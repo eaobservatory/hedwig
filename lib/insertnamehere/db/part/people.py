@@ -107,6 +107,9 @@ class PeoplePart(object):
         is updated to contain a reference to this user.
         """
 
+        if not name:
+            raise UserError('The user account name can not be blank.')
+
         (password_hash, password_salt) = create_password_hash(password_raw)
 
         with self._transaction() as conn:
