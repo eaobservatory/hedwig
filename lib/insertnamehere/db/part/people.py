@@ -1,0 +1,158 @@
+# Copyright (C) 2015 East Asian Observatory
+# All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful,but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc.,51 Franklin
+# Street, Fifth Floor, Boston, MA  02110-1301, USA
+
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
+
+from sqlalchemy.sql import select
+from sqlalchemy.sql.expression import and_
+from sqlalchemy.sql.functions import count
+
+from ...auth import check_password_hash, create_password_hash
+from ...error import ConsistencyError, UserError
+from ..meta import email, institution, person, user
+
+
+class PeoplePart(object):
+    def add_person(self, name, public=False, user_id=None,
+                   _test_skip_check=False):
+        """
+        Add a person to the database.
+
+        If the user_id for an existing user is provided, then the person
+        includes a reference to that user.
+        """
+
+        with self._transaction() as conn:
+            if user_id is not None and not _test_skip_check:
+                if not _exists_user_id(conn, user_id):
+                    raise ConsistencyError(
+                        'user does not exist with id={0}', user_id)
+                if _exists_person_user(conn, user_id):
+                    raise ConsistencyError(
+                        'person already exists with user_id={0}', user_id)
+
+            result = conn.execute(person.insert().values({
+                person.c.name: name,
+                person.c.public: public,
+                person.c.user_id: user_id,
+            }))
+
+            person_id = result.inserted_primary_key[0]
+
+        return person_id
+
+    def add_user(self, name, password_raw, person_id=None,
+                 _test_skip_check=False):
+        """
+        Add a user to the database.
+
+        The given raw password is used to generate a salted password
+        hash which is then stored in the database.  If a person_id
+        for an existing person is given, then that person's record
+        is updated to contain a reference to this user.
+        """
+
+        (password_hash, password_salt) = create_password_hash(password_raw)
+
+        with self._transaction() as conn:
+            if not _test_skip_check and _exists_user_name(conn, name):
+                raise UserError(
+                    'The user account name "{0}" already exists.',
+                    name)
+
+            result = conn.execute(user.insert().values({
+                user.c.name: name,
+                user.c.password: password_hash,
+                user.c.salt: password_salt,
+            }))
+
+            user_id = result.inserted_primary_key[0]
+
+            if person_id is not None:
+                if not _test_skip_check and \
+                        not _exists_person_id(conn, person_id):
+                    raise ConsistencyError(
+                        'person does not exist with id={0}', person_id)
+
+                result = conn.execute(person.update().where(and_(
+                    person.c.id == person_id,
+                    person.c.user_id.is_(None)
+                )).values({
+                    person.c.user_id: user_id,
+                }))
+
+                if result.rowcount != 1:
+                    raise ConsistencyError(
+                        'no rows matched setting new user_id'
+                        ' for person with id={0}',
+                        person_id)
+
+        return user_id
+
+    def authenticate_user(self, name, password_raw):
+        """
+        Given a user name and raw password, try to authenitcate the user.
+
+        Returns the user_id on success, None otherwise.
+        """
+
+        with self._transaction() as conn:
+            result = conn.execute(user.select().where(
+                user.c.name == name,
+            )).first()
+
+        if result is None:
+            # Spend time hashing the password so that the user can't tell
+            # that the user name doesn't exist by this function returning fast.
+            create_password_hash(password_raw)
+            return None
+
+        else:
+            if check_password_hash(password_raw, result[user.c.password],
+                                   result[user.c.salt]):
+                return result[user.c.id]
+            else:
+                return None
+
+
+def _exists_person_id(conn, person_id):
+    """Test whether a person exists by id."""
+    return 0 < conn.execute(select([count(person.c.id)]).where(
+        person.c.id == person_id,
+    )).scalar()
+
+
+def _exists_person_user(conn, user_id):
+    """Test whether a person exists with the given user_id."""
+    return 0 < conn.execute(select([count(person.c.id)]).where(
+        person.c.user_id == user_id,
+    )).scalar()
+
+
+def _exists_user_id(conn, user_id):
+    """Test whether a user exists by id."""
+    return 0 < conn.execute(select([count(user.c.id)]).where(
+        user.c.id == user_id,
+    )).scalar()
+
+
+def _exists_user_name(conn, name):
+    """Test whether a user exists by name."""
+    return 0 < conn.execute(select([count(user.c.id)]).where(
+        user.c.name == name,
+    )).scalar()
