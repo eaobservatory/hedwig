@@ -18,9 +18,12 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import OrderedDict
+
 from insertnamehere import auth
 from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
     UserError
+from insertnamehere.type import Email, Institution, InstitutionInfo
 from .dummy_db import DBTestCase
 
 
@@ -94,3 +97,74 @@ class DBUserTest(DBTestCase):
         with self.assertRaises(DatabaseIntegrityError):
             person_id = self.db.add_person('User Two', user_id=user_id,
                                            _test_skip_check=True)
+
+    def test_email(self):
+        # Check that we can add an email address.
+        person_id = self.db.add_person('User One')
+        email_id = self.db.add_email(person_id, 'one@users.net')
+
+        self.assertIsInstance(email_id, int)
+
+        # Test person_id existance checking.
+        with self.assertRaisesRegexp(ConsistencyError,
+                                     '^person does not exist'):
+            email_id = self.db.add_email(999, 'zero@users.net')
+
+        # Test that the database check for the same thing works.
+        with self.assertRaises(DatabaseIntegrityError):
+            email_id = self.db.add_email(999, 'zero@users.net',
+                                         _test_skip_check=True)
+
+        # Test that the database prevents duplicates for the same person.
+        with self.assertRaises(DatabaseIntegrityError):
+            email_id = self.db.add_email(person_id, 'one@users.net')
+
+        # But we can have the same address for multiple person records.
+        person_id = self.db.add_person('User One Duplicate')
+        email_id = self.db.add_email(person_id, 'one@users.net')
+        self.assertIsInstance(email_id, int)
+
+        # Add a second address and try a search.
+        email_id2 = self.db.add_email(person_id, 'one@another.name')
+        result = self.db.search_email(person_id=person_id)
+
+        self.assertIsInstance(result, OrderedDict)
+        self.assertEqual(len(result), 2)
+
+        for ((result_id, email), address, expected_id) in zip(
+                result.items(),
+                ['one@users.net', 'one@another.name'],
+                [email_id, email_id2]):
+            self.assertIsInstance(email, Email)
+            self.assertEqual(email.id, result_id)
+            self.assertEqual(email.id, expected_id)
+            self.assertEqual(email.person_id, person_id)
+            self.assertEqual(email.address, address)
+            self.assertIs(email.primary, False)
+            self.assertIs(email.validated, False)
+            self.assertIs(email.public, False)
+
+    def test_institution(self):
+        # Check that we can add an institution.
+        institution_id = self.db.add_institution('Institution One')
+
+        self.assertIsInstance(institution_id, int)
+
+        # Try retrieving the institution.
+        institution = self.db.get_institution(institution_id)
+        self.assertIsInstance(institution, Institution)
+
+        # Get a list of institutions.
+        institution_id2 = self.db.add_institution('Institution Two')
+        result = self.db.list_institution()
+        self.assertIsInstance(result, OrderedDict)
+        self.assertEqual(len(result), 2)
+
+        for ((row_id, institution), name, expected_id) in zip(
+                result.items(),
+                ['Institution One', 'Institution Two'],
+                [institution_id, institution_id2]):
+            self.assertIsInstance(institution, InstitutionInfo)
+            self.assertEqual(institution.id, row_id)
+            self.assertEqual(institution.id, expected_id)
+            self.assertEqual(institution.name, name)

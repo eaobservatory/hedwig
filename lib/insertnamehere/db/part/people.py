@@ -18,16 +18,56 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import OrderedDict
+
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_
 from sqlalchemy.sql.functions import count
 
 from ...auth import check_password_hash, create_password_hash
 from ...error import ConsistencyError, UserError
+from ...type import Email, Institution, InstitutionInfo
 from ..meta import email, institution, person, user
 
 
 class PeoplePart(object):
+    def add_email(self, person_id, address, primary=False, validated=False,
+                  public=False, _test_skip_check=False):
+        """
+        Add an email address record to the databae.
+
+        Returns the email_id number.
+        """
+
+        with self._transaction() as conn:
+            if not _test_skip_check and not _exists_person_id(conn, person_id):
+                raise ConsistencyError(
+                    'person does not exist with id={0}', person_id)
+
+            result = conn.execute(email.insert().values({
+                email.c.person_id: person_id,
+                email.c.address: address,
+                email.c.primary: primary,
+                email.c.validated: validated,
+                email.c.public: public,
+            }))
+
+        return result.inserted_primary_key[0]
+
+    def add_institution(self, name):
+        """
+        Add an institution to the database.
+
+        Returns the new institution_id number.
+        """
+
+        with self._transaction() as conn:
+            result = conn.execute(institution.insert().values({
+                institution.c.name: name,
+            }))
+
+        return result.inserted_primary_key[0]
+
     def add_person(self, name, public=False, user_id=None,
                    _test_skip_check=False):
         """
@@ -128,6 +168,49 @@ class PeoplePart(object):
                 return result[user.c.id]
             else:
                 return None
+
+    def get_institution(self, institution_id):
+        """
+        Get an institution record.
+        """
+
+        with self._transaction() as conn:
+            return Institution(**conn.execute(institution.select().where(
+                institution.c.id == institution_id
+            )).first())
+
+    def list_institution(self):
+        """
+        Get a list of all institutions.
+
+        Summary information is returned.
+        """
+
+        ans = OrderedDict()
+
+        with self._transaction() as conn:
+            for row in conn.execute(select([institution.c.id,
+                                            institution.c.name
+                                            ]).order_by(institution.c.name)):
+                ans[row['id']] = InstitutionInfo(**row)
+
+        return ans
+
+    def search_email(self, person_id):
+        """
+        Find email address records.
+        """
+
+        stmt = email.select()
+        stmt = stmt.where(email.c.person_id == person_id)
+
+        ans = OrderedDict()
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt.order_by(email.c.id)):
+                ans[row['id']] = Email(**row)
+
+        return ans
 
 
 def _exists_person_id(conn, person_id):
