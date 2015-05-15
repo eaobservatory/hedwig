@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple
 
-from .db.meta import email, institution
+from .db.meta import email, institution, person
 
 Email = namedtuple(
     'Email',
@@ -33,3 +33,7 @@ Institution = namedtuple(
 InstitutionInfo = namedtuple(
     'InstitutionInfo',
     ['id', 'name'])
+
+Person = namedtuple(
+    'Person',
+    map(lambda x: x.name, person.columns) + ['email', 'institution'])

@@ -25,8 +25,8 @@ from sqlalchemy.sql.expression import and_
 from sqlalchemy.sql.functions import count
 
 from ...auth import check_password_hash, create_password_hash
-from ...error import ConsistencyError, UserError
-from ...type import Email, Institution, InstitutionInfo
+from ...error import ConsistencyError, Error, UserError
+from ...type import Email, Institution, InstitutionInfo, Person
 from ..meta import email, institution, person, user
 
 
@@ -179,6 +179,18 @@ class PeoplePart(object):
                 institution.c.id == institution_id
             )).first())
 
+    def get_person(self, person_id):
+        """
+        Get a person record.
+        """
+
+        with self._transaction() as conn:
+            result = conn.execute(person.select().where(
+                person.c.id == person_id
+            )).first()
+
+        return Person(email=None, institution=None, **result)
+
     def list_institution(self):
         """
         Get a list of all institutions.
@@ -211,6 +223,37 @@ class PeoplePart(object):
                 ans[row['id']] = Email(**row)
 
         return ans
+
+    def update_person(self, person_id, institution_id=(),
+                      _test_skip_check=False):
+        """
+        Update a person database record.
+        """
+
+        update = {}
+
+        if institution_id != ():
+            update['institution_id'] = institution_id
+
+        # The update dictionary is only empty if the caller specified
+        # no parameters, i.e. everything was left at the default of ()
+        # meaning do nothing.  In this case, raise an error.
+        if not update:
+            raise Error('no person updates specified')
+
+        with self._transaction() as conn:
+            if not _test_skip_check and not _exists_person_id(conn, person_id):
+                raise ConsistencyError(
+                    'person does not exist with id={0}', person_id)
+
+            result = conn.execute(person.update().where(
+                person.c.id == person_id
+            ).values(update))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched updating person with id={0}',
+                    person_id)
 
 
 def _exists_person_id(conn, person_id):

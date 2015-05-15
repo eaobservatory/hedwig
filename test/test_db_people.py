@@ -22,8 +22,8 @@ from collections import OrderedDict
 
 from insertnamehere import auth
 from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
-    UserError
-from insertnamehere.type import Email, Institution, InstitutionInfo
+    Error, UserError
+from insertnamehere.type import Email, Institution, InstitutionInfo, Person
 from .dummy_db import DBTestCase
 
 
@@ -168,3 +168,36 @@ class DBUserTest(DBTestCase):
             self.assertEqual(institution.id, row_id)
             self.assertEqual(institution.id, expected_id)
             self.assertEqual(institution.name, name)
+
+    def test_person(self):
+        # Create a test person record.
+        person_id = self.db.add_person('Person One')
+        self.assertIsInstance(person_id, int)
+
+        # Check starting state of the record.
+        person = self.db.get_person(person_id)
+        self.assertIsInstance(person, Person)
+        self.assertIsNone(person.institution_id)
+
+        # Create a test institution record.
+        institution_id = self.db.add_institution('Institution One')
+        self.assertIsInstance(institution_id, int)
+
+        # Update the person to reference the new institution.
+        self.db.update_person(person_id, institution_id=institution_id)
+
+        # Get and inspect the updated record.
+        person = self.db.get_person(person_id)
+        self.assertIsInstance(person, Person)
+        self.assertEqual(person.institution_id, institution_id)
+
+        # Check that errors are trapped.
+        with self.assertRaisesRegexp(Error, '^no person updates specified'):
+            self.db.update_person(person_id)
+        with self.assertRaisesRegexp(ConsistencyError, '^person does not'):
+            self.db.update_person(999, institution_id=institution_id)
+        with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
+            self.db.update_person(999, institution_id=institution_id,
+                                  _test_skip_check=True)
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.update_person(person_id, institution_id=999)
