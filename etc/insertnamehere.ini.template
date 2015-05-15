@@ -4,3 +4,7 @@
 #     mysql+mysqlconnector://<user>:<password>@<host>[:<port>]/<dbname>
 [database]
 url=
+
+[application]
+name=Insert Name Here
+secret_key=

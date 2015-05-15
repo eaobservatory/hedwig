@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <title>{{ application_name }}{% if title is defined %}: {{ title }}{% endif %}</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" type="text/css" />
+    </head>
+    <body>
+        {% block body %}
+            {% if title is defined %}
+                <h1>{{ title }}</h1>
+            {% endif %}
+
+            {% block content %}
+            {% endblock %}
+        {% endblock %}
+    </body>
+</html>
