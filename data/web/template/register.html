@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% if message is not none %}
+    <p>
+        {{ message }}
+    </p>
+{% endif %}
+
+<p>
+Please only register a new account if you do not already have one.
+You may <a href="{{ url_for('login') }}">log in</a> to an
+existing account to update your personal details and email addresses,
+or <a href="{{ url_for('reset_password') }}">reset a forgotten password</a>.
+</p>
+
+<form method="POST" action="{{ url_for('register') }}">
+    <p>
+        User name: <input type="text" name="user_name" value="{{ user_name }}" />
+        <br />
+        Password: <input type="password" name="password" />
+        <br />
+        Re-enter password: <input type="password" name="password_check" />
+        <br />
+        <input type="submit" value="Register" name="submit" />
+    </p>
+</form>
+
+{% endblock %}

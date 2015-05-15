@@ -19,11 +19,12 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 import datetime
-from flask import Flask, session
+from flask import Flask, flash, request, session, url_for
 import os
 
 from ..config import get_config, get_database, get_home
-from .util import templated
+from ..error import UserError
+from .util import templated, HTTPRedirect
 
 
 def create_web_app():
@@ -55,6 +56,66 @@ def create_web_app():
     @templated('home.html')
     def home_page():
         return {
+        }
+
+    @app.route('/user/login', methods=['GET', 'POST'])
+    @templated('login.html')
+    def login():
+        message = None
+
+        if request.method == 'POST':
+            user_id = db.authenticate_user(request.form['user_name'],
+                                           request.form['password'])
+
+            if user_id is None:
+                message = 'User name or password not recognised.';
+            else:
+                session['user_id'] = user_id
+                flash('You have been logged in.')
+                raise HTTPRedirect(url_for('home_page'))
+
+        return {
+            'title': 'Log in',
+            'message':  message,
+            'user_name': request.form.get('user_name', ''),
+        }
+
+    @app.route('/user/logout')
+    def logout():
+        session.pop('user_id', None)
+        flash('You have been logged out.')
+        raise HTTPRedirect(url_for('home_page'))
+
+    @app.route('/user/register', methods=['GET', 'POST'])
+    @templated('register.html')
+    def register():
+        message = None
+
+        if request.method == 'POST':
+            try:
+                user_name = request.form['user_name']
+                password = request.form['password']
+                if password != request.form['password_check']:
+                    raise UserError('The passwords did not match.')
+                user_id = db.add_user(user_name, password)
+                session['user_id'] = user_id
+                flash('Your user account has been created.')
+                raise HTTPRedirect(url_for('home_page'))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Register',
+            'message':  message,
+            'user_name': request.form.get('user_name', ''),
+        }
+
+    @app.route('/user/password/reset', methods=['GET', 'POST'])
+    @templated('reset_password.html')
+    def reset_password():
+        return {
+            'title': 'Reset password',
         }
 
     @app.context_processor
