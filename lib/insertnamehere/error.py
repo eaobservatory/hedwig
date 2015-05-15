@@ -60,6 +60,19 @@ class ConsistencyError(FormattedError):
     pass
 
 
+class NoSuchRecord(FormattedError):
+    """
+    Error for when an expected database record is not present.
+
+    This should only be used when a method is given an explicit
+    record primary key such that the record non-existance is
+    clearly unexpected.  In a searching operation, methods should
+    instead return None or an empty collection as appropriate.
+    """
+
+    pass
+
+
 class UserError(FormattedError):
     """
     Exception class for errors which are presumed to result from user

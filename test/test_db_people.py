@@ -22,7 +22,7 @@ from collections import OrderedDict
 
 from insertnamehere import auth
 from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
-    Error, UserError
+    Error, NoSuchRecord, UserError
 from insertnamehere.type import Email, Institution, InstitutionInfo, Person
 from .dummy_db import DBTestCase
 
@@ -145,6 +145,11 @@ class DBUserTest(DBTestCase):
             self.assertIs(email.public, False)
 
     def test_institution(self):
+        # Try getting a non-existent institution record.
+        with self.assertRaisesRegexp(NoSuchRecord,
+                                     '^institution does not exist'):
+            institution = self.db.get_institution(999)
+
         # Check that we can add an institution.
         institution_id = self.db.add_institution('Institution One')
 
@@ -170,6 +175,10 @@ class DBUserTest(DBTestCase):
             self.assertEqual(institution.name, name)
 
     def test_person(self):
+        # Try getting a non-existent person record.
+        with self.assertRaisesRegexp(NoSuchRecord, '^person does not exist'):
+            person = self.db.get_person(999)
+
         # Create a test person record.
         person_id = self.db.add_person('Person One')
         self.assertIsInstance(person_id, int)

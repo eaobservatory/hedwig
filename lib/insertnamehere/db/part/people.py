@@ -25,7 +25,7 @@ from sqlalchemy.sql.expression import and_
 from sqlalchemy.sql.functions import count
 
 from ...auth import check_password_hash, create_password_hash
-from ...error import ConsistencyError, Error, UserError
+from ...error import ConsistencyError, Error, NoSuchRecord, UserError
 from ...type import Email, Institution, InstitutionInfo, Person
 from ..meta import email, institution, person, user
 
@@ -175,19 +175,30 @@ class PeoplePart(object):
         """
 
         with self._transaction() as conn:
-            return Institution(**conn.execute(institution.select().where(
+            result = conn.execute(institution.select().where(
                 institution.c.id == institution_id
-            )).first())
+            )).first()
+
+        if result is None:
+            raise NoSuchRecord('institution does not exist with id={0}',
+                               institution_id)
+
+        return Institution(**result)
 
     def get_person(self, person_id):
         """
         Get a person record.
+
+        Raises NoSuchRecord if the person_id doesn't exist.
         """
 
         with self._transaction() as conn:
             result = conn.execute(person.select().where(
                 person.c.id == person_id
             )).first()
+
+        if result is None:
+            raise NoSuchRecord('person does not exist with id={0}', person_id)
 
         return Person(email=None, institution=None, **result)
 
