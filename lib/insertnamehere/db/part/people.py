@@ -152,22 +152,35 @@ class PeoplePart(object):
 
         return user_id
 
-    def authenticate_user(self, name, password_raw):
+    def authenticate_user(self, name, password_raw, user_id=None):
         """
         Given a user name and raw password, try to authenitcate the user.
+
+        Can take a user_id instead of a user name for re-authentication,
+        e.g. before changing password.  In that case, name must be
+        explicitly set to None (to prevent accidental use of this
+        rare use-case).
 
         Returns the user_id on success, None otherwise.
         """
 
-        if not name:
+        stmt = user.select()
+
+        if user_id is not None:
+            if name is not None:
+                raise Error('name and user_id both given')
+            stmt = stmt.where(user.c.id == user_id)
+        elif name is None:
+            raise Error('neither name nor user_id given')
+        elif not name:
             raise UserError('The user account name can not be blank.')
+        else:
+            stmt = stmt.where(user.c.name == name)
         if not password_raw:
             raise UserError('The password can not be blank.')
 
         with self._transaction() as conn:
-            result = conn.execute(user.select().where(
-                user.c.name == name,
-            )).first()
+            result = conn.execute(stmt).first()
 
         if result is None:
             # Spend time hashing the password so that the user can't tell
