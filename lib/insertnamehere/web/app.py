@@ -23,8 +23,9 @@ from flask import Flask, flash, request, session, url_for
 import os
 
 from ..config import get_config, get_database, get_home
-from ..error import UserError
-from .util import require_auth, require_not_auth, templated, HTTPRedirect
+from ..error import NoSuchRecord, UserError
+from .util import require_auth, require_not_auth, templated, \
+    ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
 
 
 def create_web_app():
@@ -155,12 +156,49 @@ def create_web_app():
             'single_email': email
         }
 
-    @app.route('/person/<int:person_id>/institution')
+    @app.route('/person/<int:person_id>/institution', methods=['GET', 'POST'])
     @templated('edit_person_institution.html')
     @require_auth
     def edit_person_institution(person_id):
+        try:
+            person = db.get_person(person_id)
+        except NoSuchRecord:
+            raise HTTPNotFound('Person profile not found.')
+        if person.user_id != session['user_id']:
+            raise HTTPForbidden('Permission denied for this person profile.')
+
+        message = None
+
+        name = request.form.get('institution_name', '')
+        institutions = db.list_institution()
+        print(repr(institutions))
+
+        if request.method == 'POST':
+            if 'submit_select' in request.form:
+                institution_id = int(request.form['institution_id'])
+                if institution_id not in institutions:
+                    raise HTTPError('Institution not found.')
+                db.update_person(person_id, institution_id=institution_id)
+                raise HTTPRedirect(url_for('home_page'))
+
+            elif 'submit_add' in request.form:
+                if not name:
+                    message = 'Please enter the institution name.'
+                else:
+                    institution_id = db.add_institution(name)
+                    db.update_person(person_id, institution_id=institution_id)
+                    raise HTTPRedirect(url_for('home_page'))
+
+            else:
+                raise ErrorPage('Unknown action')
+
         return {
             'title': 'Select Institution',
+            'message': message,
+            'person_id': person_id,
+            'institution_name': name,
+            'institution_id': person.institution_id,
+            'institutions': institutions.values(),
         }
 
     @app.context_processor

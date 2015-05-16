@@ -33,6 +33,12 @@ class HTTPError(werkzeug.exceptions.InternalServerError):
     pass
 
 
+class HTTPForbidden(werkzeug.exceptions.Forbidden):
+    """Exception class for HTTP forbidden errors."""
+
+    pass
+
+
 class HTTPNotFound(werkzeug.exceptions.NotFound):
     """Exception class for HTTP not found errors."""
 

@@ -2,8 +2,47 @@
 
 {% block content %}
 
+<h2>Existing Institutions</h2>
+
 <p>
-Selecting your institution has not yet been implemented.
+The following institutions are already known to this system.
+If your institution appears here, please select it from this list.
 </p>
+
+<form method="POST" action="{{ url_for('edit_person_institution', person_id=person_id) }}">
+<p>
+    Institution:
+    <select name="institution_id">
+        {% for institution in institutions %}
+            <option value="{{ institution.id }}" {{'selected="selected"' | safe if institution.id == institution_id }}>{{ institution.name }}</option>
+        {% endfor %}
+    </select>
+    <br />
+    <input type="submit" value="Select institution" name="submit_select" />
+</p>
+
+</form>
+
+<h2>New Institution</h2>
+
+<p>
+If your institution does not appear in the list above,
+you may enter it into the system here.
+</p>
+
+{% if message is not none %}
+    <p>
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('edit_person_institution', person_id=person_id) }}">
+<p>
+    Institution name:
+    <input type="text" name="institution_name" value="{{ institution_name }}" />
+    <br />
+    <input type="submit" value="Add new institution" name="submit_add" />
+</p>
+</form>
 
 {% endblock %}
