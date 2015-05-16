@@ -20,11 +20,11 @@ from __future__ import absolute_import, division, print_function, \
 
 import functools
 
-import flask
+from flask import flash, session, url_for
+from flask import make_response as _flask_make_response
+from flask import render_template as _flask_render_template
 import werkzeug.exceptions
 import werkzeug.routing
-
-url_for = flask.url_for
 
 
 class HTTPError(werkzeug.exceptions.InternalServerError):
@@ -64,7 +64,7 @@ def require_auth(f):
 
     @functools.wraps(f)
     def decorated(*args, **kwargs):
-        if 'user_id' not in flask.session:
+        if 'user_id' not in session:
             raise HTTPRedirect(url_for('login'))
         return f(*args, **kwargs)
 
@@ -78,7 +78,7 @@ def require_not_auth(f):
 
     @functools.wraps(f)
     def decorated(*args, **kwargs):
-        if 'user_id' in flask.session:
+        if 'user_id' in session:
             raise ErrorPage('You are already logged in.')
         return f(*args, **kwargs)
 
@@ -103,14 +103,14 @@ def templated(template):
                 return _make_response(template, f(*args, **kwargs))
 
             except ErrorPage as err:
-                return error_page_response(err)
+                return _error_page_response(err)
 
         return decorated_function
 
     return decorator
 
 
-def error_page_response(err):
+def _error_page_response(err):
     """Prepare flask response for an error page."""
 
     return _make_response('error.html',
@@ -120,7 +120,7 @@ def error_page_response(err):
 def _make_response(template, result):
     """Prepare flask repsonse via a template."""
 
-    resp = flask.make_response(flask.render_template(template, **result))
+    resp = _flask_make_response(_flask_render_template(template, **result))
     resp.headers['Content-Language'] = 'en'
 
     return resp

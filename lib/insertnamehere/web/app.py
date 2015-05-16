@@ -19,13 +19,14 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 import datetime
-from flask import Flask, flash, request, session, url_for
+from flask import Flask, request
 import os
 
 from ..config import get_config, get_database, get_home
-from ..error import NoSuchRecord, UserError
-from .util import require_auth, require_not_auth, templated, \
-    ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
+from ..view.people import do_login, do_logout, do_register_user, \
+    do_reset_password, do_register_person, do_edit_person_institution
+from ..view.home import prepare_home
+from .util import require_auth, require_not_auth, templated
 
 
 def create_web_app():
@@ -56,150 +57,42 @@ def create_web_app():
     @app.route('/')
     @templated('home.html')
     def home_page():
-        return {
-        }
+        return prepare_home()
 
     @app.route('/user/login', methods=['GET', 'POST'])
     @templated('login.html')
     @require_not_auth
     def login():
-        message = None
-
-        if request.method == 'POST':
-            user_id = db.authenticate_user(request.form['user_name'],
-                                           request.form['password'])
-
-            if user_id is None:
-                message = 'User name or password not recognised.'
-            else:
-                session['user_id'] = user_id
-                flash('You have been logged in.')
-                raise HTTPRedirect(url_for('home_page'))
-
-        return {
-            'title': 'Log in',
-            'message':  message,
-            'user_name': request.form.get('user_name', ''),
-        }
+        return do_login(db, request.form, request.method == 'POST')
 
     @app.route('/user/logout')
     def logout():
-        session.pop('user_id', None)
-        flash('You have been logged out.')
-        raise HTTPRedirect(url_for('home_page'))
+        do_logout()
 
     @app.route('/user/register', methods=['GET', 'POST'])
     @templated('register.html')
     @require_not_auth
     def register():
-        message = None
-
-        if request.method == 'POST':
-            try:
-                user_name = request.form['user_name']
-                password = request.form['password']
-                if password != request.form['password_check']:
-                    raise UserError('The passwords did not match.')
-                user_id = db.add_user(user_name, password)
-                session['user_id'] = user_id
-                flash('Your user account has been created.')
-                raise HTTPRedirect(url_for('register_person'))
-
-            except UserError as e:
-                message = e.message
-
-        return {
-            'title': 'Register',
-            'message':  message,
-            'user_name': request.form.get('user_name', ''),
-        }
+        return do_register_user(db, request.form, request.method == 'POST')
 
     @app.route('/user/password/reset', methods=['GET', 'POST'])
     @templated('reset_password.html')
     @require_not_auth
     def reset_password():
-        return {
-            'title': 'Reset password',
-        }
+        return do_reset_password(db, request.form, request.method == 'POST')
 
     @app.route('/person/register', methods=['GET', 'POST'])
     @templated('edit_person.html')
     @require_auth
     def register_person():
-        message = None
-
-        name = request.form.get('person_name', '')
-        email = request.form.get('single_email', '')
-        public = 'person_public' in request.form
-
-        if request.method == 'POST':
-            name = request.form['person_name']
-            email = request.form['single_email']
-            if not name:
-                message = 'Please enter your full name.'
-            elif not email:
-                message = 'Please enter your email address.'
-            else:
-                user_id = session['user_id']
-                person_id = db.add_person(name, public=public, user_id=user_id)
-                db.add_email(person_id, email, primary=True)
-                flash('Your user profile has been saved.')
-                raise HTTPRedirect(url_for('edit_person_institution',
-                                           person_id=person_id))
-
-        return {
-            'title': 'Create Profile',
-            'target': 'register_person',
-            'message': message,
-            'person_name': name,
-            'person_public': public,
-            'single_email': email
-        }
+        return do_register_person(db, request.form, request.method == 'POST')
 
     @app.route('/person/<int:person_id>/institution', methods=['GET', 'POST'])
     @templated('edit_person_institution.html')
     @require_auth
     def edit_person_institution(person_id):
-        try:
-            person = db.get_person(person_id)
-        except NoSuchRecord:
-            raise HTTPNotFound('Person profile not found.')
-        if person.user_id != session['user_id']:
-            raise HTTPForbidden('Permission denied for this person profile.')
-
-        message = None
-
-        name = request.form.get('institution_name', '')
-        institutions = db.list_institution()
-        print(repr(institutions))
-
-        if request.method == 'POST':
-            if 'submit_select' in request.form:
-                institution_id = int(request.form['institution_id'])
-                if institution_id not in institutions:
-                    raise HTTPError('Institution not found.')
-                db.update_person(person_id, institution_id=institution_id)
-                raise HTTPRedirect(url_for('home_page'))
-
-            elif 'submit_add' in request.form:
-                if not name:
-                    message = 'Please enter the institution name.'
-                else:
-                    institution_id = db.add_institution(name)
-                    db.update_person(person_id, institution_id=institution_id)
-                    raise HTTPRedirect(url_for('home_page'))
-
-            else:
-                raise ErrorPage('Unknown action')
-
-        return {
-            'title': 'Select Institution',
-            'message': message,
-            'person_id': person_id,
-            'institution_name': name,
-            'institution_id': person.institution_id,
-            'institutions': institutions.values(),
-        }
+        return do_edit_person_institution(db, person_id, request.form,
+                                          request.method == 'POST')
 
     @app.context_processor
     def add_to_context():
