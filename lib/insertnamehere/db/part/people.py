@@ -333,6 +333,25 @@ class PeoplePart(object):
                     'no rows matched updating person with id={0}',
                     person_id)
 
+    def update_user_password(self, user_id, password_raw,
+                             _test_skip_check=False):
+        if not password_raw:
+            raise UserError('The password can not be blank.')
+
+        (password_hash, password_salt) = create_password_hash(password_raw)
+
+        with self._transaction() as conn:
+            if not _test_skip_check and not _exists_user_id(conn, user_id):
+                raise ConsistencyError(
+                    'user does not exist with id={0}', user_id)
+
+            result = conn.execute(user.update().where(
+                user.c.id == user_id
+            ).values({
+                user.c.password: password_hash,
+                user.c.salt: password_salt,
+            }))
+
     def use_password_reset_token(self, token):
         """
         Tries to use the given password reset token.

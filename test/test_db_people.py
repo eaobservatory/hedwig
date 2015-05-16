@@ -73,6 +73,12 @@ class DBUserTest(DBTestCase):
             user_id = self.db.add_user('user4', 'pass4', person_id=999,
                                        _test_skip_check=True)
 
+        # Test changing a password.
+        self.assertEqual(self.db.authenticate_user('user3', 'pass3'), user_id)
+        self.db.update_user_password(user_id, '3ssap')
+        self.assertIsNone(self.db.authenticate_user('user3', 'pass3'))
+        self.assertEqual(self.db.authenticate_user('user3', '3ssap'), user_id)
+
     def test_user_person(self):
         # Check that we can create a person and get an integer person_id.
         person_id = self.db.add_person('User Zero')
