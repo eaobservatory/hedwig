@@ -77,6 +77,36 @@ def do_register_user(db, form, is_post):
     }
 
 
+def do_change_password(db, form, is_post):
+    message = None
+
+    if is_post:
+        try:
+            user_id = session['user_id']
+            password = form['password']
+            password_new = form['password_new']
+            if password_new != form['password_check']:
+                raise UserError('The new passwords did not match.')
+            if password_new == password:
+                raise UserError(
+                    'The new password is the same as the current password')
+            if db.authenticate_user(None, form['password'],
+                                    user_id=user_id) is None:
+                raise UserError(
+                    'Your current password was entered incorrectly.')
+            db.update_user_password(user_id, password_new)
+            flash('Your password has been changed.')
+            raise HTTPRedirect(url_for('home_page'))
+
+        except UserError as e:
+            message = e.message
+
+    return {
+        'title': 'Change Password',
+        'message': message,
+    }
+
+
 def get_password_reset_token(db, form, is_post):
     message = None
 

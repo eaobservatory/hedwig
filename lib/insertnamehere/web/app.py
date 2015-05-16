@@ -24,7 +24,7 @@ import os
 
 from ..config import get_config, get_database, get_home
 from ..view.people import do_login, do_logout, do_register_user, \
-    get_password_reset_token, use_password_reset_token, \
+    do_change_password, get_password_reset_token, use_password_reset_token, \
     do_register_person, do_edit_person_institution
 from ..view.home import prepare_home
 from .util import require_auth, require_not_auth, templated
@@ -75,6 +75,12 @@ def create_web_app():
     @require_not_auth
     def register():
         return do_register_user(db, request.form, request.method == 'POST')
+
+    @app.route('/user/password', methods=['GET', 'POST'])
+    @templated('change_password.html')
+    @require_auth
+    def change_password():
+        return do_change_password(db, request.form, request.method == 'POST')
 
     @app.route('/user/password/reset', methods=['GET', 'POST'])
     @templated('reset_password.html')
