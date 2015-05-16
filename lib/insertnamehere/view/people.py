@@ -23,7 +23,7 @@ from ..web.util import flash, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
 
 
-def do_login(db, form, is_post):
+def do_login(db, args, form, is_post):
     message = None
 
     if is_post:
@@ -39,7 +39,7 @@ def do_login(db, form, is_post):
     return {
         'title': 'Log in',
         'message':  message,
-        'user_name': form.get('user_name', ''),
+        'user_name': form.get('user_name', args.get('user_name', '')),
     }
 
 
@@ -73,9 +73,62 @@ def do_register_user(db, form, is_post):
     }
 
 
-def do_reset_password(db, form, is_post):
+def get_password_reset_token(db, form, is_post):
+    message = None
+
+    if is_post:
+        user_name = form.get('user_name', None)
+        address = form.get('email', None)
+
+        if user_name:
+            message = 'Searching by user name is not yet implemented.'
+        elif address:
+            person = db.search_person(email_address=address, registered=True)
+            if not person:
+                message = 'No registered users found with this email address'
+            elif len(person) > 1:
+                message = 'There are multiple registered users with this' \
+                    ' email address.  Please specify your user name.'
+            else:
+                user_id = person.values()[0].user_id
+                token = db.make_password_reset_token(user_id)
+                flash('Your password reset code has been sent by email.')
+                raise HTTPRedirect(url_for('reset_password_token'))
+        else:
+            message = 'Please enter either a user name or email address.'
+
     return {
-        'title': 'Reset password',
+        'title': 'Reset Password',
+        'message': message,
+    }
+
+
+def use_password_reset_token(db, form, is_post):
+    message = None
+
+    if is_post:
+        try:
+            token = form['token']
+            password = form['password']
+            if password != form['password_check']:
+                raise UserError('The passwords did not match.')
+            user_id = db.use_password_reset_token(token)
+            if user_id is None:
+                raise UserError('Your reset code was not recognised. '
+                                'It may have expired or been superceded by '
+                                'a newer reset code.')
+            db.update_user_password(user_id, password)
+            flash('Your password has been changed.'
+                  ' You may now log in using your new password.')
+            raise HTTPRedirect(url_for(
+                'login', user_name=db.get_user_name(user_id)))
+
+        except UserError as e:
+            message = e.message
+
+    return {
+        'title': 'Use Password Reset Code',
+        'message': message,
     }
 
 

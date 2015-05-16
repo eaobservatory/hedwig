@@ -24,7 +24,8 @@ import os
 
 from ..config import get_config, get_database, get_home
 from ..view.people import do_login, do_logout, do_register_user, \
-    do_reset_password, do_register_person, do_edit_person_institution
+    get_password_reset_token, use_password_reset_token, \
+    do_register_person, do_edit_person_institution
 from ..view.home import prepare_home
 from .util import require_auth, require_not_auth, templated
 
@@ -63,7 +64,7 @@ def create_web_app():
     @templated('login.html')
     @require_not_auth
     def login():
-        return do_login(db, request.form, request.method == 'POST')
+        return do_login(db, request.args, request.form, request.method == 'POST')
 
     @app.route('/user/logout')
     def logout():
@@ -79,7 +80,15 @@ def create_web_app():
     @templated('reset_password.html')
     @require_not_auth
     def reset_password():
-        return do_reset_password(db, request.form, request.method == 'POST')
+        return get_password_reset_token(db, request.form,
+                                        request.method == 'POST')
+
+    @app.route('/user/password/token', methods=['GET', 'POST'])
+    @templated('reset_password_token.html')
+    @require_not_auth
+    def reset_password_token():
+        return use_password_reset_token(db, request.form,
+                                         request.method == 'POST')
 
     @app.route('/person/register', methods=['GET', 'POST'])
     @templated('edit_person.html')
