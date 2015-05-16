@@ -51,6 +51,34 @@ class ErrorPage(Exception):
     pass
 
 
+def require_auth(f):
+    """
+    Decorator to require that the user is authenticated.
+    """
+
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        if 'user_id' not in flask.session:
+            raise HTTPRedirect(url_for('login'))
+        return f(*args, **kwargs)
+
+    return decorated
+
+
+def require_not_auth(f):
+    """
+    Decorator to require that the user is not authenticated.
+    """
+
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        if 'user_id' in flask.session:
+            raise ErrorPage('You are already logged in.')
+        return f(*args, **kwargs)
+
+    return decorated
+
+
 def templated(template):
     """
     Template application decorator.

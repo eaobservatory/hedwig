@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% if message is not none %}
+    <p>
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for(target) }}">
+    <p>
+        Full name: <input type="text" name="person_name" value="{{ person_name }}" />
+        <br />
+        Would you like your name to appear in the directory of users?
+        This will allow collaborators to more easily invite you to
+        participate in their proposals.
+        <br />
+        User directory: <input type="checkbox" name="person_public" value="yes" {{ 'checked="checked"' | safe if person_public }} /> show
+        {% if single_email is defined %}
+        <br />
+        Email address: <input type="email" name="single_email" value="{{ single_email }}" />
+        {% endif %}
+        <br />
+        <input type="submit" value="Save" name="submit" />
+    </p>
+</form>
+
+{% endblock %}
