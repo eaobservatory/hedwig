@@ -357,6 +357,11 @@ class PeoplePart(object):
                 user.c.salt: password_salt,
             }))
 
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched updating user with id={0}',
+                    user_id)
+
     def use_password_reset_token(self, token):
         """
         Tries to use the given password reset token.
