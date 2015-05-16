@@ -263,6 +263,33 @@ class PeoplePart(object):
 
         return ans
 
+    def search_person(self, email_address=None, registered=None):
+        """
+        Find person records.
+        """
+
+        stmt = person.select()
+
+        if email_address is not None:
+            stmt = stmt.where(person.c.id.in_(
+                select([email.c.person_id]).where(
+                    email.c.address == email_address
+                )))
+
+        if registered is not None:
+            if registered:
+                stmt = stmt.where(person.c.user_id.isnot(None))
+            else:
+                stmt = stmt.where(person.c.user_id.is_(None))
+
+        ans = OrderedDict()
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt.order_by(person.c.name)):
+                ans[row['id']] = Person(email=None, institution=None, **row)
+
+        return ans
+
     def update_person(self, person_id, institution_id=(),
                       _test_skip_check=False):
         """

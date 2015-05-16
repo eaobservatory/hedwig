@@ -146,6 +146,16 @@ class DBUserTest(DBTestCase):
             self.assertIs(email.validated, False)
             self.assertIs(email.public, False)
 
+        # Try searching for people by email address.
+        # TODO: check these results more thoroughly.
+        result = self.db.search_person(email_address='one@users.net')
+        self.assertEqual(len(result), 2)
+        result = self.db.search_person(email_address='one@another.name')
+        self.assertEqual(len(result), 1)
+        result = self.db.search_person(email_address='one@another.name',
+                                       registered=True)
+        self.assertEqual(len(result), 0)
+
     def test_institution(self):
         # Try getting a non-existent institution record.
         with self.assertRaisesRegexp(NoSuchRecord,
