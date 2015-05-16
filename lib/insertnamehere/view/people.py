@@ -27,14 +27,18 @@ def do_login(db, args, form, is_post):
     message = None
 
     if is_post:
-        user_id = db.authenticate_user(form['user_name'], form['password'])
+        try:
+            user_id = db.authenticate_user(form['user_name'], form['password'])
 
-        if user_id is None:
-            message = 'User name or password not recognised.'
-        else:
-            session['user_id'] = user_id
-            flash('You have been logged in.')
-            raise HTTPRedirect(url_for('home_page'))
+            if user_id is None:
+                raise UserError('User name or password not recognised.')
+            else:
+                session['user_id'] = user_id
+                flash('You have been logged in.')
+                raise HTTPRedirect(url_for('home_page'))
+
+        except UserError as e:
+            message = e.message
 
     return {
         'title': 'Log in',

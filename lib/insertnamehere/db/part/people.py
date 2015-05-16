@@ -159,6 +159,11 @@ class PeoplePart(object):
         Returns the user_id on success, None otherwise.
         """
 
+        if not name:
+            raise UserError('The user account name can not be blank.')
+        if not password_raw:
+            raise UserError('The password can not be blank.')
+
         with self._transaction() as conn:
             result = conn.execute(user.select().where(
                 user.c.name == name,
