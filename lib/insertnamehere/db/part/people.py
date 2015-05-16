@@ -18,7 +18,10 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from binascii import hexlify
 from collections import OrderedDict
+from datetime import datetime, timedelta
+from os import urandom
 
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_
@@ -27,7 +30,7 @@ from sqlalchemy.sql.functions import count
 from ...auth import check_password_hash, create_password_hash
 from ...error import ConsistencyError, Error, NoSuchRecord, UserError
 from ...type import Email, Institution, InstitutionInfo, Person
-from ..meta import email, institution, person, user
+from ..meta import email, institution, person, reset_token, user
 
 
 class PeoplePart(object):
@@ -222,6 +225,28 @@ class PeoplePart(object):
 
         return ans
 
+    def make_password_reset_token(self, user_id):
+        """
+        Create a password reset token for a given user.
+
+        Deletes any existing tokens for this user and returns the new token.
+        """
+
+        token = hexlify(urandom(16))
+        expiry = datetime.utcnow() + timedelta(hours=4)
+
+        with self._transaction() as conn:
+            conn.execute(reset_token.delete().where(
+                reset_token.c.user_id == user_id))
+
+            result = conn.execute(reset_token.insert().values({
+                reset_token.c.token: token,
+                reset_token.c.user_id: user_id,
+                reset_token.c.expiry: expiry,
+            }))
+
+        return token
+
     def search_email(self, person_id):
         """
         Find email address records.
@@ -268,6 +293,33 @@ class PeoplePart(object):
                 raise ConsistencyError(
                     'no rows matched updating person with id={0}',
                     person_id)
+
+    def use_password_reset_token(self, token):
+        """
+        Tries to use the given password reset token.
+
+        If successful returns the user_id.  Otherwise returns None.
+        """
+
+        with self._transaction() as conn:
+            # Remove any expired tokens to keep the reset_token
+            # table tidy.
+            conn.execute(reset_token.delete().where(
+                reset_token.c.expiry < datetime.utcnow()))
+
+            # Try to fetch this token.
+            result = conn.execute(reset_token.select().where(
+                reset_token.c.token == token
+            )).first()
+
+            if result is None:
+                return None
+
+            # If we found it, consider it used and delete it.
+            conn.execute(reset_token.delete().where(
+                reset_token.c.token == token))
+
+        return result['user_id']
 
 
 def _exists_person_id(conn, person_id):

@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from sqlalchemy.schema import Column, ForeignKey, MetaData, Table, \
     UniqueConstraint
 
-from sqlalchemy.types import Boolean, Integer, String, Unicode
+from sqlalchemy.types import Boolean, DateTime, Integer, String, Unicode
 
 metadata = MetaData()
 
@@ -59,6 +59,15 @@ person = Table(
     Column('public', Boolean, default=False, nullable=False),
     Column('user_id', None, ForeignKey('user.id'), unique=True),
     Column('institution_id', None, ForeignKey('institution.id')),
+    **_table_opts
+)
+
+reset_token = Table(
+    'reset_token',
+    metadata,
+    Column('token', String(255), primary_key=True),
+    Column('user_id', None, ForeignKey('user.id'), unique=True),
+    Column('expiry', DateTime(), nullable=False),
     **_table_opts
 )
 

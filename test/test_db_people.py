@@ -19,8 +19,10 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict
+from datetime import datetime, timedelta
 
 from insertnamehere import auth
+from insertnamehere.db.meta import reset_token
 from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from insertnamehere.type import Email, Institution, InstitutionInfo, Person
@@ -210,3 +212,48 @@ class DBUserTest(DBTestCase):
                                   _test_skip_check=True)
         with self.assertRaises(DatabaseIntegrityError):
             self.db.update_person(person_id, institution_id=999)
+
+    def test_password_reset_token(self):
+        # Create a user record.
+        user_id = self.db.add_user('user1', 'pass1')
+        self.assertIsInstance(user_id, int)
+
+        # Try making a reset token.
+        token = self.db.make_password_reset_token(user_id)
+        self.assertIsInstance(token, str)
+        self.assertEqual(len(token), 32)
+
+        # Using a bad token should do nothing.
+        token_user_id = self.db.use_password_reset_token(b'not a valid token')
+        self.assertIsNone(token_user_id)
+
+        # Using the token should return this user id.
+        token_user_id = self.db.use_password_reset_token(token)
+        self.assertEqual(token_user_id, user_id)
+
+        # Using the token again should return None because the
+        # token should have been deleted.
+        token_user_id = self.db.use_password_reset_token(token)
+        self.assertIsNone(token_user_id)
+
+        # Issue two more tokens: the older should be removed automatically.
+        token1 = self.db.make_password_reset_token(user_id)
+        token2 = self.db.make_password_reset_token(user_id)
+        token_user_id = self.db.use_password_reset_token(token1)
+        self.assertIsNone(token_user_id)
+        token_user_id = self.db.use_password_reset_token(token2)
+        self.assertEqual(token_user_id, user_id)
+
+        # Create a token and artificially age it by putting the expiry
+        # date in the past.  It should then not work.
+        token = self.db.make_password_reset_token(user_id)
+        with self.db._transaction() as conn:
+            result = conn.execute(reset_token.update().where(
+                reset_token.c.token == token
+            ).values({
+                reset_token.c.expiry: datetime.utcnow() - timedelta(hours=1),
+            }))
+
+            self.assertEqual(result.rowcount, 1)
+        token_user_id = self.db.use_password_reset_token(token)
+        self.assertIsNone(token_user_id)
