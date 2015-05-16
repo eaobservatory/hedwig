@@ -112,6 +112,8 @@ class PeoplePart(object):
 
         if not name:
             raise UserError('The user account name can not be blank.')
+        if not password_raw:
+            raise UserError('The password can not be blank.')
 
         (password_hash, password_salt) = create_password_hash(password_raw)
 
