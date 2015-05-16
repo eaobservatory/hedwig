@@ -39,6 +39,9 @@ class DBUserTest(DBTestCase):
         user_id = self.db.add_user('user1', 'pass1')
         self.assertIsInstance(user_id, int)
 
+        user_name = self.db.get_user_name(user_id)
+        self.assertEqual(user_name, 'user1')
+
         # Attempting to re-create the same user is an error.
         with self.assertRaises(UserError):
             self.db.add_user('user1', 'pass1')

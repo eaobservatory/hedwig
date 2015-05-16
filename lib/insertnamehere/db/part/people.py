@@ -208,6 +208,16 @@ class PeoplePart(object):
 
         return Person(email=None, institution=None, **result)
 
+    def get_user_name(self, user_id):
+        """
+        Get the user name associated with the given user_id.
+        """
+
+        with self._transaction() as conn:
+            return conn.execute(select([user.c.name]).where(
+                user.c.id == user_id
+            )).scalar()
+
     def list_institution(self):
         """
         Get a list of all institutions.
