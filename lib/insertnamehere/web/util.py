@@ -27,29 +27,29 @@ from flask import flash, session, url_for
 from flask import make_response as _flask_make_response
 from flask import render_template as _flask_render_template
 from flask import request as _flask_request
-import werkzeug.exceptions
-import werkzeug.routing
+from werkzeug import exceptions as _werkzeug_exceptions
+from werkzeug import routing as _werkzeug_routing
 
 
-class HTTPError(werkzeug.exceptions.InternalServerError):
+class HTTPError(_werkzeug_exceptions.InternalServerError):
     """Exception class for raising HTTP errors."""
 
     pass
 
 
-class HTTPForbidden(werkzeug.exceptions.Forbidden):
+class HTTPForbidden(_werkzeug_exceptions.Forbidden):
     """Exception class for HTTP forbidden errors."""
 
     pass
 
 
-class HTTPNotFound(werkzeug.exceptions.NotFound):
+class HTTPNotFound(_werkzeug_exceptions.NotFound):
     """Exception class for HTTP not found errors."""
 
     pass
 
 
-class HTTPRedirect(werkzeug.routing.RequestRedirect):
+class HTTPRedirect(_werkzeug_routing.RequestRedirect):
     """Exception class requesting a temporary ("See Other") HTTP redirect."""
 
     code = 303
