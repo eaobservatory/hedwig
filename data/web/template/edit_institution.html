@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% if message is not none %}
+    <p>
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('edit_institution', institution_id=institution_id) }}">
+{% if show_confirm_prompt %}
+    <p>
+        Are you sure you want to edit this institution?
+    </p>
+    <p>
+        This institution record may be shared with other people.
+        If you have moved, please update the institution associated with
+        your profile rather than editing the details of this institution.
+        <b>TODO: insert link!</b>
+    </p>
+    <p>
+        If you would like to edit the details of this
+        institution, please confirm to proceed.
+    </p>
+    <p>
+        <input type="submit" value="Confirm edit" name="submit-confirm" />
+    </p>
+{% else %}
+    <p>
+        Name: <input type="text" name="name" value="{{ institution.name }}" />
+        <br />
+        <input type="submit" value="Save" name="submit-edit" />
+    </p>
+{% endif %}
+</form>
+
+{% endblock %}

@@ -25,7 +25,8 @@ import os
 from ..config import get_config, get_database, get_home
 from ..view.people import do_login, do_logout, do_register_user, \
     do_change_password, get_password_reset_token, use_password_reset_token, \
-    do_register_person, do_edit_person_institution
+    do_register_person, do_edit_person_institution, do_view_person, \
+    do_view_institution, do_edit_institution
 from ..view.home import prepare_home
 from .util import require_auth, require_not_auth, templated
 
@@ -102,12 +103,31 @@ def create_web_app():
     def register_person():
         return do_register_person(db, request.form, request.method == 'POST')
 
+    @app.route('/person/<int:person_id>')
+    @templated('view_person.html')
+    @require_auth
+    def view_person(person_id):
+        return do_view_person(db, person_id)
+
     @app.route('/person/<int:person_id>/institution', methods=['GET', 'POST'])
     @templated('edit_person_institution.html')
     @require_auth
     def edit_person_institution(person_id):
         return do_edit_person_institution(db, person_id, request.form,
                                           request.method == 'POST')
+
+    @app.route('/institution/<int:institution_id>')
+    @templated('view_institution.html')
+    def view_institution(institution_id):
+        return do_view_institution(db, institution_id)
+
+    @app.route('/institution/<int:institution_id>/edit',
+               methods=['GET', 'POST'])
+    @templated('edit_institution.html')
+    @require_auth
+    def edit_institution(institution_id):
+        return do_edit_institution(db, institution_id, request.form,
+                                   request.method == 'POST')
 
     @app.context_processor
     def add_to_context():

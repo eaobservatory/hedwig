@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% if person.user_id is none %}
+    <p>
+        This profile does not belong to a regsitered user.
+    </p>
+{% else %}
+    {% if is_current_user %}
+        <p>
+            This is your profile.
+        </p>
+        <p>
+            <a href="{{ url_for('change_password') }}">Change password</a>
+        </p>
+    {% endif %}
+{% endif %}
+
+<p>
+    Full name: {{ person.name }}
+    <br />
+    User directory: {{ 'shown' if person.public else 'not shown' }} in directory
+    {% if person.institution is not none %}
+        <br />
+        Institution: <a href="{{ url_for('view_institution', institution_id=person.institution.id) }}">{{ person.institution.name }}</a>
+    {% endif %}
+    {% if person.email is not none %}
+        {% for email in person.email %}
+            <br />
+            Email:
+            <a href="mailto:{{ email.address }}">{{ email.address }}</a>
+            {{ 'primary' if email.primary }}
+            {{ 'verified' if email.verified }}
+            {{ 'public' if email.public }}
+        {% endfor %}
+    {% endif %}
+</p>
+
+{% endblock %}

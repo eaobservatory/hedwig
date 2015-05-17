@@ -198,6 +198,28 @@ def do_register_person(db, form, is_post):
     }
 
 
+def do_view_person(db, person_id):
+    try:
+        person = db.get_person(person_id,
+                               with_institution=True, with_email=True)
+    except NoSuchRecord:
+        raise HTTPNotFound('Person profile not found.')
+
+    is_current_user = person.user_id == session['user_id']
+
+    if not is_current_user and not person.public:
+        raise HTTPForbidden('Permission denied for this person profile.')
+
+    person = person._replace(email=filter(
+        (lambda x: x.public or is_current_user), person.email.values()))
+
+    return {
+        'title': 'Profile',
+        'is_current_user': is_current_user,
+        'person': person,
+    }
+
+
 def do_edit_person_institution(db, person_id, form, is_post):
     try:
         person = db.get_person(person_id)
@@ -237,4 +259,54 @@ def do_edit_person_institution(db, person_id, form, is_post):
         'institution_name': name,
         'institution_id': person.institution_id,
         'institutions': institutions.values(),
+    }
+
+
+def do_view_institution(db, institution_id):
+    try:
+        institution = db.get_institution(institution_id)
+    except NoSuchRecord:
+        raise HTTPNotFound('Institution not found.')
+
+    return {
+        'title': 'Institution',
+        'institution': institution,
+    }
+
+
+def do_edit_institution(db, institution_id, form, is_post):
+    try:
+        institution = db.get_institution(institution_id)
+    except NoSuchRecord:
+        raise HTTPNotFound('Institution not found.')
+
+    # TODO: check the user should be able to edit this?
+
+    show_confirm_prompt = True
+    message = None
+
+    if is_post:
+        if 'submit-confirm' in form:
+            show_confirm_prompt = False
+        elif 'submit-edit' in form:
+            name = form['name']
+
+            try:
+                if not name:
+                    raise UserError('Please enter the institution name.')
+                db.update_institution(institution_id, name=name)
+                raise HTTPRedirect(url_for('view_institution',
+                                           institution_id=institution_id))
+            except UserError as e:
+                message = e.message
+                show_confirm_prompt = False
+        else:
+            raise ErrorPage('Unknown action.')
+
+    return {
+        'title': 'Edit Institution',
+        'show_confirm_prompt': show_confirm_prompt,
+        'message': message,
+        'institution_id': institution_id,
+        'institution': institution,
     }
