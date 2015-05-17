@@ -2,6 +2,12 @@
 
 {% block content %}
 
+{% if single_email is defined %}
+    <p>
+        <i>Registration step 2/3.</i>
+    </p>
+{% endif %}
+
 {% if message is not none %}
     <p>
         {{ message }}

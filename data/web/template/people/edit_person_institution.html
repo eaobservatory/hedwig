@@ -2,6 +2,12 @@
 
 {% block content %}
 
+{% if institution_id is none %}
+    <p>
+        <i>Registration step 3/3.</i>
+    </p>
+{% endif %}
+
 <h2>Existing Institutions</h2>
 
 <p>
