@@ -34,7 +34,7 @@ from ..meta import email, institution, person, reset_token, user
 
 
 class PeoplePart(object):
-    def add_email(self, person_id, address, primary=False, validated=False,
+    def add_email(self, person_id, address, primary=False, verified=False,
                   public=False, _test_skip_check=False):
         """
         Add an email address record to the databae.
@@ -51,7 +51,7 @@ class PeoplePart(object):
                 email.c.person_id: person_id,
                 email.c.address: address,
                 email.c.primary: primary,
-                email.c.validated: validated,
+                email.c.verified: verified,
                 email.c.public: public,
             }))
 

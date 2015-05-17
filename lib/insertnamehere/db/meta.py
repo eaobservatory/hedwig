@@ -37,7 +37,7 @@ email = Table(
     Column('person_id', None, ForeignKey('person.id')),
     Column('address', Unicode(255), nullable=False),
     Column('primary', Boolean, default=False, nullable=False),
-    Column('validated', Boolean, default=False, nullable=False),
+    Column('verified', Boolean, default=False, nullable=False),
     Column('public', Boolean, default=False, nullable=False),
     UniqueConstraint('person_id', 'address'),
     **_table_opts

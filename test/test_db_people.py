@@ -152,7 +152,7 @@ class DBUserTest(DBTestCase):
             self.assertEqual(email.person_id, person_id)
             self.assertEqual(email.address, address)
             self.assertIs(email.primary, False)
-            self.assertIs(email.validated, False)
+            self.assertIs(email.verified, False)
             self.assertIs(email.public, False)
 
         # Try searching for people by email address.
