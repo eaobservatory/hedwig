@@ -32,7 +32,7 @@ def create_people_blueprint(db):
     bp = Blueprint('people', __name__)
 
     @bp.route('/user/login', methods=['GET', 'POST'])
-    @templated('login.html')
+    @templated('people/login.html')
     @require_not_auth
     def login():
         return do_login(db, request.args, request.form,
@@ -43,58 +43,58 @@ def create_people_blueprint(db):
         do_logout()
 
     @bp.route('/user/register', methods=['GET', 'POST'])
-    @templated('register.html')
+    @templated('people/register_user.html')
     @require_not_auth
     def register():
         return do_register_user(db, request.form, request.method == 'POST')
 
     @bp.route('/user/password', methods=['GET', 'POST'])
-    @templated('change_password.html')
+    @templated('people/change_password.html')
     @require_auth
     def change_password():
         return do_change_password(db, request.form, request.method == 'POST')
 
     @bp.route('/user/password/reset', methods=['GET', 'POST'])
-    @templated('reset_password.html')
+    @templated('people/reset_password.html')
     @require_not_auth
     def reset_password():
         return get_password_reset_token(db, request.form,
                                         request.method == 'POST')
 
     @bp.route('/user/password/token', methods=['GET', 'POST'])
-    @templated('reset_password_token.html')
+    @templated('people/reset_password_token.html')
     @require_not_auth
     def reset_password_token():
         return use_password_reset_token(db, request.form,
                                         request.method == 'POST')
 
     @bp.route('/person/register', methods=['GET', 'POST'])
-    @templated('edit_person.html')
+    @templated('people/edit_person.html')
     @require_auth
     def register_person():
         return do_register_person(db, request.form, request.method == 'POST')
 
     @bp.route('/person/<int:person_id>')
-    @templated('view_person.html')
+    @templated('people/view_person.html')
     @require_auth
     def view_person(person_id):
         return do_view_person(db, person_id)
 
     @bp.route('/person/<int:person_id>/institution', methods=['GET', 'POST'])
-    @templated('edit_person_institution.html')
+    @templated('people/edit_person_institution.html')
     @require_auth
     def edit_person_institution(person_id):
         return do_edit_person_institution(db, person_id, request.form,
                                           request.method == 'POST')
 
     @bp.route('/institution/<int:institution_id>')
-    @templated('view_institution.html')
+    @templated('people/view_institution.html')
     def view_institution(institution_id):
         return do_view_institution(db, institution_id)
 
     @bp.route('/institution/<int:institution_id>/edit',
               methods=['GET', 'POST'])
-    @templated('edit_institution.html')
+    @templated('people/edit_institution.html')
     @require_auth
     def edit_institution(institution_id):
         return do_edit_institution(db, institution_id, request.form,
