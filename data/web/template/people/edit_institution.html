@@ -14,10 +14,10 @@
         Are you sure you want to edit this institution?
     </p>
     <p>
-        This institution record may be shared with other people.
-        If you have moved, please update the institution associated with
-        your profile rather than editing the details of this institution.
-        <b>TODO: insert link!</b>
+        <b>This institution record may be shared with other people.</b>
+        If you have moved, please
+        <a href="{{ url_for('people.edit_person_institution', person_id=session.person.id) }}">update the institution associated with your profile</a>
+        rather than editing the details of this institution.
     </p>
     <p>
         If you would like to edit the details of this

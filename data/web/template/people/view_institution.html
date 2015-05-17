@@ -6,8 +6,10 @@
     Name: {{ institution.name }}
 </p>
 
-<p>
-    <a href="{{ url_for('.edit_institution', institution_id=institution.id) }}">Edit this institution</a>
-</p>
+{% if can_edit %}
+    <p>
+        <a href="{{ url_for('.edit_institution', institution_id=institution.id) }}">Edit this institution</a>
+    </p>
+{% endif %}
 
 {% endblock %}

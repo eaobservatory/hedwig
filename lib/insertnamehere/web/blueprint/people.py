@@ -89,6 +89,7 @@ def create_people_blueprint(db):
 
     @bp.route('/institution/<int:institution_id>')
     @templated('people/view_institution.html')
+    @require_auth
     def view_institution(institution_id):
         return do_view_institution(db, institution_id)
 

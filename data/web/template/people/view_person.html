@@ -13,6 +13,8 @@
         </p>
         <p>
             <a href="{{ url_for('.change_password') }}">Change password</a>
+            <br />
+            <a href="{{ url_for('.edit_person_institution', person_id=person.id) }}">Change institution</a>
         </p>
     {% endif %}
 {% endif %}

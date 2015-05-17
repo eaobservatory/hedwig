@@ -35,7 +35,28 @@ def do_login(db, args, form, is_post):
             else:
                 session['user_id'] = user_id
                 flash('You have been logged in.')
-                raise HTTPRedirect(url_for('home_page'))
+
+                persons = db.search_person(user_id=user_id)
+                if not persons:
+                    # If the user has no profile, take them to the profile
+                    # registration page.
+                    flash('It appears your registration was not complete. '
+                          'If convenient, please complete your profile.')
+                    raise HTTPRedirect(url_for('.register_person'))
+                elif len(persons) == 1:
+                    person = list(persons.values())[0]
+                    _update_session_person(person)
+                    if person.institution_id is None:
+                        # If the user has no institution, take them to the
+                        # institution selection page.
+                        flash('It appears your registration was not complete. '
+                              'If convenient, please select your institution.')
+                        raise HTTPRedirect(url_for('.edit_person_institution',
+                                                   person_id=person.id))
+                    raise HTTPRedirect(url_for('home_page'))
+                else:
+                    raise ErrorPage(
+                        'Your account is associated with multiple profiles.')
 
         except UserError as e:
             message = e.message
@@ -49,6 +70,7 @@ def do_login(db, args, form, is_post):
 
 def do_logout():
     session.pop('user_id', None)
+    session.pop('person', None)
     flash('You have been logged out.')
     raise HTTPRedirect(url_for('home_page'))
 
@@ -167,6 +189,9 @@ def use_password_reset_token(db, form, is_post):
 
 
 def do_register_person(db, form, is_post):
+    if 'person' in session:
+        raise ErrorPage('You have already created a profile')
+
     message = None
 
     name = form.get('person_name', '')
@@ -185,6 +210,7 @@ def do_register_person(db, form, is_post):
             person_id = db.add_person(name, public=public, user_id=user_id)
             db.add_email(person_id, email, primary=True)
             flash('Your user profile has been saved.')
+            _update_session_person(db.get_person(person_id))
             raise HTTPRedirect(url_for('.edit_person_institution',
                                        person_id=person_id))
 
@@ -239,6 +265,8 @@ def do_edit_person_institution(db, person_id, form, is_post):
             if institution_id not in institutions:
                 raise HTTPError('Institution not found.')
             db.update_person(person_id, institution_id=institution_id)
+            _update_session_person(db.get_person(person_id))
+            flash('Your institution has been selected.')
             raise HTTPRedirect(url_for('home_page'))
 
         elif 'submit_add' in form:
@@ -247,6 +275,8 @@ def do_edit_person_institution(db, person_id, form, is_post):
             else:
                 institution_id = db.add_institution(name)
                 db.update_person(person_id, institution_id=institution_id)
+                _update_session_person(db.get_person(person_id))
+                flash('Your new institution has been recorded.')
                 raise HTTPRedirect(url_for('home_page'))
 
         else:
@@ -268,9 +298,16 @@ def do_view_institution(db, institution_id):
     except NoSuchRecord:
         raise HTTPNotFound('Institution not found.')
 
+    if 'person' in session:
+        user_institution_id = session['person']['institution_id']
+    else:
+        user_institution_id = None
+
     return {
         'title': 'Institution',
         'institution': institution,
+        'can_edit': (user_institution_id is not None and
+                     user_institution_id == institution_id),
     }
 
 
@@ -280,7 +317,13 @@ def do_edit_institution(db, institution_id, form, is_post):
     except NoSuchRecord:
         raise HTTPNotFound('Institution not found.')
 
-    # TODO: check the user should be able to edit this?
+    if 'person' in session:
+        user_institution_id = session['person']['institution_id']
+    else:
+        user_institution_id = None
+
+    if user_institution_id is None or user_institution_id != institution_id:
+        raise HTTPForbidden('Permission denied for editing this institution.')
 
     show_confirm_prompt = True
     message = None
@@ -295,6 +338,7 @@ def do_edit_institution(db, institution_id, form, is_post):
                 if not name:
                     raise UserError('Please enter the institution name.')
                 db.update_institution(institution_id, name=name)
+                flash('The institution\'s record has been updated.')
                 raise HTTPRedirect(url_for('.view_institution',
                                            institution_id=institution_id))
             except UserError as e:
@@ -310,3 +354,7 @@ def do_edit_institution(db, institution_id, form, is_post):
         'institution_id': institution_id,
         'institution': institution,
     }
+
+
+def _update_session_person(person):
+    session['person'] = person._asdict()

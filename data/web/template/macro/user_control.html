@@ -1,7 +1,15 @@
 {% macro render_user_panel() %}
 <p>
 {% if session.user_id is defined %}
-    Logged in as {{ session.user_id }} &mdash;
+    Logged in as
+    {% if session.person is defined %}
+        <a href="{{ url_for('people.view_person', person_id=session.person.id) }}">{{ session.person.name }}</a>
+    {% else %}
+        &ldquo;User {{ session.user_id }}&rdquo;
+        &mdash;
+        <a href="{{ url_for('people.register_person') }}">create profile</a>
+    {% endif %}
+    &mdash;
     <a href="{{ url_for('people.logout') }}">log out</a>
 {% else %}
     <a href="{{ url_for('people.login') }}">Log in</a>

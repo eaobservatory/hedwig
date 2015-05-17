@@ -309,12 +309,15 @@ class PeoplePart(object):
 
         return ans
 
-    def search_person(self, email_address=None, registered=None):
+    def search_person(self, user_id=None, email_address=None, registered=None):
         """
         Find person records.
         """
 
         stmt = person.select()
+
+        if user_id is not None:
+            stmt = stmt.where(person.c.user_id == user_id)
 
         if email_address is not None:
             stmt = stmt.where(person.c.id.in_(
