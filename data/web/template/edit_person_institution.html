@@ -9,7 +9,7 @@ The following institutions are already known to this system.
 If your institution appears here, please select it from this list.
 </p>
 
-<form method="POST" action="{{ url_for('edit_person_institution', person_id=person_id) }}">
+<form method="POST" action="{{ url_for('.edit_person_institution', person_id=person_id) }}">
 <p>
     Institution:
     <select name="institution_id">
@@ -36,7 +36,7 @@ you may enter it into the system here.
     </p>
 {% endif %}
 
-<form method="POST" action="{{ url_for('edit_person_institution', person_id=person_id) }}">
+<form method="POST" action="{{ url_for('.edit_person_institution', person_id=person_id) }}">
 <p>
     Institution name:
     <input type="text" name="institution_name" value="{{ institution_name }}" />

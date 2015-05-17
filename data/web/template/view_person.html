@@ -12,7 +12,7 @@
             This is your profile.
         </p>
         <p>
-            <a href="{{ url_for('change_password') }}">Change password</a>
+            <a href="{{ url_for('.change_password') }}">Change password</a>
         </p>
     {% endif %}
 {% endif %}
@@ -23,7 +23,7 @@
     User directory: {{ 'shown' if person.public else 'not shown' }} in directory
     {% if person.institution is not none %}
         <br />
-        Institution: <a href="{{ url_for('view_institution', institution_id=person.institution.id) }}">{{ person.institution.name }}</a>
+        Institution: <a href="{{ url_for('.view_institution', institution_id=person.institution.id) }}">{{ person.institution.name }}</a>
     {% endif %}
     {% if person.email is not none %}
         {% for email in person.email %}

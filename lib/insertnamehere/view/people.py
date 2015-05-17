@@ -65,7 +65,7 @@ def do_register_user(db, form, is_post):
             user_id = db.add_user(user_name, password)
             session['user_id'] = user_id
             flash('Your user account has been created.')
-            raise HTTPRedirect(url_for('register_person'))
+            raise HTTPRedirect(url_for('.register_person'))
 
         except UserError as e:
             message = e.message
@@ -127,7 +127,7 @@ def get_password_reset_token(db, form, is_post):
                 user_id = person.values()[0].user_id
                 token = db.make_password_reset_token(user_id)
                 flash('Your password reset code has been sent by email.')
-                raise HTTPRedirect(url_for('reset_password_token'))
+                raise HTTPRedirect(url_for('.reset_password_token'))
         else:
             message = 'Please enter either a user name or email address.'
 
@@ -155,7 +155,7 @@ def use_password_reset_token(db, form, is_post):
             flash('Your password has been changed.'
                   ' You may now log in using your new password.')
             raise HTTPRedirect(url_for(
-                'login', user_name=db.get_user_name(user_id)))
+                '.login', user_name=db.get_user_name(user_id)))
 
         except UserError as e:
             message = e.message
@@ -185,12 +185,12 @@ def do_register_person(db, form, is_post):
             person_id = db.add_person(name, public=public, user_id=user_id)
             db.add_email(person_id, email, primary=True)
             flash('Your user profile has been saved.')
-            raise HTTPRedirect(url_for('edit_person_institution',
+            raise HTTPRedirect(url_for('.edit_person_institution',
                                        person_id=person_id))
 
     return {
         'title': 'Create Profile',
-        'target': 'register_person',
+        'target': '.register_person',
         'message': message,
         'person_name': name,
         'person_public': public,
@@ -295,7 +295,7 @@ def do_edit_institution(db, institution_id, form, is_post):
                 if not name:
                     raise UserError('Please enter the institution name.')
                 db.update_institution(institution_id, name=name)
-                raise HTTPRedirect(url_for('view_institution',
+                raise HTTPRedirect(url_for('.view_institution',
                                            institution_id=institution_id))
             except UserError as e:
                 message = e.message

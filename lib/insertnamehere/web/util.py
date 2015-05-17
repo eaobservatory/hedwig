@@ -65,7 +65,7 @@ def require_auth(f):
     @functools.wraps(f)
     def decorated(*args, **kwargs):
         if 'user_id' not in session:
-            raise HTTPRedirect(url_for('login'))
+            raise HTTPRedirect(url_for('people.login'))
         return f(*args, **kwargs)
 
     return decorated

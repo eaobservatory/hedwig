@@ -8,7 +8,7 @@
     </p>
 {% endif %}
 
-<form method="POST" action="{{ url_for('edit_institution', institution_id=institution_id) }}">
+<form method="POST" action="{{ url_for('.edit_institution', institution_id=institution_id) }}">
 {% if show_confirm_prompt %}
     <p>
         Are you sure you want to edit this institution?

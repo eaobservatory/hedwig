@@ -8,7 +8,7 @@
     </p>
 {% endif %}
 
-<form method="POST" action="{{ url_for('login') }}">
+<form method="POST" action="{{ url_for('.login') }}">
     <p>
         User name: <input type="text" name="user_name" value="{{ user_name }}" />
         <br />
@@ -20,12 +20,12 @@
 
 <p>
     If you do not already have an account you may
-    <a href="{{ url_for('register') }}">register</a>.
+    <a href="{{ url_for('.register') }}">register</a>.
 </p>
 
 <p>
     If you do not remember your user name or password, please
-    <a href="{{ url_for('reset_password') }}">reset your password</a>
+    <a href="{{ url_for('.reset_password') }}">reset your password</a>
     to regain access to your account.
 </p>
 

@@ -2,9 +2,9 @@
 <p>
 {% if session.user_id is defined %}
     Logged in as {{ session.user_id }} &mdash;
-    <a href="{{ url_for('logout') }}">log out</a>
+    <a href="{{ url_for('people.logout') }}">log out</a>
 {% else %}
-    <a href="{{ url_for('login') }}">Log in</a>
+    <a href="{{ url_for('people.login') }}">Log in</a>
 {% endif %}
 </p>
 {% endmacro %}
