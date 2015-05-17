@@ -195,6 +195,21 @@ class DBUserTest(DBTestCase):
             self.assertEqual(institution.id, expected_id)
             self.assertEqual(institution.name, name)
 
+        # Try updating an institution.
+        with self.assertRaisesRegexp(Error,
+                                     '^no institution updates specified'):
+            self.db.update_institution(institution_id)
+        with self.assertRaisesRegexp(ConsistencyError,
+                                     '^institution does not exist'):
+            self.db.update_institution(999, '...')
+        with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
+            self.db.update_institution(999, '...', _test_skip_check=True)
+
+        self.db.update_institution(institution_id, 'Renamed Institution One')
+        institution = self.db.get_institution(institution_id)
+        self.assertIsInstance(institution, Institution)
+        self.assertEqual(institution.name, 'Renamed Institution One')
+
     def test_person(self):
         # Try getting a non-existent person record.
         with self.assertRaisesRegexp(NoSuchRecord, '^person does not exist'):

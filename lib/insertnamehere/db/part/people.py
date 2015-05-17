@@ -320,6 +320,35 @@ class PeoplePart(object):
 
         return ans
 
+    def update_institution(self, institution_id, name=None,
+                           _test_skip_check=False):
+        """
+        Update an institution record.
+        """
+
+        update = {}
+
+        if name is not None:
+            update['name'] = name
+
+        if not update:
+            raise Error('no institution updates specified')
+
+        with self._transaction() as conn:
+            if not _test_skip_check and not _exists_institution_id(
+                    conn, institution_id):
+                raise ConsistencyError(
+                    'institution does not exist with id={0}', institution_id)
+
+            result = conn.execute(institution.update().where(
+                institution.c.id == institution_id
+            ).values(update))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched updating institution with id={0}',
+                    institution_id)
+
     def update_person(self, person_id, institution_id=(),
                       _test_skip_check=False):
         """
@@ -401,6 +430,13 @@ class PeoplePart(object):
                 reset_token.c.token == token))
 
         return result['user_id']
+
+
+def _exists_institution_id(conn, institution_id):
+    """Test whether an institution exists by id."""
+    return 0 < conn.execute(select([count(institution.c.id)]).where(
+        institution.c.id == institution_id,
+    )).scalar()
 
 
 def _exists_person_id(conn, person_id):
