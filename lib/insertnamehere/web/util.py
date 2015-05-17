@@ -57,19 +57,37 @@ class ErrorPage(Exception):
     pass
 
 
-def require_auth(f):
+def require_auth(require_person=False, require_institution=False):
     """
     Decorator to require that the user is authenticated.
+
+    Can optionally require the user to have a profile,
+    and to have an institution associated with that profile.
     """
 
-    @functools.wraps(f)
-    def decorated(*args, **kwargs):
-        if 'user_id' not in session:
-            flash('Please log in or register for an account to proceed.')
-            raise HTTPRedirect(url_for('people.login'))
-        return f(*args, **kwargs)
+    def decorator(f):
+        @functools.wraps(f)
+        def decorated_function(*args, **kwargs):
+            if 'user_id' not in session:
+                flash('Please log in or register for an account to proceed.')
+                raise HTTPRedirect(url_for('people.login'))
 
-    return decorated
+            elif ((require_person or require_institution) and
+                    'person' not in session):
+                flash('Please complete your profile before proceeding.')
+                raise HTTPRedirect(url_for('people.register_person'))
+
+            elif (require_institution and
+                    session['person']['institution_id'] is None):
+                flash('Please select your institution before proceeding.')
+                raise HTTPRedirect(url_for('people.edit_person_institution',
+                                           person_id=session['person']['id']))
+
+            return f(*args, **kwargs)
+
+        return decorated_function
+
+    return decorator
 
 
 def require_not_auth(f):

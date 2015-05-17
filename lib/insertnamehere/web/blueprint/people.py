@@ -50,7 +50,7 @@ def create_people_blueprint(db):
 
     @bp.route('/user/password', methods=['GET', 'POST'])
     @templated('people/change_password.html')
-    @require_auth
+    @require_auth()
     def change_password():
         return do_change_password(db, request.form, request.method == 'POST')
 
@@ -70,33 +70,33 @@ def create_people_blueprint(db):
 
     @bp.route('/person/register', methods=['GET', 'POST'])
     @templated('people/edit_person.html')
-    @require_auth
+    @require_auth()
     def register_person():
         return do_register_person(db, request.form, request.method == 'POST')
 
     @bp.route('/person/<int:person_id>')
     @templated('people/view_person.html')
-    @require_auth
+    @require_auth()
     def view_person(person_id):
         return do_view_person(db, person_id)
 
     @bp.route('/person/<int:person_id>/institution', methods=['GET', 'POST'])
     @templated('people/edit_person_institution.html')
-    @require_auth
+    @require_auth()
     def edit_person_institution(person_id):
         return do_edit_person_institution(db, person_id, request.form,
                                           request.method == 'POST')
 
     @bp.route('/institution/<int:institution_id>')
     @templated('people/view_institution.html')
-    @require_auth
+    @require_auth()
     def view_institution(institution_id):
         return do_view_institution(db, institution_id)
 
     @bp.route('/institution/<int:institution_id>/edit',
               methods=['GET', 'POST'])
     @templated('people/edit_institution.html')
-    @require_auth
+    @require_auth()
     def edit_institution(institution_id):
         return do_edit_institution(db, institution_id, request.form,
                                    request.method == 'POST')
