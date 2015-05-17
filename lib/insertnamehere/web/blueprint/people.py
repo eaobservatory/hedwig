@@ -36,7 +36,7 @@ def create_people_blueprint(db):
     @require_not_auth
     def login():
         return do_login(db, request.args, request.form,
-                        request.method == 'POST')
+                        request.method == 'POST', request.referrer)
 
     @bp.route('/user/logout')
     def logout():

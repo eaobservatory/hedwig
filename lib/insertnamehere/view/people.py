@@ -23,7 +23,7 @@ from ..web.util import flash, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
 
 
-def do_login(db, args, form, is_post):
+def do_login(db, args, form, is_post, referrer):
     message = None
 
     if is_post:
@@ -53,13 +53,17 @@ def do_login(db, args, form, is_post):
                               'If convenient, please select your institution.')
                         raise HTTPRedirect(url_for('.edit_person_institution',
                                                    person_id=person.id))
-                    raise HTTPRedirect(url_for('home_page'))
+                    raise HTTPRedirect(
+                        session.pop('log_in_for', url_for('home_page')))
                 else:
                     raise ErrorPage(
                         'Your account is associated with multiple profiles.')
 
         except UserError as e:
             message = e.message
+
+    elif (referrer is not None) and ('log_in_for' not in session):
+        session['log_in_for'] = referrer
 
     return {
         'title': 'Log in',
@@ -267,7 +271,9 @@ def do_edit_person_institution(db, person_id, form, is_post):
             db.update_person(person_id, institution_id=institution_id)
             _update_session_person(db.get_person(person_id))
             flash('Your institution has been selected.')
-            raise HTTPRedirect(url_for('home_page'))
+            raise HTTPRedirect(session.pop(
+                'log_in_for',
+                url_for('.view_person', person_id=person_id)))
 
         elif 'submit_add' in form:
             if not name:
@@ -277,7 +283,9 @@ def do_edit_person_institution(db, person_id, form, is_post):
                 db.update_person(person_id, institution_id=institution_id)
                 _update_session_person(db.get_person(person_id))
                 flash('Your new institution has been recorded.')
-                raise HTTPRedirect(url_for('home_page'))
+                raise HTTPRedirect(session.pop(
+                    'log_in_for',
+                    url_for('.view_person', person_id=person_id)))
 
         else:
             raise ErrorPage('Unknown action')

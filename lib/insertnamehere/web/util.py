@@ -20,9 +20,13 @@ from __future__ import absolute_import, division, print_function, \
 
 import functools
 
+# Import the names we wish to expose.
 from flask import flash, session, url_for
+
+# Import the names which we use but do not wish to expose.
 from flask import make_response as _flask_make_response
 from flask import render_template as _flask_render_template
+from flask import request as _flask_request
 import werkzeug.exceptions
 import werkzeug.routing
 
@@ -70,16 +74,19 @@ def require_auth(require_person=False, require_institution=False):
         def decorated_function(*args, **kwargs):
             if 'user_id' not in session:
                 flash('Please log in or register for an account to proceed.')
+                session['log_in_for'] = _flask_request.url
                 raise HTTPRedirect(url_for('people.login'))
 
             elif ((require_person or require_institution) and
                     'person' not in session):
                 flash('Please complete your profile before proceeding.')
+                session['log_in_for'] = _flask_request.url
                 raise HTTPRedirect(url_for('people.register_person'))
 
             elif (require_institution and
                     session['person']['institution_id'] is None):
                 flash('Please select your institution before proceeding.')
+                session['log_in_for'] = _flask_request.url
                 raise HTTPRedirect(url_for('people.edit_person_institution',
                                            person_id=session['person']['id']))
 
