@@ -75,7 +75,7 @@ def require_auth(require_person=False, require_institution=False):
             if 'user_id' not in session:
                 flash('Please log in or register for an account to proceed.')
                 session['log_in_for'] = _flask_request.url
-                raise HTTPRedirect(url_for('people.login'))
+                raise HTTPRedirect(url_for('people.log_in'))
 
             elif ((require_person or require_institution) and
                     'person' not in session):

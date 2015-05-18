@@ -23,7 +23,7 @@ from ..web.util import flash, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
 
 
-def do_login(db, args, form, is_post, referrer):
+def log_in(db, args, form, is_post, referrer):
     message = None
 
     if is_post:
@@ -72,14 +72,14 @@ def do_login(db, args, form, is_post, referrer):
     }
 
 
-def do_logout():
+def log_out():
     session.pop('user_id', None)
     session.pop('person', None)
     flash('You have been logged out.')
     raise HTTPRedirect(url_for('home_page'))
 
 
-def do_register_user(db, form, is_post):
+def register_user(db, form, is_post):
     message = None
 
     if is_post:
@@ -103,7 +103,7 @@ def do_register_user(db, form, is_post):
     }
 
 
-def do_change_password(db, form, is_post):
+def change_password(db, form, is_post):
     message = None
 
     if is_post:
@@ -151,9 +151,9 @@ def get_password_reset_token(db, form, is_post):
                     ' email address.  Please specify your user name.'
             else:
                 user_id = person.values()[0].user_id
-                token = db.make_password_reset_token(user_id)
+                token = db.get_password_reset_token(user_id)
                 flash('Your password reset code has been sent by email.')
-                raise HTTPRedirect(url_for('.reset_password_token'))
+                raise HTTPRedirect(url_for('.use_password_reset_token'))
         else:
             message = 'Please enter either a user name or email address.'
 
@@ -181,7 +181,7 @@ def use_password_reset_token(db, form, is_post):
             flash('Your password has been changed.'
                   ' You may now log in using your new password.')
             raise HTTPRedirect(url_for(
-                '.login', user_name=db.get_user_name(user_id)))
+                '.log_in', user_name=db.get_user_name(user_id)))
 
         except UserError as e:
             message = e.message
@@ -192,7 +192,7 @@ def use_password_reset_token(db, form, is_post):
     }
 
 
-def do_register_person(db, form, is_post):
+def register_person(db, form, is_post):
     if 'person' in session:
         raise ErrorPage('You have already created a profile')
 
@@ -228,7 +228,7 @@ def do_register_person(db, form, is_post):
     }
 
 
-def do_view_person(db, person_id):
+def view_person(db, person_id):
     try:
         person = db.get_person(person_id,
                                with_institution=True, with_email=True)
@@ -250,7 +250,7 @@ def do_view_person(db, person_id):
     }
 
 
-def do_edit_person_institution(db, person_id, form, is_post):
+def edit_person_institution(db, person_id, form, is_post):
     try:
         person = db.get_person(person_id)
     except NoSuchRecord:
@@ -300,7 +300,7 @@ def do_edit_person_institution(db, person_id, form, is_post):
     }
 
 
-def do_view_institution(db, institution_id):
+def view_institution(db, institution_id):
     try:
         institution = db.get_institution(institution_id)
     except NoSuchRecord:
@@ -319,7 +319,7 @@ def do_view_institution(db, institution_id):
     }
 
 
-def do_edit_institution(db, institution_id, form, is_post):
+def edit_institution(db, institution_id, form, is_post):
     try:
         institution = db.get_institution(institution_id)
     except NoSuchRecord:

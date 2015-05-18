@@ -268,7 +268,7 @@ class PeoplePart(object):
 
         return ans
 
-    def make_password_reset_token(self, user_id):
+    def get_password_reset_token(self, user_id):
         """
         Create a password reset token for a given user.
 
