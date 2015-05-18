@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from ..error import NoSuchRecord, UserError
 from ..web.util import flash, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
+from . import auth
 
 
 def log_in(db, args, form, is_post, referrer):
@@ -235,17 +236,19 @@ def view_person(db, person_id):
     except NoSuchRecord:
         raise HTTPNotFound('Person profile not found.')
 
-    is_current_user = person.user_id == session['user_id']
+    can = auth.for_person(db, person)
 
-    if not is_current_user and not person.public:
+    if not can.view:
         raise HTTPForbidden('Permission denied for this person profile.')
 
+    is_current_user = person.user_id == session['user_id']
     person = person._replace(email=filter(
         (lambda x: x.public or is_current_user), person.email.values()))
 
     return {
         'title': 'Profile',
         'is_current_user': is_current_user,
+        'can_edit': can.edit,
         'person': person,
     }
 
@@ -255,7 +258,7 @@ def edit_person_institution(db, person_id, form, is_post):
         person = db.get_person(person_id)
     except NoSuchRecord:
         raise HTTPNotFound('Person profile not found.')
-    if person.user_id != session['user_id']:
+    if not auth.for_person(db, person).edit:
         raise HTTPForbidden('Permission denied for this person profile.')
 
     message = None
@@ -306,16 +309,15 @@ def view_institution(db, institution_id):
     except NoSuchRecord:
         raise HTTPNotFound('Institution not found.')
 
-    if 'person' in session:
-        user_institution_id = session['person']['institution_id']
-    else:
-        user_institution_id = None
+    can = auth.for_institution(db, institution)
+
+    if not can.view:
+        raise HTTPForbidden('Permission denied for this institution.')
 
     return {
         'title': 'Institution',
         'institution': institution,
-        'can_edit': (user_institution_id is not None and
-                     user_institution_id == institution_id),
+        'can_edit': can.edit,
     }
 
 
@@ -325,12 +327,7 @@ def edit_institution(db, institution_id, form, is_post):
     except NoSuchRecord:
         raise HTTPNotFound('Institution not found.')
 
-    if 'person' in session:
-        user_institution_id = session['person']['institution_id']
-    else:
-        user_institution_id = None
-
-    if user_institution_id is None or user_institution_id != institution_id:
+    if not auth.for_institution(db, institution).edit:
         raise HTTPForbidden('Permission denied for editing this institution.')
 
     show_confirm_prompt = True

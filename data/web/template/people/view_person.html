@@ -13,16 +13,21 @@
         </p>
         <p>
             <a href="{{ url_for('.change_password') }}">Change password</a>
-            <br />
-            <a href="{{ url_for('.edit_person_institution', person_id=person.id) }}">Change institution</a>
         </p>
     {% endif %}
+{% endif %}
+{% if can_edit %}
+    <p>
+        <a href="{{ url_for('.edit_person_institution', person_id=person.id) }}">Change institution</a>
+    </p>
 {% endif %}
 
 <p>
     Full name: {{ person.name }}
-    <br />
-    User directory: {{ 'shown' if person.public else 'not shown' }} in directory
+    {% if is_current_user %}
+        <br />
+        User directory: {{ 'shown' if person.public else 'not shown' }} in directory
+    {% endif %}
     {% if person.institution is not none %}
         <br />
         Institution: <a href="{{ url_for('.view_institution', institution_id=person.institution.id) }}">{{ person.institution.name }}</a>
