@@ -91,6 +91,13 @@ def create_people_blueprint(db):
         return view.edit_person_institution(db, person_id, request.form,
                                             request.method == 'POST')
 
+    @bp.route('/person/<int:person_id>/email', methods=['GET', 'POST'])
+    @templated('people/edit_person_email.html')
+    @require_auth()
+    def edit_person_email(person_id):
+        return view.edit_person_email(db, person_id, request.form,
+                                      request.method == 'POST')
+
     @bp.route('/institution/<int:institution_id>')
     @templated('people/view_institution.html')
     @require_auth()

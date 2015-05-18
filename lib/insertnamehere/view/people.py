@@ -342,6 +342,31 @@ def edit_person_institution(db, person_id, form, is_post):
     }
 
 
+def edit_person_email(db, person_id, form, is_post):
+    try:
+        person = db.get_person(person_id, with_email=True)
+    except NoSuchRecord:
+        raise HTTPNotFound('Person profile not found.')
+    if not auth.for_person(db, person).edit:
+        raise HTTPForbidden('Permission denied for this person profile.')
+
+    message = None
+
+    if is_post:
+        try:
+            raise HTTPError('Not implemented')
+
+        except UserError as e:
+            message = e.message
+
+    return {
+        'title': 'Edit Email Addresses',
+        'message': message,
+        'person_id': person_id,
+        'emails': person.email.values(),
+    }
+
+
 def view_institution(db, institution_id):
     try:
         institution = db.get_institution(institution_id)

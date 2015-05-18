@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% if message is not none %}
+    <p>
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.edit_person_email', person_id=person_id) }}">
+    <p>
+        {% for email in emails %}
+            {{ email.id }}
+            {{ email.address }}
+            {{ 'primary' if email.primary }}
+            {{ 'verified' if email.verified }}
+            {{ 'public' if email.public }}
+            <br />
+        {% endfor %}
+        <input type="submit" value="Save" name="submit" />
+    </p>
+</form>
+
+{% endblock %}
