@@ -104,6 +104,36 @@ def register_user(db, form, is_post):
     }
 
 
+def change_user_name(db, form, is_post):
+    message = None
+    user_id = session['user_id']
+
+    if is_post:
+        try:
+            password = form['password']
+            if db.authenticate_user(None, form['password'],
+                                    user_id=user_id) is None:
+                raise UserError(
+                    'Your current password was entered incorrectly.')
+
+            db.update_user_name(user_id, form['user_name'])
+            flash('Your user name has been changed.')
+            if 'person' in session:
+                raise HTTPRedirect(url_for('.view_person',
+                                           person_id=session['person']['id']))
+            else:
+                raise HTTPRedirect(url_for('home_page'))
+
+        except UserError as e:
+            message = e.message
+
+    return {
+        'title': 'Change User Name',
+        'message': message,
+        'user_name': form.get('user_name', db.get_user_name(user_id)),
+    }
+
+
 def change_password(db, form, is_post):
     message = None
 

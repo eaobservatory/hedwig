@@ -45,6 +45,13 @@ def create_people_blueprint(db):
     def register_user():
         return view.register_user(db, request.form, request.method == 'POST')
 
+    @bp.route('/user/name', methods=['GET', 'POST'])
+    @templated('people/change_user_name.html')
+    @require_auth()
+    def change_user_name():
+        return view.change_user_name(db, request.form,
+                                     request.method == 'POST')
+
     @bp.route('/user/password', methods=['GET', 'POST'])
     @templated('people/change_password.html')
     @require_auth()

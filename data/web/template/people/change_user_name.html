@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<p>
+    This page allows you to change the name which you use to log in
+    to this system.
+    It does not change your full name as shown to other users.
+    Note that after changing your user name, you will not be
+    able to log in using your old user name.
+</p>
+
+{% if message is not none %}
+    <p>
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.change_user_name') }}">
+    <p>
+        New user name:
+        <input type="text" name="user_name" value="{{ user_name }}" />
+        <br />
+        Confirm current password:
+        <input type="password" name="password" />
+        <br />
+        <input type="submit" value="Change user name" name="submit" />
+    </p>
+</form>
+
+{% endblock %}
