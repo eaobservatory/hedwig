@@ -134,6 +134,15 @@ class DBUserTest(DBTestCase):
             person_id = self.db.add_person('User Two', user_id=user_id,
                                            _test_skip_check=True)
 
+        # Try getting a person by user_id.
+        result = self.db.get_person(person_id=None, user_id=user_id)
+        self.assertIsInstance(result, Person)
+        self.assertEqual(result.id, person_id)
+
+        # And make sure get_person requires at least one non-None parameter.
+        with self.assertRaisesRegexp(Error, 'specified'):
+            self.db.get_person(person_id=None, user_id=None)
+
     def test_email(self):
         # Check that we can add an email address.
         person_id = self.db.add_person('User One')

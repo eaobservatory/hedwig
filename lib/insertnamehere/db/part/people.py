@@ -215,9 +215,14 @@ class PeoplePart(object):
 
         return Institution(**result)
 
-    def get_person(self, person_id, with_email=False, with_institution=False):
+    def get_person(self, person_id, user_id=None,
+                   with_email=False, with_institution=False):
         """
         Get a person record.
+
+        Can take a user_id instead of a person_id, but in that case,
+        person_id must be explicitly set to None (to prevent accidental use
+        of this rare use-case).
 
         Raises NoSuchRecord if the person_id doesn't exist.
         """
@@ -225,14 +230,24 @@ class PeoplePart(object):
         email = None
         institution = None
 
+        stmt = person.select()
+        if person_id is not None:
+            stmt = stmt.where(person.c.id == person_id)
+        elif user_id is not None:
+            stmt = stmt.where(person.c.user_id == user_id)
+        else:
+            raise Error('neither person_id nor user_id specified')
+
         with self._transaction() as conn:
-            result = conn.execute(person.select().where(
-                person.c.id == person_id
-            )).first()
+            result = conn.execute(stmt).first()
 
             if result is None:
-                raise NoSuchRecord('person does not exist with id={0}',
-                                   person_id)
+                raise NoSuchRecord('person does not exist')
+
+            # If we weren't searching by person_id, we need to retrieve it
+            # from the record.
+            if person_id is None:
+                person_id = result['id']
 
             if with_institution and result['institution_id'] is not None:
                 institution = self._get_institution(conn, result['institution_id'])
