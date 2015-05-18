@@ -181,6 +181,69 @@ class DBUserTest(DBTestCase):
                                        registered=True)
         self.assertEqual(len(result), 0)
 
+    def test_search_erson(self):
+        # Set up some test records.
+        user_1 = self.db.add_user('user1', 'pass1')
+        user_2 = self.db.add_user('user2', 'pass2')
+        user_3 = self.db.add_user('user3', 'pass3')
+
+        person_1 = self.db.add_person('person1', user_id=user_1)
+        person_2 = self.db.add_person('person2', user_id=user_2)
+        person_3 = self.db.add_person('person3', user_id=user_3)
+
+        email_1a = self.db.add_email(person_1, '1@email.a')
+        email_2a = self.db.add_email(person_2, '2@email.a')
+        email_2b = self.db.add_email(person_2, '2@email.b')
+        email_2c = self.db.add_email(person_2, 'shared@email')
+        email_3a = self.db.add_email(person_3, '3@email.a')
+        email_3b = self.db.add_email(person_3, 'shared@email')
+
+        # Check all the records were created successfully.
+        for id_ in (user_1, user_2, person_1, person_2, person_3,
+                    email_1a, email_2a, email_2b, email_2c,
+                    email_3a, email_3b):
+            self.assertIsInstance(id_, int)
+
+        # Try searching by user ID.
+        result = self.db.search_person(user_id=user_1).keys()
+        self.assertEqual(set(result), set((person_1,)))
+
+        result = self.db.search_person(user_id=user_2).keys()
+        self.assertEqual(set(result), set((person_2,)))
+
+        result = self.db.search_person(user_id=999).keys()
+        self.assertFalse(result)
+
+        # Try searching by email address.
+        result = self.db.search_person(email_address='1@email.a').keys()
+        self.assertEqual(set(result), set((person_1,)))
+
+        result = self.db.search_person(email_address='2@email.a').keys()
+        self.assertEqual(set(result), set((person_2,)))
+
+        result = self.db.search_person(email_address='2@email.b').keys()
+        self.assertEqual(set(result), set((person_2,)))
+
+        result = self.db.search_person(email_address='shared@email').keys()
+        self.assertEqual(set(result), set((person_2, person_3)))
+
+        result = self.db.search_person(email_address='no@email').keys()
+        self.assertFalse(result)
+
+        # Try constraining both user name and user_id.
+        result = self.db.search_person(
+            user_id=user_2, email_address='shared@email').keys()
+        self.assertEqual(set(result), set((person_2,)))
+        result = self.db.search_person(
+            user_id=user_3, email_address='shared@email').keys()
+        self.assertEqual(set(result), set((person_3,)))
+        result = self.db.search_person(
+            user_id=999, email_address='shared@email').keys()
+        self.assertFalse(result)
+        result = self.db.search_person(
+            user_id=user_3, email_address='no@email').keys()
+        self.assertFalse(result)
+
     def test_institution(self):
         # Try getting a non-existent institution record.
         with self.assertRaisesRegexp(NoSuchRecord,
