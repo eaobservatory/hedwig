@@ -42,6 +42,15 @@ class DBUserTest(DBTestCase):
         user_name = self.db.get_user_name(user_id)
         self.assertEqual(user_name, 'user1')
 
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_user_name(999)
+
+        user_id_fetched = self.db.get_user_id('user1')
+        self.assertEqual(user_id_fetched, user_id)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_user_id('no-user')
+
         # Attempting to re-create the same user is an error.
         with self.assertRaises(UserError):
             self.db.add_user('user1', 'pass1')

@@ -31,6 +31,7 @@ from ...auth import check_password_hash, create_password_hash
 from ...error import ConsistencyError, Error, NoSuchRecord, UserError
 from ...type import Email, Institution, InstitutionInfo, Person
 from ..meta import email, institution, person, reset_token, user
+from ..util import require_not_none
 
 
 class PeoplePart(object):
@@ -241,6 +242,18 @@ class PeoplePart(object):
 
         return Person(email=email, institution=institution, **result)
 
+    @require_not_none
+    def get_user_id(self, user_name):
+        """
+        Get the user_id for the given user name.
+        """
+
+        with self._transaction() as conn:
+            return conn.execute(select([user.c.id]).where(
+                user.c.name == user_name
+            )).scalar()
+
+    @require_not_none
     def get_user_name(self, user_id):
         """
         Get the user name associated with the given user_id.
