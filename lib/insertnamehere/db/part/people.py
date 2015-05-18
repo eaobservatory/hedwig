@@ -404,6 +404,31 @@ class PeoplePart(object):
                     'no rows matched updating person with id={0}',
                     person_id)
 
+    def update_user_name(self, user_id, name, _test_skip_check=False):
+        if not name:
+            raise UserError('The new user name can not be blank.')
+
+        with self._transaction() as conn:
+            if not _test_skip_check and not _exists_user_id(conn, user_id):
+                raise ConsistencyError(
+                    'user does not exist with id={0}', user_id)
+
+            if not _test_skip_check and _exists_user_name(conn, name):
+                raise UserError(
+                    'The user account name "{0}" already exists.',
+                    name)
+
+            result = conn.execute(user.update().where(
+                user.c.id == user_id
+            ).values({
+                user.c.name: name,
+            }))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched updating user with id={0}',
+                    user_id)
+
     def update_user_password(self, user_id, password_raw,
                              _test_skip_check=False):
         if not password_raw:

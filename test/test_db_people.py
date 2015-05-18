@@ -45,6 +45,8 @@ class DBUserTest(DBTestCase):
         # Attempting to re-create the same user is an error.
         with self.assertRaises(UserError):
             self.db.add_user('user1', 'pass1')
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.add_user('user1', 'pass1', _test_skip_check=True)
 
         # Ensure that, even if we don't check for duplicate users,
         # the database traps the error.
@@ -78,6 +80,20 @@ class DBUserTest(DBTestCase):
         self.db.update_user_password(user_id, '3ssap')
         self.assertIsNone(self.db.authenticate_user('user3', 'pass3'))
         self.assertEqual(self.db.authenticate_user('user3', '3ssap'), user_id)
+
+        # Test changing a user name
+        self.db.update_user_name(user_id, '3resu')
+        self.assertEqual(self.db.get_user_name(user_id), '3resu')
+        with self.assertRaisesRegexp(ConsistencyError, '^user does not exist'):
+            self.db.update_user_name(999, 'newname')
+        with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
+            self.db.update_user_name(999, 'newname', _test_skip_check=True)
+        with self.assertRaisesRegexp(UserError, 'already exists\.$'):
+            self.db.update_user_name(user_id, 'user1')
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.update_user_name(user_id, 'user1', _test_skip_check=True)
+        with self.assertRaisesRegexp(UserError, 'blank'):
+            self.db.update_user_name(user_id, '')
 
     def test_user_person(self):
         # Check that we can create a person and get an integer person_id.
