@@ -221,7 +221,7 @@ def register_person(db, form, is_post):
 
     return {
         'title': 'Create Profile',
-        'target': '.register_person',
+        'target': url_for('.register_person'),
         'message': message,
         'person_name': name,
         'person_public': public,
@@ -250,6 +250,45 @@ def view_person(db, person_id):
         'is_current_user': is_current_user,
         'can_edit': can.edit,
         'person': person,
+    }
+
+
+def edit_person(db, person_id, form, is_post):
+    try:
+        person = db.get_person(person_id)
+    except NoSuchRecord:
+        raise HTTPNotFound('Person profile not found.')
+    if not auth.for_person(db, person).edit:
+        raise HTTPForbidden('Permission denied for this person profile.')
+
+    message = None
+
+    name = form.get('person_name', person.name)
+    public = ('person_public' in form) if is_post else person.public
+
+    if is_post:
+        name = form['person_name']
+        try:
+            if not name:
+                raise UserError('Please enter your full name.')
+            db.update_person(person_id, name=name, public=public)
+
+            if session['user_id'] == person.user_id:
+                flash('Your user profile has been saved.')
+                _update_session_person(db.get_person(person_id))
+            else:
+                flash('The user profile has been saved.')
+            raise HTTPRedirect(url_for('.view_person', person_id=person_id))
+
+        except UserError as e:
+            message = e.message
+
+    return {
+        'title': 'Edit Profile',
+        'target': url_for('.edit_person', person_id=person_id),
+        'message': message,
+        'person_name': name,
+        'person_public': public,
     }
 
 

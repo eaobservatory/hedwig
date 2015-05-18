@@ -77,6 +77,13 @@ def create_people_blueprint(db):
     def view_person(person_id):
         return view.view_person(db, person_id)
 
+    @bp.route('/person/<int:person_id>/edit', methods=['GET', 'POST'])
+    @templated('people/edit_person.html')
+    @require_auth()
+    def edit_person(person_id):
+        return view.edit_person(db, person_id, request.form,
+                                request.method == 'POST')
+
     @bp.route('/person/<int:person_id>/institution', methods=['GET', 'POST'])
     @templated('people/edit_person_institution.html')
     @require_auth()

@@ -18,6 +18,8 @@
 {% endif %}
 {% if can_edit %}
     <p>
+        <a href="{{ url_for('.edit_person', person_id=person.id) }}">Edit profile</a>
+        <br />
         <a href="{{ url_for('.edit_person_institution', person_id=person.id) }}">Change institution</a>
     </p>
 {% endif %}

@@ -368,7 +368,8 @@ class PeoplePart(object):
                     'no rows matched updating institution with id={0}',
                     institution_id)
 
-    def update_person(self, person_id, institution_id=(),
+    def update_person(self, person_id,
+                      name=None, public=None, institution_id=(),
                       _test_skip_check=False):
         """
         Update a person database record.
@@ -376,6 +377,10 @@ class PeoplePart(object):
 
         update = {}
 
+        if name is not None:
+            update['name'] = name
+        if public is not None:
+            update['public'] = public
         if institution_id != ():
             update['institution_id'] = institution_id
 
