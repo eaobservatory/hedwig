@@ -73,6 +73,15 @@ class NoSuchRecord(FormattedError):
     pass
 
 
+class MultipleRecords(FormattedError):
+    """
+    Error for when the database unexpectedly returns multiple
+    records when only one was expected.
+    """
+
+    pass
+
+
 class UserError(FormattedError):
     """
     Exception class for errors which are presumed to result from user

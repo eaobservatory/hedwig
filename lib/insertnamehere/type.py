@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict, namedtuple
 
 from .db.meta import email, institution, member, person, proposal
+from .error import NoSuchRecord, MultipleRecords
 
 Email = namedtuple(
     'Email',
@@ -47,7 +48,19 @@ Proposal = namedtuple(
     map(lambda x: x.name, proposal.columns) + ['member'])
 
 
-class EmailCollection(OrderedDict):
+class ResultCollection(OrderedDict):
+    def get_single(self):
+        n = len(self)
+        if n == 0:
+            raise NoSuchRecord('can not get single record: no results')
+        elif n > 1:
+            raise MultipleRecords('can not get single record: many results')
+        else:
+            # WARNING: Python-2 only.
+            return self.values()[0]
+
+
+class EmailCollection(ResultCollection):
     def get_primary(self):
         for email in self.values():
             if email.primary:
@@ -56,7 +69,7 @@ class EmailCollection(OrderedDict):
         raise KeyError('no primary address')
 
 
-class MemberCollection(OrderedDict):
+class MemberCollection(ResultCollection):
     def get_pi(self):
         for member in self.values():
             if member.pi:
