@@ -43,7 +43,8 @@ class PeoplePart(object):
         """
 
         with self._transaction() as conn:
-            if not _test_skip_check and not _exists_person_id(conn, person_id):
+            if (not _test_skip_check and
+                    not self._exists_person_id(conn, person_id)):
                 raise ConsistencyError(
                     'person does not exist with id={0}', person_id)
 
@@ -82,10 +83,10 @@ class PeoplePart(object):
 
         with self._transaction() as conn:
             if user_id is not None and not _test_skip_check:
-                if not _exists_user_id(conn, user_id):
+                if not self._exists_user_id(conn, user_id):
                     raise ConsistencyError(
                         'user does not exist with id={0}', user_id)
-                if _exists_person_user(conn, user_id):
+                if self._exists_person_user(conn, user_id):
                     raise ConsistencyError(
                         'person already exists with user_id={0}', user_id)
 
@@ -118,7 +119,7 @@ class PeoplePart(object):
         (password_hash, password_salt) = create_password_hash(password_raw)
 
         with self._transaction() as conn:
-            if not _test_skip_check and _exists_user_name(conn, name):
+            if not _test_skip_check and self._exists_user_name(conn, name):
                 raise UserError(
                     'The user account name "{0}" already exists.',
                     name)
@@ -133,7 +134,7 @@ class PeoplePart(object):
 
             if person_id is not None:
                 if not _test_skip_check and \
-                        not _exists_person_id(conn, person_id):
+                        not self._exists_person_id(conn, person_id):
                     raise ConsistencyError(
                         'person does not exist with id={0}', person_id)
 
@@ -381,7 +382,7 @@ class PeoplePart(object):
             raise Error('no institution updates specified')
 
         with self._transaction() as conn:
-            if not _test_skip_check and not _exists_institution_id(
+            if not _test_skip_check and not self._exists_institution_id(
                     conn, institution_id):
                 raise ConsistencyError(
                     'institution does not exist with id={0}', institution_id)
@@ -418,7 +419,8 @@ class PeoplePart(object):
             raise Error('no person updates specified')
 
         with self._transaction() as conn:
-            if not _test_skip_check and not _exists_person_id(conn, person_id):
+            if (not _test_skip_check and
+                    not self._exists_person_id(conn, person_id)):
                 raise ConsistencyError(
                     'person does not exist with id={0}', person_id)
 
@@ -436,11 +438,12 @@ class PeoplePart(object):
             raise UserError('The new user name can not be blank.')
 
         with self._transaction() as conn:
-            if not _test_skip_check and not _exists_user_id(conn, user_id):
+            if (not _test_skip_check and
+                    not self._exists_user_id(conn, user_id)):
                 raise ConsistencyError(
                     'user does not exist with id={0}', user_id)
 
-            if not _test_skip_check and _exists_user_name(conn, name):
+            if not _test_skip_check and self._exists_user_name(conn, name):
                 raise UserError(
                     'The user account name "{0}" already exists.',
                     name)
@@ -464,7 +467,8 @@ class PeoplePart(object):
         (password_hash, password_salt) = create_password_hash(password_raw)
 
         with self._transaction() as conn:
-            if not _test_skip_check and not _exists_user_id(conn, user_id):
+            if (not _test_skip_check and
+                    not self._exists_user_id(conn, user_id)):
                 raise ConsistencyError(
                     'user does not exist with id={0}', user_id)
 
@@ -507,37 +511,32 @@ class PeoplePart(object):
 
         return result['user_id']
 
+    def _exists_institution_id(self, conn, institution_id):
+        """Test whether an institution exists by id."""
+        return 0 < conn.execute(select([count(institution.c.id)]).where(
+            institution.c.id == institution_id,
+        )).scalar()
 
-def _exists_institution_id(conn, institution_id):
-    """Test whether an institution exists by id."""
-    return 0 < conn.execute(select([count(institution.c.id)]).where(
-        institution.c.id == institution_id,
-    )).scalar()
+    def _exists_person_id(self, conn, person_id):
+        """Test whether a person exists by id."""
+        return 0 < conn.execute(select([count(person.c.id)]).where(
+            person.c.id == person_id,
+        )).scalar()
 
+    def _exists_person_user(self, conn, user_id):
+        """Test whether a person exists with the given user_id."""
+        return 0 < conn.execute(select([count(person.c.id)]).where(
+            person.c.user_id == user_id,
+        )).scalar()
 
-def _exists_person_id(conn, person_id):
-    """Test whether a person exists by id."""
-    return 0 < conn.execute(select([count(person.c.id)]).where(
-        person.c.id == person_id,
-    )).scalar()
+    def _exists_user_id(self, conn, user_id):
+        """Test whether a user exists by id."""
+        return 0 < conn.execute(select([count(user.c.id)]).where(
+            user.c.id == user_id,
+        )).scalar()
 
-
-def _exists_person_user(conn, user_id):
-    """Test whether a person exists with the given user_id."""
-    return 0 < conn.execute(select([count(person.c.id)]).where(
-        person.c.user_id == user_id,
-    )).scalar()
-
-
-def _exists_user_id(conn, user_id):
-    """Test whether a user exists by id."""
-    return 0 < conn.execute(select([count(user.c.id)]).where(
-        user.c.id == user_id,
-    )).scalar()
-
-
-def _exists_user_name(conn, name):
-    """Test whether a user exists by name."""
-    return 0 < conn.execute(select([count(user.c.id)]).where(
-        user.c.name == name,
-    )).scalar()
+    def _exists_user_name(self, conn, name):
+        """Test whether a user exists by name."""
+        return 0 < conn.execute(select([count(user.c.id)]).where(
+            user.c.name == name,
+        )).scalar()
