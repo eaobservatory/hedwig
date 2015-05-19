@@ -25,7 +25,8 @@ from insertnamehere import auth
 from insertnamehere.db.meta import reset_token
 from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
-from insertnamehere.type import Email, Institution, InstitutionInfo, Person
+from insertnamehere.type import Email, EmailCollection, \
+    Institution, InstitutionInfo, Person
 from .dummy_db import DBTestCase
 
 
@@ -173,7 +174,7 @@ class DBUserTest(DBTestCase):
         email_id2 = self.db.add_email(person_id, 'one@another.name')
         result = self.db.search_email(person_id=person_id)
 
-        self.assertIsInstance(result, OrderedDict)
+        self.assertIsInstance(result, EmailCollection)
         self.assertEqual(len(result), 2)
 
         for ((result_id, email), address, expected_id) in zip(

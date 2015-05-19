@@ -29,7 +29,8 @@ from sqlalchemy.sql.functions import count
 
 from ...auth import check_password_hash, create_password_hash
 from ...error import ConsistencyError, Error, NoSuchRecord, UserError
-from ...type import Email, Institution, InstitutionInfo, Person
+from ...type import Email, EmailCollection, Institution, InstitutionInfo, \
+    Person
 from ..meta import email, institution, person, reset_token, user
 from ..util import require_not_none
 
@@ -330,7 +331,7 @@ class PeoplePart(object):
         stmt = email.select()
         stmt = stmt.where(email.c.person_id == person_id)
 
-        ans = OrderedDict()
+        ans = EmailCollection()
 
         for row in conn.execute(stmt.order_by(email.c.id)):
             ans[row['id']] = Email(**row)

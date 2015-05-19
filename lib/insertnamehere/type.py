@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import namedtuple
+from collections import OrderedDict, namedtuple
 
 from .db.meta import email, institution, person
 
@@ -37,3 +37,12 @@ InstitutionInfo = namedtuple(
 Person = namedtuple(
     'Person',
     map(lambda x: x.name, person.columns) + ['email', 'institution'])
+
+
+class EmailCollection(OrderedDict):
+    def get_primary(self):
+        for email in self.values():
+            if email.primary:
+                return email
+
+        raise KeyError('no primary address')
