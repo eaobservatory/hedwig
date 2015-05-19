@@ -167,30 +167,83 @@ def change_password(db, form, is_post):
 def get_password_reset_token(db, form, is_post):
     message = None
 
-    if is_post:
-        user_name = form.get('user_name', None)
-        address = form.get('email', None)
+    user_name = form.get('user_name', '')
+    email_address = form.get('email', '')
 
-        if user_name:
-            message = 'Searching by user name is not yet implemented.'
-        elif address:
-            person = db.search_person(email_address=address, registered=True)
-            if not person:
-                message = 'No registered users found with this email address'
-            elif len(person) > 1:
-                message = 'There are multiple registered users with this' \
-                    ' email address.  Please specify your user name.'
+    if is_post:
+        try:
+            user_id = None
+
+            if user_name:
+                try:
+                    user_id = db.get_user_id(user_name)
+                except NoSuchRecord:
+                    # TODO: delay or rate-check before showing this?
+                    raise UserError(
+                        'No user account was found matching the information '
+                        'you provided.')
+
+            if email_address:
+                # Look up person by email address.  If this succeeds then
+                # we know the email address belongs to their account,
+                # so we can send the token to it.
+                persons = db.search_person(email_address=email_address,
+                                           user_id=user_id,
+                                           registered=True)
+
+                if not persons:
+                    raise UserError(
+                        'No user account was found matching the information '
+                        'you provided.')
+
+                elif len(persons) > 1:
+                    # This shouldn't happen if they did enter a user name,
+                    # so there is no need to check whether they did to decide
+                    # what to suggest.
+                    raise UserError(
+                        'Your account could not be uniquely identified from '
+                        'the information you have entered.  Please try to '
+                        'be more specific: include your user name if you '
+                        'remember it, or use an email address which is not '
+                        'used by other accounts.')
+
+                user_id = persons.values()[0].user_id
+
+            elif user_id is not None:
+                # They did specify a user name, so try to look up their
+                # primary email address.
+                try:
+                    person = db.get_person(person_id=None, user_id=user_id,
+                                           with_email=True)
+                except NoSuchRecord:
+                    raise ErrorPage(
+                        'There is no email address associated with your '
+                        'account, so it is not currently possible to '
+                        'send you a password reset code.')
+
+                try:
+                    email_address = person.email.get_primary().address
+                except KeyError:
+                    raise HTTPError('Could not get primary email.')
+
             else:
-                user_id = person.values()[0].user_id
-                token = db.get_password_reset_token(user_id)
-                flash('Your password reset code has been sent by email.')
-                raise HTTPRedirect(url_for('.use_password_reset_token'))
-        else:
-            message = 'Please enter either a user name or email address.'
+                raise UserError(
+                    'Please enter either a user name or email address.')
+
+            token = db.get_password_reset_token(user_id)
+            # TODO: email the token to: email_address
+            flash('Your password reset code has been sent by email '
+                  ' to "{0}".'.format(email_address))
+            raise HTTPRedirect(url_for('.use_password_reset_token'))
+
+        except UserError as e:
+            message = e.message
 
     return {
         'title': 'Reset Password',
         'message': message,
+        'user_name': user_name,
+        'email': email_address,
     }
 
 
