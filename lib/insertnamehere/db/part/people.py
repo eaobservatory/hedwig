@@ -18,16 +18,14 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from binascii import hexlify
 from collections import OrderedDict
 from datetime import datetime, timedelta
-from os import urandom
 
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_
 from sqlalchemy.sql.functions import count
 
-from ...auth import check_password_hash, create_password_hash
+from ...auth import check_password_hash, create_password_hash, generate_token
 from ...error import ConsistencyError, Error, NoSuchRecord, UserError
 from ...type import Email, EmailCollection, Institution, InstitutionInfo, \
     Person
@@ -304,7 +302,7 @@ class PeoplePart(object):
         Deletes any existing tokens for this user and returns the new token.
         """
 
-        token = hexlify(urandom(16))
+        token = generate_token()
         expiry = datetime.utcnow() + timedelta(hours=4)
 
         with self._transaction() as conn:

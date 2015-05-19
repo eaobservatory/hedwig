@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from binascii import hexlify, unhexlify
 from codecs import utf_8_encode
 from hashlib import pbkdf2_hmac
-import os
+from os import urandom
 
 _rounds = 1000000
 
@@ -34,7 +34,7 @@ def create_password_hash(password_raw):
     Returns ASCII hex representation of the hash and salt.
     """
 
-    password_salt = os.urandom(32)
+    password_salt = urandom(32)
     password_hash = pbkdf2_hmac(
         'sha256', utf_8_encode(password_raw)[0], password_salt, _rounds)
 
@@ -53,3 +53,12 @@ def check_password_hash(password_raw, password_hash, password_salt):
     return password_hash == hexlify(pbkdf2_hmac(
         'sha256', utf_8_encode(password_raw)[0], unhexlify(password_salt),
         _rounds))
+
+
+def generate_token():
+    """
+    Generate random token strings, to be used for things such as password
+    reset codes and invitations.
+    """
+
+    return hexlify(urandom(16))
