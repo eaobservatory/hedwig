@@ -34,7 +34,7 @@ email = Table(
     'email',
     metadata,
     Column('id', Integer, primary_key=True),
-    Column('person_id', None, ForeignKey('person.id')),
+    Column('person_id', None, ForeignKey('person.id'), nullable=False),
     Column('address', Unicode(255), nullable=False),
     Column('primary', Boolean, default=False, nullable=False),
     Column('verified', Boolean, default=False, nullable=False),
@@ -66,7 +66,8 @@ reset_token = Table(
     'reset_token',
     metadata,
     Column('token', String(255), primary_key=True),
-    Column('user_id', None, ForeignKey('user.id'), unique=True),
+    Column('user_id', None, ForeignKey('user.id'),
+           unique=True, nullable=False),
     Column('expiry', DateTime(), nullable=False),
     **_table_opts
 )
