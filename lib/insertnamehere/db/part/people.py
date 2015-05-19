@@ -18,7 +18,6 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import OrderedDict
 from datetime import datetime, timedelta
 
 from sqlalchemy.sql import select
@@ -28,7 +27,7 @@ from sqlalchemy.sql.functions import count
 from ...auth import check_password_hash, create_password_hash, generate_token
 from ...error import ConsistencyError, Error, NoSuchRecord, UserError
 from ...type import Email, EmailCollection, Institution, InstitutionInfo, \
-    Person
+    Person, ResultCollection
 from ..meta import email, institution, person, reset_token, user
 from ..util import require_not_none
 
@@ -286,7 +285,7 @@ class PeoplePart(object):
         Summary information is returned.
         """
 
-        ans = OrderedDict()
+        ans = ResultCollection()
 
         with self._transaction() as conn:
             for row in conn.execute(select([institution.c.id,
@@ -359,7 +358,7 @@ class PeoplePart(object):
             else:
                 stmt = stmt.where(person.c.user_id.is_(None))
 
-        ans = OrderedDict()
+        ans = ResultCollection()
 
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(person.c.name)):

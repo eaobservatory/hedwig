@@ -18,14 +18,13 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import OrderedDict
 from datetime import datetime, timedelta
 
 from insertnamehere.db.meta import reset_token
 from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from insertnamehere.type import Email, EmailCollection, \
-    Institution, InstitutionInfo, Person
+    Institution, InstitutionInfo, Person, ResultCollection
 from .dummy_db import DBTestCase
 
 
@@ -276,7 +275,7 @@ class DBUserTest(DBTestCase):
         # Get a list of institutions.
         institution_id2 = self.db.add_institution('Institution Two')
         result = self.db.list_institution()
-        self.assertIsInstance(result, OrderedDict)
+        self.assertIsInstance(result, ResultCollection)
         self.assertEqual(len(result), 2)
 
         for ((row_id, institution), name, expected_id) in zip(
