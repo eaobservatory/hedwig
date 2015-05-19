@@ -21,7 +21,6 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
-from insertnamehere import auth
 from insertnamehere.db.meta import reset_token
 from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
@@ -31,10 +30,6 @@ from .dummy_db import DBTestCase
 
 
 class DBUserTest(DBTestCase):
-    def setUp(self):
-        DBTestCase.setUp(self)
-        auth._rounds = 10
-
     def test_user(self):
         # Check that we can create a user and get an integer user_id.
         user_id = self.db.add_user('user1', 'pass1')

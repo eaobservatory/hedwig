@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from unittest import TestCase
 
+from insertnamehere import auth
 from insertnamehere.db.control import Database
 from insertnamehere.db.meta import metadata
 from insertnamehere.db.engine import get_engine
@@ -40,6 +41,7 @@ def get_dummy_database():
 class DBTestCase(TestCase):
     def setUp(self):
         self.db = get_dummy_database()
+        auth._rounds = 10
 
     def tearDown(self):
         del self.db
