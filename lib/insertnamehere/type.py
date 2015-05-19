@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict, namedtuple
 
-from .db.meta import email, institution, person
+from .db.meta import email, institution, member, person, proposal
 
 Email = namedtuple(
     'Email',
@@ -34,9 +34,17 @@ InstitutionInfo = namedtuple(
     'InstitutionInfo',
     ['id', 'name'])
 
+Member = namedtuple(
+    'Member',
+    map(lambda x: x.name, member.columns))
+
 Person = namedtuple(
     'Person',
     map(lambda x: x.name, person.columns) + ['email', 'institution'])
+
+Proposal = namedtuple(
+    'Proposal',
+    map(lambda x: x.name, proposal.columns) + ['member'])
 
 
 class EmailCollection(OrderedDict):
@@ -46,3 +54,12 @@ class EmailCollection(OrderedDict):
                 return email
 
         raise KeyError('no primary address')
+
+
+class MemberCollection(OrderedDict):
+    def get_pi(self):
+        for member in self.values():
+            if member.pi:
+                return member
+
+        raise KeyError('no pi member')

@@ -25,9 +25,10 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 from ..error import DatabaseError, DatabaseIntegrityError
 from .part.people import PeoplePart
+from .part.proposal import ProposalPart
 
 
-class Database(PeoplePart):
+class Database(PeoplePart, ProposalPart):
     def __init__(self, engine):
         """
         Create database controller object.

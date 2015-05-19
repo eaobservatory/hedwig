@@ -30,6 +30,12 @@ _table_opts = {
     'mysql_charset': 'utf8',
 }
 
+call = Table(
+    'call',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    **_table_opts)
+
 email = Table(
     'email',
     metadata,
@@ -49,6 +55,27 @@ institution = Table(
     Column('name', Unicode(255), nullable=False),
     **_table_opts)
 
+invitation = Table(
+    'invitation',
+    metadata,
+    Column('token', String(255), primary_key=True),
+    Column('person_id', None, ForeignKey('person.id'),
+           unique=True, nullable=False),
+    Column('expiry', DateTime(), nullable=False),
+    **_table_opts)
+
+member = Table(
+    'member',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('proposal_id', None, ForeignKey('proposal.id'), nullable=False),
+    Column('person_id', None, ForeignKey('person.id'), nullable=False),
+    Column('pi', Boolean, nullable=False),
+    Column('editor', Boolean, nullable=False),
+    Column('observer', Boolean, nullable=False),
+    UniqueConstraint('proposal_id', 'person_id'),
+    **_table_opts)
+
 person = Table(
     'person',
     metadata,
@@ -57,6 +84,16 @@ person = Table(
     Column('public', Boolean, default=False, nullable=False),
     Column('user_id', None, ForeignKey('user.id'), unique=True),
     Column('institution_id', None, ForeignKey('institution.id')),
+    **_table_opts)
+
+proposal = Table(
+    'proposal',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('call_id', None, ForeignKey('call.id'), nullable=False),
+    Column('number', Integer, nullable=False),
+    Column('title', Unicode(255), nullable=False),
+    UniqueConstraint('call_id', 'number'),
     **_table_opts)
 
 reset_token = Table(
