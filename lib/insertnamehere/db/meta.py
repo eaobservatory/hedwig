@@ -40,16 +40,14 @@ email = Table(
     Column('verified', Boolean, default=False, nullable=False),
     Column('public', Boolean, default=False, nullable=False),
     UniqueConstraint('person_id', 'address'),
-    **_table_opts
-)
+    **_table_opts)
 
 institution = Table(
     'institution',
     metadata,
     Column('id', Integer, primary_key=True),
     Column('name', Unicode(255), nullable=False),
-    **_table_opts
-)
+    **_table_opts)
 
 person = Table(
     'person',
@@ -59,8 +57,7 @@ person = Table(
     Column('public', Boolean, default=False, nullable=False),
     Column('user_id', None, ForeignKey('user.id'), unique=True),
     Column('institution_id', None, ForeignKey('institution.id')),
-    **_table_opts
-)
+    **_table_opts)
 
 reset_token = Table(
     'reset_token',
@@ -69,8 +66,7 @@ reset_token = Table(
     Column('user_id', None, ForeignKey('user.id'),
            unique=True, nullable=False),
     Column('expiry', DateTime(), nullable=False),
-    **_table_opts
-)
+    **_table_opts)
 
 user = Table(
     'user',
@@ -79,5 +75,4 @@ user = Table(
     Column('name', Unicode(255), unique=True, nullable=False),
     Column('password', String(255)),
     Column('salt', String(255)),
-    **_table_opts
-)
+    **_table_opts)
