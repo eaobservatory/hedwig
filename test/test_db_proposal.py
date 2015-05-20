@@ -24,7 +24,7 @@ from insertnamehere.type import Member, MemberCollection, Proposal
 from .dummy_db import DBTestCase
 
 
-class DBUserTest(DBTestCase):
+class DBProposalTest(DBTestCase):
     def test_call(self):
         # Check that we can create a call for proposals.
         call_id = self.db.add_call()

@@ -28,7 +28,7 @@ from insertnamehere.type import Email, EmailCollection, \
 from .dummy_db import DBTestCase
 
 
-class DBUserTest(DBTestCase):
+class DBPeopleTest(DBTestCase):
     def test_user(self):
         # Check that we can create a user and get an integer user_id.
         user_id = self.db.add_user('user1', 'pass1')
