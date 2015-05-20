@@ -350,8 +350,8 @@ class DBPeopleTest(DBTestCase):
         self.assertRegexpMatches(token, '^[0-9a-f]{32}$')
 
         # Using a bad token should do nothing.
-        token_user_id = self.db.use_password_reset_token(b'not a valid token')
-        self.assertIsNone(token_user_id)
+        with self.assertRaises(NoSuchRecord):
+            self.db.use_password_reset_token(b'not a valid token')
 
         # Using the token should return this user id.
         token_user_id = self.db.use_password_reset_token(token)
@@ -359,14 +359,14 @@ class DBPeopleTest(DBTestCase):
 
         # Using the token again should return None because the
         # token should have been deleted.
-        token_user_id = self.db.use_password_reset_token(token)
-        self.assertIsNone(token_user_id)
+        with self.assertRaises(NoSuchRecord):
+            self.db.use_password_reset_token(token)
 
         # Issue two more tokens: the older should be removed automatically.
         token1 = self.db.get_password_reset_token(user_id)
         token2 = self.db.get_password_reset_token(user_id)
-        token_user_id = self.db.use_password_reset_token(token1)
-        self.assertIsNone(token_user_id)
+        with self.assertRaises(NoSuchRecord):
+            self.db.use_password_reset_token(token1)
         token_user_id = self.db.use_password_reset_token(token2)
         self.assertEqual(token_user_id, user_id)
 
@@ -381,8 +381,8 @@ class DBPeopleTest(DBTestCase):
             }))
 
             self.assertEqual(result.rowcount, 1)
-        token_user_id = self.db.use_password_reset_token(token)
-        self.assertIsNone(token_user_id)
+        with self.assertRaises(NoSuchRecord):
+            self.db.use_password_reset_token(token)
 
     def test_invitation_new_user(self):
         # Create a person record.

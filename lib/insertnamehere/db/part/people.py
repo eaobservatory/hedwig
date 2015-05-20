@@ -538,7 +538,7 @@ class PeoplePart(object):
             )).first()
 
             if result is None:
-                return None
+                raise NoSuchRecord('reset token expired or non-existant')
 
             # If we found it, consider it used and delete it.
             conn.execute(reset_token.delete().where(

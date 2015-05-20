@@ -257,8 +257,9 @@ def use_password_reset_token(db, form, is_post):
             password = form['password']
             if password != form['password_check']:
                 raise UserError('The passwords did not match.')
-            user_id = db.use_password_reset_token(token)
-            if user_id is None:
+            try:
+                user_id = db.use_password_reset_token(token)
+            except NoSuchRecord:
                 raise UserError('Your reset code was not recognised. '
                                 'It may have expired or been superceded by '
                                 'a newer reset code.')
