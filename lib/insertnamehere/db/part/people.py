@@ -413,12 +413,12 @@ class PeoplePart(object):
         Update an institution record.
         """
 
-        update = {}
+        values = {}
 
         if name is not None:
-            update['name'] = name
+            values['name'] = name
 
-        if not update:
+        if not values:
             raise Error('no institution updates specified')
 
         with self._transaction() as conn:
@@ -429,7 +429,7 @@ class PeoplePart(object):
 
             result = conn.execute(institution.update().where(
                 institution.c.id == institution_id
-            ).values(update))
+            ).values(values))
 
             if result.rowcount != 1:
                 raise ConsistencyError(
@@ -444,21 +444,21 @@ class PeoplePart(object):
         Update a person database record.
         """
 
-        update = {}
+        values = {}
 
         if name is not None:
-            update['name'] = name
+            values['name'] = name
         if public is not None:
-            update['public'] = public
+            values['public'] = public
         if institution_id != ():
-            update['institution_id'] = institution_id
+            values['institution_id'] = institution_id
         if admin is not None:
-            update['admin'] = admin
+            values['admin'] = admin
 
-        # The update dictionary is only empty if the caller specified
+        # The values dictionary is only empty if the caller specified
         # no parameters, i.e. everything was left at the default of ()
         # meaning do nothing.  In this case, raise an error.
-        if not update:
+        if not values:
             raise Error('no person updates specified')
 
         with self._transaction() as conn:
@@ -469,7 +469,7 @@ class PeoplePart(object):
 
             result = conn.execute(person.update().where(
                 person.c.id == person_id
-            ).values(update))
+            ).values(values))
 
             if result.rowcount != 1:
                 raise ConsistencyError(
