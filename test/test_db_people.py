@@ -476,7 +476,10 @@ class DBPeopleTest(DBTestCase):
         self.db.add_email(person_id_new, 'new@email')
 
         # Create a proposal with 2 members.
-        call_id = self.db.add_call()
+        facility_id = self.db.ensure_facility('test')
+        semester_id = self.db.add_semester(facility_id, 'test')
+        queue_id = self.db.add_queue(facility_id, 'test')
+        call_id = self.db.add_call(semester_id, queue_id)
         proposal_id = self.db.add_proposal(call_id, person_id_1, 'Proposal 1')
         self.db.add_member(proposal_id, person_id_2)
 

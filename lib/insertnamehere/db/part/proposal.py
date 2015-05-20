@@ -24,17 +24,27 @@ from sqlalchemy.sql.functions import max as max_
 
 from ...error import ConsistencyError, UserError
 from ...type import Member, MemberCollection, Proposal
-from ..meta import call, member, proposal
+from ..meta import call, facility, member, proposal, queue, semester
 
 
 class ProposalPart(object):
-    def add_call(self):
+    def add_call(self, semester_id, queue_id, _test_skip_check=False):
         """
         Add a call for proposals to the database.
         """
 
         with self._transaction() as conn:
+            if not _test_skip_check:
+                if not self._exists_id(conn, semester, semester_id):
+                    raise ConsistencyError(
+                        'semester does not exist with id={0}', semester_id)
+                if not self._exists_id(conn, queue, queue_id):
+                    raise ConsistencyError(
+                        'queue does not exist with id={0}', queue_id)
+
             result = conn.execute(call.insert().values({
+                call.c.semester_id: semester_id,
+                call.c.queue_id: queue_id,
             }))
 
         return result.inserted_primary_key[0]
@@ -94,6 +104,74 @@ class ProposalPart(object):
                              _test_skip_check=_test_skip_check)
 
         return proposal_id
+
+    def add_queue(self, facility_id, name, _test_skip_check=False):
+        """
+        Add a queue to the database.
+        """
+
+        if not name:
+            raise UserError('The queue name can not be blank.')
+
+        with self._transaction() as conn:
+            if (not _test_skip_check and
+                    not self._exists_id(conn, facility, facility_id)):
+                raise ConsistencyError('facility does not exist with id={0}',
+                                       facility_id)
+
+            result = conn.execute(queue.insert().values({
+                queue.c.facility_id: facility_id,
+                queue.c.name: name,
+            }))
+
+            return result.inserted_primary_key[0]
+
+    def add_semester(self, facility_id, name, _test_skip_check=False):
+        """
+        Add a semester to the database.
+        """
+
+        if not name:
+            raise UserError('The semester name can not be blank.')
+
+        with self._transaction() as conn:
+            if (not _test_skip_check and
+                    not self._exists_id(conn, facility, facility_id)):
+                raise ConsistencyError('facility does not exist with id={0}',
+                                       facility_id)
+
+            result = conn.execute(semester.insert().values({
+                queue.c.facility_id: facility_id,
+                queue.c.name: name,
+            }))
+
+            return result.inserted_primary_key[0]
+
+    def ensure_facility(self, code):
+        """
+        Ensure that a facility exists in the database.
+
+        If the facility already exists, just return its identifier.
+
+        Otherwise add it and return the new identifier.
+        """
+
+        if not code:
+            raise ConsistencyError('The facility code can not be blank.')
+
+        with self._transaction() as conn:
+            result = conn.execute(facility.select().where(
+                facility.c.code == code
+            )).first()
+
+            if result is not None:
+                return result['id']
+
+            result = conn.execute(facility.insert().values({
+                facility.c.code: code,
+            }))
+
+            return result.inserted_primary_key[0]
 
     def get_proposal(self, proposal_id, with_members=False):
         """

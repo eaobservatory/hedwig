@@ -22,6 +22,8 @@ from contextlib import contextmanager
 from threading import Lock
 
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from sqlalchemy.sql import select
+from sqlalchemy.sql.functions import count
 
 from ..error import DatabaseError, DatabaseIntegrityError
 from .part.people import PeoplePart
@@ -55,3 +57,12 @@ class Database(PeoplePart, ProposalPart):
             raise DatabaseIntegrityError(e)
         except SQLAlchemyError as e:
             raise DatabaseError(e)
+
+    def _exists_id(self, conn, table, id_):
+        """
+        Test whether an identifier exists in the given table.
+        """
+
+        return 0 < conn.execute(select([count(table.c.id)]).where(
+            table.c.id == id_,
+        )).scalar()

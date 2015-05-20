@@ -25,15 +25,79 @@ from .dummy_db import DBTestCase
 
 
 class DBProposalTest(DBTestCase):
+    def test_facility(self):
+        # Test the ensure_facility method.
+        facility_id = self.db.ensure_facility('my_tel')
+        self.assertIsInstance(facility_id, int)
+
+        facility_id_copy = self.db.ensure_facility('my_tel')
+        facility_id_diff = self.db.ensure_facility('my_other_tel')
+
+        self.assertEqual(facility_id_copy, facility_id)
+        self.assertNotEqual(facility_id_diff, facility_id)
+
+    def test_semester(self):
+        # Test add_semeseter method.
+        facility_id = self.db.ensure_facility('my_tel')
+        self.assertIsInstance(facility_id, int)
+
+        with self.assertRaisesRegexp(ConsistencyError, 'facility does not'):
+            self.db.add_semester(999, '99A')
+
+        semester_id = self.db.add_semester(facility_id, '99A')
+        self.assertIsInstance(semester_id, int)
+
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.add_semester(facility_id, '99A')
+
+        semester_id_2 = self.db.add_semester(facility_id, '99B')
+        self.assertIsInstance(semester_id_2, int)
+        self.assertNotEqual(semester_id_2, semester_id)
+
+    def test_queue(self):
+        # Test add_queue method.
+        facility_id = self.db.ensure_facility('my_tel')
+        self.assertIsInstance(facility_id, int)
+
+        with self.assertRaisesRegexp(ConsistencyError, 'facility does not'):
+            self.db.add_queue(999, 'INT')
+
+        queue_id = self.db.add_queue(facility_id, 'INT')
+        self.assertIsInstance(queue_id, int)
+
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.add_queue(facility_id, 'INT')
+
+        queue_id_2 = self.db.add_queue(facility_id, 'XYZ')
+        self.assertIsInstance(queue_id_2, int)
+        self.assertNotEqual(queue_id_2, queue_id)
+
     def test_call(self):
         # Check that we can create a call for proposals.
-        call_id = self.db.add_call()
+        facility_id = self.db.ensure_facility('my_tel')
+        self.assertIsInstance(facility_id, int)
+        semester_id = self.db.add_semester(facility_id, 'My Semester')
+        self.assertIsInstance(semester_id, int)
+        queue_id = self.db.add_queue(facility_id, 'My Queue')
+        self.assertIsInstance(queue_id, int)
+
+        call_id = self.db.add_call(semester_id, queue_id)
         self.assertIsInstance(call_id, int)
 
+        # Check tests for bad values.
+        with self.assertRaisesRegexp(ConsistencyError, 'semester does not'):
+            self.db.add_call(999, queue_id)
+        with self.assertRaisesRegexp(ConsistencyError, 'queue does not'):
+            self.db.add_call(semester_id, 999)
+
+        # Check uniqueness constraint.
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.add_call(semester_id, queue_id)
+
     def test_add_proposal(self):
-        call_id_1 = self.db.add_call()
+        call_id_1 = self._create_test_call('semester1', 'queue1')
         self.assertIsInstance(call_id_1, int)
-        call_id_2 = self.db.add_call()
+        call_id_2 = self._create_test_call('semester2', 'queue2')
         self.assertIsInstance(call_id_2, int)
 
         person_id = self.db.add_person('Person 1')
@@ -83,7 +147,7 @@ class DBProposalTest(DBTestCase):
 
     def test_add_member(self):
         # Create test records and check we have integer identifiers for all.
-        call_id = self.db.add_call()
+        call_id = self._create_test_call('semester1', 'queue1')
         person_id_1 = self.db.add_person('Person 1')
         person_id_2 = self.db.add_person('Person 2')
         person_id_3 = self.db.add_person('Person 3')
@@ -118,6 +182,19 @@ class DBProposalTest(DBTestCase):
         member = result.get_single()
         self.assertEqual(member.proposal_id, proposal_id)
         self.assertEqual(member.person_id, person_id_2)
+
+    def _create_test_call(self, semester_name, queue_name):
+        facility_id = self.db.ensure_facility('my_tel')
+        self.assertIsInstance(facility_id, int)
+        semester_id = self.db.add_semester(facility_id, semester_name)
+        self.assertIsInstance(semester_id, int)
+        queue_id = self.db.add_queue(facility_id, queue_name)
+        self.assertIsInstance(queue_id, int)
+
+        call_id = self.db.add_call(semester_id, queue_id)
+        self.assertIsInstance(call_id, int)
+
+        return call_id
 
 
 def _member_person_set(member_collection):

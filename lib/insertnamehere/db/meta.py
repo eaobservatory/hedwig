@@ -34,6 +34,13 @@ call = Table(
     'call',
     metadata,
     Column('id', Integer, primary_key=True),
+    Column('semester_id', None,
+           ForeignKey('semester.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('queue_id', None,
+           ForeignKey('queue.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    UniqueConstraint('semester_id', 'queue_id'),
     **_table_opts)
 
 email = Table(
@@ -48,6 +55,13 @@ email = Table(
     Column('verified', Boolean, default=False, nullable=False),
     Column('public', Boolean, default=False, nullable=False),
     UniqueConstraint('person_id', 'address'),
+    **_table_opts)
+
+facility = Table(
+    'facility',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('code', Unicode(31), nullable=False, unique=True),
     **_table_opts)
 
 institution = Table(
@@ -110,6 +124,17 @@ proposal = Table(
     UniqueConstraint('call_id', 'number'),
     **_table_opts)
 
+queue = Table(
+    'queue',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('facility_id', None,
+           ForeignKey('facility.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('name', Unicode(31), nullable=False),
+    UniqueConstraint('facility_id', 'name'),
+    **_table_opts)
+
 reset_token = Table(
     'reset_token',
     metadata,
@@ -118,6 +143,17 @@ reset_token = Table(
            ForeignKey('user.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            unique=True, nullable=False),
     Column('expiry', DateTime(), nullable=False),
+    **_table_opts)
+
+semester = Table(
+    'semester',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('facility_id', None,
+           ForeignKey('facility.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('name', Unicode(31), nullable=False),
+    UniqueConstraint('facility_id', 'name'),
     **_table_opts)
 
 user = Table(
