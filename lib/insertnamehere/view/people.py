@@ -34,7 +34,7 @@ def log_in(db, args, form, is_post, referrer):
             if user_id is None:
                 raise UserError('User name or password not recognised.')
             else:
-                session['user_id'] = user_id
+                _update_session_user(user_id)
                 flash('You have been logged in.')
 
                 try:
@@ -76,8 +76,7 @@ def log_in(db, args, form, is_post, referrer):
 
 
 def log_out():
-    session.pop('user_id', None)
-    session.pop('person', None)
+    session.clear()
     flash('You have been logged out.')
     raise HTTPRedirect(url_for('home_page'))
 
@@ -92,7 +91,7 @@ def register_user(db, form, is_post):
             if password != form['password_check']:
                 raise UserError('The passwords did not match.')
             user_id = db.add_user(user_name, password)
-            session['user_id'] = user_id
+            _update_session_user(user_id)
             flash('Your user account has been created.')
             raise HTTPRedirect(url_for('.register_person'))
 
@@ -508,6 +507,29 @@ def edit_institution(db, institution_id, form, is_post):
         'institution_id': institution_id,
         'institution': institution,
     }
+
+
+def _update_session_user(user_id):
+    """
+    Clears the session and inserts the given user identifier.
+
+    This should be done on log in to ensure that nothing from a
+    previous session remains.
+
+    Certain (white-listed) session entries are preserved, e.g.
+    "log_in_for", which needs to persist through the log in process.
+    """
+
+    # Save the white-listed session entries.
+    saved = {}
+    for key in ('log_in_for',):
+        if key in session:
+            saved[key] = session[key]
+
+    # Clear the session, restore saved entries, and log in.
+    session.clear()
+    session.update(saved)
+    session['user_id'] = user_id
 
 
 def _update_session_person(person):
