@@ -445,6 +445,25 @@ class DBPeopleTest(DBTestCase):
                                      'no rows matched setting new user_id'):
             self.db.use_invitation(token, user_id=user_id_2)
 
+    def test_invitation_user_admin(self):
+        # Create an administrative person record.
+        person_id = self.db.add_person('Administrator')
+        self.assertIsInstance(person_id, int)
+        self.db.update_person(person_id, admin=True)
+
+        # Try to create an invitation to register as that person: should
+        # fail unless the check is disabled.
+        with self.assertRaisesRegexp(UserError, 'administrative privileges'):
+            self.db.add_invitation(person_id)
+        token = self.db.add_invitation(person_id, _test_skip_check=True)
+
+        # Try to accept the invitation to register as that person.
+        user_id = self.db.add_user('user1', 'pass1')
+        with self.assertRaisesRegexp(ConsistencyError, 'no rows matched'):
+            self.db.use_invitation(token, user_id=user_id)
+        person = self.db.get_person(person_id=person_id)
+        self.assertIsNone(person.user_id)
+
     def test_invitation_replace_person(self):
         # Create test person records.
         person_id_1 = self.db.add_person('Person 1')

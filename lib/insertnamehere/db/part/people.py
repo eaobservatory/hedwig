@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from datetime import datetime, timedelta
 
 from sqlalchemy.sql import select
-from sqlalchemy.sql.expression import and_
+from sqlalchemy.sql.expression import and_, not_
 from sqlalchemy.sql.functions import count
 
 from ...auth import check_password_hash, create_password_hash, generate_token
@@ -87,7 +87,9 @@ class PeoplePart(object):
 
         with self._transaction() as conn:
             if not _test_skip_check:
-                result = conn.execute(select([person.c.user_id]).where(
+                result = conn.execute(select([
+                    person.c.user_id, person.c.admin
+                ]).where(
                     person.c.id == person_id
                 )).first()
                 if result is None:
@@ -95,6 +97,8 @@ class PeoplePart(object):
                                            person_id)
                 elif result['user_id'] is not None:
                     raise ConsistencyError('person is already registered')
+                elif result['admin']:
+                    raise UserError('person has administrative privileges')
 
             conn.execute(invitation.delete().where(
                 invitation.c.person_id == person_id))
@@ -129,6 +133,7 @@ class PeoplePart(object):
                 person.c.name: name,
                 person.c.public: public,
                 person.c.user_id: user_id,
+                person.c.admin: False,
             }))
 
             person_id = result.inserted_primary_key[0]
@@ -433,6 +438,7 @@ class PeoplePart(object):
 
     def update_person(self, person_id,
                       name=None, public=None, institution_id=(),
+                      admin=None,
                       _test_skip_check=False):
         """
         Update a person database record.
@@ -446,6 +452,8 @@ class PeoplePart(object):
             update['public'] = public
         if institution_id != ():
             update['institution_id'] = institution_id
+        if admin is not None:
+            update['admin'] = admin
 
         # The update dictionary is only empty if the caller specified
         # no parameters, i.e. everything was left at the default of ()
@@ -596,7 +604,8 @@ class PeoplePart(object):
                 # invited person record.  Simply set the user_id there.
                 result = conn.execute(person.update().where(and_(
                     person.c.id == old_person_id,
-                    person.c.user_id.is_(None)
+                    person.c.user_id.is_(None),
+                    not_(person.c.admin)
                 )).values({
                     person.c.user_id: user_id,
                 }))
