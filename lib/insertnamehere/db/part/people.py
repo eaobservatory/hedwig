@@ -44,7 +44,7 @@ class PeoplePart(object):
 
         with self._transaction() as conn:
             if (not _test_skip_check and
-                    not self._exists_person_id(conn, person_id)):
+                    not self._exists_id(conn, person, person_id)):
                 raise ConsistencyError(
                     'person does not exist with id={0}', person_id)
 
@@ -122,7 +122,7 @@ class PeoplePart(object):
 
         with self._transaction() as conn:
             if user_id is not None and not _test_skip_check:
-                if not self._exists_user_id(conn, user_id):
+                if not self._exists_id(conn, user, user_id):
                     raise ConsistencyError(
                         'user does not exist with id={0}', user_id)
                 if self._exists_person_user(conn, user_id):
@@ -174,7 +174,7 @@ class PeoplePart(object):
 
             if person_id is not None:
                 if not _test_skip_check and \
-                        not self._exists_person_id(conn, person_id):
+                        not self._exists_id(conn, person, person_id):
                     raise ConsistencyError(
                         'person does not exist with id={0}', person_id)
 
@@ -422,8 +422,8 @@ class PeoplePart(object):
             raise Error('no institution updates specified')
 
         with self._transaction() as conn:
-            if not _test_skip_check and not self._exists_institution_id(
-                    conn, institution_id):
+            if not _test_skip_check and not self._exists_id(
+                    conn, institution, institution_id):
                 raise ConsistencyError(
                     'institution does not exist with id={0}', institution_id)
 
@@ -467,7 +467,7 @@ class PeoplePart(object):
 
         with self._transaction() as conn:
             if (not _test_skip_check and
-                    not self._exists_person_id(conn, person_id)):
+                    not self._exists_id(conn, person, person_id)):
                 raise ConsistencyError(
                     'person does not exist with id={0}', person_id)
 
@@ -484,7 +484,7 @@ class PeoplePart(object):
 
         with self._transaction() as conn:
             if (not _test_skip_check and
-                    not self._exists_user_id(conn, user_id)):
+                    not self._exists_id(conn, user, user_id)):
                 raise ConsistencyError(
                     'user does not exist with id={0}', user_id)
 
@@ -513,7 +513,7 @@ class PeoplePart(object):
 
         with self._transaction() as conn:
             if (not _test_skip_check and
-                    not self._exists_user_id(conn, user_id)):
+                    not self._exists_id(conn, user, user_id)):
                 raise ConsistencyError(
                     'user does not exist with id={0}', user_id)
 
@@ -572,11 +572,11 @@ class PeoplePart(object):
             # Check the user or person exist.
             if not _test_skip_check:
                 if user_id is not None:
-                    if not self._exists_user_id(conn, user_id):
+                    if not self._exists_id(conn, user, user_id):
                         raise ConsistencyError(
                             'user does not exist with id={0}', user_id)
                 if new_person_id is not None:
-                    if not self._exists_person_id(conn, new_person_id):
+                    if not self._exists_id(conn, person, new_person_id):
                         raise ConsistencyError(
                             'person does not exist with id={0}', new_person_id)
 
@@ -636,28 +636,10 @@ class PeoplePart(object):
                 # shouldn't happen.
                 raise Error('user_id or new_person_id vanished')
 
-    def _exists_institution_id(self, conn, institution_id):
-        """Test whether an institution exists by id."""
-        return 0 < conn.execute(select([count(institution.c.id)]).where(
-            institution.c.id == institution_id,
-        )).scalar()
-
-    def _exists_person_id(self, conn, person_id):
-        """Test whether a person exists by id."""
-        return 0 < conn.execute(select([count(person.c.id)]).where(
-            person.c.id == person_id,
-        )).scalar()
-
     def _exists_person_user(self, conn, user_id):
         """Test whether a person exists with the given user_id."""
         return 0 < conn.execute(select([count(person.c.id)]).where(
             person.c.user_id == user_id,
-        )).scalar()
-
-    def _exists_user_id(self, conn, user_id):
-        """Test whether a user exists by id."""
-        return 0 < conn.execute(select([count(user.c.id)]).where(
-            user.c.id == user_id,
         )).scalar()
 
     def _exists_user_name(self, conn, name):

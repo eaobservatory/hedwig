@@ -24,7 +24,7 @@ from sqlalchemy.sql.functions import max as max_
 
 from ...error import ConsistencyError, UserError
 from ...type import Member, MemberCollection, Proposal
-from ..meta import call, facility, member, proposal, queue, semester
+from ..meta import call, facility, member, person, proposal, queue, semester
 
 
 class ProposalPart(object):
@@ -58,7 +58,7 @@ class ProposalPart(object):
     def _add_member(self, conn, proposal_id, person_id, pi, editor, observer,
                     _test_skip_check=False):
         if (not _test_skip_check and
-                not self._exists_person_id(conn, person_id)):
+                not self._exists_id(conn, person, person_id)):
             raise ConsistencyError('person does not exist with id={0}',
                                    person_id)
 
@@ -86,7 +86,7 @@ class ProposalPart(object):
 
         with self._transaction() as conn:
             if (not _test_skip_check and
-                    not self._exists_call_id(conn, call_id)):
+                    not self._exists_id(conn, call, call_id)):
                 raise ConsistencyError('call does not exist with id={0}',
                                        call_id)
 
@@ -211,9 +211,3 @@ class ProposalPart(object):
             ans[row['id']] = Member(**row)
 
         return ans
-
-    def _exists_call_id(self, conn, call_id):
-        """Test whether a call exists."""
-        return 0 < conn.execute(select([count(call.c.id)]).where(
-            call.c.id == call_id,
-        )).scalar()
