@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime, timedelta
 
-from insertnamehere.db.meta import reset_token
+from insertnamehere.db.meta import invitation, reset_token
 from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from insertnamehere.type import Email, EmailCollection, \
@@ -347,7 +347,7 @@ class DBPeopleTest(DBTestCase):
         # Try making a reset token.
         token = self.db.get_password_reset_token(user_id)
         self.assertIsInstance(token, str)
-        self.assertEqual(len(token), 32)
+        self.assertRegexpMatches(token, '^[0-9a-f]{32}$')
 
         # Using a bad token should do nothing.
         token_user_id = self.db.use_password_reset_token(b'not a valid token')
@@ -383,3 +383,107 @@ class DBPeopleTest(DBTestCase):
             self.assertEqual(result.rowcount, 1)
         token_user_id = self.db.use_password_reset_token(token)
         self.assertIsNone(token_user_id)
+
+    def test_invitation_new_user(self):
+        # Create a person record.
+        person_id = self.db.add_person('Person One')
+        self.assertIsInstance(person_id, int)
+
+        # Check we can generate a token of the expected format.
+        token = self.db.add_invitation(person_id)
+        self.assertIsInstance(token, str)
+        self.assertRegexpMatches(token, '^[0-9a-f]{32}$')
+
+        user_id = self.db.add_user('user1', 'pass1')
+        with self.assertRaisesRegexp(NoSuchRecord, 'expired or non-existant'):
+            self.db.use_invitation(b'not a valid token', user_id=user_id)
+
+        # Try check that the user exists.
+        with self.assertRaisesRegexp(ConsistencyError,
+                                     'user does not exist'):
+            self.db.use_invitation(token, user_id=999)
+
+        # Try using the token: user_id is None before but set afterwards.
+        person = self.db.get_person(person_id=person_id)
+        self.assertIsNone(person.user_id)
+        self.db.use_invitation(token, user_id=user_id)
+        person = self.db.get_person(person_id=person_id)
+        self.assertEqual(person.user_id, user_id)
+
+        # The token should no longer exist.
+        with self.assertRaisesRegexp(NoSuchRecord, 'expired or non-existant'):
+            self.db.use_invitation(token, user_id=user_id)
+
+        # Check error trapping.
+        with self.assertRaisesRegexp(ConsistencyError,
+                                     'person does not exist'):
+            self.db.add_invitation(999)
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.add_invitation(999, _test_skip_check=True)
+        with self.assertRaisesRegexp(ConsistencyError,
+                                     'person is already registered'):
+            self.db.add_invitation(person_id)
+
+        # Try artificially aging a token.
+        person_id = self.db.add_person('Person Two')
+        token = self.db.add_invitation(person_id)
+        with self.db._transaction() as conn:
+            result = conn.execute(invitation.update().where(
+                invitation.c.token == token
+            ).values({
+                invitation.c.expiry: datetime.utcnow() - timedelta(hours=1),
+            }))
+            self.assertEqual(result.rowcount, 1)
+        with self.assertRaises(NoSuchRecord):
+            self.db.use_invitation(token, user_id=user_id)
+
+        # Try using for a person who subsequently somehow became registered.
+        token = self.db.add_invitation(person_id)
+        user_id_2 = self.db.add_user('user2', 'pass2')
+        user_id_3 = self.db.add_user('user3', 'pass3', person_id=person_id)
+        with self.assertRaisesRegexp(ConsistencyError,
+                                     'no rows matched setting new user_id'):
+            self.db.use_invitation(token, user_id=user_id_2)
+
+    def test_invitation_replace_person(self):
+        # Create test person records.
+        person_id_1 = self.db.add_person('Person 1')
+        self.db.add_email(person_id_1, '1@email')
+
+        person_id_2 = self.db.add_person('Person 2')
+        self.db.add_email(person_id_2, '2@email')
+
+        person_id_new = self.db.add_person('Person New')
+        self.db.add_email(person_id_new, 'new@email')
+
+        # Create a proposal with 2 members.
+        call_id = self.db.add_call()
+        proposal_id = self.db.add_proposal(call_id, person_id_1, 'Proposal 1')
+        self.db.add_member(proposal_id, person_id_2)
+
+        # Issue invitation token for one of the members.
+        token = self.db.add_invitation(person_id_2)
+        self.assertIsInstance(token, str)
+        self.assertRegexpMatches(token, '^[0-9a-f]{32}$')
+
+        # Try check that the person exists.
+        with self.assertRaisesRegexp(ConsistencyError,
+                                     'person does not exist'):
+            self.db.use_invitation(token, new_person_id=999)
+
+        # Accept the invitation with the existing new person record.
+        self.db.use_invitation(token, new_person_id=person_id_new)
+
+        # The "temporary" person record should have gone.
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_person(person_id=person_id_2)
+
+        # The proposal members should by the original author and new person.
+        proposal = self.db.get_proposal(proposal_id, with_member=True)
+        self.assertEqual(map(lambda x: x.person_id, proposal.member.values()),
+                         [person_id_1, person_id_new])
+
+        # The invitation should have been removed.
+        person_id_new_2 = self.db.add_person('Person New 2')
+        with self.assertRaisesRegexp(NoSuchRecord, 'expired or non-existant'):
+            self.db.use_invitation(token, new_person_id=person_id_new_2)

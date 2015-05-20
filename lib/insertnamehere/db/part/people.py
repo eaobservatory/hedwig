@@ -28,7 +28,8 @@ from ...auth import check_password_hash, create_password_hash, generate_token
 from ...error import ConsistencyError, Error, NoSuchRecord, UserError
 from ...type import Email, EmailCollection, Institution, InstitutionInfo, \
     Person, ResultCollection
-from ..meta import email, institution, person, reset_token, user
+from ..meta import email, institution, invitation, member, person, \
+    reset_token, user
 from ..util import require_not_none
 
 
@@ -70,6 +71,41 @@ class PeoplePart(object):
             }))
 
         return result.inserted_primary_key[0]
+
+    def add_invitation(self, person_id, _test_skip_check=False):
+        """
+        Creates an invitation token to allow someone to register as the
+        given person and adds it to the database.
+
+        Deletes existing tokens to register as this person.
+
+        Returns the new token.
+        """
+
+        token = generate_token()
+        expiry = datetime.utcnow() + timedelta(days=30)
+
+        with self._transaction() as conn:
+            if not _test_skip_check:
+                result = conn.execute(select([person.c.user_id]).where(
+                    person.c.id == person_id
+                )).first()
+                if result is None:
+                    raise ConsistencyError('person does not exist with id={0}',
+                                           person_id)
+                elif result['user_id'] is not None:
+                    raise ConsistencyError('person is already registered')
+
+            conn.execute(invitation.delete().where(
+                invitation.c.person_id == person_id))
+
+            conn.execute(invitation.insert().values({
+                invitation.c.token: token,
+                invitation.c.person_id: person_id,
+                invitation.c.expiry: expiry,
+            }))
+
+        return token
 
     def add_person(self, name, public=False, user_id=None,
                    _test_skip_check=False):
@@ -509,6 +545,85 @@ class PeoplePart(object):
                 reset_token.c.token == token))
 
         return result['user_id']
+
+    def use_invitation(self, token, user_id=None, new_person_id=None,
+                       _test_skip_check=False):
+        """
+        Uses the invitation token to link the given user_id to the
+        person record associated with the invitation.
+        """
+
+        if user_id is None and new_person_id is None:
+            raise Error('one of user_id and new_person_id must be specified')
+        if not (user_id is None or new_person_id is None):
+            raise Error('user_id and new_person_id can not both be specified')
+
+        with self._transaction() as conn:
+            # Check the user or person exist.
+            if not _test_skip_check:
+                if user_id is not None:
+                    if not self._exists_user_id(conn, user_id):
+                        raise ConsistencyError(
+                            'user does not exist with id={0}', user_id)
+                if new_person_id is not None:
+                    if not self._exists_person_id(conn, new_person_id):
+                        raise ConsistencyError(
+                            'person does not exist with id={0}', new_person_id)
+
+            # Removed any expired invitations, as for password reset tokens.
+            conn.execute(invitation.delete().where(
+                invitation.c.expiry < datetime.utcnow()))
+
+            # Fetch the requested invitation.
+            result = conn.execute(invitation.select().where(
+                invitation.c.token == token
+                )).first()
+
+            if result is None:
+                raise NoSuchRecord('invitation token expired or non-existant')
+
+            old_person_id = result['person_id']
+
+            # Remove the token.  (Must do first otherwise it has a foreign
+            # key which references the person record and prevents its
+            # deletion, but this should be OK as any exceptions should
+            # abort the whole transaction.)
+            conn.execute(invitation.delete().where(
+                invitation.c.token == token))
+
+            if user_id is not None:
+                # They have registered a new user account to link to the
+                # invited person record.  Simply set the user_id there.
+                result = conn.execute(person.update().where(and_(
+                    person.c.id == old_person_id,
+                    person.c.user_id.is_(None)
+                )).values({
+                    person.c.user_id: user_id,
+                }))
+
+                if result.rowcount != 1:
+                    raise ConsistencyError(
+                        'no rows matched setting new user_id'
+                        ' for person with id={0}',
+                        old_person_id)
+
+            elif new_person_id is not None:
+                # They already have a person record, so swap out the
+                # record linked to the invitation and delete it.
+                for table in (member,):
+                    conn.execute(table.update().where(
+                        table.c.person_id == old_person_id
+                    ).values({
+                        table.c.person_id: new_person_id,
+                    }))
+
+                result = conn.execute(person.delete().where(
+                    person.c.id == old_person_id))
+
+            else:
+                # They were there at the start of the method so this
+                # shouldn't happen.
+                raise Error('user_id or new_person_id vanished')
 
     def _exists_institution_id(self, conn, institution_id):
         """Test whether an institution exists by id."""
