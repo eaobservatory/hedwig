@@ -25,6 +25,7 @@ from ..web.util import session, HTTPForbidden
 Authorization = namedtuple('Authorization', ('view', 'edit'))
 
 no = Authorization(False, False)
+yes = Authorization(True, True)
 
 
 def for_person(db, person):
@@ -35,6 +36,8 @@ def for_person(db, person):
 
     if 'user_id' not in session:
         return no
+    elif session.get('is_admin', False) and can_be_admin(db):
+        return yes
 
     is_user = person.user_id == session['user_id']
 
@@ -46,6 +49,11 @@ def for_institution(db, institution):
     Determine the current user's authorization regarding this
     institution.
     """
+
+    if 'user_id' not in session:
+        return no
+    elif session.get('is_admin', False) and can_be_admin(db):
+        return yes
 
     if 'person' in session:
         user_institution_id = session['person']['institution_id']
