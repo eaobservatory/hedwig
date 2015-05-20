@@ -449,7 +449,7 @@ class DBPeopleTest(DBTestCase):
         # Create an administrative person record.
         person_id = self.db.add_person('Administrator')
         self.assertIsInstance(person_id, int)
-        self.db.update_person(person_id, admin=True)
+        self.db.update_person(person_id, admin=True, _test_skip_check=True)
 
         # Try to create an invitation to register as that person: should
         # fail unless the check is disabled.

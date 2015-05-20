@@ -444,6 +444,7 @@ class PeoplePart(object):
         Update a person database record.
         """
 
+        stmt = person.update().where(person.c.id == person_id)
         values = {}
 
         if name is not None:
@@ -454,6 +455,9 @@ class PeoplePart(object):
             values['institution_id'] = institution_id
         if admin is not None:
             values['admin'] = admin
+            # Don't allow setting of the admin flag for non-registered users.
+            if admin and not _test_skip_check:
+                stmt = stmt.where(not_(person.c.user_id.is_(None)))
 
         # The values dictionary is only empty if the caller specified
         # no parameters, i.e. everything was left at the default of ()
@@ -467,9 +471,7 @@ class PeoplePart(object):
                 raise ConsistencyError(
                     'person does not exist with id={0}', person_id)
 
-            result = conn.execute(person.update().where(
-                person.c.id == person_id
-            ).values(values))
+            result = conn.execute(stmt.values(values))
 
             if result.rowcount != 1:
                 raise ConsistencyError(
