@@ -45,7 +45,7 @@ Person = namedtuple(
 
 Proposal = namedtuple(
     'Proposal',
-    map(lambda x: x.name, proposal.columns) + ['member'])
+    map(lambda x: x.name, proposal.columns) + ['members'])
 
 
 class ResultCollection(OrderedDict):

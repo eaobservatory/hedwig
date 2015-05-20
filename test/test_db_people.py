@@ -479,8 +479,8 @@ class DBPeopleTest(DBTestCase):
             self.db.get_person(person_id=person_id_2)
 
         # The proposal members should by the original author and new person.
-        proposal = self.db.get_proposal(proposal_id, with_member=True)
-        self.assertEqual(map(lambda x: x.person_id, proposal.member.values()),
+        proposal = self.db.get_proposal(proposal_id, with_members=True)
+        self.assertEqual(map(lambda x: x.person_id, proposal.members.values()),
                          [person_id_1, person_id_new])
 
         # The invitation should have been removed.

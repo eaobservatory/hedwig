@@ -46,7 +46,7 @@ class DBProposalTest(DBTestCase):
                 proposal_id = self.db.add_proposal(call_id, person_id, title)
                 self.assertIsInstance(proposal_id, int)
 
-                proposal = self.db.get_proposal(proposal_id, with_member=True)
+                proposal = self.db.get_proposal(proposal_id, with_members=True)
                 self.assertIsInstance(proposal, Proposal)
 
                 self.assertEqual(proposal.number, i)
@@ -55,9 +55,9 @@ class DBProposalTest(DBTestCase):
                 self.assertEqual(proposal.id, proposal_id)
                 self.assertEqual(proposal.title, title)
                 self.assertEqual(proposal.call_id, call_id)
-                self.assertIsInstance(proposal.member, MemberCollection)
-                self.assertEqual(len(proposal.member), 1)
-                member = proposal.member.get_single()
+                self.assertIsInstance(proposal.members, MemberCollection)
+                self.assertEqual(len(proposal.members), 1)
+                member = proposal.members.get_single()
                 self.assertIsInstance(member, Member)
                 self.assertEqual(member.person_id, person_id)
                 self.assertEqual(member.proposal_id, proposal_id)

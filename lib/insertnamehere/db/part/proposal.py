@@ -95,12 +95,12 @@ class ProposalPart(object):
 
         return proposal_id
 
-    def get_proposal(self, proposal_id, with_member=False):
+    def get_proposal(self, proposal_id, with_members=False):
         """
         Get a proposal record.
         """
 
-        member = None
+        members = None
 
         with self._transaction() as conn:
             result = conn.execute(proposal.select().where(
@@ -111,10 +111,10 @@ class ProposalPart(object):
                 raise NoSuchRecord('proposal does not exist with id={0}',
                                    proposal_id)
 
-            if with_member:
-                member = self._search_member(conn, proposal_id=proposal_id)
+            if with_members:
+                members = self._search_member(conn, proposal_id=proposal_id)
 
-        return Proposal(member=member, **result)
+        return Proposal(members=members, **result)
 
     def search_member(self, proposal_id=None, person_id=None):
         with self._transaction() as conn:
