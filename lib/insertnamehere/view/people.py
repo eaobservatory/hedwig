@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from ..error import NoSuchRecord, UserError
+from ..error import MultipleRecords, NoSuchRecord, UserError
 from ..web.util import flash, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
 from . import auth
@@ -37,28 +37,30 @@ def log_in(db, args, form, is_post, referrer):
                 session['user_id'] = user_id
                 flash('You have been logged in.')
 
-                persons = db.search_person(user_id=user_id)
-                if not persons:
+                try:
+                    person = db.search_person(user_id=user_id).get_single()
+                except NoSuchRecord:
                     # If the user has no profile, take them to the profile
                     # registration page.
                     flash('It appears your registration was not complete. '
                           'If convenient, please complete your profile.')
                     raise HTTPRedirect(url_for('.register_person'))
-                elif len(persons) == 1:
-                    person = list(persons.values())[0]
-                    _update_session_person(person)
-                    if person.institution_id is None:
-                        # If the user has no institution, take them to the
-                        # institution selection page.
-                        flash('It appears your registration was not complete. '
-                              'If convenient, please select your institution.')
-                        raise HTTPRedirect(url_for('.edit_person_institution',
-                                                   person_id=person.id))
-                    raise HTTPRedirect(
-                        session.pop('log_in_for', url_for('home_page')))
-                else:
+                except MultipleRecords:
+                    # Mutliple results should not be possible.
                     raise ErrorPage(
                         'Your account is associated with multiple profiles.')
+
+                _update_session_person(person)
+
+                if person.institution_id is None:
+                    # If the user has no institution, take them to the
+                    # institution selection page.
+                    flash('It appears your registration was not complete. '
+                          'If convenient, please select your institution.')
+                    raise HTTPRedirect(url_for('.edit_person_institution',
+                                               person_id=person.id))
+                raise HTTPRedirect(
+                    session.pop('log_in_for', url_for('home_page')))
 
         except UserError as e:
             message = e.message
@@ -187,16 +189,18 @@ def get_password_reset_token(db, form, is_post):
                 # Look up person by email address.  If this succeeds then
                 # we know the email address belongs to their account,
                 # so we can send the token to it.
-                persons = db.search_person(email_address=email_address,
-                                           user_id=user_id,
-                                           registered=True)
+                try:
+                    user_id = db.search_person(
+                        email_address=email_address, user_id=user_id,
+                        registered=True
+                    ).get_single().user_id
 
-                if not persons:
+                except NoSuchRecord:
                     raise UserError(
                         'No user account was found matching the information '
                         'you provided.')
 
-                elif len(persons) > 1:
+                except MultipleRecords:
                     # This shouldn't happen if they did enter a user name,
                     # so there is no need to check whether they did to decide
                     # what to suggest.
@@ -206,8 +210,6 @@ def get_password_reset_token(db, form, is_post):
                         'be more specific: include your user name if you '
                         'remember it, or use an email address which is not '
                         'used by other accounts.')
-
-                user_id = persons.values()[0].user_id
 
             elif user_id is not None:
                 # They did specify a user name, so try to look up their

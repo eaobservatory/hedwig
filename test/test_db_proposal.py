@@ -57,7 +57,7 @@ class DBUserTest(DBTestCase):
                 self.assertEqual(proposal.call_id, call_id)
                 self.assertIsInstance(proposal.member, MemberCollection)
                 self.assertEqual(len(proposal.member), 1)
-                member = proposal.member.values()[0]
+                member = proposal.member.get_single()
                 self.assertIsInstance(member, Member)
                 self.assertEqual(member.person_id, person_id)
                 self.assertEqual(member.proposal_id, proposal_id)
@@ -115,8 +115,7 @@ class DBUserTest(DBTestCase):
 
         # Try searching instead by person_id.
         result = self.db.search_member(person_id=person_id_2)
-        self.assertEqual(len(result), 1)
-        member = result.values()[0]
+        member = result.get_single()
         self.assertEqual(member.proposal_id, proposal_id)
         self.assertEqual(member.person_id, person_id_2)
 
