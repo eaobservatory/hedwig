@@ -20,7 +20,8 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict, namedtuple
 
-from .db.meta import email, institution, member, person, proposal
+from .db.meta import email, institution, member, person, proposal, queue, \
+    semester
 from .error import NoSuchRecord, MultipleRecords
 
 Email = namedtuple(
@@ -46,6 +47,14 @@ Person = namedtuple(
 Proposal = namedtuple(
     'Proposal',
     map(lambda x: x.name, proposal.columns) + ['members'])
+
+Semester = namedtuple(
+    'Semester',
+    map(lambda x: x.name, semester.columns))
+
+Queue = namedtuple(
+    'Queue',
+    map(lambda x: x.name, queue.columns))
 
 
 class ResultCollection(OrderedDict):

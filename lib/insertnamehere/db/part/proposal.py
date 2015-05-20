@@ -22,8 +22,8 @@ from sqlalchemy.sql import select
 from sqlalchemy.sql.functions import coalesce, count
 from sqlalchemy.sql.functions import max as max_
 
-from ...error import ConsistencyError, UserError
-from ...type import Member, MemberCollection, Proposal
+from ...error import ConsistencyError, NoSuchRecord, UserError
+from ...type import Member, MemberCollection, Proposal, Semester, Queue
 from ..meta import call, facility, member, person, proposal, queue, semester
 
 
@@ -35,12 +35,20 @@ class ProposalPart(object):
 
         with self._transaction() as conn:
             if not _test_skip_check:
-                if not self._exists_id(conn, semester, semester_id):
+                try:
+                    semester = self._get_semester(conn, semester_id)
+                    queue = self._get_queue(conn, queue_id)
+                except NoSuchRecord as e:
+                    raise ConsistencyError(e.message)
+
+                # Then check they are for the same facility.
+                if not semester.facility_id == queue.facility_id:
                     raise ConsistencyError(
-                        'semester does not exist with id={0}', semester_id)
-                if not self._exists_id(conn, queue, queue_id):
-                    raise ConsistencyError(
-                        'queue does not exist with id={0}', queue_id)
+                        'call has inconsistent facility references: '
+                        'semester {0} is for facility {1} but '
+                        'queue {2} is for facility {3}',
+                        semester_id, semester.facility_id,
+                        queue_id, queue.facility_id)
 
             result = conn.execute(call.insert().values({
                 call.c.semester_id: semester_id,
@@ -193,6 +201,44 @@ class ProposalPart(object):
                 members = self._search_member(conn, proposal_id=proposal_id)
 
         return Proposal(members=members, **result)
+
+    def get_semester(self, *args, **kwargs):
+        """
+        Get a semester record.
+        """
+
+        with self._transaction() as conn:
+            return self._get_semester(conn, *args, **kwargs)
+
+    def _get_semester(self, conn, semester_id):
+        result = conn.execute(semester.select().where(
+            semester.c.id == semester_id
+        )).first()
+
+        if result is None:
+            raise NoSuchRecord('semester does not exist with id={0}',
+                               semester_id)
+
+        return Semester(**result)
+
+    def get_queue(self, *args, **kwargs):
+        """
+        Get a queue record.
+        """
+
+        with self._transaction() as conn:
+            return self._get_queue(*args, **kwargs)
+
+    def _get_queue(self, conn, queue_id):
+        result = conn.execute(queue.select().where(
+            queue.c.id == queue_id
+        )).first()
+
+        if result is None:
+            raise NoSuchRecord('queue does not exist with id={0}',
+                               queue_id)
+
+        return Queue(**result)
 
     def search_member(self, proposal_id=None, person_id=None):
         with self._transaction() as conn:

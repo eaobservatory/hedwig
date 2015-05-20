@@ -94,6 +94,13 @@ class DBProposalTest(DBTestCase):
         with self.assertRaises(DatabaseIntegrityError):
             self.db.add_call(semester_id, queue_id)
 
+        # Check facility consistency check.
+        facility_id_2 = self.db.ensure_facility('my_other_tel')
+        semester_id_2 = self.db.add_semester(facility_id_2, 'My Semester')
+        with self.assertRaisesRegexp(ConsistencyError,
+                                     'inconsistent facility references'):
+            self.db.add_call(semester_id_2, queue_id)
+
     def test_add_proposal(self):
         call_id_1 = self._create_test_call('semester1', 'queue1')
         self.assertIsInstance(call_id_1, int)
