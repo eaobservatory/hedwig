@@ -72,6 +72,16 @@ def create_people_blueprint(db):
         return view.use_password_reset_token(db, request.form,
                                              request.method == 'POST')
 
+    @bp.route('/user/admin/take')
+    @require_auth()
+    def take_admin():
+        return view.take_admin(db, request.referrer)
+
+    @bp.route('/user/admin/drop')
+    def drop_admin():
+        return view.drop_admin(request.referrer)
+
+
     @bp.route('/person/register', methods=['GET', 'POST'])
     @templated('people/edit_person.html')
     @require_auth()

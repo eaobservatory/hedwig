@@ -4,6 +4,13 @@
     Logged in as
     {% if session.person is defined %}
         <a href="{{ url_for('people.view_person', person_id=session.person.id) }}">{{ session.person.name }}</a>
+        {% if session.is_admin is defined %}
+            &mdash;
+            <a href="{{ url_for('people.drop_admin') }}">drop admin</a>
+        {% elif session.person.admin %}
+            &mdash;
+            <a href="{{ url_for('people.take_admin') }}">take admin</a>
+        {% endif %}
     {% else %}
         &ldquo;User {{ session.user_id }}&rdquo;
         &mdash;

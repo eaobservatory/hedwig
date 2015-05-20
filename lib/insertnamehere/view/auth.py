@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple
 
-from ..web.util import session
+from ..web.util import session, HTTPForbidden
 
 Authorization = namedtuple('Authorization', ('view', 'edit'))
 
@@ -54,3 +54,16 @@ def for_institution(db, institution):
 
     return Authorization(view=True, edit=(user_institution_id is not None and
                          user_institution_id == institution.id))
+
+
+def can_be_admin(db):
+    """
+    Check whether the user is permitted to take administrative
+    privileges.
+    """
+
+    try:
+        person = db.get_person(person_id=None, user_id=session['user_id'])
+        return person.admin
+    except NoSuchRecord:
+        raise HTTPForbidden('Could not verify administrative access.')

@@ -95,6 +95,7 @@ person = Table(
     Column('institution_id', None,
            ForeignKey('institution.id', onupdate='RESTRICT',
                       ondelete='RESTRICT')),
+    Column('admin', Boolean, default=False, nullable=False),
     **_table_opts)
 
 proposal = Table(

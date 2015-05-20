@@ -278,6 +278,25 @@ def use_password_reset_token(db, form, is_post):
     }
 
 
+def take_admin(db, referrer):
+    if 'person' not in session or not session['person']['admin']:
+        raise HTTPForbidden('Permission denied.')
+
+    # Double-check the user still has administrative privileges.
+    if not auth.can_be_admin(db):
+        raise HTTPForbidden('Permission denied.')
+
+    session['is_admin'] = True
+    flash('You have taken administrative privileges.')
+    raise HTTPRedirect(referrer if referrer else url_for('home_page'))
+
+
+def drop_admin(referrer):
+    session.pop('is_admin', None)
+    flash('You have dropped administrative privileges.')
+    raise HTTPRedirect(referrer if referrer else url_for('home_page'))
+
+
 def register_person(db, form, is_post):
     if 'person' in session:
         raise ErrorPage('You have already created a profile')
