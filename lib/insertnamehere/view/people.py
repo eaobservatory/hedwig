@@ -406,6 +406,7 @@ def edit_person_institution(db, person_id, form, is_post):
 
     message = None
 
+    is_current_user = person.user_id == session['user_id']
     name = form.get('institution_name', '')
     institutions = db.list_institution()
 
@@ -415,11 +416,7 @@ def edit_person_institution(db, person_id, form, is_post):
             if institution_id not in institutions:
                 raise HTTPError('Institution not found.')
             db.update_person(person_id, institution_id=institution_id)
-            _update_session_person(db.get_person(person_id))
-            flash('Your institution has been selected.')
-            raise HTTPRedirect(session.pop(
-                'log_in_for',
-                url_for('.view_person', person_id=person_id)))
+            action = 'selected'
 
         elif 'submit_add' in form:
             if not name:
@@ -427,14 +424,20 @@ def edit_person_institution(db, person_id, form, is_post):
             else:
                 institution_id = db.add_institution(name)
                 db.update_person(person_id, institution_id=institution_id)
-                _update_session_person(db.get_person(person_id))
-                flash('Your new institution has been recorded.')
-                raise HTTPRedirect(session.pop(
-                    'log_in_for',
-                    url_for('.view_person', person_id=person_id)))
+                action = 'recorded'
 
         else:
             raise ErrorPage('Unknown action')
+
+        if is_current_user:
+            _update_session_person(db.get_person(person_id))
+            flash('Your institution has been {0}.'.format(action))
+        else:
+            flash('The institution has been {0}.'.format(action))
+
+        raise HTTPRedirect(session.pop(
+            'log_in_for',
+            url_for('.view_person', person_id=person_id)))
 
     return {
         'title': 'Select Institution',
