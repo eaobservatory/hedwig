@@ -61,12 +61,17 @@ class ErrorPage(Exception):
     pass
 
 
-def require_auth(require_person=False, require_institution=False):
+def require_auth(require_person=False, require_institution=False,
+                 register_user_only=False):
     """
     Decorator to require that the user is authenticated.
 
     Can optionally require the user to have a profile,
     and to have an institution associated with that profile.
+
+    If "register_user_only" is set, then we want the user to log in or
+    create a user account but not to complete a profile before
+    proceeding.  This is to support accepting invitation tokens.
     """
 
     def decorator(f):
@@ -74,7 +79,12 @@ def require_auth(require_person=False, require_institution=False):
         def decorated_function(*args, **kwargs):
             if 'user_id' not in session:
                 flash('Please log in or register for an account to proceed.')
-                session['log_in_for'] = _flask_request.url
+
+                if register_user_only:
+                    session['register_user_for'] = _flask_request.url
+                else:
+                    session['log_in_for'] = _flask_request.url
+
                 raise HTTPRedirect(url_for('people.log_in'))
 
             elif ((require_person or require_institution) and

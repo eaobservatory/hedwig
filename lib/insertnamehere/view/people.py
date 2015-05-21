@@ -35,12 +35,23 @@ def log_in(db, args, form, is_post, referrer):
             if user_id is None:
                 raise UserError('User name or password not recognised.')
             else:
+                # Extract this session entry, if it exists, before clearing
+                # the session on log-in.  (Not worth generally exempting
+                # this entry from session clearning.)
+                register_user_for = session.pop('register_user_for', None)
+
                 _update_session_user(user_id)
                 flash('You have been logged in.')
 
                 try:
                     person = db.search_person(user_id=user_id).get_single()
                 except NoSuchRecord:
+                    if register_user_for is not None:
+                        # The user has no profile, but we specifically only
+                        # wanted them to have a user account.  Redirect
+                        # to the specified URL.
+                        raise HTTPRedirect(register_user_for)
+
                     # If the user has no profile, take them to the profile
                     # registration page.
                     flash('It appears your registration was not complete. '
@@ -52,6 +63,12 @@ def log_in(db, args, form, is_post, referrer):
                         'Your account is associated with multiple profiles.')
 
                 _update_session_person(person)
+
+                if register_user_for is not None:
+                    # If we have this parameter, redirect there now.  (This
+                    # entry will have been cleared from the session on log-in
+                    # so do not redirect via any other pages first!)
+                    raise HTTPRedirect(register_user_for)
 
                 if person.institution_id is None:
                     # If the user has no institution, take them to the
@@ -66,7 +83,9 @@ def log_in(db, args, form, is_post, referrer):
         except UserError as e:
             message = e.message
 
-    elif (referrer is not None) and ('log_in_for' not in session):
+    elif ((referrer is not None) and
+            ('log_in_for' not in session) and
+            ('register_user_for' not in session)):
         session['log_in_for'] = referrer
 
     return {
@@ -92,8 +111,16 @@ def register_user(db, form, is_post):
             if password != form['password_check']:
                 raise UserError('The passwords did not match.')
             user_id = db.add_user(user_name, password)
+
+            # Extract this session entry, if it exists, before logging in.
+            register_user_for = session.pop('register_user_for', None)
             _update_session_user(user_id)
             flash('Your user account has been created.')
+
+            # If we only wanted them to make a user account, go to the
+            # next URL, otherwise go to the profile creation page.
+            if register_user_for is not None:
+                raise HTTPRedirect(register_user_for)
             raise HTTPRedirect(url_for('.register_person'))
 
         except UserError as e:
