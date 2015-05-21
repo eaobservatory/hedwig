@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% set scripts=['edit_email'] %}
 
 {% block content %}
 
@@ -9,15 +10,43 @@
 {% endif %}
 
 <form method="POST" action="{{ url_for('.edit_person_email', person_id=person_id) }}">
-    <p>
+    <table id="emailaddresses">
+        <tr>
+            <th>Address</th>
+            <th>Primary</th>
+            <th>Public</th>
+            <th>Verified</th>
+            <th>Actions</th>
+        </tr>
         {% for email in emails %}
-            {{ email.id }}
-            {{ email.address }}
-            {{ 'primary' if email.primary }}
-            {{ 'verified' if email.verified }}
-            {{ 'public' if email.public }}
-            <br />
+            <tr id="emailrow_{{ email.id }}">
+                <td><input type="email" name="email_{{ email.id }}" value="{{ email.address }}" required="required" /></td>
+                <td><input type="radio" name="primary" value="{{ email.id }}" {{ 'checked="checked"' | safe if email.primary }} /></td>
+                <td><input type="checkbox" name="public_{{ email.id }}" value="yes" {{ 'checked="checked"' | safe if email.public }} /></td>
+                <td>
+                    {% if email.verified %}
+                        verified
+                    {% else %}
+                        not verified
+                    {% endif %}
+                </td>
+                <td><a href="#" id="delete_{{ email.id }}">delete</a>
+            </tr>
         {% endfor %}
+    </table>
+    <table class="template">
+        <tr id="emailrow_template">
+            <td><input type="email" name="email" value="" /></td>
+            <td><input type="radio" name="primary" value="" /></td>
+            <td><input type="checkbox" name="public" value="yes" /></td>
+            <td>not verified</td>
+            <td><a href="#" id="delete_template">delete</a>
+        </tr>
+    </table>
+    <p>
+        <a href="#" id="add_email">Add address</a>
+    </p>
+    <p>
         <input type="submit" value="Save" name="submit" />
     </p>
 </form>

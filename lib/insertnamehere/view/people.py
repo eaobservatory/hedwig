@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from ..error import MultipleRecords, NoSuchRecord, UserError
+from ..type import Email, EmailCollection
 from ..web.util import flash, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
 from . import auth
@@ -458,10 +459,66 @@ def edit_person_email(db, person_id, form, is_post):
         raise HTTPForbidden('Permission denied for this person profile.')
 
     message = None
+    is_current_user = person.user_id == session['user_id']
+    records = person.email
 
     if is_post:
         try:
-            raise HTTPError('Not implemented')
+            # Temporary (unsorted) dictionaries for new records.
+            updated_records = {}
+            added_records = {}
+
+            # Which is the primary address?
+            primary = form['primary']
+
+            for param in form:
+                if not param.startswith('email_'):
+                    continue
+                id_ = param[6:]
+
+                is_primary = primary == id_
+                is_public = ('public_' + id_) in form
+
+                if id_.startswith('new_'):
+                    # Temporarily use the "new" number.
+                    email_id = int(id_[4:])
+                    added_records[email_id] = Email(
+                        email_id, person_id, form[param],
+                        is_primary, False, is_public)
+
+                else:
+                    # Convert to integer so that it matches existing
+                    # email records.
+                    email_id = int(id_)
+
+                    verified = False
+                    if email_id in person.email:
+                        verified = person.email[email_id].verified
+
+                    updated_records[email_id] = Email(
+                        email_id, person_id, form[param],
+                        is_primary, verified, is_public)
+
+            # Create new record collection: overwrite "records" variable
+            # name so that, in case of failure, the form will display the
+            # new records again for correction.
+            records = EmailCollection(map((lambda x: (x, updated_records[x])),
+                                          sorted(updated_records.keys())))
+            # Number the newly-added addresses upwards from the existing max.
+            max_record = max(records.keys()) if records else 0
+            for email_id in sorted(added_records.keys()):
+                new_email_id = max_record + email_id
+                records[new_email_id] = \
+                    added_records[email_id]._replace(id=new_email_id)
+
+            db.sync_person_email(person_id, records)
+
+            if is_current_user:
+                flash('Your email addresses have been updated.')
+                _update_session_person(db.get_person(person_id))
+            else:
+                flash('The email addresses have been updated.')
+            raise HTTPRedirect(url_for('.view_person', person_id=person_id))
 
         except UserError as e:
             message = e.message
@@ -470,7 +527,7 @@ def edit_person_email(db, person_id, form, is_post):
         'title': 'Edit Email Addresses',
         'message': message,
         'person_id': person_id,
-        'emails': person.email.values(),
+        'emails': records.values(),
     }
 
 

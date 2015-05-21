@@ -7,6 +7,12 @@
     <head>
         <title>{{ application_name }}{% if title is defined %}: {{ title }}{% endif %}</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" type="text/css" />
+        {% if scripts is defined %}
+           <script type="text/javascript" src="/static/js/jquery.js"></script>
+           {% for script in scripts %}
+               <script type="text/javascript" src="/static/js/{{ script }}.js"></script>
+           {% endfor %}
+        {% endif %}
     </head>
     <body>
         {{ render_user_panel() }}
