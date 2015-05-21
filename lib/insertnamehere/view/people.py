@@ -249,8 +249,9 @@ def get_password_reset_token(db, form, is_post):
     }
 
 
-def use_password_reset_token(db, form, is_post):
+def use_password_reset_token(db, args, form, is_post):
     message = None
+    token = args.get('token', '')
 
     if is_post:
         try:
@@ -276,6 +277,7 @@ def use_password_reset_token(db, form, is_post):
     return {
         'title': 'Use Password Reset Code',
         'message': message,
+        'token': token,
     }
 
 

@@ -69,7 +69,7 @@ def create_people_blueprint(db):
     @templated('people/use_password_reset_token.html')
     @require_not_auth
     def use_password_reset_token():
-        return view.use_password_reset_token(db, request.form,
+        return view.use_password_reset_token(db, request.args, request.form,
                                              request.method == 'POST')
 
     @bp.route('/user/admin/take')
