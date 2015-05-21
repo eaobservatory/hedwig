@@ -407,6 +407,26 @@ class PeoplePart(object):
 
         return ans
 
+    def sync_person_email(self, person_id, records):
+        """
+        Update the email records for a person to match those
+        given in "records".
+
+        The "verified" column is not updated.
+        """
+
+        records.validate()
+
+        with self._transaction() as conn:
+            if not self._exists_id(conn, person, person_id):
+                raise ConsistencyError(
+                    'person does not exist with id={0}', person_id)
+
+            return self._sync_records(
+                conn, email, email.c.person_id, person_id, records, [
+                    email.c.address, email.c.primary, email.c.public,
+                ])
+
     def update_institution(self, institution_id, name=None,
                            _test_skip_check=False):
         """

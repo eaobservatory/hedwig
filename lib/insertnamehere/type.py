@@ -22,7 +22,7 @@ from collections import OrderedDict, namedtuple
 
 from .db.meta import email, institution, member, person, proposal, queue, \
     semester
-from .error import NoSuchRecord, MultipleRecords
+from .error import NoSuchRecord, MultipleRecords, UserError
 
 Email = namedtuple(
     'Email',
@@ -76,6 +76,28 @@ class EmailCollection(ResultCollection):
                 return email
 
         raise KeyError('no primary address')
+
+    def validate(self):
+        """
+        Attempts to validate a collection of email records.
+
+        Checks:
+
+        * There is exactly one primary address.
+
+        Raises UserError for any problems found.
+        """
+
+        n_primary = 0
+
+        for email in self.values():
+            if email.primary:
+                n_primary += 1
+
+        if n_primary == 0:
+            raise UserError('There is no primary address.')
+        elif n_primary != 1:
+            raise UserError('There is more than one primary address.')
 
 
 class MemberCollection(ResultCollection):

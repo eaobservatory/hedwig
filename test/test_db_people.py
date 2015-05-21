@@ -194,7 +194,93 @@ class DBPeopleTest(DBTestCase):
                                        registered=True)
         self.assertEqual(len(result), 0)
 
-    def test_search_erson(self):
+    def test_sync_person_email(self):
+        # Set up email addresses.
+        person_1 = self.db.add_person('Person One')
+        person_2 = self.db.add_person('Person Two')
+
+        email_1a = self.db.add_email(person_1, '1a@e', True, False, False)
+        email_1b = self.db.add_email(person_1, '1b@e', False, False, False)
+        email_1c = self.db.add_email(person_1, '1c@e', False, False, False)
+        email_2a = self.db.add_email(person_2, '2a@e', True, False, False)
+        email_2b = self.db.add_email(person_2, '2b@e', False, False, False)
+
+        values_1 = EmailCollection()
+        values_1[1] = Email(email_1a, None, '1a@e', True, False, False)
+        values_1[2] = Email(email_1b, None, '1b@e', False, False, False)
+        values_1[3] = Email(email_1c, None, '1c@e', False, False, False)
+        values_2 = EmailCollection()
+        values_2[1] = Email(email_2a, None, '2a@e', True, False, False)
+        values_2[2] = Email(email_2b, None, '2b@e', False, False, False)
+
+        # Check the values match to start with.
+        self._compare_email_records(
+            self.db.search_email(person_id=person_1), values_1)
+        self._compare_email_records(
+            self.db.search_email(person_id=person_2), values_2)
+
+        # Updating with these same values should do nothing.
+        self.assertEqual(
+            self.db.sync_person_email(person_1, values_1), (0, 0, 0))
+        self.assertEqual(
+            self.db.sync_person_email(person_2, values_2), (0, 0, 0))
+        self._compare_email_records(
+            self.db.search_email(person_id=person_1), values_1)
+        self._compare_email_records(
+            self.db.search_email(person_id=person_2), values_2)
+
+        # Updating a value.
+        values_1[2] = values_1[2]._replace(address='2b@eeeee', public=True)
+        self.assertEqual(
+            self.db.sync_person_email(person_1, values_1), (0, 1, 0))
+        self._compare_email_records(
+            self.db.search_email(person_id=person_1), values_1)
+
+        # Insert a value.
+        values_1[4] = Email(
+            email_2b + 1, person_1, '1d@e', False, False, False)
+        self.assertEqual(
+            self.db.sync_person_email(person_1, values_1), (1, 0, 0))
+        self._compare_email_records(
+            self.db.search_email(person_id=person_1), values_1)
+
+        # Delete a value.
+        del values_1[3]
+        self.assertEqual(
+            self.db.sync_person_email(person_1, values_1), (0, 0, 1))
+        self._compare_email_records(
+            self.db.search_email(person_id=person_1), values_1)
+
+        # Check Person Two's email records weren't modified in the process.
+        self._compare_email_records(
+            self.db.search_email(person_id=person_2), values_2)
+
+        # Do multiple update for Person Two.
+        values_2[1] = Email(email_2a, None, '2a@e', True, False, True)
+        values_2[2] = Email(email_2b + 2, None, '2c@e', False, False, False)
+        self.assertEqual(
+            self.db.sync_person_email(person_2, values_2), (1, 1, 1))
+        self._compare_email_records(
+            self.db.search_email(person_id=person_2), values_2)
+
+        # Finally check the validation of the record collection.
+        values_2[2] = values_2[2]._replace(primary=True)
+        with self.assertRaisesRegexp(UserError, 'more than one primary'):
+            self.db.sync_person_email(person_2, values_2)
+
+    def _compare_email_records(self, got, expect):
+        self.assertEqual(len(got), len(expect))
+        for record in expect.values():
+            self.assertIn(record.id, got)
+
+            got_record = got[record.id]
+
+            self.assertEqual(got_record.address, record.address)
+            self.assertEqual(got_record.primary, record.primary)
+            self.assertEqual(got_record.verified, record.verified)
+            self.assertEqual(got_record.public, record.public)
+
+    def test_search_person(self):
         # Set up some test records.
         user_1 = self.db.add_user('user1', 'pass1')
         user_2 = self.db.add_user('user2', 'pass2')
