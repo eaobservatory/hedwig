@@ -263,10 +263,30 @@ class DBPeopleTest(DBTestCase):
         self._compare_email_records(
             self.db.search_email(person_id=person_2), values_2)
 
-        # Finally check the validation of the record collection.
+        # Check the validation of the record collection.
         values_2[2] = values_2[2]._replace(primary=True)
         with self.assertRaisesRegexp(UserError, 'more than one primary'):
             self.db.sync_person_email(person_2, values_2)
+
+        # Test behavior of the "verified" flag.
+        person_3 = self.db.add_person('Person Three')
+        email_3a = self.db.add_email(person_3, '3a@e', True, True, False)
+        values_3 = EmailCollection()
+        values_3[1] = Email(email_3a, person_3, '3a@e', True, True, False)
+        self._compare_email_records(
+            self.db.search_email(person_id=person_3), values_3)
+
+        # Switching "verified" manually shouldn't work.
+        values_3[1] = values_3[1]._replace(verified=False)
+        self.db.sync_person_email(person_3, values_3)
+        self.assertTrue(
+            self.db.search_email(person_id=person_3)[email_3a].verified)
+
+        # But changing the address should cause it to turn False.
+        values_3[1] = values_3[1]._replace(address='a3@e')
+        self.db.sync_person_email(person_3, values_3)
+        self.assertFalse(
+            self.db.search_email(person_id=person_3)[email_3a].verified)
 
     def _compare_email_records(self, got, expect):
         self.assertEqual(len(got), len(expect))

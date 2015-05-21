@@ -69,7 +69,7 @@ class Database(PeoplePart, ProposalPart):
         )).scalar()
 
     def _sync_records(self, conn, table, key_column, key_value,
-                      records, update_columns=None):
+                      records, update_columns=None, verified_columns=()):
         """
         Update a set of database records to match the given set of records.
 
@@ -86,6 +86,11 @@ class Database(PeoplePart, ProposalPart):
 
         key_column and update_columns should be a column object and a list
         of column objects respectively.
+
+        If a column is being updated which is listed in "verified columns"
+        then a column called "verified" is set to False.  (If verified
+        columns exist, then update_columns should probably be set to prevent
+        the "verified" column being edited!)
         """
 
         # Initialize debugging counters.
@@ -135,6 +140,8 @@ class Database(PeoplePart, ProposalPart):
                     col_val = getattr(value, column.key)
                     if previous[column] != col_val:
                         values[column] = col_val
+                        if column in verified_columns:
+                            values[table.c.verified] = False
 
                 if values:
                     conn.execute(table.update().where(

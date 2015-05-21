@@ -425,7 +425,7 @@ class PeoplePart(object):
             return self._sync_records(
                 conn, email, email.c.person_id, person_id, records, [
                     email.c.address, email.c.primary, email.c.public,
-                ])
+                ], verified_columns=(email.c.address,))
 
     def update_institution(self, institution_id, name=None,
                            _test_skip_check=False):
