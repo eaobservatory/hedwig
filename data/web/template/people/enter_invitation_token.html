@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<p>
+    If you have received an invitation code for this system,
+    please enter it here.
+    {% if session.user_id is defined %}
+        Since you are already logged in, the invitation will be added
+        to your existing account.
+        On the next page
+    {% else %}
+        The next page will allow you to log in or register for
+        a new account.
+        If you already have an account, please log in using that account,
+        and the invitation will be added to it.
+        Once you have logged in
+    {% endif %}
+    you will be able to view the details of the invitation
+    and choose whether to accept it.
+</p>
+
+<form method="GET" action="{{ url_for('.accept_invitation_token') }}">
+    <p>
+        Invitation code:
+        <input type="text" name="token" value="{{ token }}" required="required" />
+        <br />
+        <input type="submit" value="Enter code" />
+    </p>
+</form>
+
+{% endblock %}

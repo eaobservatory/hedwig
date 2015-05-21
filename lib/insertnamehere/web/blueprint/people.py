@@ -129,4 +129,16 @@ def create_people_blueprint(db):
         return view.edit_institution(db, institution_id, request.form,
                                      request.method == 'POST')
 
+    @bp.route('/invitation')
+    @templated('people/enter_invitation_token.html')
+    def enter_invitation_token():
+        return view.enter_invitation_token(db, request.args)
+
+    @bp.route('/invitation/accept', methods=['GET', 'POST'])
+    @templated('people/accept_invitation_token.html')
+    @require_auth(register_user_only=True)
+    def accept_invitation_token():
+        return view.accept_invitation_token(db, request.args, request.form,
+                                            request.method == 'POST')
+
     return bp

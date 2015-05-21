@@ -618,6 +618,30 @@ def edit_institution(db, institution_id, form, is_post):
     }
 
 
+def enter_invitation_token(db, args):
+    return {
+        'title': 'Enter Invitation',
+        'token': args.get('token', ''),
+    }
+
+
+def accept_invitation_token(db, args, form, is_post):
+    token = form.get('token', None) if is_post else args.get('token', None)
+
+    if token is None:
+        # Token was lost somehow: redirect back to entry page.
+        flash('Your invitation code was not received.  Please enter it again.')
+        raise HTTPRedirect(url_for('.enter_invitation_token'))
+
+    if is_post:
+        raise HTTPError('Not implemented')
+
+    return {
+        'title': 'Accept Invitation',
+        'token': token,
+    }
+
+
 def _update_session_user(user_id):
     """
     Clears the session and inserts the given user identifier.

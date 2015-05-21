@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<p>
+Invitation code: <tt>{{ token }}</tt>
+</p>
+
+<form method="POST" action="{{ url_for('.accept_invitation_token') }}">
+    <p>
+        <input type="hidden" name="token" value="{{ token }}" />
+        <input type="submit" value="Accept invitation" name="submit-accept" />
+    </p>
+</form>
+
+{% endblock %}
+
