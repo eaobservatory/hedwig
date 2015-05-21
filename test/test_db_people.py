@@ -615,3 +615,12 @@ class DBPeopleTest(DBTestCase):
         person_id_new_2 = self.db.add_person('Person New 2')
         with self.assertRaisesRegexp(NoSuchRecord, 'expired or non-existant'):
             self.db.use_invitation(token, new_person_id=person_id_new_2)
+
+        # Check we can't accept a token for a person who somehow became
+        # a registered user in the meantime.
+        person_id_3 = self.db.add_person('Person 3')
+        person_id_new_3 = self.db.add_person('Person New 3')
+        token = self.db.add_invitation(person_id_3)
+        self.db.add_user('user3', 'pass3', person_id=person_id_3)
+        with self.assertRaisesRegexp(ConsistencyError, 'already registered'):
+            self.db.use_invitation(token, new_person_id=person_id_new_3)

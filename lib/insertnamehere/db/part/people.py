@@ -639,6 +639,16 @@ class PeoplePart(object):
                         old_person_id)
 
             elif new_person_id is not None:
+                # Ensure the "old_person_id" profile wasn't already
+                # registered.
+                result = conn.execute(select([person.c.user_id]).where(
+                    person.c.id == old_person_id
+                )).scalar()
+                if result is not None:
+                    raise ConsistencyError(
+                        'person {0} is already registered as user {1}',
+                        old_person_id, result)
+
                 # They already have a person record, so swap out the
                 # record linked to the invitation and delete it.
                 for table in (member,):
@@ -648,7 +658,7 @@ class PeoplePart(object):
                         table.c.person_id: new_person_id,
                     }))
 
-                result = conn.execute(person.delete().where(
+                conn.execute(person.delete().where(
                     person.c.id == old_person_id))
 
             else:
