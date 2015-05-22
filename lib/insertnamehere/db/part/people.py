@@ -256,7 +256,8 @@ class PeoplePart(object):
         return Institution(**result)
 
     def get_person(self, person_id, user_id=None,
-                   with_email=False, with_institution=False):
+                   with_email=False, with_institution=False,
+                   with_proposals=False):
         """
         Get a person record.
 
@@ -269,6 +270,7 @@ class PeoplePart(object):
 
         email = None
         institution = None
+        proposals = None
 
         stmt = person.select()
         if person_id is not None:
@@ -295,7 +297,11 @@ class PeoplePart(object):
             if with_email:
                 email = self._search_email(conn, person_id=person_id)
 
-        return Person(email=email, institution=institution, **result)
+            if with_proposals:
+                proposals = self._search_member(conn, person_id=person_id)
+
+        return Person(email=email, institution=institution,
+                      proposals=proposals, **result)
 
     @require_not_none
     def get_user_id(self, user_name):
@@ -403,7 +409,8 @@ class PeoplePart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(person.c.name)):
-                ans[row['id']] = Person(email=None, institution=None, **row)
+                ans[row['id']] = Person(email=None, institution=None,
+                                        proposals=None, **row)
 
         return ans
 

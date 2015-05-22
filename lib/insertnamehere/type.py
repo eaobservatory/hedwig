@@ -42,7 +42,8 @@ Member = namedtuple(
 
 Person = namedtuple(
     'Person',
-    map(lambda x: x.name, person.columns) + ['email', 'institution'])
+    map(lambda x: x.name, person.columns) +
+    ['email', 'institution', 'proposals'])
 
 Proposal = namedtuple(
     'Proposal',
