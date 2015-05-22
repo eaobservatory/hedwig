@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<p>
+    <a href="{{ url_for('.queue_new') }}">New queue</a>
+</p>
+
+<ul>
+    {% for queue in queues.values() %}
+        <li><a href="{{ url_for('.queue_view', queue_id=queue.id) }}">{{ queue.name }}</a></li>
+    {% endfor %}
+</ul>
+
+{% endblock %}

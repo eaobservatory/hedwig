@@ -142,3 +142,78 @@ class GenericFacility(object):
             'message': message,
             'semester_name': semester_name,
         }
+
+    def view_queue_list(self, db):
+        queues = db.search_queue(facility_id=self.id_)
+
+        return {
+            'title': 'Queue List',
+            'queues': queues,
+        }
+
+    def view_queue_new(self, db, form, is_post):
+        if not can_be_admin(db):
+            raise HTTPForbidden('Could not verify administrative access.')
+
+        message = None
+        queue_name = form.get('queue_name', '')
+
+        if is_post:
+            try:
+                db.add_queue(self.id_, queue_name)
+                raise HTTPRedirect(url_for('.queue_list'))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Add New Queue',
+            'target': url_for('.queue_new'),
+            'message': message,
+            'queue_name': queue_name,
+        }
+
+    def view_queue_view(self, db, queue_id):
+        try:
+            queue = db.get_queue(queue_id)
+        except NoSuchRecord:
+            raise HTTPNotFound('Queue not found')
+
+        if queue.facility_id != self.id_:
+            raise ErrorPage('Queue is not for this facility')
+
+        return {
+            'title': 'Queue: {0}'.format(queue.name),
+            'queue_id': queue_id,
+        }
+
+    def view_queue_edit(self, db, queue_id, form, is_post):
+        if not can_be_admin(db):
+            raise HTTPForbidden('Could not verify administrative access.')
+
+        try:
+            queue = db.get_queue(queue_id)
+        except NoSuchRecord:
+            raise HTTPNotFound('Queue not found')
+
+        if queue.facility_id != self.id_:
+            raise ErrorPage('Queue is not for this facility')
+
+        message = None
+        queue_name = form.get('queue_name', queue.name)
+
+        if is_post:
+            queue_name = form['queue_name']
+            try:
+                db.update_queue(queue_id, name=queue_name)
+                raise HTTPRedirect(url_for('.queue_list'))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Edit Queue: {0}'.format(queue.name),
+            'target': url_for('.queue_edit', queue_id=queue_id),
+            'message': message,
+            'queue_name': queue_name,
+        }

@@ -83,6 +83,33 @@ def create_facility_blueprint(db, facility):
         return facility.view_semester_edit(db, semester_id, request.form,
                                            request.method == 'POST')
 
+    @bp.route('/admin/queue/')
+    @facility_template('queue_list.html')
+    @require_admin
+    def queue_list():
+        return facility.view_queue_list(db)
+
+    @bp.route('/admin/queue/new', methods=['GET', 'POST'])
+    @facility_template('queue_edit.html')
+    @require_admin
+    def queue_new():
+        return facility.view_queue_new(db, request.form,
+                                       request.method == 'POST')
+
+    @bp.route('/admin/queue/<int:queue_id>')
+    @facility_template('queue_view.html')
+    @require_admin
+    def queue_view(queue_id):
+        return facility.view_queue_view(db, queue_id)
+
+    @bp.route('/admin/queue/<int:queue_id>/edit',
+              methods=['GET', 'POST'])
+    @facility_template('queue_edit.html')
+    @require_admin
+    def queue_edit(queue_id):
+        return facility.view_queue_edit(db, queue_id, request.form,
+                                        request.method == 'POST')
+
     @bp.context_processor
     def add_to_context():
         return {
