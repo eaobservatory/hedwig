@@ -18,12 +18,14 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import OrderedDict
 from flask import Flask
 import os
 
-from ..config import get_config, get_database, get_home
+from ..config import get_config, get_database, get_facilities, get_home
 from .util import templated
 
+from .blueprint.facility import create_facility_blueprint
 from .blueprint.people import create_people_blueprint
 
 from ..view.home import prepare_home
@@ -37,6 +39,7 @@ def create_web_app():
     home = get_home()
     config = get_config()
     db = get_database()
+    facilities = OrderedDict()
 
     application_name = config.get('application', 'name')
 
@@ -57,9 +60,22 @@ def create_web_app():
     @app.route('/')
     @templated('home.html')
     def home_page():
-        return prepare_home()
+        return prepare_home(facilities)
 
     app.register_blueprint(create_people_blueprint(db))
+
+    # Register blueprints for each facility.
+    for facility_class in get_facilities():
+        # Create facility object.
+        code = facility_class.get_code()
+        facility = facility_class(db.ensure_facility(code))
+
+        # Store in our facilities list.
+        facilities[code] = facility.get_name()
+
+        # Register blueprint for the facility.
+        app.register_blueprint(create_facility_blueprint(db, facility),
+                               url_prefix='/' + code)
 
     @app.context_processor
     def add_to_context():

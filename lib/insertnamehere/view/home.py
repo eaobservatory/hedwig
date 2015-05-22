@@ -19,5 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 
-def prepare_home():
-    return {}
+def prepare_home(facilities):
+    return {
+        'facilities': facilities,
+    }

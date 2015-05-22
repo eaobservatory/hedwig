@@ -6,4 +6,12 @@
 Welcome to {{ application_name }}.
 </p>
 
+<ul>
+    {% for (code, name) in facilities.items() %}
+        <li>
+            <a href="{{ url_for(code + '.facility_home') }}">{{ name }}</a>
+        </li>
+    {% endfor %}
+</ul>
+
 {% endblock %}
