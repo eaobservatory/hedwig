@@ -86,8 +86,8 @@ def get_facilities():
             except ValueError:
                 # If there were no dots in the class name guess that the module
                 # is in the expected directory and has a lower case name.
-                module = import_module('insertnamehere.facility.' +
-                                       name.lower())
+                module = import_module(
+                    'insertnamehere.facility.{0}.view'.format(name.lower()))
                 class_ = getattr(module, name)
 
             facilities.append(class_)

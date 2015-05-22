@@ -18,13 +18,13 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from ..error import NoSuchRecord, UserError
-from ..type import Queue, Semester
-from ..view.auth import can_be_admin
-from ..web.util import ErrorPage, HTTPNotFound, HTTPRedirect, url_for
+from ...error import NoSuchRecord, UserError
+from ...type import Queue, Semester
+from ...view.auth import can_be_admin
+from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, url_for
 
 
-class GenericFacility(object):
+class Generic(object):
     """
     Base class for Facility objects.
     """
