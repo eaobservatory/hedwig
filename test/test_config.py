@@ -71,3 +71,10 @@ class ConfigTestCase(TestCase):
         os.environ['INSERTNAMEHERE_DIR'] = '/HORSEFEATHERS'
         with self.assertRaises(Error):
             c = config.get_config()
+
+    def test_facilities(self):
+        facilities = config.get_facilities()
+
+        self.assertIsInstance(facilities, list)
+        for facility in facilities:
+            self.assertIsInstance(facility, type)

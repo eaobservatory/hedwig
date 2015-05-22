@@ -8,3 +8,4 @@ url=
 [application]
 name=Insert Name Here
 secret_key=
+facilities=GenericFacility

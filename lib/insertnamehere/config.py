@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from ConfigParser import SafeConfigParser
+from importlib import import_module
 import os
 
 from .error import FormattedError
@@ -28,6 +29,7 @@ from .db.engine import get_engine
 config_file = ('etc', 'insertnamehere.ini')
 config = None
 database = None
+facilities = None
 
 
 def get_config():
@@ -64,6 +66,33 @@ def get_database():
         database = Database(get_engine(config.get('database', 'url')))
 
     return database
+
+
+def get_facilities():
+    """
+    Get a list of the facility classes as listed in the configuration file.
+    """
+
+    global facilities
+
+    if facilities is None:
+        facilities = []
+
+        for name in get_config().get('application', 'facilities').split(','):
+            try:
+                last_dot = name.rindex('.')
+                module = import_module(name[:last_dot])
+                class_ = getattr(module, name[last_dot + 1:])
+            except ValueError:
+                # If there were no dots in the class name guess that the module
+                # is in the expected directory and has a lower case name.
+                module = import_module('insertnamehere.facility.' +
+                                       name.lower())
+                class_ = getattr(module, name)
+
+            facilities.append(class_)
+
+    return facilities
 
 
 def get_home():
