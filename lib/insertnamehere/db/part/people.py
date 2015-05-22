@@ -255,6 +255,36 @@ class PeoplePart(object):
 
         return Institution(**result)
 
+    def get_invitation_person(self, token, *args, **kwargs):
+        """
+        Get the person record associated with an invitation.
+
+        Any additional "args" and "kwargs" are passed to the "get_person"
+        method.
+
+        NoSuchRecord is raised if the token does not exist and RecordExpired
+        is raised if it does exist but has expired.
+
+        Simply returns the Person record from "get_person" since there
+        is no other useful information associated with an invitation.
+        """
+
+        with self._transaction() as conn:
+            # Removed any expired invitations, as for password reset tokens.
+            conn.execute(invitation.delete().where(
+                invitation.c.expiry < datetime.utcnow()))
+
+            # Fetch the requested invitation.
+            result = conn.execute(invitation.select().where(
+                invitation.c.token == token
+            )).first()
+
+            if result is None:
+                raise NoSuchRecord('invitation token expired or non-existant')
+
+        return self.get_person(person_id=result['person_id'],
+                               *args, **kwargs)
+
     def get_person(self, person_id, user_id=None,
                    with_email=False, with_institution=False,
                    with_proposals=False):
