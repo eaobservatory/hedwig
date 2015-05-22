@@ -19,11 +19,13 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from sqlalchemy.sql import select
+from sqlalchemy.sql.expression import desc
 from sqlalchemy.sql.functions import coalesce, count
 from sqlalchemy.sql.functions import max as max_
 
 from ...error import ConsistencyError, NoSuchRecord, UserError
-from ...type import Member, MemberCollection, Proposal, Semester, Queue
+from ...type import Member, MemberCollection, Proposal, \
+    Queue, ResultCollection, Semester, SemesterInfo
 from ..meta import call, facility, member, person, proposal, queue, semester
 
 
@@ -257,3 +259,45 @@ class ProposalPart(object):
             ans[row['id']] = Member(**row)
 
         return ans
+
+    def search_semester(self, facility_id=None):
+        stmt = select([semester.c.id, semester.c.facility_id, semester.c.name])
+
+        if facility_id is not None:
+            stmt = stmt.where(semester.c.facility_id == facility_id)
+
+        ans = ResultCollection()
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt.order_by(desc(semester.c.id))):
+                ans[row['id']] = SemesterInfo(**row)
+
+        return ans
+
+    def update_semester(self, semester_id, name=None, _test_skip_check=False):
+        """
+        Update a semester record.
+        """
+
+        values = {}
+
+        if name is not None:
+            values['name'] = name
+
+        if not values:
+            raise Error('no semester updates specified')
+
+        with self._transaction() as conn:
+            if not _test_skip_check and not self._exists_id(
+                    conn, semester, semester_id):
+                raise ConsistencyError(
+                    'semester does not exist with id={0}', semester_id)
+
+            result = conn.execute(semester.update().where(
+                semester.c.id == semester_id
+            ).values(values))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched updating semester with id={0}',
+                    semester_id)

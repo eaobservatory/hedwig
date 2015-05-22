@@ -53,6 +53,10 @@ Semester = namedtuple(
     'Semester',
     map(lambda x: x.name, semester.columns))
 
+SemesterInfo = namedtuple(
+    'SemesterInfo',
+    ['id', 'facility_id', 'name'])
+
 Queue = namedtuple(
     'Queue',
     map(lambda x: x.name, queue.columns))

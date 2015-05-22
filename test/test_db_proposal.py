@@ -20,7 +20,8 @@ from __future__ import absolute_import, division, print_function, \
 
 from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
     UserError
-from insertnamehere.type import Member, MemberCollection, Proposal
+from insertnamehere.type import Member, MemberCollection, Proposal, \
+    ResultCollection
 from .dummy_db import DBTestCase
 
 
@@ -53,6 +54,17 @@ class DBProposalTest(DBTestCase):
         semester_id_2 = self.db.add_semester(facility_id, '99B')
         self.assertIsInstance(semester_id_2, int)
         self.assertNotEqual(semester_id_2, semester_id)
+
+        semesters = self.db.search_semester(facility_id=facility_id)
+        self.assertIsInstance(semesters, ResultCollection)
+        self.assertEqual(len(semesters), 2)
+
+        # Try updating a record.
+        self.assertEqual(self.db.get_semester(semester_id).name, '99A')
+        self.db.update_semester(semester_id, name='99 (a)')
+        self.assertEqual(self.db.get_semester(semester_id).name, '99 (a)')
+        with self.assertRaisesRegexp(ConsistencyError, 'semester does not ex'):
+            self.db.update_semester(999, name='bad semester')
 
     def test_queue(self):
         # Test add_queue method.
