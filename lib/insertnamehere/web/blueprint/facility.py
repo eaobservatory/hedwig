@@ -56,6 +56,33 @@ def create_facility_blueprint(db, facility):
     def facility_admin():
         return facility.view_facility_admin(db)
 
+    @bp.route('/admin/semester/')
+    @facility_template('semester_list.html')
+    @require_admin
+    def semester_list():
+        return facility.view_semester_list(db)
+
+    @bp.route('/admin/semester/new', methods=['GET', 'POST'])
+    @facility_template('semester_edit.html')
+    @require_admin
+    def semester_new():
+        return facility.view_semester_new(db, request.form,
+                                          request.method == 'POST')
+
+    @bp.route('/admin/semester/<int:semester_id>')
+    @facility_template('semester_view.html')
+    @require_admin
+    def semester_view(semester_id):
+        return facility.view_semester_view(db, semester_id)
+
+    @bp.route('/admin/semester/<int:semester_id>/edit',
+              methods=['GET', 'POST'])
+    @facility_template('semester_edit.html')
+    @require_admin
+    def semester_edit(semester_id):
+        return facility.view_semester_edit(db, semester_id, request.form,
+                                           request.method == 'POST')
+
     @bp.context_processor
     def add_to_context():
         return {

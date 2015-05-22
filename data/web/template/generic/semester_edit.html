@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% if message is not none %}
+    <p>
+        {{ message }}
+    </p>
+{% endif %}
+
+
+<form method="POST" action="{{ target }}">
+    <p>
+        Name: <input type="text" name="semester_name" value="{{ semester_name }}" required="required" />
+        <br />
+        <input type="submit" value="Save" name="submit" />
+    </p>
+</form>
+
+{% endblock %}

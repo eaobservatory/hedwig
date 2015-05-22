@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<p>
+    <a href="{{ url_for('.semester_new') }}">New semester</a>
+</p>
+
+<ul>
+    {% for semester in semesters.values() %}
+        <li><a href="{{ url_for('.semester_view', semester_id=semester.id) }}">{{ semester.name }}</a></li>
+    {% endfor %}
+</ul>
+
+{% endblock %}
