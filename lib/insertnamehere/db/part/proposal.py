@@ -25,7 +25,7 @@ from sqlalchemy.sql.functions import max as max_
 
 from ...error import ConsistencyError, NoSuchRecord, UserError
 from ...type import Member, MemberCollection, Proposal, \
-    Queue, ResultCollection, Semester, SemesterInfo
+    Queue, QueueInfo, ResultCollection, Semester, SemesterInfo
 from ..meta import call, facility, member, person, proposal, queue, semester
 
 
@@ -229,7 +229,7 @@ class ProposalPart(object):
         """
 
         with self._transaction() as conn:
-            return self._get_queue(*args, **kwargs)
+            return self._get_queue(conn, *args, **kwargs)
 
     def _get_queue(self, conn, queue_id):
         result = conn.execute(queue.select().where(
@@ -274,6 +274,20 @@ class ProposalPart(object):
 
         return ans
 
+    def search_queue(self, facility_id=None):
+        stmt = select([queue.c.id, queue.c.facility_id, queue.c.name])
+
+        if facility_id is not None:
+            stmt = stmt.where(queue.c.facility_id == facility_id)
+
+        ans = ResultCollection()
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt.order_by((queue.c.name))):
+                ans[row['id']] = QueueInfo(**row)
+
+        return ans
+
     def update_semester(self, semester_id, name=None, _test_skip_check=False):
         """
         Update a semester record.
@@ -301,3 +315,31 @@ class ProposalPart(object):
                 raise ConsistencyError(
                     'no rows matched updating semester with id={0}',
                     semester_id)
+
+    def update_queue(self, queue_id, name=None, _test_skip_check=False):
+        """
+        Update a queue record.
+        """
+
+        values = {}
+
+        if name is not None:
+            values['name'] = name
+
+        if not values:
+            raise Error('no queue updates specified')
+
+        with self._transaction() as conn:
+            if not _test_skip_check and not self._exists_id(
+                    conn, queue, queue_id):
+                raise ConsistencyError(
+                    'queue does not exist with id={0}', queue_id)
+
+            result = conn.execute(queue.update().where(
+                queue.c.id == queue_id
+            ).values(values))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched updating queue with id={0}',
+                    queue_id)

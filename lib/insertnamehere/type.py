@@ -61,6 +61,10 @@ Queue = namedtuple(
     'Queue',
     map(lambda x: x.name, queue.columns))
 
+QueueInfo = namedtuple(
+    'Queue',
+    ['id', 'facility_id', 'name'])
+
 
 class ResultCollection(OrderedDict):
     def get_single(self):

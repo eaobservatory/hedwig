@@ -84,6 +84,23 @@ class DBProposalTest(DBTestCase):
         self.assertIsInstance(queue_id_2, int)
         self.assertNotEqual(queue_id_2, queue_id)
 
+        # Try searching: add a queue for another facility first.
+        facility_id_2 = self.db.ensure_facility('my_other_tel')
+        queue_id_3 = self.db.add_queue(facility_id_2, '???')
+        self.assertIsInstance(queue_id_3, int)
+        queues = self.db.search_queue(facility_id=facility_id)
+        self.assertIsInstance(queues, ResultCollection)
+        self.assertEqual(list(queues.keys()), [queue_id, queue_id_2])
+        queues = self.db.search_queue(facility_id=facility_id_2)
+        self.assertEqual(list(queues.keys()), [queue_id_3])
+
+        # Try updating a record.
+        queue = self.db.get_queue(queue_id_3)
+        self.assertEqual(queue.name, '???')
+        self.db.update_queue(queue_id_3, name='!!!')
+        queue = self.db.get_queue(queue_id_3)
+        self.assertEqual(queue.name, '!!!')
+
     def test_call(self):
         # Check that we can create a call for proposals.
         facility_id = self.db.ensure_facility('my_tel')
