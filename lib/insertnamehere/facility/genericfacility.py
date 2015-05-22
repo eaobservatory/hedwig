@@ -56,3 +56,6 @@ class GenericFacility(object):
 
     def view_facility_home(self, db):
         return {}
+
+    def view_facility_admin(self, db):
+        return {}

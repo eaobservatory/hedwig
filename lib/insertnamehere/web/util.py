@@ -61,6 +61,26 @@ class ErrorPage(Exception):
     pass
 
 
+def require_admin(f):
+    """
+    Decorator to require that the user has administrative access.
+
+    Simply checks that the user is logged in and has administrative
+    privileges enabled.  Views should double-check that the user is
+    still entitled to administrative privileges (e.g. using
+    view.auth.can_be_admin).
+    """
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        if 'user_id' in session and session.get('is_admin', False):
+            return f(*args, **kwargs)
+
+        raise HTTPForbidden(
+            'You need administrative privileges to view this page.')
+
+    return decorated
+
+
 def require_auth(require_person=False, require_institution=False,
                  register_user_only=False):
     """

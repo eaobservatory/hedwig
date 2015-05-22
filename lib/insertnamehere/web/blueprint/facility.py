@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from flask import Blueprint, request
 
-from ..util import require_auth, templated
+from ..util import require_admin, require_auth, templated
 
 
 def create_facility_blueprint(db, facility):
@@ -49,6 +49,12 @@ def create_facility_blueprint(db, facility):
     @facility_template('facility_home.html')
     def facility_home():
         return facility.view_facility_home(db)
+
+    @bp.route('/admin')
+    @facility_template('facility_admin.html')
+    @require_admin
+    def facility_admin():
+        return facility.view_facility_admin(db)
 
     @bp.context_processor
     def add_to_context():
