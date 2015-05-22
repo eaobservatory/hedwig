@@ -20,9 +20,13 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict, namedtuple
 
-from .db.meta import email, institution, member, person, proposal, queue, \
+from .db.meta import call, email, institution, member, person, proposal, queue, \
     semester
 from .error import NoSuchRecord, MultipleRecords, UserError
+
+Call = namedtuple(
+    'Call',
+    map(lambda x: x.name, call.columns) + ['semester_name', 'queue_name'])
 
 Email = namedtuple(
     'Email',

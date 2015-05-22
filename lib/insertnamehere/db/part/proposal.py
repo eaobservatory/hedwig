@@ -23,7 +23,7 @@ from sqlalchemy.sql.functions import coalesce, count
 from sqlalchemy.sql.functions import max as max_
 
 from ...error import ConsistencyError, NoSuchRecord, UserError
-from ...type import Member, MemberCollection, Proposal, \
+from ...type import Call, Member, MemberCollection, Proposal, \
     Queue, QueueInfo, ResultCollection, Semester, SemesterInfo
 from ..meta import call, facility, member, person, proposal, queue, semester
 
@@ -240,6 +240,34 @@ class ProposalPart(object):
                                queue_id)
 
         return Queue(**result)
+
+    def search_call(self, call_id=None, facility_id=None):
+        """
+        Search for call records.
+        """
+
+        stmt = select([
+            call,
+            semester.c.name.label('semester_name'),
+            queue.c.name.label('queue_name')
+        ]).select_from(
+            call.join(semester).join(queue)
+        )
+
+        if call_id is not None:
+            stmt = stmt.where(call.c.id == call_id)
+
+        if facility_id is not None:
+            stmt = stmt.where(semester.c.facility_id == facility_id)
+
+        ans = ResultCollection()
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt.order_by(semester.c.id.desc(),
+                                                  queue.c.name.asc())):
+                ans[row['id']] = Call(**row)
+
+        return ans
 
     def search_member(self, proposal_id=None, person_id=None):
         with self._transaction() as conn:

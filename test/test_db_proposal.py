@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
     UserError
-from insertnamehere.type import Member, MemberCollection, Proposal, \
+from insertnamehere.type import Call, Member, MemberCollection, Proposal, \
     ResultCollection
 from .dummy_db import DBTestCase
 
@@ -129,6 +129,14 @@ class DBProposalTest(DBTestCase):
         with self.assertRaisesRegexp(ConsistencyError,
                                      'inconsistent facility references'):
             self.db.add_call(semester_id_2, queue_id)
+
+        # Try the search_call method.
+        result = self.db.search_call(call_id=call_id)
+        self.assertIsInstance(result, ResultCollection)
+        self.assertEqual(list(result.keys()), [call_id])
+        self.assertEqual(result[call_id], Call(
+            id=call_id, semester_id=semester_id, queue_id=queue_id,
+            semester_name='My Semester', queue_name='My Queue'))
 
     def test_add_proposal(self):
         call_id_1 = self._create_test_call('semester1', 'queue1')
