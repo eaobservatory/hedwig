@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from ..error import NoSuchRecord, UserError
+from ..type import Queue, Semester
 from ..view.auth import can_be_admin
 from ..web.util import ErrorPage, HTTPNotFound, HTTPRedirect, url_for
 
@@ -76,28 +77,6 @@ class GenericFacility(object):
             'semesters': semesters,
         }
 
-    def view_semester_new(self, db, form, is_post):
-        if not can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
-
-        message = None
-        semester_name = form.get('semester_name', '')
-
-        if is_post:
-            try:
-                db.add_semester(self.id_, semester_name)
-                raise HTTPRedirect(url_for('.semester_list'))
-
-            except UserError as e:
-                message = e.message
-
-        return {
-            'title': 'Add New Semester',
-            'target': url_for('.semester_new'),
-            'message': message,
-            'semester_name': semester_name,
-        }
-
     def view_semester_view(self, db, semester_id):
         try:
             semester = db.get_semester(semester_id)
@@ -113,34 +92,59 @@ class GenericFacility(object):
         }
 
     def view_semester_edit(self, db, semester_id, form, is_post):
+        """
+        Edit or create a new semester.
+
+        If the "semester_id" parameter is None, then a new semester
+        will be created.  Otherwise the existing semester will be
+        updated.
+        """
+
         if not can_be_admin(db):
             raise HTTPForbidden('Could not verify administrative access.')
 
-        try:
-            semester = db.get_semester(semester_id)
-        except NoSuchRecord:
-            raise HTTPNotFound('Semester not found')
+        if semester_id is None:
+            # We are creating a new semester.
+            semester = Semester(None, None, name='')
+            title = 'Add New Semester'
+            target = url_for('.semester_new')
+        else:
+            # Fetch the existing semester record.
+            try:
+                semester = db.get_semester(semester_id)
+            except NoSuchRecord:
+                raise HTTPNotFound('Semester not found')
 
-        if semester.facility_id != self.id_:
-            raise ErrorPage('Semester is not for this facility')
+            if semester.facility_id != self.id_:
+                raise ErrorPage('Semester is not for this facility')
+
+            title = 'Edit Semester: {0}'.format(semester.name)
+            target = url_for('.semester_edit', semester_id=semester_id)
 
         message = None
-        semester_name = form.get('semester_name', semester.name)
 
         if is_post:
-            semester_name = form['semester_name']
+            semester = semester._replace(name=form['semester_name'])
+
             try:
-                db.update_semester(semester_id, name=semester_name)
-                raise HTTPRedirect(url_for('.semester_list'))
+                if semester_id is None:
+                    # Create the new semester.
+                    db.add_semester(self.id_, semester.name)
+                    raise HTTPRedirect(url_for('.semester_list'))
+
+                else:
+                    # Update an existing semseter.
+                    db.update_semester(semester_id, name=semester.name)
+                    raise HTTPRedirect(url_for('.semester_list'))
 
             except UserError as e:
                 message = e.message
 
         return {
-            'title': 'Edit Semester: {0}'.format(semester.name),
-            'target': url_for('.semester_edit', semester_id=semester_id),
+            'title': title,
+            'target': target,
             'message': message,
-            'semester_name': semester_name,
+            'semester': semester,
         }
 
     def view_queue_list(self, db):
@@ -149,28 +153,6 @@ class GenericFacility(object):
         return {
             'title': 'Queue List',
             'queues': queues,
-        }
-
-    def view_queue_new(self, db, form, is_post):
-        if not can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
-
-        message = None
-        queue_name = form.get('queue_name', '')
-
-        if is_post:
-            try:
-                db.add_queue(self.id_, queue_name)
-                raise HTTPRedirect(url_for('.queue_list'))
-
-            except UserError as e:
-                message = e.message
-
-        return {
-            'title': 'Add New Queue',
-            'target': url_for('.queue_new'),
-            'message': message,
-            'queue_name': queue_name,
         }
 
     def view_queue_view(self, db, queue_id):
@@ -188,32 +170,53 @@ class GenericFacility(object):
         }
 
     def view_queue_edit(self, db, queue_id, form, is_post):
+        """
+        Edit or create a new queue.
+        """
+
         if not can_be_admin(db):
             raise HTTPForbidden('Could not verify administrative access.')
 
-        try:
-            queue = db.get_queue(queue_id)
-        except NoSuchRecord:
-            raise HTTPNotFound('Queue not found')
+        if queue_id is None:
+            # We are creating a new queue.
+            queue = Queue(None, None, name='')
+            title = 'Add New Queue'
+            target = url_for('.queue_new')
+        else:
+            # Fetch the existing queue record.
+            try:
+                queue = db.get_queue(queue_id)
+            except NoSuchRecord:
+                raise HTTPNotFound('Queue not found')
 
-        if queue.facility_id != self.id_:
-            raise ErrorPage('Queue is not for this facility')
+            if queue.facility_id != self.id_:
+                raise ErrorPage('Queue is not for this facility')
+
+            title = 'Edit Queue: {0}'.format(queue.name)
+            target = url_for('.queue_edit', queue_id=queue_id)
 
         message = None
-        queue_name = form.get('queue_name', queue.name)
 
         if is_post:
-            queue_name = form['queue_name']
+            queue = queue._replace(name=form['queue_name'])
+
             try:
-                db.update_queue(queue_id, name=queue_name)
-                raise HTTPRedirect(url_for('.queue_list'))
+                if queue_id is None:
+                    # Create new queue.
+                    db.add_queue(self.id_, queue.name)
+                    raise HTTPRedirect(url_for('.queue_list'))
+
+                else:
+                    # Update existing queue.
+                    db.update_queue(queue_id, name=queue.name)
+                    raise HTTPRedirect(url_for('.queue_list'))
 
             except UserError as e:
                 message = e.message
 
         return {
-            'title': 'Edit Queue: {0}'.format(queue.name),
-            'target': url_for('.queue_edit', queue_id=queue_id),
+            'title': title,
+            'target': target,
             'message': message,
-            'queue_name': queue_name,
+            'queue': queue,
         }

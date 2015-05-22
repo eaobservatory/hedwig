@@ -66,8 +66,8 @@ def create_facility_blueprint(db, facility):
     @facility_template('semester_edit.html')
     @require_admin
     def semester_new():
-        return facility.view_semester_new(db, request.form,
-                                          request.method == 'POST')
+        return facility.view_semester_edit(db, None, request.form,
+                                           request.method == 'POST')
 
     @bp.route('/admin/semester/<int:semester_id>')
     @facility_template('semester_view.html')
@@ -93,8 +93,8 @@ def create_facility_blueprint(db, facility):
     @facility_template('queue_edit.html')
     @require_admin
     def queue_new():
-        return facility.view_queue_new(db, request.form,
-                                       request.method == 'POST')
+        return facility.view_queue_edit(db, None, request.form,
+                                        request.method == 'POST')
 
     @bp.route('/admin/queue/<int:queue_id>')
     @facility_template('queue_view.html')
