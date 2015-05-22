@@ -26,7 +26,8 @@ from .error import NoSuchRecord, MultipleRecords, UserError
 
 Call = namedtuple(
     'Call',
-    map(lambda x: x.name, call.columns) + ['semester_name', 'queue_name'])
+    map(lambda x: x.name, call.columns) +
+    ['facility_id', 'semester_name', 'queue_name'])
 
 Email = namedtuple(
     'Email',

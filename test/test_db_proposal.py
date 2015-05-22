@@ -135,6 +135,7 @@ class DBProposalTest(DBTestCase):
         self.assertIsInstance(result, ResultCollection)
         self.assertEqual(list(result.keys()), [call_id])
         expected = Call(id=call_id, semester_id=semester_id, queue_id=queue_id,
+                        facility_id=facility_id,
                         semester_name='My Semester', queue_name='My Queue')
         self.assertEqual(result[call_id], expected)
         self.assertEqual(self.db.get_call(call_id), expected)

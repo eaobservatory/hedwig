@@ -255,6 +255,7 @@ class ProposalPart(object):
 
         stmt = select([
             call,
+            semester.c.facility_id,
             semester.c.name.label('semester_name'),
             queue.c.name.label('queue_name')
         ]).select_from(
