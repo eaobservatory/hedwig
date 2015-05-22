@@ -19,7 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from ...error import NoSuchRecord, UserError
-from ...type import Queue, Semester
+from ...type import Call, Queue, Semester
 from ...view.auth import can_be_admin
 from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, url_for
 
@@ -219,4 +219,92 @@ class Generic(object):
             'target': target,
             'message': message,
             'queue': queue,
+        }
+
+    def view_call_list(self, db):
+        calls = db.search_call(facility_id=self.id_)
+
+        return {
+            'title': 'Call List',
+            'calls': calls,
+        }
+
+    def view_call_view(self, db, call_id):
+        try:
+            call = db.get_call(call_id=call_id)
+        except NoSuchRecord:
+            raise HTTPNotFound('Call or semester not found')
+
+        if call.facility_id != self.id_:
+            raise ErrorPage('Call is not for this facility')
+
+        return {
+            'title': 'Call: {0} {1}'.format(call.semester_name,
+                                            call.queue_name),
+            'call': call,
+        }
+
+    def view_call_edit(self, db, call_id, form, is_post):
+        """
+        Create or edit a call.
+        """
+
+        if not can_be_admin(db):
+            raise HTTPForbidden('Could not verify administrative access.')
+
+        if call_id is None:
+            # We are creating a new call, so need to be able to offer
+            # menus of semesters and queues.
+            call = Call(None, semester_id=None, queue_id=None,
+                        facility_id=None, semester_name='', queue_name='')
+            semesters = db.search_semester(facility_id=self.id_)
+            queues = db.search_queue(facility_id=self.id_)
+            title = 'Add New Call'
+            target = url_for('.call_new')
+        else:
+            # Fetch the existing call record.
+            try:
+                call = db.get_call(call_id)
+            except NoSuchRecord:
+                raise HTTPNotFound('Call not found')
+
+            if call.facility_id != self.id_:
+                raise ErrorPage('Call is not for this facility')
+
+            semesters = None
+            queues = None
+            title = 'Edit Call: {0} {1}'.format(call.semester_name,
+                                                call.queue_name)
+            target = url_for('.call_edit', call_id=call_id)
+
+        message = None
+
+        if is_post:
+            try:
+                if call_id is None:
+                    # Create new call.
+                    call = call._replace(semester_id=int(form['semester_id']))
+                    call = call._replace(queue_id=int(form['queue_id']))
+
+                    db.add_call(semester_id=call.semester_id,
+                                queue_id=call.queue_id)
+                    raise HTTPRedirect(url_for('.call_list'))
+
+                else:
+                    # Update existing call.
+                    # The call table doesn't yet have anything we can
+                    # actually edit.
+                    # db.update_call(call_id, ...)
+                    raise HTTPRedirect(url_for('.call_list'))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': title,
+            'target': target,
+            'message': message,
+            'call': call,
+            'semesters': (None if semesters is None else semesters.values()),
+            'queues': (None if queues is None else queues.values()),
         }

@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<p>
+    <a href="{{ url_for('.call_edit', call_id=call.id) }}">Edit call</a>
+</p>
+
+<p>
+    Semester: <a href="{{ url_for('.semester_view', semester_id=call.semester_id) }}">{{ call.semester_name }}</a>
+    <br />
+    Queue: <a href="{{ url_for('.queue_view', queue_id=call.queue_id) }}">{{ call.queue_name }}</a>
+</p>
+
+{% endblock %}

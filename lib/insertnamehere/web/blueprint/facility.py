@@ -110,6 +110,32 @@ def create_facility_blueprint(db, facility):
         return facility.view_queue_edit(db, queue_id, request.form,
                                         request.method == 'POST')
 
+    @bp.route('/admin/call/')
+    @facility_template('call_list.html')
+    @require_admin
+    def call_list():
+        return facility.view_call_list(db)
+
+    @bp.route('/admin/call/new', methods=['GET', 'POST'])
+    @facility_template('call_edit.html')
+    @require_admin
+    def call_new():
+        return facility.view_call_edit(db, None, request.form,
+                                       request.method == 'POST')
+
+    @bp.route('/admin/call/<int:call_id>')
+    @facility_template('call_view.html')
+    @require_admin
+    def call_view(call_id):
+        return facility.view_call_view(db, call_id)
+
+    @bp.route('/admin/call/<int:call_id>/edit', methods=['GET', 'POST'])
+    @facility_template('call_edit.html')
+    @require_admin
+    def call_edit(call_id):
+        return facility.view_call_edit(db, call_id, request.form,
+                                       request.method == 'POST')
+
     @bp.context_processor
     def add_to_context():
         return {

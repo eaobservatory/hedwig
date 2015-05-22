@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% if message is not none %}
+    <p>
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ target }}">
+    <p>
+        {% if semesters is not none %}
+            <select name="semester_id">
+                {% for semester in semesters %}
+                    <option value="{{ semester.id }}" {{'selected="selected"' | safe if semester.id == call.semester_id }}>{{ semester.name }}</option>
+                {% endfor %}
+            </select>
+            <br />
+        {% endif %}
+        {% if queues is not none %}
+            <select name="queue_id">
+                {% for queue in queues %}
+                    <option value="{{ queue.id }}" {{'selected="selected"' | safe if queue.id == call.queue_id }}>{{ queue.name }}</option>
+                {% endfor %}
+            </select>
+            <br />
+        {% endif %}
+        <input type="submit" value="Save" name="submit" />
+    </p>
+</form>
+
+{% endblock %}

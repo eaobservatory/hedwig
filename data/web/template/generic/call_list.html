@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<p>
+    <a href="{{ url_for('.call_new') }}">New call</a>
+</p>
+
+<ul>
+    {% for call in calls.values() %}
+        <li>
+            <a href="{{ url_for('.call_view', call_id=call.id) }}">
+                {{ call.semester_name }}
+                {{ call.queue_name }}
+            </a>
+        </li>
+    {% endfor %}
+</ul>
+
+{% endblock %}
