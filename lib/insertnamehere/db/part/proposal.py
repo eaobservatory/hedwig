@@ -19,7 +19,6 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from sqlalchemy.sql import select
-from sqlalchemy.sql.expression import desc
 from sqlalchemy.sql.functions import coalesce, count
 from sqlalchemy.sql.functions import max as max_
 
@@ -269,7 +268,7 @@ class ProposalPart(object):
         ans = ResultCollection()
 
         with self._transaction() as conn:
-            for row in conn.execute(stmt.order_by(desc(semester.c.id))):
+            for row in conn.execute(stmt.order_by(semester.c.id.desc())):
                 ans[row['id']] = SemesterInfo(**row)
 
         return ans
