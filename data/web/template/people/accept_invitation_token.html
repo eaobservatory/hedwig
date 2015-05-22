@@ -3,7 +3,34 @@
 {% block content %}
 
 <p>
-Invitation code: <tt>{{ token }}</tt>
+    The details of this invitation are shown below.
+    Please do not accept if the invitation appears
+    not to refer to you.
+    {% if session.person is defined %}
+        Since you have already registered,
+        your existing profile will be retained,
+        so do not worry if these details are not entirely correct.
+    {% else %}
+        These details will be the basis for your new profile,
+        but you will be able to edit everything after accepting
+        the invitation.
+    {% endif %}
+</p>
+
+<p>
+    Invitation code: <tt>{{ token }}</tt>
+    <br />
+    Name: {{ person.name }}
+    {% if person.email is not none %}
+        {% for email in person.email %}
+            <br />
+            Email: {{ email.address }}
+        {% endfor %}
+    {% endif %}
+    {% if person.institution is not none %}
+        <br />
+        Institution: {{ person.institution.name }}
+    {% endif %}
 </p>
 
 <form method="POST" action="{{ url_for('.accept_invitation_token') }}">

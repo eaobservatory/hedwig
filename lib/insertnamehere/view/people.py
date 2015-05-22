@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from ..error import MultipleRecords, NoSuchRecord, UserError
+from ..error import Error, MultipleRecords, NoSuchRecord, UserError
 from ..type import Email, EmailCollection
 from ..web.util import flash, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
@@ -633,12 +633,44 @@ def accept_invitation_token(db, args, form, is_post):
         flash('Your invitation code was not received.  Please enter it again.')
         raise HTTPRedirect(url_for('.enter_invitation_token'))
 
-    if is_post:
-        raise HTTPError('Not implemented')
+    try:
+        if is_post:
+            # Re-fetch the current user's profile, in case they registered a
+            # profile in another session.  We need to be sure we know whether
+            # they are registered or not.
+            user_id = session['user_id']
+            try:
+                person = db.get_person(person_id=None, user_id=user_id)
+                kwargs = {'new_person_id': person.id}
+            except NoSuchRecord:
+                kwargs = {'user_id': user_id}
+
+            db.use_invitation(token, **kwargs)
+            flash('The invitation has been accepted successfully.')
+            person = db.get_person(person_id=None, user_id=user_id)
+            _update_session_person(person)
+
+            # TODO: redirect to proposal page if we have one in the
+            # person record.  (But use the old person record associated
+            # with the invitation so we only see the new ones.)
+            raise HTTPRedirect(url_for('.view_person', person_id=person.id))
+
+        person = db.get_invitation_person(
+            token, with_email=True, with_institution=True)
+
+    except NoSuchRecord:
+        raise ErrorPage('Your invitation code was not recognised. '
+                        'It may have expired or been superceded by '
+                        'a newer code.')
+
+    except Error as e:
+        raise ErrorPage('An error occurred while attempting to process '
+                        'the invitation.')
 
     return {
         'title': 'Accept Invitation',
         'token': token,
+        'person': person._replace(email=person.email.values())
     }
 
 
