@@ -19,7 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
-    UserError
+    NoSuchRecord, UserError
 from insertnamehere.type import Call, Member, MemberCollection, Proposal, \
     ResultCollection
 from .dummy_db import DBTestCase
@@ -134,9 +134,13 @@ class DBProposalTest(DBTestCase):
         result = self.db.search_call(call_id=call_id)
         self.assertIsInstance(result, ResultCollection)
         self.assertEqual(list(result.keys()), [call_id])
-        self.assertEqual(result[call_id], Call(
-            id=call_id, semester_id=semester_id, queue_id=queue_id,
-            semester_name='My Semester', queue_name='My Queue'))
+        expected = Call(id=call_id, semester_id=semester_id, queue_id=queue_id,
+                        semester_name='My Semester', queue_name='My Queue')
+        self.assertEqual(result[call_id], expected)
+        self.assertEqual(self.db.get_call(call_id), expected)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_call(999)
 
     def test_add_proposal(self):
         call_id_1 = self._create_test_call('semester1', 'queue1')

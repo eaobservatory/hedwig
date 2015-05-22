@@ -22,7 +22,7 @@ from sqlalchemy.sql import select
 from sqlalchemy.sql.functions import coalesce, count
 from sqlalchemy.sql.functions import max as max_
 
-from ...error import ConsistencyError, NoSuchRecord, UserError
+from ...error import ConsistencyError, MultipleRecords, NoSuchRecord, UserError
 from ...type import Call, Member, MemberCollection, Proposal, \
     Queue, QueueInfo, ResultCollection, Semester, SemesterInfo
 from ..meta import call, facility, member, person, proposal, queue, semester
@@ -181,6 +181,13 @@ class ProposalPart(object):
             }))
 
             return result.inserted_primary_key[0]
+
+    def get_call(self, call_id):
+        """
+        Get a call record.
+        """
+
+        return self.search_call(call_id=call_id).get_single()
 
     def get_proposal(self, proposal_id, with_members=False):
         """
