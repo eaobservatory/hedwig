@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% if message is not none %}
+    <p>
+        {{ message }}
+    </p>
+{% endif %}
+
+<p>
+    Facility: {{ facility_name }}
+    <br />
+    Call for proposals: {{ call.semester_name }}
+    <br />
+    Proposal queue: {{ call.queue_name }}
+    <br />
+    Your name: {{ session.person.name }}
+</p>
+
+
+<form method="POST" action="{{ url_for('.proposal_new', call_id=call.id) }}">
+    Proposal title:
+    <input type="text" name="proposal_title" value="{{ proposal_title }}" required="required" autofocus="autofocus" />
+    <br />
+    <input type="submit" name="submit-new" value="Create new proposal" />
+</form>
+
+{% endblock %}

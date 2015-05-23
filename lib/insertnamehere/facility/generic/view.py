@@ -18,10 +18,13 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import OrderedDict
+
 from ...error import NoSuchRecord, UserError
 from ...type import Call, Queue, Semester
-from ...view.auth import can_be_admin
-from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, url_for
+from ...view import auth
+from ...web.util import ErrorPage, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
+    flash, session, url_for
 
 
 class Generic(object):
@@ -60,8 +63,95 @@ class Generic(object):
         return 'Generic Facility'
 
     def view_facility_home(self, db):
+        # Determine which semesters have open calls for proposals.
+        # TODO: restrict to open calls.
+        open_semesters = OrderedDict()
+        for call in db.search_call(facility_id=self.id_).values():
+            if call.semester_id not in open_semesters:
+                open_semesters[call.semester_id] = call.semester_name
+
         return {
             'title': self.get_name(),
+            'open_semesters': open_semesters,
+        }
+
+    def view_semester_calls(self, db, semester_id):
+        try:
+            semester = db.get_semester(semester_id)
+        except NoSuchRecord:
+            raise HTTPNotFound('Semester not found')
+
+        if semester.facility_id != self.id_:
+            raise ErrorPage('Semester is not for this facility')
+
+        # TODO: restrict to open calls.
+        calls = db.search_call(facility_id=self.id_, semester_id=semester_id)
+        if not calls:
+            raise ErrorPage('No calls are currently open for this semester.')
+
+        return {
+            'title': 'Call for Semester {0}'.format(semester.name),
+            'semester': semester,
+            'calls': calls.values(),
+        }
+
+    def view_proposal_new(self, db, call_id, form, is_post):
+        try:
+            call = db.search_call(
+                facility_id=self.id_, call_id=call_id
+            ).get_single()
+        except NoSuchRecord:
+            raise HTTPNotFound('Call not found')
+        except MultipleRecords:
+            raise HTTPError('Multiple calls found')
+        # TODO: check call is open.
+        # if not call.open:
+        #    raise ErrorPage('This call is not currently open for proposals.')
+
+        message = None
+
+        proposal_title = ''
+
+        if is_post:
+            proposal_title = form['proposal_title']
+            try:
+                proposal_id = db.add_proposal(
+                    call_id=call_id, person_id=session['person']['id'],
+                    title=proposal_title)
+                flash('Your new proposal has been created.')
+                raise HTTPRedirect(url_for('.proposal_view',
+                                           proposal_id=proposal_id))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'New Proposal',
+            'call': call,
+            'message': message,
+            'proposal_title': proposal_title,
+        }
+
+    def view_proposal_view(self, db, proposal_id):
+        try:
+            proposal = db.get_proposal(proposal_id, with_members=True)
+            call = db.get_call(proposal.call_id)
+        except NoSuchRecord:
+            raise HTTPNotFound('Proposal not found')
+
+        if call.facility_id != self.id_:
+            raise ErrorPage('Semester is not for this facility')
+
+        can = auth.for_proposal(db, proposal)
+
+        if not can.view:
+            raise HTTPForbidden('Permission denied for this proposal.')
+
+        return {
+            'title': proposal.title,
+            'can_edit': can.edit,
+            'call': call,
+            'proposal': proposal,
         }
 
     def view_facility_admin(self, db):
@@ -100,7 +190,7 @@ class Generic(object):
         updated.
         """
 
-        if not can_be_admin(db):
+        if not auth.can_be_admin(db):
             raise HTTPForbidden('Could not verify administrative access.')
 
         if semester_id is None:
@@ -174,7 +264,7 @@ class Generic(object):
         Edit or create a new queue.
         """
 
-        if not can_be_admin(db):
+        if not auth.can_be_admin(db):
             raise HTTPForbidden('Could not verify administrative access.')
 
         if queue_id is None:
@@ -249,7 +339,7 @@ class Generic(object):
         Create or edit a call.
         """
 
-        if not can_be_admin(db):
+        if not auth.can_be_admin(db):
             raise HTTPForbidden('Could not verify administrative access.')
 
         if call_id is None:

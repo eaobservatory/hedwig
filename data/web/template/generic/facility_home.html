@@ -12,4 +12,22 @@ Welcome to {{ application_name }}: {{ facility_name }}.
     </p>
 {% endif %}
 
+<h2>Calls for Proposals</h2>
+
+{% if open_semesters %}
+    <p>
+        The following calls for proposals are open:
+    </p>
+
+    <ul>
+        {% for semester_id, semester_name in open_semesters.items() %}
+            <li><a href="{{ url_for('.semester_calls', semester_id=semester_id) }}">{{ semester_name }}</a></li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>
+        There are currently no open calls for proposals.
+    </p>
+{% endif %}
+
 {% endblock %}

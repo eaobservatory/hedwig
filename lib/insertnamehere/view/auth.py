@@ -64,6 +64,21 @@ def for_institution(db, institution):
                          user_institution_id == institution.id))
 
 
+def for_proposal(db, proposal):
+    """
+    Determine the current user's authorization regarding this proposal.
+    """
+
+    if 'user_id' not in session or 'person' not in session:
+        return no
+
+    try:
+        member = proposal.members.get_person(session['person']['id'])
+        return Authorization(view=True, edit=member.editor)
+    except KeyError:
+        return no
+
+
 def can_be_admin(db):
     """
     Check whether the user is permitted to take administrative

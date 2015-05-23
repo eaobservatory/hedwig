@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<p>
+    The following queues have open calls for this semester.
+    Please select a queue to start a new proposal.
+</p>
+
+<ul>
+    {% for call in calls %}
+        <li>
+            <a href="{{ url_for('.proposal_new', call_id=call.id) }}">{{ call.queue_name }}</a>
+        </li>
+    {% endfor %}
+</ul>
+
+{% endblock %}

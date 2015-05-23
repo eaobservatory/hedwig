@@ -50,6 +50,25 @@ def create_facility_blueprint(db, facility):
     def facility_home():
         return facility.view_facility_home(db)
 
+    @bp.route('/semester/<int:semester_id>')
+    @facility_template('semester_calls.html')
+    def semester_calls(semester_id):
+        return facility.view_semester_calls(db, semester_id)
+
+    @bp.route('/call/<int:call_id>/new_proposal',
+              methods=['GET', 'POST'])
+    @facility_template('proposal_new.html')
+    @require_auth(require_institution=True)
+    def proposal_new(call_id):
+        return facility.view_proposal_new(
+            db, call_id, request.form, request.method == 'POST')
+
+    @bp.route('/proposal/<int:proposal_id>')
+    @facility_template('proposal_view.html')
+    @require_auth(require_person=True)
+    def proposal_view(proposal_id):
+        return facility.view_proposal_view(db, proposal_id)
+
     @bp.route('/admin')
     @facility_template('facility_admin.html')
     @require_admin

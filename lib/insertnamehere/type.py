@@ -121,3 +121,10 @@ class MemberCollection(ResultCollection):
                 return member
 
         raise KeyError('no pi member')
+
+    def get_person(self, person_id):
+        for member in self.values():
+            if member.person_id == person_id:
+                return member
+
+        raise KeyError('person not in member collection')
