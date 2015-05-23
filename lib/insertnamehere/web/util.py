@@ -21,9 +21,10 @@ from __future__ import absolute_import, division, print_function, \
 import functools
 
 # Import the names we wish to expose.
-from flask import flash, session, url_for
+from flask import session, url_for
 
 # Import the names which we use but do not wish to expose.
+from flask import flash as _flask_flash
 from flask import make_response as _flask_make_response
 from flask import render_template as _flask_render_template
 from flask import request as _flask_request
@@ -59,6 +60,21 @@ class ErrorPage(Exception):
     """Exception class where an error page should be shown."""
 
     pass
+
+
+def flash(message, *args):
+    """
+    Add a message to the list of messages to be flashed on
+    the next page viewied.
+
+    The message can include string formatting and the remaining
+    arguments taken as arguments for string formatting.
+    """
+
+    if args:
+        _flask_flash(message.format(*args))
+    else:
+        _flask_flash(message)
 
 
 def require_admin(f):

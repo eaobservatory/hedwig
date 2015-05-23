@@ -461,9 +461,9 @@ def edit_person_institution(db, person_id, form, is_post):
 
         if is_current_user:
             _update_session_person(db.get_person(person_id))
-            flash('Your institution has been {0}.'.format(action))
+            flash('Your institution has been {0}.', action)
         else:
-            flash('The institution has been {0}.'.format(action))
+            flash('The institution has been {0}.', action)
 
         raise HTTPRedirect(session.pop(
             'log_in_for',
