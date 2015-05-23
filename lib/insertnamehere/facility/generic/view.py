@@ -220,11 +220,14 @@ class Generic(object):
                 if semester_id is None:
                     # Create the new semester.
                     db.add_semester(self.id_, semester.name)
+                    flash('New semester "{0}" has been created.',
+                          semester.name)
                     raise HTTPRedirect(url_for('.semester_list'))
 
                 else:
                     # Update an existing semseter.
                     db.update_semester(semester_id, name=semester.name)
+                    flash('Semester "{0}" has been updated.', semester.name)
                     raise HTTPRedirect(url_for('.semester_list'))
 
             except UserError as e:
@@ -294,11 +297,13 @@ class Generic(object):
                 if queue_id is None:
                     # Create new queue.
                     db.add_queue(self.id_, queue.name)
+                    flash('New queue "{0}" has been added.', queue.name)
                     raise HTTPRedirect(url_for('.queue_list'))
 
                 else:
                     # Update existing queue.
                     db.update_queue(queue_id, name=queue.name)
+                    flash('Queue "{0}" has been updated.', queue.name)
                     raise HTTPRedirect(url_for('.queue_list'))
 
             except UserError as e:
@@ -378,6 +383,7 @@ class Generic(object):
 
                     db.add_call(semester_id=call.semester_id,
                                 queue_id=call.queue_id)
+                    flash('The new call has been added.')
                     raise HTTPRedirect(url_for('.call_list'))
 
                 else:
@@ -385,6 +391,7 @@ class Generic(object):
                     # The call table doesn't yet have anything we can
                     # actually edit.
                     # db.update_call(call_id, ...)
+                    flash('The call has been updated.')
                     raise HTTPRedirect(url_for('.call_list'))
 
             except UserError as e:
