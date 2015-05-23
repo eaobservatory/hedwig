@@ -248,7 +248,8 @@ class ProposalPart(object):
 
         return Queue(**result)
 
-    def search_call(self, call_id=None, facility_id=None):
+    def search_call(self, call_id=None, facility_id=None, semester_id=None,
+                    queue_id=None):
         """
         Search for call records.
         """
@@ -267,6 +268,12 @@ class ProposalPart(object):
 
         if facility_id is not None:
             stmt = stmt.where(semester.c.facility_id == facility_id)
+
+        if semester_id is not None:
+            stmt = stmt.where(call.c.semester_id == semester_id)
+
+        if queue_id is not None:
+            stmt = stmt.where(call.c.queue_id == queue_id)
 
         ans = ResultCollection()
 
