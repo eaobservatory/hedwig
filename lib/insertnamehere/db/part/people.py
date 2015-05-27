@@ -236,18 +236,15 @@ class PeoplePart(object):
             else:
                 return None
 
-    def get_institution(self, institution_id):
+    def get_institution(self, institution_id, _conn=None):
         """
         Get an institution record.
         """
 
-        with self._transaction() as conn:
-            return self._get_institution(conn, institution_id)
-
-    def _get_institution(self, conn, institution_id):
-        result = conn.execute(institution.select().where(
-            institution.c.id == institution_id
-        )).first()
+        with self._transaction(_conn=_conn) as conn:
+            result = conn.execute(institution.select().where(
+                institution.c.id == institution_id
+            )).first()
 
         if result is None:
             raise NoSuchRecord('institution does not exist with id={0}',
@@ -322,13 +319,14 @@ class PeoplePart(object):
                 person_id = result['id']
 
             if with_institution and result['institution_id'] is not None:
-                institution = self._get_institution(conn, result['institution_id'])
+                institution = self.get_institution(result['institution_id'],
+                                                   _conn=conn)
 
             if with_email:
-                email = self._search_email(conn, person_id=person_id)
+                email = self.search_email(person_id=person_id, _conn=conn)
 
             if with_proposals:
-                proposals = self._search_member(conn, person_id=person_id)
+                proposals = self.search_member(person_id=person_id, _conn=conn)
 
         return Person(email=email, institution=institution,
                       proposals=proposals, **result)
@@ -394,22 +392,19 @@ class PeoplePart(object):
 
         return token
 
-    def search_email(self, person_id):
+    def search_email(self, person_id, _conn=None):
         """
         Find email address records.
         """
 
-        with self._transaction() as conn:
-            return self._search_email(conn, person_id)
-
-    def _search_email(self, conn, person_id):
         stmt = email.select()
         stmt = stmt.where(email.c.person_id == person_id)
 
         ans = EmailCollection()
 
-        for row in conn.execute(stmt.order_by(email.c.id)):
-            ans[row['id']] = Email(**row)
+        with self._transaction(_conn=_conn) as conn:
+            for row in conn.execute(stmt.order_by(email.c.id)):
+                ans[row['id']] = Email(**row)
 
         return ans
 

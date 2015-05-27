@@ -41,14 +41,22 @@ class Database(PeoplePart, ProposalPart):
         self._lock = Lock()
 
     @contextmanager
-    def _transaction(self):
+    def _transaction(self, _conn=None):
         """
         Private context manager method for handling database transactions.
 
         Obtains a lock and then yields a connection object.  SQLAlchemy
         errors are trapped and re-raised as our DatabaseError, other than
         for IntegrityError which is re-raised as DatabaseIntegrityError.
+
+        If "_conn" is not None, however, simply yields its value.  This is
+        so that methods can optionally take a transaction argument for when
+        they are called from within an existing transaction.
         """
+
+        if _conn is not None:
+            yield _conn
+            return
 
         try:
             with self._lock:

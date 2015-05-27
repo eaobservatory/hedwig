@@ -37,8 +37,8 @@ class ProposalPart(object):
         with self._transaction() as conn:
             if not _test_skip_check:
                 try:
-                    semester = self._get_semester(conn, semester_id)
-                    queue = self._get_queue(conn, queue_id)
+                    semester = self.get_semester(semester_id, _conn=conn)
+                    queue = self.get_queue(queue_id, _conn=conn)
                 except NoSuchRecord as e:
                     raise ConsistencyError(e.message)
 
@@ -59,25 +59,20 @@ class ProposalPart(object):
         return result.inserted_primary_key[0]
 
     def add_member(self, proposal_id, person_id, pi=False, editor=False,
-                   observer=False, _test_skip_check=False):
-        with self._transaction() as conn:
-            return self._add_member(conn, proposal_id, person_id, pi, editor,
-                                    observer, _test_skip_check)
+                   observer=False, _conn=None, _test_skip_check=False):
+        with self._transaction(_conn=_conn) as conn:
+            if (not _test_skip_check and
+                    not self._exists_id(conn, person, person_id)):
+                raise ConsistencyError('person does not exist with id={0}',
+                                       person_id)
 
-    def _add_member(self, conn, proposal_id, person_id, pi, editor, observer,
-                    _test_skip_check=False):
-        if (not _test_skip_check and
-                not self._exists_id(conn, person, person_id)):
-            raise ConsistencyError('person does not exist with id={0}',
-                                   person_id)
-
-        result = conn.execute(member.insert().values({
-            member.c.proposal_id: proposal_id,
-            member.c.person_id: person_id,
-            member.c.pi: pi,
-            member.c.editor: editor,
-            member.c.observer: observer,
-        }))
+            result = conn.execute(member.insert().values({
+                member.c.proposal_id: proposal_id,
+                member.c.person_id: person_id,
+                member.c.pi: pi,
+                member.c.editor: editor,
+                member.c.observer: observer,
+            }))
 
         return result.inserted_primary_key[0]
 
@@ -109,8 +104,8 @@ class ProposalPart(object):
 
             proposal_id = result.inserted_primary_key[0]
 
-            self._add_member(conn, proposal_id, person_id, True, True, False,
-                             _test_skip_check=_test_skip_check)
+            self.add_member(proposal_id, person_id, True, True, False,
+                            _conn=conn, _test_skip_check=_test_skip_check)
 
         return proposal_id
 
@@ -206,22 +201,20 @@ class ProposalPart(object):
                                    proposal_id)
 
             if with_members:
-                members = self._search_member(conn, proposal_id=proposal_id)
+                members = self.search_member(proposal_id=proposal_id,
+                                             _conn=conn)
 
         return Proposal(members=members, **result)
 
-    def get_semester(self, *args, **kwargs):
+    def get_semester(self, semester_id, _conn=None):
         """
         Get a semester record.
         """
 
-        with self._transaction() as conn:
-            return self._get_semester(conn, *args, **kwargs)
-
-    def _get_semester(self, conn, semester_id):
-        result = conn.execute(semester.select().where(
-            semester.c.id == semester_id
-        )).first()
+        with self._transaction(_conn=_conn) as conn:
+            result = conn.execute(semester.select().where(
+                semester.c.id == semester_id
+            )).first()
 
         if result is None:
             raise NoSuchRecord('semester does not exist with id={0}',
@@ -229,18 +222,15 @@ class ProposalPart(object):
 
         return Semester(**result)
 
-    def get_queue(self, *args, **kwargs):
+    def get_queue(self, queue_id, _conn=None):
         """
         Get a queue record.
         """
 
-        with self._transaction() as conn:
-            return self._get_queue(conn, *args, **kwargs)
-
-    def _get_queue(self, conn, queue_id):
-        result = conn.execute(queue.select().where(
-            queue.c.id == queue_id
-        )).first()
+        with self._transaction(_conn=_conn) as conn:
+            result = conn.execute(queue.select().where(
+                queue.c.id == queue_id
+            )).first()
 
         if result is None:
             raise NoSuchRecord('queue does not exist with id={0}',
@@ -284,12 +274,9 @@ class ProposalPart(object):
 
         return ans
 
-    def search_member(self, proposal_id=None, person_id=None):
-        with self._transaction() as conn:
-            return self._search_member(conn, proposal_id, person_id)
-
-    def _search_member(self, conn, proposal_id=None, person_id=None):
+    def search_member(self, proposal_id=None, person_id=None, _conn=None):
         stmt = member.select()
+
         if proposal_id is not None:
             stmt = stmt.where(member.c.proposal_id == proposal_id)
         if person_id is not None:
@@ -297,8 +284,9 @@ class ProposalPart(object):
 
         ans = MemberCollection()
 
-        for row in conn.execute(stmt.order_by(member.c.id)):
-            ans[row['id']] = Member(**row)
+        with self._transaction(_conn=_conn) as conn:
+            for row in conn.execute(stmt.order_by(member.c.id)):
+                ans[row['id']] = Member(**row)
 
         return ans
 
