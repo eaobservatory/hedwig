@@ -52,7 +52,12 @@ Person = namedtuple(
 
 Proposal = namedtuple(
     'Proposal',
-    map(lambda x: x.name, proposal.columns) + ['members'])
+    map(lambda x: x.name, proposal.columns) + [
+        'semester_id', 'semester_name',
+        'queue_id', 'queue_name',
+        'facility_id',
+        'members',
+    ])
 
 Semester = namedtuple(
     'Semester',

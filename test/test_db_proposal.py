@@ -159,7 +159,8 @@ class DBProposalTest(DBTestCase):
                 proposal_id = self.db.add_proposal(call_id, person_id, title)
                 self.assertIsInstance(proposal_id, int)
 
-                proposal = self.db.get_proposal(proposal_id, with_members=True)
+                proposal = self.db.get_proposal(None, proposal_id,
+                                                with_members=True)
                 self.assertIsInstance(proposal, Proposal)
 
                 self.assertEqual(proposal.number, i)

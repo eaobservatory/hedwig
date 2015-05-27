@@ -134,13 +134,10 @@ class Generic(object):
 
     def view_proposal_view(self, db, proposal_id):
         try:
-            proposal = db.get_proposal(proposal_id, with_members=True)
-            call = db.get_call(proposal.call_id)
+            proposal = db.get_proposal(self.id_, proposal_id,
+                                       with_members=True)
         except NoSuchRecord:
             raise HTTPNotFound('Proposal not found')
-
-        if call.facility_id != self.id_:
-            raise ErrorPage('Semester is not for this facility')
 
         can = auth.for_proposal(db, proposal)
 
@@ -150,7 +147,6 @@ class Generic(object):
         return {
             'title': proposal.title,
             'can_edit': can.edit,
-            'call': call,
             'proposal': proposal,
         }
 

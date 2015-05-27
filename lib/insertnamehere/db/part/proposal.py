@@ -184,17 +184,30 @@ class ProposalPart(object):
 
         return self.search_call(call_id=call_id).get_single()
 
-    def get_proposal(self, proposal_id, with_members=False):
+    def get_proposal(self, facility_id, proposal_id, with_members=False):
         """
         Get a proposal record.
         """
 
         members = None
+        stmt = select([
+            proposal,
+            call.c.semester_id,
+            semester.c.name.label('semester_name'),
+            call.c.queue_id,
+            queue.c.name.label('queue_name'),
+            semester.c.facility_id,
+        ]).select_from(
+            proposal.join(call).join(semester).join(queue)
+        ).where(
+            proposal.c.id == proposal_id
+        )
+
+        if facility_id is not None:
+            stmt = stmt.where(semester.c.facility_id == facility_id)
 
         with self._transaction() as conn:
-            result = conn.execute(proposal.select().where(
-                proposal.c.id == proposal_id
-            )).first()
+            result = conn.execute(stmt).first()
 
             if result is None:
                 raise NoSuchRecord('proposal does not exist with id={0}',
