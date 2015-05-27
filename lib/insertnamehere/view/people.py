@@ -222,6 +222,8 @@ def get_password_reset_token(db, form, is_post):
                         registered=True
                     ).get_single().user_id
 
+                    show_email_address = email_address
+
                 except NoSuchRecord:
                     raise UserError(
                         'No user account was found matching the information '
@@ -255,6 +257,8 @@ def get_password_reset_token(db, form, is_post):
                 except KeyError:
                     raise HTTPError('Could not get primary email.')
 
+                show_email_address = 'your primary address'
+
             else:
                 raise UserError(
                     'Please enter either a user name or email address.')
@@ -262,7 +266,7 @@ def get_password_reset_token(db, form, is_post):
             token = db.get_password_reset_token(user_id)
             # TODO: email the token to: email_address
             flash('Your password reset code has been sent by email '
-                  ' to "{0}".'.format(email_address))
+                  ' to {0}.'.format(show_email_address))
             raise HTTPRedirect(url_for('.use_password_reset_token'))
 
         except UserError as e:
