@@ -18,7 +18,7 @@ function addEmailRow(newRowNumber) {
 
 function deleteEmailRow(emailid) {
     var primaryid = $('input[name=primary]:checked').val();
-    if (primaryid == emailid) {
+    if (primaryid === emailid) {
         alert('Please select another primary address before removing this address.');
     } else {
         $('#emailrow_' + emailid).remove();
