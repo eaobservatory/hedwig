@@ -77,12 +77,9 @@ class Generic(object):
 
     def view_semester_calls(self, db, semester_id):
         try:
-            semester = db.get_semester(semester_id)
+            semester = db.get_semester(self.id_, semester_id)
         except NoSuchRecord:
             raise HTTPNotFound('Semester not found')
-
-        if semester.facility_id != self.id_:
-            raise ErrorPage('Semester is not for this facility')
 
         # TODO: restrict to open calls.
         calls = db.search_call(facility_id=self.id_, semester_id=semester_id)
@@ -165,12 +162,9 @@ class Generic(object):
 
     def view_semester_view(self, db, semester_id):
         try:
-            semester = db.get_semester(semester_id)
+            semester = db.get_semester(self.id_, semester_id)
         except NoSuchRecord:
             raise HTTPNotFound('Semester not found')
-
-        if semester.facility_id != self.id_:
-            raise ErrorPage('Semester is not for this facility')
 
         return {
             'title': 'Semester: {0}'.format(semester.name),
@@ -197,12 +191,9 @@ class Generic(object):
         else:
             # Fetch the existing semester record.
             try:
-                semester = db.get_semester(semester_id)
+                semester = db.get_semester(self.id_, semester_id)
             except NoSuchRecord:
                 raise HTTPNotFound('Semester not found')
-
-            if semester.facility_id != self.id_:
-                raise ErrorPage('Semester is not for this facility')
 
             title = 'Edit Semester: {0}'.format(semester.name)
             target = url_for('.semester_edit', semester_id=semester_id)
@@ -246,12 +237,9 @@ class Generic(object):
 
     def view_queue_view(self, db, queue_id):
         try:
-            queue = db.get_queue(queue_id)
+            queue = db.get_queue(self.id_, queue_id)
         except NoSuchRecord:
             raise HTTPNotFound('Queue not found')
-
-        if queue.facility_id != self.id_:
-            raise ErrorPage('Queue is not for this facility')
 
         return {
             'title': 'Queue: {0}'.format(queue.name),
@@ -274,12 +262,9 @@ class Generic(object):
         else:
             # Fetch the existing queue record.
             try:
-                queue = db.get_queue(queue_id)
+                queue = db.get_queue(self.id_, queue_id)
             except NoSuchRecord:
                 raise HTTPNotFound('Queue not found')
-
-            if queue.facility_id != self.id_:
-                raise ErrorPage('Queue is not for this facility')
 
             title = 'Edit Queue: {0}'.format(queue.name)
             target = url_for('.queue_edit', queue_id=queue_id)
@@ -322,12 +307,9 @@ class Generic(object):
 
     def view_call_view(self, db, call_id):
         try:
-            call = db.get_call(call_id=call_id)
+            call = db.get_call(facility_id=self.id_, call_id=call_id)
         except NoSuchRecord:
             raise HTTPNotFound('Call or semester not found')
-
-        if call.facility_id != self.id_:
-            raise ErrorPage('Call is not for this facility')
 
         return {
             'title': 'Call: {0} {1}'.format(call.semester_name,
@@ -355,12 +337,9 @@ class Generic(object):
         else:
             # Fetch the existing call record.
             try:
-                call = db.get_call(call_id)
+                call = db.get_call(self.id_, call_id)
             except NoSuchRecord:
                 raise HTTPNotFound('Call not found')
-
-            if call.facility_id != self.id_:
-                raise ErrorPage('Call is not for this facility')
 
             semesters = None
             queues = None

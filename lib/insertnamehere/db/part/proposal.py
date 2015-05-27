@@ -37,8 +37,8 @@ class ProposalPart(object):
         with self._transaction() as conn:
             if not _test_skip_check:
                 try:
-                    semester = self.get_semester(semester_id, _conn=conn)
-                    queue = self.get_queue(queue_id, _conn=conn)
+                    semester = self.get_semester(None, semester_id, _conn=conn)
+                    queue = self.get_queue(None, queue_id, _conn=conn)
                 except NoSuchRecord as e:
                     raise ConsistencyError(e.message)
 
@@ -177,12 +177,13 @@ class ProposalPart(object):
 
             return result.inserted_primary_key[0]
 
-    def get_call(self, call_id):
+    def get_call(self, facility_id, call_id):
         """
         Get a call record.
         """
 
-        return self.search_call(call_id=call_id).get_single()
+        return self.search_call(facility_id=facility_id,
+                                call_id=call_id).get_single()
 
     def get_proposal(self, facility_id, proposal_id, with_members=False):
         """
@@ -219,35 +220,39 @@ class ProposalPart(object):
 
         return Proposal(members=members, **result)
 
-    def get_semester(self, semester_id, _conn=None):
+    def get_semester(self, facility_id, semester_id, _conn=None):
         """
         Get a semester record.
         """
 
+        stmt = semester.select().where(semester.c.id == semester_id)
+
+        if facility_id is not None:
+            stmt = stmt.where(semester.c.facility_id == facility_id)
+
         with self._transaction(_conn=_conn) as conn:
-            result = conn.execute(semester.select().where(
-                semester.c.id == semester_id
-            )).first()
+            result = conn.execute(stmt).first()
 
         if result is None:
-            raise NoSuchRecord('semester does not exist with id={0}',
-                               semester_id)
+            raise NoSuchRecord('semester does not exist')
 
         return Semester(**result)
 
-    def get_queue(self, queue_id, _conn=None):
+    def get_queue(self, facility_id, queue_id, _conn=None):
         """
         Get a queue record.
         """
 
+        stmt = queue.select().where(queue.c.id == queue_id)
+
+        if facility_id is not None:
+            stmt = stmt.where(queue.c.facility_id == facility_id)
+
         with self._transaction(_conn=_conn) as conn:
-            result = conn.execute(queue.select().where(
-                queue.c.id == queue_id
-            )).first()
+            result = conn.execute(stmt).first()
 
         if result is None:
-            raise NoSuchRecord('queue does not exist with id={0}',
-                               queue_id)
+            raise NoSuchRecord('queue does not exist')
 
         return Queue(**result)
 

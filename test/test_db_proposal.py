@@ -60,11 +60,19 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(len(semesters), 2)
 
         # Try updating a record.
-        self.assertEqual(self.db.get_semester(semester_id).name, '99A')
+        self.assertEqual(self.db.get_semester(facility_id, semester_id).name,
+                         '99A')
         self.db.update_semester(semester_id, name='99 (a)')
-        self.assertEqual(self.db.get_semester(semester_id).name, '99 (a)')
+        self.assertEqual(self.db.get_semester(facility_id, semester_id).name,
+                         '99 (a)')
         with self.assertRaisesRegexp(ConsistencyError, 'semester does not ex'):
             self.db.update_semester(999, name='bad semester')
+
+        # Check for semesters which don't exist or have wrong facility.
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_semester(facility_id, 999)
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_semester(999, semester_id)
 
     def test_queue(self):
         # Test add_queue method.
@@ -95,11 +103,17 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(list(queues.keys()), [queue_id_3])
 
         # Try updating a record.
-        queue = self.db.get_queue(queue_id_3)
+        queue = self.db.get_queue(facility_id_2, queue_id_3)
         self.assertEqual(queue.name, '???')
         self.db.update_queue(queue_id_3, name='!!!')
-        queue = self.db.get_queue(queue_id_3)
+        queue = self.db.get_queue(facility_id_2, queue_id_3)
         self.assertEqual(queue.name, '!!!')
+
+        # Check test for non-existant queue or facility.
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_queue(facility_id_2, 999)
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_queue(999, queue_id_3)
 
     def test_call(self):
         # Check that we can create a call for proposals.
@@ -138,10 +152,13 @@ class DBProposalTest(DBTestCase):
                         facility_id=facility_id,
                         semester_name='My Semester', queue_name='My Queue')
         self.assertEqual(result[call_id], expected)
-        self.assertEqual(self.db.get_call(call_id), expected)
+        self.assertEqual(self.db.get_call(facility_id, call_id), expected)
 
         with self.assertRaises(NoSuchRecord):
-            self.db.get_call(999)
+            self.db.get_call(facility_id, 999)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_call(999, call_id)
 
     def test_add_proposal(self):
         call_id_1 = self._create_test_call('semester1', 'queue1')
