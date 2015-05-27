@@ -455,9 +455,10 @@ class PeoplePart(object):
                     'person does not exist with id={0}', person_id)
 
             return self._sync_records(
-                conn, email, email.c.person_id, person_id, records, [
+                conn, email, email.c.person_id, person_id, records,
+                update_columns=(
                     email.c.address, email.c.primary, email.c.public,
-                ], verified_columns=(email.c.address,))
+                ), verified_columns=(email.c.address,))
 
     def update_institution(self, institution_id, name=None,
                            _test_skip_check=False):

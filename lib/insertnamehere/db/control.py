@@ -76,8 +76,8 @@ class Database(PeoplePart, ProposalPart):
             table.c.id == id_,
         )).scalar()
 
-    def _sync_records(self, conn, table, key_column, key_value,
-                      records, update_columns=None, verified_columns=()):
+    def _sync_records(self, conn, table, key_column, key_value, records,
+                      update_columns=None, verified_columns=()):
         """
         Update a set of database records to match the given set of records.
 
