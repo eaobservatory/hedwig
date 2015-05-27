@@ -194,6 +194,11 @@ class DBPeopleTest(DBTestCase):
                                        registered=True)
         self.assertEqual(len(result), 0)
 
+        # Check that the "with_email" option of "get_person" works.
+        result = self.db.get_person(person_id, with_email=True)
+        self.assertIsInstance(result.email, EmailCollection)
+        self.assertEqual(len(result.email), 2)
+
     def test_sync_person_email(self):
         # Set up email addresses.
         person_1 = self.db.add_person('Person One')
@@ -421,18 +426,22 @@ class DBPeopleTest(DBTestCase):
         person = self.db.get_person(person_id)
         self.assertIsInstance(person, Person)
         self.assertIsNone(person.institution_id)
+        self.assertFalse(person.public)
+        self.assertFalse(person.admin)
 
         # Create a test institution record.
         institution_id = self.db.add_institution('Institution One')
         self.assertIsInstance(institution_id, int)
 
         # Update the person to reference the new institution.
-        self.db.update_person(person_id, institution_id=institution_id)
+        self.db.update_person(person_id, institution_id=institution_id,
+                              public=True)
 
         # Get and inspect the updated record.
         person = self.db.get_person(person_id)
         self.assertIsInstance(person, Person)
         self.assertEqual(person.institution_id, institution_id)
+        self.assertTrue(person.public)
 
         # Check that errors are trapped.
         with self.assertRaisesRegexp(Error, '^no person updates specified'):
@@ -444,6 +453,18 @@ class DBPeopleTest(DBTestCase):
                                   _test_skip_check=True)
         with self.assertRaises(DatabaseIntegrityError):
             self.db.update_person(person_id, institution_id=999)
+
+        # We should only be able to enable administrative privileges
+        # for registered users.
+        with self.assertRaises(ConsistencyError):
+            self.db.update_person(person_id, admin=True)
+        person = self.db.get_person(person_id)
+        self.assertFalse(person.admin)
+
+        self.db.add_user('user1', 'pass1', person_id=person_id)
+        self.db.update_person(person_id, admin=True)
+        person = self.db.get_person(person_id)
+        self.assertTrue(person.admin)
 
     def test_password_reset_token(self):
         # Create a user record.

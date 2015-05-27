@@ -194,6 +194,11 @@ class DBProposalTest(DBTestCase):
         with self.assertRaises(DatabaseIntegrityError):
             self.db.add_proposal(call_id, 999, 'Title', _test_skip_check=True)
 
+        # Check that the "with_proposals" option of "get_user" works.
+        result = self.db.get_person(person_id, with_proposals=True)
+        self.assertIsInstance(result.proposals, ResultCollection)
+        self.assertEqual(len(result.proposals), 20)
+
     def test_add_member(self):
         # Create test records and check we have integer identifiers for all.
         call_id = self._create_test_call('semester1', 'queue1')
