@@ -21,10 +21,11 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict
 
 from ...error import NoSuchRecord, UserError
-from ...type import Call, Queue, Semester
+from ...type import Affiliation, Call, Queue, ResultCollection, Semester
 from ...view import auth
 from ...web.util import ErrorPage, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
+from ...view.util import organise_collection
 
 
 class Generic(object):
@@ -379,4 +380,51 @@ class Generic(object):
             'call': call,
             'semesters': (None if semesters is None else semesters.values()),
             'queues': (None if queues is None else queues.values()),
+        }
+
+    def view_affiliation_edit(self, db, form, is_post):
+        if not auth.can_be_admin(db):
+            raise HTTPForbidden('Could not verify administrative access.')
+
+        message = None
+        records = db.search_affiliation(facility_id=self.id_)
+
+        if is_post:
+            try:
+                # Temporary (unsorted) dictionaries.
+                updated_records = {}
+                added_records = {}
+
+                for param in form:
+                    if not param.startswith('name_'):
+                        continue
+
+                    id_ = param[5:]
+                    is_hidden = ('hidden_' + id_) in form
+
+                    if id_.startswith('new_'):
+                        id_ = int(id_[4:])
+                        added_records[id_] = Affiliation(
+                            id_, self.id_, form[param], is_hidden)
+
+                    else:
+                        id_ = int(id_)
+                        updated_records[id_] = Affiliation(
+                            id_, self.id_, form[param], is_hidden)
+
+                records = organise_collection(
+                    ResultCollection, updated_records, added_records)
+
+                db.sync_facility_affiliation(self.id_, records)
+
+                flash('The affiliations have been updated.')
+                raise HTTPRedirect(url_for('.facility_admin'))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Edit Affiliations',
+            'message': message,
+            'affiliations': records.values(),
         }

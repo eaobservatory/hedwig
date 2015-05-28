@@ -155,6 +155,13 @@ def create_facility_blueprint(db, facility):
         return facility.view_call_edit(db, call_id, request.form,
                                        request.method == 'POST')
 
+    @bp.route('/admin/affiliation', methods=['GET', 'POST'])
+    @facility_template('affiliation_edit.html')
+    @require_admin
+    def affiliation_edit():
+        return facility.view_affiliation_edit(db, request.form,
+                                              request.method == 'POST')
+
     @bp.context_processor
     def add_to_context():
         return {

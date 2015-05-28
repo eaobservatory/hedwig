@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+{% set scripts=['edit_affiliation'] %}
+
+{% block content %}
+
+<p>
+    This page allows you to edit the affiliations which may be selected
+    for each member of a proposal for this facility.
+</p>
+
+<p>
+    <b>Note:</b>
+</p>
+
+<ul>
+    <li>
+        Editing the affiliations here will alter any existing
+        proposals on which they have been used.  Therefore please only
+        make minor alterations to the affiliations which do not alter
+        their meaning.
+    </li>
+    <li>
+        If an affiliation has changed substantially, please "hide" it to
+        prevent its subsequent selection and add its replacement as a new
+        affiliation.
+    </li>
+    <li>
+        You should not delete existing affiliations if there is a chance
+        that they have already been used on a proposal.
+        (Attempting to do so should be an error.)
+    </li>
+</ul>
+
+{% if message is not none %}
+    <p>
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.affiliation_edit') }}">
+    <table id="affiliations">
+        <tr>
+            <th>Affiliation</th>
+            <th>Hidden</th>
+            <th>Actions</th>
+        </tr>
+        {% for affiliation in affiliations %}
+            <tr id="affiliationrow_{{ affiliation.id }}">
+                <td><input type="text" name="name_{{ affiliation.id }}" value="{{ affiliation.name }}" required="required" /></td>
+                <td><input type="checkbox" name="hidden_{{ affiliation.id }}" value="yes" {{ 'checked="checked"' | safe if affiliation.hidden }} /></td>
+                <td><a href="#" id="delete_{{ affiliation.id }}">delete</a>
+            </tr>
+        {% endfor %}
+    </table>
+    <table class="template">
+        <tr id="affiliationrow_template">
+            <td><input type="text" name="name" value="" /></td>
+            <td><input type="checkbox" name="hidden" value="yes" /></td>
+            <td><a href="#" id="delete_template">delete</a>
+        </tr>
+    </table>
+    <p>
+        <a href="#" id="add_affiliation">Add affiliation</a>
+    </p>
+    <p>
+        <input type="submit" value="Save" name="submit" />
+    </p>
+</form>
+
+{% endblock %}
