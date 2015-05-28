@@ -21,7 +21,8 @@ from __future__ import absolute_import, division, print_function, \
 from sqlalchemy.schema import Column, ForeignKey, MetaData, Table, \
     UniqueConstraint
 
-from sqlalchemy.types import Boolean, DateTime, Integer, String, Unicode
+from sqlalchemy.types import Boolean, DateTime, Integer, \
+    String, Unicode, UnicodeText
 
 metadata = MetaData()
 
@@ -81,6 +82,9 @@ institution = Table(
     metadata,
     Column('id', Integer, primary_key=True),
     Column('name', Unicode(255), nullable=False),
+    Column('organization', Unicode(255), nullable=False),
+    Column('address', UnicodeText, nullable=False),
+    Column('country', Unicode(2), nullable=False),
     **_table_opts)
 
 invitation = Table(

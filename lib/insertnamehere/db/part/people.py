@@ -28,6 +28,7 @@ from ...auth import check_password_hash, create_password_hash, generate_token
 from ...error import ConsistencyError, Error, NoSuchRecord, UserError
 from ...type import Email, EmailCollection, Institution, InstitutionInfo, \
     Person, ResultCollection
+from ...util import get_countries
 from ..meta import email, institution, invitation, member, person, \
     reset_token, user
 from ..util import require_not_none
@@ -58,16 +59,22 @@ class PeoplePart(object):
 
         return result.inserted_primary_key[0]
 
-    def add_institution(self, name):
+    def add_institution(self, name, organization, address, country):
         """
         Add an institution to the database.
 
         Returns the new institution_id number.
         """
 
+        if country not in get_countries():
+            raise UserError('Country code not recognised')
+
         with self._transaction() as conn:
             result = conn.execute(institution.insert().values({
                 institution.c.name: name,
+                institution.c.organization: organization,
+                institution.c.address: address,
+                institution.c.country: country,
             }))
 
         return result.inserted_primary_key[0]
@@ -364,7 +371,9 @@ class PeoplePart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(select([institution.c.id,
-                                            institution.c.name
+                                            institution.c.name,
+                                            institution.c.organization,
+                                            institution.c.country,
                                             ]).order_by(institution.c.name)):
                 ans[row['id']] = InstitutionInfo(**row)
 
@@ -461,6 +470,7 @@ class PeoplePart(object):
                 ), verified_columns=(email.c.address,))
 
     def update_institution(self, institution_id, name=None,
+                           organization=None, address=None, country=None,
                            _test_skip_check=False):
         """
         Update an institution record.
@@ -470,6 +480,17 @@ class PeoplePart(object):
 
         if name is not None:
             values['name'] = name
+
+        if organization is not None:
+            values['organization'] = organization
+
+        if address is not None:
+            values['address'] = address
+
+        if country is not None:
+            if country not in get_countries():
+                raise UserError('Country code not recognised')
+            values['country'] = country
 
         if not values:
             raise Error('no institution updates specified')

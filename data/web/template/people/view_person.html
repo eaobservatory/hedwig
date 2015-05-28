@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
 
+{% from 'macro/institution.html' import render_institution_summary %}
+
 {% block content %}
 
 {% if person.user_id is none %}
@@ -36,7 +38,7 @@
     {% endif %}
     {% if person.institution is not none %}
         <br />
-        Institution: <a href="{{ url_for('.view_institution', institution_id=person.institution.id) }}">{{ person.institution.name }}</a>
+        Institution: <a href="{{ url_for('.view_institution', institution_id=person.institution.id) }}">{{ render_institution_summary(person.institution) }}</a>
     {% endif %}
     {% if person.email is not none %}
         {% for email in person.email %}

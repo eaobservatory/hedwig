@@ -1,10 +1,18 @@
 {% extends "layout.html" %}
 
+{% from 'macro/institution.html' import render_institution_form, render_institution_summary %}
+
 {% block content %}
 
 {% if institution_id is none %}
     <p>
         <i>Registration step 3/3.</i>
+    </p>
+{% else %}
+    <p>
+        If you would like to make minor corrections to the entry
+        for your existing institution, you may
+        <a href="{{ url_for('.edit_institution', institution_id=institution_id) }}">edit your current institution</a>.
     </p>
 {% endif %}
 
@@ -20,7 +28,9 @@ If your institution appears here, please select it from this list.
     Institution:
     <select name="institution_id">
         {% for institution in institutions %}
-            <option value="{{ institution.id }}" {{'selected="selected"' | safe if institution.id == institution_id }}>{{ institution.name }}</option>
+            <option value="{{ institution.id }}" {{'selected="selected"' | safe if institution.id == institution_id }}>
+                {{ render_institution_summary(institution) }}
+            </option>
         {% endfor %}
     </select>
     <br />
@@ -44,8 +54,7 @@ you may enter it into the system here.
 
 <form method="POST" action="{{ url_for('.edit_person_institution', person_id=person_id) }}">
 <p>
-    Institution name:
-    <input type="text" name="institution_name" value="{{ institution_name }}" />
+    {{ render_institution_form(institution, countries) }}
     <br />
     <input type="submit" value="Add new institution" name="submit_add" />
 </p>

@@ -19,7 +19,8 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from ..error import Error, MultipleRecords, NoSuchRecord, UserError
-from ..type import Email, EmailCollection
+from ..type import Email, EmailCollection, Institution
+from ..util import get_countries
 from ..web.util import flash, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
 from .util import organise_collection
@@ -381,8 +382,12 @@ def view_person(db, person_id):
         raise HTTPForbidden('Permission denied for this person profile.')
 
     is_current_user = person.user_id == session['user_id']
-    person = person._replace(email=filter(
-        (lambda x: x.public or is_current_user), person.email.values()))
+    person = person._replace(
+        email=[x for x in person.email.values()
+               if x.public or is_current_user],
+        institution=person.institution._replace(
+            country=get_countries().get(person.institution.country,
+                                        'Unknown country')))
 
     return {
         'title': 'Profile',
@@ -442,45 +447,65 @@ def edit_person_institution(db, person_id, form, is_post):
     message = None
 
     is_current_user = person.user_id == session['user_id']
-    name = form.get('institution_name', '')
     institutions = db.list_institution()
 
-    if is_post:
-        if 'submit_select' in form:
-            institution_id = int(form['institution_id'])
-            if institution_id not in institutions:
-                raise HTTPError('Institution not found.')
-            db.update_person(person_id, institution_id=institution_id)
-            action = 'selected'
+    # Prepare blank record for an institution to potentially be
+    # added to the database.
+    institution = Institution(id=None, name='', organization='',
+                              address='', country='')
 
-        elif 'submit_add' in form:
-            if not name:
-                message = 'Please enter the institution name.'
-            else:
-                institution_id = db.add_institution(name)
+    if is_post:
+        try:
+            if 'submit_select' in form:
+                institution_id = int(form['institution_id'])
+                if institution_id not in institutions:
+                    raise HTTPError('Institution not found.')
+                db.update_person(person_id, institution_id=institution_id)
+                action = 'selected'
+
+            elif 'submit_add' in form:
+                institution = institution._replace(
+                    name=form['institution_name'],
+                    organization=form['organization'],
+                    address=form['address'],
+                    country=form['country_code'])
+                if not institution.name:
+                    raise UserError('Please enter the institution name.')
+                if not institution.country:
+                    raise UserError('Please select the institution country.')
+
+                institution_id = db.add_institution(
+                    institution.name, institution.organization,
+                    institution.address, institution.country)
                 db.update_person(person_id, institution_id=institution_id)
                 action = 'recorded'
 
-        else:
-            raise ErrorPage('Unknown action')
+            else:
+                raise ErrorPage('Unknown action')
 
-        if is_current_user:
-            _update_session_person(db.get_person(person_id))
-            flash('Your institution has been {0}.', action)
-        else:
-            flash('The institution has been {0}.', action)
+            if is_current_user:
+                _update_session_person(db.get_person(person_id))
+                flash('Your institution has been {0}.', action)
+            else:
+                flash('The institution has been {0}.', action)
 
-        raise HTTPRedirect(session.pop(
-            'log_in_for',
-            url_for('.view_person', person_id=person_id)))
+            raise HTTPRedirect(session.pop(
+                'log_in_for',
+                url_for('.view_person', person_id=person_id)))
+
+        except UserError as e:
+            message = e.message
 
     return {
         'title': 'Select Institution',
         'message': message,
         'person_id': person_id,
-        'institution_name': name,
+        'institution': institution,
         'institution_id': person.institution_id,
-        'institutions': institutions.values(),
+        'institutions': [i._replace(
+            country=get_countries().get(i.country, 'Unknown country'))
+            for i in institutions.values()],
+        'countries': get_countries(),
     }
 
 
@@ -572,7 +597,9 @@ def view_institution(db, institution_id):
 
     return {
         'title': 'Institution',
-        'institution': institution,
+        'institution': institution._replace(
+            country=get_countries().get(institution.country,
+                                        'Unknown country')),
         'can_edit': can.edit,
     }
 
@@ -593,12 +620,23 @@ def edit_institution(db, institution_id, form, is_post):
         if 'submit-confirm' in form:
             show_confirm_prompt = False
         elif 'submit-edit' in form:
-            name = form['name']
-
             try:
-                if not name:
+                institution = institution._replace(
+                    name=form['institution_name'],
+                    organization=form['organization'],
+                    address=form['address'],
+                    country=form['country_code'])
+                if not institution.name:
                     raise UserError('Please enter the institution name.')
-                db.update_institution(institution_id, name=name)
+                if not institution.country:
+                    raise UserError('Please select the institution country.')
+
+                db.update_institution(
+                    institution_id,
+                    name=institution.name,
+                    organization=institution.organization,
+                    address=institution.address,
+                    country=institution.country)
                 flash('The institution\'s record has been updated.')
                 raise HTTPRedirect(url_for('.view_institution',
                                            institution_id=institution_id))
@@ -614,6 +652,7 @@ def edit_institution(db, institution_id, form, is_post):
         'message': message,
         'institution_id': institution_id,
         'institution': institution,
+        'countries': get_countries(),
     }
 
 

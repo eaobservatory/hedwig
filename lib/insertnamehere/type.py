@@ -44,7 +44,7 @@ Institution = namedtuple(
 
 InstitutionInfo = namedtuple(
     'InstitutionInfo',
-    ['id', 'name'])
+    ['id', 'name', 'organization', 'country'])
 
 Member = namedtuple(
     'Member',

@@ -3,7 +3,17 @@
 {% block content %}
 
 <p>
-    Name: {{ institution.name }}
+    Institution name: {{ institution.name }}
+    {% if institution.organization %}
+        <br />
+        Organization: {{ institution.organization }}
+    {% endif %}
+    {% if institution.address %}
+        <br />
+        Address: <pre>{{ institution.address }}</pre>
+    {% endif %}
+    <br />
+    Country: {{ institution.country }}
 </p>
 
 {% if can_edit %}

@@ -375,28 +375,40 @@ class DBPeopleTest(DBTestCase):
             institution = self.db.get_institution(999)
 
         # Check that we can add an institution.
-        institution_id = self.db.add_institution('Institution One')
+        institution_id = self.db.add_institution('Institution One',
+                                                 'Organization One',
+                                                 'Address...', 'AX')
 
         self.assertIsInstance(institution_id, int)
 
         # Try retrieving the institution.
         institution = self.db.get_institution(institution_id)
         self.assertIsInstance(institution, Institution)
+        self.assertEqual(institution.id, institution_id)
+        self.assertEqual(institution.name, 'Institution One')
+        self.assertEqual(institution.organization, 'Organization One')
+        self.assertEqual(institution.address, 'Address...')
+        self.assertEqual(institution.country, 'AX')
 
         # Get a list of institutions.
-        institution_id2 = self.db.add_institution('Institution Two')
+        institution_id2 = self.db.add_institution('Institution Two',
+                                                  '', '', 'AX')
         result = self.db.list_institution()
         self.assertIsInstance(result, ResultCollection)
         self.assertEqual(len(result), 2)
 
-        for ((row_id, institution), name, expected_id) in zip(
+        for ((row_id, institution), name, expected_id, org, country) in zip(
                 result.items(),
                 ['Institution One', 'Institution Two'],
-                [institution_id, institution_id2]):
+                [institution_id, institution_id2],
+                ['Organization One', ''],
+                ['AX', 'AX']):
             self.assertIsInstance(institution, InstitutionInfo)
             self.assertEqual(institution.id, row_id)
             self.assertEqual(institution.id, expected_id)
             self.assertEqual(institution.name, name)
+            self.assertEqual(institution.organization, org)
+            self.assertEqual(institution.country, country)
 
         # Try updating an institution.
         with self.assertRaisesRegexp(Error,
@@ -407,11 +419,26 @@ class DBPeopleTest(DBTestCase):
             self.db.update_institution(999, '...')
         with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
             self.db.update_institution(999, '...', _test_skip_check=True)
+        with self.assertRaisesRegexp(UserError, 'Country code not recognised'):
+            self.db.update_institution(institution_id, country='BX')
 
         self.db.update_institution(institution_id, 'Renamed Institution One')
         institution = self.db.get_institution(institution_id)
         self.assertIsInstance(institution, Institution)
         self.assertEqual(institution.name, 'Renamed Institution One')
+        self.db.update_institution(institution_id,
+                        organization='Renamed Organization',
+                        address='New Address',
+                        country='CX')
+        institution = self.db.get_institution(institution_id)
+        self.assertIsInstance(institution, Institution)
+        self.assertEqual(institution.organization, 'Renamed Organization')
+        self.assertEqual(institution.address, 'New Address')
+        self.assertEqual(institution.country, 'CX')
+
+        # Check country validation for new institutions.
+        with self.assertRaisesRegexp(UserError, 'Country code not recognised'):
+            self.db.add_institution('Institution Three', '', '', 'BX')
 
     def test_person(self):
         # Try getting a non-existent person record.
@@ -430,7 +457,8 @@ class DBPeopleTest(DBTestCase):
         self.assertFalse(person.admin)
 
         # Create a test institution record.
-        institution_id = self.db.add_institution('Institution One')
+        institution_id = self.db.add_institution('Institution One',
+                                                 '', '', 'AX')
         self.assertIsInstance(institution_id, int)
 
         # Update the person to reference the new institution.
