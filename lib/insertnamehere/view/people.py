@@ -22,6 +22,7 @@ from ..error import Error, MultipleRecords, NoSuchRecord, UserError
 from ..type import Email, EmailCollection
 from ..web.util import flash, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
+from .util import organise_collection
 from . import auth
 
 
@@ -535,14 +536,8 @@ def edit_person_email(db, person_id, form, is_post):
             # Create new record collection: overwrite "records" variable
             # name so that, in case of failure, the form will display the
             # new records again for correction.
-            records = EmailCollection(map((lambda x: (x, updated_records[x])),
-                                          sorted(updated_records.keys())))
-            # Number the newly-added addresses upwards from the existing max.
-            max_record = max(records.keys()) if records else 0
-            for email_id in sorted(added_records.keys()):
-                new_email_id = max_record + email_id
-                records[new_email_id] = \
-                    added_records[email_id]._replace(id=new_email_id)
+            records = organise_collection(EmailCollection, updated_records,
+                                          added_records)
 
             db.sync_person_email(person_id, records)
 
