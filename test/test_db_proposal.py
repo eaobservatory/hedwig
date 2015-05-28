@@ -20,8 +20,8 @@ from __future__ import absolute_import, division, print_function, \
 
 from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
     NoSuchRecord, UserError
-from insertnamehere.type import Call, Member, MemberCollection, Proposal, \
-    ResultCollection
+from insertnamehere.type import Affiliation, Call, \
+    Member, MemberCollection, Proposal, ResultCollection
 from .dummy_db import DBTestCase
 
 
@@ -36,6 +36,34 @@ class DBProposalTest(DBTestCase):
 
         self.assertEqual(facility_id_copy, facility_id)
         self.assertNotEqual(facility_id_diff, facility_id)
+
+    def test_affiliation(self):
+        # Get test facility ID.
+        facility_id = self.db.ensure_facility('test_tel')
+        self.assertIsInstance(facility_id, int)
+
+        # Check we have no affiliations to start.
+        result = self.db.search_affiliation(facility_id=facility_id)
+        self.assertIsInstance(result, ResultCollection)
+        self.assertEqual(len(result), 0)
+
+        # Generate a collection of 2 records and sync it.
+        records = ResultCollection()
+        records[0] = Affiliation(None, facility_id, 'Aff 1', False)
+        records[1] = Affiliation(None, facility_id, 'Aff 2', True)
+
+        n = self.db.sync_facility_affiliation(facility_id, records)
+        self.assertEqual(n, (2, 0, 0))
+
+        # Check that we now have the expected 2 records.
+        result = self.db.search_affiliation(facility_id=facility_id)
+        self.assertIsInstance(result, ResultCollection)
+        self.assertEqual(len(result), 2)
+        for (row, expect_name, expect_hidden) in zip(
+                result.values(), ('Aff 1', 'Aff 2'), (False, True)):
+            self.assertIsInstance(row.id, int)
+            self.assertEqual(row.name, expect_name)
+            self.assertEqual(row.hidden, expect_hidden)
 
     def test_semester(self):
         # Test add_semeseter method.

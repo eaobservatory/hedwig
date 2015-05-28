@@ -23,9 +23,10 @@ from sqlalchemy.sql.functions import coalesce, count
 from sqlalchemy.sql.functions import max as max_
 
 from ...error import ConsistencyError, MultipleRecords, NoSuchRecord, UserError
-from ...type import Call, Member, MemberCollection, Proposal, \
+from ...type import Affiliation, Call, Member, MemberCollection, Proposal, \
     Queue, QueueInfo, ResultCollection, Semester, SemesterInfo
-from ..meta import call, facility, member, person, proposal, queue, semester
+from ..meta import affiliation, call, facility, member, \
+    person, proposal, queue, semester
 
 
 class ProposalPart(object):
@@ -256,6 +257,24 @@ class ProposalPart(object):
 
         return Queue(**result)
 
+    def search_affiliation(self, facility_id=None):
+        """
+        Search for affiliation records.
+        """
+
+        stmt = affiliation.select()
+
+        if facility_id is not None:
+            stmt = stmt.where(affiliation.c.facility_id == facility_id)
+
+        ans = ResultCollection()
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt.order_by(affiliation.c.name.asc())):
+                ans[row['id']] = Affiliation(**row)
+
+        return ans
+
     def search_call(self, call_id=None, facility_id=None, semester_id=None,
                     queue_id=None):
         """
@@ -335,6 +354,21 @@ class ProposalPart(object):
                 ans[row['id']] = QueueInfo(**row)
 
         return ans
+
+    def sync_facility_affiliation(self, facility_id, records):
+        """
+        Update the affiliation records for a facility to match those
+        given by "records".
+        """
+
+        with self._transaction() as conn:
+            if not self._exists_id(conn, facility, facility_id):
+                raise ConsistencyError(
+                    'person does not exist with id={0}', person_id)
+
+            return self._sync_records(
+                conn, affiliation, affiliation.c.facility_id, facility_id,
+                records)
 
     def update_semester(self, semester_id, name=None, _test_skip_check=False):
         """

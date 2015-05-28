@@ -30,6 +30,18 @@ _table_opts = {
     'mysql_charset': 'utf8',
 }
 
+affiliation = Table(
+    'affiliation',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('facility_id', None,
+           ForeignKey('facility.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('name', Unicode(31), nullable=False),
+    Column('hidden', Boolean, default=False, nullable=False),
+    UniqueConstraint('facility_id', 'name'),
+    **_table_opts)
+
 call = Table(
     'call',
     metadata,
