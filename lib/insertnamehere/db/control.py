@@ -87,7 +87,8 @@ class Database(PeoplePart, ProposalPart):
         a series of inserts, updates and deletes to bring the database
         to a state matching the specified values.  Records are matched
         by their "id" values, but the dictionary keys of "records"
-        don't matter.
+        don't matter.  New records can be given with an "id" of None,
+        or an "id" which doesn't match an existing record.
 
         If update columns are specified, then only those columns are
         considered, both for comparison and updating.
@@ -125,13 +126,18 @@ class Database(PeoplePart, ProposalPart):
         for value in records.values():
             id_ = value.id
 
-            # Have we seen this identifier before?
-            if id_ in considered:
-                raise ConsistencyError(
-                    'the identifier {0} appears more than once', id_)
+            if id_ is None:
+                # Allow completely new records to be given with id=None.
+                previous = None
 
-            considered.add(id_)
-            previous = existing.pop(id_, None)
+            else:
+                # Have we seen this identifier before?
+                if id_ in considered:
+                    raise ConsistencyError(
+                        'the identifier {0} appears more than once', id_)
+
+                considered.add(id_)
+                previous = existing.pop(id_, None)
 
             if previous is None:
                 # Insert the new value.
