@@ -607,8 +607,10 @@ class DBPeopleTest(DBTestCase):
         semester_id = self.db.add_semester(facility_id, 'test')
         queue_id = self.db.add_queue(facility_id, 'test')
         call_id = self.db.add_call(semester_id, queue_id)
-        proposal_id = self.db.add_proposal(call_id, person_id_1, 'Proposal 1')
-        self.db.add_member(proposal_id, person_id_2)
+        affiliation_id = self.db.add_affiliation(facility_id, 'Aff/n 1')
+        proposal_id = self.db.add_proposal(call_id, person_id_1,
+                                           affiliation_id, 'Proposal 1')
+        self.db.add_member(proposal_id, person_id_2, affiliation_id)
 
         # Issue invitation token for one of the members.
         token = self.db.add_invitation(person_id_2)

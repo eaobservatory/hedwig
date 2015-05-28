@@ -20,6 +20,13 @@
 
 
 <form method="POST" action="{{ url_for('.proposal_new', call_id=call.id) }}">
+    Your affiliation:
+    <select name="affiliation_id">
+        {% for affiliation in affiliations %}
+            <option value="{{ affiliation.id }}" {{ 'selected="selected"' | safe if affiliation.id == affiliation_id }}>{{ affiliation.name }}</option>
+        {% endfor %}
+    </select>
+    <br />
     Proposal title:
     <input type="text" name="proposal_title" value="{{ proposal_title }}" required="required" autofocus="autofocus" />
     <br />

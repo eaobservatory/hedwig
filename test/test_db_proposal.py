@@ -189,19 +189,23 @@ class DBProposalTest(DBTestCase):
             self.db.get_call(999, call_id)
 
     def test_add_proposal(self):
-        call_id_1 = self._create_test_call('semester1', 'queue1')
+        (call_id_1, affiliation_id_1) = self._create_test_call(
+            'semester1', 'queue1')
         self.assertIsInstance(call_id_1, int)
-        call_id_2 = self._create_test_call('semester2', 'queue2')
+        (call_id_2, affiliation_id_2) = self._create_test_call(
+            'semester2', 'queue2')
         self.assertIsInstance(call_id_2, int)
 
         person_id = self.db.add_person('Person 1')
         self.assertIsInstance(person_id, int)
 
         # Create proposals and check the numbers are as expected.
-        for call_id in (call_id_1, call_id_2):
+        for (call_id, affiliation_id) in ((call_id_1, affiliation_id_1),
+                                          (call_id_2, affiliation_id_2)):
             for i in range(1, 11):
                 title = 'Proposal {0}'.format(i)
-                proposal_id = self.db.add_proposal(call_id, person_id, title)
+                proposal_id = self.db.add_proposal(call_id, person_id,
+                                                   affiliation_id, title)
                 self.assertIsInstance(proposal_id, int)
 
                 proposal = self.db.get_proposal(None, proposal_id,
@@ -226,19 +230,29 @@ class DBProposalTest(DBTestCase):
 
         # The proposal must have a title.
         with self.assertRaisesRegexp(UserError, 'blank'):
-            self.db.add_proposal(call_id_1, person_id, '')
+            self.db.add_proposal(call_id_1, person_id, affiliation_id_1, '')
 
         # Check for error raised when the call or person doesn't exist.
         with self.assertRaisesRegexp(ConsistencyError, '^call does not'):
-            self.db.add_proposal(999, person_id, 'Title')
+            self.db.add_proposal(999, person_id, affiliation_id_1, 'Title')
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_proposal(999, person_id, 'Title',
+            self.db.add_proposal(999, person_id, affiliation_id_1, 'Title',
                                  _test_skip_check=True)
 
         with self.assertRaisesRegexp(ConsistencyError, '^person does not'):
-            self.db.add_proposal(call_id, 999, 'Title')
+            self.db.add_proposal(call_id, 999, affiliation_id_1, 'Title')
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_proposal(call_id, 999, 'Title', _test_skip_check=True)
+            self.db.add_proposal(call_id, 999, affiliation_id_1, 'Title',
+                                 _test_skip_check=True)
+
+        # Check for error raised when the affiliation is for the wrong
+        # facility.
+        other_facility_id = self.db.ensure_facility('another_tel')
+        other_affiliation_id = self.db.add_affiliation(other_facility_id,
+                                                       'another aff/n')
+        with self.assertRaisesRegexp(ConsistencyError, 'affiliation does not'):
+            self.db.add_proposal(call_id_1, person_id, other_affiliation_id,
+                                 'title')
 
         # Check that the "with_proposals" option of "get_user" works.
         result = self.db.get_person(person_id, with_proposals=True)
@@ -247,11 +261,13 @@ class DBProposalTest(DBTestCase):
 
     def test_add_member(self):
         # Create test records and check we have integer identifiers for all.
-        call_id = self._create_test_call('semester1', 'queue1')
+        (call_id, affiliation_id) = self._create_test_call(
+            'semester1', 'queue1')
         person_id_1 = self.db.add_person('Person 1')
         person_id_2 = self.db.add_person('Person 2')
         person_id_3 = self.db.add_person('Person 3')
-        proposal_id = self.db.add_proposal(call_id, person_id_1, 'Proposal 1')
+        proposal_id = self.db.add_proposal(call_id, person_id_1,
+                                           affiliation_id, 'Proposal 1')
 
         for id_ in (call_id, person_id_1, person_id_2, person_id_3,
                     proposal_id):
@@ -261,12 +277,14 @@ class DBProposalTest(DBTestCase):
         result = self.db.search_member(proposal_id=proposal_id)
         self.assertEqual(_member_person_set(result), [person_id_1])
 
-        self.db.add_member(proposal_id, person_id_2, False, False, True)
+        self.db.add_member(proposal_id, person_id_2, affiliation_id,
+                           False, False, True)
         result = self.db.search_member(proposal_id=proposal_id)
         self.assertEqual(_member_person_set(result),
                          [person_id_1, person_id_2])
 
-        self.db.add_member(proposal_id, person_id_3, False, True, True)
+        self.db.add_member(proposal_id, person_id_3, affiliation_id,
+                           False, True, True)
         result = self.db.search_member(proposal_id=proposal_id)
         self.assertEqual(_member_person_set(result),
                          [person_id_1, person_id_2, person_id_3])
@@ -275,7 +293,16 @@ class DBProposalTest(DBTestCase):
 
         # Ensure we can't add a member twice.
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_member(proposal_id, person_id_2, False, False, False)
+            self.db.add_member(proposal_id, person_id_2, affiliation_id,
+                               False, False, False)
+
+        # Ensure we can't add a member with an affiliation for the wrong
+        # facility.
+        person_id_4 = self.db.add_person('Person 4')
+        other_facility = self.db.ensure_facility('another_tel')
+        other_affiliation = self.db.add_affiliation(other_facility, 'Aff/n')
+        with self.assertRaisesRegexp(ConsistencyError, 'affiliation does not'):
+            self.db.add_member(proposal_id, person_id_4, other_affiliation)
 
         # Try searching instead by person_id.
         result = self.db.search_member(person_id=person_id_2)
@@ -294,7 +321,14 @@ class DBProposalTest(DBTestCase):
         call_id = self.db.add_call(semester_id, queue_id)
         self.assertIsInstance(call_id, int)
 
-        return call_id
+        affiliations = self.db.search_affiliation(facility_id=facility_id)
+        if affiliations:
+            affiliation_id = affiliations.values()[0].id
+        else:
+            affiliation_id = self.db.add_affiliation(facility_id, 'test aff/n')
+        self.assertIsInstance(affiliation_id, int)
+
+        return (call_id, affiliation_id)
 
 
 def _member_person_set(member_collection):

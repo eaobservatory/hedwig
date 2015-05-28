@@ -106,6 +106,14 @@ member = Table(
     Column('pi', Boolean, nullable=False),
     Column('editor', Boolean, nullable=False),
     Column('observer', Boolean, nullable=False),
+    Column('affiliation_id', None,
+           ForeignKey('affiliation.id', onupdate='RESTRICT',
+                      ondelete='RESTRICT'),
+           nullable=False),
+    Column('institution_id', None,
+           ForeignKey('institution.id', onupdate='RESTRICT',
+                      ondelete='RESTRICT'),
+           nullable=True),
     UniqueConstraint('proposal_id', 'person_id'),
     **_table_opts)
 

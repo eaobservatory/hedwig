@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from sqlalchemy.sql import select
+from sqlalchemy.sql.expression import and_, false
 from sqlalchemy.sql.functions import coalesce, count
 from sqlalchemy.sql.functions import max as max_
 
@@ -73,13 +74,22 @@ class ProposalPart(object):
 
         return result.inserted_primary_key[0]
 
-    def add_member(self, proposal_id, person_id, pi=False, editor=False,
+    def add_member(self, proposal_id, person_id, affiliation_id,
+                   pi=False, editor=False,
                    observer=False, _conn=None, _test_skip_check=False):
         with self._transaction(_conn=_conn) as conn:
-            if (not _test_skip_check and
-                    not self._exists_id(conn, person, person_id)):
-                raise ConsistencyError('person does not exist with id={0}',
-                                       person_id)
+            if not _test_skip_check:
+                if not self._exists_id(conn, person, person_id):
+                    raise ConsistencyError('person does not exist with id={0}',
+                                           person_id)
+                proposal_record = self.get_proposal(None, proposal_id,
+                                                    _conn=conn)
+                if not self._exists_facility_affiliation(
+                        conn, proposal_record.facility_id, affiliation_id):
+                    raise ConsistencyError(
+                        'affiliation does not exist with id={0} '
+                        'for facility with id={1}'.format(
+                            affiliation_id, proposal_record.facility_id))
 
             result = conn.execute(member.insert().values({
                 member.c.proposal_id: proposal_id,
@@ -87,27 +97,41 @@ class ProposalPart(object):
                 member.c.pi: pi,
                 member.c.editor: editor,
                 member.c.observer: observer,
+                member.c.affiliation_id: affiliation_id,
             }))
 
         return result.inserted_primary_key[0]
 
-    def add_proposal(self, call_id, person_id, title, _test_skip_check=False):
+    def add_proposal(self, call_id, person_id, affiliation_id, title,
+                     _test_skip_check=False):
         """
         Add a new proposal to the database.
 
         The given person will be added as a member, assumed to be PI
         and with "editor" permission so that they can continue to
-        prepare the proposal.
+        prepare the proposal.  This person's affiliation (for the
+        relevant facility) should be given for inclusion in the
+        member table.
         """
 
         if not title:
             raise UserError('The proposal title should not be blank.')
 
         with self._transaction() as conn:
-            if (not _test_skip_check and
-                    not self._exists_id(conn, call, call_id)):
-                raise ConsistencyError('call does not exist with id={0}',
-                                       call_id)
+            if not _test_skip_check:
+                try:
+                    call = self.search_call(
+                        call_id=call_id, _conn=conn).get_single()
+                except NoSuchRecord:
+                    raise ConsistencyError('call does not exist with id={0}',
+                                           call_id)
+
+                if not self._exists_facility_affiliation(
+                        conn, call.facility_id, affiliation_id):
+                    raise ConsistencyError(
+                        'affiliation does not exist with id={0} '
+                        'for facility with id={1}'.format(
+                            affiliation_id, call.facility_id))
 
             result = conn.execute(proposal.insert().values({
                 proposal.c.call_id: call_id,
@@ -119,7 +143,8 @@ class ProposalPart(object):
 
             proposal_id = result.inserted_primary_key[0]
 
-            self.add_member(proposal_id, person_id, True, True, False,
+            self.add_member(proposal_id, person_id, affiliation_id,
+                            True, True, False,
                             _conn=conn, _test_skip_check=_test_skip_check)
 
         return proposal_id
@@ -200,7 +225,8 @@ class ProposalPart(object):
         return self.search_call(facility_id=facility_id,
                                 call_id=call_id).get_single()
 
-    def get_proposal(self, facility_id, proposal_id, with_members=False):
+    def get_proposal(self, facility_id, proposal_id, with_members=False,
+                     _conn=None):
         """
         Get a proposal record.
         """
@@ -222,7 +248,7 @@ class ProposalPart(object):
         if facility_id is not None:
             stmt = stmt.where(semester.c.facility_id == facility_id)
 
-        with self._transaction() as conn:
+        with self._transaction(_conn=_conn) as conn:
             result = conn.execute(stmt).first()
 
             if result is None:
@@ -271,7 +297,7 @@ class ProposalPart(object):
 
         return Queue(**result)
 
-    def search_affiliation(self, facility_id=None):
+    def search_affiliation(self, facility_id=None, hidden=None):
         """
         Search for affiliation records.
         """
@@ -280,6 +306,9 @@ class ProposalPart(object):
 
         if facility_id is not None:
             stmt = stmt.where(affiliation.c.facility_id == facility_id)
+
+        if hidden is not None:
+            stmt = stmt.where(affiliation.c.hidden == hidden)
 
         ans = ResultCollection()
 
@@ -290,7 +319,7 @@ class ProposalPart(object):
         return ans
 
     def search_call(self, call_id=None, facility_id=None, semester_id=None,
-                    queue_id=None):
+                    queue_id=None, _conn=None):
         """
         Search for call records.
         """
@@ -318,7 +347,7 @@ class ProposalPart(object):
 
         ans = ResultCollection()
 
-        with self._transaction() as conn:
+        with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(semester.c.id.desc(),
                                                   queue.c.name.asc())):
                 ans[row['id']] = Call(**row)
@@ -439,3 +468,14 @@ class ProposalPart(object):
                 raise ConsistencyError(
                     'no rows matched updating queue with id={0}',
                     queue_id)
+
+    def _exists_facility_affiliation(self, conn, facility_id, affiliation_id):
+        """
+        Test whether an identifier exists in the given table.
+        """
+
+        return 0 < conn.execute(select([count(affiliation.c.id)]).where(and_(
+            affiliation.c.facility_id == facility_id,
+            affiliation.c.id == affiliation_id,
+            affiliation.c.hidden == false()
+        ))).scalar()

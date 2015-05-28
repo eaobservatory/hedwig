@@ -23,7 +23,8 @@ from collections import OrderedDict
 from ...error import NoSuchRecord, UserError
 from ...type import Affiliation, Call, Queue, ResultCollection, Semester
 from ...view import auth
-from ...web.util import ErrorPage, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
+from ...web.util import ErrorPage, HTTPError, HTTPForbidden, \
+    HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
 from ...view.util import organise_collection
 
@@ -106,15 +107,27 @@ class Generic(object):
         # if not call.open:
         #    raise ErrorPage('This call is not currently open for proposals.')
 
+        affiliations = db.search_affiliation(
+            facility_id=self.id_, hidden=False)
+        if not affiliations:
+            raise HTTPError('No affiliations appear to be available.')
+
         message = None
 
         proposal_title = ''
+        affiliation_id = None
 
         if is_post:
             proposal_title = form['proposal_title']
+
+            affiliation_id = int(form['affiliation_id'])
+            if affiliation_id not in affiliations:
+                raise ErrorPage('Invalid affiliation selected.')
+
             try:
                 proposal_id = db.add_proposal(
                     call_id=call_id, person_id=session['person']['id'],
+                    affiliation_id=affiliation_id,
                     title=proposal_title)
                 flash('Your new proposal has been created.')
                 raise HTTPRedirect(url_for('.proposal_view',
@@ -128,6 +141,8 @@ class Generic(object):
             'call': call,
             'message': message,
             'proposal_title': proposal_title,
+            'affiliations': affiliations.values(),
+            'affiliation_id': affiliation_id
         }
 
     def view_proposal_view(self, db, proposal_id):
