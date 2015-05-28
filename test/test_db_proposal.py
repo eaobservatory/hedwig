@@ -49,8 +49,8 @@ class DBProposalTest(DBTestCase):
 
         # Generate a collection of 2 records and sync it.
         records = ResultCollection()
-        records[0] = Affiliation(None, facility_id, 'Aff 1', False)
-        records[1] = Affiliation(None, facility_id, 'Aff 2', True)
+        records[0] = Affiliation(None, facility_id, 'Aff 1', True)
+        records[1] = Affiliation(None, facility_id, 'Aff 2', False)
 
         n = self.db.sync_facility_affiliation(facility_id, records)
         self.assertEqual(n, (2, 0, 0))
@@ -60,10 +60,20 @@ class DBProposalTest(DBTestCase):
         self.assertIsInstance(result, ResultCollection)
         self.assertEqual(len(result), 2)
         for (row, expect_name, expect_hidden) in zip(
-                result.values(), ('Aff 1', 'Aff 2'), (False, True)):
+                result.values(), ('Aff 1', 'Aff 2'), (True, False)):
             self.assertIsInstance(row.id, int)
             self.assertEqual(row.name, expect_name)
             self.assertEqual(row.hidden, expect_hidden)
+
+        # Check we can't remove an affiliation once it is in use.
+        semester_id = self.db.add_semester(facility_id, 'Sem1')
+        queue_id = self.db.add_queue(facility_id, 'Queue1')
+        call_id = self.db.add_call(semester_id, queue_id)
+        person_id = self.db.add_person('Person1')
+        (affiliation_id, affiliation_record) = result.popitem()
+        self.db.add_proposal(call_id, person_id, affiliation_id, 'Title')
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.sync_facility_affiliation(facility_id, result)
 
     def test_semester(self):
         # Test add_semeseter method.
