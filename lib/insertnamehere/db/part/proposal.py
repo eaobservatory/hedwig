@@ -30,6 +30,20 @@ from ..meta import affiliation, call, facility, member, \
 
 
 class ProposalPart(object):
+    def add_affiliation(self, facility_id, name, hidden=False):
+        """
+        Add an affiliation to the database.
+        """
+
+        with self._transaction() as conn:
+            result = conn.execute(affiliation.insert().values({
+                affiliation.c.facility_id: facility_id,
+                affiliation.c.name: name,
+                affiliation.c.hidden: hidden,
+            }))
+
+        return result.inserted_primary_key[0]
+
     def add_call(self, semester_id, queue_id, _test_skip_check=False):
         """
         Add a call for proposals to the database.
