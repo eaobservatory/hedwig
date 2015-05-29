@@ -26,7 +26,7 @@ from sqlalchemy.sql.functions import max as max_
 from ...error import ConsistencyError, MultipleRecords, NoSuchRecord, UserError
 from ...type import Affiliation, Call, Member, MemberCollection, Proposal, \
     Queue, QueueInfo, ResultCollection, Semester, SemesterInfo
-from ..meta import affiliation, call, facility, member, \
+from ..meta import affiliation, call, facility, institution, member, \
     person, proposal, queue, semester
 
 
@@ -355,7 +355,20 @@ class ProposalPart(object):
         return ans
 
     def search_member(self, proposal_id=None, person_id=None, _conn=None):
-        stmt = member.select()
+        stmt = select([
+            x for x in member.columns if x.name not in ('institution_id',)
+        ] + [
+            person.c.name.label('person_name'),
+            coalesce(member.c.institution_id, person.c.institution_id).label(
+                'resolved_institution_id'),
+            institution.c.name.label('institution_name'),
+            institution.c.organization.label('institution_organization'),
+            institution.c.country.label('institution_country'),
+        ]).select_from(
+            member.join(person).outerjoin(
+                institution, institution.c.id == coalesce(
+                    member.c.institution_id, person.c.institution_id
+                )))
 
         if proposal_id is not None:
             stmt = stmt.where(member.c.proposal_id == proposal_id)
