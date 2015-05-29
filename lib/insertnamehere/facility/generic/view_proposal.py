@@ -102,3 +102,55 @@ class GenericProposal(object):
                     x.institution_country, 'Unknown country'))
                 for x in proposal.members.values()]),
         }
+
+    def view_member_edit(self, db, proposal_id, form, is_post):
+        try:
+            proposal = db.get_proposal(self.id_, proposal_id,
+                                       with_members=True)
+        except NoSuchRecord:
+            raise HTTPNotFound('Proposal not found')
+
+        can = auth.for_proposal(db, proposal)
+
+        if not can.edit:
+            raise HTTPForbidden('Permission denied for this proposal.')
+
+        message = None
+        records = proposal.members
+
+        if is_post:
+            pi = int(form['pi'])
+
+            try:
+                for param in form:
+                    if not param.startswith('member_'):
+                        continue
+
+                    id_ = int(param[7:])
+
+                    record = records.get(id_)
+                    if record is None:
+                        raise UserError('Unexpected member present.')
+
+                    records[id_] = record._replace(
+                        pi=(id_ == pi),
+                        editor=('editor_{0}'.format(id_) in form),
+                        observer=('observer_{0}'.format(id_) in form))
+
+                db.sync_proposal_member(
+                    proposal_id, records,
+                    editor_person_id=session['person']['id'])
+
+                flash('The proposal member list has been updated.')
+                raise HTTPRedirect(url_for('.proposal_view',
+                                           proposal_id=proposal_id))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Edit Members',
+            'message': message,
+            'proposal_id': proposal_id,
+            'members': records.values(),
+        }

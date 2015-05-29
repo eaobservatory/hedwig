@@ -141,3 +141,36 @@ class MemberCollection(ResultCollection):
                 return member
 
         raise KeyError('person not in member collection')
+
+    def validate(self, editor_person_id):
+        """
+        Attempts to validate the members of a proposal.
+
+        Checks:
+
+        * There is exactly one PI.
+        * The given person ID is an editor.  (To prevent people removing
+          their own editor permission.)
+
+        Raises UserError for any problems found.
+        """
+
+        n_pi = 0
+        person_is_editor = None
+
+        for member in self.values():
+            if member.pi:
+                n_pi += 1
+
+            if member.person_id == editor_person_id:
+                person_is_editor = member.editor
+
+        if n_pi == 0:
+            raise UserError('There is no PI specified.')
+        elif n_pi != 1:
+            raise UserError('There is more than one PI specified')
+
+        if person_is_editor is None:
+            raise userError('You can not remove yourself from the proposal.')
+        elif not person_is_editor:
+            raise userError('You can not remove yourself as an editor.')

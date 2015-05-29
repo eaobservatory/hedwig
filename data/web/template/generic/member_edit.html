@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+{% set scripts=['edit_member'] %}
+
+{% block content %}
+
+{% if message is not none %}
+    <p>
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.member_edit', proposal_id=proposal_id) }}">
+    <table>
+        <tr>
+            <th>Member</th>
+            <th>Is PI?</th>
+            <th>Can edit proposal?</th>
+            <th>Potential observer?</th>
+            <th>Actions</th>
+        </tr>
+        {% for member in members %}
+            <tr id="memberrow_{{ member.id }}">
+                <td>{{ member.person_name }}</td>
+                <td>
+                    <input type="radio" name="pi" value="{{ member.id }}" {{ 'checked="checked"' | safe if member.pi }} />
+                </td>
+                <td>
+                    {% if session.person.id != member.person_id %}
+                        <input type="checkbox" name="editor_{{ member.id }}" value="yes" {{ 'checked="checked"' | safe if member.editor }} />
+                    {% elif member.editor %}
+                        Yes <input type="hidden" name="editor_{{ member.id }}" value="yes" />
+                    {% else %}
+                        No
+                    {% endif %}
+                </td>
+                <td>
+                    <input type="checkbox" name="observer_{{ member.id }}" value="yes" {{ 'checked="checked"' | safe if member.observer }} />
+                </td>
+                <td>
+                    <input type="hidden" name="member_{{ member.id }}" value="{{ member.id }}" />
+                    {% if session.person.id != member.person_id %}
+                        <a href="#" id="delete_{{ member.id }}">delete</a>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <p>
+        <input type="submit" value="Save" name="submit" />
+    </p>
+</form>
+
+{% endblock %}
