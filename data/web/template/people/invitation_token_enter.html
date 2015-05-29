@@ -20,7 +20,7 @@
     and choose whether to accept it.
 </p>
 
-<form method="GET" action="{{ url_for('.accept_invitation_token') }}">
+<form method="GET" action="{{ url_for('.invitation_token_accept') }}">
     <p>
         Invitation code:
         <input type="text" name="token" value="{{ token }}" required="required" />

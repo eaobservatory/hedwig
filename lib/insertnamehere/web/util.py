@@ -133,7 +133,7 @@ def require_auth(require_person=False, require_institution=False,
                     session['person']['institution_id'] is None):
                 flash('Please select your institution before proceeding.')
                 session['log_in_for'] = _flask_request.url
-                raise HTTPRedirect(url_for('people.edit_person_institution',
+                raise HTTPRedirect(url_for('people.person_edit_institution',
                                            person_id=session['person']['id']))
 
             return f(*args, **kwargs)

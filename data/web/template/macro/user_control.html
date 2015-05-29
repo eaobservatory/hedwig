@@ -3,7 +3,7 @@
 {% if session.user_id is defined %}
     Logged in as
     {% if session.person is defined %}
-        <a href="{{ url_for('people.view_person', person_id=session.person.id) }}">{{ session.person.name }}</a>
+        <a href="{{ url_for('people.person_view', person_id=session.person.id) }}">{{ session.person.name }}</a>
         {% if session.is_admin is defined %}
             &mdash;
             <a href="{{ url_for('people.drop_admin') }}">drop admin</a>

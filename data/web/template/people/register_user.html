@@ -16,7 +16,7 @@
 Please only register a new account if you do not already have one.
 You may <a href="{{ url_for('.log_in') }}">log in</a> to an
 existing account to update your personal details and email addresses,
-or <a href="{{ url_for('.get_password_reset_token') }}">reset a forgotten password</a>.
+or <a href="{{ url_for('.password_reset_token_get') }}">reset a forgotten password</a>.
 </p>
 
 <form method="POST" action="{{ url_for('.register_user') }}">

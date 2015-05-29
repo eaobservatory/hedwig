@@ -22,11 +22,11 @@
 {% endif %}
 {% if can_edit %}
     <p>
-        <a href="{{ url_for('.edit_person', person_id=person.id) }}">Edit profile</a>
+        <a href="{{ url_for('.person_edit', person_id=person.id) }}">Edit profile</a>
         <br />
-        <a href="{{ url_for('.edit_person_email', person_id=person.id) }}">Edit email addresses</a>
+        <a href="{{ url_for('.person_edit_email', person_id=person.id) }}">Edit email addresses</a>
         <br />
-        <a href="{{ url_for('.edit_person_institution', person_id=person.id) }}">Change institution</a>
+        <a href="{{ url_for('.person_edit_institution', person_id=person.id) }}">Change institution</a>
     </p>
 {% endif %}
 
@@ -38,7 +38,7 @@
     {% endif %}
     {% if person.institution is not none %}
         <br />
-        Institution: <a href="{{ url_for('.view_institution', institution_id=person.institution.id) }}">{{ render_institution_summary(person.institution) }}</a>
+        Institution: <a href="{{ url_for('.institution_view', institution_id=person.institution.id) }}">{{ render_institution_summary(person.institution) }}</a>
     {% endif %}
     {% if person.email is not none %}
         {% for email in person.email %}

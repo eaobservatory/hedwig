@@ -10,7 +10,7 @@
     </p>
 {% endif %}
 
-<form method="POST" action="{{ url_for('.edit_institution', institution_id=institution_id) }}">
+<form method="POST" action="{{ url_for('.institution_edit', institution_id=institution_id) }}">
 {% if show_confirm_prompt %}
     <p>
         Are you sure you want to edit this institution?
@@ -18,7 +18,7 @@
     <p>
         <b>This institution record may be shared with other people.</b>
         If you have moved, please
-        <a href="{{ url_for('people.edit_person_institution', person_id=session.person.id) }}">update the institution associated with your profile</a>
+        <a href="{{ url_for('people.person_edit_institution', person_id=session.person.id) }}">update the institution associated with your profile</a>
         rather than editing the details of this institution.
     </p>
     <p>

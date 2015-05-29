@@ -77,7 +77,7 @@ def log_in(db, args, form, is_post, referrer):
                     # institution selection page.
                     flash('It appears your registration was not complete. '
                           'If convenient, please select your institution.')
-                    raise HTTPRedirect(url_for('.edit_person_institution',
+                    raise HTTPRedirect(url_for('.person_edit_institution',
                                                person_id=person.id))
                 raise HTTPRedirect(
                     session.pop('log_in_for', url_for('home_page')))
@@ -150,7 +150,7 @@ def change_user_name(db, form, is_post):
             db.update_user_name(user_id, form['user_name'])
             flash('Your user name has been changed.')
             if 'person' in session:
-                raise HTTPRedirect(url_for('.view_person',
+                raise HTTPRedirect(url_for('.person_view',
                                            person_id=session['person']['id']))
             else:
                 raise HTTPRedirect(url_for('home_page'))
@@ -195,7 +195,7 @@ def change_password(db, form, is_post):
     }
 
 
-def get_password_reset_token(db, form, is_post):
+def password_reset_token_get(db, form, is_post):
     message = None
 
     user_name = form.get('user_name', '')
@@ -269,7 +269,7 @@ def get_password_reset_token(db, form, is_post):
             # TODO: email the token to: email_address
             flash('Your password reset code has been sent by email '
                   ' to {0}.'.format(show_email_address))
-            raise HTTPRedirect(url_for('.use_password_reset_token'))
+            raise HTTPRedirect(url_for('.password_reset_token_use'))
 
         except UserError as e:
             message = e.message
@@ -282,7 +282,7 @@ def get_password_reset_token(db, form, is_post):
     }
 
 
-def use_password_reset_token(db, args, form, is_post):
+def password_reset_token_use(db, args, form, is_post):
     message = None
     token = args.get('token', '')
 
@@ -356,7 +356,7 @@ def register_person(db, form, is_post):
             db.add_email(person_id, email, primary=True)
             flash('Your user profile has been saved.')
             _update_session_person(db.get_person(person_id))
-            raise HTTPRedirect(url_for('.edit_person_institution',
+            raise HTTPRedirect(url_for('.person_edit_institution',
                                        person_id=person_id))
 
     return {
@@ -369,7 +369,7 @@ def register_person(db, form, is_post):
     }
 
 
-def view_person(db, person_id):
+def person_view(db, person_id):
     try:
         person = db.get_person(person_id,
                                with_institution=True, with_email=True)
@@ -397,7 +397,7 @@ def view_person(db, person_id):
     }
 
 
-def edit_person(db, person_id, form, is_post):
+def person_edit(db, person_id, form, is_post):
     try:
         person = db.get_person(person_id)
     except NoSuchRecord:
@@ -422,21 +422,21 @@ def edit_person(db, person_id, form, is_post):
                 _update_session_person(db.get_person(person_id))
             else:
                 flash('The user profile has been saved.')
-            raise HTTPRedirect(url_for('.view_person', person_id=person_id))
+            raise HTTPRedirect(url_for('.person_view', person_id=person_id))
 
         except UserError as e:
             message = e.message
 
     return {
         'title': 'Edit Profile',
-        'target': url_for('.edit_person', person_id=person_id),
+        'target': url_for('.person_edit', person_id=person_id),
         'message': message,
         'person_name': name,
         'person_public': public,
     }
 
 
-def edit_person_institution(db, person_id, form, is_post):
+def person_edit_institution(db, person_id, form, is_post):
     try:
         person = db.get_person(person_id)
     except NoSuchRecord:
@@ -491,7 +491,7 @@ def edit_person_institution(db, person_id, form, is_post):
 
             raise HTTPRedirect(session.pop(
                 'log_in_for',
-                url_for('.view_person', person_id=person_id)))
+                url_for('.person_view', person_id=person_id)))
 
         except UserError as e:
             message = e.message
@@ -509,7 +509,7 @@ def edit_person_institution(db, person_id, form, is_post):
     }
 
 
-def edit_person_email(db, person_id, form, is_post):
+def person_edit_email(db, person_id, form, is_post):
     try:
         person = db.get_person(person_id, with_email=True)
     except NoSuchRecord:
@@ -571,7 +571,7 @@ def edit_person_email(db, person_id, form, is_post):
                 _update_session_person(db.get_person(person_id))
             else:
                 flash('The email addresses have been updated.')
-            raise HTTPRedirect(url_for('.view_person', person_id=person_id))
+            raise HTTPRedirect(url_for('.person_view', person_id=person_id))
 
         except UserError as e:
             message = e.message
@@ -584,7 +584,7 @@ def edit_person_email(db, person_id, form, is_post):
     }
 
 
-def view_institution(db, institution_id):
+def institution_view(db, institution_id):
     try:
         institution = db.get_institution(institution_id)
     except NoSuchRecord:
@@ -604,7 +604,7 @@ def view_institution(db, institution_id):
     }
 
 
-def edit_institution(db, institution_id, form, is_post):
+def institution_edit(db, institution_id, form, is_post):
     try:
         institution = db.get_institution(institution_id)
     except NoSuchRecord:
@@ -638,7 +638,7 @@ def edit_institution(db, institution_id, form, is_post):
                     address=institution.address,
                     country=institution.country)
                 flash('The institution\'s record has been updated.')
-                raise HTTPRedirect(url_for('.view_institution',
+                raise HTTPRedirect(url_for('.institution_view',
                                            institution_id=institution_id))
             except UserError as e:
                 message = e.message
@@ -656,20 +656,20 @@ def edit_institution(db, institution_id, form, is_post):
     }
 
 
-def enter_invitation_token(db, args):
+def invitation_token_enter(db, args):
     return {
         'title': 'Enter Invitation',
         'token': args.get('token', ''),
     }
 
 
-def accept_invitation_token(db, args, form, is_post):
+def invitation_token_accept(db, args, form, is_post):
     token = form.get('token', None) if is_post else args.get('token', None)
 
     if token is None:
         # Token was lost somehow: redirect back to entry page.
         flash('Your invitation code was not received.  Please enter it again.')
-        raise HTTPRedirect(url_for('.enter_invitation_token'))
+        raise HTTPRedirect(url_for('.invitation_token_enter'))
 
     try:
         if is_post:
@@ -691,7 +691,7 @@ def accept_invitation_token(db, args, form, is_post):
             # TODO: redirect to proposal page if we have one in the
             # person record.  (But use the old person record associated
             # with the invitation so we only see the new ones.)
-            raise HTTPRedirect(url_for('.view_person', person_id=person.id))
+            raise HTTPRedirect(url_for('.person_view', person_id=person.id))
 
         person = db.get_invitation_person(
             token, with_email=True, with_institution=True)

@@ -12,7 +12,7 @@
     <p>
         If you would like to make minor corrections to the entry
         for your existing institution, you may
-        <a href="{{ url_for('.edit_institution', institution_id=institution_id) }}">edit your current institution</a>.
+        <a href="{{ url_for('.institution_edit', institution_id=institution_id) }}">edit your current institution</a>.
     </p>
 {% endif %}
 
@@ -23,7 +23,7 @@ The following institutions are already known to this system.
 If your institution appears here, please select it from this list.
 </p>
 
-<form method="POST" action="{{ url_for('.edit_person_institution', person_id=person_id) }}">
+<form method="POST" action="{{ url_for('.person_edit_institution', person_id=person_id) }}">
 <p>
     Institution:
     <select name="institution_id">
@@ -52,7 +52,7 @@ you may enter it into the system here.
     </p>
 {% endif %}
 
-<form method="POST" action="{{ url_for('.edit_person_institution', person_id=person_id) }}">
+<form method="POST" action="{{ url_for('.person_edit_institution', person_id=person_id) }}">
 <p>
     {{ render_institution_form(institution, countries) }}
     <br />
