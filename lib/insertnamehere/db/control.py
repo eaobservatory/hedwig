@@ -25,7 +25,8 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.sql import select
 from sqlalchemy.sql.functions import count
 
-from ..error import ConsistencyError, DatabaseError, DatabaseIntegrityError
+from ..error import ConsistencyError, DatabaseError, DatabaseIntegrityError, \
+    UserError
 from ..type import ResultCollection
 from .part.people import PeoplePart
 from .part.proposal import ProposalPart
@@ -77,7 +78,8 @@ class Database(PeoplePart, ProposalPart):
         )).scalar()
 
     def _sync_records(self, conn, table, key_column, key_value, records,
-                      update_columns=None, verified_columns=()):
+                      update_columns=None, verified_columns=(),
+                      forbid_add=False, forbid_delete=False):
         """
         Update a set of database records to match the given set of records.
 
@@ -141,6 +143,9 @@ class Database(PeoplePart, ProposalPart):
 
             if previous is None:
                 # Insert the new value.
+                if forbid_add:
+                    raise UserError('New entries can not be added here.')
+
                 values = {key_column: key_value}
                 for column in update_columns:
                     values[column] = getattr(value, column.key)
@@ -165,6 +170,9 @@ class Database(PeoplePart, ProposalPart):
 
         # Delete remaining un-matched entries.
         for id_ in existing:
+            if forbid_delete:
+                raise UserError('Entries can not be deleted here.')
+
             conn.execute(table.delete().where(table.c.id == id_))
             n_delete += 1
 

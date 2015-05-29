@@ -426,6 +426,26 @@ class ProposalPart(object):
                 conn, affiliation, affiliation.c.facility_id, facility_id,
                 records)
 
+    def sync_proposal_member(self, proposal_id, records, editor_person_id):
+        """
+        Update the member records for a proposal.
+
+        Only the "pi", "editor" and "observer" flags are updated.
+        """
+
+        records.validate(editor_person_id=editor_person_id)
+
+        with self._transaction() as conn:
+            if not self._exists_id(conn, proposal, proposal_id):
+                raise ConsistencyError(
+                    'proposal does not exist with id={0}', proposal_id)
+
+            return self._sync_records(
+                conn, member, member.c.proposal_id, proposal_id, records,
+                update_columns=(
+                    member.c.pi, member.c.editor, member.c.observer,
+                ), forbid_add=True)
+
     def update_semester(self, semester_id, name=None, _test_skip_check=False):
         """
         Update a semester record.
