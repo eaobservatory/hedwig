@@ -17,10 +17,18 @@
     </select>
 {% endmacro %}
 
-{% macro render_institution_summary(institution) %}
-    {{ institution.name }},
-    {% if institution.organization %}
-        {{ institution.organization }},
+{% macro _institution_summary(name, organization, country) %}
+    {{ name }},
+    {% if organization %}
+        {{ organization }},
     {% endif %}
-    {{ institution.country }}
+    {{ country }}
+{% endmacro %}
+
+{% macro render_institution_summary(institution) %}
+    {{ _institution_summary(institution.name, institution.organization, institution.country) }}
+{% endmacro %}
+
+{% macro render_member_institution(member) %}
+    {{ _institution_summary(member.institution_name, member.institution_organization, member.institution_country) }}
 {% endmacro %}

@@ -1,0 +1,35 @@
+{% from 'macro/institution.html' import render_member_institution %}
+
+{% macro render_proposal_summary(facility_name, proposal) %}
+    <p>
+        Proposal for:
+        {{ facility_name }}
+        /
+        {{ proposal.semester_name }}
+        /
+        {{ proposal.queue_name }}
+    </p>
+{% endmacro %}
+
+{% macro render_proposal_members(proposal) %}
+    <h2>Members</h2>
+
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Institution</th>
+            <th>Information</th>
+        </tr>
+        {% for member in proposal.members %}
+            <tr>
+                <td><a href="{{ url_for('people.view_person', person_id=member.person_id) }}">{{ member.person_name }}</a></td>
+                <td>{{ render_member_institution(member) }}</td>
+                <td>
+                    {% if member.pi %}PI{% endif %}
+                    {% if member.editor %}Editor{% endif %}
+                    {% if member.observer%}Observer{% endif %}
+                </td>
+           </tr>
+        {% endfor %}
+    </table>
+{% endmacro %}

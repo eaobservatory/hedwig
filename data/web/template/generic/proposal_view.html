@@ -1,14 +1,11 @@
 {% extends "layout.html" %}
 
+{% from 'macro/proposal.html' import render_proposal_summary, render_proposal_members %}
+
 {% block content %}
 
-<p>
-    Proposal for:
-    {{ facility_name }}
-    /
-    {{ proposal.semester_name }}
-    /
-    {{ proposal.queue_name }}
-</p>
+{{ render_proposal_summary(facility_name, proposal) }}
+
+{{ render_proposal_members(proposal) }}
 
 {% endblock %}

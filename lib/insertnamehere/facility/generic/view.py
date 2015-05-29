@@ -22,6 +22,7 @@ from collections import OrderedDict
 
 from ...error import NoSuchRecord, UserError
 from ...type import Affiliation, Call, Queue, ResultCollection, Semester
+from ...util import get_countries
 from ...view import auth
 from ...web.util import ErrorPage, HTTPError, HTTPForbidden, \
     HTTPNotFound, HTTPRedirect, \
@@ -157,10 +158,15 @@ class Generic(object):
         if not can.view:
             raise HTTPForbidden('Permission denied for this proposal.')
 
+        countries = get_countries()
+
         return {
             'title': proposal.title,
             'can_edit': can.edit,
-            'proposal': proposal,
+            'proposal': proposal._replace(members=[
+                x._replace(institution_country=countries.get(
+                    x.institution_country, 'Unknown country'))
+                for x in proposal.members.values()]),
         }
 
     def view_facility_admin(self, db):
