@@ -510,6 +510,7 @@ def person_edit_institution(db, person_id, form, is_post):
             country=get_countries().get(i.country, 'Unknown country'))
             for i in institutions.values()],
         'countries': get_countries(),
+        'is_current_user': is_current_user,
     }
 
 

@@ -5,14 +5,19 @@
 {% block content %}
 
 {% if institution_id is none %}
-    <p>
-        <i>Registration step 3/3.</i>
-    </p>
+    {% if is_current_user %}
+        <p>
+            <i>Registration step 3/3.</i>
+        </p>
+    {% endif %}
 {% else %}
     <p>
-        If you would like to make minor corrections to the entry
-        for your existing institution, you may
-        <a href="{{ url_for('.institution_edit', institution_id=institution_id) }}">edit your current institution</a>.
+        If you would like to make minor corrections to the entry for
+        {% if is_current_user %} your {% else %} the {% endif %}
+        existing institution, you may
+        <a href="{{ url_for('.institution_edit', institution_id=institution_id) }}">edit
+        {% if is_current_user %} your {% else %} the {% endif %}
+        current institution</a>.
     </p>
 {% endif %}
 
@@ -20,7 +25,8 @@
 
 <p>
 The following institutions are already known to this system.
-If your institution appears here, please select it from this list.
+If {% if is_current_user %} your {% else %} the {% endif %}
+institution appears here, please select it from this list.
 </p>
 
 <form method="POST" action="{{ url_for('.person_edit_institution', person_id=person_id) }}">
@@ -42,7 +48,8 @@ If your institution appears here, please select it from this list.
 <h2>New Institution</h2>
 
 <p>
-If your institution does not appear in the list above,
+If {% if is_current_user %} your {% else %} the {% endif %}
+institution does not appear in the list above,
 you may enter it into the system here.
 </p>
 
