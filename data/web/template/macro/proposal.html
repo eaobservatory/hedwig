@@ -24,7 +24,7 @@
         {% for member in proposal.members %}
             <tr>
                 <td>
-                    {% if member.person_public or (can_edit and not member.person_registered) %}
+                    {% if session.is_admin or member.person_public or (can_edit and not member.person_registered) %}
                         <a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name }}</a></td>
                     {% else %}
                         {{ member.person_name }}
@@ -32,7 +32,11 @@
                 <td>{{ member.affiliation_name }}</td>
                 <td>
                     {% if member.resolved_institution_id is not none %}
-                        {{ render_member_institution(member) }}
+                        {% if session.is_admin %}
+                            <a href="{{ url_for('people.institution_view', institution_id=member.resolved_institution_id) }}">{{ render_member_institution(member) }}</a>
+                        {% else %}
+                            {{ render_member_institution(member) }}
+                        {% endif %}
                     {% elif can_edit %}
                         <a href="{{ url_for('people.person_edit_institution', person_id=member.person_id) }}">Select institution</a>
                     {% else %}
