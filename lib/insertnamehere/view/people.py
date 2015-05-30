@@ -382,12 +382,16 @@ def person_view(db, person_id):
         raise HTTPForbidden('Permission denied for this person profile.')
 
     is_current_user = person.user_id == session['user_id']
+
     person = person._replace(
         email=[x for x in person.email.values()
-               if x.public or is_current_user],
-        institution=person.institution._replace(
-            country=get_countries().get(person.institution.country,
-                                        'Unknown country')))
+               if x.public or is_current_user])
+
+    if person.institution is not None:
+        person = person._replace(
+            institution=person.institution._replace(
+                country=get_countries().get(person.institution.country,
+                                            'Unknown country')))
 
     return {
         'title': 'Profile',
