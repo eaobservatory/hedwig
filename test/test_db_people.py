@@ -561,9 +561,14 @@ class DBPeopleTest(DBTestCase):
         # Try using the token: user_id is None before but set afterwards.
         person = self.db.get_person(person_id=person_id)
         self.assertIsNone(person.user_id)
-        self.db.use_invitation(token, user_id=user_id)
+        old_person_record = self.db.use_invitation(token, user_id=user_id)
         person = self.db.get_person(person_id=person_id)
         self.assertEqual(person.user_id, user_id)
+
+        # Check the old person record was returned correctly.
+        self.assertIsInstance(old_person_record, Person)
+        self.assertEqual(old_person_record.id, person_id)
+        self.assertIsNone(old_person_record.user_id)
 
         # The token should no longer exist.
         with self.assertRaisesRegexp(NoSuchRecord, 'expired or non-existant'):
@@ -651,7 +656,15 @@ class DBPeopleTest(DBTestCase):
             self.db.use_invitation(token, new_person_id=999)
 
         # Accept the invitation with the existing new person record.
-        self.db.use_invitation(token, new_person_id=person_id_new)
+        old_user_record = self.db.use_invitation(token,
+                                                 new_person_id=person_id_new)
+
+        # Check the old person record was returned correctly.
+        self.assertIsInstance(old_user_record, Person)
+        self.assertEqual(old_user_record.id, person_id_2)
+        self.assertEqual(
+            [x.proposal_id for x in old_user_record.proposals.values()],
+            [proposal_id])
 
         # The "temporary" person record should have gone.
         with self.assertRaises(NoSuchRecord):

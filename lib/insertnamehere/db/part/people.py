@@ -291,7 +291,8 @@ class PeoplePart(object):
 
     def get_person(self, person_id, user_id=None,
                    with_email=False, with_institution=False,
-                   with_proposals=False):
+                   with_proposals=False,
+                   _conn=None):
         """
         Get a person record.
 
@@ -314,7 +315,7 @@ class PeoplePart(object):
         else:
             raise Error('neither person_id nor user_id specified')
 
-        with self._transaction() as conn:
+        with self._transaction(_conn=_conn) as conn:
             result = conn.execute(stmt).first()
 
             if result is None:
@@ -660,6 +661,9 @@ class PeoplePart(object):
         """
         Uses the invitation token to link the given user_id to the
         person record associated with the invitation.
+
+        Returns the person record to which the invitation refers as it was
+        before the invitation was accepted.
         """
 
         if user_id is None and new_person_id is None:
@@ -692,6 +696,9 @@ class PeoplePart(object):
                 raise NoSuchRecord('invitation token expired or non-existant')
 
             old_person_id = result['person_id']
+            old_person_record = self.get_person(old_person_id,
+                                                with_proposals=True,
+                                                _conn=conn)
 
             # Remove the token.  (Must do first otherwise it has a foreign
             # key which references the person record and prevents its
@@ -744,6 +751,8 @@ class PeoplePart(object):
                 # They were there at the start of the method so this
                 # shouldn't happen.
                 raise Error('user_id or new_person_id vanished')
+
+        return old_person_record
 
     def _exists_person_user(self, conn, user_id):
         """Test whether a person exists with the given user_id."""
