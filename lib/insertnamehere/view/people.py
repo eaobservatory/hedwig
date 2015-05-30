@@ -692,22 +692,39 @@ def invitation_token_accept(db, args, form, is_post):
             except NoSuchRecord:
                 kwargs = {'user_id': user_id}
 
-            db.use_invitation(token, **kwargs)
+            old_person_record = db.use_invitation(token, **kwargs)
             flash('The invitation has been accepted successfully.')
             person = db.get_person(person_id=None, user_id=user_id)
             _update_session_person(person)
 
+            # Attempt to determine where to redirect: ideally there will only
+            # be one proposal associated with the old person record.
+            target = None
+            try:
+                member = old_person_record.proposals.get_single()
+                proposal_id = member.proposal_id
+                code = db.get_proposal_facility_code(proposal_id)
+                target = url_for('{0}.proposal_view'.format(code),
+                                 proposal_id=proposal_id)
+            except NoSuchRecord:
+                pass
+            except MultipleRecords:
+                pass
+
             if person.institution_id is None:
                 # If the user has no institution, take them to the
                 # institution selection page.
+                if target is not None:
+                    session['next_page'] = target
+
                 flash('Please select your institution.')
                 raise HTTPRedirect(url_for('.person_edit_institution',
                                            person_id=person.id))
 
-            # TODO: redirect to proposal page if we have one in the
-            # person record.  (But use the old person record associated
-            # with the invitation so we only see the new ones.)
-            raise HTTPRedirect(url_for('.person_view', person_id=person.id))
+            # Redirect to the proposal, if we determined it, otherwise
+            # the profile page.
+            raise HTTPRedirect(target if target is not None else
+                               url_for('.person_view', person_id=person.id))
 
         person = db.get_invitation_person(
             token, with_email=True, with_institution=True)
