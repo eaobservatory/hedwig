@@ -27,7 +27,7 @@ from sqlalchemy.sql.functions import count
 from ...auth import check_password_hash, create_password_hash, generate_token
 from ...error import ConsistencyError, Error, NoSuchRecord, UserError
 from ...type import Email, EmailCollection, Institution, InstitutionInfo, \
-    Person, ResultCollection
+    Person, PersonInfo, ResultCollection
 from ...util import get_countries
 from ..meta import email, institution, invitation, member, person, \
     reset_token, user
@@ -417,12 +417,30 @@ class PeoplePart(object):
 
         return ans
 
-    def search_person(self, user_id=None, email_address=None, registered=None):
+    def search_person(self, user_id=None, email_address=None,
+                      registered=None,
+                      with_institution=False):
         """
         Find person records.
         """
 
-        stmt = person.select()
+        if not with_institution:
+            default = {
+                'institution_name': None,
+                'institution_organization': None,
+                'institution_country': None,
+            }
+
+            stmt = person.select()
+        else:
+            default = {}
+
+            stmt = select([
+                person,
+                institution.c.name.label('institution_name'),
+                institution.c.organization.label('institution_organization'),
+                institution.c.country.label('institution_country'),
+            ]).select_from(person.outerjoin(institution))
 
         if user_id is not None:
             stmt = stmt.where(person.c.user_id == user_id)
@@ -443,8 +461,9 @@ class PeoplePart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(person.c.name)):
-                ans[row['id']] = Person(email=None, institution=None,
-                                        proposals=None, **row)
+                values = default.copy()
+                values.update(**row)
+                ans[row['id']] = PersonInfo(**values)
 
         return ans
 

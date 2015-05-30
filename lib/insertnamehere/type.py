@@ -58,6 +58,11 @@ Person = namedtuple(
     map(lambda x: x.name, person.columns) +
     ['email', 'institution', 'proposals'])
 
+PersonInfo = namedtuple(
+    'PersonInfo',
+    [x.name for x in person.columns] +
+    ['institution_name', 'institution_organization', 'institution_country'])
+
 Proposal = namedtuple(
     'Proposal',
     map(lambda x: x.name, proposal.columns) + [
