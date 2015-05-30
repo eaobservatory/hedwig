@@ -697,6 +697,13 @@ def invitation_token_accept(db, args, form, is_post):
             person = db.get_person(person_id=None, user_id=user_id)
             _update_session_person(person)
 
+            if person.institution_id is None:
+                # If the user has no institution, take them to the
+                # institution selection page.
+                flash('Please select your institution.')
+                raise HTTPRedirect(url_for('.person_edit_institution',
+                                           person_id=person.id))
+
             # TODO: redirect to proposal page if we have one in the
             # person record.  (But use the old person record associated
             # with the invitation so we only see the new ones.)
