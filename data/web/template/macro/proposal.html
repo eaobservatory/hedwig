@@ -25,7 +25,15 @@
             <tr>
                 <td><a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name }}</a></td>
                 <td>{{ member.affiliation_name }}</td>
-                <td>{{ render_member_institution(member) }}</td>
+                <td>
+                    {% if member.resolved_institution_id is not none %}
+                        {{ render_member_institution(member) }}
+                    {% elif can_edit %}
+                        <a href="{{ url_for('people.person_edit_institution', person_id=member.person_id) }}">Select institution</a>
+                    {% else %}
+                        <i>Unknown institution</i>
+                    {% endif %}
+                </td>
                 <td>
                     {% if member.pi %}PI{% endif %}
                     {% if member.editor %}Editor{% endif %}
