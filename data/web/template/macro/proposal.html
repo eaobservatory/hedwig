@@ -17,12 +17,14 @@
     <table>
         <tr>
             <th>Name</th>
+            <th>Affiliation</th>
             <th>Institution</th>
             <th>Information</th>
         </tr>
         {% for member in proposal.members %}
             <tr>
                 <td><a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name }}</a></td>
+                <td>{{ member.affiliation_name }}</td>
                 <td>{{ render_member_institution(member) }}</td>
                 <td>
                     {% if member.pi %}PI{% endif %}

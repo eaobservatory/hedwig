@@ -13,6 +13,7 @@
     <table>
         <tr>
             <th>Member</th>
+            <th>Affiliation</th>
             <th>Is PI?</th>
             <th>Can edit proposal?</th>
             <th>Potential observer?</th>
@@ -21,6 +22,13 @@
         {% for member in members %}
             <tr id="memberrow_{{ member.id }}">
                 <td>{{ member.person_name }}</td>
+                <td>
+                    <select name="affiliation_{{ member.id }}">
+                        {% for affiliation in affiliations %}
+                            <option value="{{ affiliation.id }}" {{ 'selected="selected"' | safe if affiliation.id == member.affiliation_id }}>{{ affiliation.name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
                 <td>
                     <input type="radio" name="pi" value="{{ member.id }}" {{ 'checked="checked"' | safe if member.pi }} />
                 </td>
@@ -37,7 +45,6 @@
                     <input type="checkbox" name="observer_{{ member.id }}" value="yes" {{ 'checked="checked"' | safe if member.observer }} />
                 </td>
                 <td>
-                    <input type="hidden" name="member_{{ member.id }}" value="{{ member.id }}" />
                     {% if session.person.id != member.person_id %}
                         <a href="#" id="delete_{{ member.id }}">delete</a>
                     {% endif %}

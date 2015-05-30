@@ -359,13 +359,14 @@ class ProposalPart(object):
             x for x in member.columns if x.name not in ('institution_id',)
         ] + [
             person.c.name.label('person_name'),
+            affiliation.c.name.label('affiliation_name'),
             coalesce(member.c.institution_id, person.c.institution_id).label(
                 'resolved_institution_id'),
             institution.c.name.label('institution_name'),
             institution.c.organization.label('institution_organization'),
             institution.c.country.label('institution_country'),
         ]).select_from(
-            member.join(person).outerjoin(
+            member.join(person).join(affiliation).outerjoin(
                 institution, institution.c.id == coalesce(
                     member.c.institution_id, person.c.institution_id
                 )))
@@ -444,6 +445,7 @@ class ProposalPart(object):
                 conn, member, member.c.proposal_id, proposal_id, records,
                 update_columns=(
                     member.c.pi, member.c.editor, member.c.observer,
+                    member.c.affiliation_id
                 ), forbid_add=True)
 
     def update_semester(self, semester_id, name=None, _test_skip_check=False):

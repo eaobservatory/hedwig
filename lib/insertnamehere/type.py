@@ -49,7 +49,7 @@ InstitutionInfo = namedtuple(
 Member = namedtuple(
     'Member',
     [x.name for x in member.columns if x.name not in ('institution_id',)] +
-    ['person_name',
+    ['person_name', 'affiliation_name',
      'resolved_institution_id',
      'institution_name', 'institution_organization', 'institution_country'])
 

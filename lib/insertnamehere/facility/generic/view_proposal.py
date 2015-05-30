@@ -118,24 +118,34 @@ class GenericProposal(object):
         message = None
         records = proposal.members
 
+        affiliations = db.search_affiliation(
+            facility_id=self.id_, hidden=False)
+        if not affiliations:
+            raise HTTPError('No affiliations appear to be available.')
+
         if is_post:
-            pi = int(form['pi'])
+            if 'pi' in form:
+                pi = int(form['pi'])
+            else:
+                pi = None
 
             try:
-                for param in form:
-                    if not param.startswith('member_'):
+                # Create a new list from the items so that it is safe
+                # to update and/or delete from records (for Python-3).
+                for (id_, record) in list(records.items()):
+
+                    # The affiliation_id should always be present, so use it
+                    # to detect members who have been deleted from the form.
+                    affiliation_str = form.get('affiliation_{0}'.format(id_))
+                    if affiliation_str is None:
+                        del records[id_]
                         continue
-
-                    id_ = int(param[7:])
-
-                    record = records.get(id_)
-                    if record is None:
-                        raise UserError('Unexpected member present.')
 
                     records[id_] = record._replace(
                         pi=(id_ == pi),
                         editor=('editor_{0}'.format(id_) in form),
-                        observer=('observer_{0}'.format(id_) in form))
+                        observer=('observer_{0}'.format(id_) in form),
+                        affiliation_id=int(affiliation_str))
 
                 db.sync_proposal_member(
                     proposal_id, records,
@@ -153,4 +163,5 @@ class GenericProposal(object):
             'message': message,
             'proposal_id': proposal_id,
             'members': records.values(),
+            'affiliations': affiliations.values(),
         }
