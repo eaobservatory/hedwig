@@ -354,7 +354,14 @@ class ProposalPart(object):
 
         return ans
 
-    def search_member(self, proposal_id=None, person_id=None, _conn=None):
+    def search_member(self, proposal_id=None, person_id=None,
+                      co_member_person_id=None,
+                      co_member_institution_id=None,
+                      editor=None, _conn=None):
+        """
+        Search for proposal members.
+        """
+
         stmt = select([
             x for x in member.columns if x.name not in ('institution_id',)
         ] + [
@@ -375,6 +382,28 @@ class ProposalPart(object):
             stmt = stmt.where(member.c.proposal_id == proposal_id)
         if person_id is not None:
             stmt = stmt.where(member.c.person_id == person_id)
+        if co_member_person_id is not None:
+            stmt = stmt.where(and_(
+                member.c.person_id != co_member_person_id,
+                member.c.proposal_id.in_(
+                    select([member.c.proposal_id]).where(
+                        member.c.person_id == co_member_person_id
+                    ))))
+        if co_member_institution_id is not None:
+            stmt = stmt.where(
+                member.c.proposal_id.in_(
+                    select([member.c.proposal_id]).select_from(
+                        member.join(person)
+                    ).where(
+                        coalesce(member.c.institution_id,
+                                 person.c.institution_id) ==
+                        co_member_institution_id
+                    )))
+        if editor is not None:
+            if editor:
+                stmt = stmt.where(member.c.editor)
+            else:
+                stmt = stmt.where(not_(member.c.editor))
 
         ans = MemberCollection()
 
