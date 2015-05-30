@@ -37,7 +37,7 @@
                         {% else %}
                             {{ render_member_institution(member) }}
                         {% endif %}
-                    {% elif can_edit %}
+                    {% elif can_edit and not member.person_registered %}
                         <a href="{{ url_for('people.person_edit_institution', person_id=member.person_id) }}">Select institution</a>
                     {% else %}
                         <i>Unknown institution</i>
