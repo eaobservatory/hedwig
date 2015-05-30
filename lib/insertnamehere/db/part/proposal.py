@@ -261,6 +261,25 @@ class ProposalPart(object):
 
         return Proposal(members=members, **result)
 
+    def get_proposal_facility_code(self, proposal_id):
+        """
+        Determine the facility code associated with the given proposal.
+        """
+
+        with self._transaction() as conn:
+            result = conn.execute(select([
+                facility.c.code
+            ]).select_from(
+                facility.join(semester).join(call).join(proposal)
+            ).where(
+                proposal.c.id == proposal_id
+            )).first()
+
+        if result is None:
+            raise NoSuchRecord('facility or proposal does not exist')
+
+        return result['code']
+
     def get_semester(self, facility_id, semester_id, _conn=None):
         """
         Get a semester record.
