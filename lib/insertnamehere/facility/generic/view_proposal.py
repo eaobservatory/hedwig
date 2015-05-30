@@ -207,6 +207,9 @@ class GenericProposal(object):
                     except NoSuchRecord:
                         raise ErrorPage('This person\'s record was not found')
 
+                    if not person.public:
+                        raise ErrorPage('This person\'s record is private.')
+
                     db.add_member(proposal_id, member['person_id'],
                                   member['affiliation_id'],
                                   editor=member['editor'],
