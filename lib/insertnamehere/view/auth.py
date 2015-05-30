@@ -39,9 +39,27 @@ def for_person(db, person):
     elif session.get('is_admin', False) and can_be_admin(db):
         return yes
 
-    is_user = person.user_id == session['user_id']
+    if person.user_id is not None:
+        # This is a registered user: allow access based on the "public"
+        # flag and only allow them to edit their profile.
 
-    return Authorization(view=is_user or person.public, edit=is_user)
+        is_user = person.user_id == session['user_id']
+
+        return Authorization(view=is_user or person.public, edit=is_user)
+
+    else:
+        # Look for proposals of which this person is a member and allow
+        # access based on the proposal settings.
+        auth = no
+
+        for member in db.search_member(person_id=session['person']['id'],
+                                       co_member_person_id=person.id).values():
+            if member.editor:
+                auth = auth._replace(view=True, edit=True)
+            else:
+                auth = auth._replace(view=True)
+
+        return auth
 
 
 def for_institution(db, institution):
@@ -55,13 +73,29 @@ def for_institution(db, institution):
     elif session.get('is_admin', False) and can_be_admin(db):
         return yes
 
-    if 'person' in session:
-        user_institution_id = session['person']['institution_id']
-    else:
-        user_institution_id = None
+    auth = Authorization(view=True, edit=False)
 
-    return Authorization(view=True, edit=(user_institution_id is not None and
-                         user_institution_id == institution.id))
+    if 'person' not in session:
+        return auth
+
+    if institution.id == session['person']['institution_id']:
+        # If this is the person's institution, allow them to edit it.
+
+        auth = auth._replace(edit=True)
+
+    else:
+        # Is the person an editor for a proposal with a representative of this
+        # institution?
+
+        # TODO: consider restricting this method to institutions with no
+        # registered representatives?
+
+        if db.search_member(person_id=session['person']['id'],
+                            editor=True,
+                            co_member_institution_id=institution.id):
+            auth = auth._replace(edit=True)
+
+    return auth
 
 
 def for_proposal(db, proposal):
