@@ -1,0 +1,76 @@
+{% extends "layout.html" %}
+
+{% from 'macro/institution.html' import render_member_institution %}
+
+{% macro render_member_options() %}
+    <input type="checkbox" name="editor" value="yes" {{ 'checked="checked"' | safe if member.editor }}>
+    Can edit proposal?
+    <br />
+    <input type="checkbox" name="observer" value="yes" {{ 'checked="checked"' | safe if member.observer }}>
+    Potential observer?
+    <br />
+    Affiliation:
+    <select name="affiliation_id">
+        {% for affiliation in affiliations %}
+            <option value="{{ affiliation.id }}" {{ 'selected="selected"' | safe if affiliation.id == member.affiliation_id }}>{{ affiliation.name }}</option>
+        {% endfor %}
+    </select>
+
+{% endmacro %}
+
+{% block content %}
+
+<h2>Add a Member from the Directory</h2>
+
+{% if message_link is not none %}
+    <p>
+        {{ message_link }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.member_add', proposal_id=proposal_id) }}">
+    <p>
+        <select name="person_id">
+            {% for person in persons %}
+                <option value="{{ person.id }}" {{ 'selected="selected"' | safe if member.person_id == person.id }}>
+                    {{ person.name }}{% if person.institution_id is not none %},
+                        {{ render_member_institution(person) }}
+                    {% endif %}
+                </option>
+            {% endfor %}
+        </select>
+    </p>
+    <p>
+        {{ render_member_options() }}
+    </p>
+    <p>
+        <input type="submit" value="Add to proposal" name="submit-link" />
+    </p>
+</form>
+
+<h2>Invite a New Member to the Proposal</h2>
+
+{% if message_invite is not none %}
+    <p>
+        {{ message_invite }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.member_add', proposal_id=proposal_id) }}">
+    <p>
+        Full name:
+        <input type="text" name="name" value="{{ member.name }}" required="required" autofocus="autofocus" />
+        <br />
+        Email address:
+        <input type="email" name="email" value="{{ member.email }}" required="required" />
+        <br />
+        {{ render_member_options() }}
+    </p>
+    <p>
+        <input type="submit" value="Invite to register" name="submit-invite" />
+    </p>
+
+</form>
+
+
+{% endblock %}

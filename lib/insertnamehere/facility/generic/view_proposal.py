@@ -165,3 +165,114 @@ class GenericProposal(object):
             'members': records.values(),
             'affiliations': affiliations.values(),
         }
+
+    def view_member_add(self, db, proposal_id, form, is_post):
+        try:
+            proposal = db.get_proposal(self.id_, proposal_id,
+                                       with_members=True)
+        except NoSuchRecord:
+            raise HTTPNotFound('Proposal not found')
+
+        can = auth.for_proposal(db, proposal)
+
+        if not can.edit:
+            raise HTTPForbidden('Permission denied for this proposal.')
+
+        message_link = message_invite = None
+        member = dict(editor=None, observer=None, person_id=None,
+                      name='', email='')
+
+        affiliations = db.search_affiliation(
+            facility_id=self.id_, hidden=False)
+        if not affiliations:
+            raise HTTPError('No affiliations appear to be available.')
+
+        if is_post:
+            member['editor'] = 'editor' in form
+            member['observer'] = 'observer' in form
+            if 'person_id' in form:
+                member['person_id'] = int(form['person_id'])
+            member['name'] = form.get('name', '')
+            member['email'] = form.get('email', '')
+            member['affiliation_id'] = int(form['affiliation_id'])
+
+            if 'submit-link' in form:
+                try:
+                    if member['person_id'] is None:
+                        raise UserError(
+                            'No-one was selected from the directory.')
+
+                    try:
+                        person = db.get_person(person_id=member['person_id'])
+                    except NoSuchRecord:
+                        raise ErrorPage('This person\'s record was not found')
+
+                    db.add_member(proposal_id, member['person_id'],
+                                  member['affiliation_id'],
+                                  editor=member['editor'],
+                                  observer=member['observer'])
+
+                    # TODO: email the person a notification.
+
+                    flash('{0} has been added to the proposal.', person.name)
+                    raise HTTPRedirect(url_for('.proposal_view',
+                                       proposal_id=proposal_id))
+
+                except UserError as e:
+                    message_link = e.message
+
+            elif 'submit-invite' in form:
+                try:
+                    if not member['name']:
+                        raise UserError('Please enter the person\'s name.')
+                    if not member['email']:
+                        raise UserError('Please enter an email address.')
+
+                    person_id = db.add_person(member['name'])
+                    db.add_email(person_id, member['email'], primary=True)
+                    db.add_member(proposal_id, person_id,
+                                  member['affiliation_id'],
+                                  editor=member['editor'],
+                                  observer=member['observer'])
+                    token = db.add_invitation(person_id)
+
+                    # TODO: email the person the invitation token.
+
+                    flash('{0} has been added to the proposal.',
+                          member['name'])
+
+                    # Return to the proposal page after editing the new
+                    # member's institution.
+                    session['next_page'] = url_for('.proposal_view',
+                                                   proposal_id=proposal_id)
+
+                    raise HTTPRedirect(url_for(
+                        'people.person_edit_institution', person_id=person_id))
+
+                except UserError as e:
+                    message_invite = e.message
+
+            else:
+                raise ErrorPage('Unknown action.')
+
+        # Prepare list of people to display as the registered member
+        # directory, filtering out current proposal members.
+        countries = get_countries()
+        current_persons = [m.person_id for m in proposal.members.values()]
+        persons = [
+            p._replace(institution_country=countries.get(
+                p.institution_country))
+            for p in db.search_person(registered=True, public=True,
+                                      with_institution=True).values()
+            if p.id not in current_persons
+        ]
+
+        return {
+            'title': 'Add Member',
+            'message_link': message_link,
+            'message_invite': message_invite,
+            'proposal_id': proposal_id,
+            'persons': persons,
+            'affiliations': affiliations.values(),
+            'member': member,
+        }

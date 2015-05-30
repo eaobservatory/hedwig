@@ -76,6 +76,14 @@ def create_facility_blueprint(db, facility):
         return facility.view_member_edit(
             db, proposal_id, request.form, request.method == 'POST')
 
+    @bp.route('/proposal/<int:proposal_id>/member/add',
+              methods=['GET', 'POST'])
+    @facility_template('member_add.html')
+    @require_auth(require_person=True)
+    def member_add(proposal_id):
+        return facility.view_member_add(
+            db, proposal_id, request.form, request.method == 'POST')
+
     @bp.route('/admin')
     @facility_template('facility_admin.html')
     @require_admin

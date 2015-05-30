@@ -45,6 +45,8 @@
 
     {% if can_edit %}
     <p>
+        <a href="{{ url_for('.member_add', proposal_id=proposal.id) }}">Add member</a>
+        <br />
         <a href="{{ url_for('.member_edit', proposal_id=proposal.id) }}">Edit members</a>
     </p>
     {% endif %}

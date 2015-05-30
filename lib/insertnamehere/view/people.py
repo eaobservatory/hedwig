@@ -493,6 +493,10 @@ def person_edit_institution(db, person_id, form, is_post):
             else:
                 flash('The institution has been {0}.', action)
 
+            # If an explicit "next page" has been set, go there now.
+            if 'next_page' in session:
+                raise HTTPRedirect(session.pop('next_page'))
+
             raise HTTPRedirect(session.pop(
                 'log_in_for',
                 url_for('.person_view', person_id=person_id)))
