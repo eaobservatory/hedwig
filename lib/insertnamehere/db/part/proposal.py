@@ -366,6 +366,7 @@ class ProposalPart(object):
             x for x in member.columns if x.name not in ('institution_id',)
         ] + [
             person.c.name.label('person_name'),
+            person.c.public.label('person_public'),
             affiliation.c.name.label('affiliation_name'),
             coalesce(member.c.institution_id, person.c.institution_id).label(
                 'resolved_institution_id'),
