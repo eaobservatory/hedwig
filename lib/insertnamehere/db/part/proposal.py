@@ -367,6 +367,7 @@ class ProposalPart(object):
         ] + [
             person.c.name.label('person_name'),
             person.c.public.label('person_public'),
+            (person.c.user_id.isnot(None)).label('person_registered'),
             affiliation.c.name.label('affiliation_name'),
             coalesce(member.c.institution_id, person.c.institution_id).label(
                 'resolved_institution_id'),
