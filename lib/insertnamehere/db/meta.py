@@ -35,12 +35,12 @@ affiliation = Table(
     'affiliation',
     metadata,
     Column('id', Integer, primary_key=True),
-    Column('facility_id', None,
-           ForeignKey('facility.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+    Column('queue_id', None,
+           ForeignKey('queue.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
     Column('name', Unicode(31), nullable=False),
     Column('hidden', Boolean, default=False, nullable=False),
-    UniqueConstraint('facility_id', 'name'),
+    UniqueConstraint('queue_id', 'name'),
     **_table_opts)
 
 call = Table(

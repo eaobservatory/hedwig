@@ -31,14 +31,14 @@ from ..meta import affiliation, call, facility, institution, member, \
 
 
 class ProposalPart(object):
-    def add_affiliation(self, facility_id, name, hidden=False):
+    def add_affiliation(self, queue_id, name, hidden=False):
         """
         Add an affiliation to the database.
         """
 
         with self._transaction() as conn:
             result = conn.execute(affiliation.insert().values({
-                affiliation.c.facility_id: facility_id,
+                affiliation.c.queue_id: queue_id,
                 affiliation.c.name: name,
                 affiliation.c.hidden: hidden,
             }))
@@ -84,12 +84,12 @@ class ProposalPart(object):
                                            person_id)
                 proposal_record = self.get_proposal(None, proposal_id,
                                                     _conn=conn)
-                if not self._exists_facility_affiliation(
-                        conn, proposal_record.facility_id, affiliation_id):
+                if not self._exists_queue_affiliation(
+                        conn, proposal_record.queue_id, affiliation_id):
                     raise ConsistencyError(
                         'affiliation does not exist with id={0} '
-                        'for facility with id={1}'.format(
-                            affiliation_id, proposal_record.facility_id))
+                        'for queue with id={1}'.format(
+                            affiliation_id, proposal_record.queue_id))
 
             result = conn.execute(member.insert().values({
                 member.c.proposal_id: proposal_id,
@@ -126,12 +126,12 @@ class ProposalPart(object):
                     raise ConsistencyError('call does not exist with id={0}',
                                            call_id)
 
-                if not self._exists_facility_affiliation(
-                        conn, call.facility_id, affiliation_id):
+                if not self._exists_queue_affiliation(
+                        conn, call.queue_id, affiliation_id):
                     raise ConsistencyError(
                         'affiliation does not exist with id={0} '
-                        'for facility with id={1}'.format(
-                            affiliation_id, call.facility_id))
+                        'for queue with id={1}'.format(
+                            affiliation_id, call.queue_id))
 
             result = conn.execute(proposal.insert().values({
                 proposal.c.call_id: call_id,
@@ -316,15 +316,15 @@ class ProposalPart(object):
 
         return Queue(**result)
 
-    def search_affiliation(self, facility_id=None, hidden=None):
+    def search_affiliation(self, queue_id=None, hidden=None):
         """
         Search for affiliation records.
         """
 
         stmt = affiliation.select()
 
-        if facility_id is not None:
-            stmt = stmt.where(affiliation.c.facility_id == facility_id)
+        if queue_id is not None:
+            stmt = stmt.where(affiliation.c.queue_id == queue_id)
 
         if hidden is not None:
             stmt = stmt.where(affiliation.c.hidden == hidden)
@@ -462,21 +462,6 @@ class ProposalPart(object):
 
         return ans
 
-    def sync_facility_affiliation(self, facility_id, records):
-        """
-        Update the affiliation records for a facility to match those
-        given by "records".
-        """
-
-        with self._transaction() as conn:
-            if not self._exists_id(conn, facility, facility_id):
-                raise ConsistencyError(
-                    'person does not exist with id={0}', person_id)
-
-            return self._sync_records(
-                conn, affiliation, affiliation.c.facility_id, facility_id,
-                records)
-
     def sync_proposal_member(self, proposal_id, records, editor_person_id):
         """
         Update the member records for a proposal.
@@ -497,6 +482,21 @@ class ProposalPart(object):
                     member.c.pi, member.c.editor, member.c.observer,
                     member.c.affiliation_id
                 ), forbid_add=True)
+
+    def sync_queue_affiliation(self, queue_id, records):
+        """
+        Update the affiliation records for a queue to match those
+        given by "records".
+        """
+
+        with self._transaction() as conn:
+            if not self._exists_id(conn, queue, queue_id):
+                raise ConsistencyError(
+                    'queue does not exist with id={0}', queue_id)
+
+            return self._sync_records(
+                conn, affiliation, affiliation.c.queue_id, queue_id,
+                records)
 
     def update_semester(self, semester_id, name=None, _test_skip_check=False):
         """
@@ -554,13 +554,13 @@ class ProposalPart(object):
                     'no rows matched updating queue with id={0}',
                     queue_id)
 
-    def _exists_facility_affiliation(self, conn, facility_id, affiliation_id):
+    def _exists_queue_affiliation(self, conn, queue_id, affiliation_id):
         """
         Test whether an identifier exists in the given table.
         """
 
         return 0 < conn.execute(select([count(affiliation.c.id)]).where(and_(
-            affiliation.c.facility_id == facility_id,
+            affiliation.c.queue_id == queue_id,
             affiliation.c.id == affiliation_id,
             affiliation.c.hidden == false()
         ))).scalar()

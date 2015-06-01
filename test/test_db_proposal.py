@@ -41,22 +41,24 @@ class DBProposalTest(DBTestCase):
         # Get test facility ID.
         facility_id = self.db.ensure_facility('test_tel')
         self.assertIsInstance(facility_id, int)
+        queue_id = self.db.add_queue(facility_id, 'Queue1')
+        self.assertIsInstance(queue_id, int)
 
         # Check we have no affiliations to start.
-        result = self.db.search_affiliation(facility_id=facility_id)
+        result = self.db.search_affiliation(queue_id=queue_id)
         self.assertIsInstance(result, ResultCollection)
         self.assertEqual(len(result), 0)
 
         # Generate a collection of 2 records and sync it.
         records = ResultCollection()
-        records[0] = Affiliation(None, facility_id, 'Aff 1', True)
-        records[1] = Affiliation(None, facility_id, 'Aff 2', False)
+        records[0] = Affiliation(None, queue_id, 'Aff 1', True)
+        records[1] = Affiliation(None, queue_id, 'Aff 2', False)
 
-        n = self.db.sync_facility_affiliation(facility_id, records)
+        n = self.db.sync_queue_affiliation(queue_id, records)
         self.assertEqual(n, (2, 0, 0))
 
         # Check that we now have the expected 2 records.
-        result = self.db.search_affiliation(facility_id=facility_id)
+        result = self.db.search_affiliation(queue_id=queue_id)
         self.assertIsInstance(result, ResultCollection)
         self.assertEqual(len(result), 2)
         for (row, expect_name, expect_hidden) in zip(
@@ -67,13 +69,12 @@ class DBProposalTest(DBTestCase):
 
         # Check we can't remove an affiliation once it is in use.
         semester_id = self.db.add_semester(facility_id, 'Sem1')
-        queue_id = self.db.add_queue(facility_id, 'Queue1')
         call_id = self.db.add_call(semester_id, queue_id)
         person_id = self.db.add_person('Person1')
         (affiliation_id, affiliation_record) = result.popitem()
         self.db.add_proposal(call_id, person_id, affiliation_id, 'Title')
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.sync_facility_affiliation(facility_id, result)
+            self.db.sync_queue_affiliation(queue_id, result)
 
     def test_semester(self):
         # Test add_semeseter method.
@@ -250,15 +251,16 @@ class DBProposalTest(DBTestCase):
                                  _test_skip_check=True)
 
         with self.assertRaisesRegexp(ConsistencyError, '^person does not'):
-            self.db.add_proposal(call_id, 999, affiliation_id_1, 'Title')
+            self.db.add_proposal(call_id_1, 999, affiliation_id_1, 'Title')
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_proposal(call_id, 999, affiliation_id_1, 'Title',
+            self.db.add_proposal(call_id_1, 999, affiliation_id_1, 'Title',
                                  _test_skip_check=True)
 
         # Check for error raised when the affiliation is for the wrong
-        # facility.
+        # queue.
         other_facility_id = self.db.ensure_facility('another_tel')
-        other_affiliation_id = self.db.add_affiliation(other_facility_id,
+        other_queue_id = self.db.add_queue(other_facility_id, 'another queue')
+        other_affiliation_id = self.db.add_affiliation(other_queue_id,
                                                        'another aff/n')
         with self.assertRaisesRegexp(ConsistencyError, 'affiliation does not'):
             self.db.add_proposal(call_id_1, person_id, other_affiliation_id,
@@ -313,7 +315,8 @@ class DBProposalTest(DBTestCase):
         # facility.
         person_id_4 = self.db.add_person('Person 4')
         other_facility = self.db.ensure_facility('another_tel')
-        other_affiliation = self.db.add_affiliation(other_facility, 'Aff/n')
+        other_queue = self.db.add_queue(other_facility, 'another queue')
+        other_affiliation = self.db.add_affiliation(other_queue, 'Aff/n')
         with self.assertRaisesRegexp(ConsistencyError, 'affiliation does not'):
             self.db.add_member(proposal_id, person_id_4, other_affiliation)
 
@@ -334,11 +337,11 @@ class DBProposalTest(DBTestCase):
         call_id = self.db.add_call(semester_id, queue_id)
         self.assertIsInstance(call_id, int)
 
-        affiliations = self.db.search_affiliation(facility_id=facility_id)
+        affiliations = self.db.search_affiliation(queue_id=queue_id)
         if affiliations:
             affiliation_id = affiliations.values()[0].id
         else:
-            affiliation_id = self.db.add_affiliation(facility_id, 'test aff/n')
+            affiliation_id = self.db.add_affiliation(queue_id, 'test aff/n')
         self.assertIsInstance(affiliation_id, int)
 
         return (call_id, affiliation_id)
