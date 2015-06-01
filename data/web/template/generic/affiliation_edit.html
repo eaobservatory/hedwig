@@ -5,7 +5,7 @@
 
 <p>
     This page allows you to edit the affiliations which may be selected
-    for each member of a proposal for this facility.
+    for each member of a proposal for this queue.
 </p>
 
 <p>
@@ -37,7 +37,7 @@
     </p>
 {% endif %}
 
-<form method="POST" action="{{ url_for('.affiliation_edit') }}">
+<form method="POST" action="{{ url_for('.affiliation_edit', queue_id=queue_id) }}">
     <table id="affiliations">
         <tr>
             <th>Affiliation</th>

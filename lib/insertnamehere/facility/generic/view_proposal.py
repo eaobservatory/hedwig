@@ -43,7 +43,7 @@ class GenericProposal(object):
         #    raise ErrorPage('This call is not currently open for proposals.')
 
         affiliations = db.search_affiliation(
-            facility_id=self.id_, hidden=False)
+            queue_id=call.queue_id, hidden=False)
         if not affiliations:
             raise HTTPError('No affiliations appear to be available.')
 
@@ -119,7 +119,7 @@ class GenericProposal(object):
         records = proposal.members
 
         affiliations = db.search_affiliation(
-            facility_id=self.id_, hidden=False)
+            queue_id=proposal.queue_id, hidden=False)
         if not affiliations:
             raise HTTPError('No affiliations appear to be available.')
 
@@ -183,7 +183,7 @@ class GenericProposal(object):
                       name='', email='')
 
         affiliations = db.search_affiliation(
-            facility_id=self.id_, hidden=False)
+            queue_id=proposal.queue_id, hidden=False)
         if not affiliations:
             raise HTTPError('No affiliations appear to be available.')
 

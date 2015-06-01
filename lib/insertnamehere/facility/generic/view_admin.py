@@ -157,15 +157,17 @@ class GenericAdmin(object):
             try:
                 if queue_id is None:
                     # Create new queue.
-                    db.add_queue(self.id_, queue.name)
+                    new_queue_id = db.add_queue(self.id_, queue.name)
                     flash('New queue "{0}" has been added.', queue.name)
-                    raise HTTPRedirect(url_for('.queue_list'))
+                    raise HTTPRedirect(url_for('.queue_view',
+                                               queue_id=new_queue_id))
 
                 else:
                     # Update existing queue.
                     db.update_queue(queue_id, name=queue.name)
                     flash('Queue "{0}" has been updated.', queue.name)
-                    raise HTTPRedirect(url_for('.queue_list'))
+                    raise HTTPRedirect(url_for('.queue_view',
+                                               queue_id=queue_id))
 
             except UserError as e:
                 message = e.message
@@ -261,12 +263,12 @@ class GenericAdmin(object):
             'queues': (None if queues is None else queues.values()),
         }
 
-    def view_affiliation_edit(self, db, form, is_post):
+    def view_affiliation_edit(self, db, queue_id, form, is_post):
         if not auth.can_be_admin(db):
             raise HTTPForbidden('Could not verify administrative access.')
 
         message = None
-        records = db.search_affiliation(facility_id=self.id_)
+        records = db.search_affiliation(queue_id=queue_id)
 
         if is_post:
             try:
@@ -284,20 +286,20 @@ class GenericAdmin(object):
                     if id_.startswith('new_'):
                         id_ = int(id_[4:])
                         added_records[id_] = Affiliation(
-                            id_, self.id_, form[param], is_hidden)
+                            id_, queue_id, form[param], is_hidden)
 
                     else:
                         id_ = int(id_)
                         updated_records[id_] = Affiliation(
-                            id_, self.id_, form[param], is_hidden)
+                            id_, queue_id, form[param], is_hidden)
 
                 records = organise_collection(
                     ResultCollection, updated_records, added_records)
 
-                db.sync_facility_affiliation(self.id_, records)
+                db.sync_queue_affiliation(queue_id, records)
 
                 flash('The affiliations have been updated.')
-                raise HTTPRedirect(url_for('.facility_admin'))
+                raise HTTPRedirect(url_for('.queue_view', queue_id=queue_id))
 
             except UserError as e:
                 message = e.message
@@ -306,4 +308,5 @@ class GenericAdmin(object):
             'title': 'Edit Affiliations',
             'message': message,
             'affiliations': records.values(),
+            'queue_id': queue_id,
         }
