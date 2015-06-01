@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple
 
+from ..error import NoSuchRecord
 from ..web.util import session, HTTPForbidden
 
 Authorization = namedtuple('Authorization', ('view', 'edit'))
