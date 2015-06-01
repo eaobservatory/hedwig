@@ -29,6 +29,7 @@ metadata = MetaData()
 _table_opts = {
     'mysql_engine': 'InnoDB',
     'mysql_charset': 'utf8',
+    'sqlite_autoincrement': True,
 }
 
 affiliation = Table(

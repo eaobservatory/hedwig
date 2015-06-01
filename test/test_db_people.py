@@ -38,7 +38,7 @@ class DBPeopleTest(DBTestCase):
         self.assertEqual(user_name, 'user1')
 
         with self.assertRaises(NoSuchRecord):
-            self.db.get_user_name(999)
+            self.db.get_user_name(1999999)
 
         user_id_fetched = self.db.get_user_id('user1')
         self.assertEqual(user_id_fetched, user_id)
@@ -72,11 +72,11 @@ class DBPeopleTest(DBTestCase):
         # Attempting to reference a non-existant person is an error.
         with self.assertRaisesRegexp(ConsistencyError,
                                      '^person does not exist'):
-            user_id = self.db.add_user('user4', 'pass4', person_id=999)
+            user_id = self.db.add_user('user4', 'pass4', person_id=1999999)
 
         # Check that we also detects this error via.
         with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
-            user_id = self.db.add_user('user4', 'pass4', person_id=999,
+            user_id = self.db.add_user('user4', 'pass4', person_id=1999999,
                                        _test_skip_check=True)
 
         # Test changing a password.
@@ -89,9 +89,9 @@ class DBPeopleTest(DBTestCase):
         self.db.update_user_name(user_id, '3resu')
         self.assertEqual(self.db.get_user_name(user_id), '3resu')
         with self.assertRaisesRegexp(ConsistencyError, '^user does not exist'):
-            self.db.update_user_name(999, 'newname')
+            self.db.update_user_name(1999999, 'newname')
         with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
-            self.db.update_user_name(999, 'newname', _test_skip_check=True)
+            self.db.update_user_name(1999999, 'newname', _test_skip_check=True)
         with self.assertRaisesRegexp(UserError, 'already exists\.$'):
             self.db.update_user_name(user_id, 'user1')
         with self.assertRaises(DatabaseIntegrityError):
@@ -106,11 +106,11 @@ class DBPeopleTest(DBTestCase):
 
         # Attempting to reference a non-existant user_id is an error.
         with self.assertRaisesRegexp(ConsistencyError, '^user does not exist'):
-            self.db.add_person('User One', user_id=999)
+            self.db.add_person('User One', user_id=1999999)
 
         # Check that the database also traps this error.
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_person('User One', user_id=999,
+            self.db.add_person('User One', user_id=1999999,
                                _test_skip_check=True)
 
         # Create a person which references a valid user_id.
@@ -148,11 +148,11 @@ class DBPeopleTest(DBTestCase):
         # Test person_id existance checking.
         with self.assertRaisesRegexp(ConsistencyError,
                                      '^person does not exist'):
-            email_id = self.db.add_email(999, 'zero@users.net')
+            email_id = self.db.add_email(1999999, 'zero@users.net')
 
         # Test that the database check for the same thing works.
         with self.assertRaises(DatabaseIntegrityError):
-            email_id = self.db.add_email(999, 'zero@users.net',
+            email_id = self.db.add_email(1999999, 'zero@users.net',
                                          _test_skip_check=True)
 
         # Test that the database prevents duplicates for the same person.
@@ -335,7 +335,7 @@ class DBPeopleTest(DBTestCase):
         result = self.db.search_person(user_id=user_2).keys()
         self.assertEqual(set(result), set((person_2,)))
 
-        result = self.db.search_person(user_id=999).keys()
+        result = self.db.search_person(user_id=1999999).keys()
         self.assertFalse(result)
 
         # Try searching by email address.
@@ -362,7 +362,7 @@ class DBPeopleTest(DBTestCase):
             user_id=user_3, email_address='shared@email').keys()
         self.assertEqual(set(result), set((person_3,)))
         result = self.db.search_person(
-            user_id=999, email_address='shared@email').keys()
+            user_id=1999999, email_address='shared@email').keys()
         self.assertFalse(result)
         result = self.db.search_person(
             user_id=user_3, email_address='no@email').keys()
@@ -372,7 +372,7 @@ class DBPeopleTest(DBTestCase):
         # Try getting a non-existent institution record.
         with self.assertRaisesRegexp(NoSuchRecord,
                                      '^institution does not exist'):
-            institution = self.db.get_institution(999)
+            institution = self.db.get_institution(1999999)
 
         # Check that we can add an institution.
         institution_id = self.db.add_institution('Institution One',
@@ -416,9 +416,9 @@ class DBPeopleTest(DBTestCase):
             self.db.update_institution(institution_id)
         with self.assertRaisesRegexp(ConsistencyError,
                                      '^institution does not exist'):
-            self.db.update_institution(999, '...')
+            self.db.update_institution(1999999, '...')
         with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
-            self.db.update_institution(999, '...', _test_skip_check=True)
+            self.db.update_institution(1999999, '...', _test_skip_check=True)
         with self.assertRaisesRegexp(UserError, 'Country code not recognised'):
             self.db.update_institution(institution_id, country='BX')
 
@@ -443,7 +443,7 @@ class DBPeopleTest(DBTestCase):
     def test_person(self):
         # Try getting a non-existent person record.
         with self.assertRaisesRegexp(NoSuchRecord, '^person does not exist'):
-            person = self.db.get_person(999)
+            person = self.db.get_person(1999999)
 
         # Create a test person record.
         person_id = self.db.add_person('Person One')
@@ -475,12 +475,12 @@ class DBPeopleTest(DBTestCase):
         with self.assertRaisesRegexp(Error, '^no person updates specified'):
             self.db.update_person(person_id)
         with self.assertRaisesRegexp(ConsistencyError, '^person does not'):
-            self.db.update_person(999, institution_id=institution_id)
+            self.db.update_person(1999999, institution_id=institution_id)
         with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
-            self.db.update_person(999, institution_id=institution_id,
+            self.db.update_person(1999999, institution_id=institution_id,
                                   _test_skip_check=True)
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.update_person(person_id, institution_id=999)
+            self.db.update_person(person_id, institution_id=1999999)
 
         # We should only be able to enable administrative privileges
         # for registered users.
@@ -556,7 +556,7 @@ class DBPeopleTest(DBTestCase):
         # Try check that the user exists.
         with self.assertRaisesRegexp(ConsistencyError,
                                      'user does not exist'):
-            self.db.use_invitation(token, user_id=999)
+            self.db.use_invitation(token, user_id=1999999)
 
         # Try using the token: user_id is None before but set afterwards.
         person = self.db.get_person(person_id=person_id)
@@ -577,9 +577,9 @@ class DBPeopleTest(DBTestCase):
         # Check error trapping.
         with self.assertRaisesRegexp(ConsistencyError,
                                      'person does not exist'):
-            self.db.add_invitation(999)
+            self.db.add_invitation(1999999)
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_invitation(999, _test_skip_check=True)
+            self.db.add_invitation(1999999, _test_skip_check=True)
         with self.assertRaisesRegexp(ConsistencyError,
                                      'person is already registered'):
             self.db.add_invitation(person_id)
@@ -653,7 +653,7 @@ class DBPeopleTest(DBTestCase):
         # Try check that the person exists.
         with self.assertRaisesRegexp(ConsistencyError,
                                      'person does not exist'):
-            self.db.use_invitation(token, new_person_id=999)
+            self.db.use_invitation(token, new_person_id=1999999)
 
         # Accept the invitation with the existing new person record.
         old_user_record = self.db.use_invitation(token,

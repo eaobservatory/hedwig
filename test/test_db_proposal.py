@@ -82,7 +82,7 @@ class DBProposalTest(DBTestCase):
         self.assertIsInstance(facility_id, int)
 
         with self.assertRaisesRegexp(ConsistencyError, 'facility does not'):
-            self.db.add_semester(999, '99A')
+            self.db.add_semester(1999999, '99A')
 
         semester_id = self.db.add_semester(facility_id, '99A')
         self.assertIsInstance(semester_id, int)
@@ -105,13 +105,13 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(self.db.get_semester(facility_id, semester_id).name,
                          '99 (a)')
         with self.assertRaisesRegexp(ConsistencyError, 'semester does not ex'):
-            self.db.update_semester(999, name='bad semester')
+            self.db.update_semester(1999999, name='bad semester')
 
         # Check for semesters which don't exist or have wrong facility.
         with self.assertRaises(NoSuchRecord):
-            self.db.get_semester(facility_id, 999)
+            self.db.get_semester(facility_id, 1999999)
         with self.assertRaises(NoSuchRecord):
-            self.db.get_semester(999, semester_id)
+            self.db.get_semester(1999999, semester_id)
 
     def test_queue(self):
         # Test add_queue method.
@@ -119,7 +119,7 @@ class DBProposalTest(DBTestCase):
         self.assertIsInstance(facility_id, int)
 
         with self.assertRaisesRegexp(ConsistencyError, 'facility does not'):
-            self.db.add_queue(999, 'INT')
+            self.db.add_queue(1999999, 'INT')
 
         queue_id = self.db.add_queue(facility_id, 'INT')
         self.assertIsInstance(queue_id, int)
@@ -150,9 +150,9 @@ class DBProposalTest(DBTestCase):
 
         # Check test for non-existant queue or facility.
         with self.assertRaises(NoSuchRecord):
-            self.db.get_queue(facility_id_2, 999)
+            self.db.get_queue(facility_id_2, 1999999)
         with self.assertRaises(NoSuchRecord):
-            self.db.get_queue(999, queue_id_3)
+            self.db.get_queue(1999999, queue_id_3)
 
     def test_call(self):
         # Check that we can create a call for proposals.
@@ -168,9 +168,9 @@ class DBProposalTest(DBTestCase):
 
         # Check tests for bad values.
         with self.assertRaisesRegexp(ConsistencyError, 'semester does not'):
-            self.db.add_call(999, queue_id)
+            self.db.add_call(1999999, queue_id)
         with self.assertRaisesRegexp(ConsistencyError, 'queue does not'):
-            self.db.add_call(semester_id, 999)
+            self.db.add_call(semester_id, 1999999)
 
         # Check uniqueness constraint.
         with self.assertRaises(DatabaseIntegrityError):
@@ -194,10 +194,10 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(self.db.get_call(facility_id, call_id), expected)
 
         with self.assertRaises(NoSuchRecord):
-            self.db.get_call(facility_id, 999)
+            self.db.get_call(facility_id, 1999999)
 
         with self.assertRaises(NoSuchRecord):
-            self.db.get_call(999, call_id)
+            self.db.get_call(1999999, call_id)
 
     def test_add_proposal(self):
         (call_id_1, affiliation_id_1) = self._create_test_call(
@@ -245,15 +245,15 @@ class DBProposalTest(DBTestCase):
 
         # Check for error raised when the call or person doesn't exist.
         with self.assertRaisesRegexp(ConsistencyError, '^call does not'):
-            self.db.add_proposal(999, person_id, affiliation_id_1, 'Title')
+            self.db.add_proposal(1999999, person_id, affiliation_id_1, 'Title')
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_proposal(999, person_id, affiliation_id_1, 'Title',
+            self.db.add_proposal(1999999, person_id, affiliation_id_1, 'Title',
                                  _test_skip_check=True)
 
         with self.assertRaisesRegexp(ConsistencyError, '^person does not'):
-            self.db.add_proposal(call_id_1, 999, affiliation_id_1, 'Title')
+            self.db.add_proposal(call_id_1, 1999999, affiliation_id_1, 'Title')
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_proposal(call_id_1, 999, affiliation_id_1, 'Title',
+            self.db.add_proposal(call_id_1, 1999999, affiliation_id_1, 'Title',
                                  _test_skip_check=True)
 
         # Check for error raised when the affiliation is for the wrong
