@@ -18,10 +18,12 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from datetime import datetime
+
 from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
     NoSuchRecord, UserError
 from insertnamehere.type import Affiliation, Call, \
-    Member, MemberCollection, Proposal, ResultCollection
+    Member, MemberCollection, Proposal, ProposalState, ResultCollection
 from .dummy_db import DBTestCase
 
 
@@ -41,7 +43,7 @@ class DBProposalTest(DBTestCase):
         # Get test facility ID.
         facility_id = self.db.ensure_facility('test_tel')
         self.assertIsInstance(facility_id, int)
-        queue_id = self.db.add_queue(facility_id, 'Queue1')
+        queue_id = self.db.add_queue(facility_id, 'Queue1', 'Q1')
         self.assertIsInstance(queue_id, int)
 
         # Check we have no affiliations to start.
@@ -68,8 +70,11 @@ class DBProposalTest(DBTestCase):
             self.assertEqual(row.hidden, expect_hidden)
 
         # Check we can't remove an affiliation once it is in use.
-        semester_id = self.db.add_semester(facility_id, 'Sem1')
-        call_id = self.db.add_call(semester_id, queue_id)
+        semester_id = self.db.add_semester(
+            facility_id, 'Sem1', 'S1',
+            datetime(2000, 1, 1), datetime(2000, 6, 30))
+        call_id = self.db.add_call(semester_id, queue_id,
+                                   datetime(1999, 9, 1), datetime(1999, 9, 30))
         person_id = self.db.add_person('Person1')
         (affiliation_id, affiliation_record) = result.popitem()
         self.db.add_proposal(call_id, person_id, affiliation_id, 'Title')
@@ -81,16 +86,30 @@ class DBProposalTest(DBTestCase):
         facility_id = self.db.ensure_facility('my_tel')
         self.assertIsInstance(facility_id, int)
 
-        with self.assertRaisesRegexp(ConsistencyError, 'facility does not'):
-            self.db.add_semester(1999999, '99A')
+        date_start = datetime(2002, 2, 2)
+        date_end = datetime(2002, 8, 1)
 
-        semester_id = self.db.add_semester(facility_id, '99A')
+        with self.assertRaisesRegexp(UserError, 'end date is before start'):
+            self.db.add_semester(facility_id, '99A', '99A',
+                                 date_end, date_start)
+
+        with self.assertRaisesRegexp(ConsistencyError, 'facility does not'):
+            self.db.add_semester(1999999, '99A', '99A', date_start, date_end)
+
+        semester_id = self.db.add_semester(facility_id, '99A', '99A',
+                                           date_start, date_end)
         self.assertIsInstance(semester_id, int)
 
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_semester(facility_id, '99A')
+            self.db.add_semester(facility_id, '99A', '99A2',
+                                 date_start, date_end)
 
-        semester_id_2 = self.db.add_semester(facility_id, '99B')
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.add_semester(facility_id, '99A2', '99A',
+                                 date_start, date_end)
+
+        semester_id_2 = self.db.add_semester(facility_id, '99B', '99B',
+                                             date_start, date_end)
         self.assertIsInstance(semester_id_2, int)
         self.assertNotEqual(semester_id_2, semester_id)
 
@@ -106,6 +125,9 @@ class DBProposalTest(DBTestCase):
                          '99 (a)')
         with self.assertRaisesRegexp(ConsistencyError, 'semester does not ex'):
             self.db.update_semester(1999999, name='bad semester')
+        with self.assertRaisesRegexp(UserError, 'end date is before start'):
+            self.db.update_semester(semester_id,
+                                    date_start=date_end, date_end=date_start)
 
         # Check for semesters which don't exist or have wrong facility.
         with self.assertRaises(NoSuchRecord):
@@ -119,21 +141,24 @@ class DBProposalTest(DBTestCase):
         self.assertIsInstance(facility_id, int)
 
         with self.assertRaisesRegexp(ConsistencyError, 'facility does not'):
-            self.db.add_queue(1999999, 'INT')
+            self.db.add_queue(1999999, 'INT', 'I')
 
-        queue_id = self.db.add_queue(facility_id, 'INT')
+        queue_id = self.db.add_queue(facility_id, 'INT', 'I')
         self.assertIsInstance(queue_id, int)
 
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_queue(facility_id, 'INT')
+            self.db.add_queue(facility_id, 'INT', 'I2')
 
-        queue_id_2 = self.db.add_queue(facility_id, 'XYZ')
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.add_queue(facility_id, 'INT2', 'I')
+
+        queue_id_2 = self.db.add_queue(facility_id, 'XYZ', 'XYZ')
         self.assertIsInstance(queue_id_2, int)
         self.assertNotEqual(queue_id_2, queue_id)
 
         # Try searching: add a queue for another facility first.
         facility_id_2 = self.db.ensure_facility('my_other_tel')
-        queue_id_3 = self.db.add_queue(facility_id_2, '???')
+        queue_id_3 = self.db.add_queue(facility_id_2, '???', '?')
         self.assertIsInstance(queue_id_3, int)
         queues = self.db.search_queue(facility_id=facility_id)
         self.assertIsInstance(queues, ResultCollection)
@@ -158,36 +183,47 @@ class DBProposalTest(DBTestCase):
         # Check that we can create a call for proposals.
         facility_id = self.db.ensure_facility('my_tel')
         self.assertIsInstance(facility_id, int)
-        semester_id = self.db.add_semester(facility_id, 'My Semester')
+        semester_id = self.db.add_semester(
+            facility_id, 'My Semester', 'MS',
+            datetime(2000, 1, 1), datetime(2000, 6, 30))
         self.assertIsInstance(semester_id, int)
-        queue_id = self.db.add_queue(facility_id, 'My Queue')
+        queue_id = self.db.add_queue(facility_id, 'My Queue', 'MQ')
         self.assertIsInstance(queue_id, int)
 
-        call_id = self.db.add_call(semester_id, queue_id)
+        date_open = datetime(1999, 9, 1)
+        date_close = datetime(1999, 9, 30)
+
+        call_id = self.db.add_call(semester_id, queue_id,
+                                   date_open, date_close)
         self.assertIsInstance(call_id, int)
 
         # Check tests for bad values.
         with self.assertRaisesRegexp(ConsistencyError, 'semester does not'):
-            self.db.add_call(1999999, queue_id)
+            self.db.add_call(1999999, queue_id, date_open, date_close)
         with self.assertRaisesRegexp(ConsistencyError, 'queue does not'):
-            self.db.add_call(semester_id, 1999999)
+            self.db.add_call(semester_id, 1999999, date_open, date_close)
+        with self.assertRaisesRegexp(UserError, 'Closing date is before open'):
+            self.db.add_call(semester_id, queue_id, date_close, date_open)
 
         # Check uniqueness constraint.
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_call(semester_id, queue_id)
+            self.db.add_call(semester_id, queue_id, date_open, date_close)
 
         # Check facility consistency check.
         facility_id_2 = self.db.ensure_facility('my_other_tel')
-        semester_id_2 = self.db.add_semester(facility_id_2, 'My Semester')
+        semester_id_2 = self.db.add_semester(
+            facility_id_2, 'My Semester', 'MS',
+            datetime(2000, 2, 1), datetime(2000, 7, 31))
         with self.assertRaisesRegexp(ConsistencyError,
                                      'inconsistent facility references'):
-            self.db.add_call(semester_id_2, queue_id)
+            self.db.add_call(semester_id_2, queue_id, date_open, date_close)
 
         # Try the search_call method.
         result = self.db.search_call(call_id=call_id)
         self.assertIsInstance(result, ResultCollection)
         self.assertEqual(list(result.keys()), [call_id])
         expected = Call(id=call_id, semester_id=semester_id, queue_id=queue_id,
+                        date_open=date_open, date_close=date_close,
                         facility_id=facility_id,
                         semester_name='My Semester', queue_name='My Queue')
         self.assertEqual(result[call_id], expected)
@@ -229,6 +265,7 @@ class DBProposalTest(DBTestCase):
                 self.assertEqual(proposal.id, proposal_id)
                 self.assertEqual(proposal.title, title)
                 self.assertEqual(proposal.call_id, call_id)
+                self.assertEqual(proposal.state, ProposalState.PREPARATION)
                 self.assertIsInstance(proposal.members, MemberCollection)
                 self.assertEqual(len(proposal.members), 1)
                 member = proposal.members.get_single()
@@ -259,7 +296,8 @@ class DBProposalTest(DBTestCase):
         # Check for error raised when the affiliation is for the wrong
         # queue.
         other_facility_id = self.db.ensure_facility('another_tel')
-        other_queue_id = self.db.add_queue(other_facility_id, 'another queue')
+        other_queue_id = self.db.add_queue(other_facility_id, 'another queue',
+                                           'aq')
         other_affiliation_id = self.db.add_affiliation(other_queue_id,
                                                        'another aff/n')
         with self.assertRaisesRegexp(ConsistencyError, 'affiliation does not'):
@@ -315,7 +353,7 @@ class DBProposalTest(DBTestCase):
         # facility.
         person_id_4 = self.db.add_person('Person 4')
         other_facility = self.db.ensure_facility('another_tel')
-        other_queue = self.db.add_queue(other_facility, 'another queue')
+        other_queue = self.db.add_queue(other_facility, 'another queue', 'aq')
         other_affiliation = self.db.add_affiliation(other_queue, 'Aff/n')
         with self.assertRaisesRegexp(ConsistencyError, 'affiliation does not'):
             self.db.add_member(proposal_id, person_id_4, other_affiliation)
@@ -329,12 +367,15 @@ class DBProposalTest(DBTestCase):
     def _create_test_call(self, semester_name, queue_name):
         facility_id = self.db.ensure_facility('my_tel')
         self.assertIsInstance(facility_id, int)
-        semester_id = self.db.add_semester(facility_id, semester_name)
+        semester_id = self.db.add_semester(
+            facility_id, semester_name, semester_name,
+            datetime(2000, 1, 1), datetime(2000, 6, 30))
         self.assertIsInstance(semester_id, int)
-        queue_id = self.db.add_queue(facility_id, queue_name)
+        queue_id = self.db.add_queue(facility_id, queue_name, queue_name)
         self.assertIsInstance(queue_id, int)
 
-        call_id = self.db.add_call(semester_id, queue_id)
+        call_id = self.db.add_call(semester_id, queue_id,
+                                   datetime(1999, 9, 1), datetime(1999, 9, 30))
         self.assertIsInstance(call_id, int)
 
         affiliations = self.db.search_affiliation(queue_id=queue_id)

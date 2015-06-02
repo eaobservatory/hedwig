@@ -68,7 +68,7 @@ Proposal = namedtuple(
     'Proposal',
     map(lambda x: x.name, proposal.columns) + [
         'semester_id', 'semester_name',
-        'queue_id', 'queue_name',
+        'queue_id', 'queue_name', 'queue_code',
         'facility_id',
         'members',
     ])
@@ -79,7 +79,7 @@ Semester = namedtuple(
 
 SemesterInfo = namedtuple(
     'SemesterInfo',
-    ['id', 'facility_id', 'name'])
+    ['id', 'facility_id', 'name', 'code', 'date_start', 'date_end'])
 
 Queue = namedtuple(
     'Queue',
@@ -87,7 +87,7 @@ Queue = namedtuple(
 
 QueueInfo = namedtuple(
     'Queue',
-    ['id', 'facility_id', 'name'])
+    ['id', 'facility_id', 'name', 'code'])
 
 
 class ProposalState(object):

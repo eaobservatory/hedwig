@@ -39,7 +39,7 @@ affiliation = Table(
     Column('queue_id', None,
            ForeignKey('queue.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
-    Column('name', Unicode(31), nullable=False),
+    Column('name', Unicode(255), nullable=False),
     Column('hidden', Boolean, default=False, nullable=False),
     UniqueConstraint('queue_id', 'name'),
     **_table_opts)
@@ -54,6 +54,8 @@ call = Table(
     Column('queue_id', None,
            ForeignKey('queue.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
+    Column('date_open', DateTime(), nullable=False),
+    Column('date_close', DateTime(), nullable=False),
     UniqueConstraint('semester_id', 'queue_id'),
     **_table_opts)
 
@@ -145,6 +147,7 @@ proposal = Table(
            ForeignKey('call.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
     Column('number', Integer, nullable=False),
+    Column('state', Integer, nullable=False),
     Column('title', Unicode(255), nullable=False),
     UniqueConstraint('call_id', 'number'),
     **_table_opts)
@@ -156,8 +159,11 @@ queue = Table(
     Column('facility_id', None,
            ForeignKey('facility.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
-    Column('name', Unicode(31), nullable=False),
+    Column('name', Unicode(255), nullable=False),
+    Column('code', Unicode(31), nullable=False),
+    Column('description', UnicodeText, nullable=False),
     UniqueConstraint('facility_id', 'name'),
+    UniqueConstraint('facility_id', 'code'),
     **_table_opts)
 
 reset_token = Table(
@@ -177,8 +183,13 @@ semester = Table(
     Column('facility_id', None,
            ForeignKey('facility.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
-    Column('name', Unicode(31), nullable=False),
+    Column('name', Unicode(255), nullable=False),
+    Column('code', Unicode(31), nullable=False),
+    Column('date_start', DateTime(), nullable=False),
+    Column('date_end', DateTime(), nullable=False),
+    Column('description', UnicodeText, nullable=False),
     UniqueConstraint('facility_id', 'name'),
+    UniqueConstraint('facility_id', 'code'),
     **_table_opts)
 
 user = Table(

@@ -23,8 +23,10 @@ from sqlalchemy.sql.expression import and_, false
 from sqlalchemy.sql.functions import coalesce, count
 from sqlalchemy.sql.functions import max as max_
 
-from ...error import ConsistencyError, MultipleRecords, NoSuchRecord, UserError
-from ...type import Affiliation, Call, Member, MemberCollection, Proposal, \
+from ...error import ConsistencyError, Error, \
+    MultipleRecords, NoSuchRecord, UserError
+from ...type import Affiliation, Call, Member, MemberCollection, \
+    Proposal, ProposalState, \
     Queue, QueueInfo, ResultCollection, Semester, SemesterInfo
 from ..meta import affiliation, call, facility, institution, member, \
     person, proposal, queue, semester
@@ -45,10 +47,15 @@ class ProposalPart(object):
 
         return result.inserted_primary_key[0]
 
-    def add_call(self, semester_id, queue_id, _test_skip_check=False):
+    def add_call(self, semester_id, queue_id,
+                 date_open, date_close,
+                 _test_skip_check=False):
         """
         Add a call for proposals to the database.
         """
+
+        if date_close < date_open:
+            raise UserError('Closing date is before opening date.')
 
         with self._transaction() as conn:
             if not _test_skip_check:
@@ -70,6 +77,8 @@ class ProposalPart(object):
             result = conn.execute(call.insert().values({
                 call.c.semester_id: semester_id,
                 call.c.queue_id: queue_id,
+                call.c.date_open: date_open,
+                call.c.date_close: date_close,
             }))
 
         return result.inserted_primary_key[0]
@@ -103,7 +112,7 @@ class ProposalPart(object):
         return result.inserted_primary_key[0]
 
     def add_proposal(self, call_id, person_id, affiliation_id, title,
-                     _test_skip_check=False):
+                     state=ProposalState.PREPARATION, _test_skip_check=False):
         """
         Add a new proposal to the database.
 
@@ -116,6 +125,9 @@ class ProposalPart(object):
 
         if not title:
             raise UserError('The proposal title should not be blank.')
+
+        if not ProposalState.is_valid(state):
+            raise Error('Invalid state.')
 
         with self._transaction() as conn:
             if not _test_skip_check:
@@ -138,6 +150,7 @@ class ProposalPart(object):
                 proposal.c.number: select(
                     [coalesce(max_(proposal.c.number), 0) + 1]).where(
                     proposal.c.call_id == call_id),
+                proposal.c.state: state,
                 proposal.c.title: title,
             }))
 
@@ -149,7 +162,8 @@ class ProposalPart(object):
 
         return proposal_id
 
-    def add_queue(self, facility_id, name, _test_skip_check=False):
+    def add_queue(self, facility_id, name, code, description='',
+                  _test_skip_check=False):
         """
         Add a queue to the database.
         """
@@ -166,17 +180,24 @@ class ProposalPart(object):
             result = conn.execute(queue.insert().values({
                 queue.c.facility_id: facility_id,
                 queue.c.name: name,
+                queue.c.code: code,
+                queue.c.description: description,
             }))
 
             return result.inserted_primary_key[0]
 
-    def add_semester(self, facility_id, name, _test_skip_check=False):
+    def add_semester(self, facility_id, name, code,
+                     date_start, date_end, description='',
+                     _test_skip_check=False):
         """
         Add a semester to the database.
         """
 
         if not name:
             raise UserError('The semester name can not be blank.')
+
+        if date_end < date_start:
+            raise UserError('Semester end date is before start date.')
 
         with self._transaction() as conn:
             if (not _test_skip_check and
@@ -185,8 +206,12 @@ class ProposalPart(object):
                                        facility_id)
 
             result = conn.execute(semester.insert().values({
-                queue.c.facility_id: facility_id,
-                queue.c.name: name,
+                semester.c.facility_id: facility_id,
+                semester.c.name: name,
+                semester.c.code: code,
+                semester.c.date_start: date_start,
+                semester.c.date_end: date_end,
+                semester.c.description: description,
             }))
 
             return result.inserted_primary_key[0]
@@ -238,6 +263,7 @@ class ProposalPart(object):
             semester.c.name.label('semester_name'),
             call.c.queue_id,
             queue.c.name.label('queue_name'),
+            queue.c.code.label('queue_code'),
             semester.c.facility_id,
         ]).select_from(
             proposal.join(call).join(semester).join(queue)
@@ -435,7 +461,14 @@ class ProposalPart(object):
         return ans
 
     def search_semester(self, facility_id=None):
-        stmt = select([semester.c.id, semester.c.facility_id, semester.c.name])
+        stmt = select([
+            semester.c.id,
+            semester.c.facility_id,
+            semester.c.name,
+            semester.c.code,
+            semester.c.date_start,
+            semester.c.date_end,
+        ])
 
         if facility_id is not None:
             stmt = stmt.where(semester.c.facility_id == facility_id)
@@ -449,7 +482,12 @@ class ProposalPart(object):
         return ans
 
     def search_queue(self, facility_id=None):
-        stmt = select([queue.c.id, queue.c.facility_id, queue.c.name])
+        stmt = select([
+            queue.c.id,
+            queue.c.facility_id,
+            queue.c.name,
+            queue.c.code,
+        ])
 
         if facility_id is not None:
             stmt = stmt.where(queue.c.facility_id == facility_id)
@@ -498,7 +536,9 @@ class ProposalPart(object):
                 conn, affiliation, affiliation.c.queue_id, queue_id,
                 records)
 
-    def update_semester(self, semester_id, name=None, _test_skip_check=False):
+    def update_semester(self, semester_id, name=None, code=None,
+                        date_start=None, date_end=None, description=None,
+                        _test_skip_check=False):
         """
         Update a semester record.
         """
@@ -507,6 +547,18 @@ class ProposalPart(object):
 
         if name is not None:
             values['name'] = name
+        if code is not None:
+            values['code'] = code
+        if date_start is not None:
+            values['date_start'] = date_start
+            # If given both dates, we can easily make this sanity check.
+            if date_end is not None:
+                if date_end < date_start:
+                    raise UserError('Semester end date is before start date.')
+        if date_end is not None:
+            values['date_end'] = date_end
+        if description is not None:
+            values['description'] = description
 
         if not values:
             raise Error('no semester updates specified')
@@ -526,7 +578,8 @@ class ProposalPart(object):
                     'no rows matched updating semester with id={0}',
                     semester_id)
 
-    def update_queue(self, queue_id, name=None, _test_skip_check=False):
+    def update_queue(self, queue_id, name=None, code=None, description=None,
+                     _test_skip_check=False):
         """
         Update a queue record.
         """
@@ -535,6 +588,10 @@ class ProposalPart(object):
 
         if name is not None:
             values['name'] = name
+        if code is not None:
+            values['code'] = code
+        if description is not None:
+            values['description'] = description
 
         if not values:
             raise Error('no queue updates specified')
