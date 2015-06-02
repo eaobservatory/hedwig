@@ -65,7 +65,8 @@ class Generic(GenericAdmin, GenericProposal):
         # Determine which semesters have open calls for proposals.
         # TODO: restrict to open calls.
         open_semesters = OrderedDict()
-        for call in db.search_call(facility_id=self.id_).values():
+        for call in db.search_call(facility_id=self.id_,
+                                   is_open=True).values():
             if call.semester_id not in open_semesters:
                 open_semesters[call.semester_id] = call.semester_name
 
@@ -80,8 +81,8 @@ class Generic(GenericAdmin, GenericProposal):
         except NoSuchRecord:
             raise HTTPNotFound('Semester not found')
 
-        # TODO: restrict to open calls.
-        calls = db.search_call(facility_id=self.id_, semester_id=semester_id)
+        calls = db.search_call(facility_id=self.id_, semester_id=semester_id,
+                               is_open=True)
         if not calls:
             raise ErrorPage('No calls are currently open for this semester.')
 

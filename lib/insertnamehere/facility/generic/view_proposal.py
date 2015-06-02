@@ -32,7 +32,7 @@ class GenericProposal(object):
     def view_proposal_new(self, db, call_id, form, is_post):
         try:
             call = db.search_call(
-                facility_id=self.id_, call_id=call_id
+                facility_id=self.id_, call_id=call_id, is_open=True
             ).get_single()
         except NoSuchRecord:
             raise HTTPNotFound('Call not found')
