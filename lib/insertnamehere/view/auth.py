@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import namedtuple
 
 from ..error import NoSuchRecord
+from ..type import ProposalState
 from ..web.util import session, HTTPForbidden
 
 Authorization = namedtuple('Authorization', ('view', 'edit'))
@@ -109,7 +110,9 @@ def for_proposal(db, proposal):
 
     try:
         member = proposal.members.get_person(session['person']['id'])
-        return Authorization(view=True, edit=member.editor)
+        return Authorization(
+            view=True,
+            edit=(member.editor and ProposalState.can_edit(proposal.state)))
     except KeyError:
         return no
 
