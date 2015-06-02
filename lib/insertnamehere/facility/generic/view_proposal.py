@@ -25,7 +25,7 @@ from ...view import auth
 from ...web.util import ErrorPage, HTTPError, HTTPForbidden, \
     HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
-from ...view.util import organise_collection
+from ...view.util import organise_collection, with_proposal
 
 
 class GenericProposal(object):
@@ -80,18 +80,8 @@ class GenericProposal(object):
             'affiliation_id': affiliation_id
         }
 
-    def view_proposal_view(self, db, proposal_id):
-        try:
-            proposal = db.get_proposal(self.id_, proposal_id,
-                                       with_members=True)
-        except NoSuchRecord:
-            raise HTTPNotFound('Proposal not found')
-
-        can = auth.for_proposal(db, proposal)
-
-        if not can.view:
-            raise HTTPForbidden('Permission denied for this proposal.')
-
+    @with_proposal(permission='view')
+    def view_proposal_view(self, db, proposal, can):
         countries = get_countries()
 
         return {
@@ -104,27 +94,17 @@ class GenericProposal(object):
             'proposal_code': self.make_proposal_code(db, proposal),
         }
 
-    def view_title_edit(self, db, proposal_id, form, is_post):
-        try:
-            proposal = db.get_proposal(self.id_, proposal_id,
-                                       with_members=True)
-        except NoSuchRecord:
-            raise HTTPNotFound('Proposal not found')
-
-        can = auth.for_proposal(db, proposal)
-
-        if not can.edit:
-            raise HTTPForbidden('Permission denied for this proposal.')
-
+    @with_proposal(permission='edit')
+    def view_title_edit(self, db, proposal, can, form, is_post):
         message = None
 
         if is_post:
             try:
                 proposal = proposal._replace(title=form['proposal_title'])
-                db.update_proposal(proposal_id, title=proposal.title)
+                db.update_proposal(proposal.id, title=proposal.title)
                 flash('The proposal title has been changed.')
                 raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal_id))
+                                           proposal_id=proposal.id))
 
             except UserError as e:
                 message = e.message
@@ -135,18 +115,8 @@ class GenericProposal(object):
             'proposal': proposal,
         }
 
-    def view_member_edit(self, db, proposal_id, form, is_post):
-        try:
-            proposal = db.get_proposal(self.id_, proposal_id,
-                                       with_members=True)
-        except NoSuchRecord:
-            raise HTTPNotFound('Proposal not found')
-
-        can = auth.for_proposal(db, proposal)
-
-        if not can.edit:
-            raise HTTPForbidden('Permission denied for this proposal.')
-
+    @with_proposal(permission='edit')
+    def view_member_edit(self, db, proposal, can, form, is_post):
         message = None
         records = proposal.members
 
@@ -180,12 +150,12 @@ class GenericProposal(object):
                         affiliation_id=int(affiliation_str))
 
                 db.sync_proposal_member(
-                    proposal_id, records,
+                    proposal.id, records,
                     editor_person_id=session['person']['id'])
 
                 flash('The proposal member list has been updated.')
                 raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal_id))
+                                           proposal_id=proposal.id))
 
             except UserError as e:
                 message = e.message
@@ -193,23 +163,13 @@ class GenericProposal(object):
         return {
             'title': 'Edit Members',
             'message': message,
-            'proposal_id': proposal_id,
+            'proposal_id': proposal.id,
             'members': records.values(),
             'affiliations': affiliations.values(),
         }
 
-    def view_member_add(self, db, proposal_id, form, is_post):
-        try:
-            proposal = db.get_proposal(self.id_, proposal_id,
-                                       with_members=True)
-        except NoSuchRecord:
-            raise HTTPNotFound('Proposal not found')
-
-        can = auth.for_proposal(db, proposal)
-
-        if not can.edit:
-            raise HTTPForbidden('Permission denied for this proposal.')
-
+    @with_proposal(permission='edit')
+    def view_member_add(self, db, proposal, can, form, is_post):
         message_link = message_invite = None
         member = dict(editor=None, observer=None, person_id=None,
                       name='', email='')
@@ -242,7 +202,7 @@ class GenericProposal(object):
                     if not person.public:
                         raise ErrorPage('This person\'s record is private.')
 
-                    db.add_member(proposal_id, member['person_id'],
+                    db.add_member(proposal.id, member['person_id'],
                                   member['affiliation_id'],
                                   editor=member['editor'],
                                   observer=member['observer'])
@@ -251,7 +211,7 @@ class GenericProposal(object):
 
                     flash('{0} has been added to the proposal.', person.name)
                     raise HTTPRedirect(url_for('.proposal_view',
-                                       proposal_id=proposal_id))
+                                       proposal_id=proposal.id))
 
                 except UserError as e:
                     message_link = e.message
@@ -265,7 +225,7 @@ class GenericProposal(object):
 
                     person_id = db.add_person(member['name'])
                     db.add_email(person_id, member['email'], primary=True)
-                    db.add_member(proposal_id, person_id,
+                    db.add_member(proposal.id, person_id,
                                   member['affiliation_id'],
                                   editor=member['editor'],
                                   observer=member['observer'])
@@ -279,7 +239,7 @@ class GenericProposal(object):
                     # Return to the proposal page after editing the new
                     # member's institution.
                     session['next_page'] = url_for('.proposal_view',
-                                                   proposal_id=proposal_id)
+                                                   proposal_id=proposal.id)
 
                     raise HTTPRedirect(url_for(
                         'people.person_edit_institution', person_id=person_id))
@@ -306,7 +266,7 @@ class GenericProposal(object):
             'title': 'Add Member',
             'message_link': message_link,
             'message_invite': message_invite,
-            'proposal_id': proposal_id,
+            'proposal_id': proposal.id,
             'persons': persons,
             'affiliations': affiliations.values(),
             'member': member,

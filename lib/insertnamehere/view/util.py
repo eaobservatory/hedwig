@@ -18,6 +18,12 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from ..error import NoSuchRecord
+from ..web.util import HTTPError, HTTPForbidden, HTTPNotFound
+from . import auth
+
+import functools
+
 
 def organise_collection(class_, updated_records, added_records):
     """
@@ -42,3 +48,44 @@ def organise_collection(class_, updated_records, added_records):
         records[new_id] = added_records[id_]._replace(id=new_id)
 
     return records
+
+
+def with_proposal(permission):
+    """
+    Decorator for methods which deal with proposals.
+
+    Assumes that the first arguments are a database object and proposal ID.
+    Then checks that the current user has the requested permission.
+    The wrapped method is then called with the database,  proposal and
+    authorization objects as the first two arguments.
+
+    "permission" should be one of: "view", "edit".
+    """
+
+    def decorator(f):
+        @functools.wraps(f)
+        def decorated_method(self, db, proposal_id, *args, **kwargs):
+            try:
+                proposal = db.get_proposal(self.id_, proposal_id,
+                                           with_members=True)
+            except NoSuchRecord:
+                raise HTTPNotFound('Proposal not found')
+
+            assert proposal.id == proposal_id
+
+            can = auth.for_proposal(db, proposal)
+
+            if permission == 'view':
+                if not can.view:
+                    raise HTTPForbidden('Permission denied for this proposal.')
+            elif permission == 'edit':
+                if not can.edit:
+                    raise HTTPForbidden('Permission denied for this proposal.')
+            else:
+                raise HTTPError('Unknown permission type.')
+
+            return f(self, db, proposal, can, *args, **kwargs)
+
+        return decorated_method
+
+    return decorator
