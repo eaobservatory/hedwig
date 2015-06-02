@@ -18,8 +18,10 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from datetime import datetime
+
 from sqlalchemy.sql import select
-from sqlalchemy.sql.expression import and_, false
+from sqlalchemy.sql.expression import and_, false, not_
 from sqlalchemy.sql.functions import coalesce, count
 from sqlalchemy.sql.functions import max as max_
 
@@ -364,7 +366,8 @@ class ProposalPart(object):
         return ans
 
     def search_call(self, call_id=None, facility_id=None, semester_id=None,
-                    queue_id=None, _conn=None):
+                    queue_id=None, is_open=None,
+                    _conn=None):
         """
         Search for call records.
         """
@@ -389,6 +392,15 @@ class ProposalPart(object):
 
         if queue_id is not None:
             stmt = stmt.where(call.c.queue_id == queue_id)
+
+        if is_open is not None:
+            dt_current = datetime.utcnow()
+            condition = and_(call.c.date_open <= dt_current,
+                             call.c.date_close >= dt_current)
+            if is_open:
+                stmt = stmt.where(condition)
+            else:
+                stmt = stmt.where(not_(condition))
 
         ans = ResultCollection()
 
