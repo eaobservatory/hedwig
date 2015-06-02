@@ -67,7 +67,7 @@ PersonInfo = namedtuple(
 Proposal = namedtuple(
     'Proposal',
     map(lambda x: x.name, proposal.columns) + [
-        'semester_id', 'semester_name',
+        'semester_id', 'semester_name', 'semester_code',
         'queue_id', 'queue_name', 'queue_code',
         'facility_id',
         'members',

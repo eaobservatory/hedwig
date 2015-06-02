@@ -263,6 +263,7 @@ class ProposalPart(object):
             proposal,
             call.c.semester_id,
             semester.c.name.label('semester_name'),
+            semester.c.code.label('semester_code'),
             call.c.queue_id,
             queue.c.name.label('queue_name'),
             queue.c.code.label('queue_code'),
