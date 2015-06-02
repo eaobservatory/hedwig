@@ -18,13 +18,11 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from datetime import datetime
-
 from ...error import NoSuchRecord, UserError
 from ...type import Affiliation, Call, Queue, ResultCollection, Semester
 from ...view import auth
 from ...web.util import HTTPForbidden, HTTPNotFound, HTTPRedirect, \
-    flash, url_for
+    flash, parse_datetime, url_for
 from ...view.util import organise_collection
 
 
@@ -88,12 +86,8 @@ class GenericAdmin(object):
             semester = semester._replace(
                 name=form['semester_name'],
                 code=form['semester_code'],
-                date_start=datetime.combine(
-                    datetime.strptime(form['start_date'], '%Y-%m-%d').date(),
-                    datetime.strptime(form['start_time'], '%H:%M').time()),
-                date_end=datetime.combine(
-                    datetime.strptime(form['end_date'], '%Y-%m-%d').date(),
-                    datetime.strptime(form['end_time'], '%H:%M').time()),
+                date_start=parse_datetime('start', form),
+                date_end=parse_datetime('end', form),
                 description=form['description'])
 
             try:
@@ -237,6 +231,7 @@ class GenericAdmin(object):
             # We are creating a new call, so need to be able to offer
             # menus of semesters and queues.
             call = Call(None, semester_id=None, queue_id=None,
+                        date_open=None, date_close=None,
                         facility_id=None, semester_name='', queue_name='')
             semesters = db.search_semester(facility_id=self.id_)
             queues = db.search_queue(facility_id=self.id_)
@@ -259,23 +254,30 @@ class GenericAdmin(object):
 
         if is_post:
             try:
+                call = call._replace(
+                    date_open=parse_datetime('open', form),
+                    date_close=parse_datetime('close', form))
+
                 if call_id is None:
                     # Create new call.
-                    call = call._replace(semester_id=int(form['semester_id']))
-                    call = call._replace(queue_id=int(form['queue_id']))
+                    call = call._replace(
+                        semester_id=int(form['semester_id']),
+                        queue_id=int(form['queue_id']))
 
-                    db.add_call(semester_id=call.semester_id,
-                                queue_id=call.queue_id)
+                    new_call_id = db.add_call(semester_id=call.semester_id,
+                                              queue_id=call.queue_id,
+                                              date_open=call.date_open,
+                                              date_close=call.date_close)
                     flash('The new call has been added.')
-                    raise HTTPRedirect(url_for('.call_list'))
+                    raise HTTPRedirect(url_for('.call_view',
+                                               call_id=new_call_id))
 
                 else:
                     # Update existing call.
-                    # The call table doesn't yet have anything we can
-                    # actually edit.
-                    # db.update_call(call_id, ...)
+                    db.update_call(call_id, date_open=call.date_open,
+                                   date_close=call.date_close)
                     flash('The call has been updated.')
-                    raise HTTPRedirect(url_for('.call_list'))
+                    raise HTTPRedirect(url_for('.call_view', call_id=call_id))
 
             except UserError as e:
                 message = e.message

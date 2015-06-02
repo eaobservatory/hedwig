@@ -11,6 +11,7 @@
 <form method="POST" action="{{ target }}">
     <p>
         {% if semesters is not none %}
+            Semester:
             <select name="semester_id">
                 {% for semester in semesters %}
                     <option value="{{ semester.id }}" {{'selected="selected"' | safe if semester.id == call.semester_id }}>{{ semester.name }}</option>
@@ -19,6 +20,7 @@
             <br />
         {% endif %}
         {% if queues is not none %}
+            Queue:
             <select name="queue_id">
                 {% for queue in queues %}
                     <option value="{{ queue.id }}" {{'selected="selected"' | safe if queue.id == call.queue_id }}>{{ queue.name }}</option>
@@ -26,6 +28,16 @@
             </select>
             <br />
         {% endif %}
+        Opening date:
+        <input type="date" name="open_date" value="{{ call.date_open | format_date }}" placeholder="YYYY-MM-DD" required="required" />
+        <input type="time" name="open_time" value="{{ call.date_open | format_time }}" placeholder="HH:MM" required="required" />
+        <i>(UT, date call opens for submissions)</i>
+        <br />
+        Closing date:
+        <input type="date" name="close_date" value="{{ call.date_close | format_date }}" placeholder="YYYY-MM-DD" required="requried" />
+        <input type="time" name="close_time" value="{{ call.date_close | format_time }}" placeholder="HH:MM" required="required" />
+        <i>(UT, proposal deadline)</i>
+        <br />
         <input type="submit" value="Save" name="submit" />
     </p>
 </form>

@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from datetime import datetime
 import functools
 
 # Import the names we wish to expose.
@@ -75,6 +76,20 @@ def flash(message, *args):
         _flask_flash(message.format(*args))
     else:
         _flask_flash(message)
+
+
+def parse_datetime(name, form):
+    """
+    Parses date and time fields from the form and returns a combined
+    datetime object.
+
+    "name" is the root name of the form parameters -- there should
+    be fields <name>_date and <name>_time.
+    """
+
+    return datetime.combine(
+        datetime.strptime(form[name + '_date'], '%Y-%m-%d').date(),
+        datetime.strptime(form[name + '_time'], '%H:%M').time())
 
 
 def require_admin(f):

@@ -10,6 +10,10 @@
     Semester: <a href="{{ url_for('.semester_view', semester_id=call.semester_id) }}">{{ call.semester_name }}</a>
     <br />
     Queue: <a href="{{ url_for('.queue_view', queue_id=call.queue_id) }}">{{ call.queue_name }}</a>
+    <br />
+    Open: {{ call.date_open | format_datetime }}
+    <br />
+    Cose: {{ call.date_close | format_datetime }}
 </p>
 
 {% endblock %}
