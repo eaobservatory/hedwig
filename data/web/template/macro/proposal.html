@@ -1,6 +1,6 @@
 {% from 'macro/institution.html' import render_member_institution %}
 
-{% macro render_proposal_summary(facility_name, proposal) %}
+{% macro render_proposal_summary(facility_name, proposal, can_edit) %}
     <p>
         Proposal for:
         {{ facility_name }}
@@ -9,6 +9,12 @@
         /
         {{ proposal.queue_name }}
     </p>
+
+    {% if can_edit %}
+        <p>
+            <a href="{{ url_for('.title_edit', proposal_id=proposal.id) }}">Edit title</a>
+        </p>
+    {% endif %}
 {% endmacro %}
 
 {% macro render_proposal_members(proposal, can_edit) %}

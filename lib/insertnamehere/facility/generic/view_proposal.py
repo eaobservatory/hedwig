@@ -103,6 +103,37 @@ class GenericProposal(object):
                 for x in proposal.members.values()]),
         }
 
+    def view_title_edit(self, db, proposal_id, form, is_post):
+        try:
+            proposal = db.get_proposal(self.id_, proposal_id,
+                                       with_members=True)
+        except NoSuchRecord:
+            raise HTTPNotFound('Proposal not found')
+
+        can = auth.for_proposal(db, proposal)
+
+        if not can.edit:
+            raise HTTPForbidden('Permission denied for this proposal.')
+
+        message = None
+
+        if is_post:
+            try:
+                proposal = proposal._replace(title=form['proposal_title'])
+                db.update_proposal(proposal_id, title=proposal.title)
+                flash('The proposal title has been changed.')
+                raise HTTPRedirect(url_for('.proposal_view',
+                                           proposal_id=proposal_id))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Edit Title',
+            'message': message,
+            'proposal': proposal,
+        }
+
     def view_member_edit(self, db, proposal_id, form, is_post):
         try:
             proposal = db.get_proposal(self.id_, proposal_id,

@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% set scripts=['edit_member'] %}
+
+{% block content %}
+
+{% if message is not none %}
+    <p>
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.title_edit', proposal_id=proposal.id) }}">
+    <p>
+        Title:
+        <input type="text" name="proposal_title" value="{{ proposal.title }}" required="requried" autofocus="autofocus" />
+        <br />
+        <input type="submit" value="Save" name="submit" />
+    </p>
+</form>
+
+{% endblock %}
