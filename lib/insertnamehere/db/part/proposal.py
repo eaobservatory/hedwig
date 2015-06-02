@@ -536,6 +536,40 @@ class ProposalPart(object):
                 conn, affiliation, affiliation.c.queue_id, queue_id,
                 records)
 
+    def update_call(self, call_id, date_open=None, date_close=None,
+                    _test_skip_check=False):
+        """
+        Update a call for proposals record.
+        """
+
+        values = {}
+
+        if date_open is not None:
+            values['date_open'] = date_open
+            # If given both dates, we can easily make this sanity check.
+            if date_close is not None:
+                if date_close < date_open:
+                    raise UserError('Closing date is before opening date.')
+        if date_close is not None:
+            values['date_close'] = date_close
+
+        if not values:
+            raise Error('no call updates specified')
+
+        with self._transaction() as conn:
+            if not _test_skip_check and not self._exists_id(
+                    conn, call, call_id):
+                raise ConsistencyError(
+                    'call does not exist with id={0}', call_id)
+
+            result = conn.execute(call.update().where(
+                call.c.id == call_id
+            ).values(values))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched updating call with id={0}', call_id)
+
     def update_semester(self, semester_id, name=None, code=None,
                         date_start=None, date_end=None, description=None,
                         _test_skip_check=False):
@@ -577,6 +611,37 @@ class ProposalPart(object):
                 raise ConsistencyError(
                     'no rows matched updating semester with id={0}',
                     semester_id)
+
+    def update_proposal(self, proposal_id, state=None,
+                        _test_skip_check=False):
+        """
+        Update a proposal record.
+        """
+
+        values = {}
+
+        if state is not None:
+            if not ProposalState.is_valid(state):
+                raise Error('Invalid state.')
+            values['state'] = state
+
+        if not values:
+            raise Error('No proposal updates specified.')
+
+        with self._transaction() as conn:
+            if not _test_skip_check and not self._exists_id(
+                    conn, proposal, proposal_id):
+                raise ConsistencyError(
+                    'proposal does not exist with id={0}', proposal_id)
+
+            result = conn.execute(proposal.update().where(
+                proposal.c.id == proposal_id
+            ).values(values))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched updating proposal with id={0}',
+                    proposal_id)
 
     def update_queue(self, queue_id, name=None, code=None, description=None,
                      _test_skip_check=False):

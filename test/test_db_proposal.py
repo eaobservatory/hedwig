@@ -235,6 +235,16 @@ class DBProposalTest(DBTestCase):
         with self.assertRaises(NoSuchRecord):
             self.db.get_call(1999999, call_id)
 
+        # Try updating the call.
+        with self.assertRaisesRegexp(ConsistencyError, 'call does not exist'):
+            self.db.update_call(1999999, date_open=date_open)
+        with self.assertRaisesRegexp(UserError, 'Closing date is before open'):
+            self.db.update_call(call_id,
+                                date_close=date_open, date_open=date_close)
+        self.db.update_call(call_id, date_close=datetime(1999, 10, 1))
+        call = self.db.get_call(facility_id, call_id)
+        self.assertEqual(call.date_close.month, 10)
+
     def test_add_proposal(self):
         (call_id_1, affiliation_id_1) = self._create_test_call(
             'semester1', 'queue1')
@@ -275,6 +285,14 @@ class DBProposalTest(DBTestCase):
                 self.assertTrue(member.pi)
                 self.assertTrue(member.editor)
                 self.assertFalse(member.observer)
+
+                # Try updating the proposal.
+                self.db.update_proposal(proposal_id,
+                                        state=ProposalState.SUBMITTED)
+                proposal_updated = self.db.get_proposal(None, proposal_id)
+                self.assertEqual(proposal_updated, proposal._replace(
+                    state=ProposalState.SUBMITTED,
+                    members=None))
 
         # The proposal must have a title.
         with self.assertRaisesRegexp(UserError, 'blank'):
