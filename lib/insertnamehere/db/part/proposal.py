@@ -635,7 +635,7 @@ class ProposalPart(object):
                     'no rows matched updating semester with id={0}',
                     semester_id)
 
-    def update_proposal(self, proposal_id, state=None,
+    def update_proposal(self, proposal_id, state=None, title=None,
                         _test_skip_check=False):
         """
         Update a proposal record.
@@ -647,6 +647,11 @@ class ProposalPart(object):
             if not ProposalState.is_valid(state):
                 raise Error('Invalid state.')
             values['state'] = state
+
+        if title is not None:
+            if not title:
+                raise UserError('The proposal title should not be blank.')
+            values['title'] = title
 
         if not values:
             raise Error('No proposal updates specified.')
