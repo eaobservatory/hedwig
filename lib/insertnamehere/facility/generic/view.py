@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict
 
 from ...error import NoSuchRecord, UserError
-from ...web.util import HTTPNotFound, url_for
+from ...web.util import ErrorPage, HTTPNotFound, url_for
 from .view_admin import GenericAdmin
 from .view_proposal import GenericProposal
 
