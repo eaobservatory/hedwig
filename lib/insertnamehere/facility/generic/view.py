@@ -61,6 +61,17 @@ class Generic(GenericAdmin, GenericProposal):
 
         return 'Generic Facility'
 
+    def make_proposal_code(self, db, proposal):
+        """
+        Generate the proposal identifying code for a given proposal.
+
+        This should be overridden by sub-classes to apply the naming
+        scheme in use at each facility.
+        """
+
+        return '{0}-{1}-{2}'.format(
+            proposal.semester_code, proposal.queue_code, proposal.number)
+
     def view_facility_home(self, db):
         # Determine which semesters have open calls for proposals.
         # TODO: restrict to open calls.

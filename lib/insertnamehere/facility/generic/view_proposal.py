@@ -101,6 +101,7 @@ class GenericProposal(object):
                 x._replace(institution_country=countries.get(
                     x.institution_country, 'Unknown country'))
                 for x in proposal.members.values()]),
+            'proposal_code': self.make_proposal_code(db, proposal),
         }
 
     def view_title_edit(self, db, proposal_id, form, is_post):

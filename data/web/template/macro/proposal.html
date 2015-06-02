@@ -1,6 +1,6 @@
 {% from 'macro/institution.html' import render_member_institution %}
 
-{% macro render_proposal_summary(facility_name, proposal, can_edit) %}
+{% macro render_proposal_summary(facility_name, proposal, proposal_code, can_edit) %}
     <p>
         Proposal for:
         {{ facility_name }}
@@ -8,6 +8,9 @@
         {{ proposal.semester_name }}
         /
         {{ proposal.queue_name }}
+        <br />
+        Proposal identifier:
+        {{ proposal_code }}
     </p>
 
     {% if can_edit %}
