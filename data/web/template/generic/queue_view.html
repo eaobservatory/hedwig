@@ -3,11 +3,20 @@
 {% block content %}
 
 <p>
-    <a href="{{ url_for('.queue_edit', queue_id=queue_id) }}">Edit queue</a>
+    Code: {{ queue.code }}
+    <br />
+    Description:
+    <pre>
+        {{ queue.description }}
+    </pre>
 </p>
 
 <p>
-    <a href="{{ url_for('.affiliation_edit', queue_id=queue_id) }}">Edit affiliations</a>
+    <a href="{{ url_for('.queue_edit', queue_id=queue.id) }}">Edit queue</a>
+</p>
+
+<p>
+    <a href="{{ url_for('.affiliation_edit', queue_id=queue.id) }}">Edit affiliations</a>
 </p>
 
 {% endblock %}

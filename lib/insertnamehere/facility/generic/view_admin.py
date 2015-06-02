@@ -145,7 +145,7 @@ class GenericAdmin(object):
 
         return {
             'title': 'Queue: {0}'.format(queue.name),
-            'queue_id': queue_id,
+            'queue': queue,
         }
 
     def view_queue_edit(self, db, queue_id, form, is_post):
@@ -158,7 +158,7 @@ class GenericAdmin(object):
 
         if queue_id is None:
             # We are creating a new queue.
-            queue = Queue(None, None, name='')
+            queue = Queue(None, None, name='', code='', description='')
             title = 'Add New Queue'
             target = url_for('.queue_new')
         else:
@@ -174,19 +174,23 @@ class GenericAdmin(object):
         message = None
 
         if is_post:
-            queue = queue._replace(name=form['queue_name'])
+            queue = queue._replace(name=form['queue_name'],
+                                   code=form['queue_code'],
+                                   description=form['description'])
 
             try:
                 if queue_id is None:
                     # Create new queue.
-                    new_queue_id = db.add_queue(self.id_, queue.name)
+                    new_queue_id = db.add_queue(self.id_, queue.name,
+                                                queue.code, queue.description)
                     flash('New queue "{0}" has been added.', queue.name)
                     raise HTTPRedirect(url_for('.queue_view',
                                                queue_id=new_queue_id))
 
                 else:
                     # Update existing queue.
-                    db.update_queue(queue_id, name=queue.name)
+                    db.update_queue(queue_id, name=queue.name, code=queue.code,
+                                    description=queue.description)
                     flash('Queue "{0}" has been updated.', queue.name)
                     raise HTTPRedirect(url_for('.queue_view',
                                                queue_id=queue_id))
