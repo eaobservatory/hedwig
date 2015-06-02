@@ -90,6 +90,38 @@ QueueInfo = namedtuple(
     ['id', 'facility_id', 'name'])
 
 
+class ProposalState(object):
+    PREPARATION = 1
+    SUBMITTED = 2
+    WITHDRAWN = 3
+    REVIEW = 4
+    ACCEPTED = 5
+    REJECTED = 6
+
+    StateInfo = namedtuple('StateInfo', ('name', 'edit'))
+
+    _info = OrderedDict((
+        (PREPARATION, StateInfo('In preparation', True)),
+        (SUBMITTED,   StateInfo('Submitted',      True)),
+        (WITHDRAWN,   StateInfo('Withdrawn',      True)),
+        (REVIEW,      StateInfo('Under review',   False)),
+        (ACCEPTED,    StateInfo('Accepted',       False)),
+        (REJECTED,    StateInfo('Rejected',       False))
+    ))
+
+    @classmethod
+    def is_valid(cls, state):
+        return state in cls._info
+
+    @classmethod
+    def get_name(cls, state):
+        return cls._info[state].name
+
+    @classmethod
+    def can_edit(cls, state):
+        return cls._info[state].edit
+
+
 class ResultCollection(OrderedDict):
     def get_single(self):
         n = len(self)

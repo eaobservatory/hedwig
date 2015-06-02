@@ -21,10 +21,38 @@ from __future__ import absolute_import, division, print_function, \
 from unittest import TestCase
 
 from insertnamehere.error import MultipleRecords, NoSuchRecord
-from insertnamehere.type import ResultCollection
+from insertnamehere.type import ResultCollection, ProposalState
 
 
 class TypeTestCase(TestCase):
+    def test_proposal_state(self):
+        states = set()
+        for state in (
+                ProposalState.PREPARATION,
+                ProposalState.SUBMITTED,
+                ProposalState.WITHDRAWN,
+                ProposalState.REVIEW,
+                ProposalState.ACCEPTED,
+                ProposalState.REJECTED,
+                ):
+            # Check state is an integer.
+            self.assertIsInstance(state, int)
+            self.assertNotIn(state, states)
+
+            # Check state is unique.
+            states.add(state)
+
+            # State should be considered valid.
+            self.assertTrue(ProposalState.is_valid(state))
+
+            # State should have a name.
+            self.assertIsInstance(ProposalState.get_name(state), unicode)
+
+            # State should have boolean "can_edit" property.
+            self.assertIn(ProposalState.can_edit(state), (True, False))
+
+        self.assertFalse(ProposalState.is_valid(999))
+
     def test_result_collection(self):
         rc = ResultCollection()
         r = 'test result'
