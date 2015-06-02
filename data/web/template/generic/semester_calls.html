@@ -2,6 +2,20 @@
 
 {% block content %}
 
+<h2>Semester Information</h2>
+
+<p>
+    Start: {{ semester.date_start | format_datetime }}
+    <br />
+    End: {{ semester.date_end | format_datetime }}
+</p>
+
+<p>
+    <pre>{{ semester.description }}</pre>
+</p>
+
+<h2>Available Queues</h2>
+
 <p>
     The following queues have open calls for this semester.
     Please select a queue to start a new proposal.
@@ -10,7 +24,21 @@
 <ul>
     {% for call in calls %}
         <li>
-            <a href="{{ url_for('.proposal_new', call_id=call.id) }}">{{ call.queue_name }}</a>
+            <p>
+                <a href="{{ url_for('.proposal_new', call_id=call.id) }}">{{ call.queue_name }}</a>
+            </p>
+
+            <p>
+                Call for proposals in this queue open:
+                {{ call.date_open | format_datetime }}
+                &mdash;
+                {{ call.date_close | format_datetime }}
+                UT
+            </p>
+
+            <p>
+                <pre>{{ call.queue_description }}</pre>
+            </p>
         </li>
     {% endfor %}
 </ul>

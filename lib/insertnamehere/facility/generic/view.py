@@ -82,7 +82,7 @@ class Generic(GenericAdmin, GenericProposal):
             raise HTTPNotFound('Semester not found')
 
         calls = db.search_call(facility_id=self.id_, semester_id=semester_id,
-                               is_open=True)
+                               is_open=True, with_queue_description=True)
         if not calls:
             raise ErrorPage('No calls are currently open for this semester.')
 
