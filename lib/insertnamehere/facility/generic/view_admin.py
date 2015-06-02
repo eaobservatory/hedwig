@@ -232,7 +232,8 @@ class GenericAdmin(object):
             # menus of semesters and queues.
             call = Call(None, semester_id=None, queue_id=None,
                         date_open=None, date_close=None,
-                        facility_id=None, semester_name='', queue_name='')
+                        facility_id=None, semester_name='',
+                        queue_name='', queue_description=None)
             semesters = db.search_semester(facility_id=self.id_)
             queues = db.search_queue(facility_id=self.id_)
             title = 'Add New Call'

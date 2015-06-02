@@ -366,18 +366,27 @@ class ProposalPart(object):
         return ans
 
     def search_call(self, call_id=None, facility_id=None, semester_id=None,
-                    queue_id=None, is_open=None,
+                    queue_id=None, is_open=None, with_queue_description=False,
                     _conn=None):
         """
         Search for call records.
         """
 
-        stmt = select([
+        fields = [
             call,
             semester.c.facility_id,
             semester.c.name.label('semester_name'),
             queue.c.name.label('queue_name')
-        ]).select_from(
+        ]
+
+        default = {}
+
+        if with_queue_description:
+            fields.append(queue.c.description.label('queue_description'))
+        else:
+            default['queue_description'] = None
+
+        stmt = select(fields).select_from(
             call.join(semester).join(queue)
         )
 
@@ -407,7 +416,9 @@ class ProposalPart(object):
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(semester.c.id.desc(),
                                                   queue.c.name.asc())):
-                ans[row['id']] = Call(**row)
+                values = default.copy()
+                values.update(**row)
+                ans[row['id']] = Call(**values)
 
         return ans
 

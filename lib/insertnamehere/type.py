@@ -32,7 +32,7 @@ Affiliation = namedtuple(
 Call = namedtuple(
     'Call',
     map(lambda x: x.name, call.columns) +
-    ['facility_id', 'semester_name', 'queue_name'])
+    ['facility_id', 'semester_name', 'queue_name', 'queue_description'])
 
 Email = namedtuple(
     'Email',

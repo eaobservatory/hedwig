@@ -225,7 +225,8 @@ class DBProposalTest(DBTestCase):
         expected = Call(id=call_id, semester_id=semester_id, queue_id=queue_id,
                         date_open=date_open, date_close=date_close,
                         facility_id=facility_id,
-                        semester_name='My Semester', queue_name='My Queue')
+                        semester_name='My Semester', queue_name='My Queue',
+                        queue_description=None)
         self.assertEqual(result[call_id], expected)
         self.assertEqual(self.db.get_call(facility_id, call_id), expected)
 
