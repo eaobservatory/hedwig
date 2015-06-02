@@ -11,6 +11,9 @@
         <br />
         Proposal identifier:
         {{ proposal_code }}
+        <br />
+        Proposal status:
+        {{ proposal.state | proposal_state_name }}
     </p>
 
     {% if can_edit %}

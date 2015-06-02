@@ -23,6 +23,7 @@ from flask import Flask
 import os
 
 from ..config import get_config, get_database, get_facilities, get_home
+from ..type import ProposalState
 from .util import templated
 
 from .blueprint.facility import create_facility_blueprint
@@ -100,5 +101,12 @@ def create_web_app():
         if value is None:
             return ''
         return value.strftime('%Y-%m-%d %H:%M')
+
+    @app.template_filter('proposal_state_name')
+    def proposal_state_name(value):
+        try:
+            return ProposalState.get_name(value)
+        except KeyError:
+            return 'Unknown state'
 
     return app
