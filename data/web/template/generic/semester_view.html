@@ -3,7 +3,20 @@
 {% block content %}
 
 <p>
-    <a href="{{ url_for('.semester_edit', semester_id=semester_id) }}">Edit semester</a>
+    Code: {{ semester.code }}
+    <br />
+    Start: {{ semester.date_start | format_datetime }}
+    <br />
+    End: {{ semester.date_end | format_datetime }}
+    <br />
+    Description:
+    <pre>
+        {{ semester.description }}
+    </pre>
+</p>
+
+<p>
+    <a href="{{ url_for('.semester_edit', semester_id=semester.id) }}">Edit semester</a>
 </p>
 
 {% endblock %}

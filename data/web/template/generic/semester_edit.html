@@ -11,7 +11,26 @@
 
 <form method="POST" action="{{ target }}">
     <p>
-        Name: <input type="text" name="semester_name" value="{{ semester.name }}" required="required" />
+        Name:
+        <input type="text" name="semester_name" value="{{ semester.name }}" required="required" autofocus="autofocus" />
+        <i>(for display on this system)</i>
+        <br />
+        Code:
+        <input type="text" name="semester_code" value="{{ semester.code }}" required="required" />
+        <i>(as part of a project code)</i>
+        <br />
+        Start date:
+        <input type="date" name="start_date" value="{{ semester.date_start | format_date }}" placeholder="YYYY-MM-DD" required="required" />
+        <input type="time" name="start_time" value="{{ semester.date_start | format_time }}" placeholder="HH:MM" required="required" />
+        <i>(UT, start of observing)</i>
+        <br />
+        End date:
+        <input type="date" name="end_date" value="{{ semester.date_end | format_date }}" placeholder="YYYY-MM-DD" required="requried" />
+        <input type="time" name="end_time" value="{{ semester.date_end | format_time }}" placeholder="HH:MM" required="required" />
+        <i>(UT, end of observing)</i>
+        <br />
+        Description:
+        <textarea name="description">{{ semester.description }}</textarea>
         <br />
         <input type="submit" value="Save" name="submit" />
     </p>

@@ -18,6 +18,8 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from datetime import datetime
+
 from ...error import NoSuchRecord, UserError
 from ...type import Affiliation, Call, Queue, ResultCollection, Semester
 from ...view import auth
@@ -48,7 +50,7 @@ class GenericAdmin(object):
 
         return {
             'title': 'Semester: {0}'.format(semester.name),
-            'semester_id': semester_id,
+            'semester': semester,
         }
 
     def view_semester_edit(self, db, semester_id, form, is_post):
@@ -65,7 +67,9 @@ class GenericAdmin(object):
 
         if semester_id is None:
             # We are creating a new semester.
-            semester = Semester(None, None, name='')
+            semester = Semester(None, None, name='', code='',
+                                date_start=None, date_end=None,
+                                description='')
             title = 'Add New Semester'
             target = url_for('.semester_new')
         else:
@@ -81,21 +85,39 @@ class GenericAdmin(object):
         message = None
 
         if is_post:
-            semester = semester._replace(name=form['semester_name'])
+            semester = semester._replace(
+                name=form['semester_name'],
+                code=form['semester_code'],
+                date_start=datetime.combine(
+                    datetime.strptime(form['start_date'], '%Y-%m-%d').date(),
+                    datetime.strptime(form['start_time'], '%H:%M').time()),
+                date_end=datetime.combine(
+                    datetime.strptime(form['end_date'], '%Y-%m-%d').date(),
+                    datetime.strptime(form['end_time'], '%H:%M').time()),
+                description=form['description'])
 
             try:
                 if semester_id is None:
                     # Create the new semester.
-                    db.add_semester(self.id_, semester.name)
+                    new_semester_id = db.add_semester(
+                        self.id_, semester.name, semester.code,
+                        semester.date_start, semester.date_end,
+                        semester.description)
                     flash('New semester "{0}" has been created.',
                           semester.name)
-                    raise HTTPRedirect(url_for('.semester_list'))
+                    raise HTTPRedirect(url_for('.semester_view',
+                                               semester_id=new_semester_id))
 
                 else:
                     # Update an existing semseter.
-                    db.update_semester(semester_id, name=semester.name)
+                    db.update_semester(semester_id, name=semester.name,
+                                       code=semester.code,
+                                       date_start=semester.date_start,
+                                       date_end=semester.date_end,
+                                       description=semester.description)
                     flash('Semester "{0}" has been updated.', semester.name)
-                    raise HTTPRedirect(url_for('.semester_list'))
+                    raise HTTPRedirect(url_for('.semester_view',
+                                               semester_id=semester_id))
 
             except UserError as e:
                 message = e.message

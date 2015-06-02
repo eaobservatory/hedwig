@@ -83,4 +83,22 @@ def create_web_app():
             'application_name': application_name,
         }
 
+    @app.template_filter('format_date')
+    def format_date(value):
+        if value is None:
+            return ''
+        return value.strftime('%Y-%m-%d')
+
+    @app.template_filter('format_time')
+    def format_time(value):
+        if value is None:
+            return ''
+        return value.strftime('%H:%M')
+
+    @app.template_filter('format_datetime')
+    def format_datetime(value):
+        if value is None:
+            return ''
+        return value.strftime('%Y-%m-%d %H:%M')
+
     return app
