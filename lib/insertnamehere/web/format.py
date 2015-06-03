@@ -23,7 +23,22 @@ from flask import Markup
 from .util import HTTPError
 
 
-def format_text(text, format='plain'):
+def format_text(text, format=None):
+    """
+    Format text, possibly using different formatting schemes.
+
+    If "format" is not specified, it defaults to "plain" unless
+    "text" has attributes "text" and "format", in which case those
+    are used instead.
+    """
+
+    if format is None:
+        if hasattr(text, 'text') and hasattr(text, 'format'):
+            format = text.format
+            text = text.text
+        else:
+            format = 'plain'
+
     if format == 'plain':
         return format_text_plain(text)
 
