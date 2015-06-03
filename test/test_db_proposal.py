@@ -23,7 +23,8 @@ from datetime import datetime
 from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
     NoSuchRecord, UserError
 from insertnamehere.type import Affiliation, Call, \
-    Member, MemberCollection, Proposal, ProposalState, ResultCollection
+    Member, MemberCollection, Proposal, ProposalInfo, ProposalState, \
+    ResultCollection
 from .dummy_db import DBTestCase
 
 
@@ -294,6 +295,15 @@ class DBProposalTest(DBTestCase):
                 self.assertEqual(proposal_updated, proposal._replace(
                     state=ProposalState.SUBMITTED,
                     members=None))
+
+                # Try searching for proposals.
+                result = self.db.search_proposal(call_id=call_id)
+                self.assertIsInstance(result, ResultCollection)
+                self.assertEqual(len(result), i)
+                self.assertIn(proposal_id, result)
+                self.assertEqual(result[proposal_id],
+                                 ProposalInfo(proposal_id, call_id, i,
+                                              ProposalState.SUBMITTED, title))
 
         # The proposal must have a title.
         with self.assertRaisesRegexp(UserError, 'blank'):

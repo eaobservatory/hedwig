@@ -73,6 +73,10 @@ Proposal = namedtuple(
         'members',
     ])
 
+ProposalInfo = namedtuple(
+    'ProposalInfo',
+    [x.name for x in proposal.columns])
+
 Semester = namedtuple(
     'Semester',
     map(lambda x: x.name, semester.columns))

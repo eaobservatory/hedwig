@@ -28,7 +28,7 @@ from sqlalchemy.sql.functions import max as max_
 from ...error import ConsistencyError, Error, \
     MultipleRecords, NoSuchRecord, UserError
 from ...type import Affiliation, Call, Member, MemberCollection, \
-    Proposal, ProposalState, \
+    Proposal, ProposalInfo, ProposalState, \
     Queue, QueueInfo, ResultCollection, Semester, SemesterInfo
 from ..meta import affiliation, call, facility, institution, member, \
     person, proposal, queue, semester
@@ -502,6 +502,24 @@ class ProposalPart(object):
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(semester.c.id.desc())):
                 ans[row['id']] = SemesterInfo(**row)
+
+        return ans
+
+    def search_proposal(self, call_id=None):
+        """
+        Search for proposals.
+        """
+
+        stmt = proposal.select()
+
+        if call_id is not None:
+            stmt = stmt.where(proposal.c.call_id == call_id)
+
+        ans = ResultCollection()
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt.order_by(proposal.c.id)):
+                ans[row['id']] = ProposalInfo(**row)
 
         return ans
 
