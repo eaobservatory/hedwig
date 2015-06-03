@@ -19,7 +19,8 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from ...error import NoSuchRecord, UserError
-from ...type import Affiliation, Call, Queue, ResultCollection, Semester
+from ...type import Affiliation, Call, ProposalState, \
+    Queue, ResultCollection, Semester
 from ...util import get_countries
 from ...view import auth
 from ...web.util import ErrorPage, HTTPError, HTTPForbidden, \
@@ -87,11 +88,56 @@ class GenericProposal(object):
         return {
             'title': proposal.title,
             'can_edit': can.edit,
+            'is_submitted': ProposalState.is_submitted(proposal.state),
             'proposal': proposal._replace(members=[
                 x._replace(institution_country=countries.get(
                     x.institution_country, 'Unknown country'))
                 for x in proposal.members.values()]),
             'proposal_code': self.make_proposal_code(db, proposal),
+        }
+
+    @with_proposal(permission='edit')
+    def view_proposal_submit(self, db, proposal, can, form, is_post):
+        if ProposalState.is_submitted(proposal.state):
+            raise ErrorPage('The proposal has already been submitted.')
+
+        # TODO: validate proposal before allowing submission.
+
+        if is_post:
+            if 'submit_confirm' in form:
+                db.update_proposal(proposal.id, state=ProposalState.SUBMITTED)
+                flash('The proposal has been submitted.')
+                # TODO: email notification to proposal members.
+            else:
+                flash('The submission process has been cancelled.')
+
+            raise HTTPRedirect(url_for('.proposal_view',
+                                       proposal_id=proposal.id))
+
+        return {
+            'title': 'Submit Proposal',
+            'proposal': proposal,
+        }
+
+    @with_proposal(permission='edit')
+    def view_proposal_withdraw(self, db, proposal, can, form, is_post):
+        if not ProposalState.is_submitted(proposal.state):
+            raise ErrorPage('The proposal has not been submitted.')
+
+        if is_post:
+            if 'submit_confirm' in form:
+                db.update_proposal(proposal.id, state=ProposalState.WITHDRAWN)
+                flash('The proposal has been withdrawn.')
+                # TODO: email notification to proposal members.
+            else:
+                flash('The withdrawl process has been cancelled.')
+
+            raise HTTPRedirect(url_for('.proposal_view',
+                                       proposal_id=proposal.id))
+
+        return {
+            'title': 'Withdraw Proposal',
+            'proposal': proposal,
         }
 
     @with_proposal(permission='edit')

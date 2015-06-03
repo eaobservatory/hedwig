@@ -98,16 +98,20 @@ class ProposalState(object):
     ACCEPTED = 5
     REJECTED = 6
 
-    StateInfo = namedtuple('StateInfo', ('name', 'edit'))
+    StateInfo = namedtuple('StateInfo', ('name', 'edit', 'submitted'))
 
     _info = OrderedDict((
-        (PREPARATION, StateInfo('In preparation', True)),
-        (SUBMITTED,   StateInfo('Submitted',      True)),
-        (WITHDRAWN,   StateInfo('Withdrawn',      True)),
-        (REVIEW,      StateInfo('Under review',   False)),
-        (ACCEPTED,    StateInfo('Accepted',       False)),
-        (REJECTED,    StateInfo('Rejected',       False))
+        (PREPARATION, StateInfo('In preparation', True,  False)),
+        (SUBMITTED,   StateInfo('Submitted',      True,  True)),
+        (WITHDRAWN,   StateInfo('Withdrawn',      True,  False)),
+        (REVIEW,      StateInfo('Under review',   False, True)),
+        (ACCEPTED,    StateInfo('Accepted',       False, True)),
+        (REJECTED,    StateInfo('Rejected',       False, True))
     ))
+
+    @classmethod
+    def is_submitted(cls, state):
+        return cls._info[state].submitted
 
     @classmethod
     def is_valid(cls, state):

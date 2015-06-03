@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<form method="POST" action="{{ url_for('.proposal_submit', proposal_id=proposal.id) }}">
+    <p>
+        <input type="submit" name="submit_confirm" value="Submit proposal" />
+        <input type="submit" name="submit_cancel" value="Cancel" />
+    </p>
+</form>
+
+{% endblock %}

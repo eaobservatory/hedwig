@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<p>
+    Are you sure you wish to withdraw your proposal?
+    You may continue to edit the proposal until the deadline without
+    withdrawing it.
+    The proposal will not be considered unless you re-submit it
+    before the deadline.
+</p>
+
+<form method="POST" action="{{ url_for('.proposal_withdraw', proposal_id=proposal.id) }}">
+    <p>
+        <input type="submit" name="submit_confirm" value="Withdraw proposal" />
+        <input type="submit" name="submit_cancel" value="Cancel" />
+    </p>
+</form>
+
+{% endblock %}

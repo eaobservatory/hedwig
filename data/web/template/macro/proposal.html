@@ -1,6 +1,13 @@
 {% from 'macro/institution.html' import render_member_institution %}
 
-{% macro render_proposal_summary(facility_name, proposal, proposal_code, can_edit) %}
+{% macro render_proposal_summary(facility_name, proposal, proposal_code, is_submitted, can_edit) %}
+    {% if not is_submitted %}
+        <p>
+            <b>This proposal has not been submitted. If you wish it to be
+            considered, please be sure to submit it before the proposal
+            deadline.</b>
+        </p>
+    {% endif %}
     <p>
         Proposal for:
         {{ facility_name }}
@@ -19,6 +26,12 @@
     {% if can_edit %}
         <p>
             <a href="{{ url_for('.title_edit', proposal_id=proposal.id) }}">Edit title</a>
+            <br />
+        {% if is_submitted %}
+            <a href="{{ url_for('.proposal_withdraw', proposal_id=proposal.id) }}">Withdraw proposal</a>
+        {% else %}
+            <a href="{{ url_for('.proposal_submit', proposal_id=proposal.id) }}">Submit proposal</a>
+        {% endif %}
         </p>
     {% endif %}
 {% endmacro %}
