@@ -28,10 +28,11 @@ from sqlalchemy.sql.functions import max as max_
 from ...error import ConsistencyError, Error, \
     MultipleRecords, NoSuchRecord, UserError
 from ...type import Affiliation, Call, Member, MemberCollection, \
-    Proposal, ProposalInfo, ProposalState, \
+    Proposal, ProposalInfo, ProposalState, ProposalText, \
     Queue, QueueInfo, ResultCollection, Semester, SemesterInfo
 from ..meta import affiliation, call, facility, institution, member, \
-    person, proposal, queue, semester
+    person, proposal, proposal_text, queue, semester
+from ..util import require_not_none
 
 
 class ProposalPart(object):
@@ -218,6 +219,24 @@ class ProposalPart(object):
 
             return result.inserted_primary_key[0]
 
+    def delete_proposal_text(self, proposal_id, role_num,
+                             _test_skip_check=False):
+        with self._transaction() as conn:
+            if not _test_skip_check and not self._exists_proposal_text(
+                    conn, proposal_id, role_num):
+                raise ConsistencyError('text does not exist for {0} role {1}',
+                                       proposal_id, role_num)
+
+            result = conn.execute(proposal_text.delete().where(and_(
+                proposal_text.c.proposal_id == proposal_id,
+                proposal_text.c.role_num == role_num
+            )))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no row matched deleting text for {0} role {1}',
+                    proposal_id, role_num)
+
     def ensure_facility(self, code):
         """
         Ensure that a facility exists in the database.
@@ -308,6 +327,23 @@ class ProposalPart(object):
             raise NoSuchRecord('facility or proposal does not exist')
 
         return result['code']
+
+    def get_proposal_text(self, proposal_id, role_num):
+        """
+        Get the given text associated with a proposal.
+        """
+
+        with self._transaction() as conn:
+            row = conn.execute(proposal_text.select().where(and_(
+                proposal_text.c.proposal_id == proposal_id,
+                proposal_text.c.role_num == role_num
+            ))).first()
+
+        if row is None:
+            raise NoSuchRecord('text does not exist for {0} role {1}',
+                               proposal_id, role_num)
+
+        return ProposalText(text=row['text'], format=row['format'])
 
     def get_semester(self, facility_id, semester_id, _conn=None):
         """
@@ -542,6 +578,54 @@ class ProposalPart(object):
 
         return ans
 
+    def set_proposal_text(self, proposal_id, role_num, text, format, is_update,
+                          _test_skip_check=False):
+        """
+        Insert or update a given piece of proposal text.
+
+        The "is_update" boolean argument must be used to indicated whether
+        this is a new piece of text to insert or an update to an existing
+        piece.
+        """
+
+        if not format:
+            raise UserError('Text format not specified.')
+
+        with self._transaction() as conn:
+            if not _test_skip_check:
+                already_exists = self._exists_proposal_text(
+                    conn, proposal_id, role_num)
+                if is_update and not already_exists:
+                    raise ConsistencyError(
+                        'text does not exist for proposal {0} role {1}',
+                        proposal_id, role_num)
+                elif not is_update and already_exists:
+                    raise ConsistencyError(
+                        'text already exists for proposal {0} role {1}',
+                        proposal_id, role_num)
+
+            if is_update:
+                result = conn.execute(proposal_text.update().where(and_(
+                    proposal_text.c.proposal_id == proposal_id,
+                    proposal_text.c.role_num == role_num
+                )).values({
+                    proposal_text.c.text: text,
+                    proposal_text.c.format: format,
+                }))
+
+                if result.rowcount != 1:
+                    raise ConsistencyError(
+                        'no rows matched updating proposal text {0} role {1}',
+                        proposal_id, role_num)
+
+            else:
+                result = conn.execute(proposal_text.insert().values({
+                    proposal_text.c.proposal_id: proposal_id,
+                    proposal_text.c.role_num: role_num,
+                    proposal_text.c.text: text,
+                    proposal_text.c.format: format,
+                }))
+
     def sync_proposal_member(self, proposal_id, records, editor_person_id):
         """
         Update the member records for a proposal.
@@ -733,6 +817,16 @@ class ProposalPart(object):
                 raise ConsistencyError(
                     'no rows matched updating queue with id={0}',
                     queue_id)
+
+    def _exists_proposal_text(self, conn, proposal_id, role_num):
+        """
+        Test whether text of the given role already exists for a proposal.
+        """
+
+        return 0 < conn.execute(select([count(proposal_text.c.id)]).where(and_(
+            proposal_text.c.proposal_id == proposal_id,
+            proposal_text.c.role_num == role_num
+        ))).scalar()
 
     def _exists_queue_affiliation(self, conn, queue_id, affiliation_id):
         """

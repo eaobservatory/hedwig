@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from sqlalchemy.schema import Column, ForeignKey, MetaData, Table, \
+from sqlalchemy.schema import Column, ForeignKey, Index, MetaData, Table, \
     UniqueConstraint
 
 from sqlalchemy.types import Boolean, DateTime, Integer, \
@@ -150,6 +150,19 @@ proposal = Table(
     Column('state', Integer, nullable=False),
     Column('title', Unicode(255), nullable=False),
     UniqueConstraint('call_id', 'number'),
+    **_table_opts)
+
+proposal_text = Table(
+    'proposal_text',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('role_num', Integer, nullable=False),
+    Column('text', UnicodeText, nullable=False),
+    Column('format', Unicode(31), nullable=False),
+    Index('idx_text_prop_role', 'proposal_id', 'role_num', unique=True),
     **_table_opts)
 
 queue = Table(

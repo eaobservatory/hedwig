@@ -25,7 +25,7 @@ from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
     NoSuchRecord, UserError
 from insertnamehere.type import Affiliation, Call, \
     Member, MemberCollection, MemberInstitution,  \
-    Proposal, ProposalInfo, ProposalState, \
+    Proposal, ProposalInfo, ProposalState, ProposalText, \
     ResultCollection
 from .dummy_db import DBTestCase
 
@@ -463,6 +463,73 @@ class DBProposalTest(DBTestCase):
         expect = list(expect_ref)
         for row in result.values():
             self.assertEqual(row.resolved_institution_id, expect.pop())
+
+    def test_proposal_text(self):
+        (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
+        person_id = self.db.add_person('Person 1')
+        proposal_id_1 = self.db.add_proposal(call_id, person_id,
+                                             affiliation_id, 'Proposal 1')
+        self.assertIsInstance(proposal_id_1, int)
+        proposal_id_2 = self.db.add_proposal(call_id, person_id,
+                                             affiliation_id, 'Proposal 1')
+        self.assertIsInstance(proposal_id_2, int)
+
+        # Test we can't get, delete or update a non-existant record.
+        with self.assertRaisesRegexp(NoSuchRecord, '^text does not exist'):
+            self.db.get_proposal_text(proposal_id_1, 1)
+
+        with self.assertRaisesRegexp(ConsistencyError, '^text does not exist'):
+            self.db.delete_proposal_text(proposal_id_1, 1)
+
+        with self.assertRaisesRegexp(ConsistencyError, '^no row matched'):
+            self.db.delete_proposal_text(proposal_id_1, 1,
+                                         _test_skip_check=True)
+
+        with self.assertRaisesRegexp(ConsistencyError, '^text does not exist'):
+            self.db.set_proposal_text(proposal_id_1, 10, 'test', 'plain', True)
+
+        with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
+            self.db.set_proposal_text(proposal_id_1, 10, 'test', 'plain', True,
+                                      _test_skip_check=True)
+
+        # Try creating and updating some text.
+        self.db.set_proposal_text(proposal_id_1, 20, 'test', 'plain', False)
+        self.assertEqual(self.db.get_proposal_text(proposal_id_1, 20),
+                         ProposalText('test', 'plain'))
+        self.db.set_proposal_text(proposal_id_1, 20, 'change', 'plain', True)
+        self.assertEqual(self.db.get_proposal_text(proposal_id_1, 20),
+                         ProposalText('change', 'plain'))
+
+        # Check we can't re-create an existing text record.
+        with self.assertRaisesRegexp(ConsistencyError, '^text already exists'):
+            self.db.set_proposal_text(proposal_id_1, 20, 'new', 'plain', False)
+
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.set_proposal_text(proposal_id_1, 20, 'new', 'plain', False,
+                                      _test_skip_check=True)
+
+        # Now delete the record.
+        self.db.delete_proposal_text(proposal_id_1, 20)
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_text(proposal_id_1, 20)
+
+        # Add and change multiple records.
+        self.db.set_proposal_text(proposal_id_1, 40, 'a', 'plain', False)
+        self.db.set_proposal_text(proposal_id_1, 41, 'b', 'plain', False)
+        self.db.set_proposal_text(proposal_id_2, 40, 'c', 'md', False)
+        self.db.set_proposal_text(proposal_id_2, 41, 'd', 'docbook', False)
+
+        self.db.set_proposal_text(proposal_id_2, 40, 'cc', 'rst', True)
+        self.db.delete_proposal_text(proposal_id_1, 41)
+
+        self.assertEqual(self.db.get_proposal_text(proposal_id_1, 40),
+                         ProposalText('a', 'plain'))
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_text(proposal_id_1, 41)
+        self.assertEqual(self.db.get_proposal_text(proposal_id_2, 40),
+                         ProposalText('cc', 'rst'))
+        self.assertEqual(self.db.get_proposal_text(proposal_id_2, 41),
+                         ProposalText('d', 'docbook'))
 
     def _create_test_call(self, semester_name, queue_name):
         facility_id = self.db.ensure_facility('my_tel')

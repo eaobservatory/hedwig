@@ -81,6 +81,10 @@ ProposalInfo = namedtuple(
     'ProposalInfo',
     [x.name for x in proposal.columns])
 
+ProposalText = namedtuple(
+    'ProposalText',
+    ['text', 'format'])
+
 Semester = namedtuple(
     'Semester',
     map(lambda x: x.name, semester.columns))
