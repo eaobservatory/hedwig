@@ -20,10 +20,12 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime
 
+from insertnamehere.db.meta import member
 from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
     NoSuchRecord, UserError
 from insertnamehere.type import Affiliation, Call, \
-    Member, MemberCollection, Proposal, ProposalInfo, ProposalState, \
+    Member, MemberCollection, MemberInstitution,  \
+    Proposal, ProposalInfo, ProposalState, \
     ResultCollection
 from .dummy_db import DBTestCase
 
@@ -392,6 +394,75 @@ class DBProposalTest(DBTestCase):
         member = result.get_single()
         self.assertEqual(member.proposal_id, proposal_id)
         self.assertEqual(member.person_id, person_id_2)
+
+    def test_sync_member_institution(self):
+        (call_id, affiliation_id) = self._create_test_call(
+            'semester1', 'queue1')
+        institution_id_1 = self.db.add_institution('Inst 1', '', '', 'AX')
+        institution_id_2 = self.db.add_institution('Inst 2', '', '', 'CX')
+        institution_id_3 = self.db.add_institution('Inst 3', '', '', 'AX')
+        person_id_1 = self.db.add_person('Person 1')
+        person_id_2 = self.db.add_person('Person 2')
+        person_id_3 = self.db.add_person('Person 3')
+        self.db.update_person(person_id_3, institution_id=institution_id_3)
+        proposal_id = self.db.add_proposal(call_id, person_id_1,
+                                           affiliation_id, 'Proposal 1')
+
+        self.db.add_member(proposal_id, person_id_2, affiliation_id,
+                           False, False, False)
+        self.db.add_member(proposal_id, person_id_3, affiliation_id,
+                           False, False, False)
+
+        # Institutions should be undefined at first except person 3.
+        expect_ref = (institution_id_3, None, None)
+        expect = list(expect_ref)
+        result = self.db.search_member(proposal_id=proposal_id)
+        self.assertEqual(len(result), 3)
+        for row in result.values():
+            self.assertEqual(row.resolved_institution_id, expect.pop())
+
+        # Create set of member institution records to sync.
+        records = ResultCollection()
+        inst_ref = (institution_id_3, institution_id_2, institution_id_1)
+        institutions = list(inst_ref)
+        with self.db._engine.begin() as conn:
+            for row in conn.execute(
+                    member.select().order_by(member.c.id.asc())):
+                self.assertIsNone(row['institution_id'])
+
+                records[row['id']] = MemberInstitution(row['id'],
+                                                       institutions.pop())
+
+        self.assertEqual(len(records), 3)
+        result = self.db.sync_proposal_member_institution(proposal_id, records)
+        self.assertEqual(result, (0, 3, 0))
+
+        # Institutions should now be defined.
+        institutions = list(inst_ref)
+        result = self.db.search_member(proposal_id=proposal_id)
+        self.assertEqual(len(result), 3)
+        for row in result.values():
+            self.assertEqual(row.resolved_institution_id, institutions.pop())
+
+        # Check also by manual query.
+        institutions = list(inst_ref)
+        records = ResultCollection()
+        with self.db._engine.begin() as conn:
+            for row in conn.execute(
+                    member.select().order_by(member.c.id.asc())):
+                self.assertEqual(row['institution_id'], institutions.pop())
+                records[row['id']] = MemberInstitution(row['id'], None)
+        self.assertEqual(institutions, [])
+
+        # Sync all the records back to null.
+        self.assertEqual(len(records), 3)
+        result = self.db.sync_proposal_member_institution(proposal_id, records)
+        self.assertEqual(result, (0, 3, 0))
+        result = self.db.search_member(proposal_id=proposal_id)
+        self.assertEqual(len(result), 3)
+        expect = list(expect_ref)
+        for row in result.values():
+            self.assertEqual(row.resolved_institution_id, expect.pop())
 
     def _create_test_call(self, semester_name, queue_name):
         facility_id = self.db.ensure_facility('my_tel')

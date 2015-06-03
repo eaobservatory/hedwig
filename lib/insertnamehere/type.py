@@ -54,6 +54,10 @@ Member = namedtuple(
      'resolved_institution_id',
      'institution_name', 'institution_organization', 'institution_country'])
 
+MemberInstitution = namedtuple(
+    'MemberInstitution',
+    ['id', 'institution_id'])
+
 Person = namedtuple(
     'Person',
     map(lambda x: x.name, person.columns) +

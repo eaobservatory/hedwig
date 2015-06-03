@@ -563,6 +563,17 @@ class ProposalPart(object):
                     member.c.affiliation_id
                 ), forbid_add=True)
 
+    def sync_proposal_member_institution(self, proposal_id, records):
+        """
+        Update the institution of members of a proposal.
+        """
+
+        with self._transaction() as conn:
+            return self._sync_records(
+                conn, member, member.c.proposal_id, proposal_id, records,
+                update_columns=(member.c.institution_id,),
+                forbid_add=True, forbid_delete=True)
+
     def sync_queue_affiliation(self, queue_id, records):
         """
         Update the affiliation records for a queue to match those
