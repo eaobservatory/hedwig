@@ -8,12 +8,13 @@
     Start: {{ semester.date_start | format_datetime }}
     <br />
     End: {{ semester.date_end | format_datetime }}
-    <br />
-    Description:
-    <pre>
-        {{ semester.description }}
-    </pre>
 </p>
+
+<p>
+    Description:
+</p>
+
+{{ semester.description | format_text }}
 
 <p>
     <a href="{{ url_for('.semester_edit', semester_id=semester.id) }}">Edit semester</a>

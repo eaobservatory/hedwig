@@ -8,11 +8,17 @@
         <br />
         Organization: {{ institution.organization }}
     {% endif %}
-    {% if institution.address %}
-        <br />
-        Address: <pre>{{ institution.address }}</pre>
-    {% endif %}
-    <br />
+</p>
+
+{% if institution.address %}
+    <p>
+        Address:
+    </p>
+
+    {{ institution.address | format_text }}
+{% endif %}
+
+<p>
     Country: {{ institution.country }}
 </p>
 

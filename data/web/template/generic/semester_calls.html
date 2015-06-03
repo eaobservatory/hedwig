@@ -10,9 +10,7 @@
     End: {{ semester.date_end | format_datetime }}
 </p>
 
-<p>
-    <pre>{{ semester.description }}</pre>
-</p>
+{{ semester.description | format_text }}
 
 <h2>Available Queues</h2>
 
@@ -36,9 +34,7 @@
                 UT
             </p>
 
-            <p>
-                <pre>{{ call.queue_description }}</pre>
-            </p>
+            {{ call.queue_description | format_text }}
         </li>
     {% endfor %}
 </ul>

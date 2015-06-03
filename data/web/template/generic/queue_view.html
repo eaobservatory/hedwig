@@ -4,12 +4,13 @@
 
 <p>
     Code: {{ queue.code }}
-    <br />
-    Description:
-    <pre>
-        {{ queue.description }}
-    </pre>
 </p>
+
+<p>
+    Description:
+</p>
+
+{{ queue.description | format_text }}
 
 <p>
     <a href="{{ url_for('.queue_edit', queue_id=queue.id) }}">Edit queue</a>
