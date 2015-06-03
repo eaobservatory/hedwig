@@ -103,8 +103,9 @@ class ProposalState(object):
     SUBMITTED = 2
     WITHDRAWN = 3
     REVIEW = 4
-    ACCEPTED = 5
-    REJECTED = 6
+    ABANDONED = 5
+    ACCEPTED = 6
+    REJECTED = 7
 
     StateInfo = namedtuple('StateInfo', ('name', 'edit', 'submitted'))
 
@@ -113,6 +114,7 @@ class ProposalState(object):
         (SUBMITTED,   StateInfo('Submitted',      True,  True)),
         (WITHDRAWN,   StateInfo('Withdrawn',      True,  False)),
         (REVIEW,      StateInfo('Under review',   False, True)),
+        (ABANDONED,   StateInfo('Abandoned',      False, False)),
         (ACCEPTED,    StateInfo('Accepted',       False, True)),
         (REJECTED,    StateInfo('Rejected',       False, True))
     ))
