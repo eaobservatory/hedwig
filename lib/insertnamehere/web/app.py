@@ -28,6 +28,7 @@ from .util import templated
 
 from .blueprint.facility import create_facility_blueprint
 from .blueprint.people import create_people_blueprint
+from .format import format_text
 
 from ..view.home import prepare_home
 
@@ -108,5 +109,7 @@ def create_web_app():
             return ProposalState.get_name(value)
         except KeyError:
             return 'Unknown state'
+
+    app.add_template_filter(format_text)
 
     return app
