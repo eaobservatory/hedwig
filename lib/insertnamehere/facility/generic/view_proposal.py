@@ -19,7 +19,8 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from ...error import NoSuchRecord, UserError
-from ...type import Affiliation, Call, ProposalState, \
+from ...type import Affiliation, Call, \
+    ProposalState, ProposalText, ProposalTextRole, \
     Queue, ResultCollection, Semester
 from ...util import get_countries
 from ...view import auth
@@ -85,6 +86,13 @@ class GenericProposal(object):
     def view_proposal_view(self, db, proposal, can):
         countries = get_countries()
 
+        abstract = None
+        try:
+            abstract = db.get_proposal_text(proposal.id,
+                                            ProposalTextRole.ABSTRACT)
+        except NoSuchRecord:
+            pass
+
         return {
             'title': proposal.title,
             'can_edit': can.edit,
@@ -94,6 +102,7 @@ class GenericProposal(object):
                     x.institution_country, 'Unknown country'))
                 for x in proposal.members.values()]),
             'proposal_code': self.make_proposal_code(db, proposal),
+            'abstract': abstract,
         }
 
     @with_proposal(permission='edit')
@@ -159,6 +168,39 @@ class GenericProposal(object):
             'title': 'Edit Title',
             'message': message,
             'proposal': proposal,
+        }
+
+    @with_proposal(permission='edit')
+    def view_abstract_edit(self, db, proposal, can, form, is_post):
+        message = None
+
+        try:
+            abstract = db.get_proposal_text(proposal.id,
+                                            ProposalTextRole.ABSTRACT)
+            is_update = True
+        except NoSuchRecord:
+            abstract = ProposalText('', 'plain')
+            is_update = False
+
+        if is_post:
+            abstract = abstract._replace(text=form['text'],
+                                         format=form['format'])
+
+            try:
+                db.set_proposal_text(proposal.id, ProposalTextRole.ABSTRACT,
+                                     abstract.text, abstract.format, is_update)
+                flash('The abstract has been saved.')
+                raise HTTPRedirect(url_for('.proposal_view',
+                                           proposal_id=proposal.id))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Edit Abstract',
+            'proposal_id': proposal.id,
+            'text': abstract,
+            'target': url_for('.abstract_edit', proposal_id=proposal.id),
         }
 
     @with_proposal(permission='edit')

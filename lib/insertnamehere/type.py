@@ -140,6 +140,10 @@ class ProposalState(object):
         return cls._info[state].edit
 
 
+class ProposalTextRole(object):
+    ABSTRACT = 1
+
+
 class ResultCollection(OrderedDict):
     def get_single(self):
         n = len(self)

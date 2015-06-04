@@ -90,6 +90,13 @@ def create_facility_blueprint(db, facility):
         return facility.view_title_edit(
             db, proposal_id, request.form, request.method == 'POST')
 
+    @bp.route('/proposal/<int:proposal_id>/abstract', methods=['GET', 'POST'])
+    @facility_template('text_edit.html')
+    @require_auth(require_person=True)
+    def abstract_edit(proposal_id):
+        return facility.view_abstract_edit(
+            db, proposal_id, request.form, request.method == 'POST')
+
     @bp.route('/proposal/<int:proposal_id>/member', methods=['GET', 'POST'])
     @facility_template('member_edit.html')
     @require_auth(require_person=True)

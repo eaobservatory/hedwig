@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% if message is not none %}
+    <p>
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ target }}">
+    <p>
+        <textarea name="text" required="requried" autofocus="autofocus" cols="80" rows="{{ rows | default(10) }}">{{ text.text }}</textarea>
+        <br />
+        <input type="hidden" name="format" value="{{ text.format }}" />
+        <input type="submit" value="Save" name="submit" />
+    </p>
+</form>
+
+{% endblock %}

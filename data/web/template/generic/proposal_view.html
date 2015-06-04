@@ -40,6 +40,24 @@
     {% endif %}
 {% endblock %}
 
+{% block proposal_abstract %}
+    <h2>Abstract</h2>
+
+    {% if abstract is none %}
+        <p>
+            <i>This proposal does not yet have an abstract.</i>
+        </p>
+    {% else %}
+        {{ abstract | format_text }}
+    {% endif %}
+
+    {% if can_edit %}
+        <p>
+            <a href="{{ url_for('.abstract_edit', proposal_id=proposal.id) }}">Edit abstract</a>
+        </p>
+    {% endif %}
+{% endblock %}
+
 {% block proposal_members %}
     <h2>Members</h2>
 
