@@ -23,13 +23,15 @@ from insertnamehere.web.app import create_web_app
 parser = argparse.ArgumentParser()
 parser.add_argument('--debug', required=False, default=False,
                     action='store_true')
+parser.add_argument('--https', required=False, default=False,
+                    action='store_true')
+parser.add_argument('--port', type=int, required=False, default=5678)
+
 
 args = parser.parse_args()
 
-app = create_web_app()
-
 options = {
-    'port': 5678,
+    'port': args.port,
 }
 
 if args.debug:
@@ -40,4 +42,14 @@ else:
     options['host'] = '0.0.0.0'
     options['debug'] = False
 
+if args.https:
+    from OpenSSL import SSL
+
+    context = SSL.Context(SSL.SSLv23_METHOD)
+    context.use_privatekey_file('server.key')
+    context.use_certificate_file('server.crt')
+
+    options['ssl_context'] = context
+
+app = create_web_app()
 app.run(**options)
