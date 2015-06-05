@@ -22,7 +22,7 @@ from collections import OrderedDict, namedtuple
 
 from .db.meta import affiliation, call, email, institution, \
     member, person, proposal, queue, \
-    semester
+    semester, target
 from .error import NoSuchRecord, MultipleRecords, UserError
 
 Affiliation = namedtuple(
@@ -92,6 +92,10 @@ Semester = namedtuple(
 SemesterInfo = namedtuple(
     'SemesterInfo',
     ['id', 'facility_id', 'name', 'code', 'date_start', 'date_end'])
+
+Target = namedtuple(
+    'Target',
+    [x.name for x in target.columns])
 
 Queue = namedtuple(
     'Queue',
@@ -234,3 +238,7 @@ class MemberCollection(ResultCollection):
             raise userError('You can not remove yourself from the proposal.')
         elif not person_is_editor:
             raise userError('You can not remove yourself as an editor.')
+
+
+class TargetCollection(OrderedDict):
+    pass

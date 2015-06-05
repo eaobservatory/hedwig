@@ -29,9 +29,10 @@ from ...error import ConsistencyError, Error, \
     MultipleRecords, NoSuchRecord, UserError
 from ...type import Affiliation, Call, Member, MemberCollection, \
     Proposal, ProposalInfo, ProposalState, ProposalText, \
-    Queue, QueueInfo, ResultCollection, Semester, SemesterInfo
+    Queue, QueueInfo, ResultCollection, Semester, SemesterInfo, \
+    Target, TargetCollection
 from ..meta import affiliation, call, facility, institution, member, \
-    person, proposal, proposal_text, queue, semester
+    person, proposal, proposal_text, queue, semester, target
 from ..util import require_not_none
 
 
@@ -578,6 +579,21 @@ class ProposalPart(object):
 
         return ans
 
+    def search_target(self, proposal_id):
+        """
+        Retrieve the targets of a given proposal.
+        """
+
+        stmt = target.select().where(target.c.proposal_id == proposal_id)
+
+        ans = TargetCollection()
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt.order_by(target.c.id.asc())):
+                ans[row['id']] = Target(**row)
+
+        return ans
+
     def set_proposal_text(self, proposal_id, role_num, text, format, is_update,
                           _test_skip_check=False):
         """
@@ -657,6 +673,15 @@ class ProposalPart(object):
                 conn, member, member.c.proposal_id, proposal_id, records,
                 update_columns=(member.c.institution_id,),
                 forbid_add=True, forbid_delete=True)
+
+    def sync_proposal_target(self, proposal_id, records):
+        """
+        Update the target records for a proposal.
+        """
+
+        with self._transaction() as conn:
+            return self._sync_records(
+                conn, target, target.c.proposal_id, proposal_id, records)
 
     def sync_queue_affiliation(self, queue_id, records):
         """

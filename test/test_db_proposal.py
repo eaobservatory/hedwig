@@ -26,7 +26,7 @@ from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
 from insertnamehere.type import Affiliation, Call, \
     Member, MemberCollection, MemberInstitution,  \
     Proposal, ProposalInfo, ProposalState, ProposalText, \
-    ResultCollection
+    ResultCollection, Target, TargetCollection
 from .dummy_db import DBTestCase
 
 
@@ -530,6 +530,37 @@ class DBProposalTest(DBTestCase):
                          ProposalText('cc', 'rst'))
         self.assertEqual(self.db.get_proposal_text(proposal_id_2, 41),
                          ProposalText('d', 'docbook'))
+
+    def test_proposal_target(self):
+        (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
+        person_id = self.db.add_person('Person 1')
+        proposal_id = self.db.add_proposal(call_id, person_id,
+                                           affiliation_id, 'Proposal 1')
+        self.assertIsInstance(proposal_id, int)
+
+        result = self.db.search_target(proposal_id=proposal_id)
+        self.assertIsInstance(result, TargetCollection)
+        self.assertFalse(result)
+
+        records = TargetCollection([
+            (1, Target(1, proposal_id, 'Obj 1', 1, 0.5, -0.5)),
+            (2, Target(2, proposal_id, 'Obj 2', None, None, None)),
+            (3, Target(3, proposal_id, 'Obj 3', 2, 335, 1.5)),
+        ])
+
+        n = self.db.sync_proposal_target(proposal_id, records)
+        self.assertEqual(n, (3, 0, 0))
+
+        result = self.db.search_target(proposal_id=proposal_id)
+        self.assertIsInstance(result, TargetCollection)
+        self.assertEqual(len(result), 3)
+
+        i = 1
+        for t in result.values():
+            self.assertIsInstance(t, Target)
+            self.assertEqual(t.proposal_id, proposal_id)
+            self.assertEqual(t.name, 'Obj {0}'.format(i))
+            i += 1
 
     def _create_test_call(self, semester_name, queue_name):
         facility_id = self.db.ensure_facility('my_tel')

@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from sqlalchemy.schema import Column, ForeignKey, Index, MetaData, Table, \
     UniqueConstraint
 
-from sqlalchemy.types import Boolean, DateTime, Integer, \
+from sqlalchemy.types import Boolean, DateTime, Float, Integer, \
     String, Unicode, UnicodeText
 
 metadata = MetaData()
@@ -203,6 +203,19 @@ semester = Table(
     Column('description', UnicodeText, nullable=False),
     UniqueConstraint('facility_id', 'name'),
     UniqueConstraint('facility_id', 'code'),
+    **_table_opts)
+
+target = Table(
+    'target',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('name', Unicode(255), nullable=False),
+    Column('system', Integer, nullable=True),
+    Column('x', Float(precision=53, asdecimal=False), nullable=True),
+    Column('y', Float(precision=53, asdecimal=False), nullable=True),
     **_table_opts)
 
 user = Table(
