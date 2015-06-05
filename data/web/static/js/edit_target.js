@@ -10,7 +10,6 @@ function addTargetRow(newRowNumber) {
     deletelink.attr('id', 'delete_' + nid);
     deletelink.click(function (event) {
         deleteTargetRow(nid);
-        event.preventDefault();
     });
     newrow.appendTo($('table#targets'));
 }
@@ -24,12 +23,10 @@ $(document).ready(function () {
 
     $('#add_target').click(function (event) {
         addTargetRow(newRowCounter ++);
-        event.preventDefault();
     });
 
     $('[id^="delete_"]').click(function (event) {
         var targetid = event.target.id.replace('delete_', '');
         deleteTargetRow(targetid);
-        event.preventDefault();
     });
 });

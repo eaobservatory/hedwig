@@ -11,7 +11,6 @@ function addEmailRow(newRowNumber) {
     deletelink.attr('id', 'delete_' + nid);
     deletelink.click(function (event) {
         deleteEmailRow(nid);
-        event.preventDefault();
     });
     newrow.appendTo($('table#emailaddresses'));
 }
@@ -30,12 +29,10 @@ $(document).ready(function () {
 
     $('#add_email').click(function (event) {
         addEmailRow(newRowCounter ++);
-        event.preventDefault();
     });
 
     $('[id^="delete_"]').click(function (event) {
         var emailid = event.target.id.replace('delete_', '');
         deleteEmailRow(emailid);
-        event.preventDefault();
     });
 });

@@ -46,7 +46,7 @@
                 </td>
                 <td>
                     {% if session.person.id != member.person_id %}
-                        <a href="#" id="delete_{{ member.id }}">delete</a>
+                        <input type="button" id="delete_{{ member.id }}" value="Delete" />
                     {% endif %}
                 </td>
             </tr>

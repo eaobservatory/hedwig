@@ -10,7 +10,6 @@ function addAffiliationRow(newRowNumber) {
     deletelink.attr('id', 'delete_' + nid);
     deletelink.click(function (event) {
         deleteAffiliationRow(nid);
-        event.preventDefault();
     });
     newrow.appendTo($('table#affiliations'));
 }
@@ -24,12 +23,10 @@ $(document).ready(function () {
 
     $('#add_affiliation').click(function (event) {
         addAffiliationRow(newRowCounter ++);
-        event.preventDefault();
     });
 
     $('[id^="delete_"]').click(function (event) {
         var affiliationid = event.target.id.replace('delete_', '');
         deleteAffiliationRow(affiliationid);
-        event.preventDefault();
     });
 });

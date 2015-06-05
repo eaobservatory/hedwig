@@ -30,7 +30,7 @@
                         not verified
                     {% endif %}
                 </td>
-                <td><a href="#" id="delete_{{ email.id }}">delete</a>
+                <td><input type="button" id="delete_{{ email.id }}" value="Delete" />
             </tr>
         {% endfor %}
     </table>
@@ -40,11 +40,11 @@
             <td><input type="radio" name="primary" value="" /></td>
             <td><input type="checkbox" name="public" value="yes" /></td>
             <td>not verified</td>
-            <td><a href="#" id="delete_template">delete</a>
+            <td><input type="button" id="delete_template" value="Delete" />
         </tr>
     </table>
     <p>
-        <a href="#" id="add_email">Add address</a>
+        <input type="button" id="add_email" value="Add address" />
     </p>
     <p>
         <input type="submit" value="Save" name="submit" />
