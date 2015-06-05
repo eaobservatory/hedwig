@@ -67,6 +67,9 @@ class CoordSystem(object):
         Get the displayable name of a coordinate system.
         """
 
+        if system is None:
+            return 'None'
+
         return cls._info[system].name
 
     @classmethod
