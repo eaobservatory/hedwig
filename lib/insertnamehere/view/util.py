@@ -80,7 +80,10 @@ def with_proposal(permission):
                     raise HTTPForbidden('Permission denied for this proposal.')
             elif permission == 'edit':
                 if not can.edit:
-                    raise HTTPForbidden('Permission denied for this proposal.')
+                    raise HTTPForbidden(
+                        'Edit permission denied for this proposal.  '
+                        'Either you are not listed as an editor, '
+                        'or the proposal deadline has passed.')
             else:
                 raise HTTPError('Unknown permission type.')
 
