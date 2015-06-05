@@ -20,6 +20,8 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict, namedtuple
 
+from .astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
+    format_coord, parse_coord
 from .db.meta import affiliation, call, email, institution, \
     member, person, proposal, queue, \
     semester, target
@@ -241,4 +243,41 @@ class MemberCollection(ResultCollection):
 
 
 class TargetCollection(OrderedDict):
-    pass
+    def to_formatted_collection(self):
+        ans = OrderedDict()
+
+        for (k, v) in self.items():
+            if v.x is None or v.y is None:
+                x = y = ''
+            else:
+                (x, y) = format_coord(v.system,
+                                      coord_from_dec_deg(v.system, v.x, v.y))
+
+            ans[k] = v._replace(x=x, y=y)
+
+        return ans
+
+    @classmethod
+    def from_formatted_collection(cls, records):
+        ans = cls()
+
+        for (k, v) in records.items():
+            system = v.system
+
+            if not v.name:
+                raise UserError('Each target object should have a name.')
+
+            if v.x and v.y:
+                (x, y) = coord_to_dec_deg(parse_coord(system,
+                                                      v.x, v.y, v.name))
+
+            elif v.x or v.y:
+                raise UserError('Target "{0}" has only one coordinate.',
+                                v.name)
+
+            else:
+                system = x = y = None
+
+            ans[k] = v._replace(system=system, x=x, y=y)
+
+        return ans
