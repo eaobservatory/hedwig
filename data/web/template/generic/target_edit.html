@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+{% set scripts=['edit_target'] %}
+
+{% block content %}
+
+<ul>
+    <li>
+        Target coordinates may be entered in sexagesmial or decimal degrees.
+    </li>
+    <li>
+        For targets without suitable fixed coordinates, e.g. Venus, you may
+        enter just the name.
+    </li>
+</ul>
+
+{% if message is not none %}
+    <p>
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.target_edit', proposal_id=proposal_id) }}">
+    <table id="targets">
+        <tr>
+            <th>Name</th>
+            <th>RA / Longitude</th>
+            <th>Dec / Latitude</th>
+            <th>System</th>
+        </tr>
+        {% for target in targets %}
+            <tr id="targetrow_{{ target.id }}">
+                <td><input type="text" name="name_{{ target.id }}" value="{{ target.name }}" /></td>
+                <td><input type="text" name="x_{{ target.id }}" value="{{ target.x }}" placeholder="00:00:00" /></td>
+                <td><input type="text" name="y_{{ target.id }}" value="{{ target.y }}" placeholder="00:00:00" /></td>
+                <td>
+                    <select name="system_{{ target.id }}">
+                        {% for (system_id, system_name) in systems.items() %}
+                            <option value="{{ system_id }}" {{ 'selected="selected"' | safe if system_id == target.system }} >{{ system_name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td><input type="button" id="delete_{{ target.id }}" value="Delete" />
+            </tr>
+        {% endfor %}
+    </table>
+    <table class="template">
+        <tr id="targetrow_template">
+            <td><input type="text" name="name" value="" /></td>
+            <td><input type="text" name="x" value="" placeholder="00:00:00" /></td>
+            <td><input type="text" name="y" value="" placeholder="00:00:00" /></td>
+            <td>
+                <select name="system">
+                    {% for (system_id, system_name) in systems.items() %}
+                        <option value="{{ system_id }}">{{ system_name }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td><input type="button" id="delete_template" value="Delete" />
+        </tr>
+    </table>
+    <p>
+        <input type="button" id="add_target" value="Add target" />
+    </p>
+    <p>
+        <input type="submit" value="Save" name="submit" />
+    </p>
+</form>
+
+{% endblock %}

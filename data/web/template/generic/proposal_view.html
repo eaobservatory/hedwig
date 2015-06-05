@@ -108,4 +108,37 @@
     {% endif %}
 {% endblock %}
 
+{% block proposal_targets %}
+    <h2>Target Objects</h2>
+
+    {% if not targets %}
+        <p>
+            <i>This proposal does not yet have any target objects.</i>
+        </p>
+    {% else %}
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>RA / Longitude</th>
+                <th>Dec / Latitude</th>
+                <th>System</th>
+            </tr>
+            {% for target in targets %}
+                <tr>
+                    <td>{{ target.name }}</td>
+                    <td>{{ target.x }}</td>
+                    <td>{{ target.y }}</td>
+                    <td>{{ target.system }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+
+    {% if can_edit %}
+        <p>
+            <a href="{{ url_for('.target_edit', proposal_id=proposal.id) }}">Edit targets</a>
+        </p>
+    {% endif %}
+{% endblock %}
+
 {% endblock %}

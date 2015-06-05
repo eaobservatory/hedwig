@@ -18,10 +18,11 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from ...astro.coord import CoordSystem
 from ...error import NoSuchRecord, UserError
 from ...type import Affiliation, Call, \
     ProposalState, ProposalText, ProposalTextRole, \
-    Queue, ResultCollection, Semester
+    Queue, ResultCollection, Semester, Target, TargetCollection
 from ...util import get_countries
 from ...view import auth
 from ...web.util import ErrorPage, HTTPError, HTTPForbidden, \
@@ -93,6 +94,11 @@ class GenericProposal(object):
         except NoSuchRecord:
             pass
 
+        targets = [
+            x._replace(system=CoordSystem.get_name(x.system)) for x in
+            db.search_target(
+                proposal_id=proposal.id).to_formatted_collection().values()]
+
         return {
             'title': proposal.title,
             'can_edit': can.edit,
@@ -103,6 +109,7 @@ class GenericProposal(object):
                 for x in proposal.members.values()]),
             'proposal_code': self.make_proposal_code(db, proposal),
             'abstract': abstract,
+            'targets': targets,
         }
 
     @with_proposal(permission='edit')
@@ -358,4 +365,58 @@ class GenericProposal(object):
             'persons': persons,
             'affiliations': affiliations.values(),
             'member': member,
+        }
+
+    @with_proposal(permission='edit')
+    def view_target_edit(self, db, proposal, can, form, is_post):
+        message = None
+
+        records = db.search_target(
+            proposal_id=proposal.id).to_formatted_collection()
+
+        if is_post:
+            # Temporary dictionaries for new records.
+            updated_records = {}
+            added_records = {}
+
+            for param in form:
+                if not param.startswith('name_'):
+                    continue
+                id_ = param[5:]
+
+                if id_.startswith('new_'):
+                    target_id = int(id_[4:])
+                    destination = added_records
+                else:
+                    target_id = int(id_)
+                    destination = updated_records
+
+                destination[target_id] = Target(
+                    target_id, proposal.id, form[param],
+                    int(form['system_' + id_]),
+                    form['x_' + id_],
+                    form['y_' + id_])
+
+            records = organise_collection(TargetCollection, updated_records,
+                                          added_records)
+
+            try:
+                db.sync_proposal_target(
+                    proposal.id,
+                    TargetCollection.from_formatted_collection(records))
+
+                flash('The target object list has been saved.')
+
+                raise HTTPRedirect(url_for('.proposal_view',
+                                           proposal_id=proposal.id))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Edit Targets',
+            'proposal_id': proposal.id,
+            'message': message,
+            'systems': CoordSystem.get_options(),
+            'targets': records.values(),
         }
