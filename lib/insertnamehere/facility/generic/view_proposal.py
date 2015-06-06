@@ -87,6 +87,29 @@ class GenericProposal(object):
     def view_proposal_view(self, db, proposal, can):
         countries = get_countries()
 
+        ctx = {
+            'title': proposal.title,
+            'can_edit': can.edit,
+            'is_submitted': ProposalState.is_submitted(proposal.state),
+            'proposal': proposal._replace(members=[
+                x._replace(institution_country=countries.get(
+                    x.institution_country, 'Unknown country'))
+                for x in proposal.members.values()]),
+            'proposal_code': self.make_proposal_code(db, proposal),
+        }
+
+        ctx.update(self._view_proposal_extra(db, proposal))
+
+        return ctx
+
+    def _view_proposal_extra(self, db, proposal):
+        """
+        Method to gather additional information for the proposal view page.
+
+        Sub-classes can override this method to add additional information
+        to the proposal.
+        """
+
         abstract = None
         try:
             abstract = db.get_proposal_text(proposal.id,
@@ -100,14 +123,6 @@ class GenericProposal(object):
                 proposal_id=proposal.id).to_formatted_collection().values()]
 
         return {
-            'title': proposal.title,
-            'can_edit': can.edit,
-            'is_submitted': ProposalState.is_submitted(proposal.state),
-            'proposal': proposal._replace(members=[
-                x._replace(institution_country=countries.get(
-                    x.institution_country, 'Unknown country'))
-                for x in proposal.members.values()]),
-            'proposal_code': self.make_proposal_code(db, proposal),
             'abstract': abstract,
             'targets': targets,
         }
