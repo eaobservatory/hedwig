@@ -63,7 +63,41 @@ def get_database():
 
     if database is None:
         config = get_config()
-        database = Database(get_engine(config.get('database', 'url')))
+        db_parts = [Database]
+
+        # Import facility metadata and control modules.
+        for name in config.get('application', 'facilities').split(','):
+            try:
+                parts = name.split('.')
+
+                if len(parts) > 1:
+                    # Try looking for "meta" and "control" modules in the same
+                    # directory as the module which defines the facility class.
+                    import_module('.'.join(parts[:-2] + ['meta']))
+                    module = import_module('.'.join(parts[:-2] + ['control']))
+
+                else:
+                    # If there are no dots in the facility class, use the
+                    # standard location in this packages.
+                    import_module(
+                        'insertnamehere.facility.{0}.meta'.format(
+                            name.lower()))
+                    module = import_module(
+                        'insertnamehere.facility.{0}.control'.format(
+                            name.lower()))
+
+                # Look for a class named <Facility>Part.
+                db_parts.append(getattr(module, parts[-1] + 'Part'))
+
+            except ImportError:
+                # Not all facilities will define custom metadata and control
+                # modules.
+                pass
+
+        # Create combined database object using the base database class, plus
+        # any facility-specific classes.
+        CombinedDatabase = type(b'CombinedDatabase', tuple(db_parts), {})
+        database = CombinedDatabase(get_engine(config.get('database', 'url')))
 
     return database
 
