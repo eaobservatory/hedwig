@@ -162,6 +162,9 @@ class ResultCollection(OrderedDict):
             return self.values()[0]
 
 
+ResultTable = namedtuple('ResultTable', ('table', 'columns', 'rows'))
+
+
 class EmailCollection(ResultCollection):
     def get_primary(self):
         for email in self.values():

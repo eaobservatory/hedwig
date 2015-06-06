@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict, namedtuple
 
+from ...type import ResultTable
 from ...error import UserError
 from .meta import jcmt_request
 
@@ -92,6 +93,61 @@ class JCMTRequestCollection(OrderedDict):
                         JCMTWeather.get_name(record.weather)))
 
             requests.add(request_tuple)
+
+    def to_table(self):
+        """
+        Rearrange the records into a table by instrument and weather
+        band.
+
+        Returns: ResultTable(table, weather bands, instruments)
+
+        Where:
+            * table is a nested dictionary of time by instrument and band,
+              with additional "total" figures having identifier zero.  Totals
+              by band (i.e. instrument=0) are only added if there is more than
+              one instrument.
+            * bands is an ordered dictionary of band names by identifier
+              for bands present in the table and currently available bands.
+            * instruments is an odered dictionary of instruments by identifier
+              for instruments present in the table only.
+        """
+
+        weathers = set()
+        instruments = {}
+        total = {}
+
+        for request in self.values():
+            weathers.add(request.weather)
+
+            instrument = instruments.get(request.instrument)
+            if instrument is None:
+                instrument = instruments[request.instrument] = {}
+
+            # Add time to table cell.  (Really there should only be one
+            # record per cell if the validation method was applied.)
+            instrument[request.weather] = instrument.get(
+                request.weather, 0.0) + request.time
+
+            # Add time to instrument total.
+            instrument[0] = instrument.get(0, 0.0) + request.time
+
+            # Add time to weather total.
+            total[request.weather] = total.get(
+                request.weather, 0.0) + request.time
+
+        # Include weather total if there are multiple instruments.
+        if len(instruments) > 1:
+            total[0] = sum(total.values())
+            instruments[0] = total
+
+        return ResultTable(
+            instruments,
+            OrderedDict([(k, v.name)
+                         for (k, v) in JCMTWeather._info.items()
+                         if v.available or k in weathers]),
+            OrderedDict([(k, v.name)
+                         for (k, v) in JCMTInstrument._info.items()
+                         if k in instruments]))
 
 
 class JCMTWeather(object):

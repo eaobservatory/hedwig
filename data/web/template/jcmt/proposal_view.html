@@ -3,20 +3,37 @@
 {% block proposal_request %}
     <h2>Observing Request</h2>
 
-    {% if not requests %}
+    {% if not requests.table %}
         <p>
             <i>This proposal does not yet have an observing request.</i>
         </p>
     {% else %}
         <table>
-            <tr><th>Instrument</th><th>Weather band</th><th>Time</th></tr>
-            {% for request in requests %}
+            <tr>
+                <th>Instrument</th>
+                {% for column in requests.columns.values() %}
+                    <th>{{ column }}</th>
+                {% endfor %}
+                <th>Total</th>
+            </tr>
+            {% for (row_id, row_name) in requests.rows.items() %}
                 <tr>
-                    <td>{{ request.instrument }}</td>
-                    <td>{{ request.weather }}</td>
-                    <td>{{ request.time }}</td>
+                    <th>{{ row_name }}</th>
+                    {% for column_id in requests.columns.keys() %}
+                        <td>{{ requests.table[row_id][column_id] }}</td>
+                    {% endfor %}
+                    <td>{{ requests.table[row_id][0] }}</td>
                 </tr>
             {% endfor %}
+            {% if 0 in requests.table %}
+                <tr>
+                    <th>Total</th>
+                    {% for column_id in requests.columns.keys() %}
+                        <td>{{ requests.table[0][column_id] }}</td>
+                    {% endfor %}
+                    <td>{{ requests.table[0][0] }}</th>
+                </tr>
+            {% endif %}
         </table>
     {% endif %}
 

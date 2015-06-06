@@ -44,13 +44,8 @@ class JCMT(Generic):
 
         requests = db.search_jcmt_request(proposal_id=proposal.id)
 
-        # TODO: organise results sensibly rather than just outputting them
-        # as recieved from the database.
         ctx.update({
-            'requests': [x._replace(
-                instrument=JCMTInstrument.get_name(x.instrument),
-                weather=JCMTWeather.get_name(x.weather),
-            ) for x in requests.values()],
+            'requests': requests.to_table(),
         })
 
         return ctx
