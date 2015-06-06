@@ -119,6 +119,13 @@ def create_facility_blueprint(db, facility):
         return facility.view_target_edit(
             db, proposal_id, request.form, request.method == 'POST')
 
+    @bp.route('/proposal/<int:proposal_id>/request', methods=['GET', 'POST'])
+    @facility_template('request_edit.html')
+    @require_auth(require_person=True)
+    def request_edit(proposal_id):
+        return facility.view_request_edit(
+            db, proposal_id, request.form, request.method == 'POST')
+
     @bp.route('/admin')
     @facility_template('facility_admin.html')
     @require_admin

@@ -435,3 +435,7 @@ class GenericProposal(object):
             'systems': CoordSystem.get_options(),
             'targets': records.values(),
         }
+
+    @with_proposal(permission='edit')
+    def view_request_edit(self, db, proposal, can, form, is_post):
+        raise ErrorPage('Observing request not implemented for this facility.')
