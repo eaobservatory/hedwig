@@ -8,3 +8,13 @@ body {
 .template {
     display: none;
 }
+
+td.total {
+    background: #DDD;
+    font-weight: bold;
+}
+
+td.grandtotal {
+    background: #BBB;
+    font-weight: bold;
+}

@@ -22,16 +22,16 @@
                     {% for column_id in requests.columns.keys() %}
                         <td>{{ requests.table[row_id][column_id] }}</td>
                     {% endfor %}
-                    <td>{{ requests.table[row_id][0] }}</td>
+                    <td class="total">{{ requests.table[row_id][0] }}</td>
                 </tr>
             {% endfor %}
             {% if 0 in requests.table %}
                 <tr>
                     <th>Total</th>
                     {% for column_id in requests.columns.keys() %}
-                        <td>{{ requests.table[0][column_id] }}</td>
+                        <td class="total">{{ requests.table[0][column_id] }}</td>
                     {% endfor %}
-                    <td>{{ requests.table[0][0] }}</th>
+                    <td class="grandtotal">{{ requests.table[0][0] }}</th>
                 </tr>
             {% endif %}
         </table>
