@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict
 from flask import Flask
+from jinja2.runtime import Undefined
 import os
 
 from ..config import get_config, get_database, get_facilities, get_home
@@ -84,6 +85,17 @@ def create_web_app():
         return {
             'application_name': application_name,
         }
+
+    @app.template_filter()
+    def fmt(value, format_):
+        """
+        Similar to the Jinja built in filter "format" but the other way
+        round and using new-style formatting.
+        """
+
+        if value is None or isinstance(value, Undefined):
+            return ''
+        return format_.format(value)
 
     @app.template_filter()
     def format_date(value):
