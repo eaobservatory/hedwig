@@ -220,23 +220,23 @@ class ProposalPart(object):
 
             return result.inserted_primary_key[0]
 
-    def delete_proposal_text(self, proposal_id, role_num,
+    def delete_proposal_text(self, proposal_id, role,
                              _test_skip_check=False):
         with self._transaction() as conn:
             if not _test_skip_check and not self._exists_proposal_text(
-                    conn, proposal_id, role_num):
+                    conn, proposal_id, role):
                 raise ConsistencyError('text does not exist for {0} role {1}',
-                                       proposal_id, role_num)
+                                       proposal_id, role)
 
             result = conn.execute(proposal_text.delete().where(and_(
                 proposal_text.c.proposal_id == proposal_id,
-                proposal_text.c.role_num == role_num
+                proposal_text.c.role == role
             )))
 
             if result.rowcount != 1:
                 raise ConsistencyError(
                     'no row matched deleting text for {0} role {1}',
-                    proposal_id, role_num)
+                    proposal_id, role)
 
     def ensure_facility(self, code):
         """
@@ -329,7 +329,7 @@ class ProposalPart(object):
 
         return result['code']
 
-    def get_proposal_text(self, proposal_id, role_num):
+    def get_proposal_text(self, proposal_id, role):
         """
         Get the given text associated with a proposal.
         """
@@ -337,12 +337,12 @@ class ProposalPart(object):
         with self._transaction() as conn:
             row = conn.execute(proposal_text.select().where(and_(
                 proposal_text.c.proposal_id == proposal_id,
-                proposal_text.c.role_num == role_num
+                proposal_text.c.role == role
             ))).first()
 
         if row is None:
             raise NoSuchRecord('text does not exist for {0} role {1}',
-                               proposal_id, role_num)
+                               proposal_id, role)
 
         return ProposalText(text=row['text'], format=row['format'])
 
@@ -594,7 +594,7 @@ class ProposalPart(object):
 
         return ans
 
-    def set_proposal_text(self, proposal_id, role_num, text, format, is_update,
+    def set_proposal_text(self, proposal_id, role, text, format, is_update,
                           _test_skip_check=False):
         """
         Insert or update a given piece of proposal text.
@@ -610,20 +610,20 @@ class ProposalPart(object):
         with self._transaction() as conn:
             if not _test_skip_check:
                 already_exists = self._exists_proposal_text(
-                    conn, proposal_id, role_num)
+                    conn, proposal_id, role)
                 if is_update and not already_exists:
                     raise ConsistencyError(
                         'text does not exist for proposal {0} role {1}',
-                        proposal_id, role_num)
+                        proposal_id, role)
                 elif not is_update and already_exists:
                     raise ConsistencyError(
                         'text already exists for proposal {0} role {1}',
-                        proposal_id, role_num)
+                        proposal_id, role)
 
             if is_update:
                 result = conn.execute(proposal_text.update().where(and_(
                     proposal_text.c.proposal_id == proposal_id,
-                    proposal_text.c.role_num == role_num
+                    proposal_text.c.role == role
                 )).values({
                     proposal_text.c.text: text,
                     proposal_text.c.format: format,
@@ -632,12 +632,12 @@ class ProposalPart(object):
                 if result.rowcount != 1:
                     raise ConsistencyError(
                         'no rows matched updating proposal text {0} role {1}',
-                        proposal_id, role_num)
+                        proposal_id, role)
 
             else:
                 result = conn.execute(proposal_text.insert().values({
                     proposal_text.c.proposal_id: proposal_id,
-                    proposal_text.c.role_num: role_num,
+                    proposal_text.c.role: role,
                     proposal_text.c.text: text,
                     proposal_text.c.format: format,
                 }))
@@ -843,14 +843,14 @@ class ProposalPart(object):
                     'no rows matched updating queue with id={0}',
                     queue_id)
 
-    def _exists_proposal_text(self, conn, proposal_id, role_num):
+    def _exists_proposal_text(self, conn, proposal_id, role):
         """
         Test whether text of the given role already exists for a proposal.
         """
 
         return 0 < conn.execute(select([count(proposal_text.c.id)]).where(and_(
             proposal_text.c.proposal_id == proposal_id,
-            proposal_text.c.role_num == role_num
+            proposal_text.c.role == role
         ))).scalar()
 
     def _exists_queue_affiliation(self, conn, queue_id, affiliation_id):

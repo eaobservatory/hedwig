@@ -159,10 +159,10 @@ proposal_text = Table(
     Column('proposal_id', None,
            ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
-    Column('role_num', Integer, nullable=False),
+    Column('role', Integer, nullable=False),
     Column('text', UnicodeText, nullable=False),
     Column('format', Unicode(31), nullable=False),
-    Index('idx_text_prop_role', 'proposal_id', 'role_num', unique=True),
+    Index('idx_text_prop_role', 'proposal_id', 'role', unique=True),
     **_table_opts)
 
 queue = Table(
