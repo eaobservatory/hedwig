@@ -402,13 +402,16 @@ class PeoplePart(object):
 
         return token
 
-    def search_email(self, person_id, _conn=None):
+    def search_email(self, person_id, address=None, _conn=None):
         """
         Find email address records.
         """
 
         stmt = email.select()
         stmt = stmt.where(email.c.person_id == person_id)
+
+        if address is not None:
+            stmt = stmt.where(email.c.address == address)
 
         ans = EmailCollection()
 

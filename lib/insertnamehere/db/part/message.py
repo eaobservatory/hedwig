@@ -19,17 +19,28 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from datetime import datetime
+from itertools import izip_longest
 
 from sqlalchemy.sql import select
-from sqlalchemy.sql.expression import and_
+from sqlalchemy.sql.expression import and_, case
 
-from ...error import ConsistencyError
+from ...error import ConsistencyError, NoSuchRecord, MultipleRecords
 from ...type import Message, MessageRecipient, ResultCollection
 from ..meta import email, message, message_recipient, person
 
 
 class MessagePart(object):
-    def add_message(self, subject, body, person_ids, _test_skip_check=False):
+    def add_message(self, subject, body, person_ids, email_addresses=[],
+                    _test_skip_check=False):
+        """
+        Add a message to the database.
+
+        "email_addresses" can normally be left empty, but if it is necessary to
+        send to a particular address (rather than the person's primary address)
+        then it can be a list with email addresses in the same order as the
+        person_ids list.
+        """
+
         if not _test_skip_check:
             if ((not isinstance(person_ids, set)) and
                     (len(person_ids) != len(set(person_ids)))):
@@ -44,10 +55,24 @@ class MessagePart(object):
 
             message_id = result.inserted_primary_key[0]
 
-            for person_id in person_ids:
+            for (person_id, email_address) in izip_longest(person_ids,
+                                                           email_addresses):
+                if email_address is None:
+                    email_id = None
+                else:
+                    try:
+                        email_id = self.search_email(
+                            person_id, address=email_address, _conn=conn
+                        ).get_single().id
+                    except NoSuchRecord:
+                        raise ConsistencyError('email address does not exist')
+                    except MultipleRecords:
+                        raise ConsistencyError('multiple address results')
+
                 conn.execute(message_recipient.insert().values({
                     message_recipient.c.message_id: message_id,
                     message_recipient.c.person_id: person_id,
+                    message_recipient.c.email_id: email_id,
                 }))
 
         return message_id
@@ -82,7 +107,9 @@ class MessagePart(object):
                         message_recipient.join(person).join(email)
                     ).where(and_(
                         message_recipient.c.message_id == message_id,
-                        email.c.primary))):
+                        case([(message_recipient.c.email_id.isnot(None),
+                               message_recipient.c.email_id == email.c.id)],
+                             else_=email.c.primary)))):
                 recipients.append(MessageRecipient(**row))
 
             if mark_sending:

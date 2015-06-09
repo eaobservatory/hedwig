@@ -158,3 +158,37 @@ class DBMessageTest(DBTestCase):
             MessageRecipient('Person Three', '3@c', True),
             MessageRecipient('Person Four', '4@b', False),
         )))
+
+    def test_explicit_email(self):
+        # Create some person records with multiple email addresses.
+        person_1 = self.db.add_person('Person One')
+        self.db.add_email(person_1, '1@a', primary=False, public=True)
+        self.db.add_email(person_1, '1@b', primary=True, public=True)
+        self.db.add_email(person_1, '1@c', primary=False, public=True)
+
+        person_2 = self.db.add_person('Person Two')
+        self.db.add_email(person_2, '2@a', primary=True, public=False)
+        self.db.add_email(person_2, '2@b', primary=False, public=True)
+        self.db.add_email(person_2, '2@c', primary=False, public=True)
+
+        # Create test message, giving specific email addresses.
+        message_id = self.db.add_message('test', 'test message',
+                                         [person_1, person_2],
+                                         ['1@c', '2@b'])
+
+        self.assertIsInstance(message_id, int)
+
+        # Check that the message has the correct set of addresses.
+        message = self.db.get_unsent_message(mark_sending=True)
+        self.assertEqual(message.id, message_id)
+        self.assertEqual(set(message.recipients), set((
+            MessageRecipient('Person One', '1@c', True),
+            MessageRecipient('Person Two', '2@b', True),
+        )))
+
+        # Check we get an error if we try to specify an email address
+        # for the wrong person (or which doesn't exist at all).
+        with self.assertRaisesRegexp(ConsistencyError,
+                                     '^email address does not exist'):
+            message_id = self.db.add_message('test', 'test message',
+                                             [person_1], ['2@b'])

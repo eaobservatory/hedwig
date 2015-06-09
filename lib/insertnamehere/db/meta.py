@@ -145,6 +145,9 @@ message_recipient = Table(
     Column('person_id', None,
            ForeignKey('person.id', onupdate='RESTRICT', ondelete='CASCADE'),
            nullable=False),
+    Column('email_id', None,
+           ForeignKey('email.id', onupdate='RESTRICT', ondelete='SET NULL'),
+           default=None),
     PrimaryKeyConstraint('message_id', 'person_id',
                          name='message_recipient_pk'),
     **_table_opts)
