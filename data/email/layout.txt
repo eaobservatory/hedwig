@@ -1,0 +1,16 @@
+{% block opening %}
+{% if recipient_name is defined %}
+Dear {{ recipient_name }},
+{% else %}
+Hello,
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% endblock %}
+
+{% block closing %}
+Have a nice day!
+
+{{ application_name }}
+{% endblock %}

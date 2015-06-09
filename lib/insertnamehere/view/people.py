@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from ..email.format import render_email_template
 from ..error import Error, MultipleRecords, NoSuchRecord, UserError
 from ..type import Email, EmailCollection, Institution
 from ..util import get_countries
@@ -267,6 +268,12 @@ def password_reset_token_get(db, form, is_post):
 
             token = db.get_password_reset_token(user_id)
             # TODO: email the token to: email_address
+            db.add_message(
+                'Password reset token',
+                render_email_template('password_reset.txt', {
+                    'token': token,
+                }),
+                [person.id])
             flash('Your password reset code has been sent by email '
                   ' to {0}.'.format(show_email_address))
             raise HTTPRedirect(url_for('.password_reset_token_use'))

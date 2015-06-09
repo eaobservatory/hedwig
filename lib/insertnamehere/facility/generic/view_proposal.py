@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from ...astro.coord import CoordSystem
+from ...email.format import render_email_template
 from ...error import NoSuchRecord, UserError
 from ...type import Affiliation, Call, \
     ProposalState, ProposalText, ProposalTextRole, \
@@ -317,7 +318,11 @@ class GenericProposal(object):
                                   editor=member['editor'],
                                   observer=member['observer'])
 
-                    # TODO: email the person a notification.
+                    db.add_message(
+                        'Proposal invitation',
+                        render_email_template('proposal_added.txt', {
+                        }),
+                        [member['person_id']])
 
                     flash('{0} has been added to the proposal.', person.name)
                     raise HTTPRedirect(url_for('.proposal_view',
@@ -341,7 +346,12 @@ class GenericProposal(object):
                                   observer=member['observer'])
                     token = db.add_invitation(person_id)
 
-                    # TODO: email the person the invitation token.
+                    db.add_message(
+                        'Proposal invitation',
+                        render_email_template('proposal_invitation.txt', {
+                            'token': token,
+                        }),
+                        [person_id])
 
                     flash('{0} has been added to the proposal.',
                           member['name'])
