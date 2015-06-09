@@ -220,10 +220,12 @@ def password_reset_token_get(db, form, is_post):
                 # we know the email address belongs to their account,
                 # so we can send the token to it.
                 try:
-                    user_id = db.search_person(
+                    person = db.search_person(
                         email_address=email_address, user_id=user_id,
                         registered=True
-                    ).get_single().user_id
+                    ).get_single()
+
+                    user_id = person.user_id
 
                     show_email_address = email_address
 
@@ -267,13 +269,13 @@ def password_reset_token_get(db, form, is_post):
                     'Please enter either a user name or email address.')
 
             token = db.get_password_reset_token(user_id)
-            # TODO: email the token to: email_address
             db.add_message(
                 'Password reset token',
                 render_email_template('password_reset.txt', {
                     'token': token,
                 }),
-                [person.id])
+                [person.id],
+                email_addresses=[email_address])
             flash('Your password reset code has been sent by email '
                   ' to {0}.'.format(show_email_address))
             raise HTTPRedirect(url_for('.password_reset_token_use'))
