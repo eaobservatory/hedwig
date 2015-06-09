@@ -9,3 +9,7 @@ url=
 name=Insert Name Here
 secret_key=
 facilities=Generic
+
+[email]
+server=
+from=
