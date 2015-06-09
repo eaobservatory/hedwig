@@ -65,7 +65,11 @@ def render_email_template(name, context):
         if not paragraph:
             continue
 
-        wrapped = wrap(paragraph, width=70)
+        # Avoid breaking long "words" in order not to break URLs.
+        wrapped = wrap(paragraph, width=70,
+                       break_long_words=False,
+                       break_on_hyphens=False)
+
         if not wrapped:
             continue
 
