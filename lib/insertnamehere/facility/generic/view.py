@@ -74,7 +74,6 @@ class Generic(GenericAdmin, GenericProposal):
 
     def view_facility_home(self, db):
         # Determine which semesters have open calls for proposals.
-        # TODO: restrict to open calls.
         open_semesters = OrderedDict()
         for call in db.search_call(facility_id=self.id_,
                                    is_open=True).values():

@@ -42,9 +42,6 @@ class GenericProposal(object):
             raise HTTPNotFound('Call not found')
         except MultipleRecords:
             raise HTTPError('Multiple calls found')
-        # TODO: check call is open.
-        # if not call.open:
-        #    raise ErrorPage('This call is not currently open for proposals.')
 
         affiliations = db.search_affiliation(
             queue_id=call.queue_id, hidden=False)
