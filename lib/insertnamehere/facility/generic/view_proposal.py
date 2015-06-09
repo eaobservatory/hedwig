@@ -138,8 +138,17 @@ class GenericProposal(object):
         if is_post:
             if 'submit_confirm' in form:
                 db.update_proposal(proposal.id, state=ProposalState.SUBMITTED)
+
+                db.add_message(
+                    'Proposal submission',
+                    render_email_template(
+                        'proposal_submitted.txt', {
+                        },
+                        facility_code=self.get_code()),
+                    [x.person_id for x in proposal.members.values()])
+
                 flash('The proposal has been submitted.')
-                # TODO: email notification to proposal members.
+
             else:
                 flash('The submission process has been cancelled.')
 
@@ -159,8 +168,17 @@ class GenericProposal(object):
         if is_post:
             if 'submit_confirm' in form:
                 db.update_proposal(proposal.id, state=ProposalState.WITHDRAWN)
+
+                db.add_message(
+                    'Proposal withdrawl',
+                    render_email_template(
+                        'proposal_withdrawn.txt', {
+                        },
+                        facility_code=self.get_code()),
+                    [x.person_id for x in proposal.members.values()])
+
                 flash('The proposal has been withdrawn.')
-                # TODO: email notification to proposal members.
+
             else:
                 flash('The withdrawl process has been cancelled.')
 

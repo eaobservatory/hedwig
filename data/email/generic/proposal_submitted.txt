@@ -1,0 +1,5 @@
+{% extends 'layout.txt' %}
+
+{% block content %}
+Your proposal has been submitted.
+{% endblock %}
