@@ -18,8 +18,8 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from sqlalchemy.schema import Column, ForeignKey, Index, MetaData, Table, \
-    UniqueConstraint
+from sqlalchemy.schema import Column, ForeignKey, Index, MetaData, \
+    PrimaryKeyConstraint, Table, UniqueConstraint
 
 from sqlalchemy.types import Boolean, DateTime, Float, Integer, \
     String, Unicode, UnicodeText
@@ -122,6 +122,31 @@ member = Table(
                       ondelete='RESTRICT'),
            nullable=True),
     UniqueConstraint('proposal_id', 'person_id'),
+    **_table_opts)
+
+message = Table(
+    'message',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('date', DateTime(), nullable=False),
+    Column('subject', Unicode(255), nullable=False),
+    Column('body', UnicodeText, nullable=False),
+    Column('timestamp_send', DateTime(), default=None),
+    Column('timestamp_sent', DateTime(), default=None),
+    Column('identifier', Unicode(255), default=None),
+    **_table_opts)
+
+message_recipient = Table(
+    'message_recipient',
+    metadata,
+    Column('message_id', None,
+           ForeignKey('message.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('person_id', None,
+           ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    PrimaryKeyConstraint('message_id', 'person_id',
+                         name='message_recipient_pk'),
     **_table_opts)
 
 person = Table(

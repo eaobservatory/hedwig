@@ -23,7 +23,7 @@ from collections import OrderedDict, namedtuple
 from .astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
 from .db.meta import affiliation, call, email, institution, \
-    member, person, proposal, queue, \
+    member, message, person, proposal, queue, \
     semester, target
 from .error import NoSuchRecord, MultipleRecords, UserError
 
@@ -59,6 +59,14 @@ Member = namedtuple(
 MemberInstitution = namedtuple(
     'MemberInstitution',
     ['id', 'institution_id'])
+
+Message = namedtuple(
+    'Message',
+    [x.name for x in message.columns] + ['recipients'])
+
+MessageRecipient = namedtuple(
+    'MessageRecipient',
+    ['name', 'address', 'public'])
 
 Person = namedtuple(
     'Person',
