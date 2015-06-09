@@ -44,7 +44,7 @@ def get_environment():
     return environment
 
 
-def render_email_template(name, context):
+def render_email_template(name, context, facility_code=None):
     """
     Render a template and then attempt to line-wrap the output
     sensibly.
@@ -53,7 +53,11 @@ def render_email_template(name, context):
     # Apply the template.
     env = get_environment()
 
-    template = env.get_template(name)
+    if facility_code is None:
+        template = env.get_template(name)
+    else:
+        template = env.select_template((facility_code + '/' + name,
+                                        'generic/' + name))
 
     body = template.render(context)
 

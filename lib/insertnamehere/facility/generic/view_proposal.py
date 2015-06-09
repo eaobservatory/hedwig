@@ -320,8 +320,10 @@ class GenericProposal(object):
 
                     db.add_message(
                         'Proposal invitation',
-                        render_email_template('proposal_added.txt', {
-                        }),
+                        render_email_template(
+                            'proposal_added.txt', {
+                            },
+                            facility_code=self.get_code()),
                         [member['person_id']])
 
                     flash('{0} has been added to the proposal.', person.name)
@@ -348,9 +350,11 @@ class GenericProposal(object):
 
                     db.add_message(
                         'Proposal invitation',
-                        render_email_template('proposal_invitation.txt', {
-                            'token': token,
-                        }),
+                        render_email_template(
+                            'proposal_invitation.txt', {
+                                'token': token,
+                            },
+                            facility_code=self.get_code()),
                         [person_id])
 
                     flash('{0} has been added to the proposal.',
