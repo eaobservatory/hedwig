@@ -141,7 +141,7 @@ class GenericProposal(object):
                     render_email_template(
                         'proposal_submitted.txt', {
                         },
-                        facility_code=self.get_code()),
+                        facility=self),
                     [x.person_id for x in proposal.members.values()])
 
                 flash('The proposal has been submitted.')
@@ -171,7 +171,7 @@ class GenericProposal(object):
                     render_email_template(
                         'proposal_withdrawn.txt', {
                         },
-                        facility_code=self.get_code()),
+                        facility=self),
                     [x.person_id for x in proposal.members.values()])
 
                 flash('The proposal has been withdrawn.')
@@ -334,11 +334,18 @@ class GenericProposal(object):
                                   observer=member['observer'])
 
                     db.add_message(
-                        'Proposal invitation',
+                        'Proposal {0} invitation'.format(
+                            self.make_proposal_code(db, proposal)),
                         render_email_template(
                             'proposal_added.txt', {
+                                'proposal': proposal,
+                                'recipient_name': person.name,
+                                'inviter_name': session['person']['name'],
+                                'target_url': url_for(
+                                    '.proposal_view',
+                                    proposal_id=proposal.id, _external=True),
                             },
-                            facility_code=self.get_code()),
+                            facility=self),
                         [member['person_id']])
 
                     flash('{0} has been added to the proposal.', person.name)
@@ -361,15 +368,26 @@ class GenericProposal(object):
                                   member['affiliation_id'],
                                   editor=member['editor'],
                                   observer=member['observer'])
-                    token = db.add_invitation(person_id)
+                    (token, expiry) = db.add_invitation(person_id)
 
                     db.add_message(
-                        'Proposal invitation',
+                        'Proposal {0} invitation'.format(
+                            self.make_proposal_code(db, proposal)),
                         render_email_template(
                             'proposal_invitation.txt', {
                                 'token': token,
+                                'expiry': expiry,
+                                'proposal': proposal,
+                                'recipient_name': member['name'],
+                                'inviter_name': session['person']['name'],
+                                'target_url': url_for(
+                                    'people.invitation_token_enter',
+                                    token=token, _external=True),
+                                'target_plain': url_for(
+                                    'people.invitation_token_enter',
+                                    _external=True),
                             },
-                            facility_code=self.get_code()),
+                            facility=self),
                         [person_id])
 
                     flash('{0} has been added to the proposal.',

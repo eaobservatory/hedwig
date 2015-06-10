@@ -86,7 +86,7 @@ class PeoplePart(object):
 
         Deletes existing tokens to register as this person.
 
-        Returns the new token.
+        Returns a tuple of the new token and its expiry.
         """
 
         token = generate_token()
@@ -116,7 +116,7 @@ class PeoplePart(object):
                 invitation.c.expiry: expiry,
             }))
 
-        return token
+        return (token, expiry)
 
     def add_person(self, name, public=False, user_id=None,
                    _test_skip_check=False):

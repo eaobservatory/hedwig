@@ -47,7 +47,7 @@ def get_environment():
     return environment
 
 
-def render_email_template(name, context, facility_code=None):
+def render_email_template(name, context, facility=None):
     """
     Render a template and then attempt to line-wrap the output
     sensibly.
@@ -56,13 +56,18 @@ def render_email_template(name, context, facility_code=None):
     # Apply the template.
     env = get_environment()
 
-    if facility_code is None:
+    full_context = context.copy()
+
+    if facility is None:
         template = env.get_template(name)
+
     else:
-        template = env.select_template((facility_code + '/' + name,
+        template = env.select_template((facility.get_code() + '/' + name,
                                         'generic/' + name))
 
-    body = template.render(context)
+        full_context['facility_name'] = facility.get_name()
+
+    body = template.render(full_context)
 
     # Wrap each paragraph and append to the lines list.
     lines = []

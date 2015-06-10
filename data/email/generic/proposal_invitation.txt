@@ -1,5 +1,27 @@
 {% extends 'layout.txt' %}
 
 {% block content %}
-Here is your invitation: {{ token }}
+You have been invited by {{ inviter_name }} to participate in a proposal
+to use {{ facility_name }} entitled "{{ proposal.title }}".
+This is a proposal in the {{ proposal.queue_name }} queue
+for Semester {{ proposal.semester_name }}.
+
+To accept this invitation and view the proposal, you will need to
+log in or register with our system.
+Please begin by entering the following invitation code
+on the invitation page:
+
+Invitation code: {{ token }}
+
+Invitation page: {{ target_plain }}
+
+Alternatively you may click the following link:
+
+{{ target_url }}
+
+This code will expire at {{ expiry | format_datetime }} UTC.
+
+If you do not wish to register with our system, you may still be listed
+as a member of a proposal, but you will not be able to view the proposal
+through the on-line system.
 {% endblock %}

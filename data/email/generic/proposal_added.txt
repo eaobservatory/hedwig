@@ -1,5 +1,13 @@
 {% extends 'layout.txt' %}
 
 {% block content %}
-You have been added to a proposal.
+You have been invited by {{ inviter_name }} to participate in a proposal
+to use {{ facility_name }} entitled "{{ proposal.title }}".
+This is a proposal in the {{ proposal.queue_name }} queue
+for Semester {{ proposal.semester_name }}.
+
+Since you are already registered with our system, you may view
+the proposal at:
+
+{{ target_url }}
 {% endblock %}
