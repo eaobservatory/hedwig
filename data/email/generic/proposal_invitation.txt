@@ -6,6 +6,7 @@ to use {{ facility_name }} entitled "{{ proposal.title }}".
 This is a proposal in the {{ proposal.queue_name }} queue
 for Semester {{ proposal.semester_name }}.
 
+{% if token is defined %}
 To accept this invitation and view the proposal, you will need to
 log in or register with our system.
 Please begin by entering the following invitation code
@@ -24,4 +25,10 @@ This code will expire at {{ expiry | format_datetime }} UTC.
 If you do not wish to register with our system, you may still be listed
 as a member of a proposal, but you will not be able to view the proposal
 through the on-line system.
+{% else %}
+Since you are already registered with our system, you may view
+the proposal at:
+
+{{ target_url }}
+{% endif %}
 {% endblock %}

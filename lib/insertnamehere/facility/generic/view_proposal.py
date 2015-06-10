@@ -348,7 +348,7 @@ class GenericProposal(object):
                         'Proposal {0} invitation'.format(
                             self.make_proposal_code(db, proposal)),
                         render_email_template(
-                            'proposal_added.txt', {
+                            'proposal_invitation.txt', {
                                 'proposal': proposal,
                                 'recipient_name': person.name,
                                 'inviter_name': session['person']['name'],
