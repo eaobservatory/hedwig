@@ -1,5 +1,10 @@
 {% extends 'layout.txt' %}
 
 {% block content %}
-Your proposal has been submitted.
+This is to inform you that your proposal {{ proposal_code }}
+entitled "{{ proposal.title }}" has been submitted for consideration.
+
+The proposal may be viewed at:
+
+{{ target_url }}
 {% endblock %}

@@ -136,10 +136,17 @@ class GenericProposal(object):
             if 'submit_confirm' in form:
                 db.update_proposal(proposal.id, state=ProposalState.SUBMITTED)
 
+                proposal_code = self.make_proposal_code(db, proposal)
+
                 db.add_message(
-                    'Proposal submission',
+                    'Proposal {0} submitted'.format(proposal_code),
                     render_email_template(
                         'proposal_submitted.txt', {
+                            'proposal': proposal,
+                            'proposal_code': proposal_code,
+                            'target_url': url_for(
+                                '.proposal_view',
+                                proposal_id=proposal.id, _external=True),
                         },
                         facility=self),
                     [x.person_id for x in proposal.members.values()])
@@ -166,10 +173,14 @@ class GenericProposal(object):
             if 'submit_confirm' in form:
                 db.update_proposal(proposal.id, state=ProposalState.WITHDRAWN)
 
+                proposal_code = self.make_proposal_code(db, proposal)
+
                 db.add_message(
-                    'Proposal withdrawl',
+                    'Proposal {0} withdrawn'.format(proposal_code),
                     render_email_template(
                         'proposal_withdrawn.txt', {
+                            'proposal': proposal,
+                            'proposal_code': proposal_code,
                         },
                         facility=self),
                     [x.person_id for x in proposal.members.values()])

@@ -1,5 +1,9 @@
 {% extends 'layout.txt' %}
 
 {% block content %}
-Your proposal has been withdrawn.
+This is to inform you that your proposal {{ proposal_code }}
+entitled "{{ proposal.title }}" has been withdrawn.
+
+Please note that the proposal will not be considered unless it
+is re-submitted before the proposal deadline.
 {% endblock %}
