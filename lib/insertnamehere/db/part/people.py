@@ -384,7 +384,8 @@ class PeoplePart(object):
         """
         Create a password reset token for a given user.
 
-        Deletes any existing tokens for this user and returns the new token.
+        Deletes any existing tokens for this user and returns a tuple of
+        the new token and its expiry date.
         """
 
         token = generate_token()
@@ -400,7 +401,7 @@ class PeoplePart(object):
                 reset_token.c.expiry: expiry,
             }))
 
-        return token
+        return (token, expiry)
 
     def search_email(self, person_id, address=None, _conn=None):
         """

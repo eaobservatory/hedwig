@@ -500,7 +500,7 @@ class DBPeopleTest(DBTestCase):
         self.assertIsInstance(user_id, int)
 
         # Try making a reset token.
-        token = self.db.get_password_reset_token(user_id)
+        (token, expiry) = self.db.get_password_reset_token(user_id)
         self.assertIsInstance(token, str)
         self.assertRegexpMatches(token, '^[0-9a-f]{32}$')
 
@@ -518,8 +518,8 @@ class DBPeopleTest(DBTestCase):
             self.db.use_password_reset_token(token)
 
         # Issue two more tokens: the older should be removed automatically.
-        token1 = self.db.get_password_reset_token(user_id)
-        token2 = self.db.get_password_reset_token(user_id)
+        (token1, expiry) = self.db.get_password_reset_token(user_id)
+        (token2, expiry) = self.db.get_password_reset_token(user_id)
         with self.assertRaises(NoSuchRecord):
             self.db.use_password_reset_token(token1)
         token_user_id = self.db.use_password_reset_token(token2)
@@ -527,7 +527,7 @@ class DBPeopleTest(DBTestCase):
 
         # Create a token and artificially age it by putting the expiry
         # date in the past.  It should then not work.
-        token = self.db.get_password_reset_token(user_id)
+        (token, expiry) = self.db.get_password_reset_token(user_id)
         with self.db._transaction() as conn:
             result = conn.execute(reset_token.update().where(
                 reset_token.c.token == token

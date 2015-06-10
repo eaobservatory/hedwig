@@ -268,11 +268,15 @@ def password_reset_token_get(db, form, is_post):
                 raise UserError(
                     'Please enter either a user name or email address.')
 
-            token = db.get_password_reset_token(user_id)
+            (token, expiry) = db.get_password_reset_token(user_id)
             db.add_message(
-                'Password reset token',
+                'Password reset code',
                 render_email_template('password_reset.txt', {
+                    'recipient_name': person.name,
                     'token': token,
+                    'expiry': expiry,
+                    'target_url': url_for('.password_reset_token_use',
+                                          token=token, _external=True),
                 }),
                 [person.id],
                 email_addresses=[email_address])

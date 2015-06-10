@@ -41,6 +41,9 @@ def get_environment():
         environment.globals['application_name'] = get_config().get(
             'application', 'name')
 
+        environment.filters['format_datetime'] = \
+            lambda x: x.strftime('%Y-%m-%d %H:%M')
+
     return environment
 
 
