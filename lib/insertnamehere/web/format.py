@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from flask import Markup
 
+from ..type import FormatType
 from .util import HTTPError
 
 
@@ -27,7 +28,7 @@ def format_text(text, format=None):
     """
     Format text, possibly using different formatting schemes.
 
-    If "format" is not specified, it defaults to "plain" unless
+    If "format" is not specified, it defaults to PLAIN unless
     "text" has attributes "text" and "format", in which case those
     are used instead.
     """
@@ -37,9 +38,9 @@ def format_text(text, format=None):
             format = text.format
             text = text.text
         else:
-            format = 'plain'
+            format = FormatType.PLAIN
 
-    if format == 'plain':
+    if format == FormatType.PLAIN:
         return format_text_plain(text)
 
     else:

@@ -23,7 +23,7 @@ from datetime import datetime
 from insertnamehere.db.meta import member
 from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
     NoSuchRecord, UserError
-from insertnamehere.type import Affiliation, Call, \
+from insertnamehere.type import Affiliation, Call, FormatType, \
     Member, MemberCollection, MemberInstitution,  \
     Proposal, ProposalInfo, ProposalState, ProposalText, \
     ResultCollection, Target, TargetCollection
@@ -474,6 +474,10 @@ class DBProposalTest(DBTestCase):
                                              affiliation_id, 'Proposal 1')
         self.assertIsInstance(proposal_id_2, int)
 
+        # Test we can't use an invalid format code.
+        with self.assertRaisesRegexp(UserError, 'format not recognised'):
+            self.db.set_proposal_text(proposal_id_1, 1, 'test', 999, False)
+
         # Test we can't get, delete or update a non-existant record.
         with self.assertRaisesRegexp(NoSuchRecord, '^text does not exist'):
             self.db.get_proposal_text(proposal_id_1, 1)
@@ -486,26 +490,32 @@ class DBProposalTest(DBTestCase):
                                          _test_skip_check=True)
 
         with self.assertRaisesRegexp(ConsistencyError, '^text does not exist'):
-            self.db.set_proposal_text(proposal_id_1, 10, 'test', 'plain', True)
+            self.db.set_proposal_text(proposal_id_1, 10, 'test',
+                                      FormatType.PLAIN, True)
 
         with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
-            self.db.set_proposal_text(proposal_id_1, 10, 'test', 'plain', True,
+            self.db.set_proposal_text(proposal_id_1, 10, 'test',
+                                      FormatType.PLAIN, True,
                                       _test_skip_check=True)
 
         # Try creating and updating some text.
-        self.db.set_proposal_text(proposal_id_1, 20, 'test', 'plain', False)
+        self.db.set_proposal_text(proposal_id_1, 20, 'test',
+                                  FormatType.PLAIN, False)
         self.assertEqual(self.db.get_proposal_text(proposal_id_1, 20),
-                         ProposalText('test', 'plain'))
-        self.db.set_proposal_text(proposal_id_1, 20, 'change', 'plain', True)
+                         ProposalText('test', FormatType.PLAIN))
+        self.db.set_proposal_text(proposal_id_1, 20, 'change',
+                                  FormatType.PLAIN, True)
         self.assertEqual(self.db.get_proposal_text(proposal_id_1, 20),
-                         ProposalText('change', 'plain'))
+                         ProposalText('change', FormatType.PLAIN))
 
         # Check we can't re-create an existing text record.
         with self.assertRaisesRegexp(ConsistencyError, '^text already exists'):
-            self.db.set_proposal_text(proposal_id_1, 20, 'new', 'plain', False)
+            self.db.set_proposal_text(proposal_id_1, 20, 'new',
+                                      FormatType.PLAIN, False)
 
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.set_proposal_text(proposal_id_1, 20, 'new', 'plain', False,
+            self.db.set_proposal_text(proposal_id_1, 20, 'new',
+                                      FormatType.PLAIN, False,
                                       _test_skip_check=True)
 
         # Now delete the record.
@@ -513,23 +523,31 @@ class DBProposalTest(DBTestCase):
         with self.assertRaises(NoSuchRecord):
             self.db.get_proposal_text(proposal_id_1, 20)
 
-        # Add and change multiple records.
-        self.db.set_proposal_text(proposal_id_1, 40, 'a', 'plain', False)
-        self.db.set_proposal_text(proposal_id_1, 41, 'b', 'plain', False)
-        self.db.set_proposal_text(proposal_id_2, 40, 'c', 'md', False)
-        self.db.set_proposal_text(proposal_id_2, 41, 'd', 'docbook', False)
+        # "Define" some extra format types just for the purpose of testing
+        # this method before multiple formats have been implemented.
+        FormatType._info[991] = 'MD'
+        FormatType._info[992] = 'DocBook'
+        FormatType._info[993] = 'RST'
 
-        self.db.set_proposal_text(proposal_id_2, 40, 'cc', 'rst', True)
+        # Add and change multiple records.
+        self.db.set_proposal_text(proposal_id_1, 40, 'a',
+                                  FormatType.PLAIN, False)
+        self.db.set_proposal_text(proposal_id_1, 41, 'b',
+                                  FormatType.PLAIN, False)
+        self.db.set_proposal_text(proposal_id_2, 40, 'c', 991, False)
+        self.db.set_proposal_text(proposal_id_2, 41, 'd', 992, False)
+
+        self.db.set_proposal_text(proposal_id_2, 40, 'cc', 993, True)
         self.db.delete_proposal_text(proposal_id_1, 41)
 
         self.assertEqual(self.db.get_proposal_text(proposal_id_1, 40),
-                         ProposalText('a', 'plain'))
+                         ProposalText('a', FormatType.PLAIN))
         with self.assertRaises(NoSuchRecord):
             self.db.get_proposal_text(proposal_id_1, 41)
         self.assertEqual(self.db.get_proposal_text(proposal_id_2, 40),
-                         ProposalText('cc', 'rst'))
+                         ProposalText('cc', 993))
         self.assertEqual(self.db.get_proposal_text(proposal_id_2, 41),
-                         ProposalText('d', 'docbook'))
+                         ProposalText('d', 992))
 
     def test_proposal_target(self):
         (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')

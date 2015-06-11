@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from unittest import TestCase
 
-from insertnamehere.type import ProposalText
+from insertnamehere.type import FormatType, ProposalText
 from insertnamehere.web.format import format_text, format_text_plain
 from insertnamehere.web.util import HTTPError
 
@@ -28,15 +28,15 @@ from insertnamehere.web.util import HTTPError
 class TextFormatTest(TestCase):
     def test_format(self):
         self.assertEqual(format_text('text'), '<p>text</p>')
-        self.assertEqual(format_text('text', 'plain'), '<p>text</p>')
+        self.assertEqual(format_text('text', FormatType.PLAIN), '<p>text</p>')
 
         with self.assertRaises(HTTPError):
-            format_text('text', 'unknownformat')
+            format_text('text', 999)
 
         with self.assertRaises(HTTPError):
-            format_text(ProposalText('text', 'anotherunknownformat'))
+            format_text(ProposalText('text', 999))
 
-        self.assertEqual(format_text(ProposalText('hello', 'plain')),
+        self.assertEqual(format_text(ProposalText('hello', FormatType.PLAIN)),
                          '<p>hello</p>')
 
     def test_format_plain(self):

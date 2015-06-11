@@ -116,6 +116,18 @@ QueueInfo = namedtuple(
     ['id', 'facility_id', 'name', 'code'])
 
 
+class FormatType(object):
+    PLAIN = 1
+
+    _info = OrderedDict((
+        (PLAIN, 'Plain'),
+    ))
+
+    @classmethod
+    def is_valid(cls, format):
+        return format in cls._info
+
+
 class ProposalState(object):
     PREPARATION = 1
     SUBMITTED = 2

@@ -189,7 +189,7 @@ proposal_text = Table(
            nullable=False),
     Column('role', Integer, nullable=False),
     Column('text', UnicodeText, nullable=False),
-    Column('format', Unicode(31), nullable=False),
+    Column('format', Integer, nullable=False),
     Index('idx_text_prop_role', 'proposal_id', 'role', unique=True),
     **_table_opts)
 

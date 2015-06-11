@@ -27,7 +27,7 @@ from sqlalchemy.sql.functions import max as max_
 
 from ...error import ConsistencyError, Error, \
     MultipleRecords, NoSuchRecord, UserError
-from ...type import Affiliation, Call, Member, MemberCollection, \
+from ...type import Affiliation, Call, FormatType, Member, MemberCollection, \
     Proposal, ProposalInfo, ProposalState, ProposalText, \
     Queue, QueueInfo, ResultCollection, Semester, SemesterInfo, \
     Target, TargetCollection
@@ -606,6 +606,8 @@ class ProposalPart(object):
 
         if not format:
             raise UserError('Text format not specified.')
+        if not FormatType.is_valid(format):
+            raise UserError('Text format not recognised.')
 
         with self._transaction() as conn:
             if not _test_skip_check:

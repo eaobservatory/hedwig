@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from ...astro.coord import CoordSystem
 from ...email.format import render_email_template
 from ...error import NoSuchRecord, UserError
-from ...type import Affiliation, Call, \
+from ...type import Affiliation, Call, FormatType, \
     ProposalState, ProposalText, ProposalTextRole, \
     Queue, ResultCollection, Semester, Target, TargetCollection
 from ...util import get_countries
@@ -228,12 +228,12 @@ class GenericProposal(object):
                                             ProposalTextRole.ABSTRACT)
             is_update = True
         except NoSuchRecord:
-            abstract = ProposalText('', 'plain')
+            abstract = ProposalText('', FormatType.PLAIN)
             is_update = False
 
         if is_post:
             abstract = abstract._replace(text=form['text'],
-                                         format=form['format'])
+                                         format=int(form['format']))
 
             try:
                 db.set_proposal_text(proposal.id, ProposalTextRole.ABSTRACT,
