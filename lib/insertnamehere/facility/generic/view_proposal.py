@@ -247,6 +247,7 @@ class GenericProposal(object):
 
         return {
             'title': 'Edit Abstract',
+            'message': message,
             'proposal_id': proposal.id,
             'text': abstract,
             'target': url_for('.abstract_edit', proposal_id=proposal.id),
