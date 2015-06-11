@@ -24,9 +24,15 @@ from sqlalchemy.engine import Engine
 
 @event.listens_for(Engine, 'connect')
 def set_sqlite_pragma(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
+    """
+    Enable foreign key constraints if the engine is SQLite.
+    """
+
+    # Is there a better way to detect the engine type?
+    if type(dbapi_connection).__module__.startswith('sqlite'):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
 
 def get_engine(url):
