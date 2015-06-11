@@ -407,7 +407,7 @@ def person_view(db, person_id):
                                             'Unknown country')))
 
     return {
-        'title': 'Profile',
+        'title': '{0}: Profile'.format(person.name),
         'is_current_user': is_current_user,
         'can_edit': can.edit,
         'person': person,
@@ -445,7 +445,7 @@ def person_edit(db, person_id, form, is_post):
             message = e.message
 
     return {
-        'title': 'Edit Profile',
+        'title': '{0}: Edit Profile'.format(person.name),
         'target': url_for('.person_edit', person_id=person_id),
         'message': message,
         'person_name': name,
@@ -518,7 +518,7 @@ def person_edit_institution(db, person_id, form, is_post):
             message = e.message
 
     return {
-        'title': 'Select Institution',
+        'title': '{0}: Select Institution'.format(person.name),
         'message': message,
         'person_id': person_id,
         'institution': institution,
@@ -599,7 +599,7 @@ def person_edit_email(db, person_id, form, is_post):
             message = e.message
 
     return {
-        'title': 'Edit Email Addresses',
+        'title': '{0}: Edit Email Addresses'.format(person.name),
         'message': message,
         'person_id': person_id,
         'emails': records.values(),
