@@ -22,7 +22,7 @@ from sqlalchemy.schema import Column, ForeignKey, Index, MetaData, \
     PrimaryKeyConstraint, Table, UniqueConstraint
 
 from sqlalchemy.types import Boolean, DateTime, Float, Integer, \
-    String, Unicode, UnicodeText
+    LargeBinary, String, Unicode, UnicodeText
 
 metadata = MetaData()
 
@@ -191,6 +191,17 @@ proposal_text = Table(
     Column('text', UnicodeText, nullable=False),
     Column('format', Integer, nullable=False),
     Index('idx_text_prop_role', 'proposal_id', 'role', unique=True),
+    **_table_opts)
+
+proposal_pdf = Table(
+    'proposal_pdf',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('pdf', LargeBinary, nullable=False),
+    Column('pages', Integer, default=None),
     **_table_opts)
 
 queue = Table(
