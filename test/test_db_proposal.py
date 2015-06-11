@@ -22,10 +22,10 @@ from datetime import datetime
 
 from insertnamehere.db.meta import member
 from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
-    NoSuchRecord, UserError
+    Error, NoSuchRecord, UserError
 from insertnamehere.type import Affiliation, Call, FormatType, \
     Member, MemberCollection, MemberInstitution,  \
-    Proposal, ProposalInfo, ProposalState, ProposalText, \
+    Proposal, ProposalInfo, ProposalState, ProposalText, ProposalTextRole, \
     ResultCollection, Target, TargetCollection
 from .dummy_db import DBTestCase
 
@@ -465,6 +465,11 @@ class DBProposalTest(DBTestCase):
             self.assertEqual(row.resolved_institution_id, expect.pop())
 
     def test_proposal_text(self):
+        # "Define" extra text roles for the purpose of testing this
+        # method before multiple roles are implemented.
+        ProposalTextRole._roles.add(40)
+        ProposalTextRole._roles.add(41)
+
         (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
         person_id = self.db.add_person('Person 1')
         proposal_id_1 = self.db.add_proposal(call_id, person_id,
@@ -474,54 +479,70 @@ class DBProposalTest(DBTestCase):
                                              affiliation_id, 'Proposal 1')
         self.assertIsInstance(proposal_id_2, int)
 
-        # Test we can't use an invalid format code.
+        # Test we can't use an invalid format code or role number.
         with self.assertRaisesRegexp(UserError, 'format not recognised'):
-            self.db.set_proposal_text(proposal_id_1, 1, 'test', 999, False)
+            self.db.set_proposal_text(proposal_id_1, ProposalTextRole.ABSTRACT,
+                                      'test', 999, False)
+        with self.assertRaisesRegexp(Error, 'text role not recognised'):
+            self.db.set_proposal_text(proposal_id_1, 999,
+                                      'test', FormatType.PLAIN, False)
 
         # Test we can't get, delete or update a non-existant record.
         with self.assertRaisesRegexp(NoSuchRecord, '^text does not exist'):
-            self.db.get_proposal_text(proposal_id_1, 1)
+            self.db.get_proposal_text(proposal_id_1, ProposalTextRole.ABSTRACT)
 
         with self.assertRaisesRegexp(ConsistencyError, '^text does not exist'):
-            self.db.delete_proposal_text(proposal_id_1, 1)
+            self.db.delete_proposal_text(proposal_id_1,
+                                         ProposalTextRole.ABSTRACT)
 
         with self.assertRaisesRegexp(ConsistencyError, '^no row matched'):
-            self.db.delete_proposal_text(proposal_id_1, 1,
+            self.db.delete_proposal_text(proposal_id_1,
+                                         ProposalTextRole.ABSTRACT,
                                          _test_skip_check=True)
 
         with self.assertRaisesRegexp(ConsistencyError, '^text does not exist'):
-            self.db.set_proposal_text(proposal_id_1, 10, 'test',
+            self.db.set_proposal_text(proposal_id_1,
+                                      ProposalTextRole.TECHNICAL_CASE, 'test',
                                       FormatType.PLAIN, True)
 
         with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
-            self.db.set_proposal_text(proposal_id_1, 10, 'test',
+            self.db.set_proposal_text(proposal_id_1,
+                                      ProposalTextRole.TECHNICAL_CASE, 'test',
                                       FormatType.PLAIN, True,
                                       _test_skip_check=True)
 
         # Try creating and updating some text.
-        self.db.set_proposal_text(proposal_id_1, 20, 'test',
-                                  FormatType.PLAIN, False)
-        self.assertEqual(self.db.get_proposal_text(proposal_id_1, 20),
-                         ProposalText('test', FormatType.PLAIN))
-        self.db.set_proposal_text(proposal_id_1, 20, 'change',
-                                  FormatType.PLAIN, True)
-        self.assertEqual(self.db.get_proposal_text(proposal_id_1, 20),
-                         ProposalText('change', FormatType.PLAIN))
+        self.db.set_proposal_text(
+            proposal_id_1, ProposalTextRole.SCIENCE_CASE, 'test',
+            FormatType.PLAIN, False)
+        self.assertEqual(self.db.get_proposal_text(
+            proposal_id_1, ProposalTextRole.SCIENCE_CASE),
+            ProposalText('test', FormatType.PLAIN))
+        self.db.set_proposal_text(
+            proposal_id_1, ProposalTextRole.SCIENCE_CASE, 'change',
+            FormatType.PLAIN, True)
+        self.assertEqual(self.db.get_proposal_text(
+            proposal_id_1, ProposalTextRole.SCIENCE_CASE),
+            ProposalText('change', FormatType.PLAIN))
 
         # Check we can't re-create an existing text record.
         with self.assertRaisesRegexp(ConsistencyError, '^text already exists'):
-            self.db.set_proposal_text(proposal_id_1, 20, 'new',
-                                      FormatType.PLAIN, False)
+            self.db.set_proposal_text(
+                proposal_id_1, ProposalTextRole.SCIENCE_CASE, 'new',
+                FormatType.PLAIN, False)
 
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.set_proposal_text(proposal_id_1, 20, 'new',
-                                      FormatType.PLAIN, False,
-                                      _test_skip_check=True)
+            self.db.set_proposal_text(
+                proposal_id_1, ProposalTextRole.SCIENCE_CASE, 'new',
+                FormatType.PLAIN, False,
+                _test_skip_check=True)
 
         # Now delete the record.
-        self.db.delete_proposal_text(proposal_id_1, 20)
+        self.db.delete_proposal_text(
+            proposal_id_1, ProposalTextRole.SCIENCE_CASE)
         with self.assertRaises(NoSuchRecord):
-            self.db.get_proposal_text(proposal_id_1, 20)
+            self.db.get_proposal_text(
+                proposal_id_1, ProposalTextRole.SCIENCE_CASE)
 
         # "Define" some extra format types just for the purpose of testing
         # this method before multiple formats have been implemented.

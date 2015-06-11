@@ -25,10 +25,10 @@ from sqlalchemy.sql.expression import and_, false, not_
 from sqlalchemy.sql.functions import coalesce, count
 from sqlalchemy.sql.functions import max as max_
 
-from ...error import ConsistencyError, Error, \
+from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
 from ...type import Affiliation, Call, FormatType, Member, MemberCollection, \
-    Proposal, ProposalInfo, ProposalState, ProposalText, \
+    Proposal, ProposalInfo, ProposalState, ProposalText, ProposalTextRole, \
     Queue, QueueInfo, ResultCollection, Semester, SemesterInfo, \
     Target, TargetCollection
 from ..meta import affiliation, call, facility, institution, member, \
@@ -334,6 +334,10 @@ class ProposalPart(object):
         Get the given text associated with a proposal.
         """
 
+        if not ProposalTextRole.is_valid(role):
+            raise FormattedError('proposal text role not recognised: {0}',
+                                 role)
+
         with self._transaction() as conn:
             row = conn.execute(proposal_text.select().where(and_(
                 proposal_text.c.proposal_id == proposal_id,
@@ -608,6 +612,9 @@ class ProposalPart(object):
             raise UserError('Text format not specified.')
         if not FormatType.is_valid(format):
             raise UserError('Text format not recognised.')
+        if not ProposalTextRole.is_valid(role):
+            raise FormattedError('proposal text role not recognised: {0}',
+                                 role)
 
         with self._transaction() as conn:
             if not _test_skip_check:

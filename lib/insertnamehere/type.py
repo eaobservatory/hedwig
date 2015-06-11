@@ -168,6 +168,14 @@ class ProposalState(object):
 
 class ProposalTextRole(object):
     ABSTRACT = 1
+    TECHNICAL_CASE = 2
+    SCIENCE_CASE = 3
+
+    _roles = set((ABSTRACT, TECHNICAL_CASE, SCIENCE_CASE))
+
+    @classmethod
+    def is_valid(cls, role):
+        return role in cls._roles
 
 
 class ResultCollection(OrderedDict):
