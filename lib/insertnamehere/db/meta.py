@@ -200,7 +200,7 @@ proposal_pdf = Table(
     Column('proposal_id', None,
            ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
-    Column('pdf', LargeBinary, nullable=False),
+    Column('pdf', LargeBinary(2**32 - 1), nullable=False),
     Column('pages', Integer, default=None),
     **_table_opts)
 
