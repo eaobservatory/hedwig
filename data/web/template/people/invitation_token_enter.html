@@ -21,12 +21,15 @@
 </p>
 
 <form method="GET" action="{{ url_for('.invitation_token_accept') }}">
-    <p>
-        Invitation code:
-        <input type="text" name="token" value="{{ token }}" required="required" />
-        <br />
-        <input type="submit" value="Enter code" />
-    </p>
+    <ol>
+        <li>
+            <label for="token">Invitation code</label>
+            <input type="text" name="token" value="{{ token }}" required="required" size="40" />
+        </li>
+        <li>
+            <input type="submit" value="Enter code" />
+        </li>
+    </ol>
 </form>
 
 {% endblock %}

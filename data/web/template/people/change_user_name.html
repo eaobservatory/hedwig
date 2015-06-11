@@ -20,11 +20,11 @@
     <ol>
         <li>
             <label for="user_name">New user name</label>
-            <input type="text" name="user_name" value="{{ user_name }}" />
+            <input type="text" name="user_name" value="{{ user_name }}" autofocus="autofocus" required="required" />
         </li>
         <li>
-            <label for="password">Confirm current password</label>
-            <input type="password" name="password" />
+            <label for="password">Current password</label>
+            <input type="password" name="password" required="required" />
         </li>
         <li>
             <input type="submit" value="Change user name" name="submit" />
