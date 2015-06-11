@@ -1,0 +1,30 @@
+body {
+    background: silver;
+    color: black;
+}
+
+ul#navbar {
+    border-bottom: 1px solid black;
+    box-shadow: 0ex 0ex 1ex black;
+}
+
+ul#flashes {
+    background: #FF0;
+    box-shadow: 0ex 0ex 1ex black;
+    border-radius: 1ex;
+    border: 1px solid black;
+}
+
+div#content {
+    background: white;
+    color: black;
+    max-width: 120ex;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 4ex;
+    margin-bottom: 4ex;
+    padding: 2ex;
+    box-shadow: 0ex 0ex 1ex black;
+    border-radius: 1ex;
+    border: 1px solid black;
+}

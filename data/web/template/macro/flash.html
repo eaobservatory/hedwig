@@ -1,7 +1,7 @@
 {% macro render_flashes() %}
     {% with messages = get_flashed_messages() %}
         {% if messages %}
-            <ul>
+            <ul id="flashes">
                 {% for message in messages %}
                     <li>{{  message }}</li>
                 {% endfor %}

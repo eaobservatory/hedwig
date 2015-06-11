@@ -3,19 +3,25 @@
 {% block content %}
 
 {% if message is not none %}
-    <p>
+    <p class="warning">
         {{ message }}
     </p>
 {% endif %}
 
 <form method="POST" action="{{ url_for('.log_in') }}">
-    <p>
-        User name: <input type="text" name="user_name" value="{{ user_name }}" />
-        <br />
-        Password: <input type="password" name="password" />
-        <br />
-        <input type="submit" value="Log in" name="submit" />
-    </p>
+    <ol>
+        <li>
+            <label for="user_name">User name</label>
+            <input type="text" name="user_name" value="{{ user_name }}" autofocus="autofocus" />
+        </li>
+        <li>
+            <label for="password">Password</label>
+            <input type="password" name="password" />
+        </li>
+        <li>
+            <input type="submit" value="Log in" name="submit" />
+        </li>
+    </ol>
 </form>
 
 <p>

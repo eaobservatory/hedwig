@@ -3,43 +3,49 @@
 {% block content %}
 
 {% if message is not none %}
-    <p>
+    <p class="warning">
         {{ message }}
     </p>
 {% endif %}
 
 <form method="POST" action="{{ target }}">
-    <p>
+    <ol>
         {% if semesters is not none %}
-            Semester:
-            <select name="semester_id">
-                {% for semester in semesters %}
-                    <option value="{{ semester.id }}" {{'selected="selected"' | safe if semester.id == call.semester_id }}>{{ semester.name }}</option>
-                {% endfor %}
-            </select>
-            <br />
+            <li>
+                <label for="semester_id">Semester</label>
+                <select name="semester_id">
+                    {% for semester in semesters %}
+                        <option value="{{ semester.id }}" {{'selected="selected"' | safe if semester.id == call.semester_id }}>{{ semester.name }}</option>
+                    {% endfor %}
+                </select>
+            </li>
         {% endif %}
         {% if queues is not none %}
-            Queue:
-            <select name="queue_id">
-                {% for queue in queues %}
-                    <option value="{{ queue.id }}" {{'selected="selected"' | safe if queue.id == call.queue_id }}>{{ queue.name }}</option>
-                {% endfor %}
-            </select>
-            <br />
+            <li>
+                <label for="queue_id">Queue</label>
+                <select name="queue_id">
+                    {% for queue in queues %}
+                        <option value="{{ queue.id }}" {{'selected="selected"' | safe if queue.id == call.queue_id }}>{{ queue.name }}</option>
+                    {% endfor %}
+                </select>
+            </li>
         {% endif %}
-        Opening date:
-        <input type="date" name="open_date" value="{{ call.date_open | format_date }}" placeholder="YYYY-MM-DD" required="required" />
-        <input type="time" name="open_time" value="{{ call.date_open | format_time }}" placeholder="HH:MM" required="required" />
-        <i>(UT, date call opens for submissions)</i>
-        <br />
-        Closing date:
-        <input type="date" name="close_date" value="{{ call.date_close | format_date }}" placeholder="YYYY-MM-DD" required="requried" />
-        <input type="time" name="close_time" value="{{ call.date_close | format_time }}" placeholder="HH:MM" required="required" />
-        <i>(UT, proposal deadline)</i>
-        <br />
-        <input type="submit" value="Save" name="submit" />
-    </p>
+        <li>
+            <label for="date_open">Opening date</label>
+            <input type="date" name="open_date" value="{{ call.date_open | format_date }}" placeholder="YYYY-MM-DD" required="required" />
+            <input type="time" name="open_time" value="{{ call.date_open | format_time }}" placeholder="HH:MM" required="required" />
+            <span class="explanation">UT, date call opens for submissions)</span>
+        </li>
+        <li>
+            <label for="close_date">Closing date</label>
+            <input type="date" name="close_date" value="{{ call.date_close | format_date }}" placeholder="YYYY-MM-DD" required="requried" />
+            <input type="time" name="close_time" value="{{ call.date_close | format_time }}" placeholder="HH:MM" required="required" />
+            <span class="explanation">UT, proposal deadline)</span>
+        </li>
+        <li>
+            <input type="submit" value="Save" name="submit" />
+        </li>
+    </ol>
 </form>
 
 {% endblock %}

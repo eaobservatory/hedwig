@@ -2,12 +2,12 @@
 
 {% block content %}
 
-<p>
-    <i>Registration step 1/3.</i>
+<p class="progress">
+    Registration step 1/3.
 </p>
 
 {% if message is not none %}
-    <p>
+    <p class="warning">
         {{ message }}
     </p>
 {% endif %}
@@ -20,15 +20,23 @@ or <a href="{{ url_for('.password_reset_token_get') }}">reset a forgotten passwo
 </p>
 
 <form method="POST" action="{{ url_for('.register_user') }}">
-    <p>
-        User name: <input type="text" name="user_name" value="{{ user_name }}" />
-        <br />
-        Password: <input type="password" name="password" />
-        <br />
-        Re-enter password: <input type="password" name="password_check" />
-        <br />
-        <input type="submit" value="Register" name="submit" />
-    </p>
+    <ol>
+        <li>
+            <label for="user_name">User name</label>
+            <input type="text" name="user_name" value="{{ user_name }}" autofocus="autofocus" />
+        </li>
+        <li>
+            <label for="password">Password</label>
+            <input type="password" name="password" />
+        </li>
+        <li>
+            <label for="password_check">Re-enter password</label>
+            <input type="password" name="password_check" />
+        </li>
+        <li>
+            <input type="submit" value="Register" name="submit" />
+        </li>
+    </ol>
 </form>
 
 {% endblock %}

@@ -3,19 +3,24 @@
 {% from 'macro/institution.html' import render_member_institution %}
 
 {% macro render_member_options() %}
-    <input type="checkbox" name="editor" value="yes" {{ 'checked="checked"' | safe if member.editor }}>
-    Can edit proposal?
-    <br />
-    <input type="checkbox" name="observer" value="yes" {{ 'checked="checked"' | safe if member.observer }}>
-    Potential observer?
-    <br />
-    Affiliation:
-    <select name="affiliation_id">
-        {% for affiliation in affiliations %}
-            <option value="{{ affiliation.id }}" {{ 'selected="selected"' | safe if affiliation.id == member.affiliation_id }}>{{ affiliation.name }}</option>
-        {% endfor %}
-    </select>
-
+    <li>
+        <label for="editor">Proposal editor</label>
+        <input type="checkbox" name="editor" value="yes" {{ 'checked="checked"' | safe if member.editor }}>
+        Can edit proposal
+    </li>
+    <li>
+        <label for="observer">Potential observer</label>
+        <input type="checkbox" name="observer" value="yes" {{ 'checked="checked"' | safe if member.observer }}>
+        Potential observer
+    </li>
+    <li>
+        <label for="affiliation_id">Affiliation</label>
+        <select name="affiliation_id">
+            {% for affiliation in affiliations %}
+                <option value="{{ affiliation.id }}" {{ 'selected="selected"' | safe if affiliation.id == member.affiliation_id }}>{{ affiliation.name }}</option>
+            {% endfor %}
+        </select>
+    </li>
 {% endmacro %}
 
 {% block content %}
@@ -23,53 +28,55 @@
 <h2>Add a Member from the Directory</h2>
 
 {% if message_link is not none %}
-    <p>
+    <p class="warning">
         {{ message_link }}
     </p>
 {% endif %}
 
 <form method="POST" action="{{ url_for('.member_add', proposal_id=proposal_id) }}">
-    <p>
-        <select name="person_id">
-            {% for person in persons %}
-                <option value="{{ person.id }}" {{ 'selected="selected"' | safe if member.person_id == person.id }}>
-                    {{ person.name }}{% if person.institution_id is not none %},
-                        {{ render_member_institution(person) }}
-                    {% endif %}
-                </option>
-            {% endfor %}
-        </select>
-    </p>
-    <p>
+    <ol>
+        <li>
+            <label for="person_id">Member</label>
+            <select name="person_id">
+                {% for person in persons %}
+                    <option value="{{ person.id }}" {{ 'selected="selected"' | safe if member.person_id == person.id }}>
+                        {{ person.name }}{% if person.institution_id is not none %},
+                            {{ render_member_institution(person) }}
+                        {% endif %}
+                    </option>
+                {% endfor %}
+            </select>
+        </li>
         {{ render_member_options() }}
-    </p>
-    <p>
-        <input type="submit" value="Add to proposal" name="submit-link" />
-    </p>
+        <li>
+            <input type="submit" value="Add to proposal" name="submit-link" />
+        </li>
+    </ol>
 </form>
 
 <h2>Invite a New Member to the Proposal</h2>
 
 {% if message_invite is not none %}
-    <p>
+    <p class="warning">
         {{ message_invite }}
     </p>
 {% endif %}
 
 <form method="POST" action="{{ url_for('.member_add', proposal_id=proposal_id) }}">
-    <p>
-        Full name:
-        <input type="text" name="name" value="{{ member.name }}" required="required" autofocus="autofocus" />
-        <br />
-        Email address:
-        <input type="email" name="email" value="{{ member.email }}" required="required" />
-        <br />
+    <ol>
+        <li>
+            <label for="name">Full name</label>
+            <input type="text" name="name" value="{{ member.name }}" required="required" autofocus="autofocus" />
+        </li>
+        <li>
+            <label for="email">Email address</label>
+            <input type="email" name="email" value="{{ member.email }}" required="required" />
+        </li>
         {{ render_member_options() }}
-    </p>
-    <p>
-        <input type="submit" value="Invite to register" name="submit-invite" />
-    </p>
-
+        <li>
+            <input type="submit" value="Invite to register" name="submit-invite" />
+        </li>
+    </ol>
 </form>
 
 

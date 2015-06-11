@@ -5,7 +5,7 @@
 {% block content %}
 
 {% if message is not none %}
-    <p>
+    <p class="warning">
         {{ message }}
     </p>
 {% endif %}
@@ -29,11 +29,12 @@
         <input type="submit" value="Confirm edit" name="submit-confirm" />
     </p>
 {% else %}
-    <p>
+    <ol>
         {{ render_institution_form(institution, countries) }}
-        <br />
-        <input type="submit" value="Save" name="submit-edit" />
-    </p>
+        <li>
+            <input type="submit" value="Save" name="submit-edit" />
+        </li>
+    </ol>
 {% endif %}
 </form>
 

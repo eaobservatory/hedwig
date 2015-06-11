@@ -3,33 +3,43 @@
 {% block content %}
 
 {% if single_email is defined %}
-    <p>
-        <i>Registration step 2/3.</i>
+    <p class="progress">
+        Registration step 2/3.
     </p>
 {% endif %}
 
 {% if message is not none %}
-    <p>
+    <p class="warning">
         {{ message }}
     </p>
 {% endif %}
 
 <form method="POST" action="{{ target }}">
-    <p>
-        Full name: <input type="text" name="person_name" value="{{ person_name }}" />
-        <br />
-        Would you like your name to appear in the directory of users?
-        This will allow collaborators to more easily invite you to
-        participate in their proposals.
-        <br />
-        User directory: <input type="checkbox" name="person_public" value="yes" {{ 'checked="checked"' | safe if person_public }} /> show
+    <ol>
+        <li>
+            <label for="person_name">Full name</label>
+            <input type="text" name="person_name" value="{{ person_name }}" autofocus="autofocus" required="required" />
+        </li>
+        <li>
+            <div class="explanation">
+                Would you like your name to appear in the directory of users?
+                This will allow collaborators to more easily invite you to
+                participate in their proposals.
+            </div>
+            <label for="person_public">User directory</label>
+            <input type="checkbox" name="person_public" value="yes" {{ 'checked="checked"' | safe if person_public }} />
+            Show in directory
+        </li>
         {% if single_email is defined %}
-        <br />
-        Email address: <input type="email" name="single_email" value="{{ single_email }}" />
+            <li>
+                <label for="single_email">Email address</label>
+                <input type="email" name="single_email" value="{{ single_email }}" />
+            </li>
         {% endif %}
-        <br />
-        <input type="submit" value="Save" name="submit" />
-    </p>
+        <li>
+            <input type="submit" value="Save" name="submit" />
+        </li>
+    </ol>
 </form>
 
 {% endblock %}

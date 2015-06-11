@@ -1,0 +1,23 @@
+body {
+    font-size: 10pt;
+    background: white;
+    color: black;
+}
+
+header, footer, nav {
+    display: none;
+}
+
+a:link, a:visited {
+    color: inherit;
+    text-decoration: none;
+}
+
+p.warning {
+    display: none;
+}
+
+p.missing {
+    background: inherit;
+    color: inherit;
+}

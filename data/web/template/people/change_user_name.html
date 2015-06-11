@@ -11,21 +11,25 @@
 </p>
 
 {% if message is not none %}
-    <p>
+    <p class="warning">
         {{ message }}
     </p>
 {% endif %}
 
 <form method="POST" action="{{ url_for('.change_user_name') }}">
-    <p>
-        New user name:
-        <input type="text" name="user_name" value="{{ user_name }}" />
-        <br />
-        Confirm current password:
-        <input type="password" name="password" />
-        <br />
-        <input type="submit" value="Change user name" name="submit" />
-    </p>
+    <ol>
+        <li>
+            <label for="user_name">New user name</label>
+            <input type="text" name="user_name" value="{{ user_name }}" />
+        </li>
+        <li>
+            <label for="password">Confirm current password</label>
+            <input type="password" name="password" />
+        </li>
+        <li>
+            <input type="submit" value="Change user name" name="submit" />
+        </li>
+    </ol>
 </form>
 
 {% endblock %}

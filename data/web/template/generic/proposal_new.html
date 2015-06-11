@@ -3,34 +3,44 @@
 {% block content %}
 
 {% if message is not none %}
-    <p>
+    <p class="warning">
         {{ message }}
     </p>
 {% endif %}
 
-<p>
-    Facility: {{ facility_name }}
-    <br />
-    Call for proposals: {{ call.semester_name }}
-    <br />
-    Proposal queue: {{ call.queue_name }}
-    <br />
-    Your name: {{ session.person.name }}
-</p>
-
-
 <form method="POST" action="{{ url_for('.proposal_new', call_id=call.id) }}">
-    Your affiliation:
-    <select name="affiliation_id">
-        {% for affiliation in affiliations %}
-            <option value="{{ affiliation.id }}" {{ 'selected="selected"' | safe if affiliation.id == affiliation_id }}>{{ affiliation.name }}</option>
-        {% endfor %}
-    </select>
-    <br />
-    Proposal title:
-    <input type="text" name="proposal_title" value="{{ proposal_title }}" required="required" autofocus="autofocus" />
-    <br />
-    <input type="submit" name="submit-new" value="Create new proposal" />
+    <ol>
+        <li>
+            <label>Facility</label>
+            {{ facility_name }}
+        </li>
+        <li>
+            <label>Semester</label>
+            {{ call.semester_name }}
+        </li>
+        <li>
+            <label>Queue</label>
+            {{ call.queue_name }}
+        </li>
+        <li>
+            <label>Your name</label>
+            {{ session.person.name }}
+        <li>
+            <label for="affiliation_id">Your affiliation</label>
+            <select name="affiliation_id">
+                {% for affiliation in affiliations %}
+                    <option value="{{ affiliation.id }}" {{ 'selected="selected"' | safe if affiliation.id == affiliation_id }}>{{ affiliation.name }}</option>
+                {% endfor %}
+            </select>
+        </li>
+        <li>
+            <label for="proposal_title">Proposal title</label>
+            <input type="text" name="proposal_title" value="{{ proposal_title }}" required="required" autofocus="autofocus" />
+        </li>
+        <li>
+            <input type="submit" name="submit-new" value="Create new proposal" />
+        </li>
+    </ol>
 </form>
 
 {% endblock %}

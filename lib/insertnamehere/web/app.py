@@ -63,7 +63,7 @@ def create_web_app():
     @app.route('/')
     @templated('home.html')
     def home_page():
-        return prepare_home(facilities)
+        return prepare_home(application_name, facilities)
 
     app.register_blueprint(create_people_blueprint(db))
 

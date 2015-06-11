@@ -1,20 +1,26 @@
 {% macro render_institution_form(institution, countries) %}
-    Institution name: <input type="text" name="institution_name" value="{{ institution.name }}" autofocus="autofocus" required="required" />
-    <i>(e.g. Institute for Astronomy)</i>
-    <br />
-    Organization:
-    <input type="text" name="organization" value="{{ institution.organization }}" />
-    <i>(e.g. University of Anytown, if applicable)</i>
-    <br />
-    Address:
-    <textarea name="address">{{ institution.address }}</textarea>
-    <br />
-    Country:
-    <select name="country_code">
-        {% for (country_code, country_name) in countries.items() %}
-            <option value="{{ country_code }}" {{ 'selected="selected"' | safe if country_code == institution.country }}>{{ country_name }}</option>
-        {% endfor %}
-    </select>
+    <li>
+        <label for="institution_name">Institution name</label>
+        <input type="text" name="institution_name" value="{{ institution.name }}" autofocus="autofocus" required="required" />
+        <span class="explanation">e.g. Institute for Astronomy</span>
+    </li>
+    <li>
+        <label for="organization">Organization</label>
+        <input type="text" name="organization" value="{{ institution.organization }}" />
+        <span class="explanation">e.g. University of Anytown, if applicable</span>
+    </li>
+    <li>
+        <label for="address">Address</label>
+        <textarea name="address">{{ institution.address }}</textarea>
+    </li>
+    <li>
+        <label for="country_code">Country</label>
+        <select name="country_code">
+            {% for (country_code, country_name) in countries.items() %}
+                <option value="{{ country_code }}" {{ 'selected="selected"' | safe if country_code == institution.country }}>{{ country_name }}</option>
+            {% endfor %}
+        </select>
+    </li>
 {% endmacro %}
 
 {% macro _institution_summary(name, organization, country) %}

@@ -5,8 +5,12 @@
 
 <html lang="en">
     <head>
+        <meta charset="utf-8" />
         <title>{{ application_name }}{% if title is defined %}: {{ title }}{% endif %}</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}" type="text/css" />
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" type="text/css" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/nonprint.css') }}" media="not print" type="text/css" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}" media="print" type="text/css" />
         {% if scripts is defined %}
            <script type="text/javascript" src="/static/js/jquery.js"></script>
            {% for script in scripts %}
@@ -15,16 +19,28 @@
         {% endif %}
     </head>
     <body>
-        {{ render_user_panel() }}
-        {{ render_flashes() }}
+        <header>
+            <ul id="navbar">
+                <li><a href="{{ url_for('home_page') }}">Home</a></li>
+                {% if facility_name is defined %}
+                    <li><a href="{{ url_for('.facility_home') }}">{{ facility_name }}</a></li>
+                {% endif %}
+                <li id="user_control">
+                    {{ render_user_panel() }}
+                </li>
+            </ul>
+            {{ render_flashes() }}
+        </header>
 
         {% block body %}
-            {% if title is defined %}
-                <h1>{{ title }}</h1>
-            {% endif %}
+            <div id="content">
+                {% if title is defined %}
+                    <h1>{{ title }}</h1>
+                {% endif %}
 
-            {% block content %}
-            {% endblock %}
+                {% block content %}
+                {% endblock %}
+            </div>
         {% endblock %}
     </body>
 </html>

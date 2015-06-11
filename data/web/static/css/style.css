@@ -1,12 +1,30 @@
 body {
-    background: white;
-    color: black;
     font-family: serif;
     font-size: 12pt;
 }
 
-.template {
-    display: none;
+h1 {
+    text-align: center;
+}
+
+a:link, a:visited {
+    color: #00F;
+    text-decoration: underline;
+}
+
+#navbar {
+    background: #040;
+    color: #AAA;
+}
+
+#navbar a:link, #navbar a:visited {
+    color: #FFF;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+#navbar a:hover {
+    text-shadow: 0px 0px 10px white;
 }
 
 td.total {
@@ -17,4 +35,43 @@ td.total {
 td.grandtotal {
     background: #BBB;
     font-weight: bold;
+}
+
+p.warning {
+    font-weight: bold;
+    background: #FAA;
+    color: black;
+    padding: 1ex;
+    border-radius: 1ex;
+}
+
+p.missing {
+    font-style: italic;
+    background: #FFA;
+    color: black;
+    padding: 1ex;
+    border-radius: 1ex;
+}
+
+p.progress {
+    font-style: italic;
+    text-align: center;
+}
+
+form ol li div.explanation {
+    margin-left: 205px;
+    color: #888;
+}
+
+form ol li span.explanation {
+    font-style: italic;
+    color: #888;
+}
+
+form ol li span.explanation:before {
+    content: "(";
+}
+
+form ol li span.explanation:after {
+    content: ")";
 }

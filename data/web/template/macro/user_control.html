@@ -1,5 +1,4 @@
 {% macro render_user_panel() %}
-<p>
 {% if session.user_id is defined %}
     Logged in as
     {% if session.person is defined %}
@@ -21,5 +20,4 @@
 {% else %}
     <a href="{{ url_for('people.log_in') }}">Log in</a>
 {% endif %}
-</p>
 {% endmacro %}

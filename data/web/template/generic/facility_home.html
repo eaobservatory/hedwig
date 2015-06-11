@@ -2,14 +2,12 @@
 
 {% block content %}
 
-<p>
-Welcome to {{ application_name }}: {{ facility_name }}.
-</p>
-
 {% if session.is_admin %}
-    <p>
-        <a href="{{ url_for('.facility_admin') }}">Administrative menu</a>
-    </p>
+    <nav>
+        <p>
+            <a href="{{ url_for('.facility_admin') }}">Administrative menu</a>
+        </p>
+    </nav>
 {% endif %}
 
 <h2>Calls for Proposals</h2>

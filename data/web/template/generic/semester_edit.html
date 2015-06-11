@@ -3,37 +3,44 @@
 {% block content %}
 
 {% if message is not none %}
-    <p>
+    <p class="warning">
         {{ message }}
     </p>
 {% endif %}
 
 
 <form method="POST" action="{{ target }}">
-    <p>
-        Name:
-        <input type="text" name="semester_name" value="{{ semester.name }}" required="required" autofocus="autofocus" />
-        <i>(for display on this system)</i>
-        <br />
-        Code:
-        <input type="text" name="semester_code" value="{{ semester.code }}" required="required" />
-        <i>(as part of a project code)</i>
-        <br />
-        Start date:
-        <input type="date" name="start_date" value="{{ semester.date_start | format_date }}" placeholder="YYYY-MM-DD" required="required" />
-        <input type="time" name="start_time" value="{{ semester.date_start | format_time }}" placeholder="HH:MM" required="required" />
-        <i>(UT, start of observing)</i>
-        <br />
-        End date:
-        <input type="date" name="end_date" value="{{ semester.date_end | format_date }}" placeholder="YYYY-MM-DD" required="requried" />
-        <input type="time" name="end_time" value="{{ semester.date_end | format_time }}" placeholder="HH:MM" required="required" />
-        <i>(UT, end of observing)</i>
-        <br />
-        Description:
-        <textarea name="description">{{ semester.description }}</textarea>
-        <br />
-        <input type="submit" value="Save" name="submit" />
-    </p>
+    <ol>
+        <li>
+            <label for="semester_name">Name</label>
+            <input type="text" name="semester_name" value="{{ semester.name }}" required="required" autofocus="autofocus" />
+            <span class="explanation">for display on this system</span>
+        </li>
+        <li>
+            <label for="semester_code">Code</label>
+            <input type="text" name="semester_code" value="{{ semester.code }}" required="required" />
+            <span class="explanation">as part of a project code</span>
+        </li>
+        <li>
+            <label for="start_date">Start date</label>
+            <input type="date" name="start_date" value="{{ semester.date_start | format_date }}" placeholder="YYYY-MM-DD" required="required" />
+            <input type="time" name="start_time" value="{{ semester.date_start | format_time }}" placeholder="HH:MM" required="required" />
+            <span class="explanation">UT, start of observing</span>
+        </li>
+        <li>
+            <label for="end_date">End date</label>
+            <input type="date" name="end_date" value="{{ semester.date_end | format_date }}" placeholder="YYYY-MM-DD" required="requried" />
+            <input type="time" name="end_time" value="{{ semester.date_end | format_time }}" placeholder="HH:MM" required="required" />
+            <span class="explanation">UT, end of observing</span>
+        </li>
+        <li>
+            <label for="description">Description</label>
+            <textarea name="description">{{ semester.description }}</textarea>
+        </li>
+        <li>
+            <input type="submit" value="Save" name="submit" />
+        </li>
+    </ol>
 </form>
 
 {% endblock %}

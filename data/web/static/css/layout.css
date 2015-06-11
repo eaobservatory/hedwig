@@ -1,0 +1,54 @@
+body {
+    margin: 0px;
+    padding: 0px;
+}
+
+ul#navbar {
+    display: block;
+    margin: 0px;
+    padding: 1ex;
+    text-align: center;
+    list-style-type: none;
+    overflow: auto;
+}
+
+ul#navbar li {
+    display: inline;
+    margin-left: 4ex;
+    margin-right: 4ex;
+}
+
+li#user_control {
+    float: right;
+}
+
+ul#flashes {
+    display: block;
+    width: 40ex;
+    float: right;
+    padding: 1ex;
+    margin-right: 2ex;
+}
+
+ul#flashes li {
+    margin-left: 2ex;
+}
+
+form ol li {
+    list-style: none;
+}
+
+label {
+    min-width: 200px;
+    display: inline-block;
+    text-align: right;
+    vertical-align: top;
+}
+
+form ol li > input[type=submit]:first-child {
+    margin-left: 205px;
+}
+
+.template {
+    display: none;
+}

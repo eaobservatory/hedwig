@@ -5,11 +5,11 @@
 {% block content %}
 
 {% block proposal_summary %}
-    {% if not is_submitted %}
-        <p>
-            <b>This proposal has not been submitted. If you wish it to be
+    {% if can_edit and not is_submitted %}
+        <p class="warning">
+            This proposal has not been submitted. If you wish it to be
             considered, please be sure to submit it before the proposal
-            deadline.</b>
+            deadline.
         </p>
     {% endif %}
     <p>
@@ -28,120 +28,134 @@
     </p>
 
     {% if can_edit %}
-        <p>
-            <a href="{{ url_for('.title_edit', proposal_id=proposal.id) }}">Edit title</a>
-            <br />
-        {% if is_submitted %}
-            <a href="{{ url_for('.proposal_withdraw', proposal_id=proposal.id) }}">Withdraw proposal</a>
-        {% else %}
-            <a href="{{ url_for('.proposal_submit', proposal_id=proposal.id) }}">Submit proposal</a>
-        {% endif %}
-        </p>
+        <nav>
+            <p>
+                <a href="{{ url_for('.title_edit', proposal_id=proposal.id) }}">Edit title</a>
+                <br />
+            {% if is_submitted %}
+                <a href="{{ url_for('.proposal_withdraw', proposal_id=proposal.id) }}">Withdraw proposal</a>
+            {% else %}
+                <a href="{{ url_for('.proposal_submit', proposal_id=proposal.id) }}">Submit proposal</a>
+            {% endif %}
+            </p>
+        </nav>
     {% endif %}
 {% endblock %}
 
 {% block proposal_abstract %}
-    <h2>Abstract</h2>
+    <section>
+        <h2>Abstract</h2>
 
-    {% if abstract is none %}
-        <p>
-            <i>This proposal does not yet have an abstract.</i>
-        </p>
-    {% else %}
-        {{ abstract | format_text }}
-    {% endif %}
+        {% if abstract is none %}
+            <p class="missing">
+                This proposal does not yet have an abstract.
+            </p>
+        {% else %}
+            {{ abstract | format_text }}
+        {% endif %}
 
-    {% if can_edit %}
-        <p>
-            <a href="{{ url_for('.abstract_edit', proposal_id=proposal.id) }}">Edit abstract</a>
-        </p>
-    {% endif %}
+        {% if can_edit %}
+            <nav>
+                <p>
+                    <a href="{{ url_for('.abstract_edit', proposal_id=proposal.id) }}">Edit abstract</a>
+                </p>
+            </nav>
+        {% endif %}
+    </section>
 {% endblock %}
 
 {% block proposal_request %}
 {% endblock %}
 
 {% block proposal_members %}
-    <h2>Members</h2>
+    <section>
+        <h2>Members</h2>
 
-    <table>
-        <tr>
-            <th>Name</th>
-            <th>Affiliation</th>
-            <th>Institution</th>
-            <th>Information</th>
-        </tr>
-        {% for member in proposal.members %}
-            <tr>
-                <td>
-                    {% if session.is_admin or member.person_public or (can_edit and not member.person_registered) %}
-                        <a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name }}</a></td>
-                    {% else %}
-                        {{ member.person_name }}
-                    {% endif %}
-                <td>{{ member.affiliation_name }}</td>
-                <td>
-                    {% if member.resolved_institution_id is not none %}
-                        {% if session.is_admin %}
-                            <a href="{{ url_for('people.institution_view', institution_id=member.resolved_institution_id) }}">{{ render_member_institution(member) }}</a>
-                        {% else %}
-                            {{ render_member_institution(member) }}
-                        {% endif %}
-                    {% elif can_edit and not member.person_registered %}
-                        <a href="{{ url_for('people.person_edit_institution', person_id=member.person_id) }}">Select institution</a>
-                    {% else %}
-                        <i>Unknown institution</i>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if member.pi %}PI{% endif %}
-                    {% if member.editor %}Editor{% endif %}
-                    {% if member.observer%}Observer{% endif %}
-                </td>
-           </tr>
-        {% endfor %}
-    </table>
-
-    {% if can_edit %}
-    <p>
-        <a href="{{ url_for('.member_add', proposal_id=proposal.id) }}">Add member</a>
-        <br />
-        <a href="{{ url_for('.member_edit', proposal_id=proposal.id) }}">Edit members</a>
-    </p>
-    {% endif %}
-{% endblock %}
-
-{% block proposal_targets %}
-    <h2>Target Objects</h2>
-
-    {% if not targets %}
-        <p>
-            <i>This proposal does not yet have any target objects.</i>
-        </p>
-    {% else %}
         <table>
             <tr>
                 <th>Name</th>
-                <th>RA / Longitude</th>
-                <th>Dec / Latitude</th>
-                <th>System</th>
+                <th>Affiliation</th>
+                <th>Institution</th>
+                <th>Information</th>
             </tr>
-            {% for target in targets %}
+            {% for member in proposal.members %}
                 <tr>
-                    <td>{{ target.name }}</td>
-                    <td>{{ target.x }}</td>
-                    <td>{{ target.y }}</td>
-                    <td>{{ target.system }}</td>
-                </tr>
+                    <td>
+                        {% if session.is_admin or member.person_public or (can_edit and not member.person_registered) %}
+                            <a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name }}</a></td>
+                        {% else %}
+                            {{ member.person_name }}
+                        {% endif %}
+                    <td>{{ member.affiliation_name }}</td>
+                    <td>
+                        {% if member.resolved_institution_id is not none %}
+                            {% if session.is_admin %}
+                                <a href="{{ url_for('people.institution_view', institution_id=member.resolved_institution_id) }}">{{ render_member_institution(member) }}</a>
+                            {% else %}
+                                {{ render_member_institution(member) }}
+                            {% endif %}
+                        {% elif can_edit and not member.person_registered %}
+                            <a href="{{ url_for('people.person_edit_institution', person_id=member.person_id) }}">Select institution</a>
+                        {% else %}
+                            <i>Unknown institution</i>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if member.pi %}PI{% endif %}
+                        {% if member.editor %}Editor{% endif %}
+                        {% if member.observer%}Observer{% endif %}
+                    </td>
+               </tr>
             {% endfor %}
         </table>
-    {% endif %}
 
-    {% if can_edit %}
-        <p>
-            <a href="{{ url_for('.target_edit', proposal_id=proposal.id) }}">Edit targets</a>
-        </p>
-    {% endif %}
+        {% if can_edit %}
+        <nav>
+            <p>
+                <a href="{{ url_for('.member_add', proposal_id=proposal.id) }}">Add member</a>
+                <br />
+                <a href="{{ url_for('.member_edit', proposal_id=proposal.id) }}">Edit members</a>
+            </p>
+        </nav>
+        {% endif %}
+    </section>
+{% endblock %}
+
+{% block proposal_targets %}
+    <section>
+        <h2>Target Objects</h2>
+
+        {% if not targets %}
+            <p class="missing">
+                This proposal does not yet have any target objects.
+            </p>
+        {% else %}
+            <table>
+                <tr>
+                    <th>Name</th>
+                    <th>RA / Longitude</th>
+                    <th>Dec / Latitude</th>
+                    <th>System</th>
+                </tr>
+                {% for target in targets %}
+                    <tr>
+                        <td>{{ target.name }}</td>
+                        <td>{{ target.x }}</td>
+                        <td>{{ target.y }}</td>
+                        <td>{{ target.system }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+
+        {% if can_edit %}
+            <nav>
+                <p>
+                    <a href="{{ url_for('.target_edit', proposal_id=proposal.id) }}">Edit targets</a>
+                </p>
+            </nav>
+        {% endif %}
+    </section>
 {% endblock %}
 
 {% endblock %}

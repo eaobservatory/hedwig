@@ -3,18 +3,21 @@
 {% block content %}
 
 {% if message is not none %}
-    <p>
+    <p class="warning">
         {{ message }}
     </p>
 {% endif %}
 
 <form method="POST" action="{{ url_for('.title_edit', proposal_id=proposal.id) }}">
-    <p>
-        Title:
-        <input type="text" name="proposal_title" value="{{ proposal.title }}" required="requried" autofocus="autofocus" />
-        <br />
-        <input type="submit" value="Save" name="submit" />
-    </p>
+    <ol>
+        <li>
+            <label for="proposal_title">Title</label>
+            <input type="text" name="proposal_title" value="{{ proposal.title }}" required="requried" autofocus="autofocus" />
+        </li>
+        <li>
+            <input type="submit" value="Save" name="submit" />
+        </li>
+    </ol>
 </form>
 
 {% endblock %}

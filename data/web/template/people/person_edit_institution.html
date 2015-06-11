@@ -6,8 +6,8 @@
 
 {% if institution_id is none %}
     {% if is_current_user %}
-        <p>
-            <i>Registration step 3/3.</i>
+        <p class="progress">
+            Registration step 3/3.
         </p>
     {% endif %}
 {% else %}
@@ -30,19 +30,21 @@ institution appears here, please select it from this list.
 </p>
 
 <form method="POST" action="{{ url_for('.person_edit_institution', person_id=person_id) }}">
-<p>
-    Institution:
-    <select name="institution_id">
-        {% for institution in institutions %}
-            <option value="{{ institution.id }}" {{'selected="selected"' | safe if institution.id == institution_id }}>
-                {{ render_institution_summary(institution) }}
-            </option>
-        {% endfor %}
-    </select>
-    <br />
-    <input type="submit" value="Select institution" name="submit_select" />
-</p>
-
+    <ol>
+        <li>
+            <label for="institution_id">Institution</label>
+            <select name="institution_id">
+                {% for institution in institutions %}
+                    <option value="{{ institution.id }}" {{'selected="selected"' | safe if institution.id == institution_id }}>
+                        {{ render_institution_summary(institution) }}
+                    </option>
+                {% endfor %}
+            </select>
+        </li>
+        <li>
+            <input type="submit" value="Select institution" name="submit_select" />
+        </li>
+    </ol>
 </form>
 
 <h2>New Institution</h2>
@@ -54,17 +56,18 @@ you may enter it into the system here.
 </p>
 
 {% if message is not none %}
-    <p>
+    <p class="warning">
         {{ message }}
     </p>
 {% endif %}
 
 <form method="POST" action="{{ url_for('.person_edit_institution', person_id=person_id) }}">
-<p>
-    {{ render_institution_form(institution, countries) }}
-    <br />
-    <input type="submit" value="Add new institution" name="submit_add" />
-</p>
+    <ol>
+        {{ render_institution_form(institution, countries) }}
+        <li>
+            <input type="submit" value="Add new institution" name="submit_add" />
+        </li>
+    </ol>
 </form>
 
 {% endblock %}
