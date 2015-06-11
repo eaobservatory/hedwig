@@ -27,9 +27,20 @@ a:link, a:visited {
     text-shadow: 0px 0px 10px white;
 }
 
-td.total {
-    background: #DDD;
+table {
+    border-collapse: collapse;
+}
+
+td, th {
+    border: 1px solid #AAA;
+    padding: 5px;
+    text-align: left;
+    vertical-align: top;
+}
+
+th, td.total {
     font-weight: bold;
+    background: #DDD;
 }
 
 td.grandtotal {

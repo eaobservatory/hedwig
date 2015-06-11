@@ -17,21 +17,29 @@
     {% endif %}
 </p>
 
-<p>
-    Invitation code: <tt>{{ token }}</tt>
-    <br />
-    Name: {{ person.name }}
+<table>
+    <tr>
+        <th>Invitation code</th>
+        <td><tt>{{ token }}</tt></td>
+    </tr>
+    <tr>
+        <th>Name</th>
+        <td>{{ person.name }}</td>
     {% if person.email is not none %}
         {% for email in person.email %}
-            <br />
-            Email: {{ email.address }}
+            <tr>
+                <th>Email</th>
+                <td>{{ email.address }}</td>
+            </tr>
         {% endfor %}
     {% endif %}
     {% if person.institution is not none %}
-        <br />
-        Institution: {{ person.institution.name }}
+        <tr>
+            <th>Institution</th>
+            <td>{{ person.institution.name }}</td>
+        </tr>
     {% endif %}
-</p>
+</table>
 
 <form method="POST" action="{{ url_for('.invitation_token_accept') }}">
     <p>

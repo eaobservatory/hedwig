@@ -13,43 +13,59 @@
         <p>
             This is your profile.
         </p>
-        <p>
-            <a href="{{ url_for('.change_password') }}">Change password</a>
-            <br />
-            <a href="{{ url_for('.change_user_name') }}">Change user name</a>
-        </p>
+        <nav>
+            <p>
+                <a href="{{ url_for('.change_password') }}">Change password</a>
+                <br />
+                <a href="{{ url_for('.change_user_name') }}">Change user name</a>
+            </p>
+        </nav>
     {% endif %}
 {% endif %}
 {% if can_edit %}
-    <p>
-        <a href="{{ url_for('.person_edit', person_id=person.id) }}">Edit profile</a>
-        <br />
-        <a href="{{ url_for('.person_edit_email', person_id=person.id) }}">Edit email addresses</a>
-        <br />
-        <a href="{{ url_for('.person_edit_institution', person_id=person.id) }}">Change institution</a>
-    </p>
+    <nav>
+        <p>
+            <a href="{{ url_for('.person_edit', person_id=person.id) }}">Edit profile</a>
+            <br />
+            <a href="{{ url_for('.person_edit_email', person_id=person.id) }}">Edit email addresses</a>
+            <br />
+            <a href="{{ url_for('.person_edit_institution', person_id=person.id) }}">Change institution</a>
+        </p>
+    </nav>
 {% endif %}
 
-<p>
-    Full name: {{ person.name }}
+<table>
+    <tr>
+        <th>Full name</th>
+        <td>{{ person.name }}</td>
+    </tr>
     {% if is_current_user %}
-        <br />
-        User directory: {{ 'shown' if person.public else 'not shown' }} in directory
+        <tr>
+            <th>User directory</th>
+            <td>{{ 'Shown' if person.public else 'Not shown' }} in directory</td>
+        </tr>
     {% endif %}
     {% if person.institution is not none %}
-        <br />
-        Institution: <a href="{{ url_for('.institution_view', institution_id=person.institution.id) }}">{{ render_institution_summary(person.institution) }}</a>
+        <tr>
+            <th>Institution</th>
+            <td><a href="{{ url_for('.institution_view', institution_id=person.institution.id) }}">{{ render_institution_summary(person.institution) }}</a></td>
+        </tr>
     {% endif %}
     {% if person.email is not none %}
         {% for email in person.email %}
-            <br />
-            Email:
-            <a href="mailto:{{ email.address }}">{{ email.address }}</a>
-            {{ 'primary' if email.primary }}
-            {{ 'verified' if email.verified }}
-            {{ 'public' if email.public }}
+            <tr>
+                {% if loop.first %}
+                    <th rowspan="{{ person.email | length }}">Email</th>
+                {% endif %}
+                <td>
+                    <a href="mailto:{{ email.address }}">{{ email.address }}</a>
+                    {{ 'primary' if email.primary }}
+                    {{ 'verified' if email.verified }}
+                    {{ 'public' if email.public }}
+                </td>
+            </tr>
         {% endfor %}
     {% endif %}
-</p>
+</table>
 
 {% endblock %}
