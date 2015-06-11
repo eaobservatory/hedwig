@@ -149,11 +149,13 @@ class ProposalPart(object):
                         'for queue with id={1}'.format(
                             affiliation_id, call.queue_id))
 
+            proposal_alias = proposal.alias()
+
             result = conn.execute(proposal.insert().values({
                 proposal.c.call_id: call_id,
                 proposal.c.number: select(
-                    [coalesce(max_(proposal.c.number), 0) + 1]).where(
-                    proposal.c.call_id == call_id),
+                    [coalesce(max_(proposal_alias.c.number), 0) + 1]).where(
+                    proposal_alias.c.call_id == call_id),
                 proposal.c.state: state,
                 proposal.c.title: title,
             }))
