@@ -23,19 +23,19 @@
         </li>
         <li>
             <label for="start_date">Start date</label>
-            <input type="date" name="start_date" value="{{ semester.date_start | format_date }}" placeholder="YYYY-MM-DD" required="required" />
-            <input type="time" name="start_time" value="{{ semester.date_start | format_time }}" placeholder="HH:MM" required="required" />
+            <input type="date" name="start_date" value="{{ semester.date_start | format_date }}" placeholder="YYYY-MM-DD" required="required" size="10" />
+            <input type="time" name="start_time" value="{{ semester.date_start | format_time }}" placeholder="HH:MM" required="required" size="5" />
             <span class="explanation">UT, start of observing</span>
         </li>
         <li>
             <label for="end_date">End date</label>
-            <input type="date" name="end_date" value="{{ semester.date_end | format_date }}" placeholder="YYYY-MM-DD" required="requried" />
-            <input type="time" name="end_time" value="{{ semester.date_end | format_time }}" placeholder="HH:MM" required="required" />
+            <input type="date" name="end_date" value="{{ semester.date_end | format_date }}" placeholder="YYYY-MM-DD" required="requried" size="10" />
+            <input type="time" name="end_time" value="{{ semester.date_end | format_time }}" placeholder="HH:MM" required="required" size="5" />
             <span class="explanation">UT, end of observing</span>
         </li>
         <li>
             <label for="description">Description</label>
-            <textarea name="description">{{ semester.description }}</textarea>
+            <textarea name="description" cols="80" rows="10">{{ semester.description }}</textarea>
         </li>
         <li>
             <input type="submit" value="Save" name="submit" />

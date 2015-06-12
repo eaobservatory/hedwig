@@ -2,18 +2,27 @@
 
 {% block content %}
 
-<p>
-    <a href="{{ url_for('.call_edit', call_id=call.id) }}">Edit call</a>
-</p>
+<table>
+    <tr>
+        <th>Semester</th>
+        <td><a href="{{ url_for('.semester_view', semester_id=call.semester_id) }}">{{ call.semester_name }}</a></td>
+    </tr>
+    <tr>
+        <th>Queue</th>
+        <td><a href="{{ url_for('.queue_view', queue_id=call.queue_id) }}">{{ call.queue_name }}</a></td>
+    </tr>
+    <tr>
+        <th>Open</th>
+        <td>{{ call.date_open | format_datetime }}</td>
+    </tr>
+    <tr>
+        <th>Close</th>
+        <td>{{ call.date_close | format_datetime }}</td>
+    </tr>
+</table>
 
 <p>
-    Semester: <a href="{{ url_for('.semester_view', semester_id=call.semester_id) }}">{{ call.semester_name }}</a>
-    <br />
-    Queue: <a href="{{ url_for('.queue_view', queue_id=call.queue_id) }}">{{ call.queue_name }}</a>
-    <br />
-    Open: {{ call.date_open | format_datetime }}
-    <br />
-    Cose: {{ call.date_close | format_datetime }}
+    <a href="{{ url_for('.call_edit', call_id=call.id) }}">Edit call</a>
 </p>
 
 {% endblock %}

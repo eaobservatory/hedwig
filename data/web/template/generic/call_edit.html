@@ -32,15 +32,15 @@
         {% endif %}
         <li>
             <label for="date_open">Opening date</label>
-            <input type="date" name="open_date" value="{{ call.date_open | format_date }}" placeholder="YYYY-MM-DD" required="required" />
-            <input type="time" name="open_time" value="{{ call.date_open | format_time }}" placeholder="HH:MM" required="required" />
-            <span class="explanation">UT, date call opens for submissions)</span>
+            <input type="date" name="open_date" value="{{ call.date_open | format_date }}" placeholder="YYYY-MM-DD" required="required" size="10" />
+            <input type="time" name="open_time" value="{{ call.date_open | format_time }}" placeholder="HH:MM" required="required" size="5" />
+            <span class="explanation">UT, date call opens for submissions</span>
         </li>
         <li>
             <label for="close_date">Closing date</label>
-            <input type="date" name="close_date" value="{{ call.date_close | format_date }}" placeholder="YYYY-MM-DD" required="requried" />
-            <input type="time" name="close_time" value="{{ call.date_close | format_time }}" placeholder="HH:MM" required="required" />
-            <span class="explanation">UT, proposal deadline)</span>
+            <input type="date" name="close_date" value="{{ call.date_close | format_date }}" placeholder="YYYY-MM-DD" required="requried" size="10" />
+            <input type="time" name="close_time" value="{{ call.date_close | format_time }}" placeholder="HH:MM" required="required" size="5" />
+            <span class="explanation">UT, proposal deadline</span>
         </li>
         <li>
             <input type="submit" value="Save" name="submit" />

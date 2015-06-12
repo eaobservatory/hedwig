@@ -20,7 +20,7 @@
         </tr>
         {% for email in emails %}
             <tr id="emailrow_{{ email.id }}">
-                <td><input type="email" name="email_{{ email.id }}" value="{{ email.address }}" required="required" /></td>
+                <td><input type="email" name="email_{{ email.id }}" value="{{ email.address }}" required="required" size="40" /></td>
                 <td><input type="radio" name="primary" value="{{ email.id }}" {{ 'checked="checked"' | safe if email.primary }} /></td>
                 <td><input type="checkbox" name="public_{{ email.id }}" value="yes" {{ 'checked="checked"' | safe if email.public }} /></td>
                 <td>
@@ -36,7 +36,7 @@
     </table>
     <table class="template">
         <tr id="emailrow_template">
-            <td><input type="email" name="email" value="" /></td>
+            <td><input type="email" name="email" value="" size="40" /></td>
             <td><input type="radio" name="primary" value="" /></td>
             <td><input type="checkbox" name="public" value="yes" /></td>
             <td>not verified</td>

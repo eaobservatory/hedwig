@@ -1,17 +1,17 @@
 {% macro render_institution_form(institution, countries) %}
     <li>
         <label for="institution_name">Institution name</label>
-        <input type="text" name="institution_name" value="{{ institution.name }}" autofocus="autofocus" required="required" />
+        <input type="text" name="institution_name" value="{{ institution.name }}" autofocus="autofocus" required="required" size="40" />
         <span class="explanation">e.g. Institute for Astronomy</span>
     </li>
     <li>
         <label for="organization">Organization</label>
-        <input type="text" name="organization" value="{{ institution.organization }}" />
+        <input type="text" name="organization" value="{{ institution.organization }}" size="40" />
         <span class="explanation">e.g. University of Anytown, if applicable</span>
     </li>
     <li>
         <label for="address">Address</label>
-        <textarea name="address">{{ institution.address }}</textarea>
+        <textarea name="address" cols="40" rows="8">{{ institution.address }}</textarea>
     </li>
     <li>
         <label for="country_code">Country</label>

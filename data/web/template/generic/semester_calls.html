@@ -4,11 +4,16 @@
 
 <h2>Semester Information</h2>
 
-<p>
-    Start: {{ semester.date_start | format_datetime }}
-    <br />
-    End: {{ semester.date_end | format_datetime }}
-</p>
+<table>
+    <tr>
+        <th>Start</th>
+        <td>{{ semester.date_start | format_datetime }} UT</td>
+    </tr>
+    <tr>
+        <th>End</th>
+        <td>{{ semester.date_end | format_datetime }} UT</td>
+    </tr>
+</table>
 
 {{ semester.description | format_text }}
 

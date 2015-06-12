@@ -2,13 +2,12 @@
 
 {% block content %}
 
-<p>
-    Code: {{ queue.code }}
-</p>
-
-<p>
-    Description:
-</p>
+<table>
+    <tr>
+        <th>Code</th>
+        <td>{{ queue.code }}</td>
+    </tr>
+</table>
 
 {{ queue.description | format_text }}
 

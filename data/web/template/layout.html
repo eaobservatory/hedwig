@@ -22,10 +22,10 @@
         <header>
             <ul id="navbar">
                 <li><a href="{{ url_for('home_page') }}">Home</a></li>
+                <li><a href="{{ url_for('people.invitation_token_enter') }}">Invitation</a></li>
                 {% if facility_name is defined %}
                     <li><a href="{{ url_for('.facility_home') }}">{{ facility_name }}</a></li>
                 {% endif %}
-                <li><a href="{{ url_for('people.invitation_token_enter') }}">Invitation</a></li>
                 <li id="user_control">
                     {{ render_user_panel() }}
                 </li>

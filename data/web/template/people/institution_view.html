@@ -2,25 +2,28 @@
 
 {% block content %}
 
-<p>
-    Institution name: {{ institution.name }}
+<table>
+    <tr>
+        <th>Institution name</th>
+        <td>{{ institution.name }}</td>
+    </tr>
     {% if institution.organization %}
-        <br />
-        Organization: {{ institution.organization }}
+        <tr>
+            <th>Organization</th>
+            <td>{{ institution.organization }}</td>
+        </tr>
     {% endif %}
-</p>
-
-{% if institution.address %}
-    <p>
-        Address:
-    </p>
-
-    {{ institution.address | format_text }}
-{% endif %}
-
-<p>
-    Country: {{ institution.country }}
-</p>
+    {% if institution.address %}
+        <tr>
+            <th>Address</th>
+            <td>{{ institution.address | format_text }}</td>
+        </tr>
+    {% endif %}
+    <tr>
+        <th>Country</th>
+        <td>{{ institution.country }}</td>
+    </tr>
+</table>
 
 {% if can_edit %}
     <p>
