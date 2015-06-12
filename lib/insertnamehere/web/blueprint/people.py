@@ -115,6 +115,12 @@ def create_people_blueprint(db):
         return view.person_edit_email(db, person_id, request.form,
                                       request.method == 'POST')
 
+    @bp.route('/institution/')
+    @templated('people/institution_list.html')
+    @require_auth()
+    def institution_list():
+        return view.institution_list(db)
+
     @bp.route('/institution/<int:institution_id>')
     @templated('people/institution_view.html')
     @require_auth()

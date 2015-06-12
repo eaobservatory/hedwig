@@ -614,6 +614,17 @@ def person_edit_email(db, person_id, form, is_post):
     }
 
 
+def institution_list(db):
+    countries = get_countries()
+
+    return {
+        'title': 'Institutions',
+        'institutions': [
+            x._replace(country=countries.get(x.country, 'Unknown country'))
+            for x in db.list_institution().values()],
+    }
+
+
 def institution_view(db, institution_id):
     try:
         institution = db.get_institution(institution_id)
@@ -626,7 +637,7 @@ def institution_view(db, institution_id):
         raise HTTPForbidden('Permission denied for this institution.')
 
     return {
-        'title': 'Institution',
+        'title': 'Institution: {0}'.format(institution.name),
         'institution': institution._replace(
             country=get_countries().get(institution.country,
                                         'Unknown country')),
@@ -677,7 +688,7 @@ def institution_edit(db, institution_id, form, is_post):
             raise ErrorPage('Unknown action.')
 
     return {
-        'title': 'Edit Institution',
+        'title': 'Edit Institution: {0}'.format(institution.name),
         'show_confirm_prompt': show_confirm_prompt,
         'message': message,
         'institution_id': institution_id,

@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% set navigation=[('Institutions', url_for('.institution_list'))] %}
 
 {% from 'macro/institution.html' import render_institution_form %}
 
