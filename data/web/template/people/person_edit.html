@@ -1,8 +1,11 @@
 {% extends "layout.html" %}
+{% if person.id is not none %}
+    {% set navigation=[(person.name, url_for('.person_view', person_id=person.id))] %}
+{% endif %}
 
 {% block content %}
 
-{% if single_email is defined %}
+{% if person.id is none %}
     <p class="progress">
         Registration step 2/3.
     </p>
@@ -18,7 +21,7 @@
     <ol>
         <li>
             <label for="person_name">Full name</label>
-            <input type="text" name="person_name" value="{{ person_name }}" autofocus="autofocus" required="required" size="40" />
+            <input type="text" name="person_name" value="{{ person.name }}" autofocus="autofocus" required="required" size="40" />
         </li>
         <li>
             <div class="explanation">
@@ -27,7 +30,7 @@
                 participate in their proposals.
             </div>
             <label for="person_public">User directory</label>
-            <input type="checkbox" name="person_public" value="yes" {{ 'checked="checked"' | safe if person_public }} />
+            <input type="checkbox" name="person_public" value="yes" {{ 'checked="checked"' | safe if person.public }} />
             Show in directory
         </li>
         {% if single_email is defined %}

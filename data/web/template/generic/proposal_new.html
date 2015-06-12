@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% set navigation=[(call.semester_name, url_for('.semester_calls', semester_id=call.semester_id))] %}
 
 {% block content %}
 

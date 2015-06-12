@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% set navigation=[(person.name, url_for('.person_view', person_id=person.id))] %}
 
 {% from 'macro/institution.html' import render_institution_form, render_institution_summary %}
 
@@ -29,7 +30,7 @@ If {% if is_current_user %} your {% else %} the {% endif %}
 institution appears here, please select it from this list.
 </p>
 
-<form method="POST" action="{{ url_for('.person_edit_institution', person_id=person_id) }}">
+<form method="POST" action="{{ url_for('.person_edit_institution', person_id=person.id) }}">
     <ol>
         <li>
             <label for="institution_id">Institution</label>
@@ -61,7 +62,7 @@ you may enter it into the system here.
     </p>
 {% endif %}
 
-<form method="POST" action="{{ url_for('.person_edit_institution', person_id=person_id) }}">
+<form method="POST" action="{{ url_for('.person_edit_institution', person_id=person.id) }}">
     <ol>
         {{ render_institution_form(institution, countries) }}
         <li>

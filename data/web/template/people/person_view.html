@@ -22,17 +22,6 @@
         </nav>
     {% endif %}
 {% endif %}
-{% if can_edit %}
-    <nav>
-        <p>
-            <a href="{{ url_for('.person_edit', person_id=person.id) }}">Edit profile</a>
-            <br />
-            <a href="{{ url_for('.person_edit_email', person_id=person.id) }}">Edit email addresses</a>
-            <br />
-            <a href="{{ url_for('.person_edit_institution', person_id=person.id) }}">Change institution</a>
-        </p>
-    </nav>
-{% endif %}
 
 <table>
     <tr>
@@ -67,5 +56,17 @@
         {% endfor %}
     {% endif %}
 </table>
+
+{% if can_edit %}
+    <nav>
+        <p>
+            <a href="{{ url_for('.person_edit', person_id=person.id) }}">Edit profile</a>
+            <br />
+            <a href="{{ url_for('.person_edit_email', person_id=person.id) }}">Edit email addresses</a>
+            <br />
+            <a href="{{ url_for('.person_edit_institution', person_id=person.id) }}">Change institution</a>
+        </p>
+    </nav>
+{% endif %}
 
 {% endblock %}

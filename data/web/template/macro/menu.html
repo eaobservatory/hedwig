@@ -1,0 +1,18 @@
+{% macro render_main_menu(facility_name, navigation) %}
+    <li><a href="{{ url_for('home_page') }}">Home</a></li>
+    <li><a href="{{ url_for('people.invitation_token_enter') }}">Invitation</a></li>
+    {% if facility_name is defined %}
+        <li><a href="{{ url_for('.facility_home') }}">{{ facility_name }}</a></li>
+    {% endif %}
+    {% if navigation is defined %}
+        {% for navitem in navigation %}
+            {% if navitem == 'facility_admin' %}
+                <li><a href="{{ url_for('.facility_admin') }}">Administrative menu</a></li>
+            {% elif navitem is not string %}
+                {% with name=navitem[0], url=navitem[1] %}
+                    <li><a href="{{ url }}">{{ name }}</a></li>
+                {% endwith %}
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+{% endmacro %}

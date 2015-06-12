@@ -7,7 +7,7 @@ ul#navbar {
     display: block;
     margin: 0px;
     padding: 1ex;
-    text-align: center;
+    text-align: left;
     list-style-type: none;
     overflow: auto;
 }

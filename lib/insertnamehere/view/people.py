@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from ..email.format import render_email_template
 from ..error import Error, MultipleRecords, NoSuchRecord, UserError
-from ..type import Email, EmailCollection, Institution
+from ..type import Email, EmailCollection, Institution, Person
 from ..util import get_countries
 from ..web.util import flash, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
@@ -352,32 +352,41 @@ def register_person(db, form, is_post):
 
     message = None
 
-    name = form.get('person_name', '')
+    person = Person(
+        name='', public=False,
+        **{x: None for x in Person._fields if x not in ('name', 'public')})
+
     email = form.get('single_email', '')
-    public = 'person_public' in form
 
     if is_post:
-        name = form['person_name']
+        person = person._replace(
+            name=form['person_name'],
+            public=('person_public' in form))
         email = form['single_email']
-        if not name:
-            message = 'Please enter your full name.'
-        elif not email:
-            message = 'Please enter your email address.'
-        else:
+
+        try:
+            if not person.name:
+                raise UserError('Please enter your full name.')
+            elif not email:
+                raise UserError('Please enter your email address.')
+
             user_id = session['user_id']
-            person_id = db.add_person(name, public=public, user_id=user_id)
+            person_id = db.add_person(person.name, public=person.public,
+                                      user_id=user_id)
             db.add_email(person_id, email, primary=True)
             flash('Your user profile has been saved.')
             _update_session_person(db.get_person(person_id))
             raise HTTPRedirect(url_for('.person_edit_institution',
                                        person_id=person_id))
 
+        except UserError as e:
+            message = e.message
+
     return {
         'title': 'Create Profile',
         'target': url_for('.register_person'),
         'message': message,
-        'person_name': name,
-        'person_public': public,
+        'person': person,
         'single_email': email
     }
 
@@ -424,15 +433,15 @@ def person_edit(db, person_id, form, is_post):
 
     message = None
 
-    name = form.get('person_name', person.name)
-    public = ('person_public' in form) if is_post else person.public
-
     if is_post:
-        name = form['person_name']
+        person = person._replace(
+            name=form['person_name'],
+            public=('person_public' in form))
+
         try:
-            if not name:
+            if not person.name:
                 raise UserError('Please enter your full name.')
-            db.update_person(person_id, name=name, public=public)
+            db.update_person(person_id, name=person.name, public=person.public)
 
             if session['user_id'] == person.user_id:
                 flash('Your user profile has been saved.')
@@ -448,8 +457,7 @@ def person_edit(db, person_id, form, is_post):
         'title': '{0}: Edit Profile'.format(person.name),
         'target': url_for('.person_edit', person_id=person_id),
         'message': message,
-        'person_name': name,
-        'person_public': public,
+        'person': person,
     }
 
 
@@ -520,7 +528,7 @@ def person_edit_institution(db, person_id, form, is_post):
     return {
         'title': '{0}: Select Institution'.format(person.name),
         'message': message,
-        'person_id': person_id,
+        'person': person,
         'institution': institution,
         'institution_id': person.institution_id,
         'institutions': [i._replace(
@@ -601,7 +609,7 @@ def person_edit_email(db, person_id, form, is_post):
     return {
         'title': '{0}: Edit Email Addresses'.format(person.name),
         'message': message,
-        'person_id': person_id,
+        'person': person,
         'emails': records.values(),
     }
 

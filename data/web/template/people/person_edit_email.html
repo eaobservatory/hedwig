@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% set navigation=[(person.name, url_for('.person_view', person_id=person.id))] %}
 {% set scripts=['edit_email'] %}
 
 {% block content %}
@@ -9,7 +10,7 @@
     </p>
 {% endif %}
 
-<form method="POST" action="{{ url_for('.person_edit_email', person_id=person_id) }}">
+<form method="POST" action="{{ url_for('.person_edit_email', person_id=person.id) }}">
     <table id="emailaddresses">
         <tr>
             <th>Address</th>

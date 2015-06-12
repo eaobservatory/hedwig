@@ -2,6 +2,7 @@
 
 {% from 'macro/user_control.html' import render_user_panel %}
 {% from 'macro/flash.html' import render_flashes %}
+{% from 'macro/menu.html' import render_main_menu %}
 
 <html lang="en">
     <head>
@@ -21,11 +22,7 @@
     <body>
         <header>
             <ul id="navbar">
-                <li><a href="{{ url_for('home_page') }}">Home</a></li>
-                <li><a href="{{ url_for('people.invitation_token_enter') }}">Invitation</a></li>
-                {% if facility_name is defined %}
-                    <li><a href="{{ url_for('.facility_home') }}">{{ facility_name }}</a></li>
-                {% endif %}
+                {{ render_main_menu(facility_name, navigation) }}
                 <li id="user_control">
                     {{ render_user_panel() }}
                 </li>
