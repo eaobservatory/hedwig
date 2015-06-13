@@ -636,12 +636,21 @@ def institution_view(db, institution_id):
     if not can.view:
         raise HTTPForbidden('Permission denied for this institution.')
 
+    # Only show public members unless the user is has administrative
+    # privileges.
+    public = True
+    if session.get('is_admin', False) and auth.can_be_admin(db):
+        public = None
+    persons = db.search_person(institution_id=institution_id,
+                               registered=True, public=public)
+
     return {
         'title': 'Institution: {0}'.format(institution.name),
         'institution': institution._replace(
             country=get_countries().get(institution.country,
                                         'Unknown country')),
         'can_edit': can.edit,
+        'persons': persons.values(),
     }
 
 

@@ -74,6 +74,14 @@ p.progress {
     text-align: center;
 }
 
+span.label {
+    background: #888;
+    color: #FFF;
+    border-radius: 1ex;
+    padding-left: 1ex;
+    padding-right: 1ex;
+}
+
 form ol li div.explanation {
     margin-left: 205px;
     color: #888;

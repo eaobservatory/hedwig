@@ -32,4 +32,21 @@
     </p>
 {% endif %}
 
+{% if persons %}
+    <section>
+        <h2>Members</h2>
+
+        <ul>
+            {% for person in persons %}
+                <li>
+                    <a href="{{ url_for('.person_view', person_id=person.id) }}">{{ person.name }}</a>
+                    {% if not person.public %}
+                        <span class="label">private</span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+{% endif %}
+
 {% endblock %}

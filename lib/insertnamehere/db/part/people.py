@@ -424,6 +424,7 @@ class PeoplePart(object):
 
     def search_person(self, user_id=None, email_address=None,
                       registered=None, public=None,
+                      institution_id=None,
                       with_institution=False):
         """
         Find person records.
@@ -449,6 +450,9 @@ class PeoplePart(object):
 
         if user_id is not None:
             stmt = stmt.where(person.c.user_id == user_id)
+
+        if institution_id is not None:
+            stmt = stmt.where(person.c.institution_id == institution_id)
 
         if email_address is not None:
             stmt = stmt.where(person.c.id.in_(
