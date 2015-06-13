@@ -24,7 +24,7 @@ from jinja2.runtime import Undefined
 import os
 
 from ..config import get_config, get_database, get_facilities, get_home
-from ..type import ProposalState
+from ..type import FacilityInfo, ProposalState
 from .util import templated
 
 from .blueprint.facility import create_facility_blueprint
@@ -70,15 +70,17 @@ def create_web_app():
     # Register blueprints for each facility.
     for facility_class in get_facilities():
         # Create facility object.
-        code = facility_class.get_code()
-        facility = facility_class(db.ensure_facility(code))
+        facility_code = facility_class.get_code()
+        facility_id = db.ensure_facility(facility_code)
+        facility = facility_class(facility_id)
 
         # Store in our facilities list.
-        facilities[code] = facility.get_name()
+        facilities[facility_id] = FacilityInfo(
+            facility_id, facility_code, facility.get_name(), facility)
 
         # Register blueprint for the facility.
         app.register_blueprint(create_facility_blueprint(db, facility),
-                               url_prefix='/' + code)
+                               url_prefix='/' + facility_code)
 
     @app.context_processor
     def add_to_context():

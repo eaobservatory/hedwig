@@ -3,9 +3,9 @@
 {% block content %}
 
 <ul>
-    {% for (code, name) in facilities.items() %}
+    {% for facility in facilities %}
         <li>
-            <a href="{{ url_for(code + '.facility_home') }}">{{ name }}</a>
+            <a href="{{ url_for(facility.code + '.facility_home') }}">{{ facility.name }}</a>
         </li>
     {% endfor %}
 </ul>

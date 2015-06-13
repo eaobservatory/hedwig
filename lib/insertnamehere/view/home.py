@@ -22,5 +22,5 @@ from __future__ import absolute_import, division, print_function, \
 def prepare_home(application_name, facilities):
     return {
         'title': application_name,
-        'facilities': facilities,
+        'facilities': facilities.values(),
     }

@@ -40,6 +40,10 @@ Email = namedtuple(
     'Email',
     map(lambda x: x.name, email.columns))
 
+FacilityInfo = namedtuple(
+    'FacilityInfo',
+    ['id', 'code', 'name', 'view'])
+
 Institution = namedtuple(
     'Institution',
     map(lambda x: x.name, institution.columns))
