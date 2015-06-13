@@ -8,11 +8,22 @@ ul#navbar {
     box-shadow: 0ex 0ex 1ex black;
 }
 
+@keyframes yellowfade {
+    0% {background-color: #FF0;}
+    100% {background-color: #AAA;}
+}
+
 ul#flashes {
     background: #FF0;
     box-shadow: 0ex 0ex 1ex black;
     border-radius: 1ex;
     border: 1px solid black;
+    animation-name: yellowfade;
+    animation-delay: 2s;
+    animation-duration: 2s;
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+    animation-timing-function: linear;
 }
 
 div#content {
