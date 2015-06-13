@@ -28,7 +28,7 @@ from sqlalchemy.sql.functions import max as max_
 from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
 from ...type import Affiliation, Call, FormatType, Member, MemberCollection, \
-    Proposal, ProposalInfo, ProposalState, ProposalText, ProposalTextRole, \
+    MemberInfo, Proposal, ProposalState, ProposalText, ProposalTextRole, \
     Queue, QueueInfo, ResultCollection, Semester, SemesterInfo, \
     Target, TargetCollection
 from ..meta import affiliation, call, facility, institution, member, \
@@ -280,37 +280,10 @@ class ProposalPart(object):
         Get a proposal record.
         """
 
-        members = None
-        stmt = select([
-            proposal,
-            call.c.semester_id,
-            semester.c.name.label('semester_name'),
-            semester.c.code.label('semester_code'),
-            call.c.queue_id,
-            queue.c.name.label('queue_name'),
-            queue.c.code.label('queue_code'),
-            semester.c.facility_id,
-        ]).select_from(
-            proposal.join(call).join(semester).join(queue)
-        ).where(
-            proposal.c.id == proposal_id
-        )
-
-        if facility_id is not None:
-            stmt = stmt.where(semester.c.facility_id == facility_id)
-
-        with self._transaction(_conn=_conn) as conn:
-            result = conn.execute(stmt).first()
-
-            if result is None:
-                raise NoSuchRecord('proposal does not exist with id={0}',
-                                   proposal_id)
-
-            if with_members:
-                members = self.search_member(proposal_id=proposal_id,
-                                             _conn=conn)
-
-        return Proposal(members=members, **result)
+        return self.search_proposal(
+            facility_id=facility_id, proposal_id=proposal_id,
+            with_members=with_members, _conn=_conn
+        ).get_single()
 
     def get_proposal_facility_code(self, proposal_id):
         """
@@ -548,21 +521,90 @@ class ProposalPart(object):
 
         return ans
 
-    def search_proposal(self, call_id=None):
+    def search_proposal(self, call_id=None, facility_id=None, proposal_id=None,
+                        person_id=None, with_members=False, _conn=None):
         """
         Search for proposals.
+
+        If "person_id" is specified, then this method searches for proposals
+        with this person as a member, and also sets "members" in the
+        returned "Proposal" object to a "MemberInfo" object summarizing
+        that person's role.
+
+        Otherwise if "with_members" is set, then the "Proposal" object's
+        "members" attribute is a "MemberCollection" with information about
+        all the members of the proposal.
         """
 
-        stmt = proposal.select()
+        select_columns = [
+            proposal,
+            call.c.semester_id,
+            semester.c.name.label('semester_name'),
+            semester.c.code.label('semester_code'),
+            call.c.queue_id,
+            queue.c.name.label('queue_name'),
+            queue.c.code.label('queue_code'),
+            semester.c.facility_id,
+        ]
 
+        select_from = proposal.join(call).join(semester).join(queue)
+
+        # Determine query: add member results if person_id specified.
+        if person_id is not None:
+            select_columns.extend([
+                member.c.pi,
+                member.c.editor,
+                member.c.observer,
+            ])
+            select_from = select_from.join(member)
+
+        stmt = select(select_columns).select_from(select_from)
+
+        # Determine constraints.
         if call_id is not None:
             stmt = stmt.where(proposal.c.call_id == call_id)
 
+        if facility_id is not None:
+            stmt = stmt.where(semester.c.facility_id == facility_id)
+
+        if proposal_id is not None:
+            stmt = stmt.where(proposal.c.id == proposal_id)
+
+        if person_id is not None:
+            stmt = stmt.where(member.c.person_id == person_id)
+
+        # Determine ordering: don't sort if only selecting one proposal.
+        # This ordering is intended for the personal dashboard.  If other
+        # pages start using this method, perhaps the ordering should be
+        # controlled by more arguments.
+        if proposal_id is None:
+            stmt = stmt.order_by(
+                semester.c.facility_id,
+                call.c.semester_id.desc(),
+                call.c.queue_id,
+                proposal.c.number)
+
+        # Perform query and collect results.
         ans = ResultCollection()
 
-        with self._transaction() as conn:
-            for row in conn.execute(stmt.order_by(proposal.c.id)):
-                ans[row['id']] = ProposalInfo(**row)
+        with self._transaction(_conn=_conn) as conn:
+            # Fetch all results before loop so that we can also query for
+            # members if requested.
+            for row in conn.execute(stmt).fetchall():
+                members = None
+
+                if person_id is not None:
+                    row = dict(row.items())
+                    members = MemberInfo(
+                        row.pop('pi'),
+                        row.pop('editor'),
+                        row.pop('observer'))
+
+                elif with_members:
+                    members = self.search_member(proposal_id=row['id'],
+                                                 _conn=conn)
+
+                ans[row['id']] = Proposal(members=members, **row)
 
         return ans
 

@@ -25,7 +25,7 @@ from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from insertnamehere.type import Affiliation, Call, FormatType, \
     Member, MemberCollection, MemberInstitution,  \
-    Proposal, ProposalInfo, ProposalState, ProposalText, ProposalTextRole, \
+    Proposal, ProposalState, ProposalText, ProposalTextRole, \
     ResultCollection, Target, TargetCollection
 from .dummy_db import DBTestCase
 
@@ -303,9 +303,14 @@ class DBProposalTest(DBTestCase):
                 self.assertIsInstance(result, ResultCollection)
                 self.assertEqual(len(result), i)
                 self.assertIn(proposal_id, result)
-                self.assertEqual(result[proposal_id],
-                                 ProposalInfo(proposal_id, call_id, i,
-                                              ProposalState.SUBMITTED, title))
+                proposal = result[proposal_id]
+                self.assertIsInstance(proposal, Proposal)
+                self.assertEqual(proposal.id, proposal_id)
+                self.assertEqual(proposal.call_id, call_id)
+                self.assertEqual(proposal.number, i)
+                self.assertEqual(proposal.state, ProposalState.SUBMITTED)
+                self.assertEqual(proposal.title, title)
+                self.assertIsNone(proposal.members)
 
         # The proposal must have a title.
         with self.assertRaisesRegexp(UserError, 'blank'):

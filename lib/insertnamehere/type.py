@@ -56,6 +56,10 @@ Member = namedtuple(
      'resolved_institution_id',
      'institution_name', 'institution_organization', 'institution_country'])
 
+MemberInfo = namedtuple(
+    'MemberInfo',
+    ['pi', 'editor', 'observer'])
+
 MemberInstitution = namedtuple(
     'MemberInstitution',
     ['id', 'institution_id'])
@@ -86,10 +90,6 @@ Proposal = namedtuple(
         'facility_id',
         'members',
     ])
-
-ProposalInfo = namedtuple(
-    'ProposalInfo',
-    [x.name for x in proposal.columns])
 
 ProposalText = namedtuple(
     'ProposalText',

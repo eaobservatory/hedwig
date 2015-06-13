@@ -41,7 +41,8 @@ def close_call_proposals(db, call_id):
         raise UserError('Call with id={0} not found or still open.',
                         call_id)
 
-    for proposal in db.search_proposal(call_id=call_id).values():
+    for proposal in db.search_proposal(call_id=call_id,
+                                       with_members=True).values():
         # Change the proposal state.
         new_state = None
 
@@ -62,7 +63,7 @@ def close_call_proposals(db, call_id):
 
         # Freeze the current institution ID values in the member table.
         records = {}
-        for member in db.search_member(proposal_id=proposal.id).values():
+        for member in proposal.members.values():
             records[member.id] = MemberInstitution(
                 member.id, member.resolved_institution_id)
 
