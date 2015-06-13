@@ -36,9 +36,9 @@
                                 <td>{{ proposal.title }}</td>
                                 <td>{{ proposal.state | proposal_state_name }}</td>
                                 <td>
-                                    {% if proposal.members.pi %}PI{% endif %}
-                                    {% if proposal.members.editor %}Editor{% endif %}
-                                    {% if proposal.members.observer%}Observer{% endif %}
+                                    {% if proposal.members.pi %}<span class="label">PI</span>{% endif %}
+                                    {% if proposal.members.editor %}<span class="label">editor</span>{% endif %}
+                                    {% if proposal.members.observer%}<span class="label">observer</span>{% endif %}
                                 </td>
                             </tr>
                         {% endfor %}

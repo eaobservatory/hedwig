@@ -36,9 +36,9 @@
                     {% if session.person.id != member.person_id %}
                         <input type="checkbox" name="editor_{{ member.id }}" value="yes" {{ 'checked="checked"' | safe if member.editor }} />
                     {% elif member.editor %}
-                        Yes <input type="hidden" name="editor_{{ member.id }}" value="yes" />
+                        yes <input type="hidden" name="editor_{{ member.id }}" value="yes" />
                     {% else %}
-                        No
+                        no
                     {% endif %}
                 </td>
                 <td>

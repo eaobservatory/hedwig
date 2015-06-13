@@ -85,7 +85,7 @@
                 <th>Name</th>
                 <th>Affiliation</th>
                 <th>Institution</th>
-                <th>Information</th>
+                <th>Role</th>
             </tr>
             {% for member in proposal.members %}
                 <tr>
@@ -110,9 +110,9 @@
                         {% endif %}
                     </td>
                     <td>
-                        {% if member.pi %}PI{% endif %}
-                        {% if member.editor %}Editor{% endif %}
-                        {% if member.observer%}Observer{% endif %}
+                        {% if member.pi %}<span class="label">PI</span>{% endif %}
+                        {% if member.editor %}<span class="label">editor</span>{% endif %}
+                        {% if member.observer%}<span class="label">observer</span>{% endif %}
                     </td>
                </tr>
             {% endfor %}

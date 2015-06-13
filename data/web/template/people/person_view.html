@@ -48,9 +48,9 @@
                 {% endif %}
                 <td>
                     <a href="mailto:{{ email.address }}">{{ email.address }}</a>
-                    {{ 'primary' if email.primary }}
-                    {{ 'verified' if email.verified }}
-                    {{ 'public' if email.public }}
+                    {% if email.primary %}<span class="label">primary</span>{% endif %}
+                    {% if email.verified %}<span class="label">verified</span>{% endif %}
+                    {% if email.public %}<span class="label">public</span>{% endif %}
                 </td>
             </tr>
         {% endfor %}
