@@ -25,13 +25,13 @@ import os
 
 from ..config import get_config, get_database, get_facilities, get_home
 from ..type import FacilityInfo, ProposalState
-from .util import templated
+from .util import require_auth, session, templated
 
 from .blueprint.facility import create_facility_blueprint
 from .blueprint.people import create_people_blueprint
 from .format import format_text
 
-from ..view.home import prepare_home
+from ..view.home import prepare_dashboard, prepare_home
 
 
 def create_web_app():
@@ -64,6 +64,12 @@ def create_web_app():
     @templated('home.html')
     def home_page():
         return prepare_home(application_name, facilities)
+
+    @app.route('/dashboard')
+    @require_auth(require_person=True)
+    @templated('dashboard.html')
+    def dashboard():
+        return prepare_dashboard(db, session['person']['id'], facilities)
 
     app.register_blueprint(create_people_blueprint(db))
 

@@ -64,6 +64,11 @@ p.missing {
     border-radius: 1ex;
 }
 
+p.not_present {
+    font-style: italic;
+    color: #888;
+}
+
 p.progress {
     font-style: italic;
     text-align: center;

@@ -1,0 +1,51 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<section>
+    <h2>Proposals</h2>
+
+    {% if not proposals %}
+        <p class="not_present">
+            You do not yet have any proposals in this system.
+        </p>
+    {% else %}
+        {% for facility_name, facility_proposals in proposals.items() %}
+            <h3>{{ facility_name }}</h3>
+
+            <table>
+                <tr>
+                    <th>Semester</th>
+                    <th>Queue</th>
+                    <th>Proposal</th>
+                    <th>Title</th>
+                    <th>State</th>
+                    <th>Your role</th>
+                </tr>
+                {% for semester, semester_proposals in facility_proposals | groupby('semester_id') %}
+                    {% for queue, queue_proposals in semester_proposals | groupby('queue_id') %}
+                    {% set semester_loop = loop %}
+                        {% for proposal in queue_proposals %}
+                            <tr>
+                                {% if loop.first and semester_loop.first %}
+                                    <td rowspan="{{ semester_proposals | length }}">{{ proposal.semester_name }}</td>
+                                {% endif %}
+                                {% if loop.first %}
+                                    <td rowspan="{{ loop.length }}">{{ proposal.queue_name }}</td>
+                                {% endif %}
+                                <td><a href="{{ url_for(proposal.facility_code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+                                <td>{{ proposal.title }}</td>
+                                <td>{{ proposal.state | proposal_state_name }}</td>
+                                <td>
+                                    {% if proposal.members.pi %}PI{% endif %}
+                                    {% if proposal.members.editor %}Editor{% endif %}
+                                    {% if proposal.members.observer%}Observer{% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                {% endfor %}
+            </table>
+        {% endfor %}
+    {% endif %}
+</section>
+{% endblock %}
