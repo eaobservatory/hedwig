@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% from 'macro/institution.html' import render_member_institution %}
+
+{% block content %}
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Institution</th>
+    </tr>
+    {% for person in persons %}
+        <tr>
+            <td>
+                <a href="{{ url_for('.person_view', person_id=person.id) }}">{{ person.name }}</a>
+                {% if not person.public %}
+                    <span class="label">private</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if person.institution_id is not none %}
+                    <a href="{{ url_for('.institution_view', institution_id=person.institution_id) }}">
+                    {{ render_member_institution(person) }}
+                    </a>
+                {% else %}
+                    &nbsp;
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

@@ -81,12 +81,17 @@ def create_people_blueprint(db):
     def drop_admin():
         return view.drop_admin(request.referrer)
 
-
     @bp.route('/person/register', methods=['GET', 'POST'])
     @templated('people/person_edit.html')
     @require_auth()
     def register_person():
         return view.register_person(db, request.form, request.method == 'POST')
+
+    @bp.route('/person/')
+    @templated('people/person_list.html')
+    @require_auth()
+    def person_list():
+        return view.person_list(db)
 
     @bp.route('/person/<int:person_id>')
     @templated('people/person_view.html')

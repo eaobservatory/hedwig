@@ -391,6 +391,26 @@ def register_person(db, form, is_post):
     }
 
 
+def person_list(db):
+    # Only show public members unless the user is has administrative
+    # privileges.
+    public = True
+    if session.get('is_admin', False) and auth.can_be_admin(db):
+        public = None
+    persons = db.search_person(registered=True, public=public,
+                               with_institution=True)
+
+    countries = get_countries()
+
+    return {
+        'title': 'Directory of Users',
+        'persons': [
+            p._replace(institution_country=countries.get(
+                p.institution_country, 'Unknown country'))
+            for p in persons.values()],
+    }
+
+
 def person_view(db, person_id):
     try:
         person = db.get_person(person_id,
