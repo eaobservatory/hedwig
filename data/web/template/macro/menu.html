@@ -9,6 +9,8 @@
         {% for navitem in navigation %}
             {% if navitem == 'facility_admin' %}
                 <li><a href="{{ url_for('.facility_admin') }}">Administrative menu</a></li>
+            {% elif navitem == 'people' %}
+                <li><a href="{{ url_for('.person_list') }}">User Directory</a></li>
             {% elif navitem is not string %}
                 {% with name=navitem[0], url=navitem[1] %}
                     <li><a href="{{ url }}">{{ name }}</a></li>

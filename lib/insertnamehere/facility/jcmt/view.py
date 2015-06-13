@@ -108,4 +108,5 @@ class JCMT(Generic):
             'requests': records.values(),
             'instruments': JCMTInstrument.get_options(),
             'weathers': JCMTWeather.get_options(),
+            'proposal_code': self.make_proposal_code(db, proposal),
         }

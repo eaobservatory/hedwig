@@ -1,4 +1,5 @@
 {% extends "generic/proposal_view.html" %}
+{% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
 {% set scripts=['edit_jcmt_request'] %}
 
 {% block content %}

@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% set navigation=[(person.name, url_for('.person_view', person_id=person.id))] %}
+{% set navigation=['people', (person.name, url_for('.person_view', person_id=person.id))] %}
 {% set scripts=['edit_email'] %}
 
 {% block content %}

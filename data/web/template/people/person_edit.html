@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% if person.id is not none %}
-    {% set navigation=[(person.name, url_for('.person_view', person_id=person.id))] %}
+    {% set navigation=['people', (person.name, url_for('.person_view', person_id=person.id))] %}
 {% endif %}
 
 {% block content %}

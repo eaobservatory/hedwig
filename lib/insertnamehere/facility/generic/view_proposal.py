@@ -162,6 +162,7 @@ class GenericProposal(object):
         return {
             'title': 'Submit Proposal',
             'proposal': proposal,
+            'proposal_code': self.make_proposal_code(db, proposal),
         }
 
     @with_proposal(permission='edit')
@@ -196,6 +197,7 @@ class GenericProposal(object):
         return {
             'title': 'Withdraw Proposal',
             'proposal': proposal,
+            'proposal_code': self.make_proposal_code(db, proposal),
         }
 
     @with_proposal(permission='edit')
@@ -217,6 +219,7 @@ class GenericProposal(object):
             'title': 'Edit Title',
             'message': message,
             'proposal': proposal,
+            'proposal_code': self.make_proposal_code(db, proposal),
         }
 
     @with_proposal(permission='edit')
@@ -251,6 +254,7 @@ class GenericProposal(object):
             'proposal_id': proposal.id,
             'text': abstract,
             'target': url_for('.abstract_edit', proposal_id=proposal.id),
+            'proposal_code': self.make_proposal_code(db, proposal),
         }
 
     @with_proposal(permission='edit')
@@ -304,6 +308,7 @@ class GenericProposal(object):
             'proposal_id': proposal.id,
             'members': records.values(),
             'affiliations': affiliations.values(),
+            'proposal_code': self.make_proposal_code(db, proposal),
         }
 
     @with_proposal(permission='edit')
@@ -439,6 +444,7 @@ class GenericProposal(object):
             'persons': persons,
             'affiliations': affiliations.values(),
             'member': member,
+            'proposal_code': self.make_proposal_code(db, proposal),
         }
 
     @with_proposal(permission='edit')
@@ -493,6 +499,7 @@ class GenericProposal(object):
             'message': message,
             'systems': CoordSystem.get_options(),
             'targets': records.values(),
+            'proposal_code': self.make_proposal_code(db, proposal),
         }
 
     @with_proposal(permission='edit')
