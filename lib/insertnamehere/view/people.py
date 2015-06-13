@@ -441,7 +441,9 @@ def person_edit(db, person_id, form, is_post):
         try:
             if not person.name:
                 raise UserError('Please enter your full name.')
-            db.update_person(person_id, name=person.name, public=person.public)
+            db.update_person(
+                person_id, name=person.name,
+                public=(person.public and person.user_id is not None))
 
             if session['user_id'] == person.user_id:
                 flash('Your user profile has been saved.')

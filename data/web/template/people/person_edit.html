@@ -23,16 +23,18 @@
             <label for="person_name">Full name</label>
             <input type="text" name="person_name" value="{{ person.name }}" autofocus="autofocus" required="required" size="40" />
         </li>
-        <li>
-            <div class="explanation">
-                Would you like your name to appear in the directory of users?
-                This will allow collaborators to more easily invite you to
-                participate in their proposals.
-            </div>
-            <label for="person_public">User directory</label>
-            <input type="checkbox" name="person_public" value="yes" {{ 'checked="checked"' | safe if person.public }} />
-            Show in directory
-        </li>
+        {% if (person.id is none) or (person.user_id is not none) %}
+            <li>
+                <div class="explanation">
+                    Would you like your name to appear in the directory of users?
+                    This will allow collaborators to more easily invite you to
+                    participate in their proposals.
+                </div>
+                <label for="person_public">User directory</label>
+                <input type="checkbox" name="person_public" value="yes" {{ 'checked="checked"' | safe if person.public }} />
+                Show in directory
+            </li>
+        {% endif %}
         {% if single_email is defined %}
             <li>
                 <label for="single_email">Email address</label>
