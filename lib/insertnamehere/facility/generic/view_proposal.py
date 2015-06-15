@@ -108,12 +108,7 @@ class GenericProposal(object):
         to the proposal.
         """
 
-        abstract = None
-        try:
-            abstract = db.get_proposal_text(proposal.id,
-                                            ProposalTextRole.ABSTRACT)
-        except NoSuchRecord:
-            pass
+        proposal_text = db.get_all_proposal_text(proposal.id)
 
         targets = [
             x._replace(system=CoordSystem.get_name(x.system)) for x in
@@ -121,7 +116,7 @@ class GenericProposal(object):
                 proposal_id=proposal.id).to_formatted_collection().values()]
 
         return {
-            'abstract': abstract,
+            'abstract': proposal_text.get(ProposalTextRole.ABSTRACT, None),
             'targets': targets,
         }
 

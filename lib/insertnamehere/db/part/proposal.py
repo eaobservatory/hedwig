@@ -274,6 +274,24 @@ class ProposalPart(object):
 
             return result.inserted_primary_key[0]
 
+    def get_all_proposal_text(self, proposal_id, _conn=None):
+        """
+        Get all pieces of text associated with a proposal.
+
+        The results are returned as a dictionary of ProposalText objects
+        organized by role identifier.
+        """
+
+        ans = {}
+
+        with self._transaction(_conn=_conn) as conn:
+            for row in conn.execute(proposal_text.select().where(
+                    proposal_text.c.proposal_id == proposal_id)):
+                ans[row['role']] = ProposalText(text=row['text'],
+                                                format=row['format'])
+
+        return ans
+
     def get_call(self, facility_id, call_id):
         """
         Get a call record.
