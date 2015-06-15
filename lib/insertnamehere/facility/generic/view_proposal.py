@@ -29,7 +29,7 @@ from ...view import auth
 from ...web.util import ErrorPage, HTTPError, HTTPForbidden, \
     HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
-from ...view.util import organise_collection, with_proposal
+from ...view.util import count_words, organise_collection, with_proposal
 
 
 class GenericProposal(object):
@@ -225,6 +225,7 @@ class GenericProposal(object):
     @with_proposal(permission='edit')
     def view_abstract_edit(self, db, proposal, can, form, is_post):
         message = None
+        word_lim = proposal.abst_word_lim
 
         try:
             abstract = db.get_proposal_text(proposal.id,
@@ -239,6 +240,12 @@ class GenericProposal(object):
                                          format=int(form['format']))
 
             try:
+                word_count = count_words(abstract)
+                if word_count > word_lim:
+                    raise UserError(
+                        'Abstract is too long: {0} / {1} words',
+                        word_count, word_lim)
+
                 db.set_proposal_text(proposal.id, ProposalTextRole.ABSTRACT,
                                      abstract.text, abstract.format, is_update)
                 flash('The abstract has been saved.')
@@ -255,6 +262,7 @@ class GenericProposal(object):
             'text': abstract,
             'target': url_for('.abstract_edit', proposal_id=proposal.id),
             'proposal_code': self.make_proposal_code(db, proposal),
+            'wordlimit': word_lim,
         }
 
     @with_proposal(permission='edit')

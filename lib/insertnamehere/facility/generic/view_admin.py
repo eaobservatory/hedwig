@@ -233,7 +233,9 @@ class GenericAdmin(object):
             call = Call(None, semester_id=None, queue_id=None,
                         date_open=None, date_close=None,
                         facility_id=None, semester_name='',
-                        queue_name='', queue_description=None)
+                        queue_name='', queue_description=None,
+                        abst_word_lim=200, tech_word_lim=1000, tech_page_lim=1,
+                        sci_word_lim=2000, sci_fig_lim=4, sci_page_lim=3)
             semesters = db.search_semester(facility_id=self.id_)
             queues = db.search_queue(facility_id=self.id_)
             title = 'Add New Call'
@@ -257,7 +259,13 @@ class GenericAdmin(object):
             try:
                 call = call._replace(
                     date_open=parse_datetime('open', form),
-                    date_close=parse_datetime('close', form))
+                    date_close=parse_datetime('close', form),
+                    abst_word_lim=int(form['abst_word_lim']),
+                    tech_word_lim=int(form['tech_word_lim']),
+                    tech_page_lim=int(form['tech_page_lim']),
+                    sci_word_lim=int(form['sci_word_lim']),
+                    sci_fig_lim=int(form['sci_fig_lim']),
+                    sci_page_lim=int(form['sci_page_lim']))
 
                 if call_id is None:
                     # Create new call.
@@ -268,7 +276,13 @@ class GenericAdmin(object):
                     new_call_id = db.add_call(semester_id=call.semester_id,
                                               queue_id=call.queue_id,
                                               date_open=call.date_open,
-                                              date_close=call.date_close)
+                                              date_close=call.date_close,
+                                              abst_word_lim=call.abst_word_lim,
+                                              tech_word_lim=call.tech_word_lim,
+                                              tech_page_lim=call.tech_page_lim,
+                                              sci_word_lim=call.sci_word_lim,
+                                              sci_fig_lim=call.sci_fig_lim,
+                                              sci_page_lim=call.sci_page_lim)
                     flash('The new call has been added.')
                     raise HTTPRedirect(url_for('.call_view',
                                                call_id=new_call_id))
@@ -276,7 +290,13 @@ class GenericAdmin(object):
                 else:
                     # Update existing call.
                     db.update_call(call_id, date_open=call.date_open,
-                                   date_close=call.date_close)
+                                   date_close=call.date_close,
+                                   abst_word_lim=call.abst_word_lim,
+                                   tech_word_lim=call.tech_word_lim,
+                                   tech_page_lim=call.tech_page_lim,
+                                   sci_word_lim=call.sci_word_lim,
+                                   sci_fig_lim=call.sci_fig_lim,
+                                   sci_page_lim=call.sci_page_lim)
                     flash('The call has been updated.')
                     raise HTTPRedirect(url_for('.call_view', call_id=call_id))
 

@@ -18,11 +18,26 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+import functools
+import re
+
 from ..error import NoSuchRecord
 from ..web.util import HTTPError, HTTPForbidden, HTTPNotFound
 from . import auth
 
-import functools
+
+def count_words(text):
+    """
+    Counts the number of words in the given text.
+
+    "text" can be a string, or any object with a "text" attribute, such as
+    PropsalText.
+    """
+
+    if hasattr(text, 'text'):
+        text = text.text
+
+    return len(re.split('\s+', text))
 
 
 def organise_collection(class_, updated_records, added_records):

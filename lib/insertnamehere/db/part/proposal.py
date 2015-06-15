@@ -53,6 +53,8 @@ class ProposalPart(object):
 
     def add_call(self, semester_id, queue_id,
                  date_open, date_close,
+                 abst_word_lim, tech_word_lim, tech_page_lim,
+                 sci_word_lim, sci_fig_lim, sci_page_lim,
                  _test_skip_check=False):
         """
         Add a call for proposals to the database.
@@ -83,6 +85,12 @@ class ProposalPart(object):
                 call.c.queue_id: queue_id,
                 call.c.date_open: date_open,
                 call.c.date_close: date_close,
+                call.c.abst_word_lim: abst_word_lim,
+                call.c.tech_word_lim: tech_word_lim,
+                call.c.tech_page_lim: tech_page_lim,
+                call.c.sci_word_lim: sci_word_lim,
+                call.c.sci_fig_lim: sci_fig_lim,
+                call.c.sci_page_lim: sci_page_lim,
             }))
 
         return result.inserted_primary_key[0]
@@ -545,6 +553,12 @@ class ProposalPart(object):
             queue.c.name.label('queue_name'),
             queue.c.code.label('queue_code'),
             semester.c.facility_id,
+            call.c.abst_word_lim,
+            call.c.tech_word_lim,
+            call.c.tech_page_lim,
+            call.c.sci_word_lim,
+            call.c.sci_fig_lim,
+            call.c.sci_page_lim,
         ]
 
         select_from = proposal.join(call).join(semester).join(queue)
@@ -752,6 +766,8 @@ class ProposalPart(object):
                 records)
 
     def update_call(self, call_id, date_open=None, date_close=None,
+                    abst_word_lim=None, tech_word_lim=None, tech_page_lim=None,
+                    sci_word_lim=None, sci_fig_lim=None, sci_page_lim=None,
                     _test_skip_check=False):
         """
         Update a call for proposals record.
@@ -767,6 +783,18 @@ class ProposalPart(object):
                     raise UserError('Closing date is before opening date.')
         if date_close is not None:
             values['date_close'] = date_close
+        if abst_word_lim is not None:
+            values['abst_word_lim'] = abst_word_lim
+        if tech_word_lim is not None:
+            values['tech_word_lim'] = tech_word_lim
+        if tech_page_lim is not None:
+            values['tech_page_lim'] = tech_page_lim
+        if sci_word_lim is not None:
+            values['sci_word_lim'] = sci_word_lim
+        if sci_fig_lim is not None:
+            values['sci_fig_lim'] = sci_fig_lim
+        if sci_page_lim is not None:
+            values['sci_page_lim'] = sci_page_lim
 
         if not values:
             raise Error('no call updates specified')

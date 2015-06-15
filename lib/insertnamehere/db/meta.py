@@ -56,6 +56,12 @@ call = Table(
            nullable=False),
     Column('date_open', DateTime(), nullable=False),
     Column('date_close', DateTime(), nullable=False),
+    Column('abst_word_lim', Integer, nullable=False),
+    Column('tech_word_lim', Integer, nullable=False),
+    Column('tech_page_lim', Integer, nullable=False),
+    Column('sci_word_lim', Integer, nullable=False),
+    Column('sci_fig_lim', Integer, nullable=False),
+    Column('sci_page_lim', Integer, nullable=False),
     UniqueConstraint('semester_id', 'queue_id'),
     **_table_opts)
 

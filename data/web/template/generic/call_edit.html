@@ -9,7 +9,7 @@
     </p>
 {% endif %}
 
-<form method="POST" action="{{ target }}">
+<form method="POST" action="{{ target }}" novalidate="novalidate">
     <ol>
         {% if semesters is not none %}
             <li>
@@ -42,6 +42,35 @@
             <input type="date" name="close_date" value="{{ call.date_close | format_date }}" placeholder="YYYY-MM-DD" required="requried" size="10" />
             <input type="time" name="close_time" value="{{ call.date_close | format_time }}" placeholder="HH:MM" required="required" size="5" />
             <span class="explanation">UT, proposal deadline</span>
+        </li>
+        <li>
+            <label for="abst_word_lim">Abstract word limit</label>
+            <input type="number" name="abst_word_lim" value="{{ call.abst_word_lim }}" min="0" step="25" size="5" />
+        </li>
+        <li>
+            <label for="tech_word_lim">Technical word limit</label>
+            <input type="number" name="tech_word_lim" value="{{ call.tech_word_lim }}" min="0" step="100" size="5" />
+            <span class="explanation">when edited online</span>
+        </li>
+        <li>
+            <label for="tech_page_lim">Technical page limit</label>
+            <input type="number" name="tech_page_lim" value="{{ call.tech_page_lim }}" min="0" step="1" size="5" />
+            <span class="explanation">for PDF uploads</span>
+        </li>
+        <li>
+            <label for="sci_word_lim">Science word limit</label>
+            <input type="number" name="sci_word_lim" value="{{ call.sci_word_lim }}" min="0" step="100" size="5" />
+            <span class="explanation">when edited online</span>
+        </li>
+        <li>
+            <label for="sci_fig_lim">Science figure limit</label>
+            <input type="number" name="sci_fig_lim" value="{{ call.sci_fig_lim }}" min="0" step="1" size="5" />
+            <span class="explanation">when edited online</span>
+        </li>
+        <li>
+            <label for="sci_page_lim">Science page limit</label>
+            <input type="number" name="sci_page_lim" value="{{ call.sci_page_lim }}" min="0" step="1" size="5" />
+            <span class="explanation">for PDF uploads</span>
         </li>
         <li>
             <input type="submit" value="Save" name="submit" />

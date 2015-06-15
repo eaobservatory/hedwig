@@ -645,7 +645,8 @@ class DBPeopleTest(DBTestCase):
         queue_id = self.db.add_queue(facility_id, 'test', 'test')
         call_id = self.db.add_call(semester_id, queue_id,
                                    datetime(1999, 9, 1),
-                                   datetime(1999, 9, 30))
+                                   datetime(1999, 9, 30),
+                                   100, 1000, 1, 2000, 4, 3)
         affiliation_id = self.db.add_affiliation(queue_id, 'Aff/n 1')
         proposal_id = self.db.add_proposal(call_id, person_id_1,
                                            affiliation_id, 'Proposal 1')

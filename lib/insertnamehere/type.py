@@ -92,6 +92,8 @@ Proposal = namedtuple(
         'semester_id', 'semester_name', 'semester_code',
         'queue_id', 'queue_name', 'queue_code',
         'facility_id',
+        'abst_word_lim', 'tech_word_lim', 'tech_page_lim',
+        'sci_word_lim', 'sci_fig_lim', 'sci_page_lim',
         'members',
     ])
 

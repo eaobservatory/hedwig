@@ -20,6 +20,27 @@
         <th>Close</th>
         <td>{{ call.date_close | format_datetime }}</td>
     </tr>
+    <tr>
+        <th>Abstract</th>
+        <td>{{ call.abst_word_lim }} word{% if call.abst_word_lim != 1 %}s{% endif %}</td>
+    </tr>
+    <tr>
+        <th rowspan="2">Technical Justification</th>
+        <td>{{ call.tech_word_lim }} word{% if call.tech_word_lim != 1 %}s{% endif %}</td>
+    </tr>
+    <tr>
+        <td>{{ call.tech_page_lim }} page{% if call.tech_page_lim != 1 %}s{% endif %}</td>
+    </tr>
+    <tr>
+        <th rowspan="3">Scientific Justification</th>
+        <td>{{ call.sci_word_lim }} word{% if call.sci_word_lim != 1 %}s{% endif %}</td>
+    </tr>
+    <tr>
+        <td>{{ call.sci_fig_lim }} figure{% if call.sci_fig_lim != 1 %}s{% endif %}</td>
+    </tr>
+    <tr>
+        <td>{{ call.sci_page_lim }} page{% if call.sci_page_lim != 1 %}s{% endif %}</td>
+    </tr>
 </table>
 
 <p>

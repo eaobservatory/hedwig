@@ -82,6 +82,22 @@ span.label {
     padding-right: 1ex;
 }
 
+span.forminfo_ok {
+    background: #8F8;
+    color: #000;
+    border-radius: 1ex;
+    padding-left: 1ex;
+    padding-right: 1ex;
+}
+
+span.forminfo_bad {
+    background: #F00;
+    color: #FFF;
+    border-radius: 1ex;
+    padding-left: 1ex;
+    padding-right: 1ex;
+}
+
 form ol li div.explanation {
     margin-left: 205px;
     color: #888;
