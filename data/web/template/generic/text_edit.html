@@ -12,7 +12,7 @@
 
 <form method="POST" action="{{ target }}">
     <p>
-        <textarea name="text" required="requried" autofocus="autofocus" cols="80" rows="{{ rows | default(10) }}" data-wordlimit="{{ wordlimit }}">{{ text.text }}</textarea>
+        <textarea name="text" required="requried" autofocus="autofocus" cols="80" rows="{{ rows | default(10) }}" data-wordlimit="{{ word_limit }}">{{ text.text }}</textarea>
         <br />
         <span id="text_words"></span>
         <br />
@@ -20,6 +20,5 @@
         <input type="submit" value="Save" name="submit" />
     </p>
 </form>
-
 
 {% endblock %}

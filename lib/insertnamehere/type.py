@@ -177,11 +177,19 @@ class ProposalTextRole(object):
     TECHNICAL_CASE = 2
     SCIENCE_CASE = 3
 
-    _roles = set((ABSTRACT, TECHNICAL_CASE, SCIENCE_CASE))
+    _info = {
+        ABSTRACT: 'Abstract',
+        TECHNICAL_CASE: 'Technical Justification',
+        SCIENCE_CASE: 'Scientific Justification',
+    }
 
     @classmethod
     def is_valid(cls, role):
-        return role in cls._roles
+        return role in cls._info
+
+    @classmethod
+    def get_name(cls, role):
+        return cls._info[role]
 
 
 class ResultCollection(OrderedDict):

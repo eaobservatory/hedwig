@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+{% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
+
+{% block content %}
+
+{% if word_limit %}
+    <section>
+        <h2>Edit Online</h2>
+
+        <p>
+            You may write
+            {{ word_limit }} word{% if word_limit != 1 %}s{% endif %}{% if fig_limit %}
+                and attach
+                {% if fig_limit == 1 %}
+                    1 figure{% else %}
+                    up to {{ fig_limit }} figures{%endif%}{%endif %}.
+        </p>
+
+        <nav>
+            <p>
+                <a href="{{ target_text }}">Edit text online</a>
+            </p>
+        </nav>
+    </section>
+{% endif %}
+
+{% if page_limit %}
+    <section>
+        <h2>Upload PDF File</h2>
+
+        <p>
+            You may upload a PDF file with
+            {% if page_limit == 1 %}
+                1 page.
+            {% else %}
+                up to {{ page_limit }} pages.
+            {% endif %}
+        </p>
+
+    </section>
+{% endif %}
+
+{% if (not word_limit) and (not page_limit) %}
+    <p>
+        No word or page limits have been configured for this
+        call for proposals.
+    </p>
+{% endif %}
+
+{% endblock %}

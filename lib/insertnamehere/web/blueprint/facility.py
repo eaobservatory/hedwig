@@ -95,7 +95,8 @@ def create_facility_blueprint(db, facility):
     @require_auth(require_person=True)
     def abstract_edit(proposal_id):
         return facility.view_abstract_edit(
-            db, proposal_id, request.form, request.method == 'POST')
+            db, proposal_id,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/member', methods=['GET', 'POST'])
     @facility_template('member_edit.html')
@@ -125,6 +126,36 @@ def create_facility_blueprint(db, facility):
     def request_edit(proposal_id):
         return facility.view_request_edit(
             db, proposal_id, request.form, request.method == 'POST')
+
+    @bp.route('/proposal/<int:proposal_id>/technical')
+    @facility_template('case_edit.html')
+    @require_auth(require_person=True)
+    def tech_edit(proposal_id):
+        return facility.view_tech_edit(db, proposal_id)
+
+    @bp.route('/proposal/<int:proposal_id>/technical/text',
+              methods=['GET', 'POST'])
+    @facility_template('text_edit.html')
+    @require_auth(require_person=True)
+    def tech_edit_text(proposal_id):
+        return facility.view_tech_edit_text(
+            db, proposal_id,
+            (request.form if request.method == 'POST' else None))
+
+    @bp.route('/proposal/<int:proposal_id>/scientific')
+    @facility_template('case_edit.html')
+    @require_auth(require_person=True)
+    def sci_edit(proposal_id):
+        return facility.view_sci_edit(db, proposal_id)
+
+    @bp.route('/proposal/<int:proposal_id>/scientific/text',
+              methods=['GET', 'POST'])
+    @facility_template('text_edit.html')
+    @require_auth(require_person=True)
+    def sci_edit_text(proposal_id):
+        return facility.view_sci_edit_text(
+            db, proposal_id,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/admin')
     @facility_template('facility_admin.html')

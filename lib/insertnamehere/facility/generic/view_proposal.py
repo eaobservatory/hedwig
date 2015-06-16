@@ -117,6 +117,10 @@ class GenericProposal(object):
 
         return {
             'abstract': proposal_text.get(ProposalTextRole.ABSTRACT, None),
+            'tech_case': proposal_text.get(ProposalTextRole.TECHNICAL_CASE,
+                                           None),
+            'sci_case': proposal_text.get(ProposalTextRole.SCIENCE_CASE,
+                                          None),
             'targets': targets,
         }
 
@@ -218,47 +222,10 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission='edit')
-    def view_abstract_edit(self, db, proposal, can, form, is_post):
-        message = None
-        word_lim = proposal.abst_word_lim
-
-        try:
-            abstract = db.get_proposal_text(proposal.id,
-                                            ProposalTextRole.ABSTRACT)
-            is_update = True
-        except NoSuchRecord:
-            abstract = ProposalText('', FormatType.PLAIN)
-            is_update = False
-
-        if is_post:
-            abstract = abstract._replace(text=form['text'],
-                                         format=int(form['format']))
-
-            try:
-                word_count = count_words(abstract)
-                if word_count > word_lim:
-                    raise UserError(
-                        'Abstract is too long: {0} / {1} words',
-                        word_count, word_lim)
-
-                db.set_proposal_text(proposal.id, ProposalTextRole.ABSTRACT,
-                                     abstract.text, abstract.format, is_update)
-                flash('The abstract has been saved.')
-                raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id))
-
-            except UserError as e:
-                message = e.message
-
-        return {
-            'title': 'Edit Abstract',
-            'message': message,
-            'proposal_id': proposal.id,
-            'text': abstract,
-            'target': url_for('.abstract_edit', proposal_id=proposal.id),
-            'proposal_code': self.make_proposal_code(db, proposal),
-            'wordlimit': word_lim,
-        }
+    def view_abstract_edit(self, db, proposal, can, form):
+        return self._edit_text(
+            db, proposal, ProposalTextRole.ABSTRACT, proposal.abst_word_lim,
+            url_for('.abstract_edit', proposal_id=proposal.id), form, 10)
 
     @with_proposal(permission='edit')
     def view_member_edit(self, db, proposal, can, form, is_post):
@@ -508,3 +475,83 @@ class GenericProposal(object):
     @with_proposal(permission='edit')
     def view_request_edit(self, db, proposal, can, form, is_post):
         raise ErrorPage('Observing request not implemented for this facility.')
+
+    @with_proposal(permission='edit')
+    def view_tech_edit(self, db, proposal, can):
+        return {
+            'title': 'Edit Technical Justification',
+            'proposal_id': proposal.id,
+            'proposal_code': self.make_proposal_code(db, proposal),
+            'word_limit': proposal.tech_word_lim,
+            'fig_limit': 0,
+            'page_limit': proposal.tech_page_lim,
+            'target_text': url_for('.tech_edit_text', proposal_id=proposal.id),
+        }
+
+    @with_proposal(permission='edit')
+    def view_tech_edit_text(self, db, proposal, can, form):
+        return self._edit_text(
+            db, proposal, ProposalTextRole.TECHNICAL_CASE,
+            proposal.tech_word_lim,
+            url_for('.tech_edit_text', proposal_id=proposal.id), form, 30)
+
+    @with_proposal(permission='edit')
+    def view_sci_edit(self, db, proposal, can):
+        return {
+            'title': 'Edit Scientific Justification',
+            'proposal_id': proposal.id,
+            'proposal_code': self.make_proposal_code(db, proposal),
+            'word_limit': proposal.sci_word_lim,
+            'fig_limit': proposal.sci_fig_lim,
+            'page_limit': proposal.sci_page_lim,
+            'target_text': url_for('.sci_edit_text', proposal_id=proposal.id),
+        }
+
+    @with_proposal(permission='edit')
+    def view_sci_edit_text(self, db, proposal, can, form):
+        return self._edit_text(
+            db, proposal, ProposalTextRole.SCIENCE_CASE,
+            proposal.sci_word_lim,
+            url_for('.sci_edit_text', proposal_id=proposal.id), form, 30)
+
+    def _edit_text(self, db, proposal, role, word_limit, target, form, rows):
+        name = ProposalTextRole.get_name(role)
+        message = None
+
+        try:
+            text = db.get_proposal_text(proposal.id, role)
+            is_update = True
+        except NoSuchRecord:
+            text = ProposalText('', FormatType.PLAIN)
+            is_update = False
+
+        if form is not None:
+            text = text._replace(text=form['text'],
+                                 format=int(form['format']))
+
+            try:
+                word_count = count_words(text)
+                if word_count > word_limit:
+                    raise UserError(
+                        '{0} is too long: {1} / {2} words',
+                        name.capitalize(), word_count, word_limit)
+
+                db.set_proposal_text(proposal.id, role,
+                                     text.text, text.format, is_update)
+                flash('The {0} has been saved.', name.lower())
+                raise HTTPRedirect(url_for('.proposal_view',
+                                           proposal_id=proposal.id))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Edit {0}'.format(name.title()),
+            'message': message,
+            'proposal_id': proposal.id,
+            'text': text,
+            'target': target,
+            'proposal_code': self.make_proposal_code(db, proposal),
+            'word_limit': word_limit,
+            'rows': rows,
+        }

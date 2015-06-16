@@ -171,12 +171,43 @@
     <section>
         <h2>Technical Justification</h2>
 
+        {% if tech_case is none %}
+            <p class="missing">
+                This proposal does not yet have a technical justification.
+            </p>
+        {% else %}
+            {{ tech_case | format_text }}
+        {% endif %}
+
+        {% if can_edit %}
+            <nav>
+                <p>
+                    <a href="{{ url_for('.tech_edit', proposal_id=proposal.id) }}">Edit technical justification</a>
+                </p>
+            </nav>
+        {% endif %}
     </section>
 {% endblock %}
 
 {% block science_case %}
     <section>
         <h2>Scientific Justification</h2>
+
+        {% if sci_case is none %}
+            <p class="missing">
+                This proposal does not yet have a scientific justification.
+            </p>
+        {% else %}
+            {{ sci_case | format_text }}
+        {% endif %}
+
+        {% if can_edit %}
+            <nav>
+                <p>
+                    <a href="{{ url_for('.sci_edit', proposal_id=proposal.id) }}">Edit scientific justification</a>
+                </p>
+            </nav>
+        {% endif %}
     </section>
 {% endblock %}
 
