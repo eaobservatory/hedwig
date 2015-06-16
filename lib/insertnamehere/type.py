@@ -213,7 +213,7 @@ class ProposalFigureType(object):
             if info.mime == mime_type:
                 return type_
 
-        raise UserError('Image has MIME type "{0}" which is not recognised.',
+        raise UserError('File has type "{0}" which is not recognised.',
                         mime_type)
 
 

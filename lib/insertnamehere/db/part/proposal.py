@@ -818,12 +818,9 @@ class ProposalPart(object):
 
         return ans
 
-    def set_proposal_pdf(self, proposal_id, role, pdf, pages, is_update):
+    def set_proposal_pdf(self, proposal_id, role, pdf, pages):
         """
         Insert or update a given proposal PDF.
-
-        The "is_update" boolean argument must be used to indicated whether
-        this is a new PDF to insert or an update to an existing file.
 
         Returns the PDF identifier.
         """
@@ -835,16 +832,7 @@ class ProposalPart(object):
         with self._transaction() as conn:
             pdf_id = self._get_proposal_pdf_id(conn, proposal_id, role)
 
-            if is_update and (pdf_id is None):
-                raise ConsistencyError(
-                    'PDF does not exist for proposal {0} role {1}',
-                    proposal_id, role)
-            elif (not is_update) and (pdf_id is not None):
-                raise ConsistencyError(
-                    'PDF already exists for proposal {0} role {1}',
-                    proposal_id, role)
-
-            if is_update:
+            if pdf_id is not None:
                 result = conn.execute(proposal_pdf.update().where(
                     proposal_pdf.c.id == pdf_id
                 ).values({

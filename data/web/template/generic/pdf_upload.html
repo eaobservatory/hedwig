@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
+
+{% block content %}
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ target }}" enctype="multipart/form-data">
+    <ol>
+        <li>
+            <label for="file">PDF file</label>
+            <input type="file" name="file" accept="{{ mime_types | join (',') }}" />
+        </li>
+        <li>
+            <input type="submit" value="Upload" name="submit" />
+        </li>
+    </ol>
+</form>
+{% endblock %}

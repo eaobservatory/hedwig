@@ -21,8 +21,9 @@ from __future__ import absolute_import, division, print_function, \
 from ...astro.coord import CoordSystem
 from ...email.format import render_email_template
 from ...error import NoSuchRecord, UserError
+from ...file.info import determine_figure_type, determine_pdf_page_count
 from ...type import Affiliation, Call, FormatType, \
-    ProposalState, ProposalText, ProposalTextRole, \
+    ProposalFigureType, ProposalState, ProposalText, ProposalTextRole, \
     Queue, ResultCollection, Semester, Target, TargetCollection
 from ...util import get_countries
 from ...view import auth
@@ -486,6 +487,7 @@ class GenericProposal(object):
             'fig_limit': 0,
             'page_limit': proposal.tech_page_lim,
             'target_text': url_for('.tech_edit_text', proposal_id=proposal.id),
+            'target_pdf': url_for('.tech_edit_pdf', proposal_id=proposal.id),
         }
 
     @with_proposal(permission='edit')
@@ -494,6 +496,13 @@ class GenericProposal(object):
             db, proposal, ProposalTextRole.TECHNICAL_CASE,
             proposal.tech_word_lim,
             url_for('.tech_edit_text', proposal_id=proposal.id), form, 30)
+
+    @with_proposal(permission='edit')
+    def view_tech_edit_pdf(self, db, proposal, can, file):
+        return self._edit_pdf(
+            db, proposal, ProposalTextRole.TECHNICAL_CASE,
+            proposal.tech_page_lim,
+            url_for('.sci_edit_pdf', proposal_id=proposal.id), file)
 
     @with_proposal(permission='edit')
     def view_sci_edit(self, db, proposal, can):
@@ -505,6 +514,7 @@ class GenericProposal(object):
             'fig_limit': proposal.sci_fig_lim,
             'page_limit': proposal.sci_page_lim,
             'target_text': url_for('.sci_edit_text', proposal_id=proposal.id),
+            'target_pdf': url_for('.sci_edit_pdf', proposal_id=proposal.id),
         }
 
     @with_proposal(permission='edit')
@@ -513,6 +523,13 @@ class GenericProposal(object):
             db, proposal, ProposalTextRole.SCIENCE_CASE,
             proposal.sci_word_lim,
             url_for('.sci_edit_text', proposal_id=proposal.id), form, 30)
+
+    @with_proposal(permission='edit')
+    def view_sci_edit_pdf(self, db, proposal, can, file):
+        return self._edit_pdf(
+            db, proposal, ProposalTextRole.SCIENCE_CASE,
+            proposal.sci_page_lim,
+            url_for('.sci_edit_pdf', proposal_id=proposal.id), file)
 
     def _edit_text(self, db, proposal, role, word_limit, target, form, rows):
         name = ProposalTextRole.get_name(role)
@@ -546,7 +563,7 @@ class GenericProposal(object):
                 message = e.message
 
         return {
-            'title': 'Edit {0}'.format(name.title()),
+            'title': 'Edit {0} Text'.format(name.title()),
             'message': message,
             'proposal_id': proposal.id,
             'text': text,
@@ -554,4 +571,48 @@ class GenericProposal(object):
             'proposal_code': self.make_proposal_code(db, proposal),
             'word_limit': word_limit,
             'rows': rows,
+        }
+
+    def _edit_pdf(self, db, proposal, role, page_limit, target, file):
+        name = ProposalTextRole.get_name(role)
+        message = None
+
+        if file is not None:
+            try:
+                if not file:
+                    raise UserError('No file was received.')
+
+                # TODO: insert correct size.
+                buff = file.read(1000000)
+                file.close()
+
+                type_ = determine_figure_type(buff)
+                if type_ != ProposalFigureType.PDF:
+                    raise UserError('File was of type {0} rather than PDF.',
+                                    ProposalFigureType.get_name(type_))
+
+                page_count = determine_pdf_page_count(buff)
+                if page_count > page_limit:
+                    raise UserError(
+                        'PDF is too long: {0} / {1} {2}',
+                        page_count, page_limit,
+                        ('page' if page_limit == 1 else 'pages'))
+
+                db.set_proposal_pdf(proposal.id, role, buff, page_count)
+
+                flash('The {0} has been uploaded.', name.lower())
+
+                raise HTTPRedirect(url_for('.proposal_view',
+                                           proposal_id=proposal.id))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Upload {0} PDF'.format(name.title()),
+            'proposal_id': proposal.id,
+            'proposal_code': self.make_proposal_code(db, proposal),
+            'message': message,
+            'mime_types': [ProposalFigureType.get_mime_type(
+                ProposalFigureType.PDF)],
         }

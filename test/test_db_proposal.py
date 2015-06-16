@@ -600,7 +600,7 @@ class DBProposalTest(DBTestCase):
         result = self.db.search_proposal_pdf(proposal_id=proposal_id)
         self.assertEqual(len(result), 0)
 
-        pdf_id = self.db.set_proposal_pdf(proposal_id, role, pdf, 4, False)
+        pdf_id = self.db.set_proposal_pdf(proposal_id, role, pdf, 4)
         self.assertIsInstance(pdf_id, int)
 
         self.assertEqual(self.db.get_proposal_pdf(proposal_id, role), pdf)
