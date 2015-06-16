@@ -48,6 +48,10 @@
             <input type="number" name="abst_word_lim" value="{{ call.abst_word_lim }}" min="0" step="25" size="5" />
         </li>
         <li>
+            <label for="tech_note">Technical case note</label>
+            <textarea name="tech_note" cols="40" rows="5">{{ call.tech_note }}</textarea>
+        </li>
+        <li>
             <label for="tech_word_lim">Technical word limit</label>
             <input type="number" name="tech_word_lim" value="{{ call.tech_word_lim }}" min="0" step="100" size="5" />
             <span class="explanation">when edited online</span>
@@ -56,6 +60,10 @@
             <label for="tech_page_lim">Technical page limit</label>
             <input type="number" name="tech_page_lim" value="{{ call.tech_page_lim }}" min="0" step="1" size="5" />
             <span class="explanation">for PDF uploads</span>
+        </li>
+        <li>
+            <label for="sci_note">Science case note</label>
+            <textarea name="sci_note" cols="40" rows="5">{{ call.sci_note }}</textarea>
         </li>
         <li>
             <label for="sci_word_lim">Science word limit</label>

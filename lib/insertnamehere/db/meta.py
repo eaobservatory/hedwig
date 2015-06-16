@@ -62,6 +62,8 @@ call = Table(
     Column('sci_word_lim', Integer, nullable=False),
     Column('sci_fig_lim', Integer, nullable=False),
     Column('sci_page_lim', Integer, nullable=False),
+    Column('tech_note', UnicodeText, nullable=False),
+    Column('sci_note', UnicodeText, nullable=False),
     UniqueConstraint('semester_id', 'queue_id'),
     **_table_opts)
 

@@ -235,7 +235,8 @@ class GenericAdmin(object):
                         facility_id=None, semester_name='',
                         queue_name='', queue_description=None,
                         abst_word_lim=200, tech_word_lim=1000, tech_page_lim=1,
-                        sci_word_lim=2000, sci_fig_lim=4, sci_page_lim=3)
+                        sci_word_lim=2000, sci_fig_lim=4, sci_page_lim=3,
+                        tech_note='', sci_note='')
             semesters = db.search_semester(facility_id=self.id_)
             queues = db.search_queue(facility_id=self.id_)
             title = 'Add New Call'
@@ -265,7 +266,9 @@ class GenericAdmin(object):
                     tech_page_lim=int(form['tech_page_lim']),
                     sci_word_lim=int(form['sci_word_lim']),
                     sci_fig_lim=int(form['sci_fig_lim']),
-                    sci_page_lim=int(form['sci_page_lim']))
+                    sci_page_lim=int(form['sci_page_lim']),
+                    tech_note=form['tech_note'],
+                    sci_note=form['sci_note'])
 
                 if call_id is None:
                     # Create new call.
@@ -282,7 +285,9 @@ class GenericAdmin(object):
                                               tech_page_lim=call.tech_page_lim,
                                               sci_word_lim=call.sci_word_lim,
                                               sci_fig_lim=call.sci_fig_lim,
-                                              sci_page_lim=call.sci_page_lim)
+                                              sci_page_lim=call.sci_page_lim,
+                                              tech_note=call.tech_note,
+                                              sci_note=call.sci_note)
                     flash('The new call has been added.')
                     raise HTTPRedirect(url_for('.call_view',
                                                call_id=new_call_id))
@@ -296,7 +301,9 @@ class GenericAdmin(object):
                                    tech_page_lim=call.tech_page_lim,
                                    sci_word_lim=call.sci_word_lim,
                                    sci_fig_lim=call.sci_fig_lim,
-                                   sci_page_lim=call.sci_page_lim)
+                                   sci_page_lim=call.sci_page_lim,
+                                   tech_note=call.tech_note,
+                                   sci_note=call.sci_note)
                     flash('The call has been updated.')
                     raise HTTPRedirect(url_for('.call_view', call_id=call_id))
 

@@ -80,7 +80,7 @@ class DBProposalTest(DBTestCase):
             datetime(2000, 1, 1), datetime(2000, 6, 30))
         call_id = self.db.add_call(semester_id, queue_id,
                                    datetime(1999, 9, 1), datetime(1999, 9, 30),
-                                   1, 1, 1, 1, 1, 1)
+                                   1, 1, 1, 1, 1, 1, '', '')
         person_id = self.db.add_person('Person1')
         (affiliation_id, affiliation_record) = result.popitem()
         self.db.add_proposal(call_id, person_id, affiliation_id, 'Title')
@@ -202,24 +202,25 @@ class DBProposalTest(DBTestCase):
         call_id = self.db.add_call(
             semester_id, queue_id, date_open, date_close,
             abst_word_lim=1, tech_word_lim=2, tech_page_lim=3,
-            sci_word_lim=4, sci_fig_lim=5, sci_page_lim=6)
+            sci_word_lim=4, sci_fig_lim=5, sci_page_lim=6,
+            tech_note='technical note', sci_note='scientific note')
         self.assertIsInstance(call_id, int)
 
         # Check tests for bad values.
         with self.assertRaisesRegexp(ConsistencyError, 'semester does not'):
             self.db.add_call(1999999, queue_id, date_open, date_close,
-                             1, 1, 1, 1, 1, 1)
+                             1, 1, 1, 1, 1, 1, '', '')
         with self.assertRaisesRegexp(ConsistencyError, 'queue does not'):
             self.db.add_call(semester_id, 1999999, date_open, date_close,
-                             1, 1, 1, 1, 1, 1)
+                             1, 1, 1, 1, 1, 1, '', '')
         with self.assertRaisesRegexp(UserError, 'Closing date is before open'):
             self.db.add_call(semester_id, queue_id, date_close, date_open,
-                             1, 1, 1, 1, 1, 1)
+                             1, 1, 1, 1, 1, 1, '', '')
 
         # Check uniqueness constraint.
         with self.assertRaises(DatabaseIntegrityError):
             self.db.add_call(semester_id, queue_id, date_open, date_close,
-                             1, 1, 1, 1, 1, 1)
+                             1, 1, 1, 1, 1, 1, '', '')
 
         # Check facility consistency check.
         facility_id_2 = self.db.ensure_facility('my_other_tel')
@@ -229,7 +230,7 @@ class DBProposalTest(DBTestCase):
         with self.assertRaisesRegexp(ConsistencyError,
                                      'inconsistent facility references'):
             self.db.add_call(semester_id_2, queue_id, date_open, date_close,
-                             1, 1, 1, 1, 1, 1)
+                             1, 1, 1, 1, 1, 1, '', '')
 
         # Try the search_call method.
         result = self.db.search_call(call_id=call_id)
@@ -241,8 +242,10 @@ class DBProposalTest(DBTestCase):
                         semester_name='My Semester', queue_name='My Queue',
                         queue_description=None,
                         abst_word_lim=1, tech_word_lim=2, tech_page_lim=3,
-                        sci_word_lim=4, sci_fig_lim=5, sci_page_lim=6)
-        self.assertEqual(result[call_id], expected)
+                        sci_word_lim=4, sci_fig_lim=5, sci_page_lim=6,
+                        tech_note='technical note', sci_note='scientific note')
+        self.assertEqual(result[call_id],
+                         expected._replace(tech_note=None, sci_note=None))
         self.assertEqual(self.db.get_call(facility_id, call_id), expected)
 
         with self.assertRaises(NoSuchRecord):
@@ -691,7 +694,7 @@ class DBProposalTest(DBTestCase):
 
         call_id = self.db.add_call(semester_id, queue_id,
                                    datetime(1999, 9, 1), datetime(1999, 9, 30),
-                                   100, 1000, 1, 2000, 4, 3)
+                                   100, 1000, 1, 2000, 4, 3, '', '')
         self.assertIsInstance(call_id, int)
 
         affiliations = self.db.search_affiliation(queue_id=queue_id)

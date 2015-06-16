@@ -479,10 +479,13 @@ class GenericProposal(object):
 
     @with_proposal(permission='edit')
     def view_tech_edit(self, db, proposal, can):
+        call = db.get_call(facility_id=None, call_id=proposal.call_id)
+
         return {
             'title': 'Edit Technical Justification',
             'proposal_id': proposal.id,
             'proposal_code': self.make_proposal_code(db, proposal),
+            'note': call.tech_note,
             'word_limit': proposal.tech_word_lim,
             'fig_limit': 0,
             'page_limit': proposal.tech_page_lim,
@@ -506,10 +509,13 @@ class GenericProposal(object):
 
     @with_proposal(permission='edit')
     def view_sci_edit(self, db, proposal, can):
+        call = db.get_call(facility_id=None, call_id=proposal.call_id)
+
         return {
             'title': 'Edit Scientific Justification',
             'proposal_id': proposal.id,
             'proposal_code': self.make_proposal_code(db, proposal),
+            'note': call.sci_note,
             'word_limit': proposal.sci_word_lim,
             'fig_limit': proposal.sci_fig_lim,
             'page_limit': proposal.sci_page_lim,

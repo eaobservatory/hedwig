@@ -59,6 +59,7 @@ class ProposalPart(object):
                  date_open, date_close,
                  abst_word_lim, tech_word_lim, tech_page_lim,
                  sci_word_lim, sci_fig_lim, sci_page_lim,
+                 tech_note, sci_note,
                  _test_skip_check=False):
         """
         Add a call for proposals to the database.
@@ -95,6 +96,8 @@ class ProposalPart(object):
                 call.c.sci_word_lim: sci_word_lim,
                 call.c.sci_fig_lim: sci_fig_lim,
                 call.c.sci_page_lim: sci_page_lim,
+                call.c.tech_note: tech_note,
+                call.c.sci_note: sci_note,
             }))
 
         return result.inserted_primary_key[0]
@@ -347,8 +350,9 @@ class ProposalPart(object):
         Get a call record.
         """
 
-        return self.search_call(facility_id=facility_id,
-                                call_id=call_id).get_single()
+        return self.search_call(
+            facility_id=facility_id, call_id=call_id, with_case_notes=True
+        ).get_single()
 
     def get_proposal(self, facility_id, proposal_id, with_members=False,
                      _conn=None):
@@ -492,19 +496,27 @@ class ProposalPart(object):
 
     def search_call(self, call_id=None, facility_id=None, semester_id=None,
                     queue_id=None, is_open=None, with_queue_description=False,
+                    with_case_notes=False,
                     _conn=None):
         """
         Search for call records.
         """
 
-        fields = [
-            call,
+        default = {}
+
+        if with_case_notes:
+            fields = [call]
+        else:
+            fields = [x for x in call.columns
+                      if x.name not in ('tech_note', 'sci_note')]
+            default['tech_note'] = None
+            default['sci_note'] = None
+
+        fields.extend([
             semester.c.facility_id,
             semester.c.name.label('semester_name'),
             queue.c.name.label('queue_name')
-        ]
-
-        default = {}
+        ])
 
         if with_queue_description:
             fields.append(queue.c.description.label('queue_description'))
@@ -980,6 +992,7 @@ class ProposalPart(object):
     def update_call(self, call_id, date_open=None, date_close=None,
                     abst_word_lim=None, tech_word_lim=None, tech_page_lim=None,
                     sci_word_lim=None, sci_fig_lim=None, sci_page_lim=None,
+                    tech_note=None, sci_note=None,
                     _test_skip_check=False):
         """
         Update a call for proposals record.
@@ -1007,6 +1020,10 @@ class ProposalPart(object):
             values['sci_fig_lim'] = sci_fig_lim
         if sci_page_lim is not None:
             values['sci_page_lim'] = sci_page_lim
+        if tech_note is not None:
+            values['tech_note'] = tech_note
+        if sci_note is not None:
+            values['sci_note'] = sci_note
 
         if not values:
             raise Error('no call updates specified')

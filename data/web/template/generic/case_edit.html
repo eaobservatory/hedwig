@@ -3,6 +3,14 @@
 
 {% block content %}
 
+{% if note %}
+    <section>
+        <h2>Note</h2>
+
+        {{ note | format_text }}
+    </section>
+{% endif %}
+
 {% if word_limit %}
     <section>
         <h2>Edit Online</h2>
