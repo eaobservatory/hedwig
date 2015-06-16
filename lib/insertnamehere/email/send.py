@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from cStringIO import StringIO
 from email.generator import Generator
 from email.header import Header
@@ -77,13 +77,14 @@ def send_email_message(message):
     msg['To'] = Header(', '.join(recipients_public))
     msg['Message-ID'] = identifier
 
-    f = StringIO()
-    Generator(f, mangle_from_=False).flatten(msg)
+    with closing(StringIO()) as f:
+        Generator(f, mangle_from_=False).flatten(msg)
+        msg = f.getvalue()
 
     try:
         with quitting(SMTP(server)) as smtp:
             refusal = smtp.sendmail(
-                from_, recipients_public + recipients_private, f.getvalue())
+                from_, recipients_public + recipients_private, msg)
 
             for (recipient, problem) in refusal.items():
                 logger.error('Email message %i refused for %s: %s: %s',
