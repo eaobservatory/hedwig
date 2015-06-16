@@ -97,9 +97,21 @@ Proposal = namedtuple(
         'members',
     ])
 
+ProposalFigureInfo = namedtuple(
+    'ProposalFigInfo',
+    ['id', 'proposal_id', 'role', 'type', 'state', 'caption'])
+
+ProposalPDFInfo = namedtuple(
+    'ProposalPDFInfo',
+    ['id', 'proposal_id', 'role', 'state', 'pages'])
+
 ProposalText = namedtuple(
     'ProposalText',
     ['text', 'format'])
+
+ProposalTextInfo = namedtuple(
+    'ProposalTextInfo',
+    ['id', 'proposal_id', 'role', 'format'])
 
 Semester = namedtuple(
     'Semester',
@@ -132,6 +144,77 @@ class FormatType(object):
     @classmethod
     def is_valid(cls, format):
         return format in cls._info
+
+
+class ProposalAttachmentState(object):
+    NEW = 1
+    PROCESSING = 2
+    READY = 3
+    ERROR = 4
+
+    AttachmentStateInfo = namedtuple('AttachmentStateInfo',
+                                     ('name', 'ready', 'error'))
+
+    _info = OrderedDict((
+        (NEW,         AttachmentStateInfo('New',        False, False)),
+        (PROCESSING,  AttachmentStateInfo('Processing', False, False)),
+        (READY,       AttachmentStateInfo('Ready',      True,  False)),
+        (ERROR,       AttachmentStateInfo('Error',      False, True)),
+    ))
+
+    @classmethod
+    def is_valid(cls, state):
+        return state in cls._info
+
+    @classmethod
+    def get_name(cls, state):
+        return cls._info[state].name
+
+    def is_ready(cls, state):
+        return cls._info[state].ready
+
+    def is_error(cls, state):
+        return cls._info[state].error
+
+
+class ProposalFigureType(object):
+    PNG = 1
+    JPEG = 2
+    PDF = 3
+
+    FigureTypeInfo = namedtuple('FigureTypeInfo',
+                                ('name', 'mime', 'preview'))
+
+    _info = OrderedDict((
+        (PNG,  FigureTypeInfo('PNG',  'image/png',       False)),
+        (JPEG, FigureTypeInfo('JPEG', 'image/jpeg',      False)),
+        (PDF,  FigureTypeInfo('PDF',  'application/pdf', True)),
+    ))
+
+    @classmethod
+    def is_valid(cls, type_):
+        return type_ in cls._info
+
+    @classmethod
+    def get_name(cls, type_):
+        return cls._info[type_].name
+
+    @classmethod
+    def get_mime_type(cls, type_):
+        return cls._info[type_].mime
+
+    @classmethod
+    def needs_preview(cls, type_):
+        return cls._info[type_].preview
+
+    @classmethod
+    def from_mime_type(cls, mime_type):
+        for (type_, info) in cls._info.items():
+            if info.mime == mime_type:
+                return type_
+
+        raise UserError('Image has MIME type "{0}" which is not recognised.',
+                        mime_type)
 
 
 class ProposalState(object):

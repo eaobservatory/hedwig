@@ -28,11 +28,15 @@ from sqlalchemy.sql.functions import max as max_
 from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
 from ...type import Affiliation, Call, FormatType, Member, MemberCollection, \
-    MemberInfo, Proposal, ProposalState, ProposalText, ProposalTextRole, \
+    MemberInfo, Proposal, ProposalState, \
+    ProposalAttachmentState, ProposalFigureInfo, ProposalFigureType, \
+    ProposalPDFInfo, \
+    ProposalText, ProposalTextInfo, ProposalTextRole, \
     Queue, QueueInfo, ResultCollection, Semester, SemesterInfo, \
     Target, TargetCollection
-from ..meta import affiliation, call, facility, institution, member, \
-    person, proposal, proposal_text, queue, semester, target
+from ..meta import affiliation, call, facility, institution, member, person, \
+    proposal, proposal_fig, proposal_fig_preview, proposal_fig_thumbnail, \
+    proposal_pdf, proposal_pdf_preview, proposal_text, queue, semester, target
 from ..util import require_not_none
 
 
@@ -176,6 +180,34 @@ class ProposalPart(object):
 
         return proposal_id
 
+    def add_proposal_figure(self, proposal_id, role, type_, figure,
+                            caption, _test_skip_check=False):
+        if not ProposalFigureType.is_valid(type_):
+            raise Error('Invalid figure type.')
+        if not ProposalTextRole.is_valid(role):
+            raise Error('Invalid text role.')
+        if not figure:
+            # Shouldn't happen as we should have already checked the figure
+            # type.
+            raise UserError('Uploaded figure appears to be empty.')
+
+        with self._transaction() as conn:
+            if (not _test_skip_check and
+                    not self._exists_id(conn, proposal, proposal_id)):
+                raise ConsistencyError('proposal does not exist with id={0}',
+                                       proposal_id)
+
+            result = conn.execute(proposal_fig.insert().values({
+                proposal_fig.c.proposal_id: proposal_id,
+                proposal_fig.c.role: role,
+                proposal_fig.c.type: type_,
+                proposal_fig.c.state: ProposalAttachmentState.NEW,
+                proposal_fig.c.figure: figure,
+                proposal_fig.c.caption: caption,
+            }))
+
+        return result.inserted_primary_key[0]
+
     def add_queue(self, facility_id, name, code, description='',
                   _test_skip_check=False):
         """
@@ -229,6 +261,24 @@ class ProposalPart(object):
             }))
 
             return result.inserted_primary_key[0]
+
+    def delete_proposal_pdf(self, proposal_id, role,
+                            _test_skip_check=False):
+        with self._transaction() as conn:
+            if not _test_skip_check and (self._get_proposal_pdf_id(
+                    conn, proposal_id, role) is None):
+                raise ConsistencyError('PDF does not exist for {0} role {1}',
+                                       proposal_id, role)
+
+            result = conn.execute(proposal_pdf.delete().where(and_(
+                proposal_pdf.c.proposal_id == proposal_id,
+                proposal_pdf.c.role == role
+            )))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no row matched deleting PDF for {0} role {1}',
+                    proposal_id, role)
 
     def delete_proposal_text(self, proposal_id, role,
                              _test_skip_check=False):
@@ -329,6 +379,38 @@ class ProposalPart(object):
             raise NoSuchRecord('facility or proposal does not exist')
 
         return result['code']
+
+    def get_proposal_pdf(self, proposal_id, role, id_=None, _conn=None):
+        """
+        Get the given PDF associated with a proposal.
+        """
+
+        stmt = proposal_pdf.select()
+
+        if (proposal_id is not None) and (role is not None):
+            if not ProposalTextRole.is_valid(role):
+                raise FormattedError('proposal text role not recognised: {0}',
+                                     role)
+
+            stmt = stmt.where(and_(
+                proposal_pdf.c.proposal_id == proposal_id,
+                proposal_pdf.c.role == role
+            ))
+
+        elif id_ is not None:
+            stmt = stmt.where(proposal_pdf.c.id == id_)
+
+        else:
+            raise Error('neither PDF nor proposal and role specified.')
+
+        with self._transaction(_conn=_conn) as conn:
+            row = conn.execute(stmt).first()
+
+        if row is None:
+            raise NoSuchRecord('PDF does not exist for {0} role {1}',
+                               proposal_id, role)
+
+        return row['pdf']
 
     def get_proposal_text(self, proposal_id, role):
         """
@@ -640,6 +722,68 @@ class ProposalPart(object):
 
         return ans
 
+    def search_proposal_figure(self, proposal_id=None, role=None, state=None,
+                               with_caption=False):
+        select_columns = [
+            proposal_fig.c.id,
+            proposal_fig.c.proposal_id,
+            proposal_fig.c.role,
+            proposal_fig.c.type,
+            proposal_fig.c.state,
+        ]
+        default = {'caption': None}
+
+        if with_caption:
+            select_columns.append(proposal_fig.c.caption)
+            del default['caption']
+
+        stmt = select(select_columns)
+
+        if proposal_id is not None:
+            stmt = stmt.where(proposal_fig.c.proposal_id == proposal_id)
+
+        if role is not None:
+            stmt = stmt.where(proposal_fig.c.role == role)
+
+        if state is not None:
+            stmt = stmt.where(proposal_fig.c.state == state)
+
+        ans = ResultCollection()
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt.order_by(proposal_fig.c.id)):
+                values = default.copy()
+                values.update(**row)
+                ans[row['id']] = ProposalFigureInfo(**values)
+
+        return ans
+
+    def search_proposal_pdf(self, proposal_id=None, role=None, state=None):
+        stmt = select([
+            proposal_pdf.c.id,
+            proposal_pdf.c.proposal_id,
+            proposal_pdf.c.role,
+            proposal_pdf.c.state,
+            proposal_pdf.c.pages,
+        ])
+
+        if proposal_id is not None:
+            stmt = stmt.where(proposal_pdf.c.proposal_id == proposal_id)
+
+        if role is not None:
+            stmt = stmt.where(proposal_pdf.c.role == role)
+
+        if state is not None:
+            stmt = stmt.where(proposal_pdf.c.state == state)
+
+        ans = ResultCollection()
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt):
+                ans[row['id']] = ProposalPDFInfo(**row)
+
+        return ans
+
     def search_queue(self, facility_id=None):
         stmt = select([
             queue.c.id,
@@ -673,6 +817,68 @@ class ProposalPart(object):
                 ans[row['id']] = Target(**row)
 
         return ans
+
+    def set_proposal_pdf(self, proposal_id, role, pdf, pages, is_update):
+        """
+        Insert or update a given proposal PDF.
+
+        The "is_update" boolean argument must be used to indicated whether
+        this is a new PDF to insert or an update to an existing file.
+
+        Returns the PDF identifier.
+        """
+
+        if not ProposalTextRole.is_valid(role):
+            raise FormattedError('proposal text role not recognised: {0}',
+                                 role)
+
+        with self._transaction() as conn:
+            pdf_id = self._get_proposal_pdf_id(conn, proposal_id, role)
+
+            if is_update and (pdf_id is None):
+                raise ConsistencyError(
+                    'PDF does not exist for proposal {0} role {1}',
+                    proposal_id, role)
+            elif (not is_update) and (pdf_id is not None):
+                raise ConsistencyError(
+                    'PDF already exists for proposal {0} role {1}',
+                    proposal_id, role)
+
+            if is_update:
+                result = conn.execute(proposal_pdf.update().where(
+                    proposal_pdf.c.id == pdf_id
+                ).values({
+                    proposal_pdf.c.pdf: pdf,
+                    proposal_pdf.c.pages: pages,
+                    proposal_pdf.c.state: ProposalAttachmentState.NEW,
+                }))
+
+                if result.rowcount != 1:
+                    raise ConsistencyError(
+                        'no rows matched updating proposal PDF {0} role {1}',
+                        proposal_id, role)
+
+                result = conn.execute(proposal_pdf_preview.delete().where(
+                    proposal_pdf_preview.c.pdf_id == pdf_id))
+
+                if result.rowcount not in (0, 1):
+                    raise ConsistencyError(
+                        'too many rows matched deleting proposal PDF '
+                        'preview {0}',
+                        pdf_id)
+
+                return pdf_id
+
+            else:
+                result = conn.execute(proposal_pdf.insert().values({
+                    proposal_pdf.c.proposal_id: proposal_id,
+                    proposal_pdf.c.role: role,
+                    proposal_pdf.c.pdf: pdf,
+                    proposal_pdf.c.pages: pages,
+                    proposal_pdf.c.state: ProposalAttachmentState.NEW,
+                }))
+
+                return result.inserted_primary_key[0]
 
     def set_proposal_text(self, proposal_id, role, text, format, is_update,
                           _test_skip_check=False):
@@ -941,6 +1147,17 @@ class ProposalPart(object):
                 raise ConsistencyError(
                     'no rows matched updating queue with id={0}',
                     queue_id)
+
+    def _get_proposal_pdf_id(self, conn, proposal_id, role):
+        """
+        Test whether text of the given role already exists for a proposal,
+        and if it does, returns its identifier.
+        """
+
+        return conn.execute(select([proposal_pdf.c.id]).where(and_(
+            proposal_pdf.c.proposal_id == proposal_id,
+            proposal_pdf.c.role == role
+        ))).scalar()
 
     def _exists_proposal_text(self, conn, proposal_id, role):
         """

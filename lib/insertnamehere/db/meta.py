@@ -199,6 +199,40 @@ proposal_text = Table(
     Index('idx_text_prop_role', 'proposal_id', 'role', unique=True),
     **_table_opts)
 
+proposal_fig = Table(
+    'proposal_fig',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('role', Integer, nullable=False),
+    Column('type', Integer, nullable=False),
+    Column('state', Integer, nullable=False),
+    Column('figure', LargeBinary(2**24 - 1), nullable=False),
+    Column('caption', UnicodeText, nullable=False),
+    **_table_opts)
+
+proposal_fig_preview = Table(
+    'proposal_fig_preview',
+    metadata,
+    Column('fig_id', None,
+           ForeignKey('proposal_fig.id',
+                      onupdate='RESTRICT', ondelete='CASCADE'),
+           primary_key=True, nullable=False),
+    Column('thumbnail', LargeBinary(2**24 - 1), nullable=False),
+    **_table_opts)
+
+proposal_fig_thumbnail = Table(
+    'proposal_fig_thumbnail',
+    metadata,
+    Column('fig_id', None,
+           ForeignKey('proposal_fig.id',
+                      onupdate='RESTRICT', ondelete='CASCADE'),
+           primary_key=True, nullable=False),
+    Column('thumbnail', LargeBinary(2**24 - 1), nullable=False),
+    **_table_opts)
+
 proposal_pdf = Table(
     'proposal_pdf',
     metadata,
@@ -206,8 +240,23 @@ proposal_pdf = Table(
     Column('proposal_id', None,
            ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
+    Column('role', Integer, nullable=False),
     Column('pdf', LargeBinary(2**32 - 1), nullable=False),
-    Column('pages', Integer, default=None),
+    Column('state', Integer, nullable=False),
+    Column('pages', Integer, nullable=False),
+    Index('idx_pdf_prop_role', 'proposal_id', 'role', unique=True),
+    **_table_opts)
+
+proposal_pdf_preview = Table(
+    'proposal_pdf_preview',
+    metadata,
+    Column('pdf_id', None,
+           ForeignKey('proposal_pdf.id',
+                      onupdate='RESTRICT', ondelete='CASCADE'),
+           primary_key=True, nullable=False),
+    Column('page', Integer, nullable=False),
+    Column('preview', LargeBinary(2**24 - 1), nullable=False),
+    Index('idx_pdf_id_page', 'pdf_id', 'page', unique=True),
     **_table_opts)
 
 queue = Table(

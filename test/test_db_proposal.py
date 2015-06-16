@@ -25,7 +25,9 @@ from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from insertnamehere.type import Affiliation, Call, FormatType, \
     Member, MemberCollection, MemberInstitution,  \
-    Proposal, ProposalState, ProposalText, ProposalTextRole, \
+    Proposal, ProposalAttachmentState, \
+    ProposalFigureInfo, ProposalFigureType,  ProposalPDFInfo, \
+    ProposalState, ProposalText, ProposalTextRole, \
     ResultCollection, Target, TargetCollection
 from .dummy_db import DBTestCase
 
@@ -584,6 +586,67 @@ class DBProposalTest(DBTestCase):
                          ProposalText('cc', 993))
         self.assertEqual(self.db.get_proposal_text(proposal_id_2, 41),
                          ProposalText('d', 992))
+
+    def test_proposal_pdf(self):
+        (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
+        pdf = b'dummy PDF file'
+        role = ProposalTextRole.TECHNICAL_CASE
+
+        person_id = self.db.add_person('Person 1')
+        proposal_id = self.db.add_proposal(call_id, person_id,
+                                           affiliation_id, 'Proposal 1')
+        self.assertIsInstance(proposal_id, int)
+
+        result = self.db.search_proposal_pdf(proposal_id=proposal_id)
+        self.assertEqual(len(result), 0)
+
+        pdf_id = self.db.set_proposal_pdf(proposal_id, role, pdf, 4, False)
+        self.assertIsInstance(pdf_id, int)
+
+        self.assertEqual(self.db.get_proposal_pdf(proposal_id, role), pdf)
+        self.assertEqual(self.db.get_proposal_pdf(None, None, id_=pdf_id), pdf)
+
+        result = self.db.search_proposal_pdf(proposal_id=proposal_id)
+        self.assertEqual(len(result), 1)
+        self.assertIn(pdf_id, result)
+        pdf_info = result[pdf_id]
+        self.assertIsInstance(pdf_info, ProposalPDFInfo)
+        self.assertEqual(pdf_info, ProposalPDFInfo(
+            pdf_id, proposal_id, role, ProposalAttachmentState.NEW, 4))
+
+        self.db.delete_proposal_pdf(proposal_id, role)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_pdf(proposal_id, role)
+
+        result = self.db.search_proposal_pdf(proposal_id=proposal_id)
+        self.assertEqual(len(result), 0)
+
+    def test_proposal_fig(self):
+        (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
+        fig = b'dummy figure'
+        role = ProposalTextRole.TECHNICAL_CASE
+        type_ = ProposalFigureType.PNG
+
+        person_id = self.db.add_person('Person 1')
+        proposal_id = self.db.add_proposal(call_id, person_id,
+                                           affiliation_id, 'Proposal 1')
+        self.assertIsInstance(proposal_id, int)
+
+        result = self.db.search_proposal_figure(proposal_id=proposal_id)
+        self.assertEqual(len(result), 0)
+
+        fig_id = self.db.add_proposal_figure(proposal_id, role, type_, fig,
+                                             'Figure caption.')
+        self.assertIsInstance(fig_id, int)
+
+        result = self.db.search_proposal_figure(proposal_id=proposal_id)
+        self.assertEqual(len(result), 1)
+        self.assertIn(fig_id, result)
+        fig_info = result[fig_id]
+        self.assertEqual(fig_info, ProposalFigureInfo(
+            id=fig_id, proposal_id=proposal_id, role=role, type=type_,
+            state=ProposalAttachmentState.NEW, caption=None))
 
     def test_proposal_target(self):
         (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
