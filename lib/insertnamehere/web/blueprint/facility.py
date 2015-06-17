@@ -152,6 +152,12 @@ def create_facility_blueprint(db, facility):
             db, proposal_id,
             (request.files['file'] if request.method == 'POST' else None))
 
+    @bp.route('/proposal/<int:proposal_id>/technical/pdf/view')
+    @send_file(ProposalFigureType.PDF)
+    @require_auth(require_person=True)
+    def tech_view_pdf_view(proposal_id):
+        return facility.view_tech_view_pdf(db, proposal_id)
+
     @bp.route('/proposal/<int:proposal_id>/technical/pdf/preview/<int:page>')
     @send_file(ProposalFigureType.PNG)
     @require_auth(require_person=True)
@@ -181,6 +187,12 @@ def create_facility_blueprint(db, facility):
         return facility.view_sci_edit_pdf(
             db, proposal_id,
             (request.files['file'] if request.method == 'POST' else None))
+
+    @bp.route('/proposal/<int:proposal_id>/scientific/pdf/view')
+    @send_file(ProposalFigureType.PDF)
+    @require_auth(require_person=True)
+    def sci_view_pdf_view(proposal_id):
+        return facility.view_sci_view_pdf(db, proposal_id)
 
     @bp.route('/proposal/<int:proposal_id>/scientific/pdf/preview/<int:page>')
     @send_file(ProposalFigureType.PNG)

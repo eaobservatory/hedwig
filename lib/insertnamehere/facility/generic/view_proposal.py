@@ -514,6 +514,14 @@ class GenericProposal(object):
             url_for('.sci_edit_pdf', proposal_id=proposal.id), file)
 
     @with_proposal(permission='view')
+    def view_tech_view_pdf(self, db, proposal, can):
+        try:
+            return db.get_proposal_pdf(
+                proposal.id, ProposalTextRole.TECHNICAL_CASE)
+        except NoSuchRecord:
+            raise HTTPNotFound('Technical justification PDF not found.')
+
+    @with_proposal(permission='view')
     def view_tech_view_pdf_preview(self, db, proposal, can, page):
         try:
             return db.get_proposal_pdf_preview(
@@ -550,6 +558,14 @@ class GenericProposal(object):
             db, proposal, ProposalTextRole.SCIENCE_CASE,
             proposal.sci_page_lim,
             url_for('.sci_edit_pdf', proposal_id=proposal.id), file)
+
+    @with_proposal(permission='view')
+    def view_sci_view_pdf(self, db, proposal, can):
+        try:
+            return db.get_proposal_pdf(
+                proposal.id, ProposalTextRole.SCIENCE_CASE)
+        except NoSuchRecord:
+            raise HTTPNotFound('Scientific justification PDF not found.')
 
     @with_proposal(permission='view')
     def view_sci_view_pdf_preview(self, db, proposal, can, page):
