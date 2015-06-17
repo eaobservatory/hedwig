@@ -33,6 +33,8 @@ from flask import Response as _FlaskResponse
 from werkzeug import exceptions as _werkzeug_exceptions
 from werkzeug import routing as _werkzeug_routing
 
+from ..type import ProposalFigureType
+
 
 class HTTPError(_werkzeug_exceptions.InternalServerError):
     """Exception class for raising HTTP errors."""
@@ -173,26 +175,28 @@ def require_not_auth(f):
     return decorated
 
 
-def send_file(fixed_mimetype=None):
+def send_file(fixed_type=None):
     """
     Decorator for route functions which send files.
 
     If there is a fixed MIME type, it can be set in the decorator
     argument and the function just returns the data.  Otherwise
-    the function must return a (data, mimetype) tuple.
+    the function must return a (data, type) tuple where the type
+    is a value from ProposalFigureType.
     """
 
     def decorator(f):
         @functools.wraps(f)
         def decorated_function(*args, **kwargs):
-            mimetype = fixed_mimetype
+            type_ = fixed_type
             data = f(*args, **kwargs)
 
-            if mimetype is None:
+            if type_ is None:
                 # Function should have returned a tuple: unpack it.
-                (data, mimetype) = data
+                (data, type_) = data
 
-            return _FlaskResponse(data, mimetype=mimetype)
+            return _FlaskResponse(
+                data, mimetype=ProposalFigureType.get_mime_type(type_))
 
         return decorated_function
 
