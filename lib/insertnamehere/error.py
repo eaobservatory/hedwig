@@ -60,6 +60,14 @@ class ConsistencyError(FormattedError):
     pass
 
 
+class ConversionError(FormattedError):
+    """
+    Error class for file conversion errors.
+    """
+
+    pass
+
+
 class NoSuchRecord(FormattedError):
     """
     Error for when an expected database record is not present.

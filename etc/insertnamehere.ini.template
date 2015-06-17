@@ -13,3 +13,6 @@ facilities=Generic
 [email]
 server=
 from=
+
+[utilities]
+ghostscript=/usr/bin/ghostscript
