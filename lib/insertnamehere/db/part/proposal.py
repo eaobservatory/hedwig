@@ -884,12 +884,6 @@ class ProposalPart(object):
                 result = conn.execute(proposal_pdf_preview.delete().where(
                     proposal_pdf_preview.c.pdf_id == pdf_id))
 
-                if result.rowcount not in (0, 1):
-                    raise ConsistencyError(
-                        'too many rows matched deleting proposal PDF '
-                        'preview {0}',
-                        pdf_id)
-
                 return pdf_id
 
             else:
