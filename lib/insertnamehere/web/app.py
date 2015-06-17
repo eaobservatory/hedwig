@@ -24,7 +24,7 @@ from jinja2.runtime import Undefined
 import os
 
 from ..config import get_config, get_database, get_facilities, get_home
-from ..type import FacilityInfo, ProposalState
+from ..type import FacilityInfo, ProposalAttachmentState, ProposalState
 from .util import require_auth, session, templated
 
 from .blueprint.facility import create_facility_blueprint
@@ -129,6 +129,14 @@ def create_web_app():
             return ProposalState.get_name(value)
         except KeyError:
             return 'Unknown state'
+
+    @app.template_test()
+    def attachment_ready(value):
+        return ProposalAttachmentState.is_ready(value)
+
+    @app.template_test()
+    def attachment_error(value):
+        return ProposalAttachmentState.is_error(value)
 
     app.add_template_filter(format_text)
 

@@ -29,6 +29,7 @@ from flask import flash as _flask_flash
 from flask import make_response as _flask_make_response
 from flask import render_template as _flask_render_template
 from flask import request as _flask_request
+from flask import Response as _FlaskResponse
 from werkzeug import exceptions as _werkzeug_exceptions
 from werkzeug import routing as _werkzeug_routing
 
@@ -170,6 +171,32 @@ def require_not_auth(f):
         return f(*args, **kwargs)
 
     return decorated
+
+
+def send_file(fixed_mimetype=None):
+    """
+    Decorator for route functions which send files.
+
+    If there is a fixed MIME type, it can be set in the decorator
+    argument and the function just returns the data.  Otherwise
+    the function must return a (data, mimetype) tuple.
+    """
+
+    def decorator(f):
+        @functools.wraps(f)
+        def decorated_function(*args, **kwargs):
+            mimetype = fixed_mimetype
+            data = f(*args, **kwargs)
+
+            if mimetype is None:
+                # Function should have returned a tuple: unpack it.
+                (data, mimetype) = data
+
+            return _FlaskResponse(data, mimetype=mimetype)
+
+        return decorated_function
+
+    return decorator
 
 
 def templated(template):

@@ -20,7 +20,8 @@ from __future__ import absolute_import, division, print_function, \
 
 from flask import Blueprint, request
 
-from ..util import require_admin, require_auth, templated
+from ...type import ProposalFigureType
+from ..util import require_admin, require_auth, send_file, templated
 
 
 def create_facility_blueprint(db, facility):
@@ -142,7 +143,7 @@ def create_facility_blueprint(db, facility):
             db, proposal_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/technical/pdf',
+    @bp.route('/proposal/<int:proposal_id>/technical/pdf/edit',
               methods=['GET', 'POST'])
     @facility_template('pdf_upload.html')
     @require_auth(require_person=True)
@@ -150,6 +151,12 @@ def create_facility_blueprint(db, facility):
         return facility.view_tech_edit_pdf(
             db, proposal_id,
             (request.files['file'] if request.method == 'POST' else None))
+
+    @bp.route('/proposal/<int:proposal_id>/technical/pdf/preview/<int:page>')
+    @send_file(ProposalFigureType.get_mime_type(ProposalFigureType.PNG))
+    @require_auth(require_person=True)
+    def tech_view_pdf_preview(proposal_id, page):
+        return facility.view_tech_view_pdf_preview(db, proposal_id, page)
 
     @bp.route('/proposal/<int:proposal_id>/scientific')
     @facility_template('case_edit.html')
@@ -166,7 +173,7 @@ def create_facility_blueprint(db, facility):
             db, proposal_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/scientific/pdf',
+    @bp.route('/proposal/<int:proposal_id>/scientific/pdf/edit',
               methods=['GET', 'POST'])
     @facility_template('pdf_upload.html')
     @require_auth(require_person=True)
@@ -174,6 +181,12 @@ def create_facility_blueprint(db, facility):
         return facility.view_sci_edit_pdf(
             db, proposal_id,
             (request.files['file'] if request.method == 'POST' else None))
+
+    @bp.route('/proposal/<int:proposal_id>/scientific/pdf/preview/<int:page>')
+    @send_file(ProposalFigureType.get_mime_type(ProposalFigureType.PNG))
+    @require_auth(require_person=True)
+    def sci_view_pdf_preview(proposal_id, page):
+        return facility.view_sci_view_pdf_preview(db, proposal_id, page)
 
     @bp.route('/admin')
     @facility_template('facility_admin.html')

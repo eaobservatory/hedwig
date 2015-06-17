@@ -39,3 +39,7 @@ div#content {
     border-radius: 1ex;
     border: 1px solid black;
 }
+
+img.pdf_preview {
+    border: 1px solid black;
+}

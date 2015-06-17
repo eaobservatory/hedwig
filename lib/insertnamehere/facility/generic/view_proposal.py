@@ -110,6 +110,7 @@ class GenericProposal(object):
         """
 
         proposal_text = db.get_all_proposal_text(proposal.id)
+        proposal_pdf = db.search_proposal_pdf(proposal.id)
 
         targets = [
             x._replace(system=CoordSystem.get_name(x.system)) for x in
@@ -118,10 +119,14 @@ class GenericProposal(object):
 
         return {
             'abstract': proposal_text.get(ProposalTextRole.ABSTRACT, None),
-            'tech_case': proposal_text.get(ProposalTextRole.TECHNICAL_CASE,
-                                           None),
-            'sci_case': proposal_text.get(ProposalTextRole.SCIENCE_CASE,
-                                          None),
+            'tech_case_text': proposal_text.get(
+                ProposalTextRole.TECHNICAL_CASE, None),
+            'sci_case_text': proposal_text.get(
+                ProposalTextRole.SCIENCE_CASE, None),
+            'tech_case_pdf': proposal_pdf.get_role(
+                ProposalTextRole.TECHNICAL_CASE, None),
+            'sci_case_pdf': proposal_pdf.get_role(
+                ProposalTextRole.SCIENCE_CASE, None),
             'targets': targets,
         }
 
@@ -507,6 +512,14 @@ class GenericProposal(object):
             proposal.tech_page_lim,
             url_for('.sci_edit_pdf', proposal_id=proposal.id), file)
 
+    @with_proposal(permission='view')
+    def view_tech_view_pdf_preview(self, db, proposal, can, page):
+        try:
+            return db.get_proposal_pdf_preview(
+                proposal.id, ProposalTextRole.TECHNICAL_CASE, page)
+        except NoSuchRecord:
+            raise HTTPNotFound('PDF preview page not found.')
+
     @with_proposal(permission='edit')
     def view_sci_edit(self, db, proposal, can):
         call = db.get_call(facility_id=None, call_id=proposal.call_id)
@@ -536,6 +549,14 @@ class GenericProposal(object):
             db, proposal, ProposalTextRole.SCIENCE_CASE,
             proposal.sci_page_lim,
             url_for('.sci_edit_pdf', proposal_id=proposal.id), file)
+
+    @with_proposal(permission='view')
+    def view_sci_view_pdf_preview(self, db, proposal, can, page):
+        try:
+            return db.get_proposal_pdf_preview(
+                proposal.id, ProposalTextRole.SCIENCE_CASE, page)
+        except NoSuchRecord:
+            raise HTTPNotFound('PDF preview page not found.')
 
     def _edit_text(self, db, proposal, role, word_limit, target, form, rows):
         name = ProposalTextRole.get_name(role)

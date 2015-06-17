@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 
 {% from 'macro/institution.html' import render_member_institution %}
+{% from 'macro/pdf.html' import render_proposal_pdf %}
 
 {% block content %}
 
@@ -171,12 +172,14 @@
     <section>
         <h2>Technical Justification</h2>
 
-        {% if tech_case is none %}
+        {% if tech_case_text is not none %}
+            {{ tech_case | format_text }}
+        {% elif tech_case_pdf is not none %}
+            {{ render_proposal_pdf(tech_case_pdf, '.tech_view_pdf_preview', proposal.id) }}
+        {% else %}
             <p class="missing">
                 This proposal does not yet have a technical justification.
             </p>
-        {% else %}
-            {{ tech_case | format_text }}
         {% endif %}
 
         {% if can_edit %}
@@ -193,12 +196,14 @@
     <section>
         <h2>Scientific Justification</h2>
 
-        {% if sci_case is none %}
+        {% if sci_case_text is not none %}
+            {{ sci_case | format_text }}
+        {% elif sci_case_pdf is not none %}
+            {{ render_proposal_pdf(sci_case_pdf, '.sci_view_pdf_preview', proposal.id) }}
+        {% else %}
             <p class="missing">
                 This proposal does not yet have a scientific justification.
             </p>
-        {% else %}
-            {{ sci_case | format_text }}
         {% endif %}
 
         {% if can_edit %}
