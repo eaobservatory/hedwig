@@ -372,6 +372,18 @@ class MemberCollection(ResultCollection):
             raise userError('You can not remove yourself as an editor.')
 
 
+class ProposalPDFCollection(ResultCollection):
+    def get_role(self, role, default=()):
+        for pdf in self.values():
+            if pdf.role == role:
+                return pdf
+
+        if default == ():
+            raise KeyError('no PDF for this role')
+        else:
+            return default
+
+
 class TargetCollection(OrderedDict):
     def to_formatted_collection(self):
         ans = OrderedDict()

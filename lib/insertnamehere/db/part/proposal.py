@@ -30,7 +30,7 @@ from ...error import ConsistencyError, Error, FormattedError, \
 from ...type import Affiliation, Call, FormatType, Member, MemberCollection, \
     MemberInfo, Proposal, ProposalState, \
     ProposalAttachmentState, ProposalFigureInfo, ProposalFigureType, \
-    ProposalPDFInfo, \
+    ProposalPDFCollection, ProposalPDFInfo, \
     ProposalText, ProposalTextInfo, ProposalTextRole, \
     Queue, QueueInfo, ResultCollection, Semester, SemesterInfo, \
     Target, TargetCollection
@@ -811,7 +811,7 @@ class ProposalPart(object):
         if state is not None:
             stmt = stmt.where(proposal_pdf.c.state == state)
 
-        ans = ResultCollection()
+        ans = ProposalPDFCollection()
 
         with self._transaction() as conn:
             for row in conn.execute(stmt):
