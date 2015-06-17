@@ -416,6 +416,29 @@ class ProposalPart(object):
 
         return row['pdf']
 
+    def get_proposal_pdf_preview(self, proposal_id, role, page):
+        """
+        Get a preview page from a PDF associated with a proposal.
+        """
+
+        stmt = select([proposal_pdf_preview.c.preview]).select_from(
+            proposal_pdf.join(proposal_pdf_preview)
+        ).where(and_(
+            proposal_pdf.c.proposal_id == proposal_id,
+            proposal_pdf.c.role == role,
+            proposal_pdf_preview.c.page == page
+        ))
+
+        with self._transaction() as conn:
+            preview = conn.execute(stmt).scalar()
+
+        if preview is None:
+            raise NoSuchRecord(
+                'PDF preview does not exist for {} role {} page {}',
+                proposal_id, role, page)
+
+        return preview
+
     def get_proposal_text(self, proposal_id, role):
         """
         Get the given text associated with a proposal.
@@ -880,6 +903,27 @@ class ProposalPart(object):
 
                 return result.inserted_primary_key[0]
 
+    def set_proposal_pdf_preview(self, pdf_id, pngs):
+        """
+        Set the preview images for a PDF file attached to a proposal.
+        """
+
+        stmt = proposal_pdf_preview.insert()
+        n = 0
+
+        with self._transaction() as conn:
+            conn.execute(proposal_pdf_preview.delete().where(
+                proposal_pdf_preview.c.pdf_id == pdf_id))
+
+            for png in pngs:
+                n += 1
+
+                conn.execute(stmt.values({
+                    proposal_pdf_preview.c.pdf_id: pdf_id,
+                    proposal_pdf_preview.c.page: n,
+                    proposal_pdf_preview.c.preview: png,
+                }))
+
     def set_proposal_text(self, proposal_id, role, text, format, is_update,
                           _test_skip_check=False):
         """
@@ -1119,6 +1163,40 @@ class ProposalPart(object):
                 raise ConsistencyError(
                     'no rows matched updating proposal with id={0}',
                     proposal_id)
+
+    def update_proposal_pdf(self, pdf_id, state=None, state_prev=None,
+                            _test_skip_check=False):
+        """
+        Update the record for a PDF attached to a proposal.
+        """
+
+        values = {}
+        stmt = proposal_pdf.update().where(proposal_pdf.c.id == pdf_id)
+
+        if state is not None:
+            if not ProposalAttachmentState.is_valid(state):
+                raise Error('Invalid state.')
+            values['state'] = state
+
+        if state_prev is not None:
+            if not ProposalAttachmentState.is_valid(state):
+                raise Error('Invalid previous state.')
+            stmt = stmt.where(proposal_pdf.c.state == state_prev)
+
+        if not values:
+            raise Error('No proposal PDF updates specified.')
+
+        with self._transaction() as conn:
+            if not _test_skip_check and not self._exists_id(
+                    conn, proposal_pdf, pdf_id):
+                raise ConsistencyError(
+                    'proposal PDF does not exist with id={}'.format(pdf_id))
+
+            result = conn.execute(stmt.values(values))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched updating proposal PDF with id={}', pdf_id)
 
     def update_queue(self, queue_id, name=None, code=None, description=None,
                      _test_skip_check=False):

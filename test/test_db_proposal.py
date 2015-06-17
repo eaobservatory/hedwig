@@ -617,10 +617,45 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(pdf_info, ProposalPDFInfo(
             pdf_id, proposal_id, role, ProposalAttachmentState.NEW, 4))
 
+        # Try changing proposal state.
+        self.db.update_proposal_pdf(
+            pdf_id=pdf_id, state=ProposalAttachmentState.READY)
+
+        result = self.db.search_proposal_pdf(proposal_id=proposal_id)
+        self.assertEqual(result[pdf_id].state, ProposalAttachmentState.READY)
+
+        # Check that the "state_prev" constraint works.
+        with self.assertRaisesRegexp(ConsistencyError, 'no rows matched'):
+            self.db.update_proposal_pdf(
+                pdf_id=pdf_id, state=ProposalAttachmentState.READY,
+                state_prev=ProposalAttachmentState.ERROR)
+
+        self.db.update_proposal_pdf(
+            pdf_id=pdf_id, state=ProposalAttachmentState.ERROR,
+            state_prev=ProposalAttachmentState.READY)
+
+        # Test setting preview images.
+        self.db.set_proposal_pdf_preview(pdf_id, [b'dummy 1', b'dummy 2'])
+
+        self.assertEqual(
+            self.db.get_proposal_pdf_preview(proposal_id, role, 1),
+            b'dummy 1')
+
+        self.assertEqual(
+            self.db.get_proposal_pdf_preview(proposal_id, role, 2),
+            b'dummy 2')
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_pdf_preview(proposal_id, role, 3)
+
+        # Test deleting the PDF.
         self.db.delete_proposal_pdf(proposal_id, role)
 
         with self.assertRaises(NoSuchRecord):
             self.db.get_proposal_pdf(proposal_id, role)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_pdf_preview(proposal_id, role, 1)
 
         result = self.db.search_proposal_pdf(proposal_id=proposal_id)
         self.assertEqual(len(result), 0)

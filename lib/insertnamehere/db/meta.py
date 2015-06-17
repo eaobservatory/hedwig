@@ -252,10 +252,11 @@ proposal_pdf = Table(
 proposal_pdf_preview = Table(
     'proposal_pdf_preview',
     metadata,
+    Column('id', Integer, primary_key=True),
     Column('pdf_id', None,
            ForeignKey('proposal_pdf.id',
                       onupdate='RESTRICT', ondelete='CASCADE'),
-           primary_key=True, nullable=False),
+           nullable=False),
     Column('page', Integer, nullable=False),
     Column('preview', LargeBinary(2**24 - 1), nullable=False),
     Index('idx_pdf_id_page', 'pdf_id', 'page', unique=True),
