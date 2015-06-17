@@ -184,7 +184,8 @@ class ProposalPart(object):
         return proposal_id
 
     def add_proposal_figure(self, proposal_id, role, type_, figure,
-                            caption, _test_skip_check=False):
+                            caption, filename, uploader_person_id,
+                            _test_skip_check=False):
         if not ProposalFigureType.is_valid(type_):
             raise Error('Invalid figure type.')
         if not ProposalTextRole.is_valid(role):
@@ -199,6 +200,10 @@ class ProposalPart(object):
                     not self._exists_id(conn, proposal, proposal_id)):
                 raise ConsistencyError('proposal does not exist with id={0}',
                                        proposal_id)
+            if (not _test_skip_check and
+                    not self._exists_id(conn, person, uploader_person_id)):
+                raise ConsistencyError('person does not exist with id={}',
+                                       uploader_person_id)
 
             result = conn.execute(proposal_fig.insert().values({
                 proposal_fig.c.proposal_id: proposal_id,
@@ -207,6 +212,9 @@ class ProposalPart(object):
                 proposal_fig.c.state: ProposalAttachmentState.NEW,
                 proposal_fig.c.figure: figure,
                 proposal_fig.c.caption: caption,
+                proposal_fig.c.filename: filename,
+                proposal_fig.c.uploaded: datetime.utcnow(),
+                proposal_fig.c.uploader: uploader_person_id,
             }))
 
         return result.inserted_primary_key[0]
@@ -765,6 +773,9 @@ class ProposalPart(object):
             proposal_fig.c.role,
             proposal_fig.c.type,
             proposal_fig.c.state,
+            proposal_fig.c.filename,
+            proposal_fig.c.uploaded,
+            proposal_fig.c.uploader,
         ]
         default = {'caption': None}
 
@@ -800,6 +811,9 @@ class ProposalPart(object):
             proposal_pdf.c.role,
             proposal_pdf.c.state,
             proposal_pdf.c.pages,
+            proposal_pdf.c.filename,
+            proposal_pdf.c.uploaded,
+            proposal_pdf.c.uploader,
         ])
 
         if proposal_id is not None:
@@ -853,7 +867,8 @@ class ProposalPart(object):
 
         return ans
 
-    def set_proposal_pdf(self, proposal_id, role, pdf, pages):
+    def set_proposal_pdf(self, proposal_id, role, pdf, pages, filename,
+                         uploader_person_id, _test_skip_check=False):
         """
         Insert or update a given proposal PDF.
 
@@ -865,16 +880,26 @@ class ProposalPart(object):
                                  role)
 
         with self._transaction() as conn:
+            if (not _test_skip_check and
+                    not self._exists_id(conn, person, uploader_person_id)):
+                raise ConsistencyError('person does not exist with id={}',
+                                       uploader_person_id)
+
             pdf_id = self._get_proposal_pdf_id(conn, proposal_id, role)
+
+            values = {
+                proposal_pdf.c.pdf: pdf,
+                proposal_pdf.c.pages: pages,
+                proposal_pdf.c.state: ProposalAttachmentState.NEW,
+                proposal_pdf.c.filename: filename,
+                proposal_pdf.c.uploaded: datetime.utcnow(),
+                proposal_pdf.c.uploader: uploader_person_id,
+            }
 
             if pdf_id is not None:
                 result = conn.execute(proposal_pdf.update().where(
                     proposal_pdf.c.id == pdf_id
-                ).values({
-                    proposal_pdf.c.pdf: pdf,
-                    proposal_pdf.c.pages: pages,
-                    proposal_pdf.c.state: ProposalAttachmentState.NEW,
-                }))
+                ).values(values))
 
                 if result.rowcount != 1:
                     raise ConsistencyError(
@@ -887,13 +912,12 @@ class ProposalPart(object):
                 return pdf_id
 
             else:
-                result = conn.execute(proposal_pdf.insert().values({
+                values.update({
                     proposal_pdf.c.proposal_id: proposal_id,
                     proposal_pdf.c.role: role,
-                    proposal_pdf.c.pdf: pdf,
-                    proposal_pdf.c.pages: pages,
-                    proposal_pdf.c.state: ProposalAttachmentState.NEW,
-                }))
+                })
+
+                result = conn.execute(proposal_pdf.insert().values(values))
 
                 return result.inserted_primary_key[0]
 

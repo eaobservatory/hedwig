@@ -629,6 +629,7 @@ class GenericProposal(object):
 
                 # Read the file, raising an error if it is too large.
                 try:
+                    filename = file.filename
                     buff = file.read(max_size * 1024 * 1024)
 
                     # Did we get all of the file within the size limit?
@@ -650,7 +651,8 @@ class GenericProposal(object):
                         page_count, page_limit,
                         ('page' if page_limit == 1 else 'pages'))
 
-                db.set_proposal_pdf(proposal.id, role, buff, page_count)
+                db.set_proposal_pdf(proposal.id, role, buff, page_count,
+                                    filename, session['person']['id'])
 
                 flash('The {0} has been uploaded.', name.lower())
 

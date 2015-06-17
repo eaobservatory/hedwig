@@ -603,7 +603,8 @@ class DBProposalTest(DBTestCase):
         result = self.db.search_proposal_pdf(proposal_id=proposal_id)
         self.assertEqual(len(result), 0)
 
-        pdf_id = self.db.set_proposal_pdf(proposal_id, role, pdf, 4)
+        pdf_id = self.db.set_proposal_pdf(proposal_id, role, pdf, 4,
+                                          'test.pdf', person_id)
         self.assertIsInstance(pdf_id, int)
 
         self.assertEqual(self.db.get_proposal_pdf(proposal_id, role), pdf)
@@ -614,8 +615,13 @@ class DBProposalTest(DBTestCase):
         self.assertIn(pdf_id, result)
         pdf_info = result[pdf_id]
         self.assertIsInstance(pdf_info, ProposalPDFInfo)
-        self.assertEqual(pdf_info, ProposalPDFInfo(
-            pdf_id, proposal_id, role, ProposalAttachmentState.NEW, 4))
+        self.assertEqual(pdf_info.id, pdf_id)
+        self.assertEqual(pdf_info.proposal_id, proposal_id)
+        self.assertEqual(pdf_info.role, role)
+        self.assertEqual(pdf_info.state, ProposalAttachmentState.NEW, 4)
+        self.assertEqual(pdf_info.filename, 'test.pdf')
+        self.assertIsInstance(pdf_info.uploaded, datetime)
+        self.assertEqual(pdf_info.uploader, person_id)
 
         # Try changing proposal state.
         self.db.update_proposal_pdf(
@@ -675,16 +681,24 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(len(result), 0)
 
         fig_id = self.db.add_proposal_figure(proposal_id, role, type_, fig,
-                                             'Figure caption.')
+                                             'Figure caption.', 'test.png',
+                                             person_id)
         self.assertIsInstance(fig_id, int)
 
         result = self.db.search_proposal_figure(proposal_id=proposal_id)
         self.assertEqual(len(result), 1)
         self.assertIn(fig_id, result)
         fig_info = result[fig_id]
-        self.assertEqual(fig_info, ProposalFigureInfo(
-            id=fig_id, proposal_id=proposal_id, role=role, type=type_,
-            state=ProposalAttachmentState.NEW, caption=None))
+        self.assertIsInstance(fig_info, ProposalFigureInfo)
+        self.assertEqual(fig_info.id, fig_id)
+        self.assertEqual(fig_info.proposal_id, proposal_id)
+        self.assertEqual(fig_info.role, role)
+        self.assertEqual(fig_info.type, type_)
+        self.assertEqual(fig_info.state, ProposalAttachmentState.NEW)
+        self.assertEqual(fig_info.caption, None)
+        self.assertEqual(fig_info.filename, 'test.png')
+        self.assertIsInstance(fig_info.uploaded, datetime)
+        self.assertEqual(fig_info.uploader, person_id)
 
     def test_proposal_target(self):
         (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')

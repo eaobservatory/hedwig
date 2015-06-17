@@ -212,6 +212,11 @@ proposal_fig = Table(
     Column('type', Integer, nullable=False),
     Column('state', Integer, nullable=False),
     Column('figure', LargeBinary(2**24 - 1), nullable=False),
+    Column('filename', Unicode(255), nullable=False),
+    Column('uploaded', DateTime(), nullable=False),
+    Column('uploader', None,
+           ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
     Column('caption', UnicodeText, nullable=False),
     **_table_opts)
 
@@ -246,6 +251,11 @@ proposal_pdf = Table(
     Column('pdf', LargeBinary(2**32 - 1), nullable=False),
     Column('state', Integer, nullable=False),
     Column('pages', Integer, nullable=False),
+    Column('filename', Unicode(255), nullable=False),
+    Column('uploaded', DateTime(), nullable=False),
+    Column('uploader', None,
+           ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
     Index('idx_pdf_prop_role', 'proposal_id', 'role', unique=True),
     **_table_opts)
 
