@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from ...astro.coord import CoordSystem
 from ...email.format import render_email_template
+from ...config import get_config
 from ...error import NoSuchRecord, UserError
 from ...file.info import determine_figure_type, determine_pdf_page_count
 from ...type import Affiliation, Call, FormatType, \
@@ -602,6 +603,7 @@ class GenericProposal(object):
 
     def _edit_pdf(self, db, proposal, role, page_limit, target, file):
         name = ProposalTextRole.get_name(role)
+        max_size = int(get_config().get('upload', 'max_pdf_size'))
         message = None
 
         if file is not None:
@@ -609,9 +611,16 @@ class GenericProposal(object):
                 if not file:
                     raise UserError('No file was received.')
 
-                # TODO: insert correct size.
-                buff = file.read(1000000)
-                file.close()
+                # Read the file, raising an error if it is too large.
+                try:
+                    buff = file.read(max_size * 1024 * 1024)
+
+                    # Did we get all of the file within the size limit?
+                    if len(file.read(1)):
+                        raise UserError('The uploaded file was too large.')
+
+                finally:
+                    file.close()
 
                 type_ = determine_figure_type(buff)
                 if type_ != ProposalFigureType.PDF:
@@ -642,4 +651,5 @@ class GenericProposal(object):
             'message': message,
             'mime_types': [ProposalFigureType.get_mime_type(
                 ProposalFigureType.PDF)],
+            'max_size': max_size,
         }

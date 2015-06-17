@@ -10,6 +10,12 @@ name=Insert Name Here
 secret_key=
 facilities=Generic
 
+# The maximum file upload sizes for proposal PDFs and figures are specified
+# here in MiB.
+[upload]
+max_pdf_size=10
+max_fig_size=1
+
 [email]
 server=
 from=

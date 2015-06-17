@@ -13,6 +13,7 @@
         <li>
             <label for="file">PDF file</label>
             <input type="file" name="file" accept="{{ mime_types | join (',') }}" />
+            <span class="explanation">maximum size {{ max_size }} MiB</span>
         </li>
         <li>
             <input type="submit" value="Upload" name="submit" />

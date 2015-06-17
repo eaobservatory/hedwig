@@ -52,6 +52,13 @@ def create_web_app():
         template_folder=os.path.join(home, 'data', 'web', 'template'),
     )
 
+    # Determine maximum upload size: check all upload limits from the
+    # configuration file.
+    max_upload_size = max(
+        int(upload_val) for (upload_key, upload_val) in config.items('upload')
+        if upload_key.startswith('max_') and upload_key.endswith('_size'))
+    app.config['MAX_CONTENT_LENGTH'] = max_upload_size * 1024 * 1024
+
     # Try to read the secret key from the configuration file, but if
     # there isn't one, generate a temporary key.
     secret_key = config.get('application', 'secret_key')
