@@ -170,9 +170,11 @@ class ProposalAttachmentState(object):
     def get_name(cls, state):
         return cls._info[state].name
 
+    @classmethod
     def is_ready(cls, state):
         return cls._info[state].ready
 
+    @classmethod
     def is_error(cls, state):
         return cls._info[state].error
 
