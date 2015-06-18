@@ -173,7 +173,7 @@
         <h2>Technical Justification</h2>
 
         {% if tech_case_text is not none %}
-            {{ tech_case | format_text }}
+            {{ tech_case_text | format_text }}
         {% elif tech_case_pdf is not none %}
             {{ render_proposal_pdf(tech_case_pdf, '.tech_view_pdf_preview', proposal.id) }}
         {% else %}
@@ -197,7 +197,7 @@
         <h2>Scientific Justification</h2>
 
         {% if sci_case_text is not none %}
-            {{ sci_case | format_text }}
+            {{ sci_case_text | format_text }}
         {% elif sci_case_pdf is not none %}
             {{ render_proposal_pdf(sci_case_pdf, '.sci_view_pdf_preview', proposal.id) }}
         {% else %}
