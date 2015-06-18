@@ -13,11 +13,11 @@
 <form method="POST" action="{{ target }}">
     <p>
         <textarea name="text" required="requried" autofocus="autofocus" cols="80" rows="{{ rows | default(10) }}" data-wordlimit="{{ word_limit }}">{{ text.text }}</textarea>
-        <br />
-        <span id="text_words"></span>
-        <br />
+    </p>
+    <p>
         <input type="hidden" name="format" value="{{ text.format }}" />
         <input type="submit" value="Save" name="submit" />
+        <span id="text_words"></span>
     </p>
 </form>
 
