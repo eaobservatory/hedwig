@@ -954,8 +954,6 @@ class ProposalPart(object):
                 result = conn.execute(proposal_pdf_preview.delete().where(
                     proposal_pdf_preview.c.pdf_id == pdf_id))
 
-                return pdf_id
-
             else:
                 values.update({
                     proposal_pdf.c.proposal_id: proposal_id,
@@ -964,7 +962,26 @@ class ProposalPart(object):
 
                 result = conn.execute(proposal_pdf.insert().values(values))
 
-                return result.inserted_primary_key[0]
+                pdf_id = result.inserted_primary_key[0]
+
+            # Delete any previous proposal text for the same role which
+            # this PDF is replacing.
+            result = conn.execute(proposal_text.delete().where(and_(
+                proposal_text.c.proposal_id == proposal_id,
+                proposal_text.c.role == role)))
+
+            if result.rowcount not in (0, 1):
+                raise ConsistencyError(
+                    'multiple rows deleted removing replaced text '
+                    'for proposal {} role {}', proposal_id, role)
+
+            # Also delete any previous figures attached for the old text
+            # version.
+            conn.execute(proposal_fig.delete().where(and_(
+                proposal_fig.c.proposal_id == proposal_id,
+                proposal_fig.c.role == role)))
+
+            return pdf_id
 
     def set_proposal_pdf_preview(self, pdf_id, pngs):
         """
@@ -1045,6 +1062,17 @@ class ProposalPart(object):
                 })
 
                 result = conn.execute(proposal_text.insert().values(values))
+
+            # Delete any previous proposal PDF for the same role which
+            # this text is replacing.
+            result = conn.execute(proposal_pdf.delete().where(and_(
+                proposal_pdf.c.proposal_id == proposal_id,
+                proposal_pdf.c.role == role)))
+
+            if result.rowcount not in (0, 1):
+                raise ConsistencyError(
+                    'multiple rows deleted removing replaced PDF '
+                    'for proposal {} role {}', proposal_id, role)
 
     def sync_proposal_member(self, proposal_id, records, editor_person_id):
         """
