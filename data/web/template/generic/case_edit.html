@@ -24,6 +24,29 @@
                     up to {{ fig_limit }} figures{%endif%}{%endif %}.
         </p>
 
+        {% if text is not none %}
+            <table>
+                <tr>
+                    <th>Words</th>
+                    <td>{{ text.words }}</td>
+                </tr>
+                <tr>
+                    <th>Edited</th>
+                    <td>{{ text.edited | format_datetime }} UTC</td>
+                </tr>
+                <tr>
+                    <th>Edited by</th>
+                    <td>
+                        {% if session['is_admin'] %}
+                            <a href="{{ url_for('people.person_view', person_id=text.editor) }}">{{ text.editor_name }}</a>
+                        {% else %}
+                            {{ text.editor_name }}
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        {% endif %}
+
         <nav>
             <p>
                 <a href="{{ target_text }}">Edit text</a>

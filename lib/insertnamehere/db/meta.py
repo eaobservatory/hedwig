@@ -198,6 +198,11 @@ proposal_text = Table(
     Column('role', Integer, nullable=False),
     Column('text', UnicodeText, nullable=False),
     Column('format', Integer, nullable=False),
+    Column('words', Integer, nullable=False),
+    Column('edited', DateTime(), nullable=False),
+    Column('editor', None,
+           ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
     Index('idx_text_prop_role', 'proposal_id', 'role', unique=True),
     **_table_opts)
 

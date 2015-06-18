@@ -113,7 +113,8 @@ ProposalText = namedtuple(
 
 ProposalTextInfo = namedtuple(
     'ProposalTextInfo',
-    ['id', 'proposal_id', 'role', 'format'])
+    ['id', 'proposal_id', 'role', 'format', 'words',
+     'edited', 'editor', 'editor_name'])
 
 Semester = namedtuple(
     'Semester',
@@ -377,14 +378,14 @@ class MemberCollection(ResultCollection):
             raise userError('You can not remove yourself as an editor.')
 
 
-class ProposalPDFCollection(ResultCollection):
+class ProposalTextCollection(ResultCollection):
     def get_role(self, role, default=()):
         for pdf in self.values():
             if pdf.role == role:
                 return pdf
 
         if default == ():
-            raise KeyError('no PDF for this role')
+            raise KeyError('no text/PDF for this role')
         else:
             return default
 

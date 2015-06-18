@@ -582,6 +582,8 @@ class GenericProposal(object):
     def _edit_case(self, db, proposal, role):
         name = ProposalTextRole.get_name(role)
 
+        text_info = db.search_proposal_text(proposal_id=proposal.id, role=role)
+
         pdf_info = db.search_proposal_pdf(proposal_id=proposal.id, role=role,
                                           with_uploader_name=True)
 
@@ -589,6 +591,7 @@ class GenericProposal(object):
             'title': 'Edit {}'.format(name.title()),
             'proposal_id': proposal.id,
             'proposal_code': self.make_proposal_code(db, proposal),
+            'text': text_info.get_single(None),
             'pdf': pdf_info.get_single(None),
         }
 
@@ -615,7 +618,8 @@ class GenericProposal(object):
                         name.capitalize(), word_count, word_limit)
 
                 db.set_proposal_text(proposal.id, role,
-                                     text.text, text.format, is_update)
+                                     text.text, text.format, word_count,
+                                     session['person']['id'], is_update)
                 flash('The {0} has been saved.', name.lower())
                 raise HTTPRedirect(url_for('.proposal_view',
                                            proposal_id=proposal.id))

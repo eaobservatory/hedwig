@@ -30,8 +30,8 @@ from ...error import ConsistencyError, Error, FormattedError, \
 from ...type import Affiliation, Call, FormatType, Member, MemberCollection, \
     MemberInfo, Proposal, ProposalState, \
     ProposalAttachmentState, ProposalFigureInfo, ProposalFigureType, \
-    ProposalPDFCollection, ProposalPDFInfo, \
-    ProposalText, ProposalTextInfo, ProposalTextRole, \
+    ProposalPDFInfo, \
+    ProposalText, ProposalTextCollection, ProposalTextInfo, ProposalTextRole, \
     Queue, QueueInfo, ResultCollection, Semester, SemesterInfo, \
     Target, TargetCollection
 from ..meta import affiliation, call, facility, institution, member, person, \
@@ -842,13 +842,39 @@ class ProposalPart(object):
         if state is not None:
             stmt = stmt.where(proposal_pdf.c.state == state)
 
-        ans = ProposalPDFCollection()
+        ans = ProposalTextCollection()
 
         with self._transaction() as conn:
             for row in conn.execute(stmt):
                 values = default.copy()
                 values.update(**row)
                 ans[row['id']] = ProposalPDFInfo(**values)
+
+        return ans
+
+    def search_proposal_text(self, proposal_id=None, role=None):
+        stmt = select([
+            proposal_text.c.id,
+            proposal_text.c.proposal_id,
+            proposal_text.c.role,
+            proposal_text.c.format,
+            proposal_text.c.words,
+            proposal_text.c.edited,
+            proposal_text.c.editor,
+            person.c.name.label('editor_name'),
+        ]).select_from(proposal_text.join(person))
+
+        if proposal_id is not None:
+            stmt = stmt.where(proposal_text.c.proposal_id == proposal_id)
+
+        if role is not None:
+            stmt = stmt.where(proposal_text.c.role == role)
+
+        ans = ProposalTextCollection()
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt):
+                ans[row['id']] = ProposalTextInfo(**row)
 
         return ans
 
@@ -961,7 +987,8 @@ class ProposalPart(object):
                     proposal_pdf_preview.c.preview: png,
                 }))
 
-    def set_proposal_text(self, proposal_id, role, text, format, is_update,
+    def set_proposal_text(self, proposal_id, role, text, format,
+                          words, editor_person_id, is_update,
                           _test_skip_check=False):
         """
         Insert or update a given piece of proposal text.
@@ -992,14 +1019,19 @@ class ProposalPart(object):
                         'text already exists for proposal {0} role {1}',
                         proposal_id, role)
 
+            values = {
+                proposal_text.c.text: text,
+                proposal_text.c.format: format,
+                proposal_text.c.words: words,
+                proposal_text.c.edited: datetime.utcnow(),
+                proposal_text.c.editor: editor_person_id,
+            }
+
             if is_update:
                 result = conn.execute(proposal_text.update().where(and_(
                     proposal_text.c.proposal_id == proposal_id,
                     proposal_text.c.role == role
-                )).values({
-                    proposal_text.c.text: text,
-                    proposal_text.c.format: format,
-                }))
+                )).values(values))
 
                 if result.rowcount != 1:
                     raise ConsistencyError(
@@ -1007,12 +1039,12 @@ class ProposalPart(object):
                         proposal_id, role)
 
             else:
-                result = conn.execute(proposal_text.insert().values({
+                values.update({
                     proposal_text.c.proposal_id: proposal_id,
                     proposal_text.c.role: role,
-                    proposal_text.c.text: text,
-                    proposal_text.c.format: format,
-                }))
+                })
+
+                result = conn.execute(proposal_text.insert().values(values))
 
     def sync_proposal_member(self, proposal_id, records, editor_person_id):
         """
