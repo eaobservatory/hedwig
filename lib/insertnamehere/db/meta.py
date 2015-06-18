@@ -233,7 +233,7 @@ proposal_fig_preview = Table(
            ForeignKey('proposal_fig.id',
                       onupdate='RESTRICT', ondelete='CASCADE'),
            primary_key=True, nullable=False),
-    Column('thumbnail', LargeBinary(2**24 - 1), nullable=False),
+    Column('preview', LargeBinary(2**24 - 1), nullable=False),
     **_table_opts)
 
 proposal_fig_thumbnail = Table(

@@ -275,6 +275,29 @@ class ProposalPart(object):
 
             return result.inserted_primary_key[0]
 
+    def delete_proposal_figure(self, proposal_id, role, id_):
+        stmt = proposal_fig.delete()
+
+        if proposal_id is not None:
+            stmt = stmt.where(proposal_fig.c.proposal_id == proposal_id)
+
+        if role is not None:
+            stmt = stmt.where(proposal_fig.c.role == role)
+
+        if id_ is not None:
+            stmt = stmt.where(proposal_fig.c.id == id_)
+        else:
+            raise Error('figure identifier not specified')
+
+        with self._transaction() as conn:
+            result = conn.execute(stmt)
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no row matched deleting proposal figure '
+                    'for proposal {} role {} figure {}',
+                    proposal_id, role, fig_id)
+
     def delete_proposal_pdf(self, proposal_id, role,
                             _test_skip_check=False):
         with self._transaction() as conn:
@@ -394,12 +417,70 @@ class ProposalPart(object):
 
         return result['code']
 
+    def get_proposal_figure(self, proposal_id, role, id_):
+        """
+        Get a figure associated with a proposal.
+        """
+
+        stmt = select([proposal_fig.c.figure])
+
+        if proposal_id is not None:
+            stmt = stmt.where(proposal_fig.c.proposal_id == proposal_id)
+
+        if role is not None:
+            stmt = stmt.where(proposal_fig.c.role == role)
+
+        if id_ is not None:
+            stmt = stmt.where(proposal_fig.c.id == id_)
+        else:
+            raise Error('proposal figure identifier not specified')
+
+        with self._transaction() as conn:
+            row = conn.execute(stmt).first()
+
+        if row is None:
+            raise NoSuchRecord('figure does not exist')
+
+        return row[0]
+
+    def get_proposal_figure_preview(self, proposal_id, role, id_):
+        return self._get_proposal_figure_alternate(
+            proposal_fig_preview.c.preview, proposal_id, role, id_)
+
+    def get_proposal_figure_thumbnail(self, proposal_id, role, id_):
+        return self._get_proposal_figure_alternate(
+            proposal_fig_thumbnail.c.thumbnail, proposal_id, role, id_)
+
+    def _get_proposal_figure_alternate(self, column,
+                                       proposal_id, role, id_):
+        stmt = select([column])
+
+        if (proposal_id is not None) or (role is not None):
+            stmt = stmt.select_from(column.table.join(proposal_fig))
+            if proposal_id is not None:
+                stmt = stmt.where(proposal_fig.c.proposal_id == proposal_id)
+            if role is not None:
+                stmt = stmt.where(proposal_fig.c.role == role)
+
+        if id_ is not None:
+            stmt = stmt.where(column.table.c.fig_id == id_)
+        else:
+            raise Error('proposal figure identifier not specified')
+
+        with self._transaction() as conn:
+            row = conn.execute(stmt).first()
+
+        if row is None:
+            raise NoSuchRecord('figure preview/thumbnail does not exist')
+
+        return row[0]
+
     def get_proposal_pdf(self, proposal_id, role, id_=None, _conn=None):
         """
         Get the given PDF associated with a proposal.
         """
 
-        stmt = proposal_pdf.select()
+        stmt = select([proposal_pdf.c.pdf])
 
         if (proposal_id is not None) and (role is not None):
             if not ProposalTextRole.is_valid(role):
@@ -424,7 +505,7 @@ class ProposalPart(object):
             raise NoSuchRecord('PDF does not exist for {0} role {1}',
                                proposal_id, role)
 
-        return row['pdf']
+        return row[0]
 
     def get_proposal_pdf_preview(self, proposal_id, role, page):
         """
@@ -916,6 +997,39 @@ class ProposalPart(object):
 
         return ans
 
+    def set_proposal_figure_preview(self, fig_id, preview):
+        self._set_proposal_figure_alternate(
+            proposal_fig_preview.c.preview, fig_id, preview)
+
+    def set_proposal_figure_thumbnail(self, fig_id, thumbnail):
+        self._set_proposal_figure_alternate(
+            proposal_fig_thumbnail.c.thumbnail, fig_id, thumbnail)
+
+    def _set_proposal_figure_alternate(self, column, fig_id, alternate):
+        table = column.table
+
+        with self._transaction() as conn:
+            if 0 < conn.execute(select([count(column)]).where(
+                    table.c.fig_id == fig_id)).scalar():
+                # Update existing alternate.
+                result = conn.execute(table.update().where(
+                    table.c.fig_id == fig_id
+                ).values({
+                    column: alternate,
+                }))
+
+                if result.rowcount != 1:
+                    raise ConsistencyError(
+                        'no rows matched updating proposal figure alternate',
+                        proposal_id, role)
+
+            else:
+                # Add new alternate.
+                conn.execute(table.insert().values({
+                    table.c.fig_id: fig_id,
+                    column: alternate,
+                }))
+
     def set_proposal_pdf(self, proposal_id, role, pdf, pages, filename,
                          uploader_person_id, _test_skip_check=False):
         """
@@ -1265,6 +1379,103 @@ class ProposalPart(object):
                 raise ConsistencyError(
                     'no rows matched updating proposal with id={0}',
                     proposal_id)
+
+    def update_proposal_figure(self, proposal_id, role, fig_id,
+                               figure=None, type_=None,
+                               filename=None, uploader_person_id=None,
+                               state=None, state_prev=None,
+                               caption=None):
+        """
+        Update the record of a figure attached to a proposal.
+
+        Can be used to update the figure or the state.
+
+        If the figure is updated, then the type, filename and uploader
+        must be specified and the state will be set to NEW -- the state
+        must bot be speicifed explicitly.
+        """
+
+        values = {}
+        figure_updated = False
+
+        stmt = proposal_fig.update()
+
+        if proposal_id is not None:
+            stmt = stmt.where(proposal_fig.c.proposal_id == proposal_id)
+
+        if role is not None:
+            stmt = stmt.where(proposal_fig.c.role == role)
+
+        if fig_id is not None:
+            stmt = stmt.where(proposal_fig.c.id == fig_id)
+        else:
+            raise Error('figure identifier not specified')
+
+        if state_prev is not None:
+            if not ProposalAttachmentState.is_valid(state_prev):
+                raise Error('Invalid previous state.')
+            stmt = stmt.where(proposal_fig.c.state == state_prev)
+
+        if figure is not None:
+            figure_updated = True
+
+            # New figures should be set to "NEW" state, so prevent figure
+            # and state both being specified.
+            if state is not None:
+                raise Error('updated figure and state both specified')
+
+            if type_ is None:
+                raise Error('updated figure type not specified')
+            if filename is None:
+                raise Error('updated figure filename not specified')
+            if uploader_person_id is None:
+                raise Error('updated figure uploader not specified')
+
+            values.update({
+                proposal_fig.c.type: type_,
+                proposal_fig.c.state: ProposalAttachmentState.NEW,
+                proposal_fig.c.figure: figure,
+                proposal_fig.c.md5sum: md5(figure).hexdigest(),
+                proposal_fig.c.filename: filename,
+                proposal_fig.c.uploaded: datetime.utcnow(),
+                proposal_fig.c.uploader: uploader_person_id,
+            })
+
+        elif state is not None:
+            if not ProposalAttachmentState.is_valid(state):
+                raise Error('Invalid state.')
+            values['state'] = state
+
+        if caption is not None:
+            values['caption'] = caption
+
+        if not values:
+            raise Error('No proposal figure updates specified.')
+
+        with self._transaction() as conn:
+            result = conn.execute(stmt.values(values))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched updating proposal figure with id={}',
+                    fig_id)
+
+            # If the figure was updated then also remove the old preview
+            # and thumbnail.
+            if figure_updated:
+                result = conn.execute(proposal_fig_preview.delete().where(
+                    proposal_fig_preview.c.fig_id == fig_id))
+
+                if result.rowcount not in (0, 1):
+                    raise ConsistencyError(
+                        'multiple rows deleted removing old figure preview')
+
+                result = conn.execute(proposal_fig_thumbnail.delete().where(
+                    proposal_fig_thumbnail.c.fig_id == fig_id))
+
+                if result.rowcount not in (0, 1):
+                    raise ConsistencyError(
+                        'multiple rows deleted removing old figure thumbnail')
 
     def update_proposal_pdf(self, pdf_id, state=None, state_prev=None,
                             _test_skip_check=False):

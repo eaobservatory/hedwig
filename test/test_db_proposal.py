@@ -728,6 +728,88 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(fig_info.uploader, person_id)
         self.assertEqual(fig_info.uploader_name, None)
 
+        self.assertEqual(
+            self.db.get_proposal_figure(proposal_id, role, fig_id),
+            fig)
+
+        # Try previews and thumbnails.
+        preview = b'dummy preview'
+        thumbnail = b'dummy thumbnail'
+
+        self.db.set_proposal_figure_preview(fig_id, preview)
+        self.db.set_proposal_figure_thumbnail(fig_id, thumbnail)
+
+        self.assertEqual(
+            self.db.get_proposal_figure_preview(proposal_id, role, fig_id),
+            preview)
+
+        self.assertEqual(
+            self.db.get_proposal_figure_thumbnail(proposal_id, role, fig_id),
+            thumbnail)
+
+        preview = b'dummy preview updated'
+        thumbnail = b'dummy thumbnail updated'
+
+        self.db.set_proposal_figure_preview(fig_id, preview)
+        self.db.set_proposal_figure_thumbnail(fig_id, thumbnail)
+
+        self.assertEqual(
+            self.db.get_proposal_figure_preview(proposal_id, role, fig_id),
+            preview)
+
+        self.assertEqual(
+            self.db.get_proposal_figure_thumbnail(proposal_id, role, fig_id),
+            thumbnail)
+
+        # Try updating the figure...
+        # ... change figure state.
+        self.db.update_proposal_figure(
+            None, None, fig_id, state=ProposalAttachmentState.ERROR,
+            state_prev=ProposalAttachmentState.NEW)
+
+        result = self.db.search_proposal_figure(proposal_id=proposal_id)
+        fig_info = result[fig_id]
+        self.assertEqual(fig_info.state, ProposalAttachmentState.ERROR)
+
+        # ... change figure image.
+        fig = b'dummy figure updated'
+        self.db.update_proposal_figure(
+            proposal_id, role, fig_id,
+            figure=fig, type_=type_, filename='test2.png',
+            uploader_person_id=person_id)
+
+        result = self.db.search_proposal_figure(proposal_id=proposal_id,
+                                                with_caption=True)
+        fig_info = result[fig_id]
+        self.assertEqual(fig_info.md5sum, b'b9e7dfbc36883c26e5d2aff8c80f34db')
+        self.assertEqual(fig_info.state, ProposalAttachmentState.NEW)
+        self.assertEqual(fig_info.filename, 'test2.png')
+        self.assertEqual(fig_info.caption, 'Figure caption.')
+
+        self.assertEqual(
+            self.db.get_proposal_figure(proposal_id, role, fig_id),
+            fig)
+
+        # ... changing the image should have removed the preview/thumbnail.
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_figure_preview(proposal_id, role, fig_id)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_figure_thumbnail(proposal_id, role, fig_id)
+
+        # ... change the figure caption.
+        self.db.update_proposal_figure(proposal_id, role, fig_id, caption='!')
+        result = self.db.search_proposal_figure(proposal_id=proposal_id,
+                                                with_caption=True)
+        fig_info = result[fig_id]
+        self.assertEqual(fig_info.caption, '!')
+
+        # Try deleting the figure.
+        self.db.delete_proposal_figure(proposal_id, role, fig_id)
+
+        result = self.db.search_proposal_figure(proposal_id=proposal_id)
+        self.assertEqual(len(result), 0)
+
     def test_proposal_target(self):
         (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
         person_id = self.db.add_person('Person 1')
