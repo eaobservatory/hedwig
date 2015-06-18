@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from datetime import datetime
+from hashlib import md5
 
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_, false, not_
@@ -211,6 +212,7 @@ class ProposalPart(object):
                 proposal_fig.c.type: type_,
                 proposal_fig.c.state: ProposalAttachmentState.NEW,
                 proposal_fig.c.figure: figure,
+                proposal_fig.c.md5sum: md5(figure).hexdigest(),
                 proposal_fig.c.caption: caption,
                 proposal_fig.c.filename: filename,
                 proposal_fig.c.uploaded: datetime.utcnow(),
@@ -773,6 +775,7 @@ class ProposalPart(object):
             proposal_fig.c.role,
             proposal_fig.c.type,
             proposal_fig.c.state,
+            proposal_fig.c.md5sum,
             proposal_fig.c.filename,
             proposal_fig.c.uploaded,
             proposal_fig.c.uploader,
@@ -786,7 +789,7 @@ class ProposalPart(object):
         if with_uploader_name:
             select_columns.append(person.c.name.label('uploader_name'))
             stmt = select(select_columns).select_from(
-                proposal_pdf.join(person))
+                proposal_fig.join(person))
         else:
             stmt = select(select_columns)
             default['uploader_name'] = None
@@ -816,6 +819,7 @@ class ProposalPart(object):
             proposal_pdf.c.id,
             proposal_pdf.c.proposal_id,
             proposal_pdf.c.role,
+            proposal_pdf.c.md5sum,
             proposal_pdf.c.state,
             proposal_pdf.c.pages,
             proposal_pdf.c.filename,
@@ -934,6 +938,7 @@ class ProposalPart(object):
 
             values = {
                 proposal_pdf.c.pdf: pdf,
+                proposal_pdf.c.md5sum: md5(pdf).hexdigest(),
                 proposal_pdf.c.pages: pages,
                 proposal_pdf.c.state: ProposalAttachmentState.NEW,
                 proposal_pdf.c.filename: filename,
