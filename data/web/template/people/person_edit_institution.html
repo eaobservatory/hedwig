@@ -22,53 +22,65 @@
     </p>
 {% endif %}
 
-<h2>Existing Institutions</h2>
-
-<p>
-The following institutions are already known to this system.
-If {% if is_current_user %} your {% else %} the {% endif %}
-institution appears here, please select it from this list.
+<p class="section_label">
+    Either
 </p>
 
-<form method="POST" action="{{ url_for('.person_edit_institution', person_id=person.id) }}">
-    <ol>
-        <li>
-            <label for="institution_id">Institution</label>
-            <select name="institution_id">
-                {% for institution in institutions %}
-                    <option value="{{ institution.id }}" {{'selected="selected"' | safe if institution.id == institution_id }}>
-                        {{ render_institution_summary(institution) }}
-                    </option>
-                {% endfor %}
-            </select>
-        </li>
-        <li>
-            <input type="submit" value="Select institution" name="submit_select" />
-        </li>
-    </ol>
-</form>
+<section>
+    <h2>Existing Institutions</h2>
 
-<h2>New Institution</h2>
-
-<p>
-If {% if is_current_user %} your {% else %} the {% endif %}
-institution does not appear in the list above,
-you may enter it into the system here.
-</p>
-
-{% if message is not none %}
-    <p class="warning">
-        {{ message }}
+    <p>
+    The following institutions are already known to this system.
+    If {% if is_current_user %} your {% else %} the {% endif %}
+    institution appears here, please select it from this list.
     </p>
-{% endif %}
 
-<form method="POST" action="{{ url_for('.person_edit_institution', person_id=person.id) }}">
-    <ol>
-        {{ render_institution_form(institution, countries) }}
-        <li>
-            <input type="submit" value="Add new institution" name="submit_add" />
-        </li>
-    </ol>
-</form>
+    <form method="POST" action="{{ url_for('.person_edit_institution', person_id=person.id) }}">
+        <ol>
+            <li>
+                <label for="institution_id">Institution</label>
+                <select name="institution_id">
+                    {% for institution in institutions %}
+                        <option value="{{ institution.id }}" {{'selected="selected"' | safe if institution.id == institution_id }}>
+                            {{ render_institution_summary(institution) }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </li>
+            <li>
+                <input type="submit" value="Select institution" name="submit_select" />
+            </li>
+        </ol>
+    </form>
+</section>
+
+<p class="section_label">
+    Or
+</p>
+
+<section>
+    <h2>New Institution</h2>
+
+    <p>
+    If {% if is_current_user %} your {% else %} the {% endif %}
+    institution does not appear in the list above,
+    you may enter it into the system here.
+    </p>
+
+    {% if message is not none %}
+        <p class="warning">
+            {{ message }}
+        </p>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('.person_edit_institution', person_id=person.id) }}">
+        <ol>
+            {{ render_institution_form(institution, countries) }}
+            <li>
+                <input type="submit" value="Add new institution" name="submit_add" />
+            </li>
+        </ol>
+    </form>
+</section>
 
 {% endblock %}

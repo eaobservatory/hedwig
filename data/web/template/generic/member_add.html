@@ -26,59 +26,71 @@
 
 {% block content %}
 
-<h2>Add a Member from the Directory</h2>
+<p class="section_label">
+    Either
+</p>
 
-{% if message_link is not none %}
-    <p class="warning">
-        {{ message_link }}
-    </p>
-{% endif %}
+<section>
+    <h2>Add a Member from the Directory</h2>
 
-<form method="POST" action="{{ url_for('.member_add', proposal_id=proposal_id) }}">
-    <ol>
-        <li>
-            <label for="person_id">Member</label>
-            <select name="person_id">
-                {% for person in persons %}
-                    <option value="{{ person.id }}" {{ 'selected="selected"' | safe if member.person_id == person.id }}>
-                        {{ person.name }}{% if person.institution_id is not none %},
-                            {{ render_member_institution(person) }}
-                        {% endif %}
-                    </option>
-                {% endfor %}
-            </select>
-        </li>
-        {{ render_member_options() }}
-        <li>
-            <input type="submit" value="Add to proposal" name="submit-link" />
-        </li>
-    </ol>
-</form>
+    {% if message_link is not none %}
+        <p class="warning">
+            {{ message_link }}
+        </p>
+    {% endif %}
 
-<h2>Invite a New Member to the Proposal</h2>
+    <form method="POST" action="{{ url_for('.member_add', proposal_id=proposal_id) }}">
+        <ol>
+            <li>
+                <label for="person_id">Member</label>
+                <select name="person_id">
+                    {% for person in persons %}
+                        <option value="{{ person.id }}" {{ 'selected="selected"' | safe if member.person_id == person.id }}>
+                            {{ person.name }}{% if person.institution_id is not none %},
+                                {{ render_member_institution(person) }}
+                            {% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </li>
+            {{ render_member_options() }}
+            <li>
+                <input type="submit" value="Add to proposal" name="submit-link" />
+            </li>
+        </ol>
+    </form>
+</section>
 
-{% if message_invite is not none %}
-    <p class="warning">
-        {{ message_invite }}
-    </p>
-{% endif %}
+<p class="section_label">
+    Or
+</p>
 
-<form method="POST" action="{{ url_for('.member_add', proposal_id=proposal_id) }}">
-    <ol>
-        <li>
-            <label for="name">Full name</label>
-            <input type="text" name="name" value="{{ member.name }}" required="required" autofocus="autofocus" size="40" />
-        </li>
-        <li>
-            <label for="email">Email address</label>
-            <input type="email" name="email" value="{{ member.email }}" required="required" size="40" />
-        </li>
-        {{ render_member_options() }}
-        <li>
-            <input type="submit" value="Invite to register" name="submit-invite" />
-        </li>
-    </ol>
-</form>
+<section>
+    <h2>Invite a New Member to the Proposal</h2>
+
+    {% if message_invite is not none %}
+        <p class="warning">
+            {{ message_invite }}
+        </p>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('.member_add', proposal_id=proposal_id) }}">
+        <ol>
+            <li>
+                <label for="name">Full name</label>
+                <input type="text" name="name" value="{{ member.name }}" required="required" autofocus="autofocus" size="40" />
+            </li>
+            <li>
+                <label for="email">Email address</label>
+                <input type="email" name="email" value="{{ member.email }}" required="required" size="40" />
+            </li>
+            {{ render_member_options() }}
+            <li>
+                <input type="submit" value="Invite to register" name="submit-invite" />
+            </li>
+        </ol>
+    </form>
+</section>
 
 
 {% endblock %}
