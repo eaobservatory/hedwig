@@ -12,7 +12,13 @@
 {% endif %}
 
 {% if word_limit %}
-    <section>
+    {% if page_limit %}
+        <p class="section_label">
+            Either
+        </p>
+    {% endif %}
+
+    <section {{ 'class="deselected"' | safe if pdf is not none }}>
         <h2>Edit Online</h2>
 
         <p>
@@ -24,7 +30,17 @@
                     up to {{ fig_limit }} figures{%endif%}{%endif %}.
         </p>
 
-        {% if text is not none %}
+        {% if text is none %}
+            {% if pdf is none %}
+                <p class="not_present">
+                    No text has been written online.
+                </p>
+            {% else %}
+                <p class="caution">
+                    Editing text online will remove your existing PDF file.
+                </p>
+            {% endif %}
+        {% else %}
             <table>
                 <tr>
                     <th>Words</th>
@@ -56,7 +72,13 @@
 {% endif %}
 
 {% if page_limit %}
-    <section>
+    {% if word_limit %}
+        <p class="section_label">
+            Or
+        </p>
+    {% endif %}
+
+    <section {{ 'class="deselected"' | safe if text is not none }}>
         <h2>Upload PDF File</h2>
 
         <p>
@@ -68,7 +90,18 @@
             {% endif %}
         </p>
 
-        {% if pdf is not none %}
+        {% if pdf is none %}
+            {% if text is none %}
+                <p class="not_present">
+                    No PDF file has been uploaded.
+                </p>
+            {% else %}
+                <p class="caution">
+                    Uploading a PDF will remove your existing
+                    text and figures.
+                </p>
+            {% endif %}
+        {% else %}
             <table>
                 <tr>
                     <th>File name</th>
@@ -109,7 +142,7 @@
 
         <nav>
             <p>
-                <a href="{{ target_pdf }}">Upload {{ 'new' if pdf is not none }} PDF</a>
+                <a href="{{ target_pdf }}">Upload {{ 'new' if pdf is none else 'replacement' }} PDF file</a>
             </p>
         </nav>
     </section>

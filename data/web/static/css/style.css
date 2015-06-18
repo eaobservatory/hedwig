@@ -69,6 +69,33 @@ p.not_present {
     color: #888;
 }
 
+p.caution {
+    font-weight: bold;
+}
+
+p.caution:before {
+    color: #F00;
+    content: "CAUTION:";
+}
+
+section.deselected {
+    border-left: 1ex solid #BBB;
+    padding-left: 1ex;
+}
+
+section.deselected > *:not(.caution) {
+    opacity: 0.5;
+}
+
+p.section_label {
+    font-variant: small-caps;
+    color: #888;
+}
+
+p.section_label + section {
+    margin-left: 3ex;
+}
+
 p.progress {
     font-style: italic;
     text-align: center;
