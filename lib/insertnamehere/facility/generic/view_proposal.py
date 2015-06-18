@@ -487,10 +487,7 @@ class GenericProposal(object):
     def view_tech_edit(self, db, proposal, can):
         call = db.get_call(facility_id=None, call_id=proposal.call_id)
 
-        return {
-            'title': 'Edit Technical Justification',
-            'proposal_id': proposal.id,
-            'proposal_code': self.make_proposal_code(db, proposal),
+        ctx = {
             'note': call.tech_note,
             'word_limit': proposal.tech_word_lim,
             'fig_limit': 0,
@@ -498,6 +495,11 @@ class GenericProposal(object):
             'target_text': url_for('.tech_edit_text', proposal_id=proposal.id),
             'target_pdf': url_for('.tech_edit_pdf', proposal_id=proposal.id),
         }
+
+        ctx.update(self._edit_case(
+            db, proposal, ProposalTextRole.TECHNICAL_CASE))
+
+        return ctx
 
     @with_proposal(permission='edit')
     def view_tech_edit_text(self, db, proposal, can, form):
@@ -533,10 +535,7 @@ class GenericProposal(object):
     def view_sci_edit(self, db, proposal, can):
         call = db.get_call(facility_id=None, call_id=proposal.call_id)
 
-        return {
-            'title': 'Edit Scientific Justification',
-            'proposal_id': proposal.id,
-            'proposal_code': self.make_proposal_code(db, proposal),
+        ctx = {
             'note': call.sci_note,
             'word_limit': proposal.sci_word_lim,
             'fig_limit': proposal.sci_fig_lim,
@@ -544,6 +543,11 @@ class GenericProposal(object):
             'target_text': url_for('.sci_edit_text', proposal_id=proposal.id),
             'target_pdf': url_for('.sci_edit_pdf', proposal_id=proposal.id),
         }
+
+        ctx.update(self._edit_case(
+            db, proposal, ProposalTextRole.SCIENCE_CASE))
+
+        return ctx
 
     @with_proposal(permission='edit')
     def view_sci_edit_text(self, db, proposal, can, form):
@@ -574,6 +578,19 @@ class GenericProposal(object):
                 proposal.id, ProposalTextRole.SCIENCE_CASE, page)
         except NoSuchRecord:
             raise HTTPNotFound('PDF preview page not found.')
+
+    def _edit_case(self, db, proposal, role):
+        name = ProposalTextRole.get_name(role)
+
+        pdf_info = db.search_proposal_pdf(proposal_id=proposal.id, role=role,
+                                          with_uploader_name=True)
+
+        return {
+            'title': 'Edit {}'.format(name.title()),
+            'proposal_id': proposal.id,
+            'proposal_code': self.make_proposal_code(db, proposal),
+            'pdf': pdf_info.get_single(None),
+        }
 
     def _edit_text(self, db, proposal, role, word_limit, target, form, rows):
         name = ProposalTextRole.get_name(role)

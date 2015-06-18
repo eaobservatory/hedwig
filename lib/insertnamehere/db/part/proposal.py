@@ -766,7 +766,7 @@ class ProposalPart(object):
         return ans
 
     def search_proposal_figure(self, proposal_id=None, role=None, state=None,
-                               with_caption=False):
+                               with_caption=False, with_uploader_name=False):
         select_columns = [
             proposal_fig.c.id,
             proposal_fig.c.proposal_id,
@@ -783,7 +783,13 @@ class ProposalPart(object):
             select_columns.append(proposal_fig.c.caption)
             del default['caption']
 
-        stmt = select(select_columns)
+        if with_uploader_name:
+            select_columns.append(person.c.name.label('uploader_name'))
+            stmt = select(select_columns).select_from(
+                proposal_pdf.join(person))
+        else:
+            stmt = select(select_columns)
+            default['uploader_name'] = None
 
         if proposal_id is not None:
             stmt = stmt.where(proposal_fig.c.proposal_id == proposal_id)
@@ -804,8 +810,9 @@ class ProposalPart(object):
 
         return ans
 
-    def search_proposal_pdf(self, proposal_id=None, role=None, state=None):
-        stmt = select([
+    def search_proposal_pdf(self, proposal_id=None, role=None, state=None,
+                            with_uploader_name=False):
+        select_columns = [
             proposal_pdf.c.id,
             proposal_pdf.c.proposal_id,
             proposal_pdf.c.role,
@@ -814,7 +821,17 @@ class ProposalPart(object):
             proposal_pdf.c.filename,
             proposal_pdf.c.uploaded,
             proposal_pdf.c.uploader,
-        ])
+        ]
+
+        default = {}
+
+        if with_uploader_name:
+            select_columns.append(person.c.name.label('uploader_name'))
+            stmt = select(select_columns).select_from(
+                proposal_pdf.join(person))
+        else:
+            stmt = select(select_columns)
+            default['uploader_name'] = None
 
         if proposal_id is not None:
             stmt = stmt.where(proposal_pdf.c.proposal_id == proposal_id)
@@ -829,7 +846,9 @@ class ProposalPart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt):
-                ans[row['id']] = ProposalPDFInfo(**row)
+                values = default.copy()
+                values.update(**row)
+                ans[row['id']] = ProposalPDFInfo(**values)
 
         return ans
 

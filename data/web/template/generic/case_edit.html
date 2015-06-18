@@ -45,9 +45,48 @@
             {% endif %}
         </p>
 
+        {% if pdf is not none %}
+            <table>
+                <tr>
+                    <th>File name</th>
+                    <td>{{ pdf.filename }}</td>
+                </tr>
+                <tr>
+                    <th>Pages</th>
+                    <td>{{ pdf.pages }}</td>
+                </tr>
+                <tr>
+                    <th>Uploaded</th>
+                    <td>{{ pdf.uploaded | format_datetime }} UTC</td>
+                </tr>
+                <tr>
+                    <th>Uploaded by</th>
+                    <td>
+                        {% if session['is_admin'] %}
+                            <a href="{{ url_for('people.person_view', person_id=pdf.uploader) }}">{{ pdf.uploader_name }}</a>
+                        {% else %}
+                            {{ pdf.uploader_name }}
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Status</th>
+                    <td>
+                        {% if pdf.state is attachment_ready %}
+                            Processed successfully
+                        {% elif pdf.state is attachment_error %}
+                            Error during processing
+                        {% else %}
+                            Not yet processed
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        {% endif %}
+
         <nav>
             <p>
-                <a href="{{ target_pdf }}">Upload PDF</a>
+                <a href="{{ target_pdf }}">Upload {{ 'new' if pdf is not none }} PDF</a>
             </p>
         </nav>
     </section>

@@ -622,6 +622,7 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(pdf_info.filename, 'test.pdf')
         self.assertIsInstance(pdf_info.uploaded, datetime)
         self.assertEqual(pdf_info.uploader, person_id)
+        self.assertEqual(pdf_info.uploader_name, None)
 
         # Try changing proposal state.
         self.db.update_proposal_pdf(
@@ -699,6 +700,7 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(fig_info.filename, 'test.png')
         self.assertIsInstance(fig_info.uploaded, datetime)
         self.assertEqual(fig_info.uploader, person_id)
+        self.assertEqual(fig_info.uploader_name, None)
 
     def test_proposal_target(self):
         (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')

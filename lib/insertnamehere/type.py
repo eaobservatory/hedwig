@@ -100,12 +100,12 @@ Proposal = namedtuple(
 ProposalFigureInfo = namedtuple(
     'ProposalFigInfo',
     ['id', 'proposal_id', 'role', 'type', 'state', 'caption',
-     'filename', 'uploaded', 'uploader'])
+     'filename', 'uploaded', 'uploader', 'uploader_name'])
 
 ProposalPDFInfo = namedtuple(
     'ProposalPDFInfo',
     ['id', 'proposal_id', 'role', 'state', 'pages',
-     'filename', 'uploaded', 'uploader'])
+     'filename', 'uploaded', 'uploader', 'uploader_name'])
 
 ProposalText = namedtuple(
     'ProposalText',
@@ -280,10 +280,13 @@ class ProposalTextRole(object):
 
 
 class ResultCollection(OrderedDict):
-    def get_single(self):
+    def get_single(self, default=()):
         n = len(self)
         if n == 0:
-            raise NoSuchRecord('can not get single record: no results')
+            if default == ():
+                raise NoSuchRecord('can not get single record: no results')
+            else:
+                return default
         elif n > 1:
             raise MultipleRecords('can not get single record: many results')
         else:
