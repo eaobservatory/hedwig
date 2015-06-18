@@ -494,6 +494,8 @@ class GenericProposal(object):
             'page_limit': proposal.tech_page_lim,
             'target_text': url_for('.tech_edit_text', proposal_id=proposal.id),
             'target_pdf': url_for('.tech_edit_pdf', proposal_id=proposal.id),
+            'target_pdf_view': url_for('.tech_view_pdf',
+                                       proposal_id=proposal.id),
         }
 
         ctx.update(self._edit_case(
@@ -542,6 +544,8 @@ class GenericProposal(object):
             'page_limit': proposal.sci_page_lim,
             'target_text': url_for('.sci_edit_text', proposal_id=proposal.id),
             'target_pdf': url_for('.sci_edit_pdf', proposal_id=proposal.id),
+            'target_pdf_view': url_for('.sci_view_pdf',
+                                       proposal_id=proposal.id),
         }
 
         ctx.update(self._edit_case(

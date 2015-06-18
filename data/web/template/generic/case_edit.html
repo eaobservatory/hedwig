@@ -142,6 +142,10 @@
 
         <nav>
             <p>
+                {% if pdf is not none %}
+                    <a href="{{ target_pdf_view }}">View current PDF file</a>
+                    <br />
+                {% endif %}
                 <a href="{{ target_pdf }}">Upload {{ 'new' if pdf is none else 'replacement' }} PDF file</a>
             </p>
         </nav>
