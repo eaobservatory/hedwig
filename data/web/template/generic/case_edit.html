@@ -47,11 +47,11 @@
                     <td>{{ text.words }}</td>
                 </tr>
                 <tr>
-                    <th>Edited</th>
+                    <th>Last edited</th>
                     <td>{{ text.edited | format_datetime }} UTC</td>
                 </tr>
                 <tr>
-                    <th>Edited by</th>
+                    <th>Last edited by</th>
                     <td>
                         {% if session['is_admin'] %}
                             <a href="{{ url_for('people.person_view', person_id=text.editor) }}">{{ text.editor_name }}</a>
