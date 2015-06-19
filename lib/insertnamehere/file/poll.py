@@ -129,6 +129,6 @@ def process_proposal_pdf(db):
                 # stop trying to process this PDF.
                 continue
 
-        except ConversionError as e:
+        except Exception as e:
             logger.error('Error converting PDF {}: {}', pdf.id, e.message)
             db.update_proposal_pdf(pdf.id, state=ProposalAttachmentState.ERROR)
