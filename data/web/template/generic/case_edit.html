@@ -70,29 +70,43 @@
         </nav>
 
         {% if figures %}
-            {% for figure in figures %}
-                {{ figure.caption | format_text }}
-
-                <p>
-                    {{ figure.filename }}
-                    <br />
-                    {{ figure.uploaded | format_datetime }}
-                    <br />
-                    {{ figure.uploader_name }}
-                    <br />
-                    {{ figure.md5sum }}
-                    <br />
-                    {% if figure.state is attachment_ready %}
-                        <img src="{{ figure.target_view }}" />
-                    {% elif figure.state is attachment_error %}
-                        Error during processing
-                    {% else %}
-                        Not yet processed
-                    {% endif %}
-                    <br />
-                    <a href="{{ figure.target_edit }}">Edit figure</a>
-                </p>
-            {% endfor %}
+            <table>
+                <tr>
+                    <th colspan="2">Figure</th>
+                    <th>Caption</th>
+                    <th>Information</th>
+                </tr>
+                {% for figure in figures %}
+                    <tr>
+                        <th>{{ loop.index }}</th>
+                        <td>
+                            {% if figure.state is attachment_ready %}
+                                <img src="{{ figure.target_view }}" />
+                            {% elif figure.state is attachment_error %}
+                                Error during processing
+                            {% else %}
+                                Not yet processed
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ figure.caption | format_text }}
+                        </td>
+                        <td>
+                            {{ figure.filename }}
+                            <br />
+                            Uploaded:
+                            {{ figure.uploaded | format_datetime }}
+                            <br />
+                            Uploaded by:
+                            {{ figure.uploader_name }}
+                            <br />
+                            {{ figure.md5sum }}
+                            <br />
+                            <a href="{{ figure.target_edit }}">Edit figure</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
         {% endif %}
 
         <nav>
