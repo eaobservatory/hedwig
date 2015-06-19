@@ -20,8 +20,11 @@ from __future__ import absolute_import, division, print_function, \
 
 from contextlib import closing
 from cStringIO import StringIO
+import warnings
 
 from PIL import Image
+
+warnings.simplefilter('error', Image.DecompressionBombWarning)
 
 
 def create_thumbnail(image, max_width=100, max_height=100):
