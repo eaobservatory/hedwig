@@ -24,14 +24,14 @@ from email.generator import Generator
 from email.header import Header
 from email.mime.text import MIMEText
 from email.utils import formataddr, formatdate, make_msgid
-import logging
 import socket
 from smtplib import SMTP, SMTPException
 from time import mktime
 
 from ..config import get_config
+from ..util import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @contextmanager
@@ -87,16 +87,16 @@ def send_email_message(message):
                 from_, recipients_public + recipients_private, msg)
 
             for (recipient, problem) in refusal.items():
-                logger.error('Email message %i refused for %s: %s: %s',
+                logger.error('Email message {} refused for {}: {}: {}',
                              message.id, recipient, problem[0], problem[1])
 
             return identifier
 
     except SMTPException:
-        logger.exception('Email message %i refused for all recipients',
+        logger.exception('Email message {} refused for all recipients',
                          message.id)
     except socket.error:
-        logger.exception('Email message %i not sent due to failure '
+        logger.exception('Email message {} not sent due to failure '
                          'to connect to email server', message.id)
 
     return None

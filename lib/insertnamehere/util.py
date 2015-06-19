@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict
+import logging
 
 import pycountry
 
@@ -46,3 +47,42 @@ def get_countries():
         countries = OrderedDict(items)
 
     return countries
+
+
+class FormattedLogger(object):
+    """
+    Logger wrapper, similar to logging.LoggerAdapter, which uses string
+    formatting.
+    """
+
+    def __init__(self, logger):
+        self.logger = logger
+
+    def debug(self, msg, *args, **kwargs):
+        self.logger.debug(msg.format(*args), **kwargs)
+
+    def info(self, msg, *args, **kwargs):
+        self.logger.info(msg.format(*args), **kwargs)
+
+    def warning(self, msg, *args, **kwargs):
+        self.logger.warning(msg.format(*args), **kwargs)
+
+    def error(self, msg, *args, **kwargs):
+        self.logger.error(msg.format(*args), **kwargs)
+
+    def exception(self, msg, *args, **kwargs):
+        self.logger.exception(msg.format(*args), **kwargs)
+
+    def critical(self, msg, *args, **kwargs):
+        self.logger.critical(msg.format(*args), **kwargs)
+
+    def log(self, level, msg, *args, **kwargs):
+        self.logger.log(level, msg.format(*args), **kwargs)
+
+
+def get_logger(name):
+    """
+    Get a "FormattedLogger" instance which uses string formatting.
+    """
+
+    return FormattedLogger(logging.getLogger(name))

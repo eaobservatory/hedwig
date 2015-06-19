@@ -18,13 +18,12 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-import logging
-
 from ..error import ConsistencyError, ConversionError
 from ..type import ProposalAttachmentState
+from ..util import get_logger
 from .pdf import pdf_to_png
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def process_proposal_pdf(db):
@@ -34,7 +33,7 @@ def process_proposal_pdf(db):
 
     for pdf in db.search_proposal_pdf(
             state=ProposalAttachmentState.NEW).values():
-        logger.debug('Processing PDF %i', pdf.id)
+        logger.debug('Processing PDF {}', pdf.id)
 
         try:
             db.update_proposal_pdf(
@@ -65,5 +64,5 @@ def process_proposal_pdf(db):
                 continue
 
         except ConversionError as e:
-            logger.error('Error converting PDF %i: %s', pdf.id, e.message)
+            logger.error('Error converting PDF {}: {}', pdf.id, e.message)
             db.update_proposal_pdf(pdf.id, state=ProposalAttachmentState.ERROR)

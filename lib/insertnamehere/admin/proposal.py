@@ -18,12 +18,11 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-import logging
-
 from ..error import NoSuchRecord, UserError
 from ..type import MemberInstitution, ProposalState
+from ..util import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def close_call_proposals(db, call_id):
@@ -54,11 +53,11 @@ def close_call_proposals(db, call_id):
             new_state = ProposalState.ABANDONED
 
         if new_state is not None:
-            logger.info('Setting state of proposal %i to %s',
+            logger.info('Setting state of proposal {} to {}',
                         proposal.id, ProposalState.get_name(new_state))
             db.update_proposal(proposal.id, state=new_state)
         else:
-            logger.warning('Proposal %i is in unexpected state "%s"',
+            logger.warning('Proposal {} is in unexpected state "{}"',
                            proposal.id, ProposalState.get_name(proposal.state))
 
         # Freeze the current institution ID values in the member table.
