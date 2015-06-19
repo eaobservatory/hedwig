@@ -13,6 +13,13 @@
 <form method="POST" action="{{ target }}" enctype="multipart/form-data">
     <ol>
         <li>
+            {% if figure.id is not none %}
+                <div class="explanation">
+                    You may select a replacement image to upload if you wish
+                    to change the figure itself.
+                    Or to edit the caption only, do not select a file.
+                </div>
+            {% endif %}
             <label for="file">Figure</label>
             <input type="file" name="file" accept="{{ mime_types | join (',') }}" />
             <span class="explanation">maximum size {{ max_size }} MiB</span>
