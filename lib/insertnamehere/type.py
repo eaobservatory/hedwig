@@ -97,6 +97,10 @@ Proposal = namedtuple(
         'members',
     ])
 
+ProposalFigure = namedtuple(
+    'ProposalFigure',
+    ['data', 'type', 'filename'])
+
 ProposalFigureInfo = namedtuple(
     'ProposalFigInfo',
     ['id', 'proposal_id', 'role', 'type', 'state', 'caption',

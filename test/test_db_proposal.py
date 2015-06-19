@@ -729,7 +729,7 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(fig_info.uploader_name, None)
 
         self.assertEqual(
-            self.db.get_proposal_figure(proposal_id, role, fig_id),
+            self.db.get_proposal_figure(proposal_id, role, fig_id).data,
             fig)
 
         # Try previews and thumbnails.
@@ -787,7 +787,7 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(fig_info.caption, 'Figure caption.')
 
         self.assertEqual(
-            self.db.get_proposal_figure(proposal_id, role, fig_id),
+            self.db.get_proposal_figure(proposal_id, role, fig_id).data,
             fig)
 
         # ... changing the image should have removed the preview/thumbnail.

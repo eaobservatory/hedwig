@@ -30,7 +30,8 @@ from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
 from ...type import Affiliation, Call, FormatType, Member, MemberCollection, \
     MemberInfo, Proposal, ProposalState, \
-    ProposalAttachmentState, ProposalFigureInfo, ProposalFigureType, \
+    ProposalAttachmentState, \
+    ProposalFigure, ProposalFigureInfo, ProposalFigureType, \
     ProposalPDFInfo, \
     ProposalText, ProposalTextCollection, ProposalTextInfo, ProposalTextRole, \
     Queue, QueueInfo, ResultCollection, Semester, SemesterInfo, \
@@ -420,9 +421,15 @@ class ProposalPart(object):
     def get_proposal_figure(self, proposal_id, role, id_):
         """
         Get a figure associated with a proposal.
+
+        Returned as a ProposalFigure object.
         """
 
-        stmt = select([proposal_fig.c.figure])
+        stmt = select([
+            proposal_fig.c.figure,
+            proposal_fig.c.type,
+            proposal_fig.c.filename,
+        ])
 
         if proposal_id is not None:
             stmt = stmt.where(proposal_fig.c.proposal_id == proposal_id)
@@ -441,7 +448,7 @@ class ProposalPart(object):
         if row is None:
             raise NoSuchRecord('figure does not exist')
 
-        return row[0]
+        return ProposalFigure(row['figure'], row['type'], row['filename'])
 
     def get_proposal_figure_preview(self, proposal_id, role, id_):
         return self._get_proposal_figure_alternate(
