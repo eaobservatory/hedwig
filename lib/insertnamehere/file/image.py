@@ -45,5 +45,6 @@ def create_thumbnail(image, max_width=100, max_height=100):
     height = int(orig_height / scale)
 
     with closing(StringIO()) as f:
-        im.resize((width, height)).save(f, format='PNG')
+        thumbnail = im.resize((width, height), resample=Image.BICUBIC)
+        thumbnail.save(f, format='PNG')
         return f.getvalue()
