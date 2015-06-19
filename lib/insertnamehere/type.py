@@ -225,6 +225,10 @@ class ProposalFigureType(object):
         raise UserError('File has type "{0}" which is not recognised.',
                         mime_type)
 
+    @classmethod
+    def all_mime_types(cls):
+        return [x.mime for x in cls._info.values()]
+
 
 class ProposalState(object):
     PREPARATION = 1

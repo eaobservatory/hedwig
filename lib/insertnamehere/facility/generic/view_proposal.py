@@ -18,20 +18,28 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import namedtuple
+
 from ...astro.coord import CoordSystem
 from ...email.format import render_email_template
 from ...config import get_config
 from ...error import NoSuchRecord, UserError
 from ...file.info import determine_figure_type, determine_pdf_page_count
 from ...type import Affiliation, Call, FormatType, \
-    ProposalFigureType, ProposalState, ProposalText, ProposalTextRole, \
-    Queue, ResultCollection, Semester, Target, TargetCollection
+    ProposalFigureInfo, ProposalFigureType, ProposalState, \
+    ProposalText, ProposalTextRole, \
+    Queue, ResultCollection, Semester, Target, TargetCollection, \
+    null_tuple
 from ...util import get_countries
 from ...view import auth
 from ...web.util import ErrorPage, HTTPError, HTTPForbidden, \
     HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
 from ...view.util import count_words, organise_collection, with_proposal
+
+ProposalFigureExtra = namedtuple(
+    'ProposalFigureExtra',
+    ProposalFigureInfo._fields + ('target_view', 'target_edit'))
 
 
 class GenericProposal(object):
@@ -492,14 +500,19 @@ class GenericProposal(object):
             'word_limit': proposal.tech_word_lim,
             'fig_limit': 0,
             'page_limit': proposal.tech_page_lim,
-            'target_text': url_for('.tech_edit_text', proposal_id=proposal.id),
-            'target_pdf': url_for('.tech_edit_pdf', proposal_id=proposal.id),
-            'target_pdf_view': url_for('.tech_view_pdf',
-                                       proposal_id=proposal.id),
+            'target_text':
+                url_for('.tech_edit_text', proposal_id=proposal.id),
+            'target_new_figure':
+                url_for('.tech_new_figure', proposal_id=proposal.id),
+            'target_pdf':
+                url_for('.tech_edit_pdf', proposal_id=proposal.id),
+            'target_pdf_view':
+                url_for('.tech_view_pdf', proposal_id=proposal.id),
         }
 
         ctx.update(self._edit_case(
-            db, proposal, ProposalTextRole.TECHNICAL_CASE))
+            db, proposal, ProposalTextRole.TECHNICAL_CASE,
+            '.tech_view_figure_thumbnail', '.tech_edit_figure'))
 
         return ctx
 
@@ -509,6 +522,30 @@ class GenericProposal(object):
             db, proposal, ProposalTextRole.TECHNICAL_CASE,
             proposal.tech_word_lim,
             url_for('.tech_edit_text', proposal_id=proposal.id), form, 30)
+
+    @with_proposal(permission='edit')
+    def view_tech_new_figure(self, db, proposal, can, form, file):
+        return self._edit_figure(
+            db, proposal, ProposalTextRole.TECHNICAL_CASE, None,
+            url_for('.tech_new_figure', proposal_id=proposal.id),
+            form, file)
+
+    @with_proposal(permission='edit')
+    def view_tech_edit_figure(self, db, proposal, can, fig_id, form, file):
+        figure = db.search_proposal_figure(
+            proposal_id=proposal.id, role=ProposalTextRole.TECHNICAL_CASE,
+            fig_id=fig_id, with_caption=True).get_single()
+
+        return self._edit_figure(
+            db, proposal, ProposalTextRole.TECHNICAL_CASE, figure,
+            url_for('.tech_edit_figure',
+                    proposal_id=proposal.id, fig_id=fig_id),
+            form, file)
+
+    @with_proposal(permission='view')
+    def view_tech_view_figure(self, db, proposal, can, fig_id, type_=None):
+        return self._view_figure(db, proposal, ProposalTextRole.TECHNICAL_CASE,
+                                 fig_id, type_)
 
     @with_proposal(permission='edit')
     def view_tech_edit_pdf(self, db, proposal, can, file):
@@ -542,14 +579,19 @@ class GenericProposal(object):
             'word_limit': proposal.sci_word_lim,
             'fig_limit': proposal.sci_fig_lim,
             'page_limit': proposal.sci_page_lim,
-            'target_text': url_for('.sci_edit_text', proposal_id=proposal.id),
-            'target_pdf': url_for('.sci_edit_pdf', proposal_id=proposal.id),
-            'target_pdf_view': url_for('.sci_view_pdf',
-                                       proposal_id=proposal.id),
+            'target_text':
+                url_for('.sci_edit_text', proposal_id=proposal.id),
+            'target_new_figure':
+                url_for('.sci_new_figure', proposal_id=proposal.id),
+            'target_pdf':
+                url_for('.sci_edit_pdf', proposal_id=proposal.id),
+            'target_pdf_view':
+                url_for('.sci_view_pdf', proposal_id=proposal.id),
         }
 
         ctx.update(self._edit_case(
-            db, proposal, ProposalTextRole.SCIENCE_CASE))
+            db, proposal, ProposalTextRole.SCIENCE_CASE,
+            '.sci_view_figure_thumbnail', '.sci_edit_figure'))
 
         return ctx
 
@@ -559,6 +601,30 @@ class GenericProposal(object):
             db, proposal, ProposalTextRole.SCIENCE_CASE,
             proposal.sci_word_lim,
             url_for('.sci_edit_text', proposal_id=proposal.id), form, 30)
+
+    @with_proposal(permission='edit')
+    def view_sci_new_figure(self, db, proposal, can, form, file):
+        return self._edit_figure(
+            db, proposal, ProposalTextRole.SCIENCE_CASE, None,
+            url_for('.sci_new_figure', proposal_id=proposal.id),
+            form, file)
+
+    @with_proposal(permission='edit')
+    def view_sci_edit_figure(self, db, proposal, can, fig_id, form, file):
+        figure = db.search_proposal_figure(
+            proposal_id=proposal.id, role=ProposalTextRole.SCIENCE_CASE,
+            fig_id=fig_id, with_caption=True).get_single()
+
+        return self._edit_figure(
+            db, proposal, ProposalTextRole.SCIENCE_CASE, figure,
+            url_for('.sci_edit_figure',
+                    proposal_id=proposal.id, fig_id=fig_id),
+            form, file)
+
+    @with_proposal(permission='view')
+    def view_sci_view_figure(self, db, proposal, can, fig_id, type_=None):
+        return self._view_figure(db, proposal, ProposalTextRole.SCIENCE_CASE,
+                                 fig_id, type_)
 
     @with_proposal(permission='edit')
     def view_sci_edit_pdf(self, db, proposal, can, file):
@@ -583,10 +649,15 @@ class GenericProposal(object):
         except NoSuchRecord:
             raise HTTPNotFound('PDF preview page not found.')
 
-    def _edit_case(self, db, proposal, role):
+    def _edit_case(self, db, proposal, role,
+                   figure_thumbnail_route, figure_edit_route):
         name = ProposalTextRole.get_name(role)
 
         text_info = db.search_proposal_text(proposal_id=proposal.id, role=role)
+
+        fig_info = db.search_proposal_figure(
+            proposal_id=proposal.id, role=role,
+            with_caption=True, with_uploader_name=True)
 
         pdf_info = db.search_proposal_pdf(proposal_id=proposal.id, role=role,
                                           with_uploader_name=True)
@@ -596,6 +667,14 @@ class GenericProposal(object):
             'proposal_id': proposal.id,
             'proposal_code': self.make_proposal_code(db, proposal),
             'text': text_info.get_single(None),
+            'figures': [
+                ProposalFigureExtra(
+                    *x,
+                    target_view=url_for(figure_thumbnail_route,
+                                        proposal_id=proposal.id, fig_id=x.id),
+                    target_edit=url_for(figure_edit_route,
+                                        proposal_id=proposal.id, fig_id=x.id))
+                for x in fig_info.values()],
             'pdf': pdf_info.get_single(None),
         }
 
@@ -640,6 +719,100 @@ class GenericProposal(object):
             'proposal_code': self.make_proposal_code(db, proposal),
             'word_limit': word_limit,
             'rows': rows,
+        }
+
+    def _edit_figure(self, db, proposal, role, figure, target, form, file):
+        name = ProposalTextRole.get_name(role)
+        max_size = int(get_config().get('upload', 'max_fig_size'))
+        word_limit = 100
+        message = None
+
+        if figure is None:
+            figure = null_tuple(ProposalFigureInfo)._replace(caption='')
+
+        if form is not None:
+            try:
+                # Put the caption text into the figure object first in case
+                # of errors later.
+                figure = figure._replace(caption=form['text'])
+
+                word_count = count_words(figure.caption)
+                if word_count > word_limit:
+                    raise UserError(
+                        'Caption is too long: {} / {} words',
+                        word_count, word_limit)
+
+                if file:
+                    try:
+                        filename = file.filename
+                        buff = file.read(max_size * 1024 * 1024)
+
+                        # Did we get all of the file within the size limit?
+                        if len(file.read(1)):
+                            raise UserError(
+                                'The uploaded figure was too large.')
+
+                    finally:
+                        file.close()
+
+                    type_ = determine_figure_type(buff)
+                    if type_ == ProposalFigureType.PDF:
+                        page_count = determine_pdf_page_count(buff)
+                        if page_count != 1:
+                            raise UserError(
+                                'The uploaded PDF has multiple pages.')
+
+                    figure_args = {
+                        'figure': buff,
+                        'type_': type_,
+                        'filename': filename,
+                        'uploader_person_id': session['person']['id'],
+                        'caption': figure.caption,
+                    }
+
+                    if figure.id is None:
+                        # Add new figure.
+                        db.add_proposal_figure(
+                            proposal.id, role, **figure_args)
+
+                        flash('The new figure has been uploaded.')
+
+                    else:
+                        # Update existing figure.
+                        db.update_proposal_figure(
+                            proposal.id, role, figure.id, **figure_args)
+
+                        flash('The replacement figure has been uploaded.')
+
+                elif figure.id is None:
+                    # We weren't updating an existing figure, so the lack
+                    # of a file upload is an error.
+                    raise UserError('No new figure file was received.')
+
+                else:
+                    # No file uploaded for an existing figure: just edit the
+                    # caption.
+                    db.update_proposal_figure(proposal.id, role, figure.id,
+                                              caption=figure.caption)
+
+                    flash('The figure caption has been updated.')
+
+                raise HTTPRedirect(url_for('.proposal_view',
+                                           proposal_id=proposal.id))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'New {} Figure'.format(name.title()),
+            'proposal_id': proposal.id,
+            'proposal_code': self.make_proposal_code(db, proposal),
+            'figure': figure,
+            'word_limit': word_limit,
+            'message': message,
+            'max_size': max_size,
+            'mime_types': ProposalFigureType.all_mime_types(),
+            'target': target,
         }
 
     def _edit_pdf(self, db, proposal, role, page_limit, target, file):
@@ -696,3 +869,28 @@ class GenericProposal(object):
                 ProposalFigureType.PDF)],
             'max_size': max_size,
         }
+
+    def _view_figure(self, db, proposal, role, fig_id, type_):
+        if type_ is None:
+            try:
+                return db.get_proposal_figure(
+                    proposal.id, role, fig_id)
+            except NoSuchRecord:
+                raise HTTPNotFound('Figure not found.')
+
+        elif type_ == 'thumbnail':
+            try:
+                return db.get_proposal_figure_thumbnail(
+                    proposal.id, role, fig_id)
+            except NoSuchRecord:
+                raise HTTPNotFound('Figure thumbnail not found.')
+
+        elif type_ == 'preview':
+            try:
+                return db.get_proposal_figure_preview(
+                    proposal.id, role, fig_id)
+            except NoSuchRecord:
+                raise HTTPNotFound('Figure preview not found.')
+
+        else:
+            raise HTTPError('Unknown figure view type.')

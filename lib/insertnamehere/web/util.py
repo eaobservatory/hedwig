@@ -181,8 +181,8 @@ def send_file(fixed_type=None):
 
     If there is a fixed MIME type, it can be set in the decorator
     argument and the function just returns the data.  Otherwise
-    the function must return a (data, type) tuple where the type
-    is a value from ProposalFigureType.
+    the function must return a ProposalFigure(data, type, filename) tuple
+    where the type is a value from ProposalFigureType.
     """
 
     def decorator(f):
@@ -193,7 +193,7 @@ def send_file(fixed_type=None):
 
             if type_ is None:
                 # Function should have returned a tuple: unpack it.
-                (data, type_) = data
+                (data, type_, filename) = data
 
             return _FlaskResponse(
                 data, mimetype=ProposalFigureType.get_mime_type(type_))
