@@ -856,6 +856,7 @@ class ProposalPart(object):
         return ans
 
     def search_proposal_figure(self, proposal_id=None, role=None, state=None,
+                               fig_id=None,
                                with_caption=False, with_uploader_name=False):
         select_columns = [
             proposal_fig.c.id,
@@ -890,6 +891,9 @@ class ProposalPart(object):
 
         if state is not None:
             stmt = stmt.where(proposal_fig.c.state == state)
+
+        if fig_id is not None:
+            stmt = stmt.where(proposal_fig.c.id == fig_id)
 
         ans = ResultCollection()
 
