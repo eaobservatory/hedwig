@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from ..email.format import render_email_template
 from ..error import Error, MultipleRecords, NoSuchRecord, UserError
-from ..type import Email, EmailCollection, Institution, Person
+from ..type import Email, EmailCollection, Institution, Person, null_tuple
 from ..util import get_countries
 from ..web.util import flash, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
@@ -352,9 +352,7 @@ def register_person(db, form, is_post):
 
     message = None
 
-    person = Person(
-        name='', public=False,
-        **{x: None for x in Person._fields if x not in ('name', 'public')})
+    person = null_tuple(Person)._replace(name='', public=False)
 
     email = form.get('single_email', '')
 

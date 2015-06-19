@@ -429,3 +429,12 @@ class TargetCollection(OrderedDict):
             ans[k] = v._replace(system=system, x=x, y=y)
 
         return ans
+
+
+def null_tuple(type_):
+    """
+    Make a named tuple instance of the given type with all entries
+    set to None.
+    """
+
+    return type_(*((None,) * len(type_._fields)))
