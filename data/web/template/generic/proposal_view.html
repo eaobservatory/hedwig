@@ -2,6 +2,7 @@
 
 {% from 'macro/institution.html' import render_member_institution %}
 {% from 'macro/pdf.html' import render_proposal_pdf %}
+{% from 'macro/figure.html' import render_proposal_figures %}
 
 {% block content %}
 
@@ -174,6 +175,7 @@
 
         {% if tech_case_text is not none %}
             {{ tech_case_text | format_text }}
+            {{ render_proposal_figures(tech_case_fig) }}
         {% elif tech_case_pdf is not none %}
             {{ render_proposal_pdf(tech_case_pdf, '.tech_view_pdf_preview', proposal.id) }}
         {% else %}
@@ -198,6 +200,7 @@
 
         {% if sci_case_text is not none %}
             {{ sci_case_text | format_text }}
+            {{ render_proposal_figures(sci_case_fig) }}
         {% elif sci_case_pdf is not none %}
             {{ render_proposal_pdf(sci_case_pdf, '.sci_view_pdf_preview', proposal.id) }}
         {% else %}

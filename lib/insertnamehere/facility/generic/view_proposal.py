@@ -121,6 +121,26 @@ class GenericProposal(object):
         proposal_text = db.get_all_proposal_text(proposal.id)
         proposal_pdf = db.search_proposal_pdf(proposal.id)
 
+        proposal_fig = db.search_proposal_figure(proposal.id,
+                                                 with_caption=True)
+
+        tech_case_fig = [
+                ProposalFigureExtra(*x, target_view=url_for(
+                ('.tech_view_figure_preview'
+                    if ProposalFigureType.needs_preview(x.type)
+                    else '.tech_view_figure'),
+                proposal_id=proposal.id, fig_id=x.id), target_edit=None)
+            for x in proposal_fig.values()
+            if x.role == ProposalTextRole.TECHNICAL_CASE]
+        sci_case_fig = [
+            ProposalFigureExtra(*x, target_view=url_for(
+                ('.sci_view_figure_preview'
+                    if ProposalFigureType.needs_preview(x.type)
+                    else '.sci_view_figure'),
+                proposal_id=proposal.id, fig_id=x.id), target_edit=None)
+            for x in proposal_fig.values()
+            if x.role == ProposalTextRole.SCIENCE_CASE]
+
         targets = [
             x._replace(system=CoordSystem.get_name(x.system)) for x in
             db.search_target(
@@ -132,6 +152,8 @@ class GenericProposal(object):
                 ProposalTextRole.TECHNICAL_CASE, None),
             'sci_case_text': proposal_text.get(
                 ProposalTextRole.SCIENCE_CASE, None),
+            'tech_case_fig': tech_case_fig,
+            'sci_case_fig': sci_case_fig,
             'tech_case_pdf': proposal_pdf.get_role(
                 ProposalTextRole.TECHNICAL_CASE, None),
             'sci_case_pdf': proposal_pdf.get_role(

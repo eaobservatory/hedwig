@@ -1,0 +1,23 @@
+{% macro render_proposal_figures(figures) %}
+    {% if figures %}
+        {% for fig in figures %}
+            <figure>
+                {% if fig.state is attachment_ready %}
+                    <img src="{{ fig.target_view }}" alt="Figure {{ loop.index }}" />
+                {% elif fig.state is attachment_error %}
+                    <p class="warning">
+                        The uploaded figure could not be processed.
+                    </p>
+                {% else %}
+                    <p class="not_present">
+                        The uploaded figure has not yet been processed.
+                    </p>
+                {% endif %}
+
+                <figcaption>
+                    {{ fig.caption | format_text }}
+                </figcaption>
+            </figure>
+        {% endfor %}
+    {% endif %}
+{% endmacro %}
