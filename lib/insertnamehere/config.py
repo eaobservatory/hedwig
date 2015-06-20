@@ -66,7 +66,7 @@ def get_database(database_url=None, facility_spec=None):
 
     if database is None or facility_spec is not None:
         config = get_config()
-        db_parts = [Database]
+        db_parts = []
 
         if facility_spec is None:
             facility_spec = config.get('application', 'facilities')
@@ -103,7 +103,9 @@ def get_database(database_url=None, facility_spec=None):
                 pass
 
         # Create combined database object using the base database class, plus
-        # any facility-specific classes.
+        # any facility-specific classes.  Put the base class last so that
+        # facilities can override methods if necessary.
+        db_parts.append(Database)
         CombinedDatabase = type(b'CombinedDatabase', tuple(db_parts), {})
         database = CombinedDatabase(get_engine(database_url))
 
