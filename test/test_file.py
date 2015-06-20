@@ -20,7 +20,6 @@ from __future__ import absolute_import, division, print_function, \
 
 from contextlib import closing
 from cStringIO import StringIO
-from unittest import TestCase
 
 from PIL import Image
 from PyPDF2 import PdfFileWriter
@@ -32,6 +31,8 @@ from insertnamehere.file.info import determine_figure_type, \
     determine_pdf_page_count
 from insertnamehere.file.pdf import pdf_to_png
 from insertnamehere.type import ProposalFigureType
+
+from .dummy_config import DummyConfigTestCase
 
 with closing(StringIO()) as f:
     im = Image.new('RGB', (25, 50))
@@ -45,7 +46,7 @@ with closing(StringIO()) as f:
     example_pdf = f.getvalue()
 
 
-class FileTest(TestCase):
+class FileTest(DummyConfigTestCase):
     def test_figure_type(self):
         self.assertEqual(determine_figure_type(example_png),
                          ProposalFigureType.PNG)

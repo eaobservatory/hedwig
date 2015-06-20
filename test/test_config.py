@@ -20,43 +20,16 @@ from __future__ import absolute_import, division, print_function, \
 
 from ConfigParser import SafeConfigParser
 import os
-from unittest import TestCase
 
 from insertnamehere import config
 from insertnamehere.error import Error
 from insertnamehere.db.control import Database
 from insertnamehere.facility.jcmt.control import JCMTPart
 
+from .dummy_config import DummyConfigTestCase
 
-class ConfigTestCase(TestCase):
-    def setUp(self):
-        self._clear_config()
 
-        # Store a copy of the config file path tuple and append
-        # '.template' to the last component in case we are testing
-        # in a fresh copy of the application with no customized config
-        # file.
-        self.orig_file = config.config_file
-        config.config_file = self.orig_file[:-1] + (
-            self.orig_file[-1] + '.template',)
-
-    def tearDown(self):
-        # Same clean-up as setUp().
-        self._clear_config()
-
-        # Restore config file path tuple.
-        config.config_file = self.orig_file
-
-    def _clear_config(self):
-        # Unload existing configuation.
-        config.config = None
-        config.database = None
-        config.facilities = None
-
-        # Unset home directory variable.
-        if 'INSERTNAMEHERE_DIR' in os.environ:
-            del os.environ['INSERTNAMEHERE_DIR']
-
+class ConfigTestCase(DummyConfigTestCase):
     def test_database_config(self):
         c = config.get_config()
 
