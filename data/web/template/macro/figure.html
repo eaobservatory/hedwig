@@ -15,7 +15,12 @@
                 {% endif %}
 
                 <figcaption>
-                    {{ fig.caption | format_text }}
+                    <div class="fignum">
+                        <p>Figure {{ loop.index }}:</p>
+                    </div>
+                    <div class="figcap">
+                        {{ fig.caption | format_text }}
+                    </div>
                 </figcaption>
             </figure>
         {% endfor %}

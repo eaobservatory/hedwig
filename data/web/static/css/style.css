@@ -142,3 +142,19 @@ form ol li span.explanation:before {
 form ol li span.explanation:after {
     content: ")";
 }
+
+figure {
+    text-align: center;
+}
+
+figcaption div.fignum {
+    display: inline-block;
+    vertical-align: top;
+}
+
+figcaption div.figcap {
+    display: inline-block;
+    vertical-align: top;
+    width: 50%;
+    text-align: left;
+}
