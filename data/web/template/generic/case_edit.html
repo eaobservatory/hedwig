@@ -117,7 +117,7 @@
             </table>
         {% endif %}
 
-        {% if fig_limit > (figures | length) %}
+        {% if fig_limit > (figures | length) and pdf is none %}
             <nav>
                 <p>
                     {% if true %}
