@@ -85,14 +85,22 @@
                         <th>{{ loop.index }}</th>
                         <td>
                             {% if figure.state is attachment_ready %}
-                                <img src="{{ figure.target_view }}" />
+                                <a href="{{ figure.target_full }}">
+                                    <img src="{{ figure.target_view }}" />
+                                </a>
                             {% elif figure.state is attachment_error %}
                                 <p class="warning">
                                     Error during processing
                                 </p>
+                                <p>
+                                    <a href="{{ figure.target_full }}">View image</a>
+                                </p>
                             {% else %}
                                 <p class="not_present">
                                     Not yet processed
+                                </p>
+                                <p>
+                                    <a href="{{ figure.target_full }}">View image</a>
                                 </p>
                             {% endif %}
                         </td>

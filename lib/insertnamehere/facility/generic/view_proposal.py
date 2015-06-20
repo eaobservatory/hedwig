@@ -543,6 +543,7 @@ class GenericProposal(object):
 
         ctx.update(self._edit_case(
             db, proposal, ProposalTextRole.TECHNICAL_CASE,
+            '.tech_view_figure',
             '.tech_view_figure_thumbnail', '.tech_edit_figure'))
 
         return ctx
@@ -635,6 +636,7 @@ class GenericProposal(object):
 
         ctx.update(self._edit_case(
             db, proposal, ProposalTextRole.SCIENCE_CASE,
+            '.sci_view_figure',
             '.sci_view_figure_thumbnail', '.sci_edit_figure'))
 
         return ctx
@@ -707,7 +709,7 @@ class GenericProposal(object):
             raise HTTPNotFound('PDF preview page not found.')
 
     def _edit_case(self, db, proposal, role,
-                   figure_thumbnail_route, figure_edit_route):
+                   figure_route, figure_thumbnail_route, figure_edit_route):
         name = ProposalTextRole.get_name(role)
 
         text_info = db.search_proposal_text(proposal_id=proposal.id, role=role)
@@ -726,7 +728,9 @@ class GenericProposal(object):
             'text': text_info.get_single(None),
             'figures': [
                 ProposalFigureExtra(
-                    *x, target_full=None,
+                    *x,
+                    target_full=url_for(figure_route,
+                                        proposal_id=proposal.id, fig_id=x.id),
                     target_view=url_for(figure_thumbnail_route,
                                         proposal_id=proposal.id, fig_id=x.id),
                     target_edit=url_for(figure_edit_route,
