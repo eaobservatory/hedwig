@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from ..error import ConsistencyError, ConversionError
 from ..type import ProposalAttachmentState, ProposalFigureType
 from ..util import get_logger
-from .image import create_thumbnail
+from .image import create_thumbnail_and_preview
 from .pdf import pdf_to_png
 
 logger = get_logger(__name__)
@@ -67,14 +67,17 @@ def process_proposal_figure(db):
                         ProposalFigureType.get_name(figure.type))
 
             # Create figure thumbnail.
-            thumbnail = create_thumbnail(
+            tp = create_thumbnail_and_preview(
                 figure.data if preview is None else preview)
+
+            if tp.preview is not None:
+                preview = tp.preview
 
             # Store the processed data.
             if preview is not None:
                 db.set_proposal_figure_preview(figure_info.id, preview)
 
-            db.set_proposal_figure_thumbnail(figure_info.id, thumbnail)
+            db.set_proposal_figure_thumbnail(figure_info.id, tp.thumbnail)
 
             try:
                 db.update_proposal_figure(

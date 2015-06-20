@@ -109,6 +109,9 @@ ProposalFigureInfo = namedtuple(
      'md5sum', 'filename', 'uploaded', 'uploader', 'uploader_name',
      'has_preview'])
 
+ProposalFigureThumbPreview = namedtuple(
+    'ProposalFigureThumbPreview', ['thumbnail', 'preview'])
+
 ProposalPDFInfo = namedtuple(
     'ProposalPDFInfo',
     ['id', 'proposal_id', 'role', 'md5sum', 'state', 'pages',
