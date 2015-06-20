@@ -554,7 +554,7 @@ class GenericProposal(object):
             db, proposal, ProposalTextRole.TECHNICAL_CASE,
             proposal.tech_word_lim,
             url_for('.tech_edit_text', proposal_id=proposal.id), form, 30,
-            figures)
+            figures, url_for('.tech_edit', proposal_id=proposal.id))
 
     @with_proposal(permission='edit')
     def view_tech_new_figure(self, db, proposal, can, form, file):
@@ -562,7 +562,7 @@ class GenericProposal(object):
             db, proposal, ProposalTextRole.TECHNICAL_CASE,
             proposal.capt_word_lim, None,
             url_for('.tech_new_figure', proposal_id=proposal.id),
-            form, file)
+            form, file, url_for('.tech_edit', proposal_id=proposal.id))
 
     @with_proposal(permission='edit')
     def view_tech_edit_figure(self, db, proposal, can, fig_id, form, file):
@@ -575,7 +575,7 @@ class GenericProposal(object):
             proposal.capt_word_lim, figure,
             url_for('.tech_edit_figure',
                     proposal_id=proposal.id, fig_id=fig_id),
-            form, file)
+            form, file, url_for('.tech_edit', proposal_id=proposal.id))
 
     @with_proposal(permission='view')
     def view_tech_view_figure(self, db, proposal, can, fig_id, type_=None):
@@ -587,7 +587,8 @@ class GenericProposal(object):
         return self._edit_pdf(
             db, proposal, ProposalTextRole.TECHNICAL_CASE,
             proposal.tech_page_lim,
-            url_for('.sci_edit_pdf', proposal_id=proposal.id), file)
+            url_for('.tech_edit_pdf', proposal_id=proposal.id), file,
+            url_for('.tech_edit', proposal_id=proposal.id))
 
     @with_proposal(permission='view')
     def view_tech_view_pdf(self, db, proposal, can):
@@ -645,7 +646,7 @@ class GenericProposal(object):
             db, proposal, ProposalTextRole.SCIENCE_CASE,
             proposal.sci_word_lim,
             url_for('.sci_edit_text', proposal_id=proposal.id), form, 30,
-            figures)
+            figures, url_for('.sci_edit', proposal_id=proposal.id))
 
     @with_proposal(permission='edit')
     def view_sci_new_figure(self, db, proposal, can, form, file):
@@ -653,7 +654,7 @@ class GenericProposal(object):
             db, proposal, ProposalTextRole.SCIENCE_CASE,
             proposal.capt_word_lim, None,
             url_for('.sci_new_figure', proposal_id=proposal.id),
-            form, file)
+            form, file, url_for('.sci_edit', proposal_id=proposal.id))
 
     @with_proposal(permission='edit')
     def view_sci_edit_figure(self, db, proposal, can, fig_id, form, file):
@@ -666,7 +667,7 @@ class GenericProposal(object):
             proposal.capt_word_lim, figure,
             url_for('.sci_edit_figure',
                     proposal_id=proposal.id, fig_id=fig_id),
-            form, file)
+            form, file, url_for('.sci_edit', proposal_id=proposal.id))
 
     @with_proposal(permission='view')
     def view_sci_view_figure(self, db, proposal, can, fig_id, type_=None):
@@ -678,7 +679,8 @@ class GenericProposal(object):
         return self._edit_pdf(
             db, proposal, ProposalTextRole.SCIENCE_CASE,
             proposal.sci_page_lim,
-            url_for('.sci_edit_pdf', proposal_id=proposal.id), file)
+            url_for('.sci_edit_pdf', proposal_id=proposal.id), file,
+            url_for('.sci_edit', proposal_id=proposal.id))
 
     @with_proposal(permission='view')
     def view_sci_view_pdf(self, db, proposal, can):
@@ -726,7 +728,7 @@ class GenericProposal(object):
         }
 
     def _edit_text(self, db, proposal, role, word_limit, target, form, rows,
-                   figures=None):
+                   figures=None, target_redir=None):
         name = ProposalTextRole.get_name(role)
         message = None
 
@@ -753,7 +755,8 @@ class GenericProposal(object):
                                      session['person']['id'], is_update)
                 flash('The {0} has been saved.', name.lower())
                 raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id))
+                                           proposal_id=proposal.id)
+                                   if target_redir is None else target_redir)
 
             except UserError as e:
                 message = e.message
@@ -771,7 +774,7 @@ class GenericProposal(object):
         }
 
     def _edit_figure(self, db, proposal, role, word_limit, figure,
-                     target, form, file):
+                     target, form, file, target_redir):
         name = ProposalTextRole.get_name(role)
         max_size = int(get_config().get('upload', 'max_fig_size'))
         message = None
@@ -846,8 +849,7 @@ class GenericProposal(object):
 
                     flash('The figure caption has been updated.')
 
-                raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id))
+                raise HTTPRedirect(target_redir)
 
             except UserError as e:
                 message = e.message
@@ -865,7 +867,8 @@ class GenericProposal(object):
             'target': target,
         }
 
-    def _edit_pdf(self, db, proposal, role, page_limit, target, file):
+    def _edit_pdf(self, db, proposal, role, page_limit, target, file,
+                  target_redir):
         name = ProposalTextRole.get_name(role)
         max_size = int(get_config().get('upload', 'max_pdf_size'))
         message = None
@@ -904,8 +907,7 @@ class GenericProposal(object):
 
                 flash('The {0} has been uploaded.', name.lower())
 
-                raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id))
+                raise HTTPRedirect(target_redir)
 
             except UserError as e:
                 message = e.message
@@ -918,6 +920,7 @@ class GenericProposal(object):
             'mime_types': [ProposalFigureType.get_mime_type(
                 ProposalFigureType.PDF)],
             'max_size': max_size,
+            'target': target,
         }
 
     def _view_figure(self, db, proposal, role, fig_id, type_):
