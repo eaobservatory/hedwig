@@ -22,7 +22,7 @@ from datetime import datetime
 from hashlib import md5
 
 from sqlalchemy.sql import select
-from sqlalchemy.sql.expression import and_, false, not_
+from sqlalchemy.sql.expression import and_, case, false, not_
 from sqlalchemy.sql.functions import coalesce, count
 from sqlalchemy.sql.functions import max as max_
 
@@ -857,7 +857,8 @@ class ProposalPart(object):
 
     def search_proposal_figure(self, proposal_id=None, role=None, state=None,
                                fig_id=None,
-                               with_caption=False, with_uploader_name=False):
+                               with_caption=False, with_uploader_name=False,
+                               with_has_preview=False):
         select_columns = [
             proposal_fig.c.id,
             proposal_fig.c.proposal_id,
@@ -869,7 +870,14 @@ class ProposalPart(object):
             proposal_fig.c.uploaded,
             proposal_fig.c.uploader,
         ]
-        default = {'caption': None}
+
+        select_from = proposal_fig
+
+        default = {
+            'caption': None,
+            'has_preview': None,
+            'uploader_name': None,
+        }
 
         if with_caption:
             select_columns.append(proposal_fig.c.caption)
@@ -877,11 +885,17 @@ class ProposalPart(object):
 
         if with_uploader_name:
             select_columns.append(person.c.name.label('uploader_name'))
-            stmt = select(select_columns).select_from(
-                proposal_fig.join(person))
-        else:
-            stmt = select(select_columns)
-            default['uploader_name'] = None
+            select_from = select_from.join(person)
+            del default['uploader_name']
+
+        if with_has_preview:
+            select_columns.append(case([
+                (proposal_fig_preview.c.fig_id.isnot(None), True)
+                ], else_=False).label('has_preview'))
+            select_from = select_from.outerjoin(proposal_fig_preview)
+            del default['has_preview']
+
+        stmt = select(select_columns).select_from(select_from)
 
         if proposal_id is not None:
             stmt = stmt.where(proposal_fig.c.proposal_id == proposal_id)

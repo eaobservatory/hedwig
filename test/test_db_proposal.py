@@ -727,6 +727,11 @@ class DBProposalTest(DBTestCase):
         self.assertIsInstance(fig_info.uploaded, datetime)
         self.assertEqual(fig_info.uploader, person_id)
         self.assertEqual(fig_info.uploader_name, None)
+        self.assertEqual(fig_info.has_preview, None)
+
+        result = self.db.search_proposal_figure(
+            fig_id=fig_id, with_has_preview=True).get_single()
+        self.assertEqual(result.has_preview, False)
 
         self.assertEqual(
             self.db.get_proposal_figure(proposal_id, role, fig_id).data,
@@ -767,9 +772,11 @@ class DBProposalTest(DBTestCase):
             None, None, fig_id, state=ProposalAttachmentState.ERROR,
             state_prev=ProposalAttachmentState.NEW)
 
-        result = self.db.search_proposal_figure(proposal_id=proposal_id)
+        result = self.db.search_proposal_figure(proposal_id=proposal_id,
+                                                with_has_preview=True)
         fig_info = result[fig_id]
         self.assertEqual(fig_info.state, ProposalAttachmentState.ERROR)
+        self.assertEqual(fig_info.has_preview, True)
 
         # ... change figure image.
         fig = b'dummy figure updated'

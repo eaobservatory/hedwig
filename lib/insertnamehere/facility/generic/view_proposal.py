@@ -122,12 +122,13 @@ class GenericProposal(object):
         proposal_pdf = db.search_proposal_pdf(proposal.id)
 
         proposal_fig = db.search_proposal_figure(proposal.id,
-                                                 with_caption=True)
+                                                 with_caption=True,
+                                                 with_has_preview=True)
 
         tech_case_fig = [
                 ProposalFigureExtra(*x, target_view=url_for(
                 ('.tech_view_figure_preview'
-                    if ProposalFigureType.needs_preview(x.type)
+                    if x.has_preview
                     else '.tech_view_figure'),
                 proposal_id=proposal.id, fig_id=x.id), target_edit=None)
             for x in proposal_fig.values()
@@ -135,7 +136,7 @@ class GenericProposal(object):
         sci_case_fig = [
             ProposalFigureExtra(*x, target_view=url_for(
                 ('.sci_view_figure_preview'
-                    if ProposalFigureType.needs_preview(x.type)
+                    if x.has_preview
                     else '.sci_view_figure'),
                 proposal_id=proposal.id, fig_id=x.id), target_edit=None)
             for x in proposal_fig.values()

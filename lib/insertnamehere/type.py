@@ -104,7 +104,8 @@ ProposalFigure = namedtuple(
 ProposalFigureInfo = namedtuple(
     'ProposalFigInfo',
     ['id', 'proposal_id', 'role', 'type', 'state', 'caption',
-     'md5sum', 'filename', 'uploaded', 'uploader', 'uploader_name'])
+     'md5sum', 'filename', 'uploaded', 'uploader', 'uploader_name',
+     'has_preview'])
 
 ProposalPDFInfo = namedtuple(
     'ProposalPDFInfo',
