@@ -33,7 +33,7 @@ from flask import Response as _FlaskResponse
 from werkzeug import exceptions as _werkzeug_exceptions
 from werkzeug import routing as _werkzeug_routing
 
-from ..type import ProposalFigureType
+from ..type import FigureType
 
 
 class HTTPError(_werkzeug_exceptions.InternalServerError):
@@ -182,7 +182,7 @@ def send_file(fixed_type=None):
     If there is a fixed MIME type, it can be set in the decorator
     argument and the function just returns the data.  Otherwise
     the function must return a ProposalFigure(data, type, filename) tuple
-    where the type is a value from ProposalFigureType.
+    where the type is a value from FigureType.
     """
 
     def decorator(f):
@@ -196,7 +196,7 @@ def send_file(fixed_type=None):
                 (data, type_, filename) = data
 
             return _FlaskResponse(
-                data, mimetype=ProposalFigureType.get_mime_type(type_))
+                data, mimetype=FigureType.get_mime_type(type_))
 
         return decorated_function
 

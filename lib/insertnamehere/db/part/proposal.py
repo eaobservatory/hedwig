@@ -28,14 +28,14 @@ from sqlalchemy.sql.functions import max as max_
 
 from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
-from ...type import Affiliation, Call, FormatType, Member, MemberCollection, \
-    MemberInfo, Proposal, ProposalState, \
-    ProposalAttachmentState, \
-    ProposalFigure, ProposalFigureInfo, ProposalFigureType, \
-    ProposalPDFInfo, \
-    ProposalText, ProposalTextCollection, ProposalTextInfo, ProposalTextRole, \
+from ...type import Affiliation, AttachmentState, Call, \
+    FigureType, FormatType, \
+    Member, MemberCollection, MemberInfo, \
+    Proposal, ProposalState, \
+    ProposalFigure, ProposalFigureInfo, ProposalPDFInfo, \
+    ProposalText, ProposalTextCollection, ProposalTextInfo, \
     Queue, QueueInfo, ResultCollection, Semester, SemesterInfo, \
-    Target, TargetCollection
+    Target, TargetCollection, TextRole
 from ..meta import affiliation, call, facility, institution, member, person, \
     proposal, proposal_fig, proposal_fig_preview, proposal_fig_thumbnail, \
     proposal_pdf, proposal_pdf_preview, proposal_text, queue, semester, target
@@ -193,9 +193,9 @@ class ProposalPart(object):
     def add_proposal_figure(self, proposal_id, role, type_, figure,
                             caption, filename, uploader_person_id,
                             _test_skip_check=False):
-        if not ProposalFigureType.is_valid(type_):
+        if not FigureType.is_valid(type_):
             raise Error('Invalid figure type.')
-        if not ProposalTextRole.is_valid(role):
+        if not TextRole.is_valid(role):
             raise Error('Invalid text role.')
         if not figure:
             # Shouldn't happen as we should have already checked the figure
@@ -216,7 +216,7 @@ class ProposalPart(object):
                 proposal_fig.c.proposal_id: proposal_id,
                 proposal_fig.c.role: role,
                 proposal_fig.c.type: type_,
-                proposal_fig.c.state: ProposalAttachmentState.NEW,
+                proposal_fig.c.state: AttachmentState.NEW,
                 proposal_fig.c.figure: figure,
                 proposal_fig.c.md5sum: md5(figure).hexdigest(),
                 proposal_fig.c.caption: caption,
@@ -495,7 +495,7 @@ class ProposalPart(object):
         stmt = select([proposal_pdf.c.pdf])
 
         if (proposal_id is not None) and (role is not None):
-            if not ProposalTextRole.is_valid(role):
+            if not TextRole.is_valid(role):
                 raise FormattedError('proposal text role not recognised: {0}',
                                      role)
 
@@ -547,7 +547,7 @@ class ProposalPart(object):
         Get the given text associated with a proposal.
         """
 
-        if not ProposalTextRole.is_valid(role):
+        if not TextRole.is_valid(role):
             raise FormattedError('proposal text role not recognised: {0}',
                                  role)
 
@@ -1071,7 +1071,7 @@ class ProposalPart(object):
         Returns the PDF identifier.
         """
 
-        if not ProposalTextRole.is_valid(role):
+        if not TextRole.is_valid(role):
             raise FormattedError('proposal text role not recognised: {0}',
                                  role)
 
@@ -1087,7 +1087,7 @@ class ProposalPart(object):
                 proposal_pdf.c.pdf: pdf,
                 proposal_pdf.c.md5sum: md5(pdf).hexdigest(),
                 proposal_pdf.c.pages: pages,
-                proposal_pdf.c.state: ProposalAttachmentState.NEW,
+                proposal_pdf.c.state: AttachmentState.NEW,
                 proposal_pdf.c.filename: filename,
                 proposal_pdf.c.uploaded: datetime.utcnow(),
                 proposal_pdf.c.uploader: uploader_person_id,
@@ -1171,7 +1171,7 @@ class ProposalPart(object):
             raise UserError('Text format not specified.')
         if not FormatType.is_valid(format):
             raise UserError('Text format not recognised.')
-        if not ProposalTextRole.is_valid(role):
+        if not TextRole.is_valid(role):
             raise FormattedError('proposal text role not recognised: {0}',
                                  role)
 
@@ -1453,7 +1453,7 @@ class ProposalPart(object):
             raise Error('figure identifier not specified')
 
         if state_prev is not None:
-            if not ProposalAttachmentState.is_valid(state_prev):
+            if not AttachmentState.is_valid(state_prev):
                 raise Error('Invalid previous state.')
             stmt = stmt.where(proposal_fig.c.state == state_prev)
 
@@ -1474,7 +1474,7 @@ class ProposalPart(object):
 
             values.update({
                 proposal_fig.c.type: type_,
-                proposal_fig.c.state: ProposalAttachmentState.NEW,
+                proposal_fig.c.state: AttachmentState.NEW,
                 proposal_fig.c.figure: figure,
                 proposal_fig.c.md5sum: md5(figure).hexdigest(),
                 proposal_fig.c.filename: filename,
@@ -1483,7 +1483,7 @@ class ProposalPart(object):
             })
 
         elif state is not None:
-            if not ProposalAttachmentState.is_valid(state):
+            if not AttachmentState.is_valid(state):
                 raise Error('Invalid state.')
             values['state'] = state
 
@@ -1528,12 +1528,12 @@ class ProposalPart(object):
         stmt = proposal_pdf.update().where(proposal_pdf.c.id == pdf_id)
 
         if state is not None:
-            if not ProposalAttachmentState.is_valid(state):
+            if not AttachmentState.is_valid(state):
                 raise Error('Invalid state.')
             values['state'] = state
 
         if state_prev is not None:
-            if not ProposalAttachmentState.is_valid(state):
+            if not AttachmentState.is_valid(state):
                 raise Error('Invalid previous state.')
             stmt = stmt.where(proposal_pdf.c.state == state_prev)
 

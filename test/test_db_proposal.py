@@ -23,13 +23,14 @@ from datetime import datetime
 from insertnamehere.db.meta import member
 from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
-from insertnamehere.type import Affiliation, Call, FormatType, \
+from insertnamehere.type import Affiliation, AttachmentState, Call, \
+    FigureType, FormatType, \
     Member, MemberCollection, MemberInstitution,  \
-    Proposal, ProposalAttachmentState, \
-    ProposalFigureInfo, ProposalFigureType,  ProposalPDFInfo, \
+    Proposal, \
+    ProposalFigureInfo, ProposalPDFInfo, \
     ProposalState, \
-    ProposalText, ProposalTextCollection, ProposalTextInfo, ProposalTextRole, \
-    ResultCollection, Target, TargetCollection
+    ProposalText, ProposalTextCollection, ProposalTextInfo, \
+    ResultCollection, Target, TargetCollection, TextRole
 from .dummy_db import DBTestCase
 
 
@@ -492,8 +493,8 @@ class DBProposalTest(DBTestCase):
     def test_proposal_text(self):
         # "Define" extra text roles for the purpose of testing this
         # method before multiple roles are implemented.
-        ProposalTextRole._info[40] = None
-        ProposalTextRole._info[41] = None
+        TextRole._info[40] = None
+        TextRole._info[41] = None
 
         (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
         person_id = self.db.add_person('Person 1')
@@ -509,7 +510,7 @@ class DBProposalTest(DBTestCase):
 
         # Test we can't use an invalid format code or role number.
         with self.assertRaisesRegexp(UserError, 'format not recognised'):
-            self.db.set_proposal_text(proposal_id_1, ProposalTextRole.ABSTRACT,
+            self.db.set_proposal_text(proposal_id_1, TextRole.ABSTRACT,
                                       'test', 999, 1, person_id, False)
         with self.assertRaisesRegexp(Error, 'text role not recognised'):
             self.db.set_proposal_text(proposal_id_1, 999, 'test',
@@ -517,60 +518,60 @@ class DBProposalTest(DBTestCase):
 
         # Test we can't get, delete or update a non-existant record.
         with self.assertRaisesRegexp(NoSuchRecord, '^text does not exist'):
-            self.db.get_proposal_text(proposal_id_1, ProposalTextRole.ABSTRACT)
+            self.db.get_proposal_text(proposal_id_1, TextRole.ABSTRACT)
 
         with self.assertRaisesRegexp(ConsistencyError, '^text does not exist'):
             self.db.delete_proposal_text(proposal_id_1,
-                                         ProposalTextRole.ABSTRACT)
+                                         TextRole.ABSTRACT)
 
         with self.assertRaisesRegexp(ConsistencyError, '^no row matched'):
             self.db.delete_proposal_text(proposal_id_1,
-                                         ProposalTextRole.ABSTRACT,
+                                         TextRole.ABSTRACT,
                                          _test_skip_check=True)
 
         with self.assertRaisesRegexp(ConsistencyError, '^text does not exist'):
             self.db.set_proposal_text(proposal_id_1,
-                                      ProposalTextRole.TECHNICAL_CASE, 'test',
+                                      TextRole.TECHNICAL_CASE, 'test',
                                       FormatType.PLAIN, 1, person_id, True)
 
         with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
             self.db.set_proposal_text(proposal_id_1,
-                                      ProposalTextRole.TECHNICAL_CASE, 'test',
+                                      TextRole.TECHNICAL_CASE, 'test',
                                       FormatType.PLAIN, 1, person_id, True,
                                       _test_skip_check=True)
 
         # Try creating and updating some text.
         self.db.set_proposal_text(
-            proposal_id_1, ProposalTextRole.SCIENCE_CASE, 'test',
+            proposal_id_1, TextRole.SCIENCE_CASE, 'test',
             FormatType.PLAIN, 1, person_id, False)
         self.assertEqual(self.db.get_proposal_text(
-            proposal_id_1, ProposalTextRole.SCIENCE_CASE),
+            proposal_id_1, TextRole.SCIENCE_CASE),
             ProposalText('test', FormatType.PLAIN))
         self.db.set_proposal_text(
-            proposal_id_1, ProposalTextRole.SCIENCE_CASE, 'change',
+            proposal_id_1, TextRole.SCIENCE_CASE, 'change',
             FormatType.PLAIN, 1, person_id, True)
         self.assertEqual(self.db.get_proposal_text(
-            proposal_id_1, ProposalTextRole.SCIENCE_CASE),
+            proposal_id_1, TextRole.SCIENCE_CASE),
             ProposalText('change', FormatType.PLAIN))
 
         # Check we can't re-create an existing text record.
         with self.assertRaisesRegexp(ConsistencyError, '^text already exists'):
             self.db.set_proposal_text(
-                proposal_id_1, ProposalTextRole.SCIENCE_CASE, 'new',
+                proposal_id_1, TextRole.SCIENCE_CASE, 'new',
                 FormatType.PLAIN, 1, person_id, False)
 
         with self.assertRaises(DatabaseIntegrityError):
             self.db.set_proposal_text(
-                proposal_id_1, ProposalTextRole.SCIENCE_CASE, 'new',
+                proposal_id_1, TextRole.SCIENCE_CASE, 'new',
                 FormatType.PLAIN, 1, person_id, False,
                 _test_skip_check=True)
 
         # Now delete the record.
         self.db.delete_proposal_text(
-            proposal_id_1, ProposalTextRole.SCIENCE_CASE)
+            proposal_id_1, TextRole.SCIENCE_CASE)
         with self.assertRaises(NoSuchRecord):
             self.db.get_proposal_text(
-                proposal_id_1, ProposalTextRole.SCIENCE_CASE)
+                proposal_id_1, TextRole.SCIENCE_CASE)
 
         # "Define" some extra format types just for the purpose of testing
         # this method before multiple formats have been implemented.
@@ -621,7 +622,7 @@ class DBProposalTest(DBTestCase):
     def test_proposal_pdf(self):
         (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
         pdf = b'dummy PDF file'
-        role = ProposalTextRole.TECHNICAL_CASE
+        role = TextRole.TECHNICAL_CASE
 
         person_id = self.db.add_person('Person 1')
         proposal_id = self.db.add_proposal(call_id, person_id,
@@ -647,7 +648,7 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(pdf_info.proposal_id, proposal_id)
         self.assertEqual(pdf_info.role, role)
         self.assertEqual(pdf_info.md5sum, b'46ee5ebd71065c1d4caa83e4c943c70a')
-        self.assertEqual(pdf_info.state, ProposalAttachmentState.NEW, 4)
+        self.assertEqual(pdf_info.state, AttachmentState.NEW, 4)
         self.assertEqual(pdf_info.filename, 'test.pdf')
         self.assertIsInstance(pdf_info.uploaded, datetime)
         self.assertEqual(pdf_info.uploader, person_id)
@@ -655,20 +656,20 @@ class DBProposalTest(DBTestCase):
 
         # Try changing proposal state.
         self.db.update_proposal_pdf(
-            pdf_id=pdf_id, state=ProposalAttachmentState.READY)
+            pdf_id=pdf_id, state=AttachmentState.READY)
 
         result = self.db.search_proposal_pdf(proposal_id=proposal_id)
-        self.assertEqual(result[pdf_id].state, ProposalAttachmentState.READY)
+        self.assertEqual(result[pdf_id].state, AttachmentState.READY)
 
         # Check that the "state_prev" constraint works.
         with self.assertRaisesRegexp(ConsistencyError, 'no rows matched'):
             self.db.update_proposal_pdf(
-                pdf_id=pdf_id, state=ProposalAttachmentState.READY,
-                state_prev=ProposalAttachmentState.ERROR)
+                pdf_id=pdf_id, state=AttachmentState.READY,
+                state_prev=AttachmentState.ERROR)
 
         self.db.update_proposal_pdf(
-            pdf_id=pdf_id, state=ProposalAttachmentState.ERROR,
-            state_prev=ProposalAttachmentState.READY)
+            pdf_id=pdf_id, state=AttachmentState.ERROR,
+            state_prev=AttachmentState.READY)
 
         # Test setting preview images.
         self.db.set_proposal_pdf_preview(pdf_id, [b'dummy 1', b'dummy 2'])
@@ -699,8 +700,8 @@ class DBProposalTest(DBTestCase):
     def test_proposal_fig(self):
         (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
         fig = b'dummy figure'
-        role = ProposalTextRole.TECHNICAL_CASE
-        type_ = ProposalFigureType.PNG
+        role = TextRole.TECHNICAL_CASE
+        type_ = FigureType.PNG
 
         person_id = self.db.add_person('Person 1')
         proposal_id = self.db.add_proposal(call_id, person_id,
@@ -725,7 +726,7 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(fig_info.role, role)
         self.assertEqual(fig_info.md5sum, b'b41faa148ef23d1ddfa46debb3b66f35')
         self.assertEqual(fig_info.type, type_)
-        self.assertEqual(fig_info.state, ProposalAttachmentState.NEW)
+        self.assertEqual(fig_info.state, AttachmentState.NEW)
         self.assertEqual(fig_info.caption, None)
         self.assertEqual(fig_info.filename, 'test.png')
         self.assertIsInstance(fig_info.uploaded, datetime)
@@ -773,13 +774,13 @@ class DBProposalTest(DBTestCase):
         # Try updating the figure...
         # ... change figure state.
         self.db.update_proposal_figure(
-            None, None, fig_id, state=ProposalAttachmentState.ERROR,
-            state_prev=ProposalAttachmentState.NEW)
+            None, None, fig_id, state=AttachmentState.ERROR,
+            state_prev=AttachmentState.NEW)
 
         result = self.db.search_proposal_figure(proposal_id=proposal_id,
                                                 with_has_preview=True)
         fig_info = result[fig_id]
-        self.assertEqual(fig_info.state, ProposalAttachmentState.ERROR)
+        self.assertEqual(fig_info.state, AttachmentState.ERROR)
         self.assertEqual(fig_info.has_preview, True)
 
         # ... change figure image.
@@ -793,7 +794,7 @@ class DBProposalTest(DBTestCase):
                                                 with_caption=True)
         fig_info = result[fig_id]
         self.assertEqual(fig_info.md5sum, b'b9e7dfbc36883c26e5d2aff8c80f34db')
-        self.assertEqual(fig_info.state, ProposalAttachmentState.NEW)
+        self.assertEqual(fig_info.state, AttachmentState.NEW)
         self.assertEqual(fig_info.filename, 'test2.png')
         self.assertEqual(fig_info.caption, 'Figure caption.')
 

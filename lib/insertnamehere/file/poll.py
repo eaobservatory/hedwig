@@ -19,7 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from ..error import ConsistencyError, ConversionError
-from ..type import ProposalAttachmentState, ProposalFigureType
+from ..type import AttachmentState, FigureType
 from ..util import get_logger
 from .image import create_thumbnail_and_preview
 from .pdf import pdf_to_png
@@ -33,14 +33,14 @@ def process_proposal_figure(db):
     """
 
     for figure_info in db.search_proposal_figure(
-            state=ProposalAttachmentState.NEW).values():
+            state=AttachmentState.NEW).values():
         logger.debug('Processing figure {}', figure_info.id)
 
         try:
             db.update_proposal_figure(
                 proposal_id=None, role=None, fig_id=figure_info.id,
-                state=ProposalAttachmentState.PROCESSING,
-                state_prev=ProposalAttachmentState.NEW)
+                state=AttachmentState.PROCESSING,
+                state_prev=AttachmentState.NEW)
         except ConsistencyError:
             continue
 
@@ -51,8 +51,8 @@ def process_proposal_figure(db):
             # Create figure preview if necessary.
             preview = None
 
-            if ProposalFigureType.needs_preview(figure.type):
-                if figure.type == ProposalFigureType.PDF:
+            if FigureType.needs_preview(figure.type):
+                if figure.type == FigureType.PDF:
                     pngs = pdf_to_png(figure.data)
 
                     if len(pngs) != 1:
@@ -64,7 +64,7 @@ def process_proposal_figure(db):
                 else:
                     raise ConversionError(
                         'Do not know how to make preview of type {}',
-                        ProposalFigureType.get_name(figure.type))
+                        FigureType.get_name(figure.type))
 
             # Create figure thumbnail.
             tp = create_thumbnail_and_preview(
@@ -82,8 +82,8 @@ def process_proposal_figure(db):
             try:
                 db.update_proposal_figure(
                     proposal_id=None, role=None, fig_id=figure_info.id,
-                    state=ProposalAttachmentState.READY,
-                    state_prev=ProposalAttachmentState.PROCESSING)
+                    state=AttachmentState.READY,
+                    state_prev=AttachmentState.PROCESSING)
             except ConsistencyError:
                 continue
 
@@ -92,7 +92,7 @@ def process_proposal_figure(db):
                          figure_info.id, e.message)
             db.update_proposal_figure(
                 proposal_id=None, role=None, fig_id=figure_info.id,
-                state=ProposalAttachmentState.ERROR)
+                state=AttachmentState.ERROR)
 
 
 def process_proposal_pdf(db):
@@ -101,14 +101,14 @@ def process_proposal_pdf(db):
     """
 
     for pdf in db.search_proposal_pdf(
-            state=ProposalAttachmentState.NEW).values():
+            state=AttachmentState.NEW).values():
         logger.debug('Processing PDF {}', pdf.id)
 
         try:
             db.update_proposal_pdf(
                 pdf.id,
-                state=ProposalAttachmentState.PROCESSING,
-                state_prev=ProposalAttachmentState.NEW)
+                state=AttachmentState.PROCESSING,
+                state_prev=AttachmentState.NEW)
         except ConsistencyError:
             continue
 
@@ -125,8 +125,8 @@ def process_proposal_pdf(db):
             try:
                 db.update_proposal_pdf(
                     pdf.id,
-                    state=ProposalAttachmentState.READY,
-                    state_prev=ProposalAttachmentState.PROCESSING)
+                    state=AttachmentState.READY,
+                    state_prev=AttachmentState.PROCESSING)
             except ConsitencyError:
                 # If another process (e.g. new upload) has altered the state,
                 # stop trying to process this PDF.
@@ -134,4 +134,4 @@ def process_proposal_pdf(db):
 
         except Exception as e:
             logger.error('Error converting PDF {}: {}', pdf.id, e.message)
-            db.update_proposal_pdf(pdf.id, state=ProposalAttachmentState.ERROR)
+            db.update_proposal_pdf(pdf.id, state=AttachmentState.ERROR)

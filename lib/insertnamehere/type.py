@@ -159,7 +159,7 @@ class FormatType(object):
         return format in cls._info
 
 
-class ProposalAttachmentState(object):
+class AttachmentState(object):
     NEW = 1
     PROCESSING = 2
     READY = 3
@@ -192,7 +192,7 @@ class ProposalAttachmentState(object):
         return cls._info[state].error
 
 
-class ProposalFigureType(object):
+class FigureType(object):
     PNG = 1
     JPEG = 2
     PDF = 3
@@ -274,7 +274,7 @@ class ProposalState(object):
         return cls._info[state].edit
 
 
-class ProposalTextRole(object):
+class TextRole(object):
     ABSTRACT = 1
     TECHNICAL_CASE = 2
     SCIENCE_CASE = 3

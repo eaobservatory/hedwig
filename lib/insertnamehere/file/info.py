@@ -26,14 +26,14 @@ from PyPDF2 import PdfFileReader
 from PyPDF2.utils import PdfReadError
 
 from ..error import UserError
-from ..type import ProposalFigureType
+from ..type import FigureType
 
 
 def determine_figure_type(buff):
     m = Magic(mime=True)
 
     # Raises a UserError exception if the MIME type is not recognised.
-    return ProposalFigureType.from_mime_type(m.from_buffer(buff))
+    return FigureType.from_mime_type(m.from_buffer(buff))
 
 
 def determine_pdf_page_count(buff):

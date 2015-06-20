@@ -25,10 +25,9 @@ from ...email.format import render_email_template
 from ...config import get_config
 from ...error import NoSuchRecord, UserError
 from ...file.info import determine_figure_type, determine_pdf_page_count
-from ...type import Affiliation, Call, FormatType, \
-    ProposalFigureInfo, ProposalFigureType, ProposalState, \
-    ProposalText, ProposalTextRole, \
-    Queue, ResultCollection, Semester, Target, TargetCollection, \
+from ...type import Affiliation, Call, FigureType, FormatType, \
+    ProposalFigureInfo, ProposalState, ProposalText, \
+    Queue, ResultCollection, Semester, Target, TargetCollection, TextRole, \
     null_tuple
 from ...util import get_countries
 from ...view import auth
@@ -136,7 +135,7 @@ class GenericProposal(object):
                     if x.has_preview else None),
                 target_edit=None)
             for x in proposal_fig.values()
-            if x.role == ProposalTextRole.TECHNICAL_CASE]
+            if x.role == TextRole.TECHNICAL_CASE]
         sci_case_fig = [
             ProposalFigureExtra(*x, target_view=url_for(
                 ('.sci_view_figure_preview'
@@ -148,7 +147,7 @@ class GenericProposal(object):
                     if x.has_preview else None),
                 target_edit=None)
             for x in proposal_fig.values()
-            if x.role == ProposalTextRole.SCIENCE_CASE]
+            if x.role == TextRole.SCIENCE_CASE]
 
         targets = [
             x._replace(system=CoordSystem.get_name(x.system)) for x in
@@ -156,17 +155,17 @@ class GenericProposal(object):
                 proposal_id=proposal.id).to_formatted_collection().values()]
 
         return {
-            'abstract': proposal_text.get(ProposalTextRole.ABSTRACT, None),
+            'abstract': proposal_text.get(TextRole.ABSTRACT, None),
             'tech_case_text': proposal_text.get(
-                ProposalTextRole.TECHNICAL_CASE, None),
+                TextRole.TECHNICAL_CASE, None),
             'sci_case_text': proposal_text.get(
-                ProposalTextRole.SCIENCE_CASE, None),
+                TextRole.SCIENCE_CASE, None),
             'tech_case_fig': tech_case_fig,
             'sci_case_fig': sci_case_fig,
             'tech_case_pdf': proposal_pdf.get_role(
-                ProposalTextRole.TECHNICAL_CASE, None),
+                TextRole.TECHNICAL_CASE, None),
             'sci_case_pdf': proposal_pdf.get_role(
-                ProposalTextRole.SCIENCE_CASE, None),
+                TextRole.SCIENCE_CASE, None),
             'targets': targets,
         }
 
@@ -270,7 +269,7 @@ class GenericProposal(object):
     @with_proposal(permission='edit')
     def view_abstract_edit(self, db, proposal, can, form):
         return self._edit_text(
-            db, proposal, ProposalTextRole.ABSTRACT, proposal.abst_word_lim,
+            db, proposal, TextRole.ABSTRACT, proposal.abst_word_lim,
             url_for('.abstract_edit', proposal_id=proposal.id), form, 10)
 
     @with_proposal(permission='edit')
@@ -542,7 +541,7 @@ class GenericProposal(object):
         }
 
         ctx.update(self._edit_case(
-            db, proposal, ProposalTextRole.TECHNICAL_CASE,
+            db, proposal, TextRole.TECHNICAL_CASE,
             '.tech_view_figure',
             '.tech_view_figure_thumbnail', '.tech_edit_figure'))
 
@@ -557,10 +556,10 @@ class GenericProposal(object):
                                     proposal_id=proposal.id, fig_id=x.id))
             for x in db.search_proposal_figure(
                 proposal_id=proposal.id,
-                role=ProposalTextRole.TECHNICAL_CASE).values()]
+                role=TextRole.TECHNICAL_CASE).values()]
 
         return self._edit_text(
-            db, proposal, ProposalTextRole.TECHNICAL_CASE,
+            db, proposal, TextRole.TECHNICAL_CASE,
             proposal.tech_word_lim,
             url_for('.tech_edit_text', proposal_id=proposal.id), form, 30,
             figures, url_for('.tech_edit', proposal_id=proposal.id))
@@ -568,7 +567,7 @@ class GenericProposal(object):
     @with_proposal(permission='edit')
     def view_tech_new_figure(self, db, proposal, can, form, file):
         return self._edit_figure(
-            db, proposal, ProposalTextRole.TECHNICAL_CASE,
+            db, proposal, TextRole.TECHNICAL_CASE,
             proposal.capt_word_lim, None,
             url_for('.tech_new_figure', proposal_id=proposal.id),
             form, file, url_for('.tech_edit', proposal_id=proposal.id))
@@ -576,11 +575,11 @@ class GenericProposal(object):
     @with_proposal(permission='edit')
     def view_tech_edit_figure(self, db, proposal, can, fig_id, form, file):
         figure = db.search_proposal_figure(
-            proposal_id=proposal.id, role=ProposalTextRole.TECHNICAL_CASE,
+            proposal_id=proposal.id, role=TextRole.TECHNICAL_CASE,
             fig_id=fig_id, with_caption=True).get_single()
 
         return self._edit_figure(
-            db, proposal, ProposalTextRole.TECHNICAL_CASE,
+            db, proposal, TextRole.TECHNICAL_CASE,
             proposal.capt_word_lim, figure,
             url_for('.tech_edit_figure',
                     proposal_id=proposal.id, fig_id=fig_id),
@@ -588,13 +587,13 @@ class GenericProposal(object):
 
     @with_proposal(permission='view')
     def view_tech_view_figure(self, db, proposal, can, fig_id, type_=None):
-        return self._view_figure(db, proposal, ProposalTextRole.TECHNICAL_CASE,
+        return self._view_figure(db, proposal, TextRole.TECHNICAL_CASE,
                                  fig_id, type_)
 
     @with_proposal(permission='edit')
     def view_tech_edit_pdf(self, db, proposal, can, file):
         return self._edit_pdf(
-            db, proposal, ProposalTextRole.TECHNICAL_CASE,
+            db, proposal, TextRole.TECHNICAL_CASE,
             proposal.tech_page_lim,
             url_for('.tech_edit_pdf', proposal_id=proposal.id), file,
             url_for('.tech_edit', proposal_id=proposal.id))
@@ -603,7 +602,7 @@ class GenericProposal(object):
     def view_tech_view_pdf(self, db, proposal, can):
         try:
             return db.get_proposal_pdf(
-                proposal.id, ProposalTextRole.TECHNICAL_CASE)
+                proposal.id, TextRole.TECHNICAL_CASE)
         except NoSuchRecord:
             raise HTTPNotFound('Technical justification PDF not found.')
 
@@ -611,7 +610,7 @@ class GenericProposal(object):
     def view_tech_view_pdf_preview(self, db, proposal, can, page):
         try:
             return db.get_proposal_pdf_preview(
-                proposal.id, ProposalTextRole.TECHNICAL_CASE, page)
+                proposal.id, TextRole.TECHNICAL_CASE, page)
         except NoSuchRecord:
             raise HTTPNotFound('PDF preview page not found.')
 
@@ -635,7 +634,7 @@ class GenericProposal(object):
         }
 
         ctx.update(self._edit_case(
-            db, proposal, ProposalTextRole.SCIENCE_CASE,
+            db, proposal, TextRole.SCIENCE_CASE,
             '.sci_view_figure',
             '.sci_view_figure_thumbnail', '.sci_edit_figure'))
 
@@ -650,10 +649,10 @@ class GenericProposal(object):
                                     proposal_id=proposal.id, fig_id=x.id))
             for x in db.search_proposal_figure(
                 proposal_id=proposal.id,
-                role=ProposalTextRole.SCIENCE_CASE).values()]
+                role=TextRole.SCIENCE_CASE).values()]
 
         return self._edit_text(
-            db, proposal, ProposalTextRole.SCIENCE_CASE,
+            db, proposal, TextRole.SCIENCE_CASE,
             proposal.sci_word_lim,
             url_for('.sci_edit_text', proposal_id=proposal.id), form, 30,
             figures, url_for('.sci_edit', proposal_id=proposal.id))
@@ -661,7 +660,7 @@ class GenericProposal(object):
     @with_proposal(permission='edit')
     def view_sci_new_figure(self, db, proposal, can, form, file):
         return self._edit_figure(
-            db, proposal, ProposalTextRole.SCIENCE_CASE,
+            db, proposal, TextRole.SCIENCE_CASE,
             proposal.capt_word_lim, None,
             url_for('.sci_new_figure', proposal_id=proposal.id),
             form, file, url_for('.sci_edit', proposal_id=proposal.id))
@@ -669,11 +668,11 @@ class GenericProposal(object):
     @with_proposal(permission='edit')
     def view_sci_edit_figure(self, db, proposal, can, fig_id, form, file):
         figure = db.search_proposal_figure(
-            proposal_id=proposal.id, role=ProposalTextRole.SCIENCE_CASE,
+            proposal_id=proposal.id, role=TextRole.SCIENCE_CASE,
             fig_id=fig_id, with_caption=True).get_single()
 
         return self._edit_figure(
-            db, proposal, ProposalTextRole.SCIENCE_CASE,
+            db, proposal, TextRole.SCIENCE_CASE,
             proposal.capt_word_lim, figure,
             url_for('.sci_edit_figure',
                     proposal_id=proposal.id, fig_id=fig_id),
@@ -681,13 +680,13 @@ class GenericProposal(object):
 
     @with_proposal(permission='view')
     def view_sci_view_figure(self, db, proposal, can, fig_id, type_=None):
-        return self._view_figure(db, proposal, ProposalTextRole.SCIENCE_CASE,
+        return self._view_figure(db, proposal, TextRole.SCIENCE_CASE,
                                  fig_id, type_)
 
     @with_proposal(permission='edit')
     def view_sci_edit_pdf(self, db, proposal, can, file):
         return self._edit_pdf(
-            db, proposal, ProposalTextRole.SCIENCE_CASE,
+            db, proposal, TextRole.SCIENCE_CASE,
             proposal.sci_page_lim,
             url_for('.sci_edit_pdf', proposal_id=proposal.id), file,
             url_for('.sci_edit', proposal_id=proposal.id))
@@ -696,7 +695,7 @@ class GenericProposal(object):
     def view_sci_view_pdf(self, db, proposal, can):
         try:
             return db.get_proposal_pdf(
-                proposal.id, ProposalTextRole.SCIENCE_CASE)
+                proposal.id, TextRole.SCIENCE_CASE)
         except NoSuchRecord:
             raise HTTPNotFound('Scientific justification PDF not found.')
 
@@ -704,13 +703,13 @@ class GenericProposal(object):
     def view_sci_view_pdf_preview(self, db, proposal, can, page):
         try:
             return db.get_proposal_pdf_preview(
-                proposal.id, ProposalTextRole.SCIENCE_CASE, page)
+                proposal.id, TextRole.SCIENCE_CASE, page)
         except NoSuchRecord:
             raise HTTPNotFound('PDF preview page not found.')
 
     def _edit_case(self, db, proposal, role,
                    figure_route, figure_thumbnail_route, figure_edit_route):
-        name = ProposalTextRole.get_name(role)
+        name = TextRole.get_name(role)
 
         text_info = db.search_proposal_text(proposal_id=proposal.id, role=role)
 
@@ -741,7 +740,7 @@ class GenericProposal(object):
 
     def _edit_text(self, db, proposal, role, word_limit, target, form, rows,
                    figures=None, target_redir=None):
-        name = ProposalTextRole.get_name(role)
+        name = TextRole.get_name(role)
         message = None
 
         try:
@@ -787,7 +786,7 @@ class GenericProposal(object):
 
     def _edit_figure(self, db, proposal, role, word_limit, figure,
                      target, form, file, target_redir):
-        name = ProposalTextRole.get_name(role)
+        name = TextRole.get_name(role)
         max_size = int(get_config().get('upload', 'max_fig_size'))
         message = None
 
@@ -820,7 +819,7 @@ class GenericProposal(object):
                         file.close()
 
                     type_ = determine_figure_type(buff)
-                    if type_ == ProposalFigureType.PDF:
+                    if type_ == FigureType.PDF:
                         page_count = determine_pdf_page_count(buff)
                         if page_count != 1:
                             raise UserError(
@@ -875,13 +874,13 @@ class GenericProposal(object):
             'word_limit': word_limit,
             'message': message,
             'max_size': max_size,
-            'mime_types': ProposalFigureType.all_mime_types(),
+            'mime_types': FigureType.all_mime_types(),
             'target': target,
         }
 
     def _edit_pdf(self, db, proposal, role, page_limit, target, file,
                   target_redir):
-        name = ProposalTextRole.get_name(role)
+        name = TextRole.get_name(role)
         max_size = int(get_config().get('upload', 'max_pdf_size'))
         message = None
 
@@ -903,9 +902,9 @@ class GenericProposal(object):
                     file.close()
 
                 type_ = determine_figure_type(buff)
-                if type_ != ProposalFigureType.PDF:
+                if type_ != FigureType.PDF:
                     raise UserError('File was of type {0} rather than PDF.',
-                                    ProposalFigureType.get_name(type_))
+                                    FigureType.get_name(type_))
 
                 page_count = determine_pdf_page_count(buff)
                 if page_count > page_limit:
@@ -929,8 +928,7 @@ class GenericProposal(object):
             'proposal_id': proposal.id,
             'proposal_code': self.make_proposal_code(db, proposal),
             'message': message,
-            'mime_types': [ProposalFigureType.get_mime_type(
-                ProposalFigureType.PDF)],
+            'mime_types': [FigureType.get_mime_type(FigureType.PDF)],
             'max_size': max_size,
             'target': target,
         }

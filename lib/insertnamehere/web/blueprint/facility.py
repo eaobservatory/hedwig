@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from flask import Blueprint, request
 
-from ...type import ProposalFigureType
+from ...type import FigureType
 from ..util import require_admin, require_auth, send_file, templated
 
 
@@ -172,7 +172,7 @@ def create_facility_blueprint(db, facility):
 
     @bp.route(
         '/proposal/<int:proposal_id>/technical/figure/<int:fig_id>/thumbnail')
-    @send_file(ProposalFigureType.PNG)
+    @send_file(FigureType.PNG)
     @require_auth(require_person=True)
     def tech_view_figure_thumbnail(proposal_id, fig_id):
         return facility.view_tech_view_figure(db, proposal_id, fig_id,
@@ -180,7 +180,7 @@ def create_facility_blueprint(db, facility):
 
     @bp.route(
         '/proposal/<int:proposal_id>/technical/figure/<int:fig_id>/preview')
-    @send_file(ProposalFigureType.PNG)
+    @send_file(FigureType.PNG)
     @require_auth(require_person=True)
     def tech_view_figure_preview(proposal_id, fig_id):
         return facility.view_tech_view_figure(db, proposal_id, fig_id,
@@ -196,13 +196,13 @@ def create_facility_blueprint(db, facility):
             (request.files['file'] if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/technical/pdf/view')
-    @send_file(ProposalFigureType.PDF)
+    @send_file(FigureType.PDF)
     @require_auth(require_person=True)
     def tech_view_pdf(proposal_id):
         return facility.view_tech_view_pdf(db, proposal_id)
 
     @bp.route('/proposal/<int:proposal_id>/technical/pdf/preview/<int:page>')
-    @send_file(ProposalFigureType.PNG)
+    @send_file(FigureType.PNG)
     @require_auth(require_person=True)
     def tech_view_pdf_preview(proposal_id, page):
         return facility.view_tech_view_pdf_preview(db, proposal_id, page)
@@ -251,7 +251,7 @@ def create_facility_blueprint(db, facility):
 
     @bp.route(
         '/proposal/<int:proposal_id>/scientific/figure/<int:fig_id>/thumbnail')
-    @send_file(ProposalFigureType.PNG)
+    @send_file(FigureType.PNG)
     @require_auth(require_person=True)
     def sci_view_figure_thumbnail(proposal_id, fig_id):
         return facility.view_sci_view_figure(db, proposal_id, fig_id,
@@ -259,7 +259,7 @@ def create_facility_blueprint(db, facility):
 
     @bp.route(
         '/proposal/<int:proposal_id>/scientific/figure/<int:fig_id>/preview')
-    @send_file(ProposalFigureType.PNG)
+    @send_file(FigureType.PNG)
     @require_auth(require_person=True)
     def sci_view_figure_preview(proposal_id, fig_id):
         return facility.view_sci_view_figure(db, proposal_id, fig_id,
@@ -275,13 +275,13 @@ def create_facility_blueprint(db, facility):
             (request.files['file'] if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/scientific/pdf/view')
-    @send_file(ProposalFigureType.PDF)
+    @send_file(FigureType.PDF)
     @require_auth(require_person=True)
     def sci_view_pdf(proposal_id):
         return facility.view_sci_view_pdf(db, proposal_id)
 
     @bp.route('/proposal/<int:proposal_id>/scientific/pdf/preview/<int:page>')
-    @send_file(ProposalFigureType.PNG)
+    @send_file(FigureType.PNG)
     @require_auth(require_person=True)
     def sci_view_pdf_preview(proposal_id, page):
         return facility.view_sci_view_pdf_preview(db, proposal_id, page)

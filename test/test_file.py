@@ -30,7 +30,7 @@ from insertnamehere.file.image import create_thumbnail_and_preview, \
 from insertnamehere.file.info import determine_figure_type, \
     determine_pdf_page_count
 from insertnamehere.file.pdf import pdf_to_png
-from insertnamehere.type import ProposalFigureType
+from insertnamehere.type import FigureType
 
 from .dummy_config import DummyConfigTestCase
 
@@ -48,11 +48,9 @@ with closing(StringIO()) as f:
 
 class FileTest(DummyConfigTestCase):
     def test_figure_type(self):
-        self.assertEqual(determine_figure_type(example_png),
-                         ProposalFigureType.PNG)
+        self.assertEqual(determine_figure_type(example_png), FigureType.PNG)
 
-        self.assertEqual(determine_figure_type(example_pdf),
-                         ProposalFigureType.PDF)
+        self.assertEqual(determine_figure_type(example_pdf), FigureType.PDF)
 
         with self.assertRaisesRegexp(UserError, 'text/plain'):
             determine_figure_type(b'PLAIN TEXT')
@@ -64,8 +62,7 @@ class FileTest(DummyConfigTestCase):
         pages = pdf_to_png(example_pdf)
         self.assertEqual(len(pages), 1)
 
-        self.assertEqual(determine_figure_type(pages[0]),
-                         ProposalFigureType.PNG)
+        self.assertEqual(determine_figure_type(pages[0]), FigureType.PNG)
 
     def test_calculate_size(self):
         # Do not give a larger size if "only_shrink" is specified.
@@ -82,8 +79,7 @@ class FileTest(DummyConfigTestCase):
         self.assertIsNotNone(tp.thumbnail)
         self.assertIsNone(tp.preview)
 
-        self.assertEqual(determine_figure_type(tp.thumbnail),
-                         ProposalFigureType.PNG)
+        self.assertEqual(determine_figure_type(tp.thumbnail), FigureType.PNG)
 
         with closing(StringIO(tp.thumbnail)) as f:
             self.assertEqual(Image.open(f).size, (3, 6))
@@ -92,11 +88,9 @@ class FileTest(DummyConfigTestCase):
         self.assertIsNotNone(tp.thumbnail)
         self.assertIsNotNone(tp.preview)
 
-        self.assertEqual(determine_figure_type(tp.thumbnail),
-                         ProposalFigureType.PNG)
+        self.assertEqual(determine_figure_type(tp.thumbnail), FigureType.PNG)
 
-        self.assertEqual(determine_figure_type(tp.preview),
-                         ProposalFigureType.PNG)
+        self.assertEqual(determine_figure_type(tp.preview), FigureType.PNG)
 
         with closing(StringIO(tp.thumbnail)) as f:
             self.assertEqual(Image.open(f).size, (40, 80))
