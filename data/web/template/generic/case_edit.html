@@ -83,9 +83,13 @@
                             {% if figure.state is attachment_ready %}
                                 <img src="{{ figure.target_view }}" />
                             {% elif figure.state is attachment_error %}
-                                Error during processing
+                                <p class="warning">
+                                    Error during processing
+                                </p>
                             {% else %}
-                                Not yet processed
+                                <p class="not_present">
+                                    Not yet processed
+                                </p>
                             {% endif %}
                         </td>
                         <td>
