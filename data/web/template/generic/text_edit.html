@@ -21,4 +21,23 @@
     </p>
 </form>
 
+{% if figures %}
+    <table>
+        <tr>
+            {% for figure in figures %}
+                <th>
+                    Figure {{ loop.index }}
+                </th>
+            {% endfor %}
+        </tr>
+        <tr>
+            {% for figure in figures %}
+                <td>
+                    <img src="{{ figure.target_view }}" />
+                </td>
+            {% endfor %}
+        </tr>
+    </table>
+{% endif %}
+
 {% endblock %}

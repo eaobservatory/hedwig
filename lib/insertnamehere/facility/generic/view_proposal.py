@@ -541,10 +541,20 @@ class GenericProposal(object):
 
     @with_proposal(permission='edit')
     def view_tech_edit_text(self, db, proposal, can, form):
+        figures = [
+            ProposalFigureExtra(
+                *x, target_edit=None,
+                target_view=url_for('.tech_view_figure_thumbnail',
+                                    proposal_id=proposal.id, fig_id=x.id))
+            for x in db.search_proposal_figure(
+                proposal_id=proposal.id,
+                role=ProposalTextRole.TECHNICAL_CASE).values()]
+
         return self._edit_text(
             db, proposal, ProposalTextRole.TECHNICAL_CASE,
             proposal.tech_word_lim,
-            url_for('.tech_edit_text', proposal_id=proposal.id), form, 30)
+            url_for('.tech_edit_text', proposal_id=proposal.id), form, 30,
+            figures)
 
     @with_proposal(permission='edit')
     def view_tech_new_figure(self, db, proposal, can, form, file):
@@ -622,10 +632,20 @@ class GenericProposal(object):
 
     @with_proposal(permission='edit')
     def view_sci_edit_text(self, db, proposal, can, form):
+        figures = [
+            ProposalFigureExtra(
+                *x, target_edit=None,
+                target_view=url_for('.sci_view_figure_thumbnail',
+                                    proposal_id=proposal.id, fig_id=x.id))
+            for x in db.search_proposal_figure(
+                proposal_id=proposal.id,
+                role=ProposalTextRole.SCIENCE_CASE).values()]
+
         return self._edit_text(
             db, proposal, ProposalTextRole.SCIENCE_CASE,
             proposal.sci_word_lim,
-            url_for('.sci_edit_text', proposal_id=proposal.id), form, 30)
+            url_for('.sci_edit_text', proposal_id=proposal.id), form, 30,
+            figures)
 
     @with_proposal(permission='edit')
     def view_sci_new_figure(self, db, proposal, can, form, file):
@@ -705,7 +725,8 @@ class GenericProposal(object):
             'pdf': pdf_info.get_single(None),
         }
 
-    def _edit_text(self, db, proposal, role, word_limit, target, form, rows):
+    def _edit_text(self, db, proposal, role, word_limit, target, form, rows,
+                   figures=None):
         name = ProposalTextRole.get_name(role)
         message = None
 
@@ -746,6 +767,7 @@ class GenericProposal(object):
             'proposal_code': self.make_proposal_code(db, proposal),
             'word_limit': word_limit,
             'rows': rows,
+            'figures': figures,
         }
 
     def _edit_figure(self, db, proposal, role, word_limit, figure,
