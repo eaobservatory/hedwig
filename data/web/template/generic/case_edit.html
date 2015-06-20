@@ -113,13 +113,15 @@
             </table>
         {% endif %}
 
-        <nav>
-            <p>
-                {% if true %}
-                    <a href="{{ target_new_figure }}">Upload new figure</a>
-                {% endif %}
-            </p>
-        </nav>
+        {% if fig_limit > (figures | length) %}
+            <nav>
+                <p>
+                    {% if true %}
+                        <a href="{{ target_new_figure }}">Upload new figure</a>
+                    {% endif %}
+                </p>
+            </nav>
+        {% endif %}
     </section>
 {% endif %}
 
