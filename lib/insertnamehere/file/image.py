@@ -52,7 +52,7 @@ def create_thumbnail_and_preview(image, max_thumb=None, max_preview=None):
         im_thumbnail.save(f, format='PNG')
         thumbnail = f.getvalue()
 
-    new_size = _calculate_size(max_preview, orig_size)
+    new_size = _calculate_size(max_preview, orig_size, only_shrink=True)
 
     if new_size is None:
         preview = None
@@ -80,7 +80,7 @@ def _calculate_size(max_size, orig_size, only_shrink=False):
     scale = max(orig_width / max_width,
                 orig_height / max_height)
 
-    if scale <= 1:
+    if only_shrink and scale <= 1:
         return None
 
     # Scale the image and return as PNG.
