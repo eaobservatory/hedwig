@@ -3,7 +3,13 @@
         {% for fig in figures %}
             <figure>
                 {% if fig.state is attachment_ready %}
-                    <img src="{{ fig.target_view }}" alt="Figure {{ loop.index }}" />
+                    {% if fig.target_full is none %}
+                        <img src="{{ fig.target_view }}" alt="Figure {{ loop.index }}" />
+                    {% else %}
+                        <a href="{{ fig.target_full }}">
+                            <img src="{{ fig.target_view }}" alt="Figure {{ loop.index }}" />
+                        </a>
+                    {% endif %}
                 {% elif fig.state is attachment_error %}
                     <p class="warning">
                         The uploaded figure could not be processed.

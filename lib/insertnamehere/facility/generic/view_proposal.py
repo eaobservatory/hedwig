@@ -39,7 +39,7 @@ from ...view.util import count_words, organise_collection, with_proposal
 
 ProposalFigureExtra = namedtuple(
     'ProposalFigureExtra',
-    ProposalFigureInfo._fields + ('target_view', 'target_edit'))
+    ProposalFigureInfo._fields + ('target_view', 'target_edit', 'target_full'))
 
 
 class GenericProposal(object):
@@ -126,11 +126,15 @@ class GenericProposal(object):
                                                  with_has_preview=True)
 
         tech_case_fig = [
-                ProposalFigureExtra(*x, target_view=url_for(
+            ProposalFigureExtra(*x, target_view=url_for(
                 ('.tech_view_figure_preview'
                     if x.has_preview
                     else '.tech_view_figure'),
-                proposal_id=proposal.id, fig_id=x.id), target_edit=None)
+                proposal_id=proposal.id, fig_id=x.id), target_full=(
+                    url_for('.tech_view_figure',
+                            proposal_id=proposal.id, fig_id=x.id)
+                    if x.has_preview else None),
+                target_edit=None)
             for x in proposal_fig.values()
             if x.role == ProposalTextRole.TECHNICAL_CASE]
         sci_case_fig = [
@@ -138,7 +142,11 @@ class GenericProposal(object):
                 ('.sci_view_figure_preview'
                     if x.has_preview
                     else '.sci_view_figure'),
-                proposal_id=proposal.id, fig_id=x.id), target_edit=None)
+                proposal_id=proposal.id, fig_id=x.id), target_full=(
+                    url_for('.sci_view_figure',
+                            proposal_id=proposal.id, fig_id=x.id)
+                    if x.has_preview else None),
+                target_edit=None)
             for x in proposal_fig.values()
             if x.role == ProposalTextRole.SCIENCE_CASE]
 
@@ -543,7 +551,7 @@ class GenericProposal(object):
     def view_tech_edit_text(self, db, proposal, can, form):
         figures = [
             ProposalFigureExtra(
-                *x, target_edit=None,
+                *x, target_edit=None, target_full=None,
                 target_view=url_for('.tech_view_figure_thumbnail',
                                     proposal_id=proposal.id, fig_id=x.id))
             for x in db.search_proposal_figure(
@@ -635,7 +643,7 @@ class GenericProposal(object):
     def view_sci_edit_text(self, db, proposal, can, form):
         figures = [
             ProposalFigureExtra(
-                *x, target_edit=None,
+                *x, target_edit=None, target_full=None,
                 target_view=url_for('.sci_view_figure_thumbnail',
                                     proposal_id=proposal.id, fig_id=x.id))
             for x in db.search_proposal_figure(
@@ -718,7 +726,7 @@ class GenericProposal(object):
             'text': text_info.get_single(None),
             'figures': [
                 ProposalFigureExtra(
-                    *x,
+                    *x, target_full=None,
                     target_view=url_for(figure_thumbnail_route,
                                         proposal_id=proposal.id, fig_id=x.id),
                     target_edit=url_for(figure_edit_route,

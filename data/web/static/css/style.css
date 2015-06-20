@@ -147,6 +147,10 @@ figure {
     text-align: center;
 }
 
+figure a img {
+    cursor: zoom-in;
+}
+
 figcaption div.fignum {
     display: inline-block;
     vertical-align: top;
