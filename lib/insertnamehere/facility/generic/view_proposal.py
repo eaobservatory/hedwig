@@ -521,7 +521,7 @@ class GenericProposal(object):
         ctx = {
             'note': call.tech_note,
             'word_limit': proposal.tech_word_lim,
-            'fig_limit': 0,
+            'fig_limit': proposal.tech_fig_lim,
             'page_limit': proposal.tech_page_lim,
             'target_text':
                 url_for('.tech_edit_text', proposal_id=proposal.id),
@@ -549,7 +549,8 @@ class GenericProposal(object):
     @with_proposal(permission='edit')
     def view_tech_new_figure(self, db, proposal, can, form, file):
         return self._edit_figure(
-            db, proposal, ProposalTextRole.TECHNICAL_CASE, None,
+            db, proposal, ProposalTextRole.TECHNICAL_CASE,
+            proposal.capt_word_lim, None,
             url_for('.tech_new_figure', proposal_id=proposal.id),
             form, file)
 
@@ -560,7 +561,8 @@ class GenericProposal(object):
             fig_id=fig_id, with_caption=True).get_single()
 
         return self._edit_figure(
-            db, proposal, ProposalTextRole.TECHNICAL_CASE, figure,
+            db, proposal, ProposalTextRole.TECHNICAL_CASE,
+            proposal.capt_word_lim, figure,
             url_for('.tech_edit_figure',
                     proposal_id=proposal.id, fig_id=fig_id),
             form, file)
@@ -628,7 +630,8 @@ class GenericProposal(object):
     @with_proposal(permission='edit')
     def view_sci_new_figure(self, db, proposal, can, form, file):
         return self._edit_figure(
-            db, proposal, ProposalTextRole.SCIENCE_CASE, None,
+            db, proposal, ProposalTextRole.SCIENCE_CASE,
+            proposal.capt_word_lim, None,
             url_for('.sci_new_figure', proposal_id=proposal.id),
             form, file)
 
@@ -639,7 +642,8 @@ class GenericProposal(object):
             fig_id=fig_id, with_caption=True).get_single()
 
         return self._edit_figure(
-            db, proposal, ProposalTextRole.SCIENCE_CASE, figure,
+            db, proposal, ProposalTextRole.SCIENCE_CASE,
+            proposal.capt_word_lim, figure,
             url_for('.sci_edit_figure',
                     proposal_id=proposal.id, fig_id=fig_id),
             form, file)
@@ -744,10 +748,10 @@ class GenericProposal(object):
             'rows': rows,
         }
 
-    def _edit_figure(self, db, proposal, role, figure, target, form, file):
+    def _edit_figure(self, db, proposal, role, word_limit, figure,
+                     target, form, file):
         name = ProposalTextRole.get_name(role)
         max_size = int(get_config().get('upload', 'max_fig_size'))
-        word_limit = 100
         message = None
 
         if figure is None:
@@ -827,7 +831,8 @@ class GenericProposal(object):
                 message = e.message
 
         return {
-            'title': 'New {} Figure'.format(name.title()),
+            'title': '{} {} Figure'.format(
+                ('New' if figure.id is None else 'Edit'), name.title()),
             'proposal_id': proposal.id,
             'proposal_code': self.make_proposal_code(db, proposal),
             'figure': figure,

@@ -59,8 +59,10 @@ class ProposalPart(object):
 
     def add_call(self, semester_id, queue_id,
                  date_open, date_close,
-                 abst_word_lim, tech_word_lim, tech_page_lim,
+                 abst_word_lim,
+                 tech_word_lim, tech_fig_lim, tech_page_lim,
                  sci_word_lim, sci_fig_lim, sci_page_lim,
+                 capt_word_lim, expl_word_lim,
                  tech_note, sci_note,
                  _test_skip_check=False):
         """
@@ -94,10 +96,13 @@ class ProposalPart(object):
                 call.c.date_close: date_close,
                 call.c.abst_word_lim: abst_word_lim,
                 call.c.tech_word_lim: tech_word_lim,
+                call.c.tech_fig_lim: tech_fig_lim,
                 call.c.tech_page_lim: tech_page_lim,
                 call.c.sci_word_lim: sci_word_lim,
                 call.c.sci_fig_lim: sci_fig_lim,
                 call.c.sci_page_lim: sci_page_lim,
+                call.c.capt_word_lim: capt_word_lim,
+                call.c.expl_word_lim: expl_word_lim,
                 call.c.tech_note: tech_note,
                 call.c.sci_note: sci_note,
             }))
@@ -788,10 +793,13 @@ class ProposalPart(object):
             semester.c.facility_id,
             call.c.abst_word_lim,
             call.c.tech_word_lim,
+            call.c.tech_fig_lim,
             call.c.tech_page_lim,
             call.c.sci_word_lim,
             call.c.sci_fig_lim,
             call.c.sci_page_lim,
+            call.c.capt_word_lim,
+            call.c.expl_word_lim,
         ]
 
         select_from = proposal.join(call).join(semester).join(queue)
@@ -1275,8 +1283,10 @@ class ProposalPart(object):
                 records)
 
     def update_call(self, call_id, date_open=None, date_close=None,
-                    abst_word_lim=None, tech_word_lim=None, tech_page_lim=None,
+                    abst_word_lim=None,
+                    tech_word_lim=None, tech_fig_lim=None, tech_page_lim=None,
                     sci_word_lim=None, sci_fig_lim=None, sci_page_lim=None,
+                    capt_word_lim=None, expl_word_lim=None,
                     tech_note=None, sci_note=None,
                     _test_skip_check=False):
         """
@@ -1297,6 +1307,8 @@ class ProposalPart(object):
             values['abst_word_lim'] = abst_word_lim
         if tech_word_lim is not None:
             values['tech_word_lim'] = tech_word_lim
+        if tech_fig_lim is not None:
+            values['tech_fig_lim'] = tech_fig_lim
         if tech_page_lim is not None:
             values['tech_page_lim'] = tech_page_lim
         if sci_word_lim is not None:
@@ -1305,6 +1317,10 @@ class ProposalPart(object):
             values['sci_fig_lim'] = sci_fig_lim
         if sci_page_lim is not None:
             values['sci_page_lim'] = sci_page_lim
+        if capt_word_lim is not None:
+            values['capt_word_lim'] = capt_word_lim
+        if expl_word_lim is not None:
+            values['expl_word_lim'] = expl_word_lim
         if tech_note is not None:
             values['tech_note'] = tech_note
         if sci_note is not None:

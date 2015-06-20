@@ -234,8 +234,10 @@ class GenericAdmin(object):
                         date_open=None, date_close=None,
                         facility_id=None, semester_name='',
                         queue_name='', queue_description=None,
-                        abst_word_lim=200, tech_word_lim=1000, tech_page_lim=1,
+                        abst_word_lim=200,
+                        tech_word_lim=1000, tech_fig_lim=0, tech_page_lim=1,
                         sci_word_lim=2000, sci_fig_lim=4, sci_page_lim=3,
+                        capt_word_lim=200, expl_word_lim=200,
                         tech_note='', sci_note='')
             semesters = db.search_semester(facility_id=self.id_)
             queues = db.search_queue(facility_id=self.id_)
@@ -263,10 +265,13 @@ class GenericAdmin(object):
                     date_close=parse_datetime('close', form),
                     abst_word_lim=int(form['abst_word_lim']),
                     tech_word_lim=int(form['tech_word_lim']),
+                    tech_fig_lim=int(form['tech_fig_lim']),
                     tech_page_lim=int(form['tech_page_lim']),
                     sci_word_lim=int(form['sci_word_lim']),
                     sci_fig_lim=int(form['sci_fig_lim']),
                     sci_page_lim=int(form['sci_page_lim']),
+                    capt_word_lim=int(form['capt_word_lim']),
+                    expl_word_lim=int(form['expl_word_lim']),
                     tech_note=form['tech_note'],
                     sci_note=form['sci_note'])
 
@@ -282,10 +287,13 @@ class GenericAdmin(object):
                                               date_close=call.date_close,
                                               abst_word_lim=call.abst_word_lim,
                                               tech_word_lim=call.tech_word_lim,
+                                              tech_fig_lim=call.tech_fig_lim,
                                               tech_page_lim=call.tech_page_lim,
                                               sci_word_lim=call.sci_word_lim,
                                               sci_fig_lim=call.sci_fig_lim,
                                               sci_page_lim=call.sci_page_lim,
+                                              capt_word_lim=call.capt_word_lim,
+                                              expl_word_lim=call.expl_word_lim,
                                               tech_note=call.tech_note,
                                               sci_note=call.sci_note)
                     flash('The new call has been added.')
@@ -298,10 +306,13 @@ class GenericAdmin(object):
                                    date_close=call.date_close,
                                    abst_word_lim=call.abst_word_lim,
                                    tech_word_lim=call.tech_word_lim,
+                                   tech_fig_lim=call.tech_fig_lim,
                                    tech_page_lim=call.tech_page_lim,
                                    sci_word_lim=call.sci_word_lim,
                                    sci_fig_lim=call.sci_fig_lim,
                                    sci_page_lim=call.sci_page_lim,
+                                   capt_word_lim=call.capt_word_lim,
+                                   expl_word_lim=call.expl_word_lim,
                                    tech_note=call.tech_note,
                                    sci_note=call.sci_note)
                     flash('The call has been updated.')

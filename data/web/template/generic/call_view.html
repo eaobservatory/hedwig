@@ -25,11 +25,14 @@
         <td>{{ call.abst_word_lim }} word{% if call.abst_word_lim != 1 %}s{% endif %}</td>
     </tr>
     <tr>
-        <th rowspan="3">Technical Justification</th>
+        <th rowspan="4">Technical Justification</th>
         <td>{{ call.tech_note | format_text }}</td>
     </tr>
     <tr>
         <td>{{ call.tech_word_lim }} word{% if call.tech_word_lim != 1 %}s{% endif %}</td>
+    </tr>
+    <tr>
+        <td>{{ call.tech_fig_lim }} figure{% if call.tech_fig_lim != 1 %}s{% endif %}</td>
     </tr>
     <tr>
         <td>{{ call.tech_page_lim }} page{% if call.tech_page_lim != 1 %}s{% endif %}</td>
@@ -46,6 +49,14 @@
     </tr>
     <tr>
         <td>{{ call.sci_page_lim }} page{% if call.sci_page_lim != 1 %}s{% endif %}</td>
+    </tr>
+    <tr>
+        <th>Captions</th>
+        <td>{{ call.capt_word_lim }} word{% if call.capt_word_lim != 1 %}s{% endif %}</td>
+    </tr>
+    <tr>
+        <th>Explanations</th>
+        <td>{{ call.expl_word_lim }} word{% if call.expl_word_lim != 1 %}s{% endif %}</td>
     </tr>
 </table>
 

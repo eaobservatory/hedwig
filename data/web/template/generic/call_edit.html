@@ -57,6 +57,11 @@
             <span class="explanation">when edited online</span>
         </li>
         <li>
+            <label for="tech_fig_lim">Technical figure limit</label>
+            <input type="number" name="tech_fig_lim" value="{{ call.tech_fig_lim }}" min="0" step="1" size="5" />
+            <span class="explanation">when edited online</span>
+        </li>
+        <li>
             <label for="tech_page_lim">Technical page limit</label>
             <input type="number" name="tech_page_lim" value="{{ call.tech_page_lim }}" min="0" step="1" size="5" />
             <span class="explanation">for PDF uploads</span>
@@ -79,6 +84,14 @@
             <label for="sci_page_lim">Science page limit</label>
             <input type="number" name="sci_page_lim" value="{{ call.sci_page_lim }}" min="0" step="1" size="5" />
             <span class="explanation">for PDF uploads</span>
+        </li>
+        <li>
+            <label for="capt_word_lim">Caption word limit</label>
+            <input type="number" name="capt_word_lim" value="{{ call.capt_word_lim }}" min="0" step="25" size="5" />
+        </li>
+        <li>
+            <label for="expl_word_lim">Explanation word limit</label>
+            <input type="number" name="expl_word_lim" value="{{ call.expl_word_lim }}" min="0" step="25" size="5" />
         </li>
         <li>
             <input type="submit" value="Save" name="submit" />
