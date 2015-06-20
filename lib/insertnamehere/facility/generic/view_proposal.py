@@ -522,276 +522,90 @@ class GenericProposal(object):
         raise ErrorPage('Observing request not implemented for this facility.')
 
     @with_proposal(permission='edit')
-    def view_tech_edit(self, db, proposal, can):
+    def view_case_edit(self, db, proposal, can, role):
+        code = TextRole.short_name(role)
         call = db.get_call(facility_id=None, call_id=proposal.call_id)
-
-        ctx = {
-            'note': call.tech_note,
-            'word_limit': proposal.tech_word_lim,
-            'fig_limit': proposal.tech_fig_lim,
-            'page_limit': proposal.tech_page_lim,
-            'target_text':
-                url_for('.tech_edit_text', proposal_id=proposal.id),
-            'target_new_figure':
-                url_for('.tech_new_figure', proposal_id=proposal.id),
-            'target_pdf':
-                url_for('.tech_edit_pdf', proposal_id=proposal.id),
-            'target_pdf_view':
-                url_for('.tech_view_pdf', proposal_id=proposal.id),
-        }
-
-        ctx.update(self._edit_case(
-            db, proposal, TextRole.TECHNICAL_CASE,
-            '.tech_view_figure',
-            '.tech_view_figure_thumbnail', '.tech_edit_figure'))
-
-        return ctx
-
-    @with_proposal(permission='edit')
-    def view_tech_edit_text(self, db, proposal, can, form):
-        figures = [
-            ProposalFigureExtra(
-                *x, target_edit=None, target_full=None,
-                target_view=url_for('.tech_view_figure_thumbnail',
-                                    proposal_id=proposal.id, fig_id=x.id))
-            for x in db.search_proposal_figure(
-                proposal_id=proposal.id,
-                role=TextRole.TECHNICAL_CASE).values()]
-
-        return self._edit_text(
-            db, proposal, TextRole.TECHNICAL_CASE,
-            proposal.tech_word_lim,
-            url_for('.tech_edit_text', proposal_id=proposal.id), form, 30,
-            figures, url_for('.tech_edit', proposal_id=proposal.id))
-
-    @with_proposal(permission='edit')
-    def view_tech_new_figure(self, db, proposal, can, form, file):
-        return self._edit_figure(
-            db, proposal, TextRole.TECHNICAL_CASE,
-            proposal.capt_word_lim, None,
-            url_for('.tech_new_figure', proposal_id=proposal.id),
-            form, file, url_for('.tech_edit', proposal_id=proposal.id))
-
-    @with_proposal(permission='edit')
-    def view_tech_edit_figure(self, db, proposal, can, fig_id, form, file):
-        figure = db.search_proposal_figure(
-            proposal_id=proposal.id, role=TextRole.TECHNICAL_CASE,
-            fig_id=fig_id, with_caption=True).get_single()
-
-        return self._edit_figure(
-            db, proposal, TextRole.TECHNICAL_CASE,
-            proposal.capt_word_lim, figure,
-            url_for('.tech_edit_figure',
-                    proposal_id=proposal.id, fig_id=fig_id),
-            form, file, url_for('.tech_edit', proposal_id=proposal.id))
-
-    @with_proposal(permission='view')
-    def view_tech_view_figure(self, db, proposal, can, fig_id, type_=None):
-        return self._view_figure(db, proposal, TextRole.TECHNICAL_CASE,
-                                 fig_id, type_)
-
-    @with_proposal(permission='edit')
-    def view_tech_edit_pdf(self, db, proposal, can, file):
-        return self._edit_pdf(
-            db, proposal, TextRole.TECHNICAL_CASE,
-            proposal.tech_page_lim,
-            url_for('.tech_edit_pdf', proposal_id=proposal.id), file,
-            url_for('.tech_edit', proposal_id=proposal.id))
-
-    @with_proposal(permission='view')
-    def view_tech_view_pdf(self, db, proposal, can):
-        try:
-            return db.get_proposal_pdf(
-                proposal.id, TextRole.TECHNICAL_CASE)
-        except NoSuchRecord:
-            raise HTTPNotFound('Technical justification PDF not found.')
-
-    @with_proposal(permission='view')
-    def view_tech_view_pdf_preview(self, db, proposal, can, page):
-        try:
-            return db.get_proposal_pdf_preview(
-                proposal.id, TextRole.TECHNICAL_CASE, page)
-        except NoSuchRecord:
-            raise HTTPNotFound('PDF preview page not found.')
-
-    @with_proposal(permission='edit')
-    def view_sci_edit(self, db, proposal, can):
-        call = db.get_call(facility_id=None, call_id=proposal.call_id)
-
-        ctx = {
-            'note': call.sci_note,
-            'word_limit': proposal.sci_word_lim,
-            'fig_limit': proposal.sci_fig_lim,
-            'page_limit': proposal.sci_page_lim,
-            'target_text':
-                url_for('.sci_edit_text', proposal_id=proposal.id),
-            'target_new_figure':
-                url_for('.sci_new_figure', proposal_id=proposal.id),
-            'target_pdf':
-                url_for('.sci_edit_pdf', proposal_id=proposal.id),
-            'target_pdf_view':
-                url_for('.sci_view_pdf', proposal_id=proposal.id),
-        }
-
-        ctx.update(self._edit_case(
-            db, proposal, TextRole.SCIENCE_CASE,
-            '.sci_view_figure',
-            '.sci_view_figure_thumbnail', '.sci_edit_figure'))
-
-        return ctx
-
-    @with_proposal(permission='edit')
-    def view_sci_edit_text(self, db, proposal, can, form):
-        figures = [
-            ProposalFigureExtra(
-                *x, target_edit=None, target_full=None,
-                target_view=url_for('.sci_view_figure_thumbnail',
-                                    proposal_id=proposal.id, fig_id=x.id))
-            for x in db.search_proposal_figure(
-                proposal_id=proposal.id,
-                role=TextRole.SCIENCE_CASE).values()]
-
-        return self._edit_text(
-            db, proposal, TextRole.SCIENCE_CASE,
-            proposal.sci_word_lim,
-            url_for('.sci_edit_text', proposal_id=proposal.id), form, 30,
-            figures, url_for('.sci_edit', proposal_id=proposal.id))
-
-    @with_proposal(permission='edit')
-    def view_sci_new_figure(self, db, proposal, can, form, file):
-        return self._edit_figure(
-            db, proposal, TextRole.SCIENCE_CASE,
-            proposal.capt_word_lim, None,
-            url_for('.sci_new_figure', proposal_id=proposal.id),
-            form, file, url_for('.sci_edit', proposal_id=proposal.id))
-
-    @with_proposal(permission='edit')
-    def view_sci_edit_figure(self, db, proposal, can, fig_id, form, file):
-        figure = db.search_proposal_figure(
-            proposal_id=proposal.id, role=TextRole.SCIENCE_CASE,
-            fig_id=fig_id, with_caption=True).get_single()
-
-        return self._edit_figure(
-            db, proposal, TextRole.SCIENCE_CASE,
-            proposal.capt_word_lim, figure,
-            url_for('.sci_edit_figure',
-                    proposal_id=proposal.id, fig_id=fig_id),
-            form, file, url_for('.sci_edit', proposal_id=proposal.id))
-
-    @with_proposal(permission='view')
-    def view_sci_view_figure(self, db, proposal, can, fig_id, type_=None):
-        return self._view_figure(db, proposal, TextRole.SCIENCE_CASE,
-                                 fig_id, type_)
-
-    @with_proposal(permission='edit')
-    def view_sci_edit_pdf(self, db, proposal, can, file):
-        return self._edit_pdf(
-            db, proposal, TextRole.SCIENCE_CASE,
-            proposal.sci_page_lim,
-            url_for('.sci_edit_pdf', proposal_id=proposal.id), file,
-            url_for('.sci_edit', proposal_id=proposal.id))
-
-    @with_proposal(permission='view')
-    def view_sci_view_pdf(self, db, proposal, can):
-        try:
-            return db.get_proposal_pdf(
-                proposal.id, TextRole.SCIENCE_CASE)
-        except NoSuchRecord:
-            raise HTTPNotFound('Scientific justification PDF not found.')
-
-    @with_proposal(permission='view')
-    def view_sci_view_pdf_preview(self, db, proposal, can, page):
-        try:
-            return db.get_proposal_pdf_preview(
-                proposal.id, TextRole.SCIENCE_CASE, page)
-        except NoSuchRecord:
-            raise HTTPNotFound('PDF preview page not found.')
-
-    def _edit_case(self, db, proposal, role,
-                   figure_route, figure_thumbnail_route, figure_edit_route):
-        name = TextRole.get_name(role)
 
         text_info = db.search_proposal_text(proposal_id=proposal.id, role=role)
-
-        fig_info = db.search_proposal_figure(
-            proposal_id=proposal.id, role=role,
-            with_caption=True, with_uploader_name=True)
 
         pdf_info = db.search_proposal_pdf(proposal_id=proposal.id, role=role,
                                           with_uploader_name=True)
 
+        figures = [
+            ProposalFigureExtra(
+                *x,
+                target_full=url_for('.{}_view_figure'.format(code),
+                                    proposal_id=proposal.id, fig_id=x.id),
+                target_view=url_for('.{}_view_figure_thumbnail'.format(code),
+                                    proposal_id=proposal.id, fig_id=x.id),
+                target_edit=url_for('.{}_edit_figure'.format(code),
+                                    proposal_id=proposal.id, fig_id=x.id))
+            for x in db.search_proposal_figure(
+                proposal_id=proposal.id, role=role,
+                with_caption=True, with_uploader_name=True).values()]
+
         return {
-            'title': 'Edit {}'.format(name.title()),
+            'title': 'Edit {}'.format(TextRole.get_name(role).title()),
             'proposal_id': proposal.id,
             'proposal_code': self.make_proposal_code(db, proposal),
+            'note': getattr(call, code + '_note'),
+            'word_limit': getattr(proposal, code + '_word_lim'),
+            'fig_limit': getattr(proposal, code + '_fig_lim'),
+            'page_limit': getattr(proposal, code + '_page_lim'),
+            'target_text': url_for(
+                '.{}_edit_text'.format(code), proposal_id=proposal.id),
+            'target_new_figure': url_for(
+                '.{}_new_figure'.format(code), proposal_id=proposal.id),
+            'target_pdf': url_for(
+                '.{}_edit_pdf'.format(code), proposal_id=proposal.id),
+            'target_pdf_view': url_for(
+                '.{}_view_pdf'.format(code), proposal_id=proposal.id),
             'text': text_info.get_single(None),
-            'figures': [
-                ProposalFigureExtra(
-                    *x,
-                    target_full=url_for(figure_route,
-                                        proposal_id=proposal.id, fig_id=x.id),
-                    target_view=url_for(figure_thumbnail_route,
-                                        proposal_id=proposal.id, fig_id=x.id),
-                    target_edit=url_for(figure_edit_route,
-                                        proposal_id=proposal.id, fig_id=x.id))
-                for x in fig_info.values()],
+            'figures': figures,
             'pdf': pdf_info.get_single(None),
         }
 
-    def _edit_text(self, db, proposal, role, word_limit, target, form, rows,
-                   figures=None, target_redir=None):
-        name = TextRole.get_name(role)
-        message = None
+    @with_proposal(permission='edit')
+    def view_case_edit_text(self, db, proposal, can, role, form):
+        code = TextRole.short_name(role)
 
-        try:
-            text = db.get_proposal_text(proposal.id, role)
-            is_update = True
-        except NoSuchRecord:
-            text = ProposalText('', FormatType.PLAIN)
-            is_update = False
+        figures = [
+            ProposalFigureExtra(
+                *x, target_edit=None, target_full=None,
+                target_view=url_for('.{}_view_figure_thumbnail'.format(code),
+                                    proposal_id=proposal.id, fig_id=x.id))
+            for x in db.search_proposal_figure(
+                proposal_id=proposal.id, role=role).values()]
 
-        if form is not None:
-            text = text._replace(text=form['text'],
-                                 format=int(form['format']))
+        return self._edit_text(
+            db, proposal, role,
+            getattr(proposal, code + '_word_lim'),
+            url_for('.{}_edit_text'.format(code), proposal_id=proposal.id),
+            form, 30, figures,
+            url_for('.{}_edit'.format(code), proposal_id=proposal.id))
 
-            try:
-                word_count = count_words(text)
-                if word_count > word_limit:
-                    raise UserError(
-                        '{0} is too long: {1} / {2} words',
-                        name.capitalize(), word_count, word_limit)
-
-                db.set_proposal_text(proposal.id, role,
-                                     text.text, text.format, word_count,
-                                     session['person']['id'], is_update)
-                flash('The {0} has been saved.', name.lower())
-                raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id)
-                                   if target_redir is None else target_redir)
-
-            except UserError as e:
-                message = e.message
-
-        return {
-            'title': 'Edit {0} Text'.format(name.title()),
-            'message': message,
-            'proposal_id': proposal.id,
-            'text': text,
-            'target': target,
-            'proposal_code': self.make_proposal_code(db, proposal),
-            'word_limit': word_limit,
-            'rows': rows,
-            'figures': figures,
-        }
-
-    def _edit_figure(self, db, proposal, role, word_limit, figure,
-                     target, form, file, target_redir):
+    @with_proposal(permission='edit')
+    def view_case_edit_figure(self, db, proposal, can, fig_id, role,
+                              form, file):
+        code = TextRole.short_name(role)
         name = TextRole.get_name(role)
         max_size = int(get_config().get('upload', 'max_fig_size'))
+        word_limit = proposal.capt_word_lim
         message = None
 
-        if figure is None:
+        if fig_id is None:
             figure = null_tuple(ProposalFigureInfo)._replace(caption='')
+
+            target = url_for('.{}_new_figure'.format(code),
+                             proposal_id=proposal.id)
+
+        else:
+            figure = db.search_proposal_figure(
+                proposal_id=proposal.id, role=role,
+                fig_id=fig_id, with_caption=True).get_single()
+
+            target = url_for('.{}_edit_figure'.format(code),
+                             proposal_id=proposal.id, fig_id=fig_id)
 
         if form is not None:
             try:
@@ -860,7 +674,8 @@ class GenericProposal(object):
 
                     flash('The figure caption has been updated.')
 
-                raise HTTPRedirect(target_redir)
+                raise HTTPRedirect(url_for(
+                    '.{}_edit'.format(code), proposal_id=proposal.id))
 
             except UserError as e:
                 message = e.message
@@ -878,9 +693,38 @@ class GenericProposal(object):
             'target': target,
         }
 
-    def _edit_pdf(self, db, proposal, role, page_limit, target, file,
-                  target_redir):
+    @with_proposal(permission='view')
+    def view_case_view_figure(self, db, proposal, can, fig_id, role,
+                              type_=None):
+        if type_ is None:
+            try:
+                return db.get_proposal_figure(
+                    proposal.id, role, fig_id)
+            except NoSuchRecord:
+                raise HTTPNotFound('Figure not found.')
+
+        elif type_ == 'thumbnail':
+            try:
+                return db.get_proposal_figure_thumbnail(
+                    proposal.id, role, fig_id)
+            except NoSuchRecord:
+                raise HTTPNotFound('Figure thumbnail not found.')
+
+        elif type_ == 'preview':
+            try:
+                return db.get_proposal_figure_preview(
+                    proposal.id, role, fig_id)
+            except NoSuchRecord:
+                raise HTTPNotFound('Figure preview not found.')
+
+        else:
+            raise HTTPError('Unknown figure view type.')
+
+    @with_proposal(permission='edit')
+    def view_case_edit_pdf(self, db, proposal, can, role, file):
+        code = TextRole.short_name(role)
         name = TextRole.get_name(role)
+        page_limit = getattr(proposal, code + '_page_lim'),
         max_size = int(get_config().get('upload', 'max_pdf_size'))
         message = None
 
@@ -918,7 +762,8 @@ class GenericProposal(object):
 
                 flash('The {0} has been uploaded.', name.lower())
 
-                raise HTTPRedirect(target_redir)
+                raise HTTPRedirect(url_for(
+                    '.{}_edit'.format(code), proposal_id=proposal.id))
 
             except UserError as e:
                 message = e.message
@@ -930,30 +775,67 @@ class GenericProposal(object):
             'message': message,
             'mime_types': [FigureType.get_mime_type(FigureType.PDF)],
             'max_size': max_size,
-            'target': target,
+            'target': url_for('.{}_edit_pdf'.format(code),
+                              proposal_id=proposal.id),
         }
 
-    def _view_figure(self, db, proposal, role, fig_id, type_):
-        if type_ is None:
-            try:
-                return db.get_proposal_figure(
-                    proposal.id, role, fig_id)
-            except NoSuchRecord:
-                raise HTTPNotFound('Figure not found.')
+    @with_proposal(permission='view')
+    def view_case_view_pdf(self, db, proposal, can, role):
+        try:
+            return db.get_proposal_pdf(proposal.id, role)
+        except NoSuchRecord:
+            raise HTTPNotFound('{} PDF not found.'.format(
+                TextRole.get_name(role).capitalize()))
 
-        elif type_ == 'thumbnail':
-            try:
-                return db.get_proposal_figure_thumbnail(
-                    proposal.id, role, fig_id)
-            except NoSuchRecord:
-                raise HTTPNotFound('Figure thumbnail not found.')
+    @with_proposal(permission='view')
+    def view_case_view_pdf_preview(self, db, proposal, can, page, role):
+        try:
+            return db.get_proposal_pdf_preview(proposal.id, role, page)
+        except NoSuchRecord:
+            raise HTTPNotFound('PDF preview page not found.')
 
-        elif type_ == 'preview':
-            try:
-                return db.get_proposal_figure_preview(
-                    proposal.id, role, fig_id)
-            except NoSuchRecord:
-                raise HTTPNotFound('Figure preview not found.')
+    def _edit_text(self, db, proposal, role, word_limit, target, form, rows,
+                   figures=None, target_redir=None):
+        name = TextRole.get_name(role)
+        message = None
 
-        else:
-            raise HTTPError('Unknown figure view type.')
+        try:
+            text = db.get_proposal_text(proposal.id, role)
+            is_update = True
+        except NoSuchRecord:
+            text = ProposalText('', FormatType.PLAIN)
+            is_update = False
+
+        if form is not None:
+            text = text._replace(text=form['text'],
+                                 format=int(form['format']))
+
+            try:
+                word_count = count_words(text)
+                if word_count > word_limit:
+                    raise UserError(
+                        '{0} is too long: {1} / {2} words',
+                        name.capitalize(), word_count, word_limit)
+
+                db.set_proposal_text(proposal.id, role,
+                                     text.text, text.format, word_count,
+                                     session['person']['id'], is_update)
+                flash('The {0} has been saved.', name.lower())
+                raise HTTPRedirect(url_for('.proposal_view',
+                                           proposal_id=proposal.id)
+                                   if target_redir is None else target_redir)
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Edit {0} Text'.format(name.title()),
+            'message': message,
+            'proposal_id': proposal.id,
+            'text': text,
+            'target': target,
+            'proposal_code': self.make_proposal_code(db, proposal),
+            'word_limit': word_limit,
+            'rows': rows,
+            'figures': figures,
+        }

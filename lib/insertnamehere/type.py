@@ -279,10 +279,12 @@ class TextRole(object):
     TECHNICAL_CASE = 2
     SCIENCE_CASE = 3
 
+    RoleInfo = namedtuple('RoleInfo', ('name', 'shortname'))
+
     _info = {
-        ABSTRACT: 'Abstract',
-        TECHNICAL_CASE: 'Technical Justification',
-        SCIENCE_CASE: 'Scientific Justification',
+        ABSTRACT:       RoleInfo('Abstract', 'abst'),
+        TECHNICAL_CASE: RoleInfo('Technical Justification', 'tech'),
+        SCIENCE_CASE:   RoleInfo('Scientific Justification', 'sci'),
     }
 
     @classmethod
@@ -291,7 +293,11 @@ class TextRole(object):
 
     @classmethod
     def get_name(cls, role):
-        return cls._info[role]
+        return cls._info[role].name
+
+    @classmethod
+    def short_name(cls, role):
+        return cls._info[role].shortname
 
 
 class ResultCollection(OrderedDict):

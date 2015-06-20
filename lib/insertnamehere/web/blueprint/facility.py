@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from flask import Blueprint, request
 
-from ...type import FigureType
+from ...type import FigureType, TextRole
 from ..util import require_admin, require_auth, send_file, templated
 
 
@@ -132,15 +132,16 @@ def create_facility_blueprint(db, facility):
     @facility_template('case_edit.html')
     @require_auth(require_person=True)
     def tech_edit(proposal_id):
-        return facility.view_tech_edit(db, proposal_id)
+        return facility.view_case_edit(
+            db, proposal_id, TextRole.TECHNICAL_CASE)
 
     @bp.route('/proposal/<int:proposal_id>/technical/text',
               methods=['GET', 'POST'])
     @facility_template('text_edit.html')
     @require_auth(require_person=True)
     def tech_edit_text(proposal_id):
-        return facility.view_tech_edit_text(
-            db, proposal_id,
+        return facility.view_case_edit_text(
+            db, proposal_id, TextRole.TECHNICAL_CASE,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/technical/figure/new',
@@ -148,8 +149,8 @@ def create_facility_blueprint(db, facility):
     @facility_template('figure_edit.html')
     @require_auth(require_person=True)
     def tech_new_figure(proposal_id):
-        return facility.view_tech_new_figure(
-            db, proposal_id,
+        return facility.view_case_edit_figure(
+            db, proposal_id, None, TextRole.TECHNICAL_CASE,
             (request.form if request.method == 'POST' else None),
             (request.files['file'] if request.method == 'POST' else None))
 
@@ -159,8 +160,8 @@ def create_facility_blueprint(db, facility):
     @facility_template('figure_edit.html')
     @require_auth(require_person=True)
     def tech_edit_figure(proposal_id, fig_id):
-        return facility.view_tech_edit_figure(
-            db, proposal_id, fig_id,
+        return facility.view_case_edit_figure(
+            db, proposal_id, fig_id, TextRole.TECHNICAL_CASE,
             (request.form if request.method == 'POST' else None),
             (request.files['file'] if request.method == 'POST' else None))
 
@@ -168,58 +169,61 @@ def create_facility_blueprint(db, facility):
     @send_file()
     @require_auth(require_person=True)
     def tech_view_figure(proposal_id, fig_id):
-        return facility.view_tech_view_figure(db, proposal_id, fig_id)
+        return facility.view_case_view_figure(
+            db, proposal_id, fig_id, TextRole.TECHNICAL_CASE)
 
     @bp.route(
         '/proposal/<int:proposal_id>/technical/figure/<int:fig_id>/thumbnail')
     @send_file(FigureType.PNG)
     @require_auth(require_person=True)
     def tech_view_figure_thumbnail(proposal_id, fig_id):
-        return facility.view_tech_view_figure(db, proposal_id, fig_id,
-                                              'thumbnail')
+        return facility.view_case_view_figure(
+            db, proposal_id, fig_id, TextRole.TECHNICAL_CASE, 'thumbnail')
 
     @bp.route(
         '/proposal/<int:proposal_id>/technical/figure/<int:fig_id>/preview')
     @send_file(FigureType.PNG)
     @require_auth(require_person=True)
     def tech_view_figure_preview(proposal_id, fig_id):
-        return facility.view_tech_view_figure(db, proposal_id, fig_id,
-                                              'preview')
+        return facility.view_case_view_figure(
+            db, proposal_id, fig_id, TextRole.TECHNICAL_CASE, 'preview')
 
     @bp.route('/proposal/<int:proposal_id>/technical/pdf/edit',
               methods=['GET', 'POST'])
     @facility_template('pdf_upload.html')
     @require_auth(require_person=True)
     def tech_edit_pdf(proposal_id):
-        return facility.view_tech_edit_pdf(
-            db, proposal_id,
+        return facility.view_case_edit_pdf(
+            db, proposal_id, TextRole.TECHNICAL_CASE,
             (request.files['file'] if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/technical/pdf/view')
     @send_file(FigureType.PDF)
     @require_auth(require_person=True)
     def tech_view_pdf(proposal_id):
-        return facility.view_tech_view_pdf(db, proposal_id)
+        return facility.view_case_view_pdf(
+            db, proposal_id, TextRole.TECHNICAL_CASE)
 
     @bp.route('/proposal/<int:proposal_id>/technical/pdf/preview/<int:page>')
     @send_file(FigureType.PNG)
     @require_auth(require_person=True)
     def tech_view_pdf_preview(proposal_id, page):
-        return facility.view_tech_view_pdf_preview(db, proposal_id, page)
+        return facility.view_case_view_pdf_preview(
+            db, proposal_id, page, TextRole.TECHNICAL_CASE)
 
     @bp.route('/proposal/<int:proposal_id>/scientific')
     @facility_template('case_edit.html')
     @require_auth(require_person=True)
     def sci_edit(proposal_id):
-        return facility.view_sci_edit(db, proposal_id)
+        return facility.view_case_edit(db, proposal_id, TextRole.SCIENCE_CASE)
 
     @bp.route('/proposal/<int:proposal_id>/scientific/text',
               methods=['GET', 'POST'])
     @facility_template('text_edit.html')
     @require_auth(require_person=True)
     def sci_edit_text(proposal_id):
-        return facility.view_sci_edit_text(
-            db, proposal_id,
+        return facility.view_case_edit_text(
+            db, proposal_id, TextRole.SCIENCE_CASE,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/scientific/figure/new',
@@ -227,8 +231,8 @@ def create_facility_blueprint(db, facility):
     @facility_template('figure_edit.html')
     @require_auth(require_person=True)
     def sci_new_figure(proposal_id):
-        return facility.view_sci_new_figure(
-            db, proposal_id,
+        return facility.view_case_edit_figure(
+            db, proposal_id, None, TextRole.SCIENCE_CASE,
             (request.form if request.method == 'POST' else None),
             (request.files['file'] if request.method == 'POST' else None))
 
@@ -238,8 +242,8 @@ def create_facility_blueprint(db, facility):
     @facility_template('figure_edit.html')
     @require_auth(require_person=True)
     def sci_edit_figure(proposal_id, fig_id):
-        return facility.view_sci_edit_figure(
-            db, proposal_id, fig_id,
+        return facility.view_case_edit_figure(
+            db, proposal_id, fig_id, TextRole.SCIENCE_CASE,
             (request.form if request.method == 'POST' else None),
             (request.files['file'] if request.method == 'POST' else None))
 
@@ -247,44 +251,47 @@ def create_facility_blueprint(db, facility):
     @send_file()
     @require_auth(require_person=True)
     def sci_view_figure(proposal_id, fig_id):
-        return facility.view_sci_view_figure(db, proposal_id, fig_id)
+        return facility.view_case_view_figure(
+            db, proposal_id, fig_id, TextRole.SCIENCE_CASE)
 
     @bp.route(
         '/proposal/<int:proposal_id>/scientific/figure/<int:fig_id>/thumbnail')
     @send_file(FigureType.PNG)
     @require_auth(require_person=True)
     def sci_view_figure_thumbnail(proposal_id, fig_id):
-        return facility.view_sci_view_figure(db, proposal_id, fig_id,
-                                             'thumbnail')
+        return facility.view_case_view_figure(
+            db, proposal_id, fig_id, TextRole.SCIENCE_CASE, 'thumbnail')
 
     @bp.route(
         '/proposal/<int:proposal_id>/scientific/figure/<int:fig_id>/preview')
     @send_file(FigureType.PNG)
     @require_auth(require_person=True)
     def sci_view_figure_preview(proposal_id, fig_id):
-        return facility.view_sci_view_figure(db, proposal_id, fig_id,
-                                             'preview')
+        return facility.view_case_view_figure(
+            db, proposal_id, fig_id, TextRole.SCIENCE_CASE, 'preview')
 
     @bp.route('/proposal/<int:proposal_id>/scientific/pdf/edit',
               methods=['GET', 'POST'])
     @facility_template('pdf_upload.html')
     @require_auth(require_person=True)
     def sci_edit_pdf(proposal_id):
-        return facility.view_sci_edit_pdf(
-            db, proposal_id,
+        return facility.view_case_edit_pdf(
+            db, proposal_id, TextRole.SCIENCE_CASE,
             (request.files['file'] if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/scientific/pdf/view')
     @send_file(FigureType.PDF)
     @require_auth(require_person=True)
     def sci_view_pdf(proposal_id):
-        return facility.view_sci_view_pdf(db, proposal_id)
+        return facility.view_case_view_pdf(
+            db, proposal_id, TextRole.SCIENCE_CASE)
 
     @bp.route('/proposal/<int:proposal_id>/scientific/pdf/preview/<int:page>')
     @send_file(FigureType.PNG)
     @require_auth(require_person=True)
     def sci_view_pdf_preview(proposal_id, page):
-        return facility.view_sci_view_pdf_preview(db, proposal_id, page)
+        return facility.view_case_view_pdf_preview(
+            db, proposal_id, page, TextRole.SCIENCE_CASE)
 
     @bp.route('/admin')
     @facility_template('facility_admin.html')
