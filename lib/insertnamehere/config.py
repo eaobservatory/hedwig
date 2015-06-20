@@ -54,19 +54,27 @@ def get_config():
     return config
 
 
-def get_database():
+def get_database(database_url=None, facility_spec=None):
     """
     Construct a database control object.
+
+    The database URL and facility specifier text (comma-separated string)
+    can be given for testing -- otherwise they are read from the configuration.
     """
 
     global database
 
-    if database is None:
+    if database is None or facility_spec is not None:
         config = get_config()
         db_parts = [Database]
 
+        if facility_spec is None:
+            facility_spec = config.get('application', 'facilities')
+        if database_url is None:
+            database_url = config.get('database', 'url')
+
         # Import facility metadata and control modules.
-        for name in config.get('application', 'facilities').split(','):
+        for name in facility_spec.split(','):
             try:
                 parts = name.split('.')
 
@@ -97,22 +105,28 @@ def get_database():
         # Create combined database object using the base database class, plus
         # any facility-specific classes.
         CombinedDatabase = type(b'CombinedDatabase', tuple(db_parts), {})
-        database = CombinedDatabase(get_engine(config.get('database', 'url')))
+        database = CombinedDatabase(get_engine(database_url))
 
     return database
 
 
-def get_facilities():
+def get_facilities(facility_spec=None):
     """
     Get a list of the facility classes as listed in the configuration file.
+
+    The facility specifier text (comma-separated string) can be given for
+    testing -- otherwise it is read from the configuration.
     """
 
     global facilities
 
-    if facilities is None:
+    if facilities is None or facility_spec is not None:
         facilities = []
 
-        for name in get_config().get('application', 'facilities').split(','):
+        if facility_spec is None:
+            facility_spec = get_config().get('application', 'facilities')
+
+        for name in facility_spec.split(','):
             try:
                 last_dot = name.rindex('.')
                 module = import_module(name[:last_dot])

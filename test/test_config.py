@@ -24,6 +24,8 @@ from unittest import TestCase
 
 from insertnamehere import config
 from insertnamehere.error import Error
+from insertnamehere.db.control import Database
+from insertnamehere.facility.jcmt.control import JCMTPart
 
 
 class ConfigTestCase(TestCase):
@@ -48,6 +50,8 @@ class ConfigTestCase(TestCase):
     def _clear_config(self):
         # Unload existing configuation.
         config.config = None
+        config.database = None
+        config.facilities = None
 
         # Unset home directory variable.
         if 'INSERTNAMEHERE_DIR' in os.environ:
@@ -71,6 +75,48 @@ class ConfigTestCase(TestCase):
         os.environ['INSERTNAMEHERE_DIR'] = '/HORSEFEATHERS'
         with self.assertRaises(Error):
             c = config.get_config()
+
+    def test_get_facility(self):
+        # Default facility from template configuration file.
+        self.assertEqual(
+            [x.__name__ for x in config.get_facilities()],
+            ['Generic'])
+
+        # Facility by plain class name.
+        self.assertEqual(
+            [x.__name__ for x in config.get_facilities(facility_spec='JCMT')],
+            ['JCMT'])
+
+        # Facilities by full module and class name.
+        self.assertEqual(
+            [x.__name__ for x in config.get_facilities(
+                facility_spec='insertnamehere.facility.generic.view.Generic,'
+                'insertnamehere.facility.jcmt.view.JCMT')],
+            ['Generic', 'JCMT'])
+
+    def test_get_database(self):
+        database_url = 'sqlite:///:memory:'
+
+        # Default database via template configuration file.
+        db = config.get_database(database_url=database_url)
+        self.assertEqual(db.__class__.__name__, 'CombinedDatabase')
+        self.assertIsInstance(db, Database)
+        self.assertNotIsInstance(db, JCMTPart)
+
+        # Get database via plain facility name.
+        db = config.get_database(database_url=database_url,
+                                 facility_spec='JCMT')
+        self.assertEqual(db.__class__.__name__, 'CombinedDatabase')
+        self.assertIsInstance(db, Database)
+        self.assertIsInstance(db, JCMTPart)
+
+        # Get database via plain facility name.
+        db = config.get_database(
+            database_url=database_url,
+            facility_spec='insertnamehere.facility.jcmt.view.JCMT')
+        self.assertEqual(db.__class__.__name__, 'CombinedDatabase')
+        self.assertIsInstance(db, Database)
+        self.assertIsInstance(db, JCMTPart)
 
     def test_facilities(self):
         facilities = config.get_facilities()
