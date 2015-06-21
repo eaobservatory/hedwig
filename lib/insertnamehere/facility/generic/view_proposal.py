@@ -556,6 +556,8 @@ class GenericProposal(object):
                 '.{}_edit_text'.format(code), proposal_id=proposal.id),
             'target_new_figure': url_for(
                 '.{}_new_figure'.format(code), proposal_id=proposal.id),
+            'target_manage_figure': url_for(
+                '.{}_manage_figure'.format(code), proposal_id=proposal.id),
             'target_pdf': url_for(
                 '.{}_edit_pdf'.format(code), proposal_id=proposal.id),
             'target_pdf_view': url_for(
@@ -705,6 +707,54 @@ class GenericProposal(object):
             'max_size': max_size,
             'mime_types': FigureType.all_mime_types(),
             'target': target,
+        }
+
+    @with_proposal(permission='edit')
+    def view_case_manage_figure(self, db, proposal, can, role, form):
+        code = TextRole.short_name(role)
+        name = TextRole.get_name(role)
+        message = None
+
+        figures = db.search_proposal_figure(proposal_id=proposal.id, role=role,
+                                            with_uploader_name=True)
+
+        if form is not None:
+            try:
+                figures_present = [int(param[7:])
+                                   for param in form
+                                   if param.startswith('figure_')]
+
+                for fig_id in list(figures.keys()):
+                    if fig_id not in figures_present:
+                        del figures[fig_id]
+
+                (n_insert, n_update, n_delete) = \
+                    db.sync_proposal_figure(proposal.id, role, figures)
+
+                if n_delete:
+                    flash('{} {} been removed.', n_delete,
+                          ('figure has' if n_delete == 1 else 'figures have'))
+
+                raise HTTPRedirect(url_for(
+                    '.{}_edit'.format(code), proposal_id=proposal.id))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Manage {} Figures'.format(name.title()),
+            'proposal_id': proposal.id,
+            'proposal_code': self.make_proposal_code(db, proposal),
+            'message': message,
+            'target': url_for('.{}_manage_figure'.format(code),
+                              proposal_id=proposal.id),
+            'figures': [
+                ProposalFigureExtra(
+                    *x, target_full=None, target_edit=None,
+                    target_view=url_for(
+                        '.{}_view_figure_thumbnail'.format(code),
+                        proposal_id=proposal.id, fig_id=x.id))
+                for x in figures.values()],
         }
 
     @with_proposal(permission='view')

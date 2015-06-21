@@ -123,6 +123,12 @@
                     </tr>
                 {% endfor %}
             </table>
+
+            <nav>
+                <p>
+                    <a href="{{ target_manage_figure }}">Manage figures</a>
+                </p>
+            </nav>
         {% endif %}
 
         {% if fig_limit > (figures | length) and pdf is none %}

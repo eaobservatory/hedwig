@@ -165,6 +165,15 @@ def create_facility_blueprint(db, facility):
             (request.form if request.method == 'POST' else None),
             (request.files['file'] if request.method == 'POST' else None))
 
+    @bp.route('/proposal/<int:proposal_id>/technical/figure/manage',
+              methods=['GET', 'POST'])
+    @facility_template('figure_manage.html')
+    @require_auth(require_person=True)
+    def tech_manage_figure(proposal_id):
+        return facility.view_case_manage_figure(
+            db, proposal_id, TextRole.TECHNICAL_CASE,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/proposal/<int:proposal_id>/technical/figure/<int:fig_id>')
     @send_file()
     @require_auth(require_person=True)
@@ -246,6 +255,15 @@ def create_facility_blueprint(db, facility):
             db, proposal_id, fig_id, TextRole.SCIENCE_CASE,
             (request.form if request.method == 'POST' else None),
             (request.files['file'] if request.method == 'POST' else None))
+
+    @bp.route('/proposal/<int:proposal_id>/scientific/figure/manage',
+              methods=['GET', 'POST'])
+    @facility_template('figure_manage.html')
+    @require_auth(require_person=True)
+    def sci_manage_figure(proposal_id):
+        return facility.view_case_manage_figure(
+            db, proposal_id, TextRole.SCIENCE_CASE,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/scientific/figure/<int:fig_id>')
     @send_file()
