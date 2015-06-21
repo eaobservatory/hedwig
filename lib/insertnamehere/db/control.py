@@ -23,10 +23,11 @@ from threading import Lock
 
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.sql import select
+from sqlalchemy.sql.expression import and_
 from sqlalchemy.sql.functions import count
 
-from ..error import ConsistencyError, DatabaseError, DatabaseIntegrityError, \
-    UserError
+from ..error import ConsistencyError, Error, \
+    DatabaseError, DatabaseIntegrityError, UserError
 from ..type import ResultCollection
 from .part.message import MessagePart
 from .part.people import PeoplePart
@@ -97,7 +98,10 @@ class Database(MessagePart, PeoplePart, ProposalPart):
         considered, both for comparison and updating.
 
         key_column and update_columns should be a column object and a list
-        of column objects respectively.
+        of column objects respectively.  key_column and key_value can
+        alternatively be tuples/lists (of equal length) for cases where
+        multiple columns are needed to determine membership of the set of rows
+        being updated.
 
         If a column is being updated which is listed in "verified columns"
         then a column called "verified" is set to False.  (If verified
@@ -108,17 +112,26 @@ class Database(MessagePart, PeoplePart, ProposalPart):
         # Initialize debugging counters.
         n_insert = n_update = n_delete = 0
 
+        # Determine if key_column and key_value are plain strings.
+        # Warning: matches specific "list" and "tuple" types.
+        if isinstance(key_column, list) or isinstance(key_column, tuple):
+            if len(key_column) != len(key_value):
+                raise Error('key_column and key_value differ in length')
+            condition = and_(*(k == v for k, v in zip(key_column, key_value)))
+        else:
+            condition = key_column == key_value
+            key_column = (key_column,)
+            key_value = (key_value,)
+
         # Where update columns specified?  If not, assume everything should
         # be updated except for the key.
         if update_columns is None:
-            # WARNING: Python-2 only.
-            update_columns = filter(
-                (lambda x: x is not key_column and x is not table.c.id),
-                table.c)
+            update_columns = [x for x in table.c
+                              if x is not table.c.id and x not in key_column]
 
         # Fetch the current set of records.
         existing = ResultCollection()
-        for row in conn.execute(table.select().where(key_column == key_value)):
+        for row in conn.execute(table.select().where(condition)):
             existing[row['id']] = row
 
         # Keep track of identifiers in case the input "records" list tries
@@ -147,7 +160,7 @@ class Database(MessagePart, PeoplePart, ProposalPart):
                 if forbid_add:
                     raise UserError('New entries can not be added here.')
 
-                values = {key_column: key_value}
+                values = dict(zip(key_column, key_value))
                 for column in update_columns:
                     values[column] = getattr(value, column.key)
                 conn.execute(table.insert().values(values))

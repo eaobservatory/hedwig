@@ -1226,6 +1226,25 @@ class ProposalPart(object):
                     'multiple rows deleted removing replaced PDF '
                     'for proposal {} role {}', proposal_id, role)
 
+    def sync_proposal_figure(self, proposal_id, role, records):
+        """
+        Update the figures for a proposal.
+
+        Currently only deleting figures is supported -- no columns are updated.
+        """
+
+        with self._transaction() as conn:
+            if not self._exists_id(conn, proposal, proposal_id):
+                raise ConsistencyError(
+                    'proposal does not exist with id={0}', proposal_id)
+
+            return self._sync_records(
+                conn, proposal_fig,
+                (proposal_fig.c.proposal_id, proposal_fig.c.role),
+                (proposal_id, role),
+                records,
+                update_columns=(), forbid_add=True)
+
     def sync_proposal_member(self, proposal_id, records, editor_person_id):
         """
         Update the member records for a proposal.
