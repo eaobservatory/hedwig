@@ -590,10 +590,24 @@ class GenericProposal(object):
         code = TextRole.short_name(role)
         name = TextRole.get_name(role)
         max_size = int(get_config().get('upload', 'max_fig_size'))
+        fig_limit = getattr(proposal, code + '_fig_lim')
         word_limit = proposal.capt_word_lim
         message = None
 
         if fig_id is None:
+            # We are trying to add a new figure -- check whether this is
+            # permitted.
+            if not fig_limit:
+                raise ErrorPage(
+                    'The {} can not have figures attached.',
+                    name.lower())
+
+            elif len(db.search_proposal_figure(proposal_id=proposal.id,
+                                               role=role)) >= fig_limit:
+                raise ErrorPage(
+                    'The {} already has the maximum number of figures.',
+                    name.lower())
+
             figure = null_tuple(ProposalFigureInfo)._replace(caption='')
 
             target = url_for('.{}_new_figure'.format(code),
