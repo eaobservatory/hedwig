@@ -63,7 +63,13 @@ class HTTPRedirect(_werkzeug_routing.RequestRedirect):
 class ErrorPage(Exception):
     """Exception class where an error page should be shown."""
 
-    pass
+    def __init__(self, fmt_string, *fmt_args):
+        """
+        Construct exception, applying string formatting to the
+        message similarly to the FormattedError class.
+        """
+
+        Exception.__init__(self, fmt_string.format(*fmt_args))
 
 
 def flash(message, *args):
