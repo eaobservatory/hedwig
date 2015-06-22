@@ -87,14 +87,14 @@ def for_institution(db, institution):
 
     else:
         # Is the person an editor for a proposal with a representative of this
-        # institution?
+        # institution?  In that case allow them to edit it unless it has
+        # registered representatives.
 
-        # TODO: consider restricting this method to institutions with no
-        # registered representatives?
-
-        if db.search_member(person_id=session['person']['id'],
-                            editor=True,
-                            co_member_institution_id=institution.id):
+        if (db.search_member(person_id=session['person']['id'],
+                             editor=True,
+                             co_member_institution_id=institution.id) and
+                not db.search_person(registered=True,
+                                     institution_id=institution.id)):
             auth = auth._replace(edit=True)
 
     return auth
