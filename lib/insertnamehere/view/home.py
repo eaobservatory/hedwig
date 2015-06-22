@@ -21,10 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict, namedtuple
 from itertools import groupby
 
-from ..type import Proposal
-
-ProposalExtra = namedtuple('ProposalExtra',
-                           Proposal._fields + ('code', 'facility_code'))
+from ..type import ProposalWithCode
 
 
 def prepare_home(application_name, facilities):
@@ -43,8 +40,8 @@ def prepare_dashboard(db, person_id, facilities):
     for id_, ps in groupby(proposals.values(), lambda x: x.facility_id):
         facility = facilities[id_]
         facility_proposals[facility.name] = [
-            ProposalExtra(*p, code=facility.view.make_proposal_code(db, p),
-                          facility_code=facility.code)
+            ProposalWithCode(*p, code=facility.view.make_proposal_code(db, p),
+                             facility_code=facility.code)
             for p in ps]
 
     return {

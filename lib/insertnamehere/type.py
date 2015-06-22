@@ -103,6 +103,9 @@ Proposal = namedtuple(
         'members',
     ])
 
+ProposalWithCode = namedtuple('ProposalWithCode',
+                              Proposal._fields + ('code', 'facility_code'))
+
 ProposalFigure = namedtuple(
     'ProposalFigure',
     ['data', 'type', 'filename'])
