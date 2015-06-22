@@ -108,13 +108,18 @@ def for_proposal(db, proposal):
     if 'user_id' not in session or 'person' not in session:
         return no
 
+    auth = no
+
+    if session.get('is_admin', False) and can_be_admin(db):
+        auth = auth._replace(view=True)
+
     try:
         member = proposal.members.get_person(session['person']['id'])
         return Authorization(
             view=True,
             edit=(member.editor and ProposalState.can_edit(proposal.state)))
     except KeyError:
-        return no
+        return auth
 
 
 def can_be_admin(db):
