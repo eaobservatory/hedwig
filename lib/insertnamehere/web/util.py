@@ -244,6 +244,9 @@ def _error_page_response(err):
 def _make_response(template, result):
     """Prepare flask repsonse via a template."""
 
+    if result is None:
+        raise HTTPError('View function returned None as result.')
+
     resp = _flask_make_response(_flask_render_template(template, **result))
     resp.headers['Content-Language'] = 'en'
 
