@@ -19,7 +19,8 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from ...error import NoSuchRecord, UserError
-from ...type import Affiliation, Call, Queue, ResultCollection, Semester
+from ...type import Affiliation, Call, ProposalWithCode, Queue, \
+    ResultCollection, Semester
 from ...view import auth
 from ...web.util import HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, parse_datetime, url_for
@@ -328,6 +329,27 @@ class GenericAdmin(object):
             'call': call,
             'semesters': (None if semesters is None else semesters.values()),
             'queues': (None if queues is None else queues.values()),
+        }
+
+    def view_call_proposals(self, db, call_id):
+        if not auth.can_be_admin(db):
+            raise HTTPForbidden('Could not verify administrative access.')
+
+        try:
+            call = db.get_call(self.id_, call_id)
+        except NoSuchRecord:
+            raise HTTPNotFound('Call not found')
+
+        proposals = db.search_proposal(call_id=call_id, person_pi=True)
+
+        return {
+            'title': 'Proposals: {0} {1}'.format(call.semester_name,
+                                                 call.queue_name),
+            'call': call,
+            'proposals': [
+                ProposalWithCode(*x, code=self.make_proposal_code(db, x),
+                                 facility_code=None)
+                for x in proposals.values()],
         }
 
     def view_affiliation_edit(self, db, queue_id, form, is_post):

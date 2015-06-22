@@ -405,6 +405,12 @@ def create_facility_blueprint(db, facility):
         return facility.view_call_edit(db, call_id, request.form,
                                        request.method == 'POST')
 
+    @bp.route('/admin/call/<int:call_id>/proposals')
+    @facility_template('call_proposals.html')
+    @require_admin
+    def call_proposals(call_id):
+        return facility.view_call_proposals(db, call_id)
+
     @bp.context_processor
     def add_to_context():
         return {

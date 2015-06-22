@@ -1,0 +1,36 @@
+{% extends 'layout.html' %}
+{% set navigation=['facility_admin',
+                   ('Calls', url_for('.call_list')),
+                   (call.semester_name + ' ' + call.queue_name, url_for('.call_view', call_id=call.id))] %}
+
+{% block content %}
+
+<table>
+    <tr>
+        <th>Proposal</th>
+        <th>Title</th>
+        <th>State</th>
+        <th>PI Name</th>
+        <th>PI Affiliation</th>
+    </tr>
+    {% for proposal in proposals %}
+        <tr>
+            <td>
+                <a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a>
+            </td>
+            <td>{{ proposal.title }}</td>
+            <td>{{ proposal.state | proposal_state_name }}</td>
+            {% if proposal.members.person_id is not none %}
+                <td>
+                    <a href="{{ url_for('people.person_view', person_id=proposal.members.person_id) }}">{{ proposal.members.person_name }}</a>
+                </td>
+                <td>{{ proposal.members.affiliation_name }}</td>
+            {% else %}
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+            {% endif %}
+        </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

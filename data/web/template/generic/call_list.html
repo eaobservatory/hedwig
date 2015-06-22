@@ -3,19 +3,42 @@
 
 {% block content %}
 
-<p>
-    <a href="{{ url_for('.call_new') }}">New call</a>
-</p>
+<nav>
+    <p>
+        <a href="{{ url_for('.call_new') }}">New call</a>
+    </p>
+</nav>
 
-<ul>
+<table>
+    <tr>
+        <th>Semester</th>
+        <th>Queue</th>
+        <th colspan="2">Links</th>
+    </tr>
     {% for call in calls.values() %}
-        <li>
-            <a href="{{ url_for('.call_view', call_id=call.id) }}">
-                {{ call.semester_name }}
-                {{ call.queue_name }}
-            </a>
-        </li>
+        <tr>
+            <td>
+                <a href="{{ url_for('.semester_view', semester_id=call.semester_id) }}">
+                    {{ call.semester_name }}
+                </a>
+            </td>
+            <td>
+                <a href="{{ url_for('.queue_view', queue_id=call.queue_id) }}">
+                    {{ call.queue_name }}
+                </a>
+            </td>
+            <td>
+                <a href="{{ url_for('.call_view', call_id=call.id) }}">
+                    View call
+                </a>
+            </td>
+            <td>
+                <a href="{{ url_for('.call_proposals', call_id=call.id) }}">
+                    View proposals
+                </a>
+            </td>
+        </tr>
     {% endfor %}
-</ul>
+</table>
 
 {% endblock %}
