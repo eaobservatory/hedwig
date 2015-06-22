@@ -30,7 +30,7 @@ from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
 from ...type import Affiliation, AttachmentState, Call, \
     FigureType, FormatType, \
-    Member, MemberCollection, MemberInfo, \
+    Member, MemberCollection, MemberInfo, MemberPIInfo, \
     Proposal, ProposalState, \
     ProposalFigure, ProposalFigureInfo, ProposalPDFInfo, \
     ProposalText, ProposalTextCollection, ProposalTextInfo, \
@@ -768,14 +768,17 @@ class ProposalPart(object):
         return ans
 
     def search_proposal(self, call_id=None, facility_id=None, proposal_id=None,
-                        person_id=None, with_members=False, _conn=None):
+                        person_id=None, person_pi=False,
+                        with_members=False,
+                        _conn=None):
         """
         Search for proposals.
 
         If "person_id" is specified, then this method searches for proposals
         with this person as a member, and also sets "members" in the
         returned "Proposal" object to a "MemberInfo" object summarizing
-        that person's role.
+        that person's role.  Alternatively if "person_pi" is enabled, then
+        the PI's information is returned as a "MemberPIInfo" object.
 
         Otherwise if "with_members" is set, then the "Proposal" object's
         "members" attribute is a "MemberCollection" with information about
@@ -812,6 +815,21 @@ class ProposalPart(object):
                 member.c.observer,
             ])
             select_from = select_from.join(member)
+
+        elif person_pi:
+            select_columns.extend([
+                member.c.person_id,
+                person.c.name.label('pi_name'),
+                affiliation.c.name.label('pi_affiliation'),
+            ])
+            select_from = select_from.outerjoin(
+                member, and_(
+                    proposal.c.id == member.c.proposal_id,
+                    member.c.pi)
+            ).outerjoin(person).outerjoin(
+                affiliation,
+                member.c.affiliation_id == affiliation.c.id
+            )
 
         stmt = select(select_columns).select_from(select_from)
 
@@ -854,6 +872,13 @@ class ProposalPart(object):
                         row.pop('pi'),
                         row.pop('editor'),
                         row.pop('observer'))
+
+                elif person_pi:
+                    row = dict(row.items())
+                    members = MemberPIInfo(
+                        row.pop('person_id'),
+                        row.pop('pi_name'),
+                        row.pop('pi_affiliation'))
 
                 elif with_members:
                     members = self.search_member(proposal_id=row['id'],

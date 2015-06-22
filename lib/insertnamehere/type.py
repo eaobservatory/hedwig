@@ -68,6 +68,10 @@ MemberInstitution = namedtuple(
     'MemberInstitution',
     ['id', 'institution_id'])
 
+MemberPIInfo = namedtuple(
+    'MemberPIInfo',
+    ['person_id', 'person_name', 'affiliation_name'])
+
 Message = namedtuple(
     'Message',
     [x.name for x in message.columns] + ['recipients'])
