@@ -39,6 +39,9 @@ class JCMT(Generic):
             proposal.semester_code, proposal.queue_code, proposal.number
         ).upper()
 
+    def get_calculator_classes(self):
+        return ()
+
     def _view_proposal_extra(self, db, proposal):
         ctx = super(JCMT, self)._view_proposal_extra(db, proposal)
 

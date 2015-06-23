@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from flask import Blueprint, request
 
-from ...type import FigureType, TextRole
+from ...type import CalculatorInfo, FigureType, TextRole
 from ..util import require_admin, require_auth, send_file, templated
 
 
@@ -411,6 +411,26 @@ def create_facility_blueprint(db, facility):
     def call_proposals(call_id):
         return facility.view_call_proposals(db, call_id)
 
+    # Configure the facility's calculators.
+    for calculator_class in facility.get_calculator_classes():
+        calculator_code = calculator_class.get_code()
+        calculator_id = db.ensure_calculator(facility.id_, calculator_code)
+        calculator = calculator_class(calculator_id)
+
+        facility.calculators[calculator_id] = CalculatorInfo(
+            calculator_id, calculator_code, calculator.get_name(),
+            calculator, calculator.modes)
+
+        for (calculator_mode_id, calculator_mode) in calculator.modes.items():
+            route_opts = (calculator_code, calculator_mode.code)
+
+            bp.add_url_rule('/calculator/{}/{}'.format(*route_opts),
+                            'calc_{}_{}'.format(*route_opts),
+                            make_calculator_view(
+                                db, calculator, code, calculator_code,
+                                calculator_mode_id),
+                            methods=['GET', 'POST'])
+
     @bp.context_processor
     def add_to_context():
         return {
@@ -418,3 +438,22 @@ def create_facility_blueprint(db, facility):
         }
 
     return bp
+
+
+def make_calculator_view(db, calculator, facility_code, calculator_code,
+                         calculator_mode_id):
+    """
+    Create a view function for a calculator.
+
+    This is done in a separate function in order to create the proper
+    scope for a closure.
+    """
+
+    @templated(('{}/calculator_{}.html'.format(facility_code, calculator_code),
+                'generic/calculator_base.html'))
+    def view_func():
+        return calculator.view(
+            db, calculator_mode_id,
+            (request.form if request.method == 'POST' else None))
+
+    return view_func

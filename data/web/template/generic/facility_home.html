@@ -28,4 +28,25 @@
     </p>
 {% endif %}
 
+<h2>Calculators</h2>
+
+{% if calculators %}
+    <ul>
+        {% for calculator in calculators %}
+            <li>
+                {{ calculator.name }}
+                <ul>
+                    {% for mode_id, mode in calculator.modes.items() %}
+                        <li><a href="{{ url_for('.calc_' + calculator.code + '_' + mode.code) }}">{{ mode.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p class="not_present">
+        No calculators are available.
+    </p>
+{% endif %}
+
 {% endblock %}

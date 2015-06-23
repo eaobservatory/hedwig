@@ -1,0 +1,89 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+{% block calculator_output %}
+    {% if output_values is not none %}
+        <section>
+            <h2>Results</h2>
+
+            <table>
+                {% block calculator_output_table %}
+                    {% for value in outputs %}
+                        {% with output = output_values[value.code] %}
+                            <tr>
+                                <th>
+                                    {{ value.name }}
+                                </th>
+                                <td>
+                                    {{ output | fmt(value.format) }}
+                                    {% if value.unit is not none %}
+                                        {{ value.unit }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endwith %}
+                    {% endfor %}
+
+                    {% block calculator_output_extra_table %}
+                    {% endblock %}
+                {% endblock %}
+            </table>
+
+            {% block calculator_output_extra %}
+            {% endblock %}
+        </section>
+    {% endif %}
+{% endblock %}
+
+<form method="POST" action="{{ target }}">
+
+{% block calculator_input %}
+    <section>
+        <h2>Input</h2>
+
+        {% if message is not none %}
+            <p class="warning">
+                {{ message }}
+            </p>
+        {% endif %}
+
+        <ol>
+            {% block calculator_input_list %}
+                {% for value in inputs %}
+                    {% with input = input_values[value.code] %}
+                        <li>
+                            <label for="a">{{ value.name }}</label>
+                            <input type="text" name="{{ value.code }}" value="{{ input }}" />
+                            {% if value.unit is not none %}
+                                {{ value.unit }}
+                            {% endif %}
+                        </li>
+                    {% endwith %}
+                {% endfor %}
+            {% endblock %}
+            <li>
+                <input type="submit" name="submit_calc" value="Calculate" />
+            </li>
+        </ol>
+    </section>
+{% endblock %}
+
+{% block calculator_modes %}
+    <section>
+        <h2>Calculator Mode</h2>
+
+        <p>
+            <select name="mode">
+                {% for (mode_id, mode) in modes.items() %}
+                    <option value="{{ mode_id }}" {{ 'selected="selected"' | safe if mode_id == current_mode }}>{{ mode.name }}</option>
+                {% endfor %}
+            </select>
+            <input type="submit" name="submit_mode" value="Change mode" />
+        </p>
+    </section>
+{% endblock %}
+
+</form>
+
+{% endblock %}

@@ -55,6 +55,11 @@ class FormattedError(Error):
         Error.__init__(self, fmt_string.format(*fmt_args))
 
 
+class CalculatorError(FormattedError):
+    """Error class for calculator errors."""
+    pass
+
+
 class ConsistencyError(FormattedError):
     """Error for when the applications detects database inconsistency."""
     pass

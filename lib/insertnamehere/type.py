@@ -31,6 +31,22 @@ Affiliation = namedtuple(
     'Affiliation',
     map(lambda x: x.name, affiliation.columns))
 
+CalculatorInfo = namedtuple(
+    'CalculatorInfo',
+    ['id', 'code', 'name', 'calculator', 'modes'])
+
+CalculatorMode = namedtuple(
+    'CalculatorMode',
+    ['code', 'name'])
+
+CalculatorResult = namedtuple(
+    'CalculatorResult',
+    ['output', 'extra'])
+
+CalculatorValue = namedtuple(
+    'CalculatorValue',
+    ['code', 'name', 'format', 'unit'])
+
 Calculation = namedtuple(
     'Calculation',
     [x.name for x in calculation.columns])

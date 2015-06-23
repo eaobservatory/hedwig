@@ -20,8 +20,10 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict
 
+from ...config import get_config
 from ...error import NoSuchRecord, UserError
 from ...web.util import ErrorPage, HTTPNotFound, url_for
+from .calculator_dummy import DummyCalculator
 from .view_admin import GenericAdmin
 from .view_proposal import GenericProposal
 
@@ -42,6 +44,7 @@ class Generic(GenericAdmin, GenericProposal):
         """
 
         self.id_ = id_
+        self.calculators = OrderedDict()
 
     @classmethod
     def get_code(cls):
@@ -60,6 +63,17 @@ class Generic(GenericAdmin, GenericProposal):
         """
 
         return 'Generic Facility'
+
+    def get_calculator_classes(self):
+        """
+        Get a tuple of calculator classes which can be used with this
+        facility.
+
+        Sub-classes should override this method to provide the correct
+        list of calculators.
+        """
+
+        return (DummyCalculator,)
 
     def make_proposal_code(self, db, proposal):
         """
@@ -83,6 +97,7 @@ class Generic(GenericAdmin, GenericProposal):
         return {
             'title': self.get_name(),
             'open_semesters': open_semesters,
+            'calculators': self.calculators.values(),
         }
 
     def view_semester_calls(self, db, semester_id):
