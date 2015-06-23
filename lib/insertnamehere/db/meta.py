@@ -24,6 +24,8 @@ from sqlalchemy.schema import Column, ForeignKey, Index, MetaData, \
 from sqlalchemy.types import Boolean, DateTime, Float, Integer, \
     LargeBinary, String, Unicode, UnicodeText
 
+from .type import JSONEncoded
+
 metadata = MetaData()
 
 _table_opts = {
@@ -42,6 +44,35 @@ affiliation = Table(
     Column('name', Unicode(255), nullable=False),
     Column('hidden', Boolean, default=False, nullable=False),
     UniqueConstraint('queue_id', 'name'),
+    **_table_opts)
+
+calculator = Table(
+    'calculator',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('facility_id', None,
+           ForeignKey('facility.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('code', Unicode(31), nullable=False),
+    UniqueConstraint('code', 'facility_id'),
+    **_table_opts)
+
+calculation = Table(
+    'calculation',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('calculator_id', None,
+           ForeignKey('calculator.id', onupdate='RESTRICT',
+                      ondelete='RESTRICT'),
+           nullable=False),
+    Column('mode', Integer, nullable=False),
+    Column('version', Integer, nullable=False),
+    Column('input', JSONEncoded, nullable=False),
+    Column('output', JSONEncoded, nullable=False),
+    Column('date_run', DateTime(), nullable=False),
     **_table_opts)
 
 call = Table(

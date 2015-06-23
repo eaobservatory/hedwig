@@ -22,7 +22,7 @@ from collections import OrderedDict, namedtuple
 
 from .astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
-from .db.meta import affiliation, call, email, institution, \
+from .db.meta import affiliation, calculation, call, email, institution, \
     member, message, person, proposal, queue, \
     semester, target
 from .error import NoSuchRecord, MultipleRecords, UserError
@@ -30,6 +30,10 @@ from .error import NoSuchRecord, MultipleRecords, UserError
 Affiliation = namedtuple(
     'Affiliation',
     map(lambda x: x.name, affiliation.columns))
+
+Calculation = namedtuple(
+    'Calculation',
+    [x.name for x in calculation.columns])
 
 Call = namedtuple(
     'Call',

@@ -29,12 +29,13 @@ from sqlalchemy.sql.functions import count
 from ..error import ConsistencyError, Error, \
     DatabaseError, DatabaseIntegrityError, UserError
 from ..type import ResultCollection
+from .part.calculator import CalculatorPart
 from .part.message import MessagePart
 from .part.people import PeoplePart
 from .part.proposal import ProposalPart
 
 
-class Database(MessagePart, PeoplePart, ProposalPart):
+class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart):
     def __init__(self, engine):
         """
         Create database controller object.
