@@ -453,7 +453,7 @@ def make_calculator_view(db, calculator, facility_code, calculator_code,
                 'generic/calculator_base.html'))
     def view_func():
         return calculator.view(
-            db, calculator_mode_id,
+            db, calculator_mode_id, request.args,
             (request.form if request.method == 'POST' else None))
 
     return view_func

@@ -75,15 +75,17 @@
             <h2>Save to Proposal</h2>
 
             <p>
-                <select name="proposal">
+                <select name="proposal_id">
                     {% for proposal in proposals %}
-                        <option value="{{ proposal.id }}">{{ proposal.code }}: {{ proposal.title }}</option>
+                        <option value="{{ proposal.id }}" {{ 'selected="selected"' | safe if proposal.id == proposal_id }}>{{ proposal.code }}: {{ proposal.title }}</option>
                     {% endfor %}
                 </select>
                 <input type="submit" name="submit_save" value="Save" />
                 <input type="submit" name="submit_save_redir" value="Save and return to proposal" />
             </p>
         </section>
+    {% elif proposal_id is not none %}
+        <input type="hidden" name="proposal_id" value="{{ proposal_id }}">
     {% endif %}
 {% endblock %}
 

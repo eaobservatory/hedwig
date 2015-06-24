@@ -44,7 +44,7 @@ ProposalFigureExtra = namedtuple(
 CalculationExtra = namedtuple(
     'CalculationExtra',
     Calculation._fields + ('calculator_code', 'calculator_name',
-                           'inputs', 'outputs', 'mode_info'))
+                           'inputs', 'outputs', 'mode_info', 'target_view'))
 
 
 class GenericProposal(object):
@@ -169,6 +169,7 @@ class GenericProposal(object):
             calculator = calc_info.calculator
             if not calculator.is_valid_mode(calc.mode):
                 continue
+            mode_info = calculator.get_mode_info(calc.mode)
 
             calculations.append(CalculationExtra(
                 *calc,
@@ -176,7 +177,11 @@ class GenericProposal(object):
                 calculator_name=calc_info.name,
                 inputs=calculator.get_inputs(calc.mode, calc.version),
                 outputs=calculator.get_outputs(calc.mode, calc.version),
-                mode_info=calculator.get_mode_info(calc.mode)))
+                mode_info=mode_info,
+                target_view=url_for(
+                    '.calc_{}_{}'.format(calculator.get_code(),
+                                         mode_info.code),
+                    calculation_id=calc.id)))
 
         return {
             'abstract': proposal_text.get(TextRole.ABSTRACT, None),
@@ -191,6 +196,7 @@ class GenericProposal(object):
             'sci_case_pdf': proposal_pdf.get_role(
                 TextRole.SCIENCE_CASE, None),
             'targets': targets,
+            'calculators': self.calculators.values(),
             'calculations': calculations,
         }
 

@@ -20,9 +20,10 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple
 
-from ..error import UserError
+from ..error import NoSuchRecord, UserError
 from ..type import CalculatorResult, Proposal, ProposalState
-from ..web.util import HTTPError, HTTPRedirect, flash, session, url_for
+from ..web.util import HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
+    flash, session, url_for
 from . import auth
 
 ProposalWithCode = namedtuple('ProposalWithCode', Proposal._fields + ('code',))
@@ -33,7 +34,7 @@ class BaseCalculator(object):
         self.facility = facility
         self.id_ = id_
 
-    def view(self, db, mode, form):
+    def view(self, db, mode, args, form):
         """
         Web view handler for a generic calculator.
         """
@@ -42,6 +43,7 @@ class BaseCalculator(object):
 
         inputs = self.get_inputs(mode)
         output = CalculatorResult(None, None)
+        proposal_id = None
 
         # If the user is logged in, determine whether there are any proposals
         # to which they can add calculator results.
@@ -57,6 +59,9 @@ class BaseCalculator(object):
 
         if form is not None:
             try:
+                if 'proposal_id' in form:
+                    proposal_id = int(form['proposal_id'])
+
                 # Work primarily with the un-parsed "input_values" so that,
                 # in the event of a parsing error, we can still put the user
                 # data back in the form for correction.
@@ -84,7 +89,7 @@ class BaseCalculator(object):
                     output = self(mode, parsed_input)
 
                 elif ('submit_save' in form) or ('submit_save_redir' in form):
-                    proposal_id = int(form['proposal'])
+                    proposal_id = int(form['proposal_id'])
 
                     # Check access via the normal auth module.
                     proposal = db.get_proposal(self.facility.id_, proposal_id,
@@ -119,14 +124,44 @@ class BaseCalculator(object):
                 message = e.message
 
         else:
-            # When we didn't receive a form submission, get the default
-            # values -- need to convert these to strings to match the
-            # form input strings as explained above.
-            default_input = self.get_default_input(mode)
+            if 'proposal_id' in args:
+                proposal_id = args['proposal_id']
+
+            if 'calculation_id' in args:
+                try:
+                    calculation = db.get_calculation(
+                        int(args['calculation_id']))
+                except NoSuchRecord:
+                    raise HTTPNotFound('Calculation not found.')
+
+                # Check authorization to see this calculation.
+                proposal = db.get_proposal(
+                    self.facility.id_, calculation.proposal_id,
+                    with_members=True)
+
+                if not auth.for_proposal(db, proposal).view:
+                    raise HTTPForbidden('Access denied for that proposal.')
+
+                proposal_id = proposal.id
+
+                if calculation.version == self.version:
+                    default_input = calculation.input
+                else:
+                    default_input = self.convert_input_version(
+                        calculation.version, calculation.input)
+
+                output = self(mode, default_input)
+
+            else:
+                # When we didn't receive a form submission, get the default
+                # values -- need to convert these to strings to match the
+                # form input strings as explained above.
+                default_input = self.get_default_input(mode)
+
             input_values = self.format_input(inputs, default_input)
 
         return {
-            'title': self.get_name().title(),
+            'title': self.get_name(),
             'target': url_for('.calc_{}_{}'.format(self.get_code(),
                                                    self.modes[mode].code)),
             'message': message,
@@ -138,6 +173,7 @@ class BaseCalculator(object):
             'output_values': output.output,
             'output_extra': output.extra,
             'proposals': proposals,
+            'proposal_id': proposal_id,
         }
 
     def format_input(self, inputs, values):

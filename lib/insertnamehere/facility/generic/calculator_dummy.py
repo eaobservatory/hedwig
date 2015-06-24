@@ -49,7 +49,7 @@ class DummyCalculator(BaseCalculator):
         return 'dummy'
 
     def get_name(self):
-        return "Dummy calculator"
+        return "Dummy Calculator"
 
     def get_inputs(self, mode, version=None):
         """
@@ -87,6 +87,14 @@ class DummyCalculator(BaseCalculator):
         new_input['b'] = - new_input['b']
 
         return new_input
+
+    def convert_input_version(self, old_version, input_):
+        """
+        Converts the inputs from an older version so that they can be
+        used with the current version of the calculator.
+        """
+
+        return input_
 
     def get_outputs(self, mode, version=None):
         """
