@@ -3,6 +3,14 @@
 
 {% block content %}
 
+{% block calculator_proposal_link %}
+    {% if proposal_id is not none and calculation_id is not none and proposal_id == calculation_proposal %}
+        <p>
+            <a href="{{ url_for('.proposal_view', proposal_id=proposal_id) }}">Back to proposal</a>
+        </p>
+    {% endif %}
+{% endblock %}
+
 {% block calculator_output %}
     {% if output_values is not none %}
         <section>
