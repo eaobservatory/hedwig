@@ -769,7 +769,7 @@ class ProposalPart(object):
 
     def search_proposal(self, call_id=None, facility_id=None, proposal_id=None,
                         person_id=None, person_is_editor=None, person_pi=False,
-                        with_members=False,
+                        state=None, with_members=False,
                         _conn=None):
         """
         Search for proposals.
@@ -851,6 +851,12 @@ class ProposalPart(object):
                     stmt = stmt.where(member.c.editor)
                 else:
                     stmt = stmt.where(not_(member.c.editor))
+
+        if state is not None:
+            if isinstance(state, list) or isinstance(state, tuple):
+                stmt = stmt.where(proposal.c.state.in_(state))
+            else:
+                stmt = stmt.where(proposal.c.state == state)
 
         # Determine ordering: don't sort if only selecting one proposal.
         # This ordering is intended for the personal dashboard.  If other
