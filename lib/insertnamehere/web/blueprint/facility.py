@@ -415,7 +415,7 @@ def create_facility_blueprint(db, facility):
     for calculator_class in facility.get_calculator_classes():
         calculator_code = calculator_class.get_code()
         calculator_id = db.ensure_calculator(facility.id_, calculator_code)
-        calculator = calculator_class(calculator_id)
+        calculator = calculator_class(facility, calculator_id)
 
         facility.calculators[calculator_id] = CalculatorInfo(
             calculator_id, calculator_code, calculator.get_name(),

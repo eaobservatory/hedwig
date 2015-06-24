@@ -18,13 +18,19 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import namedtuple
+
 from ..error import UserError
-from ..type import CalculatorResult
-from ..web.util import HTTPError, url_for
+from ..type import CalculatorResult, Proposal, ProposalState
+from ..web.util import HTTPError, HTTPRedirect, flash, session, url_for
+from . import auth
+
+ProposalWithCode = namedtuple('ProposalWithCode', Proposal._fields + ('code',))
 
 
 class BaseCalculator(object):
-    def __init__(self, id_):
+    def __init__(self, facility, id_):
+        self.facility = facility
         self.id_ = id_
 
     def view(self, db, mode, form):
@@ -36,6 +42,18 @@ class BaseCalculator(object):
 
         inputs = self.get_inputs(mode)
         output = CalculatorResult(None, None)
+
+        # If the user is logged in, determine whether there are any proposals
+        # to which they can add calculator results.
+        proposals = None
+        if 'user_id' in session and 'person' in session:
+            proposals = [
+                ProposalWithCode(
+                    *x, code=self.facility.make_proposal_code(db, x))
+                for x in db.search_proposal(
+                    facility_id=self.facility.id_,
+                    person_id=session['person']['id'], person_is_editor=True,
+                    state=ProposalState.editable_states()).values()]
 
         if form is not None:
             try:
@@ -65,6 +83,35 @@ class BaseCalculator(object):
                 elif 'submit_calc' in form:
                     output = self(mode, parsed_input)
 
+                elif ('submit_save' in form) or ('submit_save_redir' in form):
+                    proposal_id = int(form['proposal'])
+
+                    # Check access via the normal auth module.
+                    proposal = db.get_proposal(self.facility.id_, proposal_id,
+                                               with_members=True)
+
+                    if not auth.for_proposal(db, proposal).edit:
+                        raise HTTPForbidden(
+                            'Edit permission denied for this proposal.')
+
+                    output = self(mode, parsed_input)
+
+                    db.add_calculation(
+                        proposal_id, self.id_, mode, self.version,
+                        parsed_input, output.output)
+
+                    if 'submit_save_redir' in form:
+                        flash('The calculation has been saved.')
+                        raise HTTPRedirect(url_for('.proposal_view',
+                                                   proposal_id=proposal_id))
+
+                    else:
+                        flash(
+                            'The calculation has been saved to proposal '
+                            '{}: "{}".',
+                            self.facility.make_proposal_code(db, proposal),
+                            proposal.title)
+
                 else:
                     raise HTTPError('Unknown action.')
 
@@ -90,6 +137,7 @@ class BaseCalculator(object):
             'input_values': input_values,
             'output_values': output.output,
             'output_extra': output.extra,
+            'proposals': proposals,
         }
 
     def format_input(self, inputs, values):

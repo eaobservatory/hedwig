@@ -69,6 +69,24 @@
     </section>
 {% endblock %}
 
+{% block calculator_save %}
+    {% if (output_values is not none) and proposals %}
+        <section>
+            <h2>Save to Proposal</h2>
+
+            <p>
+                <select name="proposal">
+                    {% for proposal in proposals %}
+                        <option value="{{ proposal.id }}">{{ proposal.code }}: {{ proposal.title }}</option>
+                    {% endfor %}
+                </select>
+                <input type="submit" name="submit_save" value="Save" />
+                <input type="submit" name="submit_save_redir" value="Save and return to proposal" />
+            </p>
+        </section>
+    {% endif %}
+{% endblock %}
+
 {% block calculator_modes %}
     <section>
         <h2>Calculator Mode</h2>
