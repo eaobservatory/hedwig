@@ -169,6 +169,54 @@
     </section>
 {% endblock %}
 
+{% block proposal_calculations %}
+    <section>
+        <h2>Calculation Results</h2>
+
+        {% if not calculations %}
+            <p class="missing">
+                This proposal does not have any calculation results.
+            </p>
+        {% else %}
+            {% for calculation in calculations %}
+                <h3>
+                    {{ loop.index }}.
+                    {{ calculation.calculator_name }}:
+                    {{ calculation.mode_info.name }}
+                </h3>
+
+                <p>
+                    {% for value in calculation.inputs %}
+                        {% with in_val = calculation.input[value.code] %}
+                            {{ value.name }}:
+                            {{ in_val | fmt(value.format) }}
+                            {% if value.unit is not none %}
+                                {{ value.unit }}
+                            {% endif %}
+                        {% endwith %}
+                    {% endfor %}
+
+                    <br />
+
+                    {% for value in calculation.outputs %}
+                        {% with out_val = calculation.output[value.code] %}
+                            {{ value.name }}:
+                            {{ out_val | fmt(value.format) }}
+                            {% if value.unit is not none %}
+                                {{ value.unit }}
+                            {% endif %}
+                        {% endwith %}
+                    {% endfor %}
+
+                    <br />
+
+                    Calculation performed: {{ calculation.date_run | format_datetime }} UTC
+                </p>
+            {% endfor %}
+        {% endif %}
+    </section>
+{% endblock %}
+
 {% block technical_case %}
     <section>
         <h2>Technical Justification</h2>

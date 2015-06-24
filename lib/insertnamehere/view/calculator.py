@@ -161,6 +161,13 @@ class BaseCalculator(object):
 
         return {x.code: form[x.code] for x in inputs}
 
+    def get_mode_info(self, mode):
+        """
+        Get mode information named tuple for the given mode.
+        """
+
+        return self.modes[mode]
+
     def is_valid_mode(self, mode):
         """
         Determine whether the given mode is valid.

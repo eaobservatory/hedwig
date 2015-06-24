@@ -25,7 +25,8 @@ from ...email.format import render_email_template
 from ...config import get_config
 from ...error import NoSuchRecord, UserError
 from ...file.info import determine_figure_type, determine_pdf_page_count
-from ...type import Affiliation, Call, FigureType, FormatType, \
+from ...type import Affiliation, Calculation, Call, \
+    FigureType, FormatType, \
     ProposalFigureInfo, ProposalState, ProposalText, \
     Queue, ResultCollection, Semester, Target, TargetCollection, TextRole, \
     null_tuple
@@ -39,6 +40,11 @@ from ...view.util import count_words, organise_collection, with_proposal
 ProposalFigureExtra = namedtuple(
     'ProposalFigureExtra',
     ProposalFigureInfo._fields + ('target_view', 'target_edit', 'target_full'))
+
+CalculationExtra = namedtuple(
+    'CalculationExtra',
+    Calculation._fields + ('calculator_code', 'calculator_name',
+                           'inputs', 'outputs', 'mode_info'))
 
 
 class GenericProposal(object):
@@ -154,6 +160,24 @@ class GenericProposal(object):
             db.search_target(
                 proposal_id=proposal.id).to_formatted_collection().values()]
 
+        calculations = []
+        for calc in db.search_calculation(proposal_id=proposal.id).values():
+            # Skip any results which we don't know how to display.
+            calc_info = self.calculators.get(calc.calculator_id)
+            if calc_info is None:
+                continue
+            calculator = calc_info.calculator
+            if not calculator.is_valid_mode(calc.mode):
+                continue
+
+            calculations.append(CalculationExtra(
+                *calc,
+                calculator_code=calc_info.code,
+                calculator_name=calc_info.name,
+                inputs=calculator.get_inputs(calc.mode, calc.version),
+                outputs=calculator.get_outputs(calc.mode, calc.version),
+                mode_info=calculator.get_mode_info(calc.mode)))
+
         return {
             'abstract': proposal_text.get(TextRole.ABSTRACT, None),
             'tech_case_text': proposal_text.get(
@@ -167,6 +191,7 @@ class GenericProposal(object):
             'sci_case_pdf': proposal_pdf.get_role(
                 TextRole.SCIENCE_CASE, None),
             'targets': targets,
+            'calculations': calculations,
         }
 
     @with_proposal(permission='edit')
