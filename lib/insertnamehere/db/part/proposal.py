@@ -768,7 +768,7 @@ class ProposalPart(object):
         return ans
 
     def search_proposal(self, call_id=None, facility_id=None, proposal_id=None,
-                        person_id=None, person_pi=False,
+                        person_id=None, person_is_editor=None, person_pi=False,
                         with_members=False,
                         _conn=None):
         """
@@ -845,6 +845,12 @@ class ProposalPart(object):
 
         if person_id is not None:
             stmt = stmt.where(member.c.person_id == person_id)
+
+            if person_is_editor is not None:
+                if person_is_editor:
+                    stmt = stmt.where(member.c.editor)
+                else:
+                    stmt = stmt.where(not_(member.c.editor))
 
         # Determine ordering: don't sort if only selecting one proposal.
         # This ordering is intended for the personal dashboard.  If other
