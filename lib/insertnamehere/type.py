@@ -300,6 +300,10 @@ class ProposalState(object):
     def can_edit(cls, state):
         return cls._info[state].edit
 
+    @classmethod
+    def editable_states(cls):
+        return [k for (k, v) in cls._info.items() if v.edit]
+
 
 class TextRole(object):
     ABSTRACT = 1
