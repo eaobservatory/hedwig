@@ -25,7 +25,8 @@ from ...email.format import render_email_template
 from ...config import get_config
 from ...error import NoSuchRecord, UserError
 from ...file.info import determine_figure_type, determine_pdf_page_count
-from ...type import Affiliation, Calculation, Call, \
+from ...type import Affiliation, \
+    Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
     FigureType, FormatType, \
     ProposalFigureInfo, ProposalState, ProposalText, \
     Queue, ResultCollection, Semester, Target, TargetCollection, TextRole, \
@@ -43,8 +44,12 @@ ProposalFigureExtra = namedtuple(
 
 CalculationExtra = namedtuple(
     'CalculationExtra',
-    Calculation._fields + ('calculator_code', 'calculator_name',
+    Calculation._fields + ('calculator_name',
                            'inputs', 'outputs', 'mode_info', 'target_view'))
+
+CalculatorInfoExtra = namedtuple(
+    'CalculatorInfoExtra',
+    CalculatorInfo._fields + ('target_view', ))
 
 
 class GenericProposal(object):
@@ -162,26 +167,33 @@ class GenericProposal(object):
 
         calculations = []
         for calc in db.search_calculation(proposal_id=proposal.id).values():
-            # Skip any results which we don't know how to display.
             calc_info = self.calculators.get(calc.calculator_id)
-            if calc_info is None:
-                continue
-            calculator = calc_info.calculator
-            if not calculator.is_valid_mode(calc.mode):
-                continue
-            mode_info = calculator.get_mode_info(calc.mode)
+            if (calc_info is None or
+                    not calc_info.calculator.is_valid_mode(calc.mode)):
+                calculations.append(CalculationExtra(
+                    *calc,
+                    calculator_name='Calculator {}'.format(calc.calculator_id),
+                    inputs=[CalculatorValue(x, x, '{}', None)
+                            for x in calc.input],
+                    outputs=[CalculatorValue(x, x, '{}', None)
+                             for x in calc.output],
+                    mode_info=CalculatorMode(None,
+                                             'Mode {}'.format(calc.mode)),
+                    target_view=None))
+            else:
+                calculator = calc_info.calculator
+                mode_info = calculator.get_mode_info(calc.mode)
 
-            calculations.append(CalculationExtra(
-                *calc,
-                calculator_code=calc_info.code,
-                calculator_name=calc_info.name,
-                inputs=calculator.get_inputs(calc.mode, calc.version),
-                outputs=calculator.get_outputs(calc.mode, calc.version),
-                mode_info=mode_info,
-                target_view=url_for(
-                    '.calc_{}_{}'.format(calculator.get_code(),
-                                         mode_info.code),
-                    calculation_id=calc.id)))
+                calculations.append(CalculationExtra(
+                    *calc,
+                    calculator_name=calc_info.name,
+                    inputs=calculator.get_inputs(calc.mode, calc.version),
+                    outputs=calculator.get_outputs(calc.mode, calc.version),
+                    mode_info=mode_info,
+                    target_view=url_for(
+                        '.calc_{}_{}'.format(calculator.get_code(),
+                                             mode_info.code),
+                        calculation_id=calc.id)))
 
         return {
             'abstract': proposal_text.get(TextRole.ABSTRACT, None),
@@ -196,7 +208,11 @@ class GenericProposal(object):
             'sci_case_pdf': proposal_pdf.get_role(
                 TextRole.SCIENCE_CASE, None),
             'targets': targets,
-            'calculators': self.calculators.values(),
+            'calculators': [
+                CalculatorInfoExtra(*x, target_view=url_for(
+                    '.calc_{}_{}'.format(x.code, x.modes.values()[0].code),
+                    proposal_id=proposal.id))
+                for x in self.calculators.values()],
             'calculations': calculations,
         }
 
