@@ -181,8 +181,12 @@
             {% for calculation in calculations %}
                 <h3>
                     {{ loop.index }}.
-                    {{ calculation.calculator_name }}:
-                    {{ calculation.mode_info.name }}
+                    {% if calculation.title %}
+                        {{ calculation.title }}
+                    {% else %}
+                        {{ calculation.calculator_name }}:
+                        {{ calculation.mode_info.name }}
+                    {% endif %}
                 </h3>
 
                 <p>

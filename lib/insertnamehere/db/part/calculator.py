@@ -30,7 +30,7 @@ from ..meta import calculator, calculation, facility
 
 class CalculatorPart(object):
     def add_calculation(self, proposal_id, calculator_id,
-                        mode, version, input_, output):
+                        mode, version, input_, output, title):
         with self._transaction() as conn:
             result = conn.execute(calculation.insert().values({
                 calculation.c.proposal_id: proposal_id,
@@ -40,6 +40,7 @@ class CalculatorPart(object):
                 calculation.c.input: input_,
                 calculation.c.output: output,
                 calculation.c.date_run: datetime.utcnow(),
+                calculation.c.title: title,
             }))
 
             return result.inserted_primary_key[0]
@@ -91,13 +92,14 @@ class CalculatorPart(object):
         return ans
 
     def update_calculation(self, calculation_id,
-                           mode, version, input_, output):
+                           mode, version, input_, output, title):
         values = {
             calculation.c.mode: mode,
             calculation.c.version: version,
             calculation.c.input: input_,
             calculation.c.output: output,
             calculation.c.date_run: datetime.utcnow(),
+            calculation.c.title: title,
         }
 
         with self._transaction() as conn:

@@ -53,7 +53,8 @@ class DBCalculatorTest(DBTestCase):
         calculator_id = self.db.ensure_calculator(facility_id, 'testcalc')
 
         calculation_id = self.db.add_calculation(
-            proposal_id, calculator_id, 1, 10, {'a': 10, 'b': 20}, {'c': 30})
+            proposal_id, calculator_id, 1, 10, {'a': 10, 'b': 20}, {'c': 30},
+            'test calculation')
 
         self.assertIsInstance(calculation_id, int)
 
@@ -66,11 +67,13 @@ class DBCalculatorTest(DBTestCase):
         self.assertEqual(calc.version, 10)
         self.assertEqual(calc.input, {'a': 10, 'b': 20})
         self.assertEqual(calc.output, {'c': 30})
+        self.assertEqual(calc.title, 'test calculation')
         self.assertIsInstance(calc.date_run, datetime)
 
         self.db.update_calculation(
             calculation_id=calculation_id,
-            mode=2, version=20, input_={'a': 11, 'b': 22}, output={'c': 33})
+            mode=2, version=20, input_={'a': 11, 'b': 22}, output={'c': 33},
+            title='altered calculation')
 
         result = self.db.search_calculation()
         self.assertIsInstance(result, ResultCollection)
@@ -82,6 +85,7 @@ class DBCalculatorTest(DBTestCase):
         self.assertEqual(calc.version, 20)
         self.assertEqual(calc.input, {'a': 11, 'b': 22})
         self.assertEqual(calc.output, {'c': 33})
+        self.assertEqual(calc.title, 'altered calculation')
 
     def _create_test_proposal(self):
         facility_id = self.db.ensure_facility('f')

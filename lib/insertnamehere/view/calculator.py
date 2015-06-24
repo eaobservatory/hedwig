@@ -44,6 +44,7 @@ class BaseCalculator(object):
         inputs = self.get_inputs(mode)
         output = CalculatorResult(None, None)
         proposal_id = None
+        calculation_title = ''
 
         # If the user is logged in, determine whether there are any proposals
         # to which they can add calculator results.
@@ -61,6 +62,9 @@ class BaseCalculator(object):
             try:
                 if 'proposal_id' in form:
                     proposal_id = int(form['proposal_id'])
+
+                if 'calculation_title' in form:
+                    calculation_title = form['calculation_title']
 
                 # Work primarily with the un-parsed "input_values" so that,
                 # in the event of a parsing error, we can still put the user
@@ -103,7 +107,7 @@ class BaseCalculator(object):
 
                     db.add_calculation(
                         proposal_id, self.id_, mode, self.version,
-                        parsed_input, output.output)
+                        parsed_input, output.output, calculation_title)
 
                     if 'submit_save_redir' in form:
                         flash('The calculation has been saved.')
@@ -151,6 +155,7 @@ class BaseCalculator(object):
                         calculation.version, calculation.input)
 
                 output = self(mode, default_input)
+                calculation_title = calculation.title
 
             else:
                 # When we didn't receive a form submission, get the default
@@ -174,6 +179,7 @@ class BaseCalculator(object):
             'output_extra': output.extra,
             'proposals': proposals,
             'proposal_id': proposal_id,
+            'calculation_title': calculation_title,
         }
 
     def format_input(self, inputs, values):
