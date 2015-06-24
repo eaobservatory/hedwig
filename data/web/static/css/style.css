@@ -143,6 +143,10 @@ form ol li span.explanation:after {
     content: ")";
 }
 
+input:disabled + span.checkboxlabel {
+    opacity: 0.5;
+}
+
 figure {
     text-align: center;
 }

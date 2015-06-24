@@ -44,7 +44,10 @@ class BaseCalculator(object):
         inputs = self.get_inputs(mode)
         output = CalculatorResult(None, None)
         proposal_id = None
+        calculation_id = None
+        calculation_proposal = None
         calculation_title = ''
+        overwrite = False
 
         # If the user is logged in, determine whether there are any proposals
         # to which they can add calculator results.
@@ -65,6 +68,15 @@ class BaseCalculator(object):
 
                 if 'calculation_title' in form:
                     calculation_title = form['calculation_title']
+
+                if 'calculation_id' in form:
+                    calculation_id = int(form['calculation_id'])
+
+                if 'calculation_proposal' in form:
+                    calculation_proposal = int(form['calculation_proposal'])
+
+                if 'overwrite' in form:
+                    overwrite = True
 
                 # Work primarily with the un-parsed "input_values" so that,
                 # in the event of a parsing error, we can still put the user
@@ -105,9 +117,30 @@ class BaseCalculator(object):
 
                     output = self(mode, parsed_input)
 
-                    db.add_calculation(
-                        proposal_id, self.id_, mode, self.version,
-                        parsed_input, output.output, calculation_title)
+                    if overwrite:
+                        # Check that the calculation is really for the right
+                        # proposal.
+                        try:
+                            calculation = db.get_calculation(calculation_id)
+                        except NoSuchRecord:
+                            raise UserError(
+                                'Can not overwrite calculation: '
+                                'calculation not found.')
+                        if calculation.proposal_id != proposal_id:
+                            raise UserError(
+                                'Can not overwrite calculation: '
+                                'it appears to be for a different proposal.')
+
+                        db.update_calculation(
+                            calculation_id,
+                            mode=mode, version=self.version,
+                            input_=parsed_input, output=output.output,
+                            title=calculation_title)
+
+                    else:
+                        db.add_calculation(
+                            proposal_id, self.id_, mode, self.version,
+                            parsed_input, output.output, calculation_title)
 
                     if 'submit_save_redir' in form:
                         flash('The calculation has been saved.')
@@ -143,7 +176,8 @@ class BaseCalculator(object):
                     self.facility.id_, calculation.proposal_id,
                     with_members=True)
 
-                if not auth.for_proposal(db, proposal).view:
+                can = auth.for_proposal(db, proposal)
+                if not can.view:
                     raise HTTPForbidden('Access denied for that proposal.')
 
                 proposal_id = proposal.id
@@ -155,7 +189,10 @@ class BaseCalculator(object):
                         calculation.version, calculation.input)
 
                 output = self(mode, default_input)
+                calculation_id = calculation.id
+                calculation_proposal = proposal_id
                 calculation_title = calculation.title
+                overwrite = can.edit
 
             else:
                 # When we didn't receive a form submission, get the default
@@ -179,7 +216,10 @@ class BaseCalculator(object):
             'output_extra': output.extra,
             'proposals': proposals,
             'proposal_id': proposal_id,
+            'calculation_id': calculation_id,
+            'calculation_proposal': calculation_proposal,
             'calculation_title': calculation_title,
+            'overwrite': overwrite,
         }
 
     def format_input(self, inputs, values):
