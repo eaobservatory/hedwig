@@ -26,7 +26,7 @@ from ...type import CalculatorMode, CalculatorResult, CalculatorValue
 from ...view.calculator import BaseCalculator
 
 
-class DummyCalculator(BaseCalculator):
+class ExampleCalculator(BaseCalculator):
     ADDITION = 1
     SUBTRACTION = 2
 
@@ -46,10 +46,10 @@ class DummyCalculator(BaseCalculator):
         within the facility which uses it.
         """
 
-        return 'dummy'
+        return 'example'
 
     def get_name(self):
-        return "Dummy Calculator"
+        return 'Example Calculator'
 
     def get_inputs(self, mode, version=None):
         """

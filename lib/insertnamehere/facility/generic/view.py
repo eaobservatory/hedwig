@@ -23,7 +23,7 @@ from collections import OrderedDict
 from ...config import get_config
 from ...error import NoSuchRecord, UserError
 from ...web.util import ErrorPage, HTTPNotFound, url_for
-from .calculator_dummy import DummyCalculator
+from .calculator_example import ExampleCalculator
 from .view_admin import GenericAdmin
 from .view_proposal import GenericProposal
 
@@ -73,7 +73,7 @@ class Generic(GenericAdmin, GenericProposal):
         list of calculators.
         """
 
-        return (DummyCalculator,)
+        return (ExampleCalculator,)
 
     def make_proposal_code(self, db, proposal):
         """
