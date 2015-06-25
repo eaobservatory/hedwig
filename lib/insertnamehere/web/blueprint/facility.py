@@ -311,6 +311,15 @@ def create_facility_blueprint(db, facility):
         return facility.view_case_view_pdf_preview(
             db, proposal_id, page, TextRole.SCIENCE_CASE)
 
+    @bp.route('/proposal/<int:proposal_id>/calculation',
+              methods=['GET', 'POST'])
+    @facility_template('calculation_manage.html')
+    @require_auth(require_person=True)
+    def calculation_manage(proposal_id):
+        return facility.view_calculation_manage(
+            db, proposal_id,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/admin')
     @facility_template('facility_admin.html')
     @require_admin

@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+{% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
+{% set scripts=['manage_calculation'] %}
+
+{% block content %}
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.calculation_manage', proposal_id=proposal_id) }}">
+    <table>
+        <tr>
+            <th>Calculation</th>
+            <th>Input</th>
+            <th>Output</th>
+            <th>Actions</th>
+        </tr>
+        {% for calculation in calculations %}
+            <tr id="calcrow_{{ calculation.id }}">
+                <td>
+                    {% if calculation.title %}
+                        {{ calculation.title }}
+                        </br />
+                    {% endif %}
+                    Calculator: {{ calculation.calculator_name }}
+                    <br />
+                    Mode: {{ calculation.mode_info.name }}
+                    <br />
+                    Calculator version: {{ calculation.version }}
+                    <br />
+                    Performed: {{ calculation.date_run | format_datetime }} UTC
+                </td>
+                <td>
+                    {% for value in calculation.inputs %}
+                        {% with in_val = calculation.input[value.code] %}
+                            {{ value.name }}:
+                            {{ in_val | fmt(value.format) }}
+                            {% if value.unit is not none %}
+                                {{ value.unit }}
+                            {% endif %}
+                        {% endwith %}
+                        {% if not loop.last %}
+                            <br />
+                        {% endif %}
+                    {% endfor %}
+                </td>
+                <td>
+                    {% for value in calculation.outputs %}
+                        {% with out_val = calculation.output[value.code] %}
+                            {{ value.name }}:
+                            {{ out_val | fmt(value.format) }}
+                            {% if value.unit is not none %}
+                                {{ value.unit }}
+                            {% endif %}
+                        {% endwith %}
+                        {% if not loop.last %}
+                            <br />
+                        {% endif %}
+                    {% endfor %}
+                </td>
+                <td>
+                    <input type="button" id="delete_{{ calculation.id }}" value="Delete" />
+                    <input type="hidden" name="calculation_{{ calculation.id }}" />
+                </th>
+            </tr>
+        {% endfor %}
+    </table>
+
+    </table>
+
+    <p>
+        <input type="submit" value="Save" name="submit" />
+    </p>
+</form>
+
+{% endblock %}

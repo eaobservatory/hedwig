@@ -91,6 +91,18 @@ class CalculatorPart(object):
 
         return ans
 
+    def sync_proposal_calculation(self, proposal_id, records):
+        """
+        Update the calculations for a proposal.
+
+        Currently only deleting figures is supported.
+        """
+
+        with self._transaction() as conn:
+            return self._sync_records(
+                conn, calculation, calculation.c.proposal_id, proposal_id,
+                records, update_columns=(), forbid_add=True)
+
     def update_calculation(self, calculation_id,
                            mode, version, input_, output, title):
         values = {

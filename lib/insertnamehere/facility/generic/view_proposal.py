@@ -165,35 +165,7 @@ class GenericProposal(object):
             db.search_target(
                 proposal_id=proposal.id).to_formatted_collection().values()]
 
-        calculations = []
-        for calc in db.search_calculation(proposal_id=proposal.id).values():
-            calc_info = self.calculators.get(calc.calculator_id)
-            if (calc_info is None or
-                    not calc_info.calculator.is_valid_mode(calc.mode)):
-                calculations.append(CalculationExtra(
-                    *calc,
-                    calculator_name='Calculator {}'.format(calc.calculator_id),
-                    inputs=[CalculatorValue(x, x, '{}', None)
-                            for x in calc.input],
-                    outputs=[CalculatorValue(x, x, '{}', None)
-                             for x in calc.output],
-                    mode_info=CalculatorMode(None,
-                                             'Mode {}'.format(calc.mode)),
-                    target_view=None))
-            else:
-                calculator = calc_info.calculator
-                mode_info = calculator.get_mode_info(calc.mode)
-
-                calculations.append(CalculationExtra(
-                    *calc,
-                    calculator_name=calc_info.name,
-                    inputs=calculator.get_inputs(calc.mode, calc.version),
-                    outputs=calculator.get_outputs(calc.mode, calc.version),
-                    mode_info=mode_info,
-                    target_view=url_for(
-                        '.calc_{}_{}'.format(calculator.get_code(),
-                                             mode_info.code),
-                        calculation_id=calc.id)))
+        calculations = db.search_calculation(proposal_id=proposal.id)
 
         return {
             'abstract': proposal_text.get(TextRole.ABSTRACT, None),
@@ -213,7 +185,7 @@ class GenericProposal(object):
                     '.calc_{}_{}'.format(x.code, x.modes.values()[0].code),
                     proposal_id=proposal.id))
                 for x in self.calculators.values()],
-            'calculations': calculations,
+            'calculations': self._prepare_calculations(calculations),
         }
 
     @with_proposal(permission='edit')
@@ -905,6 +877,43 @@ class GenericProposal(object):
         except NoSuchRecord:
             raise HTTPNotFound('PDF preview page not found.')
 
+    @with_proposal(permission='edit')
+    def view_calculation_manage(self, db, proposal, can, form):
+        message = None
+        calculations = db.search_calculation(proposal_id=proposal.id)
+
+        if form is not None:
+            try:
+                calculations_present = [int(param[12:])
+                                        for param in form
+                                        if param.startswith('calculation_')]
+
+                for calculation_id in list(calculations.keys()):
+                    if calculation_id not in calculations_present:
+                        del calculations[calculation_id]
+
+                (n_insert, n_update, n_delete) = \
+                    db.sync_proposal_calculation(proposal.id, calculations)
+
+                if n_delete:
+                    flash('{} {} been removed.', n_delete,
+                          ('calculation has' if n_delete == 1 else
+                           'calculations have'))
+
+                raise HTTPRedirect(url_for(
+                    '.proposal_view', proposal_id=proposal.id))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Manage Calculations',
+            'message': message,
+            'proposal_id': proposal.id,
+            'proposal_code': self.make_proposal_code(db, proposal),
+            'calculations': self._prepare_calculations(calculations),
+        }
+
     def _edit_text(self, db, proposal, role, word_limit, target, form, rows,
                    figures=None, target_redir=None):
         name = TextRole.get_name(role)
@@ -950,3 +959,37 @@ class GenericProposal(object):
             'rows': rows,
             'figures': figures,
         }
+
+    def _prepare_calculations(self, raw_calculations):
+        calculations = []
+
+        for calc in raw_calculations.values():
+            calc_info = self.calculators.get(calc.calculator_id)
+            if (calc_info is None or
+                    not calc_info.calculator.is_valid_mode(calc.mode)):
+                calculations.append(CalculationExtra(
+                    *calc,
+                    calculator_name='Calculator {}'.format(calc.calculator_id),
+                    inputs=[CalculatorValue(x, x, '{}', None)
+                            for x in calc.input],
+                    outputs=[CalculatorValue(x, x, '{}', None)
+                             for x in calc.output],
+                    mode_info=CalculatorMode(None,
+                                             'Mode {}'.format(calc.mode)),
+                    target_view=None))
+            else:
+                calculator = calc_info.calculator
+                mode_info = calculator.get_mode_info(calc.mode)
+
+                calculations.append(CalculationExtra(
+                    *calc,
+                    calculator_name=calc_info.name,
+                    inputs=calculator.get_inputs(calc.mode, calc.version),
+                    outputs=calculator.get_outputs(calc.mode, calc.version),
+                    mode_info=mode_info,
+                    target_view=url_for(
+                        '.calc_{}_{}'.format(calculator.get_code(),
+                                             mode_info.code),
+                        calculation_id=calc.id)))
+
+        return calculations

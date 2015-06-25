@@ -212,9 +212,6 @@
                         {% endwith %}
                     {% endfor %}
 
-                    <br />
-                    Calculation performed: {{ calculation.date_run | format_datetime }} UTC
-
                     {% if calculation.target_view is not none %}
                         <br />
                         <a href="{{ calculation.target_view }}">View calculation</a>
@@ -226,6 +223,10 @@
         {% if can_edit %}
             <nav>
                 <p>
+                    {% if calculations %}
+                        <a href="{{ url_for('.calculation_manage', proposal_id=proposal.id) }}">Manage calculations</a>
+                        <br />
+                    {% endif %}
                     Add calculation:
                     {% for calculator in calculators %}
                         <a href="{{ calculator.target_view }}">{{ calculator.name }}</a>
