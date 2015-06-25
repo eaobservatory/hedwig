@@ -21,10 +21,10 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict
 from unittest import TestCase
 
-from insertnamehere.error import UserError
-from insertnamehere.facility.jcmt.type import JCMTInstrument, \
+from hedwig.error import UserError
+from hedwig.facility.jcmt.type import JCMTInstrument, \
     JCMTRequest, JCMTRequestCollection, JCMTWeather
-from insertnamehere.type import ResultTable
+from hedwig.type import ResultTable
 
 
 class JCMTTypeTestCase(TestCase):

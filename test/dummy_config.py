@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 import os
 from unittest import TestCase
 
-from insertnamehere import config
+from hedwig import config
 
 
 class DummyConfigTestCase(TestCase):
@@ -50,5 +50,5 @@ class DummyConfigTestCase(TestCase):
         config.facilities = None
 
         # Unset home directory variable.
-        if 'INSERTNAMEHERE_DIR' in os.environ:
-            del os.environ['INSERTNAMEHERE_DIR']
+        if 'HEDWIG_DIR' in os.environ:
+            del os.environ['HEDWIG_DIR']

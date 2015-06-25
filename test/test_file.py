@@ -24,13 +24,13 @@ from cStringIO import StringIO
 from PIL import Image
 from PyPDF2 import PdfFileWriter
 
-from insertnamehere.error import UserError
-from insertnamehere.file.image import create_thumbnail_and_preview, \
+from hedwig.error import UserError
+from hedwig.file.image import create_thumbnail_and_preview, \
     _calculate_size
-from insertnamehere.file.info import determine_figure_type, \
+from hedwig.file.info import determine_figure_type, \
     determine_pdf_page_count
-from insertnamehere.file.pdf import pdf_to_png
-from insertnamehere.type import FigureType
+from hedwig.file.pdf import pdf_to_png
+from hedwig.type import FigureType
 
 from .dummy_config import DummyConfigTestCase
 

@@ -6,8 +6,8 @@ from alembic import context
 
 logging.basicConfig(level=logging.INFO)
 
-from insertnamehere.db.meta import metadata as target_metadata
-from insertnamehere.config import get_config, get_database
+from hedwig.db.meta import metadata as target_metadata
+from hedwig.config import get_config, get_database
 
 
 def include_object(object_, name, type_, reflected, compare_to):

@@ -6,7 +6,7 @@
 url=
 
 [application]
-name=Insert Name Here
+name=Hedwig
 secret_key=
 facilities=Generic
 

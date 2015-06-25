@@ -20,10 +20,10 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime, timedelta
 
-from insertnamehere.db.meta import invitation, reset_token
-from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
+from hedwig.db.meta import invitation, reset_token
+from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
-from insertnamehere.type import Email, EmailCollection, \
+from hedwig.type import Email, EmailCollection, \
     Institution, InstitutionInfo, Person, ResultCollection
 from .dummy_db import DBTestCase
 

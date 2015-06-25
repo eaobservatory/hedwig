@@ -20,8 +20,8 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime
 
-from insertnamehere.error import ConsistencyError, DatabaseIntegrityError
-from insertnamehere.type import Message, MessageRecipient, ResultCollection
+from hedwig.error import ConsistencyError, DatabaseIntegrityError
+from hedwig.type import Message, MessageRecipient, ResultCollection
 from .dummy_db import DBTestCase
 
 

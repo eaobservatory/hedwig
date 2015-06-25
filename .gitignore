@@ -1,4 +1,4 @@
 *~
 *.pyc
 .*.swp
-/etc/insertnamehere.ini
+/etc/hedwig.ini

@@ -21,10 +21,10 @@ from __future__ import absolute_import, division, print_function, \
 from ConfigParser import SafeConfigParser
 import os
 
-from insertnamehere import config
-from insertnamehere.error import Error
-from insertnamehere.db.control import Database
-from insertnamehere.facility.jcmt.control import JCMTPart
+from hedwig import config
+from hedwig.error import Error
+from hedwig.db.control import Database
+from hedwig.facility.jcmt.control import JCMTPart
 
 from .dummy_config import DummyConfigTestCase
 
@@ -45,7 +45,7 @@ class ConfigTestCase(DummyConfigTestCase):
         Also checks that the environment variable is being read.
         """
 
-        os.environ['INSERTNAMEHERE_DIR'] = '/HORSEFEATHERS'
+        os.environ['HEDWIG_DIR'] = '/HORSEFEATHERS'
         with self.assertRaises(Error):
             c = config.get_config()
 
@@ -63,8 +63,8 @@ class ConfigTestCase(DummyConfigTestCase):
         # Facilities by full module and class name.
         self.assertEqual(
             [x.__name__ for x in config.get_facilities(
-                facility_spec='insertnamehere.facility.generic.view.Generic,'
-                'insertnamehere.facility.jcmt.view.JCMT')],
+                facility_spec='hedwig.facility.generic.view.Generic,'
+                'hedwig.facility.jcmt.view.JCMT')],
             ['Generic', 'JCMT'])
 
     def test_get_database(self):
@@ -86,7 +86,7 @@ class ConfigTestCase(DummyConfigTestCase):
         # Get database via plain facility name.
         db = config.get_database(
             database_url=database_url,
-            facility_spec='insertnamehere.facility.jcmt.view.JCMT')
+            facility_spec='hedwig.facility.jcmt.view.JCMT')
         self.assertEqual(db.__class__.__name__, 'CombinedDatabase')
         self.assertIsInstance(db, Database)
         self.assertIsInstance(db, JCMTPart)

@@ -23,10 +23,10 @@ from unittest import TestCase
 
 from astropy.coordinates import SkyCoord
 
-from insertnamehere.astro.coord import CoordSystem, \
+from hedwig.astro.coord import CoordSystem, \
     parse_coord, format_coord, \
     coord_to_dec_deg, coord_from_dec_deg
-from insertnamehere.error import UserError
+from hedwig.error import UserError
 
 
 class AstroCoordTest(TestCase):

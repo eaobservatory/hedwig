@@ -26,7 +26,7 @@ from .error import FormattedError
 from .db.control import Database
 from .db.engine import get_engine
 
-config_file = ('etc', 'insertnamehere.ini')
+config_file = ('etc', 'hedwig.ini')
 config = None
 database = None
 facilities = None
@@ -88,10 +88,10 @@ def get_database(database_url=None, facility_spec=None):
                     # If there are no dots in the facility class, use the
                     # standard location in this packages.
                     import_module(
-                        'insertnamehere.facility.{0}.meta'.format(
+                        'hedwig.facility.{0}.meta'.format(
                             name.lower()))
                     module = import_module(
-                        'insertnamehere.facility.{0}.control'.format(
+                        'hedwig.facility.{0}.control'.format(
                             name.lower()))
 
                 # Look for a class named <Facility>Part.
@@ -137,7 +137,7 @@ def get_facilities(facility_spec=None):
                 # If there were no dots in the class name guess that the module
                 # is in the expected directory and has a lower case name.
                 module = import_module(
-                    'insertnamehere.facility.{0}.view'.format(name.lower()))
+                    'hedwig.facility.{0}.view'.format(name.lower()))
                 class_ = getattr(module, name)
 
             facilities.append(class_)
@@ -151,4 +151,4 @@ def get_home():
     """
 
     env = os.environ
-    return env.get('INSERTNAMEHERE_DIR', os.getcwd())
+    return env.get('HEDWIG_DIR', os.getcwd())

@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict
 from unittest import TestCase
 
-from insertnamehere.util import get_countries
+from hedwig.util import get_countries
 
 
 class UtilTest(TestCase):

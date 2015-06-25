@@ -23,10 +23,10 @@ from unittest import TestCase
 
 from sqlalchemy.sql import insert
 
-from insertnamehere import auth
-from insertnamehere.db.control import Database
-from insertnamehere.db.meta import metadata
-from insertnamehere.db.engine import get_engine
+from hedwig import auth
+from hedwig.db.control import Database
+from hedwig.db.meta import metadata
+from hedwig.db.engine import get_engine
 
 
 def get_dummy_database(randomize_ids=True):

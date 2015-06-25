@@ -20,8 +20,8 @@ from __future__ import absolute_import, division, print_function, \
 
 from unittest import TestCase
 
-from insertnamehere.error import MultipleRecords, NoSuchRecord
-from insertnamehere.type import ResultCollection, ProposalState
+from hedwig.error import MultipleRecords, NoSuchRecord
+from hedwig.type import ResultCollection, ProposalState
 
 
 class TypeTestCase(TestCase):

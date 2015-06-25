@@ -20,9 +20,9 @@ from __future__ import absolute_import, division, print_function, \
 
 from unittest import TestCase
 
-from insertnamehere.type import FormatType, ProposalText
-from insertnamehere.web.format import format_text, format_text_plain
-from insertnamehere.web.util import HTTPError
+from hedwig.type import FormatType, ProposalText
+from hedwig.web.format import format_text, format_text_plain
+from hedwig.web.util import HTTPError
 
 
 class TextFormatTest(TestCase):

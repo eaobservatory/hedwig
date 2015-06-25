@@ -20,10 +20,10 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime
 
-from insertnamehere.db.meta import member
-from insertnamehere.error import ConsistencyError, DatabaseIntegrityError, \
+from hedwig.db.meta import member
+from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
-from insertnamehere.type import Affiliation, AttachmentState, Call, \
+from hedwig.type import Affiliation, AttachmentState, Call, \
     FigureType, FormatType, \
     Member, MemberCollection, MemberInstitution,  \
     Proposal, \
