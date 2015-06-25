@@ -3,6 +3,10 @@
 
 {% block content %}
 
+<p>
+    <a href="{{ url_for('.proposal_view', proposal_id=proposal_id) }}">Back to proposal</a>
+</p>
+
 {% if note %}
     <section>
         <h2>Note</h2>
@@ -10,10 +14,6 @@
         {{ note | format_text }}
     </section>
 {% endif %}
-
-<p>
-    <a href="{{ url_for('.proposal_view', proposal_id=proposal_id) }}">Back to proposal</a>
-</p>
 
 {% if word_limit %}
     {% if page_limit %}
