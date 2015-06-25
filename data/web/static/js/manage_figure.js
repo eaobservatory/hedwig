@@ -4,7 +4,7 @@ function deleteFigureRow(figureid) {
 
 $(document).ready(function () {
     $('[id^="delete_"]').click(function (event) {
-        var emailid = event.target.id.replace('delete_', '');
-        deleteFigureRow(emailid);
+        var figureid = event.target.id.replace('delete_', '');
+        deleteFigureRow(figureid);
     });
 });
