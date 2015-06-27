@@ -378,7 +378,8 @@ class SCUBA2Calculator(BaseCalculator):
             time_tot = input_['time'] * 60.0
 
             time_src = time_tot - self.itc.estimate_overhead(map_mode,
-                                                             time_tot)
+                                                             time_tot,
+                                                             from_total=True)
             extra['time_src'] = time_src / 60.0
 
             output = {
