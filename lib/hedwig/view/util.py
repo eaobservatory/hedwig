@@ -107,3 +107,21 @@ def with_proposal(permission):
         return decorated_method
 
     return decorator
+
+def parse_time(input_time):
+    """
+    Accepts a time string, either as a decimal number of hours,
+    or as hours:minutes:seconds, and returns a float in hours.
+    """
+
+    if ':' in input_time:
+        input_time_part = input_time.split(':', 2)
+
+        return (
+            int(input_time_part[0]) +
+            (int(input_time_part[1]) / 60.0) +
+            (float(
+                input_time_part[2] if len(input_time_part) > 2
+                else 0.0)) / 3600.0)
+    else:
+        return float(input_time)

@@ -131,6 +131,12 @@ def create_web_app():
         return value.strftime('%Y-%m-%d %H:%M')
 
     @app.template_filter()
+    def format_hours_hms(hours):
+        (m, s) = divmod(int(3600 * hours), 60)
+        (h, m) = divmod(m, 60)
+        return '{0:d}:{1:02d}:{2:02d}'.format(h, m, s)
+
+    @app.template_filter()
     def proposal_state_name(value):
         try:
             return ProposalState.get_name(value)

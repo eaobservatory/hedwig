@@ -26,6 +26,7 @@ from jcmt_itc_scuba2 import SCUBA2ITC
 from ...error import CalculatorError, UserError
 from ...type import CalculatorMode, CalculatorResult, CalculatorValue
 from ...view.calculator import BaseCalculator
+from ...view.util import parse_time
 
 WeatherBand = namedtuple('WeatherBand', ('rep', 'min', 'max'))
 
@@ -300,9 +301,12 @@ class SCUBA2Calculator(BaseCalculator):
 
         for field in self.get_inputs(mode):
             try:
-                if field.code in ('dec', 'pix850', 'pix450', 'rms',
-                                  'time', 'tau'):
+                if field.code in ('dec', 'pix850', 'pix450', 'rms', 'tau'):
                     parsed[field.code] = float(input_[field.code])
+
+                elif field.code == 'time':
+                    parsed[field.code] = parse_time(input_[field.code])
+
                 else:
                     parsed[field.code] = input_[field.code]
 
