@@ -120,7 +120,7 @@ class SCUBA2Calculator(BaseCalculator):
             if version == 1:
                 return common_inputs + [
                     CalculatorValue(
-                        'time', 'Observing time', '{}', 'minutes'),
+                        'time', 'Observing time', '{}', 'hours'),
                 ]
             else:
                 raise CalculatorError('Unknown version.')
@@ -261,7 +261,7 @@ class SCUBA2Calculator(BaseCalculator):
             if version == 1:
                 return [
                     CalculatorValue(
-                        'time', 'Observing time', '{}', 'minutes'),
+                        'time', 'Observing time', '{}', 'hours'),
                 ]
             else:
                 raise CalculatorError('Unknown version.')
@@ -361,7 +361,7 @@ class SCUBA2Calculator(BaseCalculator):
                 map_mode, filter_, transmission[filter_], factor[filter_],
                 input_['rms'])
 
-            extra['time_src'] = time_src / 60.0
+            extra['time_src'] = time_src / 3600.0
 
             extra['wl_alt'] = filter_alt
             extra['rms_alt'] = self.itc.calculate_rms(
@@ -371,16 +371,16 @@ class SCUBA2Calculator(BaseCalculator):
             time_tot = time_src + self.itc.estimate_overhead(map_mode,
                                                              time_src)
 
-            output = {'time': time_tot / 60.0}
+            output = {'time': time_tot / 3600.0}
 
         elif mode == self.CALC_RMS:
             # Convert time to seconds.
-            time_tot = input_['time'] * 60.0
+            time_tot = input_['time'] * 3600.0
 
             time_src = time_tot - self.itc.estimate_overhead(map_mode,
                                                              time_tot,
                                                              from_total=True)
-            extra['time_src'] = time_src / 60.0
+            extra['time_src'] = time_src / 3600.0
 
             output = {
                 'rms_850': self.itc.calculate_rms(
