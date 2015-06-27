@@ -1,0 +1,94 @@
+{% extends 'generic/calculator_base.html' %}
+{% set scripts=['edit_calc_jcmt_s2'] %}
+
+{% block calculator_input_list %}
+    {% for value in inputs %}
+        {% with input = input_values[value.code] %}
+            <li>
+                <label for="a">{{ value.name }}</label>
+                {% if value.code == 'map' %}
+                    <select name="map">
+                        {% for mode_code, mode_name in map_modes.items() %}
+                            <option value="{{ mode_code }}" {{ 'selected="selected"' | safe if mode_code == input }}>{{ mode_name }}</option>
+                        {% endfor %}
+                    </select>
+                {% elif value.code == 'mf' %}
+                    <input type="checkbox" name="mf" value="yes" {{ 'checked="checked"' | safe if input }} />
+                {% elif value.code == 'tau' %}
+                    <select name="tau_band">
+                        {% for (band_num, band_info) in weather_bands.items() %}
+                            <option value="{{ band_num }}" {{ 'selected="selected"' | safe if band_num == input_values.tau_band }} data-representative="{{ band_info.rep }}">
+                                Band {{ band_num }}:
+                                {% if band_info.min is not none %}
+                                    {{ band_info.min }} &lt;
+                                {% endif %}
+                                &tau;
+                                {% if band_info.max is not none %}
+                                    &le; {{ band_info.max }}
+                                {% endif %}
+                            </option>
+                        {% endfor %}
+                        <option value="other" {{ 'selected="selected"' | safe if input_values.tau_band is none }}>Other</option>
+                    </select>
+                    <input type="text" name="tau_value" value="{{ input }}" {{ 'disabled="disabled"' | safe if input_values.tau_band is not none }} />
+                {% elif value.code == 'wl' %}
+                    <select name="wl">
+                        {% for wl_filt in (850, 450) %}
+                            <option value="{{ wl_filt }}" {{ 'selected="selected"' | safe if input == wl_filt }}>{{ wl_filt }}</option>
+                        {% endfor %}
+                    </select>
+                {% elif value.code == 'pix850' or value.code == 'pix450' %}
+                    <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="any" {{ 'disabled="disabled"' | safe if input_values.mf }} />
+                {% else %}
+                    <input type="text" name="{{ value.code }}" value="{{ input }}" />
+                {% endif %}
+                {% if value.unit is not none %}
+                    {{ value.unit }}
+                {% endif %}
+            </li>
+        {% endwith %}
+    {% endfor %}
+{% endblock %}
+
+{% block calculator_output_extra_table %}
+    <tr>
+        <th>Time on source</th>
+        <td>{{ output_extra.time_src }} minutes</td>
+    </tr>
+    {% if 'rms_alt' in output_extra %}
+        <tr>
+            <th>Sensitivity at {{ output_extra.wl_alt }} um</th>
+            <td>{{ output_extra.rms_alt }} mJy/beam</td>
+        </tr>
+    {% endif %}
+{% endblock %}
+
+{% block calculator_output_extra %}
+    <table>
+        <tr>
+            <th>Parameter</th>
+            <th>850 um</th>
+            <th>450 um</th>
+        </tr>
+        <tr>
+        <tr>
+            <th>Sampling factor</th>
+            <td>{{ output_extra.f_850 }}</td>
+            <td>{{ output_extra.f_450 }}</td>
+        </tr>
+        <tr>
+            <th>Opacity</th>
+            <td>{{ output_extra.tau_850 }}</td>
+            <td>{{ output_extra.tau_450 }}</td>
+        </tr>
+        <tr>
+            <th>Transmission</th>
+            <td>{{ output_extra.trans_850 }}</td>
+            <td>{{ output_extra.trans_450 }}</td>
+        </tr>
+        <tr>
+            <th>Airmass</th>
+            <td colspan="2">{{ output_extra.airmass }} </td>
+        </tr>
+    </table>
+{% endblock %}

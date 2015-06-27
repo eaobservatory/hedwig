@@ -202,7 +202,7 @@ class BaseCalculator(object):
 
             input_values = self.format_input(inputs, default_input)
 
-        return {
+        ctx = {
             'title': self.get_name(),
             'target': url_for('.calc_{}_{}'.format(self.get_code(),
                                                    self.modes[mode].code)),
@@ -222,6 +222,10 @@ class BaseCalculator(object):
             'overwrite': overwrite,
         }
 
+        ctx.update(self.get_extra_context())
+
+        return ctx
+
     def format_input(self, inputs, values):
         """
         Format the calculator inputs for display in the input form.
@@ -231,6 +235,14 @@ class BaseCalculator(object):
         """
 
         return {x.code: x.format.format(values[x.code]) for x in inputs}
+
+    def get_extra_context(self):
+        """
+        Method which subclasses can override to supply extra context
+        information to the view template.
+        """
+
+        return {}
 
     def get_form_input(self, inputs, form):
         """

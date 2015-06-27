@@ -52,3 +52,7 @@ form ol li > input[type=submit]:first-child {
 .template {
     display: none;
 }
+
+table + table {
+    margin-top: 2ex;
+}

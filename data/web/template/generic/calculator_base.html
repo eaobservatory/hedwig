@@ -1,5 +1,9 @@
 {% extends 'layout.html' %}
-{% set scripts=['edit_calculation'] %}
+{% if scripts is defined %}
+    {% set scripts = ['edit_calculation'] + scripts %}
+{% else %}
+    {% set scripts = ['edit_calculation'] %}
+{% endif %}
 
 {% block content %}
 
