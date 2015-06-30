@@ -196,13 +196,25 @@ def send_file(fixed_type=None):
         def decorated_function(*args, **kwargs):
             type_ = fixed_type
             data = f(*args, **kwargs)
+            filename = None
 
             if type_ is None:
                 # Function should have returned a tuple: unpack it.
                 (data, type_, filename) = data
 
-            return _FlaskResponse(
-                data, mimetype=FigureType.get_mime_type(type_))
+            mime_type = FigureType.get_mime_type(type_)
+
+            response = _FlaskResponse(data, mimetype=mime_type)
+
+            if filename is not None:
+                if mime_type.startswith('image/'):
+                    response.headers.add('Content-Disposition', 'inline',
+                                         filename=filename)
+                else:
+                    response.headers.add('Content-Disposition', 'attachment',
+                                         filename=filename)
+
+            return response
 
         return decorated_function
 

@@ -492,7 +492,7 @@ class ProposalPart(object):
         Get the given PDF associated with a proposal.
         """
 
-        stmt = select([proposal_pdf.c.pdf])
+        stmt = select([proposal_pdf.c.pdf, proposal_pdf.c.filename])
 
         if (proposal_id is not None) and (role is not None):
             if not TextRole.is_valid(role):
@@ -517,7 +517,7 @@ class ProposalPart(object):
             raise NoSuchRecord('PDF does not exist for {0} role {1}',
                                proposal_id, role)
 
-        return row[0]
+        return ProposalFigure(row['pdf'], FigureType.PDF, row['filename'])
 
     def get_proposal_pdf_preview(self, proposal_id, role, page):
         """

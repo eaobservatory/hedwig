@@ -112,7 +112,8 @@ def process_proposal_pdf(db):
         except ConsistencyError:
             continue
 
-        buff = db.get_proposal_pdf(proposal_id=None, role=None, id_=pdf.id)
+        buff = db.get_proposal_pdf(proposal_id=None, role=None,
+                                   id_=pdf.id).data
 
         try:
             pngs = pdf_to_png(buff)
