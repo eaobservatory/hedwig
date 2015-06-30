@@ -78,7 +78,7 @@
     </tr>
     {% if 'rms_alt' in output_extra %}
         <tr>
-            <th>Sensitivity at {{ output_extra.wl_alt }} um</th>
+            <th>Sensitivity at {{ output_extra.wl_alt }} &micro;m</th>
             <td>{{ output_extra.rms_alt | fmt('{:.3f}') }} mJy/beam</td>
         </tr>
     {% endif %}
@@ -88,8 +88,8 @@
     <table>
         <tr>
             <th>Parameter</th>
-            <th>850 um</th>
-            <th>450 um</th>
+            <th>850 &micro;m</th>
+            <th>450 &micro;m</th>
         </tr>
         <tr>
         <tr>

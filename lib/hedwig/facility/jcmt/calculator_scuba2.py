@@ -98,9 +98,9 @@ class SCUBA2Calculator(BaseCalculator):
                     'mf',     'Matched filter',
                     'Match. filt.', '{}', None),
                 CalculatorValue(
-                    'pix850', '850 um pixel size',  '850 um pix', '{}', '"'),
+                    'pix850', '850 \u00b5m pixel size',  '850 \u00b5m pix', '{}', '"'),
                 CalculatorValue(
-                    'pix450', '450 um pixel size',  '450 um pix', '{}', '"'),
+                    'pix450', '450 \u00b5m pixel size',  '450 \u00b5m pix', '{}', '"'),
                 CalculatorValue(
                     'tau',    '225 GHz opacity',
                     '\u03c4\u2082\u2082\u2085', '{}', None),
@@ -112,7 +112,7 @@ class SCUBA2Calculator(BaseCalculator):
             if version == 1:
                 return common_inputs + [
                     CalculatorValue(
-                        'wl',  'Wavelength', '\u03bb', '{}', 'um'),
+                        'wl',  'Wavelength', '\u03bb', '{}', '\u00b5m'),
                     CalculatorValue(
                         'rms', 'Target sensitivity', '\u03c3',
                         '{:.3f}', 'mJy/beam'),
@@ -274,10 +274,10 @@ class SCUBA2Calculator(BaseCalculator):
             if version == 1:
                 return [
                     CalculatorValue(
-                        'rms_850', '850 um sensitivity',
+                        'rms_850', '850 \u00b5m sensitivity',
                         '\u03c3\u2088\u2085\u2080', '{:.3f}', 'mJy/beam'),
                     CalculatorValue(
-                        'rms_450', '450 um sensitivity',
+                        'rms_450', '450 \u00b5m sensitivity',
                         '\u03c3\u2084\u2085\u2080', '{:.3f}', 'mJy/beam'),
                 ]
             else:
