@@ -192,7 +192,11 @@
                 <p>
                     {% for value in calculation.inputs %}
                         {% with in_val = calculation.input[value.code] %}
-                            {{ value.name }}:
+                            {% if value.abbr is not none %}
+                                <abbr title="{{ value.name }}">{{ value.abbr }}</abbr>:
+                            {% else %}
+                                {{ value.name }}:
+                            {% endif %}
                             {{ in_val | fmt(value.format) }}
                             {% if value.unit is not none %}
                                 {{ value.unit }}
@@ -204,7 +208,11 @@
 
                     {% for value in calculation.outputs %}
                         {% with out_val = calculation.output[value.code] %}
-                            {{ value.name }}:
+                            {% if value.abbr is not none %}
+                                <abbr title="{{ value.name }}">{{ value.abbr }}</abbr>:
+                            {% else %}
+                                {{ value.name }}:
+                            {% endif %}
                             {{ out_val | fmt(value.format) }}
                             {% if value.unit is not none %}
                                 {{ value.unit }}

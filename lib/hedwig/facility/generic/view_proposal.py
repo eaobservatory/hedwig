@@ -970,9 +970,9 @@ class GenericProposal(object):
                 calculations.append(CalculationExtra(
                     *calc,
                     calculator_name='Calculator {}'.format(calc.calculator_id),
-                    inputs=[CalculatorValue(x, x, '{}', None)
+                    inputs=[CalculatorValue(x, x, None, '{}', None)
                             for x in calc.input],
-                    outputs=[CalculatorValue(x, x, '{}', None)
+                    outputs=[CalculatorValue(x, x, None, '{}', None)
                              for x in calc.output],
                     mode_info=CalculatorMode(None,
                                              'Mode {}'.format(calc.mode)),

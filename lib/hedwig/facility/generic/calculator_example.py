@@ -62,8 +62,8 @@ class ExampleCalculator(BaseCalculator):
 
         if mode in (self.ADDITION, self.SUBTRACTION) and version == 1:
             return [
-                CalculatorValue('a', 'First input', '{}', 'm'),
-                CalculatorValue('b', 'Second input', '{}', 'm'),
+                CalculatorValue('a', 'First input', None, '{}', 'm'),
+                CalculatorValue('b', 'Second input', None, '{}', 'm'),
             ]
 
         else:
@@ -107,9 +107,10 @@ class ExampleCalculator(BaseCalculator):
 
         if version == 1:
             if mode == self.ADDITION:
-                return [CalculatorValue('sum', 'Sum', '{}', 'mm')]
+                return [CalculatorValue('sum', 'Sum', None, '{}', 'mm')]
             elif mode == self.SUBTRACTION:
-                return [CalculatorValue('diff', 'Difference', '{}', 'km')]
+                return [CalculatorValue('diff', 'Difference', None,
+                                        '{}', 'km')]
             else:
                 raise CalculatorError('Unknown mode.')
         else:

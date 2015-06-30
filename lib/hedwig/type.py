@@ -45,7 +45,7 @@ CalculatorResult = namedtuple(
 
 CalculatorValue = namedtuple(
     'CalculatorValue',
-    ['code', 'name', 'format', 'unit'])
+    ['code', 'name', 'abbr', 'format', 'unit'])
 
 Calculation = namedtuple(
     'Calculation',

@@ -91,17 +91,19 @@ class SCUBA2Calculator(BaseCalculator):
         if version == 1:
             common_inputs = [
                 CalculatorValue(
-                    'map',    'Map type',           '{}', None),
+                    'map',    'Map type',           'Map', '{}', None),
                 CalculatorValue(
-                    'dec',    'Source declination', '{}', 'degrees'),
+                    'dec',    'Source declination', 'Dec', '{}', 'degrees'),
                 CalculatorValue(
-                    'mf',     'Matched filter',     '{}', None),
+                    'mf',     'Matched filter',
+                    'Match. filt.', '{}', None),
                 CalculatorValue(
-                    'pix850', '850 um pixel size',  '{}', '"'),
+                    'pix850', '850 um pixel size',  '850 um pix', '{}', '"'),
                 CalculatorValue(
-                    'pix450', '450 um pixel size',  '{}', '"'),
+                    'pix450', '450 um pixel size',  '450 um pix', '{}', '"'),
                 CalculatorValue(
-                    'tau',    '225 GHz opacity',    '{}', None),
+                    'tau',    '225 GHz opacity',
+                    '\u03c4\u2082\u2082\u2085', '{}', None),
             ]
         else:
             raise CalculatorError('Unknown version.')
@@ -110,9 +112,10 @@ class SCUBA2Calculator(BaseCalculator):
             if version == 1:
                 return common_inputs + [
                     CalculatorValue(
-                        'wl',  'Wavelength', '{}', 'um'),
+                        'wl',  'Wavelength', '\u03bb', '{}', 'um'),
                     CalculatorValue(
-                        'rms', 'Target sensitivity', '{}', 'mJy/beam'),
+                        'rms', 'Target sensitivity', '\u03c3',
+                        '{}', 'mJy/beam'),
                 ]
             else:
                 raise CalculatorError('Unknown version.')
@@ -121,7 +124,7 @@ class SCUBA2Calculator(BaseCalculator):
             if version == 1:
                 return common_inputs + [
                     CalculatorValue(
-                        'time', 'Observing time', '{}', 'hours'),
+                        'time', 'Observing time', 'Time', '{}', 'hours'),
                 ]
             else:
                 raise CalculatorError('Unknown version.')
@@ -262,7 +265,7 @@ class SCUBA2Calculator(BaseCalculator):
             if version == 1:
                 return [
                     CalculatorValue(
-                        'time', 'Observing time', '{}', 'hours'),
+                        'time', 'Observing time', 'Time', '{}', 'hours'),
                 ]
             else:
                 raise CalculatorError('Unknown version.')
@@ -271,9 +274,11 @@ class SCUBA2Calculator(BaseCalculator):
             if version == 1:
                 return [
                     CalculatorValue(
-                        'rms_850', '850 um sensitivity', '{}', 'mJy/beam'),
+                        'rms_850', '850 um sensitivity',
+                        '\u03c3\u2088\u2085\u2080', '{}', 'mJy/beam'),
                     CalculatorValue(
-                        'rms_450', '450 um sensitivity', '{}', 'mJy/beam'),
+                        'rms_450', '450 um sensitivity',
+                        '\u03c3\u2084\u2085\u2080', '{}', 'mJy/beam'),
                 ]
             else:
                 raise CalculatorError('Unknown version.')
