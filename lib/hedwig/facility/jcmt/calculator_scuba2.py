@@ -289,6 +289,10 @@ class SCUBA2Calculator(BaseCalculator):
         return {
             'weather_bands': self.bands,
             'map_modes': self.itc.get_modes(),
+            'default': {
+                'pix850': self.default_pix850,
+                'pix450': self.default_pix450,
+            },
         }
 
     def parse_input(self, mode, input_):

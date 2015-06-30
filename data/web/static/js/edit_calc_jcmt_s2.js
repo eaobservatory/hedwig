@@ -3,8 +3,15 @@ $(document).ready(function () {
 
     mf_checkbox.change(function () {
         var mf_checked = mf_checkbox.prop('checked');
-        $('[name=pix850]').prop('disabled', mf_checked);
-        $('[name=pix450]').prop('disabled', mf_checked);
+        var pix850 = $('[name=pix850]');
+        var pix450 = $('[name=pix450]');
+        pix850.prop('disabled', mf_checked);
+        pix450.prop('disabled', mf_checked);
+
+        if (mf_checked) {
+            pix850.val(pix850.data('default'));
+            pix450.val(pix450.data('default'));
+        }
     });
 
     var tau_select = $('[name=tau_band]');
