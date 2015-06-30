@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from flask import Markup
 
+from ..format.rst import rst_to_html
 from ..type import FormatType
 from .util import HTTPError
 
@@ -59,3 +60,14 @@ def format_text_plain(text):
             Markup('</p>')
 
     return result
+
+
+def format_text_rst(text, extract_title_toc=False, start_heading=3):
+    (body, title, toc) = rst_to_html(text, extract_title=extract_title_toc,
+                                     start_heading=start_heading)
+
+    if not extract_title_toc:
+        return Markup(body)
+
+    else:
+        return (Markup(body), Markup(title), toc)

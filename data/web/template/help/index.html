@@ -1,0 +1,13 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+<ul>
+    <li><a href="user/">Proposal Author&rsquo;s Guide</a></li>
+    {% if session.is_admin %}
+        <li><a href="admin/">Administrator&rsquo;s Guide</a></li>
+    {% endif %}
+    <li><a href="about">About this System</a></li>
+</ul>
+
+{% endblock %}

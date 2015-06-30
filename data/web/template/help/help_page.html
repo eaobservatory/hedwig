@@ -1,0 +1,15 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+{% if toc %}
+    <ul>
+        {% for (toc_entry, toc_entry_title) in toc.items() %}
+            <li><a href="{{ toc_entry }}">{{ toc_entry_title }}</a></li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{{ help_text }}
+
+{% endblock %}

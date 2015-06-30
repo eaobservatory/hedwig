@@ -28,6 +28,7 @@ from ..type import AttachmentState, FacilityInfo, ProposalState
 from .util import require_auth, session, templated
 
 from .blueprint.facility import create_facility_blueprint
+from .blueprint.help import create_help_blueprint
 from .blueprint.people import create_people_blueprint
 from .format import format_text
 
@@ -79,6 +80,7 @@ def create_web_app():
         return prepare_dashboard(db, session['person']['id'], facilities)
 
     app.register_blueprint(create_people_blueprint(db))
+    app.register_blueprint(create_help_blueprint(), url_prefix='/help')
 
     # Register blueprints for each facility.
     for facility_class in get_facilities():
