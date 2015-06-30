@@ -174,28 +174,31 @@ def create_facility_blueprint(db, facility):
             db, proposal_id, TextRole.TECHNICAL_CASE,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/technical/figure/<int:fig_id>')
-    @send_file()
+    @bp.route('/proposal/<int:proposal_id>/technical/figure/'
+              '<int:fig_id>/<md5sum>')
+    @send_file(allow_cache=True)
     @require_auth(require_person=True)
-    def tech_view_figure(proposal_id, fig_id):
+    def tech_view_figure(proposal_id, fig_id, md5sum):
         return facility.view_case_view_figure(
-            db, proposal_id, fig_id, TextRole.TECHNICAL_CASE)
+            db, proposal_id, fig_id, TextRole.TECHNICAL_CASE, md5sum)
 
-    @bp.route(
-        '/proposal/<int:proposal_id>/technical/figure/<int:fig_id>/thumbnail')
-    @send_file(FigureType.PNG)
+    @bp.route('/proposal/<int:proposal_id>/technical/figure/'
+              '<int:fig_id>/thumbnail/<md5sum>')
+    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     @require_auth(require_person=True)
-    def tech_view_figure_thumbnail(proposal_id, fig_id):
+    def tech_view_figure_thumbnail(proposal_id, fig_id, md5sum):
         return facility.view_case_view_figure(
-            db, proposal_id, fig_id, TextRole.TECHNICAL_CASE, 'thumbnail')
+            db, proposal_id, fig_id, TextRole.TECHNICAL_CASE, md5sum,
+            'thumbnail')
 
-    @bp.route(
-        '/proposal/<int:proposal_id>/technical/figure/<int:fig_id>/preview')
-    @send_file(FigureType.PNG)
+    @bp.route('/proposal/<int:proposal_id>/technical/figure/'
+              '<int:fig_id>/preview/<md5sum>')
+    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     @require_auth(require_person=True)
-    def tech_view_figure_preview(proposal_id, fig_id):
+    def tech_view_figure_preview(proposal_id, fig_id, md5sum):
         return facility.view_case_view_figure(
-            db, proposal_id, fig_id, TextRole.TECHNICAL_CASE, 'preview')
+            db, proposal_id, fig_id, TextRole.TECHNICAL_CASE, md5sum,
+            'preview')
 
     @bp.route('/proposal/<int:proposal_id>/technical/pdf/edit',
               methods=['GET', 'POST'])
@@ -213,12 +216,13 @@ def create_facility_blueprint(db, facility):
         return facility.view_case_view_pdf(
             db, proposal_id, TextRole.TECHNICAL_CASE)
 
-    @bp.route('/proposal/<int:proposal_id>/technical/pdf/preview/<int:page>')
-    @send_file(FigureType.PNG)
+    @bp.route('/proposal/<int:proposal_id>/technical/pdf/'
+              'preview/<int:page>/<md5sum>')
+    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     @require_auth(require_person=True)
-    def tech_view_pdf_preview(proposal_id, page):
+    def tech_view_pdf_preview(proposal_id, page, md5sum):
         return facility.view_case_view_pdf_preview(
-            db, proposal_id, page, TextRole.TECHNICAL_CASE)
+            db, proposal_id, page, TextRole.TECHNICAL_CASE, md5sum)
 
     @bp.route('/proposal/<int:proposal_id>/scientific')
     @facility_template('case_edit.html')
@@ -265,28 +269,31 @@ def create_facility_blueprint(db, facility):
             db, proposal_id, TextRole.SCIENCE_CASE,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/scientific/figure/<int:fig_id>')
-    @send_file()
+    @bp.route('/proposal/<int:proposal_id>/scientific/figure/'
+              '<int:fig_id>/<md5sum>')
+    @send_file(allow_cache=True)
     @require_auth(require_person=True)
-    def sci_view_figure(proposal_id, fig_id):
+    def sci_view_figure(proposal_id, fig_id, md5sum):
         return facility.view_case_view_figure(
-            db, proposal_id, fig_id, TextRole.SCIENCE_CASE)
+            db, proposal_id, fig_id, TextRole.SCIENCE_CASE, md5sum)
 
-    @bp.route(
-        '/proposal/<int:proposal_id>/scientific/figure/<int:fig_id>/thumbnail')
-    @send_file(FigureType.PNG)
+    @bp.route('/proposal/<int:proposal_id>/scientific/figure/'
+              '<int:fig_id>/thumbnail/<md5sum>')
+    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     @require_auth(require_person=True)
-    def sci_view_figure_thumbnail(proposal_id, fig_id):
+    def sci_view_figure_thumbnail(proposal_id, fig_id, md5sum):
         return facility.view_case_view_figure(
-            db, proposal_id, fig_id, TextRole.SCIENCE_CASE, 'thumbnail')
+            db, proposal_id, fig_id, TextRole.SCIENCE_CASE, md5sum,
+            'thumbnail')
 
-    @bp.route(
-        '/proposal/<int:proposal_id>/scientific/figure/<int:fig_id>/preview')
-    @send_file(FigureType.PNG)
+    @bp.route('/proposal/<int:proposal_id>/scientific/figure/'
+              '<int:fig_id>/preview/<md5sum>')
+    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     @require_auth(require_person=True)
-    def sci_view_figure_preview(proposal_id, fig_id):
+    def sci_view_figure_preview(proposal_id, fig_id, md5sum):
         return facility.view_case_view_figure(
-            db, proposal_id, fig_id, TextRole.SCIENCE_CASE, 'preview')
+            db, proposal_id, fig_id, TextRole.SCIENCE_CASE, md5sum,
+            'preview')
 
     @bp.route('/proposal/<int:proposal_id>/scientific/pdf/edit',
               methods=['GET', 'POST'])
@@ -304,12 +311,13 @@ def create_facility_blueprint(db, facility):
         return facility.view_case_view_pdf(
             db, proposal_id, TextRole.SCIENCE_CASE)
 
-    @bp.route('/proposal/<int:proposal_id>/scientific/pdf/preview/<int:page>')
-    @send_file(FigureType.PNG)
+    @bp.route('/proposal/<int:proposal_id>/scientific/pdf/'
+              'preview/<int:page>/<md5sum>')
+    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     @require_auth(require_person=True)
-    def sci_view_pdf_preview(proposal_id, page):
+    def sci_view_pdf_preview(proposal_id, page, md5sum):
         return facility.view_case_view_pdf_preview(
-            db, proposal_id, page, TextRole.SCIENCE_CASE)
+            db, proposal_id, page, TextRole.SCIENCE_CASE, md5sum)
 
     @bp.route('/proposal/<int:proposal_id>/calculation',
               methods=['GET', 'POST'])

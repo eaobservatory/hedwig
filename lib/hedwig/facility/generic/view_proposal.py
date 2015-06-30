@@ -140,9 +140,11 @@ class GenericProposal(object):
                 ('.tech_view_figure_preview'
                     if x.has_preview
                     else '.tech_view_figure'),
-                proposal_id=proposal.id, fig_id=x.id), target_full=(
+                proposal_id=proposal.id, fig_id=x.id,
+                md5sum=x.md5sum), target_full=(
                     url_for('.tech_view_figure',
-                            proposal_id=proposal.id, fig_id=x.id)
+                            proposal_id=proposal.id, fig_id=x.id,
+                            md5sum=x.md5sum)
                     if x.has_preview else None),
                 target_edit=None)
             for x in proposal_fig.values()
@@ -152,9 +154,11 @@ class GenericProposal(object):
                 ('.sci_view_figure_preview'
                     if x.has_preview
                     else '.sci_view_figure'),
-                proposal_id=proposal.id, fig_id=x.id), target_full=(
+                proposal_id=proposal.id, fig_id=x.id,
+                md5sum=x.md5sum), target_full=(
                     url_for('.sci_view_figure',
-                            proposal_id=proposal.id, fig_id=x.id)
+                            proposal_id=proposal.id, fig_id=x.id,
+                            md5sum=x.md5sum)
                     if x.has_preview else None),
                 target_edit=None)
             for x in proposal_fig.values()
@@ -554,9 +558,11 @@ class GenericProposal(object):
             ProposalFigureExtra(
                 *x,
                 target_full=url_for('.{}_view_figure'.format(code),
-                                    proposal_id=proposal.id, fig_id=x.id),
+                                    proposal_id=proposal.id, fig_id=x.id,
+                                    md5sum=x.md5sum),
                 target_view=url_for('.{}_view_figure_thumbnail'.format(code),
-                                    proposal_id=proposal.id, fig_id=x.id),
+                                    proposal_id=proposal.id, fig_id=x.id,
+                                    md5sum=x.md5sum),
                 target_edit=url_for('.{}_edit_figure'.format(code),
                                     proposal_id=proposal.id, fig_id=x.id))
             for x in db.search_proposal_figure(
@@ -594,7 +600,8 @@ class GenericProposal(object):
             ProposalFigureExtra(
                 *x, target_edit=None, target_full=None,
                 target_view=url_for('.{}_view_figure_thumbnail'.format(code),
-                                    proposal_id=proposal.id, fig_id=x.id))
+                                    proposal_id=proposal.id, fig_id=x.id,
+                                    md5sum=x.md5sum))
             for x in db.search_proposal_figure(
                 proposal_id=proposal.id, role=role).values()]
 
@@ -772,31 +779,31 @@ class GenericProposal(object):
                     *x, target_full=None, target_edit=None,
                     target_view=url_for(
                         '.{}_view_figure_thumbnail'.format(code),
-                        proposal_id=proposal.id, fig_id=x.id))
+                        proposal_id=proposal.id, fig_id=x.id, md5sum=x.md5sum))
                 for x in figures.values()],
         }
 
     @with_proposal(permission='view')
-    def view_case_view_figure(self, db, proposal, can, fig_id, role,
+    def view_case_view_figure(self, db, proposal, can, fig_id, role, md5sum,
                               type_=None):
         if type_ is None:
             try:
                 return db.get_proposal_figure(
-                    proposal.id, role, fig_id)
+                    proposal.id, role, fig_id, md5sum=md5sum)
             except NoSuchRecord:
                 raise HTTPNotFound('Figure not found.')
 
         elif type_ == 'thumbnail':
             try:
                 return db.get_proposal_figure_thumbnail(
-                    proposal.id, role, fig_id)
+                    proposal.id, role, fig_id, md5sum=md5sum)
             except NoSuchRecord:
                 raise HTTPNotFound('Figure thumbnail not found.')
 
         elif type_ == 'preview':
             try:
                 return db.get_proposal_figure_preview(
-                    proposal.id, role, fig_id)
+                    proposal.id, role, fig_id, md5sum=md5sum)
             except NoSuchRecord:
                 raise HTTPNotFound('Figure preview not found.')
 
@@ -871,9 +878,11 @@ class GenericProposal(object):
                 TextRole.get_name(role).capitalize()))
 
     @with_proposal(permission='view')
-    def view_case_view_pdf_preview(self, db, proposal, can, page, role):
+    def view_case_view_pdf_preview(self, db, proposal, can, page, role,
+                                   md5sum):
         try:
-            return db.get_proposal_pdf_preview(proposal.id, role, page)
+            return db.get_proposal_pdf_preview(proposal.id, role, page,
+                                               md5sum=md5sum)
         except NoSuchRecord:
             raise HTTPNotFound('PDF preview page not found.')
 

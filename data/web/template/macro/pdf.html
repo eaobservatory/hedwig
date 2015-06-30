@@ -2,7 +2,7 @@
     {% if pdf.state is attachment_ready %}
         {% for page in range(1, pdf.pages + 1) %}
             <p>
-                <img src="{{ url_for(target, proposal_id=proposal_id, page=page) }}" class="pdf_preview" />
+                <img src="{{ url_for(target, proposal_id=proposal_id, page=page, md5sum=pdf.md5sum) }}" class="pdf_preview" />
             </p>
         {% endfor %}
     {% elif pdf.state is attachment_error %}

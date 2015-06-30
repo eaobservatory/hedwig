@@ -423,7 +423,7 @@ class ProposalPart(object):
 
         return result['code']
 
-    def get_proposal_figure(self, proposal_id, role, id_):
+    def get_proposal_figure(self, proposal_id, role, id_, md5sum=None):
         """
         Get a figure associated with a proposal.
 
@@ -447,6 +447,9 @@ class ProposalPart(object):
         else:
             raise Error('proposal figure identifier not specified')
 
+        if md5sum is not None:
+            stmt = stmt.where(proposal_fig.c.md5sum == md5sum)
+
         with self._transaction() as conn:
             row = conn.execute(stmt).first()
 
@@ -455,24 +458,31 @@ class ProposalPart(object):
 
         return ProposalFigure(row['figure'], row['type'], row['filename'])
 
-    def get_proposal_figure_preview(self, proposal_id, role, id_):
+    def get_proposal_figure_preview(self, proposal_id, role, id_,
+                                    md5sum=None):
         return self._get_proposal_figure_alternate(
-            proposal_fig_preview.c.preview, proposal_id, role, id_)
+            proposal_fig_preview.c.preview, proposal_id, role, id_,
+            md5sum)
 
-    def get_proposal_figure_thumbnail(self, proposal_id, role, id_):
+    def get_proposal_figure_thumbnail(self, proposal_id, role, id_,
+                                     md5sum=None):
         return self._get_proposal_figure_alternate(
-            proposal_fig_thumbnail.c.thumbnail, proposal_id, role, id_)
+            proposal_fig_thumbnail.c.thumbnail, proposal_id, role, id_,
+            md5sum)
 
     def _get_proposal_figure_alternate(self, column,
-                                       proposal_id, role, id_):
+                                       proposal_id, role, id_, md5sum):
         stmt = select([column])
 
-        if (proposal_id is not None) or (role is not None):
+        if ((proposal_id is not None) or (role is not None) or
+                (md5sum is not None)):
             stmt = stmt.select_from(column.table.join(proposal_fig))
             if proposal_id is not None:
                 stmt = stmt.where(proposal_fig.c.proposal_id == proposal_id)
             if role is not None:
                 stmt = stmt.where(proposal_fig.c.role == role)
+            if md5sum is not None:
+                stmt = stmt.where(proposal_fig.c.md5sum == md5sum)
 
         if id_ is not None:
             stmt = stmt.where(column.table.c.fig_id == id_)
@@ -519,7 +529,7 @@ class ProposalPart(object):
 
         return ProposalFigure(row['pdf'], FigureType.PDF, row['filename'])
 
-    def get_proposal_pdf_preview(self, proposal_id, role, page):
+    def get_proposal_pdf_preview(self, proposal_id, role, page, md5sum=None):
         """
         Get a preview page from a PDF associated with a proposal.
         """
@@ -531,6 +541,9 @@ class ProposalPart(object):
             proposal_pdf.c.role == role,
             proposal_pdf_preview.c.page == page
         ))
+
+        if md5sum is not None:
+            stmt = stmt.where(proposal_pdf.c.md5sum == md5sum)
 
         with self._transaction() as conn:
             preview = conn.execute(stmt).scalar()

@@ -181,7 +181,7 @@ def require_not_auth(f):
     return decorated
 
 
-def send_file(fixed_type=None):
+def send_file(fixed_type=None, allow_cache=False):
     """
     Decorator for route functions which send files.
 
@@ -189,6 +189,10 @@ def send_file(fixed_type=None):
     argument and the function just returns the data.  Otherwise
     the function must return a ProposalFigure(data, type, filename) tuple
     where the type is a value from FigureType.
+
+    If "allow_cache" is enabled, HTTP headers will be added to enable
+    caching.  In this case it is assumed that the caller will ensure
+    the resource hasn't changed, e.g. by including a checksum in the URL.
     """
 
     def decorator(f):
@@ -213,6 +217,13 @@ def send_file(fixed_type=None):
                 else:
                     response.headers.add('Content-Disposition', 'attachment',
                                          filename=filename)
+
+            if allow_cache:
+                # Set maximum age to one day to allow the user's browser
+                # to cache the file.  However this is assumed to be a part
+                # of their proposal, so request no public caching.
+                response.cache_control.max_age = 86400
+                response.cache_control.private = True
 
             return response
 
