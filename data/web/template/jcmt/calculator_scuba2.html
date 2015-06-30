@@ -74,12 +74,12 @@
     {% endfor %}
     <tr>
         <th>Time on source</th>
-        <td>{{ output_extra.time_src }} hours ({{ output_extra.time_src | format_hours_hms }})</td>
+        <td>{{ output_extra.time_src | fmt('{:.3f}') }} hours ({{ output_extra.time_src | format_hours_hms }})</td>
     </tr>
     {% if 'rms_alt' in output_extra %}
         <tr>
             <th>Sensitivity at {{ output_extra.wl_alt }} um</th>
-            <td>{{ output_extra.rms_alt }} mJy/beam</td>
+            <td>{{ output_extra.rms_alt | fmt('{:.3f}') }} mJy/beam</td>
         </tr>
     {% endif %}
 {% endblock %}
@@ -99,17 +99,17 @@
         </tr>
         <tr>
             <th>Opacity</th>
-            <td>{{ output_extra.tau_850 }}</td>
-            <td>{{ output_extra.tau_450 }}</td>
+            <td>{{ output_extra.tau_850 | fmt('{:.3f}') }}</td>
+            <td>{{ output_extra.tau_450 | fmt('{:.3f}') }}</td>
         </tr>
         <tr>
             <th>Transmission</th>
-            <td>{{ output_extra.trans_850 }}</td>
-            <td>{{ output_extra.trans_450 }}</td>
+            <td>{{ output_extra.trans_850 | fmt('{:.3f}') }}</td>
+            <td>{{ output_extra.trans_450 | fmt('{:.3f}')}}</td>
         </tr>
         <tr>
             <th>Airmass</th>
-            <td colspan="2">{{ output_extra.airmass }} </td>
+            <td colspan="2">{{ output_extra.airmass | fmt('{:.3f}') }} </td>
         </tr>
     </table>
 {% endblock %}

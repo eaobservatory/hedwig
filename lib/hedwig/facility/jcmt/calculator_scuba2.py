@@ -93,7 +93,7 @@ class SCUBA2Calculator(BaseCalculator):
                 CalculatorValue(
                     'map',    'Map type',           'Map', '{}', None),
                 CalculatorValue(
-                    'dec',    'Source declination', 'Dec', '{}', 'degrees'),
+                    'dec',    'Source declination', 'Dec', '{:.3g}', 'degrees'),
                 CalculatorValue(
                     'mf',     'Matched filter',
                     'Match. filt.', '{}', None),
@@ -115,7 +115,7 @@ class SCUBA2Calculator(BaseCalculator):
                         'wl',  'Wavelength', '\u03bb', '{}', 'um'),
                     CalculatorValue(
                         'rms', 'Target sensitivity', '\u03c3',
-                        '{}', 'mJy/beam'),
+                        '{:.3f}', 'mJy/beam'),
                 ]
             else:
                 raise CalculatorError('Unknown version.')
@@ -124,7 +124,7 @@ class SCUBA2Calculator(BaseCalculator):
             if version == 1:
                 return common_inputs + [
                     CalculatorValue(
-                        'time', 'Observing time', 'Time', '{}', 'hours'),
+                        'time', 'Observing time', 'Time', '{:.3f}', 'hours'),
                 ]
             else:
                 raise CalculatorError('Unknown version.')
@@ -265,7 +265,7 @@ class SCUBA2Calculator(BaseCalculator):
             if version == 1:
                 return [
                     CalculatorValue(
-                        'time', 'Observing time', 'Time', '{}', 'hours'),
+                        'time', 'Observing time', 'Time', '{:.3f}', 'hours'),
                 ]
             else:
                 raise CalculatorError('Unknown version.')
@@ -275,10 +275,10 @@ class SCUBA2Calculator(BaseCalculator):
                 return [
                     CalculatorValue(
                         'rms_850', '850 um sensitivity',
-                        '\u03c3\u2088\u2085\u2080', '{}', 'mJy/beam'),
+                        '\u03c3\u2088\u2085\u2080', '{:.3f}', 'mJy/beam'),
                     CalculatorValue(
                         'rms_450', '450 um sensitivity',
-                        '\u03c3\u2084\u2085\u2080', '{}', 'mJy/beam'),
+                        '\u03c3\u2084\u2085\u2080', '{:.3f}', 'mJy/beam'),
                 ]
             else:
                 raise CalculatorError('Unknown version.')
