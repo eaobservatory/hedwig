@@ -1,0 +1,18 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+{% if message is not none %}
+    <p>
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ target }}">
+    <p>
+        <input type="submit" name="submit_cancel" value="Cancel" />
+        <input type="submit" name="submit_confirm" value="Confirm" />
+    </p>
+</form>
+
+{% endblock %}

@@ -435,6 +435,35 @@ def create_facility_blueprint(db, facility):
         return facility.view_category_edit(
             db, (request.form if request.method == 'POST' else None))
 
+    @bp.route('/admin/coverage/')
+    @facility_template('moc_list.html')
+    @require_admin
+    def moc_list():
+        return facility.view_moc_list(db)
+
+    @bp.route('/admin/coverage/new', methods=['GET', 'POST'])
+    @facility_template('moc_edit.html')
+    @require_admin
+    def moc_new():
+        return facility.view_moc_edit(
+            db, None, (request.form if request.method == 'POST' else None),
+            (request.files['file'] if request.method == 'POST' else None))
+
+    @bp.route('/admin/coverage/<int:moc_id>', methods=['GET', 'POST'])
+    @facility_template('moc_edit.html')
+    @require_admin
+    def moc_edit(moc_id):
+        return facility.view_moc_edit(
+            db, moc_id, (request.form if request.method == 'POST' else None),
+            (request.files['file'] if request.method == 'POST' else None))
+
+    @bp.route('/admin/coverage/<int:moc_id>/delete', methods=['GET', 'POST'])
+    @require_admin
+    @templated('confirm.html')
+    def moc_delete(moc_id):
+        return facility.view_moc_delete(
+            db, moc_id, (request.form if request.method == 'POST' else None))
+
     # Configure the facility's calculators.
     for calculator_class in facility.get_calculator_classes():
         calculator_code = calculator_class.get_code()

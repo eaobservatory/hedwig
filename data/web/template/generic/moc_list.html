@@ -1,0 +1,35 @@
+{% extends 'layout.html' %}
+{% set navigation=['facility_admin'] %}
+
+{% block content %}
+
+<p>
+    <a href="{{ url_for('.moc_new') }}">New coverage map</a>
+</p>
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Uploaded</th>
+        <th>Cells</th>
+        <th>Area</th>
+        <th colspan="2">Actions</th>
+    </tr>
+    {% for moc in mocs %}
+        <tr>
+            <td>
+                {{ moc.name }}
+                {% if not moc.public %}
+                    <span class="label">private</span>
+                {% endif %}
+            </td>
+            <td>{{ moc.uploaded | format_datetime }}</td>
+            <td>{{ moc.num_cells }}</td>
+            <td>{{ moc.area | fmt('{:0.1f}') }} sq. deg.</td>
+            <td><a href="{{ url_for('.moc_edit', moc_id=moc.id) }}">Edit</a></td>
+            <td><a href="{{ url_for('.moc_delete', moc_id=moc.id) }}">Delete</a></td>
+        </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

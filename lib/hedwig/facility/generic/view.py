@@ -75,6 +75,25 @@ class Generic(GenericAdmin, GenericProposal):
 
         return (ExampleCalculator,)
 
+    def get_moc_order(self):
+        """
+        Get the MOC order at which MOCs should be stored for this
+        facility.
+
+        The higher the order of the MOC, the more precise it becomes,
+        but with an associated increase in storage space and
+        search time.
+
+        An appropriate value should be given here.  It is important
+        that the value is not reduced once MOCs have already been
+        stored.  That would cause there to be orders in the database
+        higher than the current level and any cells in those orders
+        would not be found in subsequent cell searches.
+        """
+
+        # MOC order 12 corresponds to 52" cells.
+        return 12
+
     def make_proposal_code(self, db, proposal):
         """
         Generate the proposal identifying code for a given proposal.

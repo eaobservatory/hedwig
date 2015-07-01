@@ -1,0 +1,39 @@
+{% extends 'layout.html' %}
+{% set navigation=['facility_admin', ('Coverage', url_for('.moc_list'))] %}
+
+{% block content %}
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ target }}" enctype="multipart/form-data">
+    <ol>
+        <li>
+            <label for="name">Name</label>
+            <input type="text" name="name" value="{{ moc.name }}" />
+        </li>
+        <li>
+            <label for="description">Description</label>
+            <textarea name="description" cols="40" rows="10">{{ moc.description }}</textarea>
+        </li>
+        <li>
+            <label for="public">Visibility</label>
+            <input type="checkbox" name="public" {{ 'checked="checked"' | safe if moc.public }} />
+            Public
+            <span class="explanation">check to allow anyone to search this coverage map</span>
+        </li>
+        <li>
+            <label for="file">MOC file</label>
+            <input type="file" name="file" accept="application/fits" />
+            <span class="explanation">FITS format</span>
+        </li>
+        <li>
+            <input type="submit" value="Save" name="submit" />
+        </li>
+    </ol>
+</form>
+
+{% endblock %}

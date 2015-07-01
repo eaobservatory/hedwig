@@ -18,9 +18,13 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from pymoc import MOC
+
 from ...error import NoSuchRecord, UserError
-from ...type import Affiliation, Call, Category, ProposalWithCode, Queue, \
-    ResultCollection, Semester
+from ...type import Affiliation, Call, Category, MOCInfo, \
+    ProposalWithCode, Queue, \
+    ResultCollection, Semester, \
+    null_tuple
 from ...view import auth
 from ...web.util import HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, parse_datetime, url_for
@@ -443,4 +447,112 @@ class GenericAdmin(object):
             'title': 'Edit Categories',
             'message': message,
             'categories': records.values(),
+        }
+
+    def view_moc_list(self, db):
+        if not auth.can_be_admin(db):
+            raise HTTPForbidden('Could not verify administrative access.')
+
+        mocs = db.search_moc(facility_id=self.id_, public=None)
+
+        return {
+            'title': 'Coverage List',
+            'mocs': mocs.values(),
+        }
+
+    def view_moc_edit(self, db, moc_id, form, file_):
+        if not auth.can_be_admin(db):
+            raise HTTPForbidden('Could not verify administrative access.')
+
+        if moc_id is None:
+            # We are uploading a new MOC -- create a blank record.
+            moc = null_tuple(MOCInfo)._replace(
+                name='', description='', public=True)
+            title = 'New Coverage Map'
+            target = url_for('.moc_new')
+
+        else:
+            # We are editing an existing MOC -- fetch its info from
+            # the database.
+            try:
+                moc = db.search_moc(facility_id=self.id_, moc_id=moc_id,
+                                    public=None).get_single()
+            except NoSuchRecord:
+                raise HTTPNotFound('Coverage map not found')
+
+            title = 'Edit {}'.format(moc.name)
+            target = url_for('.moc_edit', moc_id=moc_id)
+
+        message = None
+
+        if form is not None:
+            try:
+                moc = moc._replace(
+                    name=form['name'],
+                    description=form['description'],
+                    public=('public' in form))
+
+                moc_object = None
+                if file_:
+                    try:
+                        moc_object = MOC(filename=file_, filetype='fits')
+
+                    finally:
+                        file_.close()
+
+                elif moc_id is None:
+                    raise UserError('No new MOC file was received.')
+
+                moc_order = (None if moc_object is None
+                             else self.get_moc_order())
+
+                if moc_id is None:
+                    moc_id = db.add_moc(self.id_, moc.name, moc.description,
+                                        moc.public, moc_order, moc_object)
+                    flash('The new coverage map has been stored.')
+                else:
+                    db.update_moc(
+                        moc_id, name=moc.name, description=moc.description,
+                        public=moc.public,
+                        moc_order=moc_order, moc_object=moc_object)
+
+                    if moc_object is None:
+                        flash('The coverage map details have been updated.')
+                    else:
+                        flash('The updated coverage map has been stored.')
+
+                raise HTTPRedirect(url_for('.moc_list'))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': title,
+            'target': target,
+            'moc': moc,
+            'message': message,
+        }
+
+    def view_moc_delete(self, db, moc_id, form):
+        if not auth.can_be_admin(db):
+            raise HTTPForbidden('Could not verify administrative access.')
+
+        try:
+            moc = db.search_moc(facility_id=self.id_, moc_id=moc_id,
+                                public=None).get_single()
+        except NoSuchRecord:
+            raise HTTPNotFound('Coverage map not found')
+
+        if form:
+            if 'submit_cancel' in form:
+                raise HTTPRedirect(url_for('.moc_list'))
+
+            elif 'submit_confirm' in form:
+                db.delete_moc(self.id_, moc_id)
+                flash('The coverage map has been deleted.')
+                raise HTTPRedirect(url_for('.moc_list'))
+
+        return {
+            'title': 'Delete Coverage: {}'.format(moc.name),
+            'message': 'Are you sure you wish to delete this coverage map?',
         }
