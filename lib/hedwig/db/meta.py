@@ -216,6 +216,8 @@ moc = Table(
            nullable=False),
     Column('name', Unicode(255), nullable=False),
     Column('description', UnicodeText, nullable=False),
+    Column('public', Boolean, nullable=False),
+    Column('uploaded', DateTime(), nullable=False),
     Column('num_cells', Integer, nullable=False),
     Column('area', Float(precision=53, asdecimal=False), nullable=True),
     UniqueConstraint('facility_id', 'name'),

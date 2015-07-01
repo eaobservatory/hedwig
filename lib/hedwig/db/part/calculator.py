@@ -45,12 +45,14 @@ class CalculatorPart(object):
 
             return result.inserted_primary_key[0]
 
-    def add_moc(self, facility_id, name, description, moc_object):
+    def add_moc(self, facility_id, name, description, public, moc_object):
         with self._transaction() as conn:
             result = conn.execute(moc.insert().values({
                 moc.c.facility_id: facility_id,
                 moc.c.name: name,
                 moc.c.description: description,
+                moc.c.public: public,
+                moc.c.uploaded: datetime.utcnow(),
                 moc.c.num_cells: moc_object.cells,
                 moc.c.area: moc_object.area_sq_deg,
             }))
@@ -107,7 +109,31 @@ class CalculatorPart(object):
 
         return ans
 
-    def search_moc_cell(self, facility_id, order, cell):
+    def search_moc(self, facility_id, public, moc_id=None):
+        """
+        Search for MOC records for a facility.
+        """
+
+        stmt = moc.select()
+
+        if facility_id is not None:
+            stmt = stmt.where(moc.c.facility_id == facility_id)
+
+        if public is not None:
+            stmt = stmt.where(moc.c.public == public)
+
+        if moc_id is not None:
+            stmt = stmt.where(moc.c.id == moc_id)
+
+        ans = ResultCollection()
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt.order_by(moc.c.id.asc())):
+                ans[row['id']] = MOCInfo(**row)
+
+        return ans
+
+    def search_moc_cell(self, facility_id, public, order, cell):
         """
         Search for a MOC containing the given cell, or a cell
         at a lower order containing this cell.
@@ -121,6 +147,9 @@ class CalculatorPart(object):
 
         stmt = moc.select().select_from(moc.join(moc_cell)).where(
             moc.c.facility_id == facility_id).where(or_(*options))
+
+        if public is not None:
+            stmt = stmt.where(moc.c.public == public)
 
         ans = ResultCollection()
 
@@ -163,7 +192,8 @@ class CalculatorPart(object):
                     'no rows matched updating calculation with id={}',
                     calculation_id)
 
-    def update_moc(self, moc_id, name=None, description=None, moc_object=None):
+    def update_moc(self, moc_id, name=None, description=None, public=None,
+                   moc_object=None):
         values = {}
 
         if name is not None:
@@ -172,7 +202,11 @@ class CalculatorPart(object):
         if description is not None:
             values[moc.c.description] = description
 
+        if public is not None:
+            values[moc.c.public] = public
+
         if moc_object is not None:
+            values[moc.c.uploaded] = datetime.utcnow()
             values[moc.c.num_cells] = moc_object.cells
             values[moc.c.area] = moc_object.area_sq_deg
 

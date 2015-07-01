@@ -94,10 +94,24 @@ class DBCalculatorTest(DBTestCase):
 
         moc_a = MOC(order=1, cells=(4, 7))
 
-        moc_id = self.db.add_moc(facility_id, 'test', 'A Test MOC', moc_a)
+        moc_id = self.db.add_moc(facility_id, 'test', 'A Test MOC',
+                                 True,  moc_a)
         self.assertIsInstance(moc_id, int)
 
-        result = self.db.search_moc_cell(facility_id, 2, 16)
+        mocs = self.db.search_moc(facility_id, None)
+        self.assertIsInstance(mocs, ResultCollection)
+        self.assertIn(moc_id, mocs)
+        moc_info = mocs[moc_id]
+        self.assertIsInstance(moc_info, MOCInfo)
+        self.assertEqual(moc_info.id, moc_id)
+        self.assertEqual(moc_info.name, 'test')
+        self.assertEqual(moc_info.description, 'A Test MOC')
+        self.assertEqual(moc_info.public, True)
+        self.assertIsInstance(moc_info.uploaded, datetime)
+        self.assertEqual(moc_info.num_cells, 2)
+        self.assertAlmostEqual(moc_info.area, 1718.873, places=3)
+
+        result = self.db.search_moc_cell(facility_id, None, 2, 16)
         self.assertIsInstance(result, ResultCollection)
         self.assertEqual(len(result), 1)
         self.assertIn(moc_id, result)
@@ -109,16 +123,16 @@ class DBCalculatorTest(DBTestCase):
         self.assertEqual(moc_info.num_cells, 2)
         self.assertAlmostEqual(moc_info.area, 1718.873, places=3)
 
-        result = self.db.search_moc_cell(facility_id, 2, 32)
+        result = self.db.search_moc_cell(facility_id, None, 2, 32)
         self.assertEqual(len(result), 0)
 
-        result = self.db.search_moc_cell(facility_id, 2, 20)
+        result = self.db.search_moc_cell(facility_id, None, 2, 20)
         self.assertEqual(len(result), 0)
 
         moc_b = MOC(order=1, cells=(5, 6))
-        self.db.update_moc(moc_id, 'test2', 'Another Test MOC', moc_b)
+        self.db.update_moc(moc_id, 'test2', 'Another Test MOC', False, moc_b)
 
-        result = self.db.search_moc_cell(facility_id, 2, 20)
+        result = self.db.search_moc_cell(facility_id, None, 2, 20)
         self.assertEqual(len(result), 1)
 
     def _create_test_proposal(self):
