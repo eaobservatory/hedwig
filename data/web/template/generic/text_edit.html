@@ -11,6 +11,8 @@
 {% endif %}
 
 <form method="POST" action="{{ target }}">
+    {% block text_edit_form_extra %}
+    {% endblock %}
     <p>
         <textarea name="text" required="requried" autofocus="autofocus" cols="80" rows="{{ rows | default(10) }}" data-wordlimit="{{ word_limit }}">{{ text.text }}</textarea>
     </p>

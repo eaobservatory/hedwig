@@ -28,7 +28,7 @@ from ...file.info import determine_figure_type, determine_pdf_page_count
 from ...type import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
     FigureType, FormatType, \
-    ProposalFigureInfo, ProposalState, ProposalText, \
+    ProposalCategory, ProposalFigureInfo, ProposalState, ProposalText, \
     Queue, ResultCollection, Semester, Target, TargetCollection, TextRole, \
     null_tuple
 from ...util import get_countries
@@ -190,6 +190,8 @@ class GenericProposal(object):
                     proposal_id=proposal.id))
                 for x in self.calculators.values()],
             'calculations': self._prepare_calculations(calculations),
+            'categories': db.search_proposal_category(
+                proposal_id=proposal.id).values(),
         }
 
     @with_proposal(permission='edit')
@@ -293,7 +295,58 @@ class GenericProposal(object):
     def view_abstract_edit(self, db, proposal, can, form):
         return self._edit_text(
             db, proposal, TextRole.ABSTRACT, proposal.abst_word_lim,
-            url_for('.abstract_edit', proposal_id=proposal.id), form, 10)
+            url_for('.abstract_edit', proposal_id=proposal.id), form, 10,
+            extra_initialization=self._view_abstract_edit_init,
+            extra_form_read=self._view_abstract_edit_read,
+            extra_form_proc=self._view_abstract_edit_proc)
+
+    def _view_abstract_edit_init(self, db, proposal, role):
+        proposal_categories = db.search_proposal_category(
+            proposal_id=proposal.id)
+
+        return {
+            'categories': db.search_category(facility_id=self.id_,
+                                             hidden=False),
+            'categories_selected': set(x.category_id
+                                       for x in proposal_categories.values()),
+            '_proposal_categories': proposal_categories,
+        }
+
+    def _view_abstract_edit_read(self, db, proposal, role, form, ctx):
+        categories_selected = set()
+
+        for category_id in ctx['categories']:
+            if 'category_{}'.format(category_id) in form:
+                categories_selected.add(category_id)
+
+        ctx.update({'categories_selected': categories_selected})
+
+        return ctx
+
+    def _view_abstract_edit_proc(self, db, proposal, role, ctx):
+        categories = ctx['categories']
+        categories_selected = ctx['categories_selected'].copy()
+        proposal_categories = ctx.pop('_proposal_categories')
+        if proposal_categories:
+            max_id = max(x.id for x in proposal_categories.values())
+        else:
+            max_id = 0
+
+        for prop_cat_id, prop_cat in list(proposal_categories.items()):
+            if prop_cat.category_id in categories_selected:
+                categories_selected.discard(prop_cat.category_id)
+            else:
+                del proposal_categories[prop_cat_id]
+
+        for cat_id in categories_selected:
+            if cat_id in categories:
+                max_id += 1
+                proposal_categories[max_id] = ProposalCategory(
+                    max_id, proposal.id, cat_id, None)
+
+        db.sync_proposal_category(proposal.id, proposal_categories)
+
+        return ctx
 
     @with_proposal(permission='edit')
     def view_member_edit(self, db, proposal, can, form, is_post):
@@ -924,7 +977,9 @@ class GenericProposal(object):
         }
 
     def _edit_text(self, db, proposal, role, word_limit, target, form, rows,
-                   figures=None, target_redir=None):
+                   figures=None, target_redir=None,
+                   extra_initialization=None, extra_form_read=None,
+                   extra_form_proc=None):
         name = TextRole.get_name(role)
         message = None
 
@@ -935,9 +990,17 @@ class GenericProposal(object):
             text = ProposalText('', FormatType.PLAIN)
             is_update = False
 
+        if extra_initialization is None:
+            ctx = {}
+        else:
+            ctx = extra_initialization(db, proposal, role)
+
         if form is not None:
             text = text._replace(text=form['text'],
                                  format=int(form['format']))
+
+            if extra_form_read is not None:
+                ctx = extra_form_read(db, proposal, role, form, ctx)
 
             try:
                 word_count = count_words(text)
@@ -949,6 +1012,10 @@ class GenericProposal(object):
                 db.set_proposal_text(proposal.id, role,
                                      text.text, text.format, word_count,
                                      session['person']['id'], is_update)
+
+                if extra_form_proc is not None:
+                    ctx = extra_form_proc(db, proposal, role, ctx)
+
                 flash('The {0} has been saved.', name.lower())
                 raise HTTPRedirect(url_for('.proposal_view',
                                            proposal_id=proposal.id)
@@ -957,7 +1024,7 @@ class GenericProposal(object):
             except UserError as e:
                 message = e.message
 
-        return {
+        ctx.update({
             'title': 'Edit {0} Text'.format(name.title()),
             'message': message,
             'proposal_id': proposal.id,
@@ -967,7 +1034,9 @@ class GenericProposal(object):
             'word_limit': word_limit,
             'rows': rows,
             'figures': figures,
-        }
+        })
+
+        return ctx
 
     def _prepare_calculations(self, raw_calculations):
         calculations = []

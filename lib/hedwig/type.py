@@ -24,7 +24,7 @@ from .astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
 from .db.meta import affiliation, calculation, call, category, \
     email, institution, \
-    member, message, person, proposal, queue, \
+    member, message, person, proposal, proposal_category, queue, \
     semester, target
 from .error import NoSuchRecord, MultipleRecords, UserError
 
@@ -130,6 +130,10 @@ Proposal = namedtuple(
 
 ProposalWithCode = namedtuple('ProposalWithCode',
                               Proposal._fields + ('code', 'facility_code'))
+
+ProposalCategory = namedtuple(
+    'ProposalCategory',
+    [x.name for x in proposal_category.columns] + ['category_name'])
 
 ProposalFigure = namedtuple(
     'ProposalFigure',

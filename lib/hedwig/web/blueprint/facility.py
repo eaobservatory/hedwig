@@ -92,7 +92,7 @@ def create_facility_blueprint(db, facility):
             db, proposal_id, request.form, request.method == 'POST')
 
     @bp.route('/proposal/<int:proposal_id>/abstract', methods=['GET', 'POST'])
-    @facility_template('text_edit.html')
+    @facility_template('abstract_edit.html')
     @require_auth(require_person=True)
     def abstract_edit(proposal_id):
         return facility.view_abstract_edit(
@@ -427,6 +427,13 @@ def create_facility_blueprint(db, facility):
     @require_admin
     def call_proposals(call_id):
         return facility.view_call_proposals(db, call_id)
+
+    @bp.route('/admin/categories', methods=['GET', 'POST'])
+    @facility_template('category_edit.html')
+    @require_admin
+    def category_edit():
+        return facility.view_category_edit(
+            db, (request.form if request.method == 'POST' else None))
 
     # Configure the facility's calculators.
     for calculator_class in facility.get_calculator_classes():

@@ -19,7 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from ...error import NoSuchRecord, UserError
-from ...type import Affiliation, Call, ProposalWithCode, Queue, \
+from ...type import Affiliation, Call, Category, ProposalWithCode, Queue, \
     ResultCollection, Semester
 from ...view import auth
 from ...web.util import HTTPForbidden, HTTPNotFound, HTTPRedirect, \
@@ -398,4 +398,49 @@ class GenericAdmin(object):
             'message': message,
             'affiliations': records.values(),
             'queue_id': queue_id,
+        }
+
+    def view_category_edit(self, db, form):
+        if not auth.can_be_admin(db):
+            raise HTTPForbidden('Could not verify administrative access.')
+
+        message = None
+        records = db.search_category(facility_id=self.id_)
+
+        if form is not None:
+            try:
+                updated_records = {}
+                added_records = {}
+
+                for param in form:
+                    if not param.startswith('name_'):
+                        continue
+
+                    id_ = param[5:]
+                    is_hidden = ('hidden_' + id_) in form
+
+                    if id_.startswith('new_'):
+                        id_ = int(id_[4:])
+                        added_records[id_] = Category(id_, self.id_,
+                                                      form[param], is_hidden)
+                    else:
+                        id_ = int(id_)
+                        updated_records[id_] = Category(id_, self.id_,
+                                                        form[param], is_hidden)
+
+                records = organise_collection(
+                    ResultCollection, updated_records, added_records)
+
+                db.sync_facility_category(self.id_, records)
+
+                flash('The categories have been updated.')
+                raise HTTPRedirect(url_for('.facility_admin'))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Edit Categories',
+            'message': message,
+            'categories': records.values(),
         }

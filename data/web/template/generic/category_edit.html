@@ -1,0 +1,71 @@
+{% extends 'layout.html' %}
+{% set scripts=['edit_category'] %}
+{% set navigation=['facility_admin'] %}
+
+{% block content %}
+
+<p>
+    This page allows you to edit the categories which may be selected
+    for each proposal.
+</p>
+
+<p>
+    <b>Note:</b>
+</p>
+
+<ul>
+    <li>
+        Editing the categories here will alter any existing
+        proposals on which they have been used.  Therefore please only
+        make minor alterations to the categories which do not alter
+        their meaning.
+    </li>
+    <li>
+        If a category has changed substantially, please "hide" it to
+        prevent its subsequent selection and add its replacement as a new
+        category.
+    </li>
+    <li>
+        You should not delete existing categories if there is a chance
+        that they have already been used on a proposal.
+        (Attempting to do so should be an error.)
+    </li>
+</ul>
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.category_edit') }}">
+    <table id="categories">
+        <tr>
+            <th>Category</th>
+            <th>Hidden</th>
+            <th>Actions</th>
+        </tr>
+        {% for category in categories %}
+            <tr id="categoryrow_{{ category.id }}">
+                <td><input type="text" name="name_{{ category.id }}" value="{{ category.name }}" required="required" /></td>
+                <td><input type="checkbox" name="hidden_{{ category.id }}" value="yes" {{ 'checked="checked"' | safe if category.hidden }} /></td>
+                <td><input type="button" id="delete_{{ category.id }}" value="Delete" />
+            </tr>
+        {% endfor %}
+    </table>
+    <table class="template">
+        <tr id="categoryrow_template">
+            <td><input type="text" name="name" value="" /></td>
+            <td><input type="checkbox" name="hidden" value="yes" /></td>
+            <td><input type="button" id="delete_template" value="Delete" />
+        </tr>
+    </table>
+    <p>
+        <input type="button" id="add_category" value="Add category" />
+    </p>
+    <p>
+        <input type="submit" value="Save" name="submit" />
+    </p>
+</form>
+
+{% endblock %}

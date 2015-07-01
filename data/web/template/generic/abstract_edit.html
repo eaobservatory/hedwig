@@ -1,0 +1,15 @@
+{% extends 'generic/text_edit.html' %}
+
+{% block text_edit_form_extra %}
+
+<p>
+    Please select the categories which apply to this proposal:
+
+    {% for category in categories.values() %}
+    <br />
+    <input type="checkbox" name="category_{{ category.id}}" {{ 'checked="checked"' | safe if category.id in categories_selected }} />
+    {{ category.name }}
+    {% endfor %}
+</p>
+
+{% endblock %}
