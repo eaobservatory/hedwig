@@ -250,7 +250,8 @@ class CalculatorPart(object):
                 raise ConsistencyError(
                     'no rows matched updating moc with id={}', moc_id)
 
-            self._update_moc_cells(conn, moc_id, moc_object)
+            if moc_object is not None:
+                self._update_moc_cells(conn, moc_id, moc_object)
 
     def _update_moc_cells(self, conn, moc_id, moc_object, no_delete=False):
         if not no_delete:
