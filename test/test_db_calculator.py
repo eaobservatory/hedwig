@@ -95,7 +95,7 @@ class DBCalculatorTest(DBTestCase):
         moc_a = MOC(order=1, cells=(4, 7))
 
         moc_id = self.db.add_moc(facility_id, 'test', 'A Test MOC',
-                                 True,  moc_a)
+                                 True, 2, moc_a)
         self.assertIsInstance(moc_id, int)
 
         mocs = self.db.search_moc(facility_id, None)
@@ -130,7 +130,8 @@ class DBCalculatorTest(DBTestCase):
         self.assertEqual(len(result), 0)
 
         moc_b = MOC(order=1, cells=(5, 6))
-        self.db.update_moc(moc_id, 'test2', 'Another Test MOC', False, moc_b)
+        self.db.update_moc(moc_id, 'test2', 'Another Test MOC', False,
+                           2, moc_b)
 
         result = self.db.search_moc_cell(facility_id, None, 2, 20)
         self.assertEqual(len(result), 1)

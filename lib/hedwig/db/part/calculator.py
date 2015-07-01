@@ -45,7 +45,11 @@ class CalculatorPart(object):
 
             return result.inserted_primary_key[0]
 
-    def add_moc(self, facility_id, name, description, public, moc_object):
+    def add_moc(self, facility_id, name, description, public,
+                moc_order, moc_object):
+
+        moc_object.normalize(max_order=moc_order)
+
         with self._transaction() as conn:
             result = conn.execute(moc.insert().values({
                 moc.c.facility_id: facility_id,
@@ -199,7 +203,7 @@ class CalculatorPart(object):
                     calculation_id)
 
     def update_moc(self, moc_id, name=None, description=None, public=None,
-                   moc_object=None):
+                   moc_order=None, moc_object=None):
         values = {}
 
         if name is not None:
@@ -212,6 +216,10 @@ class CalculatorPart(object):
             values[moc.c.public] = public
 
         if moc_object is not None:
+            if moc_order is None:
+                raise Error('MOC order not specified with updated MOC')
+            moc_object.normalize(max_order=moc_order)
+
             values[moc.c.uploaded] = datetime.utcnow()
             values[moc.c.num_cells] = moc_object.cells
             values[moc.c.area] = moc_object.area_sq_deg
