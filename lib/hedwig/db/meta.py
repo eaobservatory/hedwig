@@ -102,6 +102,18 @@ call = Table(
     UniqueConstraint('semester_id', 'queue_id'),
     **_table_opts)
 
+category = Table(
+    'category',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('facility_id', None,
+           ForeignKey('facility.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('name', Unicode(255), nullable=False),
+    Column('hidden', Boolean, default=False, nullable=False),
+    UniqueConstraint('facility_id', 'name'),
+    **_table_opts)
+
 email = Table(
     'email',
     metadata,
@@ -221,6 +233,18 @@ proposal = Table(
     Column('state', Integer, nullable=False),
     Column('title', Unicode(255), nullable=False),
     UniqueConstraint('call_id', 'number'),
+    **_table_opts)
+
+proposal_category = Table(
+    'proposal_category',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('category_id', None,
+           ForeignKey('category.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
     **_table_opts)
 
 proposal_text = Table(

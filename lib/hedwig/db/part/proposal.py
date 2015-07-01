@@ -28,16 +28,17 @@ from sqlalchemy.sql.functions import max as max_
 
 from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
-from ...type import Affiliation, AttachmentState, Call, \
+from ...type import Affiliation, AttachmentState, Call, Category, \
     FigureType, FormatType, \
     Member, MemberCollection, MemberInfo, MemberPIInfo, \
-    Proposal, ProposalState, \
+    Proposal, ProposalCategory, ProposalState, \
     ProposalFigure, ProposalFigureInfo, ProposalPDFInfo, \
     ProposalText, ProposalTextCollection, ProposalTextInfo, \
     Queue, QueueInfo, ResultCollection, Semester, SemesterInfo, \
     Target, TargetCollection, TextRole
-from ..meta import affiliation, call, facility, institution, member, person, \
-    proposal, proposal_fig, proposal_fig_preview, proposal_fig_thumbnail, \
+from ..meta import affiliation, call, category, facility, institution, \
+    member, person, proposal, proposal_category, \
+    proposal_fig, proposal_fig_preview, proposal_fig_thumbnail, \
     proposal_pdf, proposal_pdf_preview, proposal_text, queue, semester, target
 from ..util import require_not_none
 
@@ -698,6 +699,27 @@ class ProposalPart(object):
 
         return ans
 
+    def search_category(self, facility_id, hidden=None, _conn=None):
+        """
+        Search for categories.
+        """
+
+        stmt = category.select()
+
+        if facility_id is not None:
+            stmt = stmt.where(category.c.facility_id == facility_id)
+
+        if hidden is not None:
+            stmt = stmt.where(category.c.hidden == hidden)
+
+        ans = ResultCollection()
+
+        with self._transaction(_conn=_conn) as conn:
+            for row in conn.execute(stmt.order_by(category.c.name.asc())):
+                ans[row['id']] = Category(**row)
+
+        return ans
+
     def search_member(self, proposal_id=None, person_id=None,
                       co_member_person_id=None,
                       co_member_institution_id=None,
@@ -910,6 +932,27 @@ class ProposalPart(object):
                                                  _conn=conn)
 
                 ans[row['id']] = Proposal(members=members, **row)
+
+        return ans
+
+    def search_proposal_category(self, proposal_id, _conn=None):
+        """
+        Search for the categories associated with a proposal.
+        """
+
+        stmt = select([
+            proposal_category,
+            category.c.name.label('category_name')
+        ]).select_from(proposal_category.join(category))
+
+        if proposal_id is not None:
+            stmt = stmt.where(proposal_category.c.proposal_id == proposal_id)
+
+        ans = ResultCollection()
+
+        with self._transaction(_conn=_conn) as conn:
+            for row in conn.execute(stmt.order_by(category.c.name.asc())):
+                ans[row['id']] = ProposalCategory(**row)
 
         return ans
 
@@ -1275,6 +1318,29 @@ class ProposalPart(object):
                 raise ConsistencyError(
                     'multiple rows deleted removing replaced PDF '
                     'for proposal {} role {}', proposal_id, role)
+
+    def sync_facility_category(self, facility_id, records):
+        """
+        Update the categories available for proposal for a facility.
+        """
+
+        with self._transaction() as conn:
+            if not self._exists_id(conn, facility, facility_id):
+                raise ConsistencyError(
+                    'facility does not exist with id={}', facility_id)
+
+            return self._sync_records(
+                conn, category, category.c.facility_id, facility_id, records)
+
+    def sync_proposal_category(self, proposal_id, records, _conn=None):
+        """
+        Update the categories associated with a proposal.
+        """
+
+        with self._transaction(_conn=_conn) as conn:
+            return self._sync_records(
+                conn, proposal_category, proposal_category.c.proposal_id,
+                proposal_id, records)
 
     def sync_proposal_figure(self, proposal_id, role, records):
         """

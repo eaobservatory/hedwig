@@ -23,10 +23,10 @@ from datetime import datetime
 from hedwig.db.meta import member
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
-from hedwig.type import Affiliation, AttachmentState, Call, \
+from hedwig.type import Affiliation, AttachmentState, Call, Category, \
     FigureType, FormatType, \
     Member, MemberCollection, MemberInstitution,  \
-    Proposal, \
+    Proposal, ProposalCategory, \
     ProposalFigureInfo, ProposalPDFInfo, \
     ProposalState, \
     ProposalText, ProposalTextCollection, ProposalTextInfo, \
@@ -854,9 +854,83 @@ class DBProposalTest(DBTestCase):
             self.assertEqual(t.name, 'Obj {0}'.format(i))
             i += 1
 
-    def _create_test_call(self, semester_name, queue_name):
-        facility_id = self.db.ensure_facility('my_tel')
-        self.assertIsInstance(facility_id, int)
+    def test_category(self):
+        facility_id = self.db.ensure_facility('cat test facility')
+        records = ResultCollection()
+        records[1] = Category(1, None, 'Category A', False)
+        records[2] = Category(2, None, 'Category B', True)
+
+        (n_insert, n_update, n_delete) = self.db.sync_facility_category(
+            facility_id, records)
+
+        self.assertEqual(n_insert, 2)
+        self.assertEqual(n_update, 0)
+        self.assertEqual(n_delete, 0)
+
+        result = self.db.search_category(facility_id=facility_id, hidden=False)
+        self.assertIsInstance(result, ResultCollection)
+
+        self.assertEqual([x.name for x in result.values()], ['Category A'])
+        category_id_a = list(result.keys())[0]
+        self.assertIsInstance(category_id_a, int)
+
+        result = self.db.search_category(facility_id=facility_id, hidden=True)
+        self.assertIsInstance(result, ResultCollection)
+
+        self.assertEqual([x.name for x in result.values()], ['Category B'])
+        category_id_b = list(result.keys())[0]
+        self.assertIsInstance(category_id_b, int)
+        self.assertNotEqual(category_id_a, category_id_b)
+
+        (call_id, affiliation_id) = self._create_test_call(
+            's 1', 'q 1', facility_id=facility_id)
+
+        person_id = self.db.add_person('Person 1')
+        proposal_id = self.db.add_proposal(call_id, person_id,
+                                           affiliation_id, 'Proposal 1')
+        self.assertIsInstance(proposal_id, int)
+
+        proposal_categories = ResultCollection()
+        proposal_categories[1] = ProposalCategory(1, proposal_id,
+                                                  category_id_a, None)
+
+        (n_insert, n_update, n_delete) = self.db.sync_proposal_category(
+            proposal_id, proposal_categories)
+
+        self.assertEqual(n_insert, 1)
+        self.assertEqual(n_update, 0)
+        self.assertEqual(n_delete, 0)
+
+        result = self.db.search_proposal_category(proposal_id=proposal_id)
+        self.assertIsInstance(result, ResultCollection)
+        self.assertEqual(len(result), 1)
+        proposal_cat = list(result.values())[0]
+        self.assertIsInstance(proposal_cat, ProposalCategory)
+        self.assertEqual(proposal_cat.category_name, 'Category A')
+
+        proposal_categories = ResultCollection()
+        proposal_categories[2] = ProposalCategory(2, proposal_id,
+                                                  category_id_b, None)
+
+        (n_insert, n_update, n_delete) = self.db.sync_proposal_category(
+            proposal_id, proposal_categories)
+
+        self.assertEqual(n_insert, 1)
+        self.assertEqual(n_update, 0)
+        self.assertEqual(n_delete, 1)
+
+        result = self.db.search_proposal_category(proposal_id=proposal_id)
+        self.assertIsInstance(result, ResultCollection)
+        self.assertEqual(len(result), 1)
+        proposal_cat = list(result.values())[0]
+        self.assertIsInstance(proposal_cat, ProposalCategory)
+        self.assertEqual(proposal_cat.category_name, 'Category B')
+
+    def _create_test_call(self, semester_name, queue_name, facility_id=None):
+        if facility_id is None:
+            facility_id = self.db.ensure_facility('my_tel')
+            self.assertIsInstance(facility_id, int)
+
         semester_id = self.db.add_semester(
             facility_id, semester_name, semester_name,
             datetime(2000, 1, 1), datetime(2000, 6, 30))
