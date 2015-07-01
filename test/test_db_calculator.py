@@ -136,6 +136,10 @@ class DBCalculatorTest(DBTestCase):
         result = self.db.search_moc_cell(facility_id, None, 2, 20)
         self.assertEqual(len(result), 1)
 
+        self.db.delete_moc(facility_id, moc_id)
+        mocs = self.db.search_moc(facility_id=None, public=None)
+        self.assertEqual(len(mocs), 0)
+
     def _create_test_proposal(self):
         facility_id = self.db.ensure_facility('f')
         semester_id = self.db.add_semester(

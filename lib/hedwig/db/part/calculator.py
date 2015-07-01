@@ -67,6 +67,20 @@ class CalculatorPart(object):
 
         return moc_id
 
+    def delete_moc(self, facility_id, moc_id):
+        """
+        Delete a MOC from the database.
+        """
+
+        with self._transaction() as conn:
+            result = conn.execute(moc.delete().where(and_(
+                moc.c.facility_id == facility_id,
+                moc.c.id == moc_id)))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched deleting moc with id={}', moc_id)
+
     def ensure_calculator(self, facility_id, code):
         """
         Ensure that a calculator exists in the database.
