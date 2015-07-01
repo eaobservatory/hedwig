@@ -145,7 +145,12 @@ class CalculatorPart(object):
                                 moc_cell.c.cell == cell))
             cell //= 4
 
-        stmt = moc.select().select_from(moc.join(moc_cell)).where(
+        stmt = select([
+            moc.c.id,
+            moc.c.facility_id,
+            moc.c.name,
+            moc.c.public,
+        ]).select_from(moc.join(moc_cell)).where(
             moc.c.facility_id == facility_id).where(or_(*options))
 
         if public is not None:
@@ -155,7 +160,8 @@ class CalculatorPart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt):
-                ans[row['id']] = MOCInfo(**row)
+                ans[row['id']] = MOCInfo(description=None, uploaded=None,
+                                         num_cells=None, area=None, **row)
 
         return ans
 

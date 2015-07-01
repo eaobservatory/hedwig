@@ -119,9 +119,9 @@ class DBCalculatorTest(DBTestCase):
         self.assertIsInstance(moc_info, MOCInfo)
         self.assertEqual(moc_info.id, moc_id)
         self.assertEqual(moc_info.name, 'test')
-        self.assertEqual(moc_info.description, 'A Test MOC')
-        self.assertEqual(moc_info.num_cells, 2)
-        self.assertAlmostEqual(moc_info.area, 1718.873, places=3)
+        self.assertIsNone(moc_info.description)
+        self.assertIsNone(moc_info.num_cells)
+        self.assertIsNone(moc_info.area)
 
         result = self.db.search_moc_cell(facility_id, None, 2, 32)
         self.assertEqual(len(result), 0)
