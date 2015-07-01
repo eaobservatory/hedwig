@@ -207,6 +207,31 @@ message_recipient = Table(
                          name='message_recipient_pk'),
     **_table_opts)
 
+moc = Table(
+    'moc',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('facility_id', None,
+           ForeignKey('facility.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('name', Unicode(255), nullable=False),
+    Column('description', UnicodeText, nullable=False),
+    Column('num_cells', Integer, nullable=False),
+    Column('area', Float(precision=53, asdecimal=False), nullable=True),
+    UniqueConstraint('facility_id', 'name'),
+    **_table_opts)
+
+moc_cell = Table(
+    'moc_cell',
+    metadata,
+    Column('moc_id', None,
+           ForeignKey('moc.id', onupdate='RESTRICT', ondelete='CASCADE'),
+           nullable=False),
+    Column('order', Integer, nullable=False),
+    Column('cell', Integer, nullable=False),
+    Index('idx_moc_cell', 'order', 'cell', unique=True),
+    **_table_opts)
+
 person = Table(
     'person',
     metadata,

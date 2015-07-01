@@ -24,7 +24,7 @@ from .astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
 from .db.meta import affiliation, calculation, call, category, \
     email, institution, \
-    member, message, person, proposal, proposal_category, queue, \
+    member, message, moc, person, proposal, proposal_category, queue, \
     semester, target
 from .error import NoSuchRecord, MultipleRecords, UserError
 
@@ -104,6 +104,10 @@ Message = namedtuple(
 MessageRecipient = namedtuple(
     'MessageRecipient',
     ['name', 'address', 'public'])
+
+MOCInfo = namedtuple(
+    'MOCInfo',
+    [x.name for x in moc.columns])
 
 Person = namedtuple(
     'Person',

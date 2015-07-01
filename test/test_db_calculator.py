@@ -20,9 +20,11 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime
 
+from pymoc import MOC
+
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     NoSuchRecord
-from hedwig.type import Calculation, ResultCollection
+from hedwig.type import Calculation, MOCInfo, ResultCollection
 
 from .dummy_db import DBTestCase
 
@@ -86,6 +88,38 @@ class DBCalculatorTest(DBTestCase):
         self.assertEqual(calc.input, {'a': 11, 'b': 22})
         self.assertEqual(calc.output, {'c': 33})
         self.assertEqual(calc.title, 'altered calculation')
+
+    def test_moc(self):
+        facility_id = self.db.ensure_facility('moc testing facility')
+
+        moc_a = MOC(order=1, cells=(4, 7))
+
+        moc_id = self.db.add_moc(facility_id, 'test', 'A Test MOC', moc_a)
+        self.assertIsInstance(moc_id, int)
+
+        result = self.db.search_moc_cell(facility_id, 2, 16)
+        self.assertIsInstance(result, ResultCollection)
+        self.assertEqual(len(result), 1)
+        self.assertIn(moc_id, result)
+        moc_info = result[moc_id]
+        self.assertIsInstance(moc_info, MOCInfo)
+        self.assertEqual(moc_info.id, moc_id)
+        self.assertEqual(moc_info.name, 'test')
+        self.assertEqual(moc_info.description, 'A Test MOC')
+        self.assertEqual(moc_info.num_cells, 2)
+        self.assertAlmostEqual(moc_info.area, 1718.873, places=3)
+
+        result = self.db.search_moc_cell(facility_id, 2, 32)
+        self.assertEqual(len(result), 0)
+
+        result = self.db.search_moc_cell(facility_id, 2, 20)
+        self.assertEqual(len(result), 0)
+
+        moc_b = MOC(order=1, cells=(5, 6))
+        self.db.update_moc(moc_id, 'test2', 'Another Test MOC', moc_b)
+
+        result = self.db.search_moc_cell(facility_id, 2, 20)
+        self.assertEqual(len(result), 1)
 
     def _create_test_proposal(self):
         facility_id = self.db.ensure_facility('f')
