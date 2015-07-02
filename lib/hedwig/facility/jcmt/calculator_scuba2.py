@@ -98,9 +98,11 @@ class SCUBA2Calculator(BaseCalculator):
                     'mf',     'Matched filter',
                     'Match. filt.', '{}', None),
                 CalculatorValue(
-                    'pix850', '850 \u00b5m pixel size',  '850 \u00b5m pix', '{}', '"'),
+                    'pix850', '850 \u00b5m pixel size',
+                    'Pixel\u2088\u2085\u2080', '{}', '"'),
                 CalculatorValue(
-                    'pix450', '450 \u00b5m pixel size',  '450 \u00b5m pix', '{}', '"'),
+                    'pix450', '450 \u00b5m pixel size',
+                     'Pixel\u2084\u2085\u2080', '{}', '"'),
                 CalculatorValue(
                     'tau',    '225 GHz opacity',
                     '\u03c4\u2082\u2082\u2085', '{}', None),
