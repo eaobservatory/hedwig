@@ -1,0 +1,29 @@
+{% extends 'generic/tool_base.html' %}
+
+{% block tool_output %}
+
+{% if clashes is not none %}
+    <section>
+        <h2>Output</h2>
+
+        {% if clashes %}
+            <p>
+                Matches were found in the following defined areas of sky coverage:
+            </p>
+
+            <ul>
+                {% for clash in clashes.values() %}
+                    <li>
+                        <a href="{{ url_for(target_moc_info, moc_id=clash.id) }}">{{ clash.name }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="not_present">
+                No matches were found for the given coordinates.
+            </p>
+        {% endif %}
+    </section>
+{% endif %}
+
+{% endblock %}

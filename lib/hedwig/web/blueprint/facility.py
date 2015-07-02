@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from flask import Blueprint, request
 
-from ...type import CalculatorInfo, FigureType, TextRole
+from ...type import CalculatorInfo, FigureType, TargetToolInfo, TextRole
 from ..util import require_admin, require_auth, send_file, templated
 
 
@@ -484,6 +484,26 @@ def create_facility_blueprint(db, facility):
                                 calculator_mode_id),
                             methods=['GET', 'POST'])
 
+    # Configure the facility's target tools.
+    for tool_class in facility.get_target_tool_classes():
+        tool_code = tool_class.get_code()
+        tool_id = 0  # TODO: db.ensure_target_tool(facility.id, tool_code)
+        tool = tool_class(facility, tool_id)
+
+        facility.target_tools[tool_id] = TargetToolInfo(
+            tool_id, tool_code, tool.get_name(), tool)
+
+        bp.add_url_rule('/tool/{}'.format(tool_code),
+                        'tool_{}'.format(tool_code),
+                        make_target_tool_view(
+                            db, tool, code, tool_code),
+                        methods=['GET', 'POST'])
+
+        for (template, rule, endpoint, func,
+                options) in tool.get_custom_routes():
+            bp.add_url_rule(rule, endpoint,
+                            make_custom_route(db, template, func), **options)
+
     @bp.context_processor
     def add_to_context():
         return {
@@ -508,5 +528,35 @@ def make_calculator_view(db, calculator, facility_code, calculator_code,
         return calculator.view(
             db, calculator_mode_id, request.args,
             (request.form if request.method == 'POST' else None))
+
+    return view_func
+
+
+def make_target_tool_view(db, tool, facility_code, tool_code):
+    """
+    Create a view function for a target tool.
+    """
+
+    @templated(('generic/tool_{}.html'.format(tool_code),
+                'generic/tool_base.html'))
+    def view_func():
+        return tool.view_single(
+            db, request.args,
+            (request.form if request.method == 'POST' else None))
+
+    return view_func
+
+
+def make_custom_route(db, template, func):
+    """
+    Create a custom view function.
+    """
+
+    @templated(template)
+    def view_func(**kwargs):
+        return func(
+            db, request.args,
+            (request.form if request.method == 'POST' else None),
+            **kwargs)
 
     return view_func

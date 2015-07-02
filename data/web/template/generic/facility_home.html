@@ -49,4 +49,20 @@
     </p>
 {% endif %}
 
+<h2>Target Tools</h2>
+
+{% if target_tools %}
+    <ul>
+        {% for tool in target_tools %}
+            <li>
+                <a href="{{ url_for('.tool_' + tool.code) }}">{{ tool.name }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p class="not_present">
+        No target tools are available.
+    </p>
+{% endif %}
+
 {% endblock %}

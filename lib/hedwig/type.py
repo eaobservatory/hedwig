@@ -178,6 +178,10 @@ Target = namedtuple(
     'Target',
     [x.name for x in target.columns])
 
+TargetToolInfo = namedtuple(
+    'TargetToolInfo',
+    ['id', 'code', 'name', 'tool'])
+
 Queue = namedtuple(
     'Queue',
     map(lambda x: x.name, queue.columns))

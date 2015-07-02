@@ -1,0 +1,45 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+{% block tool_output %}
+{% endblock %}
+
+<form method="POST" action="{{ target_url }}">
+{% block tool_input %}
+    <section>
+        <h2>Input</h2>
+
+        {% if message is not none %}
+            <p class="warning">
+                {{ message }}
+            </p>
+        {% endif %}
+
+        <ol>
+            <li>
+                <label for="x">RA / Longitude</label>
+                <input type="text" name="x" value="{{ target.x }}" placeholder="00:00:00" />
+            </li>
+            <li>
+                <label for="y">Dec / Latitude</label>
+                <input type="text" name ="y" value="{{ target.y }}" placeholder="00:00:00" />
+            </li>
+            <li>
+                <label for="system">System</label>
+                <select name="system">
+                    {% for (system_id, system_name) in systems.items() %}
+                        <option value="{{ system_id }}" {{ 'selected="selected"' | safe if system_id == target.system }}>{{ system_name }}</option>
+                    {% endfor %}
+                </select>
+            </li>
+            <li>
+                <input type="submit" name="submit_calc" value="{{ run_button }}" />
+            </li>
+        </ol>
+    </section>
+{% endblock %}
+
+</form>
+
+{% endblock %}

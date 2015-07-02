@@ -24,6 +24,7 @@ from ...config import get_config
 from ...error import NoSuchRecord, UserError
 from ...web.util import ErrorPage, HTTPNotFound, url_for
 from .calculator_example import ExampleCalculator
+from .tool_clash import ClashTool
 from .view_admin import GenericAdmin
 from .view_proposal import GenericProposal
 
@@ -45,6 +46,7 @@ class Generic(GenericAdmin, GenericProposal):
 
         self.id_ = id_
         self.calculators = OrderedDict()
+        self.target_tools = OrderedDict()
 
     @classmethod
     def get_code(cls):
@@ -94,6 +96,14 @@ class Generic(GenericAdmin, GenericProposal):
         # MOC order 12 corresponds to 52" cells.
         return 12
 
+    def get_target_tool_classes(self):
+        """
+        Get a tuple of the target tool classes which can be used
+        with this facility.
+        """
+
+        return (ClashTool,)
+
     def make_proposal_code(self, db, proposal):
         """
         Generate the proposal identifying code for a given proposal.
@@ -117,6 +127,7 @@ class Generic(GenericAdmin, GenericProposal):
             'title': self.get_name(),
             'open_semesters': open_semesters,
             'calculators': self.calculators.values(),
+            'target_tools': self.target_tools.values(),
         }
 
     def view_semester_calls(self, db, semester_id):
