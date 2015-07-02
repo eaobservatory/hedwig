@@ -12,6 +12,12 @@ a:link, a:visited {
     text-decoration: underline;
 }
 
+abbr {
+    color: #040;
+    text-decoration: none;
+    border: none;
+}
+
 #navbar {
     background: #040;
     color: #AAA;
@@ -123,6 +129,16 @@ span.forminfo_bad {
     border-radius: 1ex;
     padding-left: 1ex;
     padding-right: 1ex;
+}
+
+span.calculator_value {
+    display: inline-block;
+    margin: 0.25ex;
+    border: 1px solid #CCC;
+    background: #EEE;
+    border-radius: 0.5ex;
+    padding-left: 0.5ex;
+    padding-right: 0.5ex;
 }
 
 form ol li div.explanation {
