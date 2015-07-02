@@ -98,7 +98,7 @@ class DBCalculatorTest(DBTestCase):
                                  True, 2, moc_a)
         self.assertIsInstance(moc_id, int)
 
-        mocs = self.db.search_moc(facility_id, None)
+        mocs = self.db.search_moc(facility_id, None, with_description=True)
         self.assertIsInstance(mocs, ResultCollection)
         self.assertIn(moc_id, mocs)
         moc_info = mocs[moc_id]

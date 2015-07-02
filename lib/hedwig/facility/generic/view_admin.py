@@ -475,8 +475,9 @@ class GenericAdmin(object):
             # We are editing an existing MOC -- fetch its info from
             # the database.
             try:
-                moc = db.search_moc(facility_id=self.id_, moc_id=moc_id,
-                                    public=None).get_single()
+                moc = db.search_moc(
+                    facility_id=self.id_, moc_id=moc_id,
+                    public=None, with_description=True).get_single()
             except NoSuchRecord:
                 raise HTTPNotFound('Coverage map not found')
 

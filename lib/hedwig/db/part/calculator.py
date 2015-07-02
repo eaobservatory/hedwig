@@ -127,12 +127,29 @@ class CalculatorPart(object):
 
         return ans
 
-    def search_moc(self, facility_id, public, moc_id=None):
+    def search_moc(self, facility_id, public, moc_id=None,
+                   with_description=False):
         """
         Search for MOC records for a facility.
         """
 
-        stmt = moc.select()
+        select_cols = [
+            moc.c.id,
+            moc.c.facility_id,
+            moc.c.name,
+            moc.c.public,
+            moc.c.uploaded,
+            moc.c.num_cells,
+            moc.c.area,
+        ]
+
+        if with_description:
+            select_cols.append(moc.c.description)
+            default = {}
+        else:
+            default = {'description': None}
+
+        stmt = select(select_cols)
 
         if facility_id is not None:
             stmt = stmt.where(moc.c.facility_id == facility_id)
@@ -147,7 +164,9 @@ class CalculatorPart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(moc.c.id.asc())):
-                ans[row['id']] = MOCInfo(**row)
+                values = default.copy()
+                values.update(**row)
+                ans[row['id']] = MOCInfo(**values)
 
         return ans
 
