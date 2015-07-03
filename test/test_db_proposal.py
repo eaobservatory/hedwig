@@ -835,9 +835,9 @@ class DBProposalTest(DBTestCase):
         self.assertFalse(result)
 
         records = TargetCollection([
-            (1, Target(1, proposal_id, 'Obj 1', 1, 0.5, -0.5)),
-            (2, Target(2, proposal_id, 'Obj 2', None, None, None)),
-            (3, Target(3, proposal_id, 'Obj 3', 2, 335, 1.5)),
+            (1, Target(1, proposal_id, 'Obj 1', 1, 0.5, -0.5, 15.5, 1)),
+            (2, Target(2, proposal_id, 'Obj 2', None, None, None, 13.5, 2)),
+            (3, Target(3, proposal_id, 'Obj 3', 2, 335, 1.5, None, None)),
         ])
 
         n = self.db.sync_proposal_target(proposal_id, records)

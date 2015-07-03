@@ -6,6 +6,8 @@ function addTargetRow(newRowNumber) {
     newrow.find('[name=x]').attr('name', 'x_' + nid);
     newrow.find('[name=y]').attr('name', 'y_' + nid);
     newrow.find('[name=system]').attr('name', 'system_' + nid);
+    newrow.find('[name=time]').attr('name', 'time_' + nid);
+    newrow.find('[name=priority]').attr('name', 'priority_' + nid);
     var deletelink = newrow.find('#delete_template');
     deletelink.attr('id', 'delete_' + nid);
     deletelink.click(function (event) {

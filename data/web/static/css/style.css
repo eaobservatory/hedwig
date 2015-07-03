@@ -84,6 +84,10 @@ p.caution:before {
     content: "CAUTION:";
 }
 
+input[type="number"] {
+    width: 10ex;
+}
+
 section.deselected {
     border-left: 1ex solid #BBB;
     padding-left: 1ex;

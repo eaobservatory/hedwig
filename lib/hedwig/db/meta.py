@@ -416,6 +416,8 @@ target = Table(
     Column('system', Integer, nullable=True),
     Column('x', Float(precision=53, asdecimal=False), nullable=True),
     Column('y', Float(precision=53, asdecimal=False), nullable=True),
+    Column('time', Float(precision=53, asdecimal=False), nullable=True),
+    Column('priority', Integer, nullable=True),
     **_table_opts)
 
 user = Table(

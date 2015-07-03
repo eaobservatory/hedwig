@@ -155,6 +155,8 @@
                     <th>RA / Longitude</th>
                     <th>Dec / Latitude</th>
                     <th>System</th>
+                    <th>Time</th>
+                    <th>Priority</th>
                 </tr>
                 {% for target in targets %}
                     <tr>
@@ -162,6 +164,8 @@
                         <td>{{ target.x }}</td>
                         <td>{{ target.y }}</td>
                         <td>{{ target.system }}</td>
+                        <td>{{ target.time }} {{ 'hours' if target.time }}</td>
+                        <td>{{ target.priority }}</td>
                     </tr>
                 {% endfor %}
             </table>

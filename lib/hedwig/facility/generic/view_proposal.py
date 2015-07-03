@@ -566,7 +566,9 @@ class GenericProposal(object):
                     target_id, proposal.id, form[param],
                     int(form['system_' + id_]),
                     form['x_' + id_],
-                    form['y_' + id_])
+                    form['y_' + id_],
+                    form['time_' + id_],
+                    form['priority_' + id_])
 
             records = organise_collection(TargetCollection, updated_records,
                                           added_records)

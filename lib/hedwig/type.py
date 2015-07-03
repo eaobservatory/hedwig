@@ -469,7 +469,17 @@ class TargetCollection(OrderedDict):
                 (x, y) = format_coord(v.system,
                                       coord_from_dec_deg(v.system, v.x, v.y))
 
-            ans[k] = v._replace(x=x, y=y)
+            if v.time is None:
+                time = ''
+            else:
+                time = '{}'.format(v.time)
+
+            if v.priority is None:
+                priority = ''
+            else:
+                priority = '{}'.format(v.priority)
+
+            ans[k] = v._replace(x=x, y=y, time=time, priority=priority)
 
         return ans
 
@@ -494,7 +504,24 @@ class TargetCollection(OrderedDict):
             else:
                 system = x = y = None
 
-            ans[k] = v._replace(system=system, x=x, y=y)
+            try:
+                if v.time:
+                    time = float(v.time)
+                else:
+                    time = None
+            except ValueError:
+                raise UserError('Could not parse time for "{}".', v.name)
+
+            try:
+                if v.priority:
+                    priority = int(v.priority)
+                else:
+                    priority = None
+            except ValueError:
+                raise UserError('Could not parse priority for "{}".', v.name)
+
+            ans[k] = v._replace(system=system, x=x, y=y,
+                                time=time, priority=priority)
 
         return ans
 
