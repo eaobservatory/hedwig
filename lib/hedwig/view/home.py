@@ -21,7 +21,9 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict, namedtuple
 from itertools import groupby
 
+from ..error import NoSuchRecord
 from ..type import ProposalWithCode
+from ..web.util import HTTPNotFound
 
 
 def prepare_home(application_name, facilities):
@@ -31,7 +33,16 @@ def prepare_home(application_name, facilities):
     }
 
 
-def prepare_dashboard(db, person_id, facilities):
+def prepare_dashboard(db, person_id, facilities, administrative=False):
+    if administrative:
+        try:
+            person = db.get_person(person_id=person_id)
+            title = '{}: Dashboard'.format(person.name)
+        except NoSuchRecord:
+            raise HTTPNotFound('Person not found.')
+    else:
+        person = None
+        title = 'Personal Dashboard'
 
     proposals = db.search_proposal(person_id=person_id)
 
@@ -45,6 +56,7 @@ def prepare_dashboard(db, person_id, facilities):
             for p in ps]
 
     return {
-        'title': 'Personal Dashboard',
+        'title': title,
         'proposals': facility_proposals,
+        'person': person,
     }

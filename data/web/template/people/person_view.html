@@ -21,6 +21,12 @@
                 <a href="{{ url_for('.change_user_name') }}">Change user name</a>
             </p>
         </nav>
+    {% elif session['is_admin'] %}
+        <nav>
+            <p>
+                <a href="{{ url_for('.person_view_dashboard', person_id=person.id) }}">View dashboard</a>
+            </p>
+        </nav>
     {% endif %}
 {% endif %}
 

@@ -80,7 +80,7 @@ def create_web_app():
     def dashboard():
         return prepare_dashboard(db, session['person']['id'], facilities)
 
-    app.register_blueprint(create_people_blueprint(db))
+    app.register_blueprint(create_people_blueprint(db, facilities))
     app.register_blueprint(create_help_blueprint(), url_prefix='/help')
     app.register_blueprint(create_query_blueprint(db), url_prefix='/query')
 

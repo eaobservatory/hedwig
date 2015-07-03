@@ -20,12 +20,12 @@ from __future__ import absolute_import, division, print_function, \
 
 from flask import Blueprint, request
 
-from ..util import require_auth, require_not_auth, templated
-
+from ..util import require_admin, require_auth, require_not_auth, templated
+from ...view.home import prepare_dashboard
 from ...view import people as view
 
 
-def create_people_blueprint(db):
+def create_people_blueprint(db, facilities):
     bp = Blueprint('people', __name__)
 
     @bp.route('/user/log_in', methods=['GET', 'POST'])
@@ -119,6 +119,13 @@ def create_people_blueprint(db):
     def person_edit_email(person_id):
         return view.person_edit_email(db, person_id, request.form,
                                       request.method == 'POST')
+
+    @bp.route('/person/<int:person_id>/dashboard')
+    @templated('dashboard.html')
+    @require_admin
+    def person_view_dashboard(person_id):
+        return prepare_dashboard(db, person_id, facilities,
+                                 administrative=True)
 
     @bp.route('/institution/')
     @templated('people/institution_list.html')
