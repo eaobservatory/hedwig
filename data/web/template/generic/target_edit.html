@@ -41,7 +41,10 @@
                         {% endfor %}
                     </select>
                 </td>
-                <td><input type="button" id="delete_{{ target.id }}" value="Delete" />
+                <td>
+                    <input type="button" id="delete_{{ target.id }}" value="Delete" />
+                    <input type="button" id="resolve_{{ target.id }}" value="Resolve name" />
+                </td>
             </tr>
         {% endfor %}
     </table>
@@ -57,7 +60,10 @@
                     {% endfor %}
                 </select>
             </td>
-            <td><input type="button" id="delete_template" value="Delete" />
+            <td>
+                <input type="button" id="delete_template" value="Delete" />
+                <input type="button" id="resolve_template" value="Resolve name" />
+            </td>
         </tr>
     </table>
     <p>

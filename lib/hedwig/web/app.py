@@ -30,6 +30,7 @@ from .util import require_auth, session, templated
 from .blueprint.facility import create_facility_blueprint
 from .blueprint.help import create_help_blueprint
 from .blueprint.people import create_people_blueprint
+from .blueprint.query import create_query_blueprint
 from .format import format_text
 
 from ..view.home import prepare_dashboard, prepare_home
@@ -81,6 +82,7 @@ def create_web_app():
 
     app.register_blueprint(create_people_blueprint(db))
     app.register_blueprint(create_help_blueprint(), url_prefix='/help')
+    app.register_blueprint(create_query_blueprint(db), url_prefix='/query')
 
     # Register blueprints for each facility.
     for facility_class in get_facilities():
