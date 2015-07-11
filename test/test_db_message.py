@@ -171,10 +171,15 @@ class DBMessageTest(DBTestCase):
         self.db.add_email(person_2, '2@b', primary=False, public=True)
         self.db.add_email(person_2, '2@c', primary=False, public=True)
 
+        person_3 = self.db.add_person('Person Three')
+        self.db.add_email(person_3, '3@a', primary=True, public=False)
+        self.db.add_email(person_3, '3@b', primary=False, public=True)
+        self.db.add_email(person_3, '3@c', primary=False, public=False)
+
         # Create test message, giving specific email addresses.
         message_id = self.db.add_message('test', 'test message',
-                                         [person_1, person_2],
-                                         ['1@c', '2@b'])
+                                         [person_1, person_2, person_3],
+                                         ['1@c', '2@b', '3@c'])
 
         self.assertIsInstance(message_id, int)
 
@@ -184,11 +189,16 @@ class DBMessageTest(DBTestCase):
         self.assertEqual(set(message.recipients), set((
             MessageRecipient('Person One', '1@c', True),
             MessageRecipient('Person Two', '2@b', True),
+            MessageRecipient('Person Three', '3@c', False),
         )))
 
-        # Check we get an error if we try to specify an email address
-        # for the wrong person (or which doesn't exist at all).
-        with self.assertRaisesRegexp(ConsistencyError,
-                                     '^email address does not exist'):
-            message_id = self.db.add_message('test', 'test message',
-                                             [person_1], ['2@b'])
+        # Check handling of an email address which isn't in the email table.
+        # (This can happen if an address is changed after an email is already
+        # inserted into the database with an explicit address.)
+        message_id = self.db.add_message('test', 'test message',
+                                         [person_1], ['1@d'])
+        message = self.db.get_unsent_message(mark_sending=True)
+        self.assertEqual(message.id, message_id)
+        self.assertEqual(message.recipients, [
+            MessageRecipient('Person One', '1@d', False),
+        ])

@@ -23,6 +23,7 @@ from itertools import izip_longest
 
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_, case
+from sqlalchemy.sql.functions import coalesce
 
 from ...error import ConsistencyError, NoSuchRecord, MultipleRecords
 from ...type import Message, MessageRecipient, ResultCollection
@@ -57,22 +58,10 @@ class MessagePart(object):
 
             for (person_id, email_address) in izip_longest(person_ids,
                                                            email_addresses):
-                if email_address is None:
-                    email_id = None
-                else:
-                    try:
-                        email_id = self.search_email(
-                            person_id, address=email_address, _conn=conn
-                        ).get_single().id
-                    except NoSuchRecord:
-                        raise ConsistencyError('email address does not exist')
-                    except MultipleRecords:
-                        raise ConsistencyError('multiple address results')
-
                 conn.execute(message_recipient.insert().values({
                     message_recipient.c.message_id: message_id,
                     message_recipient.c.person_id: person_id,
-                    message_recipient.c.email_id: email_id,
+                    message_recipient.c.email_address: email_address,
                 }))
 
         return message_id
@@ -101,15 +90,25 @@ class MessagePart(object):
 
             recipients = []
 
+            # Find the recipients of the message: perform an outer join
+            # with the email table in case the address is not there -- in that
+            # case assume the address is not public.
             for row in conn.execute(select([
-                    person.c.name, email.c.address, email.c.public
+                    person.c.name,
+                    coalesce(message_recipient.c.email_address,
+                             email.c.address).label('address'),
+                    coalesce(email.c.public, False).label('public'),
                     ]).select_from(
-                        message_recipient.join(person).join(email)
-                    ).where(and_(
-                        message_recipient.c.message_id == message_id,
-                        case([(message_recipient.c.email_id.isnot(None),
-                               message_recipient.c.email_id == email.c.id)],
-                             else_=email.c.primary)))):
+                        message_recipient.join(person).outerjoin(
+                            email,
+                            and_(person.c.id == email.c.person_id, case([(
+                                message_recipient.c.email_address.isnot(None),
+                                message_recipient.c.email_address ==
+                                email.c.address)],
+                                else_=email.c.primary)
+                            ))
+                    ).where(
+                        message_recipient.c.message_id == message_id)):
                 recipients.append(MessageRecipient(**row))
 
             if mark_sending:
