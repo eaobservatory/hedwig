@@ -120,6 +120,23 @@ def create_people_blueprint(db, facilities):
         return view.person_edit_email(db, person_id, request.form,
                                       request.method == 'POST')
 
+    @bp.route('/person/<int:person_id>/email/verify/<int:email_id>',
+              methods=['GET', 'POST'])
+    @templated('people/person_email_verify_get.html')
+    @require_auth(require_person=True)
+    def person_email_verify_get(person_id, email_id):
+        return view.person_email_verify_get(
+            db, person_id, email_id,
+            (request.form if request.method == 'POST' else None))
+
+    @bp.route('/verify', methods=['GET', 'POST'])
+    @templated('people/person_email_verify_use.html')
+    @require_auth(require_person=True)
+    def person_email_verify_use():
+        return view.person_email_verify_use(
+            db, request.args,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/person/<int:person_id>/dashboard')
     @templated('dashboard.html')
     @require_admin

@@ -19,7 +19,8 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from ..email.format import render_email_template
-from ..error import Error, MultipleRecords, NoSuchRecord, UserError
+from ..error import ConsistencyError, Error, MultipleRecords, NoSuchRecord, \
+    UserError
 from ..type import Email, EmailCollection, Institution, Person, null_tuple
 from ..util import get_countries
 from ..web.util import flash, session, url_for, \
@@ -631,6 +632,82 @@ def person_edit_email(db, person_id, form, is_post):
         'message': message,
         'person': person,
         'emails': records.values(),
+    }
+
+
+def person_email_verify_get(db, person_id, email_id, form):
+    try:
+        person = db.get_person(person_id, with_email=True)
+    except NoSuchRecord:
+        raise HTTPNotFound('Person profile not found.')
+    if not auth.for_person(db, person).edit:
+        raise HTTPForbidden('Permission denied for this person profile.')
+
+    try:
+        email = person.email[email_id]
+    except KeyError:
+        raise HTTPNotFound('Email address record not found.')
+
+    if email.verified:
+        raise ErrorPage('The email address {} has already been verified.',
+                        email.address)
+
+    if form:
+        (token, expiry) = db.get_email_verify_token(person_id, email.address)
+        db.add_message(
+            'Email verification code',
+            render_email_template('email_verify.txt', {
+                'recipient_name': person.name,
+                'token': token,
+                'expiry': expiry,
+                'target_url': url_for('.person_email_verify_use',
+                                      token=token, _external=True),
+            }),
+            [person.id],
+            email_addresses=[email.address])
+        flash('Your address verification code has been sent by email to {}.',
+              email.address)
+        raise HTTPRedirect(url_for('.person_email_verify_use'))
+
+    return {
+        'title': '{}: Verify Email Address'.format(person.name),
+        'person': person,
+        'email': email,
+    }
+
+
+def person_email_verify_use(db, args, form):
+    message = None
+    token = args.get('token', '')
+    person_id = session['person']['id']
+
+    if form is not None:
+        token = form['token']
+
+        try:
+            try:
+                email_address = db.use_email_verify_token(person_id, token)
+
+            except NoSuchRecord:
+                raise UserError('Your verification code was not recognised. '
+                                'It may have expired or been superceded by '
+                                'a newer verification code.')
+
+            except ConsistencyError:
+                raise UserError('The email address to which this verification '
+                                'code relates could not be found.  It may '
+                                'have been changed or removed.')
+
+            flash('Your email address {} has been verified.', email_address)
+            raise HTTPRedirect(url_for('.person_view', person_id=person_id))
+
+        except UserError as e:
+            message = e.message
+
+    return {
+        'title': 'Enter Email Verification Code',
+        'message': message,
+        'token': token,
     }
 
 

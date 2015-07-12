@@ -58,6 +58,9 @@
                     {% if email.primary %}<span class="label">primary</span>{% endif %}
                     {% if email.verified %}<span class="label">verified</span>{% endif %}
                     {% if email.public %}<span class="label">public</span>{% endif %}
+                    {% if is_current_user and not email.verified %}
+                        <a href="{{ url_for('.person_email_verify_get', person_id=person.id, email_id=email.id) }}">verify</a>
+                    {% endif %}
                 </td>
             </tr>
         {% endfor %}

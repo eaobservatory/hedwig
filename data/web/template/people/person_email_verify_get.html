@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% set navigation=['people', (person.name, url_for('.person_view', person_id=person.id))] %}
+
+{% block content %}
+
+<p>
+    You can verify your address by sending a verification
+    code by email.
+    You will be able to enter this code on the next page
+    to complete the verification process.
+</p>
+
+<p>
+    Address: <a href="mailto:{{ email.address }}">{{ email.address }}</a>
+</p>
+
+<form method="POST" action="{{ url_for('.person_email_verify_get', person_id=person.id, email_id=email.id) }}">
+    <p>
+        <input type="submit" name="submit_sent" value="Send code" />
+    </p>
+</form>
+
+{% endblock %}
+

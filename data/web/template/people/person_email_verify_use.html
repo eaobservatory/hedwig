@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.person_email_verify_use') }}">
+    <ol>
+        <li>
+            <label for="token">Verification code</label>
+            <input type="text" name="token" value="{{ token }}" {{ 'autofocus="aotofocus"' | safe if not token }} size="40" />
+        </li>
+        <li>
+            <input type="submit" value="Verify address" name="submit" />
+        </li>
+    </ol>
+</form>
+
+{% endblock %}
