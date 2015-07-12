@@ -107,4 +107,8 @@ $(document).ready(function () {
         var targetid = event.target.id.replace('resolve_', '');
         resolveTargetName(targetid);
     });
+
+    if ($('table#targets tr').length === 1) {
+        addTargetRow(newRowCounter ++);
+    }
 });

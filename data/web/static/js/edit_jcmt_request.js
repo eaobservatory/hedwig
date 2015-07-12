@@ -28,4 +28,8 @@ $(document).ready(function () {
         var requestid = event.target.id.replace('delete_', '');
         deleteRequestRow(requestid);
     });
+
+    if ($('table#requests tr').length === 1) {
+        addRequestRow(newRowCounter ++);
+    }
 });
