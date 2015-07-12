@@ -199,6 +199,33 @@ class DBPeopleTest(DBTestCase):
         self.assertIsInstance(result.email, EmailCollection)
         self.assertEqual(len(result.email), 2)
 
+    def test_verify_email(self):
+        address = 'someone@somewhere.edu'
+        person_id = self.db.add_person('A Person')
+        email_id = self.db.add_email(person_id, address)
+
+        # Email record starts off not verified.
+        email = self.db.search_email(person_id=person_id, address=address)
+        self.assertFalse(email.get_single().verified)
+
+        # Perform verification.
+        (token, expiry) = self.db.get_email_verify_token(person_id, address)
+
+        self.assertIsInstance(token, str)
+        self.assertRegexpMatches(token, '^[0-9a-f]{32}$')
+        self.assertIsInstance(expiry, datetime)
+
+        with self.assertRaisesRegexp(UserError, 'someone else'):
+            self.db.use_email_verify_token(person_id + 1, token)
+
+        verified_address = self.db.use_email_verify_token(person_id, token)
+
+        self.assertEqual(verified_address, address)
+
+        # Email record should now be verified.
+        email = self.db.search_email(person_id=person_id, address=address)
+        self.assertTrue(email.get_single().verified)
+
     def test_sync_person_email(self):
         # Set up email addresses.
         person_1 = self.db.add_person('Person One')

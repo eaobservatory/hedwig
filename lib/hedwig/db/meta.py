@@ -426,3 +426,15 @@ user = Table(
     Column('password', String(255)),
     Column('salt', String(255)),
     **_table_opts)
+
+verify_token = Table(
+    'verify_token',
+    metadata,
+    Column('token', String(255), primary_key=True),
+    Column('person_id', None,
+           ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('email_address', Unicode(255), nullable=False),
+    Column('expiry', DateTime(), nullable=False),
+    UniqueConstraint('person_id', 'email_address'),
+    **_table_opts)

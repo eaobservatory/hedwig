@@ -30,7 +30,7 @@ from ...type import Email, EmailCollection, Institution, InstitutionInfo, \
     Person, PersonInfo, ResultCollection
 from ...util import get_countries
 from ..meta import email, institution, invitation, member, person, \
-    reset_token, user
+    reset_token, user, verify_token
 from ..util import require_not_none
 
 
@@ -380,6 +380,32 @@ class PeoplePart(object):
 
         return ans
 
+    def get_email_verify_token(self, person_id, email_address):
+        """
+        Create a email address verification token.
+
+        Stores the person_id along with the generated token in the database
+        so that we can ensure only one token is issued per person and
+        address.
+        """
+
+        token = generate_token()
+        expiry = datetime.utcnow() + timedelta(hours=24)
+
+        with self._transaction() as conn:
+            conn.execute(verify_token.delete().where(and_(
+                verify_token.c.email_address == email_address,
+                verify_token.c.person_id == person_id)))
+
+            result = conn.execute(verify_token.insert().values({
+                verify_token.c.token: token,
+                verify_token.c.person_id: person_id,
+                verify_token.c.email_address: email_address,
+                verify_token.c.expiry: expiry,
+            }))
+
+        return (token, expiry)
+
     def get_password_reset_token(self, user_id):
         """
         Create a password reset token for a given user.
@@ -636,6 +662,45 @@ class PeoplePart(object):
                 raise ConsistencyError(
                     'no rows matched updating user with id={0}',
                     user_id)
+
+    def use_email_verify_token(self, person_id, token):
+        """
+        Tries to use the given email verification token.
+        """
+
+        with self._transaction() as conn:
+            # Remove any expired tokens.
+            conn.execute(verify_token.delete().where(
+                verify_token.c.expiry < datetime.utcnow()))
+
+            # Try to fetch this token.
+            result = conn.execute(verify_token.select().where(
+                verify_token.c.token == token)).first()
+
+            if result is None:
+                raise NoSuchRecord('verify token expired or non-existant')
+
+            email_address = result['email_address']
+            if person_id != result['person_id']:
+                raise UserError('This verification code appears to have been '
+                                'issued to someone else.')
+
+            # If we found it, go ahead and verify the email address.
+            result = conn.execute(email.update().where(and_(
+                email.c.person_id == person_id,
+                email.c.address == email_address)).values({
+                    'verified': True,
+                }))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched verifying email address')
+
+            # Finally delete the token (which has now been used).
+            conn.execute(verify_token.delete().where(
+                verify_token.c.token == token))
+
+        return email_address
 
     def use_password_reset_token(self, token):
         """
