@@ -22,9 +22,12 @@ from datetime import datetime
 
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_, or_
+from sqlalchemy.sql.functions import coalesce
+from sqlalchemy.sql.functions import max as max_
 
 from ...error import ConsistencyError, Error
-from ...type import Calculation, MOCInfo, ResultCollection
+from ...type import Calculation, MOCInfo, \
+    OrderedResultCollection, ResultCollection
 from ..meta import calculator, calculation, facility, moc, moc_cell
 
 
@@ -32,8 +35,13 @@ class CalculatorPart(object):
     def add_calculation(self, proposal_id, calculator_id,
                         mode, version, input_, output, title):
         with self._transaction() as conn:
+            calculation_alias = calculation.alias()
+
             result = conn.execute(calculation.insert().values({
                 calculation.c.proposal_id: proposal_id,
+                calculation.c.sort_order: select(
+                    [coalesce(max_(calculation_alias.c.sort_order), 0) + 1]
+                    ).where(calculation_alias.c.proposal_id == proposal_id),
                 calculation.c.calculator_id: calculator_id,
                 calculation.c.mode: mode,
                 calculation.c.version: version,
@@ -119,10 +127,11 @@ class CalculatorPart(object):
         if proposal_id is not None:
             stmt = stmt.where(calculation.c.proposal_id == proposal_id)
 
-        ans = ResultCollection()
+        ans = OrderedResultCollection()
 
         with self._transaction() as conn:
-            for row in conn.execute(stmt.order_by(calculation.c.id)):
+            for row in conn.execute(
+                    stmt.order_by(calculation.c.sort_order.asc())):
                 ans[row['id']] = Calculation(**row)
 
         return ans

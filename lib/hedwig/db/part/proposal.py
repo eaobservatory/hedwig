@@ -127,8 +127,13 @@ class ProposalPart(object):
                         'for queue with id={1}'.format(
                             affiliation_id, proposal_record.queue_id))
 
+            member_alias = member.alias()
+
             result = conn.execute(member.insert().values({
                 member.c.proposal_id: proposal_id,
+                member.c.sort_order: select(
+                    [coalesce(max_(member_alias.c.sort_order), 0) + 1]).where(
+                    member_alias.c.proposal_id == proposal_id),
                 member.c.person_id: person_id,
                 member.c.pi: pi,
                 member.c.editor: editor,
@@ -213,8 +218,13 @@ class ProposalPart(object):
                 raise ConsistencyError('person does not exist with id={}',
                                        uploader_person_id)
 
+            fig_alias = proposal_fig.alias()
+
             result = conn.execute(proposal_fig.insert().values({
                 proposal_fig.c.proposal_id: proposal_id,
+                proposal_fig.c.sort_order: select(
+                    [coalesce(max_(fig_alias.c.sort_order), 0) + 1]
+                    ).where(fig_alias.c.proposal_id == proposal_id),
                 proposal_fig.c.role: role,
                 proposal_fig.c.type: type_,
                 proposal_fig.c.state: AttachmentState.NEW,
@@ -776,7 +786,7 @@ class ProposalPart(object):
         ans = MemberCollection()
 
         with self._transaction(_conn=_conn) as conn:
-            for row in conn.execute(stmt.order_by(member.c.id)):
+            for row in conn.execute(stmt.order_by(member.c.sort_order.asc())):
                 ans[row['id']] = Member(**row)
 
         return ans
@@ -1013,7 +1023,8 @@ class ProposalPart(object):
         ans = ResultCollection()
 
         with self._transaction() as conn:
-            for row in conn.execute(stmt.order_by(proposal_fig.c.id)):
+            for row in conn.execute(
+                    stmt.order_by(proposal_fig.c.sort_order.asc())):
                 values = default.copy()
                 values.update(**row)
                 ans[row['id']] = ProposalFigureInfo(**values)
@@ -1118,7 +1129,7 @@ class ProposalPart(object):
         ans = TargetCollection()
 
         with self._transaction() as conn:
-            for row in conn.execute(stmt.order_by(target.c.id.asc())):
+            for row in conn.execute(stmt.order_by(target.c.sort_order.asc())):
                 ans[row['id']] = Target(**row)
 
         return ans
@@ -1370,6 +1381,8 @@ class ProposalPart(object):
 
         records.validate(editor_person_id=editor_person_id)
 
+        records.ensure_sort_order()
+
         with self._transaction() as conn:
             if not self._exists_id(conn, proposal, proposal_id):
                 raise ConsistencyError(
@@ -1378,6 +1391,7 @@ class ProposalPart(object):
             return self._sync_records(
                 conn, member, member.c.proposal_id, proposal_id, records,
                 update_columns=(
+                    member.c.sort_order,
                     member.c.pi, member.c.editor, member.c.observer,
                     member.c.affiliation_id
                 ), forbid_add=True)
@@ -1397,6 +1411,8 @@ class ProposalPart(object):
         """
         Update the target records for a proposal.
         """
+
+        records.ensure_sort_order()
 
         with self._transaction() as conn:
             return self._sync_records(

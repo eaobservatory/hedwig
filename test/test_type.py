@@ -18,10 +18,12 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import namedtuple
 from unittest import TestCase
 
 from hedwig.error import MultipleRecords, NoSuchRecord
-from hedwig.type import ResultCollection, ProposalState
+from hedwig.type import OrderedResultCollection, ResultCollection, \
+    ProposalState
 
 
 class TypeTestCase(TestCase):
@@ -68,3 +70,21 @@ class TypeTestCase(TestCase):
 
         with self.assertRaises(MultipleRecords):
             rc.get_single()
+
+    def test_ordered_result_collection(self):
+        SortOrdered = namedtuple('SortOrdered', ('id', 'sort_order'))
+
+        rc = OrderedResultCollection()
+        rc[1] = SortOrdered(1, 1)
+        rc[2] = SortOrdered(2, None)
+        rc[3] = SortOrdered(3, 2)
+        rc[4] = SortOrdered(4, None)
+
+        rc.ensure_sort_order()
+
+        self.assertEqual(list(rc.values()), [
+            SortOrdered(1, 1),
+            SortOrdered(2, 3),
+            SortOrdered(3, 2),
+            SortOrdered(4, 4),
+        ])

@@ -563,7 +563,7 @@ class GenericProposal(object):
                     destination = updated_records
 
                 destination[target_id] = Target(
-                    target_id, proposal.id, form[param],
+                    target_id, proposal.id, None, form[param],
                     int(form['system_' + id_]),
                     form['x_' + id_],
                     form['y_' + id_],

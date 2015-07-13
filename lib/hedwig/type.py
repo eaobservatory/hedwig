@@ -363,6 +363,36 @@ class ResultCollection(OrderedDict):
             return self.values()[0]
 
 
+class OrderedResultCollection(ResultCollection):
+    """
+    Subclass of ResultCollection for results from tables with a sort_order
+    column.
+    """
+
+    def ensure_sort_order(self):
+        """
+        Ensure all records have a non-None sort_order entry.
+
+        Iterates through the entries in this collection finding the maximum
+        sort_order used and all the entries without a sort order.  Then those
+        entries are assigned sort_order values above the previous maximum
+        in the order in which they appear in the collection.
+        """
+
+        i = 0
+        unordered = []
+
+        for (key, value) in self.items():
+            if value.sort_order is None:
+                unordered.append(key)
+            elif value.sort_order > i:
+                i = value.sort_order
+
+        for key in unordered:
+            i += 1
+            self[key] = self[key]._replace(sort_order=i)
+
+
 ResultTable = namedtuple('ResultTable', ('table', 'columns', 'rows'))
 
 
@@ -397,7 +427,7 @@ class EmailCollection(ResultCollection):
             raise UserError('There is more than one primary address.')
 
 
-class MemberCollection(ResultCollection):
+class MemberCollection(OrderedResultCollection):
     def get_pi(self):
         for member in self.values():
             if member.pi:
@@ -458,7 +488,7 @@ class ProposalTextCollection(ResultCollection):
             return default
 
 
-class TargetCollection(OrderedDict):
+class TargetCollection(OrderedResultCollection):
     def to_formatted_collection(self):
         ans = OrderedDict()
 
