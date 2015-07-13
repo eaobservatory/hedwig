@@ -1,0 +1,149 @@
+#!/usr/bin/env python2
+
+# Copyright (C) 2014 Science and Technology Facilities Council.
+# Copyright (C) 2015 East Asian Observatory.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+"""
+hedwigctl - Hedwig proposal system control tool
+
+Usage:
+    hedwigctl test_server [--debug] [--https] [--port <port>]
+    hedwigctl [-v | -q] initialize_database
+
+Options:
+    --help, -h                Show usage information.
+    --verbose, -v             Print debugging information.
+    --quiet, -q               Omit informational messages.
+    --https                   Enable use of HTTPS.
+    --port <port>             Specify server port number [default: 5678].
+    --debug                   Run server in debug mode.
+"""
+
+
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
+
+import logging
+
+from docopt import docopt
+
+
+integer_arguments = (
+    '--port',
+)
+
+commands = {}
+
+
+def main():
+    """
+    Main routine for the hedwigctl tool.
+    """
+
+    args = docopt(__doc__)
+
+    for integer_argument in integer_arguments:
+        if args[integer_argument] is not None:
+            args[integer_argument] = int(args[integer_argument])
+
+    for (command, func) in commands.items():
+        if args.get(command):
+            func(args)
+            break
+    else:
+        raise Exception('Unknown command')
+
+
+def command(f):
+    """
+    Decorator which adds a function to our commands dictionary.
+    """
+
+    commands[f.__name__] = f
+    return f
+
+
+def _configure_logging(args):
+    """
+    Set up the standard Python logger based on the --verbose and --quiet
+    options.
+    """
+
+    loglevel = logging.INFO
+
+    if args['--verbose']:
+        loglevel = logging.DEBUG
+    elif args['--quiet']:
+        loglevel = logging.WARNING
+
+    logging.basicConfig(level=loglevel)
+
+
+@command
+def initialize_database(args):
+    """
+    Initialize the database as configured in the hedwig.ini file.
+    """
+
+    from hedwig.config import get_database
+    from hedwig.db.meta import metadata
+
+    _configure_logging(args)
+
+    db = get_database()
+    metadata.create_all(db._engine)
+
+
+@command
+def test_server(args):
+    """
+    Run a test web service.
+
+    The --debug option enables access to the debugger.  It must not
+    be used in an environment where access to the server is not
+    restricted.
+    """
+
+    from hedwig.web.app import create_web_app
+
+    options = {
+        'port': args['--port'],
+    }
+
+    if args['--debug']:
+        options['host'] = '127.0.0.1'
+        options['debug'] = True
+
+    else:
+        options['host'] = '0.0.0.0'
+        options['debug'] = False
+
+    if args['--https']:
+        from OpenSSL import SSL
+
+        context = SSL.Context(SSL.SSLv23_METHOD)
+        context.use_privatekey_file('server.key')
+        context.use_certificate_file('server.crt')
+
+        options['ssl_context'] = context
+
+    app = create_web_app()
+    app.run(**options)
+
+
+if __name__ == '__main__':
+    main()
