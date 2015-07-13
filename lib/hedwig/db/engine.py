@@ -35,7 +35,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
         cursor.close()
 
 
-def get_engine(url):
+def get_engine(url, **kwargs):
     """Creates an SQLAchemmy database engine object for the given URL."""
 
-    return create_engine(url, echo=False)
+    return create_engine(url, echo=False, **kwargs)

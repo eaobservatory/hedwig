@@ -22,3 +22,4 @@ from=
 
 [utilities]
 ghostscript=/usr/bin/ghostscript
+firefox=/usr/bin/firefox

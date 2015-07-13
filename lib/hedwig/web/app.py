@@ -36,14 +36,17 @@ from .format import format_text
 from ..view.home import prepare_dashboard, prepare_home
 
 
-def create_web_app():
+def create_web_app(db=None):
     """
     Function to prepare the Flask web application.
     """
 
     home = get_home()
     config = get_config()
-    db = get_database()
+
+    if db is None:
+        db = get_database()
+
     facilities = OrderedDict()
 
     application_name = config.get('application', 'name')

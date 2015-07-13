@@ -22,6 +22,7 @@ from random import randint
 from unittest import TestCase
 
 from sqlalchemy.sql import insert
+from sqlalchemy.pool import StaticPool
 
 from hedwig import auth
 from hedwig.db.control import Database
@@ -29,7 +30,7 @@ from hedwig.db.meta import metadata
 from hedwig.db.engine import get_engine
 
 
-def get_dummy_database(randomize_ids=True):
+def get_dummy_database(randomize_ids=True, allow_multi_threaded=False):
     """
     Create in-memory SQL database for testing.
 
@@ -40,7 +41,13 @@ def get_dummy_database(randomize_ids=True):
     detecting the usage of incorrect id numbers.
     """
 
-    engine = get_engine('sqlite:///:memory:')
+    connect_options = {}
+
+    if allow_multi_threaded:
+        connect_options['connect_args'] = {'check_same_thread': False}
+        connect_options['poolclass'] = StaticPool
+
+    engine = get_engine('sqlite:///:memory:', **connect_options)
 
     metadata.create_all(engine)
 
