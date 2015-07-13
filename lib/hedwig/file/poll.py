@@ -32,6 +32,8 @@ def process_proposal_figure(db):
     Function to process pending proposal figure uploads.
     """
 
+    n_processed = 0
+
     for figure_info in db.search_proposal_figure(
             state=AttachmentState.NEW).values():
         logger.debug('Processing figure {}', figure_info.id)
@@ -84,6 +86,9 @@ def process_proposal_figure(db):
                     proposal_id=None, role=None, fig_id=figure_info.id,
                     state=AttachmentState.READY,
                     state_prev=AttachmentState.PROCESSING)
+
+                n_processed += 1
+
             except ConsistencyError:
                 continue
 
@@ -94,11 +99,15 @@ def process_proposal_figure(db):
                 proposal_id=None, role=None, fig_id=figure_info.id,
                 state=AttachmentState.ERROR)
 
+    return n_processed
+
 
 def process_proposal_pdf(db):
     """
     Function to process pending proposal PDF uploads.
     """
+
+    n_processed = 0
 
     for pdf in db.search_proposal_pdf(
             state=AttachmentState.NEW).values():
@@ -128,6 +137,9 @@ def process_proposal_pdf(db):
                     pdf.id,
                     state=AttachmentState.READY,
                     state_prev=AttachmentState.PROCESSING)
+
+                n_processed += 1
+
             except ConsitencyError:
                 # If another process (e.g. new upload) has altered the state,
                 # stop trying to process this PDF.
@@ -136,3 +148,5 @@ def process_proposal_pdf(db):
         except Exception as e:
             logger.error('Error converting PDF {}: {}', pdf.id, e.message)
             db.update_proposal_pdf(pdf.id, state=AttachmentState.ERROR)
+
+    return n_processed

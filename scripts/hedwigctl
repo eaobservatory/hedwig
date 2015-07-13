@@ -21,6 +21,7 @@
 hedwigctl - Hedwig proposal system control tool
 
 Usage:
+    hedwigctl poll [-v | -q] (email | figure | pdf | all)  [--pause <delay>]
     hedwigctl test_server [--debug] [--https] [--port <port>]
     hedwigctl [-v | -q] initialize_database
 
@@ -31,6 +32,7 @@ Options:
     --https                   Enable use of HTTPS.
     --port <port>             Specify server port number [default: 5678].
     --debug                   Run server in debug mode.
+    --pause <delay>           Repeatedly poll at the given interval (seconds).
 """
 
 
@@ -38,15 +40,19 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 import logging
+from time import sleep
 
 from docopt import docopt
 
 
 integer_arguments = (
     '--port',
+    '--pause',
 )
 
 commands = {}
+
+script_name = 'hedwigctl'
 
 
 def main():
@@ -106,6 +112,55 @@ def initialize_database(args):
 
     db = get_database()
     metadata.create_all(db._engine)
+
+
+@command
+def poll(args):
+    """
+    Poll for tasks to perform.
+    """
+
+    from hedwig.config import get_database
+    from hedwig.file.poll import process_proposal_figure, process_proposal_pdf
+    from hedwig.email.poll import send_queued_messages
+    from hedwig.util import get_logger
+
+    _configure_logging(args)
+
+    db = get_database()
+
+    logger = get_logger(script_name)
+
+    while True:
+        if args['email'] or args['all']:
+            logger.debug('Checking for queued email messages')
+            try:
+                n_sent = send_queued_messages(db=db)
+
+                if n_sent:
+                    logger.info('Sent {} message(s)', n_sent)
+            except:
+                logger.exception('Error checking for queued email messages.')
+
+        if args['figure'] or args['all']:
+            logger.debug('Checking for figures to process')
+            n_processed = process_proposal_figure(db=db)
+
+            if n_processed:
+                logger.info('Processed {} figure(s)', n_processed)
+
+        if args['pdf'] or args['all']:
+            logger.debug('Checking for PDF files to process')
+            n_processed = process_proposal_pdf(db=db)
+
+            if n_processed:
+                logger.info('Processed {} PDF file(s)', n_processed)
+
+        if args['--pause']:
+            sleep(args['--pause'])
+
+        else:
+            break
 
 
 @command
