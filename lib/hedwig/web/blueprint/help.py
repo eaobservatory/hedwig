@@ -39,11 +39,12 @@ TOCEntry = namedtuple('TOCEntry', ('mtime', 'title'))
 def create_help_blueprint():
     bp = Blueprint('help', __name__)
 
-    user_doc_root = os.path.join(get_home(), 'doc', 'user')
+    doc_root = os.path.join(get_home(), 'doc')
+    user_doc_root = os.path.join(doc_root, 'user')
     user_image_root = os.path.join(user_doc_root, 'image')
     user_toc_cache = {}
 
-    admin_doc_root = os.path.join(get_home(), 'doc', 'admin')
+    admin_doc_root = os.path.join(doc_root, 'admin')
     admin_image_root = os.path.join(user_doc_root, 'image')
     admin_toc_cache = {}
 
@@ -53,9 +54,9 @@ def create_help_blueprint():
         return {'title': 'Help'}
 
     @bp.route('/about')
-    @templated('help/about.html')
+    @templated('help/help_page.html')
     def help_about():
-        return {'title': 'About this System'}
+        return prepare_help_page(doc_root, 'about', {})
 
     @bp.route('/user/')
     @templated('help/help_page.html')
