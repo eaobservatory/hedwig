@@ -30,6 +30,7 @@ config_file = ('etc', 'hedwig.ini')
 config = None
 database = None
 facilities = None
+home_directory = None
 
 
 def get_config():
@@ -150,5 +151,21 @@ def get_home():
     Determine the application's home directory.
     """
 
-    env = os.environ
-    return env.get('HEDWIG_DIR', os.getcwd())
+    global home_directory
+
+    if home_directory is not None:
+        return home_directory
+
+    return os.environ.get('HEDWIG_DIR', os.getcwd())
+
+
+def set_home(directory):
+    """
+    Set the application's home directory.
+
+    This will alter the value returned in subsequent calls to get_home.
+    """
+
+    global home_directory
+
+    home_directory = directory
