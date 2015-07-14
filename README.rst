@@ -8,9 +8,11 @@ Requirements
 ~~~~~~~~~~~~
 
 * astropy
+* docopt
 * docutils
 * Flask
 * healpy
+* mysql-connector-python
 * Pillow
 * pycountry
 * pymoc
