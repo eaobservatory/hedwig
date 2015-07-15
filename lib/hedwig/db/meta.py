@@ -231,7 +231,7 @@ moc_cell = Table(
            nullable=False),
     Column('order', Integer, nullable=False),
     Column('cell', Integer, nullable=False),
-    Index('idx_moc_cell', 'order', 'cell', unique=True),
+    Index('idx_moc_cell', 'moc_id', 'order', 'cell', unique=True),
     **_table_opts)
 
 person = Table(
