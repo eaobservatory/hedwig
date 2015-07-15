@@ -21,7 +21,7 @@
 hedwigctl - Hedwig proposal system control tool
 
 Usage:
-    hedwigctl poll [-v | -q] (email | figure | pdf | all)  [--pause <delay>] [--pidfile <file>]
+    hedwigctl poll [-v | -q] (email | figure | pdf | all)  [--pause <delay>] [--pidfile <file>] [--logfile <file>]
     hedwigctl test_server [--debug] [--https] [--port <port>]
     hedwigctl [-v | -q] initialize_database
 
@@ -34,6 +34,7 @@ Options:
     --debug                   Run server in debug mode.
     --pause <delay>           Repeatedly poll at the given interval (seconds).
     --pidfile <file>          PID file to use to control execution.
+    --logfile <file>          File in which to record logging information.
 """
 
 
@@ -99,7 +100,11 @@ def _configure_logging(args):
     elif args['--quiet']:
         loglevel = logging.WARNING
 
-    logging.basicConfig(level=loglevel)
+    logging.basicConfig(
+        level=loglevel,
+        datefmt='%Y-%m-%dT%H:%M:%S',
+        format='%(asctime)s %(levelname)s %(name)s %(message)s',
+        filename=args['--logfile'])
 
 
 @command
