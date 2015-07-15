@@ -97,7 +97,7 @@ class ClashTool(BaseTargetTool):
 
                 clashes = db.search_moc_cell(
                     facility_id=self.facility.id_, public=public,
-                    order=order, cell=cell)
+                    order=order, cell=int(cell))
 
             except UserError as e:
                 message = e.message
