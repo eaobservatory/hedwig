@@ -20,7 +20,10 @@ from __future__ import absolute_import, division, print_function, \
 
 from binascii import hexlify, unhexlify
 from codecs import utf_8_encode
-from hashlib import pbkdf2_hmac
+try:
+    from hashlib import pbkdf2_hmac
+except ImportError:
+    from backports.pbkdf2 import pbkdf2_hmac
 from os import urandom
 
 _rounds = 1000000
