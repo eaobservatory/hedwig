@@ -13,9 +13,9 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/nonprint.css') }}" media="not print" type="text/css" />
         <link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}" media="print" type="text/css" />
         {% if scripts is defined %}
-           <script type="text/javascript" src="/static/js/jquery.js"></script>
+           <script type="text/javascript" src="{{ url_for('static', filename='js/jquery.js') }}"></script>
            {% for script in scripts %}
-               <script type="text/javascript" src="/static/js/{{ script }}.js"></script>
+               <script type="text/javascript" src="{{ url_for('static', filename='js/' + script + '.js' ) }}"></script>
            {% endfor %}
         {% endif %}
     </head>
