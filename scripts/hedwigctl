@@ -21,7 +21,7 @@
 hedwigctl - Hedwig proposal system control tool
 
 Usage:
-    hedwigctl poll [-v | -q] (email | figure | pdf | all)  [--pause <delay>]
+    hedwigctl poll [-v | -q] (email | figure | pdf | all)  [--pause <delay>] [--pidfile <file>]
     hedwigctl test_server [--debug] [--https] [--port <port>]
     hedwigctl [-v | -q] initialize_database
 
@@ -33,13 +33,16 @@ Options:
     --port <port>             Specify server port number [default: 5678].
     --debug                   Run server in debug mode.
     --pause <delay>           Repeatedly poll at the given interval (seconds).
+    --pidfile <file>          PID file to use to control execution.
 """
 
 
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+import atexit
 import logging
+import os
 from time import sleep
 
 from docopt import docopt
@@ -119,6 +122,17 @@ def poll(args):
     """
     Poll for tasks to perform.
     """
+
+    if args['--pidfile']:
+        from hedwig.pidfile import pidfile_write, pidfile_running, \
+            pidfile_delete
+
+        pidfile = args['--pidfile']
+        if pidfile_running(pidfile):
+            return
+
+        pidfile_write(pidfile, os.getpid())
+        atexit.register(pidfile_delete, pidfile)
 
     from hedwig.config import get_database
     from hedwig.file.poll import process_proposal_figure, process_proposal_pdf
