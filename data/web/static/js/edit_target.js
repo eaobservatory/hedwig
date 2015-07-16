@@ -74,7 +74,9 @@ function resolveTargetName(targetid) {
     targetXBox.val('');
     targetYBox.val('');
 
-    $.ajax('/query/nameresolver?' + $.param({'target': targetName, 'format': 'xml'}),
+    var nameResolver = $('table#targets').data('resolver');
+
+    $.ajax(nameResolver + '?' + $.param({'target': targetName, 'format': 'xml'}),
            dataType='xml'
     ).done(function (xml) {
         targetXBox.val(decimalToDMS($(xml).find('ra').text(), 15.0, 2));

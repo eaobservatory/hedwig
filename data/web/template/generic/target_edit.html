@@ -25,7 +25,7 @@
 {% endif %}
 
 <form method="POST" action="{{ url_for('.target_edit', proposal_id=proposal_id) }}">
-    <table id="targets">
+    <table id="targets" data-resolver="{{ url_for('query.name_resolver') }}">
         <tr>
             <th>Name</th>
             <th>RA / Longitude</th>
