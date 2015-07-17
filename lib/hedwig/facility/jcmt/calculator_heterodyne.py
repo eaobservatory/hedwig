@@ -439,33 +439,37 @@ class HeterodyneCalculator(JCMTCalculator):
             'with_extra_output': True,
         }
 
-        if mode == self.CALC_TIME:
-            (result, extra) = self.itc.calculate_time(
-                input_['rms'], **kwargs)
+        try:
+            if mode == self.CALC_TIME:
+                (result, extra) = self.itc.calculate_time(
+                    input_['rms'], **kwargs)
 
-            output = {
-                'elapsed': result / 3600.0,
-            }
+                output = {
+                    'elapsed': result / 3600.0,
+                }
 
-        elif mode == self.CALC_RMS_FROM_ELAPSED_TIME:
-            (result, extra) = self.itc.calculate_rms_for_elapsed_time(
-                input_['elapsed'] * 3600.0, **kwargs)
+            elif mode == self.CALC_RMS_FROM_ELAPSED_TIME:
+                (result, extra) = self.itc.calculate_rms_for_elapsed_time(
+                    input_['elapsed'] * 3600.0, **kwargs)
 
-            output = {
-                'rms': result,
-            }
+                output = {
+                    'rms': result,
+                }
 
-        elif mode == self.CALC_RMS_FROM_INT_TIME:
-            (result, extra) = self.itc.calculate_rms_for_int_time(
-                input_['int_time'], **kwargs)
+            elif mode == self.CALC_RMS_FROM_INT_TIME:
+                (result, extra) = self.itc.calculate_rms_for_int_time(
+                    input_['int_time'], **kwargs)
 
-            output = {
-                'rms': result,
-                'elapsed': extra.pop('elapsed_time') / 3600.0,
-            }
+                output = {
+                    'rms': result,
+                    'elapsed': extra.pop('elapsed_time') / 3600.0,
+                }
 
-        else:
-            raise CalculatorError('Unknown mode.')
+            else:
+                raise CalculatorError('Unknown mode.')
+
+        except HeterodyneITCError as e:
+            raise UserError(e.message)
 
         extra.update({
             'zenith_angle': zenith_angle_deg,
