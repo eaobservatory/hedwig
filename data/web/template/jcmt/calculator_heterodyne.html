@@ -1,0 +1,140 @@
+{% extends 'generic/calculator_base.html' %}
+{% set scripts=['edit_calc_jcmt', 'edit_calc_jcmt_het'] %}
+
+{% block calculator_input_list %}
+    {% for value in inputs %}
+        {% with input = input_values[value.code] %}
+            <li>
+                <label for="a">{{ value.name }}</label>
+                {% if value.code == 'rx' %}
+                    <select name="{{ value.code }}">
+                        {% for receiver_info in receivers %}
+                            <option value="{{ receiver_info.name }}" {{ 'selected="selected"' | safe if receiver_info.name == input }}
+                                data-f_min="{{ receiver_info.f_min }}"
+                                data-f_max="{{ receiver_info.f_max }}"
+                                data-ssb_available="{{ 'true' if receiver_info.ssb_available else 'false' }}"
+                                data-dsb_available="{{ 'true' if receiver_info.dsb_available else 'false' }}"
+                                data-dual_pol_available="{{ 'true' if receiver_info.n_mix > 1 else 'false' }}"
+                            >{{ receiver_info.name }}</option>
+                        {% endfor %}
+                    </select>
+                {% elif value.code == 'mm' %}
+                    <select name="{{ value.code }}">
+                        {% for (mode_code, map_mode) in map_modes.items() %}
+                            <option value="{{ mode_code }}" {{ 'selected="selected"' | safe if mode_code == input }}
+                                {% for sw_code in switch_modes.keys() %}
+                                    data-{{ sw_code }}_allowed="{{ 'true' if sw_code in map_mode.sw_modes else 'false' }}"
+                                {% endfor %}
+                            >{{ map_mode.name }}</option>
+                        {% endfor %}
+                    </select>
+                {% elif value.code == 'sw' %}
+                    {% for (mode_code, switch_mode) in switch_modes.items() %}
+                        <input type="radio" name="{{ value.code }}" value="{{ mode_code }}" {{ 'checked="checked"' | safe if mode_code == input }} /><span class="checkboxlabel">{{ switch_mode.name }}</span>
+                    {% endfor %}
+                {% elif value.code == 'freq' %}
+                    <input type="number" name="{{ value.code }}" value="{{ input }}" step="any" />
+                {% elif value.code == 'res' %}
+                    <input type="number" name="{{ value.code }}" value="{{ input }}" step="any" />
+                {% elif value.code == 'tau' %}
+                    <select name="tau_band">
+                        {% for (band_num, band_info) in weather_bands.items() %}
+                            <option value="{{ band_num }}" {{ 'selected="selected"' | safe if band_num == input_values.tau_band }} data-representative="{{ band_info.rep }}">
+                                Band {{ band_num }}:
+                                {% if band_info.min is not none %}
+                                    {{ band_info.min }} &lt;
+                                {% endif %}
+                                &tau;
+                                {% if band_info.max is not none %}
+                                    &le; {{ band_info.max }}
+                                {% endif %}
+                            </option>
+                        {% endfor %}
+                        <option value="other" {{ 'selected="selected"' | safe if input_values.tau_band is none }}>Other</option>
+                    </select>
+                    <input type="text" name="tau_value" value="{{ input }}" {{ 'disabled="disabled"' | safe if input_values.tau_band is not none }} />
+                {% elif value.code == 'sb' %}
+                    <input type="radio" name="{{ value.code }}" value="ssb" {{ 'checked="checked"' | safe if input == 'ssb' }} /><span class="checkboxlabel">Single sideband</span>
+                    <input type="radio" name="{{ value.code }}" value="dsb" {{ 'checked="checked"' | safe if input == 'dsb' }} /><span class="checkboxlabel">Dual sideband</span>
+                {% elif value.code == 'dual_pol' %}
+                    <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
+                    <span class="checkboxlabel">Dual polarization</span>
+                {% elif value.code == 'n_pt' %}
+                    <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="1" />
+                {% elif value.code in ('dim_x', 'dim_y', 'dx', 'dy') %}
+                    <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="any" />
+                {% elif value.code == 'basket' %}
+                    <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
+                    <span class="checkboxlabel">Basket weave</span>
+                {% elif value.code == 'sep_off' %}
+                    <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
+                    <span class="checkboxlabel">Separate offs</span>
+                {% elif value.code == 'cont' %}
+                    <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
+                    <span class="checkboxlabel">Continuum mode</span>
+                {% else %}
+                    <input type="text" name="{{ value.code }}" value="{{ input }}" />
+                {% endif %}
+                {% if value.unit is not none %}
+                    {{ value.unit }}
+                {% endif %}
+                {% if value.code == 'elapsed' %}
+                    <span class="explanation">decimal hours or hours:minutes:seconds</span>
+                {% elif value.code == 'freq' %}
+                    <span class="explanation"><span id="freq_min"></span> &mdash; <span id="freq_max"></span> {{ value.unit }}</span>
+                {% endif %}
+            </li>
+        {% endwith %}
+    {% endfor %}
+{% endblock %}
+
+{% block calculator_output_table %}
+    {% for value in outputs %}
+        {% with output = output_values[value.code] %}
+            <tr>
+                <th>
+                    {{ value.name }}
+                </th>
+                <td>
+                    {{ output | fmt(value.format) }}
+                    {% if value.unit is not none %}
+                        {{ value.unit }}
+                    {% endif %}
+                    {% if value.code == 'elapsed' %}
+                        ({{ output | format_hours_hms }})
+                    {% endif %}
+                </td>
+            </tr>
+        {% endwith %}
+    {% endfor %}
+
+    {% if 'elapsed_time' in output_extra %}
+    <tr>
+        <th>Elapsed time</th>
+        <td>{{ output_extra.elapsed_time| fmt('{:.3f}') }} hours ({{ output_extra.elapsed_time | format_hours_hms }})</td>
+    </tr>
+    {% endif %}
+    {% if 'int_time' in output_extra %}
+    <tr>
+        <th>Integration time</th>
+        <td>{{ output_extra.int_time | fmt('{:.3f}') }} seconds per point</td>
+    </tr>
+    {% endif %}
+
+    <tr>
+        <th>Receiver temperature</th>
+        <td>{{ output_extra.t_rx | fmt('{:.3f}') }} K</td>
+    </tr>
+    <tr>
+        <th>System temperature</th>
+        <td>{{ output_extra.t_sys | fmt('{:.3f}') }} K</td>
+    </tr>
+    <tr>
+        <th>Opacity</th>
+        <td>{{ output_extra.tau | fmt('{:.3f}') }}</td>
+    </tr>
+    <tr>
+        <th>Zenith angle</th>
+        <td>{{ output_extra.zenith_angle | fmt('{:.3f}') }} degrees</td>
+    </tr>
+{% endblock %}

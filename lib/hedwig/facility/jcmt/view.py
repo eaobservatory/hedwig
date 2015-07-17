@@ -22,6 +22,7 @@ from ...error import UserError
 from ...web.util import HTTPRedirect, flash, url_for
 from ...view.util import organise_collection, with_proposal
 from ..generic.view import Generic
+from .calculator_heterodyne import HeterodyneCalculator
 from .calculator_scuba2 import SCUBA2Calculator
 from .type import JCMTInstrument, JCMTRequest, JCMTRequestCollection, \
     JCMTWeather
@@ -41,7 +42,7 @@ class JCMT(Generic):
         ).upper()
 
     def get_calculator_classes(self):
-        return (SCUBA2Calculator,)
+        return (SCUBA2Calculator, HeterodyneCalculator)
 
     def _view_proposal_extra(self, db, proposal):
         ctx = super(JCMT, self)._view_proposal_extra(db, proposal)
