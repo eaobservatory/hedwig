@@ -18,34 +18,24 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict
 import time
 
 from jcmt_itc_scuba2 import SCUBA2ITC
 
 from ...error import CalculatorError, UserError
 from ...type import CalculatorMode, CalculatorResult, CalculatorValue
-from ...view.calculator import BaseCalculator
 from ...view.util import parse_time
+from .calculator_jcmt import JCMTCalculator
 
-WeatherBand = namedtuple('WeatherBand', ('rep', 'min', 'max'))
 
-
-class SCUBA2Calculator(BaseCalculator):
+class SCUBA2Calculator(JCMTCalculator):
     CALC_TIME = 1
     CALC_RMS = 2
 
     modes = OrderedDict((
         (CALC_TIME, CalculatorMode('time', 'Time required for target RMS')),
         (CALC_RMS,  CalculatorMode('rms',  'RMS expected in given time')),
-    ))
-
-    bands = OrderedDict((
-        (1, WeatherBand(0.045, None, 0.05)),
-        (2, WeatherBand(0.065, 0.05, 0.08)),
-        (3, WeatherBand(0.1,   0.08, 0.12)),
-        (4, WeatherBand(0.16,  0.12, 0.2)),
-        (5, WeatherBand(0.23,  0.2,  None)),
     ))
 
     default_pix850 = 8.0
@@ -175,12 +165,7 @@ class SCUBA2Calculator(BaseCalculator):
             for x in inputs
         }
 
-        for (band_num, band_info) in self.bands.items():
-            if abs(values['tau'] - band_info.rep) < 0.0001:
-                formatted_inputs['tau_band'] = band_num
-                break
-        else:
-            formatted_inputs['tau_band'] = None
+        formatted_inputs['tau_band'] = self.get_tau_band(values['tau'])
 
         return formatted_inputs
 
@@ -206,12 +191,9 @@ class SCUBA2Calculator(BaseCalculator):
                     values[input_.code] = form[input_.code]
 
             elif input_.code == 'tau':
-                if form['tau_band'] == 'other':
-                    values['tau_band'] = None
-                    values['tau'] = form['tau_value']
-                else:
-                    tau_band = values['tau_band'] = int(form['tau_band'])
-                    values['tau'] = self.bands[tau_band].rep
+                (tau, tau_band) = self.get_form_tau(form)
+                values['tau_band'] = tau_band
+                values['tau'] = tau
 
             elif input_.code == 'wl':
                 values[input_.code] = int(form[input_.code])
