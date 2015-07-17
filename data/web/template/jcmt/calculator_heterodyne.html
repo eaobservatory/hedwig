@@ -108,12 +108,6 @@
         {% endwith %}
     {% endfor %}
 
-    {% if 'elapsed_time' in output_extra %}
-    <tr>
-        <th>Elapsed time</th>
-        <td>{{ output_extra.elapsed_time| fmt('{:.3f}') }} hours ({{ output_extra.elapsed_time | format_hours_hms }})</td>
-    </tr>
-    {% endif %}
     {% if 'int_time' in output_extra %}
     <tr>
         <th>Integration time</th>

@@ -286,12 +286,23 @@ class HeterodyneCalculator(JCMTCalculator):
             else:
                 raise CalculatorError('Unknown version.')
 
-        elif (mode == self.CALC_RMS_FROM_ELAPSED_TIME or
-                mode == self.CALC_RMS_FROM_INT_TIME):
+        elif mode == self.CALC_RMS_FROM_ELAPSED_TIME:
             if version == 1:
                 return [
                     CalculatorValue(
                         'rms', 'Sensitivity', '\u03bb', '{:.3f}', 'K TA*'),
+                ]
+            else:
+                raise CalculatorError('Unknown version.')
+
+        elif mode == self.CALC_RMS_FROM_INT_TIME:
+            if version == 1:
+                return [
+                    CalculatorValue(
+                        'rms', 'Sensitivity', '\u03bb', '{:.3f}', 'K TA*'),
+                    CalculatorValue(
+                        'elapsed', 'Elapsed time', 'Elapsed',
+                        '{:.3f}', 'hours'),
                 ]
             else:
                 raise CalculatorError('Unknown version.')
@@ -413,6 +424,7 @@ class HeterodyneCalculator(JCMTCalculator):
 
             output = {
                 'rms': result,
+                'elapsed': extra.pop('elapsed_time') / 3600.0,
             }
 
         else:
@@ -421,8 +433,5 @@ class HeterodyneCalculator(JCMTCalculator):
         extra.update({
             'zenith_angle': zenith_angle_deg,
         })
-
-        if 'elapsed_time' in extra:
-            extra['elapsed_time'] /= 3600.0
 
         return CalculatorResult(output, extra)
