@@ -257,7 +257,44 @@ class HeterodyneCalculator(JCMTCalculator):
         inputs for another mode.  Only called if the mode is changed.
         """
 
-        raise Exception("convert_input_mode not implemented yet")
+        new_input = input_.copy()
+
+        result = self(mode, input_)
+
+        if new_mode == self.CALC_TIME:
+            if mode == self.CALC_RMS_FROM_ELAPSED_TIME:
+                new_input['rms'] = result.output['rms']
+                del new_input['elapsed']
+            elif mode == self.CALC_RMS_FROM_INT_TIME:
+                new_input['rms'] = result.output['rms']
+                del new_input['int_time']
+            else:
+                raise CalculatorError('Impossible mode change.')
+
+        elif new_mode == self.CALC_RMS_FROM_ELAPSED_TIME:
+            if mode == self.CALC_TIME:
+                new_input['elapsed'] = result.output['elapsed']
+                del new_input['rms']
+            elif mode == self.CALC_RMS_FROM_INT_TIME:
+                new_input['elapsed'] = result.output['elapsed']
+                del new_input['int_time']
+            else:
+                raise CalculatorError('Impossible mode change.')
+
+        elif new_mode == self.CALC_RMS_FROM_INT_TIME:
+            if mode == self.CALC_TIME:
+                new_input['int_time'] = result.extra['int_time']
+                del new_input['rms']
+            elif mode == self.CALC_RMS_FROM_ELAPSED_TIME:
+                new_input['int_time'] = result.extra['int_time']
+                del new_input['elapsed']
+            else:
+                raise CalculatorError('Impossible mode change.')
+
+        else:
+            raise CalculatorError('Unknown mode.')
+
+        return new_input
 
     def convert_input_version(self, old_version, input_):
         """
