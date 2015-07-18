@@ -2,10 +2,12 @@
 {% set scripts=['edit_calc_jcmt', 'edit_calc_jcmt_het'] %}
 
 {% block calculator_input_list %}
-    {% for value in inputs %}
+    {% for value in inputs %}{% if value.code not in ('dim_y', 'dy') %}
         {% with input = input_values[value.code] %}
             <li>
-                <label for="a">{{ value.name }}</label>
+                {% if value.code not in ('dim_x', 'dx') %}
+                    <label for="a">{{ value.name }}</label>
+                {% endif %}
                 {% if value.code == 'rx' %}
                     <select name="{{ value.code }}">
                         {% for receiver_info in receivers %}
@@ -15,6 +17,8 @@
                                 data-ssb_available="{{ 'true' if receiver_info.ssb_available else 'false' }}"
                                 data-dsb_available="{{ 'true' if receiver_info.dsb_available else 'false' }}"
                                 data-dual_pol_available="{{ 'true' if receiver_info.n_mix > 1 else 'false' }}"
+                                data-pixel_size="{{ receiver_info.pixel_size }}"
+                                data-is_array="{{ 'false' if receiver_info.array is none else 'true' }}"
                             >{{ receiver_info.name }}</option>
                         {% endfor %}
                     </select>
@@ -61,6 +65,16 @@
                     <span class="checkboxlabel">Dual polarization</span>
                 {% elif value.code == 'n_pt' %}
                     <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="1" />
+                {% elif value.code == 'dim_x' %}
+                    <label>Raster map size</label>
+                    <input type="number" name="dim_x" value="{{ input_values['dim_x'] }}" min="1" step="any" />
+                    x
+                    <input type="number" name="dim_y" value="{{ input_values['dim_y'] }}" min="1" step="any" />
+                {% elif value.code == 'dx' %}
+                    <label>Raster pixel size</label>
+                    <input type="number" name="dx" value="{{ input_values['dx'] }}" min="1" step="any" />
+                    x
+                    <input type="number" name="dy" value="{{ input_values['dy'] }}" min="1" step="any" />
                 {% elif value.code in ('dim_x', 'dim_y', 'dx', 'dy') %}
                     <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="any" />
                 {% elif value.code == 'basket' %}
@@ -85,7 +99,23 @@
                 {% endif %}
             </li>
         {% endwith %}
-    {% endfor %}
+        {% if value.code == 'dx' %}
+            <li>
+                <label>Raster scan spacing</label>
+                {% for receiver in receivers %}
+                    {% if receiver.array is not none %}
+                        <select name="dy_spacing_{{ receiver.name }}">
+                            {% for (spacing_name, spacing_spacing) in receiver.array.scan_spacings.items() %}
+                                {% with spacing_str = spacing_spacing | fmt('{:.3f}') %}
+                                    <option value="{{ spacing_str }}" {{ 'selected="selected"' | safe if input_values['dy_spacing'] == spacing_str }} >{{ spacing_name }} ({{ spacing_spacing }}")</option>
+                                {% endwith %}
+                            {% endfor %}
+                        </select>
+                    {% endif %}
+                {% endfor %}
+            </li>
+        {% endif %}
+    {% endif %}{% endfor %}
 {% endblock %}
 
 {% block calculator_output_table %}

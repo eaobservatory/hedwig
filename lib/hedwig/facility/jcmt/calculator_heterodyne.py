@@ -120,10 +120,10 @@ class HeterodyneCalculator(JCMTCalculator):
                 CalculatorValue('sb', 'Sideband mode', 'SB', '{}', None),
                 CalculatorValue('dual_pol', 'Dual polarization', 'DP', '{}', None),
                 CalculatorValue('n_pt', 'Number of points', 'Points', '{}', None),
-                CalculatorValue('dim_x', 'Raster length', 'x', '{}', 'arc-seconds'),
-                CalculatorValue('dim_y', 'Raster width', 'y', '{}', 'arc-seconds'),
-                CalculatorValue('dx', 'Pixel width', 'dx', '{}', 'arc-seconds'),
-                CalculatorValue('dy', 'Pixel height', 'dy', '{}', 'arc-seconds'),
+                CalculatorValue('dim_x', 'Raster width', 'x', '{}', '"'),
+                CalculatorValue('dim_y', 'Raster height', 'y', '{}', '"'),
+                CalculatorValue('dx', 'Pixel width', 'dx', '{}', '"'),
+                CalculatorValue('dy', 'Pixel/scan height', 'dy', '{}', '"'),
                 CalculatorValue('basket', 'Basket weave', 'BW', '{}', None),
                 CalculatorValue('sep_off', 'Separate offs', 'SO', '{}', None),
                 CalculatorValue('cont', 'Continuum mode', 'CM', '{}', None),
@@ -177,8 +177,8 @@ class HeterodyneCalculator(JCMTCalculator):
             ('n_pt', 1),
             ('dim_x', 180),
             ('dim_y', 180),
-            ('dx', 7.27),
-            ('dy', 116.4),
+            ('dx', 8),
+            ('dy', 8),
             ('basket', False),
             ('sep_off', False),
             ('cont', False),
@@ -216,7 +216,10 @@ class HeterodyneCalculator(JCMTCalculator):
             for x in inputs
         }
 
-        formatted_inputs['tau_band'] = self.get_tau_band(values['tau'])
+        formatted_inputs.update({
+            'tau_band': self.get_tau_band(values['tau']),
+            'dy_spacing': '{:.3f}'.format(values['dy']),
+        })
 
         return formatted_inputs
 
@@ -248,6 +251,10 @@ class HeterodyneCalculator(JCMTCalculator):
                 if value is None:
                     value = defaults.get(input_.code, None)
                 values[input_.code] = value
+
+        values['dy_spacing'] = form.get('dy_spacing_' + form['rx'], None)
+        if values['dy_spacing'] is None:
+            values['dy_spacing'] = '{:.3f}'.format(defaults['dy'])
 
         return values
 
@@ -365,6 +372,8 @@ class HeterodyneCalculator(JCMTCalculator):
         and return values suitable for calculation (perhaps float).
         """
 
+        receiver = self.get_receiver_by_name(input_['rx'], as_object=True)
+
         parsed = {}
 
         for field in self.get_inputs(mode):
@@ -372,7 +381,27 @@ class HeterodyneCalculator(JCMTCalculator):
                 if field.code in ('freq', 'res', 'dec', 'rms', 'tau'):
                     parsed[field.code] = float(input_[field.code])
 
-                elif field.code in ('dim_x', 'dim_y', 'dx', 'dy', 'int_time'):
+                elif field.code == 'dx':
+                    if receiver.array is None:
+                        if input_[field.code] is None:
+                            parsed[field.code] = None
+                        else:
+                            parsed[field.code] = float(input_[field.code])
+                    else:
+                        # The "dx" input is disabled for array receivers:
+                        # always use the pixel size.
+                        parsed[field.code] = receiver.pixel_size
+
+                elif field.code == 'dy':
+                    if receiver.array is None:
+                        if input_[field.code] is None:
+                            parsed[field.code] = None
+                        else:
+                            parsed[field.code] = float(input_[field.code])
+                    else:
+                        parsed[field.code] = float(input_['dy_spacing'])
+
+                elif field.code in ('dim_x', 'dim_y', 'int_time'):
                     if input_[field.code] is None:
                         parsed[field.code] = None
                     else:
@@ -398,6 +427,18 @@ class HeterodyneCalculator(JCMTCalculator):
 
         return parsed
 
+    def get_receiver_by_name(self, receiver_name, as_object=False):
+        """
+        Get a receiver by name.
+        """
+        for (rx_id, rx_info) in HeterodyneReceiver.get_all_receivers().items():
+            if rx_info.name == receiver_name:
+                if as_object:
+                    return rx_info
+                return rx_id
+
+        raise UserError('Receiver not recognised.')
+
     def __call__(self, mode, input_):
         """
         Perform a calculation, taking an input dictionary and returning
@@ -411,12 +452,7 @@ class HeterodyneCalculator(JCMTCalculator):
 
         zenith_angle_deg = self.itc.estimate_zenith_angle_deg(input_['dec'])
 
-        for (rx_id, rx_info) in HeterodyneReceiver.get_all_receivers().items():
-            if rx_info.name == input_['rx']:
-                receiver = rx_id
-                break
-        else:
-            raise UserError('Receiver not recognised.')
+        receiver = self.get_receiver_by_name(input_['rx'])
 
         kwargs = {
             'receiver': receiver,

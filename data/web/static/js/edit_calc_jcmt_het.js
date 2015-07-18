@@ -30,6 +30,8 @@ $(document).ready(function () {
         freq_box.attr('max', freq_max);
         $('span#freq_min').text(freq_min);
         $('span#freq_max').text(freq_max);
+
+        check_mode_opt();
     });
 
     var check_sep_off = (function () {
@@ -48,15 +50,25 @@ $(document).ready(function () {
     });
 
     var check_mode_opt = (function () {
+        var rx = rx_select.find(':selected');
+        var is_array = rx.data('is_array');
         var is_raster = (mm_select.val() === 'raster');
 
         $('input[name=n_pt]').prop('disabled', is_raster);
 
         $('input[name=dim_x]').prop('disabled', ! is_raster);
         $('input[name=dim_y]').prop('disabled', ! is_raster);
-        $('input[name=dx]').prop('disabled', ! is_raster);
-        $('input[name=dy]').prop('disabled', ! is_raster);
+        $('input[name=dx]').prop('disabled', (! is_raster) || is_array);
+        $('input[name=dy]').prop('disabled', (! is_raster) || is_array);
         $('input[name=basket]').prop('disabled', ! is_raster);
+
+        $('select[name^=dy_spacing_]').prop('disabled', true);
+
+        if (is_raster && is_array) {
+            $('select[name=dy_spacing_' + rx.val() + ']').prop('disabled', false);
+            $('input[name=dx]').val(rx.data('pixel_size'));
+            $('input[name=dy]').val(rx.data('pixel_size'));
+        }
 
         if (! is_raster) {
             $('input[name=basket]').prop('checked', false);
@@ -84,5 +96,4 @@ $(document).ready(function () {
     $('input[name=sw]').change(check_sep_off);
 
     check_rx_opt();
-    check_mode_opt();
 });
