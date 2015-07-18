@@ -114,7 +114,8 @@ class HeterodyneCalculator(JCMTCalculator):
                 CalculatorValue('mm', 'Mapping mode', 'Mode', '{}', None),
                 CalculatorValue('sw', 'Switching mode', 'Switch', '{}', None),
                 CalculatorValue('freq', 'Frequency', 'Frequency', '{}', 'GHz'),
-                CalculatorValue('res', 'Frequency resolution', 'Resolution', '{}', 'MHz'),
+                CalculatorValue('res', 'Frequency resolution', 'Resolution', '{}', None),
+                CalculatorValue('res_unit', 'Resolution unit', 'Res. Unit', '{}', None),
                 CalculatorValue('tau', '225 GHz opacity', 'tau225', '{}', None),
                 CalculatorValue('dec', 'Source declination', 'Dec', '{}', 'degrees'),
                 CalculatorValue('sb', 'Sideband mode', 'SB', '{}', None),
@@ -170,6 +171,7 @@ class HeterodyneCalculator(JCMTCalculator):
             ('sw', 'pssw'),
             ('freq', 345.796),
             ('res', 0.488),
+            ('res_unit', 'MHz'),
             ('tau', 0.1),
             ('dec', 40.0),
             ('sb', 'ssb'),
@@ -211,7 +213,7 @@ class HeterodyneCalculator(JCMTCalculator):
             x.code:
                 x.format.format(values[x.code])
                 if x.code not in ('rx', 'mm', 'sw', 'sb', 'dual_pol',
-                                  'basket', 'sep_off', 'cont')
+                                  'basket', 'sep_off', 'cont', 'res_unit')
                 else values[x.code]
             for x in inputs
         }
@@ -450,16 +452,31 @@ class HeterodyneCalculator(JCMTCalculator):
         stored in the database as part of the calculation result.
         """
 
+        extra_output = {}
+
         zenith_angle_deg = self.itc.estimate_zenith_angle_deg(input_['dec'])
+        extra_output['zenith_angle'] = zenith_angle_deg
 
         receiver = self.get_receiver_by_name(input_['rx'])
+
+        freq = input_['freq']
+        freq_res = input_['res']
+        freq_res_unit = input_['res_unit']
+        if freq_res_unit == 'MHz':
+            extra_output['res_velocity'] = \
+                self.itc.freq_res_to_velocity(freq, freq_res)
+        elif freq_res_unit == 'km/s':
+            freq_res = self.itc.velocity_to_freq_res(freq, freq_res)
+            extra_output['res_freq'] = freq_res
+        else:
+            raise CalculatorError('Frequency units not recognised.')
 
         kwargs = {
             'receiver': receiver,
             'map_mode': self.map_modes[input_['mm']].id,
             'sw_mode': self.switch_modes[input_['sw']].id,
-            'freq': input_['freq'],
-            'freq_res': input_['res'],
+            'freq': freq,
+            'freq_res': freq_res,
             'tau_225': input_['tau'],
             'zenith_angle_deg': zenith_angle_deg,
             'is_dsb': (input_['sb'] == 'dsb'),
@@ -507,8 +524,6 @@ class HeterodyneCalculator(JCMTCalculator):
         except HeterodyneITCError as e:
             raise UserError(e.message)
 
-        extra.update({
-            'zenith_angle': zenith_angle_deg,
-        })
+        extra_output.update(extra)
 
-        return CalculatorResult(output, extra)
+        return CalculatorResult(output, extra_output)

@@ -2,7 +2,7 @@
 {% set scripts=['edit_calc_jcmt', 'edit_calc_jcmt_het'] %}
 
 {% block calculator_input_list %}
-    {% for value in inputs %}{% if value.code not in ('dim_y', 'dy') %}
+    {% for value in inputs %}{% if value.code not in ('dim_y', 'dy', 'res_unit') %}
         {% with input = input_values[value.code] %}
             <li>
                 {% if value.code not in ('dim_x', 'dx') %}
@@ -40,6 +40,11 @@
                     <input type="number" name="{{ value.code }}" value="{{ input }}" step="any" />
                 {% elif value.code == 'res' %}
                     <input type="number" name="{{ value.code }}" value="{{ input }}" step="any" />
+                    <select name="res_unit">
+                        {% for res_unit in ('MHz', 'km/s') %}
+                            <option value="{{ res_unit }}" {{ 'selected="selected"' | safe if res_unit == input_values['res_unit'] }} >{{ res_unit }}</option>
+                        {% endfor %}
+                    </select>
                 {% elif value.code == 'tau' %}
                     <select name="tau_band">
                         {% for (band_num, band_info) in weather_bands.items() %}
@@ -161,4 +166,16 @@
         <th>Zenith angle</th>
         <td>{{ output_extra.zenith_angle | fmt('{:.3f}') }} degrees</td>
     </tr>
+    {% if 'res_velocity' in output_extra %}
+    <tr>
+        <th>Velocity resolution</th>
+        <td>{{ output_extra.res_velocity | fmt('{:.3f}') }} km/s</td>
+    </tr>
+    {% endif %}
+    {% if 'res_freq' in output_extra %}
+    <tr>
+        <th>Frequency resolution</th>
+        <td>{{ output_extra.res_freq | fmt('{:.3f}') }} MHz</td>
+    </tr>
+    {% endif %}
 {% endblock %}
