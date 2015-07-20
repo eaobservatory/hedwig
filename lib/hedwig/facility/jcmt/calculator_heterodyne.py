@@ -139,7 +139,7 @@ class HeterodyneCalculator(JCMTCalculator):
         if mode == self.CALC_TIME:
             if version == 1:
                 return common_inputs + [
-                    CalculatorValue('rms', 'Target sensitivity', '\u03bb', '{}', 'K TA*'),
+                    CalculatorValue('rms', 'Target sensitivity', '\u03c3', '{}', 'K TA*'),
                 ]
             else:
                 raise CalculatorError('Unknown version.')
