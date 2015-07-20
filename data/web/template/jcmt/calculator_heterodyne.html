@@ -101,6 +101,21 @@
                     <span class="explanation">decimal hours or hours:minutes:seconds</span>
                 {% elif value.code == 'freq' %}
                     <span class="explanation"><span id="freq_min"></span> &mdash; <span id="freq_max"></span> {{ value.unit }}</span>
+                {% elif value.code == 'n_pt' %}
+                    <select name="n_pt_jiggle">
+                        {% for (jiggle_pattern_name, jiggle_pattern_pts) in jiggle_patterns.items() %}
+                            <option value="{{ jiggle_pattern_pts }}" {{ 'selected="selected"' | safe if jiggle_pattern_pts == input_values.n_pt }}>{{ jiggle_pattern_name }}</option>
+                        {% endfor %}
+                    </select>
+                    {% for receiver in receivers %}
+                        {% if receiver.array is not none %}
+                            <select name="n_pt_jiggle_{{ receiver.name }}">
+                                {% for (jiggle_pattern_name, jiggle_pattern_pts) in receiver.array.jiggle_patterns.items() %}
+                                    <option value="{{ jiggle_pattern_pts }}" {{ 'selected="selected"' | safe if jiggle_pattern_pts == input_values.n_pt }}>{{ jiggle_pattern_name }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
+                    {% endfor %}
                 {% endif %}
             </li>
         {% endwith %}

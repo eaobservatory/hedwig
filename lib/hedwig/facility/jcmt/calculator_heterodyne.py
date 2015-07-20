@@ -215,7 +215,7 @@ class HeterodyneCalculator(JCMTCalculator):
         formatted_inputs = {
             x.code:
                 x.format.format(values[x.code])
-                if x.code not in ('rx', 'mm', 'sw', 'sb', 'dual_pol',
+                if x.code not in ('rx', 'mm', 'sw', 'sb', 'dual_pol', 'n_pt',
                                   'basket', 'sep_off', 'cont', 'res_unit')
                 else values[x.code]
             for x in inputs
@@ -235,6 +235,9 @@ class HeterodyneCalculator(JCMTCalculator):
 
         defaults = self.get_default_input(self.CALC_TIME)
 
+        receiver = self.get_receiver_by_name(form['rx'], as_object=True)
+        map_mode = self.map_modes[form['mm']].id
+
         values = {}
 
         for input_ in inputs:
@@ -247,6 +250,25 @@ class HeterodyneCalculator(JCMTCalculator):
                 values['tau'] = tau
                 values['tau_band'] = tau_band
 
+            elif input_.code == 'n_pt':
+                if map_mode == HeterodyneITC.GRID:
+                    try:
+                        values[input_.code] = int(form['n_pt'])
+                    except ValueError:
+                        # Prefer to convert to integer so that the value could
+                        # match a possible jiggle pattern point count, but if
+                        # that fails, leave as a string so that we can warn
+                        # as normal for a malformed value.
+                        values[input_.code] = form['n_pt']
+                elif map_mode == HeterodyneITC.JIGGLE:
+                    if receiver.array is None:
+                        values[input_.code] = int(form['n_pt_jiggle'])
+                    else:
+                        values[input_.code] = int(
+                            form['n_pt_jiggle_' + receiver.name])
+                else:
+                    values[input_.code] = defaults.get(input_.code, None)
+
             else:
                 # Need to allow parameters not to exist when they can
                 # be disabled (e.g. raster parameters in other modes).
@@ -257,7 +279,7 @@ class HeterodyneCalculator(JCMTCalculator):
                     value = defaults.get(input_.code, None)
                 values[input_.code] = value
 
-        values['dy_spacing'] = form.get('dy_spacing_' + form['rx'], None)
+        values['dy_spacing'] = form.get('dy_spacing_' + receiver.name, None)
         if values['dy_spacing'] is None:
             values['dy_spacing'] = '{:.3f}'.format(defaults['dy'])
 
@@ -369,6 +391,7 @@ class HeterodyneCalculator(JCMTCalculator):
             'receivers': HeterodyneReceiver.get_all_receivers().values(),
             'map_modes': self.map_modes,
             'switch_modes': self.switch_modes,
+            'jiggle_patterns': self.itc.get_jiggle_patterns(),
         }
 
     def parse_input(self, mode, input_):

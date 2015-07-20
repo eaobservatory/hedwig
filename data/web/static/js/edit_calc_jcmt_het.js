@@ -51,10 +51,14 @@ $(document).ready(function () {
 
     var check_mode_opt = (function () {
         var rx = rx_select.find(':selected');
+        var rx_name = rx.val();
         var is_array = rx.data('is_array');
+        var is_grid = (mm_select.val() === 'grid');
+        var is_jiggle = (mm_select.val() === 'jiggle');
         var is_raster = (mm_select.val() === 'raster');
 
-        $('input[name=n_pt]').prop('disabled', is_raster);
+        $('input[name=n_pt]').prop('disabled', (! is_grid));
+        $('select[name=n_pt_jiggle]').prop('disabled', (! is_jiggle) || is_array);
 
         $('input[name=dim_x]').prop('disabled', ! is_raster);
         $('input[name=dim_y]').prop('disabled', ! is_raster);
@@ -65,13 +69,19 @@ $(document).ready(function () {
         $('select[name^=dy_spacing_]').prop('disabled', true);
 
         if (is_raster && is_array) {
-            $('select[name=dy_spacing_' + rx.val() + ']').prop('disabled', false);
+            $('select[name=dy_spacing_' + rx_name + ']').prop('disabled', false);
             $('input[name=dx]').val(rx.data('pixel_size'));
             $('input[name=dy]').val(rx.data('pixel_size'));
         }
 
         if (! is_raster) {
             $('input[name=basket]').prop('checked', false);
+        }
+
+        $('select[name^=n_pt_jiggle_]').prop('disabled', true);
+
+        if (is_jiggle && is_array) {
+            $('select[name=n_pt_jiggle_' + rx_name + ']').prop('disabled', false);
         }
 
         var mm = mm_select.find(':selected');
@@ -94,6 +104,10 @@ $(document).ready(function () {
     rx_select.change(check_rx_opt);
     mm_select.change(check_mode_opt);
     $('input[name=sw]').change(check_sep_off);
+
+    $('select[name^=n_pt_jiggle]').change(function () {
+        $('input[name=n_pt]').val(this.value);
+    });
 
     check_rx_opt();
 });
