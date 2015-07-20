@@ -51,6 +51,9 @@ class ExampleCalculator(BaseCalculator):
     def get_name(self):
         return 'Example Calculator'
 
+    def get_calc_version(self):
+        return '0.0.0'
+
     def get_inputs(self, mode, version=None):
         """
         Get the list of calculator inputs for a given version of the

@@ -69,6 +69,9 @@ class SCUBA2Calculator(JCMTCalculator):
     def get_name(self):
         return 'SCUBA-2 ITC'
 
+    def get_calc_version(self):
+        return self.itc.get_version()
+
     def get_inputs(self, mode, version=None):
         """
         Get the list of calculator inputs for a given version of the

@@ -74,6 +74,7 @@ calculation = Table(
     Column('input', JSONEncoded, nullable=False),
     Column('output', JSONEncoded, nullable=False),
     Column('date_run', DateTime(), nullable=False),
+    Column('calc_version', Unicode(31), nullable=False),
     Column('title', Unicode(255), nullable=False),
     **_table_opts)
 

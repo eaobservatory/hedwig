@@ -33,7 +33,7 @@ from ..meta import calculator, calculation, facility, moc, moc_cell
 
 class CalculatorPart(object):
     def add_calculation(self, proposal_id, calculator_id,
-                        mode, version, input_, output, title):
+                        mode, version, input_, output, calc_version, title):
         with self._transaction() as conn:
             calculation_alias = calculation.alias()
 
@@ -48,6 +48,7 @@ class CalculatorPart(object):
                 calculation.c.input: input_,
                 calculation.c.output: output,
                 calculation.c.date_run: datetime.utcnow(),
+                calculation.c.calc_version: calc_version,
                 calculation.c.title: title,
             }))
 
@@ -224,13 +225,14 @@ class CalculatorPart(object):
                 records, update_columns=(), forbid_add=True)
 
     def update_calculation(self, calculation_id,
-                           mode, version, input_, output, title):
+                           mode, version, input_, output, calc_version, title):
         values = {
             calculation.c.mode: mode,
             calculation.c.version: version,
             calculation.c.input: input_,
             calculation.c.output: output,
             calculation.c.date_run: datetime.utcnow(),
+            calculation.c.calc_version: calc_version,
             calculation.c.title: title,
         }
 

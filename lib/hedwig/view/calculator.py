@@ -135,12 +135,14 @@ class BaseCalculator(object):
                             calculation_id,
                             mode=mode, version=self.version,
                             input_=parsed_input, output=output.output,
+                            calc_version=self.get_calc_version(),
                             title=calculation_title)
 
                     else:
                         db.add_calculation(
                             proposal_id, self.id_, mode, self.version,
-                            parsed_input, output.output, calculation_title)
+                            parsed_input, output.output,
+                            self.get_calc_version(), calculation_title)
 
                     if 'submit_save_redir' in form:
                         flash('The calculation has been saved.')
