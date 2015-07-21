@@ -786,6 +786,7 @@ def institution_edit(db, institution_id, form, is_post):
 
                 db.update_institution(
                     institution_id,
+                    updater_person_id=session['person']['id'],
                     name=institution.name,
                     organization=institution.organization,
                     address=institution.address,

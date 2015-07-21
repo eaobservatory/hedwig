@@ -147,6 +147,24 @@ institution = Table(
     Column('country', Unicode(2), nullable=False),
     **_table_opts)
 
+institution_log = Table(
+    'institution_log',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('institution_id', None,
+           ForeignKey('institution.id', onupdate='RESTRICT',
+                      ondelete='RESTRICT'),
+           nullable=False),
+    Column('date', DateTime(), nullable=False),
+    Column('person_id', None,
+           ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('prev_name', Unicode(255), nullable=False),
+    Column('prev_organization', Unicode(255), nullable=False),
+    Column('prev_address', UnicodeText, nullable=False),
+    Column('prev_country', Unicode(2), nullable=False),
+    **_table_opts)
+
 invitation = Table(
     'invitation',
     metadata,

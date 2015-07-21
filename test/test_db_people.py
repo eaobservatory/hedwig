@@ -396,6 +396,9 @@ class DBPeopleTest(DBTestCase):
         self.assertFalse(result)
 
     def test_institution(self):
+        person_id = self.db.add_person('Institution Editor')
+        self.assertIsInstance(person_id, int)
+
         # Try getting a non-existent institution record.
         with self.assertRaisesRegexp(NoSuchRecord,
                                      '^institution does not exist'):
@@ -440,23 +443,25 @@ class DBPeopleTest(DBTestCase):
         # Try updating an institution.
         with self.assertRaisesRegexp(Error,
                                      '^no institution updates specified'):
-            self.db.update_institution(institution_id)
+            self.db.update_institution(institution_id, person_id)
         with self.assertRaisesRegexp(ConsistencyError,
                                      '^institution does not exist'):
-            self.db.update_institution(1999999, '...')
+            self.db.update_institution(1999999, person_id, '...')
         with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
-            self.db.update_institution(1999999, '...', _test_skip_check=True)
+            self.db.update_institution(1999999, person_id, '...',
+                                       _test_skip_log=True)
         with self.assertRaisesRegexp(UserError, 'Country code not recognised'):
-            self.db.update_institution(institution_id, country='BX')
+            self.db.update_institution(institution_id, person_id, country='BX')
 
-        self.db.update_institution(institution_id, 'Renamed Institution One')
+        self.db.update_institution(institution_id, person_id,
+                                   'Renamed Institution One')
         institution = self.db.get_institution(institution_id)
         self.assertIsInstance(institution, Institution)
         self.assertEqual(institution.name, 'Renamed Institution One')
-        self.db.update_institution(institution_id,
-                        organization='Renamed Organization',
-                        address='New Address',
-                        country='CX')
+        self.db.update_institution(institution_id, person_id,
+                                   organization='Renamed Organization',
+                                   address='New Address',
+                                   country='CX')
         institution = self.db.get_institution(institution_id)
         self.assertIsInstance(institution, Institution)
         self.assertEqual(institution.organization, 'Renamed Organization')

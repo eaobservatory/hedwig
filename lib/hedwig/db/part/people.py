@@ -29,7 +29,8 @@ from ...error import ConsistencyError, Error, NoSuchRecord, UserError
 from ...type import Email, EmailCollection, Institution, InstitutionInfo, \
     Person, PersonInfo, ResultCollection, UserLogEvent
 from ...util import get_countries
-from ..meta import email, institution, invitation, member, person, \
+from ..meta import email, institution, institution_log, invitation, \
+    member, person, \
     reset_token, user, user_log, verify_token
 from ..util import require_not_none
 
@@ -542,9 +543,10 @@ class PeoplePart(object):
                     email.c.address, email.c.primary, email.c.public,
                 ), verified_columns=(email.c.address,))
 
-    def update_institution(self, institution_id, name=None,
+    def update_institution(self, institution_id, updater_person_id=None,
+                           name=None,
                            organization=None, address=None, country=None,
-                           _test_skip_check=False):
+                           _test_skip_log=False):
         """
         Update an institution record.
         """
@@ -569,10 +571,22 @@ class PeoplePart(object):
             raise Error('no institution updates specified')
 
         with self._transaction() as conn:
-            if not _test_skip_check and not self._exists_id(
-                    conn, institution, institution_id):
-                raise ConsistencyError(
-                    'institution does not exist with id={0}', institution_id)
+            if not _test_skip_log:
+                try:
+                    prev = self.get_institution(institution_id, _conn=conn)
+                except NoSuchRecord:
+                    raise ConsistencyError(
+                        'institution does not exist with id={0}', institution_id)
+
+                conn.execute(institution_log.insert().values({
+                    institution_log.c.institution_id: institution_id,
+                    institution_log.c.date: datetime.utcnow(),
+                    institution_log.c.person_id: updater_person_id,
+                    institution_log.c.prev_name: prev.name,
+                    institution_log.c.prev_organization: prev.organization,
+                    institution_log.c.prev_address: prev.address,
+                    institution_log.c.prev_country: prev.country,
+                }))
 
             result = conn.execute(institution.update().where(
                 institution.c.id == institution_id

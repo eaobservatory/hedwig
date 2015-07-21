@@ -165,7 +165,7 @@ def create_people_blueprint(db, facilities):
     @bp.route('/institution/<int:institution_id>/edit',
               methods=['GET', 'POST'])
     @templated('people/institution_edit.html')
-    @require_auth()
+    @require_auth(require_person=True)
     def institution_edit(institution_id):
         return view.institution_edit(db, institution_id, request.form,
                                      request.method == 'POST')
