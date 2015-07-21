@@ -2,7 +2,7 @@
 {% set scripts=['edit_calc_jcmt', 'edit_calc_jcmt_het'] %}
 
 {% block calculator_input_list %}
-    {% for value in inputs %}{% if value.code not in ('dim_y', 'dy', 'res_unit') %}
+    {% for value in inputs %}{% if value.code not in ('dim_y', 'dy', 'res_unit', 'pos_type') %}
         {% with input = input_values[value.code] %}
             <li>
                 {% if value.code not in ('dim_x', 'dx') %}
@@ -62,6 +62,8 @@
                         <option value="other" {{ 'selected="selected"' | safe if input_values.tau_band is none }}>Other</option>
                     </select>
                     <input type="text" name="tau_value" value="{{ input }}" {{ 'disabled="disabled"' | safe if input_values.tau_band is not none }} />
+                {% elif value.code == 'pos' %}
+                    <input type="number" name="{{ value.code }}" value="{{ input }}" min="-90" max="90" step="any" />
                 {% elif value.code == 'sb' %}
                     <input type="radio" name="{{ value.code }}" value="ssb" {{ 'checked="checked"' | safe if input == 'ssb' }} /><span class="checkboxlabel">Single sideband</span>
                     <input type="radio" name="{{ value.code }}" value="dsb" {{ 'checked="checked"' | safe if input == 'dsb' }} /><span class="checkboxlabel">Dual sideband</span>
@@ -116,6 +118,12 @@
                             </select>
                         {% endif %}
                     {% endfor %}
+                {% elif value.code == 'pos' %}
+                    <select name="pos_type">
+                        {% for (pos_type, pos_type_name) in [['dec', 'declination'], ['el', 'elevation'], ['zen', 'zenith angle']] %}
+                            <option value="{{ pos_type }}" {{ 'selected="selected"' | safe if pos_type == input_values.pos_type }}>{{ pos_type_name }}</option>
+                        {% endfor %}
+                    </select>
                 {% endif %}
             </li>
         {% endwith %}
@@ -177,10 +185,12 @@
         <th>Opacity</th>
         <td>{{ output_extra.tau | fmt('{:.3f}') }}</td>
     </tr>
+    {% if 'zenith_angle' in output_extra %}
     <tr>
         <th>Zenith angle</th>
         <td>{{ output_extra.zenith_angle | fmt('{:.3f}') }} degrees</td>
     </tr>
+    {% endif %}
     {% if 'res_velocity' in output_extra %}
     <tr>
         <th>Velocity resolution</th>

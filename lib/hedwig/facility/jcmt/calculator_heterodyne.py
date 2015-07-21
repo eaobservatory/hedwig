@@ -120,7 +120,8 @@ class HeterodyneCalculator(JCMTCalculator):
                 CalculatorValue('res', 'Frequency resolution', 'Resolution', '{}', None),
                 CalculatorValue('res_unit', 'Resolution unit', 'Res. Unit', '{}', None),
                 CalculatorValue('tau', '225 GHz opacity', 'tau225', '{}', None),
-                CalculatorValue('dec', 'Source declination', 'Dec', '{}', 'degrees'),
+                CalculatorValue('pos', 'Source position', 'Pos.', '{}', '\u00b0'),
+                CalculatorValue('pos_type', 'Source position type', 'Pos. type', '{}', None),
                 CalculatorValue('sb', 'Sideband mode', 'SB', '{}', None),
                 CalculatorValue('dual_pol', 'Dual polarization', 'DP', '{}', None),
                 CalculatorValue('n_pt', 'Number of points', 'Points', '{}', None),
@@ -176,7 +177,8 @@ class HeterodyneCalculator(JCMTCalculator):
             ('res', 0.488),
             ('res_unit', 'MHz'),
             ('tau', 0.1),
-            ('dec', 40.0),
+            ('pos', 40.0),
+            ('pos_type', 'dec'),
             ('sb', 'ssb'),
             ('dual_pol', False),
             ('n_pt', 1),
@@ -406,7 +408,7 @@ class HeterodyneCalculator(JCMTCalculator):
 
         for field in self.get_inputs(mode):
             try:
-                if field.code in ('freq', 'res', 'dec', 'rms', 'tau'):
+                if field.code in ('freq', 'res', 'pos', 'rms', 'tau'):
                     parsed[field.code] = float(input_[field.code])
 
                 elif field.code == 'dx':
@@ -450,8 +452,14 @@ class HeterodyneCalculator(JCMTCalculator):
             except ValueError:
                 raise UserError('Invalid value for {}.', field.name)
 
-        if not -90 <= parsed['dec'] <= 90:
-            raise UserError('Source declination should be between -90 and 90.')
+        if parsed['pos_type'] == 'dec':
+            if not -90 <= parsed['pos'] <= 90:
+                raise UserError(
+                    'Source declination should be between -90 and 90.')
+        elif not 0 <= parsed['pos'] <= 90:
+            raise UserError(
+                'Source zenith angle / elevation '
+                'should be between 0 and 90.')
 
         return parsed
 
@@ -480,8 +488,17 @@ class HeterodyneCalculator(JCMTCalculator):
 
         extra_output = {}
 
-        zenith_angle_deg = self.itc.estimate_zenith_angle_deg(input_['dec'])
-        extra_output['zenith_angle'] = zenith_angle_deg
+        if input_['pos_type'] == 'dec':
+            zenith_angle_deg = self.itc.estimate_zenith_angle_deg(
+                input_['pos'])
+            extra_output['zenith_angle'] = zenith_angle_deg
+        elif input_['pos_type'] == 'zen':
+            zenith_angle_deg = input_['pos']
+        elif input_['pos_type'] == 'el':
+            zenith_angle_deg = 90.0 - input_['pos']
+            extra_output['zenith_angle'] = zenith_angle_deg
+        else:
+            raise UserError('Unknown source position type.')
 
         receiver = self.get_receiver_by_name(input_['rx'])
 

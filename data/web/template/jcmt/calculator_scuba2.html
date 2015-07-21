@@ -2,7 +2,7 @@
 {% set scripts=['edit_calc_jcmt', 'edit_calc_jcmt_s2'] %}
 
 {% block calculator_input_list %}
-    {% for value in inputs %}
+    {% for value in inputs %}{% if value.code not in ('pos_type',) %}
         {% with input = input_values[value.code] %}
             <li>
                 <label for="a">{{ value.name }}</label>
@@ -12,6 +12,8 @@
                             <option value="{{ mode_code }}" {{ 'selected="selected"' | safe if mode_code == input }}>{{ mode_name }}</option>
                         {% endfor %}
                     </select>
+                {% elif value.code == 'pos' %}
+                    <input type="number" name="{{ value.code }}" value="{{ input }}" min="-90" max="90" step="any" />
                 {% elif value.code == 'mf' %}
                     <input type="checkbox" name="mf" value="yes" {{ 'checked="checked"' | safe if input }} />
                 {% elif value.code == 'tau' %}
@@ -47,10 +49,16 @@
                 {% endif %}
                 {% if value.code == 'time' %}
                     <span class="explanation">decimal hours or hours:minutes:seconds</span>
+                {% elif value.code == 'pos' %}
+                    <select name="pos_type">
+                        {% for (pos_type, pos_type_name) in [['dec', 'declination'], ['el', 'elevation'], ['zen', 'zenith angle']] %}
+                            <option value="{{ pos_type }}" {{ 'selected="selected"' | safe if pos_type == input_values.pos_type }}>{{ pos_type_name }}</option>
+                        {% endfor %}
+                    </select>
                 {% endif %}
             </li>
         {% endwith %}
-    {% endfor %}
+    {% endif %}{% endfor %}
 {% endblock %}
 
 {% block calculator_output_table %}

@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict
+from math import cos, radians
 import time
 
 from jcmt_itc_scuba2 import SCUBA2ITC
@@ -86,7 +87,10 @@ class SCUBA2Calculator(JCMTCalculator):
                 CalculatorValue(
                     'map',    'Map type',           'Map', '{}', None),
                 CalculatorValue(
-                    'dec',    'Source declination', 'Dec', '{:.3g}', 'degrees'),
+                    'pos',    'Source position', 'Pos.', '{:.3g}', '\u00b0'),
+                CalculatorValue(
+                    'pos_type', 'Source position type',
+                    'Pos. type', '{}', None),
                 CalculatorValue(
                     'mf',     'Matched filter',
                     'Match. filt.', '{}', None),
@@ -134,7 +138,8 @@ class SCUBA2Calculator(JCMTCalculator):
 
         common_inputs = [
             ('map', 'daisy'),
-            ('dec', 40.0),
+            ('pos', 40.0),
+            ('pos_type', 'dec'),
             ('tau', 0.065),
             ('pix850', self.default_pix850),
             ('pix450', self.default_pix450),
@@ -297,7 +302,7 @@ class SCUBA2Calculator(JCMTCalculator):
 
         for field in self.get_inputs(mode):
             try:
-                if field.code in ('dec', 'pix850', 'pix450', 'rms', 'tau'):
+                if field.code in ('pos', 'pix850', 'pix450', 'rms', 'tau'):
                     parsed[field.code] = float(input_[field.code])
 
                 elif field.code == 'time':
@@ -309,8 +314,14 @@ class SCUBA2Calculator(JCMTCalculator):
             except ValueError:
                 raise UserError('Invalid value for {}.', field.name)
 
-        if not -90 <= parsed['dec'] <= 90:
-            raise UserError('Source declination should be between -90 and 90.')
+        if parsed['pos_type'] == 'dec':
+            if not -90 <= parsed['pos'] <= 90:
+                raise UserError(
+                    'Source declination should be between -90 and 90.')
+        elif not 0 <= parsed['pos'] <= 90:
+            raise UserError(
+                'Source zenith angle / elevation '
+                'should be between 0 and 90.')
 
         return parsed
 
@@ -338,7 +349,16 @@ class SCUBA2Calculator(JCMTCalculator):
         extra['f_850'] = factor[850]
         extra['f_450'] = factor[450]
 
-        extra['airmass'] = airmass = self.itc.estimate_airmass(input_['dec'])
+        if input_['pos_type'] == 'dec':
+            airmass = self.itc.estimate_airmass(input_['pos'])
+        elif input_['pos_type'] == 'zen':
+            airmass = 1.0 / cos(radians(input_['pos']))
+        elif input_['pos_type'] == 'el':
+            airmass = 1.0 / cos(radians(90.0 - input_['pos']))
+        else:
+            raise UserError('Unknown source position type.')
+
+        extra['airmass'] = airmass
 
         # Determine tau and transmission at each wavelength.
         tau = {}
