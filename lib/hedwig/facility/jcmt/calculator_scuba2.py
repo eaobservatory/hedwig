@@ -85,9 +85,9 @@ class SCUBA2Calculator(JCMTCalculator):
         if version == 1:
             common_inputs = [
                 CalculatorValue(
-                    'map',    'Map type',           'Map', '{}', None),
+                    'map',    'Map type', 'Map', '{}', None),
                 CalculatorValue(
-                    'pos',    'Source position', 'Pos.', '{:.3g}', '\u00b0'),
+                    'pos',    'Source position', 'Pos.', '{:.1f}', '\u00b0'),
                 CalculatorValue(
                     'pos_type', 'Source position type',
                     'Pos. type', '{}', None),

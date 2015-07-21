@@ -116,22 +116,38 @@ class HeterodyneCalculator(JCMTCalculator):
                 CalculatorValue('rx', 'Receiver', 'Receiver', '{}', None),
                 CalculatorValue('mm', 'Mapping mode', 'Mode', '{}', None),
                 CalculatorValue('sw', 'Switching mode', 'Switch', '{}', None),
-                CalculatorValue('freq', 'Frequency', 'Frequency', '{}', 'GHz'),
-                CalculatorValue('res', 'Frequency resolution', 'Resolution', '{}', None),
-                CalculatorValue('res_unit', 'Resolution unit', 'Res. Unit', '{}', None),
-                CalculatorValue('tau', '225 GHz opacity', 'tau225', '{}', None),
-                CalculatorValue('pos', 'Source position', 'Pos.', '{}', '\u00b0'),
-                CalculatorValue('pos_type', 'Source position type', 'Pos. type', '{}', None),
-                CalculatorValue('sb', 'Sideband mode', 'SB', '{}', None),
-                CalculatorValue('dual_pol', 'Dual polarization', 'DP', '{}', None),
-                CalculatorValue('n_pt', 'Number of points', 'Points', '{}', None),
-                CalculatorValue('dim_x', 'Raster width', 'x', '{}', '"'),
-                CalculatorValue('dim_y', 'Raster height', 'y', '{}', '"'),
-                CalculatorValue('dx', 'Pixel width', 'dx', '{}', '"'),
-                CalculatorValue('dy', 'Pixel/scan height', 'dy', '{}', '"'),
-                CalculatorValue('basket', 'Basket weave', 'BW', '{}', None),
-                CalculatorValue('sep_off', 'Separate offs', 'SO', '{}', None),
-                CalculatorValue('cont', 'Continuum mode', 'CM', '{}', None),
+                CalculatorValue('freq', 'Frequency',
+                                '\u03bd', '{:.3f}', 'GHz'),
+                CalculatorValue('res', 'Frequency resolution',
+                                '\u0394\u03bd', '{:.4f}', None),
+                CalculatorValue('res_unit', 'Resolution unit',
+                                '\u0394\u03bd unit', '{}', None),
+                CalculatorValue('tau', '225 GHz opacity',
+                                '\u03c4\u2082\u2082\u2085', '{:.3f}', None),
+                CalculatorValue('pos', 'Source position',
+                                'Pos.', '{:.1f}', '\u00b0'),
+                CalculatorValue('pos_type', 'Source position type',
+                                'Pos. type', '{}', None),
+                CalculatorValue('sb', 'Sideband mode',
+                                'SB', '{}', None),
+                CalculatorValue('dual_pol', 'Dual polarization',
+                                'DP', '{}', None),
+                CalculatorValue('n_pt', 'Number of points',
+                                'Points', '{:d}', None),
+                CalculatorValue('dim_x', 'Raster width',
+                                'x', '{}', '"'),
+                CalculatorValue('dim_y', 'Raster height',
+                                'y', '{}', '"'),
+                CalculatorValue('dx', 'Pixel width',
+                                'dx', '{}', '"'),
+                CalculatorValue('dy', 'Pixel/scan height',
+                                'dy', '{}', '"'),
+                CalculatorValue('basket', 'Basket weave',
+                                'BW', '{}', None),
+                CalculatorValue('sep_off', 'Separate offs',
+                                'SO', '{}', None),
+                CalculatorValue('cont', 'Continuum mode',
+                                'CM', '{}', None),
             ]
 
         else:
@@ -140,7 +156,8 @@ class HeterodyneCalculator(JCMTCalculator):
         if mode == self.CALC_TIME:
             if version == 1:
                 return common_inputs + [
-                    CalculatorValue('rms', 'Target sensitivity', '\u03c3', '{}', 'K TA*'),
+                    CalculatorValue('rms', 'Target sensitivity',
+                                    '\u03c3', '{:.3f}', 'K TA*'),
                 ]
             else:
                 raise CalculatorError('Unknown version.')
@@ -148,7 +165,8 @@ class HeterodyneCalculator(JCMTCalculator):
         elif mode == self.CALC_RMS_FROM_ELAPSED_TIME:
             if version == 1:
                 return common_inputs + [
-                    CalculatorValue('elapsed', 'Elapsed time', 'Elapsed', '{}', 'hours'),
+                    CalculatorValue('elapsed', 'Elapsed time',
+                                    'Elapsed', '{:.3f}', 'hours'),
                 ]
             else:
                 raise CalculatorError('Unknown version.')
@@ -156,7 +174,8 @@ class HeterodyneCalculator(JCMTCalculator):
         elif mode == self.CALC_RMS_FROM_INT_TIME:
             if version == 1:
                 return common_inputs + [
-                    CalculatorValue('int_time', 'Integration time', 'Int. time', '{}', 'seconds'),
+                    CalculatorValue('int_time', 'Integration time',
+                                    'Int. time', '{:.3f}', 'seconds'),
                 ]
             else:
                 raise CalculatorError('Unknown version.')
@@ -368,7 +387,7 @@ class HeterodyneCalculator(JCMTCalculator):
             if version == 1:
                 return [
                     CalculatorValue(
-                        'rms', 'Sensitivity', '\u03bb', '{:.3f}', 'K TA*'),
+                        'rms', 'Sensitivity', '\u03c3', '{:.3f}', 'K TA*'),
                 ]
             else:
                 raise CalculatorError('Unknown version.')
@@ -377,7 +396,7 @@ class HeterodyneCalculator(JCMTCalculator):
             if version == 1:
                 return [
                     CalculatorValue(
-                        'rms', 'Sensitivity', '\u03bb', '{:.3f}', 'K TA*'),
+                        'rms', 'Sensitivity', '\u03c3', '{:.3f}', 'K TA*'),
                     CalculatorValue(
                         'elapsed', 'Elapsed time', 'Elapsed',
                         '{:.3f}', 'hours'),
