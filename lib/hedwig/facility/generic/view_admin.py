@@ -18,6 +18,9 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import namedtuple
+from datetime import datetime
+
 from pymoc import MOC
 
 from ...error import NoSuchRecord, UserError
@@ -29,6 +32,10 @@ from ...view import auth
 from ...web.util import HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, parse_datetime, url_for
 from ...view.util import organise_collection
+
+CallExtra = namedtuple(
+    'CallExtra',
+    Call._fields + ('status',))
 
 
 class GenericAdmin(object):
@@ -207,9 +214,15 @@ class GenericAdmin(object):
     def view_call_list(self, db):
         calls = db.search_call(facility_id=self.id_)
 
+        date_current = datetime.utcnow()
+
         return {
             'title': 'Call List',
-            'calls': calls,
+            'calls': [CallExtra(*x, status=(
+                        'Closed' if date_current > x.date_close
+                        else ('Open' if date_current >= x.date_open
+                              else 'Not yet open')))
+                      for x in calls.values()],
         }
 
     def view_call_view(self, db, call_id):

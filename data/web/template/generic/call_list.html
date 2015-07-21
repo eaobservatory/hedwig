@@ -13,9 +13,10 @@
     <tr>
         <th>Semester</th>
         <th>Queue</th>
+        <th>Status</th>
         <th colspan="2">Links</th>
     </tr>
-    {% for call in calls.values() %}
+    {% for call in calls %}
         <tr>
             <td>
                 <a href="{{ url_for('.semester_view', semester_id=call.semester_id) }}">
@@ -27,6 +28,7 @@
                     {{ call.queue_name }}
                 </a>
             </td>
+            <td>{{ call.status }}</td>
             <td>
                 <a href="{{ url_for('.call_view', call_id=call.id) }}">
                     View call
