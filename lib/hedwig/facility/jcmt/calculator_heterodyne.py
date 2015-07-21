@@ -418,10 +418,7 @@ class HeterodyneCalculator(JCMTCalculator):
 
                 elif field.code == 'dx':
                     if receiver.array is None:
-                        if input_[field.code] is None:
-                            parsed[field.code] = None
-                        else:
-                            parsed[field.code] = float(input_[field.code])
+                        parsed[field.code] = float(input_[field.code])
                     else:
                         # The "dx" input is disabled for array receivers:
                         # always use the pixel size.
@@ -429,24 +426,15 @@ class HeterodyneCalculator(JCMTCalculator):
 
                 elif field.code == 'dy':
                     if receiver.array is None:
-                        if input_[field.code] is None:
-                            parsed[field.code] = None
-                        else:
-                            parsed[field.code] = float(input_[field.code])
+                        parsed[field.code] = float(input_[field.code])
                     else:
                         parsed[field.code] = float(input_['dy_spacing'])
 
                 elif field.code in ('dim_x', 'dim_y', 'int_time'):
-                    if input_[field.code] is None:
-                        parsed[field.code] = None
-                    else:
-                        parsed[field.code] = float(input_[field.code])
+                    parsed[field.code] = float(input_[field.code])
 
                 elif field.code in ('n_pt'):
-                    if input_[field.code] is None:
-                        parsed[field.code] = None
-                    else:
-                        parsed[field.code] = int(input_[field.code])
+                    parsed[field.code] = int(input_[field.code])
 
                 elif field.code == 'elapsed':
                     parsed[field.code] = parse_time(input_[field.code])
