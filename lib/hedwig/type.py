@@ -25,7 +25,7 @@ from .astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
 from .db.meta import affiliation, calculation, call, category, \
     email, institution, \
     member, message, moc, person, proposal, proposal_category, queue, \
-    semester, target
+    semester, target, user_log
 from .error import NoSuchRecord, MultipleRecords, UserError
 
 Affiliation = namedtuple(
@@ -181,6 +181,10 @@ Target = namedtuple(
 TargetToolInfo = namedtuple(
     'TargetToolInfo',
     ['id', 'code', 'name', 'tool'])
+
+UserLog = namedtuple(
+    'UserLog',
+    [x.name for x in user_log.columns])
 
 Queue = namedtuple(
     'Queue',
@@ -346,6 +350,32 @@ class TextRole(object):
     @classmethod
     def short_name(cls, role):
         return cls._info[role].shortname
+
+
+class UserLogEvent(object):
+    CREATE = 1
+    LINK_PROFILE = 2
+    CHANGE_NAME = 3
+    CHANGE_PASS = 4
+    GET_TOKEN = 5
+    USE_TOKEN = 6
+    USE_INVITE = 7
+
+    EventInfo = namedtuple('EventInfo', ('description',))
+
+    _info = {
+        CREATE:       EventInfo('Account created'),
+        LINK_PROFILE: EventInfo('Profile linked'),
+        CHANGE_NAME:  EventInfo('Changed user name'),
+        CHANGE_PASS:  EventInfo('Changed password'),
+        GET_TOKEN:    EventInfo('Issued password reset code'),
+        USE_TOKEN:    EventInfo('Used password reset code'),
+        USE_INVITE:   EventInfo('Profile linked via invitation'),
+    }
+
+    @classmethod
+    def get_info(cls, event):
+        return cls._info[event]
 
 
 class ResultCollection(OrderedDict):

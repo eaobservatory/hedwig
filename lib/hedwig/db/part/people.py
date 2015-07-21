@@ -27,10 +27,10 @@ from sqlalchemy.sql.functions import count
 from ...auth import check_password_hash, create_password_hash, generate_token
 from ...error import ConsistencyError, Error, NoSuchRecord, UserError
 from ...type import Email, EmailCollection, Institution, InstitutionInfo, \
-    Person, PersonInfo, ResultCollection
+    Person, PersonInfo, ResultCollection, UserLogEvent
 from ...util import get_countries
 from ..meta import email, institution, invitation, member, person, \
-    reset_token, user, verify_token
+    reset_token, user, user_log, verify_token
 from ..util import require_not_none
 
 
@@ -118,7 +118,7 @@ class PeoplePart(object):
 
         return (token, expiry)
 
-    def add_person(self, name, public=False, user_id=None,
+    def add_person(self, name, public=False, user_id=None, remote_addr=None,
                    _test_skip_check=False):
         """
         Add a person to the database.
@@ -145,9 +145,13 @@ class PeoplePart(object):
 
             person_id = result.inserted_primary_key[0]
 
+            if user_id is not None:
+                self._add_user_log_entry(
+                    conn, user_id, UserLogEvent.LINK_PROFILE, remote_addr)
+
         return person_id
 
-    def add_user(self, name, password_raw, person_id=None,
+    def add_user(self, name, password_raw, person_id=None, remote_addr=None,
                  _test_skip_check=False):
         """
         Add a user to the database.
@@ -179,6 +183,9 @@ class PeoplePart(object):
 
             user_id = result.inserted_primary_key[0]
 
+            self._add_user_log_entry(
+                conn, user_id, UserLogEvent.CREATE, remote_addr)
+
             if person_id is not None:
                 if not _test_skip_check and \
                         not self._exists_id(conn, person, person_id):
@@ -197,6 +204,9 @@ class PeoplePart(object):
                         'no rows matched setting new user_id'
                         ' for person with id={0}',
                         person_id)
+
+                self._add_user_log_entry(
+                    conn, user_id, UserLogEvent.LINK_PROFILE, remote_addr)
 
         return user_id
 
@@ -406,7 +416,7 @@ class PeoplePart(object):
 
         return (token, expiry)
 
-    def get_password_reset_token(self, user_id):
+    def get_password_reset_token(self, user_id, remote_addr):
         """
         Create a password reset token for a given user.
 
@@ -426,6 +436,9 @@ class PeoplePart(object):
                 reset_token.c.user_id: user_id,
                 reset_token.c.expiry: expiry,
             }))
+
+            self._add_user_log_entry(
+                conn, user_id, UserLogEvent.GET_TOKEN, remote_addr)
 
         return (token, expiry)
 
@@ -612,7 +625,8 @@ class PeoplePart(object):
                     'no rows matched updating person with id={0}',
                     person_id)
 
-    def update_user_name(self, user_id, name, _test_skip_check=False):
+    def update_user_name(self, user_id, name, remote_addr=None,
+                         _test_skip_check=False):
         if not name:
             raise UserError('The new user name can not be blank.')
 
@@ -638,7 +652,10 @@ class PeoplePart(object):
                     'no rows matched updating user with id={0}',
                     user_id)
 
-    def update_user_password(self, user_id, password_raw,
+            self._add_user_log_entry(
+                conn, user_id, UserLogEvent.CHANGE_NAME, remote_addr)
+
+    def update_user_password(self, user_id, password_raw, remote_addr=None,
                              _test_skip_check=False):
         if not password_raw:
             raise UserError('The password can not be blank.')
@@ -662,6 +679,9 @@ class PeoplePart(object):
                 raise ConsistencyError(
                     'no rows matched updating user with id={0}',
                     user_id)
+
+            self._add_user_log_entry(
+                conn, user_id, UserLogEvent.CHANGE_PASS, remote_addr)
 
     def use_email_verify_token(self, person_id, token):
         """
@@ -702,7 +722,7 @@ class PeoplePart(object):
 
         return email_address
 
-    def use_password_reset_token(self, token):
+    def use_password_reset_token(self, token, remote_addr):
         """
         Tries to use the given password reset token.
 
@@ -723,14 +743,19 @@ class PeoplePart(object):
             if result is None:
                 raise NoSuchRecord('reset token expired or non-existant')
 
+            user_id = result['user_id']
+
             # If we found it, consider it used and delete it.
             conn.execute(reset_token.delete().where(
                 reset_token.c.token == token))
 
-        return result['user_id']
+            self._add_user_log_entry(
+                conn, user_id, UserLogEvent.USE_TOKEN, remote_addr)
+
+        return user_id
 
     def use_invitation(self, token, user_id=None, new_person_id=None,
-                       _test_skip_check=False):
+                       remote_addr=None, _test_skip_check=False):
         """
         Uses the invitation token to link the given user_id to the
         person record associated with the invitation.
@@ -797,6 +822,9 @@ class PeoplePart(object):
                         ' for person with id={0}',
                         old_person_id)
 
+                self._add_user_log_entry(
+                    conn, user_id, UserLogEvent.USE_INVITE, remote_addr)
+
             elif new_person_id is not None:
                 # Ensure the "old_person_id" profile wasn't already
                 # registered.
@@ -826,6 +854,18 @@ class PeoplePart(object):
                 raise Error('user_id or new_person_id vanished')
 
         return old_person_record
+
+    def _add_user_log_entry(self, conn, user_id, event, remote_addr=None):
+        """
+        Adds an entry to the user log table.
+        """
+
+        conn.execute(user_log.insert().values({
+            user_log.c.user_id: user_id,
+            user_log.c.date: datetime.utcnow(),
+            user_log.c.event: event,
+            user_log.c.remote_addr: remote_addr,
+        }))
 
     def _exists_person_user(self, conn, user_id):
         """Test whether a person exists with the given user_id."""

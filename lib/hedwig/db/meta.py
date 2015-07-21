@@ -432,6 +432,18 @@ user = Table(
     Column('salt', String(255)),
     **_table_opts)
 
+user_log = Table(
+    'user_log',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('user_id', None,
+           ForeignKey('user.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('date', DateTime(), nullable=False),
+    Column('event', Integer, nullable=False),
+    Column('remote_addr', String(50), nullable=True),
+    **_table_opts)
+
 verify_token = Table(
     'verify_token',
     metadata,

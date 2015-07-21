@@ -527,34 +527,41 @@ class DBPeopleTest(DBTestCase):
         self.assertIsInstance(user_id, int)
 
         # Try making a reset token.
-        (token, expiry) = self.db.get_password_reset_token(user_id)
+        (token, expiry) = self.db.get_password_reset_token(user_id,
+                                                           remote_addr=None)
         self.assertIsInstance(token, str)
         self.assertRegexpMatches(token, '^[0-9a-f]{32}$')
 
         # Using a bad token should do nothing.
         with self.assertRaises(NoSuchRecord):
-            self.db.use_password_reset_token(b'not a valid token')
+            self.db.use_password_reset_token(b'not a valid token',
+                                             remote_addr=None)
 
         # Using the token should return this user id.
-        token_user_id = self.db.use_password_reset_token(token)
+        token_user_id = self.db.use_password_reset_token(token,
+                                                         remote_addr=None)
         self.assertEqual(token_user_id, user_id)
 
         # Using the token again should return None because the
         # token should have been deleted.
         with self.assertRaises(NoSuchRecord):
-            self.db.use_password_reset_token(token)
+            self.db.use_password_reset_token(token, remote_addr=None)
 
         # Issue two more tokens: the older should be removed automatically.
-        (token1, expiry) = self.db.get_password_reset_token(user_id)
-        (token2, expiry) = self.db.get_password_reset_token(user_id)
+        (token1, expiry) = self.db.get_password_reset_token(user_id,
+                                                            remote_addr=None)
+        (token2, expiry) = self.db.get_password_reset_token(user_id,
+                                                            remote_addr=None)
         with self.assertRaises(NoSuchRecord):
-            self.db.use_password_reset_token(token1)
-        token_user_id = self.db.use_password_reset_token(token2)
+            self.db.use_password_reset_token(token1, remote_addr=None)
+        token_user_id = self.db.use_password_reset_token(token2,
+                                                         remote_addr=None)
         self.assertEqual(token_user_id, user_id)
 
         # Create a token and artificially age it by putting the expiry
         # date in the past.  It should then not work.
-        (token, expiry) = self.db.get_password_reset_token(user_id)
+        (token, expiry) = self.db.get_password_reset_token(user_id,
+                                                           remote_addr=None)
         with self.db._transaction() as conn:
             result = conn.execute(reset_token.update().where(
                 reset_token.c.token == token
@@ -564,7 +571,7 @@ class DBPeopleTest(DBTestCase):
 
             self.assertEqual(result.rowcount, 1)
         with self.assertRaises(NoSuchRecord):
-            self.db.use_password_reset_token(token)
+            self.db.use_password_reset_token(token, remote_addr=None)
 
     def test_invitation_new_user(self):
         # Create a person record.
