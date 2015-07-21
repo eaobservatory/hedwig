@@ -107,7 +107,7 @@ def log_out():
     raise HTTPRedirect(url_for('home_page'))
 
 
-def register_user(db, form, is_post):
+def register_user(db, form, is_post, remote_addr):
     message = None
 
     if is_post:
@@ -116,7 +116,7 @@ def register_user(db, form, is_post):
             password = form['password']
             if password != form['password_check']:
                 raise UserError('The passwords did not match.')
-            user_id = db.add_user(user_name, password)
+            user_id = db.add_user(user_name, password, remote_addr=remote_addr)
 
             # Extract this session entry, if it exists, before logging in.
             register_user_for = session.pop('register_user_for', None)
@@ -139,7 +139,7 @@ def register_user(db, form, is_post):
     }
 
 
-def change_user_name(db, form, is_post):
+def change_user_name(db, form, is_post, remote_addr):
     message = None
     user_id = session['user_id']
 
@@ -151,7 +151,8 @@ def change_user_name(db, form, is_post):
                 raise UserError(
                     'Your current password was entered incorrectly.')
 
-            db.update_user_name(user_id, form['user_name'])
+            db.update_user_name(user_id, form['user_name'],
+                                remote_addr=remote_addr)
             flash('Your user name has been changed.')
             if 'person' in session:
                 raise HTTPRedirect(url_for('.person_view',
@@ -169,7 +170,7 @@ def change_user_name(db, form, is_post):
     }
 
 
-def change_password(db, form, is_post):
+def change_password(db, form, is_post, remote_addr):
     message = None
 
     if is_post:
@@ -186,7 +187,8 @@ def change_password(db, form, is_post):
                                     user_id=user_id) is None:
                 raise UserError(
                     'Your current password was entered incorrectly.')
-            db.update_user_password(user_id, password_new)
+            db.update_user_password(user_id, password_new,
+                                    remote_addr=remote_addr)
             flash('Your password has been changed.')
             raise HTTPRedirect(url_for('home_page'))
 
@@ -199,7 +201,7 @@ def change_password(db, form, is_post):
     }
 
 
-def password_reset_token_get(db, form, is_post):
+def password_reset_token_get(db, form, is_post, remote_addr):
     message = None
 
     user_name = form.get('user_name', '')
@@ -271,7 +273,8 @@ def password_reset_token_get(db, form, is_post):
                 raise UserError(
                     'Please enter either a user name or email address.')
 
-            (token, expiry) = db.get_password_reset_token(user_id)
+            (token, expiry) = db.get_password_reset_token(
+                user_id, remote_addr=remote_addr)
             db.add_message(
                 'Password reset code',
                 render_email_template('password_reset.txt', {
@@ -298,7 +301,7 @@ def password_reset_token_get(db, form, is_post):
     }
 
 
-def password_reset_token_use(db, args, form, is_post):
+def password_reset_token_use(db, args, form, is_post, remote_addr):
     message = None
     token = args.get('token', '')
 
@@ -309,12 +312,13 @@ def password_reset_token_use(db, args, form, is_post):
             if password != form['password_check']:
                 raise UserError('The passwords did not match.')
             try:
-                user_id = db.use_password_reset_token(token)
+                user_id = db.use_password_reset_token(token,
+                                                      remote_addr=remote_addr)
             except NoSuchRecord:
                 raise UserError('Your reset code was not recognised. '
                                 'It may have expired or been superceded by '
                                 'a newer reset code.')
-            db.update_user_password(user_id, password)
+            db.update_user_password(user_id, password, remote_addr=remote_addr)
             flash('Your password has been changed.'
                   ' You may now log in using your new password.')
             raise HTTPRedirect(url_for(
@@ -349,7 +353,7 @@ def drop_admin(referrer):
     raise HTTPRedirect(referrer if referrer else url_for('home_page'))
 
 
-def register_person(db, form, is_post):
+def register_person(db, form, is_post, remote_addr):
     if 'person' in session:
         raise ErrorPage('You have already created a profile')
 
@@ -373,7 +377,7 @@ def register_person(db, form, is_post):
 
             user_id = session['user_id']
             person_id = db.add_person(person.name, public=person.public,
-                                      user_id=user_id)
+                                      user_id=user_id, remote_addr=remote_addr)
             db.add_email(person_id, email, primary=True)
             flash('Your user profile has been saved.')
             _update_session_person(db.get_person(person_id))
@@ -812,7 +816,7 @@ def invitation_token_enter(db, args):
     }
 
 
-def invitation_token_accept(db, args, form, is_post):
+def invitation_token_accept(db, args, form, is_post, remote_addr):
     token = form.get('token', None) if is_post else args.get('token', None)
 
     if token is None:
@@ -832,7 +836,8 @@ def invitation_token_accept(db, args, form, is_post):
             except NoSuchRecord:
                 kwargs = {'user_id': user_id}
 
-            old_person_record = db.use_invitation(token, **kwargs)
+            old_person_record = db.use_invitation(
+                token, remote_addr=remote_addr, **kwargs)
             flash('The invitation has been accepted successfully.')
             person = db.get_person(person_id=None, user_id=user_id)
             _update_session_person(person)

@@ -43,34 +43,39 @@ def create_people_blueprint(db, facilities):
     @templated('people/register_user.html')
     @require_not_auth
     def register_user():
-        return view.register_user(db, request.form, request.method == 'POST')
+        return view.register_user(db, request.form, request.method == 'POST',
+                                  request.remote_addr)
 
     @bp.route('/user/name', methods=['GET', 'POST'])
     @templated('people/change_user_name.html')
     @require_auth()
     def change_user_name():
         return view.change_user_name(db, request.form,
-                                     request.method == 'POST')
+                                     request.method == 'POST',
+                                     request.remote_addr)
 
     @bp.route('/user/password', methods=['GET', 'POST'])
     @templated('people/change_password.html')
     @require_auth()
     def change_password():
-        return view.change_password(db, request.form, request.method == 'POST')
+        return view.change_password(db, request.form, request.method == 'POST',
+                                    request.remote_addr)
 
     @bp.route('/user/password/reset', methods=['GET', 'POST'])
     @templated('people/password_reset_token_get.html')
     @require_not_auth
     def password_reset_token_get():
         return view.password_reset_token_get(db, request.form,
-                                             request.method == 'POST')
+                                             request.method == 'POST',
+                                             request.remote_addr)
 
     @bp.route('/user/password/reset/token', methods=['GET', 'POST'])
     @templated('people/password_reset_token_use.html')
     @require_not_auth
     def password_reset_token_use():
         return view.password_reset_token_use(db, request.args, request.form,
-                                             request.method == 'POST')
+                                             request.method == 'POST',
+                                             request.remote_addr)
 
     @bp.route('/user/admin/take')
     @require_auth()
@@ -85,7 +90,8 @@ def create_people_blueprint(db, facilities):
     @templated('people/person_edit.html')
     @require_auth()
     def register_person():
-        return view.register_person(db, request.form, request.method == 'POST')
+        return view.register_person(db, request.form, request.method == 'POST',
+                                    request.remote_addr)
 
     @bp.route('/person/')
     @templated('people/person_list.html')
@@ -174,6 +180,7 @@ def create_people_blueprint(db, facilities):
     @require_auth(register_user_only=True)
     def invitation_token_accept():
         return view.invitation_token_accept(db, request.args, request.form,
-                                            request.method == 'POST')
+                                            request.method == 'POST',
+                                            request.remote_addr)
 
     return bp
