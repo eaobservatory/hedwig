@@ -112,6 +112,8 @@ def require_admin(f):
     """
     @functools.wraps(f)
     def decorated(*args, **kwargs):
+        _check_session_expiry()
+
         if 'user_id' in session and session.get('is_admin', False):
             return f(*args, **kwargs)
 
@@ -137,6 +139,8 @@ def require_auth(require_person=False, require_institution=False,
     def decorator(f):
         @functools.wraps(f)
         def decorated_function(*args, **kwargs):
+            _check_session_expiry()
+
             if 'user_id' not in session:
                 flash('Please log in or register for an account to proceed.')
 
@@ -274,3 +278,20 @@ def _make_response(template, result):
     resp.headers['Content-Language'] = 'en'
 
     return resp
+
+
+def _check_session_expiry():
+    date_set = session.get('date_set', None)
+
+    if date_set is None:
+        session.clear()
+        return
+
+    date_current = datetime.utcnow()
+
+    delta = (date_current - date_set).total_seconds()
+
+    if delta > 3600:
+        session.clear()
+    elif delta > 600:
+        session['date_set'] = date_current

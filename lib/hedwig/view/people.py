@@ -18,6 +18,8 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from datetime import datetime
+
 from ..email.format import render_email_template
 from ..error import ConsistencyError, Error, MultipleRecords, NoSuchRecord, \
     UserError
@@ -904,6 +906,7 @@ def _update_session_user(user_id):
     session.clear()
     session.update(saved)
     session['user_id'] = user_id
+    session['date_set'] = datetime.utcnow()
 
 
 def _update_session_person(person):
