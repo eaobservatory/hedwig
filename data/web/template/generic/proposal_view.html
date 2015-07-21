@@ -203,19 +203,29 @@
 
                 <p>
                     {% for value in calculation.inputs %}
-                        <span class="calculator_value">
-                            {% with in_val = calculation.input[value.code] %}
-                                {% if value.abbr is not none %}
-                                    <abbr title="{{ value.name }}">{{ value.abbr }}</abbr>:
-                                {% else %}
-                                    {{ value.name }}:
-                                {% endif %}
-                                {{ in_val | fmt(value.format) }}
-                                {% if value.unit is not none %}
-                                    {{ value.unit }}
-                                {% endif %}
-                            {% endwith %}
-                        </span>
+                        {% with in_val = calculation.input[value.code] %}
+                            {% if in_val is not none  and in_val is not sameas false %}
+                                <span class="calculator_value">
+                                    {% if in_val is sameas true %}
+                                        {% if value.abbr is not none %}
+                                            <abbr title="{{ value.name }}">{{ value.abbr }}</abbr>
+                                        {% else %}
+                                            {{ value.name }}
+                                        {% endif %}
+                                    {% else %}
+                                        {% if value.abbr is not none %}
+                                            <abbr title="{{ value.name }}">{{ value.abbr }}</abbr>:
+                                        {% else %}
+                                            {{ value.name }}:
+                                        {% endif %}
+                                        {{ in_val | fmt(value.format) }}
+                                    {% endif %}
+                                    {% if value.unit is not none %}
+                                        {{ value.unit }}
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                        {% endwith %}
                     {% endfor %}
 
                     <br />

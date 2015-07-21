@@ -165,9 +165,12 @@ class SCUBA2Calculator(JCMTCalculator):
         Format input values for display in the input form.
         """
 
+        defaults = self.get_default_input(self.CALC_TIME)
+
         formatted_inputs = {
             x.code:
-                x.format.format(values[x.code])
+                x.format.format(values[x.code] if values[x.code] is not None
+                                else defaults.get(x.code))
                 if x.code not in ('map', 'mf', 'wl')
                 else values[x.code]
             for x in inputs
@@ -322,6 +325,11 @@ class SCUBA2Calculator(JCMTCalculator):
             raise UserError(
                 'Source zenith angle / elevation '
                 'should be between 0 and 90.')
+
+        # Remove irrelevant pixel sizes when using matched filter.
+        if parsed['mf']:
+            parsed['pix850'] = None
+            parsed['pix450'] = None
 
         return parsed
 

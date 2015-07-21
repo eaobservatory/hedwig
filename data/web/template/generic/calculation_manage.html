@@ -38,15 +38,17 @@
                 <td>
                     {% for value in calculation.inputs %}
                         {% with in_val = calculation.input[value.code] %}
-                            {{ value.name }}:
-                            {{ in_val | fmt(value.format) }}
-                            {% if value.unit is not none %}
-                                {{ value.unit }}
+                            {% if in_val is not none %}
+                                {{ value.name }}:
+                                {{ in_val | fmt(value.format) }}
+                                {% if value.unit is not none %}
+                                    {{ value.unit }}
+                                {% endif %}
+                                {% if not loop.last %}
+                                    <br />
+                                {% endif %}
                             {% endif %}
                         {% endwith %}
-                        {% if not loop.last %}
-                            <br />
-                        {% endif %}
                     {% endfor %}
                 </td>
                 <td>

@@ -214,18 +214,23 @@ class HeterodyneCalculator(JCMTCalculator):
         Format input values for display in the input form.
         """
 
+        defaults = self.get_default_input(self.CALC_TIME)
+
         formatted_inputs = {
             x.code:
-                x.format.format(values[x.code])
+                x.format.format(values[x.code] if values[x.code] is not None
+                                else defaults.get(x.code))
                 if x.code not in ('rx', 'mm', 'sw', 'sb', 'dual_pol', 'n_pt',
                                   'basket', 'sep_off', 'cont', 'res_unit')
-                else values[x.code]
+                else (values[x.code] if values[x.code] is not None
+                      else defaults.get(x.code))
             for x in inputs
         }
 
         formatted_inputs.update({
             'tau_band': self.get_tau_band(values['tau']),
-            'dy_spacing': '{:.3f}'.format(values['dy']),
+            'dy_spacing': '{:.3f}'.format(
+                values['dy'] if values['dy'] is not None else defaults['dy']),
         })
 
         return formatted_inputs
@@ -460,6 +465,17 @@ class HeterodyneCalculator(JCMTCalculator):
             raise UserError(
                 'Source zenith angle / elevation '
                 'should be between 0 and 90.')
+
+        map_mode = self.map_modes[parsed['mm']].id
+
+        # Remove irrelevant input values for the given mode.
+        if map_mode == HeterodyneITC.RASTER:
+            parsed['n_pt'] = None
+        else:
+            parsed['dim_x'] = None
+            parsed['dim_y'] = None
+            parsed['dx'] = None
+            parsed['dy'] = None
 
         return parsed
 
