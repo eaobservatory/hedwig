@@ -593,3 +593,7 @@ class HeterodyneCalculator(JCMTCalculator):
         extra_output.update(extra)
 
         return CalculatorResult(output, extra_output)
+
+    def condense_calculation(self, mode, version, calculation):
+        self._condense_merge_values(calculation, (('pos', 'pos_type'),
+                                                  ('res', 'res_unit')))

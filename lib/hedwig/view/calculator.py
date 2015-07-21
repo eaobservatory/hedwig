@@ -273,3 +273,14 @@ class BaseCalculator(object):
         """
 
         return mode in self.modes
+
+    def condense_calculation(self, mode, version, calculation):
+        """
+        Method which can be called before an existing calculation
+        result is to be displayed in a compact form.
+
+        Takes a "CalculationExtra" object, which has "inputs", "input",
+        "outputs" and "output" attributes and modifies it in place.
+        """
+
+        pass

@@ -63,3 +63,48 @@ class JCMTCalculator(BaseCalculator):
         else:
             tau_band = int(form['tau_band'])
             return (self.bands[tau_band].rep, tau_band)
+
+    def _condense_merge_values(self, calculation, value_tuples):
+        """
+        Helper routine for the "condense_calculation" method.
+
+        Takes a collection of value tuples (currently assumed to be
+        pairs).  Then updates the calculation to merge the two
+        values in each of those pairs.
+        """
+
+        # Create dictionary with an entry for each value we are interested in.
+        values = {}
+        for value_tuple in value_tuples:
+            for value in value_tuple:
+                values[value] = None
+
+        # Record the index of each value, if it's present.
+        for i in range(0, len(calculation.inputs)):
+            input_ = calculation.inputs[i]
+            for value in list(values.keys()):
+                if input_.code == value:
+                    values[value] = i
+
+        to_remove = []
+
+        # Go through the collection of pairs, and if we have both entries,
+        # merge them.
+        for (val_a, val_b) in value_tuples:
+            if (values[val_a] is not None) and (values[val_b] is not None):
+                value = calculation.inputs[values[val_a]]
+                calculation.input[val_a] = ' '.join([
+                    value.format.format(calculation.input[val_a]),
+                    ('' if value.unit is None else value.unit),
+                    calculation.input[val_b],
+                ])
+                calculation.inputs[values[val_a]] = \
+                    calculation.inputs[values[val_a]]._replace(
+                        format='{}', unit=None)
+                to_remove.append(values[val_b])
+
+        # Remove the values we no longer want (in reverse order so that we
+        # don't have to worry about the indices changing as other values
+        # are removed).
+        for i in sorted(to_remove, reverse=True):
+            del calculation.inputs[i]

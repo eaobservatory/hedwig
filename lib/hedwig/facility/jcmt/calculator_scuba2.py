@@ -421,3 +421,6 @@ class SCUBA2Calculator(JCMTCalculator):
             raise CalculatorError('Unknown mode.')
 
         return CalculatorResult(output, extra)
+
+    def condense_calculation(self, mode, version, calculation):
+        self._condense_merge_values(calculation, (('pos', 'pos_type'),))

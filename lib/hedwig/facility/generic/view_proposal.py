@@ -1061,7 +1061,7 @@ class GenericProposal(object):
                 calculator = calc_info.calculator
                 mode_info = calculator.get_mode_info(calc.mode)
 
-                calculations.append(CalculationExtra(
+                calculation = CalculationExtra(
                     *calc,
                     calculator_name=calc_info.name,
                     inputs=calculator.get_inputs(calc.mode, calc.version),
@@ -1070,6 +1070,13 @@ class GenericProposal(object):
                     target_view=url_for(
                         '.calc_{}_{}'.format(calculator.get_code(),
                                              mode_info.code),
-                        calculation_id=calc.id)))
+                        calculation_id=calc.id))
+
+                # Call the calculator method to compact the calculation
+                # where possible.
+                calculator.condense_calculation(calc.mode, calc.version,
+                                                calculation)
+
+                calculations.append(calculation)
 
         return calculations
