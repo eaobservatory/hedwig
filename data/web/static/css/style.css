@@ -137,12 +137,30 @@ span.forminfo_bad {
 
 span.calculator_value {
     display: inline-block;
+    height: 2.5ex;
     margin: 0.25ex;
-    border: 1px solid #CCC;
-    background: #EEE;
-    border-radius: 0.5ex;
-    padding-left: 0.5ex;
-    padding-right: 0.5ex;
+    padding: 0px;
+    border: 1px solid #AAA;
+}
+
+span.calculator_value span.calc_val_name {
+    display: inline-block;
+    height: 100%;
+    font-weight: bold;
+    background: #DDD;
+    padding: 0ex 0.5ex 0ex 0.5ex;
+    margin: 0px;
+}
+
+span.calculator_value span.calc_val_name:not(:last-child) {
+    border-right: 1px solid #AAA;
+}
+
+span.calculator_value span.calc_val_value {
+    display: inline-block;
+    height: 100%;
+    padding: 0ex 0.5ex 0ex 0.5ex;
+    margin: 0px;
 }
 
 form ol li div.explanation {
