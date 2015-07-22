@@ -180,6 +180,17 @@
                 </p>
             </nav>
         {% endif %}
+
+        {% if targets and target_tools %}
+            <nav>
+                <p>
+                    Check targets:
+                    {% for target_tool in target_tools %}
+                        <a href="{{ target_tool.target_view }}">{{ target_tool.name }}</a>
+                    {% endfor %}
+                </p>
+            </nav>
+        {% endif %}
     </section>
 {% endblock %}
 

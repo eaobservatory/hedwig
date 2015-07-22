@@ -29,7 +29,8 @@ from ...type import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
     FigureType, FormatType, \
     ProposalCategory, ProposalFigureInfo, ProposalState, ProposalText, \
-    Queue, ResultCollection, Semester, Target, TargetCollection, TextRole, \
+    Queue, ResultCollection, Semester, Target, \
+    TargetCollection, TargetToolInfo, TextRole, \
     ValidationMessage, \
     null_tuple
 from ...util import get_countries
@@ -51,6 +52,10 @@ CalculationExtra = namedtuple(
 CalculatorInfoExtra = namedtuple(
     'CalculatorInfoExtra',
     CalculatorInfo._fields + ('target_view', ))
+
+TargetToolInfoExtra = namedtuple(
+    'TargetToolInfoExtra',
+    TargetToolInfo._fields + ('target_view', ))
 
 
 class GenericProposal(object):
@@ -191,6 +196,11 @@ class GenericProposal(object):
                     proposal_id=proposal.id))
                 for x in self.calculators.values()],
             'calculations': self._prepare_calculations(calculations),
+            'target_tools': [
+                TargetToolInfoExtra(*x, target_view=url_for(
+                    '.tool_proposal_{}'.format(x.code,),
+                    proposal_id=proposal.id))
+                for x in self.target_tools.values()],
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id).values(),
         }
