@@ -56,3 +56,7 @@ form ol li > input[type=submit]:first-child {
 table + table {
     margin-top: 2ex;
 }
+
+.valid_message div {
+    padding-left: 5ex;
+}

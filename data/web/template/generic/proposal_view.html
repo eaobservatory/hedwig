@@ -45,6 +45,8 @@
                 <br />
             {% if is_submitted %}
                 <a href="{{ url_for('.proposal_withdraw', proposal_id=proposal.id) }}">Withdraw proposal</a>
+                <br />
+                <a href="{{ url_for('.proposal_validate', proposal_id=proposal.id) }}">Validate proposal</a>
             {% else %}
                 <a href="{{ url_for('.proposal_submit', proposal_id=proposal.id) }}">Submit proposal</a>
             {% endif %}

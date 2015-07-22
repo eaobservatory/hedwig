@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from ...error import UserError
 from ...web.util import HTTPRedirect, flash, url_for
 from ...view.util import organise_collection, with_proposal
+from ...type import ValidationMessage
 from ..generic.view import Generic
 from .calculator_heterodyne import HeterodyneCalculator
 from .calculator_scuba2 import SCUBA2Calculator
@@ -54,6 +55,21 @@ class JCMT(Generic):
         })
 
         return ctx
+
+    def _validate_proposal_extra(self, db, proposal, extra):
+        messages = []
+
+        if not extra['requests'].table:
+            messages.append(ValidationMessage(
+                True,
+                'No observing time has been requested.',
+                'Edit the observing request',
+                url_for('.request_edit', proposal_id=proposal.id)))
+
+        messages.extend(super(JCMT, self)._validate_proposal_extra(
+            db, proposal, extra))
+
+        return messages
 
     @with_proposal(permission='edit')
     def view_request_edit(self, db, proposal, can, form, is_post):

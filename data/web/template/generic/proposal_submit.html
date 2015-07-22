@@ -3,11 +3,70 @@
 
 {% block content %}
 
-<form method="POST" action="{{ url_for('.proposal_submit', proposal_id=proposal.id) }}">
+{% if is_submit_page %}
+    <h2>Proposal Validation</h2>
+{% else %}
+    <nav>
+        <p>
+            <a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">Back to proposal</a>
+        </p>
+    </nav>
+{% endif %}
+
+{% if validation_messages %}
+    <ul class="valid_message">
+        {% for message in validation_messages %}
+            <li>
+                {% if message.is_error %}
+                    <p class="warning">Error</p>
+                {% else %}
+                    <p class="missing">Warning</p>
+                {% endif %}
+                <div>
+                    <p>
+                        {{ message.description }}
+                    </p>
+                    {% if can_edit %}
+                        <p>
+                            {% if message.link_url is not none %}
+                                <a href="{{ message.link_url }}">{{ message.link_text }}</a>
+                            {% endif %}
+                        </p>
+                    {% endif %}
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
     <p>
-        <input type="submit" name="submit_confirm" value="Submit proposal" />
-        <input type="submit" name="submit_cancel" value="Cancel" />
+        No problems with this proposal have been detected.
     </p>
-</form>
+{% endif %}
+
+{% if is_submit_page %}
+    <h2>Proposal Submission</h2>
+
+    {% if can_submit %}
+        {% if validation_messages %}
+            <p>
+                You may submit your proposal despite the warnings listed above,
+                but you should check that none of them is a problem
+                for your proposal.
+            </p>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('.proposal_submit', proposal_id=proposal.id) }}">
+            <p>
+                <input type="submit" name="submit_confirm" value="Submit proposal" />
+                <input type="submit" name="submit_cancel" value="Cancel" />
+            </p>
+        </form>
+    {% else %}
+        <p>
+            Please correct the errors identified above before submitting
+            the proposal.
+        </p>
+    {% endif %}
+{% endif %}
 
 {% endblock %}

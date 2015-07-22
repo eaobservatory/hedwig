@@ -30,6 +30,7 @@ from ...type import Affiliation, \
     FigureType, FormatType, \
     ProposalCategory, ProposalFigureInfo, ProposalState, ProposalText, \
     Queue, ResultCollection, Semester, Target, TargetCollection, TextRole, \
+    ValidationMessage, \
     null_tuple
 from ...util import get_countries
 from ...view import auth
@@ -194,15 +195,91 @@ class GenericProposal(object):
                 proposal_id=proposal.id).values(),
         }
 
+    def _validate_proposal(self, db, proposal):
+        messages = []
+
+        # Check the title.
+        if not proposal.title:
+            messages.append(ValidationMessage(
+                True,
+                'The proposal does not have a title.',
+                'Edit the proposal title',
+                url_for('.title_edit', proposal_id=proposal.id)))
+
+        # Check the members list.
+        try:
+            proposal.members.validate(editor_person_id=None)
+        except UserError as e:
+            messages.append(ValidationMessage(
+                True, e.message,
+                'Edit the proposal members',
+                url_for('.member_edit', proposal_id=proposal.id)))
+
+        # Now validate the "extra" parts of the proposal.
+        extra = self._view_proposal_extra(db, proposal)
+
+        messages.extend(self._validate_proposal_extra(db, proposal, extra))
+
+        # Return the list of messages.
+        return messages
+
+    def _validate_proposal_extra(self, db, proposal, extra):
+        messages = []
+
+        if extra['abstract'] is None:
+            messages.append(ValidationMessage(
+                True,
+                'The proposal does not have an abstract.',
+                'Edit the proposal abstract',
+                url_for('.abstract_edit', proposal_id=proposal.id)))
+
+        if not extra['targets']:
+            messages.append(ValidationMessage(
+                False,
+                'No target objects have been specified.',
+                'Edit target list',
+                url_for('.target_edit', proposal_id=proposal.id)))
+
+        if not extra['calculations']:
+            messages.append(ValidationMessage(
+                False,
+                'The proposal does not have any calculation results attached.',
+                'See available calculators',
+                url_for('.facility_home', _anchor='calc')))
+
+        if ((extra['tech_case_text'] is None) and
+                (extra['tech_case_pdf'] is None)):
+            messages.append(ValidationMessage(
+                False,
+                'The proposal does not have a technical justification.',
+                'Edit technical justification',
+                url_for('.tech_edit', proposal_id=proposal.id)))
+
+        if ((extra['sci_case_text'] is None) and
+                (extra['sci_case_pdf'] is None)):
+            messages.append(ValidationMessage(
+                False,
+                'The proposal does not have a scientific justification.',
+                'Edit scientific justification',
+                url_for('.sci_edit', proposal_id=proposal.id)))
+
+        return messages
+
     @with_proposal(permission='edit')
     def view_proposal_submit(self, db, proposal, can, form, is_post):
         if ProposalState.is_submitted(proposal.state):
             raise ErrorPage('The proposal has already been submitted.')
 
-        # TODO: validate proposal before allowing submission.
+        messages = self._validate_proposal(db, proposal)
+        has_error = any(x.is_error for x in messages)
 
         if is_post:
             if 'submit_confirm' in form:
+                if has_error:
+                    raise ErrorPage(
+                        'The proposal can not be submitted while there are '
+                        'errors in validation.')
+
                 db.update_proposal(proposal.id, state=ProposalState.SUBMITTED)
 
                 proposal_code = self.make_proposal_code(db, proposal)
@@ -232,6 +309,23 @@ class GenericProposal(object):
             'title': 'Submit Proposal',
             'proposal': proposal,
             'proposal_code': self.make_proposal_code(db, proposal),
+            'validation_messages': messages,
+            'can_submit': (not has_error),
+            'can_edit': True,
+            'is_submit_page': True,
+        }
+
+    @with_proposal(permission='view')
+    def view_proposal_validate(self, db, proposal, can):
+        messages = self._validate_proposal(db, proposal)
+
+        return {
+            'title': 'Proposal Validation',
+            'proposal': proposal,
+            'proposal_code': self.make_proposal_code(db, proposal),
+            'validation_messages': messages,
+            'can_edit': can.edit,
+            'is_submit_page': False,
         }
 
     @with_proposal(permission='edit')

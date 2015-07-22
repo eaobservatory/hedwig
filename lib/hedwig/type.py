@@ -194,6 +194,10 @@ QueueInfo = namedtuple(
     'Queue',
     ['id', 'facility_id', 'name', 'code'])
 
+ValidationMessage = namedtuple(
+    'ValidationMessage',
+    ['is_error', 'description', 'link_text', 'link_url'])
+
 
 class FormatType(object):
     PLAIN = 1
@@ -483,6 +487,8 @@ class MemberCollection(OrderedResultCollection):
           their own editor permission.)
 
         Raises UserError for any problems found.
+
+        "editor_person_id" can be set to "None" to disable the person checks.
         """
 
         n_pi = 0
@@ -492,18 +498,22 @@ class MemberCollection(OrderedResultCollection):
             if member.pi:
                 n_pi += 1
 
-            if member.person_id == editor_person_id:
+            if ((editor_person_id is not None) and
+                    (member.person_id == editor_person_id)):
                 person_is_editor = member.editor
 
         if n_pi == 0:
             raise UserError('There is no PI specified.')
         elif n_pi != 1:
-            raise UserError('There is more than one PI specified')
+            raise UserError('There is more than one PI specified.')
 
-        if person_is_editor is None:
-            raise userError('You can not remove yourself from the proposal.')
-        elif not person_is_editor:
-            raise userError('You can not remove yourself as an editor.')
+        if editor_person_id is not None:
+            if person_is_editor is None:
+                raise userError(
+                    'You can not remove yourself from the proposal.')
+            elif not person_is_editor:
+                raise userError(
+                    'You can not remove yourself as an editor.')
 
 
 class ProposalTextCollection(ResultCollection):

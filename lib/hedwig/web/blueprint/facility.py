@@ -77,6 +77,13 @@ def create_facility_blueprint(db, facility):
         return facility.view_proposal_submit(
             db, proposal_id, request.form, request.method == 'POST')
 
+    @bp.route('/proposal/<int:proposal_id>/validate')
+    @facility_template('proposal_submit.html')
+    @require_auth(require_person=True)
+    def proposal_validate(proposal_id):
+        return facility.view_proposal_validate(
+            db, proposal_id)
+
     @bp.route('/proposal/<int:proposal_id>/withdraw', methods=['GET', 'POST'])
     @facility_template('proposal_withdraw.html')
     @require_auth(require_person=True)
