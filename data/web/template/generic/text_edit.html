@@ -35,7 +35,17 @@
         <tr>
             {% for figure in figures %}
                 <td>
-                    <img src="{{ figure.target_view }}" />
+                    {% if figure.state is attachment_ready %}
+                        <img src="{{ figure.target_view }}" />
+                    {% elif figure.state is attachment_error %}
+                        <p class="warning">
+                            Error during processing
+                        </p>
+                    {% else %}
+                        <p class="not_present">
+                            Not yet processed
+                        </p>
+                    {% endif %}
                 </td>
             {% endfor %}
         </tr>
