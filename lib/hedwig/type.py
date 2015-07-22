@@ -178,6 +178,8 @@ Target = namedtuple(
     'Target',
     [x.name for x in target.columns])
 
+TargetObject = namedtuple('TargetObject', ('name', 'system', 'coord'))
+
 TargetToolInfo = namedtuple(
     'TargetToolInfo',
     ['id', 'code', 'name', 'tool'])
@@ -592,6 +594,21 @@ class TargetCollection(OrderedResultCollection):
 
             ans[k] = v._replace(system=system, x=x, y=y,
                                 time=time, priority=priority)
+
+        return ans
+
+    def to_object_list(self):
+        """
+        Returns a list of target objects representing members of the
+        collection for which coordinates have been defined.
+        """
+
+        ans = []
+
+        for v in self.values():
+            if not (v.x is None or v.y is None):
+                ans.append(TargetObject(
+                    v.name, v.system, coord_from_dec_deg(v.system, v.x, v.y)))
 
         return ans
 

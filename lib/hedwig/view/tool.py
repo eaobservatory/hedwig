@@ -18,6 +18,10 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from ..error import NoSuchRecord
+from ..web.util import HTTPForbidden, HTTPNotFound
+from . import auth
+
 
 class BaseTargetTool(object):
     def __init__(self, facility, id_):
@@ -33,3 +37,19 @@ class BaseTargetTool(object):
         """
 
         return []
+
+    def view_proposal(self, db, proposal_id, args):
+        try:
+            proposal = db.get_proposal(self.facility.id_, proposal_id,
+                                       with_members=True)
+        except NoSuchRecord:
+            raise HTTPNotFound('Proposal not found')
+
+        assert proposal.id == proposal_id
+
+        if not auth.for_proposal(db, proposal).view:
+            raise HTTPForbidden('Permission denied for this proposal.')
+
+        targets = db.search_target(proposal_id=proposal_id)
+
+        return self._view_proposal(db, proposal, targets, args)

@@ -500,11 +500,18 @@ def create_facility_blueprint(db, facility):
         facility.target_tools[tool_id] = TargetToolInfo(
             tool_id, tool_code, tool.get_name(), tool)
 
-        bp.add_url_rule('/tool/{}'.format(tool_code),
-                        'tool_{}'.format(tool_code),
-                        make_target_tool_view(
-                            db, tool, code, tool_code),
-                        methods=['GET', 'POST'])
+        (single_view, proposal_view) = make_target_tool_views(
+            db, tool, code, tool_code)
+
+        bp.add_url_rule(
+            '/tool/{}'.format(tool_code),
+            'tool_{}'.format(tool_code),
+            single_view, methods=['GET', 'POST'])
+
+        bp.add_url_rule(
+            '/tool/{}/proposal/<int:proposal_id>'.format(tool_code),
+            'tool_proposal_{}'.format(tool_code),
+            proposal_view)
 
         for (template, rule, endpoint, func,
                 options) in tool.get_custom_routes():
@@ -539,19 +546,25 @@ def make_calculator_view(db, calculator, facility_code, calculator_code,
     return view_func
 
 
-def make_target_tool_view(db, tool, facility_code, tool_code):
+def make_target_tool_views(db, tool, facility_code, tool_code):
     """
-    Create a view function for a target tool.
+    Create view functions for a target tool.
     """
 
     @templated(('generic/tool_{}.html'.format(tool_code),
                 'generic/tool_base.html'))
-    def view_func():
+    def single_view_func():
         return tool.view_single(
             db, request.args,
             (request.form if request.method == 'POST' else None))
 
-    return view_func
+    @templated(('generic/tool_{}.html'.format(tool_code),
+                'generic/tool_base.html'))
+    def proposal_view_func(proposal_id):
+        return tool.view_proposal(
+            db, proposal_id, request.args)
+
+    return (single_view_func, proposal_view_func)
 
 
 def make_custom_route(db, template, func):

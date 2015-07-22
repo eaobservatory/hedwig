@@ -27,8 +27,11 @@ from ...astro.coord import CoordSystem, parse_coord
 from ...error import NoSuchRecord, UserError
 from ...view.tool import BaseTargetTool
 from ...web.util import ErrorPage, HTTPNotFound, session, url_for
+from ...type import TargetObject
 
 TargetCoord = namedtuple('TargetCoord', ('x', 'y', 'system'))
+
+TargetClash = namedtuple('TargetClash', ('target', 'mocs'))
 
 
 class ClashTool(BaseTargetTool):
@@ -50,7 +53,7 @@ class ClashTool(BaseTargetTool):
     def get_custom_routes(self):
         return [
             ('generic/moc_view.html',
-             '/tool/clash/<int:moc_id>',
+             '/tool/clash/moc/<int:moc_id>',
              'tool_clash_moc_info',
              self.view_moc_info,
              {})
@@ -64,6 +67,60 @@ class ClashTool(BaseTargetTool):
         target = TargetCoord('', '', CoordSystem.ICRS)
         message = None
         clashes = None
+
+        if not form:
+            self._check_mocs_exist(db)
+
+        else:
+            target = target._replace(x=form['x'], y=form['y'],
+                                     system=int(form['system']))
+
+            try:
+                target_name = 'Input coordinates'
+                target_obj = TargetObject(
+                    target_name, target.system,
+                    parse_coord(target.system, target.x, target.y,
+                                target_name))
+
+                clashes = self._do_moc_search(db, [target_obj])
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Clash Tool',
+            'show_input': True,
+            'systems': CoordSystem.get_options(),
+            'run_button': 'Search',
+            'target': target,
+            'message': message,
+            'clashes': clashes,
+            'target_url': url_for('.tool_clash'),
+            'target_moc_info': '.tool_clash_moc_info',
+            'target_proposal': None,
+        }
+
+    def _view_proposal(self, db, proposal, targets, args):
+        target_objects = targets.to_object_list()
+
+        if not target_objects:
+            raise ErrorPage('The proposal does not appear to have '
+                            'any targets with coordinates.')
+
+        self._check_mocs_exist(db)
+
+        clashes = self._do_moc_search(db, target_objects)
+
+        return {
+            'title': 'Clash Tool',
+            'show_input': False,
+            'clashes': clashes,
+            'target_moc_info': '.tool_clash_moc_info',
+            'target_proposal': url_for('.proposal_view',
+                                       proposal_id=proposal.id),
+        }
+
+    def _check_mocs_exist(self, db):
         public = True
 
         if 'user_id' in session and session.get('is_admin', False):
@@ -72,46 +129,41 @@ class ClashTool(BaseTargetTool):
             # administrative access here.)
             public = None
 
-        if not form:
-            mocs = db.search_moc(facility_id=self.facility.id_, public=public)
-            if not mocs:
-                raise ErrorPage('No coverage maps have been set up yet.')
+        mocs = db.search_moc(facility_id=self.facility.id_, public=public)
+        if not mocs:
+            raise ErrorPage('No coverage maps have been set up yet.')
 
-        else:
-            target = target._replace(x=form['x'], y=form['y'],
-                                     system=int(form['system']))
+    def _do_moc_search(self, db, targets):
+        order = self.facility.get_moc_order()
+        clashes = []
+        public = True
 
-            try:
-                coord = parse_coord(target.system, target.x, target.y,
-                                    'search target')
+        if 'user_id' in session and session.get('is_admin', False):
+            # If the user has administrative access, remove public
+            # constraint.  (Probably not worthwhile to re-validate
+            # administrative access here.)
+            public = None
 
-                # If the coordinates weren't entered in ICRS, use the
-                # Astropy transformation to convert them.
-                if target.system != CoordSystem.ICRS:
-                    coord = coord.icrs
+        for target in targets:
+            # If the coordinates weren't entered in ICRS, use the
+            # Astropy transformation to convert them.
+            if target.system == CoordSystem.ICRS:
+                coord = target.coord
+            else:
+                coord = target.coord.icrs
 
-                order = self.facility.get_moc_order()
-                ra_rad = coord.spherical.lon.rad
-                dec_rad = coord.spherical.lat.rad
-                cell = ang2pix(2 ** order, pi / 2 - dec_rad, ra_rad, nest=True)
+            ra_rad = coord.spherical.lon.rad
+            dec_rad = coord.spherical.lat.rad
+            cell = ang2pix(2 ** order, pi / 2 - dec_rad, ra_rad, nest=True)
 
-                clashes = db.search_moc_cell(
-                    facility_id=self.facility.id_, public=public,
-                    order=order, cell=int(cell))
+            target_clashes = db.search_moc_cell(
+                facility_id=self.facility.id_, public=public,
+                order=order, cell=int(cell))
 
-            except UserError as e:
-                message = e.message
+            if target_clashes:
+                clashes.append(TargetClash(target, target_clashes))
 
-        return {
-            'title': 'Clash Tool',
-            'systems': CoordSystem.get_options(),
-            'run_button': 'Search',
-            'target': target,
-            'message': message,
-            'clashes': clashes,
-            'target_url': url_for('.tool_clash'),
-            'target_moc_info': '.tool_clash_moc_info',
-        }
+        return clashes
 
     def view_moc_info(self, db, args, form, moc_id):
         public = True
