@@ -172,7 +172,7 @@ invitation = Table(
     Column('person_id', None,
            ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            unique=True, nullable=False),
-    Column('expiry', DateTime(), nullable=False),
+    Column('expiry', DateTime(), nullable=False, index=True),
     **_table_opts)
 
 member = Table(
@@ -207,7 +207,7 @@ message = Table(
     Column('date', DateTime(), nullable=False),
     Column('subject', Unicode(255), nullable=False),
     Column('body', UnicodeText, nullable=False),
-    Column('timestamp_send', DateTime(), default=None),
+    Column('timestamp_send', DateTime(), default=None, index=True),
     Column('timestamp_sent', DateTime(), default=None),
     Column('identifier', Unicode(255), default=None),
     **_table_opts)
@@ -321,7 +321,7 @@ proposal_fig = Table(
     Column('sort_order', Integer, nullable=False),
     Column('role', Integer, nullable=False),
     Column('type', Integer, nullable=False),
-    Column('state', Integer, nullable=False),
+    Column('state', Integer, nullable=False, index=True),
     Column('figure', LargeBinary(2**24 - 1), nullable=False),
     Column('md5sum', String(40), nullable=False),
     Column('filename', Unicode(255), nullable=False),
@@ -362,7 +362,7 @@ proposal_pdf = Table(
     Column('role', Integer, nullable=False),
     Column('pdf', LargeBinary(2**32 - 1), nullable=False),
     Column('md5sum', String(40), nullable=False),
-    Column('state', Integer, nullable=False),
+    Column('state', Integer, nullable=False, index=True),
     Column('pages', Integer, nullable=False),
     Column('filename', Unicode(255), nullable=False),
     Column('uploaded', DateTime(), nullable=False),
@@ -406,7 +406,7 @@ reset_token = Table(
     Column('user_id', None,
            ForeignKey('user.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            unique=True, nullable=False),
-    Column('expiry', DateTime(), nullable=False),
+    Column('expiry', DateTime(), nullable=False, index=True),
     **_table_opts)
 
 semester = Table(
@@ -470,6 +470,6 @@ verify_token = Table(
            ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
     Column('email_address', Unicode(255), nullable=False),
-    Column('expiry', DateTime(), nullable=False),
+    Column('expiry', DateTime(), nullable=False, index=True),
     UniqueConstraint('person_id', 'email_address'),
     **_table_opts)
