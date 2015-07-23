@@ -493,7 +493,7 @@ class HeterodyneCalculator(JCMTCalculator):
         for (rx_id, rx_info) in HeterodyneReceiver.get_all_receivers().items():
             if rx_info.name == receiver_name:
                 if as_object:
-                    return rx_info
+                    return ReceiverInfoID(*rx_info, id=rx_id)
                 return rx_id
 
         raise UserError('Receiver not recognised.')
@@ -523,7 +523,7 @@ class HeterodyneCalculator(JCMTCalculator):
         else:
             raise UserError('Unknown source position type.')
 
-        receiver = self.get_receiver_by_name(input_['rx'])
+        receiver = self.get_receiver_by_name(input_['rx'], as_object=True)
 
         freq = input_['freq']
         freq_res = input_['res']
@@ -537,8 +537,17 @@ class HeterodyneCalculator(JCMTCalculator):
         else:
             raise CalculatorError('Frequency units not recognised.')
 
+        if freq < receiver.f_min:
+            raise UserError('The frequency {} GHz is below the minimum '
+                            'frequency ({} GHz) of this receiver.',
+                            freq, receiver.f_min)
+        elif freq > receiver.f_max:
+            raise UserError('The frequency {} GHz is above the maximum '
+                            'frequency ({} GHz) of this receiver.',
+                            freq, receiver.f_max)
+
         kwargs = {
-            'receiver': receiver,
+            'receiver': receiver.id,
             'map_mode': self.map_modes[input_['mm']].id,
             'sw_mode': self.switch_modes[input_['sw']].id,
             'freq': freq,
