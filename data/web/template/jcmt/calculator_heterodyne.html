@@ -75,12 +75,12 @@
                 {% elif value.code == 'dim_x' %}
                     <label>Raster map size</label>
                     <input type="number" name="dim_x" value="{{ input_values['dim_x'] }}" min="1" step="any" />
-                    x
+                    &times;
                     <input type="number" name="dim_y" value="{{ input_values['dim_y'] }}" min="1" step="any" />
                 {% elif value.code == 'dx' %}
                     <label>Raster pixel size</label>
                     <input type="number" name="dx" value="{{ input_values['dx'] }}" min="1" step="any" />
-                    x
+                    &times;
                     <input type="number" name="dy" value="{{ input_values['dy'] }}" min="1" step="any" />
                 {% elif value.code in ('dim_x', 'dim_y', 'dx', 'dy') %}
                     <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="any" />
