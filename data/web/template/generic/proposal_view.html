@@ -260,12 +260,14 @@
                             {% endwith %}
                         </span>
                     {% endfor %}
-
-                    {% if calculation.target_view is not none %}
-                        <br />
-                        <a href="{{ calculation.target_view }}">View calculation</a>
-                    {% endif %}
                 </p>
+                {% if calculation.target_view is not none %}
+                    <nav>
+                        <p>
+                            <a href="{{ calculation.target_view }}">View calculation</a>
+                        </p>
+                    </nav>
+                {% endif %}
             {% endfor %}
         {% endif %}
 
