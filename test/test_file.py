@@ -40,6 +40,11 @@ with closing(StringIO()) as f:
     example_png = f.getvalue()
 
 with closing(StringIO()) as f:
+    im = Image.new('RGB', (40, 30))
+    im.save(f, format='JPEG')
+    example_jpeg = f.getvalue()
+
+with closing(StringIO()) as f:
     w = PdfFileWriter()
     w.addBlankPage(1, 1)
     w.write(f)
@@ -49,6 +54,8 @@ with closing(StringIO()) as f:
 class FileTest(DummyConfigTestCase):
     def test_figure_type(self):
         self.assertEqual(determine_figure_type(example_png), FigureType.PNG)
+
+        self.assertEqual(determine_figure_type(example_jpeg), FigureType.JPEG)
 
         self.assertEqual(determine_figure_type(example_pdf), FigureType.PDF)
 
@@ -97,3 +104,10 @@ class FileTest(DummyConfigTestCase):
 
         with closing(StringIO(tp.preview)) as f:
             self.assertEqual(Image.open(f).size, (6, 12))
+
+    def test_create_thumb_jpeg(self):
+        tp = create_thumbnail_and_preview(example_jpeg, (10, 10), (20, 20))
+
+        for image in (tp.thumbnail, tp.preview):
+            self.assertIsNotNone(image)
+            self.assertEqual(determine_figure_type(image), FigureType.PNG)
