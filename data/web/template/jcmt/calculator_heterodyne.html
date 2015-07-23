@@ -39,7 +39,7 @@
                 {% elif value.code == 'freq' %}
                     <input type="number" name="{{ value.code }}" value="{{ input }}" step="any" />
                 {% elif value.code == 'res' %}
-                    <input type="number" name="{{ value.code }}" value="{{ input }}" step="any" />
+                    <input type="number" name="{{ value.code }}" value="{{ input }}" min="0" step="any" />
                     <select name="res_unit">
                         {% for res_unit in ('MHz', 'km/s') %}
                             <option value="{{ res_unit }}" {{ 'selected="selected"' | safe if res_unit == input_values['res_unit'] }} >{{ res_unit }}</option>
