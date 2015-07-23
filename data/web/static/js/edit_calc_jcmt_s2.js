@@ -12,5 +12,9 @@ $(document).ready(function () {
             pix850.val(pix850.data('default'));
             pix450.val(pix450.data('default'));
         }
+
+        disable_futile_labels();
     });
+
+    disable_futile_labels();
 });

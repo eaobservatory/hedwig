@@ -177,6 +177,10 @@ input:disabled + span.checkboxlabel {
     opacity: 0.5;
 }
 
+label.for_disabled {
+    opacity: 0.5;
+}
+
 figure {
     text-align: center;
 }

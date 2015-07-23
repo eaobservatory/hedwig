@@ -47,6 +47,8 @@ $(document).ready(function () {
         if (sep_off_disabled) {
             $('input[name=sep_off]').prop('checked', false);
         }
+
+        disable_futile_labels();
     });
 
     var check_mode_opt = (function () {
