@@ -75,6 +75,9 @@ def with_proposal(permission):
     authorization objects as the first two arguments.
 
     "permission" should be one of: "view", "edit".
+
+    Note: this currently can only be used to decorate methods of
+    facility classes because it uses self.id_ for the facility ID.
     """
 
     def decorator(f):
