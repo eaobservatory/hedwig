@@ -43,3 +43,11 @@ div#content {
 img.pdf_preview {
     border: 1px solid black;
 }
+
+span.label {
+    background: #888;
+    color: #FFF;
+    border-radius: 1ex;
+    padding-left: 1ex;
+    padding-right: 1ex;
+}

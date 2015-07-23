@@ -21,3 +21,11 @@ p.missing {
     background: inherit;
     color: inherit;
 }
+
+span.label {
+    font-weight: bold;
+}
+
+span.label + span.label {
+    padding-left: 1ex;
+}
