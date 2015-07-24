@@ -485,6 +485,7 @@ class MemberCollection(OrderedResultCollection):
         Checks:
 
         * There is exactly one PI.
+        * There is at least one editor.
         * The given person ID is an editor.  (To prevent people removing
           their own editor permission.)
 
@@ -494,11 +495,15 @@ class MemberCollection(OrderedResultCollection):
         """
 
         n_pi = 0
+        n_editor = 0
         person_is_editor = None
 
         for member in self.values():
             if member.pi:
                 n_pi += 1
+
+            if member.editor:
+                n_editor += 1
 
             if ((editor_person_id is not None) and
                     (member.person_id == editor_person_id)):
@@ -508,6 +513,9 @@ class MemberCollection(OrderedResultCollection):
             raise UserError('There is no PI specified.')
         elif n_pi != 1:
             raise UserError('There is more than one PI specified.')
+
+        if n_editor == 0:
+            raise UserError('There are no specified editors.')
 
         if editor_person_id is not None:
             if person_is_editor is None:
