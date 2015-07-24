@@ -181,6 +181,16 @@ label.for_disabled {
     opacity: 0.5;
 }
 
+li.separator {
+    font-variant: small-caps;
+    color: #888;
+    padding-bottom: 1ex;
+}
+
+li.separator:not(:first-child) {
+    padding-top: 3ex;
+}
+
 figure {
     text-align: center;
 }

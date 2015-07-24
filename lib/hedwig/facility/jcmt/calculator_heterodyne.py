@@ -114,26 +114,33 @@ class HeterodyneCalculator(JCMTCalculator):
         if version == 1:
             common_inputs = [
                 CalculatorValue('rx', 'Receiver', 'Receiver', '{}', None),
-                CalculatorValue('mm', 'Mapping mode', 'Mode', '{}', None),
-                CalculatorValue('sw', 'Switching mode', 'Switch', '{}', None),
                 CalculatorValue('freq', 'Frequency',
                                 '\u03bd', '{:.3f}', 'GHz'),
                 CalculatorValue('res', 'Frequency resolution',
                                 '\u0394\u03bd', '{:.4f}', None),
                 CalculatorValue('res_unit', 'Resolution unit',
                                 '\u0394\u03bd unit', '{}', None),
-                CalculatorValue('tau', '225 GHz opacity',
-                                '\u03c4\u2082\u2082\u2085', '{:.3f}', None),
-                CalculatorValue('pos', 'Source position',
-                                'Pos.', '{:.1f}', '\u00b0'),
-                CalculatorValue('pos_type', 'Source position type',
-                                'Pos. type', '{}', None),
                 CalculatorValue('sb', 'Sideband mode',
                                 'SB', '{}', None),
                 CalculatorValue('dual_pol', 'Dual polarization',
                                 'DP', '{}', None),
+                CalculatorValue('cont', 'Continuum mode',
+                                'CM', '{}', None),
+
+                CalculatorValue('pos', 'Source position',
+                                'Pos.', '{:.1f}', '\u00b0'),
+                CalculatorValue('pos_type', 'Source position type',
+                                'Pos. type', '{}', None),
+                CalculatorValue('tau', '225 GHz opacity',
+                                '\u03c4\u2082\u2082\u2085', '{:.3f}', None),
+
+                CalculatorValue('mm', 'Mapping mode', 'Mode', '{}', None),
+                CalculatorValue('sw', 'Switching mode', 'Switch', '{}', None),
                 CalculatorValue('n_pt', 'Number of points',
                                 'Points', '{:d}', None),
+                CalculatorValue('sep_off', 'Separate offs',
+                                'SO', '{}', None),
+
                 CalculatorValue('dim_x', 'Raster width',
                                 'x', '{}', '"'),
                 CalculatorValue('dim_y', 'Raster height',
@@ -144,10 +151,6 @@ class HeterodyneCalculator(JCMTCalculator):
                                 'dy', '{}', '"'),
                 CalculatorValue('basket', 'Basket weave',
                                 'BW', '{}', None),
-                CalculatorValue('sep_off', 'Separate offs',
-                                'SO', '{}', None),
-                CalculatorValue('cont', 'Continuum mode',
-                                'CM', '{}', None),
             ]
 
         else:
@@ -418,6 +421,14 @@ class HeterodyneCalculator(JCMTCalculator):
             'map_modes': self.map_modes,
             'switch_modes': self.switch_modes,
             'jiggle_patterns': self.itc.get_jiggle_patterns(),
+            'input_separators': {
+                'rx': 'Receiver',
+                'pos': 'Source and Conditions',
+                'mm': 'Observation',
+                'rms': 'Requirement',
+                'elapsed': 'Requirement',
+                'int_time': 'Requirement',
+            },
         }
 
     def parse_input(self, mode, input_):

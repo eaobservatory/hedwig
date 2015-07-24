@@ -3,6 +3,13 @@
 
 {% block calculator_input_list %}
     {% for value in inputs %}{% if value.code not in ('dim_y', 'dy', 'res_unit', 'pos_type') %}
+        {% if value.code in input_separators %}
+            <li class="separator">
+                {{ input_separators[value.code] }}
+            </li>
+        {% elif value.code == 'dim_x' %}
+            <li>&nbsp;</li>
+        {% endif %}
         {% with input = input_values[value.code] %}
             <li>
                 {% if value.code not in ('dim_x', 'dx') %}

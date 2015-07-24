@@ -85,12 +85,16 @@ class SCUBA2Calculator(JCMTCalculator):
         if version == 1:
             common_inputs = [
                 CalculatorValue(
-                    'map',    'Map type', 'Map', '{}', None),
-                CalculatorValue(
                     'pos',    'Source position', 'Pos.', '{:.1f}', '\u00b0'),
                 CalculatorValue(
                     'pos_type', 'Source position type',
                     'Pos. type', '{}', None),
+                CalculatorValue(
+                    'tau',    '225 GHz opacity',
+                    '\u03c4\u2082\u2082\u2085', '{}', None),
+
+                CalculatorValue(
+                    'map',    'Map type', 'Map', '{}', None),
                 CalculatorValue(
                     'mf',     'Matched filter',
                     'Match. filt.', '{}', None),
@@ -99,10 +103,7 @@ class SCUBA2Calculator(JCMTCalculator):
                     'Pixel\u2088\u2085\u2080', '{}', '"'),
                 CalculatorValue(
                     'pix450', '450 \u00b5m pixel size',
-                     'Pixel\u2084\u2085\u2080', '{}', '"'),
-                CalculatorValue(
-                    'tau',    '225 GHz opacity',
-                    '\u03c4\u2082\u2082\u2085', '{}', None),
+                    'Pixel\u2084\u2085\u2080', '{}', '"'),
             ]
         else:
             raise CalculatorError('Unknown version.')
@@ -292,6 +293,12 @@ class SCUBA2Calculator(JCMTCalculator):
             'default': {
                 'pix850': self.default_pix850,
                 'pix450': self.default_pix450,
+            },
+            'input_separators': {
+                'pos': 'Source and Conditions',
+                'map': 'Observation',
+                'wl': 'Requirement',
+                'time': 'Requirement',
             },
         }
 
