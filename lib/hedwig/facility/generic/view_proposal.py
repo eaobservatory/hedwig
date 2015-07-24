@@ -650,6 +650,8 @@ class GenericProposal(object):
         if not ProposalState.can_edit(proposal.state):
             raise ErrorPage('This proposal is not in an editable state.')
 
+        proposal_code = self.make_proposal_code(db, proposal)
+
         if form:
             if 'submit_cancel' in form:
                 raise HTTPRedirect(url_for('.proposal_view',
@@ -667,9 +669,8 @@ class GenericProposal(object):
                         'must make someone else an editor '
                         'before removing yourself.')
 
+                flash('You have been removed from proposal {}.', proposal_code)
                 raise HTTPRedirect(url_for('home_page'))
-
-        proposal_code = self.make_proposal_code(db, proposal)
 
         return {
             'title': 'Remove Yourself from Proposal',
