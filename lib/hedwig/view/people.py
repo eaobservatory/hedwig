@@ -870,7 +870,7 @@ def invitation_token_accept(db, args, form, is_post, remote_addr):
             # Redirect to the proposal, if we determined it, otherwise
             # the profile page.
             raise HTTPRedirect(target if target is not None else
-                               url_for('.person_view', person_id=person.id))
+                               url_for('dashboard', person_id=person.id))
 
         person = db.get_invitation_person(
             token, with_email=True, with_institution=True)
