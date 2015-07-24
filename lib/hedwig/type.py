@@ -511,10 +511,10 @@ class MemberCollection(OrderedResultCollection):
 
         if editor_person_id is not None:
             if person_is_editor is None:
-                raise userError(
+                raise UserError(
                     'You can not remove yourself from the proposal.')
             elif not person_is_editor:
-                raise userError(
+                raise UserError(
                     'You can not remove yourself as an editor.')
 
 
