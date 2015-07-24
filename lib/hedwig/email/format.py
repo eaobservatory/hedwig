@@ -38,8 +38,14 @@ def get_environment():
             trim_blocks=True,
             lstrip_blocks=True)
 
-        environment.globals['application_name'] = get_config().get(
-            'application', 'name')
+        config = get_config()
+
+        environment.globals.update({
+            'application_name': config.get('application', 'name'),
+            'email_footer_title': config.get('email', 'footer_title'),
+            'email_footer_url': config.get('email', 'footer_url'),
+            'email_footer_email': config.get('email', 'footer_email'),
+        })
 
         environment.filters['format_datetime'] = \
             lambda x: x.strftime('%Y-%m-%d %H:%M')

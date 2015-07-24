@@ -19,6 +19,9 @@ max_fig_size=1
 [email]
 server=
 from=
+footer_title=
+footer_url=
+footer_email=
 
 [utilities]
 ghostscript=/usr/bin/ghostscript
