@@ -529,6 +529,20 @@ class GenericProposal(object):
             member['email'] = form.get('email', '')
             member['affiliation_id'] = int(form['affiliation_id'])
 
+            affiliation = affiliations.get(member['affiliation_id'])
+            if affiliation is None:
+                raise ErrorPage('Selected affiliation not found.')
+
+            email_ctx = {
+                'proposal': proposal,
+                'inviter_name': session['person']['name'],
+                'affiliation': affiliation.name,
+                'is_editor': member['editor'],
+                'target_semester': url_for('.semester_calls',
+                                           semester_id=proposal.semester_id,
+                                           _external=True),
+            }
+
             if 'submit-link' in form:
                 try:
                     if member['person_id'] is None:
@@ -548,19 +562,18 @@ class GenericProposal(object):
                                   editor=member['editor'],
                                   observer=member['observer'])
 
+                    email_ctx.update({
+                        'recipient_name': person.name,
+                        'target_url': url_for(
+                            '.proposal_view',
+                            proposal_id=proposal.id, _external=True),
+                    })
+
                     db.add_message(
                         'Proposal {0} invitation'.format(
                             self.make_proposal_code(db, proposal)),
-                        render_email_template(
-                            'proposal_invitation.txt', {
-                                'proposal': proposal,
-                                'recipient_name': person.name,
-                                'inviter_name': session['person']['name'],
-                                'target_url': url_for(
-                                    '.proposal_view',
-                                    proposal_id=proposal.id, _external=True),
-                            },
-                            facility=self),
+                        render_email_template('proposal_invitation.txt',
+                                              email_ctx, facility=self),
                         [member['person_id']])
 
                     flash('{0} has been added to the proposal.', person.name)
@@ -585,24 +598,23 @@ class GenericProposal(object):
                                   observer=member['observer'])
                     (token, expiry) = db.add_invitation(person_id)
 
+                    email_ctx.update({
+                        'token': token,
+                        'expiry': expiry,
+                        'recipient_name': member['name'],
+                        'target_url': url_for(
+                            'people.invitation_token_enter',
+                            token=token, _external=True),
+                        'target_plain': url_for(
+                            'people.invitation_token_enter',
+                            _external=True),
+                    })
+
                     db.add_message(
                         'Proposal {0} invitation'.format(
                             self.make_proposal_code(db, proposal)),
-                        render_email_template(
-                            'proposal_invitation.txt', {
-                                'token': token,
-                                'expiry': expiry,
-                                'proposal': proposal,
-                                'recipient_name': member['name'],
-                                'inviter_name': session['person']['name'],
-                                'target_url': url_for(
-                                    'people.invitation_token_enter',
-                                    token=token, _external=True),
-                                'target_plain': url_for(
-                                    'people.invitation_token_enter',
-                                    _external=True),
-                            },
-                            facility=self),
+                        render_email_template('proposal_invitation.txt',
+                                              email_ctx, facility=self),
                         [person_id])
 
                     flash('{0} has been added to the proposal.',

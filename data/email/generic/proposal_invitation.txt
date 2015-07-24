@@ -3,11 +3,14 @@
 {% block content %}
 You have been invited by {{ inviter_name }} to participate in a proposal
 to use {{ facility_definite_name }} entitled "{{ proposal.title }}".
-This is a proposal in the {{ proposal.queue_name }} queue
+This is a proposal in the {{ proposal.queue_name }} Queue
 for Semester {{ proposal.semester_name }}.
+{% if is_editor %}
+You have also been given permission to edit the proposal.
+{% endif %}
 
 {% if token is defined %}
-To accept this invitation and view the proposal, you will need to
+To view the proposal on-line, you will need to
 log in or register with our system.
 Please begin by entering the following invitation code
 on the invitation page:
@@ -26,9 +29,30 @@ If you do not wish to register with our system, you may still be listed
 as a member of a proposal, but you will not be able to view the proposal
 through the on-line system.
 {% else %}
-Since you are already registered with our system, you may view
-the proposal at:
+Since you are already registered with our system, you may find the
+proposal on your "dashboard" page, or view it directly at:
 
 {{ target_url }}
 {% endif %}
+
+Your affiliation for the purpose of this proposal
+has been given as "{{ affiliation }}".  If this is not correct,
+given the requirements of the {{ proposal.queue_name }} Queue,
+{% if is_editor %}
+you may edit your entry in the proposal's members list.
+{% else %}
+please ask an editor of the proposal to correct it.
+{% endif %}
+The details of the call for proposals and the queue
+requirements can be found on this page:
+
+{{ target_semester }}
+
+Please note that your name has been provisionally added to the
+proposal.
+If you do not wish to be involved, you may remove yourself
+from the proposal via the on-line system,
+or contact the proposal author.
+If you have any remaining concerns, please contact us
+at the address below.
 {% endblock %}
