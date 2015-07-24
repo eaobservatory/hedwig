@@ -2,7 +2,7 @@
 
 {% block content %}
 You have been invited by {{ inviter_name }} to participate in a proposal
-to use {{ facility_name }} entitled "{{ proposal.title }}".
+to use {{ facility_definite_name }} entitled "{{ proposal.title }}".
 This is a proposal in the {{ proposal.queue_name }} queue
 for Semester {{ proposal.semester_name }}.
 

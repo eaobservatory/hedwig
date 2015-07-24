@@ -66,6 +66,19 @@ class Generic(GenericAdmin, GenericProposal):
 
         return 'Generic Facility'
 
+    def get_definite_name(self):
+        """
+        Get the name of the facility, with a definate article
+        for use in a sentence, if one would be appropriate.
+
+        e.g. "the JCMT" or "UKIRT".
+
+        Subclasses should override this method if they do not want
+        the word "the" to appear.
+        """
+
+        return 'the {}'.format(self.get_name())
+
     def get_calculator_classes(self):
         """
         Get a tuple of calculator classes which can be used with this
