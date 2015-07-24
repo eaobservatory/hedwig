@@ -421,6 +421,67 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(member.proposal_id, proposal_id)
         self.assertEqual(member.person_id, person_id_2)
 
+    def test_sync_proposal_member(self):
+        (call_id, affiliation_id) = self._create_test_call('s1', 'q1')
+        person_id_1 = self.db.add_person('Person 1')
+        person_id_2 = self.db.add_person('Person 2')
+        proposal_id = self.db.add_proposal(
+            call_id, person_id_1, affiliation_id, 'Proposal Title')
+        self.assertIsInstance(proposal_id, int)
+
+        self.db.add_member(proposal_id, person_id_2, affiliation_id)
+
+        members = self.db.search_member(proposal_id=proposal_id)
+        self.assertEqual(len(members), 2)
+
+        (member_id_1, member_id_2) = members.keys()
+        self.assertEqual(members[member_id_1].person_id, person_id_1)
+        self.assertEqual(members[member_id_2].person_id, person_id_2)
+
+        (n_insert, n_update, n_delete) = self.db.sync_proposal_member(
+            proposal_id, members, person_id_1)
+        self.assertEqual(n_insert, 0)
+        self.assertEqual(n_update, 0)
+        self.assertEqual(n_delete, 0)
+
+        with self.assertRaisesRegexp(UserError, 'no specified editors'):
+            mem_c = members.copy()
+            mem_c[member_id_1] = mem_c[member_id_1]._replace(editor=False)
+            self.db.sync_proposal_member(proposal_id, mem_c, person_id_1)
+
+        with self.assertRaisesRegexp(UserError, 'no PI specified'):
+            mem_c = members.copy()
+            mem_c[member_id_1] = mem_c[member_id_1]._replace(pi=False)
+            self.db.sync_proposal_member(proposal_id, mem_c, person_id_1)
+
+        with self.assertRaisesRegexp(UserError, 'more than one PI specified'):
+            mem_c = members.copy()
+            mem_c[member_id_2] = mem_c[member_id_2]._replace(pi=True)
+            self.db.sync_proposal_member(proposal_id, mem_c, person_id_1)
+
+        with self.assertRaisesRegexp(UserError, 'yourself as an editor'):
+            mem_c = members.copy()
+            mem_c[member_id_1] = mem_c[member_id_1]._replace(editor=False)
+            mem_c[member_id_2] = mem_c[member_id_2]._replace(editor=True)
+            self.db.sync_proposal_member(proposal_id, mem_c, person_id_1)
+
+        del members[member_id_1]
+        members[member_id_2] = members[member_id_2]._replace(
+            editor=True, pi=True)
+
+        with self.assertRaisesRegexp(UserError, 'can not remove yourself'):
+            self.db.sync_proposal_member(proposal_id, members, person_id_1)
+
+        (n_insert, n_update, n_delete) = self.db.sync_proposal_member(
+            proposal_id, members, None)
+
+        self.assertEqual(n_insert, 0)
+        self.assertEqual(n_update, 1)
+        self.assertEqual(n_delete, 1)
+
+        members = self.db.search_member(proposal_id=proposal_id)
+        self.assertEqual(list(members.keys()), [member_id_2])
+
     def test_sync_member_institution(self):
         (call_id, affiliation_id) = self._create_test_call(
             'semester1', 'queue1')
