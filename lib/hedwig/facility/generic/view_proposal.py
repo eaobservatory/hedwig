@@ -23,7 +23,7 @@ from collections import namedtuple
 from ...astro.coord import CoordSystem
 from ...email.format import render_email_template
 from ...config import get_config
-from ...error import NoSuchRecord, UserError
+from ...error import ConsistencyError, NoSuchRecord, UserError
 from ...file.info import determine_figure_type, determine_pdf_page_count
 from ...type import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
@@ -114,6 +114,9 @@ class GenericProposal(object):
         ctx = {
             'title': proposal.title,
             'can_edit': can.edit,
+            'can_remove_self': (ProposalState.can_edit(proposal.state) and
+                                any(x.person_id == session['person']['id']
+                                    for x in proposal.members.values())),
             'is_submitted': ProposalState.is_submitted(proposal.state),
             'proposal': proposal._replace(members=[
                 x._replace(institution_country=countries.get(
@@ -640,6 +643,39 @@ class GenericProposal(object):
             'affiliations': affiliations.values(),
             'member': member,
             'proposal_code': self.make_proposal_code(db, proposal),
+        }
+
+    @with_proposal(permission='view')
+    def view_member_remove_self(self, db, proposal, can, form):
+        if not ProposalState.can_edit(proposal.state):
+            raise ErrorPage('This proposal is not in an editable state.')
+
+        if form:
+            if 'submit_cancel' in form:
+                raise HTTPRedirect(url_for('.proposal_view',
+                                           proposal_id=proposal.id))
+
+            elif 'submit_confirm' in form:
+                try:
+                    db.delete_member_person(
+                        proposal_id=proposal.id,
+                        person_id=session['person']['id'])
+                except ConsistencyError:
+                    raise ErrorPage(
+                        'It was not possible to remove you from the proposal. '
+                        'If you are the only editor of the proposal, you '
+                        'must make someone else an editor '
+                        'before removing yourself.')
+
+                raise HTTPRedirect(url_for('home_page'))
+
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        return {
+            'title': 'Remove Yourself from Proposal',
+            'message':
+                'Are you sure you wish to remove yourself from '
+                'proposal {}?'.format(proposal_code),
         }
 
     @with_proposal(permission='edit')

@@ -121,6 +121,15 @@ def create_facility_blueprint(db, facility):
         return facility.view_member_add(
             db, proposal_id, request.form, request.method == 'POST')
 
+    @bp.route('/proposal/<int:proposal_id>/member/remove',
+              methods=['GET', 'POST'])
+    @templated('confirm.html')
+    @require_auth(require_person=True)
+    def remove_self(proposal_id):
+        return facility.view_member_remove_self(
+            db, proposal_id,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/proposal/<int:proposal_id>/target', methods=['GET', 'POST'])
     @facility_template('target_edit.html')
     @require_auth(require_person=True)

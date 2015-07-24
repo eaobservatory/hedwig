@@ -139,6 +139,14 @@
             </p>
         </nav>
         {% endif %}
+
+        {% if can_remove_self %}
+            <nav>
+                <p>
+                    <a href="{{ url_for('.remove_self', proposal_id=proposal.id) }}">Remove yourself from this proposal</a>
+                </p>
+            </nav>
+        {% endif %}
     </section>
 {% endblock %}
 
