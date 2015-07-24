@@ -34,6 +34,10 @@ ul#flashes li {
     margin-left: 2ex;
 }
 
+form ol li:not(:first-child) {
+    padding-top: 0.5ex;
+}
+
 form ol li {
     list-style: none;
 }
