@@ -8,7 +8,7 @@
 {% block content %}
 
 {% block calculator_proposal_link %}
-    {% if proposal_id is not none and calculation_id is not none and proposal_id == calculation_proposal %}
+    {% if show_proposal_link %}
         <p>
             <a href="{{ url_for('.proposal_view', proposal_id=proposal_id) }}">Back to proposal</a>
         </p>
@@ -123,6 +123,9 @@
     {% if calculation_id is not none %}
         <input type="hidden" name="calculation_id" value="{{ calculation_id }}" />
         <input type="hidden" name="calculation_proposal" value="{{ calculation_proposal }}" />
+    {% endif %}
+    {% if for_proposal_id is not none %}
+        <input type="hidden" name="for_proposal_id" value="{{ for_proposal_id }}" />
     {% endif %}
 {% endblock %}
 
