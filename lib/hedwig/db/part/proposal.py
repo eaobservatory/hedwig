@@ -292,6 +292,30 @@ class ProposalPart(object):
 
             return result.inserted_primary_key[0]
 
+    def delete_member_person(self, proposal_id, person_id):
+        """
+        Remove a member from a proposal, by person identifier.
+        """
+
+        with self._transaction() as conn:
+            result = conn.execute(member.delete().where(and_(
+                member.c.proposal_id == proposal_id,
+                member.c.person_id == person_id
+            )))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no row matched deleting member person {0} for {0}',
+                    person_id, proposal_id)
+
+            # Check that the proposal still has at least one member: if not,
+            # raise an exception to abort the transaction.
+            if 1 > conn.execute(select([count(member.c.id)]).where(and_(
+                    member.c.proposal_id == proposal_id,
+                    member.c.editor))).scalar():
+                raise ConsistencyError(
+                    'deleting this member would leave no editors')
+
     def delete_proposal_figure(self, proposal_id, role, id_):
         stmt = proposal_fig.delete()
 

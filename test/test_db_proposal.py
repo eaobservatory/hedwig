@@ -551,6 +551,31 @@ class DBProposalTest(DBTestCase):
         for row in result.values():
             self.assertEqual(row.resolved_institution_id, expect.pop())
 
+    def test_delete_member_person(self):
+        (call_id, affiliation_id) = self._create_test_call('s1', 'q1')
+        person_id_1 = self.db.add_person('Person 1')
+        person_id_2 = self.db.add_person('Person 2')
+        person_id_3 = self.db.add_person('Person 3')
+        proposal_id = self.db.add_proposal(
+            call_id, person_id_1, affiliation_id, 'Proposal Title')
+        self.assertIsInstance(proposal_id, int)
+
+        self.db.add_member(proposal_id, person_id_2, affiliation_id)
+
+        with self.assertRaisesRegexp(ConsistencyError,
+                                     'would leave no editors'):
+            self.db.delete_member_person(proposal_id, person_id_1)
+
+        self.db.add_member(proposal_id, person_id_3, affiliation_id,
+                           editor=True)
+
+        self.db.delete_member_person(proposal_id, person_id_1)
+
+        self.assertEqual(
+            [x.person_id for x in
+             self.db.search_member(proposal_id=proposal_id).values()],
+            [person_id_2, person_id_3])
+
     def test_proposal_text(self):
         # "Define" extra text roles for the purpose of testing this
         # method before multiple roles are implemented.
