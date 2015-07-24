@@ -76,7 +76,6 @@
                     <input type="radio" name="{{ value.code }}" value="dsb" {{ 'checked="checked"' | safe if input == 'dsb' }} /><span class="checkboxlabel">Dual sideband</span>
                 {% elif value.code == 'dual_pol' %}
                     <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
-                    <span class="checkboxlabel">Dual polarization</span>
                 {% elif value.code == 'n_pt' %}
                     <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="1" />
                 {% elif value.code == 'dim_x' %}
@@ -93,13 +92,10 @@
                     <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="any" />
                 {% elif value.code == 'basket' %}
                     <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
-                    <span class="checkboxlabel">Basket weave</span>
                 {% elif value.code == 'sep_off' %}
                     <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
-                    <span class="checkboxlabel">Separate offs</span>
                 {% elif value.code == 'cont' %}
                     <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
-                    <span class="checkboxlabel">Continuum mode</span>
                 {% else %}
                     <input type="text" name="{{ value.code }}" value="{{ input }}" />
                 {% endif %}
