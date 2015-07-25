@@ -26,6 +26,17 @@ from sqlalchemy.types import Boolean, DateTime, Float, Integer, \
 
 from ...db.meta import metadata, _table_opts
 
+
+jcmt_options = Table(
+    'jcmt_options',
+    metadata,
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           primary_key=True, nullable=False),
+    Column('target_of_opp', Boolean, nullable=False),
+    Column('daytime', Boolean, nullable=False),
+    **_table_opts)
+
 jcmt_request = Table(
     'jcmt_request',
     metadata,

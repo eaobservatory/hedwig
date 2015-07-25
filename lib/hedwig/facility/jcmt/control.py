@@ -18,12 +18,31 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from sqlalchemy.sql import select
+from sqlalchemy.sql.functions import count
+
 from ...db.meta import proposal
-from .meta import jcmt_request
-from .type import JCMTRequest, JCMTRequestCollection
+from ...error import ConsistencyError
+from .meta import jcmt_options, jcmt_request
+from .type import JCMTOptions, JCMTRequest, JCMTRequestCollection
 
 
 class JCMTPart(object):
+    def get_jcmt_options(self, proposal_id):
+        """
+        Retrieve the JCMT proposal options for a given proposal.
+        """
+
+        with self._transaction() as conn:
+            row = conn.execute(jcmt_options.select().where(
+                jcmt_options.c.proposal_id == proposal_id)).first()
+
+            if row is None:
+                return None
+
+            else:
+                return JCMTOptions(**row)
+
     def search_jcmt_request(self, proposal_id):
         """
         Retrieve the observing requests for the given proposal.
@@ -39,6 +58,37 @@ class JCMTPart(object):
                 ans[row['id']] = JCMTRequest(**row)
 
         return ans
+
+    def set_jcmt_options(self, proposal_id, target_of_opp, daytime):
+        """
+        Set the JCMT proposal options for a given proposal.
+        """
+
+        values = {
+            jcmt_options.c.target_of_opp: target_of_opp,
+            jcmt_options.c.daytime: daytime,
+        }
+
+        with self._transaction() as conn:
+            if 0 < conn.execute(select(
+                    [count(jcmt_options.c.proposal_id)]).where(
+                        jcmt_options.c.proposal_id == proposal_id)).scalar():
+                # Update existing options.
+                result = conn.execute(jcmt_options.update().where(
+                    jcmt_options.c.proposal_id == proposal_id
+                ).values(values))
+
+                if result.rowcount != 1:
+                    raise ConsistencyError(
+                        'no rows matched updating JCMT options')
+
+            else:
+                # Add new options record.
+                values.update({
+                    jcmt_options.c.proposal_id: proposal_id,
+                })
+
+                conn.execute(jcmt_options.insert().values(values))
 
     def sync_jcmt_proposal_request(self, proposal_id, records,
                                    _test_skip_check=False):

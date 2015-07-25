@@ -22,7 +22,11 @@ from collections import OrderedDict, namedtuple
 
 from ...type import ResultTable
 from ...error import UserError
-from .meta import jcmt_request
+from .meta import jcmt_options, jcmt_request
+
+JCMTOptions = namedtuple(
+    'JCMTOptions',
+    [x.name for x in jcmt_options.columns])
 
 JCMTRequest = namedtuple(
     'JCMTRequest',

@@ -66,6 +66,16 @@
     </p>
 
     <p>
+        {% for (option, option_name) in options.items() %}
+            <input type="checkbox" name="option_{{ option }}" {{ 'checked="checked"' | safe if option_values[option] }} />
+            <span class="checkboxlabel">{{ option_name }}</span>
+            {% if not loop.last %}
+                <br />
+            {% endif %}
+        {% endfor %}
+    </p>
+
+    <p>
         <input type="submit" name="submit-save" value="Save" />
     </p>
 

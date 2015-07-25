@@ -38,6 +38,14 @@
             </table>
         {% endif %}
 
+        {% if jcmt_options %}
+            <p>
+                {% for jcmt_option in jcmt_options %}
+                    <span class="label">{{ jcmt_option }}</span>
+                {% endfor %}
+            </p>
+        {% endif %}
+
         {% if can_edit %}
             <nav>
                 <p>

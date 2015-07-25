@@ -18,6 +18,8 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import OrderedDict
+
 from ...error import UserError
 from ...web.util import HTTPRedirect, flash, url_for
 from ...view.util import organise_collection, with_proposal
@@ -25,11 +27,17 @@ from ...type import ValidationMessage
 from ..generic.view import Generic
 from .calculator_heterodyne import HeterodyneCalculator
 from .calculator_scuba2 import SCUBA2Calculator
-from .type import JCMTInstrument, JCMTRequest, JCMTRequestCollection, \
+from .type import JCMTInstrument, JCMTOptions, \
+    JCMTRequest, JCMTRequestCollection, \
     JCMTWeather
 
 
 class JCMT(Generic):
+    options = OrderedDict((
+        ('target_of_opp', 'Target of opportunity'),
+        ('daytime', 'Daytime observation'),
+    ))
+
     @classmethod
     def get_code(cls):
         return 'jcmt'
@@ -50,8 +58,15 @@ class JCMT(Generic):
 
         requests = db.search_jcmt_request(proposal_id=proposal.id)
 
+        option_values = db.get_jcmt_options(proposal_id=proposal.id)
+        options = []
+        for (option, option_name) in self.options.items():
+            if getattr(option_values, option):
+                options.append(option_name)
+
         ctx.update({
             'requests': requests.to_table(),
+            'jcmt_options': options,
         })
 
         return ctx
@@ -76,6 +91,10 @@ class JCMT(Generic):
         message = None
 
         records = db.search_jcmt_request(proposal_id=proposal.id)
+        option_values = db.get_jcmt_options(proposal_id=proposal.id)
+        if option_values is None:
+            option_values = JCMTOptions(
+                proposal.id, *((False,) * (len(JCMTOptions._fields) - 1)))
 
         if is_post:
             # Temporary dictionaries for new records.
@@ -111,8 +130,15 @@ class JCMT(Generic):
             records = organise_collection(JCMTRequestCollection,
                                           updated_records, added_records)
 
+            option_update = {}
+            for option in self.options.keys():
+                option_update[option] = 'option_{}'.format(option) in form
+            option_values = option_values._replace(**option_update)
+
             try:
                 db.sync_jcmt_proposal_request(proposal.id, records)
+
+                db.set_jcmt_options(**option_values._asdict())
 
                 flash('The observing request has been saved.')
 
@@ -129,5 +155,7 @@ class JCMT(Generic):
             'requests': records.values(),
             'instruments': JCMTInstrument.get_options(),
             'weathers': JCMTWeather.get_options(),
+            'options': self.options,
+            'option_values': option_values,
             'proposal_code': self.make_proposal_code(db, proposal),
         }
