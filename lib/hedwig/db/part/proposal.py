@@ -1181,8 +1181,7 @@ class ProposalPart(object):
 
                 if result.rowcount != 1:
                     raise ConsistencyError(
-                        'no rows matched updating proposal figure alternate',
-                        proposal_id, role)
+                        'no rows matched updating proposal figure alternate')
 
             else:
                 # Add new alternate.
