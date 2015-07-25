@@ -119,10 +119,15 @@ class ExampleCalculator(BaseCalculator):
         else:
             raise CalculatorError('Unknown version.')
 
-    def parse_input(self, mode, input_):
+    def parse_input(self, mode, input_, defaults=None):
         """
         Parse inputs as obtained from the HTML form (typically unicode)
         and return values suitable for calculation (perhaps float).
+
+        If defaults are specified, these are used in place of missing
+        values to avoid a UserError being raised.  This is useful
+        in the case of changing mode when the form has been
+        filled in incompletely.
         """
 
         parsed = {}
@@ -132,7 +137,11 @@ class ExampleCalculator(BaseCalculator):
                 parsed[field.code] = float(input_[field.code])
 
             except ValueError:
-                raise UserError('Invalid value for {}.', field.name)
+                if (not input_[field.code]) and (defaults is not None):
+                    parsed[field.code] = defaults[field.code]
+
+                else:
+                    raise UserError('Invalid value for {}.', field.name)
 
         return parsed
 

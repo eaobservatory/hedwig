@@ -431,7 +431,7 @@ class HeterodyneCalculator(JCMTCalculator):
             },
         }
 
-    def parse_input(self, mode, input_):
+    def parse_input(self, mode, input_, defaults=None):
         """
         Parse inputs as obtained from the HTML form (typically unicode)
         and return values suitable for calculation (perhaps float).
@@ -473,7 +473,11 @@ class HeterodyneCalculator(JCMTCalculator):
                     parsed[field.code] = input_[field.code]
 
             except ValueError:
-                raise UserError('Invalid value for {}.', field.name)
+                if (not input_[field.code]) and (defaults is not None):
+                    parsed[field.code] = defaults[field.code]
+
+                else:
+                    raise UserError('Invalid value for {}.', field.name)
 
         if parsed['pos_type'] == 'dec':
             if not -90 <= parsed['pos'] <= 90:

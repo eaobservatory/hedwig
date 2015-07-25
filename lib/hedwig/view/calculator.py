@@ -86,9 +86,12 @@ class BaseCalculator(object):
                 # in the event of a parsing error, we can still put the user
                 # data back in the form for correction.
                 input_values = self.get_form_input(inputs, form)
-                parsed_input = self.parse_input(mode, input_values)
 
                 if 'submit_mode' in form:
+                    parsed_input = self.parse_input(
+                        mode, input_values,
+                        defaults=self.get_default_input(mode))
+
                     new_mode = int(form['mode'])
 
                     if not self.is_valid_mode(mode):
@@ -106,9 +109,13 @@ class BaseCalculator(object):
                         mode = new_mode
 
                 elif 'submit_calc' in form:
+                    parsed_input = self.parse_input(mode, input_values)
+
                     output = self(mode, parsed_input)
 
                 elif ('submit_save' in form) or ('submit_save_redir' in form):
+                    parsed_input = self.parse_input(mode, input_values)
+
                     proposal_id = int(form['proposal_id'])
 
                     # Check access via the normal auth module.
