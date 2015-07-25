@@ -23,7 +23,7 @@ from math import pi
 
 from healpy import ang2pix
 
-from ...astro.coord import CoordSystem, parse_coord
+from ...astro.coord import CoordSystem, format_coord, parse_coord
 from ...error import NoSuchRecord, UserError
 from ...view.tool import BaseTargetTool
 from ...web.util import ErrorPage, HTTPNotFound, session, url_for
@@ -31,7 +31,8 @@ from ...type import TargetObject
 
 TargetCoord = namedtuple('TargetCoord', ('x', 'y', 'system'))
 
-TargetClash = namedtuple('TargetClash', ('target', 'mocs'))
+TargetClash = namedtuple('TargetClash', ('target', 'mocs', 'target_search',
+                                         'display_coord'))
 
 
 class ClashTool(BaseTargetTool):
@@ -161,7 +162,11 @@ class ClashTool(BaseTargetTool):
                 order=order, cell=int(cell))
 
             if target_clashes:
-                clashes.append(TargetClash(target, target_clashes))
+                clashes.append(TargetClash(
+                    target, target_clashes,
+                    self.facility.make_archive_search_url(
+                        coord.spherical.lon.deg, coord.spherical.lat.deg),
+                    ' '.join(format_coord(CoordSystem.ICRS, coord))))
 
         return clashes
 

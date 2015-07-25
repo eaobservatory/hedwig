@@ -128,6 +128,16 @@ class Generic(GenericAdmin, GenericProposal):
         return '{0}-{1}-{2}'.format(
             proposal.semester_code, proposal.queue_code, proposal.number)
 
+    def make_archive_search_url(self, ra_deg, dec_deg):
+        """
+        Make an URL to the facility's archive search page for
+        the given coordinates.
+
+        Returns None when not implemented.
+        """
+
+        return None
+
     def view_facility_home(self, db):
         # Determine which semesters have open calls for proposals.
         open_semesters = OrderedDict()

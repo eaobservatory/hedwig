@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict
+from urllib import urlencode
 
 from ...error import UserError
 from ...web.util import HTTPRedirect, flash, url_for
@@ -52,6 +53,24 @@ class JCMT(Generic):
 
     def get_calculator_classes(self):
         return (SCUBA2Calculator, HeterodyneCalculator)
+
+    def make_archive_search_url(self, ra_deg, dec_deg):
+        """
+        Make an URL to search the JSA at CADC.
+        """
+
+        position = '{:.5f} {:.5f}'.format(ra_deg, dec_deg)
+
+        url = (
+            'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/search/?' +
+            urlencode({
+                'Observation.collection': 'JCMT',
+                'Plane.position.bounds@Shape1Resolver.value': 'ALL',
+                'Plane.position.bounds': position,
+            }))
+
+        # Advanced Search doesn't seem to like + as part of the coordinates.
+        return url.replace('+', '%20')
 
     def _view_proposal_extra(self, db, proposal):
         ctx = super(JCMT, self)._view_proposal_extra(db, proposal)

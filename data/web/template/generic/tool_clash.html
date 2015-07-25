@@ -24,6 +24,11 @@
                                 </li>
                             {% endfor %}
                         </ul>
+                        {% if clash.target_search is not none %}
+                            <p>
+                                <a href="{{ clash.target_search }}" target="_blank">Search archive at {{ clash.display_coord }}</a>
+                            </p>
+                        {% endif %}
                     </li>
                 {% endfor %}
             </ul>
