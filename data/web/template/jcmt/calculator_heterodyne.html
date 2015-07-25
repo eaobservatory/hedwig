@@ -1,5 +1,5 @@
 {% extends 'generic/calculator_base.html' %}
-{% set scripts=['hedwig_util', 'edit_calc_jcmt', 'edit_calc_jcmt_het'] %}
+{% set scripts=['edit_calc_jcmt', 'edit_calc_jcmt_het'] %}
 
 {% block calculator_input_list %}
     {% for value in inputs %}{% if value.code not in ('dim_y', 'dy', 'res_unit', 'pos_type') %}

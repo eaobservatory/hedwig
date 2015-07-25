@@ -9,5 +9,7 @@ $(document).ready(function () {
         if (! is_same_proposal) {
             overwrite_checkbox.prop('checked', false);
         }
+
+        disable_futile_labels();
     });
 });
