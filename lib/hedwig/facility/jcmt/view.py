@@ -79,9 +79,10 @@ class JCMT(Generic):
 
         option_values = db.get_jcmt_options(proposal_id=proposal.id)
         options = []
-        for (option, option_name) in self.options.items():
-            if getattr(option_values, option):
-                options.append(option_name)
+        if option_values is not None:
+            for (option, option_name) in self.options.items():
+                if getattr(option_values, option):
+                    options.append(option_name)
 
         ctx.update({
             'requests': requests.to_table(),
