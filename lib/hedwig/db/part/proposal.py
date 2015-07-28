@@ -1430,6 +1430,17 @@ class ProposalPart(object):
                 update_columns=(member.c.institution_id,),
                 forbid_add=True, forbid_delete=True)
 
+    def sync_proposal_member_student(self, proposal_id, records):
+        """
+        Update the 'student' flag of members of a proposal.
+        """
+
+        with self._transaction() as conn:
+            return self._sync_records(
+                conn, member, member.c.proposal_id, proposal_id, records,
+                update_columns=(member.c.student,),
+                forbid_add=True, forbid_delete=True)
+
     def sync_proposal_target(self, proposal_id, records):
         """
         Update the target records for a proposal.

@@ -147,6 +147,32 @@
                 </p>
             </nav>
         {% endif %}
+
+        {% if students %}
+            <p>
+                The following students are listed as needing data from this proposal:
+            </p>
+
+            <ul>
+                {% for student in students %}
+                    <li>
+                        {{ student.person_name }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="not_present">
+                No students are listed as needing data from this proposal.
+            </p>
+        {% endif %}
+
+        {% if can_edit %}
+        <nav>
+            <p>
+                <a href="{{ url_for('.student_edit', proposal_id=proposal.id) }}">Edit student list</a>
+            </p>
+        </nav>
+        {% endif %}
     </section>
 {% endblock %}
 

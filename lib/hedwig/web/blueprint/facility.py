@@ -130,6 +130,14 @@ def create_facility_blueprint(db, facility):
             db, proposal_id,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/proposal/<int:proposal_id>/student', methods=['GET', 'POST'])
+    @facility_template('student_edit.html')
+    @require_auth(require_person=True)
+    def student_edit(proposal_id):
+        return facility.view_student_edit(
+            db, proposal_id,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/proposal/<int:proposal_id>/target', methods=['GET', 'POST'])
     @facility_template('target_edit.html')
     @require_auth(require_person=True)

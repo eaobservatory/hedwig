@@ -478,6 +478,15 @@ class MemberCollection(OrderedResultCollection):
 
         raise KeyError('person not in member collection')
 
+    def get_students(self):
+        ans = []
+
+        for member in self.values():
+            if member.student:
+                ans.append(member)
+
+        return ans
+
     def validate(self, editor_person_id):
         """
         Attempts to validate the members of a proposal.

@@ -122,6 +122,7 @@ class GenericProposal(object):
                 x._replace(institution_country=countries.get(
                     x.institution_country, 'Unknown country'))
                 for x in proposal.members.values()]),
+            'students': proposal.members.get_students(),
             'proposal_code': self.make_proposal_code(db, proposal),
         }
 
@@ -689,6 +690,37 @@ class GenericProposal(object):
             'message':
                 'Are you sure you wish to remove yourself from '
                 'proposal {}?'.format(proposal_code),
+        }
+
+    @with_proposal(permission='edit')
+    def view_student_edit(self, db, proposal, can, form):
+        message = None
+        records = proposal.members
+
+        if form:
+            for member_id in records:
+                records[member_id] = records[member_id]._replace(
+                    student=('student_{}'.format(member_id) in form))
+
+            try:
+                (n_insert, n_update, n_delete) = \
+                    db.sync_proposal_member_student(proposal.id, records)
+
+                if n_update:
+                    flash('The list of students has been updated.')
+
+                raise HTTPRedirect(url_for('.proposal_view',
+                                           proposal_id=proposal.id))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Edit Students',
+            'message': message,
+            'proposal_id': proposal.id,
+            'members': records.values(),
+            'proposal_code': self.make_proposal_code(db, proposal),
         }
 
     @with_proposal(permission='edit')

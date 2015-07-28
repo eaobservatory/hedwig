@@ -1,0 +1,34 @@
+{% extends 'layout.html' %}
+{% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
+
+{% block content %}
+
+<p>
+    Please use this page to indicate which members of the proposal
+    are students who plan to use the data for their thesis.
+</p>
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.student_edit', proposal_id=proposal_id) }}">
+
+    <p>
+        {% for member in members %}
+            <input type="checkbox" name="student_{{ member.id }}" {{ 'checked="checked"' | safe if member.student }} />
+            {{ member.person_name }}
+            {% if not loop.last %}
+                <br />
+            {% endif %}
+        {% endfor %}
+    </p>
+
+    <p>
+        <input type="submit" value="Save" name="submit" />
+    </p>
+</form>
+
+{% endblock %}
