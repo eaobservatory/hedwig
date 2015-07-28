@@ -67,7 +67,8 @@ class JCMT(Generic):
                 'Observation.collection': 'JCMT',
                 'Plane.position.bounds@Shape1Resolver.value': 'ALL',
                 'Plane.position.bounds': position,
-            }))
+            }) +
+            '#resultTableTab')
 
         # Advanced Search doesn't seem to like + as part of the coordinates.
         return url.replace('+', '%20')
