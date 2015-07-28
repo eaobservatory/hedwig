@@ -128,6 +128,40 @@ class Generic(GenericAdmin, GenericProposal):
         return '{0}-{1}-{2}'.format(
             proposal.semester_code, proposal.queue_code, proposal.number)
 
+    def parse_proposal_code(self, db, proposal_code):
+        """
+        Attempt to convert a proposal code into a proposal identifier.
+
+        This is done by parsing the code and then attempting to look
+        it up in the database to get the identifier number.
+        """
+
+        (semester_code, queue_code, proposal_number) = \
+            self._parse_proposal_code(proposal_code)
+
+        return db.search_proposal(
+            facility_id=self.id_,
+            semester_code=semester_code,
+            queue_code=queue_code,
+            proposal_number=proposal_number).get_single().id
+
+    def _parse_proposal_code(self, proposal_code):
+        """
+        Perform the parsing step of processing a proposal code.
+
+        This splits the code into the semester code, queue code
+        and proposal number.
+        """
+
+        try:
+            (semester_code, queue_code, proposal_number) = \
+                proposal_code.split('-', 2)
+
+            return (semester_code, queue_code, int(proposal_number))
+
+        except ValueError:
+            raise NoSuchRecord('Could not parse proposal code')
+
     def make_archive_search_url(self, ra_deg, dec_deg):
         """
         Make an URL to the facility's archive search page for

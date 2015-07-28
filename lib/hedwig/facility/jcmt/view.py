@@ -19,9 +19,10 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict
+import re
 from urllib import urlencode
 
-from ...error import UserError
+from ...error import NoSuchRecord, UserError
 from ...web.util import HTTPRedirect, flash, url_for
 from ...view.util import organise_collection, with_proposal
 from ...type import ValidationMessage
@@ -50,6 +51,28 @@ class JCMT(Generic):
         return 'M{0}{1}{2:03d}'.format(
             proposal.semester_code, proposal.queue_code, proposal.number
         ).upper()
+
+    def _parse_proposal_code(self, proposal_code):
+        """
+        Perform the parsing step of processing a proposal code.
+
+        This splits the code into the semester code, queue code
+        and proposal number.
+        """
+
+        try:
+            m = re.match('M(\d\d[AB])([A-Z])(\d\d\d)', proposal_code)
+
+            if not m:
+                raise NoSuchRecord(
+                    'Proposal code did not match expected pattern')
+
+            (semester_code, queue_code, proposal_number) = m.groups()
+
+            return (semester_code, queue_code, int(proposal_number))
+
+        except ValueError:
+            raise NoSuchRecord('Could not parse proposal code')
 
     def get_calculator_classes(self):
         return (SCUBA2Calculator, HeterodyneCalculator)
