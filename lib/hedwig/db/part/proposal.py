@@ -839,6 +839,8 @@ class ProposalPart(object):
     def search_proposal(self, call_id=None, facility_id=None, proposal_id=None,
                         person_id=None, person_is_editor=None, person_pi=False,
                         state=None, with_members=False,
+                        proposal_number=None,
+                        semester_code=None, queue_code=None,
                         _conn=None):
         """
         Search for proposals.
@@ -926,6 +928,15 @@ class ProposalPart(object):
                 stmt = stmt.where(proposal.c.state.in_(state))
             else:
                 stmt = stmt.where(proposal.c.state == state)
+
+        if proposal_number is not None:
+            stmt = stmt.where(proposal.c.number == proposal_number)
+
+        if semester_code is not None:
+            stmt = stmt.where(semester.c.code == semester_code)
+
+        if queue_code is not None:
+            stmt = stmt.where(queue.c.code == queue_code)
 
         # Determine ordering: don't sort if only selecting one proposal.
         # This ordering is intended for the personal dashboard.  If other
