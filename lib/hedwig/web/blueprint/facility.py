@@ -145,6 +145,15 @@ def create_facility_blueprint(db, facility):
         return facility.view_target_edit(
             db, proposal_id, request.form, request.method == 'POST')
 
+    @bp.route('/proposal/<int:proposal_id>/target/note',
+              methods=['GET', 'POST'])
+    @facility_template('text_edit.html')
+    @require_auth(require_person=True)
+    def tool_note_edit(proposal_id):
+        return facility.view_tool_note_edit(
+            db, proposal_id,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/proposal/<int:proposal_id>/request', methods=['GET', 'POST'])
     @facility_template('request_edit.html')
     @require_auth(require_person=True)

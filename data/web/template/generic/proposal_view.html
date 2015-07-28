@@ -224,6 +224,24 @@
                     {% endfor %}
                 </p>
             </nav>
+
+            {% if tool_note is none %}
+                <p class="not_present">
+                    This proposal does not yet have a note on the target tool results.
+                    Please use the links above to check your targets and add
+                    a note on the results here.
+                </p>
+            {% else %}
+                {{ tool_note | format_text }}
+            {% endif %}
+
+            {% if can_edit %}
+                <nav>
+                    <p>
+                        <a href="{{ url_for('.tool_note_edit', proposal_id=proposal.id) }}">Edit note</a>
+                    </p>
+                </nav>
+            {% endif %}
         {% endif %}
     </section>
 {% endblock %}

@@ -336,6 +336,7 @@ class TextRole(object):
     ABSTRACT = 1
     TECHNICAL_CASE = 2
     SCIENCE_CASE = 3
+    TOOL_NOTE = 4
 
     RoleInfo = namedtuple('RoleInfo', ('name', 'shortname'))
 
@@ -343,6 +344,7 @@ class TextRole(object):
         ABSTRACT:       RoleInfo('Abstract', 'abst'),
         TECHNICAL_CASE: RoleInfo('Technical Justification', 'tech'),
         SCIENCE_CASE:   RoleInfo('Scientific Justification', 'sci'),
+        TOOL_NOTE:      RoleInfo('Note on Tool Results', 'tool'),
     }
 
     @classmethod

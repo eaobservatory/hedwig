@@ -205,6 +205,7 @@ class GenericProposal(object):
                     '.tool_proposal_{}'.format(x.code,),
                     proposal_id=proposal.id))
                 for x in self.target_tools.values()],
+            'tool_note': proposal_text.get(TextRole.TOOL_NOTE, None),
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id).values(),
         }
@@ -779,6 +780,12 @@ class GenericProposal(object):
             'targets': records.values(),
             'proposal_code': self.make_proposal_code(db, proposal),
         }
+
+    @with_proposal(permission='edit')
+    def view_tool_note_edit(self, db, proposal, can, form):
+        return self._edit_text(
+            db, proposal, TextRole.TOOL_NOTE, proposal.expl_word_lim,
+            url_for('.tool_note_edit', proposal_id=proposal.id), form, 10)
 
     @with_proposal(permission='edit')
     def view_request_edit(self, db, proposal, can, form, is_post):
