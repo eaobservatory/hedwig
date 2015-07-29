@@ -290,6 +290,10 @@ class FigureType(object):
                         mime_type)
 
     @classmethod
+    def all_type_names(cls):
+        return [x.name for x in cls._info.values()]
+
+    @classmethod
     def all_mime_types(cls):
         return [x.mime for x in cls._info.values()]
 

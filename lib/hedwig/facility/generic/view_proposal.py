@@ -979,6 +979,7 @@ class GenericProposal(object):
             'message': message,
             'max_size': max_size,
             'mime_types': FigureType.all_mime_types(),
+            'mime_type_names': FigureType.all_type_names(),
             'target': target,
         }
 

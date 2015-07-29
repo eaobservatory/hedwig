@@ -4,6 +4,22 @@
 
 {% block content %}
 
+<ul>
+    {% if figure.id is not none %}
+        <li>
+            You may select a replacement image to upload if you wish
+            to change the figure itself.
+        </li>
+        <li>
+            To edit the caption only, do not select a new file to upload.
+        </li>
+    {% endif %}
+    <li class="explanation">
+        The following file types are supported:
+        {{ mime_type_names | join(', ') }}.
+    </li>
+</ul>
+
 {% if message is not none %}
     <p class="warning">
         {{ message }}
@@ -13,13 +29,6 @@
 <form method="POST" action="{{ target }}" enctype="multipart/form-data">
     <ol>
         <li>
-            {% if figure.id is not none %}
-                <div class="explanation">
-                    You may select a replacement image to upload if you wish
-                    to change the figure itself.
-                    Or to edit the caption only, do not select a file.
-                </div>
-            {% endif %}
             <label for="file">Figure</label>
             <input type="file" name="file" accept="{{ mime_types | join (',') }}" />
             <span class="explanation">maximum size {{ max_size }} MiB</span>
