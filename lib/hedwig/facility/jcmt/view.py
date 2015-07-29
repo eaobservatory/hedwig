@@ -25,7 +25,7 @@ from urllib import urlencode
 from ...error import NoSuchRecord, UserError
 from ...web.util import HTTPRedirect, flash, url_for
 from ...view.util import organise_collection, with_proposal
-from ...type import ValidationMessage
+from ...type import Link, ValidationMessage
 from ..generic.view import Generic
 from .calculator_heterodyne import HeterodyneCalculator
 from .calculator_scuba2 import SCUBA2Calculator
@@ -35,6 +35,11 @@ from .type import JCMTInstrument, JCMTOptions, \
 
 
 class JCMT(Generic):
+    cadc_advanced_search = \
+        'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/search/'
+
+    omp_cgi_bin = 'http://omp.eao.hawaii.edu/cgi-bin/'
+
     options = OrderedDict((
         ('target_of_opp', 'Target of opportunity'),
         ('daytime', 'Daytime observation'),
@@ -85,7 +90,7 @@ class JCMT(Generic):
         position = '{:.5f} {:.5f}'.format(ra_deg, dec_deg)
 
         url = (
-            'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/search/?' +
+            self.cadc_advanced_search + '?' +
             urlencode({
                 'Observation.collection': 'JCMT',
                 'Plane.position.bounds@Shape1Resolver.value': 'ALL',
@@ -95,6 +100,25 @@ class JCMT(Generic):
 
         # Advanced Search doesn't seem to like + as part of the coordinates.
         return url.replace('+', '%20')
+
+    def make_proposal_info_urls(self, proposal_code):
+        """
+        Generate links to the OMP and to CADC for a given proposal code.
+        """
+
+        return [
+            Link(
+                'OMP', self.omp_cgi_bin + 'projecthome.pl?' +
+                urlencode({
+                    'urlprojid': proposal_code,
+                })),
+            Link(
+                'CADC', self.cadc_advanced_search + '?' +
+                urlencode({
+                    'Observation.collection': 'JCMT',
+                    'Observation.proposal.id': proposal_code,
+                }) + '#resultTableTab'),
+        ]
 
     def _view_proposal_extra(self, db, proposal):
         ctx = super(JCMT, self)._view_proposal_extra(db, proposal)

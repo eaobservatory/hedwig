@@ -172,6 +172,18 @@ class Generic(GenericAdmin, GenericProposal):
 
         return None
 
+    def make_proposal_info_urls(self, proposal_code):
+        """
+        Make a list of URLs ("Link" namedtuple instances
+        with "text" and "url" attributes) which link to
+        more information about a proposal.
+
+        This is used, for example, for the list of previous proposals
+        which have been entered by a proposal author.
+        """
+
+        return []
+
     def view_facility_home(self, db):
         # Determine which semesters have open calls for proposals.
         open_semesters = OrderedDict()

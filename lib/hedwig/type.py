@@ -77,6 +77,10 @@ InstitutionInfo = namedtuple(
     'InstitutionInfo',
     ['id', 'name', 'organization', 'country'])
 
+Link = namedtuple(
+    'Link',
+    ['text', 'url'])
+
 Member = namedtuple(
     'Member',
     [x.name for x in member.columns if x.name not in ('institution_id',)] +
