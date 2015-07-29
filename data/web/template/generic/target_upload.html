@@ -1,0 +1,34 @@
+{% extends 'layout.html' %}
+{% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
+
+{% from 'macro/target.html' import render_target_list_info %}
+
+{% block content %}
+
+{{ render_target_list_info() }}
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.target_upload', proposal_id=proposal_id) }}" enctype="multipart/form-data">
+    <ol>
+        <li>
+            <label for="file">Target list</label>
+            <input type="file" name="file" accept="{{ mime_types | join (',') }}" />
+        </li>
+        {% if has_targets %}
+            <li>
+                <label for="overwrite">Overwrite</label>
+                <input type="checkbox" name="overwrite"> Overwrite existing target list
+            </li>
+        {% endif %}
+        <li>
+            <input type="submit" value="Upload" name="submit" />
+        </li>
+    </ol>
+</form>
+
+{% endblock %}

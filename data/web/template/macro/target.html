@@ -1,0 +1,25 @@
+{% macro render_target_list_info() %}
+    <p>
+        A target list can be uploaded as a plain text file
+        with the following space or comma-separated columns:
+    </p>
+
+    <ul>
+        <li>Target name.</li>
+        <li>RA / longitude.</li>
+        <li>Declination / latitude.</li>
+        <li>Coordinate system ("ICRS" or "Galactic").</li>
+        <li><i>Optional:</i> Observing time (in hours)</li>
+        <li><i>Optional:</i> Priority from 1 (highest) to 100 (lowest).</li>
+    </ul>
+
+    <p>
+        For example:
+    </p>
+
+    <pre>
+IC1234 16:52:51 56:52:40 ICRS 4.5 1
+LDN123 3.75 -3.43 Galactic
+M99 184.70833 14.41639 ICRS 9.9
+    </pre>
+{% endmacro %}

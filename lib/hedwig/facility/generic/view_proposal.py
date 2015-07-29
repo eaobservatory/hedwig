@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import namedtuple
 
 from ...astro.coord import CoordSystem
+from ...astro.catalog import parse_source_list
 from ...email.format import render_email_template
 from ...config import get_config
 from ...error import ConsistencyError, NoSuchRecord, UserError
@@ -779,6 +780,57 @@ class GenericProposal(object):
             'systems': CoordSystem.get_options(),
             'targets': records.values(),
             'proposal_code': self.make_proposal_code(db, proposal),
+        }
+
+    @with_proposal(permission='edit')
+    def view_target_upload(self, db, proposal, can, form, file_):
+        message = None
+
+        records = db.search_target(proposal_id=proposal.id)
+
+        if form:
+            try:
+                if file_:
+                    try:
+                        buff = file_.read(64 * 1024)
+                        if len(file_.read(1)):
+                            raise UserError('The uploaded file was too large.')
+                    finally:
+                        file_.close()
+                else:
+                    raise UserError('No target list file was received.')
+
+                overwrite = ('overwrite' in form)
+
+                max_record = (max(records.keys()) if records else 0)
+
+                new_records = parse_source_list(buff,
+                                                number_from=max_record + 1)
+
+                # TODO: would be more efficient to have a store-only
+                # version of the sync method.
+                if not overwrite:
+                    new_records = TargetCollection(records.items() +
+                                                   new_records.items())
+
+                db.sync_proposal_target(proposal.id, new_records)
+
+                flash('The target object list has been {}.',
+                      ('overwritten' if overwrite else 'updated'))
+
+                raise HTTPRedirect(url_for('.proposal_view',
+                                           proposal_id=proposal.id))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Upload Target List',
+            'message': message,
+            'proposal_id': proposal.id,
+            'proposal_code': self.make_proposal_code(db, proposal),
+            'mime_types': ['text/plain', 'text/csv'],
+            'has_targets': bool(records),
         }
 
     @with_proposal(permission='edit')

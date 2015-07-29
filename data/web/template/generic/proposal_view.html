@@ -211,6 +211,8 @@
             <nav>
                 <p>
                     <a href="{{ url_for('.target_edit', proposal_id=proposal.id) }}">Edit targets</a>
+                    <br />
+                    <a href="{{ url_for('.target_upload', proposal_id=proposal.id) }}">Upload target list</a>
                 </p>
             </nav>
         {% endif %}
