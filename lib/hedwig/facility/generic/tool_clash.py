@@ -24,6 +24,7 @@ from math import pi
 from healpy import ang2pix
 
 from ...astro.coord import CoordSystem, format_coord, parse_coord
+from ...astro.catalog import parse_source_list
 from ...error import NoSuchRecord, UserError
 from ...view.tool import BaseTargetTool
 from ...web.util import ErrorPage, HTTPNotFound, session, url_for
@@ -91,12 +92,60 @@ class ClashTool(BaseTargetTool):
         return {
             'title': 'Clash Tool',
             'show_input': True,
+            'show_input_upload': False,
             'systems': CoordSystem.get_options(),
             'run_button': 'Search',
             'target': target,
             'message': message,
             'clashes': clashes,
             'target_url': url_for('.tool_clash'),
+            'target_moc_info': '.tool_clash_moc_info',
+            'target_proposal': None,
+            'target_upload': url_for('.tool_upload_clash'),
+        }
+
+    def view_upload(self, db, args, form, file_):
+        """
+        View handler for stand-alone usage by file upload.
+        """
+
+        message = None
+        clashes = None
+
+        if form is None:
+            self._check_mocs_exist(db)
+
+        else:
+            try:
+                if file_:
+                    try:
+                        buff = file_.read(64 * 1024)
+                        if len(file_.read(1)):
+                            raise UserError('The uploaded file was too large.')
+                    finally:
+                        file_.close()
+                else:
+                    raise UserError('No target list file was received.')
+
+                # TODO: would be more efficient to update parse_source_list
+                # to be able to return a list directly: this converts to
+                # and from Astropy objects twice.
+                target_objects = parse_source_list(buff).to_object_list()
+
+                clashes = self._do_moc_search(db, target_objects)
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Clash Tool',
+            'show_input': True,
+            'show_input_upload': True,
+            'run_button': 'Search',
+            'mime_types': ['text/plain', 'text/csv'],
+            'message': message,
+            'clashes': clashes,
+            'target_url': url_for('.tool_upload_clash'),
             'target_moc_info': '.tool_clash_moc_info',
             'target_proposal': None,
         }

@@ -536,13 +536,18 @@ def create_facility_blueprint(db, facility):
         facility.target_tools[tool_id] = TargetToolInfo(
             tool_id, tool_code, tool.get_name(), tool)
 
-        (single_view, proposal_view) = make_target_tool_views(
+        (single_view, upload_view, proposal_view) = make_target_tool_views(
             db, tool, code, tool_code)
 
         bp.add_url_rule(
             '/tool/{}'.format(tool_code),
             'tool_{}'.format(tool_code),
             single_view, methods=['GET', 'POST'])
+
+        bp.add_url_rule(
+            '/tool/{}/upload'.format(tool_code),
+            'tool_upload_{}'.format(tool_code),
+            upload_view, methods=['GET', 'POST'])
 
         bp.add_url_rule(
             '/tool/{}/proposal/<int:proposal_id>'.format(tool_code),
@@ -596,11 +601,19 @@ def make_target_tool_views(db, tool, facility_code, tool_code):
 
     @templated(('generic/tool_{}.html'.format(tool_code),
                 'generic/tool_base.html'))
+    def upload_view_func():
+        return tool.view_upload(
+            db, request.args,
+            (request.form if request.method == 'POST' else None),
+            (request.files['file'] if request.method == 'POST' else None))
+
+    @templated(('generic/tool_{}.html'.format(tool_code),
+                'generic/tool_base.html'))
     def proposal_view_func(proposal_id):
         return tool.view_proposal(
             db, proposal_id, request.args)
 
-    return (single_view_func, proposal_view_func)
+    return (single_view_func, upload_view_func, proposal_view_func)
 
 
 def make_custom_route(db, template, func):

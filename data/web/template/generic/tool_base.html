@@ -1,5 +1,7 @@
 {% extends 'layout.html' %}
 
+{% from 'macro/target.html' import render_target_list_info %}
+
 {% block content %}
 
 {% if target_proposal is not none %}
@@ -14,10 +16,14 @@
 {% endblock %}
 
 {% if show_input %}
-    <form method="POST" action="{{ target_url }}">
+    <form method="POST" action="{{ target_url }}" {{ 'enctype="multipart/form-data"' | safe if show_input_upload }}>
     {% block tool_input %}
         <section>
             <h2>Input</h2>
+
+            {% if show_input_upload %}
+                {{ render_target_list_info() }}
+            {% endif %}
 
             {% if message is not none %}
                 <p class="warning">
@@ -26,22 +32,29 @@
             {% endif %}
 
             <ol>
-                <li>
-                    <label for="x">RA / Longitude</label>
-                    <input type="text" name="x" value="{{ target.x }}" placeholder="00:00:00" />
-                </li>
-                <li>
-                    <label for="y">Dec / Latitude</label>
-                    <input type="text" name ="y" value="{{ target.y }}" placeholder="00:00:00" />
-                </li>
-                <li>
-                    <label for="system">System</label>
-                    <select name="system">
-                        {% for (system_id, system_name) in systems.items() %}
-                            <option value="{{ system_id }}" {{ 'selected="selected"' | safe if system_id == target.system }}>{{ system_name }}</option>
-                        {% endfor %}
-                    </select>
-                </li>
+                {% if show_input_upload %}
+                    <li>
+                        <label for="file">Target list</label>
+                        <input type="file" name="file" accept="{{ mime_types | join (',') }}" />
+                    </li>
+                {% else %}
+                    <li>
+                        <label for="x">RA / Longitude</label>
+                        <input type="text" name="x" value="{{ target.x }}" placeholder="00:00:00" />
+                    </li>
+                    <li>
+                        <label for="y">Dec / Latitude</label>
+                        <input type="text" name ="y" value="{{ target.y }}" placeholder="00:00:00" />
+                    </li>
+                    <li>
+                        <label for="system">System</label>
+                        <select name="system">
+                            {% for (system_id, system_name) in systems.items() %}
+                                <option value="{{ system_id }}" {{ 'selected="selected"' | safe if system_id == target.system }}>{{ system_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </li>
+                {% endif %}
                 <li>
                     <input type="submit" name="submit_calc" value="{{ run_button }}" />
                 </li>
@@ -49,6 +62,14 @@
         </section>
     {% endblock %}
     </form>
+
+    {% if target_upload %}
+        <nav>
+            <p>
+                <a href="{{ target_upload }}">Upload a target list</a>
+            </p>
+        </nav>
+    {% endif %}
 {% endif %}
 
 {% endblock %}
