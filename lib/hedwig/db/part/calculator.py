@@ -25,8 +25,8 @@ from sqlalchemy.sql.expression import and_, or_
 from sqlalchemy.sql.functions import coalesce
 from sqlalchemy.sql.functions import max as max_
 
-from ...error import ConsistencyError, Error
-from ...type import Calculation, MOCInfo, \
+from ...error import ConsistencyError, Error, UserError
+from ...type import Calculation, FormatType, MOCInfo, \
     OrderedResultCollection, ResultCollection
 from ..meta import calculator, calculation, facility, moc, moc_cell
 
@@ -54,8 +54,10 @@ class CalculatorPart(object):
 
             return result.inserted_primary_key[0]
 
-    def add_moc(self, facility_id, name, description, public,
-                moc_order, moc_object):
+    def add_moc(self, facility_id, name, description, description_format,
+                public, moc_order, moc_object):
+        if not FormatType.is_valid(description_format, is_system=True):
+            raise UserError('Text format not recognised.')
 
         moc_object.normalize(max_order=moc_order)
 
@@ -64,6 +66,7 @@ class CalculatorPart(object):
                 moc.c.facility_id: facility_id,
                 moc.c.name: name,
                 moc.c.description: description,
+                moc.c.description_format: description_format,
                 moc.c.public: public,
                 moc.c.uploaded: datetime.utcnow(),
                 moc.c.num_cells: moc_object.cells,
@@ -155,9 +158,10 @@ class CalculatorPart(object):
 
         if with_description:
             select_cols.append(moc.c.description)
+            select_cols.append(moc.c.description_format)
             default = {}
         else:
-            default = {'description': None}
+            default = {'description': None, 'description_format': None}
 
         stmt = select(select_cols)
 
@@ -207,7 +211,9 @@ class CalculatorPart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt):
-                ans[row['id']] = MOCInfo(description=None, uploaded=None,
+                ans[row['id']] = MOCInfo(description=None,
+                                         description_format=None,
+                                         uploaded=None,
                                          num_cells=None, area=None, **row)
 
         return ans
@@ -246,7 +252,8 @@ class CalculatorPart(object):
                     'no rows matched updating calculation with id={}',
                     calculation_id)
 
-    def update_moc(self, moc_id, name=None, description=None, public=None,
+    def update_moc(self, moc_id, name=None,
+                   description=None, description_format=None, public=None,
                    moc_order=None, moc_object=None):
         values = {}
 
@@ -255,6 +262,11 @@ class CalculatorPart(object):
 
         if description is not None:
             values[moc.c.description] = description
+
+        if description_format is not None:
+            if not FormatType.is_valid(description_format, is_system=True):
+                raise UserError('Text format not recognised.')
+            values[moc.c.description_format] = description_format
 
         if public is not None:
             values[moc.c.public] = public

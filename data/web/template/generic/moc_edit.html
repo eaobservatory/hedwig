@@ -1,6 +1,8 @@
 {% extends 'layout.html' %}
 {% set navigation=['facility_admin', ('Coverage', url_for('.moc_list'))] %}
 
+{% from 'macro/text.html' import render_format_control %}
+
 {% block content %}
 
 {% if message is not none %}
@@ -18,6 +20,10 @@
         <li>
             <label for="description">Description</label>
             <textarea name="description" cols="40" rows="10">{{ moc.description }}</textarea>
+        </li>
+        <li>
+            <label for="description_format">Description format</label>
+            {{ render_format_control('description_format', moc.description_format, format_types) }}
         </li>
         <li>
             <label for="public">Visibility</label>

@@ -24,7 +24,7 @@ from datetime import datetime
 from pymoc import MOC
 
 from ...error import NoSuchRecord, UserError
-from ...type import Affiliation, Call, Category, MOCInfo, \
+from ...type import Affiliation, Call, Category, FormatType, MOCInfo, \
     ProposalWithCode, Queue, \
     ResultCollection, Semester, \
     null_tuple
@@ -79,7 +79,8 @@ class GenericAdmin(object):
             # We are creating a new semester.
             semester = Semester(None, None, name='', code='',
                                 date_start=None, date_end=None,
-                                description='')
+                                description='',
+                                description_format=FormatType.PLAIN)
             title = 'Add New Semester'
             target = url_for('.semester_new')
         else:
@@ -100,7 +101,8 @@ class GenericAdmin(object):
                 code=form['semester_code'],
                 date_start=parse_datetime('start', form),
                 date_end=parse_datetime('end', form),
-                description=form['description'])
+                description=form['description'],
+                description_format=int(form['description_format']))
 
             try:
                 if semester_id is None:
@@ -108,7 +110,7 @@ class GenericAdmin(object):
                     new_semester_id = db.add_semester(
                         self.id_, semester.name, semester.code,
                         semester.date_start, semester.date_end,
-                        semester.description)
+                        semester.description, semester.description_format)
                     flash('New semester "{0}" has been created.',
                           semester.name)
                     raise HTTPRedirect(url_for('.semester_view',
@@ -116,11 +118,13 @@ class GenericAdmin(object):
 
                 else:
                     # Update an existing semseter.
-                    db.update_semester(semester_id, name=semester.name,
-                                       code=semester.code,
-                                       date_start=semester.date_start,
-                                       date_end=semester.date_end,
-                                       description=semester.description)
+                    db.update_semester(
+                        semester_id, name=semester.name,
+                        code=semester.code,
+                        date_start=semester.date_start,
+                        date_end=semester.date_end,
+                        description=semester.description,
+                        description_format=semester.description_format)
                     flash('Semester "{0}" has been updated.', semester.name)
                     raise HTTPRedirect(url_for('.semester_view',
                                                semester_id=semester_id))
@@ -133,6 +137,7 @@ class GenericAdmin(object):
             'target': target,
             'message': message,
             'semester': semester,
+            'format_types': FormatType.get_options(is_system=True),
         }
 
     def view_queue_list(self, db):
@@ -164,7 +169,8 @@ class GenericAdmin(object):
 
         if queue_id is None:
             # We are creating a new queue.
-            queue = Queue(None, None, name='', code='', description='')
+            queue = Queue(None, None, name='', code='', description='',
+                          description_format=FormatType.PLAIN)
             title = 'Add New Queue'
             target = url_for('.queue_new')
         else:
@@ -180,23 +186,28 @@ class GenericAdmin(object):
         message = None
 
         if is_post:
-            queue = queue._replace(name=form['queue_name'],
-                                   code=form['queue_code'],
-                                   description=form['description'])
+            queue = queue._replace(
+                name=form['queue_name'],
+                code=form['queue_code'],
+                description=form['description'],
+                description_format=int(form['description_format']))
 
             try:
                 if queue_id is None:
                     # Create new queue.
                     new_queue_id = db.add_queue(self.id_, queue.name,
-                                                queue.code, queue.description)
+                                                queue.code, queue.description,
+                                                queue.description_format)
                     flash('New queue "{0}" has been added.', queue.name)
                     raise HTTPRedirect(url_for('.queue_view',
                                                queue_id=new_queue_id))
 
                 else:
                     # Update existing queue.
-                    db.update_queue(queue_id, name=queue.name, code=queue.code,
-                                    description=queue.description)
+                    db.update_queue(
+                        queue_id, name=queue.name, code=queue.code,
+                        description=queue.description,
+                        description_format=queue.description_format)
                     flash('Queue "{0}" has been updated.', queue.name)
                     raise HTTPRedirect(url_for('.queue_view',
                                                queue_id=queue_id))
@@ -209,6 +220,7 @@ class GenericAdmin(object):
             'target': target,
             'message': message,
             'queue': queue,
+            'format_types': FormatType.get_options(is_system=True),
         }
 
     def view_call_list(self, db):
@@ -252,11 +264,13 @@ class GenericAdmin(object):
                         date_open=None, date_close=None,
                         facility_id=None, semester_name='',
                         queue_name='', queue_description=None,
+                        queue_description_format=None,
                         abst_word_lim=200,
                         tech_word_lim=1000, tech_fig_lim=0, tech_page_lim=1,
                         sci_word_lim=2000, sci_fig_lim=4, sci_page_lim=3,
                         capt_word_lim=200, expl_word_lim=200,
-                        tech_note='', sci_note='')
+                        tech_note='', sci_note='',
+                        note_format=FormatType.PLAIN)
             semesters = db.search_semester(facility_id=self.id_)
             queues = db.search_queue(facility_id=self.id_)
             title = 'Add New Call'
@@ -291,7 +305,8 @@ class GenericAdmin(object):
                     capt_word_lim=int(form['capt_word_lim']),
                     expl_word_lim=int(form['expl_word_lim']),
                     tech_note=form['tech_note'],
-                    sci_note=form['sci_note'])
+                    sci_note=form['sci_note'],
+                    note_format=int(form['note_format']))
 
                 if call_id is None:
                     # Create new call.
@@ -313,7 +328,8 @@ class GenericAdmin(object):
                                               capt_word_lim=call.capt_word_lim,
                                               expl_word_lim=call.expl_word_lim,
                                               tech_note=call.tech_note,
-                                              sci_note=call.sci_note)
+                                              sci_note=call.sci_note,
+                                              note_format=call.note_format)
                     flash('The new call has been added.')
                     raise HTTPRedirect(url_for('.call_view',
                                                call_id=new_call_id))
@@ -332,7 +348,8 @@ class GenericAdmin(object):
                                    capt_word_lim=call.capt_word_lim,
                                    expl_word_lim=call.expl_word_lim,
                                    tech_note=call.tech_note,
-                                   sci_note=call.sci_note)
+                                   sci_note=call.sci_note,
+                                   note_format=call.note_format)
                     flash('The call has been updated.')
                     raise HTTPRedirect(url_for('.call_view', call_id=call_id))
 
@@ -346,6 +363,7 @@ class GenericAdmin(object):
             'call': call,
             'semesters': (None if semesters is None else semesters.values()),
             'queues': (None if queues is None else queues.values()),
+            'format_types': FormatType.get_options(is_system=True),
         }
 
     def view_call_proposals(self, db, call_id):
@@ -480,7 +498,8 @@ class GenericAdmin(object):
         if moc_id is None:
             # We are uploading a new MOC -- create a blank record.
             moc = null_tuple(MOCInfo)._replace(
-                name='', description='', public=True)
+                name='', description='', description_format=FormatType.PLAIN,
+                public=True)
             title = 'New Coverage Map'
             target = url_for('.moc_new')
 
@@ -504,6 +523,7 @@ class GenericAdmin(object):
                 moc = moc._replace(
                     name=form['name'],
                     description=form['description'],
+                    description_format=int(form['description_format']),
                     public=('public' in form))
 
                 moc_object = None
@@ -522,11 +542,13 @@ class GenericAdmin(object):
 
                 if moc_id is None:
                     moc_id = db.add_moc(self.id_, moc.name, moc.description,
+                                        moc.description_format,
                                         moc.public, moc_order, moc_object)
                     flash('The new coverage map has been stored.')
                 else:
                     db.update_moc(
                         moc_id, name=moc.name, description=moc.description,
+                        description_format=moc.description_format,
                         public=moc.public,
                         moc_order=moc_order, moc_object=moc_object)
 
@@ -545,6 +567,7 @@ class GenericAdmin(object):
             'target': target,
             'moc': moc,
             'message': message,
+            'format_types': FormatType.get_options(is_system=True),
         }
 
     def view_moc_delete(self, db, moc_id, form):

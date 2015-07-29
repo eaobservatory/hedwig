@@ -101,6 +101,7 @@ call = Table(
     Column('expl_word_lim', Integer, nullable=False),
     Column('tech_note', UnicodeText, nullable=False),
     Column('sci_note', UnicodeText, nullable=False),
+    Column('note_format', Integer, nullable=False),
     UniqueConstraint('semester_id', 'queue_id'),
     **_table_opts)
 
@@ -236,6 +237,7 @@ moc = Table(
            nullable=False),
     Column('name', Unicode(255), nullable=False),
     Column('description', UnicodeText, nullable=False),
+    Column('description_format', Integer, nullable=False),
     Column('public', Boolean, nullable=False),
     Column('uploaded', DateTime(), nullable=False),
     Column('num_cells', Integer, nullable=False),
@@ -396,6 +398,7 @@ queue = Table(
     Column('name', Unicode(255), nullable=False),
     Column('code', Unicode(31), nullable=False),
     Column('description', UnicodeText, nullable=False),
+    Column('description_format', Integer, nullable=False),
     UniqueConstraint('facility_id', 'name'),
     UniqueConstraint('facility_id', 'code'),
     **_table_opts)
@@ -422,6 +425,7 @@ semester = Table(
     Column('date_start', DateTime(), nullable=False),
     Column('date_end', DateTime(), nullable=False),
     Column('description', UnicodeText, nullable=False),
+    Column('description_format', Integer, nullable=False),
     UniqueConstraint('facility_id', 'name'),
     UniqueConstraint('facility_id', 'code'),
     **_table_opts)

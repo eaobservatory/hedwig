@@ -15,7 +15,7 @@
     </tr>
 </table>
 
-{{ semester.description | format_text }}
+{{ semester.description | format_text(semester.description_format) }}
 
 <h2>Available Queues</h2>
 
@@ -39,7 +39,7 @@
                 UT
             </p>
 
-            {{ call.queue_description | format_text }}
+            {{ call.queue_description | format_text(call.queue_description_format) }}
         </li>
     {% endfor %}
 </ul>

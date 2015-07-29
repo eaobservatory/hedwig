@@ -2,6 +2,6 @@
 
 {% block content %}
 
-{{ moc.description | format_text }}
+{{ moc.description | format_text(moc.description_format) }}
 
 {% endblock %}

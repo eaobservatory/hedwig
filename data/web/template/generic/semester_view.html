@@ -22,7 +22,7 @@
     Description:
 </p>
 
-{{ semester.description | format_text }}
+{{ semester.description | format_text(semester.description_format) }}
 
 <p>
     <a href="{{ url_for('.semester_edit', semester_id=semester.id) }}">Edit semester</a>

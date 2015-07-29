@@ -44,6 +44,9 @@ def format_text(text, format=None):
     if format == FormatType.PLAIN:
         return format_text_plain(text)
 
+    elif format == FormatType.RST:
+        return format_text_rst(text)
+
     else:
         raise HTTPError('Unknown format type.')
 

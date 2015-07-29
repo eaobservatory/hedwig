@@ -873,6 +873,7 @@ class GenericProposal(object):
             'proposal_id': proposal.id,
             'proposal_code': self.make_proposal_code(db, proposal),
             'note': getattr(call, code + '_note'),
+            'note_format': call.note_format,
             'word_limit': getattr(proposal, code + '_word_lim'),
             'fig_limit': getattr(proposal, code + '_fig_lim'),
             'page_limit': getattr(proposal, code + '_page_lim'),

@@ -10,7 +10,7 @@
     </tr>
 </table>
 
-{{ queue.description | format_text }}
+{{ queue.description | format_text(queue.description_format) }}
 
 <p>
     <a href="{{ url_for('.queue_edit', queue_id=queue.id) }}">Edit queue</a>

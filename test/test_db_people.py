@@ -23,7 +23,7 @@ from datetime import datetime, timedelta
 from hedwig.db.meta import invitation, reset_token
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
-from hedwig.type import Email, EmailCollection, \
+from hedwig.type import Email, EmailCollection, FormatType, \
     Institution, InstitutionInfo, Person, ResultCollection
 from .dummy_db import DBTestCase
 
@@ -686,7 +686,7 @@ class DBPeopleTest(DBTestCase):
                                    datetime(1999, 9, 1),
                                    datetime(1999, 9, 30),
                                    100, 1000, 0, 1, 2000, 4, 3, 100, 100,
-                                   '', '')
+                                   '', '', FormatType.PLAIN)
         affiliation_id = self.db.add_affiliation(queue_id, 'Aff/n 1')
         proposal_id = self.db.add_proposal(call_id, person_id_1,
                                            affiliation_id, 'Proposal 1')

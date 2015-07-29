@@ -1,6 +1,8 @@
 {% extends "layout.html" %}
 {% set navigation=['facility_admin', ('Semesters', url_for('.semester_list'))] %}
 
+{% from 'macro/text.html' import render_format_control %}
+
 {% block content %}
 
 {% if message is not none %}
@@ -37,6 +39,10 @@
         <li>
             <label for="description">Description</label>
             <textarea name="description" cols="80" rows="10">{{ semester.description }}</textarea>
+        </li>
+        <li>
+            <label for="description_format">Description format</label>
+            {{ render_format_control('description_format', semester.description_format, format_types) }}
         </li>
         <li>
             <input type="submit" value="Save" name="submit" />

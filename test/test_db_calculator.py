@@ -24,7 +24,7 @@ from pymoc import MOC
 
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     NoSuchRecord
-from hedwig.type import Calculation, MOCInfo, ResultCollection
+from hedwig.type import Calculation, FormatType, MOCInfo, ResultCollection
 
 from .dummy_db import DBTestCase
 
@@ -96,7 +96,8 @@ class DBCalculatorTest(DBTestCase):
 
         moc_a = MOC(order=1, cells=(4, 7))
 
-        moc_id = self.db.add_moc(facility_id, 'test', 'A Test MOC',
+        moc_id = self.db.add_moc(facility_id, 'test',
+                                 'A Test MOC', FormatType.PLAIN,
                                  True, 2, moc_a)
         self.assertIsInstance(moc_id, int)
 
@@ -132,8 +133,9 @@ class DBCalculatorTest(DBTestCase):
         self.assertEqual(len(result), 0)
 
         moc_b = MOC(order=1, cells=(5, 6))
-        self.db.update_moc(moc_id, 'test2', 'Another Test MOC', False,
-                           2, moc_b)
+        self.db.update_moc(moc_id, 'test2',
+                           'Another Test MOC', FormatType.PLAIN,
+                           False, 2, moc_b)
 
         result = self.db.search_moc_cell(facility_id, None, 2, 20)
         self.assertEqual(len(result), 1)
@@ -151,7 +153,7 @@ class DBCalculatorTest(DBTestCase):
         call_id = self.db.add_call(
             semester_id, queue_id,
             datetime(1999, 4, 1), datetime(1999, 4, 2),
-            100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '')
+            100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', FormatType.PLAIN)
         affiliation_id = self.db.add_affiliation(queue_id, 'a')
         person_id = self.db.add_person('per')
         proposal_id = self.db.add_proposal(

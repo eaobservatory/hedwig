@@ -1,0 +1,7 @@
+{% macro render_format_control(control_name, current_format, format_options) %}
+    <select name="{{ control_name }}">
+        {% for (format_option, format_name) in format_options.items() %}
+            <option value="{{ format_option }}" {{ 'selected="selected"' | safe if format_option == current_format }}>{{ format_name }}</option>
+        {% endfor %}
+    </select>
+{% endmacro %}

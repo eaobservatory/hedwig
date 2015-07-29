@@ -64,7 +64,7 @@ class ProposalPart(object):
                  tech_word_lim, tech_fig_lim, tech_page_lim,
                  sci_word_lim, sci_fig_lim, sci_page_lim,
                  capt_word_lim, expl_word_lim,
-                 tech_note, sci_note,
+                 tech_note, sci_note, note_format,
                  _test_skip_check=False):
         """
         Add a call for proposals to the database.
@@ -72,6 +72,9 @@ class ProposalPart(object):
 
         if date_close < date_open:
             raise UserError('Closing date is before opening date.')
+
+        if not FormatType.is_valid(note_format, is_system=True):
+            raise UserError('Text format not recognised.')
 
         with self._transaction() as conn:
             if not _test_skip_check:
@@ -106,6 +109,7 @@ class ProposalPart(object):
                 call.c.expl_word_lim: expl_word_lim,
                 call.c.tech_note: tech_note,
                 call.c.sci_note: sci_note,
+                call.c.note_format: note_format,
             }))
 
         return result.inserted_primary_key[0]
@@ -239,6 +243,7 @@ class ProposalPart(object):
         return result.inserted_primary_key[0]
 
     def add_queue(self, facility_id, name, code, description='',
+                  description_format=FormatType.PLAIN,
                   _test_skip_check=False):
         """
         Add a queue to the database.
@@ -246,6 +251,9 @@ class ProposalPart(object):
 
         if not name:
             raise UserError('The queue name can not be blank.')
+
+        if not FormatType.is_valid(description_format, is_system=True):
+            raise UserError('Text format not recognised.')
 
         with self._transaction() as conn:
             if (not _test_skip_check and
@@ -258,12 +266,14 @@ class ProposalPart(object):
                 queue.c.name: name,
                 queue.c.code: code,
                 queue.c.description: description,
+                queue.c.description_format: description_format,
             }))
 
             return result.inserted_primary_key[0]
 
     def add_semester(self, facility_id, name, code,
                      date_start, date_end, description='',
+                     description_format=FormatType.PLAIN,
                      _test_skip_check=False):
         """
         Add a semester to the database.
@@ -274,6 +284,9 @@ class ProposalPart(object):
 
         if date_end < date_start:
             raise UserError('Semester end date is before start date.')
+
+        if not FormatType.is_valid(description_format, is_system=True):
+            raise UserError('Text format not recognised.')
 
         with self._transaction() as conn:
             if (not _test_skip_check and
@@ -288,6 +301,7 @@ class ProposalPart(object):
                 semester.c.date_start: date_start,
                 semester.c.date_end: date_end,
                 semester.c.description: description,
+                queue.c.description_format: description_format,
             }))
 
             return result.inserted_primary_key[0]
@@ -694,8 +708,11 @@ class ProposalPart(object):
 
         if with_queue_description:
             fields.append(queue.c.description.label('queue_description'))
+            fields.append(
+                queue.c.description_format.label('queue_description_format'))
         else:
             default['queue_description'] = None
+            default['queue_description_format'] = None
 
         stmt = select(fields).select_from(
             call.join(semester).join(queue)
@@ -1483,7 +1500,7 @@ class ProposalPart(object):
                     tech_word_lim=None, tech_fig_lim=None, tech_page_lim=None,
                     sci_word_lim=None, sci_fig_lim=None, sci_page_lim=None,
                     capt_word_lim=None, expl_word_lim=None,
-                    tech_note=None, sci_note=None,
+                    tech_note=None, sci_note=None, note_format=None,
                     _test_skip_check=False):
         """
         Update a call for proposals record.
@@ -1521,6 +1538,10 @@ class ProposalPart(object):
             values['tech_note'] = tech_note
         if sci_note is not None:
             values['sci_note'] = sci_note
+        if note_format is not None:
+            if not FormatType.is_valid(note_format, is_system=True):
+                raise UserError('Text format not recognised.')
+            values['note_format'] = note_format
 
         if not values:
             raise Error('no call updates specified')
@@ -1541,6 +1562,7 @@ class ProposalPart(object):
 
     def update_semester(self, semester_id, name=None, code=None,
                         date_start=None, date_end=None, description=None,
+                        description_format=None,
                         _test_skip_check=False):
         """
         Update a semester record.
@@ -1562,6 +1584,10 @@ class ProposalPart(object):
             values['date_end'] = date_end
         if description is not None:
             values['description'] = description
+        if description_format is not None:
+            if not FormatType.is_valid(description_format, is_system=True):
+                raise UserError('Text format not recognised.')
+            values['description_format'] = description_format
 
         if not values:
             raise Error('no semester updates specified')
@@ -1749,6 +1775,7 @@ class ProposalPart(object):
                     'no rows matched updating proposal PDF with id={}', pdf_id)
 
     def update_queue(self, queue_id, name=None, code=None, description=None,
+                     description_format=None,
                      _test_skip_check=False):
         """
         Update a queue record.
@@ -1762,6 +1789,10 @@ class ProposalPart(object):
             values['code'] = code
         if description is not None:
             values['description'] = description
+        if description_format is not None:
+            if not FormatType.is_valid(description_format, is_system=True):
+                raise UserError('Text format not recognised.')
+            values['description_format'] = description_format
 
         if not values:
             raise Error('no queue updates specified')

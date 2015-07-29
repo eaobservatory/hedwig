@@ -1,6 +1,8 @@
 {% extends "layout.html" %}
 {% set navigation=['facility_admin', ('Calls', url_for('.call_list'))] %}
 
+{% from 'macro/text.html' import render_format_control %}
+
 {% block content %}
 
 {% if message is not none %}
@@ -42,6 +44,11 @@
             <input type="date" name="close_date" value="{{ call.date_close | format_date }}" placeholder="YYYY-MM-DD" required="requried" size="10" />
             <input type="time" name="close_time" value="{{ call.date_close | format_time }}" placeholder="HH:MM" required="required" size="5" />
             <span class="explanation">UT, proposal deadline</span>
+        </li>
+        <li>
+            <label for="note_format">Note format</label>
+            {{ render_format_control('note_format', call.note_format, format_types) }}
+            <span class="explanation">applies to all notes below</span>
         </li>
         <li>
             <label for="abst_word_lim">Abstract word limit</label>

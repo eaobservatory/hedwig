@@ -55,7 +55,8 @@ Calculation = namedtuple(
 Call = namedtuple(
     'Call',
     map(lambda x: x.name, call.columns) +
-    ['facility_id', 'semester_name', 'queue_name', 'queue_description'])
+    ['facility_id', 'semester_name', 'queue_name',
+     'queue_description', 'queue_description_format'])
 
 Category = namedtuple(
     'Category',
@@ -207,14 +208,39 @@ ValidationMessage = namedtuple(
 
 class FormatType(object):
     PLAIN = 1
+    RST = 2
+
+    FormatTypeInfo = namedtuple('FormatTypeInfo', ('name', 'allow_user'))
 
     _info = OrderedDict((
-        (PLAIN, 'Plain'),
+        (PLAIN, FormatTypeInfo('Plain', True)),
+        (RST,   FormatTypeInfo('RST',   False)),
     ))
 
     @classmethod
-    def is_valid(cls, format):
-        return format in cls._info
+    def is_valid(cls, format_, is_system=False):
+        """
+        Determines whether the given format is allowed.
+
+        By default only allows formats for which "allow_user" is enabled.
+        However with the "is_system" flag, allows any format.
+        """
+
+        format_info = cls._info.get(format_, None)
+
+        if format_info is None:
+            return False
+
+        return is_system or format_info.allow_user
+
+    @classmethod
+    def get_options(cls, is_system=False):
+        """
+        Get an OrderedDict of type names by type numbers.
+        """
+
+        return OrderedDict([(k, v.name) for (k, v) in cls._info.items()
+                            if is_system or v.allow_user])
 
 
 class AttachmentState(object):
