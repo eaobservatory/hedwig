@@ -226,11 +226,12 @@
             </nav>
 
             {% if tool_note is none %}
-                <p class="not_present">
+                <p class="missing">
                     This proposal does not yet have a note on the target tool results.
-                    Please use the links above to check your targets and add
-                    a note on the results here.
                 </p>
+
+                {% block proposal_targets_tool_message %}
+                {% endblock %}
             {% else %}
                 {{ tool_note | format_text }}
             {% endif %}
