@@ -6,12 +6,27 @@
 
 <table>
     <tr>
-        <th>Start</th>
+        <th>Semester start of observing</th>
         <td>{{ semester.date_start | format_datetime }} UT</td>
     </tr>
     <tr>
-        <th>End</th>
+        <th>Semester end of observing</th>
         <td>{{ semester.date_end | format_datetime }} UT</td>
+    </tr>
+</table>
+
+<table>
+    <tr>
+        <th>Queue</th>
+        {% for call in calls %}
+            <td><a href="#queue_{{ call.queue_id }}">{{ call.queue_name }}</a></td>
+        {% endfor %}
+    </tr>
+    <tr>
+        <th>Call for proposals closing date</th>
+        {% for call in calls %}
+            <td>{{ call.date_close | format_datetime }} UT</td>
+        {% endfor %}
     </tr>
 </table>
 
@@ -24,24 +39,25 @@
     Please select a queue to start a new proposal.
 </p>
 
-<ul>
-    {% for call in calls %}
-        <li>
-            <p>
-                <a href="{{ url_for('.proposal_new', call_id=call.id) }}">{{ call.queue_name }}</a>
-            </p>
+{% for call in calls %}
+    <h3 id="queue_{{ call.queue_id }}">{{ call.queue_name }}</h3>
 
-            <p>
-                Call for proposals in this queue open:
-                {{ call.date_open | format_datetime }}
-                &mdash;
-                {{ call.date_close | format_datetime }}
-                UT
-            </p>
+    <table>
+        <tr>
+            <th>Call for proposals opens</th>
+            <td>{{ call.date_open | format_datetime }} UT</td>
+        </tr>
+        <tr>
+            <th>Call for proposals closes</th>
+            <td>{{ call.date_close | format_datetime }} UT</td>
+        </tr>
+    </table>
 
-            {{ call.queue_description | format_text(call.queue_description_format) }}
-        </li>
-    {% endfor %}
-</ul>
+    <p>
+        <a href="{{ url_for('.proposal_new', call_id=call.id) }}">Create a proposal for the {{ call.queue_name }} Queue</a>
+    </p>
+
+    {{ call.queue_description | format_text(call.queue_description_format) }}
+{% endfor %}
 
 {% endblock %}

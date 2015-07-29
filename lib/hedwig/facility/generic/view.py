@@ -213,5 +213,5 @@ class Generic(GenericAdmin, GenericProposal):
         return {
             'title': 'Call for Semester {0}'.format(semester.name),
             'semester': semester,
-            'calls': calls.values(),
+            'calls': list(calls.values()),
         }
