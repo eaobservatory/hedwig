@@ -2,7 +2,11 @@
 {% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
 {% set scripts=['edit_member'] %}
 
+{% from 'macro/member.html' import render_member_warning %}
+
 {% block content %}
+
+{{ render_member_warning() }}
 
 {% if message is not none %}
     <p class="warning">

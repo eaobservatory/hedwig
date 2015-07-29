@@ -84,6 +84,10 @@ p.caution:before {
     content: "CAUTION:";
 }
 
+p.caution + *.caution_detail {
+    margin-top: -1ex;
+}
+
 input[type="number"] {
     width: 10ex;
 }

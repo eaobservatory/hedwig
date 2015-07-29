@@ -1,0 +1,18 @@
+{% macro render_member_warning() %}
+    <p class="caution">
+        Adding members with permission to edit the proposal will
+        grant them full access to the proposal.
+    </p>
+
+    <ul class="caution_detail">
+        <li>
+            All editors are able to edit the members list,
+            including adding/removing people and changing the PI.
+        </li>
+        <li>
+            This system does not (yet) guard against concurrent editing
+            of part of a proposal.  You should coordinate edits with
+            other members to avoid editing the same part at the same time.
+        </li>
+    </ul>
+{% endmacro %}
