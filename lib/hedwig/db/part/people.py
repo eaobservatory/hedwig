@@ -306,6 +306,18 @@ class PeoplePart(object):
                     auth_failure.c.attempts: auth_failure.c.attempts + 1,
                 }))
 
+    def delete_auth_failure(self, user_name):
+        """
+        Delete authentication failure records for a given user name.
+
+        This can be used, for example, after a user has reset their password
+        via the password reset system.
+        """
+
+        with self._transaction() as conn:
+            conn.execute(auth_failure.delete().where(
+                auth_failure.c.user_name == user_name))
+
     def get_institution(self, institution_id, _conn=None):
         """
         Get an institution record.

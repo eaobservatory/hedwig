@@ -321,8 +321,9 @@ def password_reset_token_use(db, args, form, is_post, remote_addr):
             db.update_user_password(user_id, password, remote_addr=remote_addr)
             flash('Your password has been changed.'
                   ' You may now log in using your new password.')
-            raise HTTPRedirect(url_for(
-                '.log_in', user_name=db.get_user_name(user_id)))
+            user_name = db.get_user_name(user_id)
+            db.delete_auth_failure(user_name=user_name)
+            raise HTTPRedirect(url_for('.log_in', user_name=user_name))
 
         except UserError as e:
             message = e.message
