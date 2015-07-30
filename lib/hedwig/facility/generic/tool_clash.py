@@ -69,6 +69,7 @@ class ClashTool(BaseTargetTool):
         target = TargetCoord('', '', CoordSystem.ICRS)
         message = None
         clashes = None
+        non_clashes = None
 
         if not form:
             self._check_mocs_exist(db)
@@ -84,7 +85,7 @@ class ClashTool(BaseTargetTool):
                     parse_coord(target.system, target.x, target.y,
                                 target_name))
 
-                clashes = self._do_moc_search(db, [target_obj])
+                (clashes, non_clashes) = self._do_moc_search(db, [target_obj])
 
             except UserError as e:
                 message = e.message
@@ -98,6 +99,7 @@ class ClashTool(BaseTargetTool):
             'target': target,
             'message': message,
             'clashes': clashes,
+            'non_clashes': non_clashes,
             'target_url': url_for('.tool_clash'),
             'target_moc_info': '.tool_clash_moc_info',
             'target_proposal': None,
@@ -111,6 +113,7 @@ class ClashTool(BaseTargetTool):
 
         message = None
         clashes = None
+        non_clashes = None
 
         if form is None:
             self._check_mocs_exist(db)
@@ -132,7 +135,8 @@ class ClashTool(BaseTargetTool):
                 # and from Astropy objects twice.
                 target_objects = parse_source_list(buff).to_object_list()
 
-                clashes = self._do_moc_search(db, target_objects)
+                (clashes, non_clashes) = self._do_moc_search(db,
+                                                             target_objects)
 
             except UserError as e:
                 message = e.message
@@ -145,6 +149,7 @@ class ClashTool(BaseTargetTool):
             'mime_types': ['text/plain', 'text/csv'],
             'message': message,
             'clashes': clashes,
+            'non_clashes': non_clashes,
             'target_url': url_for('.tool_upload_clash'),
             'target_moc_info': '.tool_clash_moc_info',
             'target_proposal': None,
@@ -159,12 +164,13 @@ class ClashTool(BaseTargetTool):
 
         self._check_mocs_exist(db)
 
-        clashes = self._do_moc_search(db, target_objects)
+        (clashes, non_clashes) = self._do_moc_search(db, target_objects)
 
         return {
             'title': 'Clash Tool',
             'show_input': False,
             'clashes': clashes,
+            'non_clashes': non_clashes,
             'target_moc_info': '.tool_clash_moc_info',
             'target_proposal': url_for('.proposal_view',
                                        proposal_id=proposal.id),
@@ -186,6 +192,7 @@ class ClashTool(BaseTargetTool):
     def _do_moc_search(self, db, targets):
         order = self.facility.get_moc_order()
         clashes = []
+        non_clashes = []
         public = True
 
         if 'user_id' in session and session.get('is_admin', False):
@@ -210,14 +217,19 @@ class ClashTool(BaseTargetTool):
                 facility_id=self.facility.id_, public=public,
                 order=order, cell=int(cell))
 
+            archive_url = self.facility.make_archive_search_url(
+                coord.spherical.lon.deg, coord.spherical.lat.deg)
+            archive_url_text = ' '.join(format_coord(CoordSystem.ICRS, coord))
+
             if target_clashes:
                 clashes.append(TargetClash(
-                    target, target_clashes,
-                    self.facility.make_archive_search_url(
-                        coord.spherical.lon.deg, coord.spherical.lat.deg),
-                    ' '.join(format_coord(CoordSystem.ICRS, coord))))
+                    target, target_clashes, archive_url, archive_url_text))
 
-        return clashes
+            else:
+                non_clashes.append(TargetClash(
+                    target, None, archive_url, archive_url_text))
+
+        return (clashes, non_clashes)
 
     def view_moc_info(self, db, args, form, moc_id):
         public = True

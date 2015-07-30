@@ -7,8 +7,10 @@
         <h2>Output</h2>
 
         {% if clashes %}
+            <h3>Matches</h3>
+
             <p>
-                Matches were found in the following defined areas of sky coverage:
+                Matches were found for the following targets:
             </p>
 
             <ul>
@@ -17,6 +19,11 @@
                         <p>
                             {{ clash.target.name }}
                         </p>
+
+                        <p>
+                            Matches were found in the following defined areas of sky coverage:
+                        </p>
+
                         <ul>
                             {% for clash in clash.mocs.values() %}
                                 <li>
@@ -32,10 +39,30 @@
                     </li>
                 {% endfor %}
             </ul>
-        {% else %}
-            <p class="not_present">
-                No matches were found for the given coordinates.
+        {% endif %}
+
+        {% if non_clashes %}
+            <h3>Non-matches</h3>
+
+            <p>
+                No match was found for the following targets:
             </p>
+
+            <ul>
+                {% for clash in non_clashes %}
+                    <li>
+                        <p>
+                            {{ clash.target.name }}
+                        </p>
+
+                        {% if clash.target_search is not none %}
+                            <p>
+                                <a href="{{ clash.target_search }}" target="_blank">Search archive at {{ clash.display_coord }}</a>
+                            </p>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
         {% endif %}
     </section>
 {% endif %}
