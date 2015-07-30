@@ -9,6 +9,7 @@ url=
 name=Hedwig
 secret_key=
 facilities=Generic
+log_file=
 
 # The maximum file upload sizes for proposal PDFs and figures are specified
 # here in MiB.

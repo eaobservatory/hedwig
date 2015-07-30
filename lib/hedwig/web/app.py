@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict
 from flask import Flask
 from jinja2.runtime import Undefined
+import logging
 import os
 
 from ..config import get_config, get_database, get_facilities, get_home
@@ -57,6 +58,15 @@ def create_web_app(db=None):
         template_folder=os.path.join(home, 'data', 'web', 'template'),
     )
 
+    log_file = config.get('application', 'log_file')
+    if log_file:
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setLevel(logging.WARNING)
+        file_handler.setFormatter(logging.Formatter(
+            fmt='%(asctime)s %(levelname)s %(name)s %(message)s',
+            datefmt='%Y-%m-%dT%H:%M:%S'))
+        app.logger.addHandler(file_handler)
+
     # Determine maximum upload size: check all upload limits from the
     # configuration file.
     max_upload_size = max(
@@ -68,7 +78,7 @@ def create_web_app(db=None):
     # there isn't one, generate a temporary key.
     secret_key = config.get('application', 'secret_key')
     if not secret_key:
-        # TODO: issue warning: generating temporary secret key
+        app.logger.warning('Generating temporary secret key')
         secret_key = os.urandom(32)
     app.secret_key = secret_key
 
