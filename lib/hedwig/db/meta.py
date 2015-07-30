@@ -46,6 +46,14 @@ affiliation = Table(
     UniqueConstraint('queue_id', 'name'),
     **_table_opts)
 
+auth_failure = Table(
+    'auth_failure',
+    metadata,
+    Column('user_name', Unicode(255), primary_key=True, nullable=False),
+    Column('attempts', Integer, nullable=False),
+    Column('expiry', DateTime(), nullable=False, index=True),
+    **_table_opts)
+
 calculator = Table(
     'calculator',
     metadata,

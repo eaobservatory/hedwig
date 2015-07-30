@@ -25,12 +25,13 @@ from sqlalchemy.sql.expression import and_, not_
 from sqlalchemy.sql.functions import count
 
 from ...auth import check_password_hash, create_password_hash, generate_token
-from ...error import ConsistencyError, Error, NoSuchRecord, UserError
+from ...error import ConsistencyError, DatabaseIntegrityError, \
+    Error, NoSuchRecord, UserError
 from ...type import Email, EmailCollection, Institution, InstitutionInfo, \
     Person, PersonInfo, ResultCollection, UserLogEvent
 from ...util import get_countries
-from ..meta import email, institution, institution_log, invitation, \
-    member, person, \
+from ..meta import auth_failure, email, institution, institution_log, \
+    invitation, member, person, \
     reset_token, user, user_log, verify_token
 from ..util import require_not_none
 
@@ -221,6 +222,9 @@ class PeoplePart(object):
         rare use-case).
 
         Returns the user_id on success, None otherwise.
+
+        Attempts to protect against multiple authentication attempts, but only
+        if "name" is given.  (I.e. not in user_id re-authentication mode.)
         """
 
         stmt = user.select()
@@ -239,6 +243,21 @@ class PeoplePart(object):
             raise UserError('The password can not be blank.')
 
         with self._transaction() as conn:
+            if name is not None:
+                # Removed any expired auth_failure records.
+                conn.execute(auth_failure.delete().where(
+                    auth_failure.c.expiry < datetime.utcnow()))
+
+                # Check for excessive authentication failures.
+                attempts = conn.execute(select([
+                    auth_failure.c.attempts
+                ]).where(auth_failure.c.user_name == name)).scalar()
+
+                # Current limit: more that 5 (i.e. 6 or more failures).
+                if attempts > 5:
+                    raise UserError(
+                        'Too many authentication attempts for this user name.')
+
             result = conn.execute(stmt).first()
 
         if result is None:
@@ -252,6 +271,34 @@ class PeoplePart(object):
                                    result[user.c.salt]):
                 return result[user.c.id]
             else:
+                if name is not None:
+                    # Record the authentication failure.  Note the
+                    # try .. except outside the with block: this is because
+                    # our context manager detects and raises
+                    # DatabaseIntegrityError so we can only catch it
+                    # after the block.
+                    expiry = datetime.utcnow() + timedelta(minutes=30)
+
+                    try:
+                        with self._transaction() as conn:
+                            conn.execute(auth_failure.insert().values({
+                                auth_failure.c.user_name: name,
+                                auth_failure.c.attempts: 1,
+                                auth_failure.c.expiry: expiry,
+                            }))
+
+                    except DatabaseIntegrityError:
+                        with self._transaction() as conn:
+                            auth_fail_alias = auth_failure.alias()
+
+                            conn.execute(auth_failure.update().where(
+                                auth_failure.c.user_name == name
+                            ).values({
+                                auth_failure.c.attempts: select(
+                                    [auth_fail_alias.c.attempts + 1]).where(
+                                    auth_fail_alias.c.user_name == name),
+                            }))
+
                 return None
 
     def get_institution(self, institution_id, _conn=None):
