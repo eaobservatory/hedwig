@@ -300,14 +300,10 @@ class PeoplePart(object):
 
         except DatabaseIntegrityError:
             with self._transaction() as conn:
-                auth_fail_alias = auth_failure.alias()
-
                 conn.execute(auth_failure.update().where(
                     auth_failure.c.user_name == name
                 ).values({
-                    auth_failure.c.attempts: select(
-                        [auth_fail_alias.c.attempts + 1]).where(
-                        auth_fail_alias.c.user_name == name),
+                    auth_failure.c.attempts: auth_failure.c.attempts + 1,
                 }))
 
     def get_institution(self, institution_id, _conn=None):
