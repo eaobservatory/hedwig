@@ -61,6 +61,10 @@ class HeterodyneCalculator(JCMTCalculator):
         ('frsw', SwitchingMode(HeterodyneITC.FRSW, 'Frequency')),
     ))
 
+    # Note: the JavaScript assumes that each array-only mode is preceeded
+    # by the equivalent non-array-only mode.  In other words, if an array-only
+    # mode is selected when a non-array receiver is chosen, it should change
+    # to the preceeding mode.
     acsis_modes = OrderedDict((
         (1, ACSISMode('250 MHz',            0.0305, False)),
         (2, ACSISMode('400/420/440 MHz',    0.061,  True)),

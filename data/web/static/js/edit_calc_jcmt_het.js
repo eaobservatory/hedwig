@@ -2,8 +2,13 @@ $(document).ready(function () {
     var rx_select = $('select[name=rx]');
     var mm_select = $('select[name=mm]');
 
+    var freq_res_select = $('select[name=acsis_mode]');
+    var freq_res_box = $('input[name=res]');
+    var freq_res_unit = $('select[name=res_unit]');
+
     var check_rx_opt = (function () {
         var rx = rx_select.find(':selected');
+        var is_array = rx.data('is_array');
         var dual_pol_available = rx.data('dual_pol_available');
         var ssb_available = rx.data('ssb_available');
         var dsb_available = rx.data('dsb_available');
@@ -30,6 +35,18 @@ $(document).ready(function () {
         freq_box.attr('max', freq_max);
         $('span#freq_min').text(freq_min);
         $('span#freq_max').text(freq_max);
+
+        freq_res_select.children().each(function () {
+            var acsis_mode = $(this);
+            var is_disabled = (acsis_mode.data('array_only') && ! is_array);
+
+            if (acsis_mode.prop('selected') && is_disabled) {
+                freq_res_select.val(acsis_mode.prev().val());
+                check_freq_res();
+            };
+
+            acsis_mode.prop('disabled', is_disabled);
+        });
 
         check_mode_opt();
     });
@@ -110,10 +127,6 @@ $(document).ready(function () {
     $('select[name^=n_pt_jiggle]').change(function () {
         $('input[name=n_pt]').val(this.value);
     });
-
-    var freq_res_select = $('select[name=acsis_mode]');
-    var freq_res_box = $('input[name=res]');
-    var freq_res_unit = $('select[name=res_unit]');
 
     var check_freq_res = (function () {
         var is_res_other = (freq_res_select.val() === 'other');
