@@ -68,3 +68,11 @@
 {% endif %}
 
 {% endblock %}
+
+{% block tool_footer %}
+    <nav>
+        <p>
+            <a href="{{ url_for('.tool_clash_moc_list') }}">View all defined areas of sky coverage</a>
+        </p>
+    </nav>
+{% endblock %}

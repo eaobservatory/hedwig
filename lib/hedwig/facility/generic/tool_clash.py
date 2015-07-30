@@ -58,7 +58,12 @@ class ClashTool(BaseTargetTool):
              '/tool/clash/moc/<int:moc_id>',
              'tool_clash_moc_info',
              self.view_moc_info,
-             {})
+             {}),
+            ('generic/moc_view_list.html',
+             '/tool/clash/moc/',
+             'tool_clash_moc_list',
+             self.view_moc_list,
+             {}),
         ]
 
     def view_single(self, db, args, form):
@@ -230,6 +235,21 @@ class ClashTool(BaseTargetTool):
                     target, None, archive_url, archive_url_text))
 
         return (clashes, non_clashes)
+
+    def view_moc_list(self, db, args, form):
+        public = True
+        if 'user_id' in session and session.get('is_admin', False):
+            # If the user has administrative access, remove public
+            # constraint.  (Probably not worthwhile to re-validate
+            # administrative access here.)
+            public = None
+
+        mocs = db.search_moc(facility_id=self.facility.id_, public=public)
+
+        return {
+            'title': 'Coverage List',
+            'mocs': mocs.values(),
+        }
 
     def view_moc_info(self, db, args, form, moc_id):
         public = True
