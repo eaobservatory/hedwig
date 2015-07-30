@@ -5,4 +5,15 @@
 
 {{ moc.description | format_text(moc.description_format) }}
 
+<table>
+    <tr>
+        <th>Last updated</th>
+        <td>{{ moc.uploaded | format_datetime }}</td>
+    </tr>
+    <tr>
+        <th>Area covered</th>
+        <td>{{ moc.area | fmt('{:0.1f}') }} square degrees</td>
+    </tr>
+</table>
+
 {% endblock %}
