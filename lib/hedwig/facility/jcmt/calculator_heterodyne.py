@@ -567,7 +567,6 @@ class HeterodyneCalculator(JCMTCalculator):
             'sw_mode': self.switch_modes[input_['sw']].id,
             'freq': freq,
             'freq_res': freq_res,
-            'tau_225': input_['tau'],
             'zenith_angle_deg': zenith_angle_deg,
             'is_dsb': (input_['sb'] == 'dsb'),
             'dual_polarization': input_['dual_pol'],
@@ -585,7 +584,7 @@ class HeterodyneCalculator(JCMTCalculator):
         try:
             if mode == self.CALC_TIME:
                 (result, extra) = self.itc.calculate_time(
-                    input_['rms'], **kwargs)
+                    input_['rms'], tau_225=input_['tau'], **kwargs)
 
                 output = {
                     'elapsed': result / 3600.0,
@@ -593,7 +592,8 @@ class HeterodyneCalculator(JCMTCalculator):
 
             elif mode == self.CALC_RMS_FROM_ELAPSED_TIME:
                 (result, extra) = self.itc.calculate_rms_for_elapsed_time(
-                    input_['elapsed'] * 3600.0, **kwargs)
+                    input_['elapsed'] * 3600.0, tau_225=input_['tau'],
+                    **kwargs)
 
                 output = {
                     'rms': result,
@@ -601,7 +601,7 @@ class HeterodyneCalculator(JCMTCalculator):
 
             elif mode == self.CALC_RMS_FROM_INT_TIME:
                 (result, extra) = self.itc.calculate_rms_for_int_time(
-                    input_['int_time'], **kwargs)
+                    input_['int_time'], tau_225=input_['tau'], **kwargs)
 
                 output = {
                     'rms': result,
@@ -613,6 +613,45 @@ class HeterodyneCalculator(JCMTCalculator):
 
         except HeterodyneITCError as e:
             raise UserError(e.message)
+
+        weather_band_comparison = OrderedDict()
+        kwargs['with_extra_output'] = False
+        for (weather_band, weather_band_info) in self.bands.items():
+            weather_band_result = {}
+            for (condition_name, condition_tau) in \
+                    weather_band_info._asdict().items():
+                if condition_tau is None:
+                    weather_band_result[condition_name] = None
+                    continue
+
+                try:
+                    if mode == self.CALC_TIME:
+                        weather_band_result[condition_name] = \
+                            self.itc.calculate_time(
+                                input_['rms'], tau_225=condition_tau,
+                                **kwargs) / 3600.0
+
+                    elif mode == self.CALC_RMS_FROM_ELAPSED_TIME:
+                        weather_band_result[condition_name] = \
+                            self.itc.calculate_rms_for_elapsed_time(
+                                input_['elapsed'] * 3600.0,
+                                tau_225=condition_tau, **kwargs)
+
+                    elif mode == self.CALC_RMS_FROM_INT_TIME:
+                        weather_band_result[condition_name] = \
+                            self.itc.calculate_rms_for_int_time(
+                                input_['int_time'], tau_225=condition_tau,
+                                **kwargs)
+
+                except HeterodyneITCError as e:
+                    weather_band_result[condition_name] = None
+
+            weather_band_comparison[weather_band] = weather_band_result
+
+        primary_output = self.get_outputs(mode)[0]
+        extra['wb_comparison'] = weather_band_comparison
+        extra['wb_comparison_format'] = primary_output.format
+        extra['wb_comparison_unit'] = primary_output.unit
 
         extra_output.update(extra)
 

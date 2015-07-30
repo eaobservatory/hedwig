@@ -412,6 +412,32 @@ class SCUBA2Calculator(JCMTCalculator):
 
             output = {'time': time_tot / 3600.0}
 
+            # Make weather band comparison table.
+            weather_band_comparison = OrderedDict()
+            for (weather_band, weather_band_info) in self.bands.items():
+                weather_band_result = {}
+                for (condition_name, condition_tau) in \
+                        weather_band_info._asdict().items():
+                    if condition_tau is None:
+                        weather_band_result[condition_name] = None
+                        continue
+
+                    transmission = self.itc.calculate_transmission(
+                        airmass,
+                        self.itc.calculate_tau(filter_, condition_tau))
+                    time_src = self.itc.calculate_time(
+                        map_mode, filter_, transmission, factor[filter_],
+                        input_['rms'])
+                    time_tot = time_src + self.itc.estimate_overhead(map_mode,
+                                                                     time_src)
+                    weather_band_result[condition_name] = time_tot / 3600.0
+
+                weather_band_comparison[weather_band] = weather_band_result
+
+            extra['wb_comparison'] = weather_band_comparison
+            extra['wb_comparison_format'] = '{:.3f}'
+            extra['wb_comparison_unit'] = 'hours'
+
         elif mode == self.CALC_RMS:
             # Convert time to seconds.
             time_tot = input_['time'] * 3600.0
@@ -427,6 +453,29 @@ class SCUBA2Calculator(JCMTCalculator):
                 'rms_450': self.itc.calculate_rms(
                     map_mode, 450, transmission[450], factor[450], time_src),
             }
+
+            # Make weather band comparison table.
+            weather_band_comparison = OrderedDict()
+            for (weather_band, weather_band_info) in self.bands.items():
+                weather_band_result = {}
+                for (condition_name, condition_tau) in \
+                        weather_band_info._asdict().items():
+                    if condition_tau is None:
+                        weather_band_result[condition_name] = None
+                        continue
+
+                    transmission = self.itc.calculate_transmission(
+                        airmass,
+                        self.itc.calculate_tau(850, condition_tau))
+                    weather_band_result[condition_name] = \
+                        self.itc.calculate_rms(
+                            map_mode, 850, transmission, factor[850], time_src)
+
+                weather_band_comparison[weather_band] = weather_band_result
+
+            extra['wb_comparison'] = weather_band_comparison
+            extra['wb_comparison_format'] = '{:.3f}'
+            extra['wb_comparison_unit'] = 'mJy/beam'
 
         else:
             raise CalculatorError('Unknown mode.')

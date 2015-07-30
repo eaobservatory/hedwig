@@ -207,3 +207,40 @@
     </tr>
     {% endif %}
 {% endblock %}
+
+{% block calculator_output_extra %}
+    <table>
+        <tr>
+            <th>&nbsp;</th>
+            {% for weather_band in output_extra.wb_comparison.keys() %}
+                <th>Band {{ weather_band }}</th>
+            {% endfor %}
+        </tr>
+        <tr>
+            <th>Representative</th>
+            {% for weather_band in output_extra.wb_comparison.values() %}
+                <td>{{ weather_band.rep | fmt(output_extra.wb_comparison_format) }} {{ output_extra.wb_comparison_unit }}</td>
+            {% endfor %}
+        </tr>
+        <tr>
+            <th>Range</th>
+            {% for weather_band in output_extra.wb_comparison.values() %}
+                <td>
+                    {% if weather_band.min is none %}
+                        &hellip;
+                    {% else %}
+                        {{ weather_band.min | fmt(output_extra.wb_comparison_format) }}
+                    {% endif %}
+                    {% if (weather_band.min is not none) and (weather_band.max is not none) %}
+                        &ndash;
+                    {% endif %}
+                    {% if weather_band.max is none %}
+                        &hellip;
+                    {% else %}
+                        {{ weather_band.max | fmt(output_extra.wb_comparison_format) }}
+                    {% endif %}
+                </td>
+            {% endfor %}
+        </tr>
+    </table>
+{% endblock %}
