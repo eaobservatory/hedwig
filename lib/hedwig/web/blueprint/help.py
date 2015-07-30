@@ -19,21 +19,12 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 import os.path
-import re
-
-from collections import namedtuple, OrderedDict
 
 from flask import Blueprint, send_from_directory
 
 from ...config import get_home
-from ..format import format_text_rst
-from ..util import HTTPError, HTTPNotFound, require_admin, templated
-
-
-valid_page_name = re.compile('^([-_a-z0-9]+)$')
-
-
-TOCEntry = namedtuple('TOCEntry', ('mtime', 'title'))
+from ...view.help import prepare_help_page
+from ..util import require_admin, templated
 
 
 def create_help_blueprint():
@@ -90,59 +81,3 @@ def create_help_blueprint():
         return send_from_directory(admin_image_root, file_name)
 
     return bp
-
-
-def prepare_help_page(doc_root, page_name, toc_cache):
-    """
-    Prepare template context information for viewing a help page.
-    """
-
-    if page_name is None:
-        file_name = 'index'
-
-    else:
-        m = valid_page_name.match(page_name)
-
-        if not m:
-            raise HTTPError('Invalid help page name.')
-
-        file_name = m.group(1)
-
-    path_name = os.path.join(doc_root, file_name + '.rst')
-
-    if not os.path.exists(path_name):
-        raise HTTPNotFound('Help page  not found.')
-
-    with open(os.path.join(path_name)) as f:
-        text = f.read()
-
-    (body, title, toc) = format_text_rst(text, extract_title_toc=True,
-                                         start_heading=2)
-
-    toc_entries = OrderedDict()
-
-    for toc_entry in toc:
-        path_name = os.path.join(doc_root, toc_entry + '.rst')
-        if not os.path.exists(path_name):
-            continue
-
-        mtime = os.path.getmtime(path_name)
-
-        if toc_entry not in toc_cache or toc_cache[toc_entry].mtime < mtime:
-            with open(path_name) as f:
-                # Assume that the first line of the file is the title.  This
-                # should be more efficient than parsing the whole file as RST.
-                toc_entry_title = f.readline().strip()
-
-            toc_cache[toc_entry] = TOCEntry(mtime, toc_entry_title)
-
-        else:
-            toc_entry_title = toc_cache[toc_entry].title
-
-        toc_entries[toc_entry] = toc_entry_title
-
-    return {
-        'title': title,
-        'help_text': body,
-        'toc': toc_entries,
-    }
