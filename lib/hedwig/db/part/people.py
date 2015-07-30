@@ -261,6 +261,9 @@ class PeoplePart(object):
             result = conn.execute(stmt).first()
 
         if result is None:
+            if name is not None:
+                self._record_auth_failure(name)
+
             # Spend time hashing the password so that the user can't tell
             # that the user name doesn't exist by this function returning fast.
             create_password_hash(password_raw)
@@ -272,34 +275,40 @@ class PeoplePart(object):
                 return result[user.c.id]
             else:
                 if name is not None:
-                    # Record the authentication failure.  Note the
-                    # try .. except outside the with block: this is because
-                    # our context manager detects and raises
-                    # DatabaseIntegrityError so we can only catch it
-                    # after the block.
-                    expiry = datetime.utcnow() + timedelta(minutes=30)
-
-                    try:
-                        with self._transaction() as conn:
-                            conn.execute(auth_failure.insert().values({
-                                auth_failure.c.user_name: name,
-                                auth_failure.c.attempts: 1,
-                                auth_failure.c.expiry: expiry,
-                            }))
-
-                    except DatabaseIntegrityError:
-                        with self._transaction() as conn:
-                            auth_fail_alias = auth_failure.alias()
-
-                            conn.execute(auth_failure.update().where(
-                                auth_failure.c.user_name == name
-                            ).values({
-                                auth_failure.c.attempts: select(
-                                    [auth_fail_alias.c.attempts + 1]).where(
-                                    auth_fail_alias.c.user_name == name),
-                            }))
+                    self._record_auth_failure(name)
 
                 return None
+
+    def _record_auth_failure(self, name):
+        """
+        Record an authentication failure.
+        """
+
+        # Note the try .. except outside the with block: this is because
+        # our context manager detects and raises  DatabaseIntegrityError
+        # so we can only catch it after the block.
+
+        try:
+            expiry = datetime.utcnow() + timedelta(minutes=30)
+
+            with self._transaction() as conn:
+                conn.execute(auth_failure.insert().values({
+                    auth_failure.c.user_name: name,
+                    auth_failure.c.attempts: 1,
+                    auth_failure.c.expiry: expiry,
+                }))
+
+        except DatabaseIntegrityError:
+            with self._transaction() as conn:
+                auth_fail_alias = auth_failure.alias()
+
+                conn.execute(auth_failure.update().where(
+                    auth_failure.c.user_name == name
+                ).values({
+                    auth_failure.c.attempts: select(
+                        [auth_fail_alias.c.attempts + 1]).where(
+                        auth_fail_alias.c.user_name == name),
+                }))
 
     def get_institution(self, institution_id, _conn=None):
         """
