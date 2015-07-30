@@ -111,5 +111,21 @@ $(document).ready(function () {
         $('input[name=n_pt]').val(this.value);
     });
 
+    var freq_res_select = $('select[name=acsis_mode]');
+    var freq_res_box = $('input[name=res]');
+    var freq_res_unit = $('select[name=res_unit]');
+
+    var check_freq_res = (function () {
+        var is_res_other = (freq_res_select.val() === 'other');
+        freq_res_box.prop('disabled', ! is_res_other);
+        freq_res_unit.prop('disabled', ! is_res_other);
+        if (! is_res_other) {
+            freq_res_box.val(freq_res_select.find(':selected').data('resolution'));
+            freq_res_unit.val('MHz');
+        }
+    });
+
+    freq_res_select.change(check_freq_res);
+
     check_rx_opt();
 });

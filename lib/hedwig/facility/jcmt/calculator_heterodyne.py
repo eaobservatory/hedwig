@@ -32,6 +32,7 @@ ReceiverInfoID = namedtuple('ReceiverInfoID', ReceiverInfo._fields + ('id', ))
 
 MappingMode = namedtuple('MappingMode', ('id', 'name', 'sw_modes'))
 SwitchingMode = namedtuple('SwitchingMode', ('id', 'name'))
+ACSISMode = namedtuple('ACSISMode', ('name', 'freq_res', 'array_only'))
 
 
 class HeterodyneCalculator(JCMTCalculator):
@@ -58,6 +59,13 @@ class HeterodyneCalculator(JCMTCalculator):
         ('bmsw', SwitchingMode(HeterodyneITC.BMSW, 'Beam')),
         ('pssw', SwitchingMode(HeterodyneITC.PSSW, 'Position')),
         ('frsw', SwitchingMode(HeterodyneITC.FRSW, 'Frequency')),
+    ))
+
+    acsis_modes = OrderedDict((
+        (1, ACSISMode('250 MHz',            0.0305, False)),
+        (2, ACSISMode('400/420/440 MHz',    0.061,  True)),
+        (3, ACSISMode('1000 MHz',           0.488,  False)),
+        (4, ACSISMode('1600/1800/1860 MHz', 0.977,  True)),
     ))
 
     version = 1
@@ -238,6 +246,9 @@ class HeterodyneCalculator(JCMTCalculator):
 
         defaults = self.get_default_input(self.CALC_TIME)
 
+        is_array_receiver = self.get_receiver_by_name(
+            values['rx'], as_object=True).array is not None
+
         formatted_inputs = {
             x.code:
                 x.format.format(values[x.code] if values[x.code] is not None
@@ -249,8 +260,19 @@ class HeterodyneCalculator(JCMTCalculator):
             for x in inputs
         }
 
+        acsis_mode = None
+        if values['res_unit'] == 'MHz':
+            for (acsis_mode_num, acsis_mode_info) in self.acsis_modes.items():
+                if acsis_mode_info.array_only and not is_array_receiver:
+                    continue
+
+                if abs(values['res'] - acsis_mode_info.freq_res) < 0.0001:
+                    acsis_mode = acsis_mode_num
+                    break
+
         formatted_inputs.update({
             'tau_band': self.get_tau_band(values['tau']),
+            'acsis_mode': acsis_mode,
             'dy_spacing': '{:.3f}'.format(
                 values['dy'] if values['dy'] is not None else defaults['dy']),
         })
@@ -278,6 +300,21 @@ class HeterodyneCalculator(JCMTCalculator):
                 (tau, tau_band) = self.get_form_tau(form)
                 values['tau'] = tau
                 values['tau_band'] = tau_band
+
+            elif input_.code == 'res':
+                if form['acsis_mode'] == 'other':
+                    values[input_.code] = form[input_.code]
+                    values['acsis_mode'] = None
+                else:
+                    acsis_mode = int(form['acsis_mode'])
+                    values[input_.code] = self.acsis_modes[acsis_mode].freq_res
+                    values['acsis_mode'] = acsis_mode
+
+            elif input_.code == 'res_unit':
+                if form['acsis_mode'] == 'other':
+                    values[input_.code] = form[input_.code]
+                else:
+                    values[input_.code] = 'MHz'
 
             elif input_.code == 'n_pt':
                 if map_mode == HeterodyneITC.GRID:
@@ -421,6 +458,7 @@ class HeterodyneCalculator(JCMTCalculator):
             'map_modes': self.map_modes,
             'switch_modes': self.switch_modes,
             'jiggle_patterns': self.itc.get_jiggle_patterns(),
+            'acsis_modes': self.acsis_modes,
             'input_separators': {
                 'rx': 'Receiver',
                 'pos': 'Source and Conditions',
