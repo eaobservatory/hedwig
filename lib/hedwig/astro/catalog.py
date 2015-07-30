@@ -40,6 +40,9 @@ def parse_source_list(source_list, number_from=1):
 
     lines = source_list.splitlines()
 
+    if not lines:
+        raise UserError('The target list appears to be empty.')
+
     target_id = number_from
 
     try:
