@@ -1,0 +1,59 @@
+{% macro render_calculation_title(calculation) %}
+    {% if calculation.title %}
+        {{ calculation.title }}
+    {% else %}
+        {{ calculation.calculator_name }}:
+        {{ calculation.mode_info.name }}
+    {% endif %}
+{% endmacro %}
+
+{% macro render_calculation(calculation) %}
+    <p>
+        {% for value in calculation.inputs %}
+            {% with in_val = calculation.input[value.code] %}
+                {% if in_val is not none  and in_val is not sameas false %}
+                    <span class="calculator_value">
+                        <span class="calc_val_name">
+                            {% if value.abbr is not none %}
+                                <abbr title="{{ value.name }}">{{ value.abbr }}</abbr>
+                            {% else %}
+                                {{ value.name }}
+                            {% endif %}
+                        </span>
+                        {% if in_val is not sameas true %}
+                            <span class="calc_val_value">
+                                {{ in_val | fmt(value.format) }}
+                                {% if value.unit is not none %}
+                                    {{ value.unit }}
+                                {% endif %}
+                            </span>
+                        {% endif %}
+                    </span>
+                {% endif %}
+            {% endwith %}
+        {% endfor %}
+
+    </p>
+
+    <p>
+        {% for value in calculation.outputs %}
+            <span class="calculator_value">
+                {% with out_val = calculation.output[value.code] %}
+                    <span class="calc_val_name">
+                        {% if value.abbr is not none %}
+                            <abbr title="{{ value.name }}">{{ value.abbr }}</abbr>
+                        {% else %}
+                            {{ value.name }}
+                        {% endif %}
+                    </span>
+                    <span class="calc_val_value">
+                        {{ out_val | fmt(value.format) }}
+                        {% if value.unit is not none %}
+                            {{ value.unit }}
+                        {% endif %}
+                    </span>
+                {% endwith %}
+            </span>
+        {% endfor %}
+    </p>
+{% endmacro %}
