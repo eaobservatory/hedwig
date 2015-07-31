@@ -31,6 +31,9 @@ def create_help_blueprint():
     bp = Blueprint('help', __name__)
 
     doc_root = os.path.join(get_home(), 'doc')
+
+    about_doc_root = os.path.join(doc_root, 'about')
+
     user_doc_root = os.path.join(doc_root, 'user')
     user_image_root = os.path.join(user_doc_root, 'image')
     user_toc_cache = {}
@@ -47,7 +50,7 @@ def create_help_blueprint():
     @bp.route('/about')
     @templated('help/help_page.html')
     def help_about():
-        return prepare_help_page(doc_root, 'about', {})
+        return prepare_help_page(about_doc_root, None, {})
 
     @bp.route('/user/')
     @templated('help/help_page.html')

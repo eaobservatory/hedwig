@@ -10,7 +10,7 @@ Contents
     user/index
     admin/index
     maint/index
-    about
+    about/index
 
 Indices and tables
 ------------------
