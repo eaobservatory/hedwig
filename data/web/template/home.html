@@ -2,13 +2,17 @@
 
 {% block content %}
 
-<ul>
+<div id="facilities">
     {% for facility in facilities %}
-        <li>
-            <a href="{{ url_for(facility.code + '.facility_home') }}">{{ facility.name }}</a>
-        </li>
+        <div>
+            <a href="{{ url_for(facility.code + '.facility_home') }}">
+                <img src="{{ url_for('static', filename='image/facility_' + facility.code +'.jpeg') }}" />
+                <br />
+                {{ facility.name }}
+            </a>
+        </div>
     {% endfor %}
-</ul>
+</div>
 
 <nav>
     <ul>

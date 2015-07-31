@@ -40,6 +40,13 @@ div#content {
     border: 1px solid black;
 }
 
+div#facilities > div {
+    border-radius: 1ex;
+    border: 1px solid black;
+    box-shadow: 0.5ex 0.5ex 1ex grey;
+    font-size: 150%;
+}
+
 img.pdf_preview {
     border: 1px solid black;
 }

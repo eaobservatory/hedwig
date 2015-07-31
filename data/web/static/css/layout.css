@@ -53,6 +53,21 @@ ul#flashes li {
     margin-left: 2ex;
 }
 
+div#facilities {
+    text-align: center;
+}
+
+div#facilities > div {
+    display: inline-block;
+    width: 300px;
+    margin: 20px;
+}
+
+div#facilities a {
+    display: block;
+    padding: 20px;
+}
+
 form ol li:not(:first-child) {
     padding-top: 0.5ex;
 }
