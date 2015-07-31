@@ -905,11 +905,17 @@ class GenericProposal(object):
             for x in db.search_proposal_figure(
                 proposal_id=proposal.id, role=role).values()]
 
+        if role == TextRole.TECHNICAL_CASE:
+            calculations = self._prepare_calculations(
+                db.search_calculation(proposal_id=proposal.id))
+        else:
+            calculations = None
+
         return self._edit_text(
             db, proposal, role,
             getattr(proposal, code + '_word_lim'),
             url_for('.{}_edit_text'.format(code), proposal_id=proposal.id),
-            form, 30, figures,
+            form, 30, figures, calculations,
             url_for('.{}_edit'.format(code), proposal_id=proposal.id))
 
     @with_proposal(permission='edit')
@@ -1225,7 +1231,7 @@ class GenericProposal(object):
         }
 
     def _edit_text(self, db, proposal, role, word_limit, target, form, rows,
-                   figures=None, target_redir=None,
+                   figures=None, calculations=None, target_redir=None,
                    extra_initialization=None, extra_form_read=None,
                    extra_form_proc=None):
         name = TextRole.get_name(role)
@@ -1282,6 +1288,7 @@ class GenericProposal(object):
             'word_limit': word_limit,
             'rows': rows,
             'figures': figures,
+            'calculations': calculations,
         })
 
         return ctx
