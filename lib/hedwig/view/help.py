@@ -33,7 +33,7 @@ NavLink = namedtuple(
 
 TOCEntry = namedtuple('TOCEntry', ('mtime', 'title'))
 
-TreeEntry = namedtuple('TreeEntry', ('mtime', 'title', 'toc'))
+TreeEntry = namedtuple('TreeEntry', ('mtime', 'toc'))
 
 
 def prepare_help_page(doc_root, page_name, toc_cache):
@@ -110,17 +110,22 @@ def _read_rst_file(doc_root, path_name):
     return format_text_rst(text, extract_title_toc=True, start_heading=2)
 
 
-def _get_page_title(doc_root, page_name, title_cache):
+def _get_page_title(doc_root, page_name, title_cache, mtime=None):
     """
     Get the title of a page, using the cache if possible.
+
+    The mtime can be given to skip checking if the file exists
+    and reading its mtime.
     """
 
     path_name = os.path.join(doc_root, page_name + '.rst')
 
-    if not os.path.exists(path_name):
-        return None
+    if mtime is None:
 
-    mtime = os.path.getmtime(path_name)
+        if not os.path.exists(path_name):
+            return None
+
+        mtime = os.path.getmtime(path_name)
 
     toc_entry = title_cache.get(page_name)
 
@@ -156,10 +161,11 @@ def _find_nav_link(doc_root, target_name, page_name, title_cache, tree_cache):
     if tree_entry is None or tree_entry.mtime < mtime:
         (body, title, toc) = _read_rst_file(doc_root, path_name)
         sub_tree_cache = OrderedDict(((x, None) for x in toc))
-        tree_cache[page_name] = TreeEntry(mtime, title, sub_tree_cache)
+        tree_cache[page_name] = TreeEntry(mtime, sub_tree_cache)
+        title_cache[page_name] = TOCEntry(mtime, title)
 
     else:
-        title = tree_entry.title
+        title = _get_page_title(doc_root, page_name, title_cache, mtime)
         sub_tree_cache = tree_entry.toc
         toc = list(sub_tree_cache.keys())
 
