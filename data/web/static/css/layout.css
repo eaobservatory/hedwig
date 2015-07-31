@@ -3,13 +3,16 @@ body {
     padding: 0px;
 }
 
-ul#navbar {
+ul#navbar, ul.navlink {
     display: block;
     margin: 0px;
     padding: 1ex;
-    text-align: left;
     list-style-type: none;
     overflow: auto;
+}
+
+ul#navbar {
+    text-align: left;
 }
 
 ul#navbar li {
@@ -19,6 +22,22 @@ ul#navbar li {
 }
 
 li#user_control {
+    float: right;
+}
+
+ul.navlink {
+    text-align: center;
+}
+
+ul.navlink li {
+    display: inline;
+}
+
+ul.navlink li.prev {
+    float: left;
+}
+
+ul.navlink li.next {
     float: right;
 }
 

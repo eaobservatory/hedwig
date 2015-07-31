@@ -1,6 +1,10 @@
 {% extends 'layout.html' %}
 
+{% from 'macro/nav.html' import render_nav_link %}
+
 {% block content %}
+
+{{ render_nav_link(nav_link) }}
 
 {% if toc %}
     <ul>
@@ -11,5 +15,7 @@
 {% endif %}
 
 {{ help_text }}
+
+{{ render_nav_link(nav_link) }}
 
 {% endblock %}

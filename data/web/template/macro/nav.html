@@ -1,0 +1,19 @@
+{% macro render_nav_link(nav_link) %}
+    {% if nav_link is not none %}
+        <nav>
+            <ul class="navlink">
+                {% if nav_link.prev is not none %}
+                    <li class="prev"><a href="{{ nav_link.prev }}">&larr; {{ nav_link.prev_title }}</a></li>
+                {% endif %}
+
+                {% if nav_link.next is not none %}
+                    <li class="next"><a href="{{ nav_link.next }}">{{ nav_link.next_title }} &rarr;</a></li>
+                {% endif %}
+
+                {% if nav_link.up is not none %}
+                    <li class="up"><a href="{{ nav_link.up }}">&uarr; {{ nav_link.up_title }}</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% endmacro %}

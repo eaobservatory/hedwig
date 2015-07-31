@@ -33,6 +33,14 @@ abbr {
     text-shadow: 0px 0px 10px white;
 }
 
+ul.navlink {
+    opacity: 0.5;
+}
+
+ul.navlink a {
+    text-decoration: none;
+}
+
 table {
     border-collapse: collapse;
 }
