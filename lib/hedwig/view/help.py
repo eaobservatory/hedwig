@@ -33,6 +33,8 @@ NavLink = namedtuple(
 
 TOCEntry = namedtuple('TOCEntry', ('mtime', 'title'))
 
+TreeEntry = namedtuple('TreeEntry', ('mtime', 'title', 'toc'))
+
 
 def prepare_help_page(doc_root, page_name, toc_cache):
     """
@@ -42,6 +44,16 @@ def prepare_help_page(doc_root, page_name, toc_cache):
     information about other pages for use in generating tables
     of contents.
     """
+
+    title_cache = toc_cache.get('_title')
+    if title_cache is None:
+        title_cache = {}
+        toc_cache['_title'] = title_cache
+
+    tree_cache = toc_cache.get('_tree')
+    if tree_cache is None:
+        tree_cache = {}
+        toc_cache['_tree'] = tree_cache
 
     if page_name is None:
         file_name = 'index'
@@ -54,16 +66,30 @@ def prepare_help_page(doc_root, page_name, toc_cache):
 
         file_name = m.group(1)
 
-    (body, title, toc) = _read_rst_file(doc_root, file_name)
+    path_name = os.path.join(doc_root, file_name + '.rst')
 
-    toc_entries = _process_toc_entries(doc_root, toc, toc_cache)
+    if not os.path.exists(path_name):
+        raise HTTPNotFound('Help page  not found.')
+
+    (body, title, toc) = _read_rst_file(doc_root, path_name)
+
+    toc_entries = OrderedDict()
+
+    for toc_entry in toc:
+        toc_entry_title = _get_page_title(doc_root, toc_entry, title_cache)
+
+        if toc_entry_title is None:
+            continue
+
+        toc_entries[toc_entry] = toc_entry_title
 
     if page_name is None:
         nav_link = NavLink(url_for('.help_index'), 'Help',
                            None, None, None, None)
 
     else:
-        nav_link = _find_nav_link(doc_root, page_name, 'index', toc_cache)
+        nav_link = _find_nav_link(doc_root, page_name, 'index',
+                                  title_cache, tree_cache)
 
     return {
         'title': title,
@@ -73,17 +99,10 @@ def prepare_help_page(doc_root, page_name, toc_cache):
     }
 
 
-def _read_rst_file(doc_root, file_name):
+def _read_rst_file(doc_root, path_name):
     """
     Read a file and return the body, title and toc.
-
-    Raises HTTPNotFound if the file doesn't exist.
     """
-
-    path_name = os.path.join(doc_root, file_name + '.rst')
-
-    if not os.path.exists(path_name):
-        raise HTTPNotFound('Help page  not found.')
 
     with open(os.path.join(path_name)) as f:
         text = f.read()
@@ -91,77 +110,88 @@ def _read_rst_file(doc_root, file_name):
     return format_text_rst(text, extract_title_toc=True, start_heading=2)
 
 
-def _process_toc_entries(doc_root, toc, toc_cache):
+def _get_page_title(doc_root, page_name, title_cache):
     """
-    Processes the TOC obtained from an RST file and returns
-    an OrderedDict of entries and their titles.
-
-    Also takes a reference to the TOC cache dictionary.
+    Get the title of a page, using the cache if possible.
     """
 
-    toc_entries = OrderedDict()
+    path_name = os.path.join(doc_root, page_name + '.rst')
 
-    for toc_entry in toc:
-        path_name = os.path.join(doc_root, toc_entry + '.rst')
-        if not os.path.exists(path_name):
-            continue
-
-        mtime = os.path.getmtime(path_name)
-
-        if toc_entry not in toc_cache or toc_cache[toc_entry].mtime < mtime:
-            with open(path_name) as f:
-                # Assume that the first line of the file is the title.  This
-                # should be more efficient than parsing the whole file as RST.
-                toc_entry_title = f.readline().strip()
-
-            toc_cache[toc_entry] = TOCEntry(mtime, toc_entry_title)
-
-        else:
-            toc_entry_title = toc_cache[toc_entry].title
-
-        toc_entries[toc_entry] = toc_entry_title
-
-    return toc_entries
-
-
-def _find_nav_link(doc_root, target_name, page_name, toc_cache):
-    """
-    """
-
-    toc_i = None
-
-    try:
-        (body, title, toc) = _read_rst_file(doc_root, page_name)
-
-        toc_i = toc.index(target_name)
-
-    except HTTPNotFound:
+    if not os.path.exists(path_name):
         return None
 
+    mtime = os.path.getmtime(path_name)
+
+    toc_entry = title_cache.get(page_name)
+
+    if (toc_entry is not None) and not (toc_entry.mtime < mtime):
+        return toc_entry.title
+
+    with open(path_name) as f:
+        # Assume that the first line of the file is the title.  This
+        # should be more efficient than parsing the whole file as RST.
+        toc_entry_title = f.readline().strip()
+
+    title_cache[page_name] = TOCEntry(mtime, toc_entry_title)
+
+    return toc_entry_title
+
+
+def _find_nav_link(doc_root, target_name, page_name, title_cache, tree_cache):
+    """
+    Find navigation links for the given page.
+
+    This is called recursively, starting with page_name='index'.
+    """
+
+    path_name = os.path.join(doc_root, page_name + '.rst')
+
+    if not os.path.exists(path_name):
+        return None
+
+    mtime = os.path.getmtime(path_name)
+
+    tree_entry = tree_cache.get(page_name)
+
+    if tree_entry is None or tree_entry.mtime < mtime:
+        (body, title, toc) = _read_rst_file(doc_root, path_name)
+        sub_tree_cache = OrderedDict(((x, None) for x in toc))
+        tree_cache[page_name] = TreeEntry(mtime, title, sub_tree_cache)
+
+    else:
+        title = tree_entry.title
+        sub_tree_cache = tree_entry.toc
+        toc = list(sub_tree_cache.keys())
+
+    try:
+        toc_i = toc.index(target_name)
     except ValueError:
-        pass
+        toc_i = None
 
     if toc_i is not None:
         # The target page was in this TOC.  Create the NavLink object.
-        toc_entries = _process_toc_entries(doc_root, toc, toc_cache)
-
         nl = NavLink(('./' if page_name == 'index' else page_name),
                      title, None, None, None, None)
 
         if toc_i > 0:
             prev = toc[toc_i - 1]
-            nl = nl._replace(prev=prev, prev_title=toc_entries[prev])
+            prev_title = _get_page_title(doc_root, prev, title_cache)
+            if prev_title is not None:
+                nl = nl._replace(prev=prev, prev_title=prev_title)
 
         if toc_i < (len(toc) - 1):
             next_ = toc[toc_i + 1]
-            nl = nl._replace(next=next_, next_title=toc_entries[next_])
+            next_title = _get_page_title(doc_root, next_, title_cache)
+            if next_title is not None:
+                nl = nl._replace(next=next_, next_title=next_title)
 
         return nl
 
     else:
         # Recurse through the TOC entries looking for a match.
         for toc_entry in toc:
-            ans = _find_nav_link(doc_root, target_name, toc_entry, toc_cache)
+            ans = _find_nav_link(doc_root, target_name, toc_entry,
+                                 title_cache, sub_tree_cache)
 
             if ans is not None:
                 return ans
