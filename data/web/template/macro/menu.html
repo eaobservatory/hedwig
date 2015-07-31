@@ -1,7 +1,6 @@
 {% macro render_main_menu(facility_name, navigation) %}
     <li><a href="{{ url_for('home_page') }}">Home</a></li>
     <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-    <li><a href="{{ url_for('people.invitation_token_enter') }}">Invitation</a></li>
     {% if facility_name is defined %}
         <li><a href="{{ url_for('.facility_home') }}">{{ facility_name }}</a></li>
     {% endif %}

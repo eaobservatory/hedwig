@@ -813,7 +813,7 @@ def institution_edit(db, institution_id, form, is_post):
 
 def invitation_token_enter(db, args):
     return {
-        'title': 'Enter Invitation',
+        'title': 'Enter Invitation Code',
         'token': args.get('token', ''),
     }
 
