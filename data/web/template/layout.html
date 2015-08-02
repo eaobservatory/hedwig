@@ -32,6 +32,9 @@
 
         {% block body %}
             <div id="content">
+                {% block content_header %}
+                {% endblock %}
+
                 {% if title is defined %}
                     <h1>{{ title }}</h1>
                 {% endif %}

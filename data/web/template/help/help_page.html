@@ -4,9 +4,11 @@
 
 {% from 'macro/nav.html' import render_nav_link %}
 
-{% block content %}
-
+{% block content_header %}
 {{ render_nav_link(nav_link) }}
+{% endblock %}
+
+{% block content %}
 
 {% if toc %}
     <ul>
