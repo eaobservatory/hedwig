@@ -345,7 +345,11 @@ def take_admin(db, referrer):
 
     session['is_admin'] = True
     flash('You have taken administrative privileges.')
-    raise HTTPRedirect(referrer if referrer else url_for('home_page'))
+
+    target = session.pop('log_in_referrer', None)
+    if target is None:
+        target = referrer if referrer else url_for('home_page')
+    raise HTTPRedirect(target)
 
 
 def drop_admin(referrer):
@@ -905,7 +909,7 @@ def _update_session_user(user_id):
 
     # Save the white-listed session entries.
     saved = {}
-    for key in ('log_in_for',):
+    for key in ('log_in_for', 'log_in_referrer'):
         if key in session:
             saved[key] = session[key]
 

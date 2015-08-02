@@ -124,7 +124,7 @@ def require_admin(f):
 
 
 def require_auth(require_person=False, require_institution=False,
-                 register_user_only=False):
+                 register_user_only=False, record_referrer=False):
     """
     Decorator to require that the user is authenticated.
 
@@ -134,12 +134,19 @@ def require_auth(require_person=False, require_institution=False,
     If "register_user_only" is set, then we want the user to log in or
     create a user account but not to complete a profile before
     proceeding.  This is to support accepting invitation tokens.
+
+    If "record_referrer" is specified then the referrer is added to the
+    session as "log_in_referrer" if log in is required.  (Currently only
+    for plain log in, not requiring person/institution.)
     """
 
     def decorator(f):
         @functools.wraps(f)
         def decorated_function(*args, **kwargs):
             _check_session_expiry()
+
+            if not record_referrer:
+                session.pop('log_in_referrer', None)
 
             if 'user_id' not in session:
                 flash('Please log in or register for an account to proceed.')
@@ -148,6 +155,9 @@ def require_auth(require_person=False, require_institution=False,
                     session['register_user_for'] = _flask_request.url
                 else:
                     session['log_in_for'] = _flask_request.url
+
+                if record_referrer:
+                    session['log_in_referrer'] = _flask_request.referrer
 
                 raise HTTPRedirect(url_for('people.log_in'))
 
