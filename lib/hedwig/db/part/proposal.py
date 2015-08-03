@@ -1607,6 +1607,7 @@ class ProposalPart(object):
                     prev_proposal_pub.c.state: AttachmentState.NEW,
                     prev_proposal_pub.c.title: None,
                     prev_proposal_pub.c.author: None,
+                    prev_proposal_pub.c.year: None,
                 }))
 
                 n_change += 1
@@ -1621,6 +1622,7 @@ class ProposalPart(object):
                     prev_proposal_pub.c.state: AttachmentState.NEW,
                     prev_proposal_pub.c.title: None,
                     prev_proposal_pub.c.author: None,
+                    prev_proposal_pub.c.year: None,
                 }))
 
                 n_change += 1

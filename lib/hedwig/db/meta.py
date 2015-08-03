@@ -306,6 +306,7 @@ prev_proposal_pub = Table(
     Column('state', Integer, nullable=False, index=True),
     Column('title', Unicode(255), nullable=True),
     Column('author', Unicode(255), nullable=True),
+    Column('year', Unicode(31), nullable=True),
     **_table_opts)
 
 proposal = Table(
