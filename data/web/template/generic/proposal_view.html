@@ -224,7 +224,11 @@
                                     {% if publication is none %}
                                         &nbsp;
                                     {% else %}
-                                        {{ publication.description }}
+                                        {% if publication.url is not none %}
+                                            <a href="{{ publication.url }}" target="_blank">{{ publication.description }}</a>
+                                        {% else %}
+                                            {{ publication.description }}
+                                        {% endif %}
                                     {% endif %}
                                 </td>
                             </tr>

@@ -26,6 +26,7 @@ from ...email.format import render_email_template
 from ...config import get_config
 from ...error import ConsistencyError, NoSuchRecord, UserError
 from ...file.info import determine_figure_type, determine_pdf_page_count
+from ...publication import make_publication_url
 from ...type import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
     FigureType, FormatType, \
@@ -59,6 +60,10 @@ CalculatorInfoExtra = namedtuple(
 PrevProposalExtra = namedtuple(
     'PrevProposalExtra',
     PrevProposal._fields + ('links',))
+
+PrevProposalPubExtra = namedtuple(
+    'PrevProposalPubExtra',
+    PrevProposalPub._fields + ('url',))
 
 TargetToolInfoExtra = namedtuple(
     'TargetToolInfoExtra',
@@ -190,7 +195,10 @@ class GenericProposal(object):
 
         prev_proposals = [
             PrevProposalExtra(
-                *x,
+                *x._replace(publications=[
+                    PrevProposalPubExtra(
+                        *p, url=make_publication_url(p.type, p.description))
+                    for p in x.publications]),
                 links=self.make_proposal_info_urls(x.proposal_code))
             for x in db.search_prev_proposal(proposal_id=proposal.id).values()]
 
