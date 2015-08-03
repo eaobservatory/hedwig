@@ -19,12 +19,15 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict, namedtuple
+import re
 
 from .astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
 from .db.meta import affiliation, calculation, call, category, \
     email, institution, \
-    member, message, moc, person, proposal, proposal_category, queue, \
+    member, message, moc, person, \
+    prev_proposal, prev_proposal_pub, \
+    proposal, proposal_category, queue, \
     semester, target, user_log
 from .error import NoSuchRecord, MultipleRecords, UserError
 
@@ -123,6 +126,15 @@ PersonInfo = namedtuple(
     'PersonInfo',
     [x.name for x in person.columns] +
     ['institution_name', 'institution_organization', 'institution_country'])
+
+PrevProposal = namedtuple(
+    'PrevProposal',
+    [x.name for x in prev_proposal.columns] +
+    ['publications'])
+
+PrevProposalPub = namedtuple(
+    'PrevProposalPub',
+    [x.name for x in prev_proposal_pub.columns])
 
 Proposal = namedtuple(
     'Proposal',
@@ -366,6 +378,43 @@ class ProposalState(object):
         return [k for (k, v) in cls._info.items() if v.edit]
 
 
+class PublicationType(object):
+    PLAIN = 1
+    DOI = 2
+    ADS = 3
+    ARXIV = 4
+
+    PubTypeInfo = namedtuple('PubTypeInfo', ('name', 'placeholder', 'regex'))
+
+    _info = OrderedDict((
+        (PLAIN, PubTypeInfo('Text description',
+                            '',
+                            None)),
+        (DOI,   PubTypeInfo('DOI',
+                            '00.0000/XXXXXX',
+                            [re.compile('^\d+\.\d+\/.*$')])),
+        (ADS,   PubTypeInfo('ADS bibcode',
+                            '0000..............X',
+                            [re.compile('^\d\d\d\d..............[A-Za-z]$')])),
+        (ARXIV, PubTypeInfo('arXiv article ID',
+                            '0000.00000',
+                            [re.compile('^\d+\.\d+$'),
+                             re.compile('^.+\/\d+$')])),
+    ))
+
+    @classmethod
+    def is_valid(cls, type_):
+        return type_ in cls._info
+
+    @classmethod
+    def get_options(cls):
+        return cls._info.copy()
+
+    @classmethod
+    def get_info(cls, type_):
+        return cls._info[type_]
+
+
 class TextRole(object):
     ABSTRACT = 1
     TECHNICAL_CASE = 2
@@ -569,6 +618,79 @@ class MemberCollection(OrderedResultCollection):
             elif not person_is_editor:
                 raise UserError(
                     'You can not remove yourself as an editor.')
+
+
+class PrevProposalCollection(ResultCollection):
+    def validate(self):
+        """
+        Attempt to validate the previous proposal collection.
+
+        Checks:
+
+        * Each entry has a proposal code.
+        * No entry has more than 6 publications.
+        * No code or identifier is repeated.
+
+        Raises UserError for any problems found.
+        """
+
+        seen_codes = set()
+        seen_ids = {}
+
+        for pp in self.values():
+            if not pp.proposal_code:
+                raise UserError(
+                    'A proposal code must be specified for each entry.')
+
+            if pp.proposal_code in seen_codes:
+                raise UserError(
+                    'Proposal code {} is listed more than once.',
+                    pp.proposal_code)
+
+            if pp.proposal_id is not None:
+                if pp.proposal_id in seen_ids:
+                    raise UserError(
+                        'Proposal codes {} and {} appear to refer to '
+                        'the same proposal.',
+                        seen_ids[pp.proposal_id], pp.proposal_code)
+
+            if len(pp.publications) > 6:
+                raise UserError(
+                    'More than 6 publications are specified for proposal {}.',
+                    pp.proposal_code)
+
+            for publication in pp.publications:
+                if not publication.description:
+                    raise UserError(
+                        'Description missing for a publication for '
+                        'proposal {}', pp.proposal_code)
+
+                if not PublicationType.is_valid(publication.type):
+                    raise UserError(
+                        'Unknown publication type for publication "{}" '
+                        '(for proposal {}).',
+                        publication.description, pp.proposal_code)
+
+                type_info = PublicationType.get_info(publication.type)
+                if type_info.regex is not None:
+                    for regex in type_info.regex:
+                        if regex.search(publication.description):
+                            break
+                    else:
+                        raise UserError(
+                            '{} "{}" (for proposal {}) does not appear '
+                            'to be valid.  If you are having trouble entering '
+                            'this reference, please change the type to '
+                            '"{}" to avoid this system trying to process it.',
+                            type_info.name, publication.description,
+                            pp.proposal_code, PublicationType.get_info(
+                                PublicationType.PLAIN).name)
+
+            # Record the code and identifier to check for duplicates.
+            seen_codes.add(pp.proposal_code)
+
+            if pp.proposal_id is not None:
+                seen_ids[pp.proposal_id] = pp.proposal_code
 
 
 class ProposalTextCollection(ResultCollection):

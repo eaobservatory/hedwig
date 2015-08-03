@@ -31,13 +31,15 @@ from ...error import ConsistencyError, Error, FormattedError, \
 from ...type import Affiliation, AttachmentState, Call, Category, \
     FigureType, FormatType, \
     Member, MemberCollection, MemberInfo, MemberPIInfo, \
+    PrevProposal, PrevProposalCollection, PrevProposalPub, \
     Proposal, ProposalCategory, ProposalState, \
     ProposalFigure, ProposalFigureInfo, ProposalPDFInfo, \
     ProposalText, ProposalTextCollection, ProposalTextInfo, \
     Queue, QueueInfo, ResultCollection, Semester, SemesterInfo, \
     Target, TargetCollection, TextRole
 from ..meta import affiliation, call, category, facility, institution, \
-    member, person, proposal, proposal_category, \
+    member, person, prev_proposal, prev_proposal_pub, \
+    proposal, proposal_category, \
     proposal_fig, proposal_fig_preview, proposal_fig_thumbnail, \
     proposal_pdf, proposal_pdf_preview, proposal_text, queue, semester, target
 from ..util import require_not_none
@@ -853,6 +855,57 @@ class ProposalPart(object):
 
         return ans
 
+    def search_prev_proposal(self, proposal_id, _conn=None):
+        """
+        Search for the previous proposal associated with a given proposal.
+        """
+
+        non_id_pub_columns = [x for x in prev_proposal_pub.columns
+                              if x.name != 'id']
+        pub_columns = (non_id_pub_columns +
+                       [prev_proposal_pub.c.id.label('pp_pub_id')])
+
+        stmt = select(
+            [prev_proposal] + pub_columns
+        ).select_from(
+            prev_proposal.outerjoin(prev_proposal_pub)
+        ).where(
+            prev_proposal.c.this_proposal_id == proposal_id
+        ).order_by(
+            prev_proposal.c.id.asc(),
+            prev_proposal_pub.c.id.asc()
+        )
+
+        ans = PrevProposalCollection()
+
+        with self._transaction(_conn=_conn) as conn:
+            for row in conn.execute(stmt):
+                # Convert row to a dictionary so that we can manipulate
+                # its entries.
+                row = dict(row.items())
+
+                # Move the entries relating to the publication table to another
+                # dictionary.
+                pub_id = row.pop('pp_pub_id')
+                pub = {'id': pub_id}
+                for col in [x.name for x in non_id_pub_columns]:
+                    pub[col] = row.pop(col)
+                if pub_id is None:
+                    pub = None
+                else:
+                    pub = PrevProposalPub(**pub)
+
+                # Either make a new entry in the result table or just add
+                # the publication to it if it already exists.
+                id_ = row['id']
+                if id_ in ans and (pub is not None):
+                    ans[id_].publications.append(pub)
+                else:
+                    ans[id_] = PrevProposal(
+                        publications=([] if pub is None else [pub]), **row)
+
+        return ans
+
     def search_proposal(self, call_id=None, facility_id=None, proposal_id=None,
                         person_id=None, person_is_editor=None, person_pi=False,
                         state=None, with_members=False,
@@ -1468,6 +1521,118 @@ class ProposalPart(object):
                 conn, member, member.c.proposal_id, proposal_id, records,
                 update_columns=(member.c.student,),
                 forbid_add=True, forbid_delete=True)
+
+    def sync_proposal_prev_proposal(self, proposal_id, records):
+        """
+        Update the prev_proposal records related to a proposal.
+        """
+
+        records.validate()
+
+        # Initialize debugging counters.
+        n_insert = n_update = n_delete = 0
+
+        with self._transaction() as conn:
+            existing = self.search_prev_proposal(proposal_id=proposal_id,
+                                                 _conn=conn)
+
+            for value in records.values():
+                id_ = value.id
+
+                if id_ is None:
+                    previous = None
+                else:
+                    previous = existing.pop(id_, None)
+
+                if previous is None:
+                    result = conn.execute(prev_proposal.insert().values({
+                        prev_proposal.c.this_proposal_id: proposal_id,
+                        prev_proposal.c.proposal_id: value.proposal_id,
+                        prev_proposal.c.proposal_code: value.proposal_code,
+                        prev_proposal.c.continuation: value.continuation,
+                    }))
+
+                    prev_proposal_id = result.inserted_primary_key[0]
+
+                    n_insert += 1
+
+                    # For now, count all changes to publications as "updates".
+                    n_update += self._sync_proposal_prev_proposal_pub(
+                        conn, prev_proposal_id, [], value.publications)
+
+                else:
+                    # Check if needs update
+                    if ((previous.proposal_id != value.proposal_id) or
+                            (previous.proposal_code != value.proposal_code) or
+                            (previous.continuation != value.continuation)):
+                        conn.execute(prev_proposal.update().where(
+                            prev_proposal.c.id == id_
+                        ).values({
+                            prev_proposal.c.proposal_id: value.proposal_id,
+                            prev_proposal.c.proposal_code: value.proposal_code,
+                            prev_proposal.c.continuation: value.continuation,
+                        }))
+
+                        n_update += 1
+
+                    # For now, count all changes to publications as "updates".
+                    n_update += self._sync_proposal_prev_proposal_pub(
+                        conn, id_,
+                        previous.publications, value.publications)
+
+            # Delete remaining un-matched entries.
+            for id_ in existing:
+                conn.execute(prev_proposal.delete().where(
+                    prev_proposal.c.id == id_))
+
+                n_delete += 1
+
+        return (n_insert, n_update, n_delete)
+
+    def _sync_proposal_prev_proposal_pub(self, conn, prev_proposal_id,
+                                         existing, publications):
+        n_change = 0
+
+        for value in publications:
+            try:
+                previous = existing.pop(0)
+            except IndexError:
+                previous = None
+
+            if previous is None:
+                conn.execute(prev_proposal_pub.insert().values({
+                    prev_proposal_pub.c.prev_proposal_id: prev_proposal_id,
+                    prev_proposal_pub.c.description: value.description,
+                    prev_proposal_pub.c.type: value.type,
+                    prev_proposal_pub.c.state: AttachmentState.NEW,
+                    prev_proposal_pub.c.title: None,
+                    prev_proposal_pub.c.author: None,
+                }))
+
+                n_change += 1
+
+            elif ((previous.description != value.description) or
+                    (previous.type != value.type)):
+                conn.execute(prev_proposal_pub.update().where(
+                    prev_proposal_pub.c.id == previous.id
+                ).values({
+                    prev_proposal_pub.c.description: value.description,
+                    prev_proposal_pub.c.type: value.type,
+                    prev_proposal_pub.c.state: AttachmentState.NEW,
+                    prev_proposal_pub.c.title: None,
+                    prev_proposal_pub.c.author: None,
+                }))
+
+                n_change += 1
+
+        # Delete remaining un-matched entries.
+        for previous in existing:
+            conn.execute(prev_proposal_pub.delete().where(
+                prev_proposal_pub.c.id == previous.id))
+
+            n_change += 1
+
+        return n_change
 
     def sync_proposal_target(self, proposal_id, records):
         """

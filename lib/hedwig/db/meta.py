@@ -279,6 +279,35 @@ person = Table(
     Column('admin', Boolean, default=False, nullable=False),
     **_table_opts)
 
+prev_proposal = Table(
+    'prev_proposal',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('this_proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=True),
+    Column('proposal_code', Unicode(255), nullable=False),
+    Column('continuation', Boolean, nullable=False),
+    **_table_opts)
+
+prev_proposal_pub = Table(
+    'prev_proposal_pub',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('prev_proposal_id', None,
+           ForeignKey('prev_proposal.id',
+                      onupdate='RESTRICT', ondelete='CASCADE'),
+           nullable=False),
+    Column('description', Unicode(255), nullable=False),
+    Column('type', Integer, nullable=False),
+    Column('state', Integer, nullable=False, index=True),
+    Column('title', Unicode(255), nullable=True),
+    Column('author', Unicode(255), nullable=True),
+    **_table_opts)
+
 proposal = Table(
     'proposal',
     metadata,
