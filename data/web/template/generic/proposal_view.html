@@ -229,6 +229,15 @@
                                         {% else %}
                                             {{ publication.description }}
                                         {% endif %}
+                                        {% if publication.title is not none %}
+                                            &ldquo;{{ publication.title }}&rdquo;
+                                        {% endif %}
+                                        {% if publication.author is not none %}
+                                            <i>{{ publication.author }}</i>
+                                        {% endif %}
+                                        {% if publication.year is not none %}
+                                            <b>{{ publication.year }}</b>
+                                        {% endif %}
                                     {% endif %}
                                 </td>
                             </tr>
