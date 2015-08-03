@@ -176,6 +176,71 @@
             </p>
         </nav>
         {% endif %}
+
+    </section>
+{% endblock %}
+
+{% block proposal_previous %}
+    <section>
+        <h2>Previous Proposals and Publications</h2>
+
+        {% if not prev_proposals %}
+            <p class="missing">
+                This proposal does not yet have a list of previous proposals.
+            </p>
+        {% else %}
+            <table>
+                <tr>
+                    <th>Previous proposal</th>
+                    <th>Links</th>
+                    <th>Publications</th>
+                </tr>
+                {% for prev_proposal in prev_proposals %}
+                    {% with publications = prev_proposal.publications | default([None], true) %}
+                        {% for publication in publications %}
+                            <tr>
+                                {% if loop.first %}
+                                    <td rowspan="{{ publications | length }}">
+                                        {% if prev_proposal.proposal_id is none %}
+                                            {{ prev_proposal.proposal_code }}
+                                        {% else %}
+                                            <a href="{{ url_for('.proposal_view', proposal_id=prev_proposal.proposal_id) }}">{{ prev_proposal.proposal_code }}</a>
+                                        {% endif %}
+                                        {% if prev_proposal.continuation %}
+                                            <span class="label">continuation</span>
+                                        {% endif %}
+                                    </td>
+                                    <td rowspan="{{ publications | length }}">
+                                        {% if prev_proposal.links %}
+                                            {% for link in prev_proposal.links %}
+                                                <a href="{{ link.url }}" target="_blank">{{ link.text }}</a>
+                                            {% endfor %}
+                                        {% else %}
+                                            &nbsp;
+                                        {% endif %}
+                                    </td>
+                                {% endif %}
+                                <td>
+                                    {% if publication is none %}
+                                        &nbsp;
+                                    {% else %}
+                                        {{ publication.description }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endwith %}
+                {% endfor %}
+            </table>
+        {% endif %}
+
+        {% if can_edit %}
+            <nav>
+                <p>
+                    <a href="{{ url_for('.previous_edit', proposal_id=proposal.id) }}">Edit previous proposals and publications</a>
+                </p>
+            </nav>
+        {% endif %}
     </section>
 {% endblock %}
 

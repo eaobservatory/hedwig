@@ -1,0 +1,101 @@
+{% extends "layout.html" %}
+{% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
+{% set scripts=['edit_previous'] %}
+
+{% block content %}
+
+<ul>
+    <li>
+        Please use this page to list your previously accepted proposals.
+    </li>
+    <li>
+        You can use the &ldquo;continuation&rdquo; check-box to indicate
+        proposals where your current proposal is a continuation of the
+        same project.
+    </li>
+    <li>
+        Please note any publications related to each proposal in the
+        &ldquo;publications&rdquo; column.
+    </li>
+</ul>
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.previous_edit', proposal_id=proposal_id) }}">
+    <table id="previousproposals">
+        <tr>
+            <th>Proposal identifier</th>
+            <th>Continuation?</th>
+            <th>Publications</th>
+            <th>Actions</th>
+        </tr>
+        {% for prev_proposal in prev_proposals %}
+            <tr id="previousrow_{{ prev_proposal.id }}">
+            <td><input type="text" name="code_{{ prev_proposal.id }}" value="{{ prev_proposal.proposal_code }}" size="20" list="accepted_proposals" /></td>
+            <td><input type="checkbox" name="continuation_{{ prev_proposal.id }}" {{ 'checked="checked"' | safe if prev_proposal.continuation }} /></td>
+            <td>
+                {% for i in range(6) %}
+                    {% with pub_present = (i < (prev_proposal.publications | length)) %}
+                        {% if pub_present %}
+                            {% set this_pub = prev_proposal.publications[i] %}
+                        {% endif %}
+                        <select name="pub_type_{{ i }}_{{ prev_proposal.id }}">
+                            {% for (pub_type_num, pub_type) in publication_types.items() %}
+                                <option value="{{ pub_type_num }}"
+                                    {% if pub_present %}{% if pub_type_num == this_pub.type %}selected="selected"{% endif %}{% endif %}
+                                    data-placeholder="{{ pub_type.placeholder }}">{{ pub_type.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="text" name="publication_{{ i }}_{{ prev_proposal.id }}" value="{{ this_pub.description if pub_present }}" size="30" />
+                    {% endwith %}
+                    {% if not loop.last %}
+                        <br />
+                    {% endif %}
+                {% endfor %}
+            </td>
+            <td><input type="button" id="delete_{{ prev_proposal.id }}" value="Delete" /></dt>
+
+            </tr>
+        {% endfor %}
+    </table>
+    <table class="template">
+        <tr id="previousrow_template">
+            <td><input type="text" name="code" value="" size="20" list="accepted_proposals" /></td>
+            <td><input type="checkbox" name="continuation" /></td>
+            <td>
+                {% for i in range(6) %}
+                    <select name="pub_type_{{ i }}">
+                        {% for (pub_type_num, pub_type) in publication_types.items() %}
+                            <option value="{{ pub_type_num }}" data-placeholder="{{ pub_type.placeholder }}">{{ pub_type.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="text" name="publication_{{ i }}" size="30" />
+                    {% if not loop.last %}
+                        <br />
+                    {% endif %}
+                {% endfor %}
+            </td>
+            <td><input type="button" id="delete_template" value="Delete" /></dt>
+        </tr>
+    </table>
+
+    <datalist id="accepted_proposals">
+        {% for proposal_code in accepted_proposals %}
+            <option value="{{ proposal_code }}" />
+        {% endfor %}
+    </datalist>
+
+    <p>
+        <input type="button" id="add_previous" value="Add previous proposal" />
+    </p>
+
+    <p>
+        <input type="submit" value="Save" name="submit" />
+    </p>
+</form>
+
+{% endblock %}

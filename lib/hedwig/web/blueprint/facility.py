@@ -138,6 +138,15 @@ def create_facility_blueprint(db, facility):
             db, proposal_id,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/proposal/<int:proposal_id>/previous',
+              methods=['GET', 'POST'])
+    @facility_template('previous_edit.html')
+    @require_auth(require_person=True)
+    def previous_edit(proposal_id):
+        return facility.view_previous_edit(
+            db, proposal_id,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/proposal/<int:proposal_id>/target', methods=['GET', 'POST'])
     @facility_template('target_edit.html')
     @require_auth(require_person=True)

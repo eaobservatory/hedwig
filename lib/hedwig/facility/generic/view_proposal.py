@@ -29,7 +29,9 @@ from ...file.info import determine_figure_type, determine_pdf_page_count
 from ...type import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
     FigureType, FormatType, \
+    PrevProposal, PrevProposalCollection, PrevProposalPub, \
     ProposalCategory, ProposalFigureInfo, ProposalState, ProposalText, \
+    PublicationType, \
     Queue, ResultCollection, Semester, Target, \
     TargetCollection, TargetToolInfo, TextRole, \
     ValidationMessage, \
@@ -53,6 +55,10 @@ CalculationExtra = namedtuple(
 CalculatorInfoExtra = namedtuple(
     'CalculatorInfoExtra',
     CalculatorInfo._fields + ('target_view', ))
+
+PrevProposalExtra = namedtuple(
+    'PrevProposalExtra',
+    PrevProposal._fields + ('links',))
 
 TargetToolInfoExtra = namedtuple(
     'TargetToolInfoExtra',
@@ -182,6 +188,12 @@ class GenericProposal(object):
 
         calculations = db.search_calculation(proposal_id=proposal.id)
 
+        prev_proposals = [
+            PrevProposalExtra(
+                *x,
+                links=self.make_proposal_info_urls(x.proposal_code))
+            for x in db.search_prev_proposal(proposal_id=proposal.id).values()]
+
         return {
             'abstract': proposal_text.get(TextRole.ABSTRACT, None),
             'tech_case_text': proposal_text.get(
@@ -209,6 +221,7 @@ class GenericProposal(object):
             'tool_note': proposal_text.get(TextRole.TOOL_NOTE, None),
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id).values(),
+            'prev_proposals': prev_proposals,
         }
 
     def _validate_proposal(self, db, proposal):
@@ -723,6 +736,98 @@ class GenericProposal(object):
             'proposal_id': proposal.id,
             'members': records.values(),
             'proposal_code': self.make_proposal_code(db, proposal),
+        }
+
+    @with_proposal(permission='edit')
+    def view_previous_edit(self, db, proposal, can, form):
+        message = None
+
+        records = db.search_prev_proposal(proposal_id=proposal.id)
+
+        if form is not None:
+            # Temporary dictionaries for new records.
+            updated_records = {}
+            added_records = {}
+
+            for param in form:
+                if not param.startswith('code_'):
+                    continue
+
+                id_ = param[5:]
+
+                prev_proposal_code = form[param]
+                prev_proposal_id = None
+
+                if id_.startswith('new_'):
+                    target_id = int(id_[4:])
+                    destination = added_records
+                else:
+                    target_id = int(id_)
+                    destination = updated_records
+
+                    if target_id in records:
+                        prev_record = records[target_id]
+                        if prev_record.proposal_code == prev_proposal_code:
+                            prev_proposal_id = prev_record.proposal_id
+
+                if prev_proposal_id is None:
+                    try:
+                        prev_proposal_id = self.parse_proposal_code(
+                            db, prev_proposal_code)
+                    except NoSuchRecord:
+                        pass
+
+                publications = []
+
+                for i in range(6):
+                    pub_desc = form['publication_{}_{}'.format(i, id_)].strip()
+                    if not pub_desc:
+                        continue
+                    pub_type = int(form['pub_type_{}_{}'.format(i, id_)])
+
+                    publications.append(
+                        null_tuple(PrevProposalPub)._replace(
+                            description=pub_desc, type=pub_type))
+
+                destination[target_id] = null_tuple(PrevProposal)._replace(
+                    id=target_id,
+                    proposal_id=prev_proposal_id,
+                    proposal_code=prev_proposal_code,
+                    continuation=(('continuation_' + id_) in form),
+                    publications=publications
+                )
+
+                records = organise_collection(
+                    PrevProposalCollection, updated_records, added_records)
+
+            try:
+                updates = db.sync_proposal_prev_proposal(proposal.id, records)
+
+                if any(updates):
+                    flash('The previous proposals list has been saved.')
+
+                raise HTTPRedirect(url_for('.proposal_view',
+                                           proposal_id=proposal.id))
+
+            except UserError as e:
+                message = e.message
+
+        accepted_proposals = db.search_proposal(
+            facility_id=self.id_, person_id=session['person']['id'],
+            state=ProposalState.ACCEPTED)
+
+        accepted_proposal_codes = [
+            self.make_proposal_code(db, x)
+            for x in accepted_proposals.values()]
+
+        return {
+            'title': 'Previous Proposals and Publications',
+            'proposal_id': proposal.id,
+            'message': message,
+            'proposal_code': self.make_proposal_code(db, proposal),
+            'accepted_proposals': accepted_proposal_codes,
+            'prev_proposals': records.values(),
+            'publication_types': PublicationType.get_options(),
         }
 
     @with_proposal(permission='edit')
