@@ -26,7 +26,7 @@ from ...email.format import render_email_template
 from ...config import get_config
 from ...error import ConsistencyError, NoSuchRecord, UserError
 from ...file.info import determine_figure_type, determine_pdf_page_count
-from ...publication import make_publication_url
+from ...publication.url import make_publication_url
 from ...type import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
     FigureType, FormatType, \

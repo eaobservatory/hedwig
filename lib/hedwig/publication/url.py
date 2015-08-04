@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from urllib import quote
 
-from .type import PublicationType
+from ..type import PublicationType
 
 
 def make_publication_url(type_, reference):
