@@ -906,6 +906,33 @@ class ProposalPart(object):
 
         return ans
 
+    def search_prev_proposal_pub(self, state=None, type_=None):
+        """
+        Search for publications associated with previous proposals.
+        """
+
+        stmt = prev_proposal_pub.select()
+
+        if state is not None:
+            if isinstance(state, list) or isinstance(state, tuple):
+                stmt = stmt.where(prev_proposal_pub.c.state.in_(state))
+            else:
+                stmt = stmt.where(prev_proposal_pub.c.state == state)
+
+        if type_ is not None:
+            if isinstance(type_, list) or isinstance(type_, tuple):
+                stmt = stmt.where(prev_proposal_pub.c.type.in_(type_))
+            else:
+                stmt = stmt.where(prev_proposal_pub.c.type == type_)
+
+        ans = ResultCollection()
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt):
+                ans[row['id']] = PrevProposalPub(**row)
+
+        return ans
+
     def search_proposal(self, call_id=None, facility_id=None, proposal_id=None,
                         person_id=None, person_is_editor=None, person_pi=False,
                         state=None, with_members=False,
@@ -1726,6 +1753,31 @@ class ProposalPart(object):
             if result.rowcount != 1:
                 raise ConsistencyError(
                     'no rows matched updating call with id={0}', call_id)
+
+    def update_prev_proposal_pub(self, type_, description,
+                                 state, title, author, year):
+        """
+        Update all previous proposal publication records for the given
+        reference.
+        """
+
+        stmt = prev_proposal_pub.update().where(and_(
+            prev_proposal_pub.c.type == type_,
+            prev_proposal_pub.c.description == description))
+
+        values = {
+            prev_proposal_pub.c.state: state,
+            prev_proposal_pub.c.title: title,
+            prev_proposal_pub.c.author: author,
+            prev_proposal_pub.c.year: year,
+        }
+
+        with self._transaction() as conn:
+            result = conn.execute(stmt.values(values))
+
+            if result.rowcount == 0:
+                raise ConsistencyError(
+                    'Did not update previous proposal publication info')
 
     def update_semester(self, semester_id, name=None, code=None,
                         date_start=None, date_end=None, description=None,
