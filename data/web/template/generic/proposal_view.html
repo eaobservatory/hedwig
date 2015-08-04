@@ -229,14 +229,20 @@
                                         {% else %}
                                             {{ publication.description }}
                                         {% endif %}
-                                        {% if publication.title is not none %}
-                                            &ldquo;{{ publication.title }}&rdquo;
-                                        {% endif %}
-                                        {% if publication.author is not none %}
-                                            <i>{{ publication.author }}</i>
-                                        {% endif %}
-                                        {% if publication.year is not none %}
-                                            <b>{{ publication.year }}</b>
+                                        {% if publication.state is attachment_ready %}
+                                            {% if publication.title is not none %}
+                                                &ldquo;{{ publication.title }}&rdquo;
+                                            {% endif %}
+                                            {% if publication.author is not none %}
+                                                <i>{{ publication.author }}</i>
+                                            {% endif %}
+                                            {% if publication.year is not none %}
+                                                <b>{{ publication.year }}</b>
+                                            {% endif %}
+                                        {% elif publication.state is attachment_error %}
+                                            <span class="missing_data">failed to look up reference</span>
+                                        {% else %}
+                                            <span class="missing_data">reference not yet looked up</span>
                                         {% endif %}
                                     {% endif %}
                                 </td>

@@ -125,6 +125,19 @@ p.progress {
     text-align: center;
 }
 
+span.missing_data {
+    font-style: italic;
+    color: #888;
+}
+
+span.missing_data:before {
+    content: "(";
+}
+
+span.missing_data:after {
+    content: ")";
+}
+
 span.forminfo_ok {
     background: #8F8;
     color: #000;
