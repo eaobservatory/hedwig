@@ -18,12 +18,17 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import namedtuple
+
 from ..error import ConsistencyError
 from ..util import get_logger
 from ..type import AttachmentState, PublicationType
 from .arxiv import get_pub_info_arxiv
+from .ads import get_pub_info_ads, get_pub_info_doi
 
 logger = get_logger(__name__)
+
+PubTypeInfo = namedtuple('PubTypeInfo', ('set', 'query_function'))
 
 
 def process_publication_references(db):
@@ -33,47 +38,71 @@ def process_publication_references(db):
 
     n_processed = 0
 
-    arxiv = set()
+    types = {
+        PublicationType.DOI:   PubTypeInfo(set(), get_pub_info_doi),
+        PublicationType.ADS:   PubTypeInfo(set(), get_pub_info_ads),
+        PublicationType.ARXIV: PubTypeInfo(set(), get_pub_info_arxiv),
+    }
 
     logger.debug('Checking for publication references to retrieve')
 
     for publication in db.search_prev_proposal_pub(
-            state=AttachmentState.NEW, type_=PublicationType.ARXIV).values():
+            state=AttachmentState.NEW).values():
 
-        if publication.type == PublicationType.ARXIV:
-            arxiv.add(publication.description)
+        if publication.type in types:
+            types[publication.type].set.add(publication.description)
 
-    if arxiv:
-        logger.debug('Retreiving references from arXiv')
+        else:
+            type_name = PublicationType.get_info(publication.type).name
+            logger.warning('Can not look up reference type: {}', type_name)
 
-        arxiv_info = get_pub_info_arxiv(list(arxiv))
+    for (type_, type_info) in types.items():
+        if type_info.set:
+            n_processed += _process_ref_type(
+                db, type_, type_info.query_function, type_info.set)
 
-        for reference in arxiv:
-            info = arxiv_info.get(reference)
+    return n_processed
 
-            if info is None:
-                logger.warning(
-                    'No info received for {} - setting error state',
-                    reference)
 
+def _process_ref_type(db, type_, query_function, references):
+    type_name = PublicationType.get_info(type_).name
+
+    logger.debug('Retreiving {} references', type_name)
+
+    n_processed = 0
+
+    reference_info = query_function(list(references))
+
+    for reference in references:
+        info = reference_info.get(reference)
+
+        if info is None:
+            logger.warning(
+                'No info received for {} - setting error state',
+                reference)
+
+            try:
                 db.update_prev_proposal_pub(
-                    type_=PublicationType.ARXIV, description=reference,
+                    type_=type_, description=reference,
                     state=AttachmentState.ERROR,
                     title=None, author=None, year=None)
 
-            else:
-                logger.debug('Received info for {} - updating database',
-                             reference)
+            except:
+                logger.exception('Failed to set publication error state')
 
-                try:
-                    db.update_prev_proposal_pub(
-                        type_=PublicationType.ARXIV, description=reference,
-                        state=AttachmentState.READY,
-                        title=info.title, author=info.author, year=info.year)
+        else:
+            logger.debug('Received info for {} - updating database',
+                         reference)
 
-                    n_processed += 1
+            try:
+                db.update_prev_proposal_pub(
+                    type_=type_, description=reference,
+                    state=AttachmentState.READY,
+                    title=info.title, author=info.author, year=info.year)
 
-                except:
-                    logger.exception('Failed to update publication reference')
+                n_processed += 1
+
+            except:
+                logger.exception('Failed to update publication reference')
 
     return n_processed
