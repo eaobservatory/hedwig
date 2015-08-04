@@ -35,6 +35,7 @@ from ...type import Affiliation, AttachmentState, Call, Category, \
     Proposal, ProposalCategory, ProposalState, \
     ProposalFigure, ProposalFigureInfo, ProposalPDFInfo, \
     ProposalText, ProposalTextCollection, ProposalTextInfo, \
+    PublicationType, \
     Queue, QueueInfo, ResultCollection, Semester, SemesterInfo, \
     Target, TargetCollection, TextRole
 from ..meta import affiliation, call, category, facility, institution, \
@@ -1626,12 +1627,20 @@ class ProposalPart(object):
             except IndexError:
                 previous = None
 
+            # If it is a "plain" publication reference, insert it in the
+            # "ready" state, otherwise mark it as "new" so that we can
+            # look up the reference later.
+            if value.type == PublicationType.PLAIN:
+                new_state = AttachmentState.READY
+            else:
+                new_state = AttachmentState.NEW
+
             if previous is None:
                 conn.execute(prev_proposal_pub.insert().values({
                     prev_proposal_pub.c.prev_proposal_id: prev_proposal_id,
                     prev_proposal_pub.c.description: value.description,
                     prev_proposal_pub.c.type: value.type,
-                    prev_proposal_pub.c.state: AttachmentState.NEW,
+                    prev_proposal_pub.c.state: new_state,
                     prev_proposal_pub.c.title: None,
                     prev_proposal_pub.c.author: None,
                     prev_proposal_pub.c.year: None,
@@ -1646,7 +1655,7 @@ class ProposalPart(object):
                 ).values({
                     prev_proposal_pub.c.description: value.description,
                     prev_proposal_pub.c.type: value.type,
-                    prev_proposal_pub.c.state: AttachmentState.NEW,
+                    prev_proposal_pub.c.state: new_state,
                     prev_proposal_pub.c.title: None,
                     prev_proposal_pub.c.author: None,
                     prev_proposal_pub.c.year: None,
