@@ -12,6 +12,7 @@ Requirements
 * docutils
 * Flask
 * healpy
+* lxml
 * mysql-connector-python
 * Pillow
 * pycountry
