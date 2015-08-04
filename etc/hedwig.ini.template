@@ -27,3 +27,6 @@ footer_email=
 [utilities]
 ghostscript=/usr/bin/ghostscript
 firefox=/usr/bin/firefox
+
+[ads]
+api_token=
