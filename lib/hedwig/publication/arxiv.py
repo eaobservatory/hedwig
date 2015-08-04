@@ -18,7 +18,9 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from codecs import utf_8_decode
 from datetime import datetime
+import re
 from time import sleep
 
 from lxml import etree
@@ -66,21 +68,31 @@ def get_pub_info_arxiv(article_ids):
             for entry in feed.findall('{*}entry'):
                 try:
                     # Read elements from the feed entry.
-                    id_ = entry.find('{*}id').text
-                    title = entry.find('{*}title').text
+                    id_element = entry.find('{*}id')
+                    if id_element is None:
+                        continue
+
+                    id_ = utf_8_decode(id_element.text, 'replace')[0]
+                    title = utf_8_decode(entry.find('{*}title').text,
+                                         'replace')[0]
+
                     authors = entry.findall('{*}author')
-                    author = authors[0].find('{*}name').text
+                    author = utf_8_decode(authors[0].find('{*}name').text,
+                                          'replace')[0]
                     if len(authors) > 1:
                         author += ' et al.'
+
                     published = entry.find('{*}published').text
                     if published.endswith('Z'):
                         published = published[:-1]
-                        year = str(datetime.strptime(
-                            published, '%Y-%m-%dT%H:%M:%S').year)
+                        year = datetime.strptime(
+                            published, '%Y-%m-%dT%H:%M:%S').year
 
                     # Create publication info tuple.
                     pub = null_tuple(PrevProposalPub)._replace(
-                        title=title, author=author, year=year)
+                        title=re.sub('\s+', ' ', title).strip(),
+                        author=re.sub('\s+', ' ', author).strip(),
+                        year=unicode(year))
 
                     # Try to determine to which article ID this entry
                     # relates and store it in the dictionary.
