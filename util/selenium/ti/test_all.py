@@ -67,12 +67,14 @@ class IntegrationTest(DummyConfigTestCase):
         server.start()
 
         try:
-            self.register_user(user_name='test', person_name='Test One',
-                               screenshot_path=self.user_image_root)
+            self.register_user(user_name='test', person_name='Example Admin')
 
             self.browser.find_element_by_link_text('log out').click()
 
-            self.register_user(user_name='test2', person_name='Test Two')
+            self.register_user(user_name='username',
+                               person_name='Example Person',
+                               person_email='example@somewhere.edu',
+                               screenshot_path=self.user_image_root)
 
             self.browser.find_element_by_link_text('log out').click()
 
@@ -85,35 +87,45 @@ class IntegrationTest(DummyConfigTestCase):
                       institution_country='United States',
                       screenshot_path=None):
         self.browser.get(self.base_url)
-        self.browser.find_element_by_link_text('Log in').click()
-        self.browser.find_element_by_link_text('register').click()
 
-        self._save_screenshot(screenshot_path, 'user_new')
+        log_in = self.browser.find_element_by_link_text('Log in')
+
+        self._save_screenshot(screenshot_path, 'home_page', highlight=[log_in])
+
+        log_in.click()
+        self.browser.find_element_by_link_text('register').click()
 
         self.browser.find_element_by_name('user_name').send_keys(user_name)
         self.browser.find_element_by_name('password').send_keys('pass')
         self.browser.find_element_by_name('password_check').send_keys('pass')
+
+        self._save_screenshot(screenshot_path, 'user_new')
+
         self.browser.find_element_by_name('submit').click()
 
         self.assertIn('Your user account has been created.',
                       self.browser.page_source)
 
+        self.browser.find_element_by_name('person_name').send_keys(person_name)
+        self.browser.find_element_by_name('person_public').click()
+        self.browser.find_element_by_name('single_email').send_keys(
+            person_email)
+
         self._save_screenshot(screenshot_path, 'profile_new')
 
-        self.browser.find_element_by_name('person_name').send_keys(person_name)
-        self.browser.find_element_by_name('single_email').send_keys('a@a')
         self.browser.find_element_by_name('submit').click()
 
         self.assertIn('Your user profile has been saved.',
                       self.browser.page_source)
-
-        self._save_screenshot(screenshot_path, 'profile_institution')
 
         try:
             Select(
                 self.browser.find_element_by_name('institution_id')
             ).select_by_visible_text('{}, {}'.format(
                 institution_name, institution_country))
+
+            self._save_screenshot(screenshot_path, 'profile_institution')
+
             self.browser.find_element_by_name('submit_select').click()
 
             self.assertIn('Your institution has been selected.',
@@ -126,14 +138,30 @@ class IntegrationTest(DummyConfigTestCase):
                 self.browser.find_element_by_name('country_code')
             ).select_by_visible_text(institution_country)
 
+            self._save_screenshot(screenshot_path, 'profile_institution')
+
             self.browser.find_element_by_name('submit_add').click()
 
             self.assertIn('Your institution has been recorded.',
                           self.browser.page_source)
 
-    def _save_screenshot(self, path, name):
+        profile_link = self.browser.find_element_by_link_text(person_name)
+        self._save_screenshot(screenshot_path, 'profile_complete',
+                              highlight=[profile_link, 'log_out_link'])
+
+        profile_link.click()
+        self._save_screenshot(screenshot_path, 'profile_view')
+
+    def _save_screenshot(self, path, name, highlight=[]):
         if path is None:
             return
+
+        for highlight_element in highlight:
+            if not isinstance(highlight_element, basestring):
+                highlight_element = highlight_element.get_attribute('id')
+            self.browser.execute_script(
+                'document.getElementById("' + highlight_element +
+                '").classList.add("highlight_for_doc");')
 
         path_small = os.path.join(path, name + '_small.png')
         path_large = os.path.join(path, name + '_large.png')

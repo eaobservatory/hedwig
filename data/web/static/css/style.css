@@ -237,3 +237,7 @@ figcaption div.figcap {
     width: 50%;
     text-align: left;
 }
+
+.highlight_for_doc {
+    outline: 10px solid red;
+}
