@@ -52,6 +52,10 @@ class DummyServer(Thread):
 
 class IntegrationTest(DummyConfigTestCase):
     def test_app(self):
+        config = get_config()
+        # Use the JCMT facility for our examples.
+        config.set('application', 'facilities', 'JCMT')
+
         self.base_url = 'http://127.0.0.1:11111/'
         self.user_image_root = os.path.join('doc', 'user', 'image')
         self.admin_image_root = os.path.join('doc', 'user', 'image')
@@ -60,8 +64,7 @@ class IntegrationTest(DummyConfigTestCase):
         server = DummyServer(self.db)
 
         self.browser = webdriver.Firefox(
-            firefox_binary=FirefoxBinary(
-                get_config().get('utilities', 'firefox')))
+            firefox_binary=FirefoxBinary(config.get('utilities', 'firefox')))
         self.browser.set_window_size(1200, 800)
 
         server.start()
