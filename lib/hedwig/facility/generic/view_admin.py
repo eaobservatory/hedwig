@@ -154,9 +154,12 @@ class GenericAdmin(object):
         except NoSuchRecord:
             raise HTTPNotFound('Queue not found')
 
+        affiliations = db.search_affiliation(queue_id=queue_id, hidden=False)
+
         return {
             'title': 'Queue: {0}'.format(queue.name),
             'queue': queue,
+            'affiliations': affiliations.values(),
         }
 
     def view_queue_edit(self, db, queue_id, form, is_post):

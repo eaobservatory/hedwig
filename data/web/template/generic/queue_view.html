@@ -16,6 +16,20 @@
     <a href="{{ url_for('.queue_edit', queue_id=queue.id) }}">Edit queue</a>
 </p>
 
+<h2>Affiliations</h2>
+
+{% if affiliations %}
+    <ul>
+        {% for affiliation in affiliations %}
+            <li>{{ affiliation.name }}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p class="missing">
+        No affiliations are available for this queue.
+    </p>
+{% endif %}
+
 <p>
     <a id="affiliation_edit_link" href="{{ url_for('.affiliation_edit', queue_id=queue.id) }}">Edit affiliations</a>
 </p>
