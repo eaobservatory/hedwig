@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from datetime import datetime
 import os.path
 from threading import Thread
 
@@ -58,7 +59,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.base_url = 'http://127.0.0.1:11111/'
         self.user_image_root = os.path.join('doc', 'user', 'image')
-        self.admin_image_root = os.path.join('doc', 'user', 'image')
+        self.admin_image_root = os.path.join('doc', 'admin', 'image')
 
         self.db = get_dummy_database(allow_multi_threaded=True)
         server = DummyServer(self.db)
@@ -70,22 +71,40 @@ class IntegrationTest(DummyConfigTestCase):
         server.start()
 
         try:
+            # Register some people.
             self.register_user(user_name='test', person_name='Example Admin')
 
-            self.browser.find_element_by_link_text('log out').click()
+            self.log_out_user()
+
+            # Make this user an administrator.
+            person_id = self.db.search_person().get_single().id
+            self.db.update_person(person_id, admin=True)
 
             self.register_user(user_name='username',
                                person_name='Example Person',
                                person_email='example@somewhere.edu',
                                screenshot_path=self.user_image_root)
 
-            self.browser.find_element_by_link_text('log out').click()
+            self.log_out_user()
+
+            self.register_user(user_name='username2',
+                               person_name='Another Person')
+
+            self.log_out_user()
+
+            # Log in as administrative user and set up a semester.
+            self.log_in_user(user_name='test')
+
+            self.set_up_facility('jcmt')
+
+            self.log_out_user()
 
         finally:
-            self.browser.get('http://127.0.0.1:11111/shutdown')
+            self.browser.get(self.base_url + 'shutdown')
             self.browser.quit()
 
     def register_user(self, user_name, person_name, person_email='a@a',
+                      password='password',
                       institution_name='Test Institution',
                       institution_country='United States',
                       screenshot_path=None):
@@ -99,8 +118,8 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_link_text('register').click()
 
         self.browser.find_element_by_name('user_name').send_keys(user_name)
-        self.browser.find_element_by_name('password').send_keys('pass')
-        self.browser.find_element_by_name('password_check').send_keys('pass')
+        self.browser.find_element_by_name('password').send_keys(password)
+        self.browser.find_element_by_name('password_check').send_keys(password)
 
         self._save_screenshot(screenshot_path, 'user_new')
 
@@ -154,6 +173,170 @@ class IntegrationTest(DummyConfigTestCase):
 
         profile_link.click()
         self._save_screenshot(screenshot_path, 'profile_view')
+
+    def log_out_user(self):
+        self.browser.find_element_by_link_text('log out').click()
+
+    def log_in_user(self, user_name, password='password'):
+        self.browser.get(self.base_url)
+
+        log_in = self.browser.find_element_by_link_text('Log in')
+
+        log_in.click()
+
+        self.browser.find_element_by_name('user_name').send_keys(user_name)
+        self.browser.find_element_by_name('password').send_keys(password)
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn('You have been logged in.',
+                      self.browser.page_source)
+
+    def set_up_facility(self, facility_code):
+        self.browser.get(self.base_url + facility_code)
+
+        take_admin = self.browser.find_element_by_link_text('take admin')
+
+        self._save_screenshot(self.admin_image_root, 'facility_home',
+                              [take_admin])
+
+        take_admin.click()
+
+        self.assertIn('You have taken administrative privileges.',
+                      self.browser.page_source)
+
+        drop_admin = self.browser.find_element_by_link_text('drop admin')
+        admin_menu = self.browser.find_element_by_link_text(
+            'Administrative menu')
+
+        self._save_screenshot(self.admin_image_root, 'facility_home_admin',
+                              [drop_admin, admin_menu])
+
+        admin_menu.click()
+
+        self._save_screenshot(self.admin_image_root, 'facility_admin_menu')
+
+        admin_menu_url = self.browser.current_url
+
+        # Create a new semester.
+        self.browser.find_element_by_link_text('Semesters').click()
+        self.browser.find_element_by_link_text('New semester').click()
+
+        # Make sure we are going to generate a semester which is open for
+        # submissions: base it on the current date and use JCMT naming.
+        current_date = datetime.utcnow()
+        semester_year = str(current_date.year + 1)
+        semester_name = semester_year[2:] + 'A'
+        self.browser.find_element_by_name('semester_name').send_keys(
+            semester_name)
+        self.browser.find_element_by_name('semester_code').send_keys(
+            semester_name)
+        self.browser.find_element_by_name('start_date').send_keys(
+            semester_year + '-01-01')
+        self.browser.find_element_by_name('start_time').send_keys(
+            '00:00')
+        self.browser.find_element_by_name('end_date').send_keys(
+            semester_year + '-07-01')
+        self.browser.find_element_by_name('end_time').send_keys(
+            '00:00')
+        self.browser.find_element_by_name('description').send_keys(
+            'This is the semester description.')
+
+        self._save_screenshot(self.admin_image_root, 'semester_new')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'New semester "{}" has been created.'.format(semester_name),
+            self.browser.page_source)
+
+        # Create a new queue.
+        self.browser.get(admin_menu_url)
+        self.browser.find_element_by_link_text('Queues').click()
+        self.browser.find_element_by_link_text('New queue').click()
+
+        queue_name = 'International'
+        self.browser.find_element_by_name('queue_name').send_keys(queue_name)
+        self.browser.find_element_by_name('queue_code').send_keys('I')
+        self.browser.find_element_by_name('description').send_keys(
+            'This is the queue description.')
+
+        self._save_screenshot(self.admin_image_root, 'queue_new')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'New queue "{}" has been added.'.format(queue_name),
+            self.browser.page_source)
+
+        affiliation_edit = self.browser.find_element_by_link_text(
+            'Edit affiliations')
+
+        self._save_screenshot(self.admin_image_root, 'queue_view',
+                              [affiliation_edit])
+
+        affiliation_edit.click()
+
+        affiliation_add = self.browser.find_element_by_id('add_affiliation')
+        affiliation_add.click()
+        affiliation_add.click()
+
+        self.browser.find_element_by_name('name_new_1').send_keys('China')
+        self.browser.find_element_by_name('name_new_2').send_keys('Japan')
+
+        self._save_screenshot(self.admin_image_root, 'queue_affiliation',
+                              [affiliation_add])
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The affiliations have been updated.',
+            self.browser.page_source)
+
+        # Create a call.
+        self.browser.get(admin_menu_url)
+        self.browser.find_element_by_link_text('Calls').click()
+        self.browser.find_element_by_link_text('New call').click()
+
+        current_year = str(current_date.year)
+        self.browser.find_element_by_name('open_date').send_keys(
+            current_year + '-01-01')
+        self.browser.find_element_by_name('open_time').send_keys(
+            '00:00')
+        self.browser.find_element_by_name('close_date').send_keys(
+            current_year + '-12-31')
+        self.browser.find_element_by_name('close_time').send_keys(
+            '23:59')
+
+        self._save_screenshot(self.admin_image_root, 'call_new')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The new call has been added.',
+            self.browser.page_source)
+
+        # Add categories.
+        self.browser.get(admin_menu_url)
+        self.browser.find_element_by_link_text('Categories').click()
+
+        category_add = self.browser.find_element_by_id('add_category')
+        category_add.click()
+        category_add.click()
+
+        self.browser.find_element_by_name('name_new_1').send_keys(
+            'Star formation')
+        self.browser.find_element_by_name('name_new_2').send_keys(
+            'Cosmology')
+
+        self._save_screenshot(self.admin_image_root, 'category',
+                              [category_add])
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The categories have been updated.',
+            self.browser.page_source)
 
     def _save_screenshot(self, path, name, highlight=[]):
         if path is None:

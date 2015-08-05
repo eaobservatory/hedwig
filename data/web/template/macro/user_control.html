@@ -5,10 +5,10 @@
         <a id="user_profile_link" href="{{ url_for('people.person_view', person_id=session.person.id) }}">{{ session.person.name }}</a>
         {% if session.is_admin is defined %}
             &mdash;
-            <a href="{{ url_for('people.drop_admin') }}">drop admin</a>
+            <a id="drop_admin_link" href="{{ url_for('people.drop_admin') }}">drop admin</a>
         {% elif session.person.admin %}
             &mdash;
-            <a href="{{ url_for('people.take_admin') }}">take admin</a>
+            <a id="take_admin_link" href="{{ url_for('people.take_admin') }}">take admin</a>
         {% endif %}
     {% else %}
         &ldquo;User {{ session.user_id }}&rdquo;
