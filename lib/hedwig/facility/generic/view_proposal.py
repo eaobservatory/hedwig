@@ -793,6 +793,11 @@ class GenericProposal(object):
                         continue
                     pub_type = int(form['pub_type_{}_{}'.format(i, id_)])
 
+                    # Remove leading "doi:" from DOI references.
+                    if (pub_type == PublicationType.DOI and
+                            pub_desc.startswith('doi:')):
+                        pub_desc = pub_desc[4:]
+
                     publications.append(
                         null_tuple(PrevProposalPub)._replace(
                             description=pub_desc, type=pub_type))
