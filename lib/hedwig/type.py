@@ -679,11 +679,13 @@ class PrevProposalCollection(ResultCollection):
                     else:
                         raise UserError(
                             '{} "{}" (for proposal {}) does not appear '
-                            'to be valid.  If you are having trouble entering '
+                            'to be valid.  An entry of the form "{}" was '
+                            'expected.  If you are having trouble entering '
                             'this reference, please change the type to '
                             '"{}" to avoid this system trying to process it.',
                             type_info.name, publication.description,
-                            pp.proposal_code, PublicationType.get_info(
+                            pp.proposal_code, type_info.placeholder,
+                            PublicationType.get_info(
                                 PublicationType.PLAIN).name)
 
             # Record the code and identifier to check for duplicates.
