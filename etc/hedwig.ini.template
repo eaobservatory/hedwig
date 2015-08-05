@@ -4,6 +4,8 @@
 #     mysql+mysqlconnector://<user>:<password>@<host>[:<port>]/<dbname>
 [database]
 url=
+pool_size=
+pool_overflow=
 
 [application]
 name=Hedwig

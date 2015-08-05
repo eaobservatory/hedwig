@@ -74,6 +74,21 @@ def get_database(database_url=None, facility_spec=None):
         if database_url is None:
             database_url = config.get('database', 'url')
 
+        engine_options = {}
+
+        if not database_url.startswith('sqlite'):
+            engine_options.update({
+                'pool_size': 15,
+                'max_overflow': 5,
+            })
+
+            if config.get('database', 'pool_size'):
+                engine_options['pool_size'] = int(config.get(
+                    'database', 'pool_size'))
+            if config.get('database', 'pool_overflow'):
+                engine_options['max_overflow'] = int(config.get(
+                    'database', 'pool_overflow'))
+
         # Import facility metadata and control modules.
         for name in facility_spec.split(','):
             try:
@@ -108,7 +123,7 @@ def get_database(database_url=None, facility_spec=None):
         # facilities can override methods if necessary.
         db_parts.append(Database)
         CombinedDatabase = type(b'CombinedDatabase', tuple(db_parts), {})
-        database = CombinedDatabase(get_engine(database_url))
+        database = CombinedDatabase(get_engine(database_url, **engine_options))
 
     return database
 
