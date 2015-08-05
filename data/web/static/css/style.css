@@ -238,6 +238,12 @@ figcaption div.figcap {
     text-align: left;
 }
 
+div.rst_doc img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .highlight_for_doc {
     outline: 10px solid red;
 }
