@@ -1764,7 +1764,8 @@ class ProposalPart(object):
                     'no rows matched updating call with id={0}', call_id)
 
     def update_prev_proposal_pub(self, type_, description,
-                                 state, title, author, year):
+                                 state, title, author, year,
+                                 prev_state=None):
         """
         Update all previous proposal publication records for the given
         reference.
@@ -1773,6 +1774,9 @@ class ProposalPart(object):
         stmt = prev_proposal_pub.update().where(and_(
             prev_proposal_pub.c.type == type_,
             prev_proposal_pub.c.description == description))
+
+        if prev_state is not None:
+            stmt = stmt.where(prev_proposal_pub.c.state == prev_state)
 
         values = {
             prev_proposal_pub.c.state: state,
