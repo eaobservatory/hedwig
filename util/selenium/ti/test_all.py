@@ -65,7 +65,8 @@ class IntegrationTest(DummyConfigTestCase):
         self.user_image_root = os.path.join('doc', 'user', 'image')
         self.admin_image_root = os.path.join('doc', 'admin', 'image')
 
-        self.db = get_dummy_database(allow_multi_threaded=True)
+        self.db = get_dummy_database(randomize_ids=False,
+                                     allow_multi_threaded=True)
         server = DummyServer(self.db)
 
         self.browser = webdriver.Firefox(
