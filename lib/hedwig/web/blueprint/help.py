@@ -39,7 +39,7 @@ def create_help_blueprint():
     user_toc_cache = {}
 
     admin_doc_root = os.path.join(doc_root, 'admin')
-    admin_image_root = os.path.join(user_doc_root, 'image')
+    admin_image_root = os.path.join(admin_doc_root, 'image')
     admin_toc_cache = {}
 
     @bp.route('/')
