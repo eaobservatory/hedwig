@@ -280,9 +280,11 @@ class IntegrationTest(DummyConfigTestCase):
         affiliation_add = self.browser.find_element_by_id('add_affiliation')
         affiliation_add.click()
         affiliation_add.click()
+        affiliation_add.click()
 
         self.browser.find_element_by_name('name_new_1').send_keys('China')
         self.browser.find_element_by_name('name_new_2').send_keys('Japan')
+        self.browser.find_element_by_name('name_new_3').send_keys('Other')
 
         self._save_screenshot(self.admin_image_root, 'queue_affiliation',
                               [affiliation_add])
