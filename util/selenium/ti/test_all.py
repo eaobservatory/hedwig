@@ -22,6 +22,7 @@ import os.path
 from threading import Thread
 
 from flask import request, make_response
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.support.ui import Select
@@ -87,9 +88,7 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_link_text('Log in').click()
         self.browser.find_element_by_link_text('register').click()
 
-        if screenshot_path is not None:
-            self.browser.save_screenshot(
-                os.path.join(screenshot_path, 'user_new.png'))
+        self._save_screenshot(screenshot_path, 'user_new')
 
         self.browser.find_element_by_name('user_name').send_keys(user_name)
         self.browser.find_element_by_name('password').send_keys('pass')
@@ -98,9 +97,8 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.assertIn('Your user account has been created.',
                       self.browser.page_source)
-        if screenshot_path is not None:
-            self.browser.save_screenshot(
-                os.path.join(screenshot_path, 'profile_new.png'))
+
+        self._save_screenshot(screenshot_path, 'profile_new')
 
         self.browser.find_element_by_name('person_name').send_keys(person_name)
         self.browser.find_element_by_name('single_email').send_keys('a@a')
@@ -109,9 +107,8 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn('Your user profile has been saved.',
                       self.browser.page_source)
 
-        if screenshot_path is not None:
-            self.browser.save_screenshot(os.path.join(
-                screenshot_path, 'profile_institution.png'))
+        self._save_screenshot(screenshot_path, 'profile_institution')
+
         try:
             Select(
                 self.browser.find_element_by_name('institution_id')
@@ -133,3 +130,20 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.assertIn('Your institution has been recorded.',
                           self.browser.page_source)
+
+    def _save_screenshot(self, path, name):
+        if path is None:
+            return
+
+        path_small = os.path.join(path, name + '_small.png')
+        path_large = os.path.join(path, name + '_large.png')
+
+        self.browser.save_screenshot(path_large)
+
+        im = Image.open(path_large)
+
+        size = tuple(int(x / 2) for x in im.size)
+
+        im = im.resize(size, resample=Image.BICUBIC)
+
+        im.save(path_small, format='PNG')
