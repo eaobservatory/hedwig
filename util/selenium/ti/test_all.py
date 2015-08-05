@@ -29,6 +29,7 @@ from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import NoSuchElementException
 
+from hedwig import auth
 from hedwig.config import get_config
 from hedwig.web.app import create_web_app
 
@@ -53,6 +54,9 @@ class DummyServer(Thread):
 
 class IntegrationTest(DummyConfigTestCase):
     def test_app(self):
+        # Speed up password hashing for the test.
+        auth._rounds = 10
+
         config = get_config()
         # Use the JCMT facility for our examples.
         config.set('application', 'facilities', 'JCMT')
