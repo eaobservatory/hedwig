@@ -1,6 +1,15 @@
 About this System
 =================
 
+This System
+-----------
+
+This system was developed for the
+`James Clerk Maxell Telescope <http://www.eaobservatory.org/jcmt>`_
+by the East Asian Observatory software group.
+The software can be obtained from its
+`GitHub repository page <https://github.com/eaobservatory/hedwig>`_.
+
 Libraries Included in this System
 ---------------------------------
 
