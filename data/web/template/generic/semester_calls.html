@@ -54,7 +54,7 @@
     </table>
 
     <p>
-        <a href="{{ url_for('.proposal_new', call_id=call.id) }}">Create a proposal for the {{ call.queue_name }} Queue</a>
+        <a id="call_{{ call.id }}_link" href="{{ url_for('.proposal_new', call_id=call.id) }}">Create a proposal for the {{ call.queue_name }} Queue</a>
     </p>
 
     {{ call.queue_description | format_text(call.queue_description_format) }}

@@ -100,9 +100,14 @@ class IntegrationTest(DummyConfigTestCase):
             # Log in as administrative user and set up a semester.
             self.log_in_user(user_name='test')
 
-            self.set_up_facility('jcmt')
+            semester_name = self.set_up_facility('jcmt')
 
             self.log_out_user()
+
+            # Log back in a normal use and create a proposal.
+            self.log_in_user(user_name='username')
+
+            self.create_proposal('jcmt', semester_name)
 
         finally:
             self.browser.get(self.base_url + 'shutdown')
@@ -344,6 +349,45 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn(
             'The categories have been updated.',
             self.browser.page_source)
+
+        return semester_name
+
+    def create_proposal(self, facility_code, semester_name):
+        self.browser.get(self.base_url + facility_code)
+
+        semester_link = self.browser.find_element_by_link_text(semester_name)
+
+        self._save_screenshot(self.user_image_root, 'facility_home',
+                              [semester_link])
+
+        semester_link.click()
+
+        queue_link = self.browser.find_element_by_link_text(
+            'Create a proposal for the International Queue')
+
+        self._save_screenshot(self.user_image_root, 'call_view', [queue_link])
+
+        queue_link.click()
+
+        Select(
+            self.browser.find_element_by_name('affiliation_id')
+        ).select_by_visible_text('Other')
+
+        self.browser.find_element_by_name('proposal_title').send_keys(
+            'An Example Proposal')
+
+        self._save_screenshot(self.user_image_root, 'proposal_new')
+
+        self.browser.find_element_by_name('submit-new').click()
+
+        self.assertIn(
+            'Your new proposal has been created.',
+            self.browser.page_source)
+
+        self._save_screenshot(
+            self.user_image_root, 'proposal_view',
+            ['submit_proposal_link', 'personal_dashboard_link',
+             'proposal_identifier_cell'])
 
     def _save_screenshot(self, path, name, highlight=[]):
         if path is None:

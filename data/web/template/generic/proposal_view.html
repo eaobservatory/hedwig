@@ -31,7 +31,7 @@
         </tr>
         <tr>
             <th>Proposal identifier</th>
-            <td>{{ proposal_code }}</td>
+            <td id="proposal_identifier_cell">{{ proposal_code }}</td>
         </tr>
         <tr>
             <th>Proposal status</th>
@@ -51,7 +51,7 @@
                 <br />
                 <a href="{{ url_for('.proposal_validate', proposal_id=proposal.id) }}">Validate proposal</a>
             {% else %}
-                <a href="{{ url_for('.proposal_submit', proposal_id=proposal.id) }}">Submit proposal</a>
+                <a id="submit_proposal_link" href="{{ url_for('.proposal_submit', proposal_id=proposal.id) }}">Submit proposal</a>
             {% endif %}
             </p>
         </nav>
