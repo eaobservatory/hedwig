@@ -10,3 +10,4 @@ Proposal Author's Guide
     request
     member
     submit
+    invitation
