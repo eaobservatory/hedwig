@@ -19,14 +19,16 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from datetime import datetime
-import os.path
+import os
 from threading import Thread
 
 from flask import request, make_response
 from PIL import Image
 from selenium import webdriver
+from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
-from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import Select, WebDriverWait
+from selenium.webdriver.support import expected_conditions
 from selenium.common.exceptions import NoSuchElementException
 from sqlalchemy.sql import select
 
@@ -360,6 +362,29 @@ class IntegrationTest(DummyConfigTestCase):
             'The categories have been updated.',
             self.browser.page_source)
 
+        # Upload a MOC.
+        self.browser.get(admin_menu_url)
+        self.browser.find_element_by_link_text('Clash tool coverage').click()
+
+        self.browser.find_element_by_link_text('New coverage map').click()
+
+        self.browser.find_element_by_name('name').send_keys('Example')
+        self.browser.find_element_by_name('description').send_keys(
+            'This area is part of the "..." survey and ...')
+
+        # Give path to MOC assuming we are in the top level directory.
+        self.browser.find_element_by_name('file').send_keys(
+            os.path.join(os.getcwd(), 'util', 'selenium',
+                         'data', 'example_moc.fits'))
+
+        self._save_screenshot(self.admin_image_root, 'moc')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The new coverage map has been stored.',
+            self.browser.page_source)
+
         return semester_name
 
     def create_proposal(self, facility_code, semester_name):
@@ -544,6 +569,99 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.assertIn(
             'The observing request has been saved.',
+            self.browser.page_source)
+
+        # Add a previous proposal.
+        self.browser.find_element_by_partial_link_text(
+            'Edit previous proposals').click()
+
+        self.browser.find_element_by_name('code_new_1').send_keys('M00AI000')
+
+        Select(
+            self.browser.find_element_by_name('pub_type_0_new_1')
+        ).select_by_visible_text('ADS bibcode')
+        self.browser.find_element_by_name('publication_0_new_1').send_keys(
+            '2013MNRAS.430.2513H')
+
+        Select(
+            self.browser.find_element_by_name('pub_type_1_new_1')
+        ).select_by_visible_text('ADS bibcode')
+        self.browser.find_element_by_name('publication_1_new_1').send_keys(
+            '2013MNRAS.430.2534D')
+
+        self._save_screenshot(self.user_image_root, 'prev_proposal')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The previous proposals list has been saved.',
+            self.browser.page_source)
+
+        # Add target objects.
+        self.browser.find_element_by_link_text('Edit targets').click()
+
+        self.browser.find_element_by_id('add_target').click()
+
+        self.browser.find_element_by_name('name_new_1').send_keys('LDN 123')
+        self.browser.find_element_by_name('name_new_2').send_keys('LDN 456')
+        self.browser.find_element_by_id('resolve_new_1').click()
+        self.browser.find_element_by_id('resolve_new_2').click()
+        self.browser.find_element_by_name('time_new_1').send_keys('8')
+        self.browser.find_element_by_name('time_new_2').send_keys('8')
+        self.browser.find_element_by_name('priority_new_1').send_keys('1')
+        self.browser.find_element_by_name('priority_new_2').send_keys('2')
+
+        # Wait for the resolver to finish.
+        wait = WebDriverWait(self.browser, 10)
+        wait.until(expected_conditions.text_to_be_present_in_element_value((
+            By.NAME, 'x_new_1'), ':'))
+        wait.until(expected_conditions.text_to_be_present_in_element_value((
+            By.NAME, 'x_new_2'), ':'))
+
+        self.assertTrue(self.browser.find_element_by_name(
+            'x_new_1').get_attribute('value').startswith('18:07:'))
+        self.assertTrue(self.browser.find_element_by_name(
+            'y_new_1').get_attribute('value').startswith('-27:25:'))
+        self.assertTrue(self.browser.find_element_by_name(
+            'x_new_2').get_attribute('value').startswith('18:52:'))
+        self.assertTrue(self.browser.find_element_by_name(
+            'y_new_2').get_attribute('value').startswith('-10:55:'))
+
+        self._save_screenshot(self.user_image_root, 'target_edit')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The target object list has been saved.',
+            self.browser.page_source)
+
+        self.browser.find_element_by_link_text('Upload target list').click()
+
+        self.assertIn(
+            'A target list can be uploaded as a plain text file',
+            self.browser.page_source)
+
+        self._save_screenshot(self.user_image_root, 'target_upload')
+
+        self.browser.get(proposal_url)
+
+        self.browser.find_element_by_link_text('Clash Tool').click()
+
+        self._save_screenshot(self.user_image_root, 'target_clash')
+
+        self.browser.find_element_by_link_text('Back to proposal').click()
+
+        self.browser.find_element_by_link_text('Edit note').click()
+
+        self.browser.find_element_by_name('text').send_keys(
+            'I used the clash tool and I found ...')
+
+        self._save_screenshot(self.user_image_root, 'target_note')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The note on tool results has been saved.',
             self.browser.page_source)
 
         # Submit the proposal (should stay at the end to minimize warnings
