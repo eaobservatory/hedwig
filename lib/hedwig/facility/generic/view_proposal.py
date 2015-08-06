@@ -1396,8 +1396,11 @@ class GenericProposal(object):
             except UserError as e:
                 message = e.message
 
+        title_suffix = 'Text' if role in (TextRole.TECHNICAL_CASE,
+                                          TextRole.SCIENCE_CASE) else ''
+
         ctx.update({
-            'title': 'Edit {0} Text'.format(name.title()),
+            'title': 'Edit {} {}'.format(name.title(), title_suffix),
             'message': message,
             'proposal_id': proposal.id,
             'text': text,
