@@ -67,10 +67,7 @@ def get_database(database_url=None, facility_spec=None):
 
     if database is None or facility_spec is not None:
         config = get_config()
-        db_parts = []
 
-        if facility_spec is None:
-            facility_spec = config.get('application', 'facilities')
         if database_url is None:
             database_url = config.get('database', 'url')
 
@@ -89,43 +86,56 @@ def get_database(database_url=None, facility_spec=None):
                 engine_options['max_overflow'] = int(config.get(
                     'database', 'pool_overflow'))
 
-        # Import facility metadata and control modules.
-        for name in facility_spec.split(','):
-            try:
-                parts = name.split('.')
-
-                if len(parts) > 1:
-                    # Try looking for "meta" and "control" modules in the same
-                    # directory as the module which defines the facility class.
-                    import_module('.'.join(parts[:-2] + ['meta']))
-                    module = import_module('.'.join(parts[:-2] + ['control']))
-
-                else:
-                    # If there are no dots in the facility class, use the
-                    # standard location in this packages.
-                    import_module(
-                        'hedwig.facility.{0}.meta'.format(
-                            name.lower()))
-                    module = import_module(
-                        'hedwig.facility.{0}.control'.format(
-                            name.lower()))
-
-                # Look for a class named <Facility>Part.
-                db_parts.append(getattr(module, parts[-1] + 'Part'))
-
-            except ImportError:
-                # Not all facilities will define custom metadata and control
-                # modules.
-                pass
-
-        # Create combined database object using the base database class, plus
-        # any facility-specific classes.  Put the base class last so that
-        # facilities can override methods if necessary.
-        db_parts.append(Database)
-        CombinedDatabase = type(b'CombinedDatabase', tuple(db_parts), {})
+        CombinedDatabase = _get_db_class(facility_spec)
         database = CombinedDatabase(get_engine(database_url, **engine_options))
 
     return database
+
+
+def _get_db_class(facility_spec):
+    """
+    Create a combined database class for the given facilities.
+    """
+
+    db_parts = []
+
+    if facility_spec is None:
+        facility_spec = get_config().get('application', 'facilities')
+
+    # Import facility metadata and control modules.
+    for name in facility_spec.split(','):
+        try:
+            parts = name.split('.')
+
+            if len(parts) > 1:
+                # Try looking for "meta" and "control" modules in the same
+                # directory as the module which defines the facility class.
+                import_module('.'.join(parts[:-2] + ['meta']))
+                module = import_module('.'.join(parts[:-2] + ['control']))
+
+            else:
+                # If there are no dots in the facility class, use the
+                # standard location in this packages.
+                import_module(
+                    'hedwig.facility.{0}.meta'.format(
+                        name.lower()))
+                module = import_module(
+                    'hedwig.facility.{0}.control'.format(
+                        name.lower()))
+
+            # Look for a class named <Facility>Part.
+            db_parts.append(getattr(module, parts[-1] + 'Part'))
+
+        except ImportError:
+            # Not all facilities will define custom metadata and control
+            # modules.
+            pass
+
+    # Create combined database object using the base database class, plus
+    # any facility-specific classes.  Put the base class last so that
+    # facilities can override methods if necessary.
+    db_parts.append(Database)
+    return type(b'CombinedDatabase', tuple(db_parts), {})
 
 
 def get_facilities(facility_spec=None):
