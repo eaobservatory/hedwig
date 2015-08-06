@@ -221,16 +221,19 @@ class GenericProposal(object):
                     proposal_id=proposal.id))
                 for x in self.calculators.values()],
             'calculations': self._prepare_calculations(calculations),
-            'target_tools': [
-                TargetToolInfoExtra(*x, target_view=url_for(
-                    '.tool_proposal_{}'.format(x.code,),
-                    proposal_id=proposal.id))
-                for x in self.target_tools.values()],
+            'target_tools': self._get_target_tool_info(proposal.id),
             'tool_note': proposal_text.get(TextRole.TOOL_NOTE, None),
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id).values(),
             'prev_proposals': prev_proposals,
         }
+
+    def _get_target_tool_info(self, proposal_id):
+        return [
+            TargetToolInfoExtra(*x, target_view=url_for(
+                '.tool_proposal_{}'.format(x.code,),
+                proposal_id=proposal_id))
+            for x in self.target_tools.values()]
 
     def _validate_proposal(self, db, proposal):
         messages = []
@@ -955,7 +958,11 @@ class GenericProposal(object):
     def view_tool_note_edit(self, db, proposal, can, form):
         return self._edit_text(
             db, proposal, TextRole.TOOL_NOTE, proposal.expl_word_lim,
-            url_for('.tool_note_edit', proposal_id=proposal.id), form, 10)
+            url_for('.tool_note_edit', proposal_id=proposal.id), form, 10,
+            extra_initialization=self._view_tool_note_edit_init)
+
+    def _view_tool_note_edit_init(self, db, proposal, role):
+        return {'target_tools': self._get_target_tool_info(proposal.id)}
 
     @with_proposal(permission='edit')
     def view_request_edit(self, db, proposal, can, form, is_post):

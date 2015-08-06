@@ -1,0 +1,13 @@
+{% extends 'generic/text_edit.html' %}
+
+{% block content %}
+<p>Tools for checking your proposal targets:</p>
+
+<ul>
+    {% for target_tool in target_tools %}
+        <li><a href="{{ target_tool.target_view }}" target="_blank">{{ target_tool.name }}</a></li>
+    {% endfor %}
+</ul>
+
+{{ super() }}
+{% endblock %}

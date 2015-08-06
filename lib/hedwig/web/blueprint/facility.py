@@ -166,7 +166,7 @@ def create_facility_blueprint(db, facility):
 
     @bp.route('/proposal/<int:proposal_id>/target/note',
               methods=['GET', 'POST'])
-    @facility_template('text_edit.html')
+    @facility_template('tool_note_edit.html')
     @require_auth(require_person=True)
     def tool_note_edit(proposal_id):
         return facility.view_tool_note_edit(
