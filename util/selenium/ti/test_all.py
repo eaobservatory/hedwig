@@ -389,6 +389,50 @@ class IntegrationTest(DummyConfigTestCase):
             ['submit_proposal_link', 'personal_dashboard_link',
              'proposal_identifier_cell'])
 
+        # Add another member to the proposal.
+        self.browser.find_element_by_link_text('Add member').click()
+
+        Select(
+            self.browser.find_element_by_name('person_id')
+        ).select_by_visible_text(
+            'Another Person, Test Institution, United States')
+
+        for affiliation_selection in self.browser.find_elements_by_name(
+                'affiliation_id'):
+            Select(affiliation_selection).select_by_visible_text('Other')
+
+        self._save_screenshot(self.user_image_root, 'member_add')
+
+        self.browser.find_element_by_name('submit-link').click()
+
+        self.assertIn(
+            'has been added to the proposal.',
+            self.browser.page_source)
+
+        self.browser.find_element_by_link_text('Edit members').click()
+
+        self.browser.find_element_by_name('observer_1').click()
+
+        self._save_screenshot(self.user_image_root, 'member_edit')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The proposal member list has been updated.',
+            self.browser.page_source)
+
+        self.browser.find_element_by_link_text('Edit student list').click()
+
+        self.browser.find_element_by_name('student_2').click()
+
+        self._save_screenshot(self.user_image_root, 'member_student')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The list of students has been updated.',
+            self.browser.page_source)
+
     def _save_screenshot(self, path, name, highlight=[]):
         if path is None:
             return
