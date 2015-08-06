@@ -25,12 +25,13 @@ from sqlalchemy.sql import insert
 from sqlalchemy.pool import StaticPool
 
 from hedwig import auth
-from hedwig.db.control import Database
+from hedwig.config import _get_db_class
 from hedwig.db.meta import metadata
 from hedwig.db.engine import get_engine
 
 
-def get_dummy_database(randomize_ids=True, allow_multi_threaded=False):
+def get_dummy_database(randomize_ids=True, allow_multi_threaded=False,
+                       facility_spec=None):
     """
     Create in-memory SQL database for testing.
 
@@ -40,6 +41,9 @@ def get_dummy_database(randomize_ids=True, allow_multi_threaded=False):
     between id columns in different tables which would stop the test suite
     detecting the usage of incorrect id numbers.
     """
+
+    # Do this first to load the facility metadata.
+    CombinedDatabase = _get_db_class(facility_spec)
 
     connect_options = {}
 
@@ -58,7 +62,7 @@ def get_dummy_database(randomize_ids=True, allow_multi_threaded=False):
                              'VALUES ("{0}", {1})'.format(table,
                                                           randint(1, 1000000)))
 
-    return Database(engine)
+    return CombinedDatabase(engine)
 
 
 class DBTestCase(TestCase):
