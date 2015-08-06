@@ -28,9 +28,11 @@ from selenium import webdriver
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import NoSuchElementException
+from sqlalchemy.sql import select
 
 from hedwig import auth
 from hedwig.config import get_config
+from hedwig.db.meta import invitation
 from hedwig.web.app import create_web_app
 
 from test.dummy_config import DummyConfigTestCase
@@ -109,6 +111,11 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.create_proposal('jcmt', semester_name)
 
+            self.log_out_user()
+
+            # Try accepting an invitation.
+            self.accept_invitation()
+
         finally:
             self.browser.get(self.base_url + 'shutdown')
             self.browser.quit()
@@ -127,16 +134,7 @@ class IntegrationTest(DummyConfigTestCase):
         log_in.click()
         self.browser.find_element_by_link_text('register').click()
 
-        self.browser.find_element_by_name('user_name').send_keys(user_name)
-        self.browser.find_element_by_name('password').send_keys(password)
-        self.browser.find_element_by_name('password_check').send_keys(password)
-
-        self._save_screenshot(screenshot_path, 'user_new')
-
-        self.browser.find_element_by_name('submit').click()
-
-        self.assertIn('Your user account has been created.',
-                      self.browser.page_source)
+        self._do_register_user(user_name, password, screenshot_path)
 
         self.browser.find_element_by_name('person_name').send_keys(person_name)
         self.browser.find_element_by_name('person_public').click()
@@ -183,6 +181,18 @@ class IntegrationTest(DummyConfigTestCase):
 
         profile_link.click()
         self._save_screenshot(screenshot_path, 'profile_view')
+
+    def _do_register_user(self, user_name, password, screenshot_path=None):
+        self.browser.find_element_by_name('user_name').send_keys(user_name)
+        self.browser.find_element_by_name('password').send_keys(password)
+        self.browser.find_element_by_name('password_check').send_keys(password)
+
+        self._save_screenshot(screenshot_path, 'user_new')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn('Your user account has been created.',
+                      self.browser.page_source)
 
     def log_out_user(self):
         self.browser.find_element_by_link_text('log out').click()
@@ -391,7 +401,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         proposal_url = self.browser.current_url
 
-        # Add another member to the proposal.
+        # Add other members to the proposal.
         self.browser.find_element_by_link_text('Add member').click()
 
         Select(
@@ -433,6 +443,33 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.assertIn(
             'The list of students has been updated.',
+            self.browser.page_source)
+
+        self.browser.find_element_by_link_text('Add member').click()
+
+        for affiliation_selection in self.browser.find_elements_by_name(
+                'affiliation_id'):
+            Select(affiliation_selection).select_by_visible_text('Other')
+
+        self.browser.find_element_by_name('name').send_keys('Invited Member')
+        self.browser.find_element_by_name('email').send_keys(
+            'invitee@somewhere.edu')
+
+        self.browser.find_element_by_name('submit-invite').click()
+
+        self.assertIn(
+            'has been added to the proposal.',
+            self.browser.page_source)
+
+        self.browser.find_element_by_name('institution_name').send_keys(
+            'Your Institution')
+        Select(
+            self.browser.find_element_by_name('country_code')
+        ).select_by_visible_text('United States')
+
+        self.browser.find_element_by_name('submit_add').click()
+        self.assertIn(
+            'The institution has been recorded.',
             self.browser.page_source)
 
         # Try submitting the proposal now -- this will generate errors,
@@ -535,6 +572,38 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.assertIn(
             'The proposal has been withdrawn.',
+            self.browser.page_source)
+
+    def accept_invitation(self):
+        # Determine the invitation token to use.
+        with self.db._transaction() as conn:
+            token = conn.execute(select([invitation.c.token])).scalar()
+
+        self.browser.get(self.base_url)
+
+        self.browser.find_element_by_link_text(
+            'Enter an invitation code').click()
+
+        self.browser.find_element_by_name('token').send_keys(token)
+
+        self._save_screenshot(self.user_image_root, 'invitation_enter')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'Please log in or register for an account to proceed.',
+            self.browser.page_source)
+
+        self.browser.find_element_by_link_text('register').click()
+
+        self._do_register_user('invitee', 'password')
+
+        self._save_screenshot(self.user_image_root, 'invitation_accept')
+
+        self.browser.find_element_by_name('submit-accept').click()
+
+        self.assertIn(
+            'The invitation has been accepted successfully.',
             self.browser.page_source)
 
     def _save_screenshot(self, path, name, highlight=[]):
