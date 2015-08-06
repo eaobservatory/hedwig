@@ -389,6 +389,8 @@ class IntegrationTest(DummyConfigTestCase):
             ['submit_proposal_link', 'personal_dashboard_link',
              'proposal_identifier_cell'])
 
+        proposal_url = self.browser.current_url
+
         # Add another member to the proposal.
         self.browser.find_element_by_link_text('Add member').click()
 
@@ -431,6 +433,108 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.assertIn(
             'The list of students has been updated.',
+            self.browser.page_source)
+
+        # Try submitting the proposal now -- this will generate errors,
+        # and should not allow use to submit.
+        self.browser.find_element_by_link_text('Submit proposal').click()
+
+        self.assertIn(
+            'Please correct the errors identified above before submitting',
+            self.browser.page_source)
+
+        with self.assertRaises(NoSuchElementException):
+            self.browser.find_element_by_name('submit_confirm')
+
+        self._save_screenshot(self.user_image_root, 'submit_error')
+
+        self.browser.get(proposal_url)
+
+        # Edit the title and abstract.
+        self.browser.find_element_by_link_text('Edit title').click()
+
+        self._save_screenshot(self.user_image_root, 'title_edit')
+
+        self.browser.find_element_by_name('submit').click()
+
+        # (Hedwig currently shows this flash message even if the title
+        # didn't change.)
+        self.assertIn(
+            'The proposal title has been changed.',
+            self.browser.page_source)
+
+        self.browser.find_element_by_partial_link_text('Edit abstract').click()
+
+        self.browser.find_element_by_name('category_1').click()
+        self.browser.find_element_by_name('text').send_keys(
+            'This is an example proposal.')
+
+        self._save_screenshot(self.user_image_root, 'abstract_edit')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The abstract has been saved.',
+            self.browser.page_source)
+
+        # Create an observing request.
+        self.browser.find_element_by_link_text(
+            'Edit observing request').click()
+
+        self.browser.find_element_by_id('add_request').click()
+
+        Select(
+            self.browser.find_element_by_name('instrument_new_1')
+        ).select_by_visible_text('SCUBA-2')
+        Select(
+            self.browser.find_element_by_name('instrument_new_2')
+        ).select_by_visible_text('HARP')
+
+        Select(
+            self.browser.find_element_by_name('weather_new_1')
+        ).select_by_visible_text('Band 1')
+        Select(
+            self.browser.find_element_by_name('weather_new_2')
+        ).select_by_visible_text('Band 5')
+
+        self.browser.find_element_by_name('time_new_1').send_keys(4)
+
+        self.browser.find_element_by_name('time_new_2').send_keys(12)
+
+        self._save_screenshot(self.user_image_root, 'request_edit')
+
+        self.browser.find_element_by_name('submit-save').click()
+
+        self.assertIn(
+            'The observing request has been saved.',
+            self.browser.page_source)
+
+        # Submit the proposal (should stay at the end to minimize warnings
+        # on the submission page).
+        self.browser.find_element_by_link_text('Submit proposal').click()
+
+        self._save_screenshot(self.user_image_root, 'submit_ok')
+
+        self.browser.find_element_by_name('submit_confirm').click()
+
+        self.assertIn(
+            'The proposal has been submitted.',
+            self.browser.page_source)
+
+        self.browser.find_element_by_link_text('Validate proposal').click()
+
+        self._save_screenshot(self.user_image_root, 'validate')
+
+        self.browser.find_element_by_link_text('Back to proposal').click()
+
+        self.browser.find_element_by_link_text('Withdraw proposal').click()
+
+        self._save_screenshot(self.user_image_root, 'withdraw')
+
+        self.browser.find_element_by_name('submit_confirm').click()
+
+        self.assertIn(
+            'The proposal has been withdrawn.',
             self.browser.page_source)
 
     def _save_screenshot(self, path, name, highlight=[]):
