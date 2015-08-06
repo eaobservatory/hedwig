@@ -247,3 +247,14 @@ div.rst_doc img {
 .highlight_for_doc {
     outline: 10px solid red;
 }
+
+.valid_message li p.valid_error {
+    background: red;
+    color: white;
+    border-radius: 0.5ex;
+}
+
+.valid_message li p.valid_warning {
+    background: yellow;
+    border-radius: 0.5ex;
+}

@@ -17,11 +17,9 @@
     <ul class="valid_message">
         {% for message in validation_messages %}
             <li>
-                {% if message.is_error %}
-                    <p class="warning">Error</p>
-                {% else %}
-                    <p class="missing">Warning</p>
-                {% endif %}
+                <p class="valid_{{ 'error' if message.is_error else 'warning' }}">
+                    {{ 'Error' if message.is_error else 'Warning' }}
+                </p>
                 <div>
                     <p>
                         {{ message.description }}

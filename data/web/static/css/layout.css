@@ -116,6 +116,24 @@ table + table {
     margin-top: 2ex;
 }
 
-.valid_message div {
-    padding-left: 5ex;
+.valid_message {
+    padding-left: 0px;
+}
+
+.valid_message li {
+    list-style: none;
+    margin-left: 0ex;
+    overflow: auto;
+}
+
+.valid_message li > p:first-child {
+    display: block;
+    float: left;
+    padding: 1ex;
+    width: 12ex;
+    text-align: center;
+}
+
+.valid_message li > div {
+    margin-left: 16ex;
 }
