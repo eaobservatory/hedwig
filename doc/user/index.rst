@@ -6,3 +6,4 @@ Proposal Author's Guide
 
     register
     proposal
+    member
