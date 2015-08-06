@@ -6,8 +6,4 @@ Proposal Author's Guide
 
     register
     proposal
-    abstract
-    request
-    member
-    submit
     invitation
