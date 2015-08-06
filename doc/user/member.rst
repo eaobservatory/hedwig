@@ -13,6 +13,8 @@ Add a Member from the Directory
     invite is already registered, as you will not have to enter
     their details and they will automatically gain access to the
     proposal.
+    The person will receive an email to inform them that you have
+    invited them to the proposal.
 
 Invite a New Member to the Proposal
     If the person you would like to invite does not appear in the
