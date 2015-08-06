@@ -33,6 +33,16 @@ you have included any information requested in the call for proposals
 or in the notes on the technical and scientific justification
 editing pages.
 
+When a proposal is submitted, the members of the proposal will
+receive a notification by email.
+The email will go to each member's primary email address
+but that address will only be shown in the "To" header of
+the email if it is marked as public.
+If the person's email address is private
+(which is the default setting)
+then they will receive the email by BCC
+rather than appearing in the "To" header.
+
 .. image:: image/submit_ok_small.png
     :target: image/submit_ok_large.png
 
@@ -53,6 +63,9 @@ In particular it is recommended that you do not withdraw
 close to the closing date with the intention of re-submitting
 in case something goes wrong at the last minute and you
 aren't able to do so.
+
+When you withdraw a proposal, an email will be sent to all
+members of the proposal to inform them of the change.
 
 .. image:: image/withdraw_small.png
     :target: image/withdraw_large.png
