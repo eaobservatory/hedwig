@@ -5,3 +5,4 @@ Proposal Author's Guide
     :maxdepth: 2
 
     register
+    proposal
