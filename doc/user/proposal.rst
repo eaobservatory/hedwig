@@ -11,4 +11,6 @@ Writing a Proposal
     prev_proposal
     target
     calculation
+    technical
+    scientific
     submit
