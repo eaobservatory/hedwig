@@ -664,6 +664,38 @@ class IntegrationTest(DummyConfigTestCase):
             'The note on tool results has been saved.',
             self.browser.page_source)
 
+        # Add an integration time calculation.
+        self.browser.find_element_by_link_text('SCUBA-2 ITC').click()
+
+        position = self.browser.find_element_by_name('pos')
+        position.clear()
+        position.send_keys('-10')
+
+        rms = self.browser.find_element_by_name('rms')
+        rms.clear()
+        rms.send_keys('1.343')
+
+        self.browser.find_element_by_name('submit_calc').click()
+
+        self.assertIn(
+            'Results',
+            self.browser.page_source)
+
+        self.browser.find_element_by_name('calculation_title').send_keys(
+            'SCUBA-2 observation of LDN 456')
+
+        submit_save_redir = self.browser.find_element_by_name(
+            'submit_save_redir')
+
+        self._save_screenshot(self.user_image_root, 'calc_scuba2',
+                              [submit_save_redir, 'main_result_table'])
+
+        submit_save_redir.click()
+
+        self.assertIn(
+            'The calculation has been saved',
+            self.browser.page_source)
+
         # Submit the proposal (should stay at the end to minimize warnings
         # on the submission page).
         self.browser.find_element_by_link_text('Submit proposal').click()

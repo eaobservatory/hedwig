@@ -20,7 +20,7 @@
         <section>
             <h2>Results</h2>
 
-            <table>
+            <table id="main_result_table">
                 {% block calculator_output_table %}
                     {% for value in outputs %}
                         {% with output = output_values[value.code] %}
@@ -110,7 +110,7 @@
                 {% endif %}
                 <li>
                     <input type="submit" name="submit_save" value="Save" />
-                    <input type="submit" name="submit_save_redir" value="Save and return to proposal" />
+                    <input type="submit" name="submit_save_redir" id="submit_save_redir" value="Save and return to proposal" />
                 </li>
             </ol>
         </section>
