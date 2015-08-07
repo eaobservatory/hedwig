@@ -808,6 +808,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element_by_link_text('Back to proposal').click()
 
+        # Grab a screenshot of the complete proposal now.
+        self._save_screenshot(self.user_image_root, 'proposal_complete')
+
         self.browser.find_element_by_link_text('Withdraw proposal').click()
 
         self._save_screenshot(self.user_image_root, 'withdraw')
