@@ -10,4 +10,5 @@ Writing a Proposal
     member
     prev_proposal
     target
+    calculation
     submit
