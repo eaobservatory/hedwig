@@ -190,7 +190,12 @@ def change_password(db, form, is_post, remote_addr):
             db.update_user_password(user_id, password_new,
                                     remote_addr=remote_addr)
             flash('Your password has been changed.')
-            raise HTTPRedirect(url_for('home_page'))
+
+            if 'person' in session:
+                raise HTTPRedirect(url_for('.person_view',
+                                           person_id=session['person']['id']))
+            else:
+                raise HTTPRedirect(url_for('home_page'))
 
         except UserError as e:
             message = e.message
