@@ -8,4 +8,6 @@ Writing a Proposal
     abstract
     request
     member
+    prev_proposal
+    target
     submit
