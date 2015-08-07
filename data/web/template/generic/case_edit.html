@@ -69,7 +69,7 @@
 
         <nav>
             <p>
-                <a href="{{ target_text }}">Edit text</a>
+                <a href="{{ target_text }}" id="edit_text_link">Edit text</a>
             </p>
         </nav>
 
@@ -113,7 +113,7 @@
                             Uploaded:
                             {{ figure.uploaded | format_datetime }}
                             <br />
-                            <a href="{{ figure.target_edit }}">Edit figure</a>
+                            <a href="{{ figure.target_edit }}" id="edit_figure_{{ figure.id }}_link">Edit figure</a>
                         </td>
                     </tr>
                 {% endfor %}
@@ -121,7 +121,7 @@
 
             <nav>
                 <p>
-                    <a href="{{ target_manage_figure }}">Manage figures</a>
+                    <a href="{{ target_manage_figure }}" id="manage_figures_link">Manage figures</a>
                 </p>
             </nav>
         {% endif %}
@@ -217,7 +217,7 @@
                     <a href="{{ target_pdf_view }}">View current PDF file</a>
                     <br />
                 {% endif %}
-                <a href="{{ target_pdf }}">Upload {{ 'new' if pdf is none else 'replacement' }} PDF file</a>
+                <a href="{{ target_pdf }}" id="upload_pdf_link">Upload {{ 'new' if pdf is none else 'replacement' }} PDF file</a>
             </p>
         </nav>
     </section>

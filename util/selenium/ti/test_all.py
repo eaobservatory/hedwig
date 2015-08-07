@@ -35,6 +35,7 @@ from sqlalchemy.sql import select
 from hedwig import auth
 from hedwig.config import get_config
 from hedwig.db.meta import invitation
+from hedwig.file.poll import process_proposal_figure
 from hedwig.web.app import create_web_app
 
 from test.dummy_config import DummyConfigTestCase
@@ -695,6 +696,99 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn(
             'The calculation has been saved',
             self.browser.page_source)
+
+        # Edit technical justification.
+        self.browser.find_element_by_link_text(
+            'Edit technical justification').click()
+
+        tech_case_url = self.browser.current_url
+
+        edit_text_link = self.browser.find_element_by_link_text('Edit text')
+        upload_pdf_link = self.browser.find_element_by_link_text(
+            'Upload new PDF file')
+
+        self._save_screenshot(self.user_image_root, 'tech_case_edit',
+                              [edit_text_link, upload_pdf_link])
+
+        upload_pdf_link.click()
+
+        self.assertIn(
+            'Upload Technical Justification PDF',
+            self.browser.page_source)
+
+        self._save_screenshot(self.user_image_root, 'tech_case_pdf')
+
+        self.browser.get(tech_case_url)
+
+        self.browser.find_element_by_link_text('Edit text').click()
+
+        self.browser.find_element_by_name('text').send_keys(
+            'We plan to observe ...')
+
+        self._save_screenshot(self.user_image_root, 'tech_case_text',
+                              ['text_words'])
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The technical justification has been saved.',
+            self.browser.page_source)
+
+        self.browser.find_element_by_link_text('Back to proposal').click()
+
+        # Edit scientific justification.
+        self.browser.find_element_by_link_text(
+            'Edit scientific justification').click()
+
+        sci_case_url = self.browser.current_url
+
+        self.browser.find_element_by_link_text('Upload new figure').click()
+
+        self.browser.find_element_by_name('text').send_keys(
+            'An example figure showing ...')
+
+        self._save_screenshot(self.user_image_root, 'sci_case_fig')
+
+        self.browser.find_element_by_name('file').send_keys(
+            os.path.join(os.getcwd(), 'util', 'selenium',
+                         'data', 'example_figure.png'))
+
+        self.browser.find_element_by_name('submit').click()
+
+        # Process the uploaded figure and reload.
+        n_processed = process_proposal_figure(db=self.db)
+
+        self.assertEqual(n_processed, 1)
+
+        self.browser.get(sci_case_url)
+
+        manage_figures = self.browser.find_element_by_link_text(
+            'Manage figures')
+
+        self._save_screenshot(self.user_image_root, 'sci_case_edit',
+                              [manage_figures, 'edit_figure_1_link'])
+
+        manage_figures.click()
+
+        self._save_screenshot(self.user_image_root, 'sci_case_fig_manage')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.browser.find_element_by_link_text('Edit text').click()
+
+        self.browser.find_element_by_name('text').send_keys(
+            'The scientific rationale for this project is ...')
+
+        self._save_screenshot(self.user_image_root, 'sci_case_text',
+                              ['text_words'])
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The scientific justification has been saved.',
+            self.browser.page_source)
+
+        self.browser.find_element_by_link_text('Back to proposal').click()
 
         # Submit the proposal (should stay at the end to minimize warnings
         # on the submission page).
