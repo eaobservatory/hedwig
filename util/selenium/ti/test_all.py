@@ -34,7 +34,7 @@ from sqlalchemy.sql import select
 
 from hedwig import auth
 from hedwig.config import get_config
-from hedwig.db.meta import invitation
+from hedwig.db.meta import invitation, reset_token, verify_token
 from hedwig.file.poll import process_proposal_figure
 from hedwig.web.app import create_web_app
 
@@ -114,10 +114,23 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.create_proposal('jcmt', semester_name)
 
+            self.view_dashboard()
+
             self.log_out_user()
 
             # Try accepting an invitation.
             self.accept_invitation()
+
+            self.log_out_user()
+
+            # Try managing an account
+            self.log_in_user(user_name='username')
+
+            self.manage_account()
+
+            self.log_out_user()
+
+            self.reset_password()
 
         finally:
             self.browser.get(self.base_url + 'shutdown')
@@ -822,6 +835,20 @@ class IntegrationTest(DummyConfigTestCase):
             'The proposal has been withdrawn.',
             self.browser.page_source)
 
+    def view_dashboard(self):
+        # Test the personal dashboard.
+        self.browser.get(self.base_url + 'dashboard')
+
+        self.assertIn(
+            'Personal Dashboard',
+            self.browser.page_source)
+
+        self.assertIn(
+            'An Example Proposal',
+            self.browser.page_source)
+
+        self._save_screenshot(self.user_image_root, 'dashboard')
+
     def accept_invitation(self):
         # Determine the invitation token to use.
         with self.db._transaction() as conn:
@@ -852,6 +879,218 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.assertIn(
             'The invitation has been accepted successfully.',
+            self.browser.page_source)
+
+    def manage_account(self):
+        self.browser.find_element_by_id('user_profile_link').click()
+
+        self._save_screenshot(
+            self.user_image_root, 'profile_edit_links',
+            ['account_manage_links', 'profile_manage_links',
+             self.browser.find_element_by_link_text('verify')])
+
+        # Change password.
+        self.browser.find_element_by_link_text('Change password').click()
+
+        self.browser.find_element_by_name('password').send_keys('password')
+        self.browser.find_element_by_name('password_new').send_keys(
+            'new-pass')
+        self.browser.find_element_by_name('password_check').send_keys(
+            'new-pass')
+
+        self._save_screenshot(self.user_image_root, 'password_change')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'Your password has been changed.',
+            self.browser.page_source)
+
+        # Change user name.
+        self.browser.find_element_by_link_text('Change user name').click()
+
+        user_name_box = self.browser.find_element_by_name('user_name')
+        user_name_box.clear()
+        user_name_box.send_keys('newusername')
+        self.browser.find_element_by_name('password').send_keys('new-pass')
+
+        self._save_screenshot(self.user_image_root, 'user_name_change')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'Your user name has been changed.',
+            self.browser.page_source)
+
+        # Edit profile.
+        self.browser.find_element_by_link_text('Edit profile').click()
+
+        self.assertIn(
+            'Show in directory',
+            self.browser.page_source)
+
+        self._save_screenshot(self.user_image_root, 'profile_edit')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'Your user profile has been saved.',
+            self.browser.page_source)
+
+        # Edit email addresses.
+        self.browser.find_element_by_link_text('Edit email addresses').click()
+
+        self.assertIn(
+            'not verified',
+            self.browser.page_source)
+
+        self._save_screenshot(self.user_image_root, 'email_edit',
+                              ['delete_2', 'add_email'])
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'Your email addresses have been updated.',
+            self.browser.page_source)
+
+        # Verify email address.
+        self.browser.find_element_by_link_text('verify').click()
+
+        self.assertIn(
+            'You can verify your address by sending a verification',
+            self.browser.page_source)
+
+        self.browser.find_element_by_name('submit_sent').click()
+
+        self.assertIn(
+            'Your address verification code has been sent by email to',
+            self.browser.page_source)
+
+        with self.db._transaction() as conn:
+            token = conn.execute(select([verify_token.c.token])).scalar()
+
+        self.browser.find_element_by_name('token').send_keys(token)
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'Your email address example@somewhere.edu has been verified.',
+            self.browser.page_source)
+
+        # Change institution.
+        self.browser.find_element_by_link_text('Change institution').click()
+
+        self.assertIn(
+            'If you would like to make minor corrections',
+            self.browser.page_source)
+
+        self.browser.find_element_by_name('institution_name').send_keys(
+            'Another Institution')
+
+        Select(
+            self.browser.find_element_by_name('country_code')
+        ).select_by_visible_text('United States')
+
+        self._save_screenshot(self.user_image_root, 'institution_change')
+
+        self.browser.find_element_by_name('submit_add').click()
+
+        self.assertIn(
+            'Your institution has been recorded.',
+            self.browser.page_source)
+
+        self.browser.find_element_by_link_text('Change institution').click()
+
+        Select(
+            self.browser.find_element_by_name('institution_id')
+        ).select_by_visible_text(
+            'Test Institution, United States')
+
+        self.browser.find_element_by_name('submit_select').click()
+
+        self.assertIn(
+            'Your institution has been selected.',
+            self.browser.page_source)
+
+        # View institution.
+        self.browser.find_element_by_partial_link_text(
+            'Test Institution').click()
+
+        edit_institution = self.browser.find_element_by_link_text(
+            'Edit this institution')
+
+        self._save_screenshot(self.user_image_root, 'institution_view',
+                              [edit_institution])
+
+        edit_institution.click()
+
+        self.assertIn(
+            'Are you sure you want to edit this institution?',
+            self.browser.page_source)
+
+        self.browser.find_element_by_name('submit-confirm').click()
+
+        self._save_screenshot(self.user_image_root, 'institution_edit')
+
+        self.browser.find_element_by_name('submit-edit').click()
+
+        self.assertIn(
+            'The institution\'s record has been updated.',
+            self.browser.page_source)
+
+        # Institution list.
+        self.browser.find_element_by_link_text('Institutions').click()
+
+        self.assertIn(
+            '<h1>Institutions</h1>',
+            self.browser.page_source)
+
+        # User directory.
+        self.browser.find_element_by_id('user_profile_link').click()
+
+        self.browser.find_element_by_link_text('User Directory').click()
+
+        self.assertIn(
+            '<h1>Directory of Users</h1>',
+            self.browser.page_source)
+
+    def reset_password(self):
+        self.browser.find_element_by_link_text('Log in').click()
+
+        reset_password = self.browser.find_element_by_link_text(
+            'reset your password')
+
+        self._save_screenshot(self.user_image_root, 'pass_reset_link',
+                              [reset_password])
+
+        reset_password.click()
+
+        self.browser.find_element_by_name('email').send_keys(
+            'example@somewhere.edu')
+
+        self._save_screenshot(self.user_image_root, 'pass_reset_get')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'Your password reset code has been sent',
+            self.browser.page_source)
+
+        with self.db._transaction() as conn:
+            token = conn.execute(select([reset_token.c.token])).scalar()
+
+        self.browser.find_element_by_name('token').send_keys(token)
+        self.browser.find_element_by_name('password').send_keys(
+            'password')
+        self.browser.find_element_by_name('password_check').send_keys(
+            'password')
+
+        self._save_screenshot(self.user_image_root, 'pass_reset_use')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'Your password has been changed.',
             self.browser.page_source)
 
     def _save_screenshot(self, path, name, highlight=[]):

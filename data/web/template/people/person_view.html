@@ -15,7 +15,7 @@
             This is your profile.
         </p>
         <nav>
-            <p>
+            <p id="account_manage_links">
                 <a href="{{ url_for('.change_password') }}">Change password</a>
                 <br />
                 <a href="{{ url_for('.change_user_name') }}">Change user name</a>
@@ -59,7 +59,7 @@
                     {% if email.verified %}<span class="label">verified</span>{% endif %}
                     {% if email.public %}<span class="label">public</span>{% endif %}
                     {% if is_current_user and not email.verified %}
-                        <a href="{{ url_for('.person_email_verify_get', person_id=person.id, email_id=email.id) }}">verify</a>
+                        <a href="{{ url_for('.person_email_verify_get', person_id=person.id, email_id=email.id) }}" id="email_{{ email.id }}_verify_link">verify</a>
                     {% endif %}
                 </td>
             </tr>
@@ -69,7 +69,7 @@
 
 {% if can_edit %}
     <nav>
-        <p>
+        <p id="profile_manage_links">
             <a href="{{ url_for('.person_edit', person_id=person.id) }}">Edit profile</a>
             <br />
             <a href="{{ url_for('.person_edit_email', person_id=person.id) }}">Edit email addresses</a>
