@@ -29,3 +29,21 @@ expected in each part.  You may wish to include:
 
 .. image:: image/call_new_small.png
     :target: image/call_new_large.png
+
+The "Calls" page will then show a table of calls,
+indicating the status of each and giving links to
+pages about the call.
+The "View call" link takes you to the administrative
+interface for the call itself.
+From here you can edit the call or go to the list of proposals.
+The "View proposals" link takes you directly to the list
+of proposals for the call.
+
+.. image:: image/call_list_small.png
+    :target: image/call_list_large.png
+
+You can use the proposals page to navigate to any proposal
+which is has been created for this call.
+
+.. image:: image/call_proposals_small.png
+    :target: image/call_proposals_large.png
