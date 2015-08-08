@@ -93,12 +93,14 @@ class IntegrationTest(DummyConfigTestCase):
             self.register_user(user_name='username',
                                person_name='Example Person',
                                person_email='example@somewhere.edu',
+                               public_profile=True,
                                screenshot_path=self.user_image_root)
 
             self.log_out_user()
 
             self.register_user(user_name='username2',
-                               person_name='Another Person')
+                               person_name='Another Person',
+                               public_profile=True)
 
             self.log_out_user()
 
@@ -140,6 +142,7 @@ class IntegrationTest(DummyConfigTestCase):
                       password='password',
                       institution_name='Test Institution',
                       institution_country='United States',
+                      public_profile=False,
                       screenshot_path=None):
         self.browser.get(self.base_url)
 
@@ -153,7 +156,10 @@ class IntegrationTest(DummyConfigTestCase):
         self._do_register_user(user_name, password, screenshot_path)
 
         self.browser.find_element_by_name('person_name').send_keys(person_name)
-        self.browser.find_element_by_name('person_public').click()
+
+        if public_profile:
+            self.browser.find_element_by_name('person_public').click()
+
         self.browser.find_element_by_name('single_email').send_keys(
             person_email)
 
