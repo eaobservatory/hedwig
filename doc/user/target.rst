@@ -26,7 +26,7 @@ to award sufficient time for a subset of your proposed project.
 .. image:: image/target_edit_small.png
     :target: image/target_edit_large.png
 
-As an alternative to entering target coordinates on-line,
+As an alternative to entering target coordinates online,
 you can upload a list as a text file (space or comma-separated).
 The required format is explained on the upload page,
 which you can reach using the "Upload target list"

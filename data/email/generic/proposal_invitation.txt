@@ -10,7 +10,7 @@ You have also been given permission to edit the proposal.
 {% endif %}
 
 {% if token is defined %}
-To view the proposal on-line, you will need to
+To view the proposal online, you will need to
 log in or register with our system.
 Please begin by entering the following invitation code
 on the invitation page:
@@ -27,7 +27,7 @@ This code will expire at {{ expiry | format_datetime }} UTC.
 
 If you do not wish to register with our system, you may still be listed
 as a member of a proposal, but you will not be able to view the proposal
-through the on-line system.
+through the online system.
 {% else %}
 Since you are already registered with our system, you may find the
 proposal on your "dashboard" page, or view it directly at:
@@ -51,7 +51,7 @@ requirements can be found on this page:
 Please note that your name has been provisionally added to the
 proposal.
 If you do not wish to be involved, you may remove yourself
-from the proposal via the on-line system,
+from the proposal via the online system,
 or contact the proposal author.
 If you have any remaining concerns, please contact us
 at the address below.

@@ -10,14 +10,14 @@ or by clicking your proposal code in the menu bar
 at the top of the page.
 
 The page will normally offer the choice of editing the
-text of the technical justification on-line,
+text of the technical justification online,
 or uploading a PDF file.
 Note that this is an either/or choice:
-if you choose to edit text on-line having uploaded a PDF file,
+if you choose to edit text online having uploaded a PDF file,
 your PDF file will be removed, and vice-versa.
 
 Note that this page shows the word and page limits which
-apply to text written on-line and uploaded PDF files
+apply to text written online and uploaded PDF files
 respectively.
 
 .. image:: image/tech_case_edit_small.png
@@ -40,13 +40,13 @@ allowing you and the other proposal members to view it.
 
 When a PDF file has been uploaded,
 you will see that the section regarding editing text
-on-line is greyed out to indicate that the other
+online is greyed out to indicate that the other
 option has been used.
 
 .. image:: image/tech_case_pdf_uploaded_small.png
     :target: image/tech_case_pdf_uploaded_large.png
 
-Alternatively if you choose to edit the text on-line,
+Alternatively if you choose to edit the text online,
 you will see a page with a large text box.
 In many browsers you can change the size of this box
 by dragging a handle in the lower right corner.

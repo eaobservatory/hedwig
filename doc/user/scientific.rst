@@ -8,11 +8,11 @@ On the "Edit Scientific Justification" page,
 you will probably find a link allowing you
 to upload figures to go with your text.
 This only applies if you are editing text
-on-line --- if you plan to upload a PDF file,
+online --- if you plan to upload a PDF file,
 include your figures in the file instead
 of uploading them here.
 
-If you plan to edit the text on-line,
+If you plan to edit the text online,
 use the figure upload link to upload new figures.
 The types of figures which the system is able to
 process are listed a the top of the page.

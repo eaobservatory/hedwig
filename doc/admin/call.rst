@@ -13,7 +13,7 @@ This page also allows you to configure the word, figure and page limits
 for various parts of the proposal.
 If, for a given part, both a word limit and a PDF page limit are
 specified, proposal authors will have the choice of either
-entering text on-line or uploading a PDF file.
+entering text online or uploading a PDF file.
 If one of the limits is set to zero, only the other choice
 will be available.
 
