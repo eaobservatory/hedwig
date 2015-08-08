@@ -15,7 +15,7 @@ of uploading them here.
 If you plan to edit the text online,
 use the figure upload link to upload new figures.
 The types of figures which the system is able to
-process are listed a the top of the page.
+process are listed at the top of the page.
 You may enter a caption for the figure
 as well as choosing the file to upload.
 
