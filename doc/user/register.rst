@@ -32,6 +32,14 @@ By default, your email address is not shown on your profile, even
 if your profile is shown in the user directory.  You can configure
 these settings at any time from your profile page.
 
+Please note that you will not be able to use the password reset
+system to recover a lost password until you have entered an
+email address.
+Please contact us if you loose your password at this stage
+as we may be able to help you recover your account.
+We may also remove accounts left in this state if they are
+inactive for a long time.
+
 .. image:: image/profile_new_small.png
     :target: image/profile_new_large.png
 

@@ -14,6 +14,13 @@ If you enter an email address, your password
 reset code will be sent to that address.
 Otherwise it will be sent to your primary address.
 
+If you do not not remember any of your account information,
+or no longer have access to the email address which you used to
+register, please contact us as we may be able to help you
+recover your account.
+This is preferable to making a new account as it will ensure
+you have access to all of your proposal from a single account.
+
 .. image:: image/pass_reset_get_small.png
     :target: image/pass_reset_get_large.png
 
