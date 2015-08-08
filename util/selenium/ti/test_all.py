@@ -35,7 +35,7 @@ from sqlalchemy.sql import select
 from hedwig import auth
 from hedwig.config import get_config
 from hedwig.db.meta import invitation, reset_token, verify_token
-from hedwig.file.poll import process_proposal_figure
+from hedwig.file.poll import process_proposal_figure, process_proposal_pdf
 from hedwig.web.app import create_web_app
 
 from test.dummy_config import DummyConfigTestCase
@@ -398,8 +398,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         # Give path to MOC assuming we are in the top level directory.
         self.browser.find_element_by_name('file').send_keys(
-            os.path.join(os.getcwd(), 'util', 'selenium',
-                         'data', 'example_moc.fits'))
+            self._get_example_path('example_moc.fits'))
 
         self._save_screenshot(self.admin_image_root, 'moc')
 
@@ -724,8 +723,6 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_link_text(
             'Edit technical justification').click()
 
-        tech_case_url = self.browser.current_url
-
         edit_text_link = self.browser.find_element_by_link_text('Edit text')
         upload_pdf_link = self.browser.find_element_by_link_text(
             'Upload new PDF file')
@@ -741,7 +738,30 @@ class IntegrationTest(DummyConfigTestCase):
 
         self._save_screenshot(self.user_image_root, 'tech_case_pdf')
 
-        self.browser.get(tech_case_url)
+        self.browser.find_element_by_name('file').send_keys(
+            self._get_example_path('example_justification.pdf'))
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The technical justification has been uploaded.',
+            self.browser.page_source)
+
+        self.assertIn(
+            'Not yet processed',
+            self.browser.page_source)
+
+        n_processed = process_proposal_pdf(db=self.db)
+
+        self.assertEqual(n_processed, 1)
+
+        self.browser.get(self.browser.current_url)
+
+        self.assertIn(
+            'Processed successfully',
+            self.browser.page_source)
+
+        self._save_screenshot(self.user_image_root, 'tech_case_pdf_uploaded')
 
         self.browser.find_element_by_link_text('Edit text').click()
 
@@ -773,8 +793,7 @@ class IntegrationTest(DummyConfigTestCase):
         self._save_screenshot(self.user_image_root, 'sci_case_fig')
 
         self.browser.find_element_by_name('file').send_keys(
-            os.path.join(os.getcwd(), 'util', 'selenium',
-                         'data', 'example_figure.png'))
+            self._get_example_path('example_figure.png'))
 
         self.browser.find_element_by_name('submit').click()
 
@@ -844,6 +863,22 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn(
             'The proposal has been withdrawn.',
             self.browser.page_source)
+
+        # Test more source list upload.
+        self.browser.find_element_by_link_text('Upload target list').click()
+
+        self.browser.find_element_by_name('file').send_keys(
+            self._get_example_path('example_list.txt'))
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The target object list has been updated.',
+            self.browser.page_source)
+
+        self.assertIn('LDN 123', self.browser.page_source)
+        self.assertIn('LDN 456', self.browser.page_source)
+        self.assertIn('NGC 1234', self.browser.page_source)
 
     def view_dashboard(self):
         # Test the personal dashboard.
@@ -1214,3 +1249,7 @@ class IntegrationTest(DummyConfigTestCase):
         im = im.resize(size, resample=Image.BICUBIC)
 
         im.save(path_small, format='PNG')
+
+    def _get_example_path(self, file_name):
+        return os.path.join(
+            os.getcwd(), 'util', 'selenium', 'data', file_name)
