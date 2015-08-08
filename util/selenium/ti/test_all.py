@@ -134,6 +134,10 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.reset_password()
 
+            self.log_in_user(user_name='test')
+
+            self.administer_facility('jcmt', semester_name)
+
         finally:
             self.browser.get(self.base_url + 'shutdown')
             self.browser.quit()
@@ -1112,6 +1116,80 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn(
             'Your password has been changed.',
             self.browser.page_source)
+
+    def administer_facility(self, facility_code, semester_name):
+        """
+        This test performs some administrative tasks on a facility.
+
+        It takes a screenshot of the call proposals list and so is intended
+        to run after a user has created a proposal.
+        """
+
+        self.browser.get(self.base_url + facility_code)
+        self.browser.find_element_by_link_text('take admin').click()
+        self.browser.find_element_by_link_text('Administrative menu').click()
+
+        admin_menu_url = self.browser.current_url
+
+        # Go to the call list and get screenshots of the list and the
+        # list of proposals.
+        self.browser.find_element_by_link_text('Calls').click()
+
+        self._save_screenshot(self.admin_image_root, 'call_list')
+
+        self.browser.find_element_by_link_text('View call').click()
+
+        self.assertIn('<h1>Call:',
+                      self.browser.page_source)
+
+        self.browser.find_element_by_link_text('Edit call').click()
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn('The call has been updated.',
+                      self.browser.page_source)
+
+        self.browser.find_element_by_link_text('View proposals').click()
+
+        self.assertIn('<h1>Proposals:',
+                      self.browser.page_source)
+
+        self._save_screenshot(self.admin_image_root, 'call_proposals')
+
+        # Try deleting the MOC.
+        self.browser.get(admin_menu_url)
+        self.browser.find_element_by_link_text('Clash tool coverage').click()
+        self.browser.find_element_by_link_text('Delete').click()
+        self.browser.find_element_by_name('submit_confirm').click()
+
+        self.assertIn('The coverage map has been deleted.',
+                      self.browser.page_source)
+
+        # Also test the semester and queue edit pages.
+        self.browser.get(admin_menu_url)
+        self.browser.find_element_by_link_text('Semesters').click()
+        self.browser.find_element_by_link_text(semester_name).click()
+        self.browser.find_element_by_link_text('Edit semester').click()
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn('Semester "{}" has been updated.'.format(semester_name),
+                      self.browser.page_source)
+
+        self.browser.find_element_by_link_text('Administrative menu').click()
+        self.browser.find_element_by_link_text('Queues').click()
+        self.browser.find_element_by_link_text('International').click()
+        self.browser.find_element_by_link_text('Edit queue').click()
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn('Queue "International" has been updated.',
+                      self.browser.page_source)
+
+        # Go back to the main page and test the "drop admin" link.
+        self.browser.get(self.base_url)
+        self.browser.find_element_by_link_text('drop admin').click()
+
+        self.assertIn('You have dropped administrative privileges.',
+                      self.browser.page_source)
 
     def _save_screenshot(self, path, name, highlight=[]):
         if path is None:
