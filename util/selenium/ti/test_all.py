@@ -887,6 +887,20 @@ class IntegrationTest(DummyConfigTestCase):
             'The invitation has been accepted successfully.',
             self.browser.page_source)
 
+        # Now remove self from the proposal.
+        self.browser.find_element_by_link_text(
+            'Remove yourself from this proposal').click()
+
+        self.assertIn(
+            'Are you sure you wish to remove yourself',
+            self.browser.page_source)
+
+        self.browser.find_element_by_name('submit_confirm').click()
+
+        self.assertIn(
+            'You have been removed from proposal',
+            self.browser.page_source)
+
     def manage_account(self):
         self.browser.find_element_by_id('user_profile_link').click()
 
