@@ -2,7 +2,7 @@ The Administrative Menu
 =======================
 
 When you are logged in with an account which has permission to take
-administrative privileges, you will see a link labelled
+administrative privileges, you will see a link labeled
 "take admin" next to the "log out" link.
 
 .. image:: image/facility_home_small.png

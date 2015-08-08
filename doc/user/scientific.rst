@@ -29,7 +29,7 @@ You can continue working on the proposal while waiting
 for the figure to be processed.
 If you refresh the page later, you should see a
 small version of your figure.
-There will be a link labelled "Edit figure"
+There will be a link labeled "Edit figure"
 if you would like to change the caption
 or replace the figure with a new file.
 You can use the "Manage figures" link if you would
