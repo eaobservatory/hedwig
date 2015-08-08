@@ -7,3 +7,4 @@ Proposal Author's Guide
     register
     proposal
     invitation
+    account
