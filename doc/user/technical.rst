@@ -38,6 +38,14 @@ allowing you and the other proposal members to view it.
 .. image:: image/tech_case_pdf_small.png
     :target: image/tech_case_pdf_large.png
 
+When a PDF file has been uploaded,
+you will see that the section regarding editing text
+on-line is greyed out to indicate that the other
+option has been used.
+
+.. image:: image/tech_case_pdf_uploaded_small.png
+    :target: image/tech_case_pdf_uploaded_large.png
+
 Alternatively if you choose to edit the text on-line,
 you will see a page with a large text box.
 In many browsers you can change the size of this box
