@@ -301,7 +301,7 @@ def _check_session_expiry():
 
     delta = (date_current - date_set).total_seconds()
 
-    if delta > 3600:
+    if delta > 7200:
         session.clear()
     elif delta > 600:
         session['date_set'] = date_current
