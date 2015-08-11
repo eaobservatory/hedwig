@@ -238,6 +238,10 @@ figcaption div.figcap {
     text-align: left;
 }
 
+dt {
+    font-weight: bold;
+}
+
 div.rst_doc img {
     display: block;
     margin-left: auto;
