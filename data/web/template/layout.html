@@ -41,6 +41,14 @@
 
                 {% block content %}
                 {% endblock %}
+
+                {% if help_link is defined %}
+                    <nav>
+                        <ul class="navlink">
+                            <li><a href="{{ help_link }}" target="_blank">{{ help_link_text if help_link_text is defined else 'Help on this page' }}</a></li>
+                        </ul>
+                    </nav>
+                {% endif %}
             </div>
         {% endblock %}
     </body>
