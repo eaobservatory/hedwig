@@ -121,6 +121,15 @@ def create_facility_blueprint(db, facility):
         return facility.view_member_add(
             db, proposal_id, request.form, request.method == 'POST')
 
+    @bp.route('/proposal/<int:proposal_id>/member/reinvite/<int:member_id>',
+              methods=['GET', 'POST'])
+    @templated('confirm.html')
+    @require_auth(require_person=True)
+    def member_reinvite(proposal_id, member_id):
+        return facility.view_member_reinvite(
+            db, proposal_id, member_id,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/proposal/<int:proposal_id>/member/remove',
               methods=['GET', 'POST'])
     @templated('confirm.html')

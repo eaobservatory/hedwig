@@ -128,6 +128,9 @@
                         {% if member.pi %}<span class="label">PI</span>{% endif %}
                         {% if member.editor %}<span class="label">editor</span>{% endif %}
                         {% if member.observer%}<span class="label">observer</span>{% endif %}
+                        {% if can_edit and not member.person_registered %}
+                            <a href="{{ url_for('.member_reinvite', proposal_id=proposal.id, member_id=member.id) }}">Re-send invitation</a>
+                        {% endif %}
                     </td>
                </tr>
             {% endfor %}

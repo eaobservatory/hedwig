@@ -684,6 +684,59 @@ class GenericProposal(object):
             'proposal_code': self.make_proposal_code(db, proposal),
         }
 
+    @with_proposal(permission='edit')
+    def view_member_reinvite(self, db, proposal, can, member_id, form):
+        member = proposal.members.get(member_id)
+        if member is None:
+            raise HTTPNotFound('Proposal member not found.')
+
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        if form:
+            if 'submit_confirm' in form:
+                person_id = member.person_id
+
+                (token, expiry) = db.add_invitation(person_id)
+
+                email_ctx = {
+                    'proposal': proposal,
+                    'inviter_name': session['person']['name'],
+                    'affiliation': member.affiliation_name,
+                    'is_editor': member.editor,
+                    'target_semester': url_for(
+                        '.semester_calls',
+                        semester_id=proposal.semester_id, _external=True),
+                    'token': token,
+                    'expiry': expiry,
+                    'recipient_name': member.person_name,
+                    'target_url': url_for(
+                        'people.invitation_token_enter',
+                        token=token, _external=True),
+                    'target_plain': url_for(
+                        'people.invitation_token_enter',
+                        _external=True),
+                }
+
+                db.add_message(
+                    'Proposal {0} invitation'.format(proposal_code),
+                    render_email_template('proposal_invitation.txt',
+                                          email_ctx, facility=self),
+                    [person_id])
+
+                flash('{0} has been re-invited to the proposal.',
+                      member.person_name)
+
+            raise HTTPRedirect(url_for('.proposal_view',
+                                       proposal_id=proposal.id))
+
+        return {
+            'title': 'Re-send Proposal Invitation',
+            'message':
+                'Would you like to re-send an invitation '
+                'to proposal {} to {}?'.format(proposal_code,
+                                               member.person_name),
+        }
+
     @with_proposal(permission='view')
     def view_member_remove_self(self, db, proposal, can, form):
         if not ProposalState.can_edit(proposal.state):
