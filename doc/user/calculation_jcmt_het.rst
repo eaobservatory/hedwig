@@ -93,13 +93,13 @@ which you wish to make.
     to the limited "chop" distance".
 
   Position switching
-    Spends approximately 50% of the time
-    on an off-source reference position but will generally produce flat
-    baselines.
+    The whole telescope moves between the source and offset position.
+    Will generally produce flat baselines.
 
   Frequency switching
-    Is much more efficient, spending close to
-    100% of the time on source but will produce wavy baselines that will
+    The observing frequency alternates during the observation
+    so there is no need for a separate "off" position.
+    This can produce wavy baselines that will
     not be suitable when wide lines are being observed.
     *Frequency switching is not currently supported by this calculator.*
 
