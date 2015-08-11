@@ -22,7 +22,7 @@ from contextlib import closing, contextmanager
 from cStringIO import StringIO
 from email.generator import Generator
 from email.header import Header
-from email.mime.text import MIMEText
+from email.mime.nonmultipart import MIMENonMultipart
 from email.utils import formataddr, formatdate, make_msgid
 import socket
 from smtplib import SMTP, SMTPException
@@ -40,6 +40,18 @@ def quitting(smtp):
         yield smtp
     finally:
         smtp.quit()
+
+
+class MIMETextFlowed(MIMENonMultipart):
+    def __init__(self, text, charset='utf-8'):
+        """
+        Based on email.mime.text.MIMEText but adds format=flowed
+        to the content type.  Also defaults to UTF-8.
+        """
+
+        MIMENonMultipart.__init__(self, 'text', 'plain',
+                                  charset=charset, format='flowed')
+        self.set_payload(text, charset)
 
 
 def send_email_message(message):
@@ -69,7 +81,7 @@ def send_email_message(message):
 
     identifier = make_msgid('{0}'.format(message.id))
 
-    msg = MIMEText(message.body, 'plain', 'utf-8')
+    msg = MIMETextFlowed(message.body)
 
     msg['Subject'] = Header(message.subject)
     msg['Date'] = formatdate(mktime(message.date.timetuple()))
