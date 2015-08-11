@@ -244,6 +244,10 @@ div.rst_doc img {
     margin-right: auto;
 }
 
+div.rst_doc div.formula {
+    text-align: center;
+}
+
 .highlight_for_doc {
     outline: 10px solid red;
 }

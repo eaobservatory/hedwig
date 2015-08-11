@@ -37,6 +37,11 @@ and press the "Save and return to proposal" button.
 Alternatively if you would like to keep using the calculator
 to add more calculations to your proposal, press the plain "Save" button.
 
-
 .. image:: image/calc_scuba2_small.png
     :target: image/calc_scuba2_large.png
+
+.. toctree::
+    :maxdepth: 2
+
+    calculation_scuba2
+    calculation_jcmt_het
