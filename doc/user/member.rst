@@ -25,6 +25,19 @@ Invite a New Member to the Proposal
     The person will receive an invitation code by email which they can
     use to register with the system and gain access to the proposal.
 
+    When you invite a new member in this way,
+    you are responsible for entering their details
+    (name, email address and institution) correctly.
+    You will be able to edit this information
+    (until the person accepts the invitation)
+    by clicking on their name in the proposal member list.
+    If you need to re-send the invitation email,
+    for example after correcting the person's email address,
+    you can use the "Re-send invitation" link in the member list.
+
+    Once the new member has registered for an account and
+    accepted the invitation, only they will be able to edit their profile.
+
 **Note:** if you give give someone permission to edit the proposal they
 will have exactly the same editing privileges as you.
 You should also coordinate your editing as the system does not (yet)
