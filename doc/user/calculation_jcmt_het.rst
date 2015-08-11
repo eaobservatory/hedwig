@@ -80,7 +80,7 @@ which you wish to make.
   Grid mapping
     The telescope moves to one or more individual points.
     In this mode you should enter the number of map points
-    directly.  This can be one if intend to perform a
+    directly.  This can just be one point if you intend to perform a
     single-position "stare" observation.
 
 * **Switching mode**
