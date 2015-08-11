@@ -158,7 +158,8 @@ class BaseCalculator(object):
                     if 'submit_save_redir' in form:
                         flash('The calculation has been saved.')
                         raise HTTPRedirect(url_for('.proposal_view',
-                                                   proposal_id=proposal_id))
+                                                   proposal_id=proposal_id,
+                                                   _anchor='calculations'))
 
                     else:
                         for_proposal_id = proposal_id

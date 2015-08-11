@@ -211,7 +211,8 @@ class JCMT(Generic):
                 flash('The observing request has been saved.')
 
                 raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id))
+                                           proposal_id=proposal.id,
+                                           _anchor='request'))
 
             except UserError as e:
                 message = e.message

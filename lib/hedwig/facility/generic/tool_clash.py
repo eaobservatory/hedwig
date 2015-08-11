@@ -178,7 +178,8 @@ class ClashTool(BaseTargetTool):
             'non_clashes': non_clashes,
             'target_moc_info': '.tool_clash_moc_info',
             'target_proposal': url_for('.proposal_view',
-                                       proposal_id=proposal.id),
+                                       proposal_id=proposal.id,
+                                       _anchor='targets'),
         }
 
     def _check_mocs_exist(self, db):

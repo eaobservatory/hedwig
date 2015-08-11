@@ -432,7 +432,9 @@ class GenericProposal(object):
             url_for('.abstract_edit', proposal_id=proposal.id), form, 10,
             extra_initialization=self._view_abstract_edit_init,
             extra_form_read=self._view_abstract_edit_read,
-            extra_form_proc=self._view_abstract_edit_proc)
+            extra_form_proc=self._view_abstract_edit_proc,
+            target_redir=url_for('.proposal_view', proposal_id=proposal.id,
+                                 _anchor='abstract'))
 
     def _view_abstract_edit_init(self, db, proposal, role):
         proposal_categories = db.search_proposal_category(
@@ -522,7 +524,8 @@ class GenericProposal(object):
 
                 flash('The proposal member list has been updated.')
                 raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id))
+                                           proposal_id=proposal.id,
+                                           _anchor='members'))
 
             except UserError as e:
                 message = e.message
@@ -605,7 +608,8 @@ class GenericProposal(object):
 
                     flash('{0} has been added to the proposal.', person.name)
                     raise HTTPRedirect(url_for('.proposal_view',
-                                       proposal_id=proposal.id))
+                                       proposal_id=proposal.id,
+                                       _anchor='members'))
 
                 except UserError as e:
                     message_link = e.message
@@ -650,7 +654,8 @@ class GenericProposal(object):
                     # Return to the proposal page after editing the new
                     # member's institution.
                     session['next_page'] = url_for('.proposal_view',
-                                                   proposal_id=proposal.id)
+                                                   proposal_id=proposal.id,
+                                                   _anchor='members')
 
                     raise HTTPRedirect(url_for(
                         'people.person_edit_institution', person_id=person_id))
@@ -727,7 +732,8 @@ class GenericProposal(object):
                       member.person_name)
 
             raise HTTPRedirect(url_for('.proposal_view',
-                                       proposal_id=proposal.id))
+                                       proposal_id=proposal.id,
+                                       _anchor='members'))
 
         return {
             'title': 'Re-send Proposal Invitation',
@@ -789,7 +795,8 @@ class GenericProposal(object):
                     flash('The list of students has been updated.')
 
                 raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id))
+                                           proposal_id=proposal.id,
+                                           _anchor='members'))
 
             except UserError as e:
                 message = e.message
@@ -876,7 +883,8 @@ class GenericProposal(object):
                     flash('The previous proposals list has been saved.')
 
                 raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id))
+                                           proposal_id=proposal.id,
+                                           _anchor='prev_proposals'))
 
             except UserError as e:
                 message = e.message
@@ -942,7 +950,8 @@ class GenericProposal(object):
                 flash('The target object list has been saved.')
 
                 raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id))
+                                           proposal_id=proposal.id,
+                                           _anchor='targets'))
 
             except UserError as e:
                 message = e.message
@@ -993,7 +1002,8 @@ class GenericProposal(object):
                       ('overwritten' if overwrite else 'updated'))
 
                 raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id))
+                                           proposal_id=proposal.id,
+                                           _anchor='targets'))
 
             except UserError as e:
                 message = e.message
@@ -1012,7 +1022,9 @@ class GenericProposal(object):
         return self._edit_text(
             db, proposal, TextRole.TOOL_NOTE, proposal.expl_word_lim,
             url_for('.tool_note_edit', proposal_id=proposal.id), form, 10,
-            extra_initialization=self._view_tool_note_edit_init)
+            extra_initialization=self._view_tool_note_edit_init,
+            target_redir=url_for('.proposal_view', proposal_id=proposal.id,
+                                 _anchor='targets'))
 
     def _view_tool_note_edit_init(self, db, proposal, role):
         return {'target_tools': self._get_target_tool_info(proposal.id)}
@@ -1065,6 +1077,9 @@ class GenericProposal(object):
                 '.{}_edit_pdf'.format(code), proposal_id=proposal.id),
             'target_pdf_view': url_for(
                 '.{}_view_pdf'.format(code), proposal_id=proposal.id),
+            'target_back_to_proposal': url_for(
+                '.proposal_view', proposal_id=proposal.id,
+                _anchor='{}_case'.format(TextRole.short_name(role))),
             'text': text_info.get_single(None),
             'figures': figures,
             'pdf': pdf_info.get_single(None),

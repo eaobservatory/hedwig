@@ -10,7 +10,7 @@
 {% block calculator_proposal_link %}
     {% if show_proposal_link %}
         <p>
-            <a href="{{ url_for('.proposal_view', proposal_id=proposal_id) }}">Back to proposal</a>
+            <a href="{{ url_for('.proposal_view', proposal_id=proposal_id, _anchor="calculations") }}">Back to proposal</a>
         </p>
     {% endif %}
 {% endblock %}

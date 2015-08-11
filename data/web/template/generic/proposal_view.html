@@ -60,7 +60,7 @@
 
 {% block proposal_abstract %}
     <section>
-        <h2>Abstract</h2>
+        <h2 id="abstract">Abstract</h2>
 
         {% if abstract is none %}
             <p class="missing">
@@ -93,7 +93,7 @@
 
 {% block proposal_members %}
     <section>
-        <h2>Members</h2>
+        <h2 id="members">Members</h2>
 
         <table>
             <tr>
@@ -185,7 +185,7 @@
 
 {% block proposal_previous %}
     <section>
-        <h2>Previous Proposals and Publications</h2>
+        <h2 id="prev_proposals">Previous Proposals and Publications</h2>
 
         {% if not prev_proposals %}
             <p class="missing">
@@ -268,7 +268,7 @@
 
 {% block proposal_targets %}
     <section>
-        <h2>Target Objects</h2>
+        <h2 id="targets">Target Objects</h2>
 
         {% if not targets %}
             <p class="missing">
@@ -338,7 +338,7 @@
 
 {% block proposal_calculations %}
     <section>
-        <h2>Calculation Results</h2>
+        <h2 id="calculations">Calculation Results</h2>
 
         {% if not calculations %}
             <p class="missing">
@@ -382,7 +382,7 @@
 
 {% block technical_case %}
     <section>
-        <h2>Technical Justification</h2>
+        <h2 id="tech_case">Technical Justification</h2>
 
         {% if tech_case_text is not none %}
             {{ tech_case_text | format_text }}
@@ -407,7 +407,7 @@
 
 {% block science_case %}
     <section>
-        <h2>Scientific Justification</h2>
+        <h2 id="sci_case">Scientific Justification</h2>
 
         {% if sci_case_text is not none %}
             {{ sci_case_text | format_text }}
