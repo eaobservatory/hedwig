@@ -99,7 +99,7 @@ p.caution + *.caution_detail {
 }
 
 input[type="number"] {
-    width: 10ex;
+    width: 15ex;
 }
 
 section.deselected {
