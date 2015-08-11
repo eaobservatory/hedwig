@@ -138,6 +138,11 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.administer_facility('jcmt', semester_name)
 
+            self.log_out_user()
+
+            # Try the JCMT stand-alone ITCs
+            self.try_jcmt_itcs()
+
         finally:
             self.browser.get(self.base_url + 'shutdown')
             self.browser.quit()
@@ -1225,6 +1230,15 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.assertIn('You have dropped administrative privileges.',
                       self.browser.page_source)
+
+    def try_jcmt_itcs(self):
+        self.browser.get(self.base_url + 'jcmt/calculator/scuba2/time')
+
+        self._save_screenshot(self.user_image_root, 'calc_scuba2_input')
+
+        self.browser.get(self.base_url + 'jcmt/calculator/heterodyne/time')
+
+        self._save_screenshot(self.user_image_root, 'calc_jcmt_het_input')
 
     def _save_screenshot(self, path, name, highlight=[]):
         if path is None:
