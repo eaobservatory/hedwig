@@ -1,5 +1,5 @@
 {% extends 'generic/calculator_base.html' %}
-{% set scripts=['edit_calc_jcmt', 'edit_calc_jcmt_het'] %}
+{% set scripts=['edit_calc_jcmt', 'edit_calc_jcmt_het', 'formtip'] %}
 
 {% block calculator_input_list %}
     {% for value in inputs %}{% if value.code not in ('dim_y', 'dy', 'res_unit', 'pos_type') %}
@@ -39,10 +39,46 @@
                             >{{ map_mode.name }}</option>
                         {% endfor %}
                     </select>
+                    <div class="formtip">
+                        <div>
+                            <p>
+                                <b>Grid:</b>
+                                the telescope moves to one or more individual points.
+                                <br />
+                                <b>Jiggle:</b>
+                                the secondary mirror of the telescope moves in a pre-defined pattern.
+                                <br />
+                                <b>Raster:</b>
+                                data are recorded while the telescope scans an area.
+                            </p>
+                            <p>
+                                <a href="http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/observing-modes/" target="_blank">Heterodyne observing modes</a>
+                            </p>
+                        </div>
+                    </div>
                 {% elif value.code == 'sw' %}
                     {% for (mode_code, switch_mode) in switch_modes.items() %}
                         <input type="radio" name="{{ value.code }}" value="{{ mode_code }}" {{ 'checked="checked"' | safe if mode_code == input }} /><span class="checkboxlabel">{{ switch_mode.name }}</span>
                     {% endfor %}
+                    <div class="formtip">
+                        <div>
+                            <p>
+                                <b>Beam:</b>
+                                the secondary mirror of the telescope &ldquo;chops&rdquo;
+                                a short distance (&leq; 180 arc-seconds) to either side.
+                                <br />
+                                <b>Position:</b>
+                                the whole telescope moves between the source and offset position.
+                                <br />
+                                <b>Frequency:</b>
+                                the observing frequency alternates during the observation.
+                                <i>(Not currently available in this calculator.)</i>
+                            </p>
+                            <p>
+                                <a href="http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/observing-modes/" target="_blank">Heterodyne observing modes</a>
+                            </p>
+                        </div>
+                    </div>
                 {% elif value.code == 'freq' %}
                     <input type="number" name="{{ value.code }}" value="{{ input }}" step="any" />
                 {% elif value.code == 'res' %}
@@ -60,6 +96,25 @@
                             <option value="{{ res_unit }}" {{ 'selected="selected"' | safe if res_unit == input_values['res_unit'] }} >{{ res_unit }}</option>
                         {% endfor %}
                     </select>
+                    <div class="formtip">
+                        <div>
+                            <p>
+                                ACSIS can use 250 MHz or 1000 MHz sub-bands.
+                                In the case of HARP these can either be &ldquo;chained&rdquo;
+                                for higher resolution or overlapped as a
+                                400/420/440 MHz or 1600/1800/1860 MHz &ldquo;hybrid&rdquo; band.
+                                Other receivers can use one of these &ldquo;hybrid&rdquo; modes
+                                without a loss of resolution.
+                            </p>
+                            <p>
+                                Please see the
+                                <a href="http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/acsis/" target="_blank">ACSIS spectrometer information</a>
+                                for more information, including the resolution
+                                constraints when observing multiple simultaneous
+                                frequencies.
+                            </p>
+                        </div>
+                    </div>
                 {% elif value.code == 'tau' %}
                     <select name="tau_band">
                         {% for (band_num, band_info) in weather_bands.items() %}
@@ -77,6 +132,19 @@
                         <option value="other" {{ 'selected="selected"' | safe if input_values.tau_band is none }}>Other</option>
                     </select>
                     <input type="text" name="tau_value" value="{{ input }}" {{ 'disabled="disabled"' | safe if input_values.tau_band is not none }} />
+                    <div class="formtip">
+                        <div>
+                            <p>
+                                Opacity conditions at JCMT are divided into 5 bands.
+                                You may select a band to use a representative value for that band
+                                or select &ldquo;Other&rdquo; to enter a specific
+                                225 GHz opacity value.
+                            </p>
+                            <p>
+                                <a href="http://www.eaobservatory.org/jcmt/observing/weather-bands/" target="_blank">Weather band information</a>
+                            </p>
+                        </div>
+                    </div>
                 {% elif value.code == 'pos' %}
                     <input type="number" name="{{ value.code }}" value="{{ input }}" min="-90" max="90" step="any" />
                 {% elif value.code == 'sb' %}
@@ -100,10 +168,31 @@
                     <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="any" />
                 {% elif value.code == 'basket' %}
                     <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
+                    <div class="formtip">
+                        <div>
+                            <p>
+                                In a basket-weaved observation the telescope scans the map area
+                                in two orthogonal directions (along the height and width)
+                                to minimize the effects of sky and system uncertainties.
+                            </p>
+                        </div>
+                    </div>
                 {% elif value.code == 'sep_off' %}
                     <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
                 {% elif value.code == 'cont' %}
                     <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
+                    <div class="formtip">
+                        <div>
+                            <p>
+                                Continuum mode can be selected when you are interested in the
+                                continuum level (e.g. for planets)
+                                at the expense of reduced observing efficiency.
+                            </p>
+                            <p>
+                                <a href="http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/observing-modes/" target="_blank">Heterodyne observing modes</a>
+                            </p>
+                        </div>
+                    </div>
                 {% else %}
                     <input type="text" name="{{ value.code }}" value="{{ input }}" />
                 {% endif %}

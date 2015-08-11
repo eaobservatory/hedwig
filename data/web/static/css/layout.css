@@ -137,3 +137,39 @@ table + table {
 .valid_message li > div {
     margin-left: 16ex;
 }
+
+div.formtip {
+    display: inline-block;
+    position: relative
+}
+
+div.formtip > a {
+    cursor: help;
+    background: #88F;
+    color: #FFF;
+    padding: 0ex 1ex 0ex 1ex;
+    border-radius: 1ex;
+}
+
+div.formtip > div {
+    display: none;
+    position: absolute;
+    left: 4ex;
+    top: 0ex;
+    z-index: 10;
+    width: 40ex;
+    border: 1px solid #888;
+    background: #EEE;
+    padding: 1ex;
+    border-radius: 1ex;
+    box-shadow: 0.5ex 0.5ex 1ex grey;
+}
+
+div.formtip > div > a {
+    float: right;
+    background: #88F;
+    color: #FFF;
+    padding: 0ex 1ex 0ex 1ex;
+    border-radius: 1ex;
+    cursor: pointer;
+}
