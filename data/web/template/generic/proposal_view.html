@@ -5,6 +5,10 @@
 {% from 'macro/figure.html' import render_proposal_figures %}
 {% from 'macro/calculation.html' import render_calculation_title, render_calculation %}
 
+{% if show_dashboard_callout %}
+    {% set scripts = ['dismiss_callout'] %}
+{% endif %}
+
 {% block content %}
 
 {% block proposal_summary %}

@@ -68,7 +68,7 @@ def create_facility_blueprint(db, facility):
     @facility_template('proposal_view.html')
     @require_auth(require_person=True)
     def proposal_view(proposal_id):
-        return facility.view_proposal_view(db, proposal_id)
+        return facility.view_proposal_view(db, proposal_id, request.args)
 
     @bp.route('/proposal/<int:proposal_id>/submit', methods=['GET', 'POST'])
     @facility_template('proposal_submit.html')

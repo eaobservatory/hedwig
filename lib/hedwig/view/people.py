@@ -861,7 +861,7 @@ def invitation_token_accept(db, args, form, is_post, remote_addr):
                 proposal_id = member.proposal_id
                 code = db.get_proposal_facility_code(proposal_id)
                 target = url_for('{0}.proposal_view'.format(code),
-                                 proposal_id=proposal_id)
+                                 proposal_id=proposal_id, first_view='true')
             except NoSuchRecord:
                 pass
             except MultipleRecords:

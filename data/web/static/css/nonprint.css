@@ -58,3 +58,41 @@ span.label {
     padding-left: 1ex;
     padding-right: 1ex;
 }
+
+.callouttip > div {
+    color: #000;
+    background: #FF0;
+    box-shadow: 0ex 0ex 1ex black;
+    border-radius: 1ex;
+    border: 1px solid black;
+}
+
+.callouttip > div > p:first-child {
+    font-weight: bold;
+}
+
+.callouttip > div > p:first-child:before {
+    content: '\2196';
+    font-size: 200%;
+    vertical-align: bottom;
+}
+
+.callouttip > div > p:last-child {
+    font-weight: bold;
+    text-align: center;
+}
+
+a#callout_dismiss {
+    cursor: pointer;
+}
+
+a#callout_dismiss:before {
+    content: '\00D7';
+    display: inline-block;
+    background: #000;
+    color: #FF0;
+    width: 3ex;
+    text-align: center;
+    border-radius: 1ex;
+    margin-right: 0.5ex;
+}

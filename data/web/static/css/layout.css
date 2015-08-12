@@ -8,15 +8,22 @@ ul#navbar, ul.navlink {
     margin: 0px;
     padding: 1ex;
     list-style-type: none;
-    overflow: auto;
 }
 
 ul#navbar {
     text-align: left;
 }
 
+ul#navbar:after {
+    content: "-";
+    visibility: hidden;
+    display: block;
+    height: 0px;
+    clear: both;
+}
+
 ul#navbar li {
-    display: inline;
+    display: inline-block;
     margin-left: 4ex;
     margin-right: 4ex;
 }
@@ -27,6 +34,7 @@ li#user_control {
 
 ul.navlink {
     text-align: center;
+    overflow: auto;
 }
 
 ul.navlink li {
@@ -172,4 +180,20 @@ div.formtip > div > a {
     padding: 0ex 1ex 0ex 1ex;
     border-radius: 1ex;
     cursor: pointer;
+}
+
+.callouttip {
+    position: relative;
+    overflow: visible;
+    left: 0px;
+    top: 0px;
+}
+
+.callouttip > div {
+    position: absolute;
+    left: 3ex;
+    top: 3ex;
+    z-index: 10;
+    width: 40ex;
+    padding: 3ex;
 }

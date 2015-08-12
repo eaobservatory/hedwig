@@ -1,6 +1,22 @@
-{% macro render_main_menu(facility_name, navigation) %}
+{% macro render_main_menu(facility_name, navigation, show_dashboard_callout) %}
     <li><a href="{{ url_for('home_page') }}">Home</a></li>
-    <li><a id="personal_dashboard_link" href="{{ url_for('dashboard') }}">Dashboard</a></li>
+    <li class="callouttip">
+        <a id="personal_dashboard_link" href="{{ url_for('dashboard') }}">Dashboard</a>
+        {% if show_dashboard_callout %}
+            <div>
+                <p>
+                    Your personal dashboard
+                </p>
+                <p>
+                    You can use the dashboard to return to
+                    the proposal at any time.
+                </p>
+                <p>
+                    <a id="callout_dismiss">OK</a>
+                </p>
+            </div>
+        {% endif %}
+    </li>
     {% if facility_name is defined %}
         <li><a href="{{ url_for('.facility_home') }}">{{ facility_name }}</a></li>
     {% endif %}

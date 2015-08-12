@@ -105,7 +105,8 @@ class GenericProposal(object):
                     title=proposal_title)
                 flash('Your new proposal has been created.')
                 raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal_id))
+                                           proposal_id=proposal_id,
+                                           first_view='true'))
 
             except UserError as e:
                 message = e.message
@@ -120,7 +121,7 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission='view')
-    def view_proposal_view(self, db, proposal, can):
+    def view_proposal_view(self, db, proposal, can, args):
         countries = get_countries()
 
         ctx = {
@@ -136,6 +137,7 @@ class GenericProposal(object):
                 for x in proposal.members.values()]),
             'students': proposal.members.get_students(),
             'proposal_code': self.make_proposal_code(db, proposal),
+            'show_dashboard_callout': ('first_view' in args),
         }
 
         ctx.update(self._view_proposal_extra(db, proposal))
