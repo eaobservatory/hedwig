@@ -48,6 +48,9 @@ overwrite each other's changes.
 .. image:: image/member_add_small.png
     :target: image/member_add_large.png
 
+Editing the List of Members
+---------------------------
+
 You an also use the "Edit members" link on the proposal page to edit the
 existing members of a proposal (including yourself).
 You will need to use this page to designate someone else as the PI,
@@ -62,6 +65,9 @@ using the "Remove yourself from this proposal" on the proposal's main page.
 
 .. image:: image/member_edit_small.png
     :target: image/member_edit_large.png
+
+Students
+--------
 
 Finally if any of the members of your proposal are students who intend
 to use the data from the proposal for their thesis,

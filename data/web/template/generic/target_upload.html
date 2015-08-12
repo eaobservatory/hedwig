@@ -1,5 +1,6 @@
 {% extends 'layout.html' %}
 {% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
+{% set help_link=url_for('help.user_page', page_name='target', _anchor='uploading-a-list-of-targets') %}
 
 {% from 'macro/target.html' import render_target_list_info %}
 

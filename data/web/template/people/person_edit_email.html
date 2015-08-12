@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 {% set navigation=['people', (person.name, url_for('.person_view', person_id=person.id))] %}
 {% set scripts=['edit_email'] %}
+{% set help_link=url_for('help.user_page', page_name='profile') %}
 
 {% block content %}
 

@@ -26,6 +26,9 @@ to award sufficient time for a subset of your proposed project.
 .. image:: image/target_edit_small.png
     :target: image/target_edit_large.png
 
+Uploading a list of Targets
+---------------------------
+
 As an alternative to entering target coordinates online,
 you can upload a list as a text file (space or comma-separated).
 The required format is explained on the upload page,
@@ -39,6 +42,9 @@ whether you want to replace any existing targets
 
 .. image:: image/target_upload_small.png
     :target: image/target_upload_large.png
+
+Clash Tool
+----------
 
 Once you have a list of targets attached to your proposal,
 you can use the "Clash Tool" to check them for matches

@@ -441,6 +441,7 @@ class GenericProposal(object):
             proposal_id=proposal.id)
 
         return {
+            'help_link': url_for('help.user_page', page_name='abstract'),
             'categories': db.search_category(facility_id=self.id_,
                                              hidden=False),
             'categories_selected': set(x.category_id
@@ -1027,7 +1028,11 @@ class GenericProposal(object):
                                  _anchor='targets'))
 
     def _view_tool_note_edit_init(self, db, proposal, role):
-        return {'target_tools': self._get_target_tool_info(proposal.id)}
+        return {
+            'help_link': url_for('help.user_page', page_name='target',
+                                 _anchor='clash-tool'),
+            'target_tools': self._get_target_tool_info(proposal.id),
+        }
 
     @with_proposal(permission='edit')
     def view_request_edit(self, db, proposal, can, form, is_post):
@@ -1083,6 +1088,9 @@ class GenericProposal(object):
             'text': text_info.get_single(None),
             'figures': figures,
             'pdf': pdf_info.get_single(None),
+            'help_link': url_for('help.user_page', page_name=(
+                'technical' if role == TextRole.TECHNICAL_CASE
+                else 'scientific')),
         }
 
     @with_proposal(permission='edit')

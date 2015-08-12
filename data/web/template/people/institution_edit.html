@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% set navigation=[('Institutions', url_for('.institution_list')), (institution.name, url_for('.institution_view', institution_id=institution_id))] %}
+{% set help_link=url_for('help.user_page', page_name='profile', _anchor='editing-institutions') %}
 
 {% from 'macro/institution.html' import render_institution_form %}
 
