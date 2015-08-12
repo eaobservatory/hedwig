@@ -40,6 +40,26 @@ to add more calculations to your proposal, press the plain "Save" button.
 .. image:: image/calc_scuba2_small.png
     :target: image/calc_scuba2_large.png
 
+A compact version of each calculation which you have saved will
+be shown on your proposal.
+To see the full calculation again,
+use the "View calculation" link below the calculation.
+While viewing a saved calculation you have the option to
+save an updated version, overwriting the previous calculation.
+
+If you want to remove a calculation,
+use the "Manage calculations" link
+at the end of the "Calculation Results" section.
+This takes you to a page which shows detailed information
+about each calculation.
+From here you can delete calculations which you no longer
+want to appear on your proposal.
+Any deletions which you make will not take effect until
+you use the "Save" button below the table.
+
+.. image:: image/calc_manage_small.png
+    :target: image/calc_manage_large.png
+
 .. toctree::
     :maxdepth: 2
 
