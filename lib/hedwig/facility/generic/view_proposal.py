@@ -1410,7 +1410,8 @@ class GenericProposal(object):
                            'calculations have'))
 
                 raise HTTPRedirect(url_for(
-                    '.proposal_view', proposal_id=proposal.id))
+                    '.proposal_view', proposal_id=proposal.id,
+                    _anchor='calculations'))
 
             except UserError as e:
                 message = e.message
