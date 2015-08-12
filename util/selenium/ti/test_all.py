@@ -525,6 +525,19 @@ class IntegrationTest(DummyConfigTestCase):
             'The institution has been recorded.',
             self.browser.page_source)
 
+        # Try re-sending the invitation email.
+        self.browser.find_element_by_link_text('Re-send invitation').click()
+
+        self.assertIn(
+            'Would you like to re-send an invitation',
+            self.browser.page_source)
+
+        self.browser.find_element_by_name('submit_confirm').click()
+
+        self.assertIn(
+            'has been re-invited to the proposal',
+            self.browser.page_source)
+
         # Try submitting the proposal now -- this will generate errors,
         # and should not allow use to submit.
         self.browser.find_element_by_link_text('Submit proposal').click()
