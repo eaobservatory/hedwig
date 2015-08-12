@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% set navigation=[(call.semester_name, url_for('.semester_calls', semester_id=call.semester_id))] %}
+{% set help_link=url_for('help.user_page', page_name='proposal_create') %}
 
 {% block content %}
 
