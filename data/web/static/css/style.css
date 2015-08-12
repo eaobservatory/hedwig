@@ -64,6 +64,10 @@ td.grandtotal {
     font-weight: bold;
 }
 
+td.borderless {
+    border: none;
+}
+
 p.warning {
     font-weight: bold;
     background: #FAA;
@@ -265,4 +269,37 @@ div.rst_doc div.formula {
 .valid_message li p.valid_warning {
     background: yellow;
     border-radius: 0.5ex;
+}
+
+a#submit_proposal_link:before {
+    content: '\25B8';
+    display: inline-block;
+    background: #484;
+    color: #FFF;
+    width: 3ex;
+    text-align: center;
+    border-radius: 1ex;
+    margin-right: 0.5ex;
+}
+
+a#withdraw_proposal_link:before {
+    content: '\00D7';
+    display: inline-block;
+    background: #844;
+    color: #FFF;
+    width: 3ex;
+    text-align: center;
+    border-radius: 1ex;
+    margin-right: 0.5ex;
+}
+
+a#validate_proposal_link:before {
+    content: '\2714';
+    display: inline-block;
+    background: #AA0;
+    color: #FFF;
+    width: 3ex;
+    text-align: center;
+    border-radius: 1ex;
+    margin-right: 0.5ex;
 }

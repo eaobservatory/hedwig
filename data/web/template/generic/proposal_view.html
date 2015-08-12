@@ -8,6 +8,14 @@
 {% block content %}
 
 {% block proposal_summary %}
+    {% if can_edit %}
+        <nav>
+            <p>
+                <a href="{{ url_for('.title_edit', proposal_id=proposal.id) }}">Edit title</a>
+            </p>
+        </nav>
+    {% endif %}
+
     {% if can_edit and not is_submitted %}
         <p class="warning">
             This proposal has not been submitted. If you wish it to be
@@ -20,42 +28,43 @@
         <tr>
             <th>Facility</th>
             <td>{{ facility_name }}</td>
+            <td class="borderless">&nbsp;</td>
         </tr>
         <tr>
             <th>Semester</th>
             <td>{{ proposal.semester_name }}</td>
+            <td class="borderless">&nbsp;</td>
         </tr>
         <tr>
             <th>Queue</th>
             <td>{{ proposal.queue_name }}</td>
+            <td class="borderless">&nbsp;</td>
         </tr>
         <tr>
             <th>Proposal identifier</th>
             <td id="proposal_identifier_cell">{{ proposal_code }}</td>
+            <td class="borderless">&nbsp;</td>
         </tr>
         <tr>
             <th>Proposal status</th>
             <td id="proposal_status_cell">{{ proposal.state | proposal_state_name }}</td>
+            <td class="borderless">
+                {% if can_edit %}
+                    <nav>
+                        {% if is_submitted %}
+                            <a id="withdraw_proposal_link" href="{{ url_for('.proposal_withdraw', proposal_id=proposal.id) }}">Withdraw proposal</a>
+                            <br />
+                            <a id="validate_proposal_link" href="{{ url_for('.proposal_validate', proposal_id=proposal.id) }}">Validate proposal</a>
+                        {% else %}
+                            <a id="submit_proposal_link" href="{{ url_for('.proposal_submit', proposal_id=proposal.id) }}">Submit proposal</a>
+                        {% endif %}
+                    </nav>
+                {% else %}
+                    &nbsp;
+                {% endif %}
+            </td>
         </tr>
     </table>
-
-    {% if can_edit %}
-        <nav>
-            <p>
-                <a href="{{ url_for('.title_edit', proposal_id=proposal.id) }}">Edit title</a>
-            </p>
-
-            <p>
-            {% if is_submitted %}
-                <a href="{{ url_for('.proposal_withdraw', proposal_id=proposal.id) }}">Withdraw proposal</a>
-                <br />
-                <a href="{{ url_for('.proposal_validate', proposal_id=proposal.id) }}">Validate proposal</a>
-            {% else %}
-                <a id="submit_proposal_link" href="{{ url_for('.proposal_submit', proposal_id=proposal.id) }}">Submit proposal</a>
-            {% endif %}
-            </p>
-        </nav>
-    {% endif %}
 {% endblock %}
 
 {% block proposal_abstract %}
