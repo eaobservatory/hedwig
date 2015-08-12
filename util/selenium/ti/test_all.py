@@ -737,6 +737,16 @@ class IntegrationTest(DummyConfigTestCase):
             'The calculation has been saved',
             self.browser.page_source)
 
+        self.browser.find_element_by_link_text('Manage calculations').click()
+
+        self.assertIn(
+            'Calculator: SCUBA-2 ITC',
+            self.browser.page_source)
+
+        self._save_screenshot(self.user_image_root, 'calc_manage')
+
+        self.browser.find_element_by_name('submit').click()
+
         # Edit technical justification.
         self.browser.find_element_by_link_text(
             'Edit technical justification').click()
