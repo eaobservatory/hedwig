@@ -270,12 +270,12 @@ def create_facility_blueprint(db, facility):
             db, proposal_id, TextRole.TECHNICAL_CASE,
             (request.files['file'] if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/technical/pdf/view')
-    @send_file()
+    @bp.route('/proposal/<int:proposal_id>/technical/pdf/view/<md5sum>')
+    @send_file(allow_cache=True)
     @require_auth(require_person=True)
-    def tech_view_pdf(proposal_id):
+    def tech_view_pdf(proposal_id, md5sum):
         return facility.view_case_view_pdf(
-            db, proposal_id, TextRole.TECHNICAL_CASE)
+            db, proposal_id, TextRole.TECHNICAL_CASE, md5sum)
 
     @bp.route('/proposal/<int:proposal_id>/technical/pdf/'
               'preview/<int:page>/<md5sum>')
@@ -365,12 +365,12 @@ def create_facility_blueprint(db, facility):
             db, proposal_id, TextRole.SCIENCE_CASE,
             (request.files['file'] if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/scientific/pdf/view')
-    @send_file()
+    @bp.route('/proposal/<int:proposal_id>/scientific/pdf/view/<md5sum>')
+    @send_file(allow_cache=True)
     @require_auth(require_person=True)
-    def sci_view_pdf(proposal_id):
+    def sci_view_pdf(proposal_id, md5sum):
         return facility.view_case_view_pdf(
-            db, proposal_id, TextRole.SCIENCE_CASE)
+            db, proposal_id, TextRole.SCIENCE_CASE, md5sum)
 
     @bp.route('/proposal/<int:proposal_id>/scientific/pdf/'
               'preview/<int:page>/<md5sum>')

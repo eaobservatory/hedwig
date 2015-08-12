@@ -401,7 +401,7 @@
             {{ tech_case_text | format_text }}
             {{ render_proposal_figures(tech_case_fig) }}
         {% elif tech_case_pdf is not none %}
-            {{ render_proposal_pdf(tech_case_pdf, '.tech_view_pdf_preview', proposal.id) }}
+            {{ render_proposal_pdf(tech_case_pdf, '.tech_view_pdf', '.tech_view_pdf_preview', proposal.id) }}
         {% else %}
             <p class="missing">
                 This proposal does not yet have a technical justification.
@@ -426,7 +426,7 @@
             {{ sci_case_text | format_text }}
             {{ render_proposal_figures(sci_case_fig) }}
         {% elif sci_case_pdf is not none %}
-            {{ render_proposal_pdf(sci_case_pdf, '.sci_view_pdf_preview', proposal.id) }}
+            {{ render_proposal_pdf(sci_case_pdf, '.sci_view_pdf', '.sci_view_pdf_preview', proposal.id) }}
         {% else %}
             <p class="missing">
                 This proposal does not yet have a scientific justification.

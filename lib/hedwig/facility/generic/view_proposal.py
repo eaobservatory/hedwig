@@ -1047,8 +1047,9 @@ class GenericProposal(object):
 
         text_info = db.search_proposal_text(proposal_id=proposal.id, role=role)
 
-        pdf_info = db.search_proposal_pdf(proposal_id=proposal.id, role=role,
-                                          with_uploader_name=True)
+        pdf_info = db.search_proposal_pdf(
+            proposal_id=proposal.id, role=role,
+            with_uploader_name=True).get_single(None)
 
         figures = [
             ProposalFigureExtra(
@@ -1082,14 +1083,16 @@ class GenericProposal(object):
                 '.{}_manage_figure'.format(code), proposal_id=proposal.id),
             'target_pdf': url_for(
                 '.{}_edit_pdf'.format(code), proposal_id=proposal.id),
-            'target_pdf_view': url_for(
-                '.{}_view_pdf'.format(code), proposal_id=proposal.id),
+            'target_pdf_view': (
+                None if pdf_info is None
+                else url_for('.{}_view_pdf'.format(code),
+                             proposal_id=proposal.id, md5sum=pdf_info.md5sum)),
             'target_back_to_proposal': url_for(
                 '.proposal_view', proposal_id=proposal.id,
                 _anchor='{}_case'.format(TextRole.short_name(role))),
             'text': text_info.get_single(None),
             'figures': figures,
-            'pdf': pdf_info.get_single(None),
+            'pdf': pdf_info,
             'help_link': url_for('help.user_page', page_name=(
                 'technical' if role == TextRole.TECHNICAL_CASE
                 else 'scientific')),
@@ -1380,9 +1383,9 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission='view')
-    def view_case_view_pdf(self, db, proposal, can, role):
+    def view_case_view_pdf(self, db, proposal, can, role, md5sum):
         try:
-            return db.get_proposal_pdf(proposal.id, role)
+            return db.get_proposal_pdf(proposal.id, role, md5sum=md5sum)
         except NoSuchRecord:
             raise HTTPNotFound('{} PDF not found.'.format(
                 TextRole.get_name(role).capitalize()))

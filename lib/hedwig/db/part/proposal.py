@@ -549,7 +549,8 @@ class ProposalPart(object):
 
         return row[0]
 
-    def get_proposal_pdf(self, proposal_id, role, id_=None, _conn=None):
+    def get_proposal_pdf(self, proposal_id, role, id_=None, md5sum=None,
+                         _conn=None):
         """
         Get the given PDF associated with a proposal.
         """
@@ -571,6 +572,9 @@ class ProposalPart(object):
 
         else:
             raise Error('neither PDF nor proposal and role specified.')
+
+        if md5sum is not None:
+            stmt = stmt.where(proposal_pdf.c.md5sum == md5sum)
 
         with self._transaction(_conn=_conn) as conn:
             row = conn.execute(stmt).first()
