@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 {% set scripts=['edit_affiliation'] %}
 {% set navigation=['facility_admin', ('Queues', url_for('.queue_list'))] %}
+{% set help_link=url_for('help.admin_page', page_name='queue') %}
 
 {% block content %}
 

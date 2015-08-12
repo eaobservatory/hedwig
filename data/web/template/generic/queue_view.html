@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% set navigation=['facility_admin', ('Queues', url_for('.queue_list'))] %}
+{% set help_link=url_for('help.admin_page', page_name='queue') %}
 
 {% block content %}
 
