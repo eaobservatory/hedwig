@@ -75,4 +75,4 @@ these will be shown at the bottom of the page
 in case you wish to refer to them.
 
 .. image:: image/tech_case_text_small.png
-    :target: image/tech_case_tex_large.png
+    :target: image/tech_case_text_large.png
