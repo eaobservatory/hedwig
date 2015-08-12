@@ -272,7 +272,7 @@ div.rst_doc div.formula {
 }
 
 a#submit_proposal_link:before {
-    content: '\25B8';
+    content: '\2794';
     display: inline-block;
     background: #080;
     color: #FFF;
