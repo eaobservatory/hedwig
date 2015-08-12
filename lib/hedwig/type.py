@@ -328,6 +328,19 @@ class FigureType(object):
                         mime_type)
 
     @classmethod
+    def can_view_inline(cls, type_):
+        """
+        Determine whether the type of figure is suitable for sending to the
+        browser to view inline.
+
+        Currently implemented as any image/* MIME type or PDF, which
+        means it returns True for all types at the time of writing.
+        """
+
+        return (type_ == cls.PDF or
+                cls.get_mime_type(type_).startswith('image/'))
+
+    @classmethod
     def all_type_names(cls):
         return [x.name for x in cls._info.values()]
 

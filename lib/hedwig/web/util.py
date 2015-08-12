@@ -225,7 +225,7 @@ def send_file(fixed_type=None, allow_cache=False):
             response = _FlaskResponse(data, mimetype=mime_type)
 
             if filename is not None:
-                if mime_type.startswith('image/'):
+                if FigureType.can_view_inline(type_):
                     response.headers.add('Content-Disposition', 'inline',
                                          filename=filename)
                 else:
