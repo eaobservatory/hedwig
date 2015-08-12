@@ -49,6 +49,7 @@ div#facilities > div {
 
 img.pdf_preview {
     border: 1px solid black;
+    cursor: zoom-in;
 }
 
 span.label {
