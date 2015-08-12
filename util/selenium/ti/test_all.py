@@ -447,6 +447,8 @@ class IntegrationTest(DummyConfigTestCase):
             'Your new proposal has been created.',
             self.browser.page_source)
 
+        self.browser.find_element_by_id('callout_dismiss').click()
+
         self._save_screenshot(
             self.user_image_root, 'proposal_view',
             ['submit_proposal_link', 'personal_dashboard_link',
