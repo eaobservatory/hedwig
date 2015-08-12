@@ -274,7 +274,7 @@ div.rst_doc div.formula {
 a#submit_proposal_link:before {
     content: '\25B8';
     display: inline-block;
-    background: #484;
+    background: #080;
     color: #FFF;
     width: 3ex;
     text-align: center;
@@ -285,7 +285,7 @@ a#submit_proposal_link:before {
 a#withdraw_proposal_link:before {
     content: '\00D7';
     display: inline-block;
-    background: #844;
+    background: #C00;
     color: #FFF;
     width: 3ex;
     text-align: center;
@@ -296,7 +296,7 @@ a#withdraw_proposal_link:before {
 a#validate_proposal_link:before {
     content: '\2714';
     display: inline-block;
-    background: #AA0;
+    background: #DB0;
     color: #FFF;
     width: 3ex;
     text-align: center;
