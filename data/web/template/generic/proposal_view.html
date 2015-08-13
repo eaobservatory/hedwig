@@ -5,6 +5,8 @@
 {% from 'macro/figure.html' import render_proposal_figures %}
 {% from 'macro/calculation.html' import render_calculation_title, render_calculation %}
 
+{% set help_link=url_for('help.user_page', page_name='proposal') %}
+
 {% if show_dashboard_callout %}
     {% set scripts = ['dismiss_callout'] %}
 {% endif %}
