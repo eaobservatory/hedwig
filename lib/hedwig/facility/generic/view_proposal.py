@@ -27,7 +27,7 @@ from ...config import get_config
 from ...error import ConsistencyError, NoSuchRecord, UserError
 from ...file.info import determine_figure_type, determine_pdf_page_count
 from ...publication.url import make_publication_url
-from ...type import Affiliation, \
+from ...type import Affiliation, AttachmentState, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
     FigureType, FormatType, \
     PrevProposal, PrevProposalCollection, PrevProposalPub, \
@@ -289,21 +289,45 @@ class GenericProposal(object):
                 'See available calculators',
                 url_for('.facility_home', _anchor='calc')))
 
-        if ((extra['tech_case_text'] is None) and
-                (extra['tech_case_pdf'] is None)):
-            messages.append(ValidationMessage(
-                False,
-                'The proposal does not have a technical justification.',
-                'Edit technical justification',
-                url_for('.tech_edit', proposal_id=proposal.id)))
+        for role in (TextRole.TECHNICAL_CASE, TextRole.SCIENCE_CASE):
+            role_name = TextRole.get_name(role)
+            role_code = TextRole.short_name(role)
 
-        if ((extra['sci_case_text'] is None) and
-                (extra['sci_case_pdf'] is None)):
-            messages.append(ValidationMessage(
-                False,
-                'The proposal does not have a scientific justification.',
-                'Edit scientific justification',
-                url_for('.sci_edit', proposal_id=proposal.id)))
+            if extra['{}_case_text'.format(role_code)] is not None:
+                for fig in extra['{}_case_fig'.format(role_code)]:
+                    if fig.state == AttachmentState.ERROR:
+                        messages.append(ValidationMessage(
+                            False,
+                            'A figure in the {} could not be processed. '
+                            'Please check the file is valid and contact us '
+                            'for help in the event that this error '
+                            'persists.'.format(role_name.lower()),
+                            'Edit {}'.format(role_name.lower()),
+                            url_for('.{}_edit'.format(role_code),
+                                    proposal_id=proposal.id)))
+                        break
+
+            elif extra['{}_case_pdf'.format(role_code)] is not None:
+                if (extra['{}_case_pdf'.format(role_code)].state ==
+                        AttachmentState.ERROR):
+                    messages.append(ValidationMessage(
+                        False,
+                        'The {} PDF file could not be processed. '
+                        'Please check the file is valid and contact us '
+                        'for help in the event that this error '
+                        'persists.'.format(role_name.lower()),
+                        'Edit {}'.format(role_name.lower()),
+                        url_for('.{}_edit'.format(role_code),
+                                proposal_id=proposal.id)))
+
+            else:
+                messages.append(ValidationMessage(
+                    False,
+                    'The proposal does not have a {}.'.format(
+                        role_name.lower()),
+                    'Edit {}'.format(role_name.lower()),
+                    url_for('.{}_edit'.format(role_code),
+                            proposal_id=proposal.id)))
 
         return messages
 
