@@ -67,6 +67,14 @@ results of the Clash Tool.
 When you have added a list of target objects,
 you will see a link "Edit note" in the "Target Objects" section
 of the proposal.
+Anyone viewing your proposal will be able to use the latest version
+of the clash tool to check the target coordinates,
+so you do not need to include the result of the tool here.
+You should just include your comments about the results
+--- this could be as simple as
+"The clash tool did not find any matches"
+if that is the case.
+
 
 This note is particularly important when clashes are found ---
 you can use this space to explain why you still need to observe
