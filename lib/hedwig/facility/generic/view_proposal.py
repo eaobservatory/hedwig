@@ -275,6 +275,15 @@ class GenericProposal(object):
                 'Edit the proposal abstract',
                 url_for('.abstract_edit', proposal_id=proposal.id)))
 
+        if not extra['prev_proposals']:
+            messages.append(ValidationMessage(
+                False,
+                'No previous proposals have been listed.  If you do not have '
+                'any previously accepted proposals you should ignore this '
+                'warning.',
+                'Edit previous proposals and publications',
+                url_for('.previous_edit', proposal_id=proposal.id)))
+
         if not extra['targets']:
             messages.append(ValidationMessage(
                 False,
