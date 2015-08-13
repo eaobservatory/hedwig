@@ -338,7 +338,7 @@ class GenericProposal(object):
 
             else:
                 messages.append(ValidationMessage(
-                    False,
+                    True,
                     'The proposal does not have a {}.'.format(
                         role_name.lower()),
                     'Edit {}'.format(role_name.lower()),
