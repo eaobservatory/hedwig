@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
 
+{% set help_link=url_for('help.user_page', page_name='proposal_create') %}
+
 {% block content %}
 
 {% if session.is_admin %}
