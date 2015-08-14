@@ -271,12 +271,17 @@ div.rst_doc div.formula {
     border-radius: 0.5ex;
 }
 
+a#submit_proposal_link {
+    font-weight: bold;
+}
+
 a#submit_proposal_link:before {
     content: '\2794';
     display: inline-block;
     background: #080;
     color: #FFF;
     width: 3ex;
+    font-weight: normal;
     text-align: center;
     border-radius: 1ex;
     margin-right: 0.5ex;
