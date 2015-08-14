@@ -2,7 +2,8 @@
 
 {% block content %}
 This is to inform you that your proposal {{ proposal_code }}
-entitled "{{ proposal.title }}" has been withdrawn.
+entitled "{{ proposal.title }}" has been withdrawn
+by {{ withdrawer_name }}.
 
 Please note that the proposal will not be considered unless it
 is re-submitted before the proposal deadline.

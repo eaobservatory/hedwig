@@ -375,6 +375,7 @@ class GenericProposal(object):
                             'target_url': url_for(
                                 '.proposal_view',
                                 proposal_id=proposal.id, _external=True),
+                            'submitter_name': session['person']['name'],
                         },
                         facility=self),
                     [x.person_id for x in proposal.members.values()])
@@ -427,6 +428,7 @@ class GenericProposal(object):
                         'proposal_withdrawn.txt', {
                             'proposal': proposal,
                             'proposal_code': proposal_code,
+                            'withdrawer_name': session['person']['name'],
                         },
                         facility=self),
                     [x.person_id for x in proposal.members.values()])

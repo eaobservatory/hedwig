@@ -7,4 +7,6 @@ entitled "{{ proposal.title }}" has been submitted for consideration.
 The proposal may be viewed at:
 
 {{ target_url }}
+
+The proposal was submitted by {{ submitter_name }}.
 {% endblock %}
