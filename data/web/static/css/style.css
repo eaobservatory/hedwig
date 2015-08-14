@@ -7,6 +7,10 @@ h1 {
     text-align: center;
 }
 
+h2.subtitle {
+    text-align: center;
+}
+
 a:link, a:visited {
     color: #00F;
     text-decoration: underline;

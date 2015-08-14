@@ -29,7 +29,6 @@ from ..web.util import HTTPNotFound, mangle_email_address
 
 def prepare_home(application_name, facilities):
     return {
-        'title': application_name,
         'facilities': facilities.values(),
     }
 
