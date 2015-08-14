@@ -128,7 +128,7 @@ class HeterodyneCalculator(JCMTCalculator):
                 CalculatorValue('rx', 'Receiver', 'Receiver', '{}', None),
                 CalculatorValue('freq', 'Frequency',
                                 '\u03bd', '{:.3f}', 'GHz'),
-                CalculatorValue('res', 'Frequency resolution',
+                CalculatorValue('res', 'Spectral resolution',
                                 '\u0394\u03bd', '{:.4f}', None),
                 CalculatorValue('res_unit', 'Resolution unit',
                                 '\u0394\u03bd unit', '{}', None),
