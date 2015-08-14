@@ -49,7 +49,10 @@ def prepare_person_proposals(db, person_id, facilities, administrative=False):
     facility_proposals = OrderedDict()
 
     for id_, ps in groupby(proposals.values(), lambda x: x.facility_id):
-        facility = facilities[id_]
+        facility = facilities.get(id_)
+        if facility is None:
+            continue
+
         facility_proposals[facility.name] = [
             ProposalWithCode(*p, code=facility.view.make_proposal_code(db, p),
                              facility_code=facility.code)
