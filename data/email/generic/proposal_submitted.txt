@@ -9,4 +9,8 @@ The proposal may be viewed at:
 {{ target_url }}
 
 The proposal was submitted by {{ submitter_name }}.
+Please note that our system allows submitted proposals to be edited
+until the proposal deadline.
+Another message like this will only be sent if the proposal is
+withdrawn from consideration.
 {% endblock %}
