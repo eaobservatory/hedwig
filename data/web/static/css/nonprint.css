@@ -62,7 +62,7 @@ span.label {
 
 .callouttip > div {
     color: #000;
-    background: #FF0;
+    background: #AAF;
     box-shadow: 0ex 0ex 1ex black;
     border-radius: 1ex;
     border: 1px solid black;
@@ -91,7 +91,7 @@ a#callout_dismiss:before {
     content: '\00D7';
     display: inline-block;
     background: #000;
-    color: #FF0;
+    color: #AAF;
     width: 3ex;
     text-align: center;
     border-radius: 1ex;
