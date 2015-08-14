@@ -5,12 +5,14 @@
 <table>
     <tr>
         <th>Institution</th>
+        <th>Department</th>
         <th>Organization</th>
         <th>Country</th>
     </tr>
     {% for institution in institutions %}
         <tr>
             <td><a href="{{ url_for('.institution_view', institution_id=institution.id)}}">{{ institution.name }}</a></td>
+            <td>{{ institution.department }}</td>
             <td>{{ institution.organization }}</td>
             <td>{{ institution.country }} </td>
         </tr>
