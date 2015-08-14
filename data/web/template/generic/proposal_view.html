@@ -103,7 +103,29 @@
     </section>
 {% endblock %}
 
-{% block proposal_request %}
+{% block science_case %}
+    <section>
+        <h2 id="sci_case">Scientific Justification</h2>
+
+        {% if sci_case_text is not none %}
+            {{ sci_case_text | format_text }}
+            {{ render_proposal_figures(sci_case_fig) }}
+        {% elif sci_case_pdf is not none %}
+            {{ render_proposal_pdf(sci_case_pdf, '.sci_view_pdf', '.sci_view_pdf_preview', proposal.id) }}
+        {% else %}
+            <p class="missing">
+                This proposal does not yet have a scientific justification.
+            </p>
+        {% endif %}
+
+        {% if can_edit %}
+            <nav>
+                <p>
+                    <a href="{{ url_for('.sci_edit', proposal_id=proposal.id) }}">Edit scientific justification</a>
+                </p>
+            </nav>
+        {% endif %}
+    </section>
 {% endblock %}
 
 {% block proposal_members %}
@@ -198,87 +220,7 @@
     </section>
 {% endblock %}
 
-{% block proposal_previous %}
-    <section>
-        <h2 id="prev_proposals">Previous Proposals and Publications</h2>
-
-        {% if not prev_proposals %}
-            <p class="missing">
-                This proposal does not yet have a list of previous proposals.
-            </p>
-        {% else %}
-            <table>
-                <tr>
-                    <th>Previous proposal</th>
-                    <th>Links</th>
-                    <th>Publications</th>
-                </tr>
-                {% for prev_proposal in prev_proposals %}
-                    {% with publications = prev_proposal.publications | default([None], true) %}
-                        {% for publication in publications %}
-                            <tr>
-                                {% if loop.first %}
-                                    <td rowspan="{{ publications | length }}">
-                                        {% if prev_proposal.proposal_id is none %}
-                                            {{ prev_proposal.proposal_code }}
-                                        {% else %}
-                                            <a href="{{ url_for('.proposal_view', proposal_id=prev_proposal.proposal_id) }}">{{ prev_proposal.proposal_code }}</a>
-                                        {% endif %}
-                                        {% if prev_proposal.continuation %}
-                                            <span class="label">continuation</span>
-                                        {% endif %}
-                                    </td>
-                                    <td rowspan="{{ publications | length }}">
-                                        {% if prev_proposal.links %}
-                                            {% for link in prev_proposal.links %}
-                                                <a href="{{ link.url }}" target="_blank">{{ link.text }}</a>
-                                            {% endfor %}
-                                        {% else %}
-                                            &nbsp;
-                                        {% endif %}
-                                    </td>
-                                {% endif %}
-                                <td>
-                                    {% if publication is none %}
-                                        &nbsp;
-                                    {% else %}
-                                        {% if publication.url is not none %}
-                                            <a href="{{ publication.url }}" target="_blank">{{ publication.description }}</a>
-                                        {% else %}
-                                            {{ publication.description }}
-                                        {% endif %}
-                                        {% if publication.state is attachment_ready %}
-                                            {% if publication.title is not none %}
-                                                &ldquo;{{ publication.title }}&rdquo;
-                                            {% endif %}
-                                            {% if publication.author is not none %}
-                                                <i>{{ publication.author }}</i>
-                                            {% endif %}
-                                            {% if publication.year is not none %}
-                                                <b>{{ publication.year }}</b>
-                                            {% endif %}
-                                        {% elif publication.state is attachment_error %}
-                                            <span class="missing_data">failed to look up reference</span>
-                                        {% else %}
-                                            <span class="missing_data">reference not yet looked up</span>
-                                        {% endif %}
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    {% endwith %}
-                {% endfor %}
-            </table>
-        {% endif %}
-
-        {% if can_edit %}
-            <nav>
-                <p>
-                    <a href="{{ url_for('.previous_edit', proposal_id=proposal.id) }}">Edit previous proposals and publications</a>
-                </p>
-            </nav>
-        {% endif %}
-    </section>
+{% block proposal_request %}
 {% endblock %}
 
 {% block proposal_targets %}
@@ -420,25 +362,83 @@
     </section>
 {% endblock %}
 
-{% block science_case %}
+{% block proposal_previous %}
     <section>
-        <h2 id="sci_case">Scientific Justification</h2>
+        <h2 id="prev_proposals">Previous Proposals and Publications</h2>
 
-        {% if sci_case_text is not none %}
-            {{ sci_case_text | format_text }}
-            {{ render_proposal_figures(sci_case_fig) }}
-        {% elif sci_case_pdf is not none %}
-            {{ render_proposal_pdf(sci_case_pdf, '.sci_view_pdf', '.sci_view_pdf_preview', proposal.id) }}
-        {% else %}
+        {% if not prev_proposals %}
             <p class="missing">
-                This proposal does not yet have a scientific justification.
+                This proposal does not yet have a list of previous proposals.
             </p>
+        {% else %}
+            <table>
+                <tr>
+                    <th>Previous proposal</th>
+                    <th>Links</th>
+                    <th>Publications</th>
+                </tr>
+                {% for prev_proposal in prev_proposals %}
+                    {% with publications = prev_proposal.publications | default([None], true) %}
+                        {% for publication in publications %}
+                            <tr>
+                                {% if loop.first %}
+                                    <td rowspan="{{ publications | length }}">
+                                        {% if prev_proposal.proposal_id is none %}
+                                            {{ prev_proposal.proposal_code }}
+                                        {% else %}
+                                            <a href="{{ url_for('.proposal_view', proposal_id=prev_proposal.proposal_id) }}">{{ prev_proposal.proposal_code }}</a>
+                                        {% endif %}
+                                        {% if prev_proposal.continuation %}
+                                            <span class="label">continuation</span>
+                                        {% endif %}
+                                    </td>
+                                    <td rowspan="{{ publications | length }}">
+                                        {% if prev_proposal.links %}
+                                            {% for link in prev_proposal.links %}
+                                                <a href="{{ link.url }}" target="_blank">{{ link.text }}</a>
+                                            {% endfor %}
+                                        {% else %}
+                                            &nbsp;
+                                        {% endif %}
+                                    </td>
+                                {% endif %}
+                                <td>
+                                    {% if publication is none %}
+                                        &nbsp;
+                                    {% else %}
+                                        {% if publication.url is not none %}
+                                            <a href="{{ publication.url }}" target="_blank">{{ publication.description }}</a>
+                                        {% else %}
+                                            {{ publication.description }}
+                                        {% endif %}
+                                        {% if publication.state is attachment_ready %}
+                                            {% if publication.title is not none %}
+                                                &ldquo;{{ publication.title }}&rdquo;
+                                            {% endif %}
+                                            {% if publication.author is not none %}
+                                                <i>{{ publication.author }}</i>
+                                            {% endif %}
+                                            {% if publication.year is not none %}
+                                                <b>{{ publication.year }}</b>
+                                            {% endif %}
+                                        {% elif publication.state is attachment_error %}
+                                            <span class="missing_data">failed to look up reference</span>
+                                        {% else %}
+                                            <span class="missing_data">reference not yet looked up</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endwith %}
+                {% endfor %}
+            </table>
         {% endif %}
 
         {% if can_edit %}
             <nav>
                 <p>
-                    <a href="{{ url_for('.sci_edit', proposal_id=proposal.id) }}">Edit scientific justification</a>
+                    <a href="{{ url_for('.previous_edit', proposal_id=proposal.id) }}">Edit previous proposals and publications</a>
                 </p>
             </nav>
         {% endif %}
