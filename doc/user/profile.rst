@@ -107,5 +107,14 @@ after which you will see the
 You can correct any errors in the institution's record
 and press the "Save" button.
 
+Note that the "Institution name" should be the main name by which
+you refer to the institution.  This is often the name
+of the university (e.g. University of Exeter) or
+observatory (e.g. Purple Mountain Observatory)
+but is sometimes the name of a specific institute
+(e.g. Harvard-Smithsonian Center for Astrophysics)
+when it is often used alone.
+The department and parent organization are optional.
+
 .. image:: image/institution_edit_small.png
     :target: image/institution_edit_large.png

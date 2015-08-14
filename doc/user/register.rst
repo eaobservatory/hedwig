@@ -51,6 +51,15 @@ please select it, and press the "Select institution" button.
 If your institution does not appear, you may enter the
 institution's details in the "New Institution" section
 of the page and press the "Add new institution" button.
+The "Institution name" should be the main name by which
+you refer to the institution.  This is often the name
+of the university (e.g. University of Exeter) or
+observatory (e.g. Purple Mountain Observatory)
+but is sometimes the name of a specific institute
+(e.g. Harvard-Smithsonian Center for Astrophysics)
+when it is often used alone.
+The department and parent organization are optional.
+Please be sure to select the correct country from the list.
 
 .. image:: image/profile_institution_small.png
     :target: image/profile_institution_large.png

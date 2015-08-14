@@ -406,6 +406,7 @@ class DBPeopleTest(DBTestCase):
 
         # Check that we can add an institution.
         institution_id = self.db.add_institution('Institution One',
+                                                 'Department One',
                                                  'Organization One',
                                                  'Address...', 'AX')
 
@@ -422,7 +423,7 @@ class DBPeopleTest(DBTestCase):
 
         # Get a list of institutions.
         institution_id2 = self.db.add_institution('Institution Two',
-                                                  '', '', 'AX')
+                                                  '', '', '', 'AX')
         result = self.db.list_institution()
         self.assertIsInstance(result, ResultCollection)
         self.assertEqual(len(result), 2)
@@ -470,7 +471,7 @@ class DBPeopleTest(DBTestCase):
 
         # Check country validation for new institutions.
         with self.assertRaisesRegexp(UserError, 'Country code not recognised'):
-            self.db.add_institution('Institution Three', '', '', 'BX')
+            self.db.add_institution('Institution Three', '', '', '', 'BX')
 
     def test_person(self):
         # Try getting a non-existent person record.
@@ -490,7 +491,7 @@ class DBPeopleTest(DBTestCase):
 
         # Create a test institution record.
         institution_id = self.db.add_institution('Institution One',
-                                                 '', '', 'AX')
+                                                 '', '', '', 'AX')
         self.assertIsInstance(institution_id, int)
 
         # Update the person to reference the new institution.

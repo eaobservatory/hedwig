@@ -513,7 +513,7 @@ def person_edit_institution(db, person_id, form, is_post):
 
     # Prepare blank record for an institution to potentially be
     # added to the database.
-    institution = Institution(id=None, name='', organization='',
+    institution = Institution(id=None, name='', department='', organization='',
                               address='', country='')
 
     if is_post:
@@ -528,6 +528,7 @@ def person_edit_institution(db, person_id, form, is_post):
             elif 'submit_add' in form:
                 institution = institution._replace(
                     name=form['institution_name'],
+                    department=form['department'],
                     organization=form['organization'],
                     address=form['address'],
                     country=form['country_code'])
@@ -537,7 +538,8 @@ def person_edit_institution(db, person_id, form, is_post):
                     raise UserError('Please select the institution country.')
 
                 institution_id = db.add_institution(
-                    institution.name, institution.organization,
+                    institution.name, institution.department,
+                    institution.organization,
                     institution.address, institution.country)
                 db.update_person(person_id, institution_id=institution_id)
                 action = 'recorded'
@@ -786,6 +788,7 @@ def institution_edit(db, institution_id, form, is_post):
             try:
                 institution = institution._replace(
                     name=form['institution_name'],
+                    department=form['department'],
                     organization=form['organization'],
                     address=form['address'],
                     country=form['country_code'])
@@ -798,6 +801,7 @@ def institution_edit(db, institution_id, form, is_post):
                     institution_id,
                     updater_person_id=session['person']['id'],
                     name=institution.name,
+                    department=institution.department,
                     organization=institution.organization,
                     address=institution.address,
                     country=institution.country)

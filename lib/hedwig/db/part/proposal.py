@@ -796,6 +796,7 @@ class ProposalPart(object):
             coalesce(member.c.institution_id, person.c.institution_id).label(
                 'resolved_institution_id'),
             institution.c.name.label('institution_name'),
+            institution.c.department.label('institution_department'),
             institution.c.organization.label('institution_organization'),
             institution.c.country.label('institution_country'),
         ]).select_from(

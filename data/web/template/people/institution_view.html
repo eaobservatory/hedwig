@@ -8,6 +8,12 @@
         <th>Institution name</th>
         <td>{{ institution.name }}</td>
     </tr>
+    {% if institution.department %}
+        <tr>
+            <th>Department</th>
+            <td>{{ institution.department }}</td>
+        </tr>
+    {% endif %}
     {% if institution.organization %}
         <tr>
             <th>Organization</th>

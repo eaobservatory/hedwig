@@ -79,7 +79,7 @@ Institution = namedtuple(
 
 InstitutionInfo = namedtuple(
     'InstitutionInfo',
-    ['id', 'name', 'organization', 'country'])
+    ['id', 'name', 'department', 'organization', 'country'])
 
 Link = namedtuple(
     'Link',
@@ -91,7 +91,8 @@ Member = namedtuple(
     ['person_name', 'person_public', 'person_registered',
      'affiliation_name',
      'resolved_institution_id',
-     'institution_name', 'institution_organization', 'institution_country'])
+     'institution_name', 'institution_department',
+     'institution_organization', 'institution_country'])
 
 MemberInfo = namedtuple(
     'MemberInfo',
@@ -125,7 +126,8 @@ Person = namedtuple(
 PersonInfo = namedtuple(
     'PersonInfo',
     [x.name for x in person.columns] +
-    ['institution_name', 'institution_organization', 'institution_country'])
+    ['institution_name', 'institution_department',
+     'institution_organization', 'institution_country'])
 
 PrevProposal = namedtuple(
     'PrevProposal',

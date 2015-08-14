@@ -61,7 +61,8 @@ class PeoplePart(object):
 
         return result.inserted_primary_key[0]
 
-    def add_institution(self, name, organization, address, country):
+    def add_institution(self, name, department, organization,
+                        address, country):
         """
         Add an institution to the database.
 
@@ -74,6 +75,7 @@ class PeoplePart(object):
         with self._transaction() as conn:
             result = conn.execute(institution.insert().values({
                 institution.c.name: name,
+                institution.c.department: department,
                 institution.c.organization: organization,
                 institution.c.address: address,
                 institution.c.country: country,
@@ -446,11 +448,14 @@ class PeoplePart(object):
         ans = ResultCollection()
 
         with self._transaction() as conn:
-            for row in conn.execute(select([institution.c.id,
-                                            institution.c.name,
-                                            institution.c.organization,
-                                            institution.c.country,
-                                            ]).order_by(institution.c.name)):
+            for row in conn.execute(select(
+                    [institution.c.id,
+                     institution.c.name,
+                     institution.c.department,
+                     institution.c.organization,
+                     institution.c.country,
+                     ]).order_by(
+                    institution.c.name, institution.c.department)):
                 ans[row['id']] = InstitutionInfo(**row)
 
         return ans
@@ -537,6 +542,7 @@ class PeoplePart(object):
         if not with_institution:
             default = {
                 'institution_name': None,
+                'institution_department': None,
                 'institution_organization': None,
                 'institution_country': None,
             }
@@ -548,6 +554,7 @@ class PeoplePart(object):
             stmt = select([
                 person,
                 institution.c.name.label('institution_name'),
+                institution.c.department.label('institution_department'),
                 institution.c.organization.label('institution_organization'),
                 institution.c.country.label('institution_country'),
             ]).select_from(person.outerjoin(institution))
@@ -608,7 +615,7 @@ class PeoplePart(object):
                 ), verified_columns=(email.c.address,))
 
     def update_institution(self, institution_id, updater_person_id=None,
-                           name=None,
+                           name=None, department=None,
                            organization=None, address=None, country=None,
                            _test_skip_log=False):
         """
@@ -619,6 +626,9 @@ class PeoplePart(object):
 
         if name is not None:
             values['name'] = name
+
+        if department is not None:
+            values['department'] = department
 
         if organization is not None:
             values['organization'] = organization
@@ -647,6 +657,7 @@ class PeoplePart(object):
                     institution_log.c.date: datetime.utcnow(),
                     institution_log.c.person_id: updater_person_id,
                     institution_log.c.prev_name: prev.name,
+                    institution_log.c.prev_department: prev.department,
                     institution_log.c.prev_organization: prev.organization,
                     institution_log.c.prev_address: prev.address,
                     institution_log.c.prev_country: prev.country,

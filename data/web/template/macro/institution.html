@@ -2,12 +2,18 @@
     <li>
         <label for="institution_name">Institution name</label>
         <input type="text" name="institution_name" value="{{ institution.name }}" autofocus="autofocus" required="required" size="40" />
-        <span class="explanation">e.g. Institute for Astronomy</span>
+        <span class="explanation">e.g. University of &hellip; &nbsp; / &nbsp; &hellip; Observatory</span>
     </li>
+    <li>
+        <label for="department">Department</label>
+        <input type="text" name="department" value="{{ institution.department }}" size="40" />
+        <span class="explanation">e.g. Department of &hellip; &nbsp; / &nbsp;  Institute of &hellip;</span>
+    </li>
+
     <li>
         <label for="organization">Organization</label>
         <input type="text" name="organization" value="{{ institution.organization }}" size="40" />
-        <span class="explanation">e.g. University of Anytown, if applicable</span>
+        <span class="explanation">e.g. &hellip; Academy of Sciences</span>
     </li>
     <li>
         <label for="address">Address</label>
@@ -23,8 +29,8 @@
     </li>
 {% endmacro %}
 
-{% macro _institution_summary(name, organization, country) %}
-    {{ name }},
+{% macro _institution_summary(name, department, organization, country) %}
+    {{ name }}{% if department %} ({{ department }}){% endif %},
     {% if organization %}
         {{ organization }},
     {% endif %}
@@ -32,9 +38,9 @@
 {% endmacro %}
 
 {% macro render_institution_summary(institution) %}
-    {{ _institution_summary(institution.name, institution.organization, institution.country) }}
+    {{ _institution_summary(institution.name, institution.department, institution.organization, institution.country) }}
 {% endmacro %}
 
 {% macro render_member_institution(member) %}
-    {{ _institution_summary(member.institution_name, member.institution_organization, member.institution_country) }}
+    {{ _institution_summary(member.institution_name, member.institution_department, member.institution_organization, member.institution_country) }}
 {% endmacro %}

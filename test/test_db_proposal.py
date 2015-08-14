@@ -493,9 +493,9 @@ class DBProposalTest(DBTestCase):
     def test_sync_member_institution(self):
         (call_id, affiliation_id) = self._create_test_call(
             'semester1', 'queue1')
-        institution_id_1 = self.db.add_institution('Inst 1', '', '', 'AX')
-        institution_id_2 = self.db.add_institution('Inst 2', '', '', 'CX')
-        institution_id_3 = self.db.add_institution('Inst 3', '', '', 'AX')
+        institution_id_1 = self.db.add_institution('Inst 1', '', '', '', 'AX')
+        institution_id_2 = self.db.add_institution('Inst 2', '', '', '', 'CX')
+        institution_id_3 = self.db.add_institution('Inst 3', '', '', '', 'AX')
         person_id_1 = self.db.add_person('Person 1')
         person_id_2 = self.db.add_person('Person 2')
         person_id_3 = self.db.add_person('Person 3')
