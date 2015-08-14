@@ -49,9 +49,10 @@
                 <select name="person_id">
                     {% for person in persons %}
                         <option value="{{ person.id }}" {{ 'selected="selected"' | safe if member.person_id == person.id }}>
-                            {{ person.name }}{% if person.institution_id is not none %},
-                                {{ person.institution_name }},
-                                {{ person.institution_country }}
+                            {{ person.name | truncate(40, killwords=True, end='\u2026') }}{% if person.institution_id is not none %},
+                                {{ person.institution_name | truncate(35, killwords=True, end='\u2026') }}{% if person.institution_country is not none %},
+                                    {{ person.institution_country | truncate(15, killwords=True, end='\u2026')}}
+                                {% endif %}
                             {% endif %}
                         </option>
                     {% endfor %}
