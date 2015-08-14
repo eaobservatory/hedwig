@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from flask import Blueprint, request
 
 from ..util import require_admin, require_auth, require_not_auth, templated
-from ...view.home import prepare_dashboard
+from ...view.home import prepare_person_proposals
 from ...view import people as view
 
 
@@ -143,12 +143,12 @@ def create_people_blueprint(db, facilities):
             db, request.args,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/person/<int:person_id>/dashboard')
-    @templated('dashboard.html')
+    @bp.route('/person/<int:person_id>/proposals')
+    @templated('person_proposals.html')
     @require_admin
-    def person_view_dashboard(person_id):
-        return prepare_dashboard(db, person_id, facilities,
-                                 administrative=True)
+    def person_view_proposals(person_id):
+        return prepare_person_proposals(db, person_id, facilities,
+                                        administrative=True)
 
     @bp.route('/institution/')
     @templated('people/institution_list.html')

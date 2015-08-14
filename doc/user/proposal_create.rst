@@ -65,11 +65,11 @@ ready for you to start working on.
 
 Please note the following features of the page:
 
-* In the menu at the top of the page there is a link to your
-  personal "Dashboard".
-  Your dashboard lists all the proposals of which you are a
+* In the menu at the top of the page there is a link to
+  "Your proposals".
+  This lists all the proposals of which you are a
   member.  If you leave your proposal and wish to return
-  to it later, you will be able to access it via your dashboard.
+  to it later, you will be able to access it via your proposal list.
 
 * A proposal identifier will be shown.
   If you need to contact us regarding your proposal, please

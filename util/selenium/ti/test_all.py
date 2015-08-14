@@ -116,7 +116,7 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.create_proposal('jcmt', semester_name)
 
-            self.view_dashboard()
+            self.view_person_proposals()
 
             self.log_out_user()
 
@@ -451,7 +451,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         self._save_screenshot(
             self.user_image_root, 'proposal_view',
-            ['submit_proposal_link', 'personal_dashboard_link',
+            ['submit_proposal_link', 'person_proposals_link',
              'proposal_identifier_cell'])
 
         proposal_url = self.browser.current_url
@@ -910,19 +910,19 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn('LDN 456', self.browser.page_source)
         self.assertIn('NGC 1234', self.browser.page_source)
 
-    def view_dashboard(self):
-        # Test the personal dashboard.
-        self.browser.get(self.base_url + 'dashboard')
+    def view_person_proposals(self):
+        # Test the personal proposal list.
+        self.browser.get(self.base_url + 'proposals')
 
         self.assertIn(
-            'Personal Dashboard',
+            '<h1>Your Proposals</h1>',
             self.browser.page_source)
 
         self.assertIn(
             'An Example Proposal',
             self.browser.page_source)
 
-        self._save_screenshot(self.user_image_root, 'dashboard')
+        self._save_screenshot(self.user_image_root, 'proposal_list')
 
     def accept_invitation(self):
         # Determine the invitation token to use.

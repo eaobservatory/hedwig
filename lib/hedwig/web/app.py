@@ -34,7 +34,8 @@ from .blueprint.people import create_people_blueprint
 from .blueprint.query import create_query_blueprint
 from .format import format_text
 
-from ..view.home import prepare_dashboard, prepare_home, prepare_contact_page
+from ..view.home import prepare_home, \
+    prepare_person_proposals, prepare_contact_page
 
 
 def create_web_app(db=None):
@@ -87,11 +88,12 @@ def create_web_app(db=None):
     def home_page():
         return prepare_home(application_name, facilities)
 
-    @app.route('/dashboard')
+    @app.route('/proposals')
     @require_auth(require_person=True)
-    @templated('dashboard.html')
-    def dashboard():
-        return prepare_dashboard(db, session['person']['id'], facilities)
+    @templated('person_proposals.html')
+    def person_proposals():
+        return prepare_person_proposals(
+            db, session['person']['id'], facilities)
 
     @app.route('/contact-us')
     @templated('contact.html')

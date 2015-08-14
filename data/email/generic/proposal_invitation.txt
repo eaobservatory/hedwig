@@ -30,7 +30,7 @@ as a member of a proposal, but you will not be able to view the proposal
 through the online system.
 {% else %}
 Since you are already registered with our system, you may find the
-proposal on your "dashboard" page, or view it directly at:
+proposal on your proposal list page, or view it directly at:
 
 {{ target_url }}
 {% endif %}

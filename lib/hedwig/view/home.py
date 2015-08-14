@@ -34,16 +34,16 @@ def prepare_home(application_name, facilities):
     }
 
 
-def prepare_dashboard(db, person_id, facilities, administrative=False):
+def prepare_person_proposals(db, person_id, facilities, administrative=False):
     if administrative:
         try:
             person = db.get_person(person_id=person_id)
-            title = '{}: Dashboard'.format(person.name)
+            title = '{}: Proposals'.format(person.name)
         except NoSuchRecord:
             raise HTTPNotFound('Person not found.')
     else:
         person = None
-        title = 'Personal Dashboard'
+        title = 'Your Proposals'
 
     proposals = db.search_proposal(person_id=person_id)
 

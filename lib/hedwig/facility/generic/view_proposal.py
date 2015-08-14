@@ -137,7 +137,7 @@ class GenericProposal(object):
                 for x in proposal.members.values()]),
             'students': proposal.members.get_students(),
             'proposal_code': self.make_proposal_code(db, proposal),
-            'show_dashboard_callout': ('first_view' in args),
+            'show_person_proposals_callout': ('first_view' in args),
         }
 
         ctx.update(self._view_proposal_extra(db, proposal))

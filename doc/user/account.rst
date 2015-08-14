@@ -4,6 +4,6 @@ Managing your Account
 .. toctree::
     :maxdepth: 2
 
-    dashboard
+    proposal_list
     profile
     password

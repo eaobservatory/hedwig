@@ -2,13 +2,10 @@
 {% if person is not none %}
     {% set navigation=['people', (person.name, url_for('.person_view', person_id=person.id))] %}
 {% else %}
-    {% set help_link=url_for('help.user_page', page_name='dashboard') %}
+    {% set help_link=url_for('help.user_page', page_name='proposal_list') %}
 {% endif %}
 
 {% block content %}
-<section>
-    <h2>Proposals</h2>
-
     {% if not proposals %}
         <p class="not_present">
             You do not yet have any proposals in this system.
@@ -52,5 +49,4 @@
             </table>
         {% endfor %}
     {% endif %}
-</section>
 {% endblock %}

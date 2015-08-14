@@ -45,5 +45,5 @@ invitation you received:
 * Otherwise you should be taken directly to the proposal view page.
 
 * If the system can not determine which proposal to show you,
-  you will be redirected to your personal dashboard.
+  you will be redirected to your proposal list.
   This will list all the proposals of which you are a member.

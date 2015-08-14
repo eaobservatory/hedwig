@@ -1042,7 +1042,7 @@ class ProposalPart(object):
             stmt = stmt.where(queue.c.code == queue_code)
 
         # Determine ordering: don't sort if only selecting one proposal.
-        # This ordering is intended for the personal dashboard.  If other
+        # This ordering is intended for the personal proposal list.  If other
         # pages start using this method, perhaps the ordering should be
         # controlled by more arguments.
         if proposal_id is None:
