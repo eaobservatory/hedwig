@@ -21,9 +21,10 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict, namedtuple
 from itertools import groupby
 
+from ..config import get_config
 from ..error import NoSuchRecord
 from ..type import ProposalWithCode
-from ..web.util import HTTPNotFound
+from ..web.util import HTTPNotFound, mangle_email_address
 
 
 def prepare_home(application_name, facilities):
@@ -59,4 +60,15 @@ def prepare_dashboard(db, person_id, facilities, administrative=False):
         'title': title,
         'proposals': facility_proposals,
         'person': person,
+    }
+
+
+def prepare_contact_page():
+    # NB: shares email address with the one used in the email footer.
+    # If this is not OK they could have separate configuration entries.
+    email = get_config().get('email', 'footer_email')
+
+    return {
+        'title': 'Contact Us',
+        'email_address': mangle_email_address(email),
     }

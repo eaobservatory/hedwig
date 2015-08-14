@@ -1,0 +1,16 @@
+{% extends 'layout.html' %}
+
+{% set scripts = ['unmangle'] %}
+
+{% block content %}
+
+<p>
+    If you have any questions or problems with this system,
+    please contact us at the following email address:
+</p>
+
+<p>
+    <span class="mangled_address" data-mangled="{{ email_address }}">&nbsp;</span>
+</p>
+
+{% endblock %}

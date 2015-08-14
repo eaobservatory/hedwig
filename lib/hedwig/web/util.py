@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from datetime import datetime
+import json
 import functools
 
 # Import the names we wish to expose.
@@ -85,6 +86,22 @@ def flash(message, *args):
         _flask_flash(message.format(*args))
     else:
         _flask_flash(message)
+
+
+def mangle_email_address(email_address):
+    """
+    Mangles an email address by turning it into a JSON-encoded list of
+    HTML character entities.
+
+    The "unmangle.js" script can be used to reconstruct such addresses.
+    """
+
+    mangled = []
+
+    for char in email_address:
+        mangled.append('&#{};'.format(ord(char)))
+
+    return json.dumps(mangled)
 
 
 def parse_datetime(name, form):
