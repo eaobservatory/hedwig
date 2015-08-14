@@ -91,7 +91,8 @@ You should use this if, for example:
 * The institution name is spelled incorrectly.
 * The address is wrong or has changed.
 
-To get started, click on the name of your institution
+To get started, click
+the link "View this institution's information"
 on your profile page.
 This will take you to the institution view.
 Here you will see a list of the members of the institution.
