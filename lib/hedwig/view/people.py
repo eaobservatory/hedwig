@@ -895,8 +895,12 @@ def invitation_token_accept(db, args, form, is_post, remote_addr):
                         'a newer code.')
 
     except Error as e:
+        # TODO: detect the "already a member" error specifically and avoid
+        # it.  For now adding the note that this is a possible cause of this
+        # error will have to suffice.
         raise ErrorPage('An error occurred while attempting to process '
-                        'the invitation.')
+                        'the invitation.  Perhaps you have been invited '
+                        'to a proposal of which you are already a member?')
 
     return {
         'title': 'Accept Invitation',
