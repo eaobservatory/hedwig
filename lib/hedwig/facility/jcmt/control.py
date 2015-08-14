@@ -59,7 +59,8 @@ class JCMTPart(object):
 
         return ans
 
-    def set_jcmt_options(self, proposal_id, target_of_opp, daytime):
+    def set_jcmt_options(self, proposal_id, target_of_opp, daytime,
+                         time_specific):
         """
         Set the JCMT proposal options for a given proposal.
         """
@@ -67,6 +68,7 @@ class JCMTPart(object):
         values = {
             jcmt_options.c.target_of_opp: target_of_opp,
             jcmt_options.c.daytime: daytime,
+            jcmt_options.c.time_specific: time_specific,
         }
 
         with self._transaction() as conn:

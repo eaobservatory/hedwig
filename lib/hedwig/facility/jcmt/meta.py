@@ -35,6 +35,7 @@ jcmt_options = Table(
            primary_key=True, nullable=False),
     Column('target_of_opp', Boolean, nullable=False),
     Column('daytime', Boolean, nullable=False),
+    Column('time_specific', Boolean, nullable=False),
     **_table_opts)
 
 jcmt_request = Table(

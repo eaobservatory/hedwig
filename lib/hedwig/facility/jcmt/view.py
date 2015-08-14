@@ -43,6 +43,7 @@ class JCMT(Generic):
     options = OrderedDict((
         ('target_of_opp', 'Target of opportunity'),
         ('daytime', 'Daytime observation'),
+        ('time_specific', 'Time-specific observation'),
     ))
 
     @classmethod
