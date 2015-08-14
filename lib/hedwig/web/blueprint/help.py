@@ -24,7 +24,7 @@ from flask import Blueprint, send_from_directory
 
 from ...config import get_home
 from ...view.help import prepare_help_page
-from ..util import require_admin, templated
+from ..util import templated
 
 
 def create_help_blueprint():
@@ -68,18 +68,15 @@ def create_help_blueprint():
 
     @bp.route('/admin/')
     @templated('help/help_page.html')
-    @require_admin
     def admin_index():
         return prepare_help_page(admin_doc_root, None, admin_toc_cache)
 
     @bp.route('/admin/<page_name>')
     @templated('help/help_page.html')
-    @require_admin
     def admin_page(page_name):
         return prepare_help_page(admin_doc_root, page_name, admin_toc_cache)
 
     @bp.route('/admin/image/<path:file_name>')
-    @require_admin
     def admin_image(file_name):
         return send_from_directory(admin_image_root, file_name)
 
