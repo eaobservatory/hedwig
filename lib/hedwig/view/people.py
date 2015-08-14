@@ -25,7 +25,7 @@ from ..error import ConsistencyError, Error, MultipleRecords, NoSuchRecord, \
     UserError
 from ..type import Email, EmailCollection, Institution, Person, null_tuple
 from ..util import get_countries
-from ..web.util import flash, session, url_for, \
+from ..web.util import flash, mangle_email_address, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
 from .util import organise_collection
 from . import auth
@@ -441,7 +441,8 @@ def person_view(db, person_id):
     is_current_user = person.user_id == session['user_id']
 
     person = person._replace(
-        email=[x for x in person.email.values()
+        email=[x._replace(address=mangle_email_address(x.address))
+               for x in person.email.values()
                if x.public or is_current_user])
 
     if person.institution is not None:

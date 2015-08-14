@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% set navigation=['people'] %}
+{% set scripts = ['unmangle'] %}
 {% if is_current_user %}
     {% set help_link=url_for('help.user_page', page_name='profile') %}
 {% endif %}
@@ -72,7 +73,7 @@
                     <th rowspan="{{ person.email | length }}">Email</th>
                 {% endif %}
                 <td>
-                    <a href="mailto:{{ email.address }}">{{ email.address }}</a>
+                    <span class="mangled_address" data-mangled="{{ email.address }}">&nbsp;</span>
                     {% if email.primary %}<span class="label">primary</span>{% endif %}
                     {% if email.verified %}<span class="label">verified</span>{% endif %}
                     {% if email.public %}<span class="label">public</span>{% endif %}
