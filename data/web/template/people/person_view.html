@@ -4,8 +4,6 @@
     {% set help_link=url_for('help.user_page', page_name='profile') %}
 {% endif %}
 
-{% from 'macro/institution.html' import render_institution_summary %}
-
 {% block content %}
 
 {% if person.user_id is none %}
@@ -47,7 +45,21 @@
     {% if person.institution is not none %}
         <tr>
             <th>Institution</th>
-            <td><a href="{{ url_for('.institution_view', institution_id=person.institution.id) }}">{{ render_institution_summary(person.institution) }}</a></td>
+            <td>
+                {{ person.institution.name }}
+                <br />
+                {% if person.institution.department %}
+                    {{ person.institution.department }}
+                    <br />
+                {% endif %}
+                {% if person.institution.organization %}
+                    {{ person.institution.organization }}
+                    <br />
+                {% endif %}
+                {{ person.institution.country }}
+                <br />
+                <a href="{{ url_for('.institution_view', institution_id=person.institution.id) }}">View this institution's information</a>
+            </td>
         </tr>
     {% endif %}
     {% if person.email is not none %}
