@@ -6,12 +6,12 @@ Writing a Proposal
 
     proposal_create
     abstract
-    request
+    scientific
     member
-    prev_proposal
+    request
     target
     calculation
     technical
-    scientific
+    prev_proposal
     submit
     proposal_complete

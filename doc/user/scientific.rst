@@ -1,11 +1,21 @@
 The Scientific Justification
 ============================
 
-The process of editing the scientific justification
-is very similar to that for the technical justification.
+From the "Scientific Justification" section of your proposal,
+the "Edit scientific justification" link will take you to
+a page allowing you to manage this part of the proposal.
+When you have finished editing it, you can return to your
+proposal using the "Back to proposal" link,
+or by clicking your proposal code in the menu bar
+at the top of the page.
 
-On the "Edit Scientific Justification" page,
-you will probably find a link allowing you
+The page will normally offer the choice of editing the
+text of the technical justification online,
+or uploading a PDF file.
+Note that this is an either/or choice:
+if you choose to edit text online having uploaded a PDF file,
+your PDF file will be removed, and vice-versa.
+You will probably find a link allowing you
 to upload figures to go with your text.
 This only applies if you are editing text
 online --- if you plan to upload a PDF file,
@@ -64,7 +74,7 @@ This procedure is expected to work in the current
 versions of Firefox and Chrome and probably
 other browsers too.
 
-There is another estimated word counter next to the "Save" button.
+There is an estimated word counter next to the "Save" button.
 As always, the server will double-check the word count when you
 save the text and may produce a slightly different count.
 If this leads to the error that the "Scientific justification is too long"
