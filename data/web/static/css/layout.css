@@ -32,6 +32,10 @@ li#user_control {
     float: right;
 }
 
+li#user_control a.help_link {
+    margin-left: 4ex;
+}
+
 ul.navlink {
     text-align: center;
     overflow: auto;
