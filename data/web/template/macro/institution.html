@@ -30,11 +30,11 @@
 {% endmacro %}
 
 {% macro _institution_summary(name, department, organization, country) %}
-    {{ name }}{% if department %} ({{ department }}){% endif %},
+    {{ name | truncate(35, killwords=True, end='\u2026') }}{% if department %} ({{ department | truncate(25, killwords=True, end='\u2026') }}){% endif %},
     {% if organization %}
-        {{ organization }},
+        {{ organization | truncate(15, killwords=True, end='\u2026') }},
     {% endif %}
-    {{ country }}
+    {{ country | truncate(15, killwords=True, end='\u2026') }}
 {% endmacro %}
 
 {% macro render_institution_summary(institution) %}
