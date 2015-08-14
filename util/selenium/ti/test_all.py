@@ -1103,7 +1103,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         # View institution.
         self.browser.find_element_by_partial_link_text(
-            'Test Institution').click()
+            'View this institution').click()
 
         edit_institution = self.browser.find_element_by_link_text(
             'Edit this institution')
