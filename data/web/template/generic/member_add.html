@@ -2,7 +2,6 @@
 {% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
 {% set help_link=url_for('help.user_page', page_name='member') %}
 
-{% from 'macro/institution.html' import render_member_institution %}
 {% from 'macro/member.html' import render_member_warning %}
 
 {% macro render_member_options() %}
@@ -51,7 +50,8 @@
                     {% for person in persons %}
                         <option value="{{ person.id }}" {{ 'selected="selected"' | safe if member.person_id == person.id }}>
                             {{ person.name }}{% if person.institution_id is not none %},
-                                {{ render_member_institution(person) }}
+                                {{ person.institution_name }},
+                                {{ person.institution_country }}
                             {% endif %}
                         </option>
                     {% endfor %}
