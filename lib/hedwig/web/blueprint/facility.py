@@ -639,11 +639,14 @@ def make_custom_route(db, template, func):
     Create a custom view function.
     """
 
-    @templated(template)
     def view_func(**kwargs):
         return func(
             db, request.args,
             (request.form if request.method == 'POST' else None),
             **kwargs)
 
-    return view_func
+    if template is None:
+        return send_file()(view_func)
+
+    else:
+        return templated(template)(view_func)

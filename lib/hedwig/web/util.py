@@ -34,7 +34,7 @@ from flask import Response as _FlaskResponse
 from werkzeug import exceptions as _werkzeug_exceptions
 from werkzeug import routing as _werkzeug_routing
 
-from ..type import FigureType
+from ..type import FigureType, FileTypeInfo
 
 
 class HTTPError(_werkzeug_exceptions.InternalServerError):
@@ -237,12 +237,17 @@ def send_file(fixed_type=None, allow_cache=False):
                 # Function should have returned a tuple: unpack it.
                 (data, type_, filename) = data
 
-            mime_type = FigureType.get_mime_type(type_)
+            if isinstance(type_, FileTypeInfo):
+                mime_type = type_.mime
+                can_view_inline = False
+            else:
+                mime_type = FigureType.get_mime_type(type_)
+                can_view_inline = FigureType.can_view_inline(type_)
 
             response = _FlaskResponse(data, mimetype=mime_type)
 
             if filename is not None:
-                if FigureType.can_view_inline(type_):
+                if can_view_inline:
                     response.headers.add('Content-Disposition', 'inline',
                                          filename=filename)
                 else:

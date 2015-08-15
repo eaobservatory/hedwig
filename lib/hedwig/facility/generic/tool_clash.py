@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple
 from math import pi
+import re
 
 from healpy import ang2pix
 
@@ -28,7 +29,7 @@ from ...astro.catalog import parse_source_list
 from ...error import NoSuchRecord, UserError
 from ...view.tool import BaseTargetTool
 from ...web.util import ErrorPage, HTTPNotFound, session, url_for
-from ...type import TargetObject
+from ...type import FileTypeInfo, TargetObject
 
 TargetCoord = namedtuple('TargetCoord', ('x', 'y', 'system'))
 
@@ -58,6 +59,11 @@ class ClashTool(BaseTargetTool):
              '/tool/clash/moc/<int:moc_id>',
              'tool_clash_moc_info',
              self.view_moc_info,
+             {}),
+            (None,
+             '/tool/clash/moc/<int:moc_id>/fits',
+             'tool_clash_moc_fits',
+             self.view_moc_fits,
              {}),
             ('generic/moc_view_list.html',
              '/tool/clash/moc/',
@@ -271,3 +277,29 @@ class ClashTool(BaseTargetTool):
             'title': 'Coverage: {}'.format(moc.name),
             'moc': moc,
         }
+
+    def view_moc_fits(self, db, args, form, moc_id):
+        public = True
+        if 'user_id' in session and session.get('is_admin', False):
+            # If the user has administrative access, remove public
+            # constraint.  (Probably not worthwhile to re-validate
+            # administrative access here.)
+            public = None
+
+        try:
+            moc = db.search_moc(
+                facility_id=self.facility.id_, public=public,
+                moc_id=moc_id, with_description=False).get_single()
+        except NoSuchRecord:
+            raise HTTPNotFound('Coverage map not found.')
+
+        try:
+            moc_fits = db.get_moc_fits(moc_id)
+        except NoSuchRecord:
+            raise HTTPNotFound('The FITS file for this coverage map '
+                               'appears to be missing.')
+
+        return (
+            moc_fits,
+            FileTypeInfo(name='FITS', mime='application/fits', preview=None),
+            '{}.fits'.format(re.sub('[^-_a-z0-9]', '_', moc.name.lower())))

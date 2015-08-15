@@ -291,20 +291,21 @@ class AttachmentState(object):
         return cls._info[state].error
 
 
+FileTypeInfo = namedtuple('FileTypeInfo',
+                          ('name', 'mime', 'preview'))
+
+
 class FigureType(object):
     PNG = 1
     JPEG = 2
     PDF = 3
     PS = 4
 
-    FigureTypeInfo = namedtuple('FigureTypeInfo',
-                                ('name', 'mime', 'preview'))
-
     _info = OrderedDict((
-        (PNG,  FigureTypeInfo('PNG',  'image/png',       False)),
-        (JPEG, FigureTypeInfo('JPEG', 'image/jpeg',      False)),
-        (PDF,  FigureTypeInfo('PDF',  'application/pdf', True)),
-        (PS,   FigureTypeInfo('EPS',  'application/postscript', True)),
+        (PNG,  FileTypeInfo('PNG',  'image/png',       False)),
+        (JPEG, FileTypeInfo('JPEG', 'image/jpeg',      False)),
+        (PDF,  FileTypeInfo('PDF',  'application/pdf', True)),
+        (PS,   FileTypeInfo('EPS',  'application/postscript', True)),
     ))
 
     @classmethod
