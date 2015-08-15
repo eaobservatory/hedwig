@@ -18,8 +18,12 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from contextlib import closing
+from cStringIO import StringIO
 from datetime import datetime
 
+from pymoc import MOC
+from pymoc.io.fits import read_moc_fits
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_, or_
 from sqlalchemy.sql.functions import coalesce
@@ -28,7 +32,7 @@ from sqlalchemy.sql.functions import max as max_
 from ...error import ConsistencyError, Error, UserError
 from ...type import Calculation, FormatType, MOCInfo, \
     OrderedResultCollection, ResultCollection
-from ..meta import calculator, calculation, facility, moc, moc_cell
+from ..meta import calculator, calculation, facility, moc, moc_cell, moc_fits
 
 
 class CalculatorPart(object):
@@ -55,9 +59,13 @@ class CalculatorPart(object):
             return result.inserted_primary_key[0]
 
     def add_moc(self, facility_id, name, description, description_format,
-                public, moc_order, moc_object):
+                public, moc_order, moc_file):
         if not FormatType.is_valid(description_format, is_system=True):
             raise UserError('Text format not recognised.')
+
+        moc_object = MOC()
+        with closing(StringIO(moc_file)) as f:
+            read_moc_fits(moc_object, f)
 
         moc_object.normalize(max_order=moc_order)
 
@@ -74,6 +82,11 @@ class CalculatorPart(object):
             }))
 
             moc_id = result.inserted_primary_key[0]
+
+            conn.execute(moc_fits.insert().values({
+                moc_fits.c.moc_id: moc_id,
+                moc_fits.c.fits: moc_file,
+            }))
 
             self._update_moc_cells(conn, moc_id, moc_object, no_delete=True)
 
@@ -254,7 +267,7 @@ class CalculatorPart(object):
 
     def update_moc(self, moc_id, name=None,
                    description=None, description_format=None, public=None,
-                   moc_order=None, moc_object=None):
+                   moc_order=None, moc_file=None):
         values = {}
 
         if name is not None:
@@ -271,9 +284,15 @@ class CalculatorPart(object):
         if public is not None:
             values[moc.c.public] = public
 
-        if moc_object is not None:
+        moc_object = None
+        if moc_file is not None:
             if moc_order is None:
                 raise Error('MOC order not specified with updated MOC')
+
+            moc_object = MOC()
+            with closing(StringIO(moc_file)) as f:
+                read_moc_fits(moc_object, f)
+
             moc_object.normalize(max_order=moc_order)
 
             values[moc.c.uploaded] = datetime.utcnow()
@@ -293,6 +312,10 @@ class CalculatorPart(object):
                     'no rows matched updating moc with id={}', moc_id)
 
             if moc_object is not None:
+                conn.execute(moc_fits.update().where(
+                    moc_fits.c.moc_id == moc_id
+                ).values({moc_fits.c.fits: moc_file}))
+
                 self._update_moc_cells(conn, moc_id, moc_object)
 
     def _update_moc_cells(self, conn, moc_id, moc_object, no_delete=False):

@@ -266,6 +266,15 @@ moc_cell = Table(
     Index('idx_moc_cell', 'moc_id', 'order', 'cell', unique=True),
     **_table_opts)
 
+moc_fits = Table(
+    'moc_fits',
+    metadata,
+    Column('moc_id', None,
+           ForeignKey('moc.id', onupdate='RESTRICT', ondelete='CASCADE'),
+           primary_key=True, nullable=False),
+    Column('fits', LargeBinary(2**32 - 1), nullable=False),
+    **_table_opts)
+
 person = Table(
     'person',
     metadata,

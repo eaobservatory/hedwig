@@ -18,9 +18,12 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from contextlib import closing
+from cStringIO import StringIO
 from datetime import datetime
 
 from pymoc import MOC
+from pymoc.io.fits import write_moc_fits
 
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     NoSuchRecord
@@ -96,9 +99,13 @@ class DBCalculatorTest(DBTestCase):
 
         moc_a = MOC(order=1, cells=(4, 7))
 
+        with closing(StringIO()) as f:
+            write_moc_fits(moc_a, f)
+            moc_a_fits = f.getvalue()
+
         moc_id = self.db.add_moc(facility_id, 'test',
                                  'A Test MOC', FormatType.PLAIN,
-                                 True, 2, moc_a)
+                                 True, 2, moc_a_fits)
         self.assertIsInstance(moc_id, int)
 
         mocs = self.db.search_moc(facility_id, None, with_description=True)
@@ -133,9 +140,14 @@ class DBCalculatorTest(DBTestCase):
         self.assertEqual(len(result), 0)
 
         moc_b = MOC(order=1, cells=(5, 6))
+
+        with closing(StringIO()) as f:
+            write_moc_fits(moc_b, f)
+            moc_b_fits = f.getvalue()
+
         self.db.update_moc(moc_id, 'test2',
                            'Another Test MOC', FormatType.PLAIN,
-                           False, 2, moc_b)
+                           False, 2, moc_b_fits)
 
         result = self.db.search_moc_cell(facility_id, None, 2, 20)
         self.assertEqual(len(result), 1)

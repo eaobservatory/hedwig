@@ -21,8 +21,6 @@ from __future__ import absolute_import, division, print_function, \
 from collections import namedtuple
 from datetime import datetime
 
-from pymoc import MOC
-
 from ...error import NoSuchRecord, UserError
 from ...type import Affiliation, Call, Category, FormatType, MOCInfo, \
     ProposalWithCode, Queue, \
@@ -529,10 +527,14 @@ class GenericAdmin(object):
                     description_format=int(form['description_format']),
                     public=('public' in form))
 
-                moc_object = None
+                moc_file = None
                 if file_:
                     try:
-                        moc_object = MOC(filename=file_, filetype='fits')
+                        moc_file = file_.read(10 * 1024 * 1024)
+
+                        # Did we get all of the file within the size limit?
+                        if len(file_.read(1)):
+                            raise UserError('The uploaded file was too large.')
 
                     finally:
                         file_.close()
@@ -540,22 +542,22 @@ class GenericAdmin(object):
                 elif moc_id is None:
                     raise UserError('No new MOC file was received.')
 
-                moc_order = (None if moc_object is None
+                moc_order = (None if moc_file is None
                              else self.get_moc_order())
 
                 if moc_id is None:
                     moc_id = db.add_moc(self.id_, moc.name, moc.description,
                                         moc.description_format,
-                                        moc.public, moc_order, moc_object)
+                                        moc.public, moc_order, moc_file)
                     flash('The new coverage map has been stored.')
                 else:
                     db.update_moc(
                         moc_id, name=moc.name, description=moc.description,
                         description_format=moc.description_format,
                         public=moc.public,
-                        moc_order=moc_order, moc_object=moc_object)
+                        moc_order=moc_order, moc_file=moc_file)
 
-                    if moc_object is None:
+                    if moc_file is None:
                         flash('The coverage map details have been updated.')
                     else:
                         flash('The updated coverage map has been stored.')
