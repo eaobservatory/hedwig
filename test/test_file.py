@@ -29,7 +29,7 @@ from hedwig.file.image import create_thumbnail_and_preview, \
     _calculate_size
 from hedwig.file.info import determine_figure_type, \
     determine_pdf_page_count
-from hedwig.file.pdf import pdf_to_png
+from hedwig.file.pdf import pdf_to_png, ps_to_png
 from hedwig.type import FigureType
 
 from .dummy_config import DummyConfigTestCase
@@ -50,6 +50,12 @@ with closing(StringIO()) as f:
     w.write(f)
     example_pdf = f.getvalue()
 
+example_eps = b"""%!PS-Adobe-3.0 EPSF-3.0
+%%BoundingBox: 0 0 100 50
+(Helvetica) findfont 12 scalefont setfont
+40 20 moveto (test) show
+showpage"""
+
 
 class FileTest(DummyConfigTestCase):
     def test_figure_type(self):
@@ -59,6 +65,8 @@ class FileTest(DummyConfigTestCase):
 
         self.assertEqual(determine_figure_type(example_pdf), FigureType.PDF)
 
+        self.assertEqual(determine_figure_type(example_eps), FigureType.PS)
+
         with self.assertRaisesRegexp(UserError, 'text/plain'):
             determine_figure_type(b'PLAIN TEXT')
 
@@ -67,6 +75,12 @@ class FileTest(DummyConfigTestCase):
 
     def test_pdf_to_png(self):
         pages = pdf_to_png(example_pdf)
+        self.assertEqual(len(pages), 1)
+
+        self.assertEqual(determine_figure_type(pages[0]), FigureType.PNG)
+
+    def test_ps_to_png(self):
+        pages = ps_to_png(example_eps)
         self.assertEqual(len(pages), 1)
 
         self.assertEqual(determine_figure_type(pages[0]), FigureType.PNG)
