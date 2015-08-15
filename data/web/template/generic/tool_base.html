@@ -2,6 +2,12 @@
 
 {% from 'macro/target.html' import render_target_list_info %}
 
+{% if scripts is defined %}
+    {% set scripts = ['formtip'] + scripts %}
+{% else %}
+    {% set scripts = ['formtip'] %}
+{% endif %}
+
 {% block content %}
 
 {% if target_proposal is not none %}
@@ -53,6 +59,14 @@
                                 <option value="{{ system_id }}" {{ 'selected="selected"' | safe if system_id == target.system }}>{{ system_name }}</option>
                             {% endfor %}
                         </select>
+                        <div class="formtip">
+                            <div>
+                                If you have <b>FK5 J2000</b> coordinates,
+                                you may enter them as <b>ICRS</b>.
+                                (The difference is not likely to be
+                                significant for this purpose.)
+                            </div>
+                        </div>
                     </li>
                 {% endif %}
                 <li>

@@ -1,7 +1,15 @@
 {% extends 'layout.html' %}
 {% set navigation=[('Coverage List', url_for('.tool_clash_moc_list'))] %}
+{% set help_link=url_for('help.user_page', page_name='target', _anchor='clash-tool') %}
+{% set scripts=['formtip'] %}
 
 {% block content %}
+
+<p>
+    This page gives information about one of the coverage maps
+    which is used by the Clash Tool
+    to check for matches with your target coordinates.
+</p>
 
 {% if moc.description %}
     <h2>Description of Coverage Map</h2>
@@ -15,10 +23,18 @@
     <tr>
         <th>Last updated</th>
         <td>{{ moc.uploaded | format_datetime }}</td>
+        <td class="borderless">&nbsp;</td>
     </tr>
     <tr>
         <th>Area covered</th>
         <td>{{ moc.area | fmt('{:0.1f}') }} square degrees</td>
+        <td class="borderless">
+            <div class="formtip">
+                <div>
+                    This is the area of the sky included in this coverage map.
+                <div>
+            </div>
+        </td>
     </tr>
 </table>
 
