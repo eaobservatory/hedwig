@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
+{% set scripts = ['formtip'] %}
 
 {% block content %}
 
@@ -99,6 +100,21 @@
                                 <p class="not_present">
                                     Not yet processed
                                 </p>
+
+                                <div class="formtip">
+                                    <div>
+                                        <p>
+                                            Your figure is in a queue, waiting to be processed.
+                                        </p>
+                                        <p>
+                                            If you reload this page later, you should see a thumbnail
+                                            version of the figure here.
+                                            Meanwhile you may continue working on your proposal
+                                            as normal.
+                                        </p>
+                                    </div>
+                                </div>
+
                                 <p>
                                     <a href="{{ figure.target_full }}">View image</a>
                                 </p>
@@ -205,6 +221,20 @@
                             Error during processing
                         {% else %}
                             Not yet processed
+
+                            <div class="formtip">
+                                <div>
+                                    <p>
+                                        Your PDF file is in a queue, waiting to be processed.
+                                    </p>
+                                    <p>
+                                        If you reload this page later, you should see
+                                        updated status information here.
+                                        Meanwhile you may continue working on your proposal
+                                        as normal.
+                                    </p>
+                                </div>
+                            </div>
                         {% endif %}
                     </td>
                 </tr>
