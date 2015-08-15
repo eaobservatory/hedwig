@@ -10,7 +10,7 @@ You can access these calculators at any time from the
 (They should be available even when there is no open call for proposals.)
 
 When you are writing a proposal, you will find a section
-"Calculation Results" immeditately before the technical
+"Calculation Results" immediately before the technical
 justification.  This section will also include links to the
 available calculators.
 
