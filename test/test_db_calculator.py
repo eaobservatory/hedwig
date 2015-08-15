@@ -108,6 +108,12 @@ class DBCalculatorTest(DBTestCase):
                                  True, 2, moc_a_fits)
         self.assertIsInstance(moc_id, int)
 
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_moc_fits(moc_id + 1)
+
+        moc_a_fits_fetched = self.db.get_moc_fits(moc_id)
+        self.assertEqual(moc_a_fits_fetched, moc_a_fits)
+
         mocs = self.db.search_moc(facility_id, None, with_description=True)
         self.assertIsInstance(mocs, ResultCollection)
         self.assertIn(moc_id, mocs)
@@ -148,6 +154,9 @@ class DBCalculatorTest(DBTestCase):
         self.db.update_moc(moc_id, 'test2',
                            'Another Test MOC', FormatType.PLAIN,
                            False, 2, moc_b_fits)
+
+        moc_b_fits_fetched = self.db.get_moc_fits(moc_id)
+        self.assertEqual(moc_b_fits_fetched, moc_b_fits)
 
         result = self.db.search_moc_cell(facility_id, None, 2, 20)
         self.assertEqual(len(result), 1)

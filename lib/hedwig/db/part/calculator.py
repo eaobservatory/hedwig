@@ -33,6 +33,7 @@ from ...error import ConsistencyError, Error, UserError
 from ...type import Calculation, FormatType, MOCInfo, \
     OrderedResultCollection, ResultCollection
 from ..meta import calculator, calculation, facility, moc, moc_cell, moc_fits
+from ..util import require_not_none
 
 
 class CalculatorPart(object):
@@ -134,6 +135,12 @@ class CalculatorPart(object):
 
     def get_calculation(self, id_):
         return self.search_calculation(calculation_id=id_).get_single()
+
+    @require_not_none
+    def get_moc_fits(self, moc_id):
+        with self._transaction() as conn:
+            return conn.execute(select([moc_fits.c.fits]).where(
+                moc_fits.c.moc_id == moc_id)).scalar()
 
     def search_calculation(self, calculation_id=None, proposal_id=None):
         stmt = calculation.select()
