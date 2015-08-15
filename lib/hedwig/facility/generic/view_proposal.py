@@ -188,10 +188,12 @@ class GenericProposal(object):
             for x in proposal_fig.values()
             if x.role == TextRole.SCIENCE_CASE]
 
+        targets = db.search_target(proposal_id=proposal.id)
+        target_total_time = targets.total_time()
+
         targets = [
             x._replace(system=CoordSystem.get_name(x.system)) for x in
-            db.search_target(
-                proposal_id=proposal.id).to_formatted_collection().values()]
+            targets.to_formatted_collection().values()]
 
         calculations = db.search_calculation(proposal_id=proposal.id)
 
@@ -217,6 +219,7 @@ class GenericProposal(object):
             'sci_case_pdf': proposal_pdf.get_role(
                 TextRole.SCIENCE_CASE, None),
             'targets': targets,
+            'target_total_time': target_total_time,
             'calculators': [
                 CalculatorInfoExtra(*x, target_view=url_for(
                     '.calc_{}_{}'.format(x.code, x.modes.values()[0].code),

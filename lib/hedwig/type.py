@@ -808,6 +808,23 @@ class TargetCollection(OrderedResultCollection):
 
         return ans
 
+    def total_time(self):
+        """
+        Returns the sum of the "time" value for each target in the collection
+        for which this value isn't undefined.
+
+        A total of 0.0 will be returned if no targets had defined times.  (Or
+        if the times add up to zero.)
+        """
+
+        total = 0.0
+
+        for v in self.values():
+            if v.time is not None:
+                total += v.time
+
+        return total
+
 
 def null_tuple(type_):
     """
