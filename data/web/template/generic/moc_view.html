@@ -3,7 +3,13 @@
 
 {% block content %}
 
-{{ moc.description | format_text(moc.description_format) }}
+{% if moc.description %}
+    <h2>Description of Coverage Map</h2>
+
+    {{ moc.description | format_text(moc.description_format) }}
+{% endif %}
+
+<h2>Additional Information about Coverage Map</h2>
 
 <table>
     <tr>
