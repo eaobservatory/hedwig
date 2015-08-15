@@ -22,7 +22,7 @@ from ..error import ConsistencyError, ConversionError
 from ..type import AttachmentState, FigureType
 from ..util import get_logger
 from .image import create_thumbnail_and_preview
-from .pdf import pdf_to_png
+from .pdf import pdf_to_png, ps_to_png
 
 logger = get_logger(__name__)
 
@@ -60,6 +60,15 @@ def process_proposal_figure(db):
                     if len(pngs) != 1:
                         raise ConversionError(
                             'PDF figure did not generate one page')
+
+                    preview = pngs[0]
+
+                elif figure.type == FigureType.PS:
+                    pngs = ps_to_png(figure.data)
+
+                    if len(pngs) != 1:
+                        raise ConversionError(
+                            'PS/EPS figure did not generate one page')
 
                     preview = pngs[0]
 
