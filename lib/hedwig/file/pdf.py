@@ -25,9 +25,13 @@ from ..error import Error, ConversionError
 from .info import determine_pdf_page_count
 
 
-def pdf_to_png(pdf, page_count=None, resolution=100):
+def pdf_to_png(pdf, page_count=None, **kwargs):
     """
     Convert a PDF file to a list of PNG images.
+
+    The page count is determined automatically if not specified.
+
+    Any additional keyword arguments are passed on to _pdf_ps_to_png.
     """
 
     if page_count is None:
@@ -35,6 +39,30 @@ def pdf_to_png(pdf, page_count=None, resolution=100):
             page_count = determine_pdf_page_count(pdf)
         except Error as e:
             raise ConversionError(e.message)
+
+    return _pdf_ps_to_png(pdf, page_count, **kwargs)
+
+
+def ps_to_png(ps, page_count=None, **kwargs):
+    """
+    Convert a PS or EPS image to a list of PNG images.
+
+    Currently assumes there is only one page if no page_count is given,
+    so one PNG should be created in that case.
+
+    Any additional keyword arguments are passed on to _pdf_ps_to_png.
+    """
+
+    if page_count is None:
+        page_count = 1
+
+    return _pdf_ps_to_png(ps, page_count=1, **kwargs)
+
+
+def _pdf_ps_to_png(buff, page_count, resolution=100):
+    """
+    Implements PDF or PS conversion to PDF via Ghostscript.
+    """
 
     ghostscript = get_config().get('utilities', 'ghostscript')
     pages = []
@@ -55,6 +83,7 @@ def pdf_to_png(pdf, page_count=None, resolution=100):
                     '-dTextAlphaBits=4',
                     '-dFirstPage={}'.format(i + 1),
                     '-dLastPage={}'.format(i + 1),
+                    '-dEPSCrop',
                     '-sOutputFile=-',
                     '-'
                 ],
@@ -62,10 +91,10 @@ def pdf_to_png(pdf, page_count=None, resolution=100):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE)
 
-            (stdoutdata, stderrdata) = p.communicate(pdf)
+            (stdoutdata, stderrdata) = p.communicate(buff)
 
             if p.returncode:
-                raise ConversionError('PDF to PNG conversion failed: ' +
+                raise ConversionError('PDF/PS to PNG conversion failed: ' +
                                       stderrdata.replace('\n', ' ').strip())
 
             pages.append(stdoutdata)
