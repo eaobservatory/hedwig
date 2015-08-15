@@ -11,9 +11,10 @@ The "Delete" button removes rows from the table,
 but as always, your changes on this page are not
 saved until you press the "Save" button at the bottom of the page.
 
-The "Resolve name" button can be used to attempt to determine
-the coordinates of an object from its name.
-If successful the RA and Dec columns will then be filled in for you.
+The "Resolve name" button can be used to attempt to determine the
+coordinates of an object from its name using CADC's Name Resolver.
+If successful the RA and Dec columns will then be filled in for you,
+otherwise you will need to enter these yourself.
 
 Note also the "Time" and "Priority" columns.
 These columns are useful for helping
