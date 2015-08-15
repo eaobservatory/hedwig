@@ -27,7 +27,7 @@
             {% elif navitem == 'people' %}
                 <li><a href="{{ url_for('.person_list') }}">User Directory</a></li>
             {% elif navitem == 'help' %}
-                <li><a href="{{ url_for('.help_index') }}">Help</a></li>
+                <li><a href="{{ url_for('.help_index') }}">Help contents</a></li>
             {% elif navitem is not string %}
                 {% with name=navitem[0], url=navitem[1] %}
                     <li><a href="{{ url }}">{{ name }}</a></li>
