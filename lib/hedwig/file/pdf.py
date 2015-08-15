@@ -76,6 +76,7 @@ def _pdf_ps_to_png(buff, page_count, resolution=100):
                     '-dNOPAUSE',
                     '-dBATCH',
                     '-dSAFER',
+                    '-dPARANOIDSAFER',
                     '-dNOTRANSPARENCY',
                     '-sDEVICE=png16m',
                     '-r{}'.format(resolution),
