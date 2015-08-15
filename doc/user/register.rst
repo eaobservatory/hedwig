@@ -8,7 +8,7 @@ then click the "register" link.
 .. image:: image/home_page_small.png
     :target: image/home_page_large.png
 
-You should now see the new user registration page.  Enter the user
+You should now see the new-user registration page.  Enter the user
 name which you would like to use to log in to the system and
 a password.
 
@@ -35,7 +35,7 @@ these settings at any time from your profile page.
 Please note that you will not be able to use the password reset
 system to recover a lost password until you have entered an
 email address.
-Please contact us if you loose your password at this stage
+Please contact us if you lose your password at this stage
 as we may be able to help you recover your account.
 We may also remove accounts left in this state if they are
 inactive for a long time.
@@ -45,7 +45,7 @@ inactive for a long time.
 
 Finally you should select the institution with which you are
 affiliated.  Please check the menu of institutions which are
-already known to the system.  Your institution appears here,
+already known to the system.  If your institution appears here,
 please select it, and press the "Select institution" button.
 
 If your institution does not appear, you may enter the
