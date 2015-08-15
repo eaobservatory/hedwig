@@ -295,6 +295,7 @@ class FigureType(object):
     PNG = 1
     JPEG = 2
     PDF = 3
+    PS = 4
 
     FigureTypeInfo = namedtuple('FigureTypeInfo',
                                 ('name', 'mime', 'preview'))
@@ -303,6 +304,7 @@ class FigureType(object):
         (PNG,  FigureTypeInfo('PNG',  'image/png',       False)),
         (JPEG, FigureTypeInfo('JPEG', 'image/jpeg',      False)),
         (PDF,  FigureTypeInfo('PDF',  'application/pdf', True)),
+        (PS,   FigureTypeInfo('EPS',  'application/postscript', True)),
     ))
 
     @classmethod
