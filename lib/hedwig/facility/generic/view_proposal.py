@@ -1527,8 +1527,10 @@ class GenericProposal(object):
             except UserError as e:
                 message = e.message
 
-        title_suffix = 'Text' if role in (TextRole.TECHNICAL_CASE,
-                                          TextRole.SCIENCE_CASE) else ''
+        is_case_text = (role in
+                        (TextRole.TECHNICAL_CASE, TextRole.SCIENCE_CASE))
+
+        title_suffix = 'Text' if is_case_text else ''
 
         ctx.update({
             'title': 'Edit {} {}'.format(name.title(), title_suffix),
@@ -1541,6 +1543,7 @@ class GenericProposal(object):
             'rows': rows,
             'figures': figures,
             'calculations': calculations,
+            'show_save_reminder': is_case_text,
         })
 
         return ctx

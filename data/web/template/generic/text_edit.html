@@ -6,6 +6,16 @@
 
 {% block content %}
 
+{% if show_save_reminder %}
+    <p>
+        <b>Please save your work frequently!</b>
+        You can save the text as often as you like
+        and return to this page to continue editing.
+        You may be required to log in again if your session
+        is idle for about two hours.
+    </p>
+{% endif %}
+
 {% if message is not none %}
     <p class="warning">
         {{ message }}
