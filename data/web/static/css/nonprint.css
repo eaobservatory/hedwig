@@ -68,12 +68,24 @@ span.label {
     border: 1px solid black;
 }
 
-.callouttip > div > p:first-child {
+.callouttip > div > p.point_left {
     font-weight: bold;
+    text-align: left;
 }
 
-.callouttip > div > p:first-child:before {
+.callouttip > div > p.point_left:before {
     content: '\2196';
+    font-size: 200%;
+    vertical-align: bottom;
+}
+
+.callouttip > div > p.point_right {
+    font-weight: bold;
+    text-align: right;
+}
+
+.callouttip > div > p.point_right:after {
+    content: '\2191';
     font-size: 200%;
     vertical-align: bottom;
 }
@@ -81,6 +93,7 @@ span.label {
 .callouttip > div > p:last-child {
     font-weight: bold;
     text-align: center;
+    padding-top: 2ex;
 }
 
 a#callout_dismiss {

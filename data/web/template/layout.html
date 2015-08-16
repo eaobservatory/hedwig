@@ -22,7 +22,7 @@
     <body>
         <header>
             <ul id="navbar">
-                {{ render_main_menu(facility_name, navigation, show_person_proposals_callout) }}
+                {{ render_main_menu(facility_name, navigation, show_person_proposals_callout, proposal_code) }}
                 <li id="user_control">
                     {{ render_user_panel() }}
                     {% if help_link is defined %}

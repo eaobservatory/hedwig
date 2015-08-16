@@ -1,15 +1,29 @@
-{% macro render_main_menu(facility_name, navigation, show_person_proposals_callout) %}
+{% macro render_main_menu(facility_name, navigation, show_person_proposals_callout, proposal_code) %}
     <li><a href="{{ url_for('home_page') }}">Home</a></li>
     <li class="callouttip">
         <a id="person_proposals_link" href="{{ url_for('person_proposals') }}">Your proposals</a>
         {% if show_person_proposals_callout %}
             <div>
-                <p>
+                <p class="point_left">
                     Your proposal list
                 </p>
                 <p>
                     You can use your proposal list to return to
                     the proposal at any time.
+                </p>
+                <p class="point_right">
+                    Proposal identifier {{ proposal_code }}
+                </p>
+                <p>
+                    This is your new proposal identifier.
+                    When you are editing part of your proposal,
+                    click this to return to the main proposal view
+                    (abandoning any unsaved changes).
+                    You can also use your browser&rsquo;s back button.
+                </p>
+                <p>
+                    Please mention the proposal identifier if you need
+                    to contact us about your proposal.
                 </p>
                 <p>
                     <a id="callout_dismiss">OK</a>
@@ -19,6 +33,9 @@
     </li>
     {% if facility_name is defined %}
         <li><a href="{{ url_for('.facility_home') }}">{{ facility_name }}</a></li>
+    {% endif %}
+    {% if show_person_proposals_callout %}
+        <li>{{ proposal_code }}</li>
     {% endif %}
     {% if navigation is defined %}
         {% for navitem in navigation %}
