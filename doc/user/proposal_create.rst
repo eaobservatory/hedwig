@@ -2,7 +2,7 @@ Creating a Proposal
 ===================
 
 On the main home page you will find a large tile for each facility
-showing an image of the facility its name.
+showing an image of the facility and its name.
 Clicking on this tile will take you to the facility home page.
 
 At the top of the facility home page you will find a list
