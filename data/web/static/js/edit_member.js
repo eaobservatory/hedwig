@@ -1,5 +1,10 @@
 function deleteMemberRow(memberId) {
-    $('#memberrow_' + memberId).remove();
+    var piId = $('input[name=pi]:checked').val();
+    if (piId === memberId) {
+        alert('Please select someone else to be the PI before removing this member.');
+    } else {
+        $('#memberrow_' + memberId).remove();
+    }
 }
 
 $(document).ready(function () {
