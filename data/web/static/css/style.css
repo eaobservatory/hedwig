@@ -275,6 +275,10 @@ div.rst_doc div.formula {
     border-radius: 0.5ex;
 }
 
+div#facilities a span {
+    text-decoration: underline;
+}
+
 a.create_proposal_link {
     font-weight: bold;
 }

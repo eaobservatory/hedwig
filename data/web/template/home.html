@@ -14,7 +14,7 @@
             <a href="{{ url_for(facility.code + '.facility_home') }}">
                 <img src="{{ url_for('static', filename='image/facility_' + facility.code +'.jpeg') }}" />
                 <br />
-                {{ facility.name }}
+                <span>{{ facility.name }}</span>
             </a>
         </div>
     {% endfor %}

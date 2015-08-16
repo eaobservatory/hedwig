@@ -109,6 +109,7 @@ div#facilities > div {
 div#facilities a {
     display: block;
     padding: 20px;
+    text-decoration: none;
 }
 
 form ol li:not(:first-child) {
