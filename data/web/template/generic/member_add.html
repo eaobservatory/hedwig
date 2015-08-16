@@ -1,6 +1,8 @@
 {% extends "layout.html" %}
+{% from 'macro/affiliation_tip.html' import render_affiliation_tip %}
 {% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
 {% set help_link=url_for('help.user_page', page_name='member') %}
+{% set scripts = ['formtip'] %}
 
 {% from 'macro/member.html' import render_member_warning %}
 
@@ -22,6 +24,7 @@
                 <option value="{{ affiliation.id }}" {{ 'selected="selected"' | safe if affiliation.id == member.affiliation_id }}>{{ affiliation.name }}</option>
             {% endfor %}
         </select>
+        {{ render_affiliation_tip(semester_id) }}
     </li>
 {% endmacro %}
 

@@ -162,7 +162,8 @@ table + table {
 
 div.formtip {
     display: inline-block;
-    position: relative
+    position: relative;
+    font-weight: normal;
 }
 
 div.formtip > a {

@@ -1,0 +1,21 @@
+{% macro render_affiliation_tip(semester_id) %}
+    <div class="formtip">
+        <div>
+            <p>
+                <i>Why isn't this the same as the institution's country?</i>
+            </p>
+            <p>
+                Some affiliations have more complex requirements than
+                the country of the institution.
+                Unfortunately this means that we have to ask you to
+                confirm the applicable affiliation for
+                each proposal member.
+            </p>
+            <p>
+                Please see the
+                <a href="{{ url_for('.semester_calls', semester_id=semester_id) }}" target="_blank">call for proposals</a>
+                for more information the affiliation requirements.
+            </p>
+        </div>
+    </div>
+{% endmacro %}
