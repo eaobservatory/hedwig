@@ -785,6 +785,9 @@ def institution_edit(db, institution_id, form, is_post):
     if is_post:
         if 'submit-confirm' in form:
             show_confirm_prompt = False
+        elif 'submit_cancel' in form:
+            raise HTTPRedirect(url_for('.institution_view',
+                                       institution_id=institution_id))
         elif 'submit-edit' in form:
             try:
                 institution = institution._replace(
