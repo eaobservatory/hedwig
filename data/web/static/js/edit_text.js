@@ -15,5 +15,16 @@ $(document).ready(function () {
 
     makeWordCount();
 
-    $('[name="text"]').on('input', makeWordCount);
+    var timerRunning = 0;
+    var timerDuration = ((wordLimit > 250) ? 2000 : 500);
+
+    wordArea.on('input', function () {
+        if (! timerRunning) {
+            timerRunning = 1;
+            setTimeout((function () {
+                timerRunning = 0;
+                makeWordCount();
+            }), timerDuration);
+        }
+    });
 });
