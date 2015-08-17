@@ -32,7 +32,16 @@
                 <td>
                     <select name="weather_{{ request.id }}">
                         {% for weather_id, weather_info in weathers.items() %}
-                            <option value="{{ weather_id }}" {{ 'selected="selected"' | safe if weather_id == request.weather }}>{{ weather_info.name }}</option>
+                            <option value="{{ weather_id }}" {{ 'selected="selected"' | safe if weather_id == request.weather }}>
+                                {{ weather_info.name }}:
+                                {% if weather_info.min is not none %}
+                                    {{ weather_info.min }} &lt;
+                                {% endif %}
+                                &tau;&#x2082;&#x2082;&#x2085;
+                                {% if weather_info.max is not none %}
+                                    &le; {{ weather_info.max }}
+                                {% endif %}
+                            </option>
                         {% endfor %}
                     </select>
                 </td>
@@ -53,7 +62,16 @@
             <td>
                 <select name="weather">
                     {% for weather_id, weather_info in weathers.items() %}
-                        <option value="{{ weather_id }}">{{ weather_info.name }}</option>
+                        <option value="{{ weather_id }}">
+                            {{ weather_info.name }}:
+                            {% if weather_info.min is not none %}
+                                {{ weather_info.min }} &lt;
+                            {% endif %}
+                            &tau;&#x2082;&#x2082;&#x2085;
+                            {% if weather_info.max is not none %}
+                                &le; {{ weather_info.max }}
+                            {% endif %}
+                        </option>
                     {% endfor %}
                 </select>
             </td>
