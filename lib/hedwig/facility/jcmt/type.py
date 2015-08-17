@@ -169,7 +169,7 @@ class JCMTWeather(object):
         (BAND2, WeatherInfo('Band 2', True, 0.065, 0.05, 0.08)),
         (BAND3, WeatherInfo('Band 3', True, 0.1,   0.08, 0.12)),
         (BAND4, WeatherInfo('Band 4', True, 0.16,  0.12, 0.2)),
-        (BAND5, WeatherInfo('Band 5', True, 0.23,  0.2,  None)),
+        (BAND5, WeatherInfo('Band 5', True, 0.25,  0.2,  None)),
     ))
 
     @classmethod
