@@ -98,5 +98,14 @@ Also note the red and yellow boxes on your proposal:
   or your first proposal for the facility where you won't have
   any previous proposals to list.
 
+While you are editing a part of your proposal,
+on a separate page,
+you will see your proposal's identifier in the menu bar at the
+top of the page.
+You can click this to return to the main proposal page,
+abandoning any unsaved changes.
+You can also use your browser's back button to navigate
+back to the proposal page.
+
 .. image:: image/proposal_view_small.png
     :target: image/proposal_view_large.png
