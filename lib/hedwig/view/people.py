@@ -440,10 +440,20 @@ def person_view(db, person_id):
 
     is_current_user = person.user_id == session['user_id']
 
+    # Show all email addresses if:
+    # * It's your own profile.
+    # * You're an administrator. (Not double-checked here but "auth.for_person"
+    #   would have.)
+    # * The user is unregistered but you can edit. (You're a co-member editor.)
+    view_all_email = (
+        is_current_user or
+        session.get('is_admin', False) or
+        ((person.user_id is None) and can.edit))
+
     person = person._replace(
         email=[x._replace(address=mangle_email_address(x.address))
                for x in person.email.values()
-               if x.public or is_current_user])
+               if x.public or view_all_email])
 
     if person.institution is not None:
         person = person._replace(
