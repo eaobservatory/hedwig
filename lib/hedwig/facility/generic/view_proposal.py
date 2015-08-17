@@ -803,7 +803,8 @@ class GenericProposal(object):
         if form:
             if 'submit_cancel' in form:
                 raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id))
+                                           proposal_id=proposal.id,
+                                           _anchor='members'))
 
             elif 'submit_confirm' in form:
                 try:
