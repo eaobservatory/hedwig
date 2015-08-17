@@ -28,6 +28,7 @@ from ...error import CalculatorError, UserError
 from ...type import CalculatorMode, CalculatorResult, CalculatorValue
 from ...view.util import parse_time
 from .calculator_jcmt import JCMTCalculator
+from .type import JCMTWeather
 
 
 class SCUBA2Calculator(JCMTCalculator):
@@ -288,7 +289,7 @@ class SCUBA2Calculator(JCMTCalculator):
         """
 
         return {
-            'weather_bands': self.bands,
+            'weather_bands': JCMTWeather.get_available(),
             'map_modes': self.itc.get_modes(),
             'default': {
                 'pix850': self.default_pix850,
@@ -414,10 +415,11 @@ class SCUBA2Calculator(JCMTCalculator):
 
             # Make weather band comparison table.
             weather_band_comparison = OrderedDict()
-            for (weather_band, weather_band_info) in self.bands.items():
+            for (weather_band, weather_band_info) in \
+                    JCMTWeather.get_available().items():
                 weather_band_result = {}
-                for (condition_name, condition_tau) in \
-                        weather_band_info._asdict().items():
+                for condition_name in ('rep', 'min', 'max'):
+                    condition_tau = getattr(weather_band_info, condition_name)
                     if condition_tau is None:
                         weather_band_result[condition_name] = None
                         continue
@@ -456,10 +458,11 @@ class SCUBA2Calculator(JCMTCalculator):
 
             # Make weather band comparison table.
             weather_band_comparison = OrderedDict()
-            for (weather_band, weather_band_info) in self.bands.items():
+            for (weather_band, weather_band_info) in \
+                    JCMTWeather.get_available().items():
                 weather_band_result = {}
-                for (condition_name, condition_tau) in \
-                        weather_band_info._asdict().items():
+                for condition_name in ('rep', 'min', 'max'):
+                    condition_tau = getattr(weather_band_info, condition_name)
                     if condition_tau is None:
                         weather_band_result[condition_name] = None
                         continue

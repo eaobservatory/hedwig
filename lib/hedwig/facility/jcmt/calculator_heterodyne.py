@@ -27,6 +27,7 @@ from ...error import CalculatorError, UserError
 from ...type import CalculatorMode, CalculatorResult, CalculatorValue
 from ...view.util import parse_time
 from .calculator_jcmt import JCMTCalculator
+from .type import JCMTWeather
 
 ReceiverInfoID = namedtuple('ReceiverInfoID', ReceiverInfo._fields + ('id', ))
 
@@ -457,7 +458,7 @@ class HeterodyneCalculator(JCMTCalculator):
         """
 
         return {
-            'weather_bands': self.bands,
+            'weather_bands': JCMTWeather.get_available(),
             'receivers': HeterodyneReceiver.get_all_receivers().values(),
             'map_modes': self.map_modes,
             'switch_modes': self.switch_modes,
@@ -658,10 +659,11 @@ class HeterodyneCalculator(JCMTCalculator):
 
         weather_band_comparison = OrderedDict()
         kwargs['with_extra_output'] = False
-        for (weather_band, weather_band_info) in self.bands.items():
+        for (weather_band, weather_band_info) in \
+                JCMTWeather.get_available().items():
             weather_band_result = {}
-            for (condition_name, condition_tau) in \
-                    weather_band_info._asdict().items():
+            for condition_name in ('rep', 'min', 'max'):
+                condition_tau = getattr(weather_band_info, condition_name)
                 if condition_tau is None:
                     weather_band_result[condition_name] = None
                     continue

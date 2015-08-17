@@ -31,8 +31,8 @@
                 </td>
                 <td>
                     <select name="weather_{{ request.id }}">
-                        {% for weather_id, weather_name in weathers.items() %}
-                            <option value="{{ weather_id }}" {{ 'selected="selected"' | safe if weather_id == request.weather }}>{{ weather_name }}</option>
+                        {% for weather_id, weather_info in weathers.items() %}
+                            <option value="{{ weather_id }}" {{ 'selected="selected"' | safe if weather_id == request.weather }}>{{ weather_info.name }}</option>
                         {% endfor %}
                     </select>
                 </td>
@@ -52,8 +52,8 @@
             </td>
             <td>
                 <select name="weather">
-                    {% for weather_id, weather_name in weathers.items() %}
-                        <option value="{{ weather_id }}">{{ weather_name }}</option>
+                    {% for weather_id, weather_info in weathers.items() %}
+                        <option value="{{ weather_id }}">{{ weather_info.name }}</option>
                     {% endfor %}
                 </select>
             </td>

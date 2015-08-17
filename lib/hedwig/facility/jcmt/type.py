@@ -161,14 +161,15 @@ class JCMTWeather(object):
     BAND4 = 4
     BAND5 = 5
 
-    WeatherInfo = namedtuple('WeatherInfo', ('name', 'available'))
+    WeatherInfo = namedtuple('WeatherInfo',
+                             ('name', 'available', 'rep', 'min', 'max'))
 
     _info = OrderedDict((
-        (BAND1, WeatherInfo('Band 1', True)),
-        (BAND2, WeatherInfo('Band 2', True)),
-        (BAND3, WeatherInfo('Band 3', True)),
-        (BAND4, WeatherInfo('Band 4', True)),
-        (BAND5, WeatherInfo('Band 5', True)),
+        (BAND1, WeatherInfo('Band 1', True, 0.045, None, 0.05)),
+        (BAND2, WeatherInfo('Band 2', True, 0.065, 0.05, 0.08)),
+        (BAND3, WeatherInfo('Band 3', True, 0.1,   0.08, 0.12)),
+        (BAND4, WeatherInfo('Band 4', True, 0.16,  0.12, 0.2)),
+        (BAND5, WeatherInfo('Band 5', True, 0.23,  0.2,  None)),
     ))
 
     @classmethod
@@ -180,11 +181,10 @@ class JCMTWeather(object):
         return cls._info[state].name
 
     @classmethod
-    def get_options(cls):
-        ans = OrderedDict()
+    def get_info(cls, type_):
+        return cls._info[type_]
 
-        for (k, v) in cls._info.items():
-            if v.available:
-                ans[k] = v.name
-
-        return ans
+    @classmethod
+    def get_available(cls):
+        return OrderedDict(((k, v) for (k, v) in cls._info.items()
+                            if v.available))

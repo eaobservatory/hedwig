@@ -55,7 +55,7 @@ class JCMTTypeTestCase(TestCase):
         self.assertFalse(JCMTInstrument.is_valid(999))
 
     def test_weather(self):
-        options = JCMTWeather.get_options()
+        options = JCMTWeather.get_available()
         self.assertIsInstance(options, OrderedDict)
 
         weathers = set()
@@ -77,7 +77,7 @@ class JCMTTypeTestCase(TestCase):
 
             # It should also be in the list of options.
             self.assertIn(weather, options)
-            self.assertIsInstance(options[weather], unicode)
+            self.assertIsInstance(options[weather].name, unicode)
 
         self.assertFalse(JCMTWeather.is_valid(0))
         self.assertFalse(JCMTWeather.is_valid(999))
@@ -114,7 +114,7 @@ class JCMTTypeTestCase(TestCase):
 
         self.assertIsInstance(t.columns, OrderedDict)
         self.assertEqual(list(t.columns.keys()),
-                         list(JCMTWeather.get_options().keys()))
+                         list(JCMTWeather.get_available().keys()))
 
         # Add data for more instruments.
         c[4] = JCMTRequest(4, 0, instrument=2, weather=2, time=200.0)

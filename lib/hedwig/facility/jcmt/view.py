@@ -224,7 +224,7 @@ class JCMT(Generic):
             'proposal_id': proposal.id,
             'requests': records.values(),
             'instruments': JCMTInstrument.get_options(),
-            'weathers': JCMTWeather.get_options(),
+            'weathers': JCMTWeather.get_available(),
             'options': self.options,
             'option_values': option_values,
             'proposal_code': self.make_proposal_code(db, proposal),

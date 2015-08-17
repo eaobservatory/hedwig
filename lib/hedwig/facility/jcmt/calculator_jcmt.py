@@ -20,20 +20,12 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple, OrderedDict
 
+from ...web.util import ErrorPage
 from ...view.calculator import BaseCalculator
-
-WeatherBand = namedtuple('WeatherBand', ('rep', 'min', 'max'))
+from .type import JCMTWeather
 
 
 class JCMTCalculator(BaseCalculator):
-    bands = OrderedDict((
-        (1, WeatherBand(0.045, None, 0.05)),
-        (2, WeatherBand(0.065, 0.05, 0.08)),
-        (3, WeatherBand(0.1,   0.08, 0.12)),
-        (4, WeatherBand(0.16,  0.12, 0.2)),
-        (5, WeatherBand(0.23,  0.2,  None)),
-    ))
-
     def get_tau_band(self, tau):
         """
         Finds the band number matching the given tau.
@@ -41,7 +33,7 @@ class JCMTCalculator(BaseCalculator):
         Returns None if a match within 0.0001 was not found.
         """
 
-        for (band_num, band_info) in self.bands.items():
+        for (band_num, band_info) in JCMTWeather.get_available().items():
             if abs(tau - band_info.rep) < 0.0001:
                 return band_num
 
@@ -62,7 +54,10 @@ class JCMTCalculator(BaseCalculator):
             return (form['tau_value'], None)
         else:
             tau_band = int(form['tau_band'])
-            return (self.bands[tau_band].rep, tau_band)
+            try:
+                return (JCMTWeather.get_info(tau_band).rep, tau_band)
+            except KeyError:
+                raise ErrorPage('Invalid weather band "{}".', tau_band)
 
     def _condense_merge_values(self, calculation, value_tuples):
         """

@@ -27,7 +27,7 @@
                     <select name="tau_band">
                         {% for (band_num, band_info) in weather_bands.items() %}
                             <option value="{{ band_num }}" {{ 'selected="selected"' | safe if band_num == input_values.tau_band }} data-representative="{{ band_info.rep }}">
-                                Band {{ band_num }}:
+                                {{ band_info.name }}:
                                 {% if band_info.min is not none %}
                                     {{ band_info.min }} &lt;
                                 {% endif %}
