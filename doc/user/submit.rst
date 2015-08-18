@@ -46,6 +46,10 @@ rather than appearing in the "To" header.
 
 After submitting your proposal you will still be able to edit it
 up until the closing date of the call for proposals.
+If you do make changes after submission, you do not have to resubmit
+your proposal. Instead any changes you make after submitting are
+automatically included. However, please note that other members of the
+proposal will not be automatically notified about these changes.
 If you wish to perform another validation while the
 proposal is in the "Submitted" state,
 use the "Validate proposal" link near the top of the proposal page.
