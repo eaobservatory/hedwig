@@ -219,6 +219,14 @@ class BaseCalculator(object):
 
             input_values = self.format_input(inputs, default_input)
 
+        # If we have a specific proposal ID, see if we know its code.
+        proposal_code = None
+        if (proposal_id is not None) and (proposals is not None):
+            for proposal in proposals:
+                if proposal.id == proposal_id:
+                    proposal_code = proposal.code
+                    break
+
         ctx = {
             'title': self.get_name(),
             'target': url_for('.calc_{}_{}'.format(self.get_code(),
@@ -233,6 +241,7 @@ class BaseCalculator(object):
             'output_extra': output.extra,
             'proposals': proposals,
             'proposal_id': proposal_id,
+            'proposal_code': proposal_code,
             'for_proposal_id': for_proposal_id,
             'calculation_id': calculation_id,
             'calculation_proposal': calculation_proposal,

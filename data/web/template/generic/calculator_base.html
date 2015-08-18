@@ -1,4 +1,9 @@
 {% extends 'layout.html' %}
+
+{% if show_proposal_link and (proposal_code is not none) %}
+    {% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
+{% endif %}
+
 {% if scripts is defined %}
     {% set scripts = ['hedwig_util', 'edit_calculation'] + scripts %}
 {% else %}
