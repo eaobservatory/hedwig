@@ -52,4 +52,11 @@ class BaseTargetTool(object):
 
         targets = db.search_target(proposal_id=proposal_id)
 
-        return self._view_proposal(db, proposal, targets, args)
+        ctx = self._view_proposal(db, proposal, targets, args)
+
+        ctx.update({
+            'proposal_id': proposal.id,
+            'proposal_code': self.facility.make_proposal_code(db, proposal),
+        })
+
+        return ctx

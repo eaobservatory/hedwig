@@ -113,7 +113,6 @@ class ClashTool(BaseTargetTool):
             'non_clashes': non_clashes,
             'target_url': url_for('.tool_clash'),
             'target_moc_info': '.tool_clash_moc_info',
-            'target_proposal': None,
             'target_upload': url_for('.tool_upload_clash'),
         }
 
@@ -163,7 +162,6 @@ class ClashTool(BaseTargetTool):
             'non_clashes': non_clashes,
             'target_url': url_for('.tool_upload_clash'),
             'target_moc_info': '.tool_clash_moc_info',
-            'target_proposal': None,
         }
 
     def _view_proposal(self, db, proposal, targets, args):
@@ -187,9 +185,6 @@ class ClashTool(BaseTargetTool):
             'clashes': clashes,
             'non_clashes': non_clashes,
             'target_moc_info': '.tool_clash_moc_info',
-            'target_proposal': url_for('.proposal_view',
-                                       proposal_id=proposal.id,
-                                       _anchor='targets'),
         }
 
     def _check_mocs_exist(self, db):

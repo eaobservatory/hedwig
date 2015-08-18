@@ -1,5 +1,7 @@
 {% extends 'layout.html' %}
-
+{% if proposal_id is defined %}
+    {% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
+{% endif %}
 {% from 'macro/target.html' import render_target_list_info %}
 
 {% if scripts is defined %}
@@ -10,10 +12,10 @@
 
 {% block content %}
 
-{% if target_proposal is not none %}
+{% if proposal_id is defined %}
     <nav>
         <p>
-            <a href="{{ target_proposal }}">Back to proposal</a>
+            <a href="{{ url_for('.proposal_view', proposal_id=proposal_id, _anchor='targets') }}">Back to proposal</a>
         </p>
     </nav>
 {% endif %}
