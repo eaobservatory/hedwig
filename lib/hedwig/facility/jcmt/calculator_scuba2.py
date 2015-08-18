@@ -40,8 +40,8 @@ class SCUBA2Calculator(JCMTCalculator):
         (CALC_RMS,  CalculatorMode('rms',  'RMS expected in given time')),
     ))
 
-    default_pix850 = 8.0
-    default_pix450 = 4.0
+    default_pix850 = 4.0
+    default_pix450 = 2.0
 
     version = 1
 
