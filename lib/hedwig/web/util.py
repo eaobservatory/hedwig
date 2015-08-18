@@ -64,13 +64,15 @@ class HTTPRedirect(_werkzeug_routing.RequestRedirect):
 class ErrorPage(Exception):
     """Exception class where an error page should be shown."""
 
-    def __init__(self, fmt_string, *fmt_args):
+    def __init__(self, fmt_string, *fmt_args, **kwargs):
         """
         Construct exception, applying string formatting to the
         message similarly to the FormattedError class.
         """
 
         Exception.__init__(self, fmt_string.format(*fmt_args))
+
+        self.links = kwargs.get('links', None)
 
 
 def flash(message, *args):
@@ -296,8 +298,11 @@ def templated(template):
 def _error_page_response(err):
     """Prepare flask response for an error page."""
 
-    return _make_response('error.html',
-                          {'title': 'Error', 'message': err.message})
+    return _make_response('error.html', {
+        'title': 'Error',
+        'message': err.message,
+        'links': err.links,
+    })
 
 
 def _make_response(template, result):

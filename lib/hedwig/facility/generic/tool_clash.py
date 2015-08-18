@@ -29,7 +29,7 @@ from ...astro.catalog import parse_source_list
 from ...error import NoSuchRecord, UserError
 from ...view.tool import BaseTargetTool
 from ...web.util import ErrorPage, HTTPNotFound, session, url_for
-from ...type import FileTypeInfo, TargetObject
+from ...type import FileTypeInfo, Link, TargetObject
 
 TargetCoord = namedtuple('TargetCoord', ('x', 'y', 'system'))
 
@@ -170,8 +170,12 @@ class ClashTool(BaseTargetTool):
         target_objects = targets.to_object_list()
 
         if not target_objects:
-            raise ErrorPage('The proposal does not appear to have '
-                            'any targets with coordinates.')
+            raise ErrorPage(
+                'The proposal does not appear to have any targets '
+                'with coordinates.',
+                links=[Link('Back to proposal', url_for(
+                    '.proposal_view', proposal_id=proposal.id,
+                    _anchor='targets'))])
 
         self._check_mocs_exist(db)
 

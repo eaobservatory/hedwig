@@ -6,4 +6,17 @@
 {{ message }}
 </p>
 
+{% if links %}
+    <nav>
+        <p>
+            {% for link in links %}
+                <a href="{{ link.url }}">{{ link.text }}</a>
+                {% if not loop.last %}
+                    <br />
+                {% endif %}
+            {% endfor %}
+        </p>
+    </nav>
+{% endif %}
+
 {% endblock %}
