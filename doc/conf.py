@@ -54,7 +54,6 @@ copyright = u'2015, East Asian Observatory'
 #
 # The short X.Y version.
 from hedwig.version import version
-version = '0.0.0'
 # The full version, including alpha/beta/rc tags.
 release = version
 
