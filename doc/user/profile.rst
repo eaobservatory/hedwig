@@ -56,7 +56,9 @@ You can also choose whether to make your email address public.
 When your address is public, it is visible in the following places:
 
 * On your profile page.  (Note that profile pages are only visible
-  to people who are logged in.)
+  to people who are logged in.  Email addresses on profile pages
+  are also obfuscated to make it harder for automated systems to
+  collect them, e.g. for sending junk email.)
 
 * As a recipient in email messages sent to multiple people.
   (If the address is not public you will receive the
