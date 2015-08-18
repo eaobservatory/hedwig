@@ -174,7 +174,8 @@ class DBCalculatorTest(DBTestCase):
         call_id = self.db.add_call(
             semester_id, queue_id,
             datetime(1999, 4, 1), datetime(1999, 4, 2),
-            100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', FormatType.PLAIN)
+            100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', '',
+            FormatType.PLAIN)
         affiliation_id = self.db.add_affiliation(queue_id, 'a')
         person_id = self.db.add_person('per')
         proposal_id = self.db.add_proposal(

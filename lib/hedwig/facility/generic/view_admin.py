@@ -270,7 +270,7 @@ class GenericAdmin(object):
                         tech_word_lim=1000, tech_fig_lim=0, tech_page_lim=1,
                         sci_word_lim=2000, sci_fig_lim=4, sci_page_lim=3,
                         capt_word_lim=200, expl_word_lim=200,
-                        tech_note='', sci_note='',
+                        tech_note='', sci_note='', prev_prop_note='',
                         note_format=FormatType.PLAIN)
             semesters = db.search_semester(facility_id=self.id_)
             queues = db.search_queue(facility_id=self.id_)
@@ -307,6 +307,7 @@ class GenericAdmin(object):
                     expl_word_lim=int(form['expl_word_lim']),
                     tech_note=form['tech_note'],
                     sci_note=form['sci_note'],
+                    prev_prop_note=form['prev_prop_note'],
                     note_format=int(form['note_format']))
 
                 if call_id is None:
@@ -330,6 +331,7 @@ class GenericAdmin(object):
                                               expl_word_lim=call.expl_word_lim,
                                               tech_note=call.tech_note,
                                               sci_note=call.sci_note,
+                                              prev_prop_note=call.prev_prop_note,
                                               note_format=call.note_format)
                     flash('The new call has been added.')
                     raise HTTPRedirect(url_for('.call_view',
@@ -350,6 +352,7 @@ class GenericAdmin(object):
                                    expl_word_lim=call.expl_word_lim,
                                    tech_note=call.tech_note,
                                    sci_note=call.sci_note,
+                                   prev_prop_note=call.prev_prop_note,
                                    note_format=call.note_format)
                     flash('The call has been updated.')
                     raise HTTPRedirect(url_for('.call_view', call_id=call_id))

@@ -59,6 +59,10 @@
         <th>Explanations</th>
         <td>{{ call.expl_word_lim }} word{% if call.expl_word_lim != 1 %}s{% endif %}</td>
     </tr>
+    <tr>
+        <th>Previous proposals</th>
+        <td>{{ call.prev_prop_note | format_text(call.note_format) }}</td>
+    </tr>
 </table>
 
 <p>

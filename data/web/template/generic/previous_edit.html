@@ -5,10 +5,15 @@
 
 {% block content %}
 
+{% if note %}
+    <section>
+        <h2>Note</h2>
+
+        {{ note | format_text(note_format) }}
+    </section>
+{% endif %}
+
 <ul>
-    <li>
-        Please use this page to list your previously accepted proposals.
-    </li>
     <li>
         You can use the &ldquo;continuation&rdquo; check-box to indicate
         proposals where your current proposal is a continuation of the

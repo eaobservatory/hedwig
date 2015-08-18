@@ -109,6 +109,7 @@ call = Table(
     Column('expl_word_lim', Integer, nullable=False),
     Column('tech_note', UnicodeText, nullable=False),
     Column('sci_note', UnicodeText, nullable=False),
+    Column('prev_prop_note', UnicodeText, nullable=False),
     Column('note_format', Integer, nullable=False),
     UniqueConstraint('semester_id', 'queue_id'),
     **_table_opts)

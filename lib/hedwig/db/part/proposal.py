@@ -67,7 +67,7 @@ class ProposalPart(object):
                  tech_word_lim, tech_fig_lim, tech_page_lim,
                  sci_word_lim, sci_fig_lim, sci_page_lim,
                  capt_word_lim, expl_word_lim,
-                 tech_note, sci_note, note_format,
+                 tech_note, sci_note, prev_prop_note, note_format,
                  _test_skip_check=False):
         """
         Add a call for proposals to the database.
@@ -112,6 +112,7 @@ class ProposalPart(object):
                 call.c.expl_word_lim: expl_word_lim,
                 call.c.tech_note: tech_note,
                 call.c.sci_note: sci_note,
+                call.c.prev_prop_note: prev_prop_note,
                 call.c.note_format: note_format,
             }))
 
@@ -703,9 +704,11 @@ class ProposalPart(object):
             fields = [call]
         else:
             fields = [x for x in call.columns
-                      if x.name not in ('tech_note', 'sci_note')]
+                      if x.name not in
+                      ('tech_note', 'sci_note', 'prev_prop_note')]
             default['tech_note'] = None
             default['sci_note'] = None
+            default['prev_prop_note'] = None
 
         fields.extend([
             semester.c.facility_id,
@@ -1709,7 +1712,8 @@ class ProposalPart(object):
                     tech_word_lim=None, tech_fig_lim=None, tech_page_lim=None,
                     sci_word_lim=None, sci_fig_lim=None, sci_page_lim=None,
                     capt_word_lim=None, expl_word_lim=None,
-                    tech_note=None, sci_note=None, note_format=None,
+                    tech_note=None, sci_note=None, prev_prop_note=None,
+                    note_format=None,
                     _test_skip_check=False):
         """
         Update a call for proposals record.
@@ -1747,6 +1751,8 @@ class ProposalPart(object):
             values['tech_note'] = tech_note
         if sci_note is not None:
             values['sci_note'] = sci_note
+        if prev_prop_note is not None:
+            values['prev_prop_note'] = prev_prop_note
         if note_format is not None:
             if not FormatType.is_valid(note_format, is_system=True):
                 raise UserError('Text format not recognised.')

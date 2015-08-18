@@ -940,6 +940,8 @@ class GenericProposal(object):
             except UserError as e:
                 message = e.message
 
+        call = db.get_call(facility_id=None, call_id=proposal.call_id)
+
         accepted_proposals = db.search_proposal(
             facility_id=self.id_, person_id=session['person']['id'],
             state=ProposalState.ACCEPTED)
@@ -956,6 +958,8 @@ class GenericProposal(object):
             'accepted_proposals': accepted_proposal_codes,
             'prev_proposals': records.values(),
             'publication_types': PublicationType.get_options(),
+            'note': call.prev_prop_note,
+            'note_format': call.note_format,
         }
 
     @with_proposal(permission='edit')
