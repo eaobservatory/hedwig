@@ -178,7 +178,10 @@ class BaseCalculator(object):
 
         else:
             if 'proposal_id' in args:
-                proposal_id = args['proposal_id']
+                try:
+                    proposal_id = int(args['proposal_id'])
+                except ValueError:
+                    raise HTTPError('Non-integer proposal_id query argument')
                 for_proposal_id = proposal_id
 
             if 'calculation_id' in args:
