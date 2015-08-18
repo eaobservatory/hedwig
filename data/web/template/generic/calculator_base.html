@@ -97,7 +97,7 @@
                     <label for="proposal_id">Proposal</label>
                     <select name="proposal_id">
                         {% for proposal in proposals %}
-                            <option value="{{ proposal.id }}" {{ 'selected="selected"' | safe if proposal.id == proposal_id }}>{{ proposal.code }}: {{ proposal.title }}</option>
+                            <option value="{{ proposal.id }}" {{ 'selected="selected"' | safe if proposal.id == proposal_id }}>{{ proposal.code }}: {{ proposal.title | truncate(45, killwords=True, end='\u2026') }}</option>
                         {% endfor %}
                     </select>
                 </li>
