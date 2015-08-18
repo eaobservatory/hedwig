@@ -67,10 +67,10 @@ class HeterodyneCalculator(JCMTCalculator):
     # mode is selected when a non-array receiver is chosen, it should change
     # to the preceeding mode.
     acsis_modes = OrderedDict((
-        (1, ACSISMode('250 MHz',            0.0305, False)),
-        (2, ACSISMode('400/420/440 MHz',    0.061,  True)),
-        (3, ACSISMode('1000 MHz',           0.488,  False)),
-        (4, ACSISMode('1600/1800/1860 MHz', 0.977,  True)),
+        (1, ACSISMode('250 MHz',  0.0305, False)),
+        (2, ACSISMode('400 MHz',  0.061,  True)),
+        (3, ACSISMode('1000 MHz', 0.488,  False)),
+        (4, ACSISMode('1600 MHz', 0.977,  True)),
     ))
 
     version = 1
