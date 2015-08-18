@@ -47,3 +47,26 @@ invitation you received:
 * If the system can not determine which proposal to show you,
   you will be redirected to your proposal list.
   This will list all the proposals of which you are a member.
+
+Removing Yourself from a Proposal
+---------------------------------
+
+If you find that you have been added as a member of a proposal
+with which you do not wish to be involved,
+you can remove yourself as follows:
+
+1. Accept the invitation normally as described above.
+
+2. Go to the proposal view page.  Normally you will be redirected
+   to this page on accepting an invitation --- otherwise you can
+   find it from the "Your proposals" page.
+
+3. You can then read the proposal to ensure you do not wish to
+   remain part of it.
+
+4. Scroll down to the "Members" section and click the link
+   "Remove yourself from this proposal".
+
+5. On the next page you will be asked to confirm your removal from
+   the proposal.  Once you click "Confirm" you will be
+   removed from the proposal and taken back to the main home page.

@@ -63,6 +63,9 @@ accidentally being left in a state where no-one can edit it.
 
 If you would like to remove yourself from a proposal, you can do so
 using the "Remove yourself from this proposal" on the proposal's main page.
+Please see
+`the section on invitations <invitation#removing-yourself-from-a-proposal>`_
+for more information.
 
 .. image:: image/member_edit_small.png
     :target: image/member_edit_large.png
