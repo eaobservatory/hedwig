@@ -597,10 +597,10 @@ class IntegrationTest(DummyConfigTestCase):
 
         Select(
             self.browser.find_element_by_name('weather_new_1')
-        ).select_by_visible_text('Band 1')
+        ).select_by_value('1')
         Select(
             self.browser.find_element_by_name('weather_new_2')
-        ).select_by_visible_text('Band 5')
+        ).select_by_value('5')
 
         self.browser.find_element_by_name('time_new_1').send_keys(4)
 
