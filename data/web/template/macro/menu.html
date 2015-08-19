@@ -34,9 +34,6 @@
     {% if facility_name is defined %}
         <li><a href="{{ url_for('.facility_home') }}">{{ facility_name }}</a></li>
     {% endif %}
-    {% if show_person_proposals_callout %}
-        <li>{{ proposal_code }}</li>
-    {% endif %}
     {% if navigation is defined %}
         {% for navitem in navigation %}
             {% if navitem == 'facility_admin' %}
@@ -47,7 +44,11 @@
                 <li><a href="{{ url_for('.help_index') }}">Help contents</a></li>
             {% elif navitem is not string %}
                 {% with name=navitem[0], url=navitem[1] %}
-                    <li><a href="{{ url }}">{{ name }}</a></li>
+                    {% if url is none %}
+                        <li>{{ name }}</li>
+                    {% else %}
+                        <li><a href="{{ url }}">{{ name }}</a></li>
+                    {% endif %}
                 {% endwith %}
             {% endif %}
         {% endfor %}
