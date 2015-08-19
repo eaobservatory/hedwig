@@ -28,7 +28,6 @@ expected in each part.  You may wish to include:
   figures when PDF files are uploaded.
 
 .. image:: image/call_new_small.png
-    :target: image/call_new_large.png
 
 The "Calls" page will then show a table of calls,
 indicating the status of each and giving links to
@@ -40,10 +39,8 @@ The "View proposals" link takes you directly to the list
 of proposals for the call.
 
 .. image:: image/call_list_small.png
-    :target: image/call_list_large.png
 
 You can use the proposals page to navigate to any proposal
 which is has been created for this call.
 
 .. image:: image/call_proposals_small.png
-    :target: image/call_proposals_large.png

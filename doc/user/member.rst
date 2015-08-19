@@ -47,7 +47,6 @@ people editing the same part of the proposal at the same time to
 overwrite each other's changes.
 
 .. image:: image/member_add_small.png
-    :target: image/member_add_large.png
 
 Editing the List of Members
 ---------------------------
@@ -68,7 +67,6 @@ Please see
 for more information.
 
 .. image:: image/member_edit_small.png
-    :target: image/member_edit_large.png
 
 Students
 --------
@@ -79,4 +77,3 @@ you can use the "Edit student list" link on the proposal page to
 open the student list editor.
 
 .. image:: image/member_student_small.png
-    :target: image/member_student_large.png

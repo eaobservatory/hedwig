@@ -6,7 +6,6 @@ administrative privileges, you will see a link labeled
 "take admin" next to the "log out" link.
 
 .. image:: image/facility_home_small.png
-    :target: image/facility_home_large.png
 
 Clicking this link will temporarily grant you administrative
 privileges.  Note that the link changes to "drop admin" ---
@@ -19,10 +18,8 @@ extra links, such as the "Administrative menu" link on a
 facility home page.
 
 .. image:: image/facility_home_admin_small.png
-    :target: image/facility_home_admin_large.png
 
 This menu gives access to a number of pages which will allow
 you to manage calls for proposals for the facility.
 
 .. image:: image/facility_admin_menu_small.png
-    :target: image/facility_admin_menu_large.png

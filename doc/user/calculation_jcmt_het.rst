@@ -138,4 +138,3 @@ The calculator will attempt to adjust your inputs to
 do the same calculation in the new mode.
 
 .. image:: image/calc_jcmt_het_input_small.png
-    :target: image/calc_jcmt_het_input_large.png

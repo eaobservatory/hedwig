@@ -15,4 +15,3 @@ to enter your user name and password before
 being taken to the list.
 
 .. image:: image/proposal_list_small.png
-    :target: image/proposal_list_large.png

@@ -22,7 +22,6 @@ for example if the targets are unknown for a target of opportunity
 project.
 
 .. image:: image/submit_error_small.png
-    :target: image/submit_error_large.png
 
 If there are no errors, you will be able to submit your proposal.
 
@@ -44,7 +43,6 @@ then they will receive the email by BCC
 rather than appearing in the "To" header.
 
 .. image:: image/submit_ok_small.png
-    :target: image/submit_ok_large.png
 
 After submitting your proposal you will still be able to edit it
 up until the closing date of the call for proposals.
@@ -53,7 +51,6 @@ proposal is in the "Submitted" state,
 use the "Validate proposal" link near the top of the proposal page.
 
 .. image:: image/validate_small.png
-    :target: image/validate_large.png
 
 Finally, should you wish to withdraw a submitted proposal,
 use the "Withdraw proposal" link near the top of the proposal page.
@@ -68,4 +65,3 @@ When you withdraw a proposal, an email will be sent to all
 members of the proposal to inform them of the change.
 
 .. image:: image/withdraw_small.png
-    :target: image/withdraw_large.png

@@ -26,4 +26,3 @@ There may be a delay while this happens, during which you may
 continue working on your proposal as normal.
 
 .. image:: image/prev_proposal_small.png
-    :target: image/prev_proposal_large.png

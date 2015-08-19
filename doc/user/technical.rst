@@ -21,7 +21,6 @@ apply to text written online and uploaded PDF files
 respectively.
 
 .. image:: image/tech_case_edit_small.png
-    :target: image/tech_case_edit_large.png
 
 If you choose to upload a PDF file, simply select the
 file and press the "Upload button".
@@ -36,7 +35,6 @@ will appear on your main proposal page,
 allowing you and the other proposal members to view it.
 
 .. image:: image/tech_case_pdf_small.png
-    :target: image/tech_case_pdf_large.png
 
 When a PDF file has been uploaded,
 you will see that the section regarding editing text
@@ -44,7 +42,6 @@ online is greyed out to indicate that the other
 option has been used.
 
 .. image:: image/tech_case_pdf_uploaded_small.png
-    :target: image/tech_case_pdf_uploaded_large.png
 
 Alternatively if you choose to edit the text online,
 you will see a page with a large text box.
@@ -75,4 +72,3 @@ these will be shown at the bottom of the page
 in case you wish to refer to them.
 
 .. image:: image/tech_case_text_small.png
-    :target: image/tech_case_text_large.png

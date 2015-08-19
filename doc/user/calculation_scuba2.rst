@@ -63,4 +63,3 @@ The calculator will attempt to adjust your inputs to
 do the same calculation in the new mode.
 
 .. image:: image/calc_scuba2_input_small.png
-    :target: image/calc_scuba2_input_large.png

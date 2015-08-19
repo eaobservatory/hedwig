@@ -25,7 +25,6 @@ the committee may be able to use the target priority information
 to award sufficient time for a subset of your proposed project.
 
 .. image:: image/target_edit_small.png
-    :target: image/target_edit_large.png
 
 Uploading a list of Targets
 ---------------------------
@@ -42,7 +41,6 @@ whether you want to replace any existing targets
 (overwrite un-checked).
 
 .. image:: image/target_upload_small.png
-    :target: image/target_upload_large.png
 
 Clash Tool
 ----------
@@ -61,7 +59,6 @@ In the case of a match, your can click on the name of the area
 to see a description of it.
 
 .. image:: image/target_clash_small.png
-    :target: image/target_clash_large.png
 
 There is an area on your proposal where you can enter notes on the
 results of the Clash Tool.
@@ -82,4 +79,3 @@ you can use this space to explain why you still need to observe
 the corresponding targets.
 
 .. image:: image/target_note_small.png
-    :target: image/target_note_large.png

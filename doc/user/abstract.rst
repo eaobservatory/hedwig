@@ -5,7 +5,6 @@ You can edit the title of your proposal using the
 "Edit title" link at the top of the proposal main page.
 
 .. image:: image/title_edit_small.png
-    :target: image/title_edit_large.png
 
 You can also edit the abstract,
 using the "Edit abstract and categories" link in the
@@ -28,4 +27,3 @@ please ignore the estimated count and remove a few words from
 your abstract.
 
 .. image:: image/abstract_edit_small.png
-    :target: image/abstract_edit_large.png

@@ -30,4 +30,3 @@ Example types of MOC files are:
   planned (e.g. the specific molecular transition).
 
 .. image:: image/moc_small.png
-    :target: image/moc_large.png

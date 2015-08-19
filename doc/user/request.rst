@@ -27,4 +27,3 @@ Finally select any special requirements of your
 proposal, such as daytime observing.
 
 .. image:: image/request_edit_small.png
-    :target: image/request_edit_large.png

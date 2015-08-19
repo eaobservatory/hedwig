@@ -21,4 +21,3 @@ so you should be able to use this to save a copy of the proposal
 from your web browser.
 
 .. image:: image/proposal_complete_small.png
-    :target: image/proposal_complete_large.png

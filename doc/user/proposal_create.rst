@@ -9,7 +9,6 @@ At the top of the facility home page you will find a list
 of all the semesters for which there are open calls for proposals.
 
 .. image:: image/facility_home_small.png
-    :target: image/facility_home_large.png
 
 Clicking on the semester in the list will take you to a page
 showing information about the call for proposals for that
@@ -37,7 +36,6 @@ For each queue there is a link which you can use to start a new
 proposal for that queue.
 
 .. image:: image/call_view_small.png
-    :target: image/call_view_large.png
 
 Once you have selected a queue, you will see the "New Proposal" page.
 Please check that the fixed information presented on the page is correct
@@ -58,7 +56,6 @@ in the system if you wish to return to it later.
 When you're ready, press the "Create new proposal" button.
 
 .. image:: image/proposal_new_small.png
-    :target: image/proposal_new_large.png
 
 On the next page you will see your new, blank, proposal
 ready for you to start working on.
@@ -108,4 +105,3 @@ You can also use your browser's back button to navigate
 back to the proposal page.
 
 .. image:: image/proposal_view_small.png
-    :target: image/proposal_view_large.png

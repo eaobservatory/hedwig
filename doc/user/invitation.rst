@@ -17,7 +17,6 @@ Copy and paste the code into the box and
 press the "Enter code" button.
 
 .. image:: image/invitation_enter_small.png
-    :target: image/invitation_enter_large.png
 
 Next, if you are not already logged in, you will be prompted
 to log in or register for an account.
@@ -34,7 +33,6 @@ able to edit your profile after accepting the invitation.
 Press the "Accept invitation" button to continue.
 
 .. image:: image/invitation_accept_small.png
-    :target: image/invitation_accept_large.png
 
 The next page you see will depend on the details of the
 invitation you received:

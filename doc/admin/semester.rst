@@ -44,4 +44,3 @@ later in the process, so for now you need not include:
 * Notes on what is expected in the technical and scientific justification.
 
 .. image:: image/semester_new_small.png
-    :target: image/semester_new_large.png

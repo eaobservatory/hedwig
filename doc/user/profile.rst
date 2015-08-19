@@ -16,13 +16,11 @@ with your account.
   email addresses and institution.
 
 .. image:: image/profile_edit_links_small.png
-    :target: image/profile_edit_links_large.png
 
 **"Change password"** will take you to a page where you can confirm
 your existing password and choose a new one.
 
 .. image:: image/password_change_small.png
-    :target: image/password_change_large.png
 
 **"Change user name"** links to a page where you can alter the name
 you use to log in.
@@ -31,7 +29,6 @@ you want it shown on proposals.)
 You will need to enter your current password for confirmation.
 
 .. image:: image/user_name_change_small.png
-    :target: image/user_name_change_large.png
 
 **"Edit profile"** allows you to alter your name as it is shown
 on proposals.
@@ -39,7 +36,6 @@ You can also choose whether to have your name appear in the
 user directory.
 
 .. image:: image/profile_edit_small.png
-    :target: image/profile_edit_large.png
 
 **"Edit email addresses"** takes you to a page with a table
 of all your email addresses known to the system.
@@ -65,7 +61,6 @@ When your address is public, it is visible in the following places:
   email by BCC instead.)
 
 .. image:: image/email_edit_small.png
-    :target: image/email_edit_large.png
 
 **"Change institution"** should be used when you have moved
 to a different institution.
@@ -76,7 +71,6 @@ Please check the list first to avoid creating
 multiple records for the same institution.
 
 .. image:: image/institution_change_small.png
-    :target: image/institution_change_large.png
 
 Editing Institutions
 --------------------
@@ -102,7 +96,6 @@ Here you will see a list of the members of the institution.
 Click the "Edit this institution" link to proceed.
 
 .. image:: image/institution_view_small.png
-    :target: image/institution_view_large.png
 
 Please read the information on the confirmation page,
 after which you will see the
@@ -120,4 +113,3 @@ when it is often used alone.
 The department and parent organization are optional.
 
 .. image:: image/institution_edit_small.png
-    :target: image/institution_edit_large.png
