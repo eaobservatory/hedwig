@@ -472,6 +472,7 @@ class HeterodyneCalculator(JCMTCalculator):
                 'elapsed': 'Requirement',
                 'int_time': 'Requirement',
             },
+            'int_time_minimum': self.itc.int_time_minimum,
         }
 
     def parse_input(self, mode, input_, defaults=None):

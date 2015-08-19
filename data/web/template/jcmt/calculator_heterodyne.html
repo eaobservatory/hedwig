@@ -207,6 +207,8 @@
                 {% endif %}
                 {% if value.code == 'elapsed' %}
                     <span class="explanation">decimal hours or hours:minutes:seconds</span>
+                {% elif value.code == 'int_time' %}
+                    <span class="explanation">minimum {{ int_time_minimum | fmt('{:.3f}') }} {{ value.unit }}</span>
                 {% elif value.code == 'freq' %}
                     <span class="explanation"><span id="freq_min"></span> &mdash; <span id="freq_max"></span> {{ value.unit }}</span>
                 {% elif value.code == 'n_pt' %}
