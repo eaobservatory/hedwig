@@ -46,7 +46,7 @@ guard against concurrent edits and it would be possible for two
 people editing the same part of the proposal at the same time to
 overwrite each other's changes.
 
-.. image:: image/member_add_small.png
+.. image:: image/member_add.png
 
 Editing the List of Members
 ---------------------------
@@ -66,7 +66,7 @@ Please see
 `the section on invitations <invitation#removing-yourself-from-a-proposal>`_
 for more information.
 
-.. image:: image/member_edit_small.png
+.. image:: image/member_edit.png
 
 Students
 --------
@@ -76,4 +76,4 @@ to use the data from the proposal for their thesis,
 you can use the "Edit student list" link on the proposal page to
 open the student list editor.
 
-.. image:: image/member_student_small.png
+.. image:: image/member_student.png

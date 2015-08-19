@@ -19,7 +19,7 @@ As for semesters, the queue can have a "name" (for display) and a "code"
 The description can be used to describe the queue and explain who
 is eligible to submit a proposal to it.
 
-.. image:: image/queue_new_small.png
+.. image:: image/queue_new.png
 
 Once you have created a queue, you will see its information page.
 At first a queue has no affiliations.
@@ -27,7 +27,7 @@ At first a queue has no affiliations.
 You should proceed by clicking the
 "Edit affiliations" list in order to set up the list of affiliations.
 
-.. image:: image/queue_view_small.png
+.. image:: image/queue_view.png
 
 The affiliations page shows a table where you can add as many rows
 as you like using the "Add affiliation" button.
@@ -56,4 +56,4 @@ In practice this means:
   with the wrong affiliation listed.  You should add a new affiliation
   and hide the old one instead.
 
-.. image:: image/queue_affiliation_small.png
+.. image:: image/queue_affiliation.png

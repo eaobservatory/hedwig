@@ -29,4 +29,4 @@ Example types of MOC files are:
   archive for the particular type of observation being
   planned (e.g. the specific molecular transition).
 
-.. image:: image/moc_small.png
+.. image:: image/moc.png

@@ -1276,7 +1276,7 @@ class IntegrationTest(DummyConfigTestCase):
                 'document.getElementById("' + highlight_element +
                 '").classList.add("highlight_for_doc");')
 
-        path_small = os.path.join(path, name + '_small.png')
+        path_small = os.path.join(path, name + '.png')
         path_large = os.path.join(path, name + '_large.png')
 
         self.browser.save_screenshot(path_large)

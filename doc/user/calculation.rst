@@ -37,7 +37,7 @@ and press the "Save and return to proposal" button.
 Alternatively if you would like to keep using the calculator
 to add more calculations to your proposal, press the plain "Save" button.
 
-.. image:: image/calc_scuba2_small.png
+.. image:: image/calc_scuba2.png
 
 A compact version of each calculation which you have saved will
 be shown on your proposal.
@@ -56,7 +56,7 @@ want to appear on your proposal.
 Any deletions which you make will not take effect until
 you use the "Save" button below the table.
 
-.. image:: image/calc_manage_small.png
+.. image:: image/calc_manage.png
 
 .. toctree::
     :maxdepth: 2

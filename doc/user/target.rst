@@ -24,7 +24,7 @@ proposal to be accepted in its entirety,
 the committee may be able to use the target priority information
 to award sufficient time for a subset of your proposed project.
 
-.. image:: image/target_edit_small.png
+.. image:: image/target_edit.png
 
 Uploading a list of Targets
 ---------------------------
@@ -40,7 +40,7 @@ whether you want to replace any existing targets
 (overwrite checked) or add targets to your existing list
 (overwrite un-checked).
 
-.. image:: image/target_upload_small.png
+.. image:: image/target_upload.png
 
 Clash Tool
 ----------
@@ -58,7 +58,7 @@ and "Non-matches" (your target objects for which no search results were found).
 In the case of a match, your can click on the name of the area
 to see a description of it.
 
-.. image:: image/target_clash_small.png
+.. image:: image/target_clash.png
 
 There is an area on your proposal where you can enter notes on the
 results of the Clash Tool.
@@ -78,4 +78,4 @@ This note is particularly important when clashes are found ---
 you can use this space to explain why you still need to observe
 the corresponding targets.
 
-.. image:: image/target_note_small.png
+.. image:: image/target_note.png

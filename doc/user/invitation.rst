@@ -16,7 +16,7 @@ or by clicking the "Enter an invitation code" link on the home page.
 Copy and paste the code into the box and
 press the "Enter code" button.
 
-.. image:: image/invitation_enter_small.png
+.. image:: image/invitation_enter.png
 
 Next, if you are not already logged in, you will be prompted
 to log in or register for an account.
@@ -32,7 +32,7 @@ Don't worry if the details aren't quite right --- you will be
 able to edit your profile after accepting the invitation.
 Press the "Accept invitation" button to continue.
 
-.. image:: image/invitation_accept_small.png
+.. image:: image/invitation_accept.png
 
 The next page you see will depend on the details of the
 invitation you received:

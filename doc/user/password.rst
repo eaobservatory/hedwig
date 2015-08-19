@@ -5,7 +5,7 @@ If you forget your user name or password,
 please use the "reset your password"
 link on the "Log in" page.
 
-.. image:: image/pass_reset_link_small.png
+.. image:: image/pass_reset_link.png
 
 On the next page,
 enter your user name, email address or both.
@@ -20,7 +20,7 @@ recover your account.
 This is preferable to making a new account as it will ensure
 you have access to all of your proposal from a single account.
 
-.. image:: image/pass_reset_get_small.png
+.. image:: image/pass_reset_get.png
 
 Once you receive the reset code,
 you can enter it and select a new password.
@@ -28,4 +28,4 @@ After doing this, you will be taken back to the
 "Log in" page where your user name will have
 been filled in for you in case it also was forgotten.
 
-.. image:: image/pass_reset_use_small.png
+.. image:: image/pass_reset_use.png

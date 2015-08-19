@@ -25,4 +25,4 @@ after you save the list.
 There may be a delay while this happens, during which you may
 continue working on your proposal as normal.
 
-.. image:: image/prev_proposal_small.png
+.. image:: image/prev_proposal.png

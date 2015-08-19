@@ -27,7 +27,7 @@ expected in each part.  You may wish to include:
 * Additional constraints, such as the number of pages of text and
   figures when PDF files are uploaded.
 
-.. image:: image/call_new_small.png
+.. image:: image/call_new.png
 
 The "Calls" page will then show a table of calls,
 indicating the status of each and giving links to
@@ -38,9 +38,9 @@ From here you can edit the call or go to the list of proposals.
 The "View proposals" link takes you directly to the list
 of proposals for the call.
 
-.. image:: image/call_list_small.png
+.. image:: image/call_list.png
 
 You can use the proposals page to navigate to any proposal
 which is has been created for this call.
 
-.. image:: image/call_proposals_small.png
+.. image:: image/call_proposals.png

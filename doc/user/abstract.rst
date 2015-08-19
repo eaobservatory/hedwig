@@ -4,7 +4,7 @@ The Title and Abstract
 You can edit the title of your proposal using the
 "Edit title" link at the top of the proposal main page.
 
-.. image:: image/title_edit_small.png
+.. image:: image/title_edit.png
 
 You can also edit the abstract,
 using the "Edit abstract and categories" link in the
@@ -26,4 +26,4 @@ but on saving the abstract you see an error "Abstract is too long",
 please ignore the estimated count and remove a few words from
 your abstract.
 
-.. image:: image/abstract_edit_small.png
+.. image:: image/abstract_edit.png

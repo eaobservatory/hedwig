@@ -43,4 +43,4 @@ later in the process, so for now you need not include:
 * Details of available queues and eligibility for them.
 * Notes on what is expected in the technical and scientific justification.
 
-.. image:: image/semester_new_small.png
+.. image:: image/semester_new.png

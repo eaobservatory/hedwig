@@ -26,4 +26,4 @@ weather band should not be entered more than once.
 Finally select any special requirements of your
 proposal, such as daytime observing.
 
-.. image:: image/request_edit_small.png
+.. image:: image/request_edit.png

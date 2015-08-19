@@ -5,13 +5,13 @@ Before you can begin writing a proposal, you will need to create
 an account.  Click the "Log in" link at the top right and
 then click the "register" link.
 
-.. image:: image/home_page_small.png
+.. image:: image/home_page.png
 
 You should now see the new-user registration page.  Enter the user
 name which you would like to use to log in to the system and
 a password.
 
-.. image:: image/user_new_small.png
+.. image:: image/user_new.png
 
 On the next page, notice the yellow box at the top right.  When this
 box appears it will indicate an action which has been performed.
@@ -38,7 +38,7 @@ as we may be able to help you recover your account.
 We may also remove accounts left in this state if they are
 inactive for a long time.
 
-.. image:: image/profile_new_small.png
+.. image:: image/profile_new.png
 
 Finally you should select the institution with which you are
 affiliated.  Please check the menu of institutions which are
@@ -58,7 +58,7 @@ when it is often used alone.
 The department and parent organization are optional.
 Please be sure to select the correct country from the list.
 
-.. image:: image/profile_institution_small.png
+.. image:: image/profile_institution.png
 
 This completes the registration process.  You should be taken back to the
 home page.
@@ -70,7 +70,7 @@ may have access to your computer.  Your session will automatically
 time out after two hours of inactivity --- you will be prompted to
 log in again in this case.
 
-.. image:: image/profile_complete_small.png
+.. image:: image/profile_complete.png
 
 The link showing your name will take you to your profile page.
 You may use this page at any time to manage your account,
@@ -98,4 +98,4 @@ Please be aware of the different ways you can change your institution:
   and then click "Edit this institution".   This will update the
   institution record for everyone using it.
 
-.. image:: image/profile_view_small.png
+.. image:: image/profile_view.png

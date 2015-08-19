@@ -29,7 +29,7 @@ process are listed at the top of the page.
 You may enter a caption for the figure
 as well as choosing the file to upload.
 
-.. image:: image/sci_case_fig_small.png
+.. image:: image/sci_case_fig.png
 
 Back on the "Edit Scientific Justification" page,
 your figure will initially be shown as
@@ -44,14 +44,14 @@ or replace the figure with a new file.
 You can use the "Manage figures" link if you would
 like to remove a figure.
 
-.. image:: image/sci_case_edit_small.png
+.. image:: image/sci_case_edit.png
 
 The figure management page shows a table with some information
 about each figure which you have uploaded.
 To remove a figure, click the "Delete" button next to it,
 and then press the "Save" button below the table.
 
-.. image:: image/sci_case_fig_manage_small.png
+.. image:: image/sci_case_fig_manage.png
 
 When you edit the text of your scientific justification,
 the figures, along with their numbers, will be shown
@@ -77,4 +77,4 @@ save the text and may produce a slightly different count.
 If this leads to the error that the "Scientific justification is too long"
 then you will need to remove a few words before you can save the text.
 
-.. image:: image/sci_case_text_small.png
+.. image:: image/sci_case_text.png

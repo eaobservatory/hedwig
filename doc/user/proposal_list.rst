@@ -14,4 +14,4 @@ If you are not already logged in, you will be prompted
 to enter your user name and password before
 being taken to the list.
 
-.. image:: image/proposal_list_small.png
+.. image:: image/proposal_list.png

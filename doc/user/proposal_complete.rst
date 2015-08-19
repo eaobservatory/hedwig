@@ -20,4 +20,4 @@ of the proposal (without the menu bar and navigation links),
 so you should be able to use this to save a copy of the proposal
 from your web browser.
 
-.. image:: image/proposal_complete_small.png
+.. image:: image/proposal_complete.png

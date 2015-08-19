@@ -15,12 +15,12 @@ with your account.
   as it is displayed: your profile (name and privacy setting),
   email addresses and institution.
 
-.. image:: image/profile_edit_links_small.png
+.. image:: image/profile_edit_links.png
 
 **"Change password"** will take you to a page where you can confirm
 your existing password and choose a new one.
 
-.. image:: image/password_change_small.png
+.. image:: image/password_change.png
 
 **"Change user name"** links to a page where you can alter the name
 you use to log in.
@@ -28,14 +28,14 @@ you use to log in.
 you want it shown on proposals.)
 You will need to enter your current password for confirmation.
 
-.. image:: image/user_name_change_small.png
+.. image:: image/user_name_change.png
 
 **"Edit profile"** allows you to alter your name as it is shown
 on proposals.
 You can also choose whether to have your name appear in the
 user directory.
 
-.. image:: image/profile_edit_small.png
+.. image:: image/profile_edit.png
 
 **"Edit email addresses"** takes you to a page with a table
 of all your email addresses known to the system.
@@ -60,7 +60,7 @@ When your address is public, it is visible in the following places:
   (If the address is not public you will receive the
   email by BCC instead.)
 
-.. image:: image/email_edit_small.png
+.. image:: image/email_edit.png
 
 **"Change institution"** should be used when you have moved
 to a different institution.
@@ -70,7 +70,7 @@ or enter the details of a new institution.
 Please check the list first to avoid creating
 multiple records for the same institution.
 
-.. image:: image/institution_change_small.png
+.. image:: image/institution_change.png
 
 Editing Institutions
 --------------------
@@ -95,7 +95,7 @@ Here you will see a list of the members of the institution.
 (If they have chosen to appear in the user directory.)
 Click the "Edit this institution" link to proceed.
 
-.. image:: image/institution_view_small.png
+.. image:: image/institution_view.png
 
 Please read the information on the confirmation page,
 after which you will see the
@@ -112,4 +112,4 @@ but is sometimes the name of a specific institute
 when it is often used alone.
 The department and parent organization are optional.
 
-.. image:: image/institution_edit_small.png
+.. image:: image/institution_edit.png
