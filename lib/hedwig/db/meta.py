@@ -175,6 +175,7 @@ institution_log = Table(
     Column('prev_organization', Unicode(255), nullable=False),
     Column('prev_address', UnicodeText, nullable=False),
     Column('prev_country', Unicode(2), nullable=False),
+    Column('approved', Boolean, default=False, nullable=False),
     **_table_opts)
 
 invitation = Table(

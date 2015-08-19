@@ -661,6 +661,7 @@ class PeoplePart(object):
                     institution_log.c.prev_organization: prev.organization,
                     institution_log.c.prev_address: prev.address,
                     institution_log.c.prev_country: prev.country,
+                    institution_log.c.approved: False,
                 }))
 
             result = conn.execute(institution.update().where(
