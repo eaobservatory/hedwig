@@ -24,7 +24,7 @@
                     <span class="label">private</span>
                 {% endif %}
             </td>
-            <td>{{ moc.uploaded | format_datetime }}</td>
+            <td>{{ moc.uploaded | format_datetime }} UT</td>
             <td>{{ moc.num_cells }}</td>
             <td>{{ moc.area | fmt('{:0.1f}') }} sq. deg.</td>
             <td><a href="{{ url_for('.moc_edit', moc_id=moc.id) }}">Edit</a></td>
