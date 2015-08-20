@@ -51,8 +51,8 @@ requirements can be found on this page:
 Please note that your name has been provisionally added to the
 proposal.
 If you do not wish to be involved, you may remove yourself
-from the proposal via the online system,
-or contact the proposal author.
-If you have any remaining concerns, please contact us
-at the address below.
+from the proposal directly via the online system (requires registration).
+If you do not wish to register,
+you should contact the proposal author
+or email us at the address below.
 {% endblock %}
