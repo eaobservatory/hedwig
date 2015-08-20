@@ -46,9 +46,9 @@
         </tr>
         {% for target in targets %}
             <tr id="targetrow_{{ target.id }}">
-                <td><input type="text" name="name_{{ target.id }}" value="{{ target.name }}" size="20" /></td>
-                <td><input type="text" name="x_{{ target.id }}" value="{{ target.x }}" placeholder="00:00:00" size="12" /></td>
-                <td><input type="text" name="y_{{ target.id }}" value="{{ target.y }}" placeholder="00:00:00" size="12" /></td>
+                <td><input type="text" name="name_{{ target.id }}" value="{{ target.name }}" size="15" /></td>
+                <td><input type="text" name="x_{{ target.id }}" value="{{ target.x }}" placeholder="00:00:00" size="10" /></td>
+                <td><input type="text" name="y_{{ target.id }}" value="{{ target.y }}" placeholder="00:00:00" size="10" /></td>
                 <td>
                     <select name="system_{{ target.id }}">
                         {% for (system_id, system_name) in systems.items() %}
@@ -67,9 +67,9 @@
     </table>
     <table class="template">
         <tr id="targetrow_template">
-            <td><input type="text" name="name" value="" size="20" /></td>
-            <td><input type="text" name="x" value="" placeholder="00:00:00" size="12" /></td>
-            <td><input type="text" name="y" value="" placeholder="00:00:00" size="12" /></td>
+            <td><input type="text" name="name" value="" size="15" /></td>
+            <td><input type="text" name="x" value="" placeholder="00:00:00" size="10" /></td>
+            <td><input type="text" name="y" value="" placeholder="00:00:00" size="10" /></td>
             <td>
                 <select name="system">
                     {% for (system_id, system_name) in systems.items() %}
