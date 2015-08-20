@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from datetime import datetime, timedelta
+from time import sleep
 
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_, not_
@@ -34,6 +35,9 @@ from ..meta import auth_failure, email, institution, institution_log, \
     invitation, member, person, \
     reset_token, user, user_log, verify_token
 from ..util import require_not_none
+
+# Time to sleep as a delay which simulates hashing the password.
+password_hash_delay = 3
 
 
 class PeoplePart(object):
@@ -266,9 +270,10 @@ class PeoplePart(object):
             if name is not None:
                 self._record_auth_failure(name)
 
-            # Spend time hashing the password so that the user can't tell
-            # that the user name doesn't exist by this function returning fast.
-            create_password_hash(password_raw)
+            # Spend time as if we were hashing the password so that the user
+            # can't tell that the user name doesn't exist by this function
+            # returning fast.
+            sleep(password_hash_delay)
             return None
 
         else:
