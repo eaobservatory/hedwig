@@ -21,7 +21,8 @@ from __future__ import absolute_import, division, print_function, \
 from flask import Blueprint, request
 
 from ...type import CalculatorInfo, FigureType, TargetToolInfo, TextRole
-from ..util import require_admin, require_auth, send_file, templated
+from ..util import HTTPRedirect, \
+    require_admin, require_auth, send_file, templated, url_for
 
 
 def create_facility_blueprint(db, facility):
@@ -535,6 +536,14 @@ def create_facility_blueprint(db, facility):
             calculator_id, calculator_code, calculator.get_name(),
             calculator, calculator.modes)
 
+        # Create redirect for calculator to its default (first) mode.
+        bp.add_url_rule('/calculator/{}/'.format(calculator_code),
+                        'calc_{}'.format(calculator_code),
+                        make_calculator_redirect(
+                            calculator_code,
+                            list(calculator.modes.values())[0].code))
+
+        # Create routes for each calculator mode.
         for (calculator_mode_id, calculator_mode) in calculator.modes.items():
             route_opts = (calculator_code, calculator_mode.code)
 
@@ -584,6 +593,20 @@ def create_facility_blueprint(db, facility):
         }
 
     return bp
+
+
+def make_calculator_redirect(calculator_code, calculator_mode):
+    """
+    Create a view function for a function without specifying a
+    mode which should redirect to the given (default mode) for the
+    calculator.
+    """
+
+    def default_calc_redirect():
+        raise HTTPRedirect(url_for('.calc_{}_{}'.format(
+            calculator_code, calculator_mode)))
+
+    return default_calc_redirect
 
 
 def make_calculator_view(db, calculator, facility_code, calculator_code,
