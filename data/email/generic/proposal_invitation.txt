@@ -23,7 +23,7 @@ Alternatively you may click the following link:
 
 {{ target_url }}
 
-This code will expire at {{ expiry | format_datetime }} UTC.
+This code will expire at {{ expiry | format_datetime }} UT.
 
 If you do not wish to register with our system, you may still be listed
 as a member of a proposal, but you will not be able to view the proposal
