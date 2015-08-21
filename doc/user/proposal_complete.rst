@@ -47,7 +47,7 @@ from your web browser.
   There is normally an option to save as PDF in the lower left corner
   of the print dialog box.
 
-* With **Windows 10** (not tested with Hedwig)
+* With **Windows 10**
 
   You should be able to save a PDF file by
-  selecting "Print to PDF" as your printer.
+  selecting "Microsoft Print to PDF" as your printer.
