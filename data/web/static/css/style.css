@@ -110,6 +110,10 @@ input[type="number"] {
     width: 15ex;
 }
 
+input[type="number"].narrow_number {
+    width: 10ex;
+}
+
 section.deselected {
     border-left: 1ex solid #BBB;
     padding-left: 1ex;
