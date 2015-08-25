@@ -66,8 +66,10 @@ def get_dummy_database(randomize_ids=True, allow_multi_threaded=False,
 
 
 class DBTestCase(TestCase):
+    facility_spec = 'Generic'
+
     def setUp(self):
-        self.db = get_dummy_database()
+        self.db = get_dummy_database(facility_spec=self.facility_spec)
         auth._rounds = 10
 
     def tearDown(self):
