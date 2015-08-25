@@ -41,7 +41,7 @@ If you enter the declination then the zenith angle
 will be estimated as
 
 .. math::
-    angle_zenith = \cos^{-1}( 0.9 * \cos( dec - 19.823 ) )
+    angle_{zenith} = \cos^{-1}( 0.9 * \cos( dec - 19.823 ) )
 
 where 19.823 is the latitude of the JCMT,
 and the factor 0.9 is an approximation

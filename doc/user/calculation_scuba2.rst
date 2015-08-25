@@ -13,7 +13,7 @@ If you enter the declination then the zenith angle
 will be estimated as
 
 .. math::
-    angle_zenith = \cos^{-1}( 0.9 * \cos( dec - 19.823 ) )
+    angle_{zenith} = \cos^{-1}( 0.9 * \cos( dec - 19.823 ) )
 
 where 19.823 is the latitude of the JCMT,
 and the factor 0.9 is an approximation
@@ -34,7 +34,7 @@ which you would like to use.
 If you plan to use the matched filter, you should tick the
 "Matched filter" box and the calculator will use
 sampling factors appropriate for this filter
-(:math:`f_850 = 5` and :math:`f_450=8` --- please see the
+(:math:`f_{850} = 5` and :math:`f_{450}=8` --- please see the
 `SCUBA-2 sensitivity page <http://www.eaobservatory.org/jcmt/instrumentation/continuum/scuba-2/time-and-sensitivity/>`_
 for more information).
 Otherwise enter the pixel sizes you intend to use.
