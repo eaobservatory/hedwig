@@ -25,6 +25,7 @@ from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_, not_
 from sqlalchemy.sql.functions import count
 
+from ... import auth
 from ...auth import check_password_hash, create_password_hash, generate_token
 from ...error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
@@ -35,9 +36,6 @@ from ..meta import auth_failure, email, institution, institution_log, \
     invitation, member, person, \
     reset_token, user, user_log, verify_token
 from ..util import require_not_none
-
-# Time to sleep as a delay which simulates hashing the password.
-password_hash_delay = 3
 
 
 class PeoplePart(object):
@@ -273,7 +271,7 @@ class PeoplePart(object):
             # Spend time as if we were hashing the password so that the user
             # can't tell that the user name doesn't exist by this function
             # returning fast.
-            sleep(password_hash_delay)
+            sleep(auth.password_hash_delay)
             return None
 
         else:

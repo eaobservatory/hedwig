@@ -28,6 +28,9 @@ from os import urandom
 
 _rounds = 1000000
 
+# Time to sleep as a delay which simulates hashing the password.
+password_hash_delay = 10
+
 
 def create_password_hash(password_raw):
     """

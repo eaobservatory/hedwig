@@ -20,8 +20,8 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime, timedelta
 
+from hedwig import auth
 from hedwig.db.meta import invitation, reset_token
-from hedwig.db.part import people
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from hedwig.type import Email, EmailCollection, FormatType, \
@@ -62,7 +62,7 @@ class DBPeopleTest(DBTestCase):
         self.assertEqual(self.db.authenticate_user('user1', 'pass1'), user_id)
 
         # Test unsuccessful authentication.
-        people.password_hash_delay = 0.1
+        auth.password_hash_delay = 0.1
         self.assertIsNone(self.db.authenticate_user('user1', 'wrongpass'))
         self.assertIsNone(self.db.authenticate_user('user2', 'pass1'))
 
