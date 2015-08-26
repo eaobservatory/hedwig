@@ -71,6 +71,108 @@ In the `etc` directory, you will find a file called `hedwig.ini.template`.
 This file should be copied to create the configuration file `hedwig.ini`.
 You will then need to edit the file to complete the configuration.
 
+* **database**
+
+  * *url*
+
+    This is the SQLAlchemy URL for the database you wish Hedwig to use.
+    The example configuration file contains URL formats for SQLite
+    and MySQL.
+
+  * *pool_size* and *pool_overflow* (optional)
+
+    These configure the SQLAlchemy pool.  They can be left blank to use
+    Hedwig's defaults (size 15, overflow 5).
+
+* **application**
+
+  * *name*
+
+    This is the name by which the system will refer to itself.  You can alter
+    this if you want it to be called something other than "Hedwig".
+
+  * *secret_key*
+
+    This is the key used by Flask for its secure cookie session system.
+    Since Hedwig uses this system to authenticate users, you must be
+    sure you enter a good random string here.
+    The `Flask quick start guide <http://flask.pocoo.org/docs/0.10/quickstart/>`_
+    recommends 24 random bytes.
+
+  * *facilities*
+
+    Here you can list the facilities for which you wish to accept proposals.
+    Hedwig has a basic facility configuration called "Generic" which you can
+    use to test the system.  It also forms the basis for specific facilities.
+    To indicate multiple facilities, you can give a comma-separated list.
+    Each facility can either be a plain name, in which case the classes
+    defining the facility are loaded from a submodule of `hedwig.facility`,
+    or as a full Python module and class name, if the classes cannot be
+    placed in the Hedwig namespace.
+
+  * *log_file* (optional)
+
+    If this entry is set, it configures the location to which errors and
+    warnings from the web application will be written.
+
+* **upload**
+
+  In this section you can configure maximum file size upload limits (in MiB).
+  The Flask `MAX_CONTENT_LENGTH` will be set to the maximum of the sizes
+  given here.
+
+* **email**
+
+  * *server*
+
+    Here you should enter the name of a mail server to which Hedwig can
+    connect to send email messages.
+
+  * *from*
+
+    This specifies the from header which should be used.  You may wish to
+    use your proposal support mailing list address here to allow people
+    to reply directly, for example::
+
+        Hedwig <proposals@some-observatory.org>
+
+  * *footer_title* (optional)
+
+    A title to display under the *application_name* in the signature part
+    of the email, e.g.::
+
+        Some Observatory Proposal System
+
+  * *footer_url* and *footer_email* (optional)
+
+    An optional URL and email address (which may or may not be the same as
+    that in the *from* header) to show in the footer of email messages.
+
+* **utilities**
+
+  This section contains the paths to various applications which Hedwig uses.
+  You may need to customize this section if the applications aren't in
+  their typical location.
+
+  * *ghostscript*
+
+    Used to process files (PDF and EPS) uploaded as part of a proposal.
+
+  * *firefox*
+
+    Used in the integration test system.  (See the next section for details.)
+
+* **ads**
+
+  *api_token*
+
+  This is an API token for the Astrophysics Data System, used to look up
+  ADS bibcodes and DOIs.
+  To obtain a token, create an account for the
+  `new version of ADS <https://ui.adsabs.harvard.edu/>`_
+  and select
+  "API Token" under "Customize Settings".
+
 Tests
 ~~~~~
 
