@@ -4,6 +4,8 @@ Hedwig
 Installation
 ------------
 
+.. hedwigstartinstall
+
 For Development
 ~~~~~~~~~~~~~~~
 
@@ -282,6 +284,8 @@ You can use `Sphinx <http://sphinx-doc.org/>`_ to build the
 documenation with::
 
     sphinx-build -b html doc doc/_build/html
+
+.. hedwigendinstall
 
 License
 -------
