@@ -243,7 +243,7 @@ You can also add the `--debug` command line option to enable debugging
 and automatic reloading.
 Note that this enables the
 `Werkzeug Debugger <http://werkzeug.pocoo.org/docs/0.10/debug/>`_
-which provides tracebacks and provided access to a Python shell.
+which provides tracebacks and provides access to a Python shell.
 *It should never be run in a manner accessible to untrusted users!*
 When this option is specified, `hedwigctl` configures the
 internal server to listen on localhost only.
