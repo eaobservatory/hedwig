@@ -8,7 +8,32 @@ This system was developed for the
 `James Clerk Maxell Telescope <http://www.eaobservatory.org/jcmt>`_
 by the East Asian Observatory software group.
 The software can be obtained from its
-`GitHub repository page <https://github.com/eaobservatory/hedwig>`_.
+`GitHub repository page <https://github.com/eaobservatory/hedwig>`_
+and is made available under the GPL, version 3:
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Libraries Used by this System
+-----------------------------
+
+This system makes use of a number of Python software libraries.
+These include:
+
+* `Astropy <http://www.astropy.org/>`_
+* `Flask <http://flask.pocoo.org/>`_
+* `Healpy <https://pypi.python.org/pypi/healpy>`_
+* `SQLAlchemy <http://www.sqlalchemy.org/>`_
 
 Libraries Included in this System
 ---------------------------------
