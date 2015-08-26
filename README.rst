@@ -80,6 +80,10 @@ You will then need to edit the file to complete the configuration.
     This is the SQLAlchemy URL for the database you wish Hedwig to use.
     The example configuration file contains URL formats for SQLite
     and MySQL.
+    (These are the two databases which have been tested with Hedwig.
+    In theory any database supported by SQLAlchemy should be usable,
+    but may require additional tuning of the Hedwig database access code,
+    as has been done for these databases.)
 
   * *pool_size* and *pool_overflow* (optional)
 
