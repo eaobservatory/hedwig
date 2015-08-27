@@ -27,7 +27,7 @@ from .db.meta import affiliation, calculation, call, category, \
     email, group_member, institution, \
     member, message, moc, person, \
     prev_proposal, prev_proposal_pub, \
-    proposal, proposal_category, queue, \
+    proposal, proposal_category, proposal_note, queue, \
     semester, target, user_log
 from .error import NoSuchRecord, MultipleRecords, UserError
 
@@ -175,6 +175,10 @@ ProposalFigureInfo = namedtuple(
 
 ProposalFigureThumbPreview = namedtuple(
     'ProposalFigureThumbPreview', ['thumbnail', 'preview'])
+
+ProposalNote = namedtuple(
+    'ProposalNote',
+    [x.name for x in proposal_note.columns])
 
 ProposalPDFInfo = namedtuple(
     'ProposalPDFInfo',

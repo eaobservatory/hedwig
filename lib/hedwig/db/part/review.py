@@ -21,9 +21,12 @@ from __future__ import absolute_import, division, print_function, \
 from datetime import datetime
 
 from sqlalchemy.sql import select
+from sqlalchemy.sql.expression import and_
+from sqlalchemy.sql.functions import count
 
-from ...error import ConsistencyError, Error
-from ...type import GroupMember, GroupMemberCollection, GroupType, \
+from ...error import ConsistencyError, Error, NoSuchRecord, UserError
+from ...type import FormatType, \
+    GroupMember, GroupMemberCollection, GroupType, \
     NoteRole, ProposalNote, Review, Reviewer, ReviewerRole
 from ..meta import group_member, person, proposal, proposal_note, queue, \
     review, reviewer
@@ -52,6 +55,26 @@ class ReviewPart(object):
 
         return result.inserted_primary_key[0]
 
+    def get_proposal_note(self, proposal_id, role):
+        """
+        Get the given review process note associated with a proposal.
+        """
+
+        if not NoteRole.is_valid(role):
+            raise Error('invalid note role')
+
+        with self._transaction() as conn:
+            row = conn.execute(proposal_note.select().where(and_(
+                proposal_note.c.proposal_id == proposal_id,
+                proposal_note.c.role == role
+            ))).first()
+
+        if row is None:
+            raise NoSuchRecord('note does not exist for {} role {}',
+                               proposal_id, role)
+
+        return ProposalNote(**row)
+
     def search_group_member(self, queue_id, group_type, _conn=None):
         stmt = group_member.select()
 
@@ -68,6 +91,58 @@ class ReviewPart(object):
                 ans[row['id']] = GroupMember(**row)
 
         return ans
+
+    def set_proposal_note(self, proposal_id, role, text, format_, is_update,
+                          _test_skip_check=False):
+        if not NoteRole.is_valid(role):
+            raise Error('invalid note role')
+
+        if not format_:
+            raise UserError('Text format not specified.')
+        if not FormatType.is_valid(format_):
+            raise UserError('Text format not recognised.')
+
+        with self._transaction() as conn:
+            if not _test_skip_check:
+                if not self._exists_id(conn, proposal, proposal_id):
+                    raise ConsistencyError('proposal does not exist with id={}',
+                                           proposal_id)
+
+                already_exists = self._exists_proposal_note(
+                    conn, proposal_id, role)
+                if is_update and not already_exists:
+                    raise ConsistencyError(
+                        'note does not exist for proposal {} role {}',
+                        proposal_id, role)
+                elif already_exists and not is_update:
+                    raise ConsistencyError(
+                        'note already exists for proposal {} role {}',
+                        proposal_id, role)
+
+            values = {
+                proposal_note.c.text: text,
+                proposal_note.c.format: format_,
+                proposal_note.c.edited: datetime.utcnow(),
+            }
+
+            if is_update:
+                result = conn.execute(proposal_note.update().where(and_(
+                    proposal_note.c.proposal_id == proposal_id,
+                    proposal_note.c.role == role
+                )).values(values))
+
+                if result.rowcount != 1:
+                    raise ConsistencyError(
+                        'no rows matched updating proposal text {} role {}',
+                        proposal_id, role)
+
+            else:
+                values.update({
+                    proposal_note.c.proposal_id: proposal_id,
+                    proposal_note.c.role: role,
+                })
+
+                result = conn.execute(proposal_note.insert().values(values))
 
     def sync_group_member(self, queue_id, group_type, records):
         """
@@ -94,3 +169,13 @@ class ReviewPart(object):
                 records=records,
                 update_columns=(),
                 forbid_add=True)
+
+    def _exists_proposal_note(self, conn, proposal_id, role):
+        """
+        Test whether a note of the given role already exists for a proposal.
+        """
+
+        return 0 < conn.execute(select([count(proposal_note.c.id)]).where(and_(
+            proposal_note.c.proposal_id == proposal_id,
+            proposal_note.c.role == role
+        ))).scalar()
