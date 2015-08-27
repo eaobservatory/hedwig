@@ -6,12 +6,12 @@
 <h2 class="subtitle">{{ application_name }} Proposal Submission System</h2>
 
 <ul>
-    <li><a href="user/">Proposal Author&rsquo;s Guide</a></li>
-    <li><a href="review/">Reviewer&rsquo;s Guide</a></li>
+    <li><a href="{{ url_for('.user_index') }}">Proposal Author&rsquo;s Guide</a></li>
+    <li><a href="{{ url_for('.review_index') }}">Reviewer&rsquo;s Guide</a></li>
     {% if session.is_admin %}
-        <li><a href="admin/">Administrator&rsquo;s Guide</a></li>
+        <li><a href="{{ url_for('.admin_index') }}">Administrator&rsquo;s Guide</a></li>
     {% endif %}
-    <li><a href="about">About this System</a></li>
+    <li><a href="{{ url_for('.help_about') }}">About this System</a></li>
 </ul>
 
 {% endblock %}
