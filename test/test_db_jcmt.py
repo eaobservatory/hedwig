@@ -20,7 +20,9 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime
 from hedwig.type import FormatType
-from hedwig.facility.jcmt.type import JCMTInstrument, JCMTOptions, \
+from hedwig.facility.jcmt.type import \
+    JCMTAllocation, JCMTAllocationCollection, \
+    JCMTInstrument, JCMTOptions, \
     JCMTRequest, JCMTRequestCollection, JCMTWeather
 
 from .dummy_db import DBTestCase
@@ -92,6 +94,40 @@ class DBJCMTTest(DBTestCase):
         self.assertEqual(request[1].instrument, JCMTInstrument.SCUBA2)
         self.assertEqual(request[1].weather, JCMTWeather.BAND2)
         self.assertEqual(request[1].time, 10.0)
+
+    def test_jcmt_allocation(self):
+        proposal_id = self._create_test_proposal()
+
+        allocation = self.db.search_jcmt_allocation(proposal_id)
+        self.assertIsInstance(allocation, JCMTAllocationCollection)
+        self.assertEqual(len(allocation), 0)
+
+        records = JCMTAllocationCollection()
+        records[0] = JCMTAllocation(None, None, JCMTWeather.BAND2, 25.0)
+        records[1] = JCMTAllocation(None, None, JCMTWeather.BAND5, 75.0)
+
+        self.db.sync_jcmt_proposal_allocation(proposal_id, records)
+
+        allocation = self.db.search_jcmt_allocation(proposal_id)
+        self.assertIsInstance(allocation, JCMTAllocationCollection)
+        self.assertEqual(len(allocation), 2)
+
+        allocation_id = list(allocation.keys())
+        allocation = list(allocation.values())
+
+        self.assertIsInstance(allocation[0], JCMTAllocation)
+        self.assertIsInstance(allocation[0].id, int)
+        self.assertEqual(allocation[0].id, allocation_id[0])
+        self.assertEqual(allocation[0].proposal_id, proposal_id)
+        self.assertEqual(allocation[0].weather, JCMTWeather.BAND2)
+        self.assertEqual(allocation[0].time, 25.0)
+
+        self.assertIsInstance(allocation[1], JCMTAllocation)
+        self.assertIsInstance(allocation[1].id, int)
+        self.assertEqual(allocation[1].id, allocation_id[1])
+        self.assertEqual(allocation[1].proposal_id, proposal_id)
+        self.assertEqual(allocation[1].weather, JCMTWeather.BAND5)
+        self.assertEqual(allocation[1].time, 75.0)
 
     def _create_test_proposal(self):
         facility_id = self.db.ensure_facility('jcmt')

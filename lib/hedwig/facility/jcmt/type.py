@@ -22,7 +22,11 @@ from collections import OrderedDict, namedtuple
 
 from ...type import ResultTable
 from ...error import UserError
-from .meta import jcmt_options, jcmt_request
+from .meta import jcmt_allocation, jcmt_options, jcmt_request
+
+JCMTAllocation = namedtuple(
+    'JCMTAllocation',
+    [x.name for x in jcmt_allocation.columns])
 
 JCMTOptions = namedtuple(
     'JCMTOptions',
@@ -63,6 +67,33 @@ class JCMTInstrument(object):
                 ans[k] = v.name
 
         return ans
+
+
+class JCMTAllocationCollection(OrderedDict):
+    def validate(self):
+        """
+        Attempts to validate a collection of JCMT observing allocations.
+
+        Raises UserError is a problem is found.
+        """
+
+        weathers = set()
+
+        for record in self.values():
+            if not JCMTWeather.is_valid(record.weather):
+                raise UserError('Weather band not recognised.')
+
+            if not isinstance(record.time, float):
+                raise UserError(
+                    'Please enter time as a valid number for {0}'.format(
+                        JCMTWeather.get_name(record.weather)))
+
+            if record.weather in weathers:
+                raise UserError(
+                    'There are multiple entries for {0}'.format(
+                        JCMTWeather.get_name(record.weather)))
+
+            weathers.add(record.weather)
 
 
 class JCMTRequestCollection(OrderedDict):

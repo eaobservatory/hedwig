@@ -23,8 +23,9 @@ from sqlalchemy.sql.functions import count
 
 from ...db.meta import proposal
 from ...error import ConsistencyError
-from .meta import jcmt_options, jcmt_request
-from .type import JCMTOptions, JCMTRequest, JCMTRequestCollection
+from .meta import jcmt_allocation, jcmt_options, jcmt_request
+from .type import JCMTAllocation, JCMTAllocationCollection, \
+    JCMTOptions, JCMTRequest, JCMTRequestCollection
 
 
 class JCMTPart(object):
@@ -42,6 +43,22 @@ class JCMTPart(object):
 
             else:
                 return JCMTOptions(**row)
+
+    def search_jcmt_allocation(self, proposal_id):
+        """
+        Retrieve the observing allocations for the given proposal.
+        """
+
+        ans = JCMTAllocationCollection()
+
+        stmt = jcmt_allocation.select().where(
+            jcmt_allocation.c.proposal_id == proposal_id)
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt.order_by(jcmt_allocation.c.id.asc())):
+                ans[row['id']] = JCMTAllocation(**row)
+
+        return ans
 
     def search_jcmt_request(self, proposal_id):
         """
@@ -91,6 +108,25 @@ class JCMTPart(object):
                 })
 
                 conn.execute(jcmt_options.insert().values(values))
+
+    def sync_jcmt_proposal_allocation(self, proposal_id, records,
+                                      _test_skip_check=False):
+        """
+        Update the observing allocations for the given proposal to match
+        the specified records.
+        """
+
+        records.validate()
+
+        with self._transaction() as conn:
+            if not _test_skip_check and \
+                    not self._exists_id(conn, proposal, proposal_id):
+                raise ConsistencyError(
+                    'proposal does not exist with id={0}', proposal_id)
+
+            return self._sync_records(
+                conn, jcmt_allocation, jcmt_allocation.c.proposal_id,
+                proposal_id, records)
 
     def sync_jcmt_proposal_request(self, proposal_id, records,
                                    _test_skip_check=False):
