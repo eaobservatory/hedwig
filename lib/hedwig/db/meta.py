@@ -500,6 +500,7 @@ review = Table(
            primary_key=True, nullable=False),
     Column('text', UnicodeText, nullable=True),
     Column('format', Integer, nullable=True),
+    Column('assessment', Integer, nullable=True),
     Column('rating', Integer, nullable=True),
     Column('weight', Integer, nullable=True),
     Column('edited', DateTime(), nullable=False),
