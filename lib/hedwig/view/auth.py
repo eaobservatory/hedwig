@@ -100,6 +100,16 @@ def for_institution(db, institution):
     return auth
 
 
+def for_private_moc(db):
+    """
+    Determine whether the current user can view/search private MOCs.
+    """
+
+    # Probably not worthwhile to re-validate administrative access here.
+
+    return 'user_id' in session and session.get('is_admin', False)
+
+
 def for_proposal(db, proposal):
     """
     Determine the current user's authorization regarding this proposal.

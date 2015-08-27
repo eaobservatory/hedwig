@@ -27,6 +27,7 @@ from healpy import ang2pix
 from ...astro.coord import CoordSystem, format_coord, parse_coord
 from ...astro.catalog import parse_source_list
 from ...error import NoSuchRecord, UserError
+from ...view import auth
 from ...view.tool import BaseTargetTool
 from ...web.util import ErrorPage, HTTPNotFound, session, url_for
 from ...type import FileTypeInfo, Link, TargetObject
@@ -190,10 +191,8 @@ class ClashTool(BaseTargetTool):
     def _check_mocs_exist(self, db):
         public = True
 
-        if 'user_id' in session and session.get('is_admin', False):
-            # If the user has administrative access, remove public
-            # constraint.  (Probably not worthwhile to re-validate
-            # administrative access here.)
+        if auth.for_private_moc(db):
+            # If the user has private access, remove public constraint.
             public = None
 
         mocs = db.search_moc(facility_id=self.facility.id_, public=public)
@@ -206,10 +205,8 @@ class ClashTool(BaseTargetTool):
         non_clashes = []
         public = True
 
-        if 'user_id' in session and session.get('is_admin', False):
-            # If the user has administrative access, remove public
-            # constraint.  (Probably not worthwhile to re-validate
-            # administrative access here.)
+        if auth.for_private_moc(db):
+            # If the user has private access, remove public constraint.
             public = None
 
         for target in targets:
@@ -244,10 +241,8 @@ class ClashTool(BaseTargetTool):
 
     def view_moc_list(self, db, args, form):
         public = True
-        if 'user_id' in session and session.get('is_admin', False):
-            # If the user has administrative access, remove public
-            # constraint.  (Probably not worthwhile to re-validate
-            # administrative access here.)
+        if auth.for_private_moc(db):
+            # If the user has private access, remove public constraint.
             public = None
 
         mocs = db.search_moc(facility_id=self.facility.id_, public=public)
@@ -259,10 +254,8 @@ class ClashTool(BaseTargetTool):
 
     def view_moc_info(self, db, args, form, moc_id):
         public = True
-        if 'user_id' in session and session.get('is_admin', False):
-            # If the user has administrative access, remove public
-            # constraint.  (Probably not worthwhile to re-validate
-            # administrative access here.)
+        if auth.for_private_moc(db):
+            # If the user has private access, remove public constraint.
             public = None
 
         try:
@@ -279,10 +272,8 @@ class ClashTool(BaseTargetTool):
 
     def view_moc_fits(self, db, args, form, moc_id):
         public = True
-        if 'user_id' in session and session.get('is_admin', False):
-            # If the user has administrative access, remove public
-            # constraint.  (Probably not worthwhile to re-validate
-            # administrative access here.)
+        if auth.for_private_moc(db):
+            # If the user has private access, remove public constraint.
             public = None
 
         try:
