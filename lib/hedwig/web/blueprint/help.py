@@ -38,6 +38,10 @@ def create_help_blueprint():
     user_image_root = os.path.join(user_doc_root, 'image')
     user_toc_cache = {}
 
+    review_doc_root = os.path.join(doc_root, 'review')
+    review_image_root = os.path.join(review_doc_root, 'image')
+    review_toc_cache = {}
+
     admin_doc_root = os.path.join(doc_root, 'admin')
     admin_image_root = os.path.join(admin_doc_root, 'image')
     admin_toc_cache = {}
@@ -65,6 +69,20 @@ def create_help_blueprint():
     @bp.route('/user/image/<path:file_name>')
     def user_image(file_name):
         return send_from_directory(user_image_root, file_name)
+
+    @bp.route('/review/')
+    @templated('help/help_page.html')
+    def review_index():
+        return prepare_help_page(review_doc_root, None, review_toc_cache)
+
+    @bp.route('/review/<page_name>')
+    @templated('help/help_page.html')
+    def review_page(page_name):
+        return prepare_help_page(review_doc_root, page_name, review_toc_cache)
+
+    @bp.route('/review/image/<path:file_name>')
+    def review_image(file_name):
+        return send_from_directory(review_image_root, file_name)
 
     @bp.route('/admin/')
     @templated('help/help_page.html')

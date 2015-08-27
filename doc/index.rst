@@ -8,6 +8,7 @@ Contents
     :maxdepth: 2
 
     user/index
+    review/index
     admin/index
     maint/index
     about/index
