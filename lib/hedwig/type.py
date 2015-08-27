@@ -24,7 +24,7 @@ import re
 from .astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
 from .db.meta import affiliation, calculation, call, category, \
-    email, institution, \
+    email, group_member, institution, \
     member, message, moc, person, \
     prev_proposal, prev_proposal_pub, \
     proposal, proposal_category, queue, \
@@ -72,6 +72,10 @@ Email = namedtuple(
 FacilityInfo = namedtuple(
     'FacilityInfo',
     ['id', 'code', 'name', 'view'])
+
+GroupMember = namedtuple(
+    'GroupMember',
+    [x.name for x in group_member.columns])
 
 Institution = namedtuple(
     'Institution',
@@ -644,6 +648,10 @@ class EmailCollection(ResultCollection):
             raise UserError('There is no primary address.')
         elif n_primary != 1:
             raise UserError('There is more than one primary address.')
+
+
+class GroupMemberCollection(ResultCollection):
+    pass
 
 
 class MemberCollection(OrderedResultCollection):

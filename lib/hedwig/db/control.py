@@ -33,9 +33,11 @@ from .part.calculator import CalculatorPart
 from .part.message import MessagePart
 from .part.people import PeoplePart
 from .part.proposal import ProposalPart
+from .part.review import ReviewPart
 
 
-class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart):
+class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
+               ReviewPart):
     def __init__(self, engine):
         """
         Create database controller object.
