@@ -27,6 +27,18 @@ from sqlalchemy.types import Boolean, DateTime, Float, Integer, \
 from ...db.meta import metadata, _table_opts
 
 
+jcmt_allocation = Table(
+    'jcmt_allocation',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('weather', Integer, nullable=False),
+    Column('time', Float, nullable=False),
+    UniqueConstraint('proposal_id', 'weather'),
+    **_table_opts)
+
 jcmt_options = Table(
     'jcmt_options',
     metadata,
