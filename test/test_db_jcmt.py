@@ -133,7 +133,7 @@ class DBJCMTTest(DBTestCase):
         facility_id = self.db.ensure_facility('jcmt')
         semester_id = self.db.add_semester(
             facility_id, 'test', 'test',
-            datetime(2000, 1, 1), datetime(2000, 6,30))
+            datetime(2000, 1, 1), datetime(2000, 6, 30))
         queue_id = self.db.add_queue(facility_id, 'test', 'test')
         call_id = self.db.add_call(
             semester_id, queue_id,
