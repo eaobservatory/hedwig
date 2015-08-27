@@ -147,6 +147,20 @@ facility = Table(
     Column('code', Unicode(31), nullable=False, unique=True),
     **_table_opts)
 
+group_member = Table(
+    'group_member',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('queue_id', None,
+           ForeignKey('queue.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('group_type', Integer, nullable=False),
+    Column('person_id', None,
+           ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    UniqueConstraint('queue_id', 'group_type', 'person_id'),
+    **_table_opts)
+
 institution = Table(
     'institution',
     metadata,
@@ -347,6 +361,20 @@ proposal_category = Table(
            nullable=False),
     **_table_opts)
 
+proposal_note = Table(
+    'proposal_note',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('role', Integer, nullable=False),
+    Column('text', UnicodeText, nullable=False),
+    Column('format', Integer, nullable=False),
+    Column('edited', DateTime(), nullable=False),
+    UniqueConstraint('proposal_id', 'role'),
+    **_table_opts)
+
 proposal_text = Table(
     'proposal_text',
     metadata,
@@ -462,6 +490,33 @@ reset_token = Table(
            ForeignKey('user.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            unique=True, nullable=False),
     Column('expiry', DateTime(), nullable=False, index=True),
+    **_table_opts)
+
+review = Table(
+    'review',
+    metadata,
+    Column('reviewer_id', None,
+           ForeignKey('reviewer.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           primary_key=True, nullable=False),
+    Column('text', UnicodeText, nullable=True),
+    Column('format', Integer, nullable=True),
+    Column('rating', Integer, nullable=True),
+    Column('weight', Integer, nullable=True),
+    Column('edited', DateTime(), nullable=False),
+    **_table_opts)
+
+reviewer = Table(
+    'reviewer',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('person_id', None,
+           ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('role', Integer, nullable=False),
+    UniqueConstraint('proposal_id', 'person_id', 'role'),
     **_table_opts)
 
 semester = Table(
