@@ -355,6 +355,53 @@ class FigureType(object):
         return [x.mime for x in cls._info.values()]
 
 
+class GroupType(object):
+    CTTEE = 1
+    TECH = 2
+
+    GroupInfo = namedtuple(
+        'GroupInfo', ('name', 'view_all_prop', 'private_moc'))
+
+    _info = OrderedDict((
+        (CTTEE, GroupInfo('Committee',           True,  False)),
+        (TECH,  GroupInfo('Technical assessors', False, True)),
+    ))
+
+    @classmethod
+    def is_valid(cls, type_):
+        return type_ in cls._info
+
+    @classmethod
+    def get_info(cls, type_):
+        return cls._info[type_]
+
+    @classmethod
+    def get_options(cls):
+        """
+        Get an OrderedDict of type names by type numbers.
+        """
+
+        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
+
+
+class NoteRole(object):
+    FEEDBACK = 1
+
+    RoleInfo = namedtuple('RoleInfo', ('name',))
+
+    _info = {
+        FEEDBACK:       RoleInfo('Feedback'),
+    }
+
+    @classmethod
+    def is_valid(cls, role):
+        return role in cls._info
+
+    @classmethod
+    def get_name(cls, role):
+        return cls._info[role].name
+
+
 class ProposalState(object):
     PREPARATION = 1
     SUBMITTED = 2
@@ -432,6 +479,38 @@ class PublicationType(object):
     @classmethod
     def get_info(cls, type_):
         return cls._info[type_]
+
+
+class ReviewerRole(object):
+    TECH = 1
+    EXTERNAL = 2
+    CTTEE_PRIMARY = 3
+    CTTEE_SECONDARY = 4
+    CTTEE_OTHER = 5
+
+    RoleInfo = namedtuple(
+        'RoleInfo', ('name', 'text', 'assessment', 'rating', 'weight'))
+
+    _info = OrderedDict((
+        (TECH,
+            RoleInfo('Technical',     True,  True,  False, False)),
+        (EXTERNAL,
+            RoleInfo('External',      True,  False, True,  False)),
+        (CTTEE_PRIMARY,
+            RoleInfo('TAC Primary',   True,  False, True,  True)),
+        (CTTEE_SECONDARY,
+            RoleInfo('TAC Secondary', True,  False, True,  True)),
+        (CTTEE_OTHER,
+            RoleInfo('TAC Other',     False, False, True,  True)),
+    ))
+
+    @classmethod
+    def is_valid(cls, role):
+        return role in cls._info
+
+    @classmethod
+    def get_info(cls, role):
+        return cls._info[role]
 
 
 class TextRole(object):

@@ -18,12 +18,13 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from unittest import TestCase
 
 from hedwig.error import MultipleRecords, NoSuchRecord
-from hedwig.type import OrderedResultCollection, ResultCollection, \
-    ProposalState
+from hedwig.type import GroupType, NoteRole, OrderedResultCollection, \
+    ResultCollection, \
+    ProposalState, ReviewerRole
 
 
 class TypeTestCase(TestCase):
@@ -88,3 +89,49 @@ class TypeTestCase(TestCase):
             SortOrdered(3, 2),
             SortOrdered(4, 4),
         ])
+
+    def test_group_type(self):
+        options = GroupType.get_options()
+        self.assertIsInstance(options, OrderedDict)
+
+        for (k, v) in options.items():
+            self.assertIsInstance(k, int)
+            self.assertTrue(GroupType.is_valid(k))
+
+            self.assertIsInstance(v, unicode)
+
+            i = GroupType.get_info(k)
+            self.assertIsInstance(i, tuple)
+            self.assertIsInstance(i.name, unicode)
+            self.assertIsInstance(i.view_all_prop, bool)
+            self.assertIsInstance(i.private_moc, bool)
+            self.assertEqual(i.name, v)
+
+        self.assertFalse(GroupType.is_valid(999999))
+
+    def test_note_role(self):
+        for role in [NoteRole.FEEDBACK]:
+            self.assertTrue(NoteRole.is_valid(role))
+            self.assertIsInstance(NoteRole.get_name(role), unicode)
+
+        self.assertFalse(NoteRole.is_valid(999999))
+
+    def test_reviewer_role(self):
+        for role in [
+                ReviewerRole.TECH,
+                ReviewerRole.EXTERNAL,
+                ReviewerRole.CTTEE_PRIMARY,
+                ReviewerRole.CTTEE_SECONDARY,
+                ReviewerRole.CTTEE_OTHER]:
+            self.assertTrue(ReviewerRole.is_valid(role))
+
+            info = ReviewerRole.get_info(role)
+
+            self.assertIsInstance(info, tuple)
+            self.assertIsInstance(info.name, unicode)
+            self.assertIsInstance(info.text, bool)
+            self.assertIsInstance(info.assessment, bool)
+            self.assertIsInstance(info.rating, bool)
+            self.assertIsInstance(info.weight, bool)
+
+        self.assertFalse(NoteRole.is_valid(999999))
