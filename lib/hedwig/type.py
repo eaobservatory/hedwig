@@ -497,19 +497,19 @@ class ReviewerRole(object):
     CTTEE_OTHER = 5
 
     RoleInfo = namedtuple(
-        'RoleInfo', ('name', 'text', 'assessment', 'rating', 'weight'))
+        'RoleInfo', ('name', 'unique', 'text', 'assessment', 'rating', 'weight'))
 
     _info = OrderedDict((
         (TECH,
-            RoleInfo('Technical',     True,  True,  False, False)),
+            RoleInfo('Technical',     True,  True,  True,  False, False)),
         (EXTERNAL,
-            RoleInfo('External',      True,  False, True,  False)),
+            RoleInfo('External',      False, True,  False, True,  False)),
         (CTTEE_PRIMARY,
-            RoleInfo('TAC Primary',   True,  False, True,  True)),
+            RoleInfo('TAC Primary',   True,  True,  False, True,  True)),
         (CTTEE_SECONDARY,
-            RoleInfo('TAC Secondary', True,  False, True,  True)),
+            RoleInfo('TAC Secondary', False, True,  False, True,  True)),
         (CTTEE_OTHER,
-            RoleInfo('TAC Other',     False, False, True,  True)),
+            RoleInfo('TAC Other',     False, False, False, True,  True)),
     ))
 
     @classmethod

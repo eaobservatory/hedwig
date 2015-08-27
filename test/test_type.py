@@ -129,6 +129,7 @@ class TypeTestCase(TestCase):
 
             self.assertIsInstance(info, tuple)
             self.assertIsInstance(info.name, unicode)
+            self.assertIsInstance(info.unique, bool)
             self.assertIsInstance(info.text, bool)
             self.assertIsInstance(info.assessment, bool)
             self.assertIsInstance(info.rating, bool)
