@@ -22,7 +22,7 @@ from datetime import datetime
 
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, Error, \
     NoSuchRecord, UserError
-from hedwig.type import FormatType, \
+from hedwig.type import Assessment, FormatType, \
     GroupMember, GroupMemberCollection, GroupType, \
     NoteRole, ProposalNote, Review, Reviewer, ReviewerCollection, ReviewerRole
 
@@ -185,6 +185,75 @@ class DBReviewTest(DBTestCase):
         self.assertEqual(len(result), 2)
 
         self.assertFalse(reviewer_id_1 in result.keys())
+
+        # Try specifying a review.
+        with self.assertRaisesRegexp(ConsistencyError, '^review does not'):
+            self.db.set_review(
+                reviewer_id=reviewer_id_2,
+                text='A review', format_=FormatType.PLAIN,
+                assessment=None, rating=50, weight=50, is_update=True)
+
+        self.db.set_review(
+            reviewer_id=reviewer_id_2,
+            text='A review', format_=FormatType.PLAIN,
+            assessment=None, rating=50, weight=50, is_update=False)
+
+        # Try updating a review.
+        with self.assertRaisesRegexp(ConsistencyError, '^review already'):
+            self.db.set_review(
+                reviewer_id=reviewer_id_2,
+                text='An updated review', format_=FormatType.PLAIN,
+                assessment=None, rating=51, weight=51, is_update=False)
+
+        self.db.set_review(
+            reviewer_id=reviewer_id_2,
+            text='An updated review', format_=FormatType.PLAIN,
+            assessment=None, rating=52, weight=52, is_update=True)
+
+        # Try deleting a reviewer with a review present: should need the
+        # "delete_review" argument.
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.delete_reviewer(reviewer_id=reviewer_id_2)
+
+        self.db.delete_reviewer(reviewer_id=reviewer_id_2, delete_review=True)
+
+        # Test review constraints.
+        with self.assertRaisesRegexp(Error, 'The rating should be specified'):
+            self.db.set_review(
+                reviewer_id=reviewer_id_3,
+                text='Another review', format_=FormatType.PLAIN,
+                assessment=None, rating=None, weight=None, is_update=False)
+
+        with self.assertRaisesRegexp(Error, 'Text format not specified'):
+            self.db.set_review(
+                reviewer_id=reviewer_id_3,
+                text='Another review', format_=None,
+                assessment=None, rating=25, weight=75, is_update=False)
+
+        with self.assertRaisesRegexp(Error, 'Text format not recognised'):
+            self.db.set_review(
+                reviewer_id=reviewer_id_3,
+                text='Another review', format_=999,
+                assessment=None, rating=25, weight=75, is_update=False)
+
+        with self.assertRaisesRegexp(Error, 'The assessment should not'):
+            self.db.set_review(
+                reviewer_id=reviewer_id_3,
+                text='Another review', format_=FormatType.PLAIN,
+                assessment=Assessment.PROBLEM, rating=25, weight=75,
+                is_update=False)
+
+        person_id_4 = self.db.add_person('Reviewer Four')
+        reviewer_id_4 = self.db.add_reviewer(proposal_id, person_id_4,
+                                             ReviewerRole.TECH)
+        self.assertIsInstance(reviewer_id_4, int)
+
+        with self.assertRaisesRegexp(Error, 'Assessment value not recognised'):
+            self.db.set_review(
+                reviewer_id=reviewer_id_4,
+                text='Technical review', format_=FormatType.PLAIN,
+                assessment=999, rating=None, weight=None,
+                is_update=False)
 
     def _create_test_proposal(self):
         facility_id = self.db.ensure_facility('test facility')

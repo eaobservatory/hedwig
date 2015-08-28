@@ -24,8 +24,9 @@ from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_
 from sqlalchemy.sql.functions import count
 
-from ...error import ConsistencyError, Error, NoSuchRecord, UserError
-from ...type import FormatType, \
+from ...error import ConsistencyError, Error, FormattedError, \
+    NoSuchRecord, UserError
+from ...type import Assessment, FormatType, \
     GroupMember, GroupMemberCollection, GroupType, \
     NoteRole, ProposalNote, Review, Reviewer, ReviewerCollection, ReviewerRole
 from ..meta import group_member, person, proposal, proposal_note, queue, \
@@ -153,7 +154,7 @@ class ReviewPart(object):
 
         return ans
 
-    def search_reviewer(self, proposal_id, role=None,
+    def search_reviewer(self, proposal_id=None, role=None, reviewer_id=None,
                         _conn=None):
         stmt = reviewer.select()
 
@@ -162,6 +163,9 @@ class ReviewPart(object):
 
         if role is not None:
             stmt = stmt.where(reviewer.c.role == role)
+
+        if reviewer_id is not None:
+            stmt = stmt.where(reviewer.c.id == reviewer_id)
 
         ans = ReviewerCollection()
 
@@ -223,6 +227,73 @@ class ReviewPart(object):
 
                 result = conn.execute(proposal_note.insert().values(values))
 
+    def set_review(self, reviewer_id, text, format_,
+                   assessment, rating, weight,
+                   is_update):
+        if text is not None:
+            if not format_:
+                raise UserError('Text format not specified.')
+            if not FormatType.is_valid(format_):
+                raise UserError('Text format not recognised.')
+
+        if assessment is not None:
+            if not Assessment.is_valid(assessment):
+                raise UserError('Assessment value not recognised.')
+
+        values = {
+            review.c.text: text,
+            review.c.format: (None if text is None else format_),
+            review.c.assessment: assessment,
+            review.c.rating: rating,
+            review.c.weight: weight,
+            review.c.edited: datetime.utcnow(),
+        }
+
+        with self._transaction() as conn:
+            # Find out what type of review this is so that we can
+            # determine which attributes are appropriate.
+            reviewer = self.search_reviewer(reviewer_id=reviewer_id,
+                                            _conn=conn).get_single()
+
+            role_info = ReviewerRole.get_info(reviewer.role)
+            attr_values = {k.name: v for (k, v) in values.items()}
+
+            for attr in ('text', 'assessment', 'rating', 'weight'):
+                if getattr(role_info, attr):
+                    if attr_values[attr] is None:
+                        raise FormattedError(
+                            'The {} should be specified.', attr)
+                else:
+                    if attr_values[attr] is not None:
+                        raise FormattedError(
+                            'The {} should not be specified.', attr)
+
+            # Check if the review already exists.
+            already_exists = self._exists_review(conn, reviewer_id=reviewer_id)
+            if is_update and not already_exists:
+                raise ConsistencyError(
+                    'review does not exist for reviewer {}', reviewer_id)
+            elif already_exists and not is_update:
+                raise ConsistencyError(
+                    'review already exists for reviewer {}', reviewer_id)
+
+            # Perform the insert/update.
+            if is_update:
+                result = conn.execute(review.update().where(
+                    review.c.reviewer_id == reviewer_id,
+                ).values(values))
+
+                if result.rowcount != 1:
+                    raise ConsistencyError(
+                        'no rows matched updating review {}', reviewer_id)
+
+            else:
+                values.update({
+                    review.c.reviewer_id: reviewer_id,
+                })
+
+                result = conn.execute(review.insert().values(values))
+
     def sync_group_member(self, queue_id, group_type, records):
         """
         Update the member records of the given group for the given queue.
@@ -269,3 +340,12 @@ class ReviewPart(object):
             reviewer.c.proposal_id == proposal_id,
             reviewer.c.role == role
         ))).scalar()
+
+    def _exists_review(self, conn, reviewer_id):
+        """
+        Test whether a review record by the given reviewer exists.
+        """
+
+        return 0 < conn.execute(select([count(review.c.reviewer_id)]).where(
+            review.c.reviewer_id == reviewer_id,
+        )).scalar()
