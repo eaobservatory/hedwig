@@ -22,12 +22,27 @@ from collections import namedtuple, OrderedDict
 from unittest import TestCase
 
 from hedwig.error import MultipleRecords, NoSuchRecord
-from hedwig.type import GroupType, NoteRole, OrderedResultCollection, \
+from hedwig.type import Assessment, GroupType, NoteRole, \
+    OrderedResultCollection, \
     ResultCollection, \
     ProposalState, ReviewerRole
 
 
 class TypeTestCase(TestCase):
+    def test_assessment(self):
+        self.assertTrue(Assessment.is_valid(Assessment.PROBLEM))
+        self.assertFalse(Assessment.is_valid(999))
+
+        name = Assessment.get_name(Assessment.FEASIBLE)
+        self.assertIsInstance(name, unicode)
+
+        options = Assessment.get_options()
+        self.assertIsInstance(options, OrderedDict)
+
+        for (k, v) in options.items():
+            self.assertIsInstance(k, int)
+            self.assertIsInstance(v, unicode)
+
     def test_proposal_state(self):
         states = set()
         for state in (

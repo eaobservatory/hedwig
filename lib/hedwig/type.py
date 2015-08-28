@@ -274,6 +274,32 @@ class FormatType(object):
                             if is_system or v.allow_user])
 
 
+class Assessment(object):
+    FEASIBLE = 1
+    PROBLEM = 2
+    INFEASIBLE = 3
+
+    AssessmentInfo = namedtuple('AssessmentInfo', ('name',))
+
+    _info = OrderedDict((
+        (FEASIBLE,   AssessmentInfo('Feasible')),
+        (PROBLEM,    AssessmentInfo('Problematic')),
+        (INFEASIBLE, AssessmentInfo('Infeasible')),
+    ))
+
+    @classmethod
+    def is_valid(cls, assessment):
+        return assessment in cls._info
+
+    @classmethod
+    def get_name(cls, assessment):
+        return cls._info[assessment].name
+
+    @classmethod
+    def get_options(cls):
+        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
+
+
 class AttachmentState(object):
     NEW = 1
     PROCESSING = 2
