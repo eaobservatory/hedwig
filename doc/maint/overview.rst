@@ -157,6 +157,14 @@ databases for us, so that we can, for example,
 develop and test the system using SQLite
 and then use MySQL in a live deployment.
 
+For an introduction to the SQLAlchemy Core,
+see the links on the right hand side of the
+`SQLAlchemy documentation page <http://docs.sqlalchemy.org/en/latest/>`_.
+For reference information, see the
+`Core <http://docs.sqlalchemy.org/en/latest/core/index.html>`_
+section in the documentation
+`Table of Contents <http://docs.sqlalchemy.org/en/latest/contents.html>`_.
+
 The majority of the SQLAlchemy-related code in Hedwig resides
 in the `hedwig.db` module.
 This is organized as follows:
