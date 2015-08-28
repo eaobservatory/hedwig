@@ -28,8 +28,9 @@ from ...error import ConsistencyError, Error, FormattedError, \
     NoSuchRecord, UserError
 from ...type import Assessment, FormatType, \
     GroupMember, GroupMemberCollection, GroupType, \
-    NoteRole, ProposalNote, Review, Reviewer, ReviewerCollection, ReviewerRole
-from ..meta import group_member, person, proposal, proposal_note, queue, \
+    NoteRole, ProposalNote, Reviewer, ReviewerCollection, ReviewerRole
+from ..meta import group_member, institution, person, \
+    proposal, proposal_note, queue, \
     review, reviewer
 
 
@@ -155,8 +156,41 @@ class ReviewPart(object):
         return ans
 
     def search_reviewer(self, proposal_id=None, role=None, reviewer_id=None,
+                        with_review=False, with_review_text=False,
                         _conn=None):
-        stmt = reviewer.select()
+        select_columns = [
+            reviewer,
+            person.c.name.label('person_name'),
+            person.c.public.label('person_public'),
+            (person.c.user_id.isnot(None)).label('person_registered'),
+            institution.c.name.label('institution_name'),
+            institution.c.department.label('institution_department'),
+            institution.c.organization.label('institution_organization'),
+            institution.c.country.label('institution_country'),
+        ]
+
+        select_from = reviewer.join(person).outerjoin(institution)
+
+        if with_review:
+            select_columns.extend((x.label('review_{}'.format(x.name))
+                                   for x in review.columns
+                                   if x not in (review.c.reviewer_id,
+                                                review.c.text)))
+
+            if with_review_text:
+                select_columns.append(review.c.text.label('review_text'))
+                default = {}
+
+            else:
+                default = {'review_text': None}
+
+            select_from = select_from.outerjoin(review)
+
+        else:
+            default = {'review_{}'.format(x.name): None
+                       for x in review.columns if x != review.c.reviewer_id}
+
+        stmt = select(select_columns).select_from(select_from)
 
         if proposal_id is not None:
             stmt = stmt.where(reviewer.c.proposal_id == proposal_id)
@@ -171,7 +205,9 @@ class ReviewPart(object):
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(reviewer.c.id)):
-                ans[row['id']] = Reviewer(**row)
+                values = default.copy()
+                values.update(**row)
+                ans[row['id']] = Reviewer(**values)
 
         return ans
 

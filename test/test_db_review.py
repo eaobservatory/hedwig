@@ -24,7 +24,7 @@ from hedwig.error import ConsistencyError, DatabaseIntegrityError, Error, \
     NoSuchRecord, UserError
 from hedwig.type import Assessment, FormatType, \
     GroupMember, GroupMemberCollection, GroupType, \
-    NoteRole, ProposalNote, Review, Reviewer, ReviewerCollection, ReviewerRole
+    NoteRole, ProposalNote, Reviewer, ReviewerCollection, ReviewerRole
 
 from .dummy_db import DBTestCase
 
@@ -138,9 +138,9 @@ class DBReviewTest(DBTestCase):
     def test_review(self):
         proposal_id = self._create_test_proposal()
 
-        person_id_1 = self.db.add_person('Reviewer One')
-        person_id_2 = self.db.add_person('Reviewer Two')
-        person_id_3 = self.db.add_person('Reviewer Three')
+        person_id_1 = self.db.add_person('Reviewer 1')
+        person_id_2 = self.db.add_person('Reviewer 2')
+        person_id_3 = self.db.add_person('Reviewer 3')
 
         # Try null search.
         result = self.db.search_reviewer(proposal_id)
@@ -169,14 +169,39 @@ class DBReviewTest(DBTestCase):
         self.assertEqual(len(result), 3)
 
         for ((k, v), ref) in zip(result.items(), (
-                (person_id_1, ReviewerRole.CTTEE_PRIMARY),
-                (person_id_2, ReviewerRole.CTTEE_SECONDARY),
-                (person_id_3, ReviewerRole.CTTEE_SECONDARY))):
+                (person_id_1, 'Reviewer 1', ReviewerRole.CTTEE_PRIMARY),
+                (person_id_2, 'Reviewer 2', ReviewerRole.CTTEE_SECONDARY),
+                (person_id_3, 'Reviewer 3', ReviewerRole.CTTEE_SECONDARY))):
             self.assertIsInstance(k, int)
             self.assertIsInstance(v, Reviewer)
             self.assertEqual(k, v.id)
             self.assertEqual(v.person_id, ref[0])
-            self.assertEqual(v.role, ref[1])
+            self.assertEqual(v.person_name, ref[1])
+            self.assertEqual(v.person_public, False)
+            self.assertEqual(v.person_registered, False)
+            self.assertEqual(v.role, ref[2])
+            self.assertIsNone(v.institution_name)
+            self.assertIsNone(v.institution_department)
+            self.assertIsNone(v.institution_organization)
+            self.assertIsNone(v.institution_country)
+            self.assertIsNone(v.review_text)
+            self.assertIsNone(v.review_format)
+
+        institution_id = self.db.add_institution(
+            'Inst', 'Dept', 'Org', '', 'AX')
+        self.db.update_person(person_id=person_id_3,
+                              institution_id=institution_id)
+
+        result = self.db.search_reviewer(
+            reviewer_id=reviewer_id_3,
+            with_review=True, with_review_text=True).get_single()
+
+        self.assertEqual(result.institution_name, 'Inst')
+        self.assertEqual(result.institution_department, 'Dept')
+        self.assertEqual(result.institution_organization, 'Org')
+        self.assertEqual(result.institution_country, 'AX')
+        self.assertIsNone(result.review_text)
+        self.assertIsNone(result.review_format)
 
         # Try removing a reviewer.
         self.db.delete_reviewer(reviewer_id=reviewer_id_1)
@@ -209,6 +234,20 @@ class DBReviewTest(DBTestCase):
             reviewer_id=reviewer_id_2,
             text='An updated review', format_=FormatType.PLAIN,
             assessment=None, rating=52, weight=52, is_update=True)
+
+        # Retrieve the review.
+        result = self.db.search_reviewer(
+            reviewer_id=reviewer_id_2, with_review=True).get_single()
+        self.assertIsNone(result.review_text)
+        self.assertEqual(result.review_format, FormatType.PLAIN)
+        self.assertIsNone(result.review_assessment)
+        self.assertEqual(result.review_rating, 52)
+        self.assertEqual(result.review_weight, 52)
+
+        result = self.db.search_reviewer(
+            reviewer_id=reviewer_id_2, with_review=True,
+            with_review_text=True).get_single()
+        self.assertEqual(result.review_text, 'An updated review')
 
         # Try deleting a reviewer with a review present: should need the
         # "delete_review" argument.

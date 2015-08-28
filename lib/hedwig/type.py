@@ -194,13 +194,14 @@ ProposalTextInfo = namedtuple(
     ['id', 'proposal_id', 'role', 'format', 'words',
      'edited', 'editor', 'editor_name'])
 
-Review = namedtuple(
-    'Review',
-    [x.name for x in review.columns])
-
 Reviewer = namedtuple(
     'Reviewer',
-    [x.name for x in reviewer.columns])
+    [x.name for x in reviewer.columns] +
+    ['person_name', 'person_public', 'person_registered',
+     'institution_name', 'institution_department',
+     'institution_organization', 'institution_country'] +
+    ['review_{}'.format(x.name) for x in review.columns
+     if x != review.c.reviewer_id])
 
 Semester = namedtuple(
     'Semester',
