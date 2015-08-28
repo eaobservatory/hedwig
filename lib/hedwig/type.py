@@ -27,7 +27,7 @@ from .db.meta import affiliation, calculation, call, category, \
     email, group_member, institution, \
     member, message, moc, person, \
     prev_proposal, prev_proposal_pub, \
-    proposal, proposal_category, proposal_note, queue, \
+    proposal, proposal_category, proposal_note, queue, review, reviewer, \
     semester, target, user_log
 from .error import NoSuchRecord, MultipleRecords, UserError
 
@@ -193,6 +193,14 @@ ProposalTextInfo = namedtuple(
     'ProposalTextInfo',
     ['id', 'proposal_id', 'role', 'format', 'words',
      'edited', 'editor', 'editor_name'])
+
+Review = namedtuple(
+    'Review',
+    [x.name for x in review.columns])
+
+Reviewer = namedtuple(
+    'Reviewer',
+    [x.name for x in reviewer.columns])
 
 Semester = namedtuple(
     'Semester',
@@ -815,6 +823,10 @@ class ProposalTextCollection(ResultCollection):
             raise KeyError('no text/PDF for this role')
         else:
             return default
+
+
+class ReviewerCollection(ResultCollection):
+    pass
 
 
 class TargetCollection(OrderedResultCollection):

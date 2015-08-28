@@ -27,7 +27,7 @@ from sqlalchemy.sql.functions import count
 from ...error import ConsistencyError, Error, NoSuchRecord, UserError
 from ...type import FormatType, \
     GroupMember, GroupMemberCollection, GroupType, \
-    NoteRole, ProposalNote, Review, Reviewer, ReviewerRole
+    NoteRole, ProposalNote, Review, Reviewer, ReviewerCollection, ReviewerRole
 from ..meta import group_member, person, proposal, proposal_note, queue, \
     review, reviewer
 
@@ -54,6 +54,67 @@ class ReviewPart(object):
             }))
 
         return result.inserted_primary_key[0]
+
+    def add_reviewer(self, proposal_id, person_id, role,
+                     _test_skip_check=False, _conn=None):
+        try:
+            role_info = ReviewerRole.get_info(role)
+        except KeyError:
+            raise Error('invalid reviewer role')
+
+        with self._transaction(_conn=_conn) as conn:
+            if not _test_skip_check:
+                if not self._exists_id(conn, proposal, proposal_id):
+                    raise ConsistencyError(
+                        'proposal does not exist with id={}', proposal_id)
+                if not self._exists_id(conn, person, person_id):
+                    raise ConsistencyError(
+                        'person does not exist with id={}', person_id)
+
+            # Do not allow the "unique" check to be skipped because there is
+            # no database constraint for this.  (Which is because some roles
+            # are unique and others are not.)
+            if role_info.unique:
+                if self._exists_reviewer(conn, proposal_id, role):
+                    raise UserError(
+                        'There is already a "{}" reviewer for this proposal.',
+                        role_info.name)
+
+            result = conn.execute(reviewer.insert().values({
+                reviewer.c.proposal_id: proposal_id,
+                reviewer.c.person_id: person_id,
+                reviewer.c.role: role,
+            }))
+
+        return result.inserted_primary_key[0]
+
+    def delete_reviewer(self, reviewer_id, delete_review=False):
+        """
+        Delete a reviewer record from the database.
+
+        This can, optionally, also delete any associated review.  This
+        is because, in the database, review.reviewer references
+        reviewer.id with "ondelete" set to restrict.  (We don't want
+        to accidentally delete reviews when working with th reviewer table.)
+        The option allows the deletion to be "cascaded" manually when
+        necessary.
+        """
+
+        with self._transaction() as conn:
+            if delete_review:
+                result = conn.execute(review.delete().where(
+                    review.c.reviewer_id == reviewer_id))
+                if result.rowcount > 1:
+                    raise ConsistencyError(
+                        'multiple rows matched deleting reviews by {}',
+                        reviewer_id)
+
+            result = conn.execute(reviewer.delete().where(
+                reviewer.c.id == reviewer_id))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no row matched deleting reviewer {}', reviewer_id)
 
     def get_proposal_note(self, proposal_id, role):
         """
@@ -89,6 +150,24 @@ class ReviewPart(object):
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(group_member.c.id)):
                 ans[row['id']] = GroupMember(**row)
+
+        return ans
+
+    def search_reviewer(self, proposal_id, role=None,
+                        _conn=None):
+        stmt = reviewer.select()
+
+        if proposal_id is not None:
+            stmt = stmt.where(reviewer.c.proposal_id == proposal_id)
+
+        if role is not None:
+            stmt = stmt.where(reviewer.c.role == role)
+
+        ans = ReviewerCollection()
+
+        with self._transaction(_conn=_conn) as conn:
+            for row in conn.execute(stmt.order_by(reviewer.c.id)):
+                ans[row['id']] = Reviewer(**row)
 
         return ans
 
@@ -178,4 +257,15 @@ class ReviewPart(object):
         return 0 < conn.execute(select([count(proposal_note.c.id)]).where(and_(
             proposal_note.c.proposal_id == proposal_id,
             proposal_note.c.role == role
+        ))).scalar()
+
+    def _exists_reviewer(self, conn, proposal_id, role):
+        """
+        Test whether a reviewer record of the given role already exists
+        for a proposal.
+        """
+
+        return 0 < conn.execute(select([count(reviewer.c.id)]).where(and_(
+            reviewer.c.proposal_id == proposal_id,
+            reviewer.c.role == role
         ))).scalar()

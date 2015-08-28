@@ -21,10 +21,10 @@ from __future__ import absolute_import, division, print_function, \
 from datetime import datetime
 
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, Error, \
-    NoSuchRecord
+    NoSuchRecord, UserError
 from hedwig.type import FormatType, \
     GroupMember, GroupMemberCollection, GroupType, \
-    NoteRole, ProposalNote
+    NoteRole, ProposalNote, Review, Reviewer, ReviewerCollection, ReviewerRole
 
 from .dummy_db import DBTestCase
 
@@ -134,6 +134,57 @@ class DBReviewTest(DBTestCase):
         with self.assertRaisesRegexp(Error, 'invalid note role'):
             self.db.set_proposal_note(proposal_id, 999,
                                       '', FormatType.PLAIN, False)
+
+    def test_review(self):
+        proposal_id = self._create_test_proposal()
+
+        person_id_1 = self.db.add_person('Reviewer One')
+        person_id_2 = self.db.add_person('Reviewer Two')
+        person_id_3 = self.db.add_person('Reviewer Three')
+
+        # Try null search.
+        result = self.db.search_reviewer(proposal_id)
+        self.assertIsInstance(result, ReviewerCollection)
+        self.assertEqual(len(result), 0)
+
+        # Try adding reviewers.
+        reviewer_id_1 = self.db.add_reviewer(proposal_id, person_id_1,
+                                             ReviewerRole.CTTEE_PRIMARY)
+        self.assertIsInstance(reviewer_id_1, int)
+
+        with self.assertRaisesRegexp(UserError, '^There is already'):
+            self.db.add_reviewer(proposal_id, person_id_2,
+                                 ReviewerRole.CTTEE_PRIMARY)
+
+        reviewer_id_2 = self.db.add_reviewer(proposal_id, person_id_2,
+                                             ReviewerRole.CTTEE_SECONDARY)
+        self.assertIsInstance(reviewer_id_2, int)
+
+        reviewer_id_3 = self.db.add_reviewer(proposal_id, person_id_3,
+                                             ReviewerRole.CTTEE_SECONDARY)
+        self.assertIsInstance(reviewer_id_3, int)
+
+        # Try searching for reviewers.
+        result = self.db.search_reviewer(proposal_id=proposal_id)
+        self.assertEqual(len(result), 3)
+
+        for ((k, v), ref) in zip(result.items(), (
+                (person_id_1, ReviewerRole.CTTEE_PRIMARY),
+                (person_id_2, ReviewerRole.CTTEE_SECONDARY),
+                (person_id_3, ReviewerRole.CTTEE_SECONDARY))):
+            self.assertIsInstance(k, int)
+            self.assertIsInstance(v, Reviewer)
+            self.assertEqual(k, v.id)
+            self.assertEqual(v.person_id, ref[0])
+            self.assertEqual(v.role, ref[1])
+
+        # Try removing a reviewer.
+        self.db.delete_reviewer(reviewer_id=reviewer_id_1)
+
+        result = self.db.search_reviewer(proposal_id=proposal_id)
+        self.assertEqual(len(result), 2)
+
+        self.assertFalse(reviewer_id_1 in result.keys())
 
     def _create_test_proposal(self):
         facility_id = self.db.ensure_facility('test facility')
