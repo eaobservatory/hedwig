@@ -172,6 +172,9 @@ class ReviewPart(object):
         select_from = reviewer.join(person).outerjoin(institution)
 
         if with_review:
+            select_columns.append(
+                (review.c.reviewer_id.isnot(None)).label('review_present'))
+
             select_columns.extend((x.label('review_{}'.format(x.name))
                                    for x in review.columns
                                    if x not in (review.c.reviewer_id,
@@ -189,6 +192,8 @@ class ReviewPart(object):
         else:
             default = {'review_{}'.format(x.name): None
                        for x in review.columns if x != review.c.reviewer_id}
+
+            default['review_present'] = None
 
         stmt = select(select_columns).select_from(select_from)
 

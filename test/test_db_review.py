@@ -184,6 +184,7 @@ class DBReviewTest(DBTestCase):
             self.assertIsNone(v.institution_department)
             self.assertIsNone(v.institution_organization)
             self.assertIsNone(v.institution_country)
+            self.assertIsNone(v.review_present)
             self.assertIsNone(v.review_text)
             self.assertIsNone(v.review_format)
 
@@ -200,6 +201,7 @@ class DBReviewTest(DBTestCase):
         self.assertEqual(result.institution_department, 'Dept')
         self.assertEqual(result.institution_organization, 'Org')
         self.assertEqual(result.institution_country, 'AX')
+        self.assertFalse(result.review_present)
         self.assertIsNone(result.review_text)
         self.assertIsNone(result.review_format)
 
@@ -238,6 +240,7 @@ class DBReviewTest(DBTestCase):
         # Retrieve the review.
         result = self.db.search_reviewer(
             reviewer_id=reviewer_id_2, with_review=True).get_single()
+        self.assertTrue(result.review_present)
         self.assertIsNone(result.review_text)
         self.assertEqual(result.review_format, FormatType.PLAIN)
         self.assertIsNone(result.review_assessment)
