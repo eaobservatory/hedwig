@@ -458,6 +458,12 @@ def create_facility_blueprint(db, facility):
         return facility.view_affiliation_edit(db, queue_id, request.form,
                                               request.method == 'POST')
 
+    @bp.route('/admin/queue/<int:queue_id>/group/<int:group_type>')
+    @facility_template('group_view.html')
+    @require_admin
+    def group_view(queue_id, group_type):
+        return facility.view_group_view(db, queue_id, group_type)
+
     @bp.route('/admin/call/')
     @facility_template('call_list.html')
     @require_admin

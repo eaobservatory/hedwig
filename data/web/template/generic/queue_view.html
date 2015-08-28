@@ -35,4 +35,14 @@
     <a id="affiliation_edit_link" href="{{ url_for('.affiliation_edit', queue_id=queue.id) }}">Edit affiliations</a>
 </p>
 
+<h2>Groups</h2>
+
+<ul>
+    {% for (group_type, group_name) in groups.items() %}
+        <li>
+            <a href="{{ url_for('.group_view', queue_id=queue.id, group_type=group_type) }}">{{ group_name }}</a>
+        </li>
+    {% endfor %}
+</ul>
+
 {% endblock %}

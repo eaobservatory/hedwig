@@ -1,0 +1,38 @@
+{% extends 'layout.html' %}
+{% set navigation=['facility_admin', ('Queues', url_for('.queue_list')), (queue.name, url_for('.queue_view', queue_id=queue.id))] %}
+
+{% from 'macro/institution.html' import render_member_institution %}
+
+{% block content %}
+<p>
+    Members of this group:
+</p>
+
+<ul>
+    {% set n_permission = 0 %}
+    {% if group_info.view_all_prop %}
+        <li>Can view all proposals.</li>
+        {% set n_permission = n_permission + 1 %}
+    {% endif %}
+    {% if group_info.private_moc %}
+        <li>Can search private coverage maps.</li>
+        {% set n_permission = n_permission + 1 %}
+    {% endif %}
+    {% if n_permission == 0 %}
+        <li>Have no special access rights.</li>
+    {% endif %}
+</ul>
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Institution</th>
+    </tr>
+    {% for member in members %}
+        <tr>
+            <td><a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name }}</a></td>
+            <td>{{ render_member_institution(member) }}</td>
+        </tr>
+    {% endfor %}
+</table>
+{% endblock %}

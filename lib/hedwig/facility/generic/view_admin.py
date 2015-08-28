@@ -22,10 +22,12 @@ from collections import namedtuple
 from datetime import datetime
 
 from ...error import NoSuchRecord, UserError
-from ...type import Affiliation, Call, Category, FormatType, MOCInfo, \
+from ...type import Affiliation, Call, Category, \
+    FormatType, GroupType, MOCInfo, \
     ProposalWithCode, Queue, \
     ResultCollection, Semester, \
     null_tuple
+from ...util import get_countries
 from ...view import auth
 from ...web.util import HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, parse_datetime, url_for
@@ -158,6 +160,7 @@ class GenericAdmin(object):
             'title': 'Queue: {0}'.format(queue.name),
             'queue': queue,
             'affiliations': affiliations.values(),
+            'groups': GroupType.get_options(),
         }
 
     def view_queue_edit(self, db, queue_id, form, is_post):
@@ -442,6 +445,34 @@ class GenericAdmin(object):
             'message': message,
             'affiliations': records.values(),
             'queue': queue,
+        }
+
+    def view_group_view(self, db, queue_id, group_type):
+        if not auth.can_be_admin(db):
+            raise HTTPForbidden('Could not verify administrative access.')
+
+        try:
+            queue = db.get_queue(self.id_, queue_id)
+        except NoSuchRecord:
+            raise HTTPNotFound('Queue not found')
+
+        try:
+            group_info = GroupType.get_info(group_type)
+        except KeyError:
+            raise HTTPNotFound('Unknown group.')
+
+        members = db.search_group_member(
+            queue_id=queue_id, group_type=group_type, with_person=True)
+
+        return {
+            'title': '{}: {}'.format(queue.name, group_info.name),
+            'queue': queue,
+            'group_type': group_type,
+            'group_info': group_info,
+            'members': [
+                x._replace(institution_country=get_countries().get(
+                    x.institution_country, 'Unknown country'))
+                for x in members.values()],
         }
 
     def view_category_edit(self, db, form):
