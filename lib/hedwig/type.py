@@ -75,7 +75,10 @@ FacilityInfo = namedtuple(
 
 GroupMember = namedtuple(
     'GroupMember',
-    [x.name for x in group_member.columns])
+    [x.name for x in group_member.columns] +
+    ['person_name', 'person_public', 'person_registered',
+     'institution_name', 'institution_department',
+     'institution_organization', 'institution_country'])
 
 Institution = namedtuple(
     'Institution',

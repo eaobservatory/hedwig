@@ -71,19 +71,31 @@ class DBReviewTest(DBTestCase):
         result = self.db.search_group_member(queue_id_2, GroupType.CTTEE)
         self.assertEqual(len(result), 0)
 
-        # Check the search results.
+        # Check the search results (without and then with person info).
         result = self.db.search_group_member(queue_id, GroupType.CTTEE)
         self.assertIsInstance(result, GroupMemberCollection)
         self.assertEqual(len(result), 2)
 
-        for ((k, v), person_id) in zip(result.items(),
-                                       (person_id_1, person_id_2)):
+        for v in result.values():
+            self.assertIsInstance(v, GroupMember)
+            self.assertIsNone(v.person_name)
+
+        result = self.db.search_group_member(queue_id, GroupType.CTTEE,
+                                             with_person=True)
+        self.assertIsInstance(result, GroupMemberCollection)
+        self.assertEqual(len(result), 2)
+
+        for ((k, v), person_id, person_name) in zip(
+                result.items(),
+                (person_id_1, person_id_2),
+                ('Person One', 'Person Two')):
             self.assertIsInstance(k, int)
             self.assertIsInstance(v, GroupMember)
             self.assertEqual(k, v.id)
             self.assertEqual(v.queue_id, queue_id)
             self.assertEqual(v.group_type, GroupType.CTTEE)
             self.assertEqual(v.person_id, person_id)
+            self.assertEqual(v.person_name, person_name)
 
         # Remove members via sync.
         records = GroupMemberCollection()

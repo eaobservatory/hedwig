@@ -138,8 +138,33 @@ class ReviewPart(object):
 
         return ProposalNote(**row)
 
-    def search_group_member(self, queue_id, group_type, _conn=None):
-        stmt = group_member.select()
+    def search_group_member(self, queue_id, group_type,
+                            with_person=False, _conn=None):
+        if with_person:
+            stmt = select([
+                group_member,
+                person.c.name.label('person_name'),
+                person.c.public.label('person_public'),
+                (person.c.user_id.isnot(None)).label('person_registered'),
+                institution.c.name.label('institution_name'),
+                institution.c.department.label('institution_department'),
+                institution.c.organization.label('institution_organization'),
+                institution.c.country.label('institution_country'),
+            ]).select_from(group_member.join(person).outerjoin(institution))
+
+            default = None
+        else:
+            stmt = group_member.select()
+
+            default = {
+                'person_name': None,
+                'person_public': None,
+                'person_registered': None,
+                'institution_name': None,
+                'institution_department': None,
+                'institution_organization': None,
+                'institution_country': None,
+            }
 
         if queue_id is not None:
             stmt = stmt.where(group_member.c.queue_id == queue_id)
@@ -147,11 +172,22 @@ class ReviewPart(object):
         if group_type is not None:
             stmt = stmt.where(group_member.c.group_type == group_type)
 
+        if with_person:
+            stmt = stmt.order_by(person.c.name.asc())
+        else:
+            stmt = stmt.order_by(group_member.c.id.asc())
+
         ans = GroupMemberCollection()
 
         with self._transaction(_conn=_conn) as conn:
-            for row in conn.execute(stmt.order_by(group_member.c.id)):
-                ans[row['id']] = GroupMember(**row)
+            for row in conn.execute(stmt):
+                if default is not None:
+                    values = default.copy()
+                    values.update(**row)
+                else:
+                    values = row
+
+                ans[row['id']] = GroupMember(**values)
 
         return ans
 
