@@ -191,7 +191,7 @@ class ClashTool(BaseTargetTool):
     def _check_mocs_exist(self, db):
         public = True
 
-        if auth.for_private_moc(db):
+        if auth.for_private_moc(db, self.facility.id_):
             # If the user has private access, remove public constraint.
             public = None
 
@@ -205,7 +205,7 @@ class ClashTool(BaseTargetTool):
         non_clashes = []
         public = True
 
-        if auth.for_private_moc(db):
+        if auth.for_private_moc(db, self.facility.id_):
             # If the user has private access, remove public constraint.
             public = None
 
@@ -241,7 +241,7 @@ class ClashTool(BaseTargetTool):
 
     def view_moc_list(self, db, args, form):
         public = True
-        if auth.for_private_moc(db):
+        if auth.for_private_moc(db, self.facility.id_):
             # If the user has private access, remove public constraint.
             public = None
 
@@ -254,7 +254,7 @@ class ClashTool(BaseTargetTool):
 
     def view_moc_info(self, db, args, form, moc_id):
         public = True
-        if auth.for_private_moc(db):
+        if auth.for_private_moc(db, self.facility.id_):
             # If the user has private access, remove public constraint.
             public = None
 
@@ -272,7 +272,7 @@ class ClashTool(BaseTargetTool):
 
     def view_moc_fits(self, db, args, form, moc_id):
         public = True
-        if auth.for_private_moc(db):
+        if auth.for_private_moc(db, self.facility.id_):
             # If the user has private access, remove public constraint.
             public = None
 

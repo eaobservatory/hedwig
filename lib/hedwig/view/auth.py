@@ -100,7 +100,7 @@ def for_institution(db, institution):
     return auth
 
 
-def for_private_moc(db):
+def for_private_moc(db, facility_id):
     """
     Determine whether the current user can view/search private MOCs.
     """
