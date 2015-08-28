@@ -395,6 +395,11 @@ class GenericAdmin(object):
         if not auth.can_be_admin(db):
             raise HTTPForbidden('Could not verify administrative access.')
 
+        try:
+            queue = db.get_queue(self.id_, queue_id)
+        except NoSuchRecord:
+            raise HTTPNotFound('Queue not found')
+
         message = None
         records = db.search_affiliation(queue_id=queue_id)
 
@@ -436,7 +441,7 @@ class GenericAdmin(object):
             'title': 'Edit Affiliations',
             'message': message,
             'affiliations': records.values(),
-            'queue_id': queue_id,
+            'queue': queue,
         }
 
     def view_category_edit(self, db, form):

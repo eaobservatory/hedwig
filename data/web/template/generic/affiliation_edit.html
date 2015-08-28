@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% set scripts=['edit_affiliation'] %}
-{% set navigation=['facility_admin', ('Queues', url_for('.queue_list'))] %}
+{% set navigation=['facility_admin', ('Queues', url_for('.queue_list')), (queue.name, url_for('.queue_view', queue_id=queue.id))] %}
 {% set help_link=url_for('help.admin_page', page_name='queue') %}
 
 {% block content %}
@@ -39,7 +39,7 @@
     </p>
 {% endif %}
 
-<form method="POST" action="{{ url_for('.affiliation_edit', queue_id=queue_id) }}">
+<form method="POST" action="{{ url_for('.affiliation_edit', queue_id=queue.id) }}">
     <table id="affiliations">
         <tr>
             <th>Affiliation</th>
