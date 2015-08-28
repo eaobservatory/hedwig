@@ -138,8 +138,14 @@ class ReviewPart(object):
 
         return ProposalNote(**row)
 
-    def search_group_member(self, queue_id, group_type,
+    def search_group_member(self, queue_id=None, group_type=None,
+                            person_id=None, facility_id=None,
                             with_person=False, _conn=None):
+        select_from = group_member
+
+        if facility_id is not None:
+            select_from = select_from.join(queue)
+
         if with_person:
             stmt = select([
                 group_member,
@@ -150,7 +156,9 @@ class ReviewPart(object):
                 institution.c.department.label('institution_department'),
                 institution.c.organization.label('institution_organization'),
                 institution.c.country.label('institution_country'),
-            ]).select_from(group_member.join(person).outerjoin(institution))
+            ])
+
+            select_from = select_from.join(person).outerjoin(institution)
 
             default = None
         else:
@@ -166,11 +174,19 @@ class ReviewPart(object):
                 'institution_country': None,
             }
 
+        stmt = stmt.select_from(select_from)
+
         if queue_id is not None:
             stmt = stmt.where(group_member.c.queue_id == queue_id)
 
         if group_type is not None:
             stmt = stmt.where(group_member.c.group_type == group_type)
+
+        if person_id is not None:
+            stmt = stmt.where(group_member.c.person_id == person_id)
+
+        if facility_id is not None:
+            stmt = stmt.where(queue.c.facility_id == facility_id)
 
         if with_person:
             stmt = stmt.order_by(person.c.name.asc())

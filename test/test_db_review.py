@@ -97,6 +97,19 @@ class DBReviewTest(DBTestCase):
             self.assertEqual(v.person_id, person_id)
             self.assertEqual(v.person_name, person_name)
 
+        # Check additional search criteria.
+        result = self.db.search_group_member(person_id=person_id_1)
+        self.assertEqual(len(result), 1)
+
+        result = self.db.search_group_member(person_id=1999999)
+        self.assertEqual(len(result), 0)
+
+        result = self.db.search_group_member(facility_id=facility_id)
+        self.assertEqual(len(result), 2)
+
+        result = self.db.search_group_member(facility_id=1999999)
+        self.assertEqual(len(result), 0)
+
         # Remove members via sync.
         records = GroupMemberCollection()
         self.db.sync_group_member(queue_id, GroupType.CTTEE, records)
