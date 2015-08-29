@@ -1,0 +1,22 @@
+{% extends 'layout.txt' %}
+
+{% block content %}
+You have been invited by {{ inviter_name }} to be part of the
+"{{ group.name }}" review group for {{ facility_definite_name }},
+{{ queue.name }} Queue.
+
+To participate in the online review process, you will need to
+log in or register with our system.
+Please begin by entering the following invitation code
+on the invitation page:
+
+Invitation code: {{ token }}
+
+Invitation page: {{ target_plain }}
+
+Alternatively you may click the following link:
+
+{{ target_url }}
+
+This code will expire at {{ expiry | format_datetime }} UT.
+{% endblock %}

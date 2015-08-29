@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import namedtuple
 from datetime import datetime
 
+from ...email.format import render_email_template
 from ...error import NoSuchRecord, UserError
 from ...type import Affiliation, Call, Category, \
     FormatType, GroupType, MOCInfo, \
@@ -29,8 +30,8 @@ from ...type import Affiliation, Call, Category, \
     null_tuple
 from ...util import get_countries
 from ...view import auth
-from ...web.util import HTTPForbidden, HTTPNotFound, HTTPRedirect, \
-    flash, parse_datetime, url_for
+from ...web.util import ErrorPage, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
+    flash, parse_datetime, session, url_for
 from ...view.util import organise_collection
 
 CallExtra = namedtuple(
@@ -464,15 +465,181 @@ class GenericAdmin(object):
         members = db.search_group_member(
             queue_id=queue_id, group_type=group_type, with_person=True)
 
+        countries = get_countries()
+
         return {
             'title': '{}: {}'.format(queue.name, group_info.name),
             'queue': queue,
             'group_type': group_type,
             'group_info': group_info,
             'members': [
-                x._replace(institution_country=get_countries().get(
+                x._replace(institution_country=countries.get(
                     x.institution_country, 'Unknown country'))
                 for x in members.values()],
+        }
+
+    def view_group_member_add(self, db, queue_id, group_type, form):
+        if not auth.can_be_admin(db):
+            raise HTTPForbidden('Could not verify administrative access.')
+
+        try:
+            queue = db.get_queue(self.id_, queue_id)
+        except NoSuchRecord:
+            raise HTTPNotFound('Queue not found')
+
+        try:
+            group_info = GroupType.get_info(group_type)
+        except KeyError:
+            raise HTTPNotFound('Unknown group.')
+
+        message_link = None
+        message_invite = None
+
+        member = dict(person_id=None, name='', email='')
+
+        if form is not None:
+            if 'person_id' in form:
+                member['person_id'] = int(form['person_id'])
+            member['name'] = form.get('name', '')
+            member['email'] = form.get('email', '')
+
+            if 'submit_link' in form:
+                try:
+                    if member['person_id'] is None:
+                        raise UserError(
+                            'No-one was selected from the directory.')
+                    try:
+                        person = db.get_person(person_id=member['person_id'])
+                    except NoSuchRecord:
+                        raise UserError('Could not find the person profile.')
+
+                    db.add_group_member(queue_id, group_type, person.id)
+
+                    flash('{} has been added to the group.', person.name)
+
+                    raise HTTPRedirect(url_for(
+                        '.group_view',
+                        queue_id=queue_id, group_type=group_type))
+
+                except UserError as e:
+                    message_link = e.message
+
+            elif 'submit_invite' in form:
+                try:
+                    if not member['name']:
+                        raise UserError('Please enter the person\'s name.')
+                    if not member['email']:
+                        raise UserError('Please enter an email address.')
+
+                    person_id = db.add_person(member['name'])
+                    db.add_email(person_id, member['email'], primary=True)
+                    db.add_group_member(queue_id, group_type, person_id)
+                    (token, expiry) = db.add_invitation(person_id)
+
+                    email_ctx = {
+                        'inviter_name': session['person']['name'],
+                        'recipient_name': member['name'],
+                        'group': group_info,
+                        'queue': queue,
+                        'token': token,
+                        'expiry': expiry,
+                        'target_url': url_for(
+                            'people.invitation_token_enter',
+                            token=token, _external=True),
+                        'target_plain': url_for(
+                            'people.invitation_token_enter',
+                            _external=True),
+                    }
+
+                    db.add_message(
+                        '{} invitation'.format(group_info.name),
+                        render_email_template('group_invitation.txt',
+                                              email_ctx, facility=self),
+                        [person_id])
+
+                    flash('{} has been added to the group.', member['name'])
+
+                    # Return to the group page after editing the new
+                    # member's institution.
+                    session['next_page'] = url_for(
+                        '.group_view',
+                        queue_id=queue_id, group_type=group_type)
+
+                    raise HTTPRedirect(url_for(
+                        'people.person_edit_institution', person_id=person_id))
+
+                except UserError as e:
+                    message_invite = e.message
+
+            else:
+                raise ErrorPage('Unknown action.')
+
+        # Prepare list of people to display as the registered member directory.
+        cs = get_countries()
+        existing_person_ids = [
+            x.person_id for x in db.search_group_member(
+                queue_id=queue_id, group_type=group_type).values()]
+        persons = [
+            p._replace(institution_country=cs.get(p.institution_country))
+            for p in db.search_person(registered=True, public=True,
+                                      with_institution=True).values()
+            if p.id not in existing_person_ids]
+
+        return {
+            'title': 'Add Group Member',
+            'queue': queue,
+            'group_type': group_type,
+            'group_info': group_info,
+            'persons': persons,
+            'member': member,
+            'message_link': message_link,
+            'message_invite': message_invite,
+        }
+
+    def view_group_member_edit(self, db, queue_id, group_type, form):
+        if not auth.can_be_admin(db):
+            raise HTTPForbidden('Could not verify administrative access.')
+
+        try:
+            queue = db.get_queue(self.id_, queue_id)
+        except NoSuchRecord:
+            raise HTTPNotFound('Queue not found')
+
+        try:
+            group_info = GroupType.get_info(group_type)
+        except KeyError:
+            raise HTTPNotFound('Unknown group.')
+
+        message = None
+
+        members = db.search_group_member(
+            queue_id=queue_id, group_type=group_type, with_person=True)
+
+        if form is not None:
+            try:
+                for member_id in list(members.keys()):
+                    if 'member_{}'.format(member_id) in form:
+                        # Currently nothing to update for existing members.
+                        pass
+
+                    else:
+                        del members[member_id]
+
+                db.sync_group_member(queue_id, group_type, members)
+                flash('The group membership has been saved.')
+                raise HTTPRedirect(url_for(
+                    '.group_view', queue_id=queue_id, group_type=group_type))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Edit Group Membership',
+            'queue': queue,
+            'group_type': group_type,
+            'group_info': group_info,
+            'members': members.values(),
+            'message': message,
         }
 
     def view_category_edit(self, db, form):

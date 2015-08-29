@@ -464,6 +464,24 @@ def create_facility_blueprint(db, facility):
     def group_view(queue_id, group_type):
         return facility.view_group_view(db, queue_id, group_type)
 
+    @bp.route('/admin/queue/<int:queue_id>/group/<int:group_type>/add',
+              methods=['GET', 'POST'])
+    @facility_template('group_member_add.html')
+    @require_admin
+    def group_member_add(queue_id, group_type):
+        return facility.view_group_member_add(
+            db, queue_id, group_type,
+            (request.form if request.method == 'POST' else None))
+
+    @bp.route('/admin/queue/<int:queue_id>/group/<int:group_type>/edit',
+              methods=['GET', 'POST'])
+    @facility_template('group_member_edit.html')
+    @require_admin
+    def group_member_edit(queue_id, group_type):
+        return facility.view_group_member_edit(
+            db, queue_id, group_type,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/admin/call/')
     @facility_template('call_list.html')
     @require_admin
