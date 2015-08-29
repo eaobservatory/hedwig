@@ -30,7 +30,12 @@
     </tr>
     {% for member in members %}
         <tr>
-            <td><a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name }}</a></td>
+            <td>
+                <a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name }}</a>
+                {% if not member.person_registered %}
+                    <span class="label">unregistered</span>
+                {% endif %}
+            </td>
             <td>{{ render_member_institution(member) }}</td>
         </tr>
     {% endfor %}
