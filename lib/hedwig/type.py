@@ -77,7 +77,7 @@ GroupMember = namedtuple(
     'GroupMember',
     [x.name for x in group_member.columns] +
     ['person_name', 'person_public', 'person_registered',
-     'institution_name', 'institution_department',
+     'institution_id', 'institution_name', 'institution_department',
      'institution_organization', 'institution_country'])
 
 Institution = namedtuple(
@@ -201,7 +201,7 @@ Reviewer = namedtuple(
     'Reviewer',
     [x.name for x in reviewer.columns] +
     ['person_name', 'person_public', 'person_registered',
-     'institution_name', 'institution_department',
+     'institution_id', 'institution_name', 'institution_department',
      'institution_organization', 'institution_country',
      'review_present'] +
     ['review_{}'.format(x.name) for x in review.columns
