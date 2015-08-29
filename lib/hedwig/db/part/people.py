@@ -32,9 +32,10 @@ from ...error import ConsistencyError, DatabaseIntegrityError, \
 from ...type import Email, EmailCollection, Institution, InstitutionInfo, \
     Person, PersonInfo, ResultCollection, UserLogEvent
 from ...util import get_countries
-from ..meta import auth_failure, email, institution, institution_log, \
-    invitation, member, person, \
-    reset_token, user, user_log, verify_token
+from ..meta import auth_failure, email, group_member, \
+    institution, institution_log, \
+    invitation, member, message_recipient, person, \
+    reset_token, reviewer, user, user_log, verify_token
 from ..util import require_not_none
 
 
@@ -931,7 +932,8 @@ class PeoplePart(object):
 
                 # They already have a person record, so swap out the
                 # record linked to the invitation and delete it.
-                for table in (member,):
+                for table in (member, group_member, reviewer,
+                              message_recipient):
                     conn.execute(table.update().where(
                         table.c.person_id == old_person_id
                     ).values({
