@@ -30,9 +30,9 @@ from ...type import Affiliation, Call, Category, \
     null_tuple
 from ...util import get_countries
 from ...view import auth
-from ...web.util import ErrorPage, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
+from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
     flash, parse_datetime, session, url_for
-from ...view.util import organise_collection
+from ...view.util import organise_collection, with_verified_admin
 
 CallExtra = namedtuple(
     'CallExtra',
@@ -64,6 +64,7 @@ class GenericAdmin(object):
             'semester': semester,
         }
 
+    @with_verified_admin
     def view_semester_edit(self, db, semester_id, form, is_post):
         """
         Edit or create a new semester.
@@ -72,9 +73,6 @@ class GenericAdmin(object):
         will be created.  Otherwise the existing semester will be
         updated.
         """
-
-        if not auth.can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
 
         if semester_id is None:
             # We are creating a new semester.
@@ -164,13 +162,11 @@ class GenericAdmin(object):
             'groups': GroupType.get_options(),
         }
 
+    @with_verified_admin
     def view_queue_edit(self, db, queue_id, form, is_post):
         """
         Edit or create a new queue.
         """
-
-        if not auth.can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
 
         if queue_id is None:
             # We are creating a new queue.
@@ -254,13 +250,11 @@ class GenericAdmin(object):
             'call': call,
         }
 
+    @with_verified_admin
     def view_call_edit(self, db, call_id, form, is_post):
         """
         Create or edit a call.
         """
-
-        if not auth.can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
 
         if call_id is None:
             # We are creating a new call, so need to be able to offer
@@ -374,10 +368,8 @@ class GenericAdmin(object):
             'format_types': FormatType.get_options(is_system=True),
         }
 
+    @with_verified_admin
     def view_call_proposals(self, db, call_id):
-        if not auth.can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
-
         try:
             call = db.get_call(self.id_, call_id)
         except NoSuchRecord:
@@ -395,10 +387,8 @@ class GenericAdmin(object):
                 for x in proposals.values()],
         }
 
+    @with_verified_admin
     def view_affiliation_edit(self, db, queue_id, form, is_post):
-        if not auth.can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
-
         try:
             queue = db.get_queue(self.id_, queue_id)
         except NoSuchRecord:
@@ -448,10 +438,8 @@ class GenericAdmin(object):
             'queue': queue,
         }
 
+    @with_verified_admin
     def view_group_view(self, db, queue_id, group_type):
-        if not auth.can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
-
         try:
             queue = db.get_queue(self.id_, queue_id)
         except NoSuchRecord:
@@ -478,10 +466,8 @@ class GenericAdmin(object):
                 for x in members.values()],
         }
 
+    @with_verified_admin
     def view_group_member_add(self, db, queue_id, group_type, form):
-        if not auth.can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
-
         try:
             queue = db.get_queue(self.id_, queue_id)
         except NoSuchRecord:
@@ -596,10 +582,8 @@ class GenericAdmin(object):
             'message_invite': message_invite,
         }
 
+    @with_verified_admin
     def view_group_member_edit(self, db, queue_id, group_type, form):
-        if not auth.can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
-
         try:
             queue = db.get_queue(self.id_, queue_id)
         except NoSuchRecord:
@@ -642,10 +626,8 @@ class GenericAdmin(object):
             'message': message,
         }
 
+    @with_verified_admin
     def view_category_edit(self, db, form):
-        if not auth.can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
-
         message = None
         records = db.search_category(facility_id=self.id_)
 
@@ -695,10 +677,8 @@ class GenericAdmin(object):
             'mocs': mocs.values(),
         }
 
+    @with_verified_admin
     def view_moc_edit(self, db, moc_id, form, file_):
-        if not auth.can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
-
         if moc_id is None:
             # We are uploading a new MOC -- create a blank record.
             moc = null_tuple(MOCInfo)._replace(
@@ -778,10 +758,8 @@ class GenericAdmin(object):
             'format_types': FormatType.get_options(is_system=True),
         }
 
+    @with_verified_admin
     def view_moc_delete(self, db, moc_id, form):
-        if not auth.can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
-
         try:
             moc = db.search_moc(facility_id=self.id_, moc_id=moc_id,
                                 public=None).get_single()
