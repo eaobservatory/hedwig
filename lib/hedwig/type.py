@@ -156,7 +156,7 @@ Proposal = namedtuple(
         'sci_word_lim', 'sci_fig_lim', 'sci_page_lim',
         'capt_word_lim', 'expl_word_lim',
         'date_close',
-        'members',
+        'members', 'reviewers',
     ])
 
 ProposalWithCode = namedtuple('ProposalWithCode',

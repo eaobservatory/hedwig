@@ -944,7 +944,8 @@ class ProposalPart(object):
 
     def search_proposal(self, call_id=None, facility_id=None, proposal_id=None,
                         person_id=None, person_is_editor=None, person_pi=False,
-                        state=None, with_members=False,
+                        state=None, with_members=False, with_reviewers=False,
+                        with_review_info=False, with_reviewer_role=None,
                         proposal_number=None,
                         semester_code=None, queue_code=None,
                         _conn=None):
@@ -960,6 +961,11 @@ class ProposalPart(object):
         Otherwise if "with_members" is set, then the "Proposal" object's
         "members" attribute is a "MemberCollection" with information about
         all the members of the proposal.
+
+        If "with_reviewers" is set then the "Proposal" object's "reviewers"
+        attribute is a "ReviewerCollection" with information about the
+        proposal's reviewers.  The contents of this collection are influenced
+        by the "with_review_info" and "with_reviewer_role" arguments.
         """
 
         select_columns = [
@@ -1064,6 +1070,7 @@ class ProposalPart(object):
             # members if requested.
             for row in conn.execute(stmt).fetchall():
                 members = None
+                reviewers = None
 
                 if person_id is not None:
                     row = dict(row.items())
@@ -1083,7 +1090,15 @@ class ProposalPart(object):
                     members = self.search_member(proposal_id=row['id'],
                                                  _conn=conn)
 
-                ans[row['id']] = Proposal(members=members, **row)
+                if with_reviewers:
+                    reviewers = self.search_reviewer(
+                        proposal_id=row['id'],
+                        with_review=with_review_info,
+                        role=with_reviewer_role,
+                        _conn=conn)
+
+                ans[row['id']] = Proposal(members=members, reviewers=reviewers,
+                                          **row)
 
         return ans
 
