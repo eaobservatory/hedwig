@@ -71,6 +71,16 @@ class TypeTestCase(TestCase):
 
         self.assertFalse(ProposalState.is_valid(999))
 
+        states = ProposalState.editable_states()
+        self.assertIsInstance(states, list)
+        self.assertIn(ProposalState.PREPARATION, states)
+        self.assertNotIn(ProposalState.REVIEW, states)
+
+        states = ProposalState.submitted_states()
+        self.assertIsInstance(states, list)
+        self.assertNotIn(ProposalState.PREPARATION, states)
+        self.assertIn(ProposalState.REVIEW, states)
+
     def test_result_collection(self):
         rc = ResultCollection()
         r = 'test result'

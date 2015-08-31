@@ -490,6 +490,10 @@ class ProposalState(object):
     def editable_states(cls):
         return [k for (k, v) in cls._info.items() if v.edit]
 
+    @classmethod
+    def submitted_states(cls):
+        return [k for (k, v) in cls._info.items() if v.submitted]
+
 
 class PublicationType(object):
     PLAIN = 1
