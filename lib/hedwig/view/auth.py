@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import namedtuple
 
 from ..error import NoSuchRecord
-from ..type import ProposalState
+from ..type import GroupType, ProposalState
 from ..web.util import session, HTTPForbidden
 
 Authorization = namedtuple('Authorization', ('view', 'edit'))
@@ -105,9 +105,23 @@ def for_private_moc(db, facility_id):
     Determine whether the current user can view/search private MOCs.
     """
 
-    # Probably not worthwhile to re-validate administrative access here.
+    if 'user_id' not in session or 'person' not in session:
+        return False
 
-    return 'user_id' in session and session.get('is_admin', False)
+    # If user is an administrator, allow access.
+    # Probably not worthwhile to re-validate administrative access here.
+    if session.get('is_admin', False):
+        return True
+
+    # Otherwise check groups for the given facility.
+    # TODO: consider caching this information in the session object?
+    for group_member in db.search_group_member(
+            person_id=session['person']['id'],
+            facility_id=facility_id).values():
+        if GroupType.get_info(group_member.group_type).private_moc:
+            return True
+
+    return False
 
 
 def for_proposal(db, proposal):
