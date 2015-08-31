@@ -688,9 +688,6 @@ class GenericAdmin(object):
         }
 
     def view_moc_list(self, db):
-        if not auth.can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
-
         mocs = db.search_moc(facility_id=self.id_, public=None)
 
         return {
