@@ -48,7 +48,12 @@
                         <td colspan="3"><span class="missing_data">none assigned</a></td>
                     {% else %}
                         <td>{{ reviewer.role | reviewer_role_name }}</td>
-                        <td><a href="{{ url_for('people.person_view', person_id=reviewer.person_id) }}">{{ reviewer.person_name | truncate(25, killwords=True, end='\u2026') }}</a></td>
+                        <td>
+                            <a href="{{ url_for('people.person_view', person_id=reviewer.person_id) }}">{{ reviewer.person_name | truncate(25, killwords=True, end='\u2026') }}</a>
+                            {% if not reviewer.person_registered %}
+                                <span class="label">unregistered</span>
+                            {% endif %}
+                        </td>
                         <td>
                             {% if reviewer.review_present %}
                                 Done
