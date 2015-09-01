@@ -306,7 +306,8 @@ class ReviewPart(object):
         ans = ReviewerCollection()
 
         with self._transaction(_conn=_conn) as conn:
-            for row in conn.execute(stmt.order_by(reviewer.c.id)):
+            for row in conn.execute(stmt.order_by(
+                    reviewer.c.role, person.c.name, reviewer.c.id)):
                 values = default.copy()
                 values.update(**row)
                 ans[row['id']] = Reviewer(**values)
