@@ -20,15 +20,17 @@
 
 <form method="POST" action="{{ target }}">
     <table>
-        <tr>
-            <th>Proposal</th>
-            <th>PI Name</th>
-            <th>Title</th>
-            {% for member in group_members %}
-                <th class="sideways"><div><div>{{ member.person_name| truncate(25, killwords=True, end='\u2026')  }}</div></div></th>
-            {% endfor %}
-        </tr>
         {% for proposal in proposals %}
+            {% if not loop.index0 % 20 %}
+                <tr>
+                    <th>Proposal</th>
+                    <th>PI Name</th>
+                    <th>Title</th>
+                    {% for member in group_members %}
+                        <th class="sideways"><div><div>{{ member.person_name| truncate(25, killwords=True, end='\u2026')  }}</div></div></th>
+                    {% endfor %}
+                </tr>
+            {% endif %}
             <tr>
                 <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
                 <td><a href="{{ url_for('people.person_view', person_id=proposal.members.person_id) }}">{{ proposal.members.person_name | truncate(25, killwords=True, end='\u2026') }}</a></td>
