@@ -40,6 +40,12 @@ div#content {
     border: 1px solid black;
 }
 
+div#content.wide {
+    max-width: none;
+    margin-left: 4ex;
+    margin-right: 4ex;
+}
+
 div#facilities > div {
     border-radius: 1ex;
     border: 1px solid black;

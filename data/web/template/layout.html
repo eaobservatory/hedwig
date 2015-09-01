@@ -36,7 +36,11 @@
         </header>
 
         {% block body %}
-            <div id="content">
+            {% if content_class is defined %}
+                <div id="content" class="{{ content_class }}">
+            {% else %}
+                <div id="content">
+            {% endif %}
                 {% block content_header %}
                 {% endblock %}
 
