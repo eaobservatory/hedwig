@@ -172,9 +172,17 @@ class GenericReview(object):
                                 person_new.append(person_id)
 
                         for person_id in orig:
-                            db.delete_reviewer(
-                                proposal_id=proposal.id, person_id=person_id,
-                                role=role)
+                            try:
+                                db.delete_reviewer(
+                                    proposal_id=proposal.id,
+                                    person_id=person_id,
+                                    role=role)
+                            except DatabaseIntegrityError:
+                                raise UserError(
+                                    'Could not remove previous reviewer for '
+                                    'proposal {}.  Perhaps they have already '
+                                    'provided a review?',
+                                    proposal.code)
 
                         for person_id in person_new:
                             db.add_reviewer(
