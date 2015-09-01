@@ -20,7 +20,8 @@ from __future__ import absolute_import, division, print_function, \
 
 from flask import Blueprint, request
 
-from ...type import CalculatorInfo, FigureType, TargetToolInfo, TextRole
+from ...type import CalculatorInfo, FigureType, ReviewerRole, \
+    TargetToolInfo, TextRole
 from ..util import HTTPRedirect, \
     require_admin, require_auth, send_file, templated, url_for
 
@@ -549,6 +550,30 @@ def create_facility_blueprint(db, facility):
     def moc_delete(moc_id):
         return facility.view_moc_delete(
             db, moc_id, (request.form if request.method == 'POST' else None))
+
+    @bp.route('/review/call/<int:call_id>/reviewers')
+    @require_admin
+    @facility_template('call_reviewers.html')
+    def review_call_reviewers(call_id):
+        return facility.view_review_call_reviewers(db, call_id)
+
+    @bp.route('/review/call/<int:call_id>/reviewers/technical',
+              methods=['GET', 'POST'])
+    @require_admin
+    @facility_template('reviewer_grid.html')
+    def review_call_technical(call_id):
+        return facility.view_reviewer_grid(
+            db, call_id, ReviewerRole.TECH,
+            (request.form if request.method == 'POST' else None))
+
+    @bp.route('/review/call/<int:call_id>/reviewers/committee',
+              methods=['GET', 'POST'])
+    @require_admin
+    @facility_template('reviewer_grid.html')
+    def review_call_committee(call_id):
+        return facility.view_reviewer_grid(
+            db, call_id, ReviewerRole.CTTEE_PRIMARY,
+            (request.form if request.method == 'POST' else None))
 
     # Configure the facility's calculators.
     for calculator_class in facility.get_calculator_classes():

@@ -27,9 +27,10 @@ from .calculator_example import ExampleCalculator
 from .tool_clash import ClashTool
 from .view_admin import GenericAdmin
 from .view_proposal import GenericProposal
+from .view_review import GenericReview
 
 
-class Generic(GenericAdmin, GenericProposal):
+class Generic(GenericAdmin, GenericProposal, GenericReview):
     """
     Base class for Facility objects.
     """

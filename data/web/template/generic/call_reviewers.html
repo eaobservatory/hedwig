@@ -1,0 +1,59 @@
+{% extends 'layout.html' %}
+{% set navigation=[] %}
+
+{% block content %}
+{% if targets %}
+<nav>
+    <p>
+        {% for target in targets %}
+            <a href="{{ target.url }}">{{ target.text }}</a>
+            {% if not loop.last %}
+                <br />
+            {% endif %}
+        {% endfor %}
+    </p>
+</nav>
+{% endif %}
+
+<table>
+    <tr>
+        <th>Proposal</th>
+        <th>State</th>
+        <th>PI Name</th>
+        <th>Title</th>
+        <th>Reviewer role</th>
+        <th>Reviewer name</th>
+        <th>Review status</th>
+    </tr>
+    {% for proposal in proposals %}
+        {% with reviewers = proposal.reviewers %}
+            {% if not reviewers %}
+                {% set reviewers = {None: None} %}
+            {% endif %}
+            {% for reviewer in reviewers.values() %}
+                <tr>
+                    {% if loop.first %}
+                        <td rowspan="{{ reviewers | length }}"><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+                        <td rowspan="{{ reviewers | length }}">{{ proposal.state | proposal_state_name }}</td>
+                        <td rowspan="{{ reviewers | length }}"><a href="{{ url_for('people.person_view', person_id=proposal.members.person_id) }}">{{ proposal.members.person_name | truncate(25, killwords=True, end='\u2026') }}</a></td>
+                        <td rowspan="{{ reviewers | length }}">{{ proposal.title | truncate(25, killwords=True, end='\u2026') }}</td>
+                    {% endif %}
+                    {% if reviewer is none %}
+                        <td colspan="3"><span class="missing_data">none assigned</a></td>
+                    {% else %}
+                        <td>{{ reviewer.role | reviewer_role_name }}</td>
+                        <td><a href="{{ url_for('people.person_view', person_id=reviewer.person_id) }}">{{ reviewer.person_name | truncate(25, killwords=True, end='\u2026') }}</a></td>
+                        <td>
+                            {% if reviewer.review_present %}
+                                Done
+                            {% else %}
+                                Not done
+                            {% endif %}
+                        </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        {% endwith %}
+    {% endfor %}
+</table>
+{% endblock %}
