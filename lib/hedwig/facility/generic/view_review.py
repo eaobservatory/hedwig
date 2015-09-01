@@ -233,4 +233,5 @@ class GenericReview(object):
             'secondary_unique': (None if secondary_role_info is None else
                                  secondary_role_info.unique),
             'message': message,
+            'proposal_members': proposal_members,
         }
