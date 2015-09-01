@@ -5,65 +5,73 @@
     Either
 </p>
 
-<section>
-    <h2>{{ title_link }}</h2>
+{% block person_link %}
+    <section>
+        <h2>{{ title_link }}</h2>
 
-    {% if message_link is not none %}
-        <p class="warning">
-            {{ message_link }}
-        </p>
-    {% endif %}
+        {% if message_link is not none %}
+            <p class="warning">
+                {{ message_link }}
+            </p>
+        {% endif %}
 
-    <form method="POST" action="{{ target }}">
-        <ol>
-            <li>
-                <label for="person_id">Member</label>
-                <select name="person_id">
-                    {% for person in persons %}
-                        <option value="{{ person.id }}" {{ 'selected="selected"' | safe if member.person_id == person.id }}>
-                            {{ person.name | truncate(40, killwords=True, end='\u2026') }}{% if person.institution_id is not none %},
-                                {{ person.institution_name | truncate(35, killwords=True, end='\u2026') }}{% if person.institution_country is not none %},
-                                    {{ person.institution_country | truncate(15, killwords=True, end='\u2026')}}
+        <form method="POST" action="{{ target }}">
+            <ol>
+                <li>
+                    <label for="person_id">Member</label>
+                    <select name="person_id">
+                        {% for person in persons %}
+                            <option value="{{ person.id }}" {{ 'selected="selected"' | safe if member.person_id == person.id }}>
+                                {{ person.name | truncate(40, killwords=True, end='\u2026') }}{% if person.institution_id is not none %},
+                                    {{ person.institution_name | truncate(35, killwords=True, end='\u2026') }}{% if person.institution_country is not none %},
+                                        {{ person.institution_country | truncate(15, killwords=True, end='\u2026')}}
+                                    {% endif %}
                                 {% endif %}
-                            {% endif %}
-                        </option>
-                    {% endfor %}
-                </select>
-            </li>
-            <li>
-                <input type="submit" value="{{ submit_link }}" name="submit_link" />
-            </li>
-        </ol>
-    </form>
-</section>
+                            </option>
+                        {% endfor %}
+                    </select>
+                </li>
+                {% block person_link_form_extra %}
+                {% endblock %}
+                <li>
+                    <input type="submit" value="{{ submit_link }}" name="submit_link" />
+                </li>
+            </ol>
+        </form>
+    </section>
+{% endblock %}
 
 <p class="section_label">
     Or
 </p>
 
-<section>
-    <h2>{{ title_invite }}</h2>
+{% block person_invite %}
+    <section>
+        <h2>{{ title_invite }}</h2>
 
-    {% if message_invite is not none %}
-        <p class="warning">
-            {{ message_invite }}
-        </p>
-    {% endif %}
+        {% if message_invite is not none %}
+            <p class="warning">
+                {{ message_invite }}
+            </p>
+        {% endif %}
 
-    <form method="POST" action="{{ target }}">
-        <ol>
-            <li>
-                <label for="name">Full name</label>
-                <input type="text" name="name" value="{{ member.name }}" required="required" autofocus="autofocus" size="40" />
-            </li>
-            <li>
-                <label for="email">Email address</label>
-                <input type="email" name="email" value="{{ member.email }}" required="required" size="40" />
-            </li>
-            <li>
-                <input type="submit" value="{{ submit_invite }}" name="submit_invite" />
-            </li>
-        </ol>
-    </form>
-</section>
+        <form method="POST" action="{{ target }}">
+            <ol>
+                <li>
+                    <label for="name">Full name</label>
+                    <input type="text" name="name" value="{{ member.name }}" required="required" autofocus="autofocus" size="40" />
+                </li>
+                <li>
+                    <label for="email">Email address</label>
+                    <input type="email" name="email" value="{{ member.email }}" required="required" size="40" />
+                </li>
+                {% block person_invite_form_extra %}
+                {% endblock %}
+                <li>
+                    <input type="submit" value="{{ submit_invite }}" name="submit_invite" />
+                </li>
+            </ol>
+        </form>
+    </section>
+{% endblock %}
 {% endblock %}

@@ -622,7 +622,7 @@ class GenericProposal(object):
                                            _external=True),
             }
 
-            if 'submit-link' in form:
+            if 'submit_link' in form:
                 try:
                     if member['person_id'] is None:
                         raise UserError(
@@ -663,7 +663,7 @@ class GenericProposal(object):
                 except UserError as e:
                     message_link = e.message
 
-            elif 'submit-invite' in form:
+            elif 'submit_invite' in form:
                 try:
                     if not member['name']:
                         raise UserError('Please enter the person\'s name.')
@@ -737,6 +737,11 @@ class GenericProposal(object):
             'affiliations': affiliations.values(),
             'member': member,
             'proposal_code': self.make_proposal_code(db, proposal),
+            'target': url_for('.member_add', proposal_id=proposal.id),
+            'title_link': 'Add a Member from the Directory',
+            'title_invite': 'Invite a New Member to the Proposal',
+            'submit_link': 'Add to proposal',
+            'submit_invite': 'Invite to register',
         }
 
     @with_proposal(permission='edit')
