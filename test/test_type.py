@@ -22,10 +22,12 @@ from collections import namedtuple, OrderedDict
 from unittest import TestCase
 
 from hedwig.error import MultipleRecords, NoSuchRecord
-from hedwig.type import Assessment, GroupType, NoteRole, \
+from hedwig.type import Assessment, GroupType, \
+    Member, MemberCollection, NoteRole, \
     OrderedResultCollection, \
     ResultCollection, \
-    ProposalState, ReviewerRole
+    ProposalState, ReviewerRole, \
+    null_tuple
 
 
 class TypeTestCase(TestCase):
@@ -42,6 +44,32 @@ class TypeTestCase(TestCase):
         for (k, v) in options.items():
             self.assertIsInstance(k, int)
             self.assertIsInstance(v, unicode)
+
+    def test_member_collection(self):
+        c = MemberCollection()
+
+        c[101] = null_tuple(Member)._replace(
+            id=101, person_id=9001, pi=False, person_name='Person One')
+
+        with self.assertRaises(KeyError):
+            c.get_pi()
+
+        c[102] = null_tuple(Member)._replace(
+            id=102, person_id=9002, pi=True, person_name='Person Two')
+
+        c[103] = null_tuple(Member)._replace(
+            id=103, person_id=9003, pi=False, person_name='Person Three')
+
+        result = c.get_pi()
+        self.assertEqual(result.person_id, 9002)
+
+        result = c.get_person(9003)
+        self.assertEqual(result.id, 103)
+
+        # hedwig.view.auth.for_proposal relies on this exception being
+        # raised when the current user isn't a member of the proposal.
+        with self.assertRaises(KeyError):
+            c.get_person(999999)
 
     def test_proposal_state(self):
         states = set()
