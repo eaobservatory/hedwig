@@ -2,6 +2,16 @@
 {% set navigation=[] %}
 
 {% block content %}
+{% if secondary_unique is not none %}
+    <ul>
+        <li>
+            In each proposal/person cell, the first line is the
+            primary assignment and the second line is the secondary
+            assignment.
+        </li>
+    </ul>
+{% endif %}
+
 {% if message is not none %}
     <p class="warning">
         {{ message }}
