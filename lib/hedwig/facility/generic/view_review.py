@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple
 
-from ...error import NoSuchRecord, UserError
+from ...error import DatabaseIntegrityError, NoSuchRecord, UserError
 from ...view.util import with_verified_admin
 from ...web.util import ErrorPage, HTTPError, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
@@ -88,6 +88,8 @@ class GenericReview(object):
                                                group_type=group_type,
                                                with_person=True)
 
+        group_person_ids = [x.person_id for x in group_members.values()]
+
         proposals = [
             ProposalWithReviewerPersons(
                 *x, code=self.make_proposal_code(db, x),
@@ -118,18 +120,19 @@ class GenericReview(object):
 
                     if role_info.unique:
                         # Read the radio button setting.
+                        person_ids = []
                         id_ = '{}_{}'.format(prefix, proposal.id)
                         if id_ in form:
-                            person_ids = [int(form[id_])]
-                        else:
-                            person_ids = []
+                            person_id = int(form[id_])
+                            if person_id in group_person_ids:
+                                person_ids = [person_id]
 
                     else:
                         # See which checkbox inputs are present.
                         person_ids = [
-                            x.person_id for x in group_members.values()
-                            if '{}_{}_{}'.format(prefix, proposal.id,
-                                                 x.person_id) in form]
+                            x for x in group_person_ids
+                            if '{}_{}_{}'.format(prefix, proposal.id, x)
+                            in form]
 
                     proposal = proposal._replace(
                         **{'person_ids_{}'.format(prefix): person_ids})
