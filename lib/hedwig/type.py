@@ -861,7 +861,13 @@ class ProposalTextCollection(ResultCollection):
 
 
 class ReviewerCollection(ResultCollection):
-    pass
+    def person_id_by_role(self, role):
+        """
+        Get a list of the person identifiers for members of this
+        reveiwer collection with the given role.
+        """
+
+        return [x.person_id for x in self.values() if x.role == role]
 
 
 class TargetCollection(OrderedResultCollection):
