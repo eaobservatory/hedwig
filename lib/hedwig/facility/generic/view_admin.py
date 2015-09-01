@@ -573,9 +573,6 @@ class GenericAdmin(object):
 
         return {
             'title': 'Add Group Member',
-            'queue': queue,
-            'group_type': group_type,
-            'group_info': group_info,
             'persons': persons,
             'member': member,
             'message_link': message_link,
