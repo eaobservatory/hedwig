@@ -580,6 +580,18 @@ class GenericAdmin(object):
             'member': member,
             'message_link': message_link,
             'message_invite': message_invite,
+            'target': url_for('.group_member_add',
+                              queue_id=queue.id, group_type=group_type),
+            'title_link': 'Add a Member from the Directory',
+            'title_invite': 'Invite a Member to Register',
+            'submit_link': 'Add to group',
+            'submit_invite': 'Invite to register',
+            'navigation': [
+                'facility_admin',
+                ('Queues', url_for('.queue_list')),
+                (queue.name, url_for('.queue_view', queue_id=queue.id)),
+                (group_info.name, url_for('.group_view', queue_id=queue.id,
+                                          group_type=group_type))],
         }
 
     @with_verified_admin

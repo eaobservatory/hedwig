@@ -1,5 +1,4 @@
 {% extends 'layout.html' %}
-{% set navigation=['facility_admin', ('Queues', url_for('.queue_list')), (queue.name, url_for('.queue_view', queue_id=queue.id)), (group_info.name, url_for('.group_view', queue_id=queue.id, group_type=group_type))] %}
 
 {% block content %}
 <p class="section_label">
@@ -7,7 +6,7 @@
 </p>
 
 <section>
-    <h2>Add a Member from the Directory</h2>
+    <h2>{{ title_link }}</h2>
 
     {% if message_link is not none %}
         <p class="warning">
@@ -15,7 +14,7 @@
         </p>
     {% endif %}
 
-    <form method="POST" action="{{ url_for('.group_member_add', queue_id=queue.id, group_type=group_type) }}">
+    <form method="POST" action="{{ target }}">
         <ol>
             <li>
                 <label for="person_id">Member</label>
@@ -32,7 +31,7 @@
                 </select>
             </li>
             <li>
-                <input type="submit" value="Add to group" name="submit_link" />
+                <input type="submit" value="{{ submit_link }}" name="submit_link" />
             </li>
         </ol>
     </form>
@@ -43,7 +42,7 @@
 </p>
 
 <section>
-    <h2>Invite a Member to Register</h2>
+    <h2>{{ title_invite }}</h2>
 
     {% if message_invite is not none %}
         <p class="warning">
@@ -51,7 +50,7 @@
         </p>
     {% endif %}
 
-    <form method="POST" action="{{ url_for('.group_member_add', queue_id=queue.id, group_type=group_type) }}">
+    <form method="POST" action="{{ target }}">
         <ol>
             <li>
                 <label for="name">Full name</label>
@@ -62,7 +61,7 @@
                 <input type="email" name="email" value="{{ member.email }}" required="required" size="40" />
             </li>
             <li>
-                <input type="submit" value="Invite to register" name="submit_invite" />
+                <input type="submit" value="{{ submit_invite }}" name="submit_invite" />
             </li>
         </ol>
     </form>
