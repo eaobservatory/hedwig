@@ -18,7 +18,7 @@
         <form method="POST" action="{{ target }}">
             <ol>
                 <li>
-                    <label for="person_id">Member</label>
+                    <label for="person_id">{{ label_link }}</label>
                     <select name="person_id">
                         {% for person in persons %}
                             <option value="{{ person.id }}" {{ 'selected="selected"' | safe if member.person_id == person.id }}>

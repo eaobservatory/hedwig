@@ -586,6 +586,7 @@ class GenericAdmin(object):
             'title_invite': 'Invite a Member to Register',
             'submit_link': 'Add to group',
             'submit_invite': 'Invite to register',
+            'label_link': 'Member',
             'navigation': [
                 'facility_admin',
                 ('Queues', url_for('.queue_list')),

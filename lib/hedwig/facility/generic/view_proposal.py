@@ -742,6 +742,7 @@ class GenericProposal(object):
             'title_invite': 'Invite a New Member to the Proposal',
             'submit_link': 'Add to proposal',
             'submit_invite': 'Invite to register',
+            'label_link': 'Member',
         }
 
     @with_proposal(permission='edit')
