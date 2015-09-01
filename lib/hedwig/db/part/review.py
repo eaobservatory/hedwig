@@ -224,7 +224,10 @@ class ReviewPart(object):
             stmt = stmt.where(group_member.c.queue_id == queue_id)
 
         if group_type is not None:
-            stmt = stmt.where(group_member.c.group_type == group_type)
+            if isinstance(group_type, list) or isinstance(group_type, tuple):
+                stmt = stmt.where(group_member.c.group_type.in_(group_type))
+            else:
+                stmt = stmt.where(group_member.c.group_type == group_type)
 
         if person_id is not None:
             stmt = stmt.where(group_member.c.person_id == person_id)
