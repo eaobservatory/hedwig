@@ -140,6 +140,9 @@ class GenericReview(object):
                 proposals_updated.append(proposal)
 
             try:
+                reviewer_remove = []
+                reviewer_add = []
+
                 for (proposal, proposal_updated) in zip(
                         proposals, proposals_updated):
                     for (role, role_info, prefix) in role_list:
@@ -159,35 +162,31 @@ class GenericReview(object):
                                 'proposal {}.',
                                 prefix, proposal.code)
 
-                        # Make list of people to add and remove from original
-                        # list (so that this is the removal list) and then
-                        # apply removals first to avoid violating the
-                        # uniqueness constraint in the database code.
-                        person_new = []
-
                         for person_id in updated:
                             if person_id in orig:
                                 orig.remove(person_id)
                             else:
-                                person_new.append(person_id)
+                                reviewer_add.append({
+                                    'proposal_id': proposal.id,
+                                    'person_id': person_id,
+                                    'role': role,
+                                })
 
                         for person_id in orig:
-                            try:
-                                db.delete_reviewer(
-                                    proposal_id=proposal.id,
-                                    person_id=person_id,
-                                    role=role)
-                            except DatabaseIntegrityError:
-                                raise UserError(
-                                    'Could not remove previous reviewer for '
-                                    'proposal {}.  Perhaps they have already '
-                                    'provided a review?',
-                                    proposal.code)
+                            reviewer_remove.append({
+                                'proposal_id': proposal.id,
+                                'person_id': person_id,
+                                'role': role,
+                            })
 
-                        for person_id in person_new:
-                            db.add_reviewer(
-                                proposal_id=proposal.id, person_id=person_id,
-                                role=role)
+                try:
+                    db.multiple_reviewer_update(
+                        remove=reviewer_remove, add=reviewer_add)
+                except DatabaseIntegrityError:
+                    raise UserError(
+                        'Could not update reviewer assignments. '
+                        'Perhaps you are trying to remove a reviewer '
+                        'who already provided a review?')
 
                 flash('The {} assignments have been updated.',
                       group_info.name.lower())
