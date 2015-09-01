@@ -35,7 +35,13 @@
                     {% if loop.first %}
                         <td rowspan="{{ reviewers | length }}"><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
                         <td rowspan="{{ reviewers | length }}">{{ proposal.state | proposal_state_name }}</td>
-                        <td rowspan="{{ reviewers | length }}"><a href="{{ url_for('people.person_view', person_id=proposal.members.person_id) }}">{{ proposal.members.person_name | truncate(25, killwords=True, end='\u2026') }}</a></td>
+                        <td rowspan="{{ reviewers | length }}">
+                            {% if proposal.members.person_id is not none %}
+                                <a href="{{ url_for('people.person_view', person_id=proposal.members.person_id) }}">{{ proposal.members.person_name | truncate(25, killwords=True, end='\u2026') }}</a>
+                            {% else %}
+                                &nbsp;
+                            {% endif %}
+                        </td>
                         <td rowspan="{{ reviewers | length }}">{{ proposal.title | truncate(25, killwords=True, end='\u2026') }}</td>
                     {% endif %}
                     {% if reviewer is none %}
