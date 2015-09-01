@@ -90,7 +90,9 @@ class ReviewPart(object):
 
         return result.inserted_primary_key[0]
 
-    def delete_reviewer(self, reviewer_id, delete_review=False):
+    def delete_reviewer(self, reviewer_id=None,
+                        proposal_id=None, person_id=None, role=None,
+                        delete_review=False):
         """
         Delete a reviewer record from the database.
 
@@ -100,6 +102,10 @@ class ReviewPart(object):
         to accidentally delete reviews when working with th reviewer table.)
         The option allows the deletion to be "cascaded" manually when
         necessary.
+
+        Either selects the reviewer to delete by the "reviewer_id"
+        argument, if it is specified, or, otherwise, by the proposal_id,
+        person_id and role, all of whic must be specified together.
         """
 
         with self._transaction() as conn:
@@ -111,8 +117,21 @@ class ReviewPart(object):
                         'multiple rows matched deleting reviews by {}',
                         reviewer_id)
 
-            result = conn.execute(reviewer.delete().where(
-                reviewer.c.id == reviewer_id))
+            stmt = reviewer.delete()
+
+            if reviewer_id is not None:
+                stmt = stmt.where(reviewer.c.id == reviewer_id)
+
+            elif proposal_id is None or person_id is None or role is None:
+                raise Error('Either reviewer_id or proposal/person/role '
+                            'must be specified.')
+
+            else:
+                stmt = stmt.where(and_(reviewer.c.proposal_id == proposal_id,
+                                       reviewer.c.person_id == person_id,
+                                       reviewer.c.role == role))
+
+            result = conn.execute(stmt)
 
             if result.rowcount != 1:
                 raise ConsistencyError(
