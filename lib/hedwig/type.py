@@ -430,6 +430,10 @@ class GroupType(object):
 
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
+    @classmethod
+    def view_all_groups(cls):
+        return [k for (k, v) in cls._info.items() if v.view_all_prop]
+
 
 class NoteRole(object):
     FEEDBACK = 1

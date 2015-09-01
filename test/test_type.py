@@ -162,6 +162,8 @@ class TypeTestCase(TestCase):
 
         self.assertFalse(GroupType.is_valid(999999))
 
+        self.assertIsInstance(GroupType.view_all_groups(), list)
+
     def test_note_role(self):
         for role in [NoteRole.FEEDBACK]:
             self.assertTrue(NoteRole.is_valid(role))
