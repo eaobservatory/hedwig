@@ -24,6 +24,7 @@
         <th>Reviewer role</th>
         <th>Reviewer name</th>
         <th>Review status</th>
+        <th>Actions</th>
     </tr>
     {% for proposal in proposals %}
         {% with reviewers = proposal.reviewers %}
@@ -60,6 +61,11 @@
                             {% else %}
                                 Not done
                             {% endif %}
+                        </td>
+                    {% endif %}
+                    {% if loop.first %}
+                        <td rowspan="{{ reviewers | length }}">
+                            <a href="{{ url_for('.review_external_add', proposal_id=proposal.id) }}">Add external</a>
                         </td>
                     {% endif %}
                 </tr>

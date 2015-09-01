@@ -575,6 +575,15 @@ def create_facility_blueprint(db, facility):
             db, call_id, ReviewerRole.CTTEE_PRIMARY,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/review/proposal/<int:proposal_id>/reviewers/external/add',
+              methods=['GET', 'POST'])
+    @require_admin
+    @facility_template('person_select.html')
+    def review_external_add(proposal_id):
+        return facility.view_reviewer_add(
+            db, proposal_id, ReviewerRole.EXTERNAL,
+            (request.form if request.method == 'POST' else None))
+
     # Configure the facility's calculators.
     for calculator_class in facility.get_calculator_classes():
         calculator_code = calculator_class.get_code()

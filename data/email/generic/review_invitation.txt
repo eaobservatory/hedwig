@@ -1,0 +1,43 @@
+{% extends 'layout.txt' %}
+
+{% block content %}
+You have been invited by {{ inviter_name }}
+to review proposal {{ proposal_code }}
+to use {{ facility_definite_name }}.
+This proposal, entitled "{{ proposal.title }}",
+is a proposal in the {{ proposal.queue_name }} Queue
+for Semester {{ proposal.semester_name }}
+and it is requested that you provide the
+{{ role_info.name.lower() }} review.
+
+{% if token is defined %}
+To view the proposal and enter your review online, you will need to
+log in or register with our system.
+Please begin by entering the following invitation code
+on the invitation page:
+
+Invitation code: {{ token }}
+
+Invitation page: {{ target_plain }}
+
+Alternatively you may click the following link:
+
+{{ target_url }}
+
+This code will expire at {{ expiry | format_datetime }} UT.
+
+Once you have registered with our system,
+{% else %}
+Since you are already registered with our system,
+{% endif %}
+you may find the proposal on your review list page.
+Alternatively you may use the following direct links.
+
+To view the proposal:
+
+{{ target_proposal }}
+
+To enter your review:
+
+{{ target_review }}
+{% endblock %}

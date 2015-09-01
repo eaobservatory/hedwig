@@ -20,8 +20,10 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple
 
+from ...email.format import render_email_template
 from ...error import DatabaseIntegrityError, NoSuchRecord, UserError
-from ...view.util import with_verified_admin
+from ...util import get_countries
+from ...view.util import with_proposal, with_verified_admin
 from ...web.util import ErrorPage, HTTPError, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
 from ...type import GroupType, Link, MemberPIInfo, \
@@ -234,4 +236,167 @@ class GenericReview(object):
                                  secondary_role_info.unique),
             'message': message,
             'proposal_members': proposal_members,
+        }
+
+    @with_verified_admin
+    @with_proposal(permission='none')
+    def view_reviewer_add(self, db, proposal, proposal_can, role, form):
+        try:
+            role_info = ReviewerRole.get_info(role)
+        except KeyError:
+            raise HTTPError('Unknown reviewer role')
+
+        if not ProposalState.is_submitted(proposal.state):
+            raise ErrorPage('This proposal is not in a submitted state.')
+
+        proposal_person_ids = [
+            x.person_id for x in proposal.members.values()
+        ]
+
+        existing_person_ids = [
+            x.person_id for x in db.search_reviewer(
+                proposal_id=proposal.id, role=role).values()
+        ]
+
+        message_link = None
+        message_invite = None
+
+        member = dict(person_id=None, name='', email='')
+
+        if form is not None:
+            if 'person_id' in form:
+                member['person_id'] = int(form['person_id'])
+            member['name'] = form.get('name', '')
+            member['email'] = form.get('email', '')
+
+            proposal_code = self.make_proposal_code(db, proposal)
+
+            email_ctx = {
+                'proposal': proposal,
+                'proposal_code': proposal_code,
+                'role_info': role_info,
+                'inviter_name': session['person']['name'],
+                'target_proposal': url_for(
+                    '.proposal_view', proposal_id=proposal.id, _external=True),
+            }
+
+            if 'submit_link' in form:
+                try:
+                    if member['person_id'] is None:
+                        raise UserError(
+                            'No-one was selected from the directory.')
+                    try:
+                        person = db.get_person(person_id=member['person_id'])
+                    except NoSuchRecord:
+                        raise UserError('Could not find the person profile.')
+
+                    if person.id in proposal_person_ids:
+                        raise UserError(
+                            'This person is a member of the proposal.')
+
+                    if person.id in existing_person_ids:
+                        raise UserError(
+                            'This person already has this role.')
+
+                    reviewer_id = db.add_reviewer(
+                        proposal_id=proposal.id,
+                        person_id=person.id, role=role)
+
+                    email_ctx.update({
+                        'recipient_name': person.name,
+                        # TODO: include URL for review page when it is ready.
+                        'target_review': 'TBD',
+                    })
+
+                    db.add_message(
+                        'Proposal {} review'.format(proposal_code),
+                        render_email_template('review_invitation.txt',
+                                              email_ctx, facility=self),
+                        [person.id])
+
+                    flash('{} has been added as a reviewer.', person.name)
+
+                    raise HTTPRedirect(url_for(
+                        '.review_call_reviewers', call_id=proposal.call_id))
+
+                except UserError as e:
+                    message_link = e.message
+
+            elif 'submit_invite' in form:
+                try:
+                    if not member['name']:
+                        raise UserError('Please enter the person\'s name.')
+                    if not member['email']:
+                        raise UserError('Please enter an email address.')
+
+                    person_id = db.add_person(member['name'])
+                    db.add_email(person_id, member['email'], primary=True)
+                    reviewer_id = db.add_reviewer(
+                        proposal_id=proposal.id,
+                        person_id=person_id, role=role)
+                    (token, expiry) = db.add_invitation(person_id)
+
+                    email_ctx.update({
+                        'token': token,
+                        'expiry': expiry,
+                        'recipient_name': member['name'],
+                        # TODO: include URL for review page when it is ready.
+                        'target_review': 'TBD',
+                        'target_url': url_for(
+                            'people.invitation_token_enter',
+                            token=token, _external=True),
+                        'target_plain': url_for(
+                            'people.invitation_token_enter',
+                            _external=True),
+                    })
+
+                    db.add_message(
+                        'Proposal {} review'.format(proposal_code),
+                        render_email_template('review_invitation.txt',
+                                              email_ctx, facility=self),
+                        [person_id])
+
+                    flash('{} has been invited to register.', member['name'])
+
+                    # Return to the call reviewers page after editing the new
+                    # reviewer's institution.
+                    session['next_page'] = url_for(
+                        '.review_call_reviewers', call_id=proposal.call_id)
+
+                    raise HTTPRedirect(url_for(
+                        'people.person_edit_institution', person_id=person_id))
+
+                except UserError as e:
+                    message_invite = e.message
+
+            else:
+                raise ErrorPage('Unknown action.')
+
+        # Prepare list of people to display as the registered member directory.
+        cs = get_countries()
+        exclude_person_ids = proposal_person_ids + existing_person_ids
+        persons = [
+            p._replace(institution_country=cs.get(p.institution_country))
+            for p in db.search_person(registered=True, public=True,
+                                      with_institution=True).values()
+            if p.id not in exclude_person_ids]
+
+        if role == ReviewerRole.EXTERNAL:
+            target = url_for('.review_external_add', proposal_id=proposal.id)
+        else:
+            raise HTTPError('Unexpected reviewer role.')
+
+        return {
+            'title': 'Add {} Reviewer'.format(role_info.name.title()),
+            'persons': persons,
+            'member': member,
+            'message_link': message_link,
+            'message_invite': message_invite,
+            'target': target,
+            'title_link': 'Select Reviewer from the Directory',
+            'title_invite': 'Invite a Reviewer to Register',
+            'submit_link': 'Select reviewer',
+            'submit_invite': 'Invite to register',
+            'label_link': 'Reviewer',
+            'navigation': [],
         }
