@@ -25,7 +25,7 @@ import logging
 import os
 
 from ..config import get_config, get_database, get_facilities, get_home
-from ..type import AttachmentState, FacilityInfo, ProposalState
+from ..type import AttachmentState, FacilityInfo, ProposalState, ReviewerRole
 from .util import require_auth, session, templated
 
 from .blueprint.facility import create_facility_blueprint
@@ -166,6 +166,13 @@ def create_web_app(db=None):
             return ProposalState.get_name(value)
         except KeyError:
             return 'Unknown state'
+
+    @app.template_filter()
+    def reviewer_role_name(value):
+        try:
+            return ReviewerRole.get_info(value).name
+        except KeyError:
+            return 'Unknown role'
 
     @app.template_test()
     def attachment_ready(value):
