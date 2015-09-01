@@ -92,7 +92,7 @@ class ReviewPart(object):
 
     def delete_reviewer(self, reviewer_id=None,
                         proposal_id=None, person_id=None, role=None,
-                        delete_review=False):
+                        delete_review=False, _conn=None):
         """
         Delete a reviewer record from the database.
 
@@ -108,7 +108,7 @@ class ReviewPart(object):
         person_id and role, all of whic must be specified together.
         """
 
-        with self._transaction() as conn:
+        with self._transaction(_conn=_conn) as conn:
             if delete_review:
                 result = conn.execute(review.delete().where(
                     review.c.reviewer_id == reviewer_id))
@@ -156,6 +156,29 @@ class ReviewPart(object):
                                proposal_id, role)
 
         return ProposalNote(**row)
+
+    def multiple_reviewer_update(self, remove=None, add=None):
+        """
+        Perform multiple reviewer updates.
+
+        This is so that multiple updates to the reviewer assignment
+        table can be prepared and then carried out (here) in a single
+        transaction.  The removals are performed first to avoid
+        triggering the uniqueness constraint when the reviewer for
+        a "unique" role is being changed.
+
+        "remove" and "add" are lists of kwargs dictionaries to be passed
+        to "delete_reviewer" and "add_reviewer" respectively.
+        """
+
+        with self._transaction() as conn:
+            if remove is not None:
+                for kwargs in remove:
+                    self.delete_reviewer(_conn=conn, **kwargs)
+
+            if add is not None:
+                for kwargs in add:
+                    self.add_reviewer(_conn=conn, **kwargs)
 
     def search_group_member(self, queue_id=None, group_type=None,
                             person_id=None, facility_id=None,
