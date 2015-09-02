@@ -434,6 +434,10 @@ class GroupType(object):
     def view_all_groups(cls):
         return [k for (k, v) in cls._info.items() if v.view_all_prop]
 
+    @classmethod
+    def private_moc_groups(cls):
+        return [k for (k, v) in cls._info.items() if v.private_moc]
+
 
 class NoteRole(object):
     FEEDBACK = 1
