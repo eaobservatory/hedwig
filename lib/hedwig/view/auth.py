@@ -165,6 +165,50 @@ def for_proposal(db, proposal):
     return auth
 
 
+def for_review(db, reviewer, proposal):
+    """
+    Determine the current user's authorization regarding this review.
+
+    "reviewer" can be set to "None" to skip reviewer-specific authorization.
+    (Access will then be granted based only on proposal membership,
+    administrative access and committee membership.)
+    """
+
+    if 'user_id' not in session or 'person' not in session:
+        return no
+
+    person_id = session['person']['id']
+    is_under_review = (proposal.state == ProposalState.REVIEW)
+
+    # Forbid access if the person is a member of the proposal.
+    try:
+        proposal.members.get_person(person_id)
+        return no
+    except KeyError:
+        pass
+
+    # Allow full access to the reviewer if the proposal is still under review.
+    # (But skip this test if doing a non-reviewer-specific check.)
+    if reviewer is not None:
+        if ((person_id == reviewer.person_id) and is_under_review):
+            return yes
+
+    # Allow administrators to view, with edit too if still under review.
+    # (This is to allow the administrator to adjust review ratings during
+    # the committee meeting.)
+    if session.get('is_admin', False) and can_be_admin(db):
+        return Authorization(view=True, edit=is_under_review)
+
+    # Give view access to committee members.
+    if db.search_group_member(
+            queue_id=proposal.queue_id,
+            group_type=GroupType.CTTEE,
+            person_id=person_id):
+        return Authorization(view=True, edit=False)
+
+    return no
+
+
 def can_be_admin(db):
     """
     Check whether the user is permitted to take administrative

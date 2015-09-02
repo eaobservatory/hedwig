@@ -23,10 +23,10 @@ from collections import namedtuple
 from ...email.format import render_email_template
 from ...error import DatabaseIntegrityError, NoSuchRecord, UserError
 from ...util import get_countries
-from ...view.util import with_proposal, with_verified_admin
+from ...view.util import with_proposal, with_review, with_verified_admin
 from ...web.util import ErrorPage, HTTPError, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
-from ...type import GroupType, Link, MemberPIInfo, \
+from ...type import Assessment, FormatType, GroupType, Link, MemberPIInfo, \
     ProposalState, ProposalWithCode, ReviewerRole, \
     null_tuple
 
@@ -399,4 +399,85 @@ class GenericReview(object):
             'submit_invite': 'Invite to register',
             'label_link': 'Reviewer',
             'navigation': [],
+        }
+
+    @with_review(permission='edit')
+    def view_review_edit(self, db, reviewer, proposal, can, form):
+        try:
+            role_info = ReviewerRole.get_info(reviewer.role)
+        except KeyError:
+            raise HTTPError('Unknown reviewer role')
+
+        message = None
+
+        if form is not None:
+            try:
+                # Read form inputs first.
+                if role_info.text:
+                    reviewer = reviewer._replace(
+                        review_text=form['text'],
+                        review_format=FormatType.PLAIN)
+
+                if role_info.assessment:
+                    try:
+                        reviewer = reviewer._replace(
+                            review_assessment=int(form['assessment']))
+                    except:
+                        raise UserError('Please select an assessment.')
+
+                if role_info.rating:
+                    try:
+                        reviewer = reviewer._replace(
+                            review_rating=int(form['rating']))
+                    except:
+                        raise UserError('Please provide an integer rating.')
+
+                if role_info.weight:
+                    try:
+                        reviewer = reviewer._replace(
+                            review_weight=int(form['weight']))
+                    except:
+                        raise UserError('Please provide an integer '
+                                        'self-assessment weighting.')
+
+                # Validate the form inputs.
+                if role_info.assessment:
+                    if not Assessment.is_valid(reviewer.review_assessment):
+                        raise UserError('Selected assessment not recognized.')
+
+                if role_info.rating:
+                    if not (0 <= reviewer.review_rating <= 100):
+                        raise UserError('Please give a rating between '
+                                        '0 and 100.')
+
+                if role_info.weight:
+                    if not (0 <= reviewer.review_weight <= 100):
+                        raise UserError('Please give a self-assessment '
+                                        'weighting between 0 and 100.')
+
+                db.set_review(
+                    reviewer_id=reviewer.id,
+                    text=reviewer.review_text,
+                    format_=reviewer.review_format,
+                    assessment=reviewer.review_assessment,
+                    rating=reviewer.review_rating,
+                    weight=reviewer.review_weight,
+                    is_update=reviewer.review_present)
+
+                flash('The review has been saved.')
+
+                # TODO: redirect back to a suitable page.
+                raise HTTPRedirect(url_for('home_page'))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Edit Review',
+            'proposal_code': self.make_proposal_code(db, proposal),
+            'proposal': proposal,
+            'reviewer': reviewer,
+            'role_info': role_info,
+            'assessment_options': Assessment.get_options(),
+            'message': message,
         }

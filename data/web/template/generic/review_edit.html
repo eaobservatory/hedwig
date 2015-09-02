@@ -1,0 +1,92 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h2>Proposal Information</h2>
+
+<table>
+    <tr>
+        <th>Proposal identifier</th>
+        <td>
+            <a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}" target="_blank">{{ proposal_code }}</a>
+        </td>
+    </tr>
+    <tr>
+        <th>Proposal title</th>
+        <td>{{ proposal.title }}</td>
+    </tr>
+    <tr>
+        <th>Review role</th>
+        <td>{{ role_info.name }}</td>
+    </tr>
+</table>
+
+<h2>Review</h2>
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.review_edit', reviewer_id=reviewer.id) }}">
+    <ol>
+        {% if role_info.text %}
+            <li>
+                <label for="text">Review</label>
+                <textarea name="text" cols="80" rows="16" autofocus="autofocus">{{ reviewer.review_text if reviewer.review_text is not none }}</textarea>
+            </li>
+        {% endif %}
+        {% if role_info.assessment %}
+            <li>
+                <label for="assessment">Assessment</label>
+                <select name="assessment">
+                    {% for (assessment_id, assessment_name) in assessment_options.items() %}
+                        <option value="{{ assessment_id }}" {{ 'selected="selected"' | safe if assessment_id == reviewer.review_assessment }}>{{ assessment_name }}</option>
+                    {% endfor %}
+                </select>
+            </li>
+        {% endif %}
+        {% if role_info.rating %}
+            <li>
+                <div class="explanation">
+                    Please give a rating for this proposal on a scale from
+                    0 (worst) to 100 (best).
+                    You may use the following scale for guidance:
+                    <ul>
+                        <li><b>0:</b> Very poor.
+                        <li><b>25:</b> Poor &mdash; <i>I would not recommend awarding time to the project.</i></li>
+                        <li><b>50:</b> Average &mdash; <i>I would only accept this proposal if there is not much demand for the requested observing conditions.</i></li>
+                        <li><b>75:</b> Very good &mdash; <i>I consider this a very worthwhile project.</i></li>
+                        <li><b>100:</b> An exceptional proposal with the prospect of extremely significant results.</i></li>
+                    </ul>
+                </div>
+                <label for="rating">Rating</label>
+                <input type="number" name="rating" value="{{ reviewer.review_rating if reviewer.review_rating is not none }}" min="0" max="100" step="1" required="required" {{ 'autofocus="autofocus"' | safe if not role_info.text }} />
+            </li>
+        {% endif %}
+        {% if role_info.weight %}
+            <li>
+                <div class="explanation">
+                    Please give an assessment of your expertise regarding
+                    the subject matter of this proposal,
+                    on a scale from 0 (least) to 100 (most).
+                    The self-assessment weighting given here will be used
+                    to moderate the effect of your rating of the proposal
+                    on its average score.
+                    You may use the following scale for guidance:
+                    <ul>
+                        <li><b>0:</b> I know nothing of this field.</li>
+                        <li><b>50:</b> I have a fair degree of knowledge of this field.</li>
+                        <li><b>100:</b> I am an expert in this field and my knowledge of it is fully up-to-date.</li>
+                    </ul>
+                </div>
+                <label for="weight">Weighting</label>
+                <input type="number" name="weight" value="{{ reviewer.review_weight if reviewer.review_weight is not none }}" min="0" max="100" step="1" required="required" />
+            </li>
+        {% endif %}
+        <li>
+            <input type="submit" value="Save" name="submit" />
+        </li>
+    </ol>
+</form>
+{% endblock %}

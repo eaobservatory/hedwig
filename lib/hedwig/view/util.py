@@ -119,6 +119,61 @@ def with_proposal(permission):
     return decorator
 
 
+def with_review(permission):
+    """
+    Decorator for methods which deal with reviews of proposals.
+
+    Assumes that the first arguents are a database object and reviewer ID.
+    The wrapped method is called with the database, reviewer record,
+    proposal record and authorization object followed by any remaining
+    arguments.
+    """
+
+    def decorator(f):
+        @functools.wraps(f)
+        def decorated_method(self, db, reviewer_id, *args, **kwargs):
+            try:
+                reviewer = db.search_reviewer(
+                    reviewer_id=reviewer_id,
+                    with_review=True, with_review_text=True).get_single()
+            except NoSuchRecord:
+                raise HTTPNotFound('Reviewer record not found')
+
+            assert reviewer.id == reviewer_id
+
+            proposal_id = reviewer.proposal_id
+
+            # Apply facility constraint here -- the proposal will only
+            # be found if its facility is self.id_.
+            try:
+                proposal = db.get_proposal(self.id_, proposal_id,
+                                           with_members=True)
+            except NoSuchRecord:
+                raise HTTPNotFound('Proposal record not found')
+
+            assert proposal.id == proposal_id
+
+            can = auth.for_review(db, reviewer, proposal)
+
+            if permission == 'view':
+                if not can.view:
+                    raise HTTPForbidden('Permission denied for this review.')
+
+            elif permission == 'edit':
+                if not can.edit:
+                    raise HTTPForbidden(
+                        'Edit permission denied for this review.')
+
+            else:
+                raise HTTPError('Unknown permission type.')
+
+            return f(self, db, reviewer, proposal, can, *args, **kwargs)
+
+        return decorated_method
+
+    return decorator
+
+
 def with_verified_admin(f):
     """
     Method decorator which double-checks administrative access.
