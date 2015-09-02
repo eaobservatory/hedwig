@@ -304,8 +304,9 @@ class GenericReview(object):
 
                     email_ctx.update({
                         'recipient_name': person.name,
-                        # TODO: include URL for review page when it is ready.
-                        'target_review': 'TBD',
+                        'target_review': url_for(
+                            '.review_edit',
+                            reviewer_id=reviewer_id, _external=True),
                     })
 
                     db.add_message(
@@ -340,8 +341,9 @@ class GenericReview(object):
                         'token': token,
                         'expiry': expiry,
                         'recipient_name': member['name'],
-                        # TODO: include URL for review page when it is ready.
-                        'target_review': 'TBD',
+                        'target_review': url_for(
+                            '.review_edit',
+                            reviewer_id=reviewer_id, _external=True),
                         'target_url': url_for(
                             'people.invitation_token_enter',
                             token=token, _external=True),
