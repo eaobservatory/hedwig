@@ -869,6 +869,13 @@ class ProposalTextCollection(ResultCollection):
 
 
 class ReviewerCollection(ResultCollection):
+    def get_person(self, person_id):
+        for member in self.values():
+            if member.person_id == person_id:
+                return member
+
+        raise KeyError('person not in reviewer collection')
+
     def person_id_by_role(self, role):
         """
         Get a list of the person identifiers for members of this

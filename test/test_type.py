@@ -26,7 +26,7 @@ from hedwig.type import Assessment, GroupType, \
     Member, MemberCollection, NoteRole, \
     OrderedResultCollection, \
     ResultCollection, \
-    ProposalState, ReviewerRole, \
+    ProposalState, Reviewer, ReviewerRole, ReviewerCollection, \
     null_tuple
 
 
@@ -170,6 +170,23 @@ class TypeTestCase(TestCase):
             self.assertIsInstance(NoteRole.get_name(role), unicode)
 
         self.assertFalse(NoteRole.is_valid(999999))
+
+    def test_reviewer_collection(self):
+        c = ReviewerCollection()
+
+        c[201] = null_tuple(Reviewer)._replace(id=201, person_id=2001,
+                                               role=ReviewerRole.TECH)
+        c[202] = null_tuple(Reviewer)._replace(id=202, person_id=2002,
+                                               role=ReviewerRole.EXTERNAL)
+
+        # hedwig.view.auth.for_proposal relies on this exception being
+        # raised when the current user isn't a reviewer of the proposal.
+        with self.assertRaises(KeyError):
+            c.get_person(9999)
+
+        self.assertEqual(c.get_person(2001).id, 201)
+
+        self.assertEqual(c.person_id_by_role(ReviewerRole.EXTERNAL), [2002])
 
     def test_reviewer_role(self):
         for role in [
