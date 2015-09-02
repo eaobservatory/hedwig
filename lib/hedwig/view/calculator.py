@@ -194,7 +194,7 @@ class BaseCalculator(object):
                 # Check authorization to see this calculation.
                 proposal = db.get_proposal(
                     self.facility.id_, calculation.proposal_id,
-                    with_members=True)
+                    with_members=True, with_reviewers=True)
 
                 can = auth.for_proposal(db, proposal)
                 if not can.view:

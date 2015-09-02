@@ -143,7 +143,26 @@ def for_proposal(db, proposal):
             view=True,
             edit=(member.editor and ProposalState.can_edit(proposal.state)))
     except KeyError:
-        return auth
+        pass
+
+    if ((proposal.reviewers is not None) and
+            (proposal.state == ProposalState.REVIEW)):
+        # Give access to people assigned as reviewers of the proposal.
+        try:
+            proposal.reviewers.get_person(session['person']['id'])
+            return auth._replace(view=True)
+        except KeyError:
+            pass
+
+    if ProposalState.is_submitted(proposal.state):
+        # Give access to review groups with access to view all proposals.
+        if db.search_group_member(
+                queue_id=proposal.queue_id,
+                group_type=GroupType.view_all_groups(),
+                person_id=session['person']['id']):
+            return auth._replace(view=True)
+
+    return auth
 
 
 def can_be_admin(db):

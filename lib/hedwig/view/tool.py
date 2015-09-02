@@ -41,7 +41,7 @@ class BaseTargetTool(object):
     def view_proposal(self, db, proposal_id, args):
         try:
             proposal = db.get_proposal(self.facility.id_, proposal_id,
-                                       with_members=True)
+                                       with_members=True, with_reviewers=True)
         except NoSuchRecord:
             raise HTTPNotFound('Proposal not found')
 

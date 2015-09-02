@@ -85,7 +85,8 @@ def with_proposal(permission):
         def decorated_method(self, db, proposal_id, *args, **kwargs):
             try:
                 proposal = db.get_proposal(self.id_, proposal_id,
-                                           with_members=True)
+                                           with_members=True,
+                                           with_reviewers=True)
             except NoSuchRecord:
                 raise HTTPNotFound('Proposal not found')
 
