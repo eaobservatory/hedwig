@@ -115,11 +115,11 @@ def for_private_moc(db, facility_id):
 
     # Otherwise check groups for the given facility.
     # TODO: consider caching this information in the session object?
-    for group_member in db.search_group_member(
+    if db.search_group_member(
             person_id=session['person']['id'],
+            group_type=GroupType.private_moc_groups(),
             facility_id=facility_id).values():
-        if GroupType.get_info(group_member.group_type).private_moc:
-            return True
+        return True
 
     return False
 
