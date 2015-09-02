@@ -66,6 +66,30 @@ def create_facility_blueprint(db, facility):
         return facility.view_proposal_new(
             db, call_id, request.form, request.method == 'POST')
 
+    @bp.route('/call/<int:call_id>/reviewers')
+    @require_admin
+    @facility_template('call_reviewers.html')
+    def review_call_reviewers(call_id):
+        return facility.view_review_call_reviewers(db, call_id)
+
+    @bp.route('/call/<int:call_id>/reviewers/technical',
+              methods=['GET', 'POST'])
+    @require_admin
+    @facility_template('reviewer_grid.html')
+    def review_call_technical(call_id):
+        return facility.view_reviewer_grid(
+            db, call_id, ReviewerRole.TECH,
+            (request.form if request.method == 'POST' else None))
+
+    @bp.route('/call/<int:call_id>/reviewers/committee',
+              methods=['GET', 'POST'])
+    @require_admin
+    @facility_template('reviewer_grid.html')
+    def review_call_committee(call_id):
+        return facility.view_reviewer_grid(
+            db, call_id, ReviewerRole.CTTEE_PRIMARY,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/proposal/<int:proposal_id>')
     @facility_template('proposal_view.html')
     @require_auth(require_person=True)
@@ -391,6 +415,15 @@ def create_facility_blueprint(db, facility):
             db, proposal_id,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/proposal/<int:proposal_id>/reviewers/external/add',
+              methods=['GET', 'POST'])
+    @require_admin
+    @facility_template('person_select.html')
+    def review_external_add(proposal_id):
+        return facility.view_reviewer_add(
+            db, proposal_id, ReviewerRole.EXTERNAL,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/admin')
     @facility_template('facility_admin.html')
     @require_admin
@@ -550,39 +583,6 @@ def create_facility_blueprint(db, facility):
     def moc_delete(moc_id):
         return facility.view_moc_delete(
             db, moc_id, (request.form if request.method == 'POST' else None))
-
-    @bp.route('/review/call/<int:call_id>/reviewers')
-    @require_admin
-    @facility_template('call_reviewers.html')
-    def review_call_reviewers(call_id):
-        return facility.view_review_call_reviewers(db, call_id)
-
-    @bp.route('/review/call/<int:call_id>/reviewers/technical',
-              methods=['GET', 'POST'])
-    @require_admin
-    @facility_template('reviewer_grid.html')
-    def review_call_technical(call_id):
-        return facility.view_reviewer_grid(
-            db, call_id, ReviewerRole.TECH,
-            (request.form if request.method == 'POST' else None))
-
-    @bp.route('/review/call/<int:call_id>/reviewers/committee',
-              methods=['GET', 'POST'])
-    @require_admin
-    @facility_template('reviewer_grid.html')
-    def review_call_committee(call_id):
-        return facility.view_reviewer_grid(
-            db, call_id, ReviewerRole.CTTEE_PRIMARY,
-            (request.form if request.method == 'POST' else None))
-
-    @bp.route('/review/proposal/<int:proposal_id>/reviewers/external/add',
-              methods=['GET', 'POST'])
-    @require_admin
-    @facility_template('person_select.html')
-    def review_external_add(proposal_id):
-        return facility.view_reviewer_add(
-            db, proposal_id, ReviewerRole.EXTERNAL,
-            (request.form if request.method == 'POST' else None))
 
     # Configure the facility's calculators.
     for calculator_class in facility.get_calculator_classes():
