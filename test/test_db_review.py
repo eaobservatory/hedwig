@@ -238,6 +238,11 @@ class DBReviewTest(DBTestCase):
 
         self.assertFalse(reviewer_id_1 in result.keys())
 
+        result = self.db.search_reviewer(proposal_id=proposal_id,
+                                         person_id=person_id_2)
+
+        self.assertEqual(list(result.keys()), [reviewer_id_2])
+
         # Try specifying a review.
         with self.assertRaisesRegexp(ConsistencyError, '^review does not'):
             self.db.set_review(

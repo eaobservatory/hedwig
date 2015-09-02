@@ -255,6 +255,7 @@ class ReviewPart(object):
         return ans
 
     def search_reviewer(self, proposal_id=None, role=None, reviewer_id=None,
+                        person_id=None,
                         with_review=False, with_review_text=False,
                         _conn=None):
         select_columns = [
@@ -305,6 +306,9 @@ class ReviewPart(object):
 
         if reviewer_id is not None:
             stmt = stmt.where(reviewer.c.id == reviewer_id)
+
+        if person_id is not None:
+            stmt = stmt.where(reviewer.c.person_id == person_id)
 
         ans = ReviewerCollection()
 
