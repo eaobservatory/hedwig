@@ -446,7 +446,8 @@ class ProposalPart(object):
             facility_id=facility_id, call_id=call_id, with_case_notes=True
         ).get_single()
 
-    def get_proposal(self, facility_id, proposal_id, with_members=False,
+    def get_proposal(self, facility_id, proposal_id,
+                     with_members=False, with_reviewers=False,
                      _conn=None):
         """
         Get a proposal record.
@@ -454,7 +455,8 @@ class ProposalPart(object):
 
         return self.search_proposal(
             facility_id=facility_id, proposal_id=proposal_id,
-            with_members=with_members, _conn=_conn
+            with_members=with_members, with_reviewers=with_reviewers,
+            _conn=_conn
         ).get_single()
 
     def get_proposal_facility_code(self, proposal_id):
