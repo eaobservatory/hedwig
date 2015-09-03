@@ -130,6 +130,9 @@ class GenericProposal(object):
             'can_remove_self': (ProposalState.can_edit(proposal.state) and
                                 any(x.person_id == session['person']['id']
                                     for x in proposal.members.values())),
+            'can_view_review': ((proposal.state == ProposalState.REVIEW) and
+                                auth.for_review(db, reviewer=None,
+                                                proposal=proposal).view),
             'is_submitted': ProposalState.is_submitted(proposal.state),
             'proposal': proposal._replace(members=[
                 x._replace(institution_country=countries.get(

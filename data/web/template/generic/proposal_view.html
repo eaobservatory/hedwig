@@ -66,6 +66,10 @@
                             <a id="submit_proposal_link" href="{{ url_for('.proposal_submit', proposal_id=proposal.id) }}">Submit proposal</a>
                         {% endif %}
                     </nav>
+                {% elif can_view_review %}
+                    <nav>
+                        <a id="view_review_link" href="{{ url_for('.proposal_reviews', proposal_id=proposal.id) }}">View reviews</a>
+                    </nav>
                 {% else %}
                     &nbsp;
                 {% endif %}
