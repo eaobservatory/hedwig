@@ -24,7 +24,8 @@ from itertools import groupby
 from ..config import get_config
 from ..error import NoSuchRecord
 from ..type import ProposalWithCode
-from ..web.util import HTTPNotFound, mangle_email_address
+from ..web.util import HTTPNotFound, HTTPForbidden, mangle_email_address
+from . import auth
 
 
 def prepare_home(application_name, facilities):
@@ -35,6 +36,9 @@ def prepare_home(application_name, facilities):
 
 def prepare_person_proposals(db, person_id, facilities, administrative=False):
     if administrative:
+        if not auth.can_be_admin(db):
+            raise HTTPForbidden('Could not verify administrative access.')
+
         try:
             person = db.get_person(person_id=person_id)
             title = '{}: Proposals'.format(person.name)
@@ -67,6 +71,9 @@ def prepare_person_proposals(db, person_id, facilities, administrative=False):
 
 def prepare_person_reviews(db, person_id, facilities, administrative=False):
     if administrative:
+        if not auth.can_be_admin(db):
+            raise HTTPForbidden('Could not verify administrative access.')
+
         try:
             person = db.get_person(person_id=person_id)
             title = '{}: Reviews'.format(person.name)
