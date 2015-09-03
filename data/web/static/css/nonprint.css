@@ -91,7 +91,7 @@ span.label {
 }
 
 .callouttip > div > p.point_right:after {
-    content: '\2191';
+    content: '\2197';
     font-size: 200%;
     vertical-align: bottom;
 }

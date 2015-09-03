@@ -65,6 +65,23 @@ def prepare_person_proposals(db, person_id, facilities, administrative=False):
     }
 
 
+def prepare_person_reviews(db, person_id, facilities, administrative=False):
+    if administrative:
+        try:
+            person = db.get_person(person_id=person_id)
+            title = '{}: Reviews'.format(person.name)
+        except NoSuchRecord:
+            raise HTTPNotFound('Person not found.')
+    else:
+        person = None
+        title = 'Your Reviews'
+
+    return {
+        'title': title,
+        'person': person,
+    }
+
+
 def prepare_contact_page():
     # NB: shares email address with the one used in the email footer.
     # If this is not OK they could have separate configuration entries.

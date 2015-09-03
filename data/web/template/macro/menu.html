@@ -12,7 +12,7 @@
                     the proposal at any time.
                 </p>
                 <p class="point_right">
-                    Proposal identifier {{ proposal_code }}
+                    Proposal identifier: {{ proposal_code }}
                 </p>
                 <p>
                     This is your new proposal identifier.
@@ -30,6 +30,9 @@
                 </p>
             </div>
         {% endif %}
+    </li>
+    <li>
+        <a id="person_reviews_link" href="{{ url_for('person_reviews') }}">Your reviews</a>
     </li>
     {% if facility_name is defined %}
         <li><a href="{{ url_for('.facility_home') }}">{{ facility_name }}</a></li>

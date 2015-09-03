@@ -35,7 +35,7 @@ from .blueprint.query import create_query_blueprint
 from .format import format_text
 
 from ..view.home import prepare_home, \
-    prepare_person_proposals, prepare_contact_page
+    prepare_person_proposals, prepare_person_reviews, prepare_contact_page
 
 
 def create_web_app(db=None):
@@ -93,6 +93,13 @@ def create_web_app(db=None):
     @templated('person_proposals.html')
     def person_proposals():
         return prepare_person_proposals(
+            db, session['person']['id'], facilities)
+
+    @app.route('/reviews')
+    @require_auth(require_person=True)
+    @templated('person_reviews.html')
+    def person_reviews():
+        return prepare_person_reviews(
             db, session['person']['id'], facilities)
 
     @app.route('/contact-us')
