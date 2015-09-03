@@ -25,7 +25,8 @@ from ...error import DatabaseIntegrityError, NoSuchRecord, UserError
 from ...util import get_countries
 from ...view import auth
 from ...view.util import with_proposal, with_review, with_verified_admin
-from ...web.util import ErrorPage, HTTPError, HTTPNotFound, HTTPRedirect, \
+from ...web.util import ErrorPage, \
+    HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
 from ...type import Assessment, FormatType, GroupType, Link, MemberPIInfo, \
     ProposalState, ProposalWithCode, ReviewerRole, TextRole, \
