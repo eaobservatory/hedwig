@@ -4,4 +4,42 @@
 {% endif %}
 
 {% block content %}
+    {% if not proposals %}
+        <p class="not_present">
+            You do not currently have any active reviews in this system.
+        </p>
+    {% else %}
+        {% for facility_name, facility_proposals in proposals.items() %}
+            <h2>{{ facility_name }}</h2>
+
+            <table>
+                <tr>
+                    <th>Proposal</th>
+                    <th>PI Name</th>
+                    <th>Title</th>
+                    <th>Review state</th>
+                    <th>Review role</th>
+                </tr>
+                {% for proposal_id, proposal_reviews in facility_proposals | groupby('id') %}
+                    {% for proposal in proposal_reviews %}
+                        <tr>
+                            {% if loop.first %}
+                                <td rowspan="{{ proposal_reviews | length }}"><a href="{{ url_for(proposal.facility_code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+                                <td rowspan="{{ proposal_reviews | length }}">
+                                    {% if proposal.members.person_name is not none %}
+                                        {{ proposal.members.person_name | truncate(25, killwords=True, end='\u2026') }}
+                                    {% else %}
+                                        &nbsp;
+                                    {% endif %}
+                                    </td>
+                                <td rowspan="{{ proposal_reviews | length }}">{{ proposal.title | truncate(25, killwords=True, end='\u2026') }}</td>
+                            {% endif %}
+                            <td>{{ 'Done' if proposal.reviewers.review_present else 'Not done' }}</td>
+                            <td><a href="{{ url_for(proposal.facility_code + '.review_edit', reviewer_id=proposal.reviewers.id) }}">{{ proposal.reviewers.role | reviewer_role_name }}</a></td>
+                        </tr>
+                    {% endfor %}
+                {% endfor %}
+            </table>
+        {% endfor %}
+    {% endif %}
 {% endblock %}
