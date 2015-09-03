@@ -207,6 +207,10 @@ Reviewer = namedtuple(
     ['review_{}'.format(x.name) for x in review.columns
      if x != review.c.reviewer_id])
 
+ReviewerInfo = namedtuple(
+    'ReviewerInfo',
+    ['id', 'role', 'review_present'])
+
 Semester = namedtuple(
     'Semester',
     map(lambda x: x.name, semester.columns))

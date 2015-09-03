@@ -36,13 +36,14 @@ from ...type import Affiliation, AttachmentState, Call, Category, \
     ProposalFigure, ProposalFigureInfo, ProposalPDFInfo, \
     ProposalText, ProposalTextCollection, ProposalTextInfo, \
     PublicationType, \
-    Queue, QueueInfo, ResultCollection, Semester, SemesterInfo, \
+    Queue, QueueInfo, ResultCollection, ReviewerInfo, Semester, SemesterInfo, \
     Target, TargetCollection, TextRole
 from ..meta import affiliation, call, category, facility, institution, \
     member, person, prev_proposal, prev_proposal_pub, \
     proposal, proposal_category, \
     proposal_fig, proposal_fig_preview, proposal_fig_thumbnail, \
-    proposal_pdf, proposal_pdf_preview, proposal_text, queue, semester, target
+    proposal_pdf, proposal_pdf_preview, proposal_text, \
+    queue, review, reviewer, semester, target
 from ..util import require_not_none
 
 
@@ -948,6 +949,7 @@ class ProposalPart(object):
                         person_id=None, person_is_editor=None, person_pi=False,
                         state=None, with_members=False, with_reviewers=False,
                         with_review_info=False, with_reviewer_role=None,
+                        reviewer_person_id=None,
                         proposal_number=None,
                         semester_code=None, queue_code=None,
                         _conn=None):
@@ -968,6 +970,12 @@ class ProposalPart(object):
         attribute is a "ReviewerCollection" with information about the
         proposal's reviewers.  The contents of this collection are influenced
         by the "with_review_info" and "with_reviewer_role" arguments.
+
+        However if "reviewer_person_id" is set then the "reviewers" attribute
+        in the results is a "ReviewerInfo" object describing the role of
+        the given person.  Since in this mode there may be more than one
+        result per proposal, the keys in the returned result collection
+        are reviewer identifiers rather than proposal identifiers.
         """
 
         select_columns = [
@@ -1012,10 +1020,24 @@ class ProposalPart(object):
                 member, and_(
                     proposal.c.id == member.c.proposal_id,
                     member.c.pi)
-            ).outerjoin(person).outerjoin(
+            ).outerjoin(
+                person,
+                member.c.person_id == person.c.id
+            ).outerjoin(
                 affiliation,
                 member.c.affiliation_id == affiliation.c.id
             )
+
+        if reviewer_person_id:
+            select_columns.extend([
+                reviewer.c.id.label('reviewer_id'),
+                reviewer.c.role.label('reviewer_role'),
+                review.c.reviewer_id.isnot(None).label('review_present'),
+            ])
+            select_from = select_from.join(
+                reviewer,
+                proposal.c.id == reviewer.c.proposal_id
+            ).outerjoin(review)
 
         stmt = select(select_columns).select_from(select_from)
 
@@ -1037,6 +1059,9 @@ class ProposalPart(object):
                     stmt = stmt.where(member.c.editor)
                 else:
                     stmt = stmt.where(not_(member.c.editor))
+
+        if reviewer_person_id is not None:
+            stmt = stmt.where(reviewer.c.person_id == reviewer_person_id)
 
         if state is not None:
             if isinstance(state, list) or isinstance(state, tuple):
@@ -1073,6 +1098,7 @@ class ProposalPart(object):
             for row in conn.execute(stmt).fetchall():
                 members = None
                 reviewers = None
+                row_key = row['id']
 
                 if person_id is not None:
                     row = dict(row.items())
@@ -1092,15 +1118,31 @@ class ProposalPart(object):
                     members = self.search_member(proposal_id=row['id'],
                                                  _conn=conn)
 
-                if with_reviewers:
+                if reviewer_person_id is not None:
+                    # There may be more than one reviewer record per person
+                    # and proposal, therefore in this case we need to use the
+                    # reviewer ID as the result collection key.
+                    row_key = row['reviewer_id']
+
+                    # Row may have already been converted to a dict when
+                    # processing "person_id" or "person_pi" queries.
+                    if not isinstance(row, dict):
+                        row = dict(row.items())
+
+                    reviewers = ReviewerInfo(
+                        id=row.pop('reviewer_id'),
+                        role=row.pop('reviewer_role'),
+                        review_present=row.pop('review_present'))
+
+                elif with_reviewers:
                     reviewers = self.search_reviewer(
                         proposal_id=row['id'],
                         with_review=with_review_info,
                         role=with_reviewer_role,
                         _conn=conn)
 
-                ans[row['id']] = Proposal(members=members, reviewers=reviewers,
-                                          **row)
+                ans[row_key] = Proposal(members=members, reviewers=reviewers,
+                                        **row)
 
         return ans
 
