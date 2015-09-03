@@ -23,11 +23,12 @@ from collections import namedtuple
 from ...email.format import render_email_template
 from ...error import DatabaseIntegrityError, NoSuchRecord, UserError
 from ...util import get_countries
+from ...view import auth
 from ...view.util import with_proposal, with_review, with_verified_admin
 from ...web.util import ErrorPage, HTTPError, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
 from ...type import Assessment, FormatType, GroupType, Link, MemberPIInfo, \
-    ProposalState, ProposalWithCode, ReviewerRole, \
+    ProposalState, ProposalWithCode, ReviewerRole, TextRole, \
     null_tuple
 
 ProposalWithReviewerPersons = namedtuple(
@@ -484,4 +485,38 @@ class GenericReview(object):
             'role_info': role_info,
             'assessment_options': Assessment.get_options(),
             'message': message,
+        }
+
+    def view_proposal_reviews(self, db, proposal_id):
+        try:
+            proposal = db.get_proposal(self.id_, proposal_id,
+                                       with_members=True)
+        except NoSuchRecord:
+            raise HTTPNotFound('Proposal record not found')
+
+        can = auth.for_review(db, reviewer=None, proposal=proposal)
+
+        if not can.view:
+            raise HTTPForbidden(
+                'Permission denied for this proposal\'s reviews.')
+
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        try:
+            abstract = db.get_proposal_text(proposal.id, TextRole.ABSTRACT)
+        except NoSuchRecord:
+            abstract = None
+
+        reviews = db.search_reviewer(proposal_id=proposal.id, with_review=True,
+                                     with_review_text=True)
+
+        return {
+            'title': '{}: Reviews'.format(proposal_code),
+            'proposal': proposal,
+            'proposal_code': proposal_code,
+            'abstract': abstract,
+            'categories': db.search_proposal_category(
+                proposal_id=proposal.id).values(),
+            'reviews': reviews.values(),
+            'can_edit': can.edit,
         }
