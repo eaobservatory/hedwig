@@ -251,6 +251,8 @@ class GenericReview(object):
         if not ProposalState.is_submitted(proposal.state):
             raise ErrorPage('This proposal is not in a submitted state.')
 
+        proposal_code = self.make_proposal_code(db, proposal)
+
         proposal_person_ids = [
             x.person_id for x in proposal.members.values()
         ]
@@ -271,7 +273,6 @@ class GenericReview(object):
             member['name'] = form.get('name', '')
             member['email'] = form.get('email', '')
 
-            proposal_code = self.make_proposal_code(db, proposal)
 
             email_ctx = {
                 'proposal': proposal,
@@ -403,6 +404,8 @@ class GenericReview(object):
             'submit_invite': 'Invite to register',
             'label_link': 'Reviewer',
             'navigation': [],
+            'proposal': proposal,
+            'proposal_code': proposal_code,
         }
 
     @with_review(permission='edit')

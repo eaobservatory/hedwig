@@ -1,0 +1,9 @@
+{% extends 'generic/person_select.html' %}
+
+{% from 'macro/proposal_summary.html' import render_proposal_summary %}
+
+{% block content %}
+    {{ render_proposal_summary(facility_name, proposal, proposal_code) }}
+
+    {{ super() }}
+{% endblock %}

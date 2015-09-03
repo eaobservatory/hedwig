@@ -424,7 +424,7 @@ def create_facility_blueprint(db, facility):
     @bp.route('/proposal/<int:proposal_id>/reviewers/external/add',
               methods=['GET', 'POST'])
     @require_admin
-    @facility_template('person_select.html')
+    @facility_template('reviewer_select.html')
     def review_external_add(proposal_id):
         return facility.view_reviewer_add(
             db, proposal_id, ReviewerRole.EXTERNAL,
