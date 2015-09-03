@@ -15,7 +15,7 @@
         <th>Semester</th>
         <th>Queue</th>
         <th>Status</th>
-        <th colspan="2">Links</th>
+        <th colspan="3">Links</th>
     </tr>
     {% for call in calls %}
         <tr>
@@ -38,6 +38,11 @@
             <td>
                 <a href="{{ url_for('.call_proposals', call_id=call.id) }}">
                     View proposals
+                </a>
+            </td>
+            <td>
+                <a href="{{ url_for('.review_call_reviewers', call_id=call.id) }}">
+                    Assign reviewers
                 </a>
             </td>
         </tr>
