@@ -1,0 +1,45 @@
+{% macro render_proposal_summary(facility_name, proposal, proposal_code, abstract=None, categories=None) %}
+    <table>
+        <tr>
+            <th>Facility</th>
+            <td>{{ facility_name }}</td>
+        </tr>
+        <tr>
+            <th>Semester</th>
+            <td>{{ proposal.semester_name }}</td>
+        </tr>
+        <tr>
+            <th>Queue</th>
+            <td>{{ proposal.queue_name }}</td>
+        </tr>
+        <tr>
+            <th>Proposal identifier</th>
+            <td>
+                <a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal_code }}</a>
+            </td>
+        </tr>
+        <tr>
+            <th>Proposal status</th>
+            <td>{{ proposal.state | proposal_state_name }}</td>
+        </tr>
+        <tr>
+            <th>Proposal title</th>
+            <td>{{ proposal.title }}</td>
+        </tr>
+        {% if caller is defined %}
+            {{ caller() }}
+        {% endif %}
+    </table>
+
+    {% if abstract %}
+        {{ abstract | format_text }}
+    {% endif %}
+
+    {% if categories %}
+        <p>
+            {% for category in categories %}
+                <span class="label">{{ category.category_name }}</span>
+            {% endfor %}
+        </p>
+    {% endif %}
+{% endmacro %}

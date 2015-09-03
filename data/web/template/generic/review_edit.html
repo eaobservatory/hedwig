@@ -1,24 +1,16 @@
 {% extends 'layout.html' %}
+{% from 'macro/proposal_summary.html' import render_proposal_summary %}
 
 {% block content %}
 <h2>Proposal Information</h2>
 
-<table>
-    <tr>
-        <th>Proposal identifier</th>
-        <td>
-            <a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}" target="_blank">{{ proposal_code }}</a>
-        </td>
-    </tr>
-    <tr>
-        <th>Proposal title</th>
-        <td>{{ proposal.title }}</td>
-    </tr>
+
+{% call render_proposal_summary(facility_name, proposal, proposal_code) %}
     <tr>
         <th>Review role</th>
         <td>{{ role_info.name }}</td>
     </tr>
-</table>
+{% endcall %}
 
 <h2>Review</h2>
 
