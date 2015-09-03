@@ -468,8 +468,10 @@ class GenericReview(object):
 
                 flash('The review has been saved.')
 
-                # TODO: redirect back to a suitable page.
-                raise HTTPRedirect(url_for('home_page'))
+                # TODO: redirect to a committee listing page if this is a
+                # committee member review?  Or if adjusting a rating
+                # as the administrator?
+                raise HTTPRedirect(url_for('person_reviews'))
 
             except UserError as e:
                 message = e.message
