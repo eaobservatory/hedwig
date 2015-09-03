@@ -482,9 +482,11 @@ class GenericReview(object):
             except UserError as e:
                 message = e.message
 
+        proposal_code = self.make_proposal_code(db, proposal)
+
         return {
-            'title': 'Edit Review',
-            'proposal_code': self.make_proposal_code(db, proposal),
+            'title': '{}: Edit Review'.format(proposal_code),
+            'proposal_code': proposal_code,
             'proposal': proposal,
             'reviewer': reviewer,
             'role_info': role_info,
