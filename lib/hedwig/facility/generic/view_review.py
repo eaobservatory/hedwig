@@ -405,7 +405,8 @@ class GenericReview(object):
         }
 
     @with_review(permission='edit')
-    def view_review_edit(self, db, reviewer, proposal, can, form):
+    def view_review_edit(self, db, reviewer, proposal, can, form,
+                         referrer=None):
         try:
             role_info = ReviewerRole.get_info(reviewer.role)
         except KeyError:
@@ -416,6 +417,8 @@ class GenericReview(object):
         if form is not None:
             try:
                 # Read form inputs first.
+                referrer = form.get('referrer', None)
+
                 if role_info.text:
                     reviewer = reviewer._replace(
                         review_text=form['text'],
@@ -469,10 +472,8 @@ class GenericReview(object):
 
                 flash('The review has been saved.')
 
-                # TODO: redirect to a committee listing page if this is a
-                # committee member review?  Or if adjusting a rating
-                # as the administrator?
-                raise HTTPRedirect(url_for('person_reviews'))
+                raise HTTPRedirect(referrer if referrer
+                                   else url_for('person_reviews'))
 
             except UserError as e:
                 message = e.message
@@ -485,6 +486,7 @@ class GenericReview(object):
             'role_info': role_info,
             'assessment_options': Assessment.get_options(),
             'message': message,
+            'referrer': referrer,
         }
 
     def view_proposal_reviews(self, db, proposal_id):

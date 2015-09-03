@@ -596,7 +596,8 @@ def create_facility_blueprint(db, facility):
     def review_edit(reviewer_id):
         return facility.view_review_edit(
             db, reviewer_id,
-            (request.form if request.method == 'POST' else None))
+            (request.form if request.method == 'POST' else None),
+            request.referrer)
 
     # Configure the facility's calculators.
     for calculator_class in facility.get_calculator_classes():
