@@ -65,7 +65,7 @@
                     {% endif %}
                     {% if loop.first %}
                         <td rowspan="{{ reviewers | length }}">
-                            <a href="{{ url_for('.review_external_add', proposal_id=proposal.id) }}">Add external</a>
+                            <a href="{{ url_for('.review_external_add', proposal_id=proposal.id) }}">Add external reviewer</a>
                             <br />
                             <a href="{{ url_for('.proposal_reviews', proposal_id=proposal.id) }}">View reviews</a>
                         </td>
