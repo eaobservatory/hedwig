@@ -67,4 +67,18 @@
     </p>
 {% endif %}
 
+{% if review_calls %}
+    <h2 id="reviewprocess">Review Processes</h2>
+
+    <ul>
+        {% for review_call in review_calls %}
+            <li>
+                <a href="{{ url_for('.review_call', call_id=review_call.id) }}">
+                    {{ review_call.semester_name }},
+                    {{ review_call.queue_name }}
+                </a>
+        {% endfor %}
+    </ul>
+{% endif %}
+
 {% endblock %}

@@ -66,6 +66,12 @@ def create_facility_blueprint(db, facility):
         return facility.view_proposal_new(
             db, call_id, request.form, request.method == 'POST')
 
+    @bp.route('/call/<int:call_id>/review')
+    @require_auth(require_person=True)
+    @facility_template('call_review.html')
+    def review_call(call_id):
+        return facility.view_review_call(db, call_id)
+
     @bp.route('/call/<int:call_id>/reviewers')
     @require_admin
     @facility_template('call_reviewers.html')

@@ -24,7 +24,8 @@ from ...email.format import render_email_template
 from ...error import DatabaseIntegrityError, NoSuchRecord, UserError
 from ...util import get_countries
 from ...view import auth
-from ...view.util import with_proposal, with_review, with_verified_admin
+from ...view.util import with_proposal, with_call_review, with_review, \
+    with_verified_admin
 from ...web.util import ErrorPage, \
     HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
@@ -38,6 +39,13 @@ ProposalWithReviewerPersons = namedtuple(
 
 
 class GenericReview(object):
+    @with_call_review(permission='view')
+    def view_review_call(self, db, call, can):
+        return {
+            'title': 'Review Process: {} {}'.format(call.semester_name,
+                                                    call.queue_name),
+        }
+
     @with_verified_admin
     def view_review_call_reviewers(self, db, call_id):
         try:

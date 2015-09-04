@@ -22,7 +22,8 @@ from collections import OrderedDict
 
 from ...config import get_config
 from ...error import NoSuchRecord, UserError
-from ...web.util import ErrorPage, HTTPNotFound, url_for
+from ...type import GroupType
+from ...web.util import ErrorPage, HTTPNotFound, session, url_for
 from .calculator_example import ExampleCalculator
 from .tool_clash import ClashTool
 from .view_admin import GenericAdmin
@@ -193,11 +194,32 @@ class Generic(GenericAdmin, GenericProposal, GenericReview):
             if call.semester_id not in open_semesters:
                 open_semesters[call.semester_id] = call.semester_name
 
+        # Determine whether the person is a committee member (or administrator)
+        # and if so, create a list of the review processes.
+        review_calls = None
+        can_view_reviews = False
+        if ('user_id' in session) and session.get('is_admin', False):
+            can_view_reviews = True
+            queue_id = None
+
+        elif ('user_id' in session) and ('person' in session):
+            membership = db.search_group_member(
+                group_type=GroupType.CTTEE,
+                person_id=session['person']['id'])
+            if membership:
+                can_view_reviews = True
+                queue_id = [x.queue_id for x in membership.values()]
+
+        if can_view_reviews:
+            review_calls = db.search_call(facility_id=self.id_,
+                                          queue_id=queue_id).values()
+
         return {
             'title': self.get_name(),
             'open_semesters': open_semesters,
             'calculators': self.calculators.values(),
             'target_tools': self.target_tools.values(),
+            'review_calls': review_calls,
         }
 
     def view_semester_calls(self, db, semester_id):

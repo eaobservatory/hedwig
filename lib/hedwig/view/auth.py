@@ -30,6 +30,33 @@ no = Authorization(False, False)
 yes = Authorization(True, True)
 
 
+def for_call_review(db, call):
+    """
+    Determine the current user's authorization regarding the general
+    review of proposals for a given call.
+
+    (Authorization to view the proposals and the individual reviews
+    is controlled by the more specific for_proposal and for_review
+    methods below.)
+    """
+
+    if 'user_id' not in session or 'person' not in session:
+        return no
+    elif session.get('is_admin', False) and can_be_admin(db):
+        return yes
+
+    person_id = session['person']['id']
+
+    # Give view access to committee members.
+    if db.search_group_member(
+            queue_id=call.queue_id,
+            group_type=GroupType.CTTEE,
+            person_id=person_id):
+        return Authorization(view=True, edit=False)
+
+    return no
+
+
 def for_person(db, person):
     """
     Determine the current user's authorization regarding this

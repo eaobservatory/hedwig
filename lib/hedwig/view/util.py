@@ -65,6 +65,50 @@ def organise_collection(class_, updated_records, added_records):
     return records
 
 
+def with_call_review(permission):
+    """
+    Decorator for methods which deal with reviews of all the proposals
+    for a given call.
+
+    Assumes that the first arguents are a database object and call ID.
+    The wrapped method is called with the database, call record and
+    authorization object followed by any remaining arguments.
+
+    Note: this currently can only be used to decorate methods of
+    facility classes because it uses self.id_ for the facility ID.
+    """
+
+    def decorator(f):
+        @functools.wraps(f)
+        def decorated_method(self, db, call_id, *args, **kwargs):
+            try:
+                call = db.get_call(facility_id=self.id_, call_id=call_id)
+            except NoSuchRecord:
+                raise HTTPNotFound('Call not found')
+
+            assert call.id == call_id
+
+            can = auth.for_call_review(db, call)
+
+            if permission == 'view':
+                if not can.view:
+                    raise HTTPForbidden('Permission denied for this call.')
+
+            elif permission == 'edit':
+                if not can.edit:
+                    raise HTTPForbidden(
+                        'Edit permission denied for this call.')
+
+            else:
+                raise HTTPError('Unknown permission type.')
+
+            return f(self, db, call, can, *args, **kwargs)
+
+        return decorated_method
+
+    return decorator
+
+
 def with_proposal(permission):
     """
     Decorator for methods which deal with proposals.
