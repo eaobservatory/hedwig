@@ -470,7 +470,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         self._save_screenshot(self.user_image_root, 'member_add')
 
-        self.browser.find_element_by_name('submit-link').click()
+        self.browser.find_element_by_name('submit_link').click()
 
         self.assertIn(
             'has been added to the proposal.',
@@ -510,7 +510,7 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_name('email').send_keys(
             'invitee@somewhere.edu')
 
-        self.browser.find_element_by_name('submit-invite').click()
+        self.browser.find_element_by_name('submit_invite').click()
 
         self.assertIn(
             'has been added to the proposal.',
