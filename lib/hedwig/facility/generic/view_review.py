@@ -24,8 +24,7 @@ from ...email.format import render_email_template
 from ...error import DatabaseIntegrityError, NoSuchRecord, UserError
 from ...util import get_countries
 from ...view import auth
-from ...view.util import with_proposal, with_call_review, with_review, \
-    with_verified_admin
+from ...view.util import with_proposal, with_call_review, with_review
 from ...web.util import ErrorPage, \
     HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
@@ -46,15 +45,10 @@ class GenericReview(object):
                                                     call.queue_name),
         }
 
-    @with_verified_admin
-    def view_review_call_reviewers(self, db, call_id):
-        try:
-            call = db.get_call(facility_id=self.id_, call_id=call_id)
-        except NoSuchRecord:
-            raise HTTPNotFound('Call or semester not found')
-
+    @with_call_review(permission='edit')
+    def view_review_call_reviewers(self, db, call, can):
         proposals = db.search_proposal(
-            call_id=call_id, state=ProposalState.submitted_states(),
+            call_id=call.id, state=ProposalState.submitted_states(),
             person_pi=True, with_reviewers=True, with_review_info=True)
 
         return {
@@ -66,27 +60,27 @@ class GenericReview(object):
                 for x in proposals.values()],
             'targets': [
                 Link('Assign technical reviewers',
-                     url_for('.review_call_technical', call_id=call_id)),
+                     url_for('.review_call_technical', call_id=call.id)),
                 Link('Assign committee members',
-                     url_for('.review_call_committee', call_id=call_id))],
+                     url_for('.review_call_committee', call_id=call.id))],
         }
 
-    @with_verified_admin
-    def view_reviewer_grid(self, db, call_id, primary_role, form):
+    @with_call_review(permission='edit')
+    def view_reviewer_grid(self, db, call, can, primary_role, form):
         try:
-            call = db.get_call(facility_id=self.id_, call_id=call_id)
+            call = db.get_call(facility_id=self.id_, call_id=call.id)
         except NoSuchRecord:
             raise HTTPNotFound('Call or semester not found')
 
         if primary_role == ReviewerRole.TECH:
             group_type = GroupType.TECH
             secondary_role = None
-            target = url_for('.review_call_technical', call_id=call_id)
+            target = url_for('.review_call_technical', call_id=call.id)
 
         elif primary_role == ReviewerRole.CTTEE_PRIMARY:
             group_type = GroupType.CTTEE
             secondary_role = ReviewerRole.CTTEE_SECONDARY
-            target = url_for('.review_call_committee', call_id=call_id)
+            target = url_for('.review_call_committee', call_id=call.id)
 
         else:
             raise ErrorPage('Unexpected reviewer role')
@@ -109,7 +103,7 @@ class GenericReview(object):
 
         proposals = []
         for proposal in db.search_proposal(
-                call_id=call_id, state=ProposalState.submitted_states(),
+                call_id=call.id, state=ProposalState.submitted_states(),
                 with_members=True, with_reviewers=True).values():
 
             for member in proposal.members.values():
@@ -229,7 +223,7 @@ class GenericReview(object):
                 flash('The {} assignments have been updated.',
                       group_info.name.lower())
                 raise HTTPRedirect(url_for('.review_call_reviewers',
-                                           call_id=call_id))
+                                           call_id=call.id))
 
             except UserError as e:
                 message = e.message
@@ -248,7 +242,6 @@ class GenericReview(object):
             'proposal_members': proposal_members,
         }
 
-    @with_verified_admin
     @with_proposal(permission='none')
     def view_reviewer_add(self, db, proposal, proposal_can, role, form):
         try:
@@ -258,6 +251,14 @@ class GenericReview(object):
 
         if not ProposalState.is_submitted(proposal.state):
             raise ErrorPage('This proposal is not in a submitted state.')
+
+        try:
+            call = db.get_call(facility_id=self.id_, call_id=proposal.call_id)
+        except NoSuchRecord:
+            raise HTTPError('The corresponding call was not found')
+
+        if not auth.for_call_review(db, call).edit:
+            raise HTTPForbidden('Edit permission denied for this call.')
 
         proposal_code = self.make_proposal_code(db, proposal)
 

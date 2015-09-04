@@ -73,14 +73,14 @@ def create_facility_blueprint(db, facility):
         return facility.view_review_call(db, call_id)
 
     @bp.route('/call/<int:call_id>/reviewers')
-    @require_admin
+    @require_auth(require_person=True)
     @facility_template('call_reviewers.html')
     def review_call_reviewers(call_id):
         return facility.view_review_call_reviewers(db, call_id)
 
     @bp.route('/call/<int:call_id>/reviewers/technical',
               methods=['GET', 'POST'])
-    @require_admin
+    @require_auth(require_person=True)
     @facility_template('reviewer_grid.html')
     def review_call_technical(call_id):
         return facility.view_reviewer_grid(
@@ -89,7 +89,7 @@ def create_facility_blueprint(db, facility):
 
     @bp.route('/call/<int:call_id>/reviewers/committee',
               methods=['GET', 'POST'])
-    @require_admin
+    @require_auth(require_person=True)
     @facility_template('reviewer_grid.html')
     def review_call_committee(call_id):
         return facility.view_reviewer_grid(
@@ -429,7 +429,7 @@ def create_facility_blueprint(db, facility):
 
     @bp.route('/proposal/<int:proposal_id>/reviewers/external/add',
               methods=['GET', 'POST'])
-    @require_admin
+    @require_auth(require_person=True)
     @facility_template('reviewer_select.html')
     def review_external_add(proposal_id):
         return facility.view_reviewer_add(
