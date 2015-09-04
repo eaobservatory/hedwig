@@ -741,7 +741,10 @@ class ProposalPart(object):
             stmt = stmt.where(call.c.semester_id == semester_id)
 
         if queue_id is not None:
-            stmt = stmt.where(call.c.queue_id == queue_id)
+            if isinstance(queue_id, list) or isinstance(queue_id, tuple):
+                stmt = stmt.where(call.c.queue_id.in_(queue_id))
+            else:
+                stmt = stmt.where(call.c.queue_id == queue_id)
 
         if is_open is not None:
             dt_current = datetime.utcnow()
