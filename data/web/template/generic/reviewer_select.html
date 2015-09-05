@@ -1,4 +1,6 @@
 {% extends 'generic/person_select.html' %}
+{% set navigation=[(call.semester_name + ' ' + call.queue_name, url_for('.review_call', call_id=call.id)),
+                   ('Reviewers', url_for('.review_call_reviewers', call_id=call.id))] %}
 
 {% from 'macro/proposal_summary.html' import render_proposal_summary %}
 

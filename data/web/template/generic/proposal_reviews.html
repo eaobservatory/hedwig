@@ -1,5 +1,6 @@
 {% extends 'layout.html' %}
-{% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal.id))] %}
+{% set navigation=[(proposal.semester_name + ' ' + proposal.queue_name, url_for('.review_call', call_id=proposal.call_id)),
+                   (proposal_code, url_for('.proposal_view', proposal_id=proposal.id))] %}
 {% from 'macro/proposal_summary.html' import render_proposal_summary %}
 
 {% block content %}

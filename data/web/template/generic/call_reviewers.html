@@ -1,5 +1,5 @@
 {% extends 'layout_wide.html' %}
-{% set navigation=[] %}
+{% set navigation=[(call.semester_name + ' ' + call.queue_name, url_for('.review_call', call_id=call.id))] %}
 
 {% block content %}
 {% if targets %}

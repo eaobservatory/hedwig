@@ -65,6 +65,7 @@ class GenericReview(object):
         return {
             'title': 'Reviewers: {} {}'.format(call.semester_name,
                                                call.queue_name),
+            'call': call,
             'proposals': [
                 ProposalWithCode(*x, code=self.make_proposal_code(db, x),
                                  facility_code=None)
@@ -243,6 +244,7 @@ class GenericReview(object):
         return {
             'title': '{}: {} {}'.format(group_info.name.title(),
                                         call.semester_name, call.queue_name),
+            'call': call,
             'proposals': proposals,
             'target': target,
             'group_members': list(group_members.values()),
@@ -412,7 +414,8 @@ class GenericReview(object):
             raise HTTPError('Unexpected reviewer role.')
 
         return {
-            'title': 'Add {} Reviewer'.format(role_info.name.title()),
+            'title': '{}: Add {} Reviewer'.format(
+                proposal_code, role_info.name.title()),
             'persons': persons,
             'member': member,
             'message_link': message_link,
@@ -423,9 +426,9 @@ class GenericReview(object):
             'submit_link': 'Select reviewer',
             'submit_invite': 'Invite to register',
             'label_link': 'Reviewer',
-            'navigation': [],
             'proposal': proposal,
             'proposal_code': proposal_code,
+            'call': call,
         }
 
     @with_review(permission='edit')
