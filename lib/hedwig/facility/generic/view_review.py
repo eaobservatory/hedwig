@@ -413,6 +413,11 @@ class GenericReview(object):
         else:
             raise HTTPError('Unexpected reviewer role.')
 
+        try:
+            abstract = db.get_proposal_text(proposal.id, TextRole.ABSTRACT)
+        except NoSuchRecord:
+            abstract = None
+
         return {
             'title': '{}: Add {} Reviewer'.format(
                 proposal_code, role_info.name.title()),
@@ -429,6 +434,9 @@ class GenericReview(object):
             'proposal': proposal,
             'proposal_code': proposal_code,
             'call': call,
+            'abstract': abstract,
+            'categories': db.search_proposal_category(
+                proposal_id=proposal.id).values(),
         }
 
     @with_review(permission='edit')
