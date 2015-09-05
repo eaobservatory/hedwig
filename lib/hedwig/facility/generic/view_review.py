@@ -40,9 +40,20 @@ ProposalWithReviewerPersons = namedtuple(
 class GenericReview(object):
     @with_call_review(permission='view')
     def view_review_call(self, db, call, can):
+        proposals = db.search_proposal(
+            call_id=call.id, state=ProposalState.submitted_states(),
+            person_pi=True, with_reviewers=True,
+            with_reviewer_role=ReviewerRole.CTTEE_PRIMARY)
+
         return {
             'title': 'Review Process: {} {}'.format(call.semester_name,
                                                     call.queue_name),
+            'can_edit': can.edit,
+            'call_id': call.id,
+            'proposals': [
+                ProposalWithCode(*x, code=self.make_proposal_code(db, x),
+                                 facility_code=None)
+                for x in proposals.values()],
         }
 
     @with_call_review(permission='edit')
