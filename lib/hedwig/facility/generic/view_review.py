@@ -256,7 +256,7 @@ class GenericReview(object):
         }
 
     @with_proposal(permission='none')
-    def view_reviewer_add(self, db, proposal, proposal_can, role, form):
+    def view_reviewer_add(self, db, proposal, role, form):
         try:
             role_info = ReviewerRole.get_info(role)
         except KeyError:

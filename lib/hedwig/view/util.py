@@ -118,7 +118,8 @@ def with_proposal(permission):
     The wrapped method is then called with the database,  proposal and
     authorization objects as the first two arguments.
 
-    "permission" should be one of: "view", "edit" or "none".
+    "permission" should be one of: "view", "edit" or "none".  (When "none"
+    is selected, no authorization object is passed on.)
 
     Note: this currently can only be used to decorate methods of
     facility classes because it uses self.id_ for the facility ID.
@@ -136,27 +137,28 @@ def with_proposal(permission):
 
             assert proposal.id == proposal_id
 
-            can = auth.for_proposal(db, proposal)
-
-            if permission == 'view':
-                if not can.view:
-                    raise HTTPForbidden('Permission denied for this proposal.')
-
-            elif permission == 'edit':
-                if not can.edit:
-                    raise HTTPForbidden(
-                        'Edit permission denied for this proposal.  '
-                        'Either you are not listed as an editor, '
-                        'or the proposal deadline has passed.')
-
-            elif permission =='none':
-                # Do not perform any permission check.
-                pass
+            if permission == 'none':
+                return f(self, db, proposal, *args, **kwargs)
 
             else:
-                raise HTTPError('Unknown permission type.')
+                can = auth.for_proposal(db, proposal)
 
-            return f(self, db, proposal, can, *args, **kwargs)
+                if permission == 'view':
+                    if not can.view:
+                        raise HTTPForbidden(
+                            'Permission denied for this proposal.')
+
+                elif permission == 'edit':
+                    if not can.edit:
+                        raise HTTPForbidden(
+                            'Edit permission denied for this proposal.  '
+                            'Either you are not listed as an editor, '
+                            'or the proposal deadline has passed.')
+
+                else:
+                    raise HTTPError('Unknown permission type.')
+
+                return f(self, db, proposal, can, *args, **kwargs)
 
         return decorated_method
 
