@@ -1017,6 +1017,7 @@ class ProposalPart(object):
             select_columns.extend([
                 member.c.person_id,
                 person.c.name.label('pi_name'),
+                person.c.public.label('pi_public'),
                 affiliation.c.name.label('pi_affiliation'),
             ])
             select_from = select_from.outerjoin(
@@ -1115,6 +1116,7 @@ class ProposalPart(object):
                     members = MemberPIInfo(
                         row.pop('person_id'),
                         row.pop('pi_name'),
+                        row.pop('pi_public'),
                         row.pop('pi_affiliation'))
 
                 elif with_members:
