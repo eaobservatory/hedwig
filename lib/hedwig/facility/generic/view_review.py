@@ -526,13 +526,8 @@ class GenericReview(object):
             'referrer': referrer,
         }
 
-    def view_proposal_reviews(self, db, proposal_id):
-        try:
-            proposal = db.get_proposal(self.id_, proposal_id,
-                                       with_members=True)
-        except NoSuchRecord:
-            raise HTTPNotFound('Proposal record not found')
-
+    @with_proposal(permission='none')
+    def view_proposal_reviews(self, db, proposal):
         can = auth.for_review(db, reviewer=None, proposal=proposal)
 
         if not can.view:
