@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import namedtuple
 
 from ..error import NoSuchRecord
-from ..type import GroupType, ProposalState
+from ..type import GroupType, ProposalState, ReviewerRole
 from ..web.util import session, HTTPForbidden
 
 Authorization = namedtuple('Authorization', ('view', 'edit'))
@@ -247,3 +247,36 @@ def can_be_admin(db):
         return person.admin
     except NoSuchRecord:
         raise HTTPForbidden('Could not verify administrative access.')
+
+
+def can_add_review_roles(db, proposal):
+    """
+    Determine for which reviewer roles a person can add a review to
+    a proposal.
+    """
+
+    person_id = session['person']['id']
+
+    # If the person is a member of the proposal, they can't add any reviews.
+    try:
+        proposal.members.get_person(person_id=person_id)
+        return []
+    except KeyError:
+        pass
+
+    roles = []
+
+    # Determine whether the user can add a committee "other" review -- they
+    # should be a committee member who doesn't already have a committee
+    # review.
+    try:
+        proposal.reviewers.get_person(person_id=person_id,
+                                      roles=ReviewerRole.get_cttee_roles())
+    except KeyError:
+        if db.search_group_member(
+                queue_id=proposal.queue_id,
+                group_type=GroupType.CTTEE,
+                person_id=person_id):
+            roles.append(ReviewerRole.CTTEE_OTHER)
+
+    return roles

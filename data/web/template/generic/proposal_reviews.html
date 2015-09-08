@@ -86,4 +86,17 @@
         {% endfor %}
     </table>
 {% endif %}
+
+{% if can_add_roles %}
+<nav>
+    <p>
+        {% for role in can_add_roles %}
+            <a href="{{ url_for('.proposal_review_new', proposal_id=proposal.id, reviewer_role=role) }}">Add {{ role | reviewer_role_name }} review</a>
+            {% if not loop.last %}
+                <br />
+            {% endif %}
+        {% endfor %}
+    </p>
+</nav>
+{% endif %}
 {% endblock %}

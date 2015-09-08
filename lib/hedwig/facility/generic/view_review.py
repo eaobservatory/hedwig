@@ -29,7 +29,7 @@ from ...web.util import ErrorPage, \
     HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
 from ...type import Assessment, FormatType, GroupType, Link, MemberPIInfo, \
-    ProposalState, ProposalWithCode, ReviewerRole, TextRole, \
+    ProposalState, ProposalWithCode, Reviewer, ReviewerRole, TextRole, \
     null_tuple
 
 ProposalWithReviewerPersons = namedtuple(
@@ -439,11 +439,42 @@ class GenericReview(object):
                 proposal_id=proposal.id).values(),
         }
 
+    @with_proposal(permission='none')
+    def view_review_new(self, db, proposal, reviewer_role,
+                        form, referrer=None):
+        if proposal.state != ProposalState.REVIEW:
+            raise HTTPForbidden(
+                'This proposal is not currently under review.')
+
+        can_add_roles = auth.can_add_review_roles(db, proposal)
+
+        if reviewer_role not in can_add_roles:
+            raise HTTPForbidden(
+                'You can not add a review in this role.')
+
+        return self._view_review_new_or_edit(
+            db, None, proposal, form, referrer, reviewer_role=reviewer_role)
+
     @with_review(permission='edit')
     def view_review_edit(self, db, reviewer, proposal, can, form,
                          referrer=None):
+        return self._view_review_new_or_edit(
+            db, reviewer, proposal, form, referrer)
+
+    def _view_review_new_or_edit(self, db, reviewer, proposal, form, referrer,
+                                 reviewer_role=None):
+        if reviewer is None:
+            is_new_reviewer = True
+            target = url_for('.proposal_review_new', proposal_id=proposal.id,
+                             reviewer_role=reviewer_role)
+            reviewer = null_tuple(Reviewer)
+        else:
+            is_new_reviewer = False
+            target = url_for('.review_edit', reviewer_id=reviewer.id)
+            reviewer_role = reviewer.role
+
         try:
-            role_info = ReviewerRole.get_info(reviewer.role)
+            role_info = ReviewerRole.get_info(reviewer_role)
         except KeyError:
             raise HTTPError('Unknown reviewer role')
 
@@ -496,8 +527,21 @@ class GenericReview(object):
                         raise UserError('Please give a self-assessment '
                                         'weighting between 0 and 100.')
 
+                if is_new_reviewer:
+                    reviewer_id = db.add_reviewer(
+                        proposal_id=proposal.id,
+                        person_id=session['person']['id'],
+                        role=reviewer_role)
+
+                    # Change target in case of a UserError occurring while
+                    # setting the review.
+                    target = url_for('.review_edit', reviewer_id=reviewer_id)
+
+                else:
+                    reviewer_id = reviewer.id
+
                 db.set_review(
-                    reviewer_id=reviewer.id,
+                    reviewer_id=reviewer_id,
                     text=reviewer.review_text,
                     format_=reviewer.review_format,
                     assessment=reviewer.review_assessment,
@@ -516,7 +560,10 @@ class GenericReview(object):
         proposal_code = self.make_proposal_code(db, proposal)
 
         return {
-            'title': '{}: Edit Review'.format(proposal_code),
+            'title': '{}: {} Review'.format(
+                proposal_code,
+                ('Add' if is_new_reviewer else 'Edit')),
+            'target': target,
             'proposal_code': proposal_code,
             'proposal': proposal,
             'reviewer': reviewer,
@@ -553,4 +600,5 @@ class GenericReview(object):
                 proposal_id=proposal.id).values(),
             'reviews': reviews.values(),
             'can_edit': can.edit,
+            'can_add_roles': auth.can_add_review_roles(db, proposal),
         }

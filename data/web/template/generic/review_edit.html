@@ -21,7 +21,7 @@
     </p>
 {% endif %}
 
-<form method="POST" action="{{ url_for('.review_edit', reviewer_id=reviewer.id) }}">
+<form method="POST" action="{{ target }}">
     <ol>
         {% if role_info.text %}
             <li>
