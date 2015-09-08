@@ -877,9 +877,10 @@ class ProposalTextCollection(ResultCollection):
 
 
 class ReviewerCollection(ResultCollection):
-    def get_person(self, person_id):
+    def get_person(self, person_id, roles=None):
         for member in self.values():
-            if member.person_id == person_id:
+            if ((member.person_id == person_id) and
+                    ((roles is None) or (member.role in roles))):
                 return member
 
         raise KeyError('person not in reviewer collection')

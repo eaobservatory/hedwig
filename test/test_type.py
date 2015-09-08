@@ -186,6 +186,11 @@ class TypeTestCase(TestCase):
 
         self.assertEqual(c.get_person(2001).id, 201)
 
+        with self.assertRaises(KeyError):
+            c.get_person(2001, roles=[ReviewerRole.EXTERNAL])
+
+        self.assertEqual(c.get_person(2001, roles=[ReviewerRole.TECH]).id, 201)
+
         self.assertEqual(c.person_id_by_role(ReviewerRole.EXTERNAL), [2002])
 
     def test_reviewer_role(self):
