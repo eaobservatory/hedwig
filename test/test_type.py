@@ -207,4 +207,10 @@ class TypeTestCase(TestCase):
             self.assertIsInstance(info.rating, bool)
             self.assertIsInstance(info.weight, bool)
 
-        self.assertFalse(NoteRole.is_valid(999999))
+        self.assertFalse(ReviewerRole.is_valid(999999))
+
+        self.assertEqual(ReviewerRole.get_cttee_roles(), [
+            ReviewerRole.CTTEE_PRIMARY,
+            ReviewerRole.CTTEE_SECONDARY,
+            ReviewerRole.CTTEE_OTHER,
+        ])
