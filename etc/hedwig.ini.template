@@ -27,7 +27,7 @@ footer_url=
 footer_email=
 
 [utilities]
-ghostscript=/usr/bin/ghostscript
+ghostscript=/usr/bin/gs
 firefox=/usr/bin/firefox
 
 [ads]
