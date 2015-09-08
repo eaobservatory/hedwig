@@ -27,7 +27,7 @@
         {% for review in reviews %}
             <tr>
                 <td {{ 'rowspan="2"' | safe if review.review_text is not none }}>
-                    {% if can_edit %}
+                    {% if can_edit or (session.person.id == review.person_id) %}
                         <a href="{{ url_for('.review_edit', reviewer_id=review.id) }}">{{ review.role | reviewer_role_name }}</a>
                     {% else %}
                         {{ review.role | reviewer_role_name }}
