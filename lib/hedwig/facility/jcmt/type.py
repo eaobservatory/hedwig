@@ -36,6 +36,10 @@ JCMTRequest = namedtuple(
     'JCMTRequest',
     [x.name for x in jcmt_request.columns])
 
+JCMTRequestTotal = namedtuple(
+    'JCMTRequestTotal',
+    ('total', 'weather', 'instrument'))
+
 
 class JCMTInstrument(object):
     SCUBA2 = 1
@@ -57,6 +61,10 @@ class JCMTInstrument(object):
     @classmethod
     def get_name(cls, state):
         return cls._info[state].name
+
+    @classmethod
+    def get_info(cls, instrument):
+        return cls._info[instrument]
 
     @classmethod
     def get_options(cls):
@@ -183,6 +191,37 @@ class JCMTRequestCollection(OrderedDict):
             OrderedDict([(k, v.name)
                          for (k, v) in JCMTInstrument._info.items()
                          if k in instruments]))
+
+    def get_total(self):
+        """
+        Get total by instrument and weather band.
+
+        Only instruments and weather bands currently labeled as
+        "available" are included.  Other time requested is
+        returned with identifier zero.
+        """
+
+        weathers = {}
+        instruments = {}
+        total = 0.0
+
+        for request in self.values():
+            time = request.time
+
+            weather = request.weather
+            if not JCMTWeather.get_info(weather).available:
+                weather = 0
+
+            instrument = request.instrument
+            if not JCMTInstrument.get_info(instrument).available:
+                instrument = 0
+
+            total += time
+            weathers[weather] = weathers.get(weather, 0.0) + time
+            instruments[instrument] = instruments.get(instrument, 0.0) + time
+
+        return JCMTRequestTotal(total=total, weather=weathers,
+                                instrument=instruments)
 
 
 class JCMTWeather(object):

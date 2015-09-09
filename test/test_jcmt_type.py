@@ -23,7 +23,7 @@ from unittest import TestCase
 
 from hedwig.error import UserError
 from hedwig.facility.jcmt.type import JCMTInstrument, \
-    JCMTRequest, JCMTRequestCollection, JCMTWeather
+    JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, JCMTWeather
 from hedwig.type import ResultTable
 
 
@@ -91,6 +91,12 @@ class JCMTTypeTestCase(TestCase):
         self.assertIsInstance(t, ResultTable)
         self.assertFalse(t.table)
 
+        total = c.get_total()
+        self.assertIsInstance(total, JCMTRequestTotal)
+        self.assertEqual(total.total, 0.0)
+        self.assertEqual(total.instrument, {})
+        self.assertEqual(total.weather, {})
+
         # Add some rows.
         c[1] = JCMTRequest(1, 0, instrument=1, weather=1, time=10.0)
         c[2] = JCMTRequest(2, 0, instrument=1, weather=1, time=20.0)
@@ -130,6 +136,12 @@ class JCMTTypeTestCase(TestCase):
         self.assertEqual(t.table[2],          {2: 200.0,            0: 200.0})
         self.assertEqual(t.table[3],                    {4: 1000.0, 0: 1000.0})
         self.assertEqual(t.table[0], {1: 30.0, 2: 300.0, 4: 1000.0, 0: 1330.0})
+
+        total = c.get_total()
+        self.assertIsInstance(total, JCMTRequestTotal)
+        self.assertEqual(total.total, 1330.0)
+        self.assertEqual(total.instrument, {1: 130.0, 2: 200.0, 3: 1000.0})
+        self.assertEqual(total.weather, {1: 30.0, 2: 300.0, 4: 1000.0})
 
         # This result collection isn't valid because instrument=1, weather=1
         # is repeated.
