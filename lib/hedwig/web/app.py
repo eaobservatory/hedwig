@@ -196,6 +196,10 @@ def create_web_app(db=None):
     def attachment_error(value):
         return AttachmentState.is_error(value)
 
+    @app.template_test()
+    def reviewer_role_external(value):
+        return (value == ReviewerRole.EXTERNAL)
+
     app.add_template_filter(format_text)
 
     return app

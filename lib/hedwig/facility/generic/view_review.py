@@ -440,6 +440,54 @@ class GenericReview(object):
         }
 
     @with_proposal(permission='none')
+    def view_reviewer_remove(self, db, proposal, role, reviewer_id, form):
+        try:
+            role_info = ReviewerRole.get_info(role)
+        except KeyError:
+            raise HTTPError('Unknown reviewer role')
+
+        if proposal.state != ProposalState.REVIEW:
+            raise ErrorPage('This proposal is not under review.')
+
+        try:
+            call = db.get_call(facility_id=self.id_, call_id=proposal.call_id)
+        except NoSuchRecord:
+            raise HTTPError('The corresponding call was not found')
+
+        if not auth.for_call_review(db, call).edit:
+            raise HTTPForbidden('Edit permission denied for this call.')
+
+        try:
+            reviewer = db.search_reviewer(
+                proposal_id=proposal.id, role=role, reviewer_id=reviewer_id,
+                with_review=True).get_single()
+        except NoSuchRecord:
+            raise HTTPNotFound('Reviewer record not found.')
+
+        if reviewer.review_present:
+            raise ErrorPage('This reviewer already submitted a review.')
+
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        if form is not None:
+            if 'submit_confirm' in form:
+                db.delete_reviewer(reviewer_id=reviewer_id)
+
+                flash('{} has been removed as a reviewer of proposal {}.',
+                      reviewer.person_name, proposal_code)
+
+            raise HTTPRedirect(url_for('.review_call_reviewers',
+                                       call_id=call.id))
+
+        return {
+            'title': '{}: Remove {} Reviewer'.format(
+                proposal_code, role_info.name.title()),
+            'message': 'Are you sure you wish to remove {} '
+                       'as a reviewer of this proposal?'.format(
+                           reviewer.person_name),
+        }
+
+    @with_proposal(permission='none')
     def view_review_new(self, db, proposal, reviewer_role,
                         form, referrer=None):
         if proposal.state != ProposalState.REVIEW:
