@@ -59,7 +59,7 @@ class GenericReview(object):
     @with_call_review(permission='edit')
     def view_review_call_reviewers(self, db, call, can):
         proposals = db.search_proposal(
-            call_id=call.id, state=ProposalState.submitted_states(),
+            call_id=call.id, state=ProposalState.REVIEW,
             person_pi=True, with_reviewers=True, with_review_info=True)
 
         return {
@@ -115,7 +115,7 @@ class GenericReview(object):
 
         proposals = []
         for proposal in db.search_proposal(
-                call_id=call.id, state=ProposalState.submitted_states(),
+                call_id=call.id, state=ProposalState.REVIEW,
                 with_members=True, with_reviewers=True).values():
 
             for member in proposal.members.values():
@@ -262,8 +262,8 @@ class GenericReview(object):
         except KeyError:
             raise HTTPError('Unknown reviewer role')
 
-        if not ProposalState.is_submitted(proposal.state):
-            raise ErrorPage('This proposal is not in a submitted state.')
+        if proposal.state != ProposalState.REVIEW:
+            raise ErrorPage('This proposal is not under review.')
 
         try:
             call = db.get_call(facility_id=self.id_, call_id=proposal.call_id)
