@@ -43,7 +43,8 @@ class GenericReview(object):
         proposals = db.search_proposal(
             call_id=call.id, state=ProposalState.submitted_states(),
             person_pi=True, with_reviewers=True,
-            with_reviewer_role=ReviewerRole.CTTEE_PRIMARY)
+            with_reviewer_role=ReviewerRole.CTTEE_PRIMARY,
+            with_decision=True)
 
         return {
             'title': 'Review Process: {} {}'.format(call.semester_name,

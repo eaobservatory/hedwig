@@ -14,6 +14,7 @@
         <th>Proposal</th>
         <th>Links</th>
         <th>State</th>
+        <th>Decision</th>
         <th>PI Name</th>
         <th>Title</th>
         <th>Primary Reviewer</th>
@@ -23,6 +24,18 @@
             <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
             <td><a href="{{ url_for('.proposal_reviews', proposal_id=proposal.id) }}">Reviews</a></td>
             <td>{{ proposal.state | proposal_state_name }}</td>
+            <td>
+                {% if proposal.decision_accept is none %}
+                    &nbsp;
+                {% elif proposal.decision_accept %}
+                    Accept
+                {% else %}
+                    Reject
+                {% endif %}
+                {% if proposal.decision_ready %}
+                    <span class="label">ready</span>
+                {% endif %}
+            </td>
             <td>
                 {% if proposal.members.person_id is not none %}
                     {% if session.is_admin or proposal.members.person_public %}
