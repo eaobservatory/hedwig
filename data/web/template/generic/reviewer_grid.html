@@ -44,17 +44,21 @@
                 <td>{{ proposal.title | truncate(25, killwords=True, end='\u2026') }}</td>
                 {% for member in group_members %}
                     <td>
-                        {% if primary_unique %}
-                            <input type="radio" name="primary_{{ proposal.id }}" value="{{ member.person_id }}" {{ 'checked="checked"' | safe if member.person_id in proposal.person_ids_primary }} {{ 'disabled="disabled"' | safe if (proposal.id, member.person_id) in proposal_members }} />
+                        {% if (proposal.id, member.person_id) in proposal_members %}
+                            &nbsp;
                         {% else %}
-                            <input type="checkbox" name="primary_{{ proposal.id }}_{{ member.person_id }}" value="1" {{ 'checked="checked"' | safe if member.person_id in proposal.person_ids_primary }} {{ 'disabled="disabled"' | safe if (proposal.id, member.person_id) in proposal_members }} />
-                        {% endif %}
-                        {% if secondary_unique is not none %}
-                            <br />
-                            {% if secondary_unique %}
-                                <input type="radio" name="secondary_{{ proposal.id }}" value="{{ member.person_id }}" {{ 'checked="checked"' | safe if member.person_id in proposal.person_ids_secondary }} {{ 'disabled="disabled"' | safe if (proposal.id, member.person_id) in proposal_members }} />
+                            {% if primary_unique %}
+                                <input type="radio" name="primary_{{ proposal.id }}" value="{{ member.person_id }}" {{ 'checked="checked"' | safe if member.person_id in proposal.person_ids_primary }} />
                             {% else %}
-                                <input type="checkbox" name="secondary_{{ proposal.id }}_{{ member.person_id }}" value="1" {{ 'checked="checked"' | safe if member.person_id in proposal.person_ids_secondary }} {{ 'disabled="disabled"' | safe if (proposal.id, member.person_id) in proposal_members }} />
+                                <input type="checkbox" name="primary_{{ proposal.id }}_{{ member.person_id }}" value="1" {{ 'checked="checked"' | safe if member.person_id in proposal.person_ids_primary }} />
+                            {% endif %}
+                            {% if secondary_unique is not none %}
+                                <br />
+                                {% if secondary_unique %}
+                                    <input type="radio" name="secondary_{{ proposal.id }}" value="{{ member.person_id }}" {{ 'checked="checked"' | safe if member.person_id in proposal.person_ids_secondary }} />
+                                {% else %}
+                                    <input type="checkbox" name="secondary_{{ proposal.id }}_{{ member.person_id }}" value="1" {{ 'checked="checked"' | safe if member.person_id in proposal.person_ids_secondary }} />
+                                {% endif %}
                             {% endif %}
                         {% endif %}
                     </td>
