@@ -126,6 +126,24 @@ category = Table(
     UniqueConstraint('facility_id', 'name'),
     **_table_opts)
 
+decision = Table(
+    'decision',
+    metadata,
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           primary_key=True, nullable=False),
+    Column('accept', Boolean, nullable=False,
+           doc='Indicates whether the time allocation committee decided '
+               'to accept the proposal'),
+    Column('exempt', Boolean, default=False, nullable=False,
+           doc='True if the proposal time allocation is exempt from '
+               'affiliation totals, e.g. for overall "best science" '
+               'proposals.'),
+    Column('ready', Boolean, default=False, nullable=False,
+           doc='True if the committee is ready for an email message to be '
+               'sent to the proposal members to inform them of the decision.'),
+    **_table_opts)
+
 email = Table(
     'email',
     metadata,

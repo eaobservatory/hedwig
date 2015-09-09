@@ -29,7 +29,7 @@ from ...error import ConsistencyError, Error, FormattedError, \
 from ...type import Assessment, FormatType, \
     GroupMember, GroupMemberCollection, GroupType, \
     NoteRole, ProposalNote, Reviewer, ReviewerCollection, ReviewerRole
-from ..meta import group_member, institution, person, \
+from ..meta import decision, group_member, institution, person, \
     proposal, proposal_note, queue, \
     review, reviewer
 
@@ -320,6 +320,50 @@ class ReviewPart(object):
                 ans[row['id']] = Reviewer(**values)
 
         return ans
+
+    def set_decision(self, proposal_id, accept, exempt, ready, is_update):
+        values = {}
+
+        if accept is not None:
+            values[decision.c.accept] = accept
+        if exempt is not None:
+            values[decision.c.exempt] = exempt
+        if ready is not None:
+            values[decision.c.ready] = ready
+
+        if not values:
+            raise Error('no decision update specified')
+
+        with self._transaction() as conn:
+            proposal = self.get_proposal(
+                facility_id=None, proposal_id=proposal_id,
+                with_decision=True, _conn=conn)
+
+            already_exists = (proposal.decision_accept is not None)
+
+            if is_update and not already_exists:
+                raise ConsistencyError(
+                    'decision does not already exist for {}', proposal_id)
+            elif already_exists and not is_update:
+                raise ConsistencyError(
+                    'decision already exists for {}', proposal_id)
+
+            if is_update:
+                result = conn.execute(decision.update().where(
+                    decision.c.proposal_id == proposal_id,
+                ).values(values))
+
+                if result.rowcount != 1:
+                    raise ConsistencyError(
+                        'no rows matched updating decision for proposal {}',
+                        proposal_id)
+
+            else:
+                values.update({
+                    decision.c.proposal_id: proposal_id,
+                })
+
+                result = conn.execute(decision.insert().values(values))
 
     def set_proposal_note(self, proposal_id, role, text, format_, is_update,
                           _test_skip_check=False):

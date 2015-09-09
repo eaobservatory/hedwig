@@ -327,6 +327,54 @@ class DBReviewTest(DBTestCase):
                 assessment=999, rating=None, weight=None,
                 is_update=False)
 
+    def test_decision(self):
+        proposal_id = self._create_test_proposal()
+
+        # Initially get null decision values.
+        proposal = self.db.get_proposal(
+            facility_id=None, proposal_id=proposal_id, with_decision=True)
+
+        self.assertEqual(proposal.id, proposal_id)
+        self.assertIsNone(proposal.decision_accept)
+        self.assertIsNone(proposal.decision_exempt)
+        self.assertIsNone(proposal.decision_ready)
+
+        # Try creating a decision record.
+        with self.assertRaisesRegexp(
+                ConsistencyError, 'decision does not already exist'):
+            self.db.set_decision(proposal_id, False, False, False, True)
+
+        self.db.set_decision(proposal_id, False, False, False, False)
+
+        proposal = self.db.get_proposal(
+            facility_id=None, proposal_id=proposal_id, with_decision=True)
+
+        self.assertEqual(proposal.id, proposal_id)
+        self.assertIsNotNone(proposal.decision_accept)
+        self.assertIsNotNone(proposal.decision_exempt)
+        self.assertIsNotNone(proposal.decision_ready)
+        self.assertFalse(proposal.decision_accept)
+        self.assertFalse(proposal.decision_exempt)
+        self.assertFalse(proposal.decision_ready)
+
+        # Try updating a decision record.
+        with self.assertRaisesRegexp(
+                ConsistencyError, 'decision already exists'):
+            self.db.set_decision(proposal_id, True, True, True, False)
+
+        self.db.set_decision(proposal_id, True, True, True, True)
+
+        proposal = self.db.get_proposal(
+            facility_id=None, proposal_id=proposal_id, with_decision=True)
+
+        self.assertEqual(proposal.id, proposal_id)
+        self.assertIsNotNone(proposal.decision_accept)
+        self.assertIsNotNone(proposal.decision_exempt)
+        self.assertIsNotNone(proposal.decision_ready)
+        self.assertTrue(proposal.decision_accept)
+        self.assertTrue(proposal.decision_exempt)
+        self.assertTrue(proposal.decision_ready)
+
     def _create_test_proposal(self):
         facility_id = self.db.ensure_facility('test facility')
         semester_id = self.db.add_semester(
