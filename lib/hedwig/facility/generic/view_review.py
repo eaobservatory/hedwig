@@ -495,11 +495,23 @@ class GenericReview(object):
             raise HTTPForbidden(
                 'This proposal is not currently under review.')
 
+        try:
+            role_info = ReviewerRole.get_info(reviewer_role)
+        except KeyError:
+            raise HTTPError('Unknown reviewer role')
+
+        if (role_info.unique and
+                proposal.reviewers.person_id_by_role(reviewer_role)):
+            raise ErrorPage(
+                'There is already a "{}" reviewer for this proposal.',
+                role_info.name)
+
         can_add_roles = auth.can_add_review_roles(db, proposal)
 
         if reviewer_role not in can_add_roles:
             raise HTTPForbidden(
-                'You can not add a review in this role.')
+                'You can not add a review in the "{}" role.'.format(
+                    role_info.name))
 
         return self._view_review_new_or_edit(
             db, None, proposal, form, referrer, reviewer_role=reviewer_role)
