@@ -128,7 +128,7 @@ MOCInfo = namedtuple(
 Person = namedtuple(
     'Person',
     map(lambda x: x.name, person.columns) +
-    ['email', 'institution', 'proposals'])
+    ['email', 'institution', 'proposals', 'reviews'])
 
 PersonInfo = namedtuple(
     'PersonInfo',

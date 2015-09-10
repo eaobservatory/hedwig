@@ -873,7 +873,7 @@ def invitation_token_accept(db, args, form, is_post, remote_addr):
             _update_session_person(person)
 
             # Attempt to determine where to redirect: ideally there will only
-            # be one proposal associated with the old person record.
+            # be one proposal or review associated with the old person record.
             target = None
             try:
                 member = old_person_record.proposals.get_single()
@@ -886,6 +886,18 @@ def invitation_token_accept(db, args, form, is_post, remote_addr):
             except MultipleRecords:
                 pass
 
+            if target is None:
+                try:
+                    reviewer = old_person_record.reviews.get_single()
+                    code = db.get_proposal_facility_code(reviewer.proposal_id)
+                    target = url_for('{}.review_info'.format(code),
+                                     reviewer_id=reviewer.id)
+
+                except NoSuchRecord:
+                    pass
+                except MultipleRecords:
+                    pass
+
             if person.institution_id is None:
                 # If the user has no institution, take them to the
                 # institution selection page.
@@ -896,8 +908,9 @@ def invitation_token_accept(db, args, form, is_post, remote_addr):
                 raise HTTPRedirect(url_for('.person_edit_institution',
                                            person_id=person.id))
 
-            # Redirect to the proposal, if we determined it, otherwise
-            # the proposals list.
+            # Redirect to the proposal/review, if we determined it, otherwise
+            # the user profile page, which has links to their proposal and
+            # review lists.
             raise HTTPRedirect(target if target is not None else
                                url_for('.person_view', person_id=person.id))
 

@@ -625,6 +625,12 @@ def create_facility_blueprint(db, facility):
             (request.form if request.method == 'POST' else None),
             request.referrer)
 
+    @bp.route('/review/<int:reviewer_id>/information')
+    @require_auth(require_person=True)
+    @facility_template('review_info.html')
+    def review_info(reviewer_id):
+        return facility.view_review_info(db, reviewer_id)
+
     # Configure the facility's calculators.
     for calculator_class in facility.get_calculator_classes():
         calculator_code = calculator_class.get_code()

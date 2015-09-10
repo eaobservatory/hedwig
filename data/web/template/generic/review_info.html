@@ -1,0 +1,29 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<p>
+    Thank you for accepting your invitation
+    regarding the review of this proposal.
+    Please use the links below to view the proposal and,
+    when you are ready, to write your review.
+    You will be able to see the proposal and edit
+    your review while the proposal remains under review.
+</p>
+
+<ul>
+    <li><a href="{{ url_for('.proposal_view', proposal_id=reviewer.proposal_id) }}">View proposal {{ proposal_code }}</a></li>
+    <li><a href="{{ url_for('.review_edit', reviewer_id=reviewer.id) }}">{{ 'Edit' if reviewer.review_present else 'Write' }} your review</a></li>
+</ul>
+
+<p>
+    This review can now be found in the
+    <a href="{{ url_for('person_reviews') }}">list of all of your active reviews</a>.
+    You may view this list at any time by clicking the
+    &ldquo;Your reviews&rdquo; entry in the menu at the top of the page.
+</p>
+
+<p>
+    Please <a href="{{ url_for('contact_page') }}">contact us</a>
+    if you feel unable to review this proposal.
+</p>
+{% endblock %}

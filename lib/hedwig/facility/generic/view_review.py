@@ -516,6 +516,16 @@ class GenericReview(object):
             db, None, proposal, form, referrer, reviewer_role=reviewer_role)
 
     @with_review(permission='edit')
+    def view_review_info(self, db, reviewer, proposal, can):
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        return {
+            'title': '{}: Review Information'.format(proposal_code),
+            'reviewer': reviewer,
+            'proposal_code': proposal_code,
+        }
+
+    @with_review(permission='edit')
     def view_review_edit(self, db, reviewer, proposal, can, form,
                          referrer=None):
         return self._view_review_new_or_edit(

@@ -372,7 +372,7 @@ class PeoplePart(object):
 
     def get_person(self, person_id, user_id=None,
                    with_email=False, with_institution=False,
-                   with_proposals=False,
+                   with_proposals=False, with_reviews=False,
                    _conn=None):
         """
         Get a person record.
@@ -387,6 +387,7 @@ class PeoplePart(object):
         email = None
         institution = None
         proposals = None
+        reviews = None
 
         stmt = person.select()
         if person_id is not None:
@@ -417,8 +418,11 @@ class PeoplePart(object):
             if with_proposals:
                 proposals = self.search_member(person_id=person_id, _conn=conn)
 
+            if with_reviews:
+                reviews = self.search_reviewer(person_id=person_id, _conn=conn)
+
         return Person(email=email, institution=institution,
-                      proposals=proposals, **result)
+                      proposals=proposals, reviews=reviews, **result)
 
     @require_not_none
     def get_user_id(self, user_name):
@@ -891,6 +895,7 @@ class PeoplePart(object):
             old_person_id = result['person_id']
             old_person_record = self.get_person(old_person_id,
                                                 with_proposals=True,
+                                                with_reviews=True,
                                                 _conn=conn)
 
             # Remove the token.  (Must do first otherwise it has a foreign
