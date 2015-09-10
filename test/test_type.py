@@ -23,7 +23,7 @@ from unittest import TestCase
 
 from hedwig.error import MultipleRecords, NoSuchRecord
 from hedwig.type import Assessment, GroupType, \
-    Member, MemberCollection, NoteRole, \
+    Member, MemberCollection, \
     OrderedResultCollection, \
     ResultCollection, \
     ProposalState, Reviewer, ReviewerRole, ReviewerCollection, \
@@ -163,13 +163,6 @@ class TypeTestCase(TestCase):
         self.assertFalse(GroupType.is_valid(999999))
 
         self.assertIsInstance(GroupType.view_all_groups(), list)
-
-    def test_note_role(self):
-        for role in [NoteRole.FEEDBACK]:
-            self.assertTrue(NoteRole.is_valid(role))
-            self.assertIsInstance(NoteRole.get_name(role), unicode)
-
-        self.assertFalse(NoteRole.is_valid(999999))
 
     def test_reviewer_collection(self):
         c = ReviewerCollection()

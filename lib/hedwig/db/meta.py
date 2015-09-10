@@ -379,20 +379,6 @@ proposal_category = Table(
            nullable=False),
     **_table_opts)
 
-proposal_note = Table(
-    'proposal_note',
-    metadata,
-    Column('id', Integer, primary_key=True),
-    Column('proposal_id', None,
-           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
-           nullable=False),
-    Column('role', Integer, nullable=False),
-    Column('text', UnicodeText, nullable=False),
-    Column('format', Integer, nullable=False),
-    Column('edited', DateTime(), nullable=False),
-    UniqueConstraint('proposal_id', 'role'),
-    **_table_opts)
-
 proposal_text = Table(
     'proposal_text',
     metadata,

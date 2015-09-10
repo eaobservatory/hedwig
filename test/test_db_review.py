@@ -24,7 +24,7 @@ from hedwig.error import ConsistencyError, DatabaseIntegrityError, Error, \
     NoSuchRecord, UserError
 from hedwig.type import Assessment, FormatType, \
     GroupMember, GroupMemberCollection, GroupType, \
-    NoteRole, ProposalNote, Reviewer, ReviewerCollection, ReviewerRole
+    Reviewer, ReviewerCollection, ReviewerRole
 
 from .dummy_db import DBTestCase
 
@@ -115,50 +115,6 @@ class DBReviewTest(DBTestCase):
         self.db.sync_group_member(queue_id, GroupType.CTTEE, records)
         result = self.db.search_group_member(queue_id, GroupType.CTTEE)
         self.assertEqual(len(result), 0)
-
-    def test_note(self):
-        proposal_id = self._create_test_proposal()
-
-        # Try null search.
-        with self.assertRaises(NoSuchRecord):
-            self.db.get_proposal_note(proposal_id, NoteRole.FEEDBACK)
-
-        # Set and retrieve a note.
-        with self.assertRaisesRegexp(ConsistencyError, 'note does not exist'):
-            self.db.set_proposal_note(proposal_id, NoteRole.FEEDBACK,
-                                      '', FormatType.PLAIN, True)
-
-        self.db.set_proposal_note(proposal_id, NoteRole.FEEDBACK,
-                                  'Test note...', FormatType.PLAIN, False)
-
-        note = self.db.get_proposal_note(proposal_id, NoteRole.FEEDBACK)
-
-        self.assertIsInstance(note, ProposalNote)
-
-        self.assertIsInstance(note.id, int)
-        self.assertEqual(note.proposal_id, proposal_id)
-        self.assertEqual(note.role, NoteRole.FEEDBACK)
-        self.assertEqual(note.text, 'Test note...')
-        self.assertEqual(note.format, FormatType.PLAIN)
-        self.assertIsInstance(note.edited, datetime)
-
-        # Update the note.
-        with self.assertRaisesRegexp(ConsistencyError, 'note already exists'):
-            self.db.set_proposal_note(proposal_id, NoteRole.FEEDBACK,
-                                      '', FormatType.PLAIN, False)
-
-        self.db.set_proposal_note(proposal_id, NoteRole.FEEDBACK,
-                                  'Updated note!', FormatType.PLAIN, True)
-        note = self.db.get_proposal_note(proposal_id, NoteRole.FEEDBACK)
-        self.assertEqual(note.text, 'Updated note!')
-
-        # Check constraints.
-        with self.assertRaisesRegexp(ConsistencyError, 'proposal does not'):
-            self.db.set_proposal_note(1999999, NoteRole.FEEDBACK,
-                                      '', FormatType.PLAIN, False)
-        with self.assertRaisesRegexp(Error, 'invalid note role'):
-            self.db.set_proposal_note(proposal_id, 999,
-                                      '', FormatType.PLAIN, False)
 
     def test_review(self):
         proposal_id = self._create_test_proposal()

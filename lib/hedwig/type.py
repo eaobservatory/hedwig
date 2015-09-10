@@ -27,7 +27,7 @@ from .db.meta import affiliation, calculation, call, category, \
     email, group_member, institution, \
     member, message, moc, person, \
     prev_proposal, prev_proposal_pub, \
-    proposal, proposal_category, proposal_note, queue, review, reviewer, \
+    proposal, proposal_category, queue, review, reviewer, \
     semester, target, user_log
 from .error import NoSuchRecord, MultipleRecords, UserError
 
@@ -179,10 +179,6 @@ ProposalFigureInfo = namedtuple(
 
 ProposalFigureThumbPreview = namedtuple(
     'ProposalFigureThumbPreview', ['thumbnail', 'preview'])
-
-ProposalNote = namedtuple(
-    'ProposalNote',
-    [x.name for x in proposal_note.columns])
 
 ProposalPDFInfo = namedtuple(
     'ProposalPDFInfo',
@@ -442,24 +438,6 @@ class GroupType(object):
     @classmethod
     def private_moc_groups(cls):
         return [k for (k, v) in cls._info.items() if v.private_moc]
-
-
-class NoteRole(object):
-    FEEDBACK = 1
-
-    RoleInfo = namedtuple('RoleInfo', ('name',))
-
-    _info = {
-        FEEDBACK:       RoleInfo('Feedback'),
-    }
-
-    @classmethod
-    def is_valid(cls, role):
-        return role in cls._info
-
-    @classmethod
-    def get_name(cls, role):
-        return cls._info[role].name
 
 
 class ProposalState(object):

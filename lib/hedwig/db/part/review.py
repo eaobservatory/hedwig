@@ -28,9 +28,9 @@ from ...error import ConsistencyError, Error, FormattedError, \
     NoSuchRecord, UserError
 from ...type import Assessment, FormatType, \
     GroupMember, GroupMemberCollection, GroupType, \
-    NoteRole, ProposalNote, Reviewer, ReviewerCollection, ReviewerRole
+    Reviewer, ReviewerCollection, ReviewerRole
 from ..meta import decision, group_member, institution, person, \
-    proposal, proposal_note, queue, \
+    proposal, queue, \
     review, reviewer
 
 
@@ -136,26 +136,6 @@ class ReviewPart(object):
             if result.rowcount != 1:
                 raise ConsistencyError(
                     'no row matched deleting reviewer {}', reviewer_id)
-
-    def get_proposal_note(self, proposal_id, role):
-        """
-        Get the given review process note associated with a proposal.
-        """
-
-        if not NoteRole.is_valid(role):
-            raise Error('invalid note role')
-
-        with self._transaction() as conn:
-            row = conn.execute(proposal_note.select().where(and_(
-                proposal_note.c.proposal_id == proposal_id,
-                proposal_note.c.role == role
-            ))).first()
-
-        if row is None:
-            raise NoSuchRecord('note does not exist for {} role {}',
-                               proposal_id, role)
-
-        return ProposalNote(**row)
 
     def multiple_reviewer_update(self, remove=None, add=None):
         """
@@ -365,58 +345,6 @@ class ReviewPart(object):
 
                 result = conn.execute(decision.insert().values(values))
 
-    def set_proposal_note(self, proposal_id, role, text, format_, is_update,
-                          _test_skip_check=False):
-        if not NoteRole.is_valid(role):
-            raise Error('invalid note role')
-
-        if not format_:
-            raise UserError('Text format not specified.')
-        if not FormatType.is_valid(format_):
-            raise UserError('Text format not recognised.')
-
-        with self._transaction() as conn:
-            if not _test_skip_check:
-                if not self._exists_id(conn, proposal, proposal_id):
-                    raise ConsistencyError('proposal does not exist with id={}',
-                                           proposal_id)
-
-                already_exists = self._exists_proposal_note(
-                    conn, proposal_id, role)
-                if is_update and not already_exists:
-                    raise ConsistencyError(
-                        'note does not exist for proposal {} role {}',
-                        proposal_id, role)
-                elif already_exists and not is_update:
-                    raise ConsistencyError(
-                        'note already exists for proposal {} role {}',
-                        proposal_id, role)
-
-            values = {
-                proposal_note.c.text: text,
-                proposal_note.c.format: format_,
-                proposal_note.c.edited: datetime.utcnow(),
-            }
-
-            if is_update:
-                result = conn.execute(proposal_note.update().where(and_(
-                    proposal_note.c.proposal_id == proposal_id,
-                    proposal_note.c.role == role
-                )).values(values))
-
-                if result.rowcount != 1:
-                    raise ConsistencyError(
-                        'no rows matched updating proposal text {} role {}',
-                        proposal_id, role)
-
-            else:
-                values.update({
-                    proposal_note.c.proposal_id: proposal_id,
-                    proposal_note.c.role: role,
-                })
-
-                result = conn.execute(proposal_note.insert().values(values))
-
     def set_review(self, reviewer_id, text, format_,
                    assessment, rating, weight,
                    is_update):
@@ -509,16 +437,6 @@ class ReviewPart(object):
                 records=records,
                 update_columns=(),
                 forbid_add=True)
-
-    def _exists_proposal_note(self, conn, proposal_id, role):
-        """
-        Test whether a note of the given role already exists for a proposal.
-        """
-
-        return 0 < conn.execute(select([count(proposal_note.c.id)]).where(and_(
-            proposal_note.c.proposal_id == proposal_id,
-            proposal_note.c.role == role
-        ))).scalar()
 
     def _exists_reviewer(self, conn, proposal_id, role):
         """
