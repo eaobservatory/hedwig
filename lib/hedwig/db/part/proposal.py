@@ -524,7 +524,7 @@ class ProposalPart(object):
             md5sum)
 
     def get_proposal_figure_thumbnail(self, proposal_id, role, id_,
-                                     md5sum=None):
+                                      md5sum=None):
         return self._get_proposal_figure_alternate(
             proposal_fig_thumbnail.c.thumbnail, proposal_id, role, id_,
             md5sum)

@@ -296,7 +296,6 @@ class GenericReview(object):
             member['name'] = form.get('name', '')
             member['email'] = form.get('email', '')
 
-
             email_ctx = {
                 'proposal': proposal,
                 'proposal_code': proposal_code,

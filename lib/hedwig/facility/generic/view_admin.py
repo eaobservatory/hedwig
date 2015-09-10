@@ -232,9 +232,9 @@ class GenericAdmin(object):
         return {
             'title': 'Call List',
             'calls': [CallExtra(*x, status=(
-                        'Closed' if date_current > x.date_close
-                        else ('Open' if date_current >= x.date_open
-                              else 'Not yet open')))
+                      'Closed' if date_current > x.date_close
+                      else ('Open' if date_current >= x.date_open
+                            else 'Not yet open')))
                       for x in calls.values()],
         }
 
@@ -314,44 +314,46 @@ class GenericAdmin(object):
                         semester_id=int(form['semester_id']),
                         queue_id=int(form['queue_id']))
 
-                    new_call_id = db.add_call(semester_id=call.semester_id,
-                                              queue_id=call.queue_id,
-                                              date_open=call.date_open,
-                                              date_close=call.date_close,
-                                              abst_word_lim=call.abst_word_lim,
-                                              tech_word_lim=call.tech_word_lim,
-                                              tech_fig_lim=call.tech_fig_lim,
-                                              tech_page_lim=call.tech_page_lim,
-                                              sci_word_lim=call.sci_word_lim,
-                                              sci_fig_lim=call.sci_fig_lim,
-                                              sci_page_lim=call.sci_page_lim,
-                                              capt_word_lim=call.capt_word_lim,
-                                              expl_word_lim=call.expl_word_lim,
-                                              tech_note=call.tech_note,
-                                              sci_note=call.sci_note,
-                                              prev_prop_note=call.prev_prop_note,
-                                              note_format=call.note_format)
+                    new_call_id = db.add_call(
+                        semester_id=call.semester_id,
+                        queue_id=call.queue_id,
+                        date_open=call.date_open,
+                        date_close=call.date_close,
+                        abst_word_lim=call.abst_word_lim,
+                        tech_word_lim=call.tech_word_lim,
+                        tech_fig_lim=call.tech_fig_lim,
+                        tech_page_lim=call.tech_page_lim,
+                        sci_word_lim=call.sci_word_lim,
+                        sci_fig_lim=call.sci_fig_lim,
+                        sci_page_lim=call.sci_page_lim,
+                        capt_word_lim=call.capt_word_lim,
+                        expl_word_lim=call.expl_word_lim,
+                        tech_note=call.tech_note,
+                        sci_note=call.sci_note,
+                        prev_prop_note=call.prev_prop_note,
+                        note_format=call.note_format)
                     flash('The new call has been added.')
                     raise HTTPRedirect(url_for('.call_view',
                                                call_id=new_call_id))
 
                 else:
                     # Update existing call.
-                    db.update_call(call_id, date_open=call.date_open,
-                                   date_close=call.date_close,
-                                   abst_word_lim=call.abst_word_lim,
-                                   tech_word_lim=call.tech_word_lim,
-                                   tech_fig_lim=call.tech_fig_lim,
-                                   tech_page_lim=call.tech_page_lim,
-                                   sci_word_lim=call.sci_word_lim,
-                                   sci_fig_lim=call.sci_fig_lim,
-                                   sci_page_lim=call.sci_page_lim,
-                                   capt_word_lim=call.capt_word_lim,
-                                   expl_word_lim=call.expl_word_lim,
-                                   tech_note=call.tech_note,
-                                   sci_note=call.sci_note,
-                                   prev_prop_note=call.prev_prop_note,
-                                   note_format=call.note_format)
+                    db.update_call(
+                        call_id, date_open=call.date_open,
+                        date_close=call.date_close,
+                        abst_word_lim=call.abst_word_lim,
+                        tech_word_lim=call.tech_word_lim,
+                        tech_fig_lim=call.tech_fig_lim,
+                        tech_page_lim=call.tech_page_lim,
+                        sci_word_lim=call.sci_word_lim,
+                        sci_fig_lim=call.sci_fig_lim,
+                        sci_page_lim=call.sci_page_lim,
+                        capt_word_lim=call.capt_word_lim,
+                        expl_word_lim=call.expl_word_lim,
+                        tech_note=call.tech_note,
+                        sci_note=call.sci_note,
+                        prev_prop_note=call.prev_prop_note,
+                        note_format=call.note_format)
                     flash('The call has been updated.')
                     raise HTTPRedirect(url_for('.call_view', call_id=call_id))
 

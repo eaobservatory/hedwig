@@ -654,7 +654,8 @@ class PeoplePart(object):
                     prev = self.get_institution(institution_id, _conn=conn)
                 except NoSuchRecord:
                     raise ConsistencyError(
-                        'institution does not exist with id={0}', institution_id)
+                        'institution does not exist with id={0}',
+                        institution_id)
 
                 conn.execute(institution_log.insert().values({
                     institution_log.c.institution_id: institution_id,
