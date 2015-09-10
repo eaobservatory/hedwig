@@ -175,6 +175,21 @@ def require_auth(require_person=False, require_institution=False,
                 session.pop('log_in_referrer', None)
 
             if 'user_id' not in session:
+                if _flask_request.method == 'POST':
+                    # If someone logged out (in another tab) or their session
+                    # expired while they were filling in a form, we should
+                    # show a help page.  (Otherwise after logging in they
+                    # are redirected back to a blank copy of the form they
+                    # were working on.)
+
+                    session['log_in_for'] = url_for('people.log_in_post_done')
+
+                    return _make_response('people/log_in_post.html', {
+                        'title': 'Reauthentication Required',
+                        'message': None,
+                        'without_links': True,
+                    })
+
                 flash('Please log in or register for an account to proceed.')
 
                 if register_user_only:

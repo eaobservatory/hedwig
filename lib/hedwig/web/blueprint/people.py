@@ -35,6 +35,11 @@ def create_people_blueprint(db, facilities):
         return view.log_in(db, request.args, request.form,
                            request.method == 'POST', request.referrer)
 
+    @bp.route('/user/log_in/done')
+    @templated('people/log_in_post_done.html')
+    def log_in_post_done():
+        return {'title': 'Reauthentication Complete'}
+
     @bp.route('/user/log_out')
     def log_out():
         view.log_out()

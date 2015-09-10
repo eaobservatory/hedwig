@@ -1,0 +1,35 @@
+{% extends 'people/log_in.html' %}
+
+{% block content %}
+<p>
+    Please log in again to complete your request.
+    Your session may have expired or you may have been logged
+    out from another tab.
+</p>
+
+<p class="section_label">
+    Either
+</p>
+
+<ul>
+    <li>
+        <a href="{{ url_for('people.log_in') }}" target="_blank">Log in (in a new tab)</a>
+        and then reload this page to complete your request.
+    </li>
+</ul>
+
+<p class="section_label">
+    Or
+</p>
+
+<ul>
+    <li>
+        Log in below and then press your browser&rsquo;s &ldquo;back&rdquo;
+        button (multiple times) to return to the form you were editing.
+    </li>
+</ul>
+
+<h2>Log in</h2>
+
+{{ super() }}
+{% endblock %}

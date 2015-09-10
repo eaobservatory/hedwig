@@ -8,7 +8,7 @@
     </p>
 {% endif %}
 
-<form method="POST" action="{{ url_for('.log_in') }}">
+<form method="POST" action="{{ url_for('people.log_in') }}">
     <ol>
         <li>
             <label for="user_name">User name</label>
@@ -24,15 +24,17 @@
     </ol>
 </form>
 
-<p>
-    If you do not already have an account you may
-    <a href="{{ url_for('.register_user') }}" id="register_user_link">register</a>.
-</p>
+{% if not without_links %}
+    <p>
+        If you do not already have an account you may
+        <a href="{{ url_for('people.register_user') }}" id="register_user_link">register</a>.
+    </p>
 
-<p>
-    If you do not remember your user name or password, please
-    <a href="{{ url_for('.password_reset_token_get') }}" id="reset_password_link">reset your password</a>
-    to regain access to your account.
-</p>
+    <p>
+        If you do not remember your user name or password, please
+        <a href="{{ url_for('people.password_reset_token_get') }}" id="reset_password_link">reset your password</a>
+        to regain access to your account.
+    </p>
+{% endif %}
 
 {% endblock %}

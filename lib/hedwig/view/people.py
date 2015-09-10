@@ -98,6 +98,7 @@ def log_in(db, args, form, is_post, referrer):
         'title': 'Log in',
         'message':  message,
         'user_name': form.get('user_name', args.get('user_name', '')),
+        'without_links': False,
     }
 
 
