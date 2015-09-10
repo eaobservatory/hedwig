@@ -157,6 +157,13 @@ def require_auth(require_person=False, require_institution=False,
     If "record_referrer" is specified then the referrer is added to the
     session as "log_in_referrer" if log in is required.  (Currently only
     for plain log in, not requiring person/institution.)
+
+    This needs to be the outermost route decorator, because under
+    certain circumstances (namely requiring the user to authenticate
+    from a POST request) it needs to be able to write a response
+    directly.  To help ensure this, it sets an attribute
+    `_hedwig_require_auth` on the decorated function which other
+    decorators can use to detect the problem.
     """
 
     def decorator(f):
@@ -195,6 +202,8 @@ def require_auth(require_person=False, require_institution=False,
 
             return f(*args, **kwargs)
 
+        decorated_function._hedwig_require_auth = True
+
         return decorated_function
 
     return decorator
@@ -226,9 +235,16 @@ def send_file(fixed_type=None, allow_cache=False):
     If "allow_cache" is enabled, HTTP headers will be added to enable
     caching.  In this case it is assumed that the caller will ensure
     the resource hasn't changed, e.g. by including a checksum in the URL.
+
+    Raises an exception if applied to a function with an attribute
+    `_hedwig_require_auth` because require_auth should be the outermost
+    decorator.
     """
 
     def decorator(f):
+        if hasattr(f, '_hedwig_require_auth'):
+            raise Exception('@send_file applied after @require_auth')
+
         @functools.wraps(f)
         def decorated_function(*args, **kwargs):
             type_ = fixed_type
@@ -279,9 +295,16 @@ def templated(template):
 
     The ErrorPage exception is caught, and rendered using
     the error_page_repsonse method.
+
+    Raises an exception if applied to a function with an attribute
+    `_hedwig_require_auth` because require_auth should be the outermost
+    decorator.
     """
 
     def decorator(f):
+        if hasattr(f, '_hedwig_require_auth'):
+            raise Exception('@templated applied after @require_auth')
+
         @functools.wraps(f)
         def decorated_function(*args, **kwargs):
             try:
