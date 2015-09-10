@@ -60,8 +60,8 @@ def create_facility_blueprint(db, facility):
 
     @bp.route('/call/<int:call_id>/new_proposal',
               methods=['GET', 'POST'])
-    @facility_template('proposal_new.html')
     @require_auth(require_institution=True)
+    @facility_template('proposal_new.html')
     def proposal_new(call_id):
         return facility.view_proposal_new(
             db, call_id, request.form, request.method == 'POST')
@@ -97,66 +97,66 @@ def create_facility_blueprint(db, facility):
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>')
-    @facility_template('proposal_view.html')
     @require_auth(require_person=True)
+    @facility_template('proposal_view.html')
     def proposal_view(proposal_id):
         return facility.view_proposal_view(db, proposal_id, request.args)
 
     @bp.route('/proposal/<int:proposal_id>/submit', methods=['GET', 'POST'])
-    @facility_template('proposal_submit.html')
     @require_auth(require_person=True)
+    @facility_template('proposal_submit.html')
     def proposal_submit(proposal_id):
         return facility.view_proposal_submit(
             db, proposal_id, request.form, request.method == 'POST')
 
     @bp.route('/proposal/<int:proposal_id>/validate')
-    @facility_template('proposal_submit.html')
     @require_auth(require_person=True)
+    @facility_template('proposal_submit.html')
     def proposal_validate(proposal_id):
         return facility.view_proposal_validate(
             db, proposal_id)
 
     @bp.route('/proposal/<int:proposal_id>/withdraw', methods=['GET', 'POST'])
-    @facility_template('proposal_withdraw.html')
     @require_auth(require_person=True)
+    @facility_template('proposal_withdraw.html')
     def proposal_withdraw(proposal_id):
         return facility.view_proposal_withdraw(
             db, proposal_id, request.form, request.method == 'POST')
 
     @bp.route('/proposal/<int:proposal_id>/title', methods=['GET', 'POST'])
-    @facility_template('title_edit.html')
     @require_auth(require_person=True)
+    @facility_template('title_edit.html')
     def title_edit(proposal_id):
         return facility.view_title_edit(
             db, proposal_id, request.form, request.method == 'POST')
 
     @bp.route('/proposal/<int:proposal_id>/abstract', methods=['GET', 'POST'])
-    @facility_template('abstract_edit.html')
     @require_auth(require_person=True)
+    @facility_template('abstract_edit.html')
     def abstract_edit(proposal_id):
         return facility.view_abstract_edit(
             db, proposal_id,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/member', methods=['GET', 'POST'])
-    @facility_template('member_edit.html')
     @require_auth(require_person=True)
+    @facility_template('member_edit.html')
     def member_edit(proposal_id):
         return facility.view_member_edit(
             db, proposal_id, request.form, request.method == 'POST')
 
     @bp.route('/proposal/<int:proposal_id>/member/add',
               methods=['GET', 'POST'])
-    @facility_template('member_add.html')
     @require_auth(require_person=True)
+    @facility_template('member_add.html')
     def member_add(proposal_id):
         return facility.view_member_add(
             db, proposal_id, request.form, request.method == 'POST')
 
     @bp.route('/proposal/<int:proposal_id>/member/reinvite/<int:member_id>',
               methods=['GET', 'POST'])
-    @templated('confirm.html')
     @require_auth(require_person=True)
+    @templated('confirm.html')
     def member_reinvite(proposal_id, member_id):
         return facility.view_member_reinvite(
             db, proposal_id, member_id,
@@ -164,16 +164,16 @@ def create_facility_blueprint(db, facility):
 
     @bp.route('/proposal/<int:proposal_id>/member/remove',
               methods=['GET', 'POST'])
-    @templated('confirm.html')
     @require_auth(require_person=True)
+    @templated('confirm.html')
     def remove_self(proposal_id):
         return facility.view_member_remove_self(
             db, proposal_id,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/student', methods=['GET', 'POST'])
-    @facility_template('student_edit.html')
     @require_auth(require_person=True)
+    @facility_template('student_edit.html')
     def student_edit(proposal_id):
         return facility.view_student_edit(
             db, proposal_id,
@@ -181,24 +181,24 @@ def create_facility_blueprint(db, facility):
 
     @bp.route('/proposal/<int:proposal_id>/previous',
               methods=['GET', 'POST'])
-    @facility_template('previous_edit.html')
     @require_auth(require_person=True)
+    @facility_template('previous_edit.html')
     def previous_edit(proposal_id):
         return facility.view_previous_edit(
             db, proposal_id,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/target', methods=['GET', 'POST'])
-    @facility_template('target_edit.html')
     @require_auth(require_person=True)
+    @facility_template('target_edit.html')
     def target_edit(proposal_id):
         return facility.view_target_edit(
             db, proposal_id, request.form, request.method == 'POST')
 
     @bp.route('/proposal/<int:proposal_id>/target/upload',
               methods=['GET', 'POST'])
-    @facility_template('target_upload.html')
     @require_auth(require_person=True)
+    @facility_template('target_upload.html')
     def target_upload(proposal_id):
         return facility.view_target_upload(
             db, proposal_id,
@@ -207,31 +207,31 @@ def create_facility_blueprint(db, facility):
 
     @bp.route('/proposal/<int:proposal_id>/target/note',
               methods=['GET', 'POST'])
-    @facility_template('tool_note_edit.html')
     @require_auth(require_person=True)
+    @facility_template('tool_note_edit.html')
     def tool_note_edit(proposal_id):
         return facility.view_tool_note_edit(
             db, proposal_id,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/request', methods=['GET', 'POST'])
-    @facility_template('request_edit.html')
     @require_auth(require_person=True)
+    @facility_template('request_edit.html')
     def request_edit(proposal_id):
         return facility.view_request_edit(
             db, proposal_id, request.form, request.method == 'POST')
 
     @bp.route('/proposal/<int:proposal_id>/technical')
-    @facility_template('case_edit.html')
     @require_auth(require_person=True)
+    @facility_template('case_edit.html')
     def tech_edit(proposal_id):
         return facility.view_case_edit(
             db, proposal_id, TextRole.TECHNICAL_CASE)
 
     @bp.route('/proposal/<int:proposal_id>/technical/text',
               methods=['GET', 'POST'])
-    @facility_template('text_edit.html')
     @require_auth(require_person=True)
+    @facility_template('text_edit.html')
     def tech_edit_text(proposal_id):
         return facility.view_case_edit_text(
             db, proposal_id, TextRole.TECHNICAL_CASE,
@@ -239,8 +239,8 @@ def create_facility_blueprint(db, facility):
 
     @bp.route('/proposal/<int:proposal_id>/technical/figure/new',
               methods=['GET', 'POST'])
-    @facility_template('figure_edit.html')
     @require_auth(require_person=True)
+    @facility_template('figure_edit.html')
     def tech_new_figure(proposal_id):
         return facility.view_case_edit_figure(
             db, proposal_id, None, TextRole.TECHNICAL_CASE,
@@ -250,8 +250,8 @@ def create_facility_blueprint(db, facility):
     @bp.route(
         '/proposal/<int:proposal_id>/technical/figure/<int:fig_id>/edit',
         methods=['GET', 'POST'])
-    @facility_template('figure_edit.html')
     @require_auth(require_person=True)
+    @facility_template('figure_edit.html')
     def tech_edit_figure(proposal_id, fig_id):
         return facility.view_case_edit_figure(
             db, proposal_id, fig_id, TextRole.TECHNICAL_CASE,
@@ -260,8 +260,8 @@ def create_facility_blueprint(db, facility):
 
     @bp.route('/proposal/<int:proposal_id>/technical/figure/manage',
               methods=['GET', 'POST'])
-    @facility_template('figure_manage.html')
     @require_auth(require_person=True)
+    @facility_template('figure_manage.html')
     def tech_manage_figure(proposal_id):
         return facility.view_case_manage_figure(
             db, proposal_id, TextRole.TECHNICAL_CASE,
@@ -269,16 +269,16 @@ def create_facility_blueprint(db, facility):
 
     @bp.route('/proposal/<int:proposal_id>/technical/figure/'
               '<int:fig_id>/<md5sum>')
-    @send_file(allow_cache=True)
     @require_auth(require_person=True)
+    @send_file(allow_cache=True)
     def tech_view_figure(proposal_id, fig_id, md5sum):
         return facility.view_case_view_figure(
             db, proposal_id, fig_id, TextRole.TECHNICAL_CASE, md5sum)
 
     @bp.route('/proposal/<int:proposal_id>/technical/figure/'
               '<int:fig_id>/thumbnail/<md5sum>')
-    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     @require_auth(require_person=True)
+    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     def tech_view_figure_thumbnail(proposal_id, fig_id, md5sum):
         return facility.view_case_view_figure(
             db, proposal_id, fig_id, TextRole.TECHNICAL_CASE, md5sum,
@@ -286,8 +286,8 @@ def create_facility_blueprint(db, facility):
 
     @bp.route('/proposal/<int:proposal_id>/technical/figure/'
               '<int:fig_id>/preview/<md5sum>')
-    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     @require_auth(require_person=True)
+    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     def tech_view_figure_preview(proposal_id, fig_id, md5sum):
         return facility.view_case_view_figure(
             db, proposal_id, fig_id, TextRole.TECHNICAL_CASE, md5sum,
@@ -295,38 +295,38 @@ def create_facility_blueprint(db, facility):
 
     @bp.route('/proposal/<int:proposal_id>/technical/pdf/edit',
               methods=['GET', 'POST'])
-    @facility_template('pdf_upload.html')
     @require_auth(require_person=True)
+    @facility_template('pdf_upload.html')
     def tech_edit_pdf(proposal_id):
         return facility.view_case_edit_pdf(
             db, proposal_id, TextRole.TECHNICAL_CASE,
             (request.files['file'] if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/technical/pdf/view/<md5sum>')
-    @send_file(allow_cache=True)
     @require_auth(require_person=True)
+    @send_file(allow_cache=True)
     def tech_view_pdf(proposal_id, md5sum):
         return facility.view_case_view_pdf(
             db, proposal_id, TextRole.TECHNICAL_CASE, md5sum)
 
     @bp.route('/proposal/<int:proposal_id>/technical/pdf/'
               'preview/<int:page>/<md5sum>')
-    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     @require_auth(require_person=True)
+    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     def tech_view_pdf_preview(proposal_id, page, md5sum):
         return facility.view_case_view_pdf_preview(
             db, proposal_id, page, TextRole.TECHNICAL_CASE, md5sum)
 
     @bp.route('/proposal/<int:proposal_id>/scientific')
-    @facility_template('case_edit.html')
     @require_auth(require_person=True)
+    @facility_template('case_edit.html')
     def sci_edit(proposal_id):
         return facility.view_case_edit(db, proposal_id, TextRole.SCIENCE_CASE)
 
     @bp.route('/proposal/<int:proposal_id>/scientific/text',
               methods=['GET', 'POST'])
-    @facility_template('text_edit.html')
     @require_auth(require_person=True)
+    @facility_template('text_edit.html')
     def sci_edit_text(proposal_id):
         return facility.view_case_edit_text(
             db, proposal_id, TextRole.SCIENCE_CASE,
@@ -334,8 +334,8 @@ def create_facility_blueprint(db, facility):
 
     @bp.route('/proposal/<int:proposal_id>/scientific/figure/new',
               methods=['GET', 'POST'])
-    @facility_template('figure_edit.html')
     @require_auth(require_person=True)
+    @facility_template('figure_edit.html')
     def sci_new_figure(proposal_id):
         return facility.view_case_edit_figure(
             db, proposal_id, None, TextRole.SCIENCE_CASE,
@@ -345,8 +345,8 @@ def create_facility_blueprint(db, facility):
     @bp.route(
         '/proposal/<int:proposal_id>/scientific/figure/<int:fig_id>/edit',
         methods=['GET', 'POST'])
-    @facility_template('figure_edit.html')
     @require_auth(require_person=True)
+    @facility_template('figure_edit.html')
     def sci_edit_figure(proposal_id, fig_id):
         return facility.view_case_edit_figure(
             db, proposal_id, fig_id, TextRole.SCIENCE_CASE,
@@ -355,8 +355,8 @@ def create_facility_blueprint(db, facility):
 
     @bp.route('/proposal/<int:proposal_id>/scientific/figure/manage',
               methods=['GET', 'POST'])
-    @facility_template('figure_manage.html')
     @require_auth(require_person=True)
+    @facility_template('figure_manage.html')
     def sci_manage_figure(proposal_id):
         return facility.view_case_manage_figure(
             db, proposal_id, TextRole.SCIENCE_CASE,
@@ -364,16 +364,16 @@ def create_facility_blueprint(db, facility):
 
     @bp.route('/proposal/<int:proposal_id>/scientific/figure/'
               '<int:fig_id>/<md5sum>')
-    @send_file(allow_cache=True)
     @require_auth(require_person=True)
+    @send_file(allow_cache=True)
     def sci_view_figure(proposal_id, fig_id, md5sum):
         return facility.view_case_view_figure(
             db, proposal_id, fig_id, TextRole.SCIENCE_CASE, md5sum)
 
     @bp.route('/proposal/<int:proposal_id>/scientific/figure/'
               '<int:fig_id>/thumbnail/<md5sum>')
-    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     @require_auth(require_person=True)
+    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     def sci_view_figure_thumbnail(proposal_id, fig_id, md5sum):
         return facility.view_case_view_figure(
             db, proposal_id, fig_id, TextRole.SCIENCE_CASE, md5sum,
@@ -381,8 +381,8 @@ def create_facility_blueprint(db, facility):
 
     @bp.route('/proposal/<int:proposal_id>/scientific/figure/'
               '<int:fig_id>/preview/<md5sum>')
-    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     @require_auth(require_person=True)
+    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     def sci_view_figure_preview(proposal_id, fig_id, md5sum):
         return facility.view_case_view_figure(
             db, proposal_id, fig_id, TextRole.SCIENCE_CASE, md5sum,
@@ -390,32 +390,32 @@ def create_facility_blueprint(db, facility):
 
     @bp.route('/proposal/<int:proposal_id>/scientific/pdf/edit',
               methods=['GET', 'POST'])
-    @facility_template('pdf_upload.html')
     @require_auth(require_person=True)
+    @facility_template('pdf_upload.html')
     def sci_edit_pdf(proposal_id):
         return facility.view_case_edit_pdf(
             db, proposal_id, TextRole.SCIENCE_CASE,
             (request.files['file'] if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/scientific/pdf/view/<md5sum>')
-    @send_file(allow_cache=True)
     @require_auth(require_person=True)
+    @send_file(allow_cache=True)
     def sci_view_pdf(proposal_id, md5sum):
         return facility.view_case_view_pdf(
             db, proposal_id, TextRole.SCIENCE_CASE, md5sum)
 
     @bp.route('/proposal/<int:proposal_id>/scientific/pdf/'
               'preview/<int:page>/<md5sum>')
-    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     @require_auth(require_person=True)
+    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     def sci_view_pdf_preview(proposal_id, page, md5sum):
         return facility.view_case_view_pdf_preview(
             db, proposal_id, page, TextRole.SCIENCE_CASE, md5sum)
 
     @bp.route('/proposal/<int:proposal_id>/calculation',
               methods=['GET', 'POST'])
-    @facility_template('calculation_manage.html')
     @require_auth(require_person=True)
+    @facility_template('calculation_manage.html')
     def calculation_manage(proposal_id):
         return facility.view_calculation_manage(
             db, proposal_id,
