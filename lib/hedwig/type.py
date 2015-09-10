@@ -529,6 +529,7 @@ class ReviewerRole(object):
     CTTEE_PRIMARY = 3
     CTTEE_SECONDARY = 4
     CTTEE_OTHER = 5
+    FEEDBACK = 6
 
     RoleInfo = namedtuple(
         'RoleInfo', ('name', 'unique', 'text', 'assessment', 'rating', 'weight', 'cttee'))
@@ -544,6 +545,8 @@ class ReviewerRole(object):
             RoleInfo('TAC Secondary', False, True,  False, True,  True,  True)),
         (CTTEE_OTHER,
             RoleInfo('TAC Other',     False, False, False, True,  True,  True)),
+        (FEEDBACK,
+            RoleInfo('Feedback',      True,  True,  False, False, False, False)),
     ))
 
     @classmethod
