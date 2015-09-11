@@ -10,7 +10,7 @@
     your review while the proposal remains under review.
 </p>
 
-<ul>
+<ul id="review_action_links">
     <li><a href="{{ url_for('.proposal_view', proposal_id=reviewer.proposal_id) }}">View proposal {{ proposal_code }}</a></li>
     <li><a href="{{ url_for('.review_edit', reviewer_id=reviewer.id) }}">{{ 'Edit' if reviewer.review_present else 'Write' }} your review</a></li>
 </ul>

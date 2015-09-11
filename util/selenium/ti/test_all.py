@@ -33,6 +33,7 @@ from selenium.common.exceptions import NoSuchElementException
 from sqlalchemy.sql import select
 
 from hedwig import auth
+from hedwig.admin.proposal import close_call_proposals
 from hedwig.config import get_config
 from hedwig.db.meta import invitation, reset_token, verify_token
 from hedwig.file.poll import process_proposal_figure, process_proposal_pdf
@@ -68,6 +69,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.base_url = 'http://127.0.0.1:11111/'
         self.user_image_root = os.path.join('doc', 'user', 'image')
+        self.review_image_root = os.path.join('doc', 'review', 'image')
         self.admin_image_root = os.path.join('doc', 'admin', 'image')
 
         self.db = get_dummy_database(randomize_ids=False,
@@ -121,7 +123,9 @@ class IntegrationTest(DummyConfigTestCase):
             self.log_out_user()
 
             # Try accepting an invitation.
-            self.accept_invitation()
+            self.accept_invitation(screenshot_path=self.user_image_root)
+
+            self.remove_self()
 
             self.log_out_user()
 
@@ -137,6 +141,22 @@ class IntegrationTest(DummyConfigTestCase):
             self.log_in_user(user_name='test')
 
             self.administer_facility('jcmt', semester_name)
+
+            # Set up review process.
+            close_call_proposals(self.db, 1)
+
+            self.set_up_review('jcmt')
+
+            self.log_out_user()
+
+            # Enter an external review.
+
+            self.accept_invitation(user_name='invitee2',
+                                   screenshot_path=self.review_image_root)
+
+            self.enter_review()
+
+            self.view_person_reviews()
 
             self.log_out_user()
 
@@ -894,6 +914,15 @@ class IntegrationTest(DummyConfigTestCase):
             'The proposal has been withdrawn.',
             self.browser.page_source)
 
+        # Re-submit the proposal so that we can use it to test the review
+        # system later.
+        self.browser.find_element_by_link_text('Submit proposal').click()
+        self.browser.find_element_by_name('submit_confirm').click()
+
+        self.assertIn(
+            'The proposal has been submitted.',
+            self.browser.page_source)
+
         # Test more source list upload.
         self.browser.find_element_by_link_text('Upload target list').click()
 
@@ -924,7 +953,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         self._save_screenshot(self.user_image_root, 'proposal_list')
 
-    def accept_invitation(self):
+    def accept_invitation(self, user_name='invitee', screenshot_path=None):
         # Determine the invitation token to use.
         with self.db._transaction() as conn:
             token = conn.execute(select([invitation.c.token])).scalar()
@@ -936,7 +965,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element_by_name('token').send_keys(token)
 
-        self._save_screenshot(self.user_image_root, 'invitation_enter')
+        self._save_screenshot(screenshot_path, 'invitation_enter')
 
         self.browser.find_element_by_name('submit').click()
 
@@ -946,9 +975,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element_by_link_text('register').click()
 
-        self._do_register_user('invitee', 'password')
+        self._do_register_user(user_name, 'password')
 
-        self._save_screenshot(self.user_image_root, 'invitation_accept')
+        self._save_screenshot(screenshot_path, 'invitation_accept')
 
         self.browser.find_element_by_name('submit-accept').click()
 
@@ -956,6 +985,7 @@ class IntegrationTest(DummyConfigTestCase):
             'The invitation has been accepted successfully.',
             self.browser.page_source)
 
+    def remove_self(self):
         # Now remove self from the proposal.
         self.browser.find_element_by_link_text(
             'Remove yourself from this proposal').click()
@@ -1188,6 +1218,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         It takes a screenshot of the call proposals list and so is intended
         to run after a user has created a proposal.
+
+        It also alters the closing date of the call so that it is no longer
+        open.
         """
 
         self.browser.get(self.base_url + facility_code)
@@ -1208,6 +1241,18 @@ class IntegrationTest(DummyConfigTestCase):
                       self.browser.page_source)
 
         self.browser.find_element_by_link_text('Edit call').click()
+
+        # Set the closing date back to the start of the year.
+        current_date = datetime.utcnow()
+        current_year = str(current_date.year)
+
+        close_date = self.browser.find_element_by_name('close_date')
+        close_date.clear()
+        close_date.send_keys(current_year + '-01-01')
+
+        close_time = self.browser.find_element_by_name('close_time')
+        close_time.clear()
+        close_time.send_keys('00:01')
 
         self.browser.find_element_by_name('submit').click()
 
@@ -1255,6 +1300,82 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.assertIn('You have dropped administrative privileges.',
                       self.browser.page_source)
+
+    def set_up_review(self, facility_code):
+        """
+        This test sets up a review process.
+        """
+
+        self.browser.get(self.base_url + facility_code)
+        self.browser.find_element_by_link_text('take admin').click()
+        self.browser.find_element_by_link_text('Administrative menu').click()
+        self.browser.find_element_by_link_text('Calls').click()
+        self.browser.find_element_by_link_text('Review process').click()
+
+        self._save_screenshot(self.admin_image_root, 'review_process')
+
+        self.browser.find_element_by_link_text('Assign reviewers').click()
+        self._save_screenshot(self.admin_image_root, 'reviewer_assign')
+
+        self.browser.find_element_by_link_text('Add external reviewer').click()
+
+        self.browser.find_element_by_name('name').send_keys('Invited Reviewer')
+        self.browser.find_element_by_name('email').send_keys(
+            'reviewer@somewhere.edu')
+
+        self._save_screenshot(self.admin_image_root, 'reviewer_external')
+
+        self.browser.find_element_by_name('submit_invite').click()
+
+        self.assertIn(
+            'Invited Reviewer has been invited to register.',
+            self.browser.page_source)
+
+        Select(
+            self.browser.find_element_by_name('institution_id')
+        ).select_by_visible_text(
+            'Test Institution, United States')
+
+        self.browser.find_element_by_name('submit_select').click()
+
+        self.assertIn(
+            'The institution has been selected.',
+            self.browser.page_source)
+
+    def enter_review(self):
+        """
+        Tests entering a review.
+
+        Assumes that the person starts on their review information page
+        after accepting an invitation.
+        """
+
+        self._save_screenshot(self.review_image_root, 'review_info',
+                              ['person_reviews_link', 'review_action_links'])
+
+        self.browser.find_element_by_link_text('Write your review').click()
+
+        self.browser.find_element_by_name('text').send_keys(
+            'My opinion of this proposal is...')
+        self.browser.find_element_by_name('rating').send_keys('50')
+
+        self._save_screenshot(self.review_image_root, 'review_edit')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The review has been saved.',
+            self.browser.page_source)
+
+    def view_person_reviews(self):
+        # Now acquire a screenshot of the "Your reviews" page.
+        self.browser.find_element_by_link_text('Your reviews').click()
+
+        self.assertIn('<h1>Your Reviews</h1>', self.browser.page_source)
+        self.assertIn('An Example Proposal', self.browser.page_source)
+        self.assertIn('External', self.browser.page_source)
+
+        self._save_screenshot(self.review_image_root, 'review_list')
 
     def try_jcmt_itcs(self):
         self.browser.get(self.base_url + 'jcmt/calculator/scuba2/time')
