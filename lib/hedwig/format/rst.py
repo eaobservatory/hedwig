@@ -18,10 +18,12 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+import re
 from threading import Lock
 
+from docutils import nodes
 from docutils.core import publish_parts
-from docutils.parsers.rst import Directive, directives
+from docutils.parsers.rst import Directive, roles, directives
 from docutils.readers.standalone import Reader
 from docutils.transforms.frontmatter import DocTitle
 
@@ -87,3 +89,21 @@ class HedwigTocTree(Directive):
 
 
 directives.register_directive('toctree', HedwigTocTree)
+
+
+named_link = re.compile('^(.*) +<(.*)>$')
+
+
+def doc_reference_role(role, rawtext, text, lineno, inliner,
+                       options={}, context=[]):
+    m = named_link.match(text)
+
+    if m:
+        (text, url) = m.groups()
+    else:
+        url = text
+
+    return [nodes.reference(rawtext, text, refuri=url, **options)], []
+
+
+roles.register_local_role('doc', doc_reference_role)
