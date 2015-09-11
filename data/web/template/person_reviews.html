@@ -12,6 +12,16 @@
         {% for facility_name, facility_proposals in proposals.items() %}
             <h2>{{ facility_name }}</h2>
 
+            <p>
+                The following table shows proposals for which you have
+                active reviews.
+            </p>
+
+            <ul>
+                <li>Click the proposal identifier to view a proposal.</li>
+                <li>Click a review role to edit the corresponding review.</li>
+            </ul>
+
             <table>
                 <tr>
                     <th>Proposal</th>
