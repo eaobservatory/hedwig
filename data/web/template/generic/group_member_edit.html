@@ -1,5 +1,6 @@
 {% extends 'layout.html' %}
 {% set navigation=['facility_admin', ('Queues', url_for('.queue_list')), (queue.name, url_for('.queue_view', queue_id=queue.id)), (group_info.name, url_for('.group_view', queue_id=queue.id, group_type=group_type))] %}
+{% set help_link=url_for('help.admin_page', page_name='review_group') %}
 {% set scripts=['edit_group_member'] %}
 
 {% block content %}

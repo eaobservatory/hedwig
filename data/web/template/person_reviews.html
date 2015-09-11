@@ -1,6 +1,8 @@
 {% extends 'layout.html' %}
 {% if person is not none %}
     {% set navigation=['people', (person.name, url_for('.person_view', person_id=person.id))] %}
+{% else %}
+    {% set help_link=url_for('help.review_page', page_name='review_list') %}
 {% endif %}
 
 {% block content %}

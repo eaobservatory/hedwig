@@ -1,5 +1,6 @@
 {% extends 'layout.html' %}
 {% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal.id))] %}
+{% set help_link=url_for('help.review_page', page_name='external') %}
 {% from 'macro/proposal_summary.html' import render_proposal_summary %}
 
 {% block content %}

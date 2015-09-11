@@ -592,6 +592,7 @@ class GenericAdmin(object):
                 (queue.name, url_for('.queue_view', queue_id=queue.id)),
                 (group_info.name, url_for('.group_view', queue_id=queue.id,
                                           group_type=group_type))],
+            'help_link': url_for('help.admin_page', page_name='review_group'),
         }
 
     @with_verified_admin
