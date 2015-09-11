@@ -38,6 +38,9 @@
                             {% for clash in clash.mocs.values() %}
                                 <li>
                                     <a href="{{ url_for(target_moc_info, moc_id=clash.id) }}">{{ clash.name }}</a>
+                                    {% if not clash.public %}
+                                        <span class="label">private</span>
+                                    {% endif %}
                                 </li>
                             {% endfor %}
                         </ul>

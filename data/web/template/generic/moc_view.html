@@ -36,6 +36,19 @@
             </div>
         </td>
     </tr>
+    {% if not moc.public %}
+        <tr>
+            <th>Visibility</th>
+            <td>Private</td>
+            <td class="borderless">
+                <div class="formtip">
+                    <div>
+                        This coverage map is not available for everyone to search.
+                    <div>
+                </div>
+            </td>
+        </tr>
+    {% endif %}
 </table>
 
 <nav>
