@@ -24,6 +24,32 @@ of reviewers to proposals.
 
 .. image:: image/reviewer_assign.png
 
+
+Technical Assessors
+~~~~~~~~~~~~~~~~~~~
+
+To assign technical assessors, use the
+"Assign technical assessors" link at the top of the page.
+This will show a grid where you can select the
+technical assessor for each proposal.
+
+.. image:: image/reviewer_tech.png
+
+Committee Members
+~~~~~~~~~~~~~~~~~
+
+To assign committee members, use the
+"Assign committee members" link at the top of the page.
+This shows a similar grid to that for the technical assessors,
+except that there are two rows of controls for each proposal.
+The top row selects the primary committee reviewer
+and the second rows select secondary committee reviewers.
+
+.. image:: image/reviewer_cttee.png
+
+External Reviewers
+~~~~~~~~~~~~~~~~~~
+
 To invite an external reviewer, use the
 "Add external reviewer" link the "Actions" column.
 
