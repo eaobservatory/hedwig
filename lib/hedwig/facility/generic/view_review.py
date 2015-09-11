@@ -72,7 +72,7 @@ class GenericReview(object):
                                  facility_code=None)
                 for x in proposals.values()],
             'targets': [
-                Link('Assign technical reviewers',
+                Link('Assign technical assessors',
                      url_for('.review_call_technical', call_id=call.id)),
                 Link('Assign committee members',
                      url_for('.review_call_committee', call_id=call.id))],
