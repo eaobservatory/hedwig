@@ -1479,7 +1479,8 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_link_text('Review process').click()
         self.browser.find_element_by_link_text('Reviews').click()
 
-        self._save_screenshot(self.admin_image_root, 'proposal_reviews')
+        self._save_screenshot(self.admin_image_root, 'proposal_reviews',
+                              ['extra_review_links'])
 
     def try_jcmt_itcs(self):
         self.browser.get(self.base_url + 'jcmt/calculator/scuba2/time')
