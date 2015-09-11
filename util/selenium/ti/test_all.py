@@ -107,6 +107,18 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.log_out_user()
 
+            self.register_user(user_name='group1',
+                               person_name='Example Group Member',
+                               public_profile=True)
+
+            self.log_out_user()
+
+            self.register_user(user_name='group2',
+                               person_name='Another Group Member',
+                               public_profile=True)
+
+            self.log_out_user()
+
             # Log in as administrative user and set up a semester.
             self.log_in_user(user_name='test')
 
@@ -1301,6 +1313,51 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn('Queue "International" has been updated.',
                       self.browser.page_source)
 
+        # Set up the review groups.
+        admin_queue_url = self.browser.current_url
+
+        for (group_name, group_abbr) in (('Committee', 'cttee'),
+                                         ('Technical assessors', 'tech')):
+            self.browser.get(admin_queue_url)
+            self.browser.find_element_by_link_text(group_name).click()
+
+            first_person = True
+            for person_name in ('Example Group Member',
+                                'Another Group Member'):
+                self.browser.find_element_by_link_text('Add member').click()
+                Select(
+                    self.browser.find_element_by_name('person_id')
+                ).select_by_visible_text(
+                    '{}, Test Institution, United States'.format(person_name))
+
+                if first_person:
+                    self._save_screenshot(self.admin_image_root,
+                                          'group_{}_add'.format(group_abbr))
+
+                self.browser.find_element_by_name('submit_link').click()
+
+                self.assertIn(
+                    '{} has been added to the group.'.format(person_name),
+                    self.browser.page_source)
+
+                first_person = False
+
+            # Reload page to remove the yellow flash box for the screenshot.
+            self.browser.get(self.browser.current_url)
+
+            self._save_screenshot(self.admin_image_root,
+                                  'group_{}'.format(group_abbr))
+
+            self.browser.find_element_by_link_text('Edit members').click()
+
+            self._save_screenshot(self.admin_image_root,
+                                  'group_{}_edit'.format(group_abbr))
+
+            self.browser.find_element_by_name('submit').click()
+
+            self.assertIn('The group membership has been saved.',
+                          self.browser.page_source)
+
         # Go back to the main page and test the "drop admin" link.
         self.browser.get(self.base_url)
         self.browser.find_element_by_link_text('drop admin').click()
@@ -1321,6 +1378,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         self._save_screenshot(self.admin_image_root, 'review_process')
 
+        # Add an external reviewer.
         self.browser.find_element_by_link_text('Assign reviewers').click()
         self._save_screenshot(self.admin_image_root, 'reviewer_assign')
 
@@ -1348,6 +1406,28 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn(
             'The institution has been selected.',
             self.browser.page_source)
+
+        # Technical reviewers page.
+        self.browser.find_element_by_link_text(
+            'Assign technical assessors').click()
+
+        self._save_screenshot(self.admin_image_root, 'reviewer_tech')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn('assignments have been updated.',
+                      self.browser.page_source)
+
+        # Committee reviewers page.
+        self.browser.find_element_by_link_text(
+            'Assign committee members').click()
+
+        self._save_screenshot(self.admin_image_root, 'reviewer_cttee')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn('assignments have been updated.',
+                      self.browser.page_source)
 
     def enter_review(self):
         """
