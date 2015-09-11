@@ -173,6 +173,13 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.log_out_user()
 
+            # View the completed review.
+            self.log_in_user(user_name='test')
+
+            self.view_proposal_reviews('jcmt')
+
+            self.log_out_user()
+
             # Try the JCMT stand-alone ITCs
             self.try_jcmt_itcs()
 
@@ -1463,6 +1470,16 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn('External', self.browser.page_source)
 
         self._save_screenshot(self.review_image_root, 'review_list')
+
+    def view_proposal_reviews(self, facility_code):
+        self.browser.find_element_by_link_text('take admin').click()
+        self.browser.get(self.base_url + facility_code)
+        self.browser.find_element_by_link_text('Administrative menu').click()
+        self.browser.find_element_by_link_text('Calls').click()
+        self.browser.find_element_by_link_text('Review process').click()
+        self.browser.find_element_by_link_text('Reviews').click()
+
+        self._save_screenshot(self.admin_image_root, 'proposal_reviews')
 
     def try_jcmt_itcs(self):
         self.browser.get(self.base_url + 'jcmt/calculator/scuba2/time')
