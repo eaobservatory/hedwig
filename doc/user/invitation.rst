@@ -42,9 +42,15 @@ invitation you received:
 
 * Otherwise you should be taken directly to the proposal view page.
 
+* If you were invited as an external reviewer of a proposal,
+  you should see a page of links relating to that review process.
+
 * If the system can not determine which proposal to show you,
-  you will be redirected to your proposal list.
-  This will list all the proposals of which you are a member.
+  you will be redirected to your profile page.
+  This has links to your proposal list,
+  which will list all the proposals of which you are a member,
+  and your review list,
+  listing any active review processes in which you may be participating.
 
 Removing Yourself from a Proposal
 ---------------------------------

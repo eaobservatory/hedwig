@@ -10,3 +10,4 @@ Administrator's Guide
     call
     category
     moc
+    review_process
