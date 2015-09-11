@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from datetime import datetime
 import os
 from threading import Thread
+from time import sleep
 
 from flask import request, make_response
 from PIL import Image
@@ -162,6 +163,12 @@ class IntegrationTest(DummyConfigTestCase):
 
             # Try the JCMT stand-alone ITCs
             self.try_jcmt_itcs()
+
+        except:
+            # In the event of an error, pause in case the cause of the
+            # error is visible in the web browser.
+            sleep(10)
+            raise
 
         finally:
             self.browser.get(self.base_url + 'shutdown')
