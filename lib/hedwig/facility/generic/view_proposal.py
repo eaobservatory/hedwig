@@ -271,7 +271,8 @@ class GenericProposal(object):
         # Return the list of messages.
         return messages
 
-    def _validate_proposal_extra(self, db, proposal, extra):
+    def _validate_proposal_extra(self, db, proposal, extra,
+                                 skip_missing_targets=False):
         messages = []
 
         if extra['abstract'] is None:
@@ -290,14 +291,14 @@ class GenericProposal(object):
                 'Edit previous proposals and publications',
                 url_for('.previous_edit', proposal_id=proposal.id)))
 
-        if not extra['targets']:
+        if (not skip_missing_targets) and (not extra['targets']):
             messages.append(ValidationMessage(
                 False,
                 'No target objects have been specified.',
                 'Edit target list',
                 url_for('.target_edit', proposal_id=proposal.id)))
 
-        elif extra['tool_note'] is None:
+        elif extra['targets'] and (extra['tool_note'] is None):
             messages.append(ValidationMessage(
                 False,
                 'A note on the target tool results has not been added.',

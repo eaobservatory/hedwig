@@ -136,6 +136,7 @@ class JCMT(Generic):
         ctx.update({
             'requests': requests.to_table(),
             'jcmt_options': options,
+            'jcmt_option_values': option_values,
         })
 
         return ctx
@@ -151,7 +152,8 @@ class JCMT(Generic):
                 url_for('.request_edit', proposal_id=proposal.id)))
 
         messages.extend(super(JCMT, self)._validate_proposal_extra(
-            db, proposal, extra))
+            db, proposal, extra,
+            skip_missing_targets=extra['jcmt_option_values'].target_of_opp))
 
         return messages
 
