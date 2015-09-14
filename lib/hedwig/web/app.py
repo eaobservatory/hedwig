@@ -200,6 +200,10 @@ def create_web_app(db=None):
     def reviewer_role_external(value):
         return (value == ReviewerRole.EXTERNAL)
 
+    @app.template_test()
+    def reviewer_role_review(value):
+        return ReviewerRole.get_info(value).name_review
+
     app.add_template_filter(format_text)
 
     return app

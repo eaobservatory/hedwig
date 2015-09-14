@@ -92,7 +92,7 @@
 <nav>
     <p id="extra_review_links">
         {% for role in can_add_roles %}
-            <a href="{{ url_for('.proposal_review_new', proposal_id=proposal.id, reviewer_role=role) }}">Add {{ role | reviewer_role_name }} review</a>
+            <a href="{{ url_for('.proposal_review_new', proposal_id=proposal.id, reviewer_role=role) }}">Add {{ role | reviewer_role_name | lower }}{{ ' review' if role is reviewer_role_review }}</a>
             {% if not loop.last %}
                 <br />
             {% endif %}
