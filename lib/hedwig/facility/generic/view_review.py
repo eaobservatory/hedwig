@@ -629,10 +629,15 @@ class GenericReview(object):
 
         proposal_code = self.make_proposal_code(db, proposal)
 
+        title_description = role_info.name
+        if role_info.name_review:
+            title_description += ' Review'
+
         return {
-            'title': '{}: {} Review'.format(
+            'title': '{}: {} {}'.format(
                 proposal_code,
-                ('Add' if is_new_reviewer else 'Edit')),
+                ('Add' if is_new_reviewer else 'Edit'),
+                title_description),
             'target': target,
             'proposal_code': proposal_code,
             'proposal': proposal,

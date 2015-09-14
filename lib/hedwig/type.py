@@ -531,22 +531,26 @@ class ReviewerRole(object):
     CTTEE_OTHER = 5
     FEEDBACK = 6
 
+    # Type which describes how the reviewer roles are defined, where:
+    # * name_review indicates whether the name can be suffixed with "review".
     RoleInfo = namedtuple(
-        'RoleInfo', ('name', 'unique', 'text', 'assessment', 'rating', 'weight', 'cttee'))
+        'RoleInfo',
+        ('name', 'unique', 'text', 'assessment', 'rating', 'weight',
+         'cttee', 'name_review'))
 
     _info = OrderedDict((
         (TECH,
-            RoleInfo('Technical',     True,  True,  True,  False, False, False)),
+            RoleInfo('Technical',     True,  True,  True,  False, False, False, True)),
         (EXTERNAL,
-            RoleInfo('External',      False, True,  False, True,  False, False)),
+            RoleInfo('External',      False, True,  False, True,  False, False, True)),
         (CTTEE_PRIMARY,
-            RoleInfo('TAC Primary',   True,  True,  False, True,  True,  True)),
+            RoleInfo('TAC Primary',   True,  True,  False, True,  True,  True,  True)),
         (CTTEE_SECONDARY,
-            RoleInfo('TAC Secondary', False, True,  False, True,  True,  True)),
+            RoleInfo('TAC Secondary', False, True,  False, True,  True,  True,  True)),
         (CTTEE_OTHER,
-            RoleInfo('Rating',        False, False, False, True,  True,  True)),
+            RoleInfo('Rating',        False, False, False, True,  True,  True,  False)),
         (FEEDBACK,
-            RoleInfo('Feedback',      True,  True,  False, False, False, False)),
+            RoleInfo('Feedback',      True,  True,  False, False, False, False, False)),
     ))
 
     @classmethod
