@@ -14,7 +14,7 @@
     </tr>
 {% endcall %}
 
-<h2>Review</h2>
+<h2>{{ 'Review' if role_info.name_review else role_info.name }}</h2>
 
 {% if message is not none %}
     <p class="warning">
