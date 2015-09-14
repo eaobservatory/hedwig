@@ -544,7 +544,7 @@ class ReviewerRole(object):
         (CTTEE_SECONDARY,
             RoleInfo('TAC Secondary', False, True,  False, True,  True,  True)),
         (CTTEE_OTHER,
-            RoleInfo('TAC Other',     False, False, False, True,  True,  True)),
+            RoleInfo('Rating',        False, False, False, True,  True,  True)),
         (FEEDBACK,
             RoleInfo('Feedback',      True,  True,  False, False, False, False)),
     ))
