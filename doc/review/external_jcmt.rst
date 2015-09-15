@@ -41,8 +41,7 @@ The plan for observing and data reduction
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Are the details of the program dealt with / understood?
-* Are the target objects, coordinates, required integration times
-  and instrumentation correct?
+* Are the target objects, coordinates and instrumentation correct?
 * Is the telescope requested the correct one?
 
 Where would you place this proposal within the following scale?
