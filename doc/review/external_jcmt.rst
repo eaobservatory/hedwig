@@ -108,8 +108,8 @@ Other Considerations
 
 * The JCMT is heavily over-subscribed for periods of good weather
   (bands 1--2).
-  Proposals that require such weather should have
-  the potential for seminal results.
+  Successful proposals that require such weather will need to
+  show potential for producing seminal results.
 
 * Please do not approach the applicant(s) directly.
   Assessors will follow up on points requiring clarification.
