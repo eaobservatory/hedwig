@@ -28,3 +28,8 @@ versions of Firefox and Chrome and probably
 other browsers too.
 
 .. image:: image/review_edit.png
+
+.. toctree::
+    :maxdepth: 2
+
+    external_jcmt
