@@ -11,6 +11,21 @@
 
 <h2>Reviews</h2>
 
+{% block extra_review_links %}
+    {% if can_add_roles %}
+    <nav>
+        <p id="extra_review_links">
+            {% for role in can_add_roles %}
+                <a href="{{ url_for('.proposal_review_new', proposal_id=proposal.id, reviewer_role=role) }}">Add {{ role | reviewer_role_name | lower }}{{ ' review' if role is reviewer_role_review }}</a>
+                {% if not loop.last %}
+                    <br />
+                {% endif %}
+            {% endfor %}
+        </p>
+    </nav>
+    {% endif %}
+{% endblock %}
+
 {% if not reviews %}
     <p class="not_present">
         There are no reviews for this proposal.
@@ -96,18 +111,5 @@
             </tr>
         {% endif %}
     </table>
-{% endif %}
-
-{% if can_add_roles %}
-<nav>
-    <p id="extra_review_links">
-        {% for role in can_add_roles %}
-            <a href="{{ url_for('.proposal_review_new', proposal_id=proposal.id, reviewer_role=role) }}">Add {{ role | reviewer_role_name | lower }}{{ ' review' if role is reviewer_role_review }}</a>
-            {% if not loop.last %}
-                <br />
-            {% endif %}
-        {% endfor %}
-    </p>
-</nav>
 {% endif %}
 {% endblock %}
