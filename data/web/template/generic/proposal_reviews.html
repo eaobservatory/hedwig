@@ -7,7 +7,7 @@
 {% block content %}
 <h2>Proposal Information</h2>
 
-{{ render_proposal_summary(facility_name, proposal, proposal_code, abstract, categories) }}
+{{ render_proposal_summary(facility_name, proposal, proposal_code, abstract=abstract, categories=categories, person_pi=person_pi) }}
 
 <h2>Reviews</h2>
 

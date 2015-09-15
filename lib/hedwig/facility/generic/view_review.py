@@ -419,6 +419,14 @@ class GenericReview(object):
         except NoSuchRecord:
             abstract = None
 
+        # Extract the PI before calling the template so that we can handle
+        # the exception.
+        person_pi = None
+        try:
+            person_pi = proposal.members.get_pi()
+        except KeyError:
+            pass
+
         return {
             'title': '{}: Add {} Reviewer'.format(
                 proposal_code, role_info.name.title()),
@@ -438,6 +446,7 @@ class GenericReview(object):
             'abstract': abstract,
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id).values(),
+            'person_pi': person_pi,
         }
 
     @with_proposal(permission='none')
@@ -634,6 +643,14 @@ class GenericReview(object):
         if role_info.name_review:
             title_description += ' Review'
 
+        # Extract the PI before calling the template so that we can handle
+        # the exception.
+        person_pi = None
+        try:
+            person_pi = proposal.members.get_pi()
+        except KeyError:
+            pass
+
         return {
             'title': '{}: {} {}'.format(
                 proposal_code,
@@ -642,6 +659,7 @@ class GenericReview(object):
             'target': target,
             'proposal_code': proposal_code,
             'proposal': proposal,
+            'person_pi': person_pi,
             'reviewer': reviewer,
             'role_info': role_info,
             'assessment_options': Assessment.get_options(),
@@ -667,10 +685,19 @@ class GenericReview(object):
         reviews = db.search_reviewer(proposal_id=proposal.id, with_review=True,
                                      with_review_text=True)
 
+        # Extract the PI before calling the template so that we can handle
+        # the exception.
+        person_pi = None
+        try:
+            person_pi = proposal.members.get_pi()
+        except KeyError:
+            pass
+
         return {
             'title': '{}: Reviews'.format(proposal_code),
             'proposal': proposal,
             'proposal_code': proposal_code,
+            'person_pi': person_pi,
             'abstract': abstract,
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id).values(),

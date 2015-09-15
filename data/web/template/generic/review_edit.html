@@ -7,7 +7,7 @@
 <h2>Proposal Information</h2>
 
 
-{% call render_proposal_summary(facility_name, proposal, proposal_code) %}
+{% call render_proposal_summary(facility_name, proposal, proposal_code, person_pi=person_pi) %}
     <tr>
         <th>Review role</th>
         <td>{{ role_info.name }}</td>
