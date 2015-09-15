@@ -134,6 +134,14 @@ class JCMT(Generic):
         else:
             return super(JCMT, self).make_review_guidelines_url(role)
 
+    def calculate_overall_rating(self, reviews):
+        """
+        Calculate the overall rating from a collection of reviewer
+        records (including their reviews).
+        """
+
+        return reviews.get_overall_rating(include_unweighted=False)
+
     def _view_proposal_extra(self, db, proposal):
         ctx = super(JCMT, self)._view_proposal_extra(db, proposal)
 

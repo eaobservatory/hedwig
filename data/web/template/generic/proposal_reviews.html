@@ -85,6 +85,16 @@
                 </tr>
             {% endif %}
         {% endfor %}
+        {% if overall_rating is not none %}
+            <tr>
+                <th>Overall rating</th>
+                <td class="total">&nbsp;</td>
+                <td class="total">&nbsp;</td>
+                <td class="total">{{ overall_rating }}</td>
+                <td class="total">&nbsp;</td>
+                <td class="total">&nbsp;</td>
+            </tr>
+        {% endif %}
     </table>
 {% endif %}
 

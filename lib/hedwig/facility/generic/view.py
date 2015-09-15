@@ -195,6 +195,14 @@ class Generic(GenericAdmin, GenericProposal, GenericReview):
 
         return None
 
+    def calculate_overall_rating(self, reviews):
+        """
+        Calculate the overall rating from a collection of reviewer
+        records (including their reviews).
+        """
+
+        return reviews.get_overall_rating(include_unweighted=True)
+
     def view_facility_home(self, db):
         # Determine which semesters have open calls for proposals.
         open_semesters = OrderedDict()

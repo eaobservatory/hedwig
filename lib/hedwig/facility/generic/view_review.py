@@ -702,6 +702,7 @@ class GenericReview(object):
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id).values(),
             'reviews': reviews.values(),
+            'overall_rating': self.calculate_overall_rating(reviews),
             'can_edit': can.edit,
             'can_add_roles': auth.can_add_review_roles(db, proposal),
         }
