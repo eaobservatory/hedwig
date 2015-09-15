@@ -303,6 +303,7 @@ class GenericReview(object):
                 'inviter_name': session['person']['name'],
                 'target_proposal': url_for(
                     '.proposal_view', proposal_id=proposal.id, _external=True),
+                'target_guideline': self.make_review_guidelines_url(role=role),
             }
 
             if 'submit_link' in form:

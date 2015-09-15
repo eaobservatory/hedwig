@@ -25,7 +25,7 @@ from urllib import urlencode
 from ...error import NoSuchRecord, UserError
 from ...web.util import HTTPRedirect, flash, url_for
 from ...view.util import organise_collection, with_proposal
-from ...type import Link, ValidationMessage
+from ...type import Link, ReviewerRole, ValidationMessage
 from ..generic.view import Generic
 from .calculator_heterodyne import HeterodyneCalculator
 from .calculator_scuba2 import SCUBA2Calculator
@@ -120,6 +120,19 @@ class JCMT(Generic):
                     'Observation.proposal.id': proposal_code,
                 }) + '#resultTableTab'),
         ]
+
+    def make_review_guidelines_url(self, role):
+        """
+        Make an URL for the guidelines page in the included documentation,
+        if the role is external.
+        """
+
+        if role == ReviewerRole.EXTERNAL:
+            return url_for('help.review_page', page_name='external_jcmt',
+                           _external=True)
+
+        else:
+            return super(JCMT, self).make_review_guidelines_url(role)
 
     def _view_proposal_extra(self, db, proposal):
         ctx = super(JCMT, self)._view_proposal_extra(db, proposal)

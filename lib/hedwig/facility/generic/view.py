@@ -186,6 +186,15 @@ class Generic(GenericAdmin, GenericProposal, GenericReview):
 
         return []
 
+    def make_review_guidelines_url(self, role):
+        """
+        Make an URL for guidelines to be sent to reviewers.
+
+        Returns None if there is no suitable URL defined.
+        """
+
+        return None
+
     def view_facility_home(self, db):
         # Determine which semesters have open calls for proposals.
         open_semesters = OrderedDict()

@@ -13,6 +13,12 @@ and it is requested that you provide the
 {% endblock %}
 
 {% block invitation_links %}
+{% if target_guideline is not none %}
+Guidelines for the review process are available on the following page:
+
+{{ target_guideline }}
+{% endif %}
+
 {% if token is defined %}
 To view the proposal and enter your review online, you will need to
 log in or register with our system.
