@@ -1,0 +1,29 @@
+{% extends 'generic/review_invitation.txt' %}
+
+{% block invitation_introduction %}
+The JCMT Time Allocation Committee have asked for your opinion
+on an observing proposal submitted recently.
+The proposal, {{ proposal_code }},
+entitled "{{ proposal.title }}",
+is a proposal in the {{ proposal.queue_name }} Queue
+for Semester {{ proposal.semester_name }}.
+We hope you can oblige and provide a review within 10 days.
+{% endblock %}
+
+{% block invitation_footer %}
+Please contact us at the address below if you have any serious conflict
+in reviewing the proposal.
+You have been identified as an expert in your field,
+so you may have some acquaintance or previous
+involvement with the applicants.
+At a certain level this should not disqualify you
+from providing your opinion.
+
+You need not make any assessment of the technical feasibility of the
+proposal - that is being done by JCMT staff: it is the merit of
+the scientific case which we request you assess.
+
+On behalf of the JCMT Time Allocation Committee,
+we thank you in advance for your
+participation in the proposal review process.
+{% endblock %}
