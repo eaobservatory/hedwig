@@ -172,9 +172,12 @@ class JCMT(Generic):
                 'Edit the observing request',
                 url_for('.request_edit', proposal_id=proposal.id)))
 
+        skip_missing_targets = False
+        if extra['jcmt_option_values'] is not None:
+            skip_missing_targets = extra['jcmt_option_values'].target_of_opp
+
         messages.extend(super(JCMT, self)._validate_proposal_extra(
-            db, proposal, extra,
-            skip_missing_targets=extra['jcmt_option_values'].target_of_opp))
+            db, proposal, extra, skip_missing_targets=skip_missing_targets))
 
         return messages
 
