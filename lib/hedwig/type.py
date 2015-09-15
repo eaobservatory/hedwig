@@ -863,7 +863,7 @@ class ProposalTextCollection(ResultCollection):
 
 
 class ReviewerCollection(ResultCollection):
-    def get_overall_rating(self, include_unweighted=True):
+    def get_overall_rating(self, include_unweighted):
         """
         Create weighted average of the ratings of completed reviews.
 
