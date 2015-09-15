@@ -863,6 +863,48 @@ class ProposalTextCollection(ResultCollection):
 
 
 class ReviewerCollection(ResultCollection):
+    def get_overall_rating(self, include_unweighted=True):
+        """
+        Create weighted average of the ratings of completed reviews.
+
+        If "unweighted" review roles are included, then these are
+        weighted at 100%.
+
+        The overall rating is truncated and returned as an integer.
+        """
+
+        total_rating = 0.0
+        total_weight = 0.0
+
+        for review in self.values():
+            role_info = ReviewerRole.get_info(review.role)
+
+            # Skip unweighted reviews if we don't want to include them.
+            if not (include_unweighted or role_info.weight):
+                continue
+
+            # Skip incomplete reviews.
+            if not review.review_present:
+                continue
+            if (not role_info.rating) or (review.review_rating is None):
+                continue
+            if role_info.weight and (review.review_weight is None):
+                continue
+
+            # Add to running totals.
+            if role_info.weight:
+                weight = (review.review_weight / 100.0)
+            else:
+                weight = 1.0
+
+            total_rating += review.review_rating * weight
+            total_weight += weight
+
+        if not total_weight:
+            return None
+
+        return int(total_rating / total_weight)
+
     def get_person(self, person_id, roles=None):
         for member in self.values():
             if ((member.person_id == person_id) and

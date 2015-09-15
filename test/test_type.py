@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import namedtuple, OrderedDict
+import itertools
 from unittest import TestCase
 
 from hedwig.error import MultipleRecords, NoSuchRecord
@@ -185,6 +186,40 @@ class TypeTestCase(TestCase):
         self.assertEqual(c.get_person(2001, roles=[ReviewerRole.TECH]).id, 201)
 
         self.assertEqual(c.person_id_by_role(ReviewerRole.EXTERNAL), [2002])
+
+    def test_reviewer_collection_rating(self):
+        c = ReviewerCollection()
+
+        rating = c.get_overall_rating(include_unweighted=True)
+        self.assertIsNone(rating)
+
+        # Add some simple review ratings.
+        rr = ReviewerRole
+        rs = [
+            dict(role=rr.TECH),
+            dict(role=rr.EXTERNAL),
+            dict(role=rr.EXTERNAL, review_rating=20),
+            dict(role=rr.CTTEE_PRIMARY),
+            dict(role=rr.CTTEE_PRIMARY, review_rating=10),
+            dict(role=rr.CTTEE_PRIMARY, review_rating=80, review_weight=100),
+        ]
+
+        for (r, n) in zip(rs, itertools.count(100)):
+            c[n] = null_tuple(Reviewer)._replace(review_present=True, **r)
+
+        self.assertEqual(c.get_overall_rating(include_unweighted=True), 50)
+        self.assertEqual(c.get_overall_rating(include_unweighted=False), 80)
+
+        # Add some more reviews with non-100% weights.
+        rs = [
+            dict(role=rr.CTTEE_SECONDARY, review_rating=20, review_weight=50),
+            dict(role=rr.CTTEE_SECONDARY, review_rating=40, review_weight=50),
+        ]
+
+        for (r, n) in zip(rs, itertools.count(200)):
+            c[n] = null_tuple(Reviewer)._replace(review_present=True, **r)
+
+        self.assertEqual(c.get_overall_rating(include_unweighted=False), 55)
 
     def test_reviewer_role(self):
         for role in [
