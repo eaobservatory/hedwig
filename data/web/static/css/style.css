@@ -72,6 +72,10 @@ td.borderless {
     border: none;
 }
 
+tr.spacer_above td, tr.spacer_above th {
+    border-top: 5px solid #AAA;
+}
+
 p.warning {
     font-weight: bold;
     background: #FAA;
