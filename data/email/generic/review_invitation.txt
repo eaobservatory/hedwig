@@ -1,6 +1,7 @@
 {% extends 'layout.txt' %}
 
 {% block content %}
+{% block invitation_introduction %}
 You have been invited by {{ inviter_name }}
 to review proposal {{ proposal_code }}
 to use {{ facility_definite_name }}.
@@ -9,7 +10,9 @@ is a proposal in the {{ proposal.queue_name }} Queue
 for Semester {{ proposal.semester_name }}
 and it is requested that you provide the
 {{ role_info.name.lower() }} review.
+{% endblock %}
 
+{% block invitation_links %}
 {% if token is defined %}
 To view the proposal and enter your review online, you will need to
 log in or register with our system.
@@ -40,4 +43,8 @@ To view the proposal:
 To enter your review:
 
 {{ target_review }}
+{% endblock %}
+
+{% block invitation_footer %}
+{% endblock %}
 {% endblock %}
