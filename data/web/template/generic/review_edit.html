@@ -6,12 +6,23 @@
 {% block content %}
 <h2>Proposal Information</h2>
 
-
 {% call render_proposal_summary(facility_name, proposal, proposal_code, person_pi=person_pi) %}
     <tr>
         <th>Review role</th>
         <td>{{ role_info.name }}</td>
     </tr>
+    {% if reviewer.person_id is not none %}
+        <tr>
+            <th>Reviewer</th>
+            <td>
+                {% if session.is_admin or reviewer.person_public %}
+                    <a href="{{ url_for('people.person_view', person_id=reviewer.person_id) }}">{{ reviewer.person_name }}</a>
+                {% else %}
+                    {{ reviewer.person_name }}
+                {% endif %}
+            </td>
+        </tr>
+    {% endif %}
 {% endcall %}
 
 <h2>{{ 'Review' if role_info.name_review else role_info.name }}</h2>
