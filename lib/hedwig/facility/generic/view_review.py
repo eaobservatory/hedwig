@@ -643,14 +643,6 @@ class GenericReview(object):
         if role_info.name_review:
             title_description += ' Review'
 
-        # Extract the PI before calling the template so that we can handle
-        # the exception.
-        person_pi = None
-        try:
-            person_pi = proposal.members.get_pi()
-        except KeyError:
-            pass
-
         return {
             'title': '{}: {} {}'.format(
                 proposal_code,
@@ -659,7 +651,6 @@ class GenericReview(object):
             'target': target,
             'proposal_code': proposal_code,
             'proposal': proposal,
-            'person_pi': person_pi,
             'reviewer': reviewer,
             'role_info': role_info,
             'assessment_options': Assessment.get_options(),
