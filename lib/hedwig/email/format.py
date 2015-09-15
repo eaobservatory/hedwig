@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 import os
+import re
 from textwrap import wrap
 
 from jinja2 import Environment, FileSystemLoader
@@ -26,6 +27,8 @@ from jinja2 import Environment, FileSystemLoader
 from ..config import get_config, get_home
 
 environment = None
+
+paragraph_break = re.compile('\n\n+')
 
 
 def get_environment():
@@ -80,7 +83,7 @@ def render_email_template(name, context, facility=None):
 
     # Wrap each paragraph and append to the lines list.
     lines = []
-    for paragraph in body.replace('\r', '').split('\n\n'):
+    for paragraph in paragraph_break.split(body.replace('\r', '')):
         if lines:
             lines.append('')
         if not paragraph:
