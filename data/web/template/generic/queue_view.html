@@ -20,11 +20,22 @@
 <h2>Affiliations</h2>
 
 {% if affiliations %}
-    <ul>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Assignment weight</th>
+        </tr>
         {% for affiliation in affiliations %}
-            <li>{{ affiliation.name }}</li>
+            <tr>
+                <td>{{ affiliation.name }}</td>
+                <td>
+                    {{ affiliation.weight if affiliation.weight }}
+                    {% if affiliation.exclude %}<span class="label">exclude</span>{% endif %}
+                    {% if not (affiliation.weight or affiliation.exclude) %}&nbsp;{% endif %}
+                </td>
+            </tr>
         {% endfor %}
-    </ul>
+    </table>
 {% else %}
     <p class="missing">
         No affiliations are available for this queue.
