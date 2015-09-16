@@ -6,6 +6,10 @@ function addAffiliationRow(newRowNumber) {
     newname.attr('name', 'name_' + nid);
     newname.attr('required', 'required');
     newrow.find('[name=hidden]').attr('name', 'hidden_' + nid);
+    newrow.find('[name=exclude]').attr('name', 'exclude_' + nid);
+    var newweight = newrow.find('[name=weight]');
+    newweight.attr('name', 'weight_' + nid);
+    newweight.attr('required', 'required');
     var deletelink = newrow.find('#delete_template');
     deletelink.attr('id', 'delete_' + nid);
     deletelink.click(function (event) {
