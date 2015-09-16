@@ -694,7 +694,8 @@ class ProposalPart(object):
         ans = ResultCollection()
 
         with self._transaction() as conn:
-            for row in conn.execute(stmt.order_by(affiliation.c.name.asc())):
+            for row in conn.execute(stmt.order_by(affiliation.c.exclude.asc(),
+                                                  affiliation.c.name.asc())):
                 ans[row['id']] = Affiliation(**row)
 
         return ans
