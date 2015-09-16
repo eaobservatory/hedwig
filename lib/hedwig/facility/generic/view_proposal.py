@@ -272,8 +272,40 @@ class GenericProposal(object):
         return messages
 
     def _validate_proposal_extra(self, db, proposal, extra,
-                                 skip_missing_targets=False):
+                                 skip_missing_targets=False,
+                                 check_excluded_pi=False):
         messages = []
+
+        if check_excluded_pi:
+            member_pi = None
+            try:
+                member_pi = proposal.members.get_pi()
+            except KeyError:
+                pass
+
+            # Ignore if there's no PI: the previous members.validate test
+            # should have generated an error for that.
+            if member_pi is not None:
+                exclude = db.search_affiliation(queue_id=proposal.queue_id,
+                                                exclude=True)
+
+                if member_pi.affiliation_id in exclude:
+                    exclude_names = [
+                        x.name for x in exclude.values()
+                        if ((not x.hidden) or
+                            (x.id == member_pi.affiliation_id))]
+
+                    messages.append(ValidationMessage(
+                        False,
+                        'The principal investigator (PI) has an ineligible '
+                        'affiliation.  The PI should not be someone with ' +
+                        ('one of the following affiliations: '
+                         if len(exclude_names) > 1 else
+                         'the following affiliation: ') +
+                        ', '.join(exclude_names) +
+                        '.',
+                        'Select a different proposal member as the PI',
+                        url_for('.member_edit', proposal_id=proposal.id)))
 
         if extra['abstract'] is None:
             messages.append(ValidationMessage(

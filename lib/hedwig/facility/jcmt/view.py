@@ -177,7 +177,8 @@ class JCMT(Generic):
             skip_missing_targets = extra['jcmt_option_values'].target_of_opp
 
         messages.extend(super(JCMT, self)._validate_proposal_extra(
-            db, proposal, extra, skip_missing_targets=skip_missing_targets))
+            db, proposal, extra, skip_missing_targets=skip_missing_targets,
+            check_excluded_pi=True))
 
         return messages
 
