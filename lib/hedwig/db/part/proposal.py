@@ -49,7 +49,8 @@ from ..util import require_not_none
 
 
 class ProposalPart(object):
-    def add_affiliation(self, queue_id, name, hidden=False):
+    def add_affiliation(self, queue_id, name, hidden=False,
+                        exclude=False, weight=0.0):
         """
         Add an affiliation to the database.
         """
@@ -59,6 +60,8 @@ class ProposalPart(object):
                 affiliation.c.queue_id: queue_id,
                 affiliation.c.name: name,
                 affiliation.c.hidden: hidden,
+                affiliation.c.exclude: exclude,
+                affiliation.c.weight: weight,
             }))
 
         return result.inserted_primary_key[0]

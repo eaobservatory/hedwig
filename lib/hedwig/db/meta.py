@@ -43,6 +43,12 @@ affiliation = Table(
            nullable=False),
     Column('name', Unicode(255), nullable=False),
     Column('hidden', Boolean, default=False, nullable=False),
+    Column('exclude', Boolean, default=False, nullable=False,
+           doc='True if affiliation is excluded from assignment calculations. '
+           'The exact meaning of this column is facility-specific.'),
+    Column('weight', Float(precision=53, asdecimal=False), nullable=False,
+           doc='Weighting factor for assignment calculations, if necessary. '
+           'The actual calculation will be facility-specific.'),
     UniqueConstraint('queue_id', 'name'),
     **_table_opts)
 
