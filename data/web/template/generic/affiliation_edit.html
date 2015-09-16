@@ -32,10 +32,8 @@
         (Attempting to do so should be an error.)
     </li>
     <li>
-        The exact meaning of the &ldquo;exclude&rdquo; and &ldquo;weight&rdquo;
-        columns depends on the facility-specific affiliation assignment rules.
-        If you do not need these fields you may leave them at their default
-        values (non-exclude, weight 0.0).
+        The exact meaning of the &ldquo;exclude from assignment&rdquo; column
+        depends on the facility-specific affiliation assignment rules.
     </li>
 </ul>
 
@@ -48,21 +46,16 @@
 <form method="POST" action="{{ url_for('.affiliation_edit', queue_id=queue.id) }}">
     <table id="affiliations">
         <tr>
-            <th rowspan="2">Affiliation</th>
-            <th rowspan="2">Hidden</th>
-            <th colspan="2">Assignment calculation</th>
-            <th rowspan="2">Actions</th>
-        </tr>
-        <tr>
-            <th>Exclude</th>
-            <th>Weight</th>
+            <th>Affiliation</th>
+            <th>Hidden</th>
+            <th>Exclude from assignment</th>
+            <th>Actions</th>
         </tr>
         {% for affiliation in affiliations %}
             <tr id="affiliationrow_{{ affiliation.id }}">
                 <td><input type="text" name="name_{{ affiliation.id }}" value="{{ affiliation.name }}" required="required" /></td>
                 <td><input type="checkbox" name="hidden_{{ affiliation.id }}" value="yes" {{ 'checked="checked"' | safe if affiliation.hidden }} /></td>
                 <td><input type="checkbox" name="exclude_{{ affiliation.id }}" value="yes" {{ 'checked="checked"' | safe if affiliation.exclude }} /></td>
-                <td><input type="text" name="weight_{{ affiliation.id }}" value="{{ affiliation.weight }}" required="required" /></td>
                 <td><input type="button" id="delete_{{ affiliation.id }}" value="Delete" />
             </tr>
         {% endfor %}
@@ -72,7 +65,6 @@
             <td><input type="text" name="name" value="" /></td>
             <td><input type="checkbox" name="hidden" value="yes" /></td>
             <td><input type="checkbox" name="exclude" value="yes" /></td>
-            <td><input type="text" name="weight" value="0.0" /></td>
             <td><input type="button" id="delete_template" value="Delete" />
         </tr>
     </table>
