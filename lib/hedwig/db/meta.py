@@ -46,10 +46,24 @@ affiliation = Table(
     Column('exclude', Boolean, default=False, nullable=False,
            doc='True if affiliation is excluded from assignment calculations. '
            'The exact meaning of this column is facility-specific.'),
+    UniqueConstraint('queue_id', 'name'),
+    **_table_opts)
+
+affiliation_weight = Table(
+    'affiliation_weight',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('affiliation_id', None,
+           ForeignKey('affiliation.id',
+                      onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('call_id', None,
+           ForeignKey('call.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
     Column('weight', Float(precision=53, asdecimal=False), nullable=False,
            doc='Weighting factor for assignment calculations, if necessary. '
            'The actual calculation will be facility-specific.'),
-    UniqueConstraint('queue_id', 'name'),
+    UniqueConstraint('affiliation_id', 'call_id'),
     **_table_opts)
 
 auth_failure = Table(

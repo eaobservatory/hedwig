@@ -33,7 +33,7 @@ from .error import NoSuchRecord, MultipleRecords, UserError
 
 Affiliation = namedtuple(
     'Affiliation',
-    map(lambda x: x.name, affiliation.columns))
+    [x.name for x in affiliation.columns] + ['weight'])
 
 CalculatorInfo = namedtuple(
     'CalculatorInfo',

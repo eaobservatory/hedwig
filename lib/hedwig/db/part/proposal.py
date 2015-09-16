@@ -38,7 +38,7 @@ from ...type import Affiliation, AttachmentState, Call, Category, \
     PublicationType, \
     Queue, QueueInfo, ResultCollection, ReviewerInfo, Semester, SemesterInfo, \
     Target, TargetCollection, TextRole
-from ..meta import affiliation, call, category, decision, \
+from ..meta import affiliation, affiliation_weight, call, category, decision, \
     facility, institution, \
     member, person, prev_proposal, prev_proposal_pub, \
     proposal, proposal_category, \
@@ -49,8 +49,7 @@ from ..util import require_not_none
 
 
 class ProposalPart(object):
-    def add_affiliation(self, queue_id, name, hidden=False,
-                        exclude=False, weight=0.0):
+    def add_affiliation(self, queue_id, name, hidden=False, exclude=False):
         """
         Add an affiliation to the database.
         """
@@ -61,7 +60,6 @@ class ProposalPart(object):
                 affiliation.c.name: name,
                 affiliation.c.hidden: hidden,
                 affiliation.c.exclude: exclude,
-                affiliation.c.weight: weight,
             }))
 
         return result.inserted_primary_key[0]
@@ -678,12 +676,25 @@ class ProposalPart(object):
 
         return Queue(**result)
 
-    def search_affiliation(self, queue_id=None, hidden=None, exclude=None):
+    def search_affiliation(self, queue_id=None, hidden=None, exclude=None,
+                           with_weight_call_id=None):
         """
         Search for affiliation records.
         """
 
-        stmt = affiliation.select()
+        if with_weight_call_id is None:
+            stmt = affiliation.select()
+            default = {'weight': None}
+
+        else:
+            stmt = select(
+                [affiliation, affiliation_weight.c.weight]
+            ).select_from(
+                affiliation.outerjoin(affiliation_weight, and_(
+                    affiliation_weight.c.affiliation_id == affiliation.c.id,
+                    affiliation_weight.c.call_id == with_weight_call_id))
+            )
+            default = {}
 
         if queue_id is not None:
             stmt = stmt.where(affiliation.c.queue_id == queue_id)
@@ -705,7 +716,9 @@ class ProposalPart(object):
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(affiliation.c.exclude.asc(),
                                                   affiliation.c.name.asc())):
-                ans[row['id']] = Affiliation(**row)
+                values = default.copy()
+                values.update(**row)
+                ans[values['id']] = Affiliation(**values)
 
         return ans
 
