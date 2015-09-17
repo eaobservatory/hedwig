@@ -1,0 +1,41 @@
+{% extends 'layout.html' %}
+{% set navigation=[(call.semester_name + ' ' + call.queue_name, url_for('.review_call', call_id=call.id))] %}
+
+{% block content %}
+<ul>
+    <li>
+        The affiliation weight can influence the relative assignment
+        of a proposal to its members' affiliations.
+    </li>
+    <li>
+        The exact meaning depends on the facility's specific
+        affiliation assignment rules.
+    </li>
+</ul>
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.review_affiliation_weight', call_id=call.id) }}">
+    <table>
+        <tr>
+            <th>Affiliation</th>
+            <th>Weight</th>
+        </tr>
+        {% for affiliation in affiliations %}
+            <tr>
+                <td>{{ affiliation.name }}</td>
+                <td><input type="number" name="weight_{{ affiliation.id }}" value="{{ affiliation.weight if affiliation.weight is not none }}" min="0" step="any" required="required"></td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <p>
+        <input type="submit" name="submit" value="Save" />
+    </p>
+</form>
+
+{% endblock %}

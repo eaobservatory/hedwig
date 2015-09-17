@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 
 from ...email.format import render_email_template
 from ...error import DatabaseIntegrityError, NoSuchRecord, UserError
@@ -55,6 +55,41 @@ class GenericReview(object):
                 ProposalWithCode(*x, code=self.make_proposal_code(db, x),
                                  facility_code=None)
                 for x in proposals.values()],
+        }
+
+    @with_call_review(permission='edit')
+    def view_review_affiliation_weight(self, db, call, can, form):
+        message = None
+
+        affiliations = db.search_affiliation(
+            queue_id=call.queue_id, hidden=False, exclude=False,
+            with_weight_call_id=call.id)
+
+        if form is not None:
+            try:
+                updated_affiliations = OrderedDict()
+                for affiliation in affiliations.values():
+                    id_ = affiliation.id
+                    updated_affiliations[id_] = affiliation._replace(
+                        weight=float(form['weight_{}'.format(id_)]))
+
+                updates = db.sync_affiliation_weight(
+                    call_id=call.id, records=updated_affiliations)
+
+                if any(updates):
+                    flash('The affiliation weights have been updated.')
+                raise HTTPRedirect(url_for('.review_call', call_id=call.id))
+
+            except UserError as e:
+                message = e.message
+                affiliations = updated_affiliations
+
+        return {
+            'title': 'Affiliation Weight: {} {}'.format(call.semester_name,
+                                                        call.queue_name),
+            'call': call,
+            'message': message,
+            'affiliations': affiliations.values(),
         }
 
     @with_call_review(permission='edit')
