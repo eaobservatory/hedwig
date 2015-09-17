@@ -84,7 +84,8 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
 
     def _sync_records(self, conn, table, key_column, key_value, records,
                       update_columns=None, verified_columns=(),
-                      forbid_add=False, forbid_delete=False):
+                      forbid_add=False, forbid_delete=False,
+                      record_match_column=None):
         """
         Update a set of database records to match the given set of records.
 
@@ -110,6 +111,12 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
         then a column called "verified" is set to False.  (If verified
         columns exist, then update_columns should probably be set to prevent
         the "verified" column being edited!)
+
+        If "record_match_column" is specified then it will determine the
+        column to use to match existing records to those given.  If not
+        specified then the table's "id" column will be used.  Note this
+        only applies to the existing database records -- we still expect
+        to use the "id" field of the given records.
         """
 
         # Initialize debugging counters.
@@ -132,10 +139,16 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
             update_columns = [x for x in table.c
                               if x is not table.c.id and x not in key_column]
 
+        # Is the record matching column specified?  If not use the "id" column.
+        if record_match_column is None:
+            record_match_column_name = table.c.id.name
+        else:
+            record_match_column_name = record_match_column.name
+
         # Fetch the current set of records.
         existing = ResultCollection()
         for row in conn.execute(table.select().where(condition)):
-            existing[row['id']] = row
+            existing[row[record_match_column_name]] = row
 
         # Keep track of identifiers in case the input "records" list tries
         # mentioning the same record twice.
@@ -166,6 +179,8 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                 values = dict(zip(key_column, key_value))
                 for column in update_columns:
                     values[column] = getattr(value, column.key)
+                if record_match_column is not None:
+                    values[record_match_column] = id_
                 conn.execute(table.insert().values(values))
                 n_insert += 1
 
@@ -181,16 +196,17 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
 
                 if values:
                     conn.execute(table.update().where(
-                        table.c.id == id_
+                        table.c.id == previous['id']
                     ).values(values))
                     n_update += 1
 
         # Delete remaining un-matched entries.
-        for id_ in existing:
+        for existing_record in existing.values():
             if forbid_delete:
                 raise UserError('Entries can not be deleted here.')
 
-            conn.execute(table.delete().where(table.c.id == id_))
+            conn.execute(
+                table.delete().where(table.c.id == existing_record['id']))
             n_delete += 1
 
         return (n_insert, n_update, n_delete)

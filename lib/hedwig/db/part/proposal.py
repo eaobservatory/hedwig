@@ -1595,6 +1595,27 @@ class ProposalPart(object):
                     'multiple rows deleted removing replaced PDF '
                     'for proposal {} role {}', proposal_id, role)
 
+    def sync_affiliation_weight(self, call_id, records):
+        """
+        Update the affiliation weighting values for a given call.
+
+        This takes a set of Affiliation records including weights,
+        where the "id" is actually the "affiliation.id" rather than
+        the "affiliation_weight.id".
+        """
+
+        with self._transaction() as conn:
+            if not self._exists_id(conn, call, call_id):
+                raise ConsistencyError(
+                    'call does not exist with id={}', call_id)
+
+            return self._sync_records(
+                conn, affiliation_weight,
+                key_column=affiliation_weight.c.call_id, key_value=call_id,
+                records=records,
+                update_columns=(affiliation_weight.c.weight,),
+                record_match_column=affiliation_weight.c.affiliation_id)
+
     def sync_facility_category(self, facility_id, records):
         """
         Update the categories available for proposal for a facility.
