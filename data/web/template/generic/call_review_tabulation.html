@@ -6,9 +6,13 @@
         <th rowspan="2">Proposal</th>
         <th rowspan="2">State</th>
         <th rowspan="2">Rating</th>
+        {% block heading_line_one %}
+        {% endblock %}
         <th colspan="{{ affiliations | length + 1 }}">Affiliation percentage</th>
     </tr>
     <tr>
+        {% block heading_line_two %}
+        {% endblock %}
         {% for affiliation in affiliations %}
             <th class="sideways"><div><div>{{ affiliation.name }}</div></div></th>
         {% endfor %}
@@ -25,6 +29,8 @@
                     {{ proposal.rating }}
                 {% endif %}
             </td>
+            {% block row_extra scoped %}
+            {% endblock %}
             {% for affiliation in affiliations %}
                 <td>
                     {% if affiliation.id in proposal.affiliations %}
@@ -43,5 +49,7 @@
             </td>
         </tr>
     {% endfor %}
+    {% block table_footer %}
+    {% endblock %}
 </table>
 {% endblock %}

@@ -30,7 +30,7 @@ from ..generic.view import Generic
 from .calculator_heterodyne import HeterodyneCalculator
 from .calculator_scuba2 import SCUBA2Calculator
 from .type import JCMTInstrument, JCMTOptions, \
-    JCMTRequest, JCMTRequestCollection, \
+    JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, \
     JCMTWeather
 
 
@@ -261,6 +261,39 @@ class JCMT(Generic):
             check_excluded_pi=True))
 
         return messages
+
+    def _get_proposal_tabulation(self, db, call):
+        tabulation = super(JCMT, self)._get_proposal_tabulation(db, call)
+
+        total = 0.0
+        total_weather = {}
+        total_instrument = {}
+
+        for proposal in tabulation['proposals']:
+            request = db.search_jcmt_request(
+                proposal_id=proposal['id']).get_total()
+
+            proposal['jcmt_request'] = request
+
+            total += request.total
+
+            for (weather, time) in request.weather.items():
+                total_weather[weather] = \
+                    total_weather.get(weather, 0.0) + time
+
+            for (instrument, time) in request.instrument.items():
+                total_instrument[instrument] = \
+                    total_instrument.get(instrument, 0.0) + time
+
+        tabulation.update({
+            'jcmt_weathers': JCMTWeather.get_available(),
+            'jcmt_instruments': JCMTInstrument.get_options(),
+            'jcmt_request_total': JCMTRequestTotal(
+                total=total, weather=total_weather,
+                instrument=total_instrument)
+        })
+
+        return tabulation
 
     @with_proposal(permission='edit')
     def view_request_edit(self, db, proposal, can, form, is_post):
