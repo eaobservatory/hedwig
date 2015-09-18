@@ -4,13 +4,18 @@
 <table>
     <tr>
         <th rowspan="2">Proposal</th>
+        <th colspan="2">Members</th>
+        <th rowspan="2">Title</th>
         <th rowspan="2">State</th>
+        <th rowspan="2">Decision</th>
         <th rowspan="2">Rating</th>
         {% block heading_line_one %}
         {% endblock %}
         <th colspan="{{ affiliations | length + 1 }}" class="spacer_left">Affiliation percentage</th>
     </tr>
     <tr>
+        <th>PI</th>
+        <th>Others</th>
         {% block heading_line_two %}
         {% endblock %}
         {% for affiliation in affiliations %}
@@ -21,7 +26,27 @@
     {% for proposal in proposals %}
         <tr>
             <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+            <td>
+                {% if proposal.member_pi is none %}
+                    &nbsp;
+                {% else %}
+                    {{ proposal.member_pi.person_name | abbr }}
+                {% endif %}
+            </td>
+            <td>
+                {{ proposal.members_other | length }}
+            </td>
+            <td>{{ proposal.title | abbr }}</td>
             <td>{{ proposal.state | proposal_state_name }}</td>
+            <td>
+                {% if proposal.decision_accept is none %}
+                    &nbsp;
+                {% elif proposal.decision_accept %}
+                    Accept
+                {% else %}
+                    Reject
+                {% endif %}
+            </td>
             <td>
                 {% if proposal.rating is none %}
                     &nbsp;

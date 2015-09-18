@@ -37,8 +37,7 @@
 
 {% block table_footer %}
     <tr>
-        <th>Total (hours)</th>
-        <td colspan="2" class="total">&nbsp;</td>
+        <th colspan="7">Total (hours)</th>
         {{ render_jcmt_request(jcmt_request_total, is_total=true) }}
         <td colspan="{{ affiliations | length + 1 }}" class="total spacer_left">&nbsp;</td>
     </tr>
