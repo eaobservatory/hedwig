@@ -28,7 +28,7 @@
             {% for affiliation in affiliations %}
                 <td>
                     {% if affiliation.id in proposal.affiliations %}
-                        {{ 100.0 * proposal.affiliations[affiliation.id] }}
+                        {{ (100.0 * proposal.affiliations[affiliation.id]) | fmt('{:.1f}') }}
                     {% else %}
                         &nbsp;
                     {% endif %}
@@ -36,7 +36,7 @@
             {% endfor %}
             <td>
                 {% if 0 in proposal.affiliations %}
-                    {{ 100.0 * proposal.affiliations[0] }}
+                    {{ (100.0 * proposal.affiliations[0]) | fmt('{:.1f}')}}
                 {% else %}
                     &nbsp;
                 {% endif %}
