@@ -17,7 +17,7 @@
         <th rowspan="2">Proposal</th>
         <th colspan="2">Members</th>
         <th rowspan="2">Title</th>
-        <th rowspan="2">State</th>
+        <th rowspan="2" class="spacer_left">State</th>
         <th rowspan="2">Decision</th>
         <th rowspan="2">Rating<sup>&ddagger;</sup></th>
         {% block heading_line_one %}
@@ -80,7 +80,7 @@
                 </div>
             </td>
             <td>{{ proposal.title | abbr }}</td>
-            <td>{{ proposal.state | proposal_state_name }}</td>
+            <td class="spacer_left">{{ proposal.state | proposal_state_name }}</td>
             <td>
                 {% if proposal.decision_accept is none %}
                     &nbsp;
