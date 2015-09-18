@@ -51,7 +51,7 @@
                 {% if proposal.rating is none %}
                     &nbsp;
                 {% else %}
-                    {{ proposal.rating }}
+                    {{ proposal.rating | fmt('{:.1f}') }}
                 {% endif %}
             </td>
             {% block row_extra scoped %}

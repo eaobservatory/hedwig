@@ -903,7 +903,7 @@ class ReviewerCollection(ResultCollection):
         if not total_weight:
             return None
 
-        return int(total_rating / total_weight)
+        return total_rating / total_weight
 
     def get_person(self, person_id, roles=None):
         for member in self.values():
