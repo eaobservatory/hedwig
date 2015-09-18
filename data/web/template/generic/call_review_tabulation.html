@@ -17,9 +17,9 @@
         <th rowspan="2">Proposal</th>
         <th colspan="2">Members</th>
         <th rowspan="2">Title</th>
-        <th rowspan="2" class="spacer_left">State</th>
-        <th rowspan="2">Decision</th>
-        <th rowspan="2">Rating<sup>&ddagger;</sup></th>
+        <th rowspan="2" class="spacer_left sideways"><div><div>State</div></div></th>
+        <th rowspan="2" class="sideways"><div><div>Decision</div></div></th>
+        <th rowspan="2" class="sideways"><div><div>Rating<sup>&ddagger;</sup></div></div></th>
         {% block heading_line_one %}
         {% endblock %}
         <th colspan="{{ affiliations | length + 1 }}" class="spacer_left">Affiliation percentage</th>
@@ -80,14 +80,14 @@
                 </div>
             </td>
             <td>{{ proposal.title | abbr }}</td>
-            <td class="spacer_left">{{ proposal.state | proposal_state_name }}</td>
+            <td class="spacer_left"><abbr title="{{ proposal.state | proposal_state_name }}">{{ proposal.state | proposal_state_short_name }}</abbr></td>
             <td>
                 {% if proposal.decision_accept is none %}
                     &nbsp;
                 {% elif proposal.decision_accept %}
-                    Accept
+                    &check;
                 {% else %}
-                    Reject
+                    &cross;
                 {% endif %}
             </td>
             <td>

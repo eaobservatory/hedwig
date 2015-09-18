@@ -182,6 +182,13 @@ def create_web_app(db=None):
             return 'Unknown state'
 
     @app.template_filter()
+    def proposal_state_short_name(value):
+        try:
+            return ProposalState.get_short_name(value)
+        except KeyError:
+            return '?'
+
+    @app.template_filter()
     def reviewer_role_name(value):
         try:
             return ReviewerRole.get_info(value).name

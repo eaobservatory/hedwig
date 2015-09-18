@@ -1,7 +1,7 @@
 {% extends 'generic/call_review_tabulation.html' %}
 
 {% block heading_line_one %}
-    <th rowspan="2">Request<br />(hours)</th>
+    <th rowspan="2" class="sideways"><div><div>Request (hours)</div></div></th>
     <th colspan="{{ jcmt_weathers | length + 1 }}" class="spacer_left">Weather</th>
     <th colspan="{{ jcmt_instruments | length + 1 }}" class="spacer_left">Instrument</th>
 {% endblock %}
