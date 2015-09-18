@@ -10,9 +10,9 @@
     </tr>
     <tr>
         {% for affiliation in affiliations %}
-            <th>{{ affiliation.name }}</th>
+            <th class="sideways"><div><div>{{ affiliation.name }}</div></div></th>
         {% endfor %}
-        <th>Unknown</th>
+        <th class="sideways"><div><div>Unknown</div></div></th>
     </tr>
     {% for proposal in proposals %}
         <tr>
