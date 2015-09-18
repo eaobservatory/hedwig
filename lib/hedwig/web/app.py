@@ -19,7 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict
-from flask import Flask
+from flask import Flask, Markup
 from jinja2.runtime import Undefined
 import logging
 import os
@@ -187,6 +187,23 @@ def create_web_app(db=None):
             return ReviewerRole.get_info(value).name
         except KeyError:
             return 'Unknown role'
+
+    @app.template_filter()
+    def abbr(value, length=20):
+        """
+        Filter to truncate the text to the given length and return
+        it as an "abbr" element.  If the text is already shorter than
+        specified then it is simply returned as is.
+        """
+
+        if value is None:
+            return ''
+
+        if len(value) <= length:
+            return value
+
+        return Markup('<abbr title="') + value + Markup('">') + \
+            value[:length] + Markup('&hellip;</abbr>')
 
     @app.template_test()
     def attachment_ready(value):
