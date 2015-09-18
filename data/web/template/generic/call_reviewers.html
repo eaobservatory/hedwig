@@ -39,19 +39,19 @@
                         <td rowspan="{{ reviewers | length }}">{{ proposal.state | proposal_state_name }}</td>
                         <td rowspan="{{ reviewers | length }}">
                             {% if proposal.members.person_id is not none %}
-                                <a href="{{ url_for('people.person_view', person_id=proposal.members.person_id) }}">{{ proposal.members.person_name | truncate(25, killwords=True, end='\u2026') }}</a>
+                                <a href="{{ url_for('people.person_view', person_id=proposal.members.person_id) }}">{{ proposal.members.person_name | abbr(25) }}</a>
                             {% else %}
                                 &nbsp;
                             {% endif %}
                         </td>
-                        <td rowspan="{{ reviewers | length }}">{{ proposal.title | truncate(25, killwords=True, end='\u2026') }}</td>
+                        <td rowspan="{{ reviewers | length }}">{{ proposal.title | abbr(25) }}</td>
                     {% endif %}
                     {% if reviewer is none %}
                         <td colspan="3"><span class="missing_data">none assigned</a></td>
                     {% else %}
                         <td><a href="{{ url_for('.review_edit', reviewer_id=reviewer.id) }}">{{ reviewer.role | reviewer_role_name }}</a></td>
                         <td>
-                            <a href="{{ url_for('people.person_view', person_id=reviewer.person_id) }}">{{ reviewer.person_name | truncate(25, killwords=True, end='\u2026') }}</a>
+                            <a href="{{ url_for('people.person_view', person_id=reviewer.person_id) }}">{{ reviewer.person_name | abbr(25) }}</a>
                             {% if not reviewer.person_registered %}
                                 <span class="label">unregistered</span>
                             {% endif %}

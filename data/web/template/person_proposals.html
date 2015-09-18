@@ -35,7 +35,7 @@
                                     <td rowspan="{{ loop.length }}">{{ proposal.queue_name }}</td>
                                 {% endif %}
                                 <td><a href="{{ url_for(proposal.facility_code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
-                                <td>{{ proposal.title }}</td>
+                                <td>{{ proposal.title | abbr(35) }}</td>
                                 <td>{{ proposal.state | proposal_state_name }}</td>
                                 <td>
                                     {% if proposal.members.pi %}<span class="label">PI</span>{% endif %}

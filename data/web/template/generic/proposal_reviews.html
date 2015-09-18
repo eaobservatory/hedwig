@@ -51,15 +51,15 @@
                 </td>
                 <td>
                     {% if session.is_admin or review.person_public %}
-                        <a href="{{ url_for('people.person_view', person_id=review.person_id) }}">{{ review.person_name | truncate(35, killwords=True, end='\u2026') }}</a>
+                        <a href="{{ url_for('people.person_view', person_id=review.person_id) }}">{{ review.person_name | abbr(35) }}</a>
                     {% else %}
-                        {{ review.person_name | truncate(35, killwords=True, end='\u2026') }}
+                        {{ review.person_name | abbr(35) }}
                     {% endif %}
                 </td>
                 {#
                 <td>
                     {% if review.institution_id is not none %}
-                        <a href="{{ url_for('people.institution_view', institution_id=review.institution_id) }}">{{ review.institution_name | truncate(25, killwords=True, end='\u2026') }}</a>
+                        <a href="{{ url_for('people.institution_view', institution_id=review.institution_id) }}">{{ review.institution_name | abbr(25) }}</a>
                     {% else %}
                         &nbsp;
                     {% endif %}
