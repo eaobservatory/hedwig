@@ -2,31 +2,33 @@
 
 {% block heading_line_one %}
     <th rowspan="2">Total</th>
-    <th colspan="{{ jcmt_weathers | length + 1 }}">Weather</th>
-    <th colspan="{{ jcmt_instruments | length + 1 }}">Instrument</th>
+    <th colspan="{{ jcmt_weathers | length + 1 }}" class="spacer_left">Weather</th>
+    <th colspan="{{ jcmt_instruments | length + 1 }}" class="spacer_left">Instrument</th>
 {% endblock %}
 
 {% block heading_line_two %}
     {% for weather in jcmt_weathers.values() %}
-        <th class="sideways"><div><div>{{ weather.name }}</div></div></th>
+        <th class="sideways{{ ' spacer_left' if loop.first }}"><div><div>{{ weather.name }}</div></div></th>
     {% endfor %}
     <th class="sideways"><div><div>Unknown</div></div></th>
     {% for instrument in jcmt_instruments.values() %}
-        <th class="sideways"><div><div>{{ instrument }}</div></div></th>
+        <th class="sideways{{ ' spacer_left' if loop.first }}"><div><div>{{ instrument }}</div></div></th>
     {% endfor %}
     <th class="sideways"><div><div>Unknown</div></div></th>
 {% endblock %}
 
+{% macro render_cell_class(is_total, is_first) %}{% if is_total or is_first %}class="{{ 'total' if is_total }}{{ ' ' if is_total and is_first }}{{ 'spacer_left' if is_first }}"{% endif %}{% endmacro %}
+
 {% macro render_jcmt_request(request, is_total=false) %}
-    <td {{ 'class="total"' | safe if is_total }}>{{ request.total | fmt('{:.1f}') }}</td>
+    <td {{ render_cell_class(is_total, false) }}>{{ request.total | fmt('{:.1f}') }}</td>
     {% for weather in jcmt_weathers %}
-        <td {{ 'class="total"' | safe if is_total }}>{{ request.weather[weather] | fmt('{:.1f}')}}</td>
+        <td {{ render_cell_class(is_total, loop.first) }}>{{ request.weather[weather] | fmt('{:.1f}')}}</td>
     {% endfor %}
-    <td {{ 'class="total"' | safe if is_total }}>{{ request.weather[0] | fmt('{:.1f}')}}</td>
+    <td {{ render_cell_class(is_total, false) }}>{{ request.weather[0] | fmt('{:.1f}')}}</td>
     {% for instrument in jcmt_instruments %}
-        <td {{ 'class="total"' | safe if is_total }}>{{ request.instrument[instrument] | fmt('{:.1f}')}}</td>
+        <td {{ render_cell_class(is_total, loop.first) }}>{{ request.instrument[instrument] | fmt('{:.1f}')}}</td>
     {% endfor %}
-    <td {{ 'class="total"' | safe if is_total }}>{{ request.instrument[0] | fmt('{:.1f}')}}</td>
+    <td {{ render_cell_class(is_total, false) }}>{{ request.instrument[0] | fmt('{:.1f}')}}</td>
 {% endmacro %}
 
 {% block row_extra %}
@@ -38,6 +40,6 @@
         <th>Total</th>
         <td colspan="2" class="total">&nbsp;</td>
         {{ render_jcmt_request(jcmt_request_total, is_total=true) }}
-        <td colspan="{{ affiliations | length + 1 }}" class="total">&nbsp;</td>
+        <td colspan="{{ affiliations | length + 1 }}" class="total spacer_left">&nbsp;</td>
     </tr>
 {% endblock %}

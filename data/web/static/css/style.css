@@ -76,6 +76,10 @@ tr.spacer_above td, tr.spacer_above th {
     border-top: 5px solid #AAA;
 }
 
+td.spacer_left, th.spacer_left {
+    border-left: 5px solid #AAA;
+}
+
 p.warning {
     font-weight: bold;
     background: #FAA;
