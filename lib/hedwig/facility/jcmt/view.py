@@ -142,6 +142,86 @@ class JCMT(Generic):
 
         return reviews.get_overall_rating(include_unweighted=False)
 
+    def calculate_affiliation_assignment(self, db, members, affiliations):
+        """
+        Calculate the fractional affiliation assignment for the members
+        of a proposal.
+
+        This acts like the Generic method which it overrides but applies
+        the JCMT affiliation assignment rules.
+        """
+
+        affiliation_count = {}
+        affiliation_total = 0.0
+
+        # Find the PI (if present) and their affiliation.
+        try:
+            pi = members.get_pi()
+            pi_affiliation = pi.affiliation_id
+
+            # Ensure the PI has a "valid" affiliation as we will use it for
+            # excluded-affiliation members.
+            if ((pi_affiliation is None) or
+                    (pi_affiliation not in affiliations) or
+                    (affiliations[pi_affiliation].exclude)):
+                pi_affiliation = 0
+
+        except KeyError:
+            pi = None
+            pi_affiliation = 0
+
+        # Determine maximum affiliation weight.
+        max_weight = 0.0
+        for affiliation in affiliations.values():
+            if affiliation.exclude or (affiliation.weight is None):
+                continue
+            if affiliation.weight > max_weight:
+                max_weight = affiliation.weight
+
+        # Add up weighted affiliation counts for non-PI members.
+        for member in members.values():
+            # Skip the PI as we will process their affiliation separately.
+            if (pi is not None) and (member.id == pi.id):
+                continue
+
+            affiliation = member.affiliation_id
+            if (affiliation is None) or (affiliation not in affiliations):
+                affiliation = 0
+            elif affiliations[affiliation].exclude:
+                # Members with excluded affiliations count as the PI's
+                # affiliation.
+                affiliation = pi_affiliation
+
+            if affiliation == 0:
+                # Weight "unknown" as the maximum of all the other weights. In
+                # practise there should never be any members in this state.
+                weight = max_weight
+            else:
+                weight = affiliations[affiliation].weight
+                if weight is None:
+                    weight = 0.0
+
+            affiliation_count[affiliation] = \
+                affiliation_count.get(affiliation, 0.0) + weight
+            affiliation_total += weight
+
+        if not affiliation_total:
+            # We didn't find any non-PI members (or they had zero weight),
+            # simply return the PI affiliation (which already defaulted to
+            # 0 i.e. "unknown" if there is no PI).
+            return {pi_affiliation: 1.0}
+
+        if pi is not None:
+            # 50% of the assigment is supposed to be apportioned to the PI
+            # affiliation, so add the PI with the same weight as all the other
+            # members combined.
+            affiliation_count[pi_affiliation] = \
+                affiliation_count.get(pi_affiliation, 0.0) + affiliation_total
+            affiliation_total *= 2.0
+
+        return {k: (v / affiliation_total)
+                for (k, v) in affiliation_count.items()}
+
     def _view_proposal_extra(self, db, proposal):
         ctx = super(JCMT, self)._view_proposal_extra(db, proposal)
 
