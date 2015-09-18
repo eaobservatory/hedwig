@@ -77,6 +77,8 @@ class GenericReview(object):
         affiliations = db.search_affiliation(
             queue_id=call.queue_id, hidden=False, with_weight_call_id=call.id)
 
+        cs = get_countries()
+
         proposal_list = []
         for proposal in proposals.values():
             try:
@@ -84,14 +86,21 @@ class GenericReview(object):
             except KeyError:
                 member_pi = None
 
+            n_other = 0
+            for member in proposal.members.values():
+                if (member_pi is None) or (member_pi.id != member.id):
+                    n_other += 1
+
             # Use dictionary rather than namedtuple here so that subclasses
             # can easily add extra entries to the proposal records.
             updated_proposal = proposal._asdict()
             updated_proposal.update({
                 'member_pi': member_pi,
-                'members_other': [
-                    x for x in proposal.members.values()
-                    if ((member_pi is None) or (member_pi.id != x.id))],
+                'members_other': n_other,
+                'members': [
+                    x._replace(
+                        institution_country=cs.get(x.institution_country))
+                    for x in proposal.members.values()],
                 'code': self.make_proposal_code(db, proposal),
                 'rating': self.calculate_overall_rating(proposal.reviewers),
                 'affiliations': self.calculate_affiliation_assignment(

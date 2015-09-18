@@ -1,6 +1,17 @@
 {% extends 'layout_wide.html' %}
 
+{% from 'macro/institution.html' import render_member_institution %}
+
 {% block content %}
+
+<p>
+    &dagger; Hover the mouse cursor over the &ldquo;Others&rdquo; count
+    to see all members of the proposal.
+    <br />
+    &ddagger; Hover the mouse cursor over the &ldquo;Rating&rdquo;
+    to see a table of all the proposal&rsquo;s reviews.
+</p>
+
 <table>
     <tr>
         <th rowspan="2">Proposal</th>
@@ -8,14 +19,14 @@
         <th rowspan="2">Title</th>
         <th rowspan="2">State</th>
         <th rowspan="2">Decision</th>
-        <th rowspan="2">Rating</th>
+        <th rowspan="2">Rating<sup>&ddagger;</sup></th>
         {% block heading_line_one %}
         {% endblock %}
         <th colspan="{{ affiliations | length + 1 }}" class="spacer_left">Affiliation percentage</th>
     </tr>
     <tr>
         <th>PI</th>
-        <th>Others</th>
+        <th>Others<sup>&dagger;</sup></th>
         {% block heading_line_two %}
         {% endblock %}
         {% for affiliation in affiliations %}
@@ -29,12 +40,44 @@
             <td>
                 {% if proposal.member_pi is none %}
                     &nbsp;
+                {% elif session.is_admin or proposal.member_pi.person_public %}
+                    <a href="{{ url_for('people.person_view', person_id=proposal.member_pi.person_id) }}">{{ proposal.member_pi.person_name | abbr }}</a>
                 {% else %}
                     {{ proposal.member_pi.person_name | abbr }}
                 {% endif %}
             </td>
             <td>
-                {{ proposal.members_other | length }}
+                <div class="hovertable">
+                    {{ proposal.members_other }}
+                    <table style="width: 100ex;">
+                        <tr>
+                            <th>Role</th>
+                            <th>Name</th>
+                            <th>Institution</th>
+                            <th>Affiliation</th>
+                        </tr>
+                        {% for member in proposal.members %}
+                            <tr>
+                                <td>{{ 'PI' if member.pi else ('&nbsp;' | safe) }}</td>
+                                <td>
+                                    {% if session.is_admin or member.person_public %}
+                                        <a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name | abbr(25) }}</a>
+                                    {% else %}
+                                        {{ member.person_name | abbr(25) }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if member.resolved_institution_id is none %}
+                                        &nbsp;
+                                    {% else %}
+                                        <a href="{{ url_for('people.institution_view', institution_id=member.resolved_institution_id) }}">{{ render_member_institution(member, part_truncate=25) }}</a>
+                                    {% endif %}
+                                </td>
+                                <td>{{ member.affiliation_name }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
             </td>
             <td>{{ proposal.title | abbr }}</td>
             <td>{{ proposal.state | proposal_state_name }}</td>
@@ -48,11 +91,55 @@
                 {% endif %}
             </td>
             <td>
-                {% if proposal.rating is none %}
-                    &nbsp;
-                {% else %}
-                    {{ proposal.rating | fmt('{:.1f}') }}
-                {% endif %}
+                <div class="hovertable">
+                    {% if proposal.rating is none %}
+                        &mdash;
+                    {% else %}
+                        {{ proposal.rating | fmt('{:.1f}') }}
+                    {% endif %}
+                    <table style="width: 75ex;">
+                        <tr>
+                            <th>Role</th>
+                            <th>Reviewer</th>
+                            <th>Assessment</th>
+                            <th>Rating</th>
+                            <th>Weighting</th>
+                        </tr>
+                        {% for review in proposal.reviewers.values() %}
+                            <tr>
+                                <td>{{ review.role | reviewer_role_name }}</td>
+                                <td>
+                                    {% if session.is_admin or review.person_public %}
+                                        <a href="{{ url_for('people.person_view', person_id=review.person_id) }}">{{ review.person_name | abbr(25) }}</a>
+                                    {% else %}
+                                        {{ review.person_name | abbr(25) }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if review.review_assessment is not none %}
+                                        {{ review.review_assessment | assessment_name }}
+                                    {% else %}
+                                        &nbsp;
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if review.review_rating is not none %}
+                                        {{ review.review_rating }}
+                                    {% else %}
+                                        &nbsp;
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if review.review_weight is not none %}
+                                        {{ review.review_weight }}
+                                    {% else %}
+                                        &nbsp;
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
             </td>
             {% block row_extra scoped %}
             {% endblock %}

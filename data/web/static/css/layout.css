@@ -198,6 +198,25 @@ div.formtip > div > a {
     cursor: pointer;
 }
 
+div.hovertable {
+    display: inline-block;
+    position: relative;
+}
+
+div.hovertable table {
+    position: absolute;
+    left: 0ex;
+    top: 0ex;
+    visibility: hidden;
+    background: white;
+    z-index: 10;
+    border: 5px solid #AAA;
+}
+
+div.hovertable:hover table {
+    visibility: visible;
+}
+
 .callouttip {
     position: relative;
     overflow: visible;
