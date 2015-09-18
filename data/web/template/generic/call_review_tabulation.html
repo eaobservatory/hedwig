@@ -1,0 +1,47 @@
+{% extends 'layout_wide.html' %}
+
+{% block content %}
+<table>
+    <tr>
+        <th rowspan="2">Proposal</th>
+        <th rowspan="2">State</th>
+        <th rowspan="2">Rating</th>
+        <th colspan="{{ affiliations | length + 1 }}">Affiliation percentage</th>
+    </tr>
+    <tr>
+        {% for affiliation in affiliations %}
+            <th>{{ affiliation.name }}</th>
+        {% endfor %}
+        <th>Unknown</th>
+    </tr>
+    {% for proposal in proposals %}
+        <tr>
+            <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+            <td>{{ proposal.state | proposal_state_name }}</td>
+            <td>
+                {% if proposal.rating is none %}
+                    &nbsp;
+                {% else %}
+                    {{ proposal.rating }}
+                {% endif %}
+            </td>
+            {% for affiliation in affiliations %}
+                <td>
+                    {% if affiliation.id in proposal.affiliations %}
+                        {{ 100.0 * proposal.affiliations[affiliation.id] }}
+                    {% else %}
+                        &nbsp;
+                    {% endif %}
+                </td>
+            {% endfor %}
+            <td>
+                {% if 0 in proposal.affiliations %}
+                    {{ 100.0 * proposal.affiliations[0] }}
+                {% else %}
+                    &nbsp;
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+{% endblock %}

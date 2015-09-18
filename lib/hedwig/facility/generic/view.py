@@ -203,6 +203,44 @@ class Generic(GenericAdmin, GenericProposal, GenericReview):
 
         return reviews.get_overall_rating(include_unweighted=True)
 
+    def calculate_affiliation_assignment(self, db, members, affiliations):
+        """
+        Calculate the fractional affiliation assignment for the members
+        of a proposal.
+
+        Takes a collection of affiliations and returns a dictionary of
+        fractional affiliation assignment for each affiliation identifier
+        in the given collection.  A special identifier of zero is used for
+        any affiliations which don't appear in the given collection.
+
+        Note: this is a simple example implementation which just counts
+        the members of each affiliation (skipping those where the affiliation
+        "exclude" setting is true) and ignoring the affiliation weight values.
+
+        Each facility will need to override this method with a method
+        implementing its own actual assignment rules.
+        """
+
+        affiliation_count = {}
+        affiliation_total = 0.0
+
+        for member in members.values():
+            affiliation = member.affiliation_id
+            if (affiliation is None) or (affiliation not in affiliations):
+                affiliation = 0
+            elif affiliations[affiliation].exclude:
+                continue
+
+            affiliation_count[affiliation] = \
+                affiliation_count.get(affiliation, 0.0) + 1.0
+            affiliation_total += 1.0
+
+        if not affiliation_total:
+            return {}
+
+        return {k: (v / affiliation_total)
+                for (k, v) in affiliation_count.items()}
+
     def view_facility_home(self, db):
         # Determine which semesters have open calls for proposals.
         open_semesters = OrderedDict()

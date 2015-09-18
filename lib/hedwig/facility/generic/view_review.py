@@ -57,6 +57,45 @@ class GenericReview(object):
                 for x in proposals.values()],
         }
 
+    @with_call_review(permission='view')
+    def view_review_call_tabulation(self, db, call, can):
+        ctx = {
+            'title': 'Proposal Tabulation: {} {}'.format(call.semester_name,
+                                                         call.queue_name),
+        }
+
+        ctx.update(self._get_proposal_tabulation(db, call))
+
+        return ctx
+
+    def _get_proposal_tabulation(self, db, call):
+        proposals = db.search_proposal(
+            call_id=call.id, state=ProposalState.submitted_states(),
+            with_members=True, with_reviewers=True, with_review_info=True,
+            with_decision=True)
+
+        affiliations = db.search_affiliation(
+            queue_id=call.queue_id, hidden=False, with_weight_call_id=call.id)
+
+        proposal_list = []
+        for proposal in proposals.values():
+            # Use dictionary rather than namedtuple here so that subclasses
+            # can easily add extra entries to the proposal records.
+            updated_proposal = proposal._asdict()
+            updated_proposal.update({
+                'code': self.make_proposal_code(db, proposal),
+                'rating': self.calculate_overall_rating(proposal.reviewers),
+                'affiliations': self.calculate_affiliation_assignment(
+                    db, proposal.members, affiliations),
+            })
+            proposal_list.append(updated_proposal)
+
+        return {
+            'proposals': proposal_list,
+            'affiliations': [
+                x for x in affiliations.values() if not x.exclude],
+        }
+
     @with_call_review(permission='edit')
     def view_review_affiliation_weight(self, db, call, can, form):
         message = None

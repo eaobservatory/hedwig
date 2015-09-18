@@ -72,6 +72,12 @@ def create_facility_blueprint(db, facility):
     def review_call(call_id):
         return facility.view_review_call(db, call_id)
 
+    @bp.route('/call/<int:call_id>/review/tabulation')
+    @require_auth(require_person=True)
+    @facility_template('call_review_tabulation.html')
+    def review_call_tabulation(call_id):
+        return facility.view_review_call_tabulation(db, call_id)
+
     @bp.route('/call/<int:call_id>/affiliation', methods=['GET', 'POST'])
     @require_auth(require_person=True)
     @facility_template('call_affiliation_weight.html')
