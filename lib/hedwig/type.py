@@ -449,16 +449,17 @@ class ProposalState(object):
     ACCEPTED = 6
     REJECTED = 7
 
-    StateInfo = namedtuple('StateInfo', ('name', 'edit', 'submitted'))
+    StateInfo = namedtuple(
+        'StateInfo', ('short_name', 'name', 'edit', 'submitted'))
 
     _info = OrderedDict((
-        (PREPARATION, StateInfo('In preparation', True,  False)),
-        (SUBMITTED,   StateInfo('Submitted',      True,  True)),
-        (WITHDRAWN,   StateInfo('Withdrawn',      True,  False)),
-        (REVIEW,      StateInfo('Under review',   False, True)),
-        (ABANDONED,   StateInfo('Abandoned',      False, False)),
-        (ACCEPTED,    StateInfo('Accepted',       False, True)),
-        (REJECTED,    StateInfo('Rejected',       False, True))
+        (PREPARATION, StateInfo('Prep',  'In preparation', True,  False)),
+        (SUBMITTED,   StateInfo('Sub',   'Submitted',      True,  True)),
+        (WITHDRAWN,   StateInfo('Wdwn',  'Withdrawn',      True,  False)),
+        (REVIEW,      StateInfo('Rev',   'Under review',   False, True)),
+        (ABANDONED,   StateInfo('Abnd',  'Abandoned',      False, False)),
+        (ACCEPTED,    StateInfo('Acc',   'Accepted',       False, True)),
+        (REJECTED,    StateInfo('Rej',   'Rejected',       False, True))
     ))
 
     @classmethod
@@ -472,6 +473,10 @@ class ProposalState(object):
     @classmethod
     def get_name(cls, state):
         return cls._info[state].name
+
+    @classmethod
+    def get_short_name(cls, state):
+        return cls._info[state].short_name
 
     @classmethod
     def can_edit(cls, state):
