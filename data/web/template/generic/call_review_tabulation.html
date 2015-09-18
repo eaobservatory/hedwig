@@ -46,7 +46,7 @@
                     {{ proposal.member_pi.person_name | abbr }}
                 {% endif %}
             </td>
-            <td>
+            <td class="number_right">
                 <div class="hovertable">
                     {{ proposal.members_other }}
                     <table style="width: 100ex;">
@@ -90,7 +90,7 @@
                     &cross;
                 {% endif %}
             </td>
-            <td>
+            <td class="number_right">
                 <div class="hovertable">
                     {% if proposal.rating is none %}
                         &mdash;
@@ -144,7 +144,7 @@
             {% block row_extra scoped %}
             {% endblock %}
             {% for affiliation in affiliations %}
-                <td {{ 'class="spacer_left"' | safe if loop.first }}>
+                <td class="number_right{{ ' spacer_left' if loop.first }}">
                     {% if affiliation.id in proposal.affiliations %}
                         {{ (100.0 * proposal.affiliations[affiliation.id]) | fmt('{:.1f}') }}
                     {% else %}
@@ -152,7 +152,7 @@
                     {% endif %}
                 </td>
             {% endfor %}
-            <td>
+            <td class="number_right">
                 {% if 0 in proposal.affiliations %}
                     {{ (100.0 * proposal.affiliations[0]) | fmt('{:.1f}')}}
                 {% else %}

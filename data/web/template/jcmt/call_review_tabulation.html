@@ -17,18 +17,18 @@
     <th class="sideways"><div><div>Unknown</div></div></th>
 {% endblock %}
 
-{% macro render_cell_class(is_total, is_first) %}{% if is_total or is_first %}class="{{ 'total' if is_total }}{{ ' ' if is_total and is_first }}{{ 'spacer_left' if is_first }}"{% endif %}{% endmacro %}
+{% macro render_cell_class(is_total, is_first) %}number_right{{ ' total' if is_total }}{{ ' spacer_left' if is_first }}{% endmacro %}
 
 {% macro render_jcmt_request(request, is_total=false) %}
-    <td {{ render_cell_class(is_total, false) }}>{{ request.total | fmt('{:.1f}') }}</td>
+    <td class="{{ render_cell_class(is_total, false) }}">{{ request.total | fmt('{:.1f}') }}</td>
     {% for weather in jcmt_weathers %}
-        <td {{ render_cell_class(is_total, loop.first) }}>{{ request.weather[weather] | fmt('{:.1f}')}}</td>
+        <td class="{{ render_cell_class(is_total, loop.first) }}">{{ request.weather[weather] | fmt('{:.1f}')}}</td>
     {% endfor %}
-    <td {{ render_cell_class(is_total, false) }}>{{ request.weather[0] | fmt('{:.1f}')}}</td>
+    <td class="{{ render_cell_class(is_total, false) }}">{{ request.weather[0] | fmt('{:.1f}')}}</td>
     {% for instrument in jcmt_instruments %}
-        <td {{ render_cell_class(is_total, loop.first) }}>{{ request.instrument[instrument] | fmt('{:.1f}')}}</td>
+        <td class="{{ render_cell_class(is_total, loop.first) }}">{{ request.instrument[instrument] | fmt('{:.1f}')}}</td>
     {% endfor %}
-    <td {{ render_cell_class(is_total, false) }}>{{ request.instrument[0] | fmt('{:.1f}')}}</td>
+    <td class="{{ render_cell_class(is_total, false) }}">{{ request.instrument[0] | fmt('{:.1f}')}}</td>
 {% endmacro %}
 
 {% block row_extra %}
