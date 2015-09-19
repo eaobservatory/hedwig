@@ -30,7 +30,8 @@ from ...web.util import ErrorPage, \
     flash, session, url_for
 from ...type import Affiliation, Assessment, \
     FormatType, GroupType, Link, MemberPIInfo, \
-    ProposalState, ProposalWithCode, Reviewer, ReviewerRole, TextRole, \
+    ProposalState, ProposalWithCode, \
+    Reviewer, ReviewerCollection, ReviewerRole, TextRole, \
     null_tuple
 
 ProposalWithReviewerPersons = namedtuple(
@@ -79,6 +80,7 @@ class GenericReview(object):
             queue_id=call.queue_id, hidden=False, with_weight_call_id=call.id)
 
         cs = get_countries()
+        person_id = session['person']['id']
 
         proposal_list = []
         for proposal in proposals.values():
@@ -86,6 +88,12 @@ class GenericReview(object):
                 member_pi = proposal.members.get_pi()
             except KeyError:
                 member_pi = None
+
+            try:
+                proposal.members.get_person(person_id)
+                can_view_review = False
+            except KeyError:
+                can_view_review = True
 
             n_other = 0
             for member in proposal.members.values():
@@ -96,6 +104,7 @@ class GenericReview(object):
             # can easily add extra entries to the proposal records.
             updated_proposal = proposal._asdict()
             updated_proposal.update({
+                'can_view_review': can_view_review,
                 'member_pi': member_pi,
                 'members_other': n_other,
                 'members': [
@@ -103,10 +112,23 @@ class GenericReview(object):
                         institution_country=cs.get(x.institution_country))
                     for x in proposal.members.values()],
                 'code': self.make_proposal_code(db, proposal),
-                'rating': self.calculate_overall_rating(proposal.reviewers),
                 'affiliations': self.calculate_affiliation_assignment(
                     db, proposal.members, affiliations),
             })
+
+            if can_view_review:
+                updated_proposal['rating'] = \
+                    self.calculate_overall_rating(proposal.reviewers)
+
+            else:
+                # Remove 'reviewers' from dictionary for safety, so that
+                # we don't have to rely on the template hiding reviews
+                # which the user can't see.
+                updated_proposal.update({
+                    'reviewers': ReviewerCollection(),
+                    'rating': None,
+                })
+
             proposal_list.append(updated_proposal)
 
         return {
