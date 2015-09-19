@@ -5,6 +5,8 @@
 <nav>
     <p>
         <a href="{{ url_for('.review_call_tabulation', call_id=call_id) }}">View detailed tabulation</a>
+        or
+        <a href="{{ url_for('.review_call_tabulation_download', call_id=call_id) }}">download as a CSV file</a>
         {% if can_edit %}
             <br />
             <a href="{{ url_for('.review_call_reviewers', call_id=call_id) }}">Assign reviewers</a>

@@ -19,9 +19,11 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import namedtuple, OrderedDict
+import re
 
 from ...email.format import render_email_template
 from ...error import DatabaseIntegrityError, NoSuchRecord, UserError
+from ...file.csv import CSVWriter
 from ...util import get_countries
 from ...view import auth
 from ...view.util import with_proposal, with_call_review, with_review
@@ -29,7 +31,7 @@ from ...web.util import ErrorPage, \
     HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
 from ...type import Affiliation, Assessment, \
-    FormatType, GroupType, Link, MemberPIInfo, \
+    FileTypeInfo, FormatType, GroupType, Link, MemberPIInfo, \
     ProposalState, ProposalWithCode, \
     Reviewer, ReviewerCollection, ReviewerRole, TextRole, \
     null_tuple
@@ -70,6 +72,39 @@ class GenericReview(object):
         ctx.update(self._get_proposal_tabulation(db, call))
 
         return ctx
+
+    @with_call_review(permission='view')
+    def view_review_call_tabulation_download(self, db, call, can):
+        tabulation = self._get_proposal_tabulation(db, call)
+
+        writer = CSVWriter()
+
+        writer.add_row([
+            'Proposal', 'PI', 'Title', 'State', 'Decision', 'Exempt', 'Rating',
+        ])
+
+        for proposal in tabulation['proposals']:
+            decision_accept = proposal['decision_accept']
+            row = [
+                proposal['code'],
+                (None if proposal['member_pi'] is None
+                 else proposal['member_pi'].person_name),
+                proposal['title'],
+                ProposalState.get_name(proposal['state']),
+                (None if decision_accept is None
+                 else ('Accept' if decision_accept else 'Reject')),
+                ('Exempt' if proposal['decision_exempt'] else None),
+                proposal['rating'],
+            ]
+
+            writer.add_row(row)
+
+        return (
+            writer.get_csv(),
+            FileTypeInfo(name='CSV', mime='text/csv', preview=None),
+            'proposals-{}-{}.csv'.format(
+                re.sub('[^-_a-z0-9]', '_', call.semester_name.lower()),
+                re.sub('[^-_a-z0-9]', '_', call.queue_name.lower())))
 
     def _get_proposal_tabulation(self, db, call):
         proposals = db.search_proposal(
