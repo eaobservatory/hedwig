@@ -309,7 +309,8 @@ class JCMT(Generic):
                         total_affiliation.get(affiliation, 0.0) + \
                         request.total * fraction
 
-                    if proposal['decision_accept']:
+                    if (proposal['decision_accept'] and
+                            (not proposal['decision_exempt'])):
                         accepted_affiliation[affiliation] = \
                             accepted_affiliation.get(affiliation, 0.0) + \
                             request.total * fraction
