@@ -86,7 +86,7 @@
                 {% if proposal.decision_accept is none %}
                     &nbsp;
                 {% elif proposal.decision_accept %}
-                    &check;
+                    &check; {{ 'E' if proposal.decision_exempt }}
                 {% else %}
                     &cross;
                 {% endif %}
