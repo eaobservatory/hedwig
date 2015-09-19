@@ -22,17 +22,18 @@
         <th rowspan="2" class="sideways"><div><div>Rating<sup>&ddagger;</sup></div></div></th>
         {% block heading_line_one %}
         {% endblock %}
-        <th colspan="{{ affiliations | length + 1 }}" class="spacer_left">Affiliation percentage</th>
+        <th colspan="{{ affiliations | length }}" class="spacer_left">Affiliation percentage</th>
     </tr>
     <tr>
         <th>PI</th>
         <th>Others<sup>&dagger;</sup></th>
         {% block heading_line_two %}
         {% endblock %}
-        {% for affiliation in affiliations %}
-            <th class="sideways{{ ' spacer_left' if loop.first }}"><div><div>{{ affiliation.name }}</div></div></th>
-        {% endfor %}
-        <th class="sideways"><div><div>Unknown</div></div></th>
+        {% block heading_affiliations %}
+            {% for affiliation in affiliations %}
+                <th class="sideways{{ ' spacer_left' if loop.first }}"><div><div>{{ affiliation.name }}</div></div></th>
+            {% endfor %}
+        {% endblock %}
     </tr>
     {% for proposal in proposals %}
         <tr>
@@ -152,16 +153,44 @@
                     {% endif %}
                 </td>
             {% endfor %}
-            <td class="number_right">
-                {% if 0 in proposal.affiliations %}
-                    {{ (100.0 * proposal.affiliations[0]) | fmt('{:.1f}')}}
+        </tr>
+    {% endfor %}
+    <tr>
+        <th colspan="4">Accepted (hours)</th>
+        <td colspan="3" class="total spacer_left">&nbsp;</td>
+        {% block footer_accepted_extra %}
+        {% endblock %}
+        {% for affiliation in affiliations %}
+            <td class="number_right total{{ ' spacer_left' if loop.first }}">
+                {% if affiliation.id in affiliation_accepted %}
+                    {{ affiliation_accepted[affiliation.id] | fmt('{:.1f}') }}
                 {% else %}
                     &nbsp;
                 {% endif %}
             </td>
-        </tr>
-    {% endfor %}
-    {% block table_footer %}
-    {% endblock %}
+        {% endfor %}
+    </tr>
+    <tr>
+        <th colspan="4">Total (hours)</th>
+        <td colspan="3" class="total spacer_left">&nbsp;</td>
+        {% block footer_total_extra %}
+        {% endblock %}
+        {% for affiliation in affiliations %}
+            <td class="number_right total{{ ' spacer_left' if loop.first }}">
+                {% if affiliation.id in affiliation_total %}
+                    {{ affiliation_total[affiliation.id] | fmt('{:.1f}') }}
+                {% else %}
+                    &nbsp;
+                {% endif %}
+            </td>
+        {% endfor %}
+    </tr>
+    <tr>
+        <th colspan="7">&nbsp;</th>
+        {% block footer_head_extra %}
+        {% endblock %}
+        {{ self.heading_line_two() }}
+        {{ self.heading_affiliations() }}
+    </tr>
 </table>
 {% endblock %}

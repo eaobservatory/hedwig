@@ -268,6 +268,14 @@ class JCMT(Generic):
         total = 0.0
         total_weather = {}
         total_instrument = {}
+        total_affiliation = {}
+
+        accepted = 0.0
+        accepted_weather = {}
+        accepted_instrument = {}
+        accepted_affiliation = {}
+
+        affiliation_ids = [x.id for x in tabulation['affiliations']]
 
         for proposal in tabulation['proposals']:
             request = db.search_jcmt_request(
@@ -276,21 +284,47 @@ class JCMT(Generic):
             proposal['jcmt_request'] = request
 
             total += request.total
+            if proposal['decision_accept']:
+                accepted += request.total
 
             for (weather, time) in request.weather.items():
                 total_weather[weather] = \
                     total_weather.get(weather, 0.0) + time
+                if proposal['decision_accept']:
+                    accepted_weather[weather] = \
+                        accepted_weather.get(weather, 0.0) + time
 
             for (instrument, time) in request.instrument.items():
                 total_instrument[instrument] = \
                     total_instrument.get(instrument, 0.0) + time
+                if proposal['decision_accept']:
+                    accepted_instrument[instrument] = \
+                        accepted_instrument.get(instrument, 0.0) + time
+
+            proposal_affiliations = proposal['affiliations']
+            for affiliation in affiliation_ids:
+                fraction = proposal_affiliations.get(affiliation)
+                if fraction is not None:
+                    total_affiliation[affiliation] = \
+                        total_affiliation.get(affiliation, 0.0) + \
+                        request.total * fraction
+
+                    if proposal['decision_accept']:
+                        accepted_affiliation[affiliation] = \
+                            accepted_affiliation.get(affiliation, 0.0) + \
+                            request.total * fraction
 
         tabulation.update({
             'jcmt_weathers': JCMTWeather.get_available(),
             'jcmt_instruments': JCMTInstrument.get_options(),
             'jcmt_request_total': JCMTRequestTotal(
                 total=total, weather=total_weather,
-                instrument=total_instrument)
+                instrument=total_instrument),
+            'jcmt_request_accepted': JCMTRequestTotal(
+                total=accepted, weather=accepted_weather,
+                instrument=accepted_instrument),
+            'affiliation_total': total_affiliation,
+            'affiliation_accepted': accepted_affiliation,
         })
 
         return tabulation

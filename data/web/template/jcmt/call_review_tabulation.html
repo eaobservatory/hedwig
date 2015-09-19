@@ -35,11 +35,14 @@
     {{ render_jcmt_request(proposal.jcmt_request) }}
 {% endblock %}
 
-{% block table_footer %}
-    <tr>
-        <th colspan="4">Total (hours)</th>
-        <td colspan="3" class="total spacer_left">&nbsp;</td>
-        {{ render_jcmt_request(jcmt_request_total, is_total=true) }}
-        <td colspan="{{ affiliations | length + 1 }}" class="total spacer_left">&nbsp;</td>
-    </tr>
+{% block footer_accepted_extra %}
+    {{ render_jcmt_request(jcmt_request_accepted, is_total=true) }}
+{% endblock %}
+
+{% block footer_total_extra %}
+    {{ render_jcmt_request(jcmt_request_total, is_total=true) }}
+{% endblock %}
+
+{% block footer_head_extra %}
+    <th class="sideways"><div><div>Request (hours)</div></div></th>
 {% endblock %}

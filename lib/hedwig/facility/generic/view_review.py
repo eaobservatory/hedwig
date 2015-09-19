@@ -28,7 +28,8 @@ from ...view.util import with_proposal, with_call_review, with_review
 from ...web.util import ErrorPage, \
     HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
-from ...type import Assessment, FormatType, GroupType, Link, MemberPIInfo, \
+from ...type import Affiliation, Assessment, \
+    FormatType, GroupType, Link, MemberPIInfo, \
     ProposalState, ProposalWithCode, Reviewer, ReviewerRole, TextRole, \
     null_tuple
 
@@ -111,7 +112,10 @@ class GenericReview(object):
         return {
             'proposals': proposal_list,
             'affiliations': [
-                x for x in affiliations.values() if not x.exclude],
+                x for x in affiliations.values() if not x.exclude] +
+                [null_tuple(Affiliation)._replace(id=0, name='Unknown')],
+            'affiliation_total': {},
+            'affiliation_accepted': {},
         }
 
     @with_call_review(permission='edit')
