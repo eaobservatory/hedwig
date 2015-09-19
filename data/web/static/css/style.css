@@ -89,6 +89,14 @@ td.number_right {
     text-align: right;
 }
 
+tr.decision_accept > td {
+    background: #BFB;
+}
+
+tr.decision_reject > td {
+    background: #FBB;
+}
+
 p.warning {
     font-weight: bold;
     background: #FAA;

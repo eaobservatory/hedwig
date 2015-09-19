@@ -36,7 +36,7 @@
         {% endblock %}
     </tr>
     {% for proposal in proposals %}
-        <tr>
+        <tr{% if proposal.decision_accept is not none %} class="decision_{{ 'accept' if proposal.decision_accept else 'reject' }}"{% endif %}>
             <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
             <td>
                 {% if proposal.member_pi is none %}
