@@ -64,6 +64,7 @@ class GenericReview(object):
         ctx = {
             'title': 'Proposal Tabulation: {} {}'.format(call.semester_name,
                                                          call.queue_name),
+            'call': call,
         }
 
         ctx.update(self._get_proposal_tabulation(db, call))
