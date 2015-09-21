@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict
+from itertools import izip
 import re
 from urllib import urlencode
 
@@ -329,6 +330,32 @@ class JCMT(Generic):
         })
 
         return tabulation
+
+    def _get_proposal_tabulation_titles(self, tabulation):
+        return (
+            super(JCMT, self)._get_proposal_tabulation_titles(tabulation) +
+            ['Request'] +
+            [x.name for x in tabulation['jcmt_weathers'].values()] +
+            ['Unknown weather'] +
+            [x for x in tabulation['jcmt_instruments'].values()] +
+            ['Unknown instrument']
+        )
+
+    def _get_proposal_tabulation_rows(self, tabulation):
+        weathers = list(tabulation['jcmt_weathers'].keys()) + [0]
+        instruments = list(tabulation['jcmt_instruments'].keys()) + [0]
+
+        for (row, proposal) in izip(
+                super(JCMT, self)._get_proposal_tabulation_rows(tabulation),
+                tabulation['proposals']):
+            request = proposal['jcmt_request']
+
+            yield (
+                row +
+                [request.total] +
+                [request.weather.get(x) for x in weathers] +
+                [request.instrument.get(x) for x in instruments]
+            )
 
     @with_proposal(permission='edit')
     def view_request_edit(self, db, proposal, can, form, is_post):

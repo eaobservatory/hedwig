@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import namedtuple, OrderedDict
+from itertools import izip
 import re
 
 from ...email.format import render_email_template
@@ -74,29 +75,25 @@ class GenericReview(object):
         return ctx
 
     @with_call_review(permission='view')
-    def view_review_call_tabulation_download(self, db, call, can):
+    def view_review_call_tabulation_download(self, db, call, can,
+                                             with_cois=True):
         tabulation = self._get_proposal_tabulation(db, call)
 
         writer = CSVWriter()
 
-        writer.add_row([
-            'Proposal', 'PI', 'Title', 'State', 'Decision', 'Exempt', 'Rating',
-        ])
+        titles = self._get_proposal_tabulation_titles(tabulation)
+        if with_cois:
+            titles.append('Co-Investigators')
+        writer.add_row(titles)
 
-        for proposal in tabulation['proposals']:
-            decision_accept = proposal['decision_accept']
-            row = [
-                proposal['code'],
-                (None if proposal['member_pi'] is None
-                 else proposal['member_pi'].person_name),
-                proposal['title'],
-                ProposalState.get_name(proposal['state']),
-                (None if decision_accept is None
-                 else ('Accept' if decision_accept else 'Reject')),
-                ('Exempt' if proposal['decision_exempt'] else None),
-                proposal['rating'],
-            ]
-
+        for (row, proposal) in izip(
+                self._get_proposal_tabulation_rows(tabulation),
+                tabulation['proposals']):
+            if with_cois:
+                row.extend([
+                    '{} ({})'.format(x.person_name, x.affiliation_name)
+                    for x in proposal['members']
+                    if not x.pi])
             writer.add_row(row)
 
         return (
@@ -175,6 +172,38 @@ class GenericReview(object):
             'affiliation_total': {},
             'affiliation_accepted': {},
         }
+
+    def _get_proposal_tabulation_titles(self, tabulation):
+        return (
+            [
+                'Proposal', 'PI name', 'PI affiliation', 'Title',
+                'State', 'Decision', 'Exempt', 'Rating',
+            ] +
+            [x.name for x in tabulation['affiliations']]
+        )
+
+    def _get_proposal_tabulation_rows(self, tabulation):
+        affiliations = tabulation['affiliations']
+
+        for proposal in tabulation['proposals']:
+            decision_accept = proposal['decision_accept']
+
+            yield (
+                [
+                    proposal['code'],
+                    (None if proposal['member_pi'] is None
+                     else proposal['member_pi'].person_name),
+                    (None if proposal['member_pi'] is None
+                     else proposal['member_pi'].affiliation_name),
+                    proposal['title'],
+                    ProposalState.get_name(proposal['state']),
+                    (None if decision_accept is None
+                     else ('Accept' if decision_accept else 'Reject')),
+                    ('Exempt' if proposal['decision_exempt'] else None),
+                    proposal['rating'],
+                ] +
+                [proposal['affiliations'].get(x.id) for x in affiliations]
+            )
 
     @with_call_review(permission='edit')
     def view_review_affiliation_weight(self, db, call, can, form):
