@@ -227,12 +227,19 @@ def require_auth(require_person=False, require_institution=False,
 def require_not_auth(f):
     """
     Decorator to require that the user is not authenticated.
+
+    WARNING: "ErrorPage" can not be raised here because this decorator
+    is normally applied outside of the "templated" decorator.
     """
 
     @functools.wraps(f)
     def decorated(*args, **kwargs):
-        if 'user_id' in session:
-            raise ErrorPage('You are already logged in.')
+        try:
+            if 'user_id' in session:
+                raise ErrorPage('You are already logged in.')
+        except ErrorPage as err:
+            return _error_page_response(err)
+
         return f(*args, **kwargs)
 
     return decorated
