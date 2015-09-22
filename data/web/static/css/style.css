@@ -63,6 +63,10 @@ td, th {
     vertical-align: top;
 }
 
+td {
+    background: white;
+}
+
 th, td.total {
     font-weight: bold;
     background: #DDD;
