@@ -38,7 +38,10 @@ def parse_source_list(source_list, number_from=1):
 
     ans = TargetCollection()
 
-    lines = source_list.splitlines()
+    # Remove trailing (and leading) whitespace from each line.
+    # (Otherwise trailing tabs, for example, can end up in the "system"
+    # field, causing it not to be recognised.)
+    lines = [x.strip() for x in source_list.splitlines()]
 
     if not lines:
         raise UserError('The target list appears to be empty.')
