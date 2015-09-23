@@ -236,6 +236,14 @@ One way to do this is to set up a Cron job to run
 `mysqldump <https://dev.mysql.com/doc/refman/5.0/en/mysqldump.html>`_
 regularly.
 
+Please ensure that your database's settings regarding maximum
+query size permit Hedwig to store and retrieve the maximum upload
+file size as set in the configuration file.
+For example, with MySQL and the default `max_pdf_size` of 10MiB
+you might wish to set the maximum packet size to 15MiB::
+
+    max_allowed_packet=15M
+
 Running a Test Server
 ~~~~~~~~~~~~~~~~~~~~~
 
