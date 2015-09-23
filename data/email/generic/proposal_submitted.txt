@@ -13,9 +13,4 @@ Please note that our system allows submitted proposals to be edited
 until the proposal deadline.
 Another message like this will only be sent if the proposal is
 withdrawn from consideration.
-
-We would appreciate your feedback on our new proposal submission system.
-If you have a few moments to spare, please fill in the following short survey:
-
-http://goo.gl/forms/s88o7uW7HP
 {% endblock %}
