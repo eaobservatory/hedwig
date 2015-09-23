@@ -86,7 +86,8 @@ class PeoplePart(object):
 
         return result.inserted_primary_key[0]
 
-    def add_invitation(self, person_id, _test_skip_check=False):
+    def add_invitation(self, person_id, days_valid=30,
+                       _test_skip_check=False):
         """
         Creates an invitation token to allow someone to register as the
         given person and adds it to the database.
@@ -97,7 +98,7 @@ class PeoplePart(object):
         """
 
         token = generate_token()
-        expiry = datetime.utcnow() + timedelta(days=30)
+        expiry = datetime.utcnow() + timedelta(days_valid)
 
         with self._transaction() as conn:
             if not _test_skip_check:
