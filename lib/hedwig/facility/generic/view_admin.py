@@ -525,7 +525,8 @@ class GenericAdmin(object):
                     person_id = db.add_person(member['name'])
                     db.add_email(person_id, member['email'], primary=True)
                     db.add_group_member(queue_id, group_type, person_id)
-                    (token, expiry) = db.add_invitation(person_id)
+                    (token, expiry) = db.add_invitation(person_id,
+                                                        days_valid=7)
 
                     email_ctx = {
                         'inviter_name': session['person']['name'],
