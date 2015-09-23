@@ -567,6 +567,16 @@ def create_facility_blueprint(db, facility):
             db, queue_id, group_type,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/admin/queue/<int:queue_id>/group/<int:group_type>/'
+              'reinvite/<int:member_id>',
+              methods=['GET', 'POST'])
+    @templated('confirm.html')
+    @require_admin
+    def group_member_reinvite(queue_id, group_type, member_id):
+        return facility.view_group_member_reinvite(
+            db,  queue_id, group_type, member_id,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/admin/call/')
     @facility_template('call_list.html')
     @require_admin

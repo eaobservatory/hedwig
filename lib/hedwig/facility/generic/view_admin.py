@@ -644,6 +644,69 @@ class GenericAdmin(object):
         }
 
     @with_verified_admin
+    def view_group_member_reinvite(self, db, queue_id, group_type, member_id,
+                                   form):
+        try:
+            queue = db.get_queue(self.id_, queue_id)
+        except NoSuchRecord:
+            raise HTTPNotFound('Queue not found.')
+
+        try:
+            group_info = GroupType.get_info(group_type)
+        except KeyError:
+            raise HTTPNotFound('Unknown group.')
+
+        try:
+            member = db.search_group_member(
+                queue_id=queue_id, group_type=group_type,
+                group_member_id=member_id, with_person=True).get_single()
+        except NoSuchRecord:
+            raise HTTPNotFound('Group member record not found.')
+
+        if member.person_registered:
+            raise ErrorPage('This group member is already registered.')
+
+        if form:
+            if 'submit_confirm' in form:
+                (token, expiry) = db.add_invitation(member.person_id,
+                                                    days_valid=7)
+
+                email_ctx = {
+                    'inviter_name': session['person']['name'],
+                    'recipient_name': member.person_name,
+                    'group': group_info,
+                    'queue': queue,
+                    'token': token,
+                    'expiry': expiry,
+                    'target_url': url_for(
+                        'people.invitation_token_enter',
+                        token=token, _external=True),
+                    'target_plain': url_for(
+                        'people.invitation_token_enter',
+                        _external=True),
+                }
+
+                db.add_message(
+                    '{} invitation'.format(group_info.name),
+                    render_email_template('group_invitation.txt',
+                                          email_ctx, facility=self),
+                    [member.person_id])
+
+                flash('{} has been re-invited to the group.',
+                      member.person_name)
+
+            raise HTTPRedirect(url_for('.group_view', queue_id=queue_id,
+                                       group_type=group_type))
+
+        return {
+            'title': 'Re-send Group Member Invitation',
+            'message':
+                'Would you like to re-send an invitation to '
+                '{} group "{}" to {}?'.format(
+                    queue.name, group_info.name, member.person_name),
+        }
+
+    @with_verified_admin
     def view_category_edit(self, db, form):
         message = None
         records = db.search_category(facility_id=self.id_)

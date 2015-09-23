@@ -162,6 +162,7 @@ class ReviewPart(object):
 
     def search_group_member(self, queue_id=None, group_type=None,
                             person_id=None, facility_id=None,
+                            group_member_id=None,
                             with_person=False, _conn=None):
         select_from = group_member
 
@@ -214,6 +215,9 @@ class ReviewPart(object):
 
         if facility_id is not None:
             stmt = stmt.where(queue.c.facility_id == facility_id)
+
+        if group_member_id is not None:
+            stmt = stmt.where(group_member.c.id == group_member_id)
 
         if with_person:
             stmt = stmt.order_by(person.c.name.asc())
