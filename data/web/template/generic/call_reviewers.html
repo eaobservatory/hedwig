@@ -65,6 +65,9 @@
                                     <a href="{{ url_for('.review_external_remove', proposal_id=proposal.id, reviewer_id=reviewer.id) }}">Remove</a>
                                 {% endif %}
                             {% endif %}
+                            {% if (not reviewer.person_registered) and (reviewer.role is reviewer_role_external) %}
+                                    <a href="{{ url_for('.review_external_reinvite', proposal_id=proposal.id, reviewer_id=reviewer.id) }}">Re-send invitation</a>
+                            {% endif %}
                         </td>
                     {% endif %}
                     {% if loop.first %}

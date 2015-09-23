@@ -681,6 +681,85 @@ class GenericReview(object):
         }
 
     @with_proposal(permission='none')
+    def view_reviewer_reinvite(self, db, proposal, role, reviewer_id, form):
+        try:
+            role_info = ReviewerRole.get_info(role)
+        except KeyError:
+            raise HTTPError('Unknown reviewer role')
+
+        if proposal.state != ProposalState.REVIEW:
+            raise ErrorPage('This proposal is not under review.')
+
+        try:
+            call = db.get_call(facility_id=self.id_, call_id=proposal.call_id)
+        except NoSuchRecord:
+            raise HTTPError('The corresponding call was not found')
+
+        if not auth.for_call_review(db, call).edit:
+            raise HTTPForbidden('Edit permission denied for this call.')
+
+        try:
+            reviewer = db.search_reviewer(
+                proposal_id=proposal.id, role=role, reviewer_id=reviewer_id,
+                with_review=True).get_single()
+        except NoSuchRecord:
+            raise HTTPNotFound('Reviewer record not found.')
+
+        if reviewer.person_registered:
+            raise ErrorPage('This reviewer is already registered.')
+
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        if form is not None:
+            if 'submit_confirm' in form:
+                (token, expiry) = db.add_invitation(reviewer.person_id)
+
+                email_ctx = {
+                    'proposal': proposal,
+                    'proposal_code': proposal_code,
+                    'role_info': role_info,
+                    'inviter_name': session['person']['name'],
+                    'target_proposal': url_for(
+                        '.proposal_view', proposal_id=proposal.id,
+                        _external=True),
+                    'target_guideline': self.make_review_guidelines_url(
+                        role=role),
+                    'token': token,
+                    'expiry': expiry,
+                    'recipient_name': reviewer.person_name,
+                    'target_review': url_for(
+                        '.review_edit',
+                        reviewer_id=reviewer.id, _external=True),
+                    'target_url': url_for(
+                        'people.invitation_token_enter',
+                        token=token, _external=True),
+                    'target_plain': url_for(
+                        'people.invitation_token_enter',
+                        _external=True),
+                }
+
+                db.add_message(
+                    'Proposal {} review'.format(proposal_code),
+                    render_email_template('review_invitation.txt',
+                                          email_ctx, facility=self),
+                    [reviewer.person_id])
+
+                flash('{} has been re-invited to register.',
+                      reviewer.person_name)
+
+            raise HTTPRedirect(url_for('.review_call_reviewers',
+                                       call_id=call.id))
+
+        return {
+            'title': '{}: Re-invite {} Reviewer'.format(
+                proposal_code, role_info.name.title()),
+            'message':
+                'Would you like to re-send an invitation to {} '
+                'to review proposal {}?'.format(
+                    reviewer.person_name, proposal_code),
+        }
+
+    @with_proposal(permission='none')
     def view_review_new(self, db, proposal, reviewer_role,
                         form, referrer=None):
         if proposal.state != ProposalState.REVIEW:

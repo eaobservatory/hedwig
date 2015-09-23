@@ -475,6 +475,16 @@ def create_facility_blueprint(db, facility):
             db, proposal_id, ReviewerRole.EXTERNAL, reviewer_id,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/proposal/<int:proposal_id>/reviewers/external/reinvite/'
+              '<int:reviewer_id>',
+              methods=['GET', 'POST'])
+    @require_auth(require_person=True)
+    @templated('confirm.html')
+    def review_external_reinvite(proposal_id, reviewer_id):
+        return facility.view_reviewer_reinvite(
+            db, proposal_id, ReviewerRole.EXTERNAL, reviewer_id,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/admin')
     @facility_template('facility_admin.html')
     @require_admin
