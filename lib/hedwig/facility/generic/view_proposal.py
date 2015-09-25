@@ -71,7 +71,7 @@ TargetToolInfoExtra = namedtuple(
 
 
 class GenericProposal(object):
-    def view_proposal_new(self, db, call_id, form, is_post):
+    def view_proposal_new(self, db, call_id, form):
         try:
             call = db.search_call(
                 facility_id=self.id_, call_id=call_id, is_open=True
@@ -91,7 +91,7 @@ class GenericProposal(object):
         proposal_title = ''
         affiliation_id = None
 
-        if is_post:
+        if form is not None:
             proposal_title = form['proposal_title']
 
             affiliation_id = int(form['affiliation_id'])
@@ -387,14 +387,14 @@ class GenericProposal(object):
         return messages
 
     @with_proposal(permission='edit')
-    def view_proposal_submit(self, db, proposal, can, form, is_post):
+    def view_proposal_submit(self, db, proposal, can, form):
         if ProposalState.is_submitted(proposal.state):
             raise ErrorPage('The proposal has already been submitted.')
 
         messages = self._validate_proposal(db, proposal)
         has_error = any(x.is_error for x in messages)
 
-        if is_post:
+        if form is not None:
             if 'submit_confirm' in form:
                 if has_error:
                     raise ErrorPage(
@@ -451,11 +451,11 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission='edit')
-    def view_proposal_withdraw(self, db, proposal, can, form, is_post):
+    def view_proposal_withdraw(self, db, proposal, can, form):
         if not ProposalState.is_submitted(proposal.state):
             raise ErrorPage('The proposal has not been submitted.')
 
-        if is_post:
+        if form is not None:
             if 'submit_confirm' in form:
                 db.update_proposal(proposal.id, state=ProposalState.WITHDRAWN)
 
@@ -487,10 +487,10 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission='edit')
-    def view_title_edit(self, db, proposal, can, form, is_post):
+    def view_title_edit(self, db, proposal, can, form):
         message = None
 
-        if is_post:
+        if form is not None:
             try:
                 proposal = proposal._replace(title=form['proposal_title'])
                 db.update_proposal(proposal.id, title=proposal.title)
@@ -569,7 +569,7 @@ class GenericProposal(object):
         return ctx
 
     @with_proposal(permission='edit')
-    def view_member_edit(self, db, proposal, can, form, is_post):
+    def view_member_edit(self, db, proposal, can, form):
         message = None
         records = proposal.members
 
@@ -578,7 +578,7 @@ class GenericProposal(object):
         if not affiliations:
             raise HTTPError('No affiliations appear to be available.')
 
-        if is_post:
+        if form is not None:
             if 'pi' in form:
                 pi = int(form['pi'])
             else:
@@ -625,7 +625,7 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission='edit')
-    def view_member_add(self, db, proposal, can, form, is_post):
+    def view_member_add(self, db, proposal, can, form):
         message_link = message_invite = None
         member = dict(editor=None, observer=None, person_id=None,
                       name='', email='')
@@ -635,7 +635,7 @@ class GenericProposal(object):
         if not affiliations:
             raise HTTPError('No affiliations appear to be available.')
 
-        if is_post:
+        if form is not None:
             member['editor'] = 'editor' in form
             member['observer'] = 'observer' in form
             if 'person_id' in form:
@@ -1005,13 +1005,13 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission='edit')
-    def view_target_edit(self, db, proposal, can, form, is_post):
+    def view_target_edit(self, db, proposal, can, form):
         message = None
 
         records = db.search_target(
             proposal_id=proposal.id).to_formatted_collection()
 
-        if is_post:
+        if form is not None:
             # Temporary dictionaries for new records.
             updated_records = {}
             added_records = {}
@@ -1131,7 +1131,7 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission='edit')
-    def view_request_edit(self, db, proposal, can, form, is_post):
+    def view_request_edit(self, db, proposal, can, form):
         raise ErrorPage('Observing request not implemented for this facility.')
 
     @with_proposal(permission='edit')

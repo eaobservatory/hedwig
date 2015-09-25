@@ -408,7 +408,7 @@ class JCMT(Generic):
             )
 
     @with_proposal(permission='edit')
-    def view_request_edit(self, db, proposal, can, form, is_post):
+    def view_request_edit(self, db, proposal, can, form):
         message = None
 
         records = db.search_jcmt_request(proposal_id=proposal.id)
@@ -417,7 +417,7 @@ class JCMT(Generic):
             option_values = JCMTOptions(
                 proposal.id, *((False,) * (len(JCMTOptions._fields) - 1)))
 
-        if is_post:
+        if form is not None:
             records = self._read_request_form(proposal, form)
 
             option_update = {}

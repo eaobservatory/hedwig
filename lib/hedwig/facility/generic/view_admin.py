@@ -65,7 +65,7 @@ class GenericAdmin(object):
         }
 
     @with_verified_admin
-    def view_semester_edit(self, db, semester_id, form, is_post):
+    def view_semester_edit(self, db, semester_id, form):
         """
         Edit or create a new semester.
 
@@ -94,7 +94,7 @@ class GenericAdmin(object):
 
         message = None
 
-        if is_post:
+        if form is not None:
             semester = semester._replace(
                 name=form['semester_name'],
                 code=form['semester_code'],
@@ -163,7 +163,7 @@ class GenericAdmin(object):
         }
 
     @with_verified_admin
-    def view_queue_edit(self, db, queue_id, form, is_post):
+    def view_queue_edit(self, db, queue_id, form):
         """
         Edit or create a new queue.
         """
@@ -186,7 +186,7 @@ class GenericAdmin(object):
 
         message = None
 
-        if is_post:
+        if form is not None:
             queue = queue._replace(
                 name=form['queue_name'],
                 code=form['queue_code'],
@@ -251,7 +251,7 @@ class GenericAdmin(object):
         }
 
     @with_verified_admin
-    def view_call_edit(self, db, call_id, form, is_post):
+    def view_call_edit(self, db, call_id, form):
         """
         Create or edit a call.
         """
@@ -289,7 +289,7 @@ class GenericAdmin(object):
 
         message = None
 
-        if is_post:
+        if form is not None:
             try:
                 call = call._replace(
                     date_open=parse_datetime('open', form),
@@ -390,7 +390,7 @@ class GenericAdmin(object):
         }
 
     @with_verified_admin
-    def view_affiliation_edit(self, db, queue_id, form, is_post):
+    def view_affiliation_edit(self, db, queue_id, form):
         try:
             queue = db.get_queue(self.id_, queue_id)
         except NoSuchRecord:
@@ -399,7 +399,7 @@ class GenericAdmin(object):
         message = None
         records = db.search_affiliation(queue_id=queue_id)
 
-        if is_post:
+        if form is not None:
             try:
                 # Temporary (unsorted) dictionaries.
                 updated_records = {}

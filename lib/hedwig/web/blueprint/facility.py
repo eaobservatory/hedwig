@@ -64,7 +64,8 @@ def create_facility_blueprint(db, facility):
     @facility_template('proposal_new.html')
     def proposal_new(call_id):
         return facility.view_proposal_new(
-            db, call_id, request.form, request.method == 'POST')
+            db, call_id,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/call/<int:call_id>/review')
     @require_auth(require_person=True)
@@ -126,7 +127,8 @@ def create_facility_blueprint(db, facility):
     @facility_template('proposal_submit.html')
     def proposal_submit(proposal_id):
         return facility.view_proposal_submit(
-            db, proposal_id, request.form, request.method == 'POST')
+            db, proposal_id,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/validate')
     @require_auth(require_person=True)
@@ -140,14 +142,16 @@ def create_facility_blueprint(db, facility):
     @facility_template('proposal_withdraw.html')
     def proposal_withdraw(proposal_id):
         return facility.view_proposal_withdraw(
-            db, proposal_id, request.form, request.method == 'POST')
+            db, proposal_id,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/title', methods=['GET', 'POST'])
     @require_auth(require_person=True)
     @facility_template('title_edit.html')
     def title_edit(proposal_id):
         return facility.view_title_edit(
-            db, proposal_id, request.form, request.method == 'POST')
+            db, proposal_id,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/abstract', methods=['GET', 'POST'])
     @require_auth(require_person=True)
@@ -162,7 +166,8 @@ def create_facility_blueprint(db, facility):
     @facility_template('member_edit.html')
     def member_edit(proposal_id):
         return facility.view_member_edit(
-            db, proposal_id, request.form, request.method == 'POST')
+            db, proposal_id,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/member/add',
               methods=['GET', 'POST'])
@@ -170,7 +175,8 @@ def create_facility_blueprint(db, facility):
     @facility_template('member_add.html')
     def member_add(proposal_id):
         return facility.view_member_add(
-            db, proposal_id, request.form, request.method == 'POST')
+            db, proposal_id,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/member/reinvite/<int:member_id>',
               methods=['GET', 'POST'])
@@ -212,7 +218,8 @@ def create_facility_blueprint(db, facility):
     @facility_template('target_edit.html')
     def target_edit(proposal_id):
         return facility.view_target_edit(
-            db, proposal_id, request.form, request.method == 'POST')
+            db, proposal_id,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/target/upload',
               methods=['GET', 'POST'])
@@ -238,7 +245,8 @@ def create_facility_blueprint(db, facility):
     @facility_template('request_edit.html')
     def request_edit(proposal_id):
         return facility.view_request_edit(
-            db, proposal_id, request.form, request.method == 'POST')
+            db, proposal_id,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/technical')
     @require_auth(require_person=True)
@@ -509,8 +517,9 @@ def create_facility_blueprint(db, facility):
     @facility_template('semester_edit.html')
     @require_admin
     def semester_new():
-        return facility.view_semester_edit(db, None, request.form,
-                                           request.method == 'POST')
+        return facility.view_semester_edit(
+            db, None,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/admin/semester/<int:semester_id>')
     @facility_template('semester_view.html')
@@ -523,8 +532,9 @@ def create_facility_blueprint(db, facility):
     @facility_template('semester_edit.html')
     @require_admin
     def semester_edit(semester_id):
-        return facility.view_semester_edit(db, semester_id, request.form,
-                                           request.method == 'POST')
+        return facility.view_semester_edit(
+            db, semester_id,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/admin/queue/')
     @facility_template('queue_list.html')
@@ -536,8 +546,9 @@ def create_facility_blueprint(db, facility):
     @facility_template('queue_edit.html')
     @require_admin
     def queue_new():
-        return facility.view_queue_edit(db, None, request.form,
-                                        request.method == 'POST')
+        return facility.view_queue_edit(
+            db, None,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/admin/queue/<int:queue_id>')
     @facility_template('queue_view.html')
@@ -550,16 +561,18 @@ def create_facility_blueprint(db, facility):
     @facility_template('queue_edit.html')
     @require_admin
     def queue_edit(queue_id):
-        return facility.view_queue_edit(db, queue_id, request.form,
-                                        request.method == 'POST')
+        return facility.view_queue_edit(
+            db, queue_id,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/admin/queue/<int:queue_id>/affiliation',
               methods=['GET', 'POST'])
     @facility_template('affiliation_edit.html')
     @require_admin
     def affiliation_edit(queue_id):
-        return facility.view_affiliation_edit(db, queue_id, request.form,
-                                              request.method == 'POST')
+        return facility.view_affiliation_edit(
+            db, queue_id,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/admin/queue/<int:queue_id>/group/<int:group_type>')
     @facility_template('group_view.html')
@@ -605,8 +618,9 @@ def create_facility_blueprint(db, facility):
     @facility_template('call_edit.html')
     @require_admin
     def call_new():
-        return facility.view_call_edit(db, None, request.form,
-                                       request.method == 'POST')
+        return facility.view_call_edit(
+            db, None,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/admin/call/<int:call_id>')
     @facility_template('call_view.html')
@@ -618,8 +632,9 @@ def create_facility_blueprint(db, facility):
     @facility_template('call_edit.html')
     @require_admin
     def call_edit(call_id):
-        return facility.view_call_edit(db, call_id, request.form,
-                                       request.method == 'POST')
+        return facility.view_call_edit(
+            db, call_id,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/admin/call/<int:call_id>/proposals')
     @facility_template('call_proposals.html')

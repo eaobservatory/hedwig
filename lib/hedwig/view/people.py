@@ -31,12 +31,15 @@ from .util import organise_collection
 from . import auth
 
 
-def log_in(db, args, form, is_post, referrer):
+def log_in(db, args, form, referrer):
     message = None
 
-    if is_post:
+    user_name = args.get('user_name', '')
+
+    if form is not None:
         try:
-            user_id = db.authenticate_user(form['user_name'], form['password'])
+            user_name = form['user_name']
+            user_id = db.authenticate_user(user_name, form['password'])
 
             if user_id is None:
                 raise UserError('User name or password not recognised.')
@@ -97,7 +100,7 @@ def log_in(db, args, form, is_post, referrer):
     return {
         'title': 'Log in',
         'message':  message,
-        'user_name': form.get('user_name', args.get('user_name', '')),
+        'user_name': user_name,
         'without_links': False,
     }
 
@@ -108,10 +111,12 @@ def log_out():
     raise HTTPRedirect(url_for('home_page'))
 
 
-def register_user(db, form, is_post, remote_addr):
+def register_user(db, form, remote_addr):
     message = None
 
-    if is_post:
+    user_name = ''
+
+    if form is not None:
         try:
             user_name = form['user_name']
             password = form['password']
@@ -136,23 +141,24 @@ def register_user(db, form, is_post, remote_addr):
     return {
         'title': 'Register',
         'message':  message,
-        'user_name': form.get('user_name', ''),
+        'user_name': user_name,
     }
 
 
-def change_user_name(db, form, is_post, remote_addr):
+def change_user_name(db, form, remote_addr):
     message = None
     user_id = session['user_id']
 
-    if is_post:
+    if form is not None:
         try:
+            user_name = form['user_name']
             password = form['password']
             if db.authenticate_user(None, form['password'],
                                     user_id=user_id) is None:
                 raise UserError(
                     'Your current password was entered incorrectly.')
 
-            db.update_user_name(user_id, form['user_name'],
+            db.update_user_name(user_id, user_name,
                                 remote_addr=remote_addr)
             flash('Your user name has been changed.')
             if 'person' in session:
@@ -164,17 +170,20 @@ def change_user_name(db, form, is_post, remote_addr):
         except UserError as e:
             message = e.message
 
+    else:
+        user_name = db.get_user_name(user_id)
+
     return {
         'title': 'Change User Name',
         'message': message,
-        'user_name': form.get('user_name', db.get_user_name(user_id)),
+        'user_name': user_name,
     }
 
 
-def change_password(db, form, is_post, remote_addr):
+def change_password(db, form, remote_addr):
     message = None
 
-    if is_post:
+    if form is not None:
         try:
             user_id = session['user_id']
             password = form['password']
@@ -207,13 +216,13 @@ def change_password(db, form, is_post, remote_addr):
     }
 
 
-def password_reset_token_get(db, form, is_post, remote_addr):
+def password_reset_token_get(db, form, remote_addr):
     message = None
 
-    user_name = form.get('user_name', '')
-    email_address = form.get('email', '')
+    if form is not None:
+        user_name = form['user_name']
+        email_address = form['email']
 
-    if is_post:
         try:
             user_id = None
 
@@ -299,6 +308,10 @@ def password_reset_token_get(db, form, is_post, remote_addr):
         except UserError as e:
             message = e.message
 
+    else:
+        user_name = ''
+        email_address = ''
+
     return {
         'title': 'Reset Password',
         'message': message,
@@ -307,11 +320,11 @@ def password_reset_token_get(db, form, is_post, remote_addr):
     }
 
 
-def password_reset_token_use(db, args, form, is_post, remote_addr):
+def password_reset_token_use(db, args, form, remote_addr):
     message = None
     token = args.get('token', '')
 
-    if is_post:
+    if form is not None:
         try:
             token = form['token']
             password = form['password']
@@ -364,7 +377,7 @@ def drop_admin(referrer):
     raise HTTPRedirect(referrer if referrer else url_for('home_page'))
 
 
-def register_person(db, form, is_post, remote_addr):
+def register_person(db, form, remote_addr):
     if 'person' in session:
         raise ErrorPage('You have already created a profile')
 
@@ -372,9 +385,7 @@ def register_person(db, form, is_post, remote_addr):
 
     person = null_tuple(Person)._replace(name='', public=False)
 
-    email = form.get('single_email', '')
-
-    if is_post:
+    if form is not None:
         person = person._replace(
             name=form['person_name'],
             public=('person_public' in form))
@@ -397,6 +408,9 @@ def register_person(db, form, is_post, remote_addr):
 
         except UserError as e:
             message = e.message
+
+    else:
+        email = ''
 
     return {
         'title': 'Create Profile',
@@ -470,7 +484,7 @@ def person_view(db, person_id):
     }
 
 
-def person_edit(db, person_id, form, is_post):
+def person_edit(db, person_id, form):
     try:
         person = db.get_person(person_id)
     except NoSuchRecord:
@@ -480,7 +494,7 @@ def person_edit(db, person_id, form, is_post):
 
     message = None
 
-    if is_post:
+    if form is not None:
         person = person._replace(
             name=form['person_name'],
             public=('person_public' in form))
@@ -510,7 +524,7 @@ def person_edit(db, person_id, form, is_post):
     }
 
 
-def person_edit_institution(db, person_id, form, is_post):
+def person_edit_institution(db, person_id, form):
     try:
         person = db.get_person(person_id)
     except NoSuchRecord:
@@ -528,7 +542,7 @@ def person_edit_institution(db, person_id, form, is_post):
     institution = Institution(id=None, name='', department='', organization='',
                               address='', country='')
 
-    if is_post:
+    if form is not None:
         try:
             if 'submit_select' in form:
                 institution_id = int(form['institution_id'])
@@ -590,7 +604,7 @@ def person_edit_institution(db, person_id, form, is_post):
     }
 
 
-def person_edit_email(db, person_id, form, is_post):
+def person_edit_email(db, person_id, form):
     try:
         person = db.get_person(person_id, with_email=True)
     except NoSuchRecord:
@@ -602,7 +616,7 @@ def person_edit_email(db, person_id, form, is_post):
     is_current_user = person.user_id == session['user_id']
     records = person.email
 
-    if is_post:
+    if form is not None:
         try:
             # Temporary (unsorted) dictionaries for new records.
             updated_records = {}
@@ -781,7 +795,7 @@ def institution_view(db, institution_id):
     }
 
 
-def institution_edit(db, institution_id, form, is_post):
+def institution_edit(db, institution_id, form):
     try:
         institution = db.get_institution(institution_id)
     except NoSuchRecord:
@@ -793,7 +807,7 @@ def institution_edit(db, institution_id, form, is_post):
     show_confirm_prompt = True
     message = None
 
-    if is_post:
+    if form is not None:
         if 'submit-confirm' in form:
             show_confirm_prompt = False
         elif 'submit_cancel' in form:
@@ -846,8 +860,9 @@ def invitation_token_enter(db, args):
     }
 
 
-def invitation_token_accept(db, args, form, is_post, remote_addr):
-    token = form.get('token', None) if is_post else args.get('token', None)
+def invitation_token_accept(db, args, form, remote_addr):
+    token = (form.get('token', None) if (form is not None)
+             else args.get('token', None))
 
     if token is None:
         # Token was lost somehow: redirect back to entry page.
@@ -855,7 +870,7 @@ def invitation_token_accept(db, args, form, is_post, remote_addr):
         raise HTTPRedirect(url_for('.invitation_token_enter'))
 
     try:
-        if is_post:
+        if form is not None:
             # Re-fetch the current user's profile, in case they registered a
             # profile in another session.  We need to be sure we know whether
             # they are registered or not.
