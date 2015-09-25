@@ -11,18 +11,18 @@
             <tr>
                 <th>{{ row_name }}</th>
                 {% for column_id in requests.columns.keys() %}
-                    <td>{{ requests.table[row_id][column_id] | fmt('{0:g}') }}</td>
+                    <td>{{ requests.table[row_id][column_id] | fmt('{:g}') }}</td>
                 {% endfor %}
-                <td class="total">{{ requests.table[row_id][0] | fmt('{0:g}' )}}</td>
+                <td class="total">{{ requests.table[row_id][0] | fmt('{:g}' )}}</td>
             </tr>
         {% endfor %}
         {% if 0 in requests.table %}
             <tr>
                 <th>Total</th>
                 {% for column_id in requests.columns.keys() %}
-                    <td class="total">{{ requests.table[0][column_id] | fmt('{0:g}') }}</td>
+                    <td class="total">{{ requests.table[0][column_id] | fmt('{:g}') }}</td>
                 {% endfor %}
-                <td class="grandtotal">{{ requests.table[0][0] | fmt('{0:g}') }}</th>
+                <td class="grandtotal">{{ requests.table[0][0] | fmt('{:g}') }}</th>
             </tr>
         {% endif %}
     </table>

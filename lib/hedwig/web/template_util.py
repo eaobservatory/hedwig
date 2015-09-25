@@ -80,7 +80,7 @@ def register_template_utils(app):
     def format_hours_hms(hours):
         (m, s) = divmod(int(3600 * hours), 60)
         (h, m) = divmod(m, 60)
-        return '{0:d}:{1:02d}:{2:02d}'.format(h, m, s)
+        return '{:d}:{:02d}:{:02d}'.format(h, m, s)
 
     @app.template_filter()
     def proposal_state_name(value):

@@ -60,7 +60,7 @@ class GenericAdmin(object):
             raise HTTPNotFound('Semester not found')
 
         return {
-            'title': 'Semester: {0}'.format(semester.name),
+            'title': 'Semester: {}'.format(semester.name),
             'semester': semester,
         }
 
@@ -89,7 +89,7 @@ class GenericAdmin(object):
             except NoSuchRecord:
                 raise HTTPNotFound('Semester not found')
 
-            title = 'Edit Semester: {0}'.format(semester.name)
+            title = 'Edit Semester: {}'.format(semester.name)
             target = url_for('.semester_edit', semester_id=semester_id)
 
         message = None
@@ -110,7 +110,7 @@ class GenericAdmin(object):
                         self.id_, semester.name, semester.code,
                         semester.date_start, semester.date_end,
                         semester.description, semester.description_format)
-                    flash('New semester "{0}" has been created.',
+                    flash('New semester "{}" has been created.',
                           semester.name)
                     raise HTTPRedirect(url_for('.semester_view',
                                                semester_id=new_semester_id))
@@ -124,7 +124,7 @@ class GenericAdmin(object):
                         date_end=semester.date_end,
                         description=semester.description,
                         description_format=semester.description_format)
-                    flash('Semester "{0}" has been updated.', semester.name)
+                    flash('Semester "{}" has been updated.', semester.name)
                     raise HTTPRedirect(url_for('.semester_view',
                                                semester_id=semester_id))
 
@@ -156,7 +156,7 @@ class GenericAdmin(object):
         affiliations = db.search_affiliation(queue_id=queue_id, hidden=False)
 
         return {
-            'title': 'Queue: {0}'.format(queue.name),
+            'title': 'Queue: {}'.format(queue.name),
             'queue': queue,
             'affiliations': affiliations.values(),
             'groups': GroupType.get_options(),
@@ -181,7 +181,7 @@ class GenericAdmin(object):
             except NoSuchRecord:
                 raise HTTPNotFound('Queue not found')
 
-            title = 'Edit Queue: {0}'.format(queue.name)
+            title = 'Edit Queue: {}'.format(queue.name)
             target = url_for('.queue_edit', queue_id=queue_id)
 
         message = None
@@ -199,7 +199,7 @@ class GenericAdmin(object):
                     new_queue_id = db.add_queue(self.id_, queue.name,
                                                 queue.code, queue.description,
                                                 queue.description_format)
-                    flash('New queue "{0}" has been added.', queue.name)
+                    flash('New queue "{}" has been added.', queue.name)
                     raise HTTPRedirect(url_for('.queue_view',
                                                queue_id=new_queue_id))
 
@@ -209,7 +209,7 @@ class GenericAdmin(object):
                         queue_id, name=queue.name, code=queue.code,
                         description=queue.description,
                         description_format=queue.description_format)
-                    flash('Queue "{0}" has been updated.', queue.name)
+                    flash('Queue "{}" has been updated.', queue.name)
                     raise HTTPRedirect(url_for('.queue_view',
                                                queue_id=queue_id))
 
@@ -245,8 +245,8 @@ class GenericAdmin(object):
             raise HTTPNotFound('Call or semester not found')
 
         return {
-            'title': 'Call: {0} {1}'.format(call.semester_name,
-                                            call.queue_name),
+            'title': 'Call: {} {}'.format(call.semester_name,
+                                          call.queue_name),
             'call': call,
         }
 
@@ -283,8 +283,8 @@ class GenericAdmin(object):
 
             semesters = None
             queues = None
-            title = 'Edit Call: {0} {1}'.format(call.semester_name,
-                                                call.queue_name)
+            title = 'Edit Call: {} {}'.format(call.semester_name,
+                                              call.queue_name)
             target = url_for('.call_edit', call_id=call_id)
 
         message = None
@@ -380,8 +380,8 @@ class GenericAdmin(object):
         proposals = db.search_proposal(call_id=call_id, person_pi=True)
 
         return {
-            'title': 'Proposals: {0} {1}'.format(call.semester_name,
-                                                 call.queue_name),
+            'title': 'Proposals: {} {}'.format(call.semester_name,
+                                               call.queue_name),
             'call': call,
             'proposals': [
                 ProposalWithCode(*x, code=self.make_proposal_code(db, x),

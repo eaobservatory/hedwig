@@ -56,7 +56,7 @@ class JCMT(Generic):
         return 'JCMT'
 
     def make_proposal_code(self, db, proposal):
-        return 'M{0}{1}{2:03d}'.format(
+        return 'M{}{}{:03d}'.format(
             proposal.semester_code, proposal.queue_code, proposal.number
         ).upper()
 

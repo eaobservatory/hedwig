@@ -37,8 +37,7 @@ def close_call_proposals(db, call_id):
     try:
         call = db.search_call(call_id=call_id, is_open=False).get_single()
     except NoSuchRecord:
-        raise UserError('Call with id={0} not found or still open.',
-                        call_id)
+        raise UserError('Call with id={} not found or still open.', call_id)
 
     for proposal in db.search_proposal(call_id=call_id,
                                        with_members=True).values():

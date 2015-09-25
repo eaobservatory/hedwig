@@ -166,7 +166,7 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                 # Have we seen this identifier before?
                 if id_ in considered:
                     raise ConsistencyError(
-                        'the identifier {0} appears more than once', id_)
+                        'the identifier {} appears more than once', id_)
 
                 considered.add(id_)
                 previous = existing.pop(id_, None)

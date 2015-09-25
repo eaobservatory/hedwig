@@ -296,7 +296,7 @@ class DBProposalTest(DBTestCase):
         for (call_id, affiliation_id) in ((call_id_1, affiliation_id_1),
                                           (call_id_2, affiliation_id_2)):
             for i in range(1, 11):
-                title = 'Proposal {0}'.format(i)
+                title = 'Proposal {}'.format(i)
                 proposal_id = self.db.add_proposal(call_id, person_id,
                                                    affiliation_id, title)
                 self.assertIsInstance(proposal_id, int)
@@ -949,7 +949,7 @@ class DBProposalTest(DBTestCase):
             self.assertIsInstance(t, Target)
             self.assertEqual(t.proposal_id, proposal_id)
             self.assertEqual(t.sort_order, i)
-            self.assertEqual(t.name, 'Obj {0}'.format(i))
+            self.assertEqual(t.name, 'Obj {}'.format(i))
             i += 1
 
     def test_category(self):

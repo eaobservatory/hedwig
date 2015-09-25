@@ -98,7 +98,7 @@ class JCMTRequestCollection(OrderedDict):
 
             if not isinstance(record.time, float):
                 raise UserError(
-                    'Please enter time as a valid number for {0}, {1}'.format(
+                    'Please enter time as a valid number for {}, {}'.format(
                         JCMTInstrument.get_name(record.instrument),
                         JCMTWeather.get_name(record.weather)))
 
@@ -106,7 +106,7 @@ class JCMTRequestCollection(OrderedDict):
 
             if request_tuple in requests:
                 raise UserError(
-                    'There are multiple entries for {0}, {1}'.format(
+                    'There are multiple entries for {}, {}'.format(
                         JCMTInstrument.get_name(record.instrument),
                         JCMTWeather.get_name(record.weather)))
 

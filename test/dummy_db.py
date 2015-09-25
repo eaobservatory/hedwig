@@ -59,8 +59,8 @@ def get_dummy_database(randomize_ids=True, allow_multi_threaded=False,
         with engine.begin() as conn:
             for table in metadata.tables.keys():
                 conn.execute('INSERT INTO sqlite_sequence (name, seq)'
-                             'VALUES ("{0}", {1})'.format(table,
-                                                          randint(1, 1000000)))
+                             'VALUES ("{}", {})'.format(table,
+                                                        randint(1, 1000000)))
 
     return CombinedDatabase(engine)
 

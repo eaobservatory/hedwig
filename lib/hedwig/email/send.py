@@ -79,7 +79,7 @@ def send_email_message(message):
             recipients_private.append(formataddr((recipient.name,
                                                   recipient.address)))
 
-    identifier = make_msgid('{0}'.format(message.id))
+    identifier = make_msgid('{}'.format(message.id))
 
     msg = MIMETextFlowed(message.body)
 

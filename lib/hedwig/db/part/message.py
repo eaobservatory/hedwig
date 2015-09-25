@@ -137,7 +137,7 @@ class MessagePart(object):
             if not _test_skip_check and not self._exists_id(
                     conn, message, message_id):
                 raise ConsistencyError(
-                    'message does not exist with id={0}', message_id)
+                    'message does not exist with id={}', message_id)
 
             result = conn.execute(message.update().where(and_(
                 message.c.id == message_id,

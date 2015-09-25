@@ -127,7 +127,7 @@ class Generic(GenericAdmin, GenericProposal, GenericReview):
         scheme in use at each facility.
         """
 
-        return '{0}-{1}-{2}'.format(
+        return '{}-{}-{}'.format(
             proposal.semester_code, proposal.queue_code, proposal.number)
 
     def parse_proposal_code(self, db, proposal_code):
@@ -288,7 +288,7 @@ class Generic(GenericAdmin, GenericProposal, GenericReview):
             raise ErrorPage('No calls are currently open for this semester.')
 
         return {
-            'title': 'Call for Semester {0}'.format(semester.name),
+            'title': 'Call for Semester {}'.format(semester.name),
             'semester': semester,
             'calls': list(calls.values()),
         }

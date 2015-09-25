@@ -406,7 +406,7 @@ class GenericProposal(object):
                 proposal_code = self.make_proposal_code(db, proposal)
 
                 db.add_message(
-                    'Proposal {0} submitted'.format(proposal_code),
+                    'Proposal {} submitted'.format(proposal_code),
                     render_email_template(
                         'proposal_submitted.txt', {
                             'proposal': proposal,
@@ -462,7 +462,7 @@ class GenericProposal(object):
                 proposal_code = self.make_proposal_code(db, proposal)
 
                 db.add_message(
-                    'Proposal {0} withdrawn'.format(proposal_code),
+                    'Proposal {} withdrawn'.format(proposal_code),
                     render_email_template(
                         'proposal_withdrawn.txt', {
                             'proposal': proposal,
@@ -591,15 +591,15 @@ class GenericProposal(object):
 
                     # The affiliation_id should always be present, so use it
                     # to detect members who have been deleted from the form.
-                    affiliation_str = form.get('affiliation_{0}'.format(id_))
+                    affiliation_str = form.get('affiliation_{}'.format(id_))
                     if affiliation_str is None:
                         del records[id_]
                         continue
 
                     records[id_] = record._replace(
                         pi=(id_ == pi),
-                        editor=('editor_{0}'.format(id_) in form),
-                        observer=('observer_{0}'.format(id_) in form),
+                        editor=('editor_{}'.format(id_) in form),
+                        observer=('observer_{}'.format(id_) in form),
                         affiliation_id=int(affiliation_str))
 
                 db.sync_proposal_member(
@@ -685,13 +685,13 @@ class GenericProposal(object):
                     })
 
                     db.add_message(
-                        'Proposal {0} invitation'.format(
+                        'Proposal {} invitation'.format(
                             self.make_proposal_code(db, proposal)),
                         render_email_template('proposal_invitation.txt',
                                               email_ctx, facility=self),
                         [member['person_id']])
 
-                    flash('{0} has been added to the proposal.', person.name)
+                    flash('{} has been added to the proposal.', person.name)
                     raise HTTPRedirect(url_for('.proposal_view',
                                        proposal_id=proposal.id,
                                        _anchor='members'))
@@ -727,13 +727,13 @@ class GenericProposal(object):
                     })
 
                     db.add_message(
-                        'Proposal {0} invitation'.format(
+                        'Proposal {} invitation'.format(
                             self.make_proposal_code(db, proposal)),
                         render_email_template('proposal_invitation.txt',
                                               email_ctx, facility=self),
                         [person_id])
 
-                    flash('{0} has been added to the proposal.',
+                    flash('{} has been added to the proposal.',
                           member['name'])
 
                     # Return to the proposal page after editing the new
@@ -815,12 +815,12 @@ class GenericProposal(object):
                 }
 
                 db.add_message(
-                    'Proposal {0} invitation'.format(proposal_code),
+                    'Proposal {} invitation'.format(proposal_code),
                     render_email_template('proposal_invitation.txt',
                                           email_ctx, facility=self),
                     [person_id])
 
-                flash('{0} has been re-invited to the proposal.',
+                flash('{} has been re-invited to the proposal.',
                       member.person_name)
 
             raise HTTPRedirect(url_for('.proposal_view',
@@ -1444,20 +1444,20 @@ class GenericProposal(object):
 
                 type_ = determine_figure_type(buff)
                 if type_ != FigureType.PDF:
-                    raise UserError('File was of type {0} rather than PDF.',
+                    raise UserError('File was of type {} rather than PDF.',
                                     FigureType.get_name(type_))
 
                 page_count = determine_pdf_page_count(buff)
                 if page_count > page_limit:
                     raise UserError(
-                        'PDF is too long: {0} / {1} {2}',
+                        'PDF is too long: {} / {} {}',
                         page_count, page_limit,
                         ('page' if page_limit == 1 else 'pages'))
 
                 db.set_proposal_pdf(proposal.id, role, buff, page_count,
                                     filename, session['person']['id'])
 
-                flash('The {0} has been uploaded.', name.lower())
+                flash('The {} has been uploaded.', name.lower())
 
                 raise HTTPRedirect(url_for(
                     '.{}_edit'.format(code), proposal_id=proposal.id))
@@ -1466,7 +1466,7 @@ class GenericProposal(object):
                 message = e.message
 
         return {
-            'title': 'Upload {0} PDF'.format(name.title()),
+            'title': 'Upload {} PDF'.format(name.title()),
             'proposal_id': proposal.id,
             'proposal_code': self.make_proposal_code(db, proposal),
             'message': message,
@@ -1561,7 +1561,7 @@ class GenericProposal(object):
                 word_count = count_words(text)
                 if word_count > word_limit:
                     raise UserError(
-                        '{0} is too long: {1} / {2} words',
+                        '{} is too long: {} / {} words',
                         name.capitalize(), word_count, word_limit)
 
                 db.set_proposal_text(proposal.id, role,
@@ -1571,7 +1571,7 @@ class GenericProposal(object):
                 if extra_form_proc is not None:
                     ctx = extra_form_proc(db, proposal, role, ctx)
 
-                flash('The {0} has been saved.', name.lower())
+                flash('The {} has been saved.', name.lower())
                 raise HTTPRedirect(url_for('.proposal_view',
                                            proposal_id=proposal.id)
                                    if target_redir is None else target_redir)

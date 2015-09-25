@@ -47,7 +47,7 @@ def get_config():
         file = os.path.join(dir, *config_file)
 
         if not os.path.exists(file):
-            raise FormattedError('config file {0} doesn\'t exist', file)
+            raise FormattedError('config file {} doesn\'t exist', file)
 
         config = SafeConfigParser()
         config.read(file)
@@ -117,11 +117,9 @@ def _get_db_class(facility_spec):
                 # If there are no dots in the facility class, use the
                 # standard location in this packages.
                 import_module(
-                    'hedwig.facility.{0}.meta'.format(
-                        name.lower()))
+                    'hedwig.facility.{}.meta'.format(name.lower()))
                 module = import_module(
-                    'hedwig.facility.{0}.control'.format(
-                        name.lower()))
+                    'hedwig.facility.{}.control'.format(name.lower()))
 
             # Look for a class named <Facility>Part.
             db_parts.append(getattr(module, parts[-1] + 'Part'))
@@ -163,7 +161,7 @@ def get_facilities(facility_spec=None):
                 # If there were no dots in the class name guess that the module
                 # is in the expected directory and has a lower case name.
                 module = import_module(
-                    'hedwig.facility.{0}.view'.format(name.lower()))
+                    'hedwig.facility.{}.view'.format(name.lower()))
                 class_ = getattr(module, name)
 
             facilities.append(class_)

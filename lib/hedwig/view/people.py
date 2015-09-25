@@ -302,7 +302,7 @@ def password_reset_token_get(db, form, remote_addr):
                 [person.id],
                 email_addresses=[email_address])
             flash('Your password reset code has been sent by email '
-                  ' to {0}.'.format(show_email_address))
+                  ' to {}.'.format(show_email_address))
             raise HTTPRedirect(url_for('.password_reset_token_use'))
 
         except UserError as e:
@@ -477,7 +477,7 @@ def person_view(db, person_id):
                                             'Unknown country')))
 
     return {
-        'title': '{0}: Profile'.format(person.name),
+        'title': '{}: Profile'.format(person.name),
         'is_current_user': is_current_user,
         'can_edit': can.edit,
         'person': person,
@@ -517,7 +517,7 @@ def person_edit(db, person_id, form):
             message = e.message
 
     return {
-        'title': '{0}: Edit Profile'.format(person.name),
+        'title': '{}: Edit Profile'.format(person.name),
         'target': url_for('.person_edit', person_id=person_id),
         'message': message,
         'person': person,
@@ -575,9 +575,9 @@ def person_edit_institution(db, person_id, form):
 
             if is_current_user:
                 _update_session_person(db.get_person(person_id))
-                flash('Your institution has been {0}.', action)
+                flash('Your institution has been {}.', action)
             else:
-                flash('The institution has been {0}.', action)
+                flash('The institution has been {}.', action)
 
             # If an explicit "next page" has been set, go there now.
             if 'next_page' in session:
@@ -591,7 +591,7 @@ def person_edit_institution(db, person_id, form):
             message = e.message
 
     return {
-        'title': '{0}: Select Institution'.format(person.name),
+        'title': '{}: Select Institution'.format(person.name),
         'message': message,
         'person': person,
         'institution': institution,
@@ -672,7 +672,7 @@ def person_edit_email(db, person_id, form):
             message = e.message
 
     return {
-        'title': '{0}: Edit Email Addresses'.format(person.name),
+        'title': '{}: Edit Email Addresses'.format(person.name),
         'message': message,
         'person': person,
         'emails': records.values(),
@@ -786,7 +786,7 @@ def institution_view(db, institution_id):
                                registered=True, public=public)
 
     return {
-        'title': 'Institution: {0}'.format(institution.name),
+        'title': 'Institution: {}'.format(institution.name),
         'institution': institution._replace(
             country=get_countries().get(institution.country,
                                         'Unknown country')),
@@ -844,7 +844,7 @@ def institution_edit(db, institution_id, form):
             raise ErrorPage('Unknown action.')
 
     return {
-        'title': 'Edit Institution: {0}'.format(institution.name),
+        'title': 'Edit Institution: {}'.format(institution.name),
         'show_confirm_prompt': show_confirm_prompt,
         'message': message,
         'institution_id': institution_id,
@@ -894,7 +894,7 @@ def invitation_token_accept(db, args, form, remote_addr):
                 member = old_person_record.proposals.get_single()
                 proposal_id = member.proposal_id
                 code = db.get_proposal_facility_code(proposal_id)
-                target = url_for('{0}.proposal_view'.format(code),
+                target = url_for('{}.proposal_view'.format(code),
                                  proposal_id=proposal_id, first_view='true')
             except NoSuchRecord:
                 pass

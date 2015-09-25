@@ -52,7 +52,7 @@ class PeoplePart(object):
             if (not _test_skip_check and
                     not self._exists_id(conn, person, person_id)):
                 raise ConsistencyError(
-                    'person does not exist with id={0}', person_id)
+                    'person does not exist with id={}', person_id)
 
             result = conn.execute(email.insert().values({
                 email.c.person_id: person_id,
@@ -108,7 +108,7 @@ class PeoplePart(object):
                     person.c.id == person_id
                 )).first()
                 if result is None:
-                    raise ConsistencyError('person does not exist with id={0}',
+                    raise ConsistencyError('person does not exist with id={}',
                                            person_id)
                 elif result['user_id'] is not None:
                     raise ConsistencyError('person is already registered')
@@ -139,10 +139,10 @@ class PeoplePart(object):
             if user_id is not None and not _test_skip_check:
                 if not self._exists_id(conn, user, user_id):
                     raise ConsistencyError(
-                        'user does not exist with id={0}', user_id)
+                        'user does not exist with id={}', user_id)
                 if self._exists_person_user(conn, user_id):
                     raise ConsistencyError(
-                        'person already exists with user_id={0}', user_id)
+                        'person already exists with user_id={}', user_id)
 
             result = conn.execute(person.insert().values({
                 person.c.name: name,
@@ -180,8 +180,7 @@ class PeoplePart(object):
         with self._transaction() as conn:
             if not _test_skip_check and self._exists_user_name(conn, name):
                 raise UserError(
-                    'The user account name "{0}" already exists.',
-                    name)
+                    'The user account name "{}" already exists.', name)
 
             result = conn.execute(user.insert().values({
                 user.c.name: name,
@@ -198,7 +197,7 @@ class PeoplePart(object):
                 if not _test_skip_check and \
                         not self._exists_id(conn, person, person_id):
                     raise ConsistencyError(
-                        'person does not exist with id={0}', person_id)
+                        'person does not exist with id={}', person_id)
 
                 result = conn.execute(person.update().where(and_(
                     person.c.id == person_id,
@@ -210,7 +209,7 @@ class PeoplePart(object):
                 if result.rowcount != 1:
                     raise ConsistencyError(
                         'no rows matched setting new user_id'
-                        ' for person with id={0}',
+                        ' for person with id={}',
                         person_id)
 
                 self._add_user_log_entry(
@@ -336,7 +335,7 @@ class PeoplePart(object):
             )).first()
 
         if result is None:
-            raise NoSuchRecord('institution does not exist with id={0}',
+            raise NoSuchRecord('institution does not exist with id={}',
                                institution_id)
 
         return Institution(**result)
@@ -615,7 +614,7 @@ class PeoplePart(object):
         with self._transaction() as conn:
             if not self._exists_id(conn, person, person_id):
                 raise ConsistencyError(
-                    'person does not exist with id={0}', person_id)
+                    'person does not exist with id={}', person_id)
 
             return self._sync_records(
                 conn, email, email.c.person_id, person_id, records,
@@ -659,7 +658,7 @@ class PeoplePart(object):
                     prev = self.get_institution(institution_id, _conn=conn)
                 except NoSuchRecord:
                     raise ConsistencyError(
-                        'institution does not exist with id={0}',
+                        'institution does not exist with id={}',
                         institution_id)
 
                 conn.execute(institution_log.insert().values({
@@ -680,7 +679,7 @@ class PeoplePart(object):
 
             if result.rowcount != 1:
                 raise ConsistencyError(
-                    'no rows matched updating institution with id={0}',
+                    'no rows matched updating institution with id={}',
                     institution_id)
 
     def update_person(self, person_id,
@@ -716,14 +715,13 @@ class PeoplePart(object):
             if (not _test_skip_check and
                     not self._exists_id(conn, person, person_id)):
                 raise ConsistencyError(
-                    'person does not exist with id={0}', person_id)
+                    'person does not exist with id={}', person_id)
 
             result = conn.execute(stmt.values(values))
 
             if result.rowcount != 1:
                 raise ConsistencyError(
-                    'no rows matched updating person with id={0}',
-                    person_id)
+                    'no rows matched updating person with id={}', person_id)
 
     def update_user_name(self, user_id, name, remote_addr=None,
                          _test_skip_check=False):
@@ -734,12 +732,11 @@ class PeoplePart(object):
             if (not _test_skip_check and
                     not self._exists_id(conn, user, user_id)):
                 raise ConsistencyError(
-                    'user does not exist with id={0}', user_id)
+                    'user does not exist with id={}', user_id)
 
             if not _test_skip_check and self._exists_user_name(conn, name):
                 raise UserError(
-                    'The user account name "{0}" already exists.',
-                    name)
+                    'The user account name "{}" already exists.', name)
 
             result = conn.execute(user.update().where(
                 user.c.id == user_id
@@ -749,8 +746,7 @@ class PeoplePart(object):
 
             if result.rowcount != 1:
                 raise ConsistencyError(
-                    'no rows matched updating user with id={0}',
-                    user_id)
+                    'no rows matched updating user with id={}', user_id)
 
             self._add_user_log_entry(
                 conn, user_id, UserLogEvent.CHANGE_NAME, remote_addr)
@@ -766,7 +762,7 @@ class PeoplePart(object):
             if (not _test_skip_check and
                     not self._exists_id(conn, user, user_id)):
                 raise ConsistencyError(
-                    'user does not exist with id={0}', user_id)
+                    'user does not exist with id={}', user_id)
 
             result = conn.execute(user.update().where(
                 user.c.id == user_id
@@ -777,8 +773,7 @@ class PeoplePart(object):
 
             if result.rowcount != 1:
                 raise ConsistencyError(
-                    'no rows matched updating user with id={0}',
-                    user_id)
+                    'no rows matched updating user with id={}', user_id)
 
             self._add_user_log_entry(
                 conn, user_id, UserLogEvent.CHANGE_PASS, remote_addr)
@@ -875,11 +870,11 @@ class PeoplePart(object):
                 if user_id is not None:
                     if not self._exists_id(conn, user, user_id):
                         raise ConsistencyError(
-                            'user does not exist with id={0}', user_id)
+                            'user does not exist with id={}', user_id)
                 if new_person_id is not None:
                     if not self._exists_id(conn, person, new_person_id):
                         raise ConsistencyError(
-                            'person does not exist with id={0}', new_person_id)
+                            'person does not exist with id={}', new_person_id)
 
             # Removed any expired invitations, as for password reset tokens.
             conn.execute(invitation.delete().where(
@@ -920,7 +915,7 @@ class PeoplePart(object):
                 if result.rowcount != 1:
                     raise ConsistencyError(
                         'no rows matched setting new user_id'
-                        ' for person with id={0}',
+                        ' for person with id={}',
                         old_person_id)
 
                 self._add_user_log_entry(
@@ -934,7 +929,7 @@ class PeoplePart(object):
                 )).scalar()
                 if result is not None:
                     raise ConsistencyError(
-                        'person {0} is already registered as user {1}',
+                        'person {} is already registered as user {}',
                         old_person_id, result)
 
                 # They already have a person record, so swap out the

@@ -94,8 +94,8 @@ class ProposalPart(object):
                 if not semester.facility_id == queue.facility_id:
                     raise ConsistencyError(
                         'call has inconsistent facility references: '
-                        'semester {0} is for facility {1} but '
-                        'queue {2} is for facility {3}',
+                        'semester {} is for facility {} but '
+                        'queue {} is for facility {}',
                         semester_id, semester.facility_id,
                         queue_id, queue.facility_id)
 
@@ -127,15 +127,15 @@ class ProposalPart(object):
         with self._transaction(_conn=_conn) as conn:
             if not _test_skip_check:
                 if not self._exists_id(conn, person, person_id):
-                    raise ConsistencyError('person does not exist with id={0}',
+                    raise ConsistencyError('person does not exist with id={}',
                                            person_id)
                 proposal_record = self.get_proposal(None, proposal_id,
                                                     _conn=conn)
                 if not self._exists_queue_affiliation(
                         conn, proposal_record.queue_id, affiliation_id):
                     raise ConsistencyError(
-                        'affiliation does not exist with id={0} '
-                        'for queue with id={1}'.format(
+                        'affiliation does not exist with id={} '
+                        'for queue with id={}'.format(
                             affiliation_id, proposal_record.queue_id))
 
             member_alias = member.alias()
@@ -178,14 +178,14 @@ class ProposalPart(object):
                     call = self.search_call(
                         call_id=call_id, _conn=conn).get_single()
                 except NoSuchRecord:
-                    raise ConsistencyError('call does not exist with id={0}',
+                    raise ConsistencyError('call does not exist with id={}',
                                            call_id)
 
                 if not self._exists_queue_affiliation(
                         conn, call.queue_id, affiliation_id):
                     raise ConsistencyError(
-                        'affiliation does not exist with id={0} '
-                        'for queue with id={1}'.format(
+                        'affiliation does not exist with id={} '
+                        'for queue with id={}'.format(
                             affiliation_id, call.queue_id))
 
             proposal_alias = proposal.alias()
@@ -222,7 +222,7 @@ class ProposalPart(object):
         with self._transaction() as conn:
             if (not _test_skip_check and
                     not self._exists_id(conn, proposal, proposal_id)):
-                raise ConsistencyError('proposal does not exist with id={0}',
+                raise ConsistencyError('proposal does not exist with id={}',
                                        proposal_id)
             if (not _test_skip_check and
                     not self._exists_id(conn, person, uploader_person_id)):
@@ -265,7 +265,7 @@ class ProposalPart(object):
         with self._transaction() as conn:
             if (not _test_skip_check and
                     not self._exists_id(conn, facility, facility_id)):
-                raise ConsistencyError('facility does not exist with id={0}',
+                raise ConsistencyError('facility does not exist with id={}',
                                        facility_id)
 
             result = conn.execute(queue.insert().values({
@@ -298,7 +298,7 @@ class ProposalPart(object):
         with self._transaction() as conn:
             if (not _test_skip_check and
                     not self._exists_id(conn, facility, facility_id)):
-                raise ConsistencyError('facility does not exist with id={0}',
+                raise ConsistencyError('facility does not exist with id={}',
                                        facility_id)
 
             result = conn.execute(semester.insert().values({
@@ -326,7 +326,7 @@ class ProposalPart(object):
 
             if result.rowcount != 1:
                 raise ConsistencyError(
-                    'no row matched deleting member person {0} for {0}',
+                    'no row matched deleting member person {} for {}',
                     person_id, proposal_id)
 
             # Check that the proposal still has at least one member: if not,
@@ -365,7 +365,7 @@ class ProposalPart(object):
         with self._transaction() as conn:
             if not _test_skip_check and (self._get_proposal_pdf_id(
                     conn, proposal_id, role) is None):
-                raise ConsistencyError('PDF does not exist for {0} role {1}',
+                raise ConsistencyError('PDF does not exist for {} role {}',
                                        proposal_id, role)
 
             result = conn.execute(proposal_pdf.delete().where(and_(
@@ -375,7 +375,7 @@ class ProposalPart(object):
 
             if result.rowcount != 1:
                 raise ConsistencyError(
-                    'no row matched deleting PDF for {0} role {1}',
+                    'no row matched deleting PDF for {} role {}',
                     proposal_id, role)
 
     def delete_proposal_text(self, proposal_id, role,
@@ -383,7 +383,7 @@ class ProposalPart(object):
         with self._transaction() as conn:
             if not _test_skip_check and not self._exists_proposal_text(
                     conn, proposal_id, role):
-                raise ConsistencyError('text does not exist for {0} role {1}',
+                raise ConsistencyError('text does not exist for {} role {}',
                                        proposal_id, role)
 
             result = conn.execute(proposal_text.delete().where(and_(
@@ -393,7 +393,7 @@ class ProposalPart(object):
 
             if result.rowcount != 1:
                 raise ConsistencyError(
-                    'no row matched deleting text for {0} role {1}',
+                    'no row matched deleting text for {} role {}',
                     proposal_id, role)
 
     def ensure_facility(self, code):
@@ -567,7 +567,7 @@ class ProposalPart(object):
 
         if (proposal_id is not None) and (role is not None):
             if not TextRole.is_valid(role):
-                raise FormattedError('proposal text role not recognised: {0}',
+                raise FormattedError('proposal text role not recognised: {}',
                                      role)
 
             stmt = stmt.where(and_(
@@ -588,7 +588,7 @@ class ProposalPart(object):
             row = conn.execute(stmt).first()
 
         if row is None:
-            raise NoSuchRecord('PDF does not exist for {0} role {1}',
+            raise NoSuchRecord('PDF does not exist for {} role {}',
                                proposal_id, role)
 
         return ProposalFigure(row['pdf'], FigureType.PDF, row['filename'])
@@ -625,7 +625,7 @@ class ProposalPart(object):
         """
 
         if not TextRole.is_valid(role):
-            raise FormattedError('proposal text role not recognised: {0}',
+            raise FormattedError('proposal text role not recognised: {}',
                                  role)
 
         with self._transaction() as conn:
@@ -635,7 +635,7 @@ class ProposalPart(object):
             ))).first()
 
         if row is None:
-            raise NoSuchRecord('text does not exist for {0} role {1}',
+            raise NoSuchRecord('text does not exist for {} role {}',
                                proposal_id, role)
 
         return ProposalText(text=row['text'], format=row['format'])
@@ -1444,7 +1444,7 @@ class ProposalPart(object):
         """
 
         if not TextRole.is_valid(role):
-            raise FormattedError('proposal text role not recognised: {0}',
+            raise FormattedError('proposal text role not recognised: {}',
                                  role)
 
         with self._transaction() as conn:
@@ -1472,7 +1472,7 @@ class ProposalPart(object):
 
                 if result.rowcount != 1:
                     raise ConsistencyError(
-                        'no rows matched updating proposal PDF {0} role {1}',
+                        'no rows matched updating proposal PDF {} role {}',
                         proposal_id, role)
 
                 result = conn.execute(proposal_pdf_preview.delete().where(
@@ -1544,7 +1544,7 @@ class ProposalPart(object):
         if not FormatType.is_valid(format):
             raise UserError('Text format not recognised.')
         if not TextRole.is_valid(role):
-            raise FormattedError('proposal text role not recognised: {0}',
+            raise FormattedError('proposal text role not recognised: {}',
                                  role)
 
         with self._transaction() as conn:
@@ -1553,11 +1553,11 @@ class ProposalPart(object):
                     conn, proposal_id, role)
                 if is_update and not already_exists:
                     raise ConsistencyError(
-                        'text does not exist for proposal {0} role {1}',
+                        'text does not exist for proposal {} role {}',
                         proposal_id, role)
                 elif not is_update and already_exists:
                     raise ConsistencyError(
-                        'text already exists for proposal {0} role {1}',
+                        'text already exists for proposal {} role {}',
                         proposal_id, role)
 
             values = {
@@ -1576,7 +1576,7 @@ class ProposalPart(object):
 
                 if result.rowcount != 1:
                     raise ConsistencyError(
-                        'no rows matched updating proposal text {0} role {1}',
+                        'no rows matched updating proposal text {} role {}',
                         proposal_id, role)
 
             else:
@@ -1652,7 +1652,7 @@ class ProposalPart(object):
         with self._transaction() as conn:
             if not self._exists_id(conn, proposal, proposal_id):
                 raise ConsistencyError(
-                    'proposal does not exist with id={0}', proposal_id)
+                    'proposal does not exist with id={}', proposal_id)
 
             return self._sync_records(
                 conn, proposal_fig,
@@ -1675,7 +1675,7 @@ class ProposalPart(object):
         with self._transaction() as conn:
             if not self._exists_id(conn, proposal, proposal_id):
                 raise ConsistencyError(
-                    'proposal does not exist with id={0}', proposal_id)
+                    'proposal does not exist with id={}', proposal_id)
 
             return self._sync_records(
                 conn, member, member.c.proposal_id, proposal_id, records,
@@ -1849,7 +1849,7 @@ class ProposalPart(object):
         with self._transaction() as conn:
             if not self._exists_id(conn, queue, queue_id):
                 raise ConsistencyError(
-                    'queue does not exist with id={0}', queue_id)
+                    'queue does not exist with id={}', queue_id)
 
             return self._sync_records(
                 conn, affiliation, affiliation.c.queue_id, queue_id,
@@ -1913,7 +1913,7 @@ class ProposalPart(object):
             if not _test_skip_check and not self._exists_id(
                     conn, call, call_id):
                 raise ConsistencyError(
-                    'call does not exist with id={0}', call_id)
+                    'call does not exist with id={}', call_id)
 
             result = conn.execute(call.update().where(
                 call.c.id == call_id
@@ -1921,7 +1921,7 @@ class ProposalPart(object):
 
             if result.rowcount != 1:
                 raise ConsistencyError(
-                    'no rows matched updating call with id={0}', call_id)
+                    'no rows matched updating call with id={}', call_id)
 
     def update_prev_proposal_pub(self, type_, description,
                                  state, title, author, year,
@@ -1988,7 +1988,7 @@ class ProposalPart(object):
             if not _test_skip_check and not self._exists_id(
                     conn, semester, semester_id):
                 raise ConsistencyError(
-                    'semester does not exist with id={0}', semester_id)
+                    'semester does not exist with id={}', semester_id)
 
             result = conn.execute(semester.update().where(
                 semester.c.id == semester_id
@@ -1996,7 +1996,7 @@ class ProposalPart(object):
 
             if result.rowcount != 1:
                 raise ConsistencyError(
-                    'no rows matched updating semester with id={0}',
+                    'no rows matched updating semester with id={}',
                     semester_id)
 
     def update_proposal(self, proposal_id, state=None, title=None,
@@ -2024,7 +2024,7 @@ class ProposalPart(object):
             if not _test_skip_check and not self._exists_id(
                     conn, proposal, proposal_id):
                 raise ConsistencyError(
-                    'proposal does not exist with id={0}', proposal_id)
+                    'proposal does not exist with id={}', proposal_id)
 
             result = conn.execute(proposal.update().where(
                 proposal.c.id == proposal_id
@@ -2032,7 +2032,7 @@ class ProposalPart(object):
 
             if result.rowcount != 1:
                 raise ConsistencyError(
-                    'no rows matched updating proposal with id={0}',
+                    'no rows matched updating proposal with id={}',
                     proposal_id)
 
     def update_proposal_figure(self, proposal_id, role, fig_id,
@@ -2193,7 +2193,7 @@ class ProposalPart(object):
             if not _test_skip_check and not self._exists_id(
                     conn, queue, queue_id):
                 raise ConsistencyError(
-                    'queue does not exist with id={0}', queue_id)
+                    'queue does not exist with id={}', queue_id)
 
             result = conn.execute(queue.update().where(
                 queue.c.id == queue_id
@@ -2201,7 +2201,7 @@ class ProposalPart(object):
 
             if result.rowcount != 1:
                 raise ConsistencyError(
-                    'no rows matched updating queue with id={0}',
+                    'no rows matched updating queue with id={}',
                     queue_id)
 
     def _get_proposal_pdf_id(self, conn, proposal_id, role):

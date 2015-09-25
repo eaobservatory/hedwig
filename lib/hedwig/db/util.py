@@ -33,7 +33,7 @@ def require_not_none(f):
     def decorated_function(*args, **kwargs):
         ans = f(*args, **kwargs)
         if ans is None:
-            raise NoSuchRecord('function {0}(*{1!r}, **{2!r}) returned None',
+            raise NoSuchRecord('function {}(*{!r}, **{!r}) returned None',
                                f.__name__, args, kwargs)
         return ans
 

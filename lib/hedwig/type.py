@@ -378,7 +378,7 @@ class FigureType(object):
             if info.mime == mime_type:
                 return type_
 
-        raise UserError('File has type "{0}" which is not recognised.',
+        raise UserError('File has type "{}" which is not recognised.',
                         mime_type)
 
     @classmethod
@@ -975,7 +975,7 @@ class TargetCollection(OrderedResultCollection):
                                                       v.x, v.y, v.name))
 
             elif v.x or v.y:
-                raise UserError('Target "{0}" has only one coordinate.',
+                raise UserError('Target "{}" has only one coordinate.',
                                 v.name)
 
             else:

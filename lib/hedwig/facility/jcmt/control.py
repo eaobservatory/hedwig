@@ -122,7 +122,7 @@ class JCMTPart(object):
             if not _test_skip_check and \
                     not self._exists_id(conn, proposal, proposal_id):
                 raise ConsistencyError(
-                    'proposal does not exist with id={0}', proposal_id)
+                    'proposal does not exist with id={}', proposal_id)
 
             return self._sync_records(
                 conn, jcmt_allocation, jcmt_allocation.c.proposal_id,
@@ -141,7 +141,7 @@ class JCMTPart(object):
             if not _test_skip_check and \
                     not self._exists_id(conn, proposal, proposal_id):
                 raise ConsistencyError(
-                    'proposal does not exist with id={0}', proposal_id)
+                    'proposal does not exist with id={}', proposal_id)
 
             return self._sync_records(
                 conn, jcmt_request, jcmt_request.c.proposal_id, proposal_id,

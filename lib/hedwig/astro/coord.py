@@ -98,7 +98,7 @@ def parse_coord(system, x, y, name):
     try:
         info = CoordSystem._get_info(system)
     except KeyError:
-        raise UserError('Coordinate system for "{0}" not recognized.', name)
+        raise UserError('Coordinate system for "{}" not recognized.', name)
 
     # If 'x' or 'y' looks like a plain floating point number, consider it
     # to be degrees.
@@ -116,10 +116,10 @@ def parse_coord(system, x, y, name):
     try:
         return coordinates.SkyCoord(x, y, unit=info.unit, frame=info.frame)
     except coordinates.RangeError as e:
-        raise UserError('Could not parse coordinates for "{0}": {1!s}',
+        raise UserError('Could not parse coordinates for "{}": {!s}',
                         name, e)
     except ValueError as e:
-        raise UserError('Could not parse coordinates for "{0}": {1}',
+        raise UserError('Could not parse coordinates for "{}": {}',
                         name, e.message)
 
 

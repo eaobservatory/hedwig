@@ -37,7 +37,7 @@ def send_queued_messages(db=None):
             break
 
         if message.id in message_ids:
-            raise ConsistencyError('message with id={0} seen more than once',
+            raise ConsistencyError('message with id={} seen more than once',
                                    message.id)
         message_ids.add(message.id)
 
