@@ -981,6 +981,7 @@ class ProposalPart(object):
                         person_id=None, person_is_editor=None, person_pi=False,
                         state=None, with_members=False, with_reviewers=False,
                         with_review_info=False, with_reviewer_role=None,
+                        with_review_state=None,
                         reviewer_person_id=None,
                         with_decision=False,
                         decision_accept=None, decision_ready=None,
@@ -1003,7 +1004,8 @@ class ProposalPart(object):
         If "with_reviewers" is set then the "Proposal" object's "reviewers"
         attribute is a "ReviewerCollection" with information about the
         proposal's reviewers.  The contents of this collection are influenced
-        by the "with_review_info" and "with_reviewer_role" arguments.
+        by the "with_review_info", "with_reviewer_role" and
+        "with_review_state" arguments.
 
         However if "reviewer_person_id" is set then the "reviewers" attribute
         in the results is a "ReviewerInfo" object describing the role of
@@ -1204,6 +1206,7 @@ class ProposalPart(object):
                         proposal_id=values['id'],
                         with_review=with_review_info,
                         role=with_reviewer_role,
+                        review_state=with_review_state,
                         _conn=conn)
 
                 ans[row_key] = Proposal(members=members, reviewers=reviewers,

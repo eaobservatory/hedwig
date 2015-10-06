@@ -239,7 +239,7 @@ class ReviewPart(object):
         return ans
 
     def search_reviewer(self, proposal_id=None, role=None, reviewer_id=None,
-                        person_id=None,
+                        person_id=None, review_state=None,
                         with_review=False, with_review_text=False,
                         _conn=None):
         select_columns = [
@@ -272,13 +272,14 @@ class ReviewPart(object):
             else:
                 default = {'review_text': None}
 
-            select_from = select_from.outerjoin(review)
-
         else:
             default = {'review_{}'.format(x.name): None
                        for x in review.columns if x != review.c.reviewer_id}
 
             default['review_present'] = None
+
+        if (with_review or (review_state is not None)):
+            select_from = select_from.outerjoin(review)
 
         stmt = select(select_columns).select_from(select_from)
 
@@ -293,6 +294,12 @@ class ReviewPart(object):
 
         if person_id is not None:
             stmt = stmt.where(reviewer.c.person_id == person_id)
+
+        if review_state is not None:
+            if review_state:
+                stmt = stmt.where(review.c.reviewer_id.isnot(None))
+            else:
+                stmt = stmt.where(review.c.reviewer_id.is_(None))
 
         ans = ReviewerCollection()
 
