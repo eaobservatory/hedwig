@@ -16,6 +16,23 @@
 </nav>
 {% endif %}
 
+<form method="GET" action="{{ url_for('.review_call_reviewers', call_id=call.id) }}">
+    <p>
+        <select name="role">
+            <option value="" {{ 'selected="selected"' | safe if (current_role is none) }}>Any role</option>
+            {% for (role_num, role_name) in roles.items() %}
+                <option value="{{ role_num }}" {{ 'selected="selected"' | safe if (role_num == current_role) }}>{{ role_name }}</option>
+            {% endfor %}
+        </select>
+        <select name="state">
+            <option value="" {{ 'selected="selected"' | safe if (current_state is none) }} >Any status</option>
+            <option value="0" {{ 'selected="selected"' | safe if ((current_state is not none) and (not current_state)) }}>Not done</option>
+            <option value="1" {{ 'selected="selected"' | safe if current_state }}>Done</option>
+        </select>
+        <input type="submit" value="Filter" />
+    </p>
+</form>
+
 <table>
     <tr>
         <th>Proposal</th>

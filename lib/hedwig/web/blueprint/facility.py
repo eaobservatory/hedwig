@@ -95,7 +95,7 @@ def create_facility_blueprint(db, facility):
     @require_auth(require_person=True)
     @facility_template('call_reviewers.html')
     def review_call_reviewers(call_id):
-        return facility.view_review_call_reviewers(db, call_id)
+        return facility.view_review_call_reviewers(db, call_id, request.args)
 
     @bp.route('/call/<int:call_id>/reviewers/technical',
               methods=['GET', 'POST'])

@@ -241,10 +241,23 @@ class GenericReview(object):
         }
 
     @with_call_review(permission='edit')
-    def view_review_call_reviewers(self, db, call, can):
+    def view_review_call_reviewers(self, db, call, can, args):
+        role = args.get('role', None)
+        if not role:
+            role = None
+        else:
+            role = int(role)
+
+        state = args.get('state', None)
+        if not state:
+            state = None
+        else:
+            state = bool(int(state))
+
         proposals = db.search_proposal(
             call_id=call.id, state=ProposalState.REVIEW,
-            person_pi=True, with_reviewers=True, with_review_info=True)
+            person_pi=True, with_reviewers=True, with_review_info=True,
+            with_reviewer_role=role, with_review_state=state)
 
         return {
             'title': 'Reviewers: {} {}'.format(call.semester_name,
@@ -259,6 +272,9 @@ class GenericReview(object):
                      url_for('.review_call_technical', call_id=call.id)),
                 Link('Assign committee members',
                      url_for('.review_call_committee', call_id=call.id))],
+            'roles': ReviewerRole.get_options(),
+            'current_role': role,
+            'current_state': state,
         }
 
     @with_call_review(permission='edit')

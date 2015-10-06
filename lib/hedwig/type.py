@@ -570,6 +570,14 @@ class ReviewerRole(object):
     def get_cttee_roles(cls):
         return [k for (k, v) in cls._info.items() if v.cttee]
 
+    @classmethod
+    def get_options(cls):
+        """
+        Get an OrderedDict of role names by role numbers.
+        """
+
+        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
+
 
 class TextRole(object):
     ABSTRACT = 1
