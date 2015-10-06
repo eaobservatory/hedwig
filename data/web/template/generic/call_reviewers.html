@@ -64,7 +64,7 @@
                         <td rowspan="{{ reviewers | length }}">{{ proposal.title | abbr(25) }}</td>
                     {% endif %}
                     {% if reviewer is none %}
-                        <td colspan="3"><span class="missing_data">none assigned</a></td>
+                        <td colspan="3"><span class="missing_data">none {{ 'assigned' if ((current_role is none) and (current_state is none)) else 'matching filter' }}</span></td>
                     {% else %}
                         <td class="{{ reviewer.role | reviewer_role_class }}">
                             <a href="{{ url_for('.review_edit', reviewer_id=reviewer.id) }}">{{ reviewer.role | reviewer_role_name }}</a>
