@@ -49,14 +49,16 @@
                     {% if reviewer is none %}
                         <td colspan="3"><span class="missing_data">none assigned</a></td>
                     {% else %}
-                        <td><a href="{{ url_for('.review_edit', reviewer_id=reviewer.id) }}">{{ reviewer.role | reviewer_role_name }}</a></td>
-                        <td>
+                        <td class="{{ reviewer.role | reviewer_role_class }}">
+                            <a href="{{ url_for('.review_edit', reviewer_id=reviewer.id) }}">{{ reviewer.role | reviewer_role_name }}</a>
+                        </td>
+                        <td class="{{ reviewer.role | reviewer_role_class }}">
                             <a href="{{ url_for('people.person_view', person_id=reviewer.person_id) }}">{{ reviewer.person_name | abbr(25) }}</a>
                             {% if not reviewer.person_registered %}
                                 <span class="label">unregistered</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td class="{{ 'review_done' if reviewer.review_present else 'review_not_done' }}">
                             {% if reviewer.review_present %}
                                 Done
                             {% else %}

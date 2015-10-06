@@ -101,6 +101,30 @@ tr.decision_reject > td {
     background: #FBB;
 }
 
+td.reviewer_tech {
+    background: #EEE;
+}
+
+td.reviewer_ext {
+    background: #DDD;
+}
+
+td.reviewer_cttee {
+    background: #CCC;
+}
+
+td.reviewer_feedback {
+    background: #BBB;
+}
+
+td.review_done {
+    background: #FFF;
+}
+
+td.review_not_done {
+    background: #FFA;
+}
+
 p.warning {
     font-weight: bold;
     background: #FAA;

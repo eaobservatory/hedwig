@@ -196,6 +196,14 @@ def create_web_app(db=None):
             return 'Unknown role'
 
     @app.template_filter()
+    def reviewer_role_class(value):
+        try:
+            return 'reviewer_{}'.format(
+                ReviewerRole.get_info(value).display_class)
+        except KeyError:
+            return ''
+
+    @app.template_filter()
     def abbr(value, length=20):
         """
         Filter to truncate the text to the given length and return
