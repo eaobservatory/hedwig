@@ -584,11 +584,13 @@ class GenericReview(object):
                 raise ErrorPage('Unknown action.')
 
         # Prepare list of people to display as the registered member directory.
+        # Note that this includes people without public profiles as this page
+        # is restricted to privileged users administering a review process.
         cs = get_countries()
         exclude_person_ids = proposal_person_ids + existing_person_ids
         persons = [
             p._replace(institution_country=cs.get(p.institution_country))
-            for p in db.search_person(registered=True, public=True,
+            for p in db.search_person(registered=True,
                                       with_institution=True).values()
             if p.id not in exclude_person_ids]
 
