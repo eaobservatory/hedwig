@@ -1,6 +1,7 @@
 {% extends 'generic/proposal_decision.html' %}
 
 {% block form_list_extra %}
+    <li class="separator">JCMT Time Allocation</li>
     {% for allocation in allocations %}
         <li>
             <label for="jcmt_allocation_{{ allocation.weather }}">{{ allocation.name }}</label>
