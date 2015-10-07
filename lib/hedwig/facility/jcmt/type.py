@@ -24,14 +24,6 @@ from ...type import ResultTable
 from ...error import UserError
 from .meta import jcmt_allocation, jcmt_options, jcmt_request
 
-JCMTAllocation = namedtuple(
-    'JCMTAllocation',
-    [x.name for x in jcmt_allocation.columns])
-
-JCMTAllocationTotal = namedtuple(
-    'JCMTAllocationTotal',
-    ('total', 'weather'))
-
 JCMTOptions = namedtuple(
     'JCMTOptions',
     [x.name for x in jcmt_options.columns])
@@ -81,69 +73,13 @@ class JCMTInstrument(object):
         return ans
 
 
-class JCMTAllocationCollection(OrderedDict):
-    def validate(self):
-        """
-        Attempts to validate a collection of JCMT observing allocations.
-
-        Raises UserError is a problem is found.
-        """
-
-        weathers = set()
-
-        for record in self.values():
-            if not JCMTWeather.is_valid(record.weather):
-                raise UserError('Weather band not recognised.')
-
-            if not isinstance(record.time, float):
-                raise UserError(
-                    'Please enter time as a valid number for {0}'.format(
-                        JCMTWeather.get_name(record.weather)))
-
-            if record.weather in weathers:
-                raise UserError(
-                    'There are multiple entries for {0}'.format(
-                        JCMTWeather.get_name(record.weather)))
-
-            weathers.add(record.weather)
-
-    def pop_by_weather(self, weather):
-        """
-        Pop the entry for the given weather band and return it, if it
-        exists.  Otherwise return None.
-        """
-
-        for (id_, record) in list(self.items()):
-            if record.weather == weather:
-                return self.pop(id_)
-
-        return None
-
-    def get_total(self):
-        """
-        Get total by weather band.
-
-        Only weather bands currently labeled as "available" are included.
-        Other time requested is returned with identifier zero.
-        """
-
-        weathers = {}
-        total = 0.0
-
-        for allocation in self.values():
-            time = allocation.time
-
-            weather = allocation.weather
-            if not JCMTWeather.get_info(weather).available:
-                weather = 0
-
-            total += time
-            weathers[weather] = weathers.get(weather, 0.0) + time
-
-        return JCMTAllocationTotal(total=total, weather=weathers)
-
-
 class JCMTRequestCollection(OrderedDict):
+    """
+    Class used for collections of JCMT requests.  Also used for JCMT
+    allocations (by the time allocation committee) since these have the
+    same structure.
+    """
+
     def validate(self):
         """
         Attempts to validate a collection of JCMT observing requests.

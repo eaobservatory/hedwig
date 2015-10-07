@@ -1,0 +1,86 @@
+{% macro render_request_table(requests, instruments, weathers, description='request') %}
+    <table id="requests">
+        <tr>
+            <th>Instrument</th>
+            <th>
+                Weather band
+                <div class="formtip">
+                    <div>
+                        <p>
+                            Observing time at the JCMT is scheduled in
+                            5 weather &ldquo;bands&rdquo;
+                            based on the atmospheric opacity at 225 GHz.
+                        </p>
+                        <p>
+                            <a href="http://www.eaobservatory.org/jcmt/observing/weather-bands/" target="_blank">Weather band information</a>
+                        </p>
+                    </div>
+                </div>
+            </th>
+            <th>Time</th>
+            <th>Actions</th>
+        </tr>
+        {% for request in requests %}
+            <tr id="requestrow_{{ request.id }}">
+                <td>
+                    <select name="instrument_{{ request.id }}">
+                        {% for instrument_id, instrument_name in instruments.items() %}
+                            <option value="{{ instrument_id }}" {{ 'selected="selected"' | safe if instrument_id == request.instrument }}>{{ instrument_name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <select name="weather_{{ request.id }}">
+                        {% for weather_id, weather_info in weathers.items() %}
+                            <option value="{{ weather_id }}" {{ 'selected="selected"' | safe if weather_id == request.weather }}>
+                                {{ weather_info.name }}:
+                                {% if weather_info.min is not none %}
+                                    {{ weather_info.min }} &lt;
+                                {% endif %}
+                                &tau;&#x2082;&#x2082;&#x2085;
+                                {% if weather_info.max is not none %}
+                                    &le; {{ weather_info.max }}
+                                {% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td><input type="number" min="0" step="any" name="time_{{ request.id }}" value="{{ request.time }}" /> hours</td>
+                <td><input type="button" id="delete_{{ request.id }}" value="Delete" />
+            </tr>
+        {% endfor %}
+    </table>
+    <table class="template">
+        <tr id="requestrow_template">
+            <td>
+                <select name="instrument">
+                    {% for instrument_id, instrument_name in instruments.items() %}
+                        <option value="{{ instrument_id }}">{{ instrument_name }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td>
+                <select name="weather">
+                    {% for weather_id, weather_info in weathers.items() %}
+                        <option value="{{ weather_id }}">
+                            {{ weather_info.name }}:
+                            {% if weather_info.min is not none %}
+                                {{ weather_info.min }} &lt;
+                            {% endif %}
+                            &tau;&#x2082;&#x2082;&#x2085;
+                            {% if weather_info.max is not none %}
+                                &le; {{ weather_info.max }}
+                            {% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td><input type="number" min="0" step="any" name="time" /> hours</td>
+            <td><input type="button" id="delete_template" value="Delete" />
+        </tr>
+    </table>
+
+    <p>
+        <input type="button" id="add_request" value="Add {{ description }}" />
+    </p>
+{% endmacro %}

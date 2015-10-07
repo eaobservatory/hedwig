@@ -30,13 +30,10 @@ from ...type import Link, ReviewerRole, ValidationMessage
 from ..generic.view import Generic
 from .calculator_heterodyne import HeterodyneCalculator
 from .calculator_scuba2 import SCUBA2Calculator
-from .type import JCMTAllocation, JCMTAllocationCollection, \
+from .type import \
     JCMTInstrument, JCMTOptions, \
     JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, \
     JCMTWeather
-
-JCMTAllocationNamed = namedtuple('JCMTAllocationNamed',
-                                 JCMTAllocation._fields + ('name',))
 
 
 class JCMT(Generic):
@@ -350,7 +347,9 @@ class JCMT(Generic):
             ['Unknown instrument'] +
             ['Allocation'] +
             [x.name for x in tabulation['jcmt_weathers'].values()] +
-            ['Unknown weather']
+            ['Unknown weather'] +
+            [x for x in tabulation['jcmt_instruments'].values()] +
+            ['Unknown instrument']
         )
 
     def _get_proposal_tabulation_rows(self, tabulation):
@@ -369,7 +368,8 @@ class JCMT(Generic):
                 [request.weather.get(x) for x in weathers] +
                 [request.instrument.get(x) for x in instruments] +
                 [allocation.total] +
-                [allocation.weather.get(x) for x in weathers]
+                [allocation.weather.get(x) for x in weathers] +
+                [allocation.instrument.get(x) for x in instruments]
             )
 
     @with_proposal(permission='edit')
@@ -383,38 +383,7 @@ class JCMT(Generic):
                 proposal.id, *((False,) * (len(JCMTOptions._fields) - 1)))
 
         if is_post:
-            # Temporary dictionaries for new records.
-            updated_records = {}
-            added_records = {}
-
-            for param in form:
-                if not param.startswith('time_'):
-                    continue
-                id_ = param[5:]
-
-                if id_.startswith('new_'):
-                    request_id = int(id_[4:])
-                    destination = added_records
-                else:
-                    request_id = int(id_)
-                    destination = updated_records
-
-                request_time = form[param]
-                try:
-                    request_time = float(request_time)
-                except ValueError:
-                    # Ignore parsing error for now so that we can leave
-                    # whatever the user typed in to form for them to correct.
-                    pass
-
-                destination[request_id] = JCMTRequest(
-                    request_id, proposal.id,
-                    int(form['instrument_' + id_]),
-                    int(form['weather_' + id_]),
-                    request_time)
-
-            records = organise_collection(JCMTRequestCollection,
-                                          updated_records, added_records)
+            records = self._read_request_form(proposal, form)
 
             option_update = {}
             for option in self.options.keys():
@@ -447,41 +416,52 @@ class JCMT(Generic):
             'proposal_code': self.make_proposal_code(db, proposal),
         }
 
+    def _read_request_form(self, proposal, form):
+        """
+        Read a set of JCMT observing requests (or time allocations) from
+        the form and return as a JCMTRequestCollection object.
+        """
+
+        # Temporary dictionaries for new records.
+        updated_records = {}
+        added_records = {}
+
+        for param in form:
+            if not param.startswith('time_'):
+                continue
+            id_ = param[5:]
+
+            if id_.startswith('new_'):
+                request_id = int(id_[4:])
+                destination = added_records
+            else:
+                request_id = int(id_)
+                destination = updated_records
+
+            request_time = form[param]
+            try:
+                request_time = float(request_time)
+            except ValueError:
+                # Ignore parsing error for now so that we can leave
+                # whatever the user typed in to form for them to correct.
+                pass
+
+            destination[request_id] = JCMTRequest(
+                request_id, proposal.id,
+                int(form['instrument_' + id_]),
+                int(form['weather_' + id_]),
+                request_time)
+
+        return organise_collection(JCMTRequestCollection,
+                                   updated_records, added_records)
+
     def _view_proposal_decision_get(self, db, proposal, form):
         """
         Read the JCMT observing allocation from the form without raising
         parsing errors yet.
         """
 
-        # Read the existing database records so that we can preserve the
-        # record ID numbers and perform updates rather than new inserts
-        # when syncing.
-        existing = db.search_jcmt_allocation(proposal_id=proposal.id)
-        allocations = JCMTAllocationCollection()
-
-        for (key, value) in form.items():
-            if not key.startswith('jcmt_allocation_'):
-                continue
-            weather = int(key[16:])
-
-            if not value:
-                continue
-            try:
-                value = float(value)
-            except ValueError:
-                # Ignore for now so that we can return the user's
-                # (invalid) input to them for correction.
-                pass
-
-            allocation = existing.pop_by_weather(weather)
-
-            if allocation is None:
-                allocations[weather] = JCMTAllocation(
-                    id=None, proposal_id=None, weather=weather, time=value)
-            else:
-                allocations[weather] = allocation._replace(time=value)
-
-        return allocations
+        return self._read_request_form(proposal, form)
 
     def _view_proposal_decision_save(self, db, proposal, info):
         """
@@ -498,29 +478,12 @@ class JCMT(Generic):
         """
 
         if info is None:
-            existing = db.search_jcmt_allocation(proposal_id=proposal.id)
+            allocations = db.search_jcmt_allocation(proposal_id=proposal.id)
         else:
-            existing = info
-
-        allocations = []
-
-        # Go through available weather bands in order and add the to the list.
-        for (weather, weather_info) in JCMTWeather.get_available().items():
-            allocation = existing.pop_by_weather(weather)
-
-            if allocation is None:
-                allocations.append(JCMTAllocationNamed(
-                    id=None, proposal_id=proposal.id, weather=weather,
-                    time=None, name=weather_info.name))
-            else:
-                allocations.append(JCMTAllocationNamed(
-                    *allocation, name=weather_info.name))
-
-        # Include any unexpected (i.e. no longer available weather bands).
-        for allocation in existing.values():
-            allocations.append(JCMTAllocationNamed(
-                *allocation, name=JCMTWeather.get_name(allocation.weather)))
+            allocations = info
 
         return {
-            'allocations': allocations,
+            'requests': allocations.values(),
+            'instruments': JCMTInstrument.get_options(),
+            'weathers': JCMTWeather.get_available(),
         }

@@ -24,7 +24,7 @@ from sqlalchemy.sql.functions import count
 from ...db.meta import proposal
 from ...error import ConsistencyError
 from .meta import jcmt_allocation, jcmt_options, jcmt_request
-from .type import JCMTAllocation, JCMTAllocationCollection, \
+from .type import \
     JCMTOptions, JCMTRequest, JCMTRequestCollection
 
 
@@ -49,14 +49,14 @@ class JCMTPart(object):
         Retrieve the observing allocations for the given proposal.
         """
 
-        ans = JCMTAllocationCollection()
+        ans = JCMTRequestCollection()
 
         stmt = jcmt_allocation.select().where(
             jcmt_allocation.c.proposal_id == proposal_id)
 
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(jcmt_allocation.c.id.asc())):
-                ans[row['id']] = JCMTAllocation(**row)
+                ans[row['id']] = JCMTRequest(**row)
 
         return ans
 

@@ -131,6 +131,10 @@ form ol li > input[type=submit]:first-child {
     margin-left: 205px;
 }
 
+form ol li > div.form_panel {
+    margin-left: 205px;
+}
+
 .template {
     display: none;
 }

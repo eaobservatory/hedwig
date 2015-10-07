@@ -1,12 +1,14 @@
 {% extends 'generic/proposal_decision.html' %}
 
+{% set scripts=['edit_jcmt_request', 'formtip'] %}
+
+{% from 'jcmt/macro/request_table.html' import render_request_table %}
+
 {% block form_list_extra %}
     <li class="separator">JCMT Time Allocation</li>
-    {% for allocation in allocations %}
-        <li>
-            <label for="jcmt_allocation_{{ allocation.weather }}">{{ allocation.name }}</label>
-            <input type="text" name="jcmt_allocation_{{ allocation.weather }}" value="{{ allocation.time if allocation.time is not none }}" />
-            hours
-        </li>
-    {% endfor %}
+    <li>
+        <div class="form_panel">
+            {{ render_request_table(requests, instruments, weathers, description='allocation') }}
+        </div>
+    </li>
 {% endblock %}

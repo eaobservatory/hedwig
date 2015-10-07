@@ -23,7 +23,6 @@ from unittest import TestCase
 
 from hedwig.error import UserError
 from hedwig.facility.jcmt.type import \
-    JCMTAllocation, JCMTAllocationCollection, JCMTAllocationTotal, \
     JCMTInstrument, \
     JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, JCMTWeather
 from hedwig.type import ResultTable
@@ -165,40 +164,4 @@ class JCMTTypeTestCase(TestCase):
 
         c[1] = JCMTRequest(1, 0, instrument=1, weather=0, time=1.0)
         with self.assertRaisesRegexp(UserError, 'Weather band not recognised'):
-            c.validate()
-
-    def test_allocation_collection(self):
-        c = JCMTAllocationCollection()
-
-        c[1001] = JCMTAllocation(1001, 100, 2, 10.0)
-        c[1002] = JCMTAllocation(1002, 100, 3, 15.0)
-
-        # Test the "get_total" method.
-        total = c.get_total()
-        self.assertIsInstance(total, JCMTAllocationTotal)
-        self.assertEqual(total.total, 25)
-        self.assertEqual(total.weather, {2: 10.0, 3:15.0})
-
-        # Test the "pop_by_weather" method.
-        self.assertEqual(len(c), 2)
-
-        a = c.pop_by_weather(5)
-
-        self.assertIsNone(a)
-        self.assertEqual(len(c), 2)
-
-        a = c.pop_by_weather(2)
-        self.assertEqual(len(c), 1)
-
-        self.assertEqual(list(c.keys()), [1002])
-        self.assertIsInstance(a, JCMTAllocation)
-        self.assertEqual(a.weather, 2)
-        self.assertEqual(a.time, 10)
-
-        # Test the "validate" method.
-        c.validate()
-
-        c[1003] = JCMTAllocation(1003, 100, 3, 20.0)
-
-        with self.assertRaisesRegexp(UserError, 'There are multiple entries'):
             c.validate()
