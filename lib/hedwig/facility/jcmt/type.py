@@ -28,6 +28,10 @@ JCMTAllocation = namedtuple(
     'JCMTAllocation',
     [x.name for x in jcmt_allocation.columns])
 
+JCMTAllocationTotal = namedtuple(
+    'JCMTAllocationTotal',
+    ('total', 'weather'))
+
 JCMTOptions = namedtuple(
     'JCMTOptions',
     [x.name for x in jcmt_options.columns])
@@ -114,6 +118,29 @@ class JCMTAllocationCollection(OrderedDict):
                 return self.pop(id_)
 
         return None
+
+    def get_total(self):
+        """
+        Get total by weather band.
+
+        Only weather bands currently labeled as "available" are included.
+        Other time requested is returned with identifier zero.
+        """
+
+        weathers = {}
+        total = 0.0
+
+        for allocation in self.values():
+            time = allocation.time
+
+            weather = allocation.weather
+            if not JCMTWeather.get_info(weather).available:
+                weather = 0
+
+            total += time
+            weathers[weather] = weathers.get(weather, 0.0) + time
+
+        return JCMTAllocationTotal(total=total, weather=weathers)
 
 
 class JCMTRequestCollection(OrderedDict):
