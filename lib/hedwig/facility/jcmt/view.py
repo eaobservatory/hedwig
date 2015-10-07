@@ -288,6 +288,11 @@ class JCMT(Generic):
 
             proposal['jcmt_request'] = request
 
+            allocation = db.search_jcmt_allocation(
+                proposal_id=proposal['id']).get_total()
+
+            proposal['jcmt_allocation'] = allocation
+
             total += request.total
             if proposal['decision_accept']:
                 accepted += request.total
@@ -342,7 +347,10 @@ class JCMT(Generic):
             [x.name for x in tabulation['jcmt_weathers'].values()] +
             ['Unknown weather'] +
             [x for x in tabulation['jcmt_instruments'].values()] +
-            ['Unknown instrument']
+            ['Unknown instrument'] +
+            ['Allocation'] +
+            [x.name for x in tabulation['jcmt_weathers'].values()] +
+            ['Unknown weather']
         )
 
     def _get_proposal_tabulation_rows(self, tabulation):
@@ -353,12 +361,15 @@ class JCMT(Generic):
                 super(JCMT, self)._get_proposal_tabulation_rows(tabulation),
                 tabulation['proposals']):
             request = proposal['jcmt_request']
+            allocation = proposal['jcmt_allocation']
 
             yield (
                 row +
                 [request.total] +
                 [request.weather.get(x) for x in weathers] +
-                [request.instrument.get(x) for x in instruments]
+                [request.instrument.get(x) for x in instruments] +
+                [allocation.total] +
+                [allocation.weather.get(x) for x in weathers]
             )
 
     @with_proposal(permission='edit')
