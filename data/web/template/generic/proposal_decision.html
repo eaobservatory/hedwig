@@ -1,0 +1,34 @@
+{% extends 'layout.html' %}
+{% set navigation=[(proposal.semester_name + ' ' + proposal.queue_name, url_for('.review_call', call_id=proposal.call_id)),
+                   (proposal_code, url_for('.proposal_view', proposal_id=proposal.id))] %}
+{% from 'macro/proposal_summary.html' import render_proposal_summary %}
+
+{% block content %}
+<h2>Proposal Information</h2>
+
+{{ render_proposal_summary(facility_name, proposal, proposal_code, abstract=None, categories=None, person_pi=person_pi) }}
+
+<h2>Decision</h2>
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.proposal_decision', proposal_id=proposal.id) }}">
+    <ol>
+        <li>
+            <label for="decision_accept">Accept</label>
+            <input type="checkbox" name="decision_accept" {{ 'checked="checked"' | safe if proposal.decision_accept }} />
+        </li>
+        <li>
+            <label for="decision_accept">Exempt</label>
+            <input type="checkbox" name="decision_exempt" {{ 'checked="checked"' | safe if proposal.decision_exempt }} />
+        </li>
+        <li>
+            <input type="submit" name="submit" value="Save" />
+        </li>
+    </ol>
+</form>
+{% endblock %}

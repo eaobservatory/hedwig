@@ -68,6 +68,7 @@ class GenericReview(object):
             'title': 'Proposal Tabulation: {} {}'.format(call.semester_name,
                                                          call.queue_name),
             'call': call,
+            'can_edit': can.edit,
         }
 
         ctx.update(self._get_proposal_tabulation(db, call))
@@ -976,4 +977,50 @@ class GenericReview(object):
             'overall_rating': self.calculate_overall_rating(reviews),
             'can_edit': can.edit,
             'can_add_roles': auth.can_add_review_roles(db, proposal),
+        }
+
+    def view_proposal_decision(self, db, proposal_id, form):
+        try:
+            proposal = db.search_proposal(
+                facility_id=self.id_, proposal_id=proposal_id,
+                person_pi=True, with_decision=True).get_single()
+        except NoSuchRecord:
+            raise HTTPError('The proposal was not found.')
+
+        try:
+            call = db.get_call(facility_id=self.id_, call_id=proposal.call_id)
+        except NoSuchRecord:
+            raise HTTPError('The corresponding call was not found.')
+
+        if not auth.for_call_review(db, call).edit:
+            raise HTTPForbidden('Edit permission denied for this call.')
+
+        message = None
+
+        if form is not None:
+            try:
+                db.set_decision(
+                    proposal_id=proposal.id,
+                    accept=('decision_accept' in form),
+                    exempt=('decision_exempt' in form),
+                    ready=None,
+                    is_update=(proposal.decision_accept is not None))
+
+                raise HTTPRedirect(url_for('.review_call_tabulation',
+                                           call_id=call.id))
+
+            except UserError as e:
+                message = e.message
+
+        proposal_code = self.make_proposal_code(db, proposal)
+        person_pi = proposal.members
+        if person_pi.person_id is None:
+            person_pi = None
+
+        return {
+            'title': '{}: Decision'.format(proposal_code),
+            'proposal': proposal,
+            'proposal_code': proposal_code,
+            'person_pi': person_pi,
+            'message': message,
         }

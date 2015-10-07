@@ -90,13 +90,15 @@
             <td>{{ proposal.title | abbr }}</td>
             <td class="spacer_left"><abbr title="{{ proposal.state | proposal_state_name }}">{{ proposal.state | proposal_state_short_name }}</abbr></td>
             <td>
-                {% if proposal.decision_accept is none %}
-                    &nbsp;
-                {% elif proposal.decision_accept %}
-                    &check; {{ 'E' if proposal.decision_exempt }}
-                {% else %}
-                    &cross;
-                {% endif %}
+                {% if can_edit %}<a href="{{ url_for('.proposal_decision', proposal_id=proposal.id) }}" class="undecorated">{% endif %}
+                    {% if proposal.decision_accept is none %}
+                        &mdash;
+                    {% elif proposal.decision_accept %}
+                        &check; {{ 'E' if proposal.decision_exempt }}
+                    {% else %}
+                        &cross;
+                    {% endif %}
+                {% if can_edit %}</a>{% endif %}
             </td>
             <td class="number_right">
                 {% if proposal.can_view_review %}

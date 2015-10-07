@@ -21,6 +21,10 @@ a:link abbr, a:visited abbr {
     text-decoration: underline;
 }
 
+a.undecorated:link, a.undecorated:visited {
+    text-decoration: none;
+}
+
 abbr {
     color: #040;
     text-decoration: none;
