@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import OrderedDict
+from collections import namedtuple, OrderedDict
 from itertools import izip
 import re
 from urllib import urlencode
@@ -30,9 +30,13 @@ from ...type import Link, ReviewerRole, ValidationMessage
 from ..generic.view import Generic
 from .calculator_heterodyne import HeterodyneCalculator
 from .calculator_scuba2 import SCUBA2Calculator
-from .type import JCMTInstrument, JCMTOptions, \
+from .type import JCMTAllocation, JCMTAllocationCollection, \
+    JCMTInstrument, JCMTOptions, \
     JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, \
     JCMTWeather
+
+JCMTAllocationNamed = namedtuple('JCMTAllocationNamed',
+                                 JCMTAllocation._fields + ('name',))
 
 
 class JCMT(Generic):
@@ -430,4 +434,82 @@ class JCMT(Generic):
             'options': self.options,
             'option_values': option_values,
             'proposal_code': self.make_proposal_code(db, proposal),
+        }
+
+    def _view_proposal_decision_get(self, db, proposal, form):
+        """
+        Read the JCMT observing allocation from the form without raising
+        parsing errors yet.
+        """
+
+        # Read the existing database records so that we can preserve the
+        # record ID numbers and perform updates rather than new inserts
+        # when syncing.
+        existing = db.search_jcmt_allocation(proposal_id=proposal.id)
+        allocations = JCMTAllocationCollection()
+
+        for (key, value) in form.items():
+            if not key.startswith('jcmt_allocation_'):
+                continue
+            weather = int(key[16:])
+
+            if not value:
+                continue
+            try:
+                value = float(value)
+            except ValueError:
+                # Ignore for now so that we can return the user's
+                # (invalid) input to them for correction.
+                pass
+
+            allocation = existing.pop_by_weather(weather)
+
+            if allocation is None:
+                allocations[weather] = JCMTAllocation(
+                    id=None, proposal_id=None, weather=weather, time=value)
+            else:
+                allocations[weather] = allocation._replace(time=value)
+
+        return allocations
+
+    def _view_proposal_decision_save(self, db, proposal, info):
+        """
+        Store the JCMT observing allocation.
+        """
+
+        db.sync_jcmt_proposal_allocation(proposal_id=proposal.id,
+                                         records=info)
+
+    def _view_proposal_decision_extra(self, db, proposal, info):
+        """
+        Generate template context for the JCMT allocation on the
+        decision page.
+        """
+
+        if info is None:
+            existing = db.search_jcmt_allocation(proposal_id=proposal.id)
+        else:
+            existing = info
+
+        allocations = []
+
+        # Go through available weather bands in order and add the to the list.
+        for (weather, weather_info) in JCMTWeather.get_available().items():
+            allocation = existing.pop_by_weather(weather)
+
+            if allocation is None:
+                allocations.append(JCMTAllocationNamed(
+                    id=None, proposal_id=proposal.id, weather=weather,
+                    time=None, name=weather_info.name))
+            else:
+                allocations.append(JCMTAllocationNamed(
+                    *allocation, name=weather_info.name))
+
+        # Include any unexpected (i.e. no longer available weather bands).
+        for allocation in existing.values():
+            allocations.append(JCMTAllocationNamed(
+                *allocation, name=JCMTWeather.get_name(allocation.weather)))
+
+        return {
+            'allocations': allocations,
         }

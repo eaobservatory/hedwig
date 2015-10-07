@@ -1,0 +1,11 @@
+{% extends 'generic/proposal_decision.html' %}
+
+{% block form_list_extra %}
+    {% for allocation in allocations %}
+        <li>
+            <label for="jcmt_allocation_{{ allocation.weather }}">{{ allocation.name }}</label>
+            <input type="text" name="jcmt_allocation_{{ allocation.weather }}" value="{{ allocation.time if allocation.time is not none }}" />
+            hours
+        </li>
+    {% endfor %}
+{% endblock %}
