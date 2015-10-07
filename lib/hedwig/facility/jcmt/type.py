@@ -103,6 +103,18 @@ class JCMTAllocationCollection(OrderedDict):
 
             weathers.add(record.weather)
 
+    def pop_by_weather(self, weather):
+        """
+        Pop the entry for the given weather band and return it, if it
+        exists.  Otherwise return None.
+        """
+
+        for (id_, record) in list(self.items()):
+            if record.weather == weather:
+                return self.pop(id_)
+
+        return None
+
 
 class JCMTRequestCollection(OrderedDict):
     def validate(self):
