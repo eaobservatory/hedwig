@@ -996,31 +996,81 @@ class GenericReview(object):
             raise HTTPForbidden('Edit permission denied for this call.')
 
         message = None
+        extra_info = None
+        proposal_code = self.make_proposal_code(db, proposal)
+        is_update = (proposal.decision_accept is not None)
 
         if form is not None:
             try:
+                # Read form inputs.
+                proposal = proposal._replace(
+                    decision_accept=('decision_accept' in form),
+                    decision_exempt=('decision_exempt' in form))
+                extra_info = self._view_proposal_decision_get(db, proposal,
+                                                              form)
+
+                # Parse and store new values.
+                self._view_proposal_decision_save(db, proposal, extra_info)
+
                 db.set_decision(
                     proposal_id=proposal.id,
-                    accept=('decision_accept' in form),
-                    exempt=('decision_exempt' in form),
+                    accept=proposal.decision_accept,
+                    exempt=proposal.decision_exempt,
                     ready=None,
-                    is_update=(proposal.decision_accept is not None))
+                    is_update=is_update)
 
+                flash('The decision for proposal {} has been saved.',
+                      proposal_code)
+
+                # Redirect back to tabulation page.
                 raise HTTPRedirect(url_for('.review_call_tabulation',
                                            call_id=call.id))
 
             except UserError as e:
                 message = e.message
 
-        proposal_code = self.make_proposal_code(db, proposal)
         person_pi = proposal.members
         if person_pi.person_id is None:
             person_pi = None
 
-        return {
+        ctx = {
             'title': '{}: Decision'.format(proposal_code),
             'proposal': proposal,
             'proposal_code': proposal_code,
             'person_pi': person_pi,
             'message': message,
         }
+
+        ctx.update(self._view_proposal_decision_extra(db, proposal,
+                                                      extra_info))
+
+        return ctx
+
+    def _view_proposal_decision_get(self, db, proposal, form):
+        """
+        Placeholder for a method where a facility-specific subclass could
+        read a set of form values representing its additional information
+        from the decision page.  The method should return an object containing
+        anything the class needs to know from the form.  Parsing errors should
+        be left for later.
+        """
+
+        return None
+
+    def _view_proposal_decision_save(self, db, proposal, info):
+        """
+        Placeholder for a method where a facility-specific subclass could
+        parse the (previously read) form inputs and store them in the
+        database.  Can raise UserError in the case of a problem with the
+        inputs.
+        """
+
+    def _view_proposal_decision_extra(self, db, proposal, info):
+        """
+        Placeholder for a method where a facility-specific subclass could
+        generate extra information to show in the decision page.  The
+        "info" will be None if a POST is not being handled, otherwise it
+        will be the object returned  by _view_proposal_decision_get.
+        """
+
+        return {}

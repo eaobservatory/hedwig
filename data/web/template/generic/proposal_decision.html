@@ -21,11 +21,15 @@
         <li>
             <label for="decision_accept">Accept</label>
             <input type="checkbox" name="decision_accept" {{ 'checked="checked"' | safe if proposal.decision_accept }} />
+            <span class="explanation">check to accept, leave unchecked to reject<span>
         </li>
         <li>
             <label for="decision_accept">Exempt</label>
             <input type="checkbox" name="decision_exempt" {{ 'checked="checked"' | safe if proposal.decision_exempt }} />
+            <span class="explanation">exclude the proposal from affiliation totals</span>
         </li>
+        {% block form_list_extra %}
+        {% endblock %}
         <li>
             <input type="submit" name="submit" value="Save" />
         </li>
