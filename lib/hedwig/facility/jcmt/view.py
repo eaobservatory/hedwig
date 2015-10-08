@@ -267,15 +267,15 @@ class JCMT(Generic):
     def _get_proposal_tabulation(self, db, call):
         tabulation = super(JCMT, self)._get_proposal_tabulation(db, call)
 
-        total = 0.0
-        total_weather = {}
-        total_instrument = {}
-        total_affiliation = {}
-
         accepted = 0.0
         accepted_weather = {}
         accepted_instrument = {}
         accepted_affiliation = {}
+
+        original = 0.0
+        original_weather = {}
+        original_instrument = {}
+        original_affiliation = {}
 
         affiliation_ids = [x.id for x in tabulation['affiliations']]
 
@@ -294,20 +294,20 @@ class JCMT(Generic):
 
             proposal['jcmt_allocation'] = allocation
 
-            total += request.total
+            original += request.total
             if allocation is not None:
                 accepted += request.total
 
             for (weather, time) in request.weather.items():
-                total_weather[weather] = \
-                    total_weather.get(weather, 0.0) + time
+                original_weather[weather] = \
+                    original_weather.get(weather, 0.0) + time
                 if allocation is not None:
                     accepted_weather[weather] = \
                         accepted_weather.get(weather, 0.0) + time
 
             for (instrument, time) in request.instrument.items():
-                total_instrument[instrument] = \
-                    total_instrument.get(instrument, 0.0) + time
+                original_instrument[instrument] = \
+                    original_instrument.get(instrument, 0.0) + time
                 if allocation is not None:
                     accepted_instrument[instrument] = \
                         accepted_instrument.get(instrument, 0.0) + time
@@ -316,8 +316,8 @@ class JCMT(Generic):
             for affiliation in affiliation_ids:
                 fraction = proposal_affiliations.get(affiliation)
                 if fraction is not None:
-                    total_affiliation[affiliation] = \
-                        total_affiliation.get(affiliation, 0.0) + \
+                    original_affiliation[affiliation] = \
+                        original_affiliation.get(affiliation, 0.0) + \
                         request.total * fraction
 
                     if ((allocation is not None) and
@@ -329,16 +329,17 @@ class JCMT(Generic):
         tabulation.update({
             'jcmt_weathers': JCMTWeather.get_available(),
             'jcmt_instruments': JCMTInstrument.get_options(),
-            'jcmt_request_total': JCMTRequestTotal(
-                total=total, weather=total_weather,
-                instrument=total_instrument),
             'jcmt_accepted_total': JCMTRequestTotal(
                 total=accepted, weather=accepted_weather,
                 instrument=accepted_instrument),
-            'jcmt_request_original': JCMTRequestTotal(
+            'jcmt_request_total': JCMTRequestTotal(
                 total=0.0, weather={}, instrument={}),
-            'affiliation_total': total_affiliation,
+            'jcmt_request_original': JCMTRequestTotal(
+                total=original, weather=original_weather,
+                instrument=original_instrument),
             'affiliation_accepted': accepted_affiliation,
+            'affiliation_total': {},
+            'affiliation_original': original_affiliation,
         })
 
         return tabulation
