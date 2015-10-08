@@ -1010,6 +1010,10 @@ class GenericReview(object):
                                                               form)
 
                 # Parse and store new values.
+                if proposal.decision_exempt and (not proposal.decision_accept):
+                    raise UserError('Proposal should not be marked "exempt" '
+                                    'when rejected.')
+
                 self._view_proposal_decision_save(db, proposal, extra_info)
 
                 db.set_decision(
