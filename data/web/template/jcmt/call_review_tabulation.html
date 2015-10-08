@@ -43,13 +43,18 @@
 {% endblock %}
 
 {% block footer_accepted_extra %}
-    <td colspan="2" class="{{ render_cell_class(true, false) }}">{{ jcmt_request_accepted.total | fmt('{:.1f}') }}</td>
-    {{ render_jcmt_request(jcmt_request_accepted, is_total=true) }}
+    <td colspan="2" class="{{ render_cell_class(true, false) }}">{{ jcmt_accepted_total.total | fmt('{:.1f}') }}</td>
+    {{ render_jcmt_request(jcmt_accepted_total, is_total=true) }}
 {% endblock %}
 
 {% block footer_total_extra %}
     <td colspan="2" class="{{ render_cell_class(true, false) }}">{{ jcmt_request_total.total | fmt('{:.1f}') }}</td>
     {{ render_jcmt_request(jcmt_request_total, is_total=true) }}
+{% endblock %}
+
+{% block footer_original_extra %}
+    <td colspan="2" class="{{ render_cell_class(true, false) }}">{{ jcmt_request_original.total | fmt('{:.1f}') }}</td>
+    {{ render_jcmt_request(jcmt_request_original, is_total=true) }}
 {% endblock %}
 
 {% block footer_head_extra %}

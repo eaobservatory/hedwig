@@ -181,18 +181,25 @@
         </tr>
     {% endfor %}
     <tr>
-        <th colspan="4">Accepted (hours)</th>
+        <th colspan="4">Total accepted (hours)</th>
         <td colspan="3" class="total spacer_left">&nbsp;</td>
         {% block footer_accepted_extra %}
         {% endblock %}
         {{ render_affiliation_totals(affiliations, affiliation_accepted) }}
     </tr>
     <tr>
-        <th colspan="4">Total (hours)</th>
+        <th colspan="4">Total accepted or requested (hours)</th>
         <td colspan="3" class="total spacer_left">&nbsp;</td>
         {% block footer_total_extra %}
         {% endblock %}
         {{ render_affiliation_totals(affiliations, affiliation_total) }}
+    </tr>
+    <tr>
+        <th colspan="4">Total original request (hours)</th>
+        <td colspan="3" class="total spacer_left">&nbsp;</td>
+        {% block footer_original_extra %}
+        {% endblock %}
+        {{ render_affiliation_totals(affiliations, affiliation_original) }}
     </tr>
     <tr>
         <th colspan="7">&nbsp;</th>

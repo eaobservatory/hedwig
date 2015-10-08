@@ -332,9 +332,11 @@ class JCMT(Generic):
             'jcmt_request_total': JCMTRequestTotal(
                 total=total, weather=total_weather,
                 instrument=total_instrument),
-            'jcmt_request_accepted': JCMTRequestTotal(
+            'jcmt_accepted_total': JCMTRequestTotal(
                 total=accepted, weather=accepted_weather,
                 instrument=accepted_instrument),
+            'jcmt_request_original': JCMTRequestTotal(
+                total=0.0, weather={}, instrument={}),
             'affiliation_total': total_affiliation,
             'affiliation_accepted': accepted_affiliation,
         })

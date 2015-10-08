@@ -172,6 +172,7 @@ class GenericReview(object):
                 [null_tuple(Affiliation)._replace(id=0, name='Unknown')],
             'affiliation_total': {},
             'affiliation_accepted': {},
+            'affiliation_original': {},
         }
 
     def _get_proposal_tabulation_titles(self, tabulation):
