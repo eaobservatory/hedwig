@@ -2,6 +2,7 @@
 
 {% block heading_line_one %}
     <th rowspan="2" class="sideways"><div><div>Request (hours)</div></div></th>
+    <th rowspan="2" class="sideways"><div><div>Allocation (hours)</div></div></th>
     <th colspan="{{ jcmt_weathers | length + 1 }}" class="spacer_left">Weather</th>
     <th colspan="{{ jcmt_instruments | length + 1 }}" class="spacer_left">Instrument</th>
 {% endblock %}
@@ -19,30 +20,39 @@
 
 {% macro render_cell_class(is_total, is_first) %}number_right{{ ' total' if is_total }}{{ ' spacer_left' if is_first }}{% endmacro %}
 
-{% macro render_jcmt_request(request, is_total=false) %}
-    <td class="{{ render_cell_class(is_total, false) }}">{{ request.total | fmt('{:.1f}') }}</td>
+{% macro render_jcmt_request(req_or_alloc, is_total=false) %}
     {% for weather in jcmt_weathers %}
-        <td class="{{ render_cell_class(is_total, loop.first) }}">{{ request.weather[weather] | fmt('{:.1f}')}}</td>
+        <td class="{{ render_cell_class(is_total, loop.first) }}">{{ req_or_alloc.weather[weather] | fmt('{:.1f}')}}</td>
     {% endfor %}
-    <td class="{{ render_cell_class(is_total, false) }}">{{ request.weather[0] | fmt('{:.1f}')}}</td>
+    <td class="{{ render_cell_class(is_total, false) }}">{{ req_or_alloc.weather[0] | fmt('{:.1f}')}}</td>
     {% for instrument in jcmt_instruments %}
-        <td class="{{ render_cell_class(is_total, loop.first) }}">{{ request.instrument[instrument] | fmt('{:.1f}')}}</td>
+        <td class="{{ render_cell_class(is_total, loop.first) }}">{{ req_or_alloc.instrument[instrument] | fmt('{:.1f}')}}</td>
     {% endfor %}
-    <td class="{{ render_cell_class(is_total, false) }}">{{ request.instrument[0] | fmt('{:.1f}')}}</td>
+    <td class="{{ render_cell_class(is_total, false) }}">{{ req_or_alloc.instrument[0] | fmt('{:.1f}')}}</td>
 {% endmacro %}
 
 {% block row_extra %}
-    {{ render_jcmt_request(proposal.jcmt_request) }}
+    <td class="{{ render_cell_class(false, false) }}">{{ proposal.jcmt_request.total | fmt('{:.1f}') }}</td>
+    {% if proposal.jcmt_allocation is none %}
+        <td class="{{ render_cell_class(false, false) }}">&nbsp;</td>
+        {{ render_jcmt_request(proposal.jcmt_request) }}
+    {% else %}
+        <td class="{{ render_cell_class(false, false) }}">{{ proposal.jcmt_allocation.total | fmt('{:.1f}') }}</td>
+        {{ render_jcmt_request(proposal.jcmt_allocation) }}
+    {% endif %}
 {% endblock %}
 
 {% block footer_accepted_extra %}
+    <td colspan="2" class="{{ render_cell_class(true, false) }}">{{ jcmt_request_accepted.total | fmt('{:.1f}') }}</td>
     {{ render_jcmt_request(jcmt_request_accepted, is_total=true) }}
 {% endblock %}
 
 {% block footer_total_extra %}
+    <td colspan="2" class="{{ render_cell_class(true, false) }}">{{ jcmt_request_total.total | fmt('{:.1f}') }}</td>
     {{ render_jcmt_request(jcmt_request_total, is_total=true) }}
 {% endblock %}
 
 {% block footer_head_extra %}
     <th class="sideways"><div><div>Request (hours)</div></div></th>
+    <th class="sideways"><div><div>Allocation (hours)</div></div></th>
 {% endblock %}
