@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import namedtuple, OrderedDict
+from collections import defaultdict, namedtuple, OrderedDict
 from itertools import izip
 import re
 from urllib import urlencode
@@ -153,7 +153,7 @@ class JCMT(Generic):
         the JCMT affiliation assignment rules.
         """
 
-        affiliation_count = {}
+        affiliation_count = defaultdict(float)
         affiliation_total = 0.0
 
         # Find the PI (if present) and their affiliation.
@@ -203,8 +203,7 @@ class JCMT(Generic):
                 if weight is None:
                     weight = 0.0
 
-            affiliation_count[affiliation] = \
-                affiliation_count.get(affiliation, 0.0) + weight
+            affiliation_count[affiliation] += weight
             affiliation_total += weight
 
         if not affiliation_total:
@@ -217,8 +216,7 @@ class JCMT(Generic):
             # 50% of the assigment is supposed to be apportioned to the PI
             # affiliation, so add the PI with the same weight as all the other
             # members combined.
-            affiliation_count[pi_affiliation] = \
-                affiliation_count.get(pi_affiliation, 0.0) + affiliation_total
+            affiliation_count[pi_affiliation] += affiliation_total
             affiliation_total *= 2.0
 
         return {k: (v / affiliation_total)
@@ -268,19 +266,19 @@ class JCMT(Generic):
         tabulation = super(JCMT, self)._get_proposal_tabulation(db, call)
 
         accepted = 0.0
-        accepted_weather = {}
-        accepted_instrument = {}
-        accepted_affiliation = {}
+        accepted_weather = defaultdict(float)
+        accepted_instrument = defaultdict(float)
+        accepted_affiliation = defaultdict(float)
 
         total = 0.0
-        total_weather = {}
-        total_instrument = {}
-        total_affiliation = {}
+        total_weather = defaultdict(float)
+        total_instrument = defaultdict(float)
+        total_affiliation = defaultdict(float)
 
         original = 0.0
-        original_weather = {}
-        original_instrument = {}
-        original_affiliation = {}
+        original_weather = defaultdict(float)
+        original_instrument = defaultdict(float)
+        original_affiliation = defaultdict(float)
 
         affiliation_ids = [x.id for x in tabulation['affiliations']]
 
@@ -307,55 +305,43 @@ class JCMT(Generic):
             original += request.total
 
             for (weather, time) in request.weather.items():
-                original_weather[weather] = \
-                    original_weather.get(weather, 0.0) + time
+                original_weather[weather] += time
                 if allocation is None:
-                    total_weather[weather] = \
-                        total_weather.get(weather, 0.0) + time
+                    total_weather[weather] += time
 
             if allocation is not None:
                 for (weather, time) in allocation.weather.items():
-                    accepted_weather[weather] = \
-                        accepted_weather.get(weather, 0.0) + time
-                    total_weather[weather] = \
-                        total_weather.get(weather, 0.0) + time
+                    accepted_weather[weather] += time
+                    total_weather[weather] += time
 
             for (instrument, time) in request.instrument.items():
-                original_instrument[instrument] = \
-                    original_instrument.get(instrument, 0.0) + time
+                original_instrument[instrument] += time
                 if allocation is None:
-                    total_instrument[instrument] = \
-                        total_instrument.get(instrument, 0.0) + time
+                    total_instrument[instrument] += time
 
             if allocation is not None:
                 for (instrument, time) in allocation.instrument.items():
-                    accepted_instrument[instrument] = \
-                        accepted_instrument.get(instrument, 0.0) + time
-                    total_instrument[instrument] = \
-                        total_instrument.get(instrument, 0.0) + time
+                    accepted_instrument[instrument] += time
+                    total_instrument[instrument] += time
 
             proposal_affiliations = proposal['affiliations']
             for affiliation in affiliation_ids:
                 fraction = proposal_affiliations.get(affiliation)
-                if fraction is not None:
-                    original_affiliation[affiliation] = \
-                        original_affiliation.get(affiliation, 0.0) + \
-                        request.total * fraction
+                if fraction is None:
+                    continue
 
-                    if allocation is None:
-                        total_affiliation[affiliation] = \
-                            total_affiliation.get(affiliation, 0.0) + \
-                            request.total * fraction
+                original_affiliation[affiliation] += request.total * fraction
 
-                    else:
-                        total_affiliation[affiliation] = \
-                                total_affiliation.get(affiliation, 0.0) + \
-                                allocation.total * fraction
+                if allocation is None:
+                    total_affiliation[affiliation] += request.total * fraction
 
-                        if not proposal['decision_exempt']:
-                            accepted_affiliation[affiliation] = \
-                                accepted_affiliation.get(affiliation, 0.0) + \
-                                allocation.total * fraction
+                else:
+                    total_affiliation[affiliation] += \
+                            allocation.total * fraction
+
+                    if not proposal['decision_exempt']:
+                        accepted_affiliation[affiliation] += \
+                            allocation.total * fraction
 
         tabulation.update({
             'jcmt_weathers': JCMTWeather.get_available(),

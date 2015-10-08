@@ -21,14 +21,24 @@
 {% macro render_cell_class(is_total, is_first) %}number_right{{ ' total' if is_total }}{{ ' spacer_left' if is_first }}{% endmacro %}
 
 {% macro render_jcmt_request(req_or_alloc, is_total=false) %}
-    {% for weather in jcmt_weathers %}
-        <td class="{{ render_cell_class(is_total, loop.first) }}">{{ req_or_alloc.weather[weather] | fmt('{:.1f}')}}</td>
+    {% for weather in (jcmt_weathers.keys() + [0]) %}
+        <td class="{{ render_cell_class(is_total, loop.first) }}">
+            {% if weather in req_or_alloc.weather %}
+                {{ req_or_alloc.weather[weather] | fmt('{:.1f}')}}
+            {% else %}
+                &nbsp;
+            {% endif %}
+        </td>
     {% endfor %}
-    <td class="{{ render_cell_class(is_total, false) }}">{{ req_or_alloc.weather[0] | fmt('{:.1f}')}}</td>
-    {% for instrument in jcmt_instruments %}
-        <td class="{{ render_cell_class(is_total, loop.first) }}">{{ req_or_alloc.instrument[instrument] | fmt('{:.1f}')}}</td>
+    {% for instrument in (jcmt_instruments.keys() + [0]) %}
+        <td class="{{ render_cell_class(is_total, loop.first) }}">
+            {% if instrument in req_or_alloc.instrument %}
+                {{ req_or_alloc.instrument[instrument] | fmt('{:.1f}')}}
+            {% else %}
+                &nbsp;
+            {% endif %}
+        </td>
     {% endfor %}
-    <td class="{{ render_cell_class(is_total, false) }}">{{ req_or_alloc.instrument[0] | fmt('{:.1f}')}}</td>
 {% endmacro %}
 
 {% block row_extra %}

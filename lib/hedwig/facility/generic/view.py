@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import OrderedDict
+from collections import defaultdict, OrderedDict
 
 from ...config import get_config
 from ...error import NoSuchRecord, UserError
@@ -221,7 +221,7 @@ class Generic(GenericAdmin, GenericProposal, GenericReview):
         implementing its own actual assignment rules.
         """
 
-        affiliation_count = {}
+        affiliation_count = defaultdict(float)
         affiliation_total = 0.0
 
         for member in members.values():
@@ -231,8 +231,7 @@ class Generic(GenericAdmin, GenericProposal, GenericReview):
             elif affiliations[affiliation].exclude:
                 continue
 
-            affiliation_count[affiliation] = \
-                affiliation_count.get(affiliation, 0.0) + 1.0
+            affiliation_count[affiliation] += 1.0
             affiliation_total += 1.0
 
         if not affiliation_total:
