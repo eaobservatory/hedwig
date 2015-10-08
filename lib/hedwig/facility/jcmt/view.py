@@ -416,10 +416,13 @@ class JCMT(Generic):
             'proposal_code': self.make_proposal_code(db, proposal),
         }
 
-    def _read_request_form(self, proposal, form):
+    def _read_request_form(self, proposal, form, skip_blank_time=False):
         """
         Read a set of JCMT observing requests (or time allocations) from
         the form and return as a JCMTRequestCollection object.
+
+        Can optionally skip entries with blank times, rather than leaving
+        them as non-floats to cause an error to be raised later.
         """
 
         # Temporary dictionaries for new records.
@@ -439,6 +442,10 @@ class JCMT(Generic):
                 destination = updated_records
 
             request_time = form[param]
+
+            if skip_blank_time and (not request_time):
+                continue
+
             try:
                 request_time = float(request_time)
             except ValueError:
@@ -461,7 +468,7 @@ class JCMT(Generic):
         parsing errors yet.
         """
 
-        return self._read_request_form(proposal, form)
+        return self._read_request_form(proposal, form, skip_blank_time=True)
 
     def _view_proposal_decision_save(self, db, proposal, info):
         """
