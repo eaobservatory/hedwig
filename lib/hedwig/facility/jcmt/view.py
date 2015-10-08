@@ -475,6 +475,10 @@ class JCMT(Generic):
         Store the JCMT observing allocation.
         """
 
+        if proposal.decision_accept and (not info.get_total().total):
+            raise UserError('An accepted proposal should not have '
+                            'zero total time allocation.')
+
         db.sync_jcmt_proposal_allocation(proposal_id=proposal.id,
                                          records=info)
 

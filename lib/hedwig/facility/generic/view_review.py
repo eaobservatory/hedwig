@@ -1065,8 +1065,13 @@ class GenericReview(object):
         """
         Placeholder for a method where a facility-specific subclass could
         parse the (previously read) form inputs and store them in the
-        database.  Can raise UserError in the case of a problem with the
-        inputs.
+        database.
+
+        Can raise UserError in the case of a problem with the inputs.
+
+        The "proposal" object will have been updated to include the
+        decision_accept and decision_exempt values as currently
+        being entered.
         """
 
     def _view_proposal_decision_extra(self, db, proposal, info):
