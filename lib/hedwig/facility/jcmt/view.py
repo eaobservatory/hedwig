@@ -285,26 +285,30 @@ class JCMT(Generic):
 
             proposal['jcmt_request'] = request
 
-            allocation = db.search_jcmt_allocation(
-                proposal_id=proposal['id']).get_total()
+            # Read the committee's time allocation, but only if the decision
+            # was to accept the proposal.
+            allocation = None
+            if proposal['decision_accept']:
+                allocation = db.search_jcmt_allocation(
+                    proposal_id=proposal['id']).get_total()
 
             proposal['jcmt_allocation'] = allocation
 
             total += request.total
-            if proposal['decision_accept']:
+            if allocation is not None:
                 accepted += request.total
 
             for (weather, time) in request.weather.items():
                 total_weather[weather] = \
                     total_weather.get(weather, 0.0) + time
-                if proposal['decision_accept']:
+                if allocation is not None:
                     accepted_weather[weather] = \
                         accepted_weather.get(weather, 0.0) + time
 
             for (instrument, time) in request.instrument.items():
                 total_instrument[instrument] = \
                     total_instrument.get(instrument, 0.0) + time
-                if proposal['decision_accept']:
+                if allocation is not None:
                     accepted_instrument[instrument] = \
                         accepted_instrument.get(instrument, 0.0) + time
 
@@ -316,7 +320,7 @@ class JCMT(Generic):
                         total_affiliation.get(affiliation, 0.0) + \
                         request.total * fraction
 
-                    if (proposal['decision_accept'] and
+                    if ((allocation is not None) and
                             (not proposal['decision_exempt'])):
                         accepted_affiliation[affiliation] = \
                             accepted_affiliation.get(affiliation, 0.0) + \
@@ -361,6 +365,8 @@ class JCMT(Generic):
                 tabulation['proposals']):
             request = proposal['jcmt_request']
             allocation = proposal['jcmt_allocation']
+            if allocation is None:
+                allocation = JCMTRequestTotal(None, {}, {})
 
             yield (
                 row +
