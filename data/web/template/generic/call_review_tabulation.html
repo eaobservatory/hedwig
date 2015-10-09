@@ -23,6 +23,9 @@
     </p>
 </nav>
 
+{% block explanation_extra %}
+{% endblock %}
+
 <p>
     &dagger; Hover the mouse cursor over the &ldquo;Others&rdquo; count
     to see all members of the proposal.
@@ -188,7 +191,7 @@
         {{ render_affiliation_totals(affiliations, affiliation_accepted) }}
     </tr>
     <tr>
-        <th colspan="4">Total accepted or requested (hours)</th>
+        <th colspan="4">Total as shown (hours)</th>
         <td colspan="3" class="total spacer_left">&nbsp;</td>
         {% block footer_total_extra %}
         {% endblock %}

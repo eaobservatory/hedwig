@@ -1,5 +1,23 @@
 {% extends 'generic/call_review_tabulation.html' %}
 
+{% block explanation_extra %}
+    <ul>
+        <li>
+            This table shows the total time requested and allocated for each
+            proposal and the breakdown by weather band and instrument.
+        </li>
+        <li>
+            This breakdown initially gives the requested time
+            and changes to the allocated time once it has been entered.
+        </li>
+        <li>
+            Below the table are the total times allocated,
+            the total times as shown (allocated or requested)
+            and the total original requested times.
+        </li>
+    </ul>
+{% endblock %}
+
 {% block heading_line_one %}
     <th rowspan="2" class="sideways"><div><div>Request (hours)</div></div></th>
     <th rowspan="2" class="sideways"><div><div>Allocation (hours)</div></div></th>
