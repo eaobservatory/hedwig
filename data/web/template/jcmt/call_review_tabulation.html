@@ -69,11 +69,13 @@
         {% if proposal.jcmt_allocation_different %}
             <div class="hovertable">
                 <b>{{ proposal.jcmt_request.total | fmt('{:.1f}') }}</b>
-                <table style="top: 3ex; width: 70ex;">
+                <table style="width: 80ex;">
                     <tr>
+                        <td>{{ proposal.jcmt_request.total | fmt('{:.1f}') }}</td>
                         {{ render_jcmt_request(proposal.jcmt_request) }}
                     </tr>
                     <tr>
+                        <th class="sideways"><div><div>Request (hours)</div></div></th>
                         {{ self.heading_line_two() }}
                     </tr>
                 </table>
