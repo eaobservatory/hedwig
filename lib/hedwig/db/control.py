@@ -133,7 +133,7 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
             key_column = (key_column,)
             key_value = (key_value,)
 
-        # Where update columns specified?  If not, assume everything should
+        # Were update columns specified?  If not, assume everything should
         # be updated except for the key.
         if update_columns is None:
             update_columns = [x for x in table.c
