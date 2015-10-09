@@ -11,6 +11,11 @@
             and changes to the allocated time once it has been entered.
         </li>
         <li>
+            When the request is different from the time allocated,
+            it is shown in bold and you can hover the mouse over it to see
+            its original breakdown.
+        </li>
+        <li>
             Below the table are the total times allocated,
             the total times as shown (allocated or requested)
             and the total original requested times.
@@ -60,7 +65,23 @@
 {% endmacro %}
 
 {% block row_extra %}
-    <td class="{{ render_cell_class(false, false) }}">{{ proposal.jcmt_request.total | fmt('{:.1f}') }}</td>
+    <td class="{{ render_cell_class(false, false) }}">
+        {% if proposal.jcmt_allocation_different %}
+            <div class="hovertable">
+                <b>{{ proposal.jcmt_request.total | fmt('{:.1f}') }}</b>
+                <table style="top: 3ex; width: 70ex;">
+                    <tr>
+                        {{ render_jcmt_request(proposal.jcmt_request) }}
+                    </tr>
+                    <tr>
+                        {{ self.heading_line_two() }}
+                    </tr>
+                </table>
+            </div>
+        {% else %}
+            {{ proposal.jcmt_request.total | fmt('{:.1f}') }}
+        {% endif %}
+    </td>
     {% if proposal.jcmt_allocation is none %}
         <td class="{{ render_cell_class(false, false) }}">&nbsp;</td>
         {{ render_jcmt_request(proposal.jcmt_request) }}

@@ -296,6 +296,8 @@ class JCMT(Generic):
                     proposal_id=proposal['id']).get_total()
 
             proposal['jcmt_allocation'] = allocation
+            proposal['jcmt_allocation_different'] = \
+                ((allocation is not None) and (allocation != request))
 
             if allocation is not None:
                 accepted += allocation.total
