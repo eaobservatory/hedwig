@@ -133,7 +133,13 @@
                             </tr>
                             {% for review in proposal.reviewers.values() %}
                                 <tr>
-                                    <td>{{ review.role | reviewer_role_name }}</td>
+                                    <td>
+                                        {% if can_edit or (session.person.id == review.person_id) %}
+                                            <a href="{{ url_for('.review_edit', reviewer_id=review.id) }}">{{ review.role | reviewer_role_name }}</a>
+                                        {% else %}
+                                            {{ review.role | reviewer_role_name }}
+                                        {% endif %}
+                                    </td>
                                     <td>
                                         {% if session.is_admin or review.person_public %}
                                             <a href="{{ url_for('people.person_view', person_id=review.person_id) }}">{{ review.person_name | abbr(25) }}</a>
