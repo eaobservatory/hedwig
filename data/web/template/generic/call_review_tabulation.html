@@ -36,7 +36,7 @@
 
 <table>
     <tr>
-        <th rowspan="2">Proposal</th>
+        <th colspan="2" rowspan="2">Proposal</th>
         <th colspan="2">Members</th>
         <th rowspan="2">Title</th>
         <th rowspan="2" class="spacer_left sideways"><div><div>State</div></div></th>
@@ -60,6 +60,13 @@
     {% for proposal in proposals %}
         <tr{% if proposal.decision_accept is not none %} class="decision_{{ 'accept' if proposal.decision_accept else 'reject' }}"{% endif %}>
             <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+            <td>
+                {% if proposal.reviewers %}
+                    <a href="{{ url_for('.proposal_reviews', proposal_id=proposal.id) }}"><abbr title="All reviews">R</abbr></a>
+                {% else %}
+                    &nbsp;
+                {% endif %}
+            </td>
             <td>
                 {% if proposal.member_pi is none %}
                     &nbsp;
@@ -190,28 +197,28 @@
         </tr>
     {% endfor %}
     <tr>
-        <th colspan="4">Total accepted (hours)</th>
+        <th colspan="5">Total accepted (hours)</th>
         <td colspan="3" class="total spacer_left">&nbsp;</td>
         {% block footer_accepted_extra %}
         {% endblock %}
         {{ render_affiliation_totals(affiliations, affiliation_accepted) }}
     </tr>
     <tr>
-        <th colspan="4">Total as shown (hours)</th>
+        <th colspan="5">Total as shown (hours)</th>
         <td colspan="3" class="total spacer_left">&nbsp;</td>
         {% block footer_total_extra %}
         {% endblock %}
         {{ render_affiliation_totals(affiliations, affiliation_total) }}
     </tr>
     <tr>
-        <th colspan="4">Total original request (hours)</th>
+        <th colspan="5">Total original request (hours)</th>
         <td colspan="3" class="total spacer_left">&nbsp;</td>
         {% block footer_original_extra %}
         {% endblock %}
         {{ render_affiliation_totals(affiliations, affiliation_original) }}
     </tr>
     <tr>
-        <th colspan="4">&nbsp;</th>
+        <th colspan="5">&nbsp;</th>
         <td colspan="3" class="total spacer_left">&nbsp;</td>
         {% block footer_head_extra %}
         {% endblock %}
