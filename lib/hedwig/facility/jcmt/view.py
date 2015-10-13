@@ -345,7 +345,7 @@ class JCMT(Generic):
 
                 else:
                     total_affiliation[affiliation] += \
-                            allocation.total * fraction
+                        allocation.total * fraction
 
                     if proposal_accepted and not proposal['decision_exempt']:
                         accepted_affiliation[affiliation] += \
