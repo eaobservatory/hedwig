@@ -696,15 +696,22 @@ class EmailCollection(ResultCollection):
         Checks:
 
         * There is exactly one primary address.
+        * No email addresses are duplicated.
 
         Raises UserError for any problems found.
         """
 
         n_primary = 0
+        seen_address = set()
 
         for email in self.values():
             if email.primary:
                 n_primary += 1
+
+            if email.address in seen_address:
+                raise UserError('The address "{}" appears more than once.',
+                                email.address)
+            seen_address.add(email.address)
 
         if n_primary == 0:
             raise UserError('There is no primary address.')

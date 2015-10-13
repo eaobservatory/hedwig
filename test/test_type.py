@@ -22,8 +22,8 @@ from collections import namedtuple, OrderedDict
 import itertools
 from unittest import TestCase
 
-from hedwig.error import MultipleRecords, NoSuchRecord
-from hedwig.type import Assessment, GroupType, \
+from hedwig.error import MultipleRecords, NoSuchRecord, UserError
+from hedwig.type import Assessment, Email, EmailCollection, GroupType, \
     Member, MemberCollection, \
     OrderedResultCollection, \
     ResultCollection, \
@@ -45,6 +45,28 @@ class TypeTestCase(TestCase):
         for (k, v) in options.items():
             self.assertIsInstance(k, int)
             self.assertIsInstance(v, unicode)
+
+    def test_email_collection(self):
+        c = EmailCollection()
+
+        c[1] = null_tuple(Email)._replace(address='a@b', primary=False)
+
+        with self.assertRaisesRegexp(UserError, 'There is no primary'):
+            c.validate()
+
+        c[2] = null_tuple(Email)._replace(address='c@d', primary=True)
+
+        c.validate()
+
+        c[3] = null_tuple(Email)._replace(address='e@f', primary=True)
+
+        with self.assertRaisesRegexp(UserError, 'more than one primary'):
+            c.validate()
+
+        c[3] = null_tuple(Email)._replace(address='a@b', primary=False)
+
+        with self.assertRaisesRegexp(UserError, 'appears more than once'):
+            c.validate()
 
     def test_member_collection(self):
         c = MemberCollection()
