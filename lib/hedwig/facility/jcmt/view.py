@@ -524,6 +524,7 @@ class JCMT(Generic):
         """
 
         original_request = db.search_jcmt_request(proposal_id=proposal.id)
+        is_prefilled = False
 
         if info is None:
             allocations = db.search_jcmt_allocation(proposal_id=proposal.id)
@@ -534,12 +535,14 @@ class JCMT(Generic):
                 allocations = JCMTRequestCollection((
                     (n, r._replace(id=None))
                     for (n, r) in izip(count(1), original_request.values())))
+                is_prefilled = True
 
         else:
             allocations = info
 
         return {
             'original_request': original_request.to_table(),
+            'is_prefilled': is_prefilled,
             'allocations': allocations.values(),
             'instruments': JCMTInstrument.get_options(),
             'weathers': JCMTWeather.get_available(),

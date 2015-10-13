@@ -21,6 +21,11 @@
     <li>
         <div class="explanation">
             You can use this table to adjust the project&rsquo;s time allocation.
+            {% if is_prefilled %}
+                <br />
+                This table has been pre-filled using the times from the
+                project&rsquo;s original observing request.
+            {% endif %}
         </div>
     </li>
     <li>
