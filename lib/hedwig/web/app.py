@@ -28,6 +28,7 @@ from ..config import get_config, get_database, get_facilities, get_home
 from ..type import Assessment, AttachmentState, FacilityInfo, \
     ProposalState, ReviewerRole
 from .util import require_auth, session, templated
+from . import template_util
 
 from .blueprint.facility import create_facility_blueprint
 from .blueprint.help import create_help_blueprint
@@ -132,6 +133,10 @@ def create_web_app(db=None):
         return {
             'application_name': application_name,
         }
+
+    @app.template_global()
+    def create_counter(start_value=1):
+        return template_util.Counter(start_value)
 
     @app.template_filter()
     def assessment_name(value):

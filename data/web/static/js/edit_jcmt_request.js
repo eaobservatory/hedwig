@@ -18,7 +18,7 @@ function deleteRequestRow(requestid) {
 }
 
 $(document).ready(function () {
-    var newRowCounter = 1;
+    var newRowCounter = $('#requesttable_template').data('newcounter');
 
     $('#add_request').click(function (event) {
         addRequestRow(newRowCounter ++);

@@ -19,7 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import defaultdict, namedtuple, OrderedDict
-from itertools import izip
+from itertools import count, izip
 import re
 from urllib import urlencode
 
@@ -527,6 +527,14 @@ class JCMT(Generic):
 
         if info is None:
             allocations = db.search_jcmt_allocation(proposal_id=proposal.id)
+
+            # If there is no allocation saved, load the original request.
+            if not allocations:
+                # Re-write IDs as None.
+                allocations = JCMTRequestCollection((
+                    (n, r._replace(id=None))
+                    for (n, r) in izip(count(1), original_request.values())))
+
         else:
             allocations = info
 

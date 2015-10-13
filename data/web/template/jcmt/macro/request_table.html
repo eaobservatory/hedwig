@@ -29,6 +29,7 @@
 {% endmacro %}
 
 {% macro render_request_table(requests, instruments, weathers, description='request') %}
+    {% set new_counter = create_counter(1) %}
     <table id="requests">
         <tr>
             <th>Instrument</th>
@@ -51,16 +52,21 @@
             <th>Actions</th>
         </tr>
         {% for request in requests %}
-            <tr id="requestrow_{{ request.id }}">
+            {% if request.id is none %}
+                {% set request_id = (new_counter() | fmt('new_{}')) %}
+            {% else %}
+                {% set request_id = request.id %}
+            {% endif %}
+            <tr id="requestrow_{{ request_id }}">
                 <td>
-                    <select name="instrument_{{ request.id }}">
+                    <select name="instrument_{{ request_id }}">
                         {% for instrument_id, instrument_name in instruments.items() %}
                             <option value="{{ instrument_id }}" {{ 'selected="selected"' | safe if instrument_id == request.instrument }}>{{ instrument_name }}</option>
                         {% endfor %}
                     </select>
                 </td>
                 <td>
-                    <select name="weather_{{ request.id }}">
+                    <select name="weather_{{ request_id }}">
                         {% for weather_id, weather_info in weathers.items() %}
                             <option value="{{ weather_id }}" {{ 'selected="selected"' | safe if weather_id == request.weather }}>
                                 {{ weather_info.name }}:
@@ -75,12 +81,12 @@
                         {% endfor %}
                     </select>
                 </td>
-                <td><input type="number" min="0" step="any" name="time_{{ request.id }}" value="{{ request.time }}" /> hours</td>
-                <td><input type="button" id="delete_{{ request.id }}" value="Delete" />
+                <td><input type="number" min="0" step="any" name="time_{{ request_id }}" value="{{ request.time }}" /> hours</td>
+                <td><input type="button" id="delete_{{ request_id }}" value="Delete" />
             </tr>
         {% endfor %}
     </table>
-    <table class="template">
+    <table id="requesttable_template" class="template" data-newcounter="{{ new_counter() }}">
         <tr id="requestrow_template">
             <td>
                 <select name="instrument">
