@@ -523,13 +523,16 @@ class JCMT(Generic):
         decision page.
         """
 
+        original_request = db.search_jcmt_request(proposal_id=proposal.id)
+
         if info is None:
             allocations = db.search_jcmt_allocation(proposal_id=proposal.id)
         else:
             allocations = info
 
         return {
-            'requests': allocations.values(),
+            'original_request': original_request.to_table(),
+            'allocations': allocations.values(),
             'instruments': JCMTInstrument.get_options(),
             'weathers': JCMTWeather.get_available(),
         }

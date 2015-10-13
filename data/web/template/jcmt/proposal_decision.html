@@ -2,13 +2,30 @@
 
 {% set scripts=['edit_jcmt_request', 'formtip'] %}
 
-{% from 'jcmt/macro/request_table.html' import render_request_table %}
+{% from 'jcmt/macro/request_table.html' import render_request_display, render_request_table %}
 
 {% block form_list_extra %}
-    <li class="separator">JCMT Time Allocation</li>
+    <li class="separator">JCMT Observing Request</li>
+    <li>
+        <div class="explanation">
+            This is the project&rsquo;s original observing request,
+            for information only.
+        </div>
+    </li>
     <li>
         <div class="form_panel">
-            {{ render_request_table(requests, instruments, weathers, description='allocation') }}
+            {{ render_request_display(original_request) }}
+        </div>
+    </li>
+    <li class="separator">JCMT Time Allocation</li>
+    <li>
+        <div class="explanation">
+            You can use this table to adjust the project&rsquo;s time allocation.
+        </div>
+    </li>
+    <li>
+        <div class="form_panel">
+            {{ render_request_table(allocations, instruments, weathers, description='allocation') }}
         </div>
     </li>
 {% endblock %}

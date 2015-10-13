@@ -1,3 +1,33 @@
+{% macro render_request_display(requests) %}
+    <table>
+        <tr>
+            <th>Instrument</th>
+            {% for column in requests.columns.values() %}
+                <th>{{ column }}</th>
+            {% endfor %}
+            <th>Total</th>
+        </tr>
+        {% for (row_id, row_name) in requests.rows.items() %}
+            <tr>
+                <th>{{ row_name }}</th>
+                {% for column_id in requests.columns.keys() %}
+                    <td>{{ requests.table[row_id][column_id] | fmt('{0:g}') }}</td>
+                {% endfor %}
+                <td class="total">{{ requests.table[row_id][0] | fmt('{0:g}' )}}</td>
+            </tr>
+        {% endfor %}
+        {% if 0 in requests.table %}
+            <tr>
+                <th>Total</th>
+                {% for column_id in requests.columns.keys() %}
+                    <td class="total">{{ requests.table[0][column_id] | fmt('{0:g}') }}</td>
+                {% endfor %}
+                <td class="grandtotal">{{ requests.table[0][0] | fmt('{0:g}') }}</th>
+            </tr>
+        {% endif %}
+    </table>
+{% endmacro %}
+
 {% macro render_request_table(requests, instruments, weathers, description='request') %}
     <table id="requests">
         <tr>
