@@ -19,22 +19,19 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict
-from flask import Flask, Markup
-from jinja2.runtime import Undefined
+from flask import Flask
 import logging
 import os
 
 from ..config import get_config, get_database, get_facilities, get_home
-from ..type import Assessment, AttachmentState, FacilityInfo, \
-    ProposalState, ReviewerRole
+from ..type import FacilityInfo
 from .util import require_auth, session, templated
-from . import template_util
+from .template_util import register_template_utils
 
 from .blueprint.facility import create_facility_blueprint
 from .blueprint.help import create_help_blueprint
 from .blueprint.people import create_people_blueprint
 from .blueprint.query import create_query_blueprint
-from .format import format_text
 
 from ..view.home import prepare_home, \
     prepare_person_proposals, prepare_person_reviews, prepare_contact_page
@@ -134,113 +131,6 @@ def create_web_app(db=None):
             'application_name': application_name,
         }
 
-    @app.template_global()
-    def create_counter(start_value=1):
-        return template_util.Counter(start_value)
-
-    @app.template_filter()
-    def assessment_name(value):
-        if value is None:
-            return ''
-        return Assessment.get_name(value)
-
-    @app.template_filter()
-    def fmt(value, format_):
-        """
-        Similar to the Jinja built in filter "format" but the other way
-        round and using new-style formatting.
-        """
-
-        if value is None or isinstance(value, Undefined):
-            return ''
-        return format_.format(value)
-
-    @app.template_filter()
-    def format_date(value):
-        if value is None:
-            return ''
-        return value.strftime('%Y-%m-%d')
-
-    @app.template_filter()
-    def format_time(value):
-        if value is None:
-            return ''
-        return value.strftime('%H:%M')
-
-    @app.template_filter()
-    def format_datetime(value):
-        if value is None:
-            return ''
-        return value.strftime('%Y-%m-%d %H:%M')
-
-    @app.template_filter()
-    def format_hours_hms(hours):
-        (m, s) = divmod(int(3600 * hours), 60)
-        (h, m) = divmod(m, 60)
-        return '{0:d}:{1:02d}:{2:02d}'.format(h, m, s)
-
-    @app.template_filter()
-    def proposal_state_name(value):
-        try:
-            return ProposalState.get_name(value)
-        except KeyError:
-            return 'Unknown state'
-
-    @app.template_filter()
-    def proposal_state_short_name(value):
-        try:
-            return ProposalState.get_short_name(value)
-        except KeyError:
-            return '?'
-
-    @app.template_filter()
-    def reviewer_role_name(value):
-        try:
-            return ReviewerRole.get_info(value).name
-        except KeyError:
-            return 'Unknown role'
-
-    @app.template_filter()
-    def reviewer_role_class(value):
-        try:
-            return 'reviewer_{}'.format(
-                ReviewerRole.get_info(value).display_class)
-        except KeyError:
-            return ''
-
-    @app.template_filter()
-    def abbr(value, length=20):
-        """
-        Filter to truncate the text to the given length and return
-        it as an "abbr" element.  If the text is already shorter than
-        specified then it is simply returned as is.
-        """
-
-        if value is None:
-            return ''
-
-        if len(value) <= length:
-            return value
-
-        return Markup('<abbr title="') + value + Markup('">') + \
-            value[:length] + Markup('&hellip;</abbr>')
-
-    @app.template_test()
-    def attachment_ready(value):
-        return AttachmentState.is_ready(value)
-
-    @app.template_test()
-    def attachment_error(value):
-        return AttachmentState.is_error(value)
-
-    @app.template_test()
-    def reviewer_role_external(value):
-        return (value == ReviewerRole.EXTERNAL)
-
-    @app.template_test()
-    def reviewer_role_review(value):
-        return ReviewerRole.get_info(value).name_review
-
-    app.add_template_filter(format_text)
+    register_template_utils(app)
 
     return app
