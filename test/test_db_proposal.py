@@ -90,6 +90,54 @@ class DBProposalTest(DBTestCase):
         with self.assertRaises(DatabaseIntegrityError):
             self.db.sync_queue_affiliation(queue_id, result)
 
+        # Test affiliation weights: first make a second call.
+        semester_id_2 = self.db.add_semester(
+            facility_id, 'Sem2', 'S2',
+            datetime(2000, 1, 1), datetime(2000, 6, 30))
+        call_id_2 = self.db.add_call(
+            semester_id_2, queue_id,
+            datetime(1999, 9, 1), datetime(1999, 9, 30),
+            1, 1, 1, 1, 1, 1, 1, 1, 1, '', '', '',
+            FormatType.PLAIN)
+
+        # Store different sets of weights for the two calls.
+        result = self.db.search_affiliation(queue_id=queue_id,
+                                            with_weight_call_id=call_id)
+
+        self.assertEqual(len(result), 2)
+
+        weights_1 = [1.2, 7.8]
+        weights_2 = [3.4, 6.7]
+
+        records_1 = ResultCollection()
+        records_2 = ResultCollection()
+
+        for (row, weight_1, weight_2) in zip(result.values(),
+                                             weights_1, weights_2):
+            self.assertIsNone(row.weight)
+            records_1[row.id] = row._replace(weight=weight_1)
+            records_2[row.id] = row._replace(weight=weight_2)
+
+        self.db.sync_affiliation_weight(call_id, records_1)
+        self.db.sync_affiliation_weight(call_id_2, records_2)
+
+        # Check we can recover the two sets of weights.
+        result = self.db.search_affiliation(queue_id=queue_id,
+                                            with_weight_call_id=call_id)
+
+        self.assertEqual(len(result), 2)
+
+        for (row, weight) in zip(result.values(), weights_1):
+            self.assertEqual(row.weight, weight)
+
+        result = self.db.search_affiliation(queue_id=queue_id,
+                                            with_weight_call_id=call_id_2)
+
+        self.assertEqual(len(result), 2)
+
+        for (row, weight) in zip(result.values(), weights_2):
+            self.assertEqual(row.weight, weight)
+
     def test_semester(self):
         # Test add_semeseter method.
         facility_id = self.db.ensure_facility('my_tel')
