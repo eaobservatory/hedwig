@@ -753,6 +753,16 @@ class PeoplePart(object):
 
     def update_user_password(self, user_id, password_raw, remote_addr=None,
                              _test_skip_check=False):
+        """
+        Update a user's password.
+
+        Note that this raises UserError if the password is blank.  When an
+        error cannot be tolerated (e.g. after consuming a password reset
+        token, the caller must make this check first.  (Any similar checks
+        added to this function should therefore also be added to
+        hedwig.view.people.password_reset_token_use.)
+        """
+
         if not password_raw:
             raise UserError('The password can not be blank.')
 

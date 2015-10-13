@@ -328,6 +328,11 @@ def password_reset_token_use(db, args, form, remote_addr):
         try:
             token = form['token']
             password = form['password']
+            if not password:
+                # Detect this error now before using the reset token.
+                # (Otherwise if update_user_password finds the problem, the
+                # token has already been deleted.)
+                raise UserError('The password can not be blank.')
             if password != form['password_check']:
                 raise UserError('The passwords did not match.')
             try:
