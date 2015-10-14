@@ -265,6 +265,8 @@ class JCMT(Generic):
     def _get_proposal_tabulation(self, db, call):
         tabulation = super(JCMT, self)._get_proposal_tabulation(db, call)
 
+        exempt = JCMTRequestTotal(total=0.0, weather=defaultdict(float),
+                                  instrument=defaultdict(float))
         accepted = JCMTRequestTotal(total=0.0, weather=defaultdict(float),
                                     instrument=defaultdict(float))
         total = JCMTRequestTotal(total=0.0, weather=defaultdict(float),
@@ -288,6 +290,7 @@ class JCMT(Generic):
             # (which should be if the decision is defined).
             allocation = None
             proposal_accepted = proposal['decision_accept']
+            proposal_exempt = proposal['decision_exempt']
             if proposal_accepted is not None:
                 allocation = db.search_jcmt_allocation(
                     proposal_id=proposal['id']).get_total()
@@ -297,6 +300,10 @@ class JCMT(Generic):
                 ((allocation is not None) and (allocation != request))
 
             if proposal_accepted:
+                if proposal_exempt:
+                    exempt = exempt._replace(
+                        total=(exempt.total + allocation.total))
+
                 accepted = accepted._replace(
                     total=(accepted.total + allocation.total))
 
@@ -316,6 +323,8 @@ class JCMT(Generic):
             if allocation is not None:
                 for (weather, time) in allocation.weather.items():
                     if proposal_accepted:
+                        if proposal_exempt:
+                            exempt.weather[weather] += time
                         accepted.weather[weather] += time
                     total.weather[weather] += time
 
@@ -327,6 +336,8 @@ class JCMT(Generic):
             if allocation is not None:
                 for (instrument, time) in allocation.instrument.items():
                     if proposal_accepted:
+                        if proposal_exempt:
+                            exempt.instrument[instrument] += time
                         accepted.instrument[instrument] += time
                     total.instrument[instrument] += time
 
@@ -345,13 +356,14 @@ class JCMT(Generic):
                     total_affiliation[affiliation] += \
                         allocation.total * fraction
 
-                    if proposal_accepted and not proposal['decision_exempt']:
+                    if proposal_accepted and not proposal_exempt:
                         accepted_affiliation[affiliation] += \
                             allocation.total * fraction
 
         tabulation.update({
             'jcmt_weathers': JCMTWeather.get_available(),
             'jcmt_instruments': JCMTInstrument.get_options(),
+            'jcmt_exempt_total': exempt,
             'jcmt_accepted_total': accepted,
             'jcmt_request_total': total,
             'jcmt_request_original': original,

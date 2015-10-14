@@ -197,6 +197,15 @@
         </tr>
     {% endfor %}
     <tr>
+        <th colspan="5">Total exempt (hours)</th>
+        <td colspan="3" class="total spacer_left">&nbsp;</td>
+        {% block footer_exempt_extra %}
+        {% endblock %}
+        {% for affiliation in affiliations %}
+            <td class="total{{ ' spacer_left' if loop.first }}">&nbsp;</td>
+        {% endfor %}
+    </tr>
+    <tr>
         <th colspan="5">Total accepted (hours)</th>
         <td colspan="3" class="total spacer_left">&nbsp;</td>
         {% block footer_accepted_extra %}

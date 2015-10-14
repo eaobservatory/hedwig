@@ -16,7 +16,8 @@
             its original breakdown.
         </li>
         <li>
-            Below the table are the total times allocated,
+            Below the table are the times exempted from affiliation totals,
+            the total times allocated,
             the total times as shown (allocated or requested)
             and the total original requested times.
         </li>
@@ -91,6 +92,11 @@
         <td class="{{ render_cell_class(false, false) }}">{{ proposal.jcmt_allocation.total | fmt('{:.1f}') }}</td>
         {{ render_jcmt_request(proposal.jcmt_allocation) }}
     {% endif %}
+{% endblock %}
+
+{% block footer_exempt_extra %}
+    <td colspan="2" class="{{ render_cell_class(true, false) }}">{{ jcmt_exempt_total.total | fmt('{:.1f}') }}</td>
+    {{ render_jcmt_request(jcmt_exempt_total, is_total=true) }}
 {% endblock %}
 
 {% block footer_accepted_extra %}
