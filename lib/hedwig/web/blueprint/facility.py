@@ -92,6 +92,13 @@ def create_facility_blueprint(db, facility):
         return facility.view_review_affiliation_weight(
             db, call_id, (request.form if request.method == 'POST' else None))
 
+    @bp.route('/call/<int:call_id>/feedback', methods=['GET', 'POST'])
+    @require_auth(require_person=True)
+    @facility_template('call_feedback.html')
+    def review_confirm_feedback(call_id):
+        return facility.view_review_confirm_feedback(
+            db, call_id, (request.form if request.method == 'POST' else None))
+
     @bp.route('/call/<int:call_id>/reviewers')
     @require_auth(require_person=True)
     @facility_template('call_reviewers.html')

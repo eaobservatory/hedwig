@@ -980,8 +980,8 @@ class ProposalPart(object):
     def search_proposal(self, call_id=None, facility_id=None, proposal_id=None,
                         person_id=None, person_is_editor=None, person_pi=False,
                         state=None, with_members=False, with_reviewers=False,
-                        with_review_info=False, with_reviewer_role=None,
-                        with_review_state=None,
+                        with_review_info=False, with_review_text=False,
+                        with_reviewer_role=None, with_review_state=None,
                         reviewer_person_id=None,
                         with_decision=False,
                         decision_accept=None, decision_ready=None,
@@ -1004,7 +1004,7 @@ class ProposalPart(object):
         If "with_reviewers" is set then the "Proposal" object's "reviewers"
         attribute is a "ReviewerCollection" with information about the
         proposal's reviewers.  The contents of this collection are influenced
-        by the "with_review_info", "with_reviewer_role" and
+        by the "with_review_info", "with_review_text", "with_reviewer_role" and
         "with_review_state" arguments.
 
         However if "reviewer_person_id" is set then the "reviewers" attribute
@@ -1205,6 +1205,7 @@ class ProposalPart(object):
                     reviewers = self.search_reviewer(
                         proposal_id=values['id'],
                         with_review=with_review_info,
+                        with_review_text=with_review_text,
                         role=with_reviewer_role,
                         review_state=with_review_state,
                         _conn=conn)

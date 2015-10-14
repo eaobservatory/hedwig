@@ -1,0 +1,84 @@
+{% extends 'layout.html' %}
+{% set navigation=[(call.semester_name + ' ' + call.queue_name, url_for('.review_call', call_id=call.id))] %}
+
+{% block content %}
+<ul>
+    <li>
+        This page allows you to view and approve feedback reports.
+    </li>
+    <li>
+        Once you mark a proposal as &ldquo;ready&rdquo; the system
+        will be able to change the proposal&rsquo;s state to one of
+        the final states &ldquo;Accepted&rdquo; or &ldquo;Rejected&rdquo;,
+        which are visible to the proposal members,
+        based on the pending decision.
+    </li>
+    <li>
+        Email messages will also be sent to inform proposal members
+        of the outcome of the review process.
+    </li>
+</ul>
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+{% if not proposals %}
+    <p class="not_present">
+        There are no proposals with feedback reports awaiting approval.
+    </p>
+{% else %}
+    <form action="{{ url_for('.review_confirm_feedback', call_id=call.id) }}" method="POST">
+        <table>
+            <tr>
+                <th>Proposal</th>
+                <th>Decision</th>
+                <th>Reviewer</th>
+                <th>Feedback</th>
+                <th>Ready</th>
+            </tr>
+            {% for proposal in proposals %}
+                {% for review in proposal.reviewers.values() %}
+                    <tr>
+                        {% if loop.first %}
+                            <td rowspan="{{ loop.length }}">
+                                <a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a>
+                            </td>
+                            <td rowspan="{{ loop.length }}">
+                                {% if proposal.decision_accept is none %}
+                                    &nbsp;
+                                {% elif proposal.decision_accept %}
+                                    Accept
+                                {% else %}
+                                    Reject
+                                {% endif %}
+                            </td>
+                        {% endif %}
+                        <td>
+                            {% if session.is_admin or review.person_public %}
+                                <a href="{{ url_for('people.person_view', person_id=review.person_id) }}">{{ review.person_name | abbr(25) }}</a>
+                            {% else %}
+                                {{ review.person_name | abbr(25) }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ review.review_text | format_text(review.review_format) }}
+                        </td>
+                        {% if loop.first %}
+                            <td rowspan="{{ loop.length }}">
+                                <input type="checkbox" name="ready_{{ proposal.id }}" {{ 'checked="checked"' | safe if proposal.decision_ready }} />
+                            </td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+        </table>
+
+        <p>
+            <input type="submit" name="submit" value="Save" />
+        </p>
+    </form>
+{% endif %}
+{% endblock %}

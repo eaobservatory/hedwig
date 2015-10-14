@@ -1084,3 +1084,65 @@ class GenericReview(object):
         """
 
         return {}
+
+    @with_call_review(permission='edit')
+    def view_review_confirm_feedback(self, db, call, can, form):
+        # Get proposals for this call with decisions, including their feedback
+        # review.
+        proposals = db.search_proposal(
+            call_id=call.id, state=ProposalState.REVIEW,
+            with_reviewers=True, with_review_info=True, with_review_text=True,
+            with_review_state=True, with_reviewer_role=ReviewerRole.FEEDBACK,
+            with_decision=True)
+
+        # Ignore proposals without reviews.
+        for id_ in list(proposals.keys()):
+            if not proposals[id_].reviewers:
+                del proposals[id_]
+
+        message = None
+
+        if form is not None:
+            try:
+                if not proposals:
+                    raise ErrorPage(
+                        'No proposals have feedback awaiting approval.')
+
+                ready_updates = {}
+
+                for id_ in list(proposals.keys()):
+                    proposal = proposals[id_]
+                    ready = ('ready_{}'.format(id_) in form)
+
+                    # If the status changed, place the proposal in our
+                    # updates dictionary.
+                    if ready != proposal.decision_ready:
+                        ready_updates[id_] = ready
+
+                    # Also update the proposal in the result collection
+                    # in case we have to display the form again.
+                    proposals[id_] = proposal._replace(decision_ready=ready)
+
+                if ready_updates:
+                    for (id_, ready) in ready_updates.items():
+                        db.set_decision(
+                            proposal_id=id_, accept=None, exempt=None,
+                            ready=ready, is_update=True)
+
+                    flash('The feedback approval status has been updated.')
+
+                raise HTTPRedirect(url_for('.review_call', call_id=call.id))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Feedback: {} {}'.format(call.semester_name,
+                                              call.queue_name),
+            'call': call,
+            'proposals': [
+                ProposalWithCode(*x, code=self.make_proposal_code(db, x),
+                                 facility_code=None)
+                for x in proposals.values()],
+            'message': message,
+        }
