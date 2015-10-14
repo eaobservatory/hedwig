@@ -265,19 +265,15 @@ class JCMT(Generic):
     def _get_proposal_tabulation(self, db, call):
         tabulation = super(JCMT, self)._get_proposal_tabulation(db, call)
 
-        accepted = 0.0
-        accepted_weather = defaultdict(float)
-        accepted_instrument = defaultdict(float)
+        accepted = JCMTRequestTotal(total=0.0, weather=defaultdict(float),
+                                    instrument=defaultdict(float))
+        total = JCMTRequestTotal(total=0.0, weather=defaultdict(float),
+                                 instrument=defaultdict(float))
+        original = JCMTRequestTotal(total=0.0, weather=defaultdict(float),
+                                    instrument=defaultdict(float))
+
         accepted_affiliation = defaultdict(float)
-
-        total = 0.0
-        total_weather = defaultdict(float)
-        total_instrument = defaultdict(float)
         total_affiliation = defaultdict(float)
-
-        original = 0.0
-        original_weather = defaultdict(float)
-        original_instrument = defaultdict(float)
         original_affiliation = defaultdict(float)
 
         affiliation_ids = [x.id for x in tabulation['affiliations']]
@@ -301,36 +297,38 @@ class JCMT(Generic):
                 ((allocation is not None) and (allocation != request))
 
             if proposal_accepted:
-                accepted += allocation.total
+                accepted = accepted._replace(
+                    total=(accepted.total + allocation.total))
 
             if allocation is not None:
-                total += allocation.total
+                total = total._replace(total=(total.total + allocation.total))
             else:
-                total += request.total
+                total = total._replace(total=(total.total + request.total))
 
-            original += request.total
+            original = original._replace(
+                total=(original.total + request.total))
 
             for (weather, time) in request.weather.items():
-                original_weather[weather] += time
+                original.weather[weather] += time
                 if allocation is None:
-                    total_weather[weather] += time
+                    total.weather[weather] += time
 
             if allocation is not None:
                 for (weather, time) in allocation.weather.items():
                     if proposal_accepted:
-                        accepted_weather[weather] += time
-                    total_weather[weather] += time
+                        accepted.weather[weather] += time
+                    total.weather[weather] += time
 
             for (instrument, time) in request.instrument.items():
-                original_instrument[instrument] += time
+                original.instrument[instrument] += time
                 if allocation is None:
-                    total_instrument[instrument] += time
+                    total.instrument[instrument] += time
 
             if allocation is not None:
                 for (instrument, time) in allocation.instrument.items():
                     if proposal_accepted:
-                        accepted_instrument[instrument] += time
-                    total_instrument[instrument] += time
+                        accepted.instrument[instrument] += time
+                    total.instrument[instrument] += time
 
             proposal_affiliations = proposal['affiliations']
             for affiliation in affiliation_ids:
@@ -354,15 +352,9 @@ class JCMT(Generic):
         tabulation.update({
             'jcmt_weathers': JCMTWeather.get_available(),
             'jcmt_instruments': JCMTInstrument.get_options(),
-            'jcmt_accepted_total': JCMTRequestTotal(
-                total=accepted, weather=accepted_weather,
-                instrument=accepted_instrument),
-            'jcmt_request_total': JCMTRequestTotal(
-                total=total, weather=total_weather,
-                instrument=total_instrument),
-            'jcmt_request_original': JCMTRequestTotal(
-                total=original, weather=original_weather,
-                instrument=original_instrument),
+            'jcmt_accepted_total': accepted,
+            'jcmt_request_total': total,
+            'jcmt_request_original': original,
             'affiliation_accepted': accepted_affiliation,
             'affiliation_total': total_affiliation,
             'affiliation_original': original_affiliation,
