@@ -292,3 +292,16 @@ class Generic(GenericAdmin, GenericProposal, GenericReview):
             'semester': semester,
             'calls': list(calls.values()),
         }
+
+    def get_feedback_extra(self, db, proposal):
+        """
+        Get additional context to include in the proposal feedback email
+        message.
+
+        This message informs the proposal members whether the proposal was
+        accepted or rejected at the end of the review processes.  Each facility
+        should override this method to supply additional information (such
+        as the time allocated) to its own template for the feedback message.
+        """
+
+        return {}

@@ -1,0 +1,33 @@
+{% extends 'generic/proposal_feedback.txt' %}
+
+{% block feedback_information %}
+{% if (proposal.decision_accept and jcmt_allocation) %}
+The committee has approved the following
+observing {{ 'times' if (jcmt_allocation | length) > 1 else 'time' }}
+for your project:
+
+{% for allocation in jcmt_allocation %}
+{{ allocation.instrument}}, {{ allocation.weather }}: {{ allocation.time }}
+{{ 'hour' if allocation.time == 1.0 else 'hours' }}
+
+{% endfor %}
+
+Please be aware that, to maximize productivity,
+the JCMT uses flexible scheduling
+whereby observing programs are matched to
+available instrumentation, weather conditions and
+priority as assigned by the time allocation committee.
+Therefore we are not able to guarantee that all of the
+time listed above will be available for your project.
+{% endif %}
+{% endblock %}
+
+{% block feedback_footer %}
+{% if proposal.decision_accept %}
+Observatory personnel will contact you shortly concerning
+the observing arrangements for your project.
+{% else %}
+We thank you for your interest in using the JCMT
+and wish you the best of luck in your future observing proposals.
+{% endif %}
+{% endblock %}

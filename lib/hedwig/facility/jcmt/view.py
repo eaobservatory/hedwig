@@ -551,3 +551,20 @@ class JCMT(Generic):
             'instruments': JCMTInstrument.get_options(),
             'weathers': JCMTWeather.get_available(),
         }
+
+    def get_feedback_extra(self, db, proposal):
+        """
+        Get additional context to include in the proposal feedback email
+        message.
+
+        Retrieves the proposal's time allocation for display in the message.
+        The allocation is returned as a sorted list of JCMTRequest objects
+        with the instrument and weather entries replaced by the names of the
+        corresponding instrument and weather band.
+        """
+
+        allocations = db.search_jcmt_allocation(proposal_id=proposal.id)
+
+        return {
+            'jcmt_allocation': allocations.to_sorted_list(),
+        }

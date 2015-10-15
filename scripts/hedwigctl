@@ -21,7 +21,7 @@
 hedwigctl - Hedwig proposal system control tool
 
 Usage:
-    hedwigctl poll [-v | -q] (email | figure | pdf | publication | all)  [--pause <delay>] [--pidfile <file>] [--logfile <file>]
+    hedwigctl poll [-v | -q] (email | figure | pdf | publication | feedback | all)  [--pause <delay>] [--pidfile <file>] [--logfile <file>]
     hedwigctl test_server [--debug] [--https] [--port <port>]
     hedwigctl [-v | -q] initialize_database
 
@@ -139,6 +139,7 @@ def poll(args):
         pidfile_write(pidfile, os.getpid())
         atexit.register(pidfile_delete, pidfile)
 
+    from hedwig.admin.poll import send_proposal_feedback
     from hedwig.config import get_database
     from hedwig.file.poll import process_proposal_figure, process_proposal_pdf
     from hedwig.email.poll import send_queued_messages
@@ -183,6 +184,13 @@ def poll(args):
             if n_processed:
                 logger.info('Processed {} publication reference(s)',
                             n_processed)
+
+        if args['feedback'] or args['all']:
+            logger.debug('Checking for proposals with feedback ready to send')
+            n_processed = send_proposal_feedback(db)
+
+            if n_processed:
+                logger.info('Sent feedback for {} proposal(s)', n_processed)
 
         if args['--pause']:
             sleep(args['--pause'])

@@ -1,0 +1,33 @@
+{% extends 'layout.txt' %}
+
+{% block content %}
+{% block feedback_decision %}
+{% if proposal.decision_accept %}
+We are glad to be able to inform you that
+your proposal {{ proposal_code }} entitled "{{ proposal.title }}"
+was accepted by the time allocation committee.
+{% else %}
+We regret to inform you that
+no observing time was approved by the time allocation committee for
+your proposal {{ proposal_code }} entitled "{{ proposal.title }}".
+{% endif %}
+{% endblock %}
+
+{% block feedback_information %}
+{% endblock %}
+
+{% block feedback_feedback %}
+{% if feedback %}
+The time allocation committee made the following comments regarding
+your proposal:
+
+{% for feedback_text in feedback %}
+{{ feedback_text }}
+
+{% endfor %}
+{% endif %}
+{% endblock %}
+
+{% block feedback_footer %}
+{% endblock %}
+{% endblock %}
