@@ -449,6 +449,24 @@ class ProposalPart(object):
             facility_id=facility_id, call_id=call_id, with_case_notes=True
         ).get_single()
 
+    def get_facility_code(self, facility_id):
+        """
+        Retrieve the facility code for a given facility identifier.
+        """
+
+        with self._transaction() as conn:
+            result = conn.execute(select([
+                facility.c.code,
+            ]).where(
+                facility.c.id == facility_id
+            )).first()
+
+        if result is None:
+            raise NoSuchRecord('facility with identifier {} does not exist',
+                               facility_id)
+
+        return result['code']
+
     def get_proposal(self, facility_id, proposal_id,
                      with_members=False, with_reviewers=False,
                      with_decision=False,
