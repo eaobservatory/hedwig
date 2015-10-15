@@ -72,6 +72,10 @@ class JCMTInstrument(object):
 
         return ans
 
+    @classmethod
+    def get_all_options(cls):
+        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
+
 
 class JCMTRequestCollection(OrderedDict):
     """
@@ -198,6 +202,38 @@ class JCMTRequestCollection(OrderedDict):
         return JCMTRequestTotal(total=total, weather=weathers,
                                 instrument=instruments)
 
+    def to_sorted_list(self):
+        """
+        Get sorted list with weather/instrument as names.
+
+        The collection is returned as a sorted list of JCMTRequest objects
+        with the instrument and weather entries replaced by the names of the
+        corresponding instrument and weather band.
+        """
+
+        # Get all the instrument and weather options, then iterate over them
+        # looking for matching allocations -- this allows us to place the
+        # allocations into a list which is correctly ordered by instrument
+        # and then by weather band.
+        instruments = JCMTInstrument.get_all_options()
+        weathers = JCMTWeather.get_all_options()
+
+        sorted_list = []
+
+        for (instrument, instrument_name) in instruments.items():
+            for (weather, weather_name) in weathers.items():
+                for request in self.values():
+                    if ((request.instrument != instrument) or
+                            (request.weather != weather)):
+                        continue
+
+                    # Place the request in the sorted list and insert
+                    # the instrument and weather band names.
+                    sorted_list.append(request._replace(
+                        instrument=instrument_name, weather=weather_name))
+
+        return sorted_list
+
 
 class JCMTWeather(object):
     BAND1 = 1
@@ -233,3 +269,7 @@ class JCMTWeather(object):
     def get_available(cls):
         return OrderedDict(((k, v) for (k, v) in cls._info.items()
                             if v.available))
+
+    @classmethod
+    def get_all_options(cls):
+        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))

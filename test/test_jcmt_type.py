@@ -144,6 +144,39 @@ class JCMTTypeTestCase(TestCase):
         self.assertEqual(total.instrument, {1: 130.0, 2: 200.0, 3: 1000.0})
         self.assertEqual(total.weather, {1: 30.0, 2: 300.0, 4: 1000.0})
 
+        # Check conversion to sorted list.
+        c[6] = JCMTRequest(6, 0, instrument=2, weather=1, time=500.0)
+        sorted_list = c.to_sorted_list()
+        self.assertIsInstance(sorted_list, list)
+        self.assertEqual(len(sorted_list), 6)
+        self.assertEqual(sorted_list[0].id, 1)
+        self.assertEqual(sorted_list[1].id, 2)
+        self.assertEqual(sorted_list[2].id, 3)
+        self.assertEqual(sorted_list[3].id, 6)
+        self.assertEqual(sorted_list[4].id, 4)
+        self.assertEqual(sorted_list[5].id, 5)
+
+        self.assertEqual(sorted_list[0].instrument, 'SCUBA-2')
+        self.assertEqual(sorted_list[1].instrument, 'SCUBA-2')
+        self.assertEqual(sorted_list[2].instrument, 'SCUBA-2')
+        self.assertEqual(sorted_list[3].instrument, 'HARP')
+        self.assertEqual(sorted_list[4].instrument, 'HARP')
+        self.assertEqual(sorted_list[5].instrument, 'RxA3')
+
+        self.assertEqual(sorted_list[0].weather, 'Band 1')
+        self.assertEqual(sorted_list[1].weather, 'Band 1')
+        self.assertEqual(sorted_list[2].weather, 'Band 2')
+        self.assertEqual(sorted_list[3].weather, 'Band 1')
+        self.assertEqual(sorted_list[4].weather, 'Band 2')
+        self.assertEqual(sorted_list[5].weather, 'Band 4')
+
+        self.assertEqual(sorted_list[0].time, 10.0)
+        self.assertEqual(sorted_list[1].time, 20.0)
+        self.assertEqual(sorted_list[2].time, 100.0)
+        self.assertEqual(sorted_list[3].time, 500.0)
+        self.assertEqual(sorted_list[4].time, 200.0)
+        self.assertEqual(sorted_list[5].time, 1000.0)
+
         # This result collection isn't valid because instrument=1, weather=1
         # is repeated.
         with self.assertRaisesRegexp(UserError, 'multiple entries'):
