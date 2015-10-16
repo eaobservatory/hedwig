@@ -137,6 +137,10 @@ def register_template_utils(app):
         return AttachmentState.is_error(value)
 
     @app.template_test()
+    def proposal_state_review(value):
+        return (value == ProposalState.REVIEW)
+
+    @app.template_test()
     def reviewer_role_external(value):
         return (value == ReviewerRole.EXTERNAL)
 

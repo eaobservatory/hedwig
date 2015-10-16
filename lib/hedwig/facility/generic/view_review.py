@@ -988,6 +988,9 @@ class GenericReview(object):
         except NoSuchRecord:
             raise HTTPError('The proposal was not found.')
 
+        if proposal.state != ProposalState.REVIEW:
+            raise ErrorPage('This proposal is not under review.')
+
         try:
             call = db.get_call(facility_id=self.id_, call_id=proposal.call_id)
         except NoSuchRecord:
