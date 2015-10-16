@@ -141,7 +141,7 @@
                             {% for review in proposal.reviewers.values() %}
                                 <tr>
                                     <td>
-                                        {% if can_edit or (session.person.id == review.person_id) %}
+                                        {% if ((proposal.state is proposal_state_review) and (can_edit or (session.person.id == review.person_id))) %}
                                             <a href="{{ url_for('.review_edit', reviewer_id=review.id) }}">{{ review.role | reviewer_role_name }}</a>
                                         {% else %}
                                             {{ review.role | reviewer_role_name }}
