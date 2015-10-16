@@ -24,7 +24,7 @@ from hedwig.db.meta import member
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from hedwig.type import Affiliation, AttachmentState, Call, Category, \
-    FigureType, FormatType, \
+    Facility, FigureType, FormatType, \
     Member, MemberCollection, MemberInstitution,  \
     Proposal, ProposalCategory, \
     ProposalFigureInfo, ProposalPDFInfo, \
@@ -337,6 +337,25 @@ class DBProposalTest(DBTestCase):
         self.db.update_call(call_id, date_close=datetime(1999, 10, 1))
         call = self.db.get_call(facility_id, call_id)
         self.assertEqual(call.date_close.month, 10)
+
+        # Test the get_call_facility method.
+        queue_id_2 = self.db.add_queue(facility_id_2, 'Another Queue', 'AQ')
+        call_id_2 = self.db.add_call(
+            semester_id_2, queue_id_2, date_open, date_close,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, '', '', '', FormatType.PLAIN)
+
+        result = self.db.get_call_facility(call_id)
+        self.assertIsInstance(result, Facility)
+        self.assertEqual(result.code, 'my_tel')
+        self.assertEqual(result.id, facility_id)
+
+        result = self.db.get_call_facility(call_id_2)
+        self.assertIsInstance(result, Facility)
+        self.assertEqual(result.code, 'my_other_tel')
+        self.assertEqual(result.id, facility_id_2)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_call_facility(1999999)
 
     def test_add_proposal(self):
         (call_id_1, affiliation_id_1) = self._create_test_call(

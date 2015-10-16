@@ -24,7 +24,7 @@ import re
 from .astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
 from .db.meta import affiliation, calculation, call, category, \
-    email, group_member, institution, \
+    email, facility, group_member, institution, \
     member, message, moc, person, \
     prev_proposal, prev_proposal_pub, \
     proposal, proposal_category, queue, review, reviewer, \
@@ -68,6 +68,10 @@ Category = namedtuple(
 Email = namedtuple(
     'Email',
     map(lambda x: x.name, email.columns))
+
+Facility = namedtuple(
+    'Facility',
+    [x.name for x in facility.columns])
 
 FacilityInfo = namedtuple(
     'FacilityInfo',

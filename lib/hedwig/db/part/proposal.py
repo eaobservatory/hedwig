@@ -29,7 +29,7 @@ from sqlalchemy.sql.functions import max as max_
 from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
 from ...type import Affiliation, AttachmentState, Call, Category, \
-    FigureType, FormatType, \
+    Facility, FigureType, FormatType, \
     Member, MemberCollection, MemberInfo, MemberPIInfo, \
     PrevProposal, PrevProposalCollection, PrevProposalPub, \
     Proposal, ProposalCategory, ProposalState, \
@@ -448,6 +448,23 @@ class ProposalPart(object):
         return self.search_call(
             facility_id=facility_id, call_id=call_id, with_case_notes=True
         ).get_single()
+
+    def get_call_facility(self, call_id):
+        """
+        Get the facility associated with the given call.
+        """
+
+        with self._transaction() as conn:
+            result = conn.execute(facility.select().select_from(
+                facility.join(semester).join(call)
+            ).where(
+                call.c.id == call_id
+            )).first()
+
+        if result is None:
+            raise NoSuchRecord('facility or call does not exist')
+
+        return Facility(**result)
 
     def get_facility_code(self, facility_id):
         """
