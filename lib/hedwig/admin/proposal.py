@@ -91,9 +91,25 @@ def send_call_proposal_feedback(db, call_id, proposals):
 
     logger.debug('Preparing to send feedback for call {}', call_id)
 
-    n_processed = 0
+    # Determine the facility class.
+    logger.debug('Determining facility class for this call')
+    try:
+        facility_info = db.get_call_facility(call_id)
+    except NoSuchRecord:
+        logger.error('Call {} facility identifier unknown', call.id)
+        return 0
 
-    facility = None
+    for facility_class in get_facilities():
+        if facility_class.get_code() == facility_info.code:
+            facility = facility_class(facility_info.id)
+            break
+    else:
+        logger.error('Call {} facility {} not present',
+                     call_id, facility_info.code)
+        return 0
+
+    # Iterate over proposals and send feedback.
+    n_processed = 0
 
     for proposal in proposals:
         logger.debug('Preparing to send feedback for proposal {}', proposal.id)
@@ -104,29 +120,10 @@ def send_call_proposal_feedback(db, call_id, proposals):
                 raise FeedbackError('Proposal {} is not under review',
                                     proposal.id)
 
-            # Determine the facility class.
-            if facility is None:
-                logger.debug('Determining facility')
-                facility_id = proposal.facility_id
-                try:
-                    facility_code = db.get_facility_code(facility_id)
-                except NoSuchRecord:
-                    logger.error('Proposal {} facility identifier {} unknown',
-                                 proposal.id, facility_id)
-                    return n_processed
-
-                for facility_class in get_facilities():
-                    if facility_class.get_code() == facility_code:
-                        facility = facility_class(facility_id)
-                        break
-                else:
-                    logger.error('Proposal {} facility {} not present',
-                                 proposal.id, facility_code)
-                    return n_processed
-
-            elif facility.id_ != proposal.facility_id:
+            # Double-check facility assignment.
+            if facility.id_ != proposal.facility_id:
                 raise FeedbackError(
-                    'Proposal {} has different facility from others in call',
+                    'Proposal {} has different facility from the call',
                     proposal.id)
 
             # Filter reviews in case the proposal record contains more than
