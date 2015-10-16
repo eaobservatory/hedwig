@@ -253,7 +253,12 @@ def can_add_review_roles(db, proposal):
     """
     Determine for which reviewer roles a person can add a review to
     a proposal.
+
+    If the proposal's state is not REVIEW then an empty list is returned.
     """
+
+    if proposal.state != ProposalState.REVIEW:
+        return []
 
     person_id = session['person']['id']
 

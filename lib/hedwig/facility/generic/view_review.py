@@ -782,10 +782,6 @@ class GenericReview(object):
     @with_proposal(permission='none')
     def view_review_new(self, db, proposal, reviewer_role,
                         form, referrer=None):
-        if proposal.state != ProposalState.REVIEW:
-            raise HTTPForbidden(
-                'This proposal is not currently under review.')
-
         try:
             role_info = ReviewerRole.get_info(reviewer_role)
         except KeyError:
