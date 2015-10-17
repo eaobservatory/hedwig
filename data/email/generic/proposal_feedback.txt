@@ -5,7 +5,7 @@
 {% if proposal.decision_accept %}
 We are glad to be able to inform you that
 your proposal {{ proposal_code }} entitled "{{ proposal.title }}"
-was accepted by the time allocation committee.
+was approved by the time allocation committee.
 {% else %}
 We regret to inform you that
 no observing time was approved by the time allocation committee for

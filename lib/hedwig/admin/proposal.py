@@ -159,7 +159,7 @@ def send_call_proposal_feedback(db, call_id, proposals):
             proposal_code = facility.make_proposal_code(db, proposal)
             email_subject = 'Proposal {} {}'.format(
                 proposal_code,
-                ('accepted' if proposal.decision_accept else 'rejected'))
+                ('approved' if proposal.decision_accept else 'not approved'))
             email_ctx = {
                 'proposal': proposal,
                 'proposal_code': proposal_code,
