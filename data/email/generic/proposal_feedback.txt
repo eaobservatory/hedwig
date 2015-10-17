@@ -12,6 +12,21 @@ no observing time was approved by the time allocation committee for
 your proposal {{ proposal_code }} entitled "{{ proposal.title }}".
 {% endif %}
 {% endblock %}
+{% block feedback_rating %}
+{% if proposal_quartile is not none %}
+Your proposal was rated in the
+{% if proposal_quartile == 1 %}
+lower quartile
+{% elif proposal_quartile == 2 %}
+lower middle quartile
+{% elif proposal_quartile == 3 %}
+upper middle quartile
+{% else %}
+upper quartile
+{% endif %}
+of those received for this call for proposals.
+{% endif %}
+{% endblock %}
 
 {% block feedback_information %}
 {% endblock %}

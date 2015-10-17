@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from ..config import get_facilities
 from ..email.format import render_email_template
 from ..error import FormattedError, NoSuchRecord, UserError
+from ..stats.quartile import label_quartiles
 from ..type import FormatType, MemberInstitution, ProposalState, ReviewerRole
 from ..util import get_logger
 
@@ -108,6 +109,17 @@ def send_call_proposal_feedback(db, call_id, proposals):
                      call_id, facility_info.code)
         return 0
 
+    # Compute overall ratings for all submitted proposals in the call.
+    proposal_rating = {}
+    for proposal in db.search_proposal(
+            call_id=call_id, state=ProposalState.submitted_states(),
+            with_reviewers=True, with_review_info=True).values():
+        rating = facility.calculate_overall_rating(proposal.reviewers)
+        if rating is not None:
+            proposal_rating[proposal.id] = rating
+
+    proposal_quartile = label_quartiles(proposal_rating)
+
     # Iterate over proposals and send feedback.
     n_processed = 0
 
@@ -151,6 +163,8 @@ def send_call_proposal_feedback(db, call_id, proposals):
             email_ctx = {
                 'proposal': proposal,
                 'proposal_code': proposal_code,
+                'proposal_rating': proposal_rating.get(proposal.id),
+                'proposal_quartile': proposal_quartile.get(proposal.id),
                 'feedback': feedback,
             }
             email_ctx.update(facility.get_feedback_extra(db, proposal))
