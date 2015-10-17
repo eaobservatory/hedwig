@@ -35,204 +35,210 @@
 </p>
 
 <table>
-    <tr>
-        <th colspan="2" rowspan="2">Proposal</th>
-        <th colspan="2">Members</th>
-        <th rowspan="2">Title</th>
-        <th rowspan="2" class="spacer_left sideways"><div><div>State</div></div></th>
-        <th rowspan="2" class="sideways"><div><div>Decision</div></div></th>
-        <th rowspan="2" class="sideways"><div><div>Rating<sup>&ddagger;</sup></div></div></th>
-        {% block heading_line_one %}
-        {% endblock %}
-        <th colspan="{{ affiliations | length }}" class="spacer_left">Affiliation percentage</th>
-    </tr>
-    <tr>
-        <th>PI</th>
-        <th>Others<sup>&dagger;</sup></th>
-        {% block heading_line_two %}
-        {% endblock %}
-        {% block heading_affiliations %}
-            {% for affiliation in affiliations %}
-                <th class="sideways{{ ' spacer_left' if loop.first }}"><div><div>{{ affiliation.name }}</div></div></th>
-            {% endfor %}
-        {% endblock %}
-    </tr>
-    {% for proposal in proposals %}
-        <tr{% if proposal.decision_accept is not none %} class="decision_{{ 'accept' if proposal.decision_accept else 'reject' }}"{% endif %}>
-            <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
-            <td>
-                {% if proposal.reviewers %}
-                    <a href="{{ url_for('.proposal_reviews', proposal_id=proposal.id) }}"><abbr title="All reviews">R</abbr></a>
-                {% else %}
-                    &nbsp;
-                {% endif %}
-            </td>
-            <td>
-                {% if proposal.member_pi is none %}
-                    &nbsp;
-                {% elif session.is_admin or proposal.member_pi.person_public %}
-                    <a href="{{ url_for('people.person_view', person_id=proposal.member_pi.person_id) }}">{{ proposal.member_pi.person_name | abbr }}</a>
-                {% else %}
-                    {{ proposal.member_pi.person_name | abbr }}
-                {% endif %}
-            </td>
-            <td class="number_right">
-                <div class="hovertable">
-                    {{ proposal.members_other }}
-                    <table style="width: 100ex;">
-                        <tr>
-                            <th>Role</th>
-                            <th>Name</th>
-                            <th>Institution</th>
-                            <th>Affiliation</th>
-                        </tr>
-                        {% for member in proposal.members %}
-                            <tr>
-                                <td>{{ 'PI' if member.pi else ('&nbsp;' | safe) }}</td>
-                                <td>
-                                    {% if session.is_admin or member.person_public %}
-                                        <a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name | abbr(25) }}</a>
-                                    {% else %}
-                                        {{ member.person_name | abbr(25) }}
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if member.resolved_institution_id is none %}
-                                        &nbsp;
-                                    {% else %}
-                                        <a href="{{ url_for('people.institution_view', institution_id=member.resolved_institution_id) }}">{{ render_member_institution(member, part_truncate=25) }}</a>
-                                    {% endif %}
-                                </td>
-                                <td>{{ member.affiliation_name }}</td>
-                            </tr>
-                        {% endfor %}
-                    </table>
-                </div>
-            </td>
-            <td>{{ proposal.title | abbr }}</td>
-            <td class="spacer_left"><abbr title="{{ proposal.state | proposal_state_name }}">{{ proposal.state | proposal_state_short_name }}</abbr></td>
-            <td>
-                {% if (can_edit and (proposal.state is proposal_state_review)) %}<a href="{{ url_for('.proposal_decision', proposal_id=proposal.id) }}" class="undecorated">{% endif %}
-                    {% if proposal.decision_accept is none %}
-                        &mdash;
-                    {% elif proposal.decision_accept %}
-                        &check; {{ 'E' if proposal.decision_exempt }}
-                    {% else %}
-                        &cross;
-                    {% endif %}
-                {% if can_edit %}</a>{% endif %}
-            </td>
-            <td class="number_right">
-                {% if proposal.can_view_review %}
-                    <div class="hovertable">
-                        {% if proposal.rating is none %}
-                            &mdash;
-                        {% else %}
-                            {{ proposal.rating | fmt('{:.1f}') }}
-                        {% endif %}
-                        <table style="width: 75ex;">
-                            <tr>
-                                <th>Role</th>
-                                <th>Reviewer</th>
-                                <th>Assessment</th>
-                                <th>Rating</th>
-                                <th>Weighting</th>
-                            </tr>
-                            {% for review in proposal.reviewers.values() %}
-                                <tr>
-                                    <td>
-                                        {% if ((proposal.state is proposal_state_review) and (can_edit or (session.person.id == review.person_id))) %}
-                                            <a href="{{ url_for('.review_edit', reviewer_id=review.id) }}">{{ review.role | reviewer_role_name }}</a>
-                                        {% else %}
-                                            {{ review.role | reviewer_role_name }}
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if session.is_admin or review.person_public %}
-                                            <a href="{{ url_for('people.person_view', person_id=review.person_id) }}">{{ review.person_name | abbr(25) }}</a>
-                                        {% else %}
-                                            {{ review.person_name | abbr(25) }}
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if review.review_assessment is not none %}
-                                            {{ review.review_assessment | assessment_name }}
-                                        {% else %}
-                                            &nbsp;
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if review.review_rating is not none %}
-                                            {{ review.review_rating }}
-                                        {% else %}
-                                            &nbsp;
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if review.review_weight is not none %}
-                                            {{ review.review_weight }}
-                                        {% else %}
-                                            &nbsp;
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </table>
-                    </div>
-                {% else %}
-                    &nbsp;
-                {% endif %}
-            </td>
-            {% block row_extra scoped %}
+    <thead>
+        <tr>
+            <th colspan="2" rowspan="2">Proposal</th>
+            <th colspan="2">Members</th>
+            <th rowspan="2">Title</th>
+            <th rowspan="2" class="spacer_left sideways"><div><div>State</div></div></th>
+            <th rowspan="2" class="sideways"><div><div>Decision</div></div></th>
+            <th rowspan="2" class="sideways"><div><div>Rating<sup>&ddagger;</sup></div></div></th>
+            {% block heading_line_one %}
             {% endblock %}
-            {% for affiliation in affiliations %}
-                <td class="number_right{{ ' spacer_left' if loop.first }}">
-                    {% if affiliation.id in proposal.affiliations %}
-                        {{ (100.0 * proposal.affiliations[affiliation.id]) | fmt('{:.1f}') }}
+            <th colspan="{{ affiliations | length }}" class="spacer_left">Affiliation percentage</th>
+        </tr>
+        <tr>
+            <th>PI</th>
+            <th>Others<sup>&dagger;</sup></th>
+            {% block heading_line_two %}
+            {% endblock %}
+            {% block heading_affiliations %}
+                {% for affiliation in affiliations %}
+                    <th class="sideways{{ ' spacer_left' if loop.first }}"><div><div>{{ affiliation.name }}</div></div></th>
+                {% endfor %}
+            {% endblock %}
+        </tr>
+    </thead>
+    <tbody id="tabulationbody">
+        {% for proposal in proposals %}
+            <tr{% if proposal.decision_accept is not none %} class="decision_{{ 'accept' if proposal.decision_accept else 'reject' }}"{% endif %}>
+                <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+                <td>
+                    {% if proposal.reviewers %}
+                        <a href="{{ url_for('.proposal_reviews', proposal_id=proposal.id) }}"><abbr title="All reviews">R</abbr></a>
                     {% else %}
                         &nbsp;
                     {% endif %}
                 </td>
+                <td>
+                    {% if proposal.member_pi is none %}
+                        &nbsp;
+                    {% elif session.is_admin or proposal.member_pi.person_public %}
+                        <a href="{{ url_for('people.person_view', person_id=proposal.member_pi.person_id) }}">{{ proposal.member_pi.person_name | abbr }}</a>
+                    {% else %}
+                        {{ proposal.member_pi.person_name | abbr }}
+                    {% endif %}
+                </td>
+                <td class="number_right">
+                    <div class="hovertable">
+                        {{ proposal.members_other }}
+                        <table style="width: 100ex;">
+                            <tr>
+                                <th>Role</th>
+                                <th>Name</th>
+                                <th>Institution</th>
+                                <th>Affiliation</th>
+                            </tr>
+                            {% for member in proposal.members %}
+                                <tr>
+                                    <td>{{ 'PI' if member.pi else ('&nbsp;' | safe) }}</td>
+                                    <td>
+                                        {% if session.is_admin or member.person_public %}
+                                            <a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name | abbr(25) }}</a>
+                                        {% else %}
+                                            {{ member.person_name | abbr(25) }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if member.resolved_institution_id is none %}
+                                            &nbsp;
+                                        {% else %}
+                                            <a href="{{ url_for('people.institution_view', institution_id=member.resolved_institution_id) }}">{{ render_member_institution(member, part_truncate=25) }}</a>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ member.affiliation_name }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </td>
+                <td>{{ proposal.title | abbr }}</td>
+                <td class="spacer_left"><abbr title="{{ proposal.state | proposal_state_name }}">{{ proposal.state | proposal_state_short_name }}</abbr></td>
+                <td>
+                    {% if (can_edit and (proposal.state is proposal_state_review)) %}<a href="{{ url_for('.proposal_decision', proposal_id=proposal.id) }}" class="undecorated">{% endif %}
+                        {% if proposal.decision_accept is none %}
+                            &mdash;
+                        {% elif proposal.decision_accept %}
+                            &check; {{ 'E' if proposal.decision_exempt }}
+                        {% else %}
+                            &cross;
+                        {% endif %}
+                    {% if can_edit %}</a>{% endif %}
+                </td>
+                <td class="number_right">
+                    {% if proposal.can_view_review %}
+                        <div class="hovertable">
+                            {% if proposal.rating is none %}
+                                &mdash;
+                            {% else %}
+                                {{ proposal.rating | fmt('{:.1f}') }}
+                            {% endif %}
+                            <table style="width: 75ex;">
+                                <tr>
+                                    <th>Role</th>
+                                    <th>Reviewer</th>
+                                    <th>Assessment</th>
+                                    <th>Rating</th>
+                                    <th>Weighting</th>
+                                </tr>
+                                {% for review in proposal.reviewers.values() %}
+                                    <tr>
+                                        <td>
+                                            {% if ((proposal.state is proposal_state_review) and (can_edit or (session.person.id == review.person_id))) %}
+                                                <a href="{{ url_for('.review_edit', reviewer_id=review.id) }}">{{ review.role | reviewer_role_name }}</a>
+                                            {% else %}
+                                                {{ review.role | reviewer_role_name }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if session.is_admin or review.person_public %}
+                                                <a href="{{ url_for('people.person_view', person_id=review.person_id) }}">{{ review.person_name | abbr(25) }}</a>
+                                            {% else %}
+                                                {{ review.person_name | abbr(25) }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if review.review_assessment is not none %}
+                                                {{ review.review_assessment | assessment_name }}
+                                            {% else %}
+                                                &nbsp;
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if review.review_rating is not none %}
+                                                {{ review.review_rating }}
+                                            {% else %}
+                                                &nbsp;
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if review.review_weight is not none %}
+                                                {{ review.review_weight }}
+                                            {% else %}
+                                                &nbsp;
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+                    {% else %}
+                        &nbsp;
+                    {% endif %}
+                </td>
+                {% block row_extra scoped %}
+                {% endblock %}
+                {% for affiliation in affiliations %}
+                    <td class="number_right{{ ' spacer_left' if loop.first }}">
+                        {% if affiliation.id in proposal.affiliations %}
+                            {{ (100.0 * proposal.affiliations[affiliation.id]) | fmt('{:.1f}') }}
+                        {% else %}
+                            &nbsp;
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr>
+            <th colspan="5">Total exempt (hours)</th>
+            <td colspan="3" class="total spacer_left">&nbsp;</td>
+            {% block footer_exempt_extra %}
+            {% endblock %}
+            {% for affiliation in affiliations %}
+                <td class="total{{ ' spacer_left' if loop.first }}">&nbsp;</td>
             {% endfor %}
         </tr>
-    {% endfor %}
-    <tr>
-        <th colspan="5">Total exempt (hours)</th>
-        <td colspan="3" class="total spacer_left">&nbsp;</td>
-        {% block footer_exempt_extra %}
-        {% endblock %}
-        {% for affiliation in affiliations %}
-            <td class="total{{ ' spacer_left' if loop.first }}">&nbsp;</td>
-        {% endfor %}
-    </tr>
-    <tr>
-        <th colspan="5">Total accepted (hours)</th>
-        <td colspan="3" class="total spacer_left">&nbsp;</td>
-        {% block footer_accepted_extra %}
-        {% endblock %}
-        {{ render_affiliation_totals(affiliations, affiliation_accepted) }}
-    </tr>
-    <tr class="spacer_above">
-        <th colspan="5">Total as shown (hours)</th>
-        <td colspan="3" class="total spacer_left">&nbsp;</td>
-        {% block footer_total_extra %}
-        {% endblock %}
-        {{ render_affiliation_totals(affiliations, affiliation_total) }}
-    </tr>
-    <tr>
-        <th colspan="5">Total original request (hours)</th>
-        <td colspan="3" class="total spacer_left">&nbsp;</td>
-        {% block footer_original_extra %}
-        {% endblock %}
-        {{ render_affiliation_totals(affiliations, affiliation_original) }}
-    </tr>
-    <tr>
-        <th colspan="5">&nbsp;</th>
-        <td colspan="3" class="total spacer_left">&nbsp;</td>
-        {% block footer_head_extra %}
-        {% endblock %}
-        {{ self.heading_line_two() }}
-        {{ self.heading_affiliations() }}
-    </tr>
+        <tr>
+            <th colspan="5">Total accepted (hours)</th>
+            <td colspan="3" class="total spacer_left">&nbsp;</td>
+            {% block footer_accepted_extra %}
+            {% endblock %}
+            {{ render_affiliation_totals(affiliations, affiliation_accepted) }}
+        </tr>
+        <tr class="spacer_above">
+            <th colspan="5">Total as shown (hours)</th>
+            <td colspan="3" class="total spacer_left">&nbsp;</td>
+            {% block footer_total_extra %}
+            {% endblock %}
+            {{ render_affiliation_totals(affiliations, affiliation_total) }}
+        </tr>
+        <tr>
+            <th colspan="5">Total original request (hours)</th>
+            <td colspan="3" class="total spacer_left">&nbsp;</td>
+            {% block footer_original_extra %}
+            {% endblock %}
+            {{ render_affiliation_totals(affiliations, affiliation_original) }}
+        </tr>
+        <tr>
+            <th colspan="5">&nbsp;</th>
+            <td colspan="3" class="total spacer_left">&nbsp;</td>
+            {% block footer_head_extra %}
+            {% endblock %}
+            {{ self.heading_line_two() }}
+            {{ self.heading_affiliations() }}
+        </tr>
+    </tfoot>
 </table>
 {% endblock %}
