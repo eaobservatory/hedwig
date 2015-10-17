@@ -567,13 +567,15 @@ class GenericAdmin(object):
                 raise ErrorPage('Unknown action.')
 
         # Prepare list of people to display as the registered member directory.
+        # Note that this includes people without public profiles as this page
+        # is restricted to administrators.
         cs = get_countries()
         existing_person_ids = [
             x.person_id for x in db.search_group_member(
                 queue_id=queue_id, group_type=group_type).values()]
         persons = [
             p._replace(institution_country=cs.get(p.institution_country))
-            for p in db.search_person(registered=True, public=True,
+            for p in db.search_person(registered=True,
                                       with_institution=True).values()
             if p.id not in existing_person_ids]
 
