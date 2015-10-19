@@ -25,8 +25,8 @@
 {% endblock %}
 
 {% block heading_line_one %}
-    <th rowspan="2" class="sideways"><div><div>Request (hours)</div></div></th>
-    <th rowspan="2" class="sideways"><div><div>Allocation (hours)</div></div></th>
+    <th rowspan="2" class="sideways sortable" data-sortkey="jcmt_request"><div><div>Request (hours)</div></div></th>
+    <th rowspan="2" class="sideways sortable" data-sortkey="jcmt_allocation"><div><div>Allocation (hours)</div></div></th>
     <th colspan="{{ jcmt_weathers | length + 1 }}" class="spacer_left">Weather</th>
     <th colspan="{{ jcmt_instruments | length + 1 }}" class="spacer_left">Instrument</th>
 {% endblock %}
@@ -41,6 +41,11 @@
     {% endfor %}
     <th class="sideways"><div><div>Unknown</div></div></th>
 {% endblock %}
+
+{% block row_sort_info %}{{ {
+    'jcmt_request': proposal.jcmt_request.total,
+    'jcmt_allocation': (None if (proposal.jcmt_allocation is none) else proposal.jcmt_allocation.total),
+} | json(extend=super()) }}{% endblock %}
 
 {% macro render_cell_class(is_total, is_first) %}number_right{{ ' total' if is_total }}{{ ' spacer_left' if is_first }}{% endmacro %}
 

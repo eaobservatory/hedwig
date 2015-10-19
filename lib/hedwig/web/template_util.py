@@ -18,6 +18,8 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+import json as json_module
+
 from flask import Markup
 from jinja2.runtime import Undefined
 
@@ -81,6 +83,23 @@ def register_template_utils(app):
         (m, s) = divmod(int(3600 * hours), 60)
         (h, m) = divmod(m, 60)
         return '{:d}:{:02d}:{:02d}'.format(h, m, s)
+
+    @app.template_filter()
+    def json(value, extend=None):
+        """
+        Convert given "value" dictionary to JSON representation.
+
+        If an "extend" option is given, it should be an existing JSON
+        representation via markupsafe, e.g. from the parent template.
+        The given values will be added to it.
+        """
+
+        if extend is not None:
+            extend = json_module.loads(extend.unescape())
+            extend.update(value)
+            value = extend
+
+        return json_module.dumps(value)
 
     @app.template_filter()
     def proposal_state_name(value):

@@ -1,5 +1,6 @@
 {% extends 'layout_wide.html' %}
 {% set navigation=[(call.semester_name + ' ' + call.queue_name, url_for('.review_call', call_id=call.id))] %}
+{% set scripts = ['hedwig_util', 'review_tabulation'] %}
 
 {% from 'macro/institution.html' import render_member_institution %}
 
@@ -34,21 +35,21 @@
     to see a table of all the proposal&rsquo;s reviews.
 </p>
 
-<table>
+<table id="tabulation">
     <thead>
         <tr>
-            <th colspan="2" rowspan="2">Proposal</th>
+            <th colspan="2" rowspan="2" class="sortable sortedalready" data-sortkey="proposal_code">Proposal</th>
             <th colspan="2">Members</th>
-            <th rowspan="2">Title</th>
-            <th rowspan="2" class="spacer_left sideways"><div><div>State</div></div></th>
-            <th rowspan="2" class="sideways"><div><div>Decision</div></div></th>
-            <th rowspan="2" class="sideways"><div><div>Rating<sup>&ddagger;</sup></div></div></th>
+            <th rowspan="2" class="sortable" data-sortkey="title">Title</th>
+            <th rowspan="2" class="spacer_left sideways sortable" data-sortkey="state"><div><div>State</div></div></th>
+            <th rowspan="2" class="sideways sortable sortreverse" data-sortkey="decision"><div><div>Decision</div></div></th>
+            <th rowspan="2" class="sideways sortable sortreverse" data-sortkey="rating"><div><div>Rating<sup>&ddagger;</sup></div></div></th>
             {% block heading_line_one %}
             {% endblock %}
             <th colspan="{{ affiliations | length }}" class="spacer_left">Affiliation percentage</th>
         </tr>
         <tr>
-            <th>PI</th>
+            <th class="sortable" data-sortkey="pi_name">PI</th>
             <th>Others<sup>&dagger;</sup></th>
             {% block heading_line_two %}
             {% endblock %}
@@ -61,7 +62,14 @@
     </thead>
     <tbody id="tabulationbody">
         {% for proposal in proposals %}
-            <tr{% if proposal.decision_accept is not none %} class="decision_{{ 'accept' if proposal.decision_accept else 'reject' }}"{% endif %}>
+            <tr{% if proposal.decision_accept is not none %} class="decision_{{ 'accept' if proposal.decision_accept else 'reject' }}"{% endif %} data-sortinfo="{% block row_sort_info scoped %}{{ {
+                'proposal_code': proposal.code,
+                'pi_name': (None if proposal.member_pi is none else proposal.member_pi.person_name),
+                'title': proposal.title,
+                'state': proposal.state,
+                'decision': (0 if not proposal.decision_accept else (2 if proposal.decision_exempt else 1)),
+                'rating': proposal.rating,
+            } | json }}{% endblock %}">
                 <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
                 <td>
                     {% if proposal.reviewers %}
