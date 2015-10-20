@@ -712,7 +712,7 @@ class ProposalPart(object):
         return Queue(**result)
 
     def search_affiliation(self, queue_id=None, hidden=None, exclude=None,
-                           with_weight_call_id=None):
+                           with_weight_call_id=None, order_by_id=False):
         """
         Search for affiliation records.
         """
@@ -746,11 +746,16 @@ class ProposalPart(object):
             else:
                 stmt = stmt.where(not_(affiliation.c.exclude))
 
+        if order_by_id:
+            stmt = stmt.order_by(affiliation.c.id.asc())
+        else:
+            stmt = stmt.order_by(affiliation.c.exclude.asc(),
+                                 affiliation.c.name.asc())
+
         ans = ResultCollection()
 
         with self._transaction() as conn:
-            for row in conn.execute(stmt.order_by(affiliation.c.exclude.asc(),
-                                                  affiliation.c.name.asc())):
+            for row in conn.execute(stmt):
                 values = default.copy()
                 values.update(**row)
                 ans[values['id']] = Affiliation(**values)
