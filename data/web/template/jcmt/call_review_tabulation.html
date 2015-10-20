@@ -21,12 +21,17 @@
             the total times as shown (allocated or requested)
             and the total original requested times.
         </li>
+        <li>
+            Sortable columns are indicated by a square.
+            Click the column header to sort the table by that column,
+            and click again to change the sort direction.
+        </li>
     </ul>
 {% endblock %}
 
 {% block heading_line_one %}
-    <th rowspan="2" class="sideways sortable" data-sortkey="jcmt_request"><div><div>Request (hours)</div></div></th>
-    <th rowspan="2" class="sideways sortable" data-sortkey="jcmt_allocation"><div><div>Allocation (hours)</div></div></th>
+    <th rowspan="2" class="sideways sortable" data-sortkey="jcmt_request"><div><div><span>Request (hours)</span></div></div></th>
+    <th rowspan="2" class="sideways sortable" data-sortkey="jcmt_allocation"><div><div><span>Allocation (hours)</span></div></div></th>
     <th colspan="{{ jcmt_weathers | length + 1 }}" class="spacer_left">Weather</th>
     <th colspan="{{ jcmt_instruments | length + 1 }}" class="spacer_left">Instrument</th>
 {% endblock %}

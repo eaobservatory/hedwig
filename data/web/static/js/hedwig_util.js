@@ -7,6 +7,7 @@ function disable_futile_labels() {
 }
 
 function enable_table_sorting(table) {
+    var sort_headings = table.find('th.sortable');
     var table_body = table.find('tbody').first();
     var last_sorted_by = null;
     var sort_direction = -1;
@@ -54,10 +55,14 @@ function enable_table_sorting(table) {
             }
 
             sort_direction = - sort_direction;
+
+            sort_headings.removeClass('sorted_asc').addClass('sortable');
+            sort_headings.removeClass('sorted_desc').addClass('sortable');
+            heading.removeClass('sortable').addClass((sort_direction < 0 ) ? 'sorted_asc' : 'sorted_desc');
         });
     });
 
-    table.find('th.sortable').each(function () {
+    sort_headings.each(function () {
         enable_sort_column($(this));
     });
 }

@@ -116,3 +116,22 @@ a#callout_dismiss:before {
     border-radius: 1ex;
     margin-right: 0.5ex;
 }
+
+th.sortable, th.sorted_asc, th.sorted_desc {
+    cursor: pointer;
+}
+
+th.sortable:not(.sideways):after, th.sortable.sideways span:after {
+    content: ' \25A0';
+    color: #888;
+}
+
+th.sorted_asc:not(.sideways):after, th.sorted_asc.sideways span:after {
+    content: ' \25B2';
+    color: #888;
+}
+
+th.sorted_desc:not(.sideways):after, th.sorted_desc.sideways span:after {
+    content: ' \25BC';
+    color: #888;
+}
