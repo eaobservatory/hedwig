@@ -16,7 +16,7 @@ Please be aware that, to maximize productivity,
 the JCMT uses flexible scheduling
 whereby observing programs are matched to
 available instrumentation, weather conditions and
-priority as assigned by the time allocation committee.
+priority as assigned by the Time Allocation Committee.
 Therefore we are not able to guarantee that all of the
 time listed above will be available for your project.
 {% endif %}

@@ -5,10 +5,10 @@
 {% if proposal.decision_accept %}
 We are glad to be able to inform you that
 your proposal {{ proposal_code }} entitled "{{ proposal.title }}"
-was approved by the time allocation committee.
+was approved by the Time Allocation Committee.
 {% else %}
 We regret to inform you that
-no observing time was approved by the time allocation committee for
+no observing time was approved by the Time Allocation Committee for
 your proposal {{ proposal_code }} entitled "{{ proposal.title }}".
 {% endif %}
 {% endblock %}
@@ -33,7 +33,7 @@ of those received for this call for proposals.
 
 {% block feedback_feedback %}
 {% if feedback %}
-The time allocation committee made the following comments regarding
+The Time Allocation Committee made the following comments regarding
 your proposal:
 
 {% for feedback_text in feedback %}
