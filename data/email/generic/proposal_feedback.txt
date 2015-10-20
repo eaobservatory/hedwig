@@ -16,13 +16,13 @@ your proposal {{ proposal_code }} entitled "{{ proposal.title }}".
 {% if proposal_quartile is not none %}
 Your proposal was rated in the
 {% if proposal_quartile == 1 %}
-lower quartile
+lowest quartile
 {% elif proposal_quartile == 2 %}
-lower middle quartile
+second lowest quartile
 {% elif proposal_quartile == 3 %}
-upper middle quartile
+second highest quartile
 {% else %}
-upper quartile
+highest quartile
 {% endif %}
 of those received for this call for proposals.
 {% endif %}
