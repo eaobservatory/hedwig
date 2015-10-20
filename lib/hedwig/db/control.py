@@ -85,7 +85,8 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
     def _sync_records(self, conn, table, key_column, key_value, records,
                       update_columns=None, verified_columns=(),
                       forbid_add=False, forbid_delete=False,
-                      record_match_column=None):
+                      record_match_column=None,
+                      unique_columns=None):
         """
         Update a set of database records to match the given set of records.
 
@@ -117,6 +118,9 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
         specified then the table's "id" column will be used.  Note this
         only applies to the existing database records -- we still expect
         to use the "id" field of the given records.
+
+        The "unique_columns" argument should be used to indicate which
+        columns being updated have unique constraints in the database.
         """
 
         # Initialize debugging counters.
@@ -155,12 +159,30 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
         considered = set()
 
         # List of entries to be compared.  Each entry is a tuple of
-        # (id_, value, previous) where value is the new value.
+        # (id_, value, previous, value_unique_key, previous_unique_key)
+        # where value is the new value.
         record_matches = []
+
+        # Prepare set to contain the tuples of the unique columns (where
+        # specified) for each input record processed.
+        seen_unique_key = set()
 
         # For each given value, check whether or not it already existed.
         for value in records.values():
             id_ = value.id
+
+            if unique_columns is None:
+                value_unique_key = None
+            else:
+                value_unique_key = \
+                    tuple((getattr(value, x.name) for x in unique_columns))
+
+                if value_unique_key in seen_unique_key:
+                    raise UserError(
+                        'There appear to be duplicate values amongst the '
+                        'entries which you have entered.')
+
+                seen_unique_key.add(value_unique_key)
 
             if id_ is None:
                 # Allow completely new records to be given with id=None.
@@ -175,7 +197,14 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                 considered.add(id_)
                 previous = existing.pop(id_, None)
 
-            record_matches.append((id_, value, previous))
+            if (previous is None) or (unique_columns is None):
+                previous_unique_key = None
+            else:
+                previous_unique_key = \
+                    tuple((previous[x] for x in unique_columns))
+
+            record_matches.append((id_, value, previous,
+                                   value_unique_key, previous_unique_key))
 
         # Delete remaining un-matched entries.
         for existing_record in existing.values():
@@ -187,7 +216,8 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
             n_delete += 1
 
         # Iterate over record updates and insert or update as required.
-        for (id_, value, previous) in record_matches:
+        for (id_, value, previous,
+                value_unique_key, previous_unique_key) in record_matches:
             if previous is None:
                 # Insert the new value.
                 if forbid_add:
