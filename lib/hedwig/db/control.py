@@ -195,7 +195,7 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
 
                 values = dict(zip(key_column, key_value))
                 for column in update_columns:
-                    values[column] = getattr(value, column.key)
+                    values[column] = getattr(value, column.name)
                 if record_match_column is not None:
                     values[record_match_column] = id_
                 conn.execute(table.insert().values(values))
@@ -205,7 +205,7 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                 # Check if update is necessary, and if necessary, do it.
                 values = {}
                 for column in update_columns:
-                    col_val = getattr(value, column.key)
+                    col_val = getattr(value, column.name)
                     if previous[column] != col_val:
                         values[column] = col_val
                         if column in verified_columns:
