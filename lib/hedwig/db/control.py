@@ -154,6 +154,10 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
         # mentioning the same record twice.
         considered = set()
 
+        # List of entries to be compared.  Each entry is a tuple of
+        # (id_, value, previous) where value is the new value.
+        record_matches = []
+
         # For each given value, check whether or not it already existed.
         for value in records.values():
             id_ = value.id
@@ -171,6 +175,19 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                 considered.add(id_)
                 previous = existing.pop(id_, None)
 
+            record_matches.append((id_, value, previous))
+
+        # Delete remaining un-matched entries.
+        for existing_record in existing.values():
+            if forbid_delete:
+                raise UserError('Entries can not be deleted here.')
+
+            conn.execute(
+                table.delete().where(table.c.id == existing_record['id']))
+            n_delete += 1
+
+        # Iterate over record updates and insert or update as required.
+        for (id_, value, previous) in record_matches:
             if previous is None:
                 # Insert the new value.
                 if forbid_add:
@@ -199,14 +216,5 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                         table.c.id == previous['id']
                     ).values(values))
                     n_update += 1
-
-        # Delete remaining un-matched entries.
-        for existing_record in existing.values():
-            if forbid_delete:
-                raise UserError('Entries can not be deleted here.')
-
-            conn.execute(
-                table.delete().where(table.c.id == existing_record['id']))
-            n_delete += 1
 
         return (n_insert, n_update, n_delete)
