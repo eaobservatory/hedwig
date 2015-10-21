@@ -158,10 +158,11 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
         # mentioning the same record twice.
         considered = set()
 
-        # List of entries to be compared.  Each entry is a tuple of
+        # Lists of entries to be compared/inserted.  Each entry is a tuple of
         # (id_, value, previous, value_unique_key, previous_unique_key)
         # where value is the new value.
         record_matches = []
+        record_inserts = []
 
         # Prepare set to contain the tuples of the unique columns (where
         # specified) for each input record processed.
@@ -197,14 +198,22 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                 considered.add(id_)
                 previous = existing.pop(id_, None)
 
-            if (previous is None) or (unique_columns is None):
-                previous_unique_key = None
-            else:
-                previous_unique_key = \
-                    tuple((previous[x] for x in unique_columns))
+            if previous is None:
+                if forbid_add:
+                    raise UserError('New entries can not be added here.')
 
-            record_matches.append((id_, value, previous,
-                                   value_unique_key, previous_unique_key))
+                record_inserts.append(value)
+                n_insert += 1
+
+            else:
+                if unique_columns is None:
+                    previous_unique_key = None
+                else:
+                    previous_unique_key = \
+                        tuple((previous[x] for x in unique_columns))
+
+                record_matches.append((id_, value, previous,
+                                       value_unique_key, previous_unique_key))
 
         # Delete remaining un-matched entries.
         for existing_record in existing.values():
@@ -215,36 +224,35 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                 table.delete().where(table.c.id == existing_record['id']))
             n_delete += 1
 
-        # Iterate over record updates and insert or update as required.
+        # Iterate over record matches and update as required.
         for (id_, value, previous,
                 value_unique_key, previous_unique_key) in record_matches:
-            if previous is None:
-                # Insert the new value.
-                if forbid_add:
-                    raise UserError('New entries can not be added here.')
+            # Check if update is necessary, and if necessary, do it.
+            values = {}
+            for column in update_columns:
+                col_val = getattr(value, column.name)
+                if previous[column] != col_val:
+                    values[column] = col_val
+                    if column in verified_columns:
+                        values[table.c.verified] = False
 
-                values = dict(zip(key_column, key_value))
-                for column in update_columns:
-                    values[column] = getattr(value, column.name)
-                if record_match_column is not None:
-                    values[record_match_column] = id_
-                conn.execute(table.insert().values(values))
-                n_insert += 1
+            if not values:
+                continue
 
-            else:
-                # Check if update is necessary, and if necessary, do it.
-                values = {}
-                for column in update_columns:
-                    col_val = getattr(value, column.name)
-                    if previous[column] != col_val:
-                        values[column] = col_val
-                        if column in verified_columns:
-                            values[table.c.verified] = False
+            conn.execute(table.update().where(
+                table.c.id == previous['id']
+            ).values(values))
+            n_update += 1
 
-                if values:
-                    conn.execute(table.update().where(
-                        table.c.id == previous['id']
-                    ).values(values))
-                    n_update += 1
+        # Iterate over record inserts and insert the new values.
+        for value in record_inserts:
+            values = dict(zip(key_column, key_value))
+
+            for column in update_columns:
+                values[column] = getattr(value, column.name)
+            if record_match_column is not None:
+                values[record_match_column] = value.id
+
+            conn.execute(table.insert().values(values))
 
         return (n_insert, n_update, n_delete)
