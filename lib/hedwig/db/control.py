@@ -238,7 +238,7 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
 
                     record_updates.append(RecordUpdate(
                         previous['id'], value, values,
-                        value_unique_key, previous_unique_key, False))
+                        value_unique_key, previous_unique_key, None))
 
         # Delete remaining un-matched entries.
         for existing_record in existing.values():
@@ -260,8 +260,9 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                 # be able to "continue" from the inner loop.
                 if any((i.value_unique_key == j.previous_unique_key
                         for j in record_updates)):
-                    # Check we didn't already defer this update.
-                    if i.deferred:
+                    # Check we didn't already defer this update without making
+                    # more updates since.
+                    if i.deferred == n_update:
                         if forbid_circular_reinsert:
                             raise UserError(
                                 'Circular updates are not permitted here.')
@@ -273,8 +274,11 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                         n_update += 1
                         continue
 
-                    # Defer the conflicting update until later.
-                    record_updates.append(i._replace(deferred=True))
+                    # Defer the conflicting update until later.  Record the
+                    # current number of updates in the "deferred" entry so that
+                    # we can detect if we return to this entry again without
+                    # successfully having made any more updates.
+                    record_updates.append(i._replace(deferred=n_update))
                     continue
 
             # Apply the update.
