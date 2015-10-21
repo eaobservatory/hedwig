@@ -94,6 +94,51 @@ class DBJCMTTest(DBTestCase):
         self.assertEqual(request[1].weather, JCMTWeather.BAND2)
         self.assertEqual(request[1].time, 10.0)
 
+    def test_sync_jcmt_request(self):
+        """
+        Test a JCMT request sync operation which encounters uniqueness
+        constraints.
+        """
+
+        proposal_id = self._create_test_proposal()
+
+        records = JCMTRequestCollection()
+        records[0] = JCMTRequest(
+            None, None, JCMTInstrument.HARP, JCMTWeather.BAND1, 10.0)
+        records[1] = JCMTRequest(
+            None, None, JCMTInstrument.HARP, JCMTWeather.BAND5, 20.0)
+
+        n = self.db.sync_jcmt_proposal_request(proposal_id, records)
+        self.assertEqual(n, (2, 0, 0))
+
+        records = self.db.search_jcmt_request(proposal_id)
+        id1 = list(records.keys())
+
+        self.assertEqual(records[id1[0]].weather, JCMTWeather.BAND1)
+        self.assertEqual(records[id1[0]].time, 10.0)
+        self.assertEqual(records[id1[1]].weather, JCMTWeather.BAND5)
+        self.assertEqual(records[id1[1]].time, 20.0)
+
+        # Swap the weather bands.
+        records[id1[0]] = records[id1[0]]._replace(weather=JCMTWeather.BAND5)
+        records[id1[1]] = records[id1[1]]._replace(weather=JCMTWeather.BAND1)
+
+        n = self.db.sync_jcmt_proposal_request(proposal_id, records)
+        self.assertEqual(n, (0, 2, 0))
+
+        records = self.db.search_jcmt_request(proposal_id)
+        id2 = list(records.keys())
+
+        # Expect the first entry to have been re-inserted since we made a
+        # circular update.
+        self.assertEqual(id1[1], id2[0])
+        self.assertNotEqual(id1[0], id2[1])
+
+        self.assertEqual(records[id2[0]].weather, JCMTWeather.BAND1)
+        self.assertEqual(records[id2[0]].time, 20.0)
+        self.assertEqual(records[id2[1]].weather, JCMTWeather.BAND5)
+        self.assertEqual(records[id2[1]].time, 10.0)
+
     def test_jcmt_allocation(self):
         proposal_id = self._create_test_proposal()
 
@@ -131,6 +176,54 @@ class DBJCMTTest(DBTestCase):
         self.assertEqual(allocation[1].instrument, JCMTInstrument.HARP)
         self.assertEqual(allocation[1].weather, JCMTWeather.BAND5)
         self.assertEqual(allocation[1].time, 75.0)
+
+    def test_sync_jcmt_allocation(self):
+        """
+        Test JCMT allocation sync operation including unique constraint
+        avoidance.
+        """
+
+        proposal_id = self._create_test_proposal()
+
+        records = JCMTRequestCollection()
+        records[0] = JCMTRequest(
+            None, None, JCMTInstrument.SCUBA2, JCMTWeather.BAND1, 10.0)
+        records[1] = JCMTRequest(
+            None, None, JCMTInstrument.SCUBA2, JCMTWeather.BAND2, 20.0)
+        records[2] = JCMTRequest(
+            None, None, JCMTInstrument.SCUBA2, JCMTWeather.BAND3, 30.0)
+
+        n = self.db.sync_jcmt_proposal_allocation(proposal_id, records)
+        self.assertEqual(n, (3, 0, 0))
+
+        records = self.db.search_jcmt_allocation(proposal_id=proposal_id)
+        self.assertEqual(len(records), 3)
+
+        id1 = list(records.keys())
+
+        records[id1[0]] = records[id1[0]]._replace(weather=JCMTWeather.BAND2)
+        records[id1[1]] = records[id1[1]]._replace(weather=JCMTWeather.BAND3)
+        records[id1[2]] = records[id1[2]]._replace(weather=JCMTWeather.BAND4)
+
+        n = self.db.sync_jcmt_proposal_allocation(proposal_id, records)
+        self.assertEqual(n, (0, 3, 0))
+
+        records = self.db.search_jcmt_allocation(proposal_id=proposal_id)
+
+        id2 = list(records.keys())
+
+        # There was no circular update loop so the identifiers should be
+        # unchanged.
+        self.assertEqual(id1, id2)
+
+        for (record, id_, weather, time) in zip(
+                records.values(), id2,
+                [JCMTWeather.BAND2, JCMTWeather.BAND3, JCMTWeather.BAND4],
+                [10.0, 20.0, 30.0]):
+            self.assertEqual(record.id, id_)
+            self.assertEqual(record.weather, weather)
+            self.assertEqual(record.time, time)
+            self.assertEqual(record.instrument, JCMTInstrument.SCUBA2)
 
     def _create_test_proposal(self):
         facility_id = self.db.ensure_facility('jcmt')

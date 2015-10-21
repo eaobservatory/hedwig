@@ -19,7 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from hedwig.error import UserError
-from hedwig.type import Affiliation, ResultCollection
+from hedwig.type import Affiliation, Category, ResultCollection
 
 from .dummy_db import DBTestCase
 
@@ -104,3 +104,68 @@ class DBSyncTest(DBTestCase):
 
         with self.assertRaisesRegexp(UserError, 'Circular update'):
             self.db.sync_queue_affiliation(queue_id, records)
+
+    def test_sync_category(self):
+        """
+        Test sync of a facility's categories including uniqueness problems.
+        """
+
+        facility_id = self.db.ensure_facility('test_tel')
+        self.assertIsInstance(facility_id, int)
+
+        records = ResultCollection()
+        records[0] = Category(None, facility_id, 'Cat 1', False)
+        records[1] = Category(None, facility_id, 'Cat 2', False)
+        records[2] = Category(None, facility_id, 'Cat 3', False)
+        records[3] = Category(None, facility_id, 'Cat 4', False)
+
+        n = self.db.sync_facility_category(facility_id, records)
+        self.assertEqual(n, (4, 0, 0))
+
+        records = self.db.search_category(facility_id=facility_id,
+                                          order_by_id=True)
+        self.assertEqual([x.name for x in records.values()],
+                         ['Cat 1', 'Cat 2', 'Cat 3', 'Cat 4'])
+
+        id_ = list(records.keys())
+
+        records[id_[1]] = records[id_[1]]._replace(name='Cat 3')
+        records[id_[2]] = records[id_[2]]._replace(name='Cat 4')
+        records[id_[3]] = records[id_[3]]._replace(name='Cat 5')
+
+        n = self.db.sync_facility_category(facility_id, records)
+        self.assertEqual(n, (0, 3, 0))
+
+        records = self.db.search_category(facility_id=facility_id,
+                                          order_by_id=True)
+        self.assertEqual([x.name for x in records.values()],
+                         ['Cat 1', 'Cat 3', 'Cat 4', 'Cat 5'])
+
+    def test_sync_email(self):
+        person_id = self.db.add_person('Test Person')
+        email_1 = self.db.add_email(person_id, 'a@x', primary=True)
+        email_2 = self.db.add_email(person_id, 'b@x')
+        email_3 = self.db.add_email(person_id, 'c@x')
+
+        records = self.db.search_email(person_id=person_id)
+
+        self.assertEqual([x.address for x in records.values()],
+                         ['a@x', 'b@x', 'c@x'])
+
+        id_ = list(records.keys())
+
+        # Make a circular update.
+        records[id_[0]] = records[id_[0]]._replace(address='b@x')
+        records[id_[1]] = records[id_[1]]._replace(address='c@x')
+        records[id_[2]] = records[id_[2]]._replace(address='a@x')
+
+        n = self.db.sync_person_email(person_id, records)
+        self.assertEqual(n, (0, 3, 0))
+
+        records = self.db.search_email(person_id=person_id)
+
+        # Expect first address to have moved to the end due to re-insertion.
+        self.assertEqual([x.address for x in records.values()],
+                         ['c@x', 'a@x', 'b@x'])
+        self.assertEqual([x.primary for x in records.values()],
+                         [False, False, True])

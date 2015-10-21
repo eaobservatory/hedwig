@@ -835,7 +835,8 @@ class ProposalPart(object):
 
         return ans
 
-    def search_category(self, facility_id, hidden=None, _conn=None):
+    def search_category(self, facility_id, hidden=None, order_by_id=False,
+                        _conn=None):
         """
         Search for categories.
         """
@@ -850,8 +851,13 @@ class ProposalPart(object):
 
         ans = ResultCollection()
 
+        if order_by_id:
+            stmt = stmt.order_by(category.c.id.asc())
+        else:
+            stmt = stmt.order_by(category.c.name.asc())
+
         with self._transaction(_conn=_conn) as conn:
-            for row in conn.execute(stmt.order_by(category.c.name.asc())):
+            for row in conn.execute(stmt):
                 ans[row['id']] = Category(**row)
 
         return ans
