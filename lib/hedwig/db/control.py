@@ -93,7 +93,7 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                       update_columns=None, verified_columns=(),
                       forbid_add=False, forbid_delete=False,
                       record_match_column=None,
-                      unique_columns=None):
+                      unique_columns=None, forbid_circular_reinsert=False):
         """
         Update a set of database records to match the given set of records.
 
@@ -128,6 +128,14 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
 
         The "unique_columns" argument should be used to indicate which
         columns being updated have unique constraints in the database.
+        If a set of circular updates involving the unique columns is
+        detected, then the loop will be broken by deleting and re-inserting
+        one of the records, unless the "forbid_circular_reinsert" argument
+        is given, in which case an error is raised.  Be aware that
+        re-insertion currently only retains the columns being updated!
+        If a syncing operation is added for which this is a problem,
+        the insertions should be split into new records and re-insertions
+        so that they can be handled separately.
         """
 
         # Initialize debugging counters.
@@ -165,10 +173,10 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
         # mentioning the same record twice.
         considered = set()
 
-        # Queue of entries to be updated and list of entries to be inserted.
+        # Queues of entries to be updated and entries to be inserted.
         # Each entry of the update queue is a RecordUpdate namedtuple.
         record_updates = deque()
-        record_inserts = []
+        record_inserts = deque()
 
         # Prepare set to contain the tuples of the unique columns (where
         # specified) for each input record processed.
@@ -254,7 +262,16 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                         for j in record_updates)):
                     # Check we didn't already defer this update.
                     if i.deferred:
-                        raise UserError('Circular updates not yet supported.')
+                        if forbid_circular_reinsert:
+                            raise UserError(
+                                'Circular updates are not permitted here.')
+
+                        # Delete this record and schedule it for re-insertion
+                        # later.  Count this as an "update".
+                        conn.execute(table.delete().where(table.c.id == i.id))
+                        record_inserts.appendleft(i.value)
+                        n_update += 1
+                        continue
 
                     # Defer the conflicting update until later.
                     record_updates.append(i._replace(deferred=True))

@@ -1894,7 +1894,8 @@ class ProposalPart(object):
 
             return self._sync_records(
                 conn, affiliation, affiliation.c.queue_id, queue_id,
-                records, unique_columns=(affiliation.c.name,))
+                records, unique_columns=(affiliation.c.name,),
+                forbid_circular_reinsert=True)
 
     def update_call(self, call_id, date_open=None, date_close=None,
                     abst_word_lim=None,
