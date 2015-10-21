@@ -196,6 +196,37 @@ class DBProposalTest(DBTestCase):
                 queue_id=queue_id, order_by_id=True).values()],
             ['Aff F', 'Aff E', 'Aff C', 'Aff D', 'Aff EE'])
 
+    def test_sync_affiliation_circular(self):
+        """
+        Test circular sync of affiliations.
+        """
+
+        facility_id = self.db.ensure_facility('test_tel')
+        self.assertIsInstance(facility_id, int)
+        queue_id = self.db.add_queue(facility_id, 'Queue1', 'Q1')
+        self.assertIsInstance(queue_id, int)
+
+        records = ResultCollection()
+        records[0] = Affiliation(None, queue_id, 'Aff A', False, False, None)
+        records[1] = Affiliation(None, queue_id, 'Aff B', False, False, None)
+        records[2] = Affiliation(None, queue_id, 'Aff C', False, False, None)
+        records[3] = Affiliation(None, queue_id, 'Aff D', False, False, None)
+        records[4] = Affiliation(None, queue_id, 'Aff E', False, False, None)
+
+        n = self.db.sync_queue_affiliation(queue_id, records)
+        self.assertEqual(n, (5, 0, 0))
+
+        records = self.db.search_affiliation(queue_id=queue_id,
+                                             order_by_id=True)
+        id_ = list(records.keys())
+
+        records[id_[1]] = records[id_[1]]._replace(name='Aff C')
+        records[id_[2]] = records[id_[2]]._replace(name='Aff D')
+        records[id_[3]] = records[id_[3]]._replace(name='Aff B')
+
+        with self.assertRaisesRegexp(UserError, 'Circular update'):
+            self.db.sync_queue_affiliation(queue_id, records)
+
     def test_semester(self):
         # Test add_semeseter method.
         facility_id = self.db.ensure_facility('my_tel')

@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import deque, namedtuple
 from contextlib import contextmanager
 from threading import Lock
 
@@ -34,6 +35,12 @@ from .part.message import MessagePart
 from .part.people import PeoplePart
 from .part.proposal import ProposalPart
 from .part.review import ReviewPart
+
+
+RecordUpdate = namedtuple(
+    'RecordUpdate',
+    ('id', 'value', 'updates', 'value_unique_key', 'previous_unique_key',
+     'deferred'))
 
 
 class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
@@ -158,10 +165,9 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
         # mentioning the same record twice.
         considered = set()
 
-        # Lists of entries to be compared/inserted.  Each entry is a tuple of
-        # (id_, value, previous, value_unique_key, previous_unique_key)
-        # where value is the new value.
-        record_matches = []
+        # Queue of entries to be updated and list of entries to be inserted.
+        # Each entry of the update queue is a RecordUpdate namedtuple.
+        record_updates = deque()
         record_inserts = []
 
         # Prepare set to contain the tuples of the unique columns (where
@@ -206,14 +212,25 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                 n_insert += 1
 
             else:
-                if unique_columns is None:
-                    previous_unique_key = None
-                else:
-                    previous_unique_key = \
-                        tuple((previous[x] for x in unique_columns))
+                # Check if update is necessary.
+                values = {}
+                for column in update_columns:
+                    col_val = getattr(value, column.name)
+                    if previous[column] != col_val:
+                        values[column] = col_val
+                        if column in verified_columns:
+                            values[table.c.verified] = False
 
-                record_matches.append((id_, value, previous,
-                                       value_unique_key, previous_unique_key))
+                if values:
+                    if unique_columns is None:
+                        previous_unique_key = None
+                    else:
+                        previous_unique_key = \
+                            tuple((previous[x] for x in unique_columns))
+
+                    record_updates.append(RecordUpdate(
+                        previous['id'], value, values,
+                        value_unique_key, previous_unique_key, False))
 
         # Delete remaining un-matched entries.
         for existing_record in existing.values():
@@ -224,24 +241,29 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                 table.delete().where(table.c.id == existing_record['id']))
             n_delete += 1
 
-        # Iterate over record matches and update as required.
-        for (id_, value, previous,
-                value_unique_key, previous_unique_key) in record_matches:
-            # Check if update is necessary, and if necessary, do it.
-            values = {}
-            for column in update_columns:
-                col_val = getattr(value, column.name)
-                if previous[column] != col_val:
-                    values[column] = col_val
-                    if column in verified_columns:
-                        values[table.c.verified] = False
+        # Iterate over record updates and apply as required.
+        while record_updates:
+            i = record_updates.popleft()
 
-            if not values:
-                continue
+            # Check whether applying the update would cause a unique
+            # constraint violation.
+            if unique_columns is not None:
+                # Use "any" rather than another loop because we wouldn't
+                # be able to "continue" from the inner loop.
+                if any((i.value_unique_key == j.previous_unique_key
+                        for j in record_updates)):
+                    # Check we didn't already defer this update.
+                    if i.deferred:
+                        raise UserError('Circular updates not yet supported.')
 
+                    # Defer the conflicting update until later.
+                    record_updates.append(i._replace(deferred=True))
+                    continue
+
+            # Apply the update.
             conn.execute(table.update().where(
-                table.c.id == previous['id']
-            ).values(values))
+                table.c.id == i.id
+            ).values(i.updates))
             n_update += 1
 
         # Iterate over record inserts and insert the new values.
