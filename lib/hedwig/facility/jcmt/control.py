@@ -126,7 +126,8 @@ class JCMTPart(object):
 
             return self._sync_records(
                 conn, jcmt_allocation, jcmt_allocation.c.proposal_id,
-                proposal_id, records)
+                proposal_id, records, unique_columns=(
+                    jcmt_allocation.c.instrument, jcmt_allocation.c.weather))
 
     def sync_jcmt_proposal_request(self, proposal_id, records,
                                    _test_skip_check=False):
@@ -145,4 +146,5 @@ class JCMTPart(object):
 
             return self._sync_records(
                 conn, jcmt_request, jcmt_request.c.proposal_id, proposal_id,
-                records)
+                records, unique_columns=(
+                    jcmt_request.c.instrument, jcmt_request.c.weather))

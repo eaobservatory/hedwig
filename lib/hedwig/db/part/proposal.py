@@ -1671,7 +1671,9 @@ class ProposalPart(object):
                     'facility does not exist with id={}', facility_id)
 
             return self._sync_records(
-                conn, category, category.c.facility_id, facility_id, records)
+                conn, category, category.c.facility_id, facility_id, records,
+                unique_columns=(category.c.name,),
+                forbid_circular_reinsert=True)
 
     def sync_proposal_category(self, proposal_id, records, _conn=None):
         """

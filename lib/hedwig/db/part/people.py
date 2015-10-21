@@ -620,7 +620,8 @@ class PeoplePart(object):
                 conn, email, email.c.person_id, person_id, records,
                 update_columns=(
                     email.c.address, email.c.primary, email.c.public,
-                ), verified_columns=(email.c.address,))
+                ), verified_columns=(email.c.address,),
+                unique_columns=(email.c.address,))
 
     def update_institution(self, institution_id, updater_person_id=None,
                            name=None, department=None,
