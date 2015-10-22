@@ -208,11 +208,15 @@ class BaseCalculator(object):
                     default_input = self.convert_input_version(
                         calculation.version, calculation.input)
 
-                output = self(mode, default_input)
                 calculation_id = calculation.id
                 calculation_proposal = proposal_id
                 calculation_title = calculation.title
                 overwrite = can.edit
+
+                try:
+                    output = self(mode, default_input)
+                except UserError as e:
+                    message = e.message
 
             else:
                 # When we didn't receive a form submission, get the default
