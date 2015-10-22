@@ -380,108 +380,119 @@ class SCUBA2Calculator(JCMTCalculator):
 
         extra['airmass'] = airmass
 
-        # Determine tau and transmission at each wavelength.
-        tau = {}
-        transmission = {}
-        for filter_ in (850, 450):
-            tau_wl = self.itc.calculate_tau(filter_, input_['tau'])
-            tau[filter_] = tau_wl
-            extra['tau_{}'.format(filter_)] = tau_wl
+        try:
+            # Determine tau and transmission at each wavelength.
+            tau = {}
+            transmission = {}
+            for filter_ in (850, 450):
+                tau_wl = self.itc.calculate_tau(filter_, input_['tau'])
+                tau[filter_] = tau_wl
+                extra['tau_{}'.format(filter_)] = tau_wl
 
-            transmission_wl = self.itc.calculate_transmission(airmass, tau_wl)
-            transmission[filter_] = transmission_wl
-            extra['trans_{}'.format(filter_)] = transmission_wl
+                transmission_wl = self.itc.calculate_transmission(airmass, tau_wl)
+                transmission[filter_] = transmission_wl
+                extra['trans_{}'.format(filter_)] = transmission_wl
 
-        # Perform calculation.
-        if mode == self.CALC_TIME:
-            filter_ = input_['wl']
-            filter_alt = 850 if filter_ == 450 else 450
+            # Perform calculation.
+            if mode == self.CALC_TIME:
+                filter_ = input_['wl']
+                filter_alt = 850 if filter_ == 450 else 450
 
-            time_src = self.itc.calculate_time(
-                map_mode, filter_, transmission[filter_], factor[filter_],
-                input_['rms'])
+                time_src = self.itc.calculate_time(
+                    map_mode, filter_, transmission[filter_], factor[filter_],
+                    input_['rms'])
 
-            extra['time_src'] = time_src / 3600.0
+                extra['time_src'] = time_src / 3600.0
 
-            extra['wl_alt'] = filter_alt
-            extra['rms_alt'] = self.itc.calculate_rms(
-                map_mode, filter_alt, transmission[filter_alt],
-                factor[filter_alt], time_src)
+                extra['wl_alt'] = filter_alt
+                extra['rms_alt'] = self.itc.calculate_rms(
+                    map_mode, filter_alt, transmission[filter_alt],
+                    factor[filter_alt], time_src)
 
-            time_tot = time_src + self.itc.estimate_overhead(map_mode,
-                                                             time_src)
+                time_tot = time_src + self.itc.estimate_overhead(map_mode,
+                                                                 time_src)
 
-            output = {'time': time_tot / 3600.0}
+                output = {'time': time_tot / 3600.0}
 
-            # Make weather band comparison table.
-            weather_band_comparison = OrderedDict()
-            for (weather_band, weather_band_info) in \
-                    JCMTWeather.get_available().items():
-                weather_band_result = {}
-                for condition_name in ('rep', 'min', 'max'):
-                    condition_tau = getattr(weather_band_info, condition_name)
-                    if condition_tau is None:
-                        weather_band_result[condition_name] = None
-                        continue
+                # Make weather band comparison table.
+                weather_band_comparison = OrderedDict()
+                for (weather_band, weather_band_info) in \
+                        JCMTWeather.get_available().items():
+                    weather_band_result = {}
+                    for condition_name in ('rep', 'min', 'max'):
+                        condition_tau = getattr(weather_band_info, condition_name)
+                        if condition_tau is None:
+                            weather_band_result[condition_name] = None
+                            continue
 
-                    transmission = self.itc.calculate_transmission(
-                        airmass,
-                        self.itc.calculate_tau(filter_, condition_tau))
-                    time_src = self.itc.calculate_time(
-                        map_mode, filter_, transmission, factor[filter_],
-                        input_['rms'])
-                    time_tot = time_src + self.itc.estimate_overhead(map_mode,
-                                                                     time_src)
-                    weather_band_result[condition_name] = time_tot / 3600.0
+                        transmission = self.itc.calculate_transmission(
+                            airmass,
+                            self.itc.calculate_tau(filter_, condition_tau))
+                        time_src = self.itc.calculate_time(
+                            map_mode, filter_, transmission, factor[filter_],
+                            input_['rms'])
+                        time_tot = time_src + self.itc.estimate_overhead(map_mode,
+                                                                         time_src)
+                        weather_band_result[condition_name] = time_tot / 3600.0
 
-                weather_band_comparison[weather_band] = weather_band_result
+                    weather_band_comparison[weather_band] = weather_band_result
 
-            extra['wb_comparison'] = weather_band_comparison
-            extra['wb_comparison_format'] = '{:.3f}'
-            extra['wb_comparison_unit'] = 'hours'
+                extra['wb_comparison'] = weather_band_comparison
+                extra['wb_comparison_format'] = '{:.3f}'
+                extra['wb_comparison_unit'] = 'hours'
 
-        elif mode == self.CALC_RMS:
-            # Convert time to seconds.
-            time_tot = input_['time'] * 3600.0
+            elif mode == self.CALC_RMS:
+                # Convert time to seconds.
+                time_tot = input_['time'] * 3600.0
 
-            time_src = time_tot - self.itc.estimate_overhead(map_mode,
-                                                             time_tot,
-                                                             from_total=True)
-            extra['time_src'] = time_src / 3600.0
+                time_src = time_tot - self.itc.estimate_overhead(map_mode,
+                                                                 time_tot,
+                                                                 from_total=True)
+                extra['time_src'] = time_src / 3600.0
 
-            output = {
-                'rms_850': self.itc.calculate_rms(
-                    map_mode, 850, transmission[850], factor[850], time_src),
-                'rms_450': self.itc.calculate_rms(
-                    map_mode, 450, transmission[450], factor[450], time_src),
-            }
+                output = {
+                    'rms_850': self.itc.calculate_rms(
+                        map_mode, 850, transmission[850], factor[850], time_src),
+                    'rms_450': self.itc.calculate_rms(
+                        map_mode, 450, transmission[450], factor[450], time_src),
+                }
 
-            # Make weather band comparison table.
-            weather_band_comparison = OrderedDict()
-            for (weather_band, weather_band_info) in \
-                    JCMTWeather.get_available().items():
-                weather_band_result = {}
-                for condition_name in ('rep', 'min', 'max'):
-                    condition_tau = getattr(weather_band_info, condition_name)
-                    if condition_tau is None:
-                        weather_band_result[condition_name] = None
-                        continue
+                # Make weather band comparison table.
+                weather_band_comparison = OrderedDict()
+                for (weather_band, weather_band_info) in \
+                        JCMTWeather.get_available().items():
+                    weather_band_result = {}
+                    for condition_name in ('rep', 'min', 'max'):
+                        condition_tau = getattr(weather_band_info, condition_name)
+                        if condition_tau is None:
+                            weather_band_result[condition_name] = None
+                            continue
 
-                    transmission = self.itc.calculate_transmission(
-                        airmass,
-                        self.itc.calculate_tau(850, condition_tau))
-                    weather_band_result[condition_name] = \
-                        self.itc.calculate_rms(
-                            map_mode, 850, transmission, factor[850], time_src)
+                        transmission = self.itc.calculate_transmission(
+                            airmass,
+                            self.itc.calculate_tau(850, condition_tau))
+                        weather_band_result[condition_name] = \
+                            self.itc.calculate_rms(
+                                map_mode, 850, transmission, factor[850], time_src)
 
-                weather_band_comparison[weather_band] = weather_band_result
+                    weather_band_comparison[weather_band] = weather_band_result
 
-            extra['wb_comparison'] = weather_band_comparison
-            extra['wb_comparison_format'] = '{:.3f}'
-            extra['wb_comparison_unit'] = 'mJy/beam'
+                extra['wb_comparison'] = weather_band_comparison
+                extra['wb_comparison_format'] = '{:.3f}'
+                extra['wb_comparison_unit'] = 'mJy/beam'
 
-        else:
-            raise CalculatorError('Unknown mode.')
+            else:
+                raise CalculatorError('Unknown mode.')
+
+        except ZeroDivisionError:
+            raise UserError(
+                'Division by zero error occurred during calculation.')
+
+        except ValueError as e:
+            if e.message == 'math domain error':
+                raise UserError(
+                    'Negative square root error occurred during calculation.')
+            raise
 
         return CalculatorResult(output, extra)
 
