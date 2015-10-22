@@ -658,6 +658,16 @@ class HeterodyneCalculator(JCMTCalculator):
         except HeterodyneITCError as e:
             raise UserError(e.message)
 
+        except ZeroDivisionError:
+            raise UserError(
+                'Division by zero error occurred during calculation.')
+
+        except ValueError as e:
+            if e.message == 'math domain error':
+                raise UserError(
+                    'Negative square root error occurred during calculation.')
+            raise
+
         weather_band_comparison = OrderedDict()
         kwargs['with_extra_output'] = False
         for (weather_band, weather_band_info) in \
@@ -669,27 +679,35 @@ class HeterodyneCalculator(JCMTCalculator):
                     weather_band_result[condition_name] = None
                     continue
 
+                condition_result = None
+
                 try:
                     if mode == self.CALC_TIME:
-                        weather_band_result[condition_name] = \
+                        condition_result = \
                             self.itc.calculate_time(
                                 input_['rms'], tau_225=condition_tau,
                                 **kwargs) / 3600.0
 
                     elif mode == self.CALC_RMS_FROM_ELAPSED_TIME:
-                        weather_band_result[condition_name] = \
+                        condition_result = \
                             self.itc.calculate_rms_for_elapsed_time(
                                 input_['elapsed'] * 3600.0,
                                 tau_225=condition_tau, **kwargs)
 
                     elif mode == self.CALC_RMS_FROM_INT_TIME:
-                        weather_band_result[condition_name] = \
+                        condition_result = \
                             self.itc.calculate_rms_for_int_time(
                                 input_['int_time'], tau_225=condition_tau,
                                 **kwargs)
 
                 except HeterodyneITCError as e:
-                    weather_band_result[condition_name] = None
+                    pass
+                except ZeroDivisionError:
+                    pass
+                except ValueError:
+                    pass
+
+                weather_band_result[condition_name] = condition_result
 
             weather_band_comparison[weather_band] = weather_band_result
 
