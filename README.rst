@@ -272,6 +272,7 @@ These are:
 * Processing uploaded figures.
 * Processing uploaded PDF files.
 * Looking up publication references.
+* Preparing feedback messages.
 
 In a live copy of Hedwig, you will need to keep a poll process
 running to perform these tasks.
