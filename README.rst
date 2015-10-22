@@ -101,7 +101,7 @@ You will then need to edit the file to complete the configuration.
 
     This is the key used by Flask for its secure cookie session system.
     Since Hedwig uses this system to authenticate users, you must be
-    sure you enter a good random string here.
+    sure to enter a good random string here.
     The `Flask quick start guide <http://flask.pocoo.org/docs/0.10/quickstart/>`_
     recommends 24 random bytes.
 
