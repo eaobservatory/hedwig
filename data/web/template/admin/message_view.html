@@ -5,7 +5,7 @@
 <table>
     <tr>
         <th>Date</th>
-        <td>{{ message.date | format_datetime }}</td>
+        <td>{{ message.date | format_datetime }} UT</td>
     </tr>
     <tr>
         <th>Subject</th>
@@ -14,13 +14,13 @@
     {% if message.timestamp_send is not none %}
         <tr>
             <th>Date sending started</th>
-            <td>{{ message.timestamp_send | format_datetime }}</td>
+            <td>{{ message.timestamp_send | format_datetime }} UT</td>
         </tr>
     {% endif %}
     {% if message.timestamp_sent is not none %}
         <tr>
             <th>Date message sent</th>
-            <td>{{ message.timestamp_sent | format_datetime }}</td>
+            <td>{{ message.timestamp_sent | format_datetime }} UT</td>
         </tr>
     {% endif %}
     {% if message.identifier is not none %}
