@@ -23,7 +23,7 @@ from datetime import datetime
 import re
 from time import sleep
 
-from lxml import etree
+from xml.etree import ElementTree as etree
 import requests
 
 from ..type import PrevProposalPub, null_tuple
@@ -39,12 +39,13 @@ def get_pub_info_arxiv(article_ids):
     Returns a dictionary by article ID.
     """
 
+    url = 'http://export.arxiv.org/api/query'
+    xmlns = {'atom': 'http://www.w3.org/2005/Atom'}
+
     ans = {}
 
     while article_ids:
         query = article_ids[:10]
-
-        url = 'http://export.arxiv.org/api/query'
 
         feed = None
 
@@ -65,24 +66,24 @@ def get_pub_info_arxiv(article_ids):
             logger.exception('Failed to parse arXiv feed')
 
         if feed is not None:
-            for entry in feed.findall('{*}entry'):
+            for entry in feed.findall('atom:entry', xmlns):
                 try:
                     # Read elements from the feed entry.
-                    id_element = entry.find('{*}id')
+                    id_element = entry.find('atom:id', xmlns)
                     if id_element is None:
                         continue
 
                     id_ = utf_8_decode(id_element.text, 'replace')[0]
-                    title = utf_8_decode(entry.find('{*}title').text,
-                                         'replace')[0]
+                    title = utf_8_decode(
+                        entry.find('atom:title', xmlns).text, 'replace')[0]
 
-                    authors = entry.findall('{*}author')
-                    author = utf_8_decode(authors[0].find('{*}name').text,
-                                          'replace')[0]
+                    authors = entry.findall('atom:author', xmlns)
+                    author = utf_8_decode(
+                        authors[0].find('atom:name', xmlns).text, 'replace')[0]
                     if len(authors) > 1:
                         author += ' et al.'
 
-                    published = entry.find('{*}published').text
+                    published = entry.find('atom:published', xmlns).text
                     if published.endswith('Z'):
                         published = published[:-1]
                         year = datetime.strptime(
