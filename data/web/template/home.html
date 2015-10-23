@@ -24,6 +24,9 @@
     <ul>
         <li><a href="{{ url_for('people.invitation_token_enter') }}">Enter an invitation code</a></li>
         <li><a href="{{ url_for('help.help_index') }}">Help and information</a></li>
+        {% if session.is_admin %}
+            <li><a href="{{ url_for('admin.admin_home') }}">Site administration</a>
+        {% endif %}
     </ul>
 </nav>
 

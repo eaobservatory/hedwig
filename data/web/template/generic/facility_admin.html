@@ -2,6 +2,13 @@
 {% set help_link=url_for('help.admin_page', page_name='menu') %}
 
 {% block content %}
+<nav>
+    <p>
+        <a href="{{ url_for('.facility_home') }}">Back to facility home page</a>
+        <br />
+        <a href="{{ url_for('admin.admin_home') }}">Back to site administration page</a>
+    </p>
+</nav>
 
 <ul>
     <li><a href="{{ url_for('.semester_list') }}">Semesters</a></li>

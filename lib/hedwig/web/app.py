@@ -28,6 +28,7 @@ from ..type import FacilityInfo
 from .util import require_auth, session, templated
 from .template_util import register_template_utils
 
+from .blueprint.admin import create_admin_blueprint
 from .blueprint.facility import create_facility_blueprint
 from .blueprint.help import create_help_blueprint
 from .blueprint.people import create_people_blueprint
@@ -106,6 +107,8 @@ def create_web_app(db=None):
     def contact_page():
         return prepare_contact_page()
 
+    app.register_blueprint(create_admin_blueprint(db, facilities),
+                           url_prefix='/admin')
     app.register_blueprint(create_people_blueprint(db, facilities))
     app.register_blueprint(create_help_blueprint(), url_prefix='/help')
     app.register_blueprint(create_query_blueprint(db), url_prefix='/query')
