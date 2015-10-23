@@ -49,7 +49,6 @@ The following Python modules should be installed:
 * docutils
 * Flask
 * healpy
-* lxml
 * mysql-connector-python
 * Pillow
 * pycountry
