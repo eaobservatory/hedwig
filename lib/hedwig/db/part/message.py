@@ -198,7 +198,7 @@ class MessagePart(object):
         ans = ResultCollection()
 
         with self._transaction() as conn:
-            for row in conn.execute(stmt.order_by(message.c.id.asc())):
+            for row in conn.execute(stmt.order_by(message.c.id.desc())):
                 ans[row['id']] = Message(body=None, recipients=None, **row)
 
         return ans
