@@ -75,6 +75,7 @@ class MessagePart(object):
             recipients = []
 
             for row in conn.execute(select([
+                    message_recipient.c.person_id,
                     person.c.name,
                     message_recipient.c.email_address.label('address'),
                     ]).select_from(message_recipient.join(person)).where(
@@ -119,6 +120,7 @@ class MessagePart(object):
             # with the email table in case the address is not there -- in that
             # case assume the address is not public.
             for row in conn.execute(select([
+                    message_recipient.c.person_id,
                     person.c.name,
                     coalesce(message_recipient.c.email_address,
                              email.c.address).label('address'),
