@@ -28,7 +28,7 @@ from ..web.util import HTTPNotFound, HTTPForbidden, mangle_email_address
 from . import auth
 
 
-def prepare_home(application_name, facilities):
+def prepare_home(facilities):
     return {
         'facilities': facilities.values(),
     }

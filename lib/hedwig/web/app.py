@@ -86,7 +86,7 @@ def create_web_app(db=None):
     @app.route('/')
     @templated('home.html')
     def home_page():
-        return prepare_home(application_name, facilities)
+        return prepare_home(facilities)
 
     @app.route('/proposals')
     @require_auth(require_person=True)
