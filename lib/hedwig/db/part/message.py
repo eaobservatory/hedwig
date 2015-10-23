@@ -25,7 +25,8 @@ from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_, case
 from sqlalchemy.sql.functions import coalesce
 
-from ...error import ConsistencyError, NoSuchRecord, MultipleRecords
+from ...error import ConsistencyError, FormattedError, \
+    NoSuchRecord, MultipleRecords
 from ...type import Message, MessageRecipient, MessageState, ResultCollection
 from ..meta import email, message, message_recipient, person
 
@@ -178,12 +179,13 @@ class MessagePart(object):
                 raise ConsistencyError(
                     'no rows matched marking message as sent')
 
-    def search_message(self):
+    def search_message(self, person_id=None, state=None, message_id_lt=None,
+                       limit=None):
         """
         Searches for messages.
 
-        Currently this method is just for testing, but is expected to
-        be extended to provide for an administrative interface.
+        The selection of messages to be returned can be controlled with the
+        optional keyword arguments.
         """
 
         stmt = select([
@@ -194,6 +196,34 @@ class MessagePart(object):
             message.c.timestamp_sent,
             message.c.identifier,
         ])
+
+        if person_id is not None:
+            stmt = stmt.select_from(message.join(message_recipient)).where(
+                message_recipient.c.person_id == person_id)
+
+        if state is not None:
+            if state == MessageState.UNSENT:
+                stmt = stmt.where(and_(
+                    message.c.timestamp_send.is_(None),
+                    message.c.timestamp_sent.is_(None)))
+
+            elif state == MessageState.SENDING:
+                stmt = stmt.where(and_(
+                    message.c.timestamp_send.isnot(None),
+                    message.c.timestamp_sent.is_(None)))
+
+            elif state == MessageState.SENT:
+                stmt = stmt.where(
+                    message.c.timestamp_sent.isnot(None))
+
+            else:
+                raise FormattedError('unexpected state {}', state)
+
+        if message_id_lt is not None:
+            stmt = stmt.where(message.c.id < message_id_lt)
+
+        if limit is not None:
+            stmt = stmt.limit(limit)
 
         ans = ResultCollection()
 
