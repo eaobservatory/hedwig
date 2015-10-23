@@ -119,7 +119,7 @@ MemberPIInfo = namedtuple(
 
 Message = namedtuple(
     'Message',
-    [x.name for x in message.columns] + ['recipients'])
+    [x.name for x in message.columns] + ['recipients', 'state'])
 
 MessageRecipient = namedtuple(
     'MessageRecipient',
@@ -442,6 +442,25 @@ class GroupType(object):
     @classmethod
     def private_moc_groups(cls):
         return [k for (k, v) in cls._info.items() if v.private_moc]
+
+
+class MessageState(object):
+    UNSENT = 1
+    SENDING = 2
+    SENT = 3
+
+    StateInfo = namedtuple(
+        'StateInfo', ('name',))
+
+    _info = OrderedDict((
+        (UNSENT,  StateInfo('Unsent')),
+        (SENDING, StateInfo('Sending')),
+        (SENT,    StateInfo('Sent')),
+    ))
+
+    @classmethod
+    def get_options(cls):
+        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
 
 class ProposalState(object):

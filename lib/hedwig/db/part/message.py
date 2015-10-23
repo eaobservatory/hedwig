@@ -26,7 +26,7 @@ from sqlalchemy.sql.expression import and_, case
 from sqlalchemy.sql.functions import coalesce
 
 from ...error import ConsistencyError, NoSuchRecord, MultipleRecords
-from ...type import Message, MessageRecipient, ResultCollection
+from ...type import Message, MessageRecipient, MessageState, ResultCollection
 from ..meta import email, message, message_recipient, person
 
 
@@ -88,7 +88,7 @@ class MessagePart(object):
             if row is None:
                 raise NoSuchRecord('message not found with id {}', message_id)
 
-            ans = Message(recipients=recipients, **row)
+            ans = Message(recipients=recipients, state=None, **row)
 
         return ans
 
@@ -150,7 +150,7 @@ class MessagePart(object):
                     raise ConsistencyError(
                         'no rows matched marking message as sending')
 
-        return Message(recipients=recipients, **result)
+        return Message(recipients=recipients, state=None, **result)
 
     def mark_message_sent(self, message_id, identifier,
                           _test_skip_check=False):
@@ -199,6 +199,14 @@ class MessagePart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(message.c.id.desc())):
-                ans[row['id']] = Message(body=None, recipients=None, **row)
+                if row['timestamp_sent'] is not None:
+                    state = MessageState.SENT
+                elif row['timestamp_send'] is not None:
+                    state = MessageState.SENDING
+                else:
+                    state = MessageState.UNSENT
+
+                ans[row['id']] = Message(body=None, recipients=None,
+                                         state=state, **row)
 
         return ans

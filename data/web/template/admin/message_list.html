@@ -11,13 +11,7 @@
     {% for message in messages %}
     <tr>
         <td>
-            {% if message.timestamp_sent is not none %}
-                Sent
-            {% elif message.timestamp_send is not none %}
-                Sending
-            {% else %}
-                Unsent
-            {% endif %}
+            {{ message.state }}
         </td>
         <td>{{ message.date | format_datetime }}</td>
         <td><a href="{{ url_for('.message_view', message_id=message.id) }}">{{ message.subject }}</a></td>

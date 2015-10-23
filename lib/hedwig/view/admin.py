@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from ..error import NoSuchRecord
 from ..web.util import HTTPNotFound
+from ..type import MessageState
 from .util import with_verified_admin
 
 
@@ -32,11 +33,13 @@ class AdminView(object):
 
     @with_verified_admin
     def message_list(self, db, args):
+        states = MessageState.get_options()
         messages = db.search_message()
 
         return {
             'title': 'Message List',
-            'messages': messages.values(),
+            'messages': [x._replace(state=states[x.state])
+                         for x in messages.values()],
         }
 
     @with_verified_admin
