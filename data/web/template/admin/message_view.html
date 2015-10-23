@@ -1,0 +1,55 @@
+{% extends 'layout.html' %}
+{% set navigation = ['site_admin', ('Messages', url_for('.message_list'))] %}
+
+{% block content %}
+<table>
+    <tr>
+        <th>Date</th>
+        <td>{{ message.date | format_datetime }}</td>
+    </tr>
+    <tr>
+        <th>Subject</th>
+        <td>{{ message.subject }}</td>
+    </tr>
+    {% if message.timestamp_send is not none %}
+        <tr>
+            <th>Date sending started</th>
+            <td>{{ message.timestamp_send | format_datetime }}</td>
+        </tr>
+    {% endif %}
+    {% if message.timestamp_sent is not none %}
+        <tr>
+            <th>Date message sent</th>
+            <td>{{ message.timestamp_sent | format_datetime }}</td>
+        </tr>
+    {% endif %}
+    {% if message.identifier is not none %}
+        <tr>
+            <th>Identifier</th>
+            <td>{{ message.identifier }}</td>
+        </tr>
+    {% endif %}
+</table>
+
+<table>
+    <tr>
+        <th>Recipient</th>
+        <th>Fixed address (if applicable)</th>
+    </tr>
+    {% for recipient in message.recipients %}
+        <tr>
+            <td><a href="{{ url_for('people.person_view', person_id=recipient.person_id) }}">{{ recipient.name }}</a></td>
+            <td>{{ '&nbsp;' | safe if (recipient.address is none) else recipient.address }}</td>
+        </tr>
+    {% endfor %}
+</table>
+
+<table>
+    <tr>
+        <th>Message body</th>
+    </tr>
+    <tr>
+        <td><pre>{{ message.body }}</pre></td>
+    </tr>
+</table>
+{% endblock %}

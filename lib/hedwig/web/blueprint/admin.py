@@ -21,16 +21,29 @@ from __future__ import absolute_import, division, print_function, \
 from flask import Blueprint, request
 
 from ..util import require_admin, templated
-from ...view.admin import prepare_home
+from ...view.admin import AdminView
 
 
 def create_admin_blueprint(db, facilities):
     bp = Blueprint('admin', __name__)
+    view = AdminView()
 
     @bp.route('/')
     @templated('admin/home.html')
     @require_admin
     def admin_home():
-        return prepare_home(facilities)
+        return view.home(facilities)
+
+    @bp.route('/message/')
+    @templated('admin/message_list.html')
+    @require_admin
+    def message_list():
+        return view.message_list(db, request.args)
+
+    @bp.route('/message/<int:message_id>')
+    @templated('admin/message_view.html')
+    @require_admin
+    def message_view(message_id):
+        return view.message_view(db, message_id)
 
     return bp

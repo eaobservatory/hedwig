@@ -18,9 +18,35 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from ..error import NoSuchRecord
+from ..web.util import HTTPNotFound
+from .util import with_verified_admin
 
-def prepare_home(facilities):
-    return {
-        'title': 'Site Administration',
-        'facilities': facilities.values(),
-    }
+
+class AdminView(object):
+    def home(self, facilities):
+        return {
+            'title': 'Site Administration',
+            'facilities': facilities.values(),
+        }
+
+    @with_verified_admin
+    def message_list(self, db, args):
+        messages = db.search_message()
+
+        return {
+            'title': 'Message List',
+            'messages': messages.values(),
+        }
+
+    @with_verified_admin
+    def message_view(self, db, message_id):
+        try:
+            message = db.get_message(message_id)
+        except NoSuchRecord:
+            raise HTTPNotFound('Message not found')
+
+        return {
+            'title': 'Message: {}'.format(message.subject),
+            'message': message,
+        }

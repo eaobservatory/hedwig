@@ -1,0 +1,27 @@
+{% extends 'layout.html' %}
+{% set navigation = ['site_admin'] %}
+
+{% block content %}
+<table>
+    <tr>
+        <th>Status</th>
+        <th>Date</th>
+        <th>Subject</th>
+    </tr>
+    {% for message in messages %}
+    <tr>
+        <td>
+            {% if message.timestamp_sent is not none %}
+                Sent
+            {% elif message.timestamp_send is not none %}
+                Sending
+            {% else %}
+                Unsent
+            {% endif %}
+        </td>
+        <td>{{ message.date | format_datetime }}</td>
+        <td><a href="{{ url_for('.message_view', message_id=message.id) }}">{{ message.subject }}</a></td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
