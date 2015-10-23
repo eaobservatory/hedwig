@@ -66,6 +66,31 @@ class MessagePart(object):
 
         return message_id
 
+    def get_message(self, message_id):
+        """
+        Retrieve a message from the database.
+        """
+
+        with self._transaction() as conn:
+            recipients = []
+
+            for row in conn.execute(select([
+                    person.c.name,
+                    message_recipient.c.email_address.label('address'),
+                    ]).select_from(message_recipient.join(person)).where(
+                        message_recipient.c.message_id == message_id)):
+                recipients.append(MessageRecipient(public=None, **row))
+
+            row = conn.execute(message.select().where(
+                message.c.id == message_id).limit(1)).first()
+
+            if row is None:
+                raise NoSuchRecord('message not found with id {}', message_id)
+
+            ans = Message(recipients=recipients, **row)
+
+        return ans
+
     def get_unsent_message(self, mark_sending=False):
         """
         Return the first unsent message, if there is one, or None otherwise.
