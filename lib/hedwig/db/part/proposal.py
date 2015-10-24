@@ -22,7 +22,7 @@ from datetime import datetime
 from hashlib import md5
 
 from sqlalchemy.sql import select
-from sqlalchemy.sql.expression import and_, case, false, not_
+from sqlalchemy.sql.expression import and_, case, not_
 from sqlalchemy.sql.functions import coalesce, count
 from sqlalchemy.sql.functions import max as max_
 
@@ -847,7 +847,10 @@ class ProposalPart(object):
             stmt = stmt.where(category.c.facility_id == facility_id)
 
         if hidden is not None:
-            stmt = stmt.where(category.c.hidden == hidden)
+            if hidden:
+                stmt = stmt.where(category.c.hidden)
+            else:
+                stmt = stmt.where(not_(category.c.hidden))
 
         ans = ResultCollection()
 
@@ -2283,5 +2286,5 @@ class ProposalPart(object):
         return 0 < conn.execute(select([count(affiliation.c.id)]).where(and_(
             affiliation.c.queue_id == queue_id,
             affiliation.c.id == affiliation_id,
-            affiliation.c.hidden == false()
+            not_(affiliation.c.hidden)
         ))).scalar()

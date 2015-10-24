@@ -25,7 +25,7 @@ from datetime import datetime
 from pymoc import MOC
 from pymoc.io.fits import read_moc_fits
 from sqlalchemy.sql import select
-from sqlalchemy.sql.expression import and_, or_
+from sqlalchemy.sql.expression import and_, not_, or_
 from sqlalchemy.sql.functions import coalesce
 from sqlalchemy.sql.functions import max as max_
 
@@ -189,7 +189,10 @@ class CalculatorPart(object):
             stmt = stmt.where(moc.c.facility_id == facility_id)
 
         if public is not None:
-            stmt = stmt.where(moc.c.public == public)
+            if public:
+                stmt = stmt.where(moc.c.public)
+            else:
+                stmt = stmt.where(not_(moc.c.public))
 
         if moc_id is not None:
             stmt = stmt.where(moc.c.id == moc_id)
@@ -225,7 +228,10 @@ class CalculatorPart(object):
             moc.c.facility_id == facility_id).where(or_(*options))
 
         if public is not None:
-            stmt = stmt.where(moc.c.public == public)
+            if public:
+                stmt = stmt.where(moc.c.public)
+            else:
+                stmt = stmt.where(not_(moc.c.public))
 
         ans = ResultCollection()
 
