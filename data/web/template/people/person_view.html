@@ -11,37 +11,35 @@
     <p>
         This profile does not belong to a registered user.
     </p>
-{% else %}
-    {% if is_current_user %}
-        <p>
-            This is your profile.
+{% elif is_current_user %}
+    <p>
+        This is your profile.
+    </p>
+    <nav>
+        <p id="account_manage_links">
+            <a href="{{ url_for('.change_password') }}">Change password</a>
+            <br />
+            <a href="{{ url_for('.change_user_name') }}">Change user name</a>
         </p>
-        <nav>
-            <p id="account_manage_links">
-                <a href="{{ url_for('.change_password') }}">Change password</a>
-                <br />
-                <a href="{{ url_for('.change_user_name') }}">Change user name</a>
-            </p>
-            <p>
-                <a href="{{ url_for('person_proposals') }}">Your proposal list</a>
-                <br />
-                <a href="{{ url_for('person_reviews') }}">Your review list</a>
-            </p>
-        </nav>
-    {% endif %}
-    {% if session.is_admin %}
-        <nav>
-            <p>
-                {% if not is_current_user %}
+        <p>
+            <a href="{{ url_for('person_proposals') }}">Your proposal list</a>
+            <br />
+            <a href="{{ url_for('person_reviews') }}">Your review list</a>
+        </p>
+    </nav>
+{% endif %}
+{% if session.is_admin %}
+    <nav>
+        <p>
+            {% if not is_current_user %}
                 <a href="{{ url_for('.person_view_proposals', person_id=person.id) }}">View proposal list</a>
                 <br />
                 <a href="{{ url_for('.person_view_reviews', person_id=person.id) }}">View review list</a>
                 <br />
-                {% endif %}
-                <a href="{{ url_for('admin.message_list', person_id=person.id) }}">View messages</a>
-            </p>
-        </nav>
-    {% endif %}
+            {% endif %}
+            <a href="{{ url_for('admin.message_list', person_id=person.id) }}">View messages</a>
+        </p>
+    </nav>
 {% endif %}
 
 <table>
