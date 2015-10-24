@@ -30,7 +30,7 @@ from ...auth import check_password_hash, create_password_hash, generate_token
 from ...error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from ...type import Email, EmailCollection, Institution, InstitutionInfo, \
-    Person, PersonInfo, ResultCollection, UserLogEvent
+    Person, PersonInfo, ResultCollection, UserLog, UserLogEvent
 from ...util import get_countries
 from ..meta import auth_failure, email, group_member, \
     institution, institution_log, \
@@ -598,6 +598,21 @@ class PeoplePart(object):
                 values = default.copy()
                 values.update(**row)
                 ans[row['id']] = PersonInfo(**values)
+
+        return ans
+
+    def search_user_log(self, user_id):
+        """
+        Search for user log entries.
+        """
+
+        stmt = user_log.select().where(user_log.c.user_id == user_id)
+
+        ans = ResultCollection()
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt.order_by(user_log.c.id.desc())):
+                ans[row['id']] = UserLog(**row)
 
         return ans
 
