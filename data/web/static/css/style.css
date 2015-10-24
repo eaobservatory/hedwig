@@ -129,6 +129,10 @@ td.review_not_done {
     background: #FFA;
 }
 
+td.no_change {
+    color: #888;
+}
+
 p.warning {
     font-weight: bold;
     background: #FAA;

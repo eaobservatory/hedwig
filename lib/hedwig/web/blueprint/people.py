@@ -198,6 +198,12 @@ def create_people_blueprint(db, facilities):
             db, institution_id,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/institution/<int:institution_id>/log')
+    @require_admin
+    @templated('people/institution_log.html')
+    def institution_log(institution_id):
+        return view.institution_log(db, institution_id)
+
     @bp.route('/invitation')
     @templated('people/invitation_token_enter.html')
     def invitation_token_enter():

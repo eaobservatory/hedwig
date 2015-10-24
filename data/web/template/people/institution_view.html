@@ -33,9 +33,19 @@
 </table>
 
 {% if can_edit %}
-    <p>
-        <a href="{{ url_for('.institution_edit', institution_id=institution.id) }}" id="edit_institution_link">Edit this institution</a>
-    </p>
+    <nav>
+        <p>
+            <a href="{{ url_for('.institution_edit', institution_id=institution.id) }}" id="edit_institution_link">Edit this institution</a>
+        </p>
+    </nav>
+{% endif %}
+
+{% if session.is_admin %}
+    <nav>
+        <p>
+            <a href="{{ url_for('.institution_log', institution_id=institution.id) }}">View edit log</a>
+        </p>
+    </nav>
 {% endif %}
 
 {% if persons %}

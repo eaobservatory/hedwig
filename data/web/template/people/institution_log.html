@@ -1,0 +1,56 @@
+{% extends 'layout.html' %}
+{% set navigation=[('Institutions', url_for('.institution_list')), (institution.name, url_for('.institution_view', institution_id=institution.id))] %}
+
+{% block content %}
+{% if entries %}
+    <table>
+        <tr>
+            <th>Date (UT)</th>
+            <th>Editor</th>
+            <th>Approved</th>
+            <th>Entry</th>
+            <th>Previous</th>
+            <th>New</th>
+        </tr>
+        {% for entry in entries %}
+            <tr class="spacer_above">
+                <td rowspan="5">{{ entry.date | format_datetime }}</td>
+                <td rowspan="5"><a href="{{ url_for('.person_view', person_id=entry.person_id) }}">{{ entry.person_name }}</a></td>
+                <td rowspan="5">{{ 'Yes' if entry.approved else 'No' }}</td>
+                <th>Name</th>
+                {% set cell_class = ('class="no_change"' | safe if entry.prev.name == entry.new.name else '') %}
+                <td {{ cell_class }}>{{ entry.prev.name }}</td>
+                <td {{ cell_class }}>{{ entry.new.name }}</td>
+            </tr>
+            <tr>
+                <th>Department</th>
+                {% set cell_class = ('class="no_change"' | safe if entry.prev.department == entry.new.department else '') %}
+                <td {{ cell_class }}>{{ entry.prev.department }}</td>
+                <td {{ cell_class }}>{{ entry.new.department }}</td>
+            </tr>
+            <tr>
+                <th>Organization</th>
+                {% set cell_class = ('class="no_change"' | safe if entry.prev.organization == entry.new.organization else '') %}
+                <td {{ cell_class }}>{{ entry.prev.organization }}</td>
+                <td {{ cell_class }}>{{ entry.new.organization }}</td>
+            </tr>
+            <tr>
+                <th>Address</th>
+                {% set cell_class = ('class="no_change"' | safe if entry.prev.address == entry.new.address else '') %}
+                <td {{ cell_class }}>{{ entry.prev.address | format_text }}</td>
+                <td {{ cell_class }}>{{ entry.new.address | format_text }}</td>
+            </tr>
+            <tr>
+                <th>Country</th>
+                {% set cell_class = ('class="no_change"' | safe if entry.prev.country == entry.new.country else '') %}
+                <td {{ cell_class }}>{{ entry.prev.country }}</td>
+                <td {{ cell_class }}>{{ entry.new.country }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p class="not_present">
+        No edit log entries found.
+    </p>
+{% endif %}
+{% endblock %}

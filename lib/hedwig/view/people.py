@@ -18,18 +18,25 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import namedtuple
 from datetime import datetime
 
 from ..email.format import render_email_template
 from ..error import ConsistencyError, Error, MultipleRecords, NoSuchRecord, \
     UserError
-from ..type import Email, EmailCollection, Institution, Person, UserLogEvent, \
+from ..type import Email, EmailCollection, \
+    Institution, InstitutionLog, Person, UserLogEvent, \
     null_tuple
 from ..util import get_countries
 from ..web.util import flash, mangle_email_address, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
 from .util import organise_collection
 from . import auth
+
+
+InstitutionLogExtra = namedtuple(
+    'InstitutionLogExtra',
+    InstitutionLog._fields + ('new',))
 
 
 def log_in(db, args, form, referrer):
@@ -877,6 +884,40 @@ def institution_edit(db, institution_id, form):
         'institution_id': institution_id,
         'institution': institution,
         'countries': get_countries(),
+    }
+
+
+def institution_log(db, institution_id):
+    if not auth.can_be_admin(db):
+        raise HTTPForbidden('Could not verify administrative access.')
+
+    try:
+        institution = db.get_institution(institution_id)
+    except NoSuchRecord:
+        raise HTTPNotFound('Institution not found.')
+
+    countries = get_countries()
+    institution = institution._replace(
+        country=countries.get(institution.country, 'Unknown country'))
+
+    entries = []
+
+    current = institution
+
+    for entry in db.search_institution_log(
+            institution_id=institution_id).values():
+        prev = entry.prev._replace(
+            country=countries.get(entry.prev.country, 'Unknown country'))
+
+        entries.append(InstitutionLogExtra(
+            *(entry._replace(prev=prev)), new=current))
+
+        current = prev
+
+    return {
+        'title': 'Institution Edit Log: {}'.format(institution.name),
+        'institution': institution,
+        'entries': entries,
     }
 
 
