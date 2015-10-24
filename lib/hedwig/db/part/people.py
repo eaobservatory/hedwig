@@ -29,7 +29,8 @@ from ... import auth
 from ...auth import check_password_hash, create_password_hash, generate_token
 from ...error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
-from ...type import Email, EmailCollection, Institution, InstitutionInfo, \
+from ...type import Email, EmailCollection, \
+    Institution, InstitutionInfo, InstitutionLog, \
     Person, PersonInfo, ResultCollection, UserLog, UserLogEvent
 from ...util import get_countries
 from ..meta import auth_failure, email, group_member, \
@@ -536,6 +537,46 @@ class PeoplePart(object):
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(email.c.id)):
                 ans[row['id']] = Email(**row)
+
+        return ans
+
+    def search_institution_log(self, institution_id=None, approved=None):
+        """
+        Search for records in the institution edit log.
+        """
+
+        stmt = select([
+            institution_log,
+            person.c.name.label('person_name')
+        ]).select_from(institution_log.join(person))
+
+        if institution_id is not None:
+            stmt = stmt.where(
+                institution_log.c.institution_id == institution_id)
+
+        if approved is not None:
+            if approved:
+                stmt = stmt.where(institution_log.c.approved)
+            else:
+                stmt = stmt.where(not_(institution_log.c.approved))
+
+        ans = ResultCollection()
+
+        with self._transaction() as conn:
+            for row in conn.execute(
+                    stmt.order_by(institution_log.c.id.desc())):
+                row = dict(row.items())
+
+                prev = Institution(
+                    id=row['institution_id'],
+                    name=row.pop('prev_name'),
+                    department=row.pop('prev_department'),
+                    organization=row.pop('prev_organization'),
+                    address=row.pop('prev_address'),
+                    country=row.pop('prev_country'),
+                )
+
+                ans[row['id']] = InstitutionLog(prev=prev, **row)
 
         return ans
 

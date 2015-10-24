@@ -24,7 +24,7 @@ import re
 from .astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
 from .db.meta import affiliation, calculation, call, category, \
-    email, facility, group_member, institution, \
+    email, facility, group_member, institution, institution_log, \
     member, message, moc, person, \
     prev_proposal, prev_proposal_pub, \
     proposal, proposal_category, queue, review, reviewer, \
@@ -91,6 +91,11 @@ Institution = namedtuple(
 InstitutionInfo = namedtuple(
     'InstitutionInfo',
     ['id', 'name', 'department', 'organization', 'country'])
+
+InstitutionLog = namedtuple(
+    'InstitutionLog',
+    [x.name for x in institution_log.columns
+     if not x.name.startswith('prev_')] + ['prev', 'person_name'])
 
 Link = namedtuple(
     'Link',
