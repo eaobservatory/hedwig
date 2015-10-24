@@ -28,12 +28,17 @@
                 <a href="{{ url_for('person_reviews') }}">Your review list</a>
             </p>
         </nav>
-    {% elif session['is_admin'] %}
+    {% endif %}
+    {% if session.is_admin %}
         <nav>
             <p>
+                {% if not is_current_user %}
                 <a href="{{ url_for('.person_view_proposals', person_id=person.id) }}">View proposal list</a>
                 <br />
                 <a href="{{ url_for('.person_view_reviews', person_id=person.id) }}">View review list</a>
+                <br />
+                {% endif %}
+                <a href="{{ url_for('admin.message_list', person_id=person.id) }}">View messages</a>
             </p>
         </nav>
     {% endif %}
