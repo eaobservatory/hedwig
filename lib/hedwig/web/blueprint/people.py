@@ -96,6 +96,12 @@ def create_people_blueprint(db, facilities):
     def drop_admin():
         return view.drop_admin(request.referrer)
 
+    @bp.route('/user/log/<int:user_id>')
+    @require_admin
+    @templated('people/user_log.html')
+    def user_log(user_id):
+        return view.user_log(db, user_id)
+
     @bp.route('/person/register', methods=['GET', 'POST'])
     @require_auth()
     @templated('people/person_edit.html')

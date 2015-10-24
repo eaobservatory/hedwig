@@ -1,0 +1,27 @@
+{% extends 'layout.html' %}
+{% if person is not none %}
+    {% set navigation=['people', (person.name, url_for('.person_view', person_id=person.id))] %}
+{% endif %}
+
+{% block content %}
+{% if events %}
+    <table>
+        <tr>
+            <th>Date (UT)</th>
+            <th>Event</th>
+            <th>Remote address</th>
+        </tr>
+        {% for event in events %}
+            <tr>
+                <td>{{ event.date | format_datetime }}</td>
+                <td>{{ event.event }}</td>
+                <td>{{ event.remote_addr }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p class="not_present">
+        No user account action log events are present.
+    </p>
+{% endif %}
+{% endblock %}

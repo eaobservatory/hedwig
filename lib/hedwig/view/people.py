@@ -23,7 +23,8 @@ from datetime import datetime
 from ..email.format import render_email_template
 from ..error import ConsistencyError, Error, MultipleRecords, NoSuchRecord, \
     UserError
-from ..type import Email, EmailCollection, Institution, Person, null_tuple
+from ..type import Email, EmailCollection, Institution, Person, UserLogEvent, \
+    null_tuple
 from ..util import get_countries
 from ..web.util import flash, mangle_email_address, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
@@ -380,6 +381,27 @@ def drop_admin(referrer):
     session.pop('is_admin', None)
     flash('You have dropped administrative privileges.')
     raise HTTPRedirect(referrer if referrer else url_for('home_page'))
+
+
+def user_log(db, user_id):
+    if not auth.can_be_admin(db):
+        raise HTTPForbidden('Could not verify administrative access.')
+
+    person = None
+    try:
+        person = db.search_person(user_id=user_id).get_single()
+        name = person.name
+    except NoSuchRecord:
+        name = 'User {}'.format(user_id)
+
+    events = db.search_user_log(user_id=user_id)
+
+    return {
+        'title': '{}: Event Log'.format(name),
+        'person': person,
+        'events': [x._replace(event=UserLogEvent.get_info(x.event).description)
+                   for x in events.values()],
+    }
 
 
 def register_person(db, form, remote_addr):
