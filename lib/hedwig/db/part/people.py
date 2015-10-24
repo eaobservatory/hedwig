@@ -968,6 +968,9 @@ class PeoplePart(object):
         Adds an entry to the user log table.
         """
 
+        if not UserLogEvent.is_valid(event):
+            raise Error('Invalid user account action log event type')
+
         conn.execute(user_log.insert().values({
             user_log.c.user_id: user_id,
             user_log.c.date: datetime.utcnow(),

@@ -652,6 +652,10 @@ class UserLogEvent(object):
     }
 
     @classmethod
+    def is_valid(cls, event):
+        return event in cls._info
+
+    @classmethod
     def get_info(cls, event):
         return cls._info[event]
 
