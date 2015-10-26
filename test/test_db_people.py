@@ -475,6 +475,35 @@ class DBPeopleTest(DBTestCase):
         with self.assertRaisesRegexp(UserError, 'Country code not recognised'):
             self.db.add_institution('Institution Three', '', '', '', 'BX')
 
+        # Check the institution update log.
+        records = self.db.search_institution_log(institution_id=institution_id)
+        self.assertEqual(len(records), 2)
+        for (id_, entry) in records.items():
+            self.assertIsInstance(entry.id, int)
+            self.assertEqual(entry.id, id_)
+            self.assertEqual(entry.institution_id, institution_id)
+            self.assertFalse(entry.approved)
+
+        approved = {k: True for k in records.keys()}
+
+        n_update = self.db.sync_institution_log_approval(approved)
+        self.assertEqual(n_update, 2)
+
+        records = self.db.search_institution_log(institution_id=institution_id)
+        self.assertEqual(len(records), 2)
+        for entry in records.values():
+            self.assertTrue(entry.approved)
+
+        approved = {k: False for k in approved.keys()}
+
+        n_update = self.db.sync_institution_log_approval(approved)
+        self.assertEqual(n_update, 2)
+
+        records = self.db.search_institution_log(institution_id=institution_id)
+        self.assertEqual(len(records), 2)
+        for entry in records.values():
+            self.assertFalse(entry.approved)
+
     def test_person(self):
         # Try getting a non-existent person record.
         with self.assertRaisesRegexp(NoSuchRecord, '^person does not exist'):

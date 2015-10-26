@@ -657,6 +657,58 @@ class PeoplePart(object):
 
         return ans
 
+    def sync_institution_log_approval(self, records):
+        """
+        Update the approval status for some institution edit log entries.
+
+        Takes a dictionary of log entry identifiers where the values
+        are booleans indicating whether the entry is approved or not.
+
+        This method works in terms of log entries rather than individual
+        institutions so that it could be used for log entries for
+        multiple institutions.
+        """
+
+        n_update = 0
+
+        with self._transaction() as conn:
+            # Determine which log entries are or are not already approved.
+            # Do this by retrieving the identifiers of the (hopefully smaller)
+            # subset of entries which are not approved.
+            stmt = select([
+                institution_log.c.id,
+            ]).where(
+                not_(institution_log.c.approved))
+
+            not_approved = set()
+            for row in conn.execute(stmt):
+                not_approved.add(row['id'])
+
+            # Now update the records which changed.
+            for (id_, approved) in records.items():
+                # Skip entries which didn't change.
+                if id_ in not_approved:
+                    if not approved:
+                        continue
+                elif approved:
+                    continue
+
+                # Apply update.
+                result = conn.execute(institution_log.update().where(
+                    institution_log.c.id == id_
+                ).values({
+                    institution_log.c.approved: approved,
+                }))
+
+                if result.rowcount != 1:
+                    raise ConsistencyError(
+                        'no rows updated with new approval status for id={}',
+                        id_)
+
+                n_update += 1
+
+        return n_update
+
     def sync_person_email(self, person_id, records):
         """
         Update the email records for a person to match those
