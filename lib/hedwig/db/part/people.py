@@ -543,6 +543,11 @@ class PeoplePart(object):
     def search_institution_log(self, institution_id=None, approved=None):
         """
         Search for records in the institution edit log.
+
+        Note that the web interface
+        (hedwig.view.people._display_institution_log) needs the values
+        in descending order as it works backwards from the current
+        version of each institution record.
         """
 
         stmt = select([

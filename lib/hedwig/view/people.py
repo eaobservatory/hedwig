@@ -887,35 +887,89 @@ def institution_edit(db, institution_id, form):
     }
 
 
-def institution_log(db, institution_id):
+def institution_log(db, institution_id, form):
     if not auth.can_be_admin(db):
         raise HTTPForbidden('Could not verify administrative access.')
 
-    try:
-        institution = db.get_institution(institution_id)
-    except NoSuchRecord:
-        raise HTTPNotFound('Institution not found.')
+    return _display_institution_log(db, institution_id, form)
+
+
+def institution_log_approval(db, form):
+    if not auth.can_be_admin(db):
+        raise HTTPForbidden('Could not verify administrative access.')
+
+    return _display_institution_log(db, None, form)
+
+
+def _display_institution_log(db, institution_id, form):
+    if form is not None:
+        approved = {}
+
+        for param in form:
+            if param.startswith('entry_'):
+                id_ = int(param[6:])
+                approved[id_] = ('approved_{}'.format(id_) in form)
+
+        n_update = db.sync_institution_log_approval(approved)
+        if n_update:
+            flash('The institution edit log approval status has been saved.')
+
+        if institution_id is None:
+            raise HTTPRedirect(url_for('admin.admin_home'))
+        else:
+            raise HTTPRedirect(url_for('.institution_view',
+                                       institution_id=int(institution_id)))
 
     countries = get_countries()
-    institution = institution._replace(
-        country=countries.get(institution.country, 'Unknown country'))
+    current = {}
+
+    if institution_id is None:
+        institution = None
+
+        raw_entries = db.search_institution_log(approved=False)
+
+        title = 'Approve Institution Edits'
+
+    else:
+        try:
+            institution = db.get_institution(institution_id)
+        except NoSuchRecord:
+            raise HTTPNotFound('Institution not found.')
+
+        institution = institution._replace(
+            country=countries.get(institution.country, 'Unknown country'))
+
+        raw_entries = db.search_institution_log(institution_id=institution_id)
+
+        current[institution_id] = institution
+
+        title = 'Institution Edit Log: {}'.format(institution.name)
 
     entries = []
 
-    current = institution
-
-    for entry in db.search_institution_log(
-            institution_id=institution_id).values():
+    for entry in raw_entries.values():
         prev = entry.prev._replace(
             country=countries.get(entry.prev.country, 'Unknown country'))
 
-        entries.append(InstitutionLogExtra(
-            *(entry._replace(prev=prev)), new=current))
+        if entry.institution_id in current:
+            new = current[entry.institution_id]
+        else:
+            try:
+                new = db.get_institution(entry.institution_id)
+            except NoSuchRecord:
+                raise HTTPError('Institution {} not found',
+                                entry.institution_id)
 
-        current = prev
+            new = new._replace(
+                country=countries.get(new.country, 'Unknown country'))
+
+        entries.append(InstitutionLogExtra(
+            *(entry._replace(prev=prev)), new=new))
+
+        current[entry.institution_id] = prev
 
     return {
-        'title': 'Institution Edit Log: {}'.format(institution.name),
+        'title': title,
         'institution': institution,
         'entries': entries,
     }

@@ -198,11 +198,20 @@ def create_people_blueprint(db, facilities):
             db, institution_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/institution/<int:institution_id>/log')
+    @bp.route('/institution/<int:institution_id>/log', methods=['GET', 'POST'])
     @require_admin
     @templated('people/institution_log.html')
     def institution_log(institution_id):
-        return view.institution_log(db, institution_id)
+        return view.institution_log(
+            db, institution_id,
+            (request.form if request.method == 'POST' else None))
+
+    @bp.route('/institution/log_approval', methods=['GET', 'POST'])
+    @require_admin
+    @templated('people/institution_log.html')
+    def institution_log_approval():
+        return view.institution_log_approval(
+            db, (request.form if request.method == 'POST' else None))
 
     @bp.route('/invitation')
     @templated('people/invitation_token_enter.html')
