@@ -348,6 +348,10 @@ class AttachmentState(object):
     def is_error(cls, state):
         return cls._info[state].error
 
+    @classmethod
+    def unready_states(cls):
+        return [k for (k, v) in cls._info.items() if not v.ready]
+
 
 FileTypeInfo = namedtuple('FileTypeInfo',
                           ('name', 'mime', 'preview'))

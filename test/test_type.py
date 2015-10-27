@@ -23,7 +23,8 @@ import itertools
 from unittest import TestCase
 
 from hedwig.error import MultipleRecords, NoSuchRecord, UserError
-from hedwig.type import Assessment, Email, EmailCollection, GroupType, \
+from hedwig.type import Assessment, AttachmentState, \
+    Email, EmailCollection, GroupType, \
     Member, MemberCollection, \
     OrderedResultCollection, \
     ResultCollection, \
@@ -45,6 +46,31 @@ class TypeTestCase(TestCase):
         for (k, v) in options.items():
             self.assertIsInstance(k, int)
             self.assertIsInstance(v, unicode)
+
+    def test_attachment_state(self):
+        # Get list of all states for subsequent tests.
+        states = list(AttachmentState._info.keys())
+
+        self.assertFalse(AttachmentState.is_valid(999))
+
+        unready = AttachmentState.unready_states()
+        self.assertIsInstance(unready, list)
+
+        for state in states:
+            self.assertTrue(AttachmentState.is_valid(state))
+            self.assertIsInstance(AttachmentState.get_name(state), unicode)
+
+            if state == AttachmentState.READY:
+                self.assertNotIn(state, unready)
+                self.assertTrue(AttachmentState.is_ready(state))
+            else:
+                self.assertIn(state, unready)
+                self.assertFalse(AttachmentState.is_ready(state))
+
+            if state == AttachmentState.ERROR:
+                self.assertTrue(AttachmentState.is_error(state))
+            else:
+                self.assertFalse(AttachmentState.is_error(state))
 
     def test_email_collection(self):
         c = EmailCollection()
