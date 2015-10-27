@@ -932,7 +932,7 @@ def _display_institution_log(db, institution_id, form):
     if institution_id is None:
         institution = None
 
-        raw_entries = db.search_institution_log(approved=False)
+        raw_entries = db.search_institution_log(has_unapproved=True)
 
         title = 'Approve Institution Edits'
 
@@ -969,8 +969,11 @@ def _display_institution_log(db, institution_id, form):
             new = new._replace(
                 country=countries.get(new.country, 'Unknown country'))
 
-        entries.append(InstitutionLogExtra(
-            *(entry._replace(prev=prev)), new=new))
+        # Only display non-approved entries if we are not displaying an
+        # institution-specific log.
+        if not ((entry.approved) and (institution_id is None)):
+            entries.append(InstitutionLogExtra(
+                *(entry._replace(prev=prev)), new=new))
 
         current[entry.institution_id] = prev
 
