@@ -1,4 +1,9 @@
 {% extends 'layout.html' %}
+
+{# Note: this template is used both for the single institution log (with
+   context parameter institution set) and for the combined edit approval page
+   (with insitution = None). #}
+
 {% if institution is not none %}
     {% set navigation=[('Institutions', url_for('.institution_list')), (institution.name, url_for('.institution_view', institution_id=institution.id))] %}
 {% else %}
