@@ -29,7 +29,15 @@
                 {% for entry in institution_entries | reverse %}
                     <tr class="spacer_above">
                         {% if (institution is none) and (loop.first) %}
-                            <td rowspan="{{ 5 * loop.length }}"><a href="{{ url_for('.institution_view', institution_id=entry.institution_id) }}">{{ entry.institution_name }}</a></td>
+                            <td rowspan="{{ 5 * loop.length }}">
+                                <p>
+                                    {{ entry.institution_name }}
+                                </p>
+                                <ul>
+                                    <li><a href="{{ url_for('.institution_view', institution_id=entry.institution_id) }}">View&nbsp;details</a></li>
+                                    <li><a href="{{ url_for('.institution_log', institution_id=entry.institution_id) }}">Full&nbsp;log</a></li>
+                                </ul>
+                            </td>
                         {% endif %}
                         <td rowspan="5">{{ entry.date | format_datetime }}</td>
                         <td rowspan="5"><a href="{{ url_for('.person_view', person_id=entry.person_id) }}">{{ entry.person_name }}</a></td>
