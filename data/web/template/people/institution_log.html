@@ -10,6 +10,9 @@
     <form method="POST" action="{{ url_for('.institution_log_approval') if institution is none else url_for('.institution_log', institution_id=institution.id) }}">
         <table>
             <tr>
+                {% if institution is none %}
+                    <th>Institution</th>
+                {% endif %}
                 <th>Date (UT)</th>
                 <th>Editor</th>
                 <th>Approved</th>
@@ -17,43 +20,48 @@
                 <th>Previous</th>
                 <th>New</th>
             </tr>
-            {% for entry in entries %}
-                <tr class="spacer_above">
-                    <td rowspan="5">{{ entry.date | format_datetime }}</td>
-                    <td rowspan="5"><a href="{{ url_for('.person_view', person_id=entry.person_id) }}">{{ entry.person_name }}</a></td>
-                    <td rowspan="5">
-                        <input type="checkbox" name="approved_{{ entry.id }}" {{ 'checked="checked"' | safe if entry.approved }} />
-                        <input type="hidden" name="entry_{{ entry.id }}" value="1" />
-                    </td>
-                    <th>Name</th>
-                    {% set cell_class = ('class="no_change"' | safe if entry.prev.name == entry.new.name else '') %}
-                    <td {{ cell_class }}>{{ entry.prev.name }}</td>
-                    <td {{ cell_class }}>{{ entry.new.name }}</td>
-                </tr>
-                <tr>
-                    <th>Department</th>
-                    {% set cell_class = ('class="no_change"' | safe if entry.prev.department == entry.new.department else '') %}
-                    <td {{ cell_class }}>{{ entry.prev.department }}</td>
-                    <td {{ cell_class }}>{{ entry.new.department }}</td>
-                </tr>
-                <tr>
-                    <th>Organization</th>
-                    {% set cell_class = ('class="no_change"' | safe if entry.prev.organization == entry.new.organization else '') %}
-                    <td {{ cell_class }}>{{ entry.prev.organization }}</td>
-                    <td {{ cell_class }}>{{ entry.new.organization }}</td>
-                </tr>
-                <tr>
-                    <th>Address</th>
-                    {% set cell_class = ('class="no_change"' | safe if entry.prev.address == entry.new.address else '') %}
-                    <td {{ cell_class }}>{{ entry.prev.address | format_text }}</td>
-                    <td {{ cell_class }}>{{ entry.new.address | format_text }}</td>
-                </tr>
-                <tr>
-                    <th>Country</th>
-                    {% set cell_class = ('class="no_change"' | safe if entry.prev.country == entry.new.country else '') %}
-                    <td {{ cell_class }}>{{ entry.prev.country }}</td>
-                    <td {{ cell_class }}>{{ entry.new.country }}</td>
-                </tr>
+            {% for (entry_institution_id, institution_entries) in entries | groupby('institution_id') %}
+                {% for entry in institution_entries | reverse %}
+                    <tr class="spacer_above">
+                        {% if (institution is none) and (loop.first) %}
+                            <td rowspan="{{ 5 * loop.length }}"><a href="{{ url_for('.institution_view', institution_id=entry.institution_id) }}">{{ entry.institution_name }}</a></td>
+                        {% endif %}
+                        <td rowspan="5">{{ entry.date | format_datetime }}</td>
+                        <td rowspan="5"><a href="{{ url_for('.person_view', person_id=entry.person_id) }}">{{ entry.person_name }}</a></td>
+                        <td rowspan="5">
+                            <input type="checkbox" name="approved_{{ entry.id }}" {{ 'checked="checked"' | safe if entry.approved }} />
+                            <input type="hidden" name="entry_{{ entry.id }}" value="1" />
+                        </td>
+                        <th>Name</th>
+                        {% set cell_class = ('class="no_change"' | safe if entry.prev.name == entry.new.name else '') %}
+                        <td {{ cell_class }}>{{ entry.prev.name }}</td>
+                        <td {{ cell_class }}>{{ entry.new.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Department</th>
+                        {% set cell_class = ('class="no_change"' | safe if entry.prev.department == entry.new.department else '') %}
+                        <td {{ cell_class }}>{{ entry.prev.department }}</td>
+                        <td {{ cell_class }}>{{ entry.new.department }}</td>
+                    </tr>
+                    <tr>
+                        <th>Organization</th>
+                        {% set cell_class = ('class="no_change"' | safe if entry.prev.organization == entry.new.organization else '') %}
+                        <td {{ cell_class }}>{{ entry.prev.organization }}</td>
+                        <td {{ cell_class }}>{{ entry.new.organization }}</td>
+                    </tr>
+                    <tr>
+                        <th>Address</th>
+                        {% set cell_class = ('class="no_change"' | safe if entry.prev.address == entry.new.address else '') %}
+                        <td {{ cell_class }}>{{ entry.prev.address | format_text }}</td>
+                        <td {{ cell_class }}>{{ entry.new.address | format_text }}</td>
+                    </tr>
+                    <tr>
+                        <th>Country</th>
+                        {% set cell_class = ('class="no_change"' | safe if entry.prev.country == entry.new.country else '') %}
+                        <td {{ cell_class }}>{{ entry.prev.country }}</td>
+                        <td {{ cell_class }}>{{ entry.new.country }}</td>
+                    </tr>
+                {% endfor %}
             {% endfor %}
         </table>
 
