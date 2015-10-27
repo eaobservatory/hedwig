@@ -29,7 +29,7 @@
                 {% for entry in institution_entries | reverse %}
                     <tr class="spacer_above">
                         {% if (institution is none) and (loop.first) %}
-                            <td rowspan="{{ 5 * loop.length }}">
+                            <td rowspan="{{ 5 * (institution_entries | length) }}">
                                 <p>
                                     {{ entry.institution_name }}
                                 </p>
