@@ -25,7 +25,7 @@ from hedwig.db.meta import invitation, reset_token
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from hedwig.type import Email, EmailCollection, FormatType, \
-    Institution, InstitutionInfo, Person, ResultCollection
+    Institution, InstitutionInfo, MemberInstitution, Person, ResultCollection
 from .dummy_db import DBTestCase
 
 
@@ -529,6 +529,57 @@ class DBPeopleTest(DBTestCase):
         for (id_, entry) in records.items():
             self.assertEqual(entry.institution_name, 'Renamed Institution One')
 
+    def test_institution_merge(self):
+        # Create two institution records with one person each.
+        institution_1 = self.db.add_institution('Main', '', '', '', 'AX')
+        institution_2 = self.db.add_institution('Duplicate', '', '', '', 'AX')
+
+        person_1 = self.db.add_person('Person One')
+        person_2 = self.db.add_person('Person Two')
+        self.db.update_person(person_1, institution_id=institution_1)
+        self.db.update_person(person_2, institution_id=institution_2)
+
+        # Make an entry in the log for the duplicate.
+        self.db.update_institution(institution_2, person_2, 'Duplicate!')
+        self.assertEqual(len(
+            self.db.search_institution_log(institution_id=institution_2)), 1)
+
+        # Create a proposal and store the duplicate institution identifier
+        # in the member record.
+        (proposal_id, affiliation_id) = self._create_test_proposal(person_2)
+        members = self.db.search_member(proposal_id=proposal_id)
+        self.assertEqual(len(members), 1)
+        member_id = members.popitem()[0]
+        members = {member_id: MemberInstitution(member_id, institution_2)}
+        n = self.db.sync_proposal_member_institution(proposal_id, members)
+        self.assertEqual(n, (0, 1, 0))
+
+        # Apply the merge.
+        self.db.merge_institution_records(institution_1, institution_2)
+
+        # Check the correct institution was removed.
+        institution = self.db.get_institution(institution_id=institution_1)
+        self.assertEqual(institution.id, institution_1)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_institution(institution_id=institution_2)
+
+        # The log for the removed institution should have gone.
+        self.assertEqual(len(
+            self.db.search_institution_log(institution_id=institution_2)), 0)
+
+        # The people should now both have the main institution.
+        for person_id in (person_1, person_2):
+            person = self.db.get_person(person_id=person_id)
+            self.assertEqual(person.id, person_id)
+            self.assertEqual(person.institution_id, institution_1)
+
+        # The proposal member should have the main institution.
+        members = self.db.search_member(proposal_id=proposal_id)
+        self.assertEqual(len(members), 1)
+        member = members.popitem()[1]
+        self.assertEqual(member.resolved_institution_id, institution_1)
+
     def test_person(self):
         # Try getting a non-existent person record.
         with self.assertRaisesRegexp(NoSuchRecord, '^person does not exist'):
@@ -734,19 +785,7 @@ class DBPeopleTest(DBTestCase):
         self.db.add_email(person_id_new, 'new@email')
 
         # Create a proposal with 2 members.
-        facility_id = self.db.ensure_facility('test')
-        semester_id = self.db.add_semester(facility_id, 'test', 'test',
-                                           datetime(2000, 1, 1),
-                                           datetime(2000, 6, 30))
-        queue_id = self.db.add_queue(facility_id, 'test', 'test')
-        call_id = self.db.add_call(semester_id, queue_id,
-                                   datetime(1999, 9, 1),
-                                   datetime(1999, 9, 30),
-                                   100, 1000, 0, 1, 2000, 4, 3, 100, 100,
-                                   '', '', '', FormatType.PLAIN)
-        affiliation_id = self.db.add_affiliation(queue_id, 'Aff/n 1')
-        proposal_id = self.db.add_proposal(call_id, person_id_1,
-                                           affiliation_id, 'Proposal 1')
+        (proposal_id, affiliation_id) = self._create_test_proposal(person_id_1)
         self.db.add_member(proposal_id, person_id_2, affiliation_id)
 
         # Issue invitation token for one of the members.
@@ -792,3 +831,24 @@ class DBPeopleTest(DBTestCase):
         self.db.add_user('user3', 'pass3', person_id=person_id_3)
         with self.assertRaisesRegexp(ConsistencyError, 'already registered'):
             self.db.use_invitation(token, new_person_id=person_id_new_3)
+
+    def _create_test_proposal(self, person_id):
+        """
+        Create a proposal and return the proposal and affiliation identifiers.
+        """
+
+        facility_id = self.db.ensure_facility('test')
+        semester_id = self.db.add_semester(facility_id, 'test', 'test',
+                                           datetime(2000, 1, 1),
+                                           datetime(2000, 6, 30))
+        queue_id = self.db.add_queue(facility_id, 'test', 'test')
+        call_id = self.db.add_call(semester_id, queue_id,
+                                   datetime(1999, 9, 1),
+                                   datetime(1999, 9, 30),
+                                   100, 1000, 0, 1, 2000, 4, 3, 100, 100,
+                                   '', '', '', FormatType.PLAIN)
+        affiliation_id = self.db.add_affiliation(queue_id, 'Aff/n 1')
+        proposal_id = self.db.add_proposal(call_id, person_id,
+                                           affiliation_id, 'Proposal 1')
+
+        return (proposal_id, affiliation_id)

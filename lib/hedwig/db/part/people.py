@@ -521,6 +521,44 @@ class PeoplePart(object):
 
         return (token, expiry)
 
+    def merge_institution_records(self, main_institution_id,
+                                  duplicate_institution_id,
+                                  _test_skip_check=False):
+        """
+        Merge the two given institutions.
+
+        Deletes all log entries corresponding to the duplicate and then
+        changes references to the duplicate to point at the main
+        record before deleting it.
+        """
+
+        with self._transaction() as conn:
+            if not _test_skip_check:
+                if not self._exists_id(conn, institution,
+                                       main_institution_id):
+                    raise ConsistencyError(
+                        'main institution {} does not exist for merge',
+                        main_institution_id)
+                if not self._exists_id(conn, institution,
+                                       duplicate_institution_id):
+                    raise ConsistencyError(
+                        'duplicate institution {} does not exist for merge',
+                        duplicate_institution_id)
+
+            conn.execute(institution_log.delete().where(
+                institution_log.c.institution_id == duplicate_institution_id))
+
+            # Swap out references in other tables.
+            for table in (member, person):
+                conn.execute(table.update().where(
+                    table.c.institution_id == duplicate_institution_id
+                ).values({
+                    table.c.institution_id: main_institution_id,
+                }))
+
+            conn.execute(institution.delete().where(
+                institution.c.id == duplicate_institution_id))
+
     def search_email(self, person_id, address=None, _conn=None):
         """
         Find email address records.
