@@ -754,6 +754,7 @@ class PeoplePart(object):
     def update_institution(self, institution_id, updater_person_id=None,
                            name=None, department=None,
                            organization=None, address=None, country=None,
+                           log_approved=False,
                            _test_skip_log=False):
         """
         Update an institution record.
@@ -799,7 +800,7 @@ class PeoplePart(object):
                     institution_log.c.prev_organization: prev.organization,
                     institution_log.c.prev_address: prev.address,
                     institution_log.c.prev_country: prev.country,
-                    institution_log.c.approved: False,
+                    institution_log.c.approved: log_approved,
                 }))
 
             result = conn.execute(institution.update().where(

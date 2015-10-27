@@ -860,6 +860,11 @@ def institution_edit(db, institution_id, form):
                 if not institution.country:
                     raise UserError('Please select the institution country.')
 
+                # If the user is making the update as an administrator,
+                # mark the update as already approved in the edit log.
+                log_approved = (session.get('is_admin', False) and
+                                auth.can_be_admin(db))
+
                 db.update_institution(
                     institution_id,
                     updater_person_id=session['person']['id'],
@@ -867,7 +872,8 @@ def institution_edit(db, institution_id, form):
                     department=institution.department,
                     organization=institution.organization,
                     address=institution.address,
-                    country=institution.country)
+                    country=institution.country,
+                    log_approved=log_approved)
                 flash('The institution\'s record has been updated.')
                 raise HTTPRedirect(url_for('.institution_view',
                                            institution_id=institution_id))
