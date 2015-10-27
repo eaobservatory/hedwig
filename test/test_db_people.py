@@ -485,6 +485,15 @@ class DBPeopleTest(DBTestCase):
             self.assertFalse(entry.approved)
             self.assertIsNone(entry.institution_name)
 
+        self.assertEqual(
+            len(self.db.search_institution_log(approved=True)), 0)
+        self.assertEqual(
+            len(self.db.search_institution_log(approved=False)), 2)
+        self.assertEqual(
+            len(self.db.search_institution_log(has_unapproved=True)), 2)
+        self.assertEqual(
+            len(self.db.search_institution_log(has_unapproved=False)), 0)
+
         approved = {k: True for k in records.keys()}
 
         n_update = self.db.sync_institution_log_approval(approved)
@@ -494,6 +503,15 @@ class DBPeopleTest(DBTestCase):
         self.assertEqual(len(records), 2)
         for entry in records.values():
             self.assertTrue(entry.approved)
+
+        self.assertEqual(
+            len(self.db.search_institution_log(approved=True)), 2)
+        self.assertEqual(
+            len(self.db.search_institution_log(approved=False)), 0)
+        self.assertEqual(
+            len(self.db.search_institution_log(has_unapproved=True)), 0)
+        self.assertEqual(
+            len(self.db.search_institution_log(has_unapproved=False)), 2)
 
         approved = {k: False for k in approved.keys()}
 

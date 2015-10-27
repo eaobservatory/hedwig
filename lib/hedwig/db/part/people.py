@@ -540,7 +540,8 @@ class PeoplePart(object):
 
         return ans
 
-    def search_institution_log(self, institution_id=None, approved=None):
+    def search_institution_log(self, institution_id=None, approved=None,
+                               has_unapproved=None):
         """
         Search for records in the institution edit log.
 
@@ -548,6 +549,15 @@ class PeoplePart(object):
         (hedwig.view.people._display_institution_log) needs the values
         in descending order as it works backwards from the current
         version of each institution record.
+
+        Note also that if you want to see the history of edits to an
+        institution, you should probably not filter by the "approved"
+        status.  Instead use the "has_unapproved" argument to select
+        only those institutions which have unapproved changes and
+        filter out already approved changes for display.  This will
+        allow you to see the 'before' and 'after' of each change since
+        the log only stores the 'before' -- you need to next log entry,
+        or current record, to get the 'after' values.
         """
 
         select_columns = [institution_log, person.c.name.label('person_name')]
@@ -569,6 +579,22 @@ class PeoplePart(object):
                 stmt = stmt.where(institution_log.c.approved)
             else:
                 stmt = stmt.where(not_(institution_log.c.approved))
+
+        if has_unapproved is not None:
+            log_alias = institution_log.alias()
+
+            unapproved_institutions = select([
+                log_alias.c.institution_id,
+            ]).where(
+                not_(log_alias.c.approved)
+            ).distinct()
+
+            if has_unapproved:
+                stmt = stmt.where(institution_log.c.institution_id.in_(
+                    unapproved_institutions))
+            else:
+                stmt = stmt.where(institution_log.c.institution_id.notin_(
+                    unapproved_institutions))
 
         if institution_id is not None:
             stmt = stmt.where(
