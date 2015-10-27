@@ -213,6 +213,14 @@ def create_people_blueprint(db, facilities):
         return view.institution_log_approval(
             db, (request.form if request.method == 'POST' else None))
 
+    @bp.route('/institution/<int:institution_id>/subsume', methods=['GET', 'POST'])
+    @require_admin
+    @templated('people/institution_subsume.html')
+    def institution_subsume(institution_id):
+        return view.institution_subsume(
+            db, institution_id,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/invitation')
     @templated('people/invitation_token_enter.html')
     def invitation_token_enter():

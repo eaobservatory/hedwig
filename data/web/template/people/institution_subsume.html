@@ -1,0 +1,76 @@
+{% extends 'layout.html' %}
+{% set navigation=[('Institutions', url_for('.institution_list')), (institution.name, url_for('.institution_view', institution_id=institution.id))] %}
+
+{% from 'macro/institution.html' import render_institution_form, render_institution_summary %}
+
+{% block content %}
+{% if show_confirm_prompt %}
+    <p>
+        Are you sure you wish to merge these institution records?
+    </p>
+
+    <ul>
+        <li>All log entries corresponding to the duplicate record will be lost.</li>
+        <li>All references to the duplicate record will be replaced.</li>
+    </ul>
+
+    <table>
+        <tr>
+            <th>&nbsp;</th>
+            <th>Main record<br /><i>(to be kept)</i></th>
+            <th>Duplicate record<br /><i>(to be replaced)</i></th>
+        </tr>
+        <tr>
+            <th>Institution name</th>
+            <td>{{ institution.name }}</td>
+            <td>{{ duplicate.name }}</td>
+        </tr>
+        <tr>
+            <th>Department</th>
+            <td>{{ institution.department }}</td>
+            <td>{{ duplicate.department }}</td>
+        </tr>
+        <tr>
+            <th>Parent organization</th>
+            <td>{{ institution.organization }}</td>
+            <td>{{ duplicate.organization }}</td>
+        </tr>
+        <tr>
+            <th>Address</th>
+            <td>{{ institution.address | format_text }}</td>
+            <td>{{ duplicate.address | format_text }}</td>
+        </tr>
+        <tr>
+            <th>Country</th>
+            <td>{{ institution.country }}</td>
+            <td>{{ duplicate.country }}</td>
+        </tr>
+    </table>
+
+    <form method="POST" action="{{ url_for('.institution_subsume', institution_id=institution.id) }}">
+        <p>
+            <input type="submit" name="submit_cancel" value="Cancel" />
+            <input type="submit" name="submit_confirm" value="Confirm" />
+            <input type="hidden" name="institution_id" value="{{ institution_id }}" />
+        </p>
+    </form>
+{% else %}
+    <form method="POST" action="{{ url_for('.institution_subsume', institution_id=institution.id) }}">
+        <ol>
+            <li>
+                <label for="institution_id">Institution</label>
+                <select name="institution_id">
+                    {% for institution in institutions %}
+                        <option value="{{ institution.id }}">
+                            {{ render_institution_summary(institution) }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </li>
+            <li>
+                <input type="submit" value="Select duplicate institution" name="submit" />
+            </li>
+        </ol>
+    </form>
+{% endif %}
+{% endblock %}

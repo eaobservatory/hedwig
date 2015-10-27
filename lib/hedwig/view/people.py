@@ -984,6 +984,67 @@ def _display_institution_log(db, institution_id, form):
     }
 
 
+def institution_subsume(db, institution_id, form):
+    if not auth.can_be_admin(db):
+        raise HTTPForbidden('Could not verify administrative access.')
+
+    try:
+        institution = db.get_institution(institution_id)
+    except NoSuchRecord:
+        raise HTTPNotFound('Institution not found.')
+
+    countries = get_countries()
+    ctx = {
+        'title': 'Subsume Duplicate: {}'.format(institution.name),
+        'institution': institution._replace(
+            country=countries.get(institution.country, 'Unknown country')),
+    }
+
+    if form is None:
+        ctx.update({
+            'show_confirm_prompt': False,
+            'institutions': [
+                i._replace(
+                    country=countries.get(i.country, 'Unknown country'))
+                for i in db.list_institution().values()
+                if i.id != institution_id]
+        })
+
+    else:
+        duplicate_id = int(form['institution_id'])
+
+        if duplicate_id == institution_id:
+            raise ErrorPage('Main and duplicate identifiers are the same.')
+
+        try:
+            duplicate = db.get_institution(duplicate_id)
+        except NoSuchRecord:
+            raise HTTPError('Duplicate institution not found.')
+
+        if 'submit_cancel' in form:
+            raise HTTPRedirect(url_for('.institution_view',
+                                       institution_id=int(institution_id)))
+
+        elif 'submit_confirm' in form:
+            db.merge_institution_records(main_institution_id=institution_id,
+                                         duplicate_institution_id=duplicate_id)
+
+            flash('The institution records have been merged.')
+
+            raise HTTPRedirect(url_for('.institution_view',
+                                       institution_id=int(institution_id)))
+
+        else:
+            ctx.update({
+                'show_confirm_prompt': True,
+                'institution_id': duplicate_id,
+                'duplicate': duplicate._replace(country=countries.get(
+                    duplicate.country, 'Unknown country'))
+            })
+
+    return ctx
+
+
 def invitation_token_enter(db, args):
     return {
         'title': 'Enter Invitation Code',
