@@ -1334,7 +1334,10 @@ class ProposalPart(object):
             stmt = stmt.where(proposal_fig.c.role == role)
 
         if state is not None:
-            stmt = stmt.where(proposal_fig.c.state == state)
+            if isinstance(state, list) or isinstance(state, tuple):
+                stmt = stmt.where(proposal_fig.c.state.in_(state))
+            else:
+                stmt = stmt.where(proposal_fig.c.state == state)
 
         if fig_id is not None:
             stmt = stmt.where(proposal_fig.c.id == fig_id)
@@ -1381,7 +1384,10 @@ class ProposalPart(object):
             stmt = stmt.where(proposal_pdf.c.role == role)
 
         if state is not None:
-            stmt = stmt.where(proposal_pdf.c.state == state)
+            if isinstance(state, list) or isinstance(state, tuple):
+                stmt = stmt.where(proposal_pdf.c.state.in_(state))
+            else:
+                stmt = stmt.where(proposal_pdf.c.state == state)
 
         ans = ProposalTextCollection()
 
