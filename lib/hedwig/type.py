@@ -95,7 +95,8 @@ InstitutionInfo = namedtuple(
 InstitutionLog = namedtuple(
     'InstitutionLog',
     [x.name for x in institution_log.columns
-     if not x.name.startswith('prev_')] + ['prev', 'person_name'])
+     if not x.name.startswith('prev_')] +
+    ['prev', 'person_name', 'institution_name'])
 
 Link = namedtuple(
     'Link',

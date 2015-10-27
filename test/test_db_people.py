@@ -483,6 +483,7 @@ class DBPeopleTest(DBTestCase):
             self.assertEqual(entry.id, id_)
             self.assertEqual(entry.institution_id, institution_id)
             self.assertFalse(entry.approved)
+            self.assertIsNone(entry.institution_name)
 
         approved = {k: True for k in records.keys()}
 
@@ -503,6 +504,12 @@ class DBPeopleTest(DBTestCase):
         self.assertEqual(len(records), 2)
         for entry in records.values():
             self.assertFalse(entry.approved)
+
+        # Check non-institution-specific update log.
+        records = self.db.search_institution_log()
+        self.assertEqual(len(records), 2)
+        for (id_, entry) in records.items():
+            self.assertEqual(entry.institution_name, 'Renamed Institution One')
 
     def test_person(self):
         # Try getting a non-existent person record.

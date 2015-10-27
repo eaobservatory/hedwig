@@ -550,14 +550,19 @@ class PeoplePart(object):
         version of each institution record.
         """
 
-        stmt = select([
-            institution_log,
-            person.c.name.label('person_name')
-        ]).select_from(institution_log.join(person))
+        select_columns = [institution_log, person.c.name.label('person_name')]
+        select_from = institution_log.join(person)
+        default = {}
 
-        if institution_id is not None:
-            stmt = stmt.where(
-                institution_log.c.institution_id == institution_id)
+        if institution_id is None:
+            select_columns.append(institution.c.name.label('institution_name'))
+            select_from = select_from.join(
+                institution,
+                institution_log.c.institution_id == institution.c.id)
+        else:
+            default = {'institution_name': None}
+
+        stmt = select(select_columns).select_from(select_from)
 
         if approved is not None:
             if approved:
@@ -565,23 +570,33 @@ class PeoplePart(object):
             else:
                 stmt = stmt.where(not_(institution_log.c.approved))
 
+        if institution_id is not None:
+            stmt = stmt.where(
+                institution_log.c.institution_id == institution_id
+            ).order_by(
+                institution_log.c.id.desc())
+        else:
+            stmt = stmt.order_by(
+                institution.c.name.asc(),
+                institution_log.c.id.desc())
+
         ans = ResultCollection()
 
         with self._transaction() as conn:
-            for row in conn.execute(
-                    stmt.order_by(institution_log.c.id.desc())):
-                row = dict(row.items())
+            for row in conn.execute(stmt):
+                values = default.copy()
+                values.update(**row)
 
                 prev = Institution(
-                    id=row['institution_id'],
-                    name=row.pop('prev_name'),
-                    department=row.pop('prev_department'),
-                    organization=row.pop('prev_organization'),
-                    address=row.pop('prev_address'),
-                    country=row.pop('prev_country'),
+                    id=values['institution_id'],
+                    name=values.pop('prev_name'),
+                    department=values.pop('prev_department'),
+                    organization=values.pop('prev_organization'),
+                    address=values.pop('prev_address'),
+                    country=values.pop('prev_country'),
                 )
 
-                ans[row['id']] = InstitutionLog(prev=prev, **row)
+                ans[values['id']] = InstitutionLog(prev=prev, **values)
 
         return ans
 
