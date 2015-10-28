@@ -372,6 +372,7 @@ prev_proposal_pub = Table(
     Column('title', Unicode(255), nullable=True),
     Column('author', Unicode(255), nullable=True),
     Column('year', Unicode(31), nullable=True),
+    Column('edited', DateTime(), nullable=False),
     **_table_opts)
 
 proposal = Table(
