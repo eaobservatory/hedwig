@@ -23,7 +23,8 @@ import json as json_module
 from flask import Markup
 from jinja2.runtime import Undefined
 
-from ..type import Assessment, AttachmentState, ProposalState, ReviewerRole
+from ..type import Assessment, AttachmentState, ProposalState, \
+    PublicationType, ReviewerRole, TextRole
 
 from .format import format_text
 
@@ -48,6 +49,12 @@ def register_template_utils(app):
         if value is None:
             return ''
         return Assessment.get_name(value)
+
+    @app.template_filter()
+    def attachment_state_name(value):
+        if value is None:
+            return ''
+        return AttachmentState.get_name(value)
 
     @app.template_filter()
     def fmt(value, format_):
@@ -120,6 +127,12 @@ def register_template_utils(app):
             return '?'
 
     @app.template_filter()
+    def publication_type_name(value):
+        if value is None:
+            return ''
+        return PublicationType.get_info(value).name
+
+    @app.template_filter()
     def reviewer_role_name(value):
         try:
             return ReviewerRole.get_info(value).name
@@ -133,6 +146,10 @@ def register_template_utils(app):
                 ReviewerRole.get_info(value).display_class)
         except KeyError:
             return ''
+
+    @app.template_filter()
+    def text_role_short_name(value):
+        return TextRole.short_name(value)
 
     @app.template_filter()
     def abbr(value, length=20):
