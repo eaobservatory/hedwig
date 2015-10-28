@@ -153,7 +153,7 @@ PrevProposal = namedtuple(
 
 PrevProposalPub = namedtuple(
     'PrevProposalPub',
-    [x.name for x in prev_proposal_pub.columns])
+    [x.name for x in prev_proposal_pub.columns] + ['proposal_id'])
 
 Proposal = namedtuple(
     'Proposal',

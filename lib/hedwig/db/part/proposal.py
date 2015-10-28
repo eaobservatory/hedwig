@@ -980,7 +980,7 @@ class ProposalPart(object):
                 # Move the entries relating to the publication table to another
                 # dictionary.
                 pub_id = row.pop('pp_pub_id')
-                pub = {'id': pub_id}
+                pub = {'id': pub_id, 'proposal_id': None}
                 for col in [x.name for x in non_id_pub_columns]:
                     pub[col] = row.pop(col)
                 if pub_id is None:
@@ -999,12 +999,30 @@ class ProposalPart(object):
 
         return ans
 
-    def search_prev_proposal_pub(self, state=None, type_=None):
+    def search_prev_proposal_pub(self, state=None, type_=None,
+                                 with_proposal_id=False):
         """
         Search for publications associated with previous proposals.
+
+        If requested, include the identifier of the parent proposal.
+        (I.e. return prev_proposal.this_proposal_id,
+        not prev_proposal.proposal_id).
         """
 
-        stmt = prev_proposal_pub.select()
+        select_columns = [prev_proposal_pub]
+        select_from = prev_proposal_pub
+
+        default = {
+            'proposal_id': None,
+        }
+
+        if with_proposal_id:
+            select_columns.append(
+                prev_proposal.c.this_proposal_id.label('proposal_id'))
+            select_from = select_from.join(prev_proposal)
+            del default['proposal_id']
+
+        stmt = select(select_columns).select_from(select_from)
 
         if state is not None:
             if isinstance(state, list) or isinstance(state, tuple):
@@ -1022,7 +1040,9 @@ class ProposalPart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt):
-                ans[row['id']] = PrevProposalPub(**row)
+                values = default.copy()
+                values.update(**row)
+                ans[values['id']] = PrevProposalPub(**values)
 
         return ans
 
