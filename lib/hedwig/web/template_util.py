@@ -58,6 +58,10 @@ def register_template_utils(app):
 
         if value is None or isinstance(value, Undefined):
             return ''
+
+        if isinstance(value, tuple):
+            return format_.format(*value)
+
         return format_.format(value)
 
     @app.template_filter()
