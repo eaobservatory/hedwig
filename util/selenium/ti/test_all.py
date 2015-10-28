@@ -1482,6 +1482,57 @@ class IntegrationTest(DummyConfigTestCase):
         self._save_screenshot(self.admin_image_root, 'proposal_reviews',
                               ['extra_review_links'])
 
+        # Go back and enter affiliation weights.
+        self.browser.back()
+        self.browser.find_element_by_link_text(
+            'Edit affiliation weights').click()
+
+        self.browser.find_element_by_name('weight_1').send_keys('100')
+        self.browser.find_element_by_name('weight_2').send_keys('100')
+        self.browser.find_element_by_name('weight_3').send_keys('50')
+
+        self._save_screenshot(self.admin_image_root, 'affiliation_weights')
+
+        self.browser.find_element_by_name('submit').click()
+        self.assertIn('The affiliation weights have been updated.',
+                      self.browser.page_source)
+
+        # Check that the feedback approval page loads (currently empty).
+        self.browser.find_element_by_link_text(
+            'Approve feedback reports').click()
+        self._save_screenshot(self.admin_image_root, 'approve_feedback')
+
+        # Look at the tabulation page and enter a decision.
+        self.browser.back()
+        self.browser.find_element_by_link_text(
+            'View detailed tabulation').click()
+
+        decision_link = self.browser.find_element_by_id('decision_1_link')
+        self._save_screenshot(self.admin_image_root, 'review_tabulation',
+                              [decision_link])
+
+        decision_link.click()
+
+        self.browser.find_element_by_name('decision_accept').click()
+
+        time_field = self.browser.find_element_by_name('time_new_1')
+        time_field.clear()
+        time_field.send_keys('2')
+        time_field = self.browser.find_element_by_name('time_new_2')
+        time_field.clear()
+        time_field.send_keys('6')
+
+        self._save_screenshot(self.admin_image_root, 'decision_edit')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertRegexpMatches(
+            self.browser.page_source,
+            'The decision for proposal [A-Z0-9]+ has been saved\.')
+
+        self._save_screenshot(self.admin_image_root,
+                              'review_tabulation_updated')
+
     def try_jcmt_itcs(self):
         self.browser.get(self.base_url + 'jcmt/calculator/scuba2/time')
 
