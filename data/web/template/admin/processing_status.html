@@ -61,6 +61,7 @@
         <table>
             <tr>
                 <th>State</th>
+                <th>Date (UT)</th>
                 <th>Proposal</th>
                 <th>Proposal state</th>
                 <th>Type</th>
@@ -70,6 +71,7 @@
             {% for pub in pubs %}
                 <tr>
                     <td>{{ pub.state | attachment_state_name }}</td>
+                    <td>{{ pub.edited | format_datetime }}</td>
                     <td><a href="{{ url_for(pub.proposal.facility_code | fmt('{}.proposal_view'), proposal_id=pub.proposal_id) }}">{{ pub.proposal.code }}</a></td>
                     <td>{{ pub.proposal.state | proposal_state_name }}</td>
                     <td>{{ pub.type | publication_type_name }}</td>
