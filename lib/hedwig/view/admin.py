@@ -22,7 +22,7 @@ from collections import namedtuple
 
 from ..error import NoSuchRecord
 from ..type import AttachmentState, MessageState, ProposalWithCode
-from ..web.util import ErrorPage, HTTPNotFound, url_for
+from ..web.util import ErrorPage, HTTPNotFound, HTTPRedirect, flash, url_for
 from .util import with_verified_admin
 
 
@@ -108,7 +108,34 @@ class AdminView(object):
         }
 
     @with_verified_admin
-    def processing_status(self, db, facilities):
+    def processing_status(self, db, facilities, form):
+        if form is not None:
+            n_reset = 0
+
+            for param in form:
+                if param.startswith('pdf_'):
+                    id_ = int(param[4:])
+                    db.update_proposal_pdf(
+                        pdf_id=id_, state=AttachmentState.NEW)
+
+                elif param.startswith('fig_'):
+                    id_ = int(param[4:])
+                    db.update_proposal_figure(
+                        proposal_id=None, role=None, fig_id=id_,
+                        state=AttachmentState.NEW)
+                    n_reset += 1
+
+                elif param.startswith('pub_'):
+                    id_ = int(param[4:])
+                    db.update_prev_proposal_pub(
+                        prev_proposal_pub_id=id_, state=AttachmentState.NEW)
+                    n_reset += 1
+
+            if n_reset:
+                flash('The status for {} {} has been reset.',
+                      n_reset, ('entry' if n_reset == 1 else 'entries'))
+            raise HTTPRedirect(url_for('.processing_status'))
+
         unready = AttachmentState.unready_states()
 
         status = {

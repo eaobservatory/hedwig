@@ -1,7 +1,7 @@
-{% extends 'layout.html' %}
+{% extends 'layout_wide.html' %}
 {% set navigation = ['site_admin'] %}
 
-{% macro processing_table(entries) %}
+{% macro processing_table(entries, checkbox_fmt) %}
     {% if entries %}
         <table>
             <tr>
@@ -12,6 +12,7 @@
                 <th>Uploader</th>
                 <th>File</th>
                 <th>MD5 sum</th>
+                <th>Reset?</th>
             </tr>
             {% for entry in entries %}
                 <tr>
@@ -22,6 +23,7 @@
                     <td><a href="{{ url_for('people.person_view', person_id=entry.uploader) }}">{{ entry.uploader_name }}</a></td>
                     <td>{{ caller(entry) }}</td>
                     <td>{{ entry.md5sum }}</td>
+                    <td><input type="checkbox" name="{{ entry.id | fmt(checkbox_fmt) }}" value="1" /></td>
                 </tr>
             {% endfor %}
         </table>
@@ -33,23 +35,19 @@
 {% endmacro %}
 
 {% block content %}
-<section>
+<form method="POST" action="{{ url_for('.processing_status') }}">
     <h2>PDF Files</h2>
 
-    {% call(entry) processing_table(pdfs) %}
+    {% call(entry) processing_table(pdfs, 'pdf_{}') %}
         <a href="{{ url_for((entry.proposal.facility_code, entry.role | text_role_short_name) | fmt('{}.{}_view_pdf'), proposal_id=entry.proposal_id, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
     {% endcall %}
-</section>
 
-<section>
     <h2>Figures</h2>
 
-    {% call(entry) processing_table(figures) %}
+    {% call(entry) processing_table(figures, 'fig_{}') %}
         <a href="{{ url_for((entry.proposal.facility_code, entry.role | text_role_short_name) | fmt('{}.{}_view_figure'), proposal_id=entry.proposal_id, fig_id=entry.id, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
     {% endcall %}
-</section>
 
-<section>
     <h2>Publications</h2>
 
     {% if pubs %}
@@ -60,6 +58,7 @@
                 <th>Proposal state</th>
                 <th>Type</th>
                 <th>Publication</th>
+                <th>Reset?</th>
             <tr>
             {% for pub in pubs %}
                 <tr>
@@ -68,6 +67,7 @@
                     <td>{{ pub.proposal.state | proposal_state_name }}</td>
                     <td>{{ pub.type | publication_type_name }}</td>
                     <td>{{ pub.description }}</td>
+                    <td><input type="checkbox" name="{{ pub.id | fmt('pub_{}') }}" value="1" /></td>
                 </tr>
             {% endfor %}
         </table>
@@ -76,5 +76,9 @@
             All publications appear to be ready.
         </p>
     {% endif %}
-</section>
+
+    <p>
+        <input type="submit" name="submit" value="Reset marked entries" />
+    </p>
+</form>
 {% endblock %}
