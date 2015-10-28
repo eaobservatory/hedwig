@@ -126,12 +126,22 @@ th.sortable:not(.sideways):after, th.sortable.sideways span:after {
     color: #888;
 }
 
-th.sorted_asc:not(.sideways):after, th.sorted_asc.sideways span:after {
+th.sorted_asc:not(.sideways):after {
     content: ' \25B2';
     color: #888;
 }
 
-th.sorted_desc:not(.sideways):after, th.sorted_desc.sideways span:after {
+th.sorted_asc.sideways span:after {
+    content: ' \25B6';
+    color: #888;
+}
+
+th.sorted_desc:not(.sideways):after {
     content: ' \25BC';
+    color: #888;
+}
+
+th.sorted_desc.sideways span:after {
+    content: ' \25C0';
     color: #888;
 }
