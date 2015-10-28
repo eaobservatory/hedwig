@@ -169,6 +169,10 @@ def register_template_utils(app):
             value[:length] + Markup('&hellip;</abbr>')
 
     @app.template_test()
+    def attachment_new(value):
+        return (value == AttachmentState.NEW)
+
+    @app.template_test()
     def attachment_ready(value):
         return AttachmentState.is_ready(value)
 

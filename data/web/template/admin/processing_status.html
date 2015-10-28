@@ -23,7 +23,14 @@
                     <td><a href="{{ url_for('people.person_view', person_id=entry.uploader) }}">{{ entry.uploader_name }}</a></td>
                     <td>{{ caller(entry) }}</td>
                     <td>{{ entry.md5sum }}</td>
-                    <td><input type="checkbox" name="{{ entry.id | fmt(checkbox_fmt) }}" value="1" /></td>
+                    <td>
+                        {% if entry.state is attachment_new %}
+                            &nbsp;
+                        {% else %}
+                            <input type="checkbox" name="{{ entry.id | fmt(checkbox_fmt) }}" value="1" />
+                            <input type="hidden" name="prev_{{ entry.id | fmt(checkbox_fmt) }}" value="{{ entry.state }}" />
+                        {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
         </table>
@@ -67,7 +74,14 @@
                     <td>{{ pub.proposal.state | proposal_state_name }}</td>
                     <td>{{ pub.type | publication_type_name }}</td>
                     <td>{{ pub.description }}</td>
-                    <td><input type="checkbox" name="{{ pub.id | fmt('pub_{}') }}" value="1" /></td>
+                    <td>
+                        {% if pub.state is attachment_new %}
+                            &nbsp;
+                        {% else %}
+                            <input type="checkbox" name="{{ pub.id | fmt('pub_{}') }}" value="1" />
+                            <input type="hidden" name="{{ pub.id | fmt('prev_pub_{}') }}" value="{{ pub.state }}" />
+                        {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
         </table>

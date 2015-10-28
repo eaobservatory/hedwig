@@ -86,7 +86,7 @@ def _process_ref_type(db, type_, query_function, references):
                     type_=type_, description=reference,
                     state=AttachmentState.ERROR,
                     title=None, author=None, year=None,
-                    prev_state=AttachmentState.NEW)
+                    state_prev=AttachmentState.NEW)
 
             except:
                 logger.exception('Failed to set publication error state')
@@ -100,7 +100,7 @@ def _process_ref_type(db, type_, query_function, references):
                     type_=type_, description=reference,
                     state=AttachmentState.READY,
                     title=info.title, author=info.author, year=info.year,
-                    prev_state=AttachmentState.NEW)
+                    state_prev=AttachmentState.NEW)
 
                 n_processed += 1
 

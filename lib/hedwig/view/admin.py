@@ -115,20 +115,31 @@ class AdminView(object):
             for param in form:
                 if param.startswith('pdf_'):
                     id_ = int(param[4:])
+                    state_prev = int(form['prev_{}'.format(param)])
+                    if state_prev == AttachmentState.NEW:
+                        continue
                     db.update_proposal_pdf(
-                        pdf_id=id_, state=AttachmentState.NEW)
+                        pdf_id=id_, state=AttachmentState.NEW,
+                        state_prev=state_prev)
 
                 elif param.startswith('fig_'):
                     id_ = int(param[4:])
+                    state_prev = int(form['prev_{}'.format(param)])
+                    if state_prev == AttachmentState.NEW:
+                        continue
                     db.update_proposal_figure(
                         proposal_id=None, role=None, fig_id=id_,
-                        state=AttachmentState.NEW)
+                        state=AttachmentState.NEW, state_prev=state_prev)
                     n_reset += 1
 
                 elif param.startswith('pub_'):
                     id_ = int(param[4:])
+                    state_prev = int(form['prev_{}'.format(param)])
+                    if state_prev == AttachmentState.NEW:
+                        continue
                     db.update_prev_proposal_pub(
-                        prev_proposal_pub_id=id_, state=AttachmentState.NEW)
+                        prev_proposal_pub_id=id_, state=AttachmentState.NEW,
+                        state_prev=state_prev)
                     n_reset += 1
 
             if n_reset:

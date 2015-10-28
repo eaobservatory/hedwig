@@ -2008,7 +2008,7 @@ class ProposalPart(object):
     def update_prev_proposal_pub(self, type_=None, description=None,
                                  prev_proposal_pub_id=None,
                                  state=None, title=(), author=(),
-                                 year=(), prev_state=None):
+                                 year=(), state_prev=None):
         """
         Update all previous proposal publication records for the given
         reference.
@@ -2040,8 +2040,8 @@ class ProposalPart(object):
                         'ID or type and description')
 
         # Apply previous state restriction if given.
-        if prev_state is not None:
-            stmt = stmt.where(prev_proposal_pub.c.state == prev_state)
+        if state_prev is not None:
+            stmt = stmt.where(prev_proposal_pub.c.state == state_prev)
 
         # Determine which values to update.
         values = {}
