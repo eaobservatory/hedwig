@@ -2005,28 +2005,60 @@ class ProposalPart(object):
                 raise ConsistencyError(
                     'no rows matched updating call with id={}', call_id)
 
-    def update_prev_proposal_pub(self, type_, description,
-                                 state, title, author, year,
-                                 prev_state=None):
+    def update_prev_proposal_pub(self, type_=None, description=None,
+                                 prev_proposal_pub_id=None,
+                                 state=None, title=(), author=(),
+                                 year=(), prev_state=None):
         """
         Update all previous proposal publication records for the given
         reference.
+
+        Can either select records to update by the prev_proposal_pub_id or
+        by type and description, in which case all matching entries are
+        updated.
         """
 
-        stmt = prev_proposal_pub.update().where(and_(
-            prev_proposal_pub.c.type == type_,
-            prev_proposal_pub.c.description == description))
+        stmt = prev_proposal_pub.update()
 
+        # Determine how to select the records to update.
+        has_type_desc = ((type_ is not None) and (description is not None))
+
+        if prev_proposal_pub_id is not None:
+            if has_type_desc:
+                raise Error('previous proposal publication identified by both '
+                            'ID and type and description')
+
+            stmt = stmt.where(prev_proposal_pub.c.id == prev_proposal_pub_id)
+
+        elif has_type_desc:
+            stmt = stmt.where(and_(
+                prev_proposal_pub.c.type == type_,
+                prev_proposal_pub.c.description == description))
+
+        else:
+            raise Error('previous proposal publication not identified by '
+                        'ID or type and description')
+
+        # Apply previous state restriction if given.
         if prev_state is not None:
             stmt = stmt.where(prev_proposal_pub.c.state == prev_state)
 
-        values = {
-            prev_proposal_pub.c.state: state,
-            prev_proposal_pub.c.title: title,
-            prev_proposal_pub.c.author: author,
-            prev_proposal_pub.c.year: year,
-        }
+        # Determine which values to update.
+        values = {}
 
+        if state is not None:
+            values['state'] = state
+        if title != ():
+            values['title'] = title
+        if author != ():
+            values['author'] = author
+        if year != ():
+            values['year'] = year
+
+        if not values:
+            raise Error('no previous proposal publication updates specified')
+
+        # Apply the update.
         with self._transaction() as conn:
             result = conn.execute(stmt.values(values))
 
