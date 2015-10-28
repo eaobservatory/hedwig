@@ -1387,15 +1387,18 @@ class ProposalPart(object):
             proposal_pdf.c.uploader,
         ]
 
-        default = {}
+        select_from = proposal_pdf
+
+        default = {
+            'uploader_name': None,
+        }
 
         if with_uploader_name:
             select_columns.append(person.c.name.label('uploader_name'))
-            stmt = select(select_columns).select_from(
-                proposal_pdf.join(person))
-        else:
-            stmt = select(select_columns)
-            default['uploader_name'] = None
+            select_from = select_from.join(person)
+            del default['uploader_name']
+
+        stmt = select(select_columns).select_from(select_from)
 
         if proposal_id is not None:
             stmt = stmt.where(proposal_pdf.c.proposal_id == proposal_id)
