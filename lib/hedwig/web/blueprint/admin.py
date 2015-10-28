@@ -46,4 +46,10 @@ def create_admin_blueprint(db, facilities):
     def message_view(message_id):
         return view.message_view(db, message_id)
 
+    @bp.route('/processing')
+    @templated('admin/processing_status.html')
+    @require_admin
+    def processing_status():
+        return view.processing_status(db, facilities)
+
     return bp

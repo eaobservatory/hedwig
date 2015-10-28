@@ -1,0 +1,80 @@
+{% extends 'layout.html' %}
+{% set navigation = ['site_admin'] %}
+
+{% macro processing_table(entries) %}
+    {% if entries %}
+        <table>
+            <tr>
+                <th>State</th>
+                <th>Date (UT)</th>
+                <th>Proposal</th>
+                <th>Proposal state</th>
+                <th>Uploader</th>
+                <th>File</th>
+                <th>MD5 sum</th>
+            </tr>
+            {% for entry in entries %}
+                <tr>
+                    <td>{{ entry.state | attachment_state_name }}</td>
+                    <td>{{ entry.uploaded | format_datetime }}</td>
+                    <td><a href="{{ url_for(entry.proposal.facility_code | fmt('{}.proposal_view'), proposal_id=entry.proposal_id) }}">{{ entry.proposal.code }}</a></td>
+                    <td>{{ entry.proposal.state | proposal_state_name }}</td>
+                    <td><a href="{{ url_for('people.person_view', person_id=entry.uploader) }}">{{ entry.uploader_name }}</a></td>
+                    <td>{{ caller(entry) }}</td>
+                    <td>{{ entry.md5sum }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p class="not_present">
+            All files appear to be ready.
+        </p>
+    {% endif %}
+{% endmacro %}
+
+{% block content %}
+<section>
+    <h2>PDF Files</h2>
+
+    {% call(entry) processing_table(pdfs) %}
+        <a href="{{ url_for((entry.proposal.facility_code, entry.role | text_role_short_name) | fmt('{}.{}_view_pdf'), proposal_id=entry.proposal_id, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
+    {% endcall %}
+</section>
+
+<section>
+    <h2>Figures</h2>
+
+    {% call(entry) processing_table(figures) %}
+        <a href="{{ url_for((entry.proposal.facility_code, entry.role | text_role_short_name) | fmt('{}.{}_view_figure'), proposal_id=entry.proposal_id, fig_id=entry.id, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
+    {% endcall %}
+</section>
+
+<section>
+    <h2>Publications</h2>
+
+    {% if pubs %}
+        <table>
+            <tr>
+                <th>State</th>
+                <th>Proposal</th>
+                <th>Proposal state</th>
+                <th>Type</th>
+                <th>Publication</th>
+            <tr>
+            {% for pub in pubs %}
+                <tr>
+                    <td>{{ pub.state | attachment_state_name }}</td>
+                    <td><a href="{{ url_for(pub.proposal.facility_code | fmt('{}.proposal_view'), proposal_id=pub.proposal_id) }}">{{ pub.proposal.code }}</a></td>
+                    <td>{{ pub.proposal.state | proposal_state_name }}</td>
+                    <td>{{ pub.type | publication_type_name }}</td>
+                    <td>{{ pub.description }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p class="not_present">
+            All publications appear to be ready.
+        </p>
+    {% endif %}
+</section>
+{% endblock %}

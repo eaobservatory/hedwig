@@ -18,8 +18,10 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import namedtuple
+
 from ..error import NoSuchRecord
-from ..type import MessageState
+from ..type import AttachmentState, MessageState, ProposalWithCode
 from ..web.util import ErrorPage, HTTPNotFound, url_for
 from .util import with_verified_admin
 
@@ -104,3 +106,53 @@ class AdminView(object):
             'title': 'Message: {}'.format(message.subject),
             'message': message,
         }
+
+    @with_verified_admin
+    def processing_status(self, db, facilities):
+        unready = AttachmentState.unready_states()
+
+        status = {
+            'pdfs': db.search_proposal_pdf(with_uploader_name=True,
+                                           state=unready),
+            'figures': db.search_proposal_figure(with_uploader_name=True,
+                                                 state=unready),
+            'pubs': db.search_prev_proposal_pub(with_proposal_id=True,
+                                                state=unready),
+        }
+
+        # Create empty proposal cache dictionary.
+        proposals = {}
+
+        ctx = {k: self._add_proposal(db, v.values(), facilities, proposals)
+               for (k, v) in status.items()}
+
+        ctx.update({
+            'title': 'Processing Status',
+        })
+
+        return ctx
+
+    def _add_proposal(self, db, entries, facilities, proposals):
+        result = []
+
+        for entry in entries:
+            proposal_id = entry.proposal_id
+            proposal = proposals.get(proposal_id)
+
+            if proposal is None:
+                proposal = db.get_proposal(facility_id=None,
+                                           proposal_id=proposal_id)
+                facility = facilities.get(proposal.facility_id)
+                if facility is None:
+                    continue
+                proposal = ProposalWithCode(
+                    *proposal,
+                    code=facility.view.make_proposal_code(db, proposal),
+                    facility_code=facility.code)
+                proposals[proposal_id] = proposal
+
+            result.append(
+                namedtuple('EntryWithProposal', entry._fields + ('proposal',))(
+                    *entry, proposal=proposal))
+
+        return result
