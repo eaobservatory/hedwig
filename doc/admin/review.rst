@@ -7,3 +7,6 @@ Review Processes
     review_group
     review_process
     review_proposal
+    affiliation_weights
+    tabulation_decision
+    feedback

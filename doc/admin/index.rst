@@ -6,3 +6,5 @@ Administrator's Guide
 
     facility
     review
+    site
+    user
