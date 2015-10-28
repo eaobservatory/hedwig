@@ -138,7 +138,7 @@ class AdminView(object):
                     if state_prev == AttachmentState.NEW:
                         continue
                     db.update_prev_proposal_pub(
-                        prev_proposal_pub_id=id_, state=AttachmentState.NEW,
+                        pp_pub_id=id_, state=AttachmentState.NEW,
                         state_prev=state_prev)
                     n_reset += 1
 

@@ -2008,16 +2008,16 @@ class ProposalPart(object):
                     'no rows matched updating call with id={}', call_id)
 
     def update_prev_proposal_pub(self, type_=None, description=None,
-                                 prev_proposal_pub_id=None,
+                                 pp_pub_id=None,
                                  state=None, title=(), author=(),
                                  year=(), state_prev=None):
         """
         Update all previous proposal publication records for the given
         reference.
 
-        Can either select records to update by the prev_proposal_pub_id or
-        by type and description, in which case all matching entries are
-        updated.
+        Can either select records to update by the "pp_pub_id"
+        (prev_proposal_pub.id) or by type and description,
+        in which case all matching entries are updated.
         """
 
         stmt = prev_proposal_pub.update()
@@ -2025,12 +2025,12 @@ class ProposalPart(object):
         # Determine how to select the records to update.
         has_type_desc = ((type_ is not None) and (description is not None))
 
-        if prev_proposal_pub_id is not None:
+        if pp_pub_id is not None:
             if has_type_desc:
                 raise Error('previous proposal publication identified by both '
                             'ID and type and description')
 
-            stmt = stmt.where(prev_proposal_pub.c.id == prev_proposal_pub_id)
+            stmt = stmt.where(prev_proposal_pub.c.id == pp_pub_id)
 
         elif has_type_desc:
             stmt = stmt.where(and_(
