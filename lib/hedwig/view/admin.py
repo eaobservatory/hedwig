@@ -150,12 +150,12 @@ class AdminView(object):
         unready = AttachmentState.unready_states()
 
         status = {
-            'pdfs': db.search_proposal_pdf(with_uploader_name=True,
-                                           state=unready),
-            'figures': db.search_proposal_figure(with_uploader_name=True,
-                                                 state=unready),
-            'pubs': db.search_prev_proposal_pub(with_proposal_id=True,
-                                                state=unready),
+            'pdfs': db.search_proposal_pdf(
+                with_uploader_name=True, state=unready, order_by_date=True),
+            'figures': db.search_proposal_figure(
+                with_uploader_name=True, state=unready, order_by_date=True),
+            'pubs': db.search_prev_proposal_pub(
+                with_proposal_id=True, state=unready, order_by_date=True),
         }
 
         # Create empty proposal cache dictionary.

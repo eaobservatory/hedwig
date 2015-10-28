@@ -1000,7 +1000,7 @@ class ProposalPart(object):
         return ans
 
     def search_prev_proposal_pub(self, state=None, type_=None,
-                                 with_proposal_id=False):
+                                 with_proposal_id=False, order_by_date=False):
         """
         Search for publications associated with previous proposals.
 
@@ -1035,6 +1035,9 @@ class ProposalPart(object):
                 stmt = stmt.where(prev_proposal_pub.c.type.in_(type_))
             else:
                 stmt = stmt.where(prev_proposal_pub.c.type == type_)
+
+        if order_by_date:
+            stmt = stmt.order_by(prev_proposal_pub.c.edited.desc())
 
         ans = ResultCollection()
 
@@ -1308,7 +1311,7 @@ class ProposalPart(object):
     def search_proposal_figure(self, proposal_id=None, role=None, state=None,
                                fig_id=None,
                                with_caption=False, with_uploader_name=False,
-                               with_has_preview=False):
+                               with_has_preview=False, order_by_date=False):
         select_columns = [
             proposal_fig.c.id,
             proposal_fig.c.proposal_id,
@@ -1362,11 +1365,15 @@ class ProposalPart(object):
         if fig_id is not None:
             stmt = stmt.where(proposal_fig.c.id == fig_id)
 
+        if order_by_date:
+            stmt = stmt.order_by(proposal_fig.c.uploaded.desc())
+        else:
+            stmt = stmt.order_by(proposal_fig.c.sort_order.asc())
+
         ans = ResultCollection()
 
         with self._transaction() as conn:
-            for row in conn.execute(
-                    stmt.order_by(proposal_fig.c.sort_order.asc())):
+            for row in conn.execute(stmt):
                 values = default.copy()
                 values.update(**row)
                 ans[row['id']] = ProposalFigureInfo(**values)
@@ -1374,7 +1381,7 @@ class ProposalPart(object):
         return ans
 
     def search_proposal_pdf(self, proposal_id=None, role=None, state=None,
-                            with_uploader_name=False):
+                            with_uploader_name=False, order_by_date=False):
         select_columns = [
             proposal_pdf.c.id,
             proposal_pdf.c.proposal_id,
@@ -1411,6 +1418,9 @@ class ProposalPart(object):
                 stmt = stmt.where(proposal_pdf.c.state.in_(state))
             else:
                 stmt = stmt.where(proposal_pdf.c.state == state)
+
+        if order_by_date:
+            stmt = stmt.order_by(proposal_pdf.c.uploaded.desc())
 
         ans = ProposalTextCollection()
 
