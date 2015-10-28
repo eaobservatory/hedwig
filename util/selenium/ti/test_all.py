@@ -178,6 +178,8 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.view_proposal_reviews('jcmt')
 
+            self.administer_site()
+
             self.log_out_user()
 
             # Try the JCMT stand-alone ITCs
@@ -1532,6 +1534,65 @@ class IntegrationTest(DummyConfigTestCase):
 
         self._save_screenshot(self.admin_image_root,
                               'review_tabulation_updated')
+
+    def administer_site(self):
+        self.browser.get(self.base_url)
+        self.browser.find_element_by_link_text('Site administration').click()
+        admin_menu_url = self.browser.current_url
+
+        self._save_screenshot(self.admin_image_root, 'site_admin_menu')
+
+        self.browser.find_element_by_link_text('Email messages').click()
+        self._save_screenshot(self.admin_image_root, 'message_list')
+
+        self.browser.get(admin_menu_url)
+        self.browser.find_element_by_link_text(
+            'Approve institution edits').click()
+        self._save_screenshot(self.admin_image_root, 'approve_inst_edit')
+
+        self.browser.get(admin_menu_url)
+        self.browser.find_element_by_link_text(
+            'View processing status').click()
+        self._save_screenshot(self.admin_image_root, 'processing_status')
+
+        # View administrative links on a profile and institution pages.
+        self.browser.find_element_by_id('user_profile_link').click()
+
+        self._save_screenshot(self.admin_image_root, 'person_admin',
+                              ['account_admin_links'])
+
+        self.browser.find_element_by_link_text('User account log').click()
+
+        self._save_screenshot(self.admin_image_root, 'user_log')
+
+        self.browser.back()
+
+        self.browser.find_element_by_partial_link_text(
+            'View this institution').click()
+
+        self._save_screenshot(self.admin_image_root, 'institution_links',
+                              ['institution_admin_links'])
+
+        self.browser.find_element_by_link_text('View edit log').click()
+        self._save_screenshot(self.admin_image_root, 'institution_log')
+
+        self.browser.back()
+
+        self.browser.find_element_by_link_text(
+            'Subsume duplicate record').click()
+
+        Select(
+            self.browser.find_element_by_name('institution_id')
+        ).select_by_visible_text('Another Institution, United States')
+
+        self._save_screenshot(self.admin_image_root, 'institution_subsume')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self._save_screenshot(self.admin_image_root,
+                              'institution_subsume_confirm')
+
+        self.browser.find_element_by_name('submit_cancel').click()
 
     def try_jcmt_itcs(self):
         self.browser.get(self.base_url + 'jcmt/calculator/scuba2/time')

@@ -42,7 +42,7 @@
 
 {% if session.is_admin %}
     <nav>
-        <p>
+        <p id="institution_admin_links">
             <a href="{{ url_for('.institution_log', institution_id=institution.id) }}">View edit log</a>
             <br />
             <a href="{{ url_for('.institution_subsume', institution_id=institution.id) }}">Subsume duplicate record</a>
