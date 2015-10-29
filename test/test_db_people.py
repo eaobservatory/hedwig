@@ -25,12 +25,16 @@ from hedwig.db.meta import invitation, reset_token
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from hedwig.type import Email, EmailCollection, FormatType, \
-    Institution, InstitutionInfo, MemberInstitution, Person, ResultCollection
+    Institution, InstitutionInfo, MemberInstitution, \
+    Person, ResultCollection, UserInfo
 from .dummy_db import DBTestCase
 
 
 class DBPeopleTest(DBTestCase):
     def test_user(self):
+        records = self.db.search_user()
+        self.assertFalse(records)
+
         # Check that we can create a user and get an integer user_id.
         user_id = self.db.add_user('user1', 'pass1')
         self.assertIsInstance(user_id, int)
@@ -46,6 +50,19 @@ class DBPeopleTest(DBTestCase):
 
         with self.assertRaises(NoSuchRecord):
             self.db.get_user_id('no-user')
+
+        records = self.db.search_user()
+        self.assertEqual(len(records), 1)
+        self.assertIn(user_id, records)
+        user_info = records[user_id]
+        self.assertIsInstance(user_info, UserInfo)
+        self.assertEqual(user_info.id, user_id)
+        self.assertEqual(user_info.name, 'user1')
+
+        records = self.db.search_user(registered=True)
+        self.assertEqual(len(records), 0)
+        records = self.db.search_user(registered=False)
+        self.assertEqual(len(records), 1)
 
         # Attempting to re-create the same user is an error.
         with self.assertRaises(UserError):
@@ -70,6 +87,15 @@ class DBPeopleTest(DBTestCase):
         person_id = self.db.add_person('User Three')
         user_id = self.db.add_user('user3', 'pass3', person_id=person_id)
         self.assertIsInstance(user_id, int)
+
+        records = self.db.search_user()
+        self.assertEqual(len(records), 2)
+        records = self.db.search_user(registered=True)
+        self.assertEqual(len(records), 1)
+        self.assertIn(user_id, records)
+        records = self.db.search_user(registered=False)
+        self.assertEqual(len(records), 1)
+        self.assertNotIn(user_id, records)
 
         # Attempting to reference a non-existant person is an error.
         with self.assertRaisesRegexp(ConsistencyError,

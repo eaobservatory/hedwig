@@ -236,6 +236,10 @@ TargetToolInfo = namedtuple(
     'TargetToolInfo',
     ['id', 'code', 'name', 'tool'])
 
+UserInfo = namedtuple(
+    'UserInfo',
+    ['id', 'name'])
+
 UserLog = namedtuple(
     'UserLog',
     [x.name for x in user_log.columns])

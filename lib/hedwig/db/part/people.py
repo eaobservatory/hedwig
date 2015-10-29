@@ -31,7 +31,8 @@ from ...error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from ...type import Email, EmailCollection, \
     Institution, InstitutionInfo, InstitutionLog, \
-    Person, PersonInfo, ResultCollection, UserLog, UserLogEvent
+    Person, PersonInfo, ResultCollection, \
+    UserInfo, UserLog, UserLogEvent
 from ...util import get_countries
 from ..meta import auth_failure, email, group_member, \
     institution, institution_log, \
@@ -723,6 +724,33 @@ class PeoplePart(object):
                 values = default.copy()
                 values.update(**row)
                 ans[row['id']] = PersonInfo(**values)
+
+        return ans
+
+    def search_user(self, registered=None):
+        """
+        Search for user accounts.
+        """
+
+        select_columns = [user.c.id, user.c.name]
+        select_from = user
+
+        if registered is not None:
+            select_from = select_from.outerjoin(person)
+
+        stmt = select(select_columns).select_from(select_from)
+
+        if registered is not None:
+            if registered:
+                stmt = stmt.where(person.c.id.isnot(None))
+            else:
+                stmt = stmt.where(person.c.id.is_(None))
+
+        ans = ResultCollection()
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt.order_by(user.c.name.asc())):
+                ans[row['id']] = UserInfo(**row)
 
         return ans
 
