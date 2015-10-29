@@ -54,4 +54,10 @@ def create_admin_blueprint(db, facilities):
             db, facilities,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/user_unregistered')
+    @templated('admin/user_unregistered.html')
+    @require_admin
+    def user_unregistered():
+        return view.user_unregistered(db)
+
     return bp

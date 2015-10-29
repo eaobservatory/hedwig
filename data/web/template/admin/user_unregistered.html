@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+{% set navigation=['site_admin'] %}
+
+{% block content %}
+{% if users %}
+    <ul>
+        <li>
+            The following list shows user accounts which have been created but
+            do not have profiles attached.
+        </li>
+    </ul>
+
+    <table>
+        <tr>
+            <th>User name</th>
+            <th>Links</th>
+        </tr>
+        {% for user in users %}
+            <tr>
+                <td>{{ user.name }}</td>
+                <td><a href="{{ url_for('people.user_log', user_id=user.id) }}">Account log</a></td>
+            </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p class="not_present">
+        There are no user accounts without profiles.
+    </p>
+{% endif %}
+{% endblock %}

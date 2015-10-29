@@ -194,3 +194,10 @@ class AdminView(object):
                     *entry, proposal=proposal))
 
         return result
+
+    @with_verified_admin
+    def user_unregistered(self, db):
+        return {
+            'title': 'Unregistered Users',
+            'users': db.search_user(registered=False).values(),
+        }
