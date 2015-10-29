@@ -119,6 +119,10 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.log_out_user()
 
+            self.register_user(user_name='noprofile', person_name=None)
+
+            self.log_out_user()
+
             # Log in as administrative user and set up a semester.
             self.log_in_user(user_name='test')
 
@@ -211,6 +215,9 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_link_text('register').click()
 
         self._do_register_user(user_name, password, screenshot_path)
+
+        if person_name is None:
+            return
 
         self.browser.find_element_by_name('person_name').send_keys(person_name)
 
@@ -1554,6 +1561,10 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_link_text(
             'View processing status').click()
         self._save_screenshot(self.admin_image_root, 'processing_status')
+
+        self.browser.get(admin_menu_url)
+        self.browser.find_element_by_link_text('Unregistered users').click()
+        self._save_screenshot(self.admin_image_root, 'user_unregistered')
 
         # View administrative links on a profile and institution pages.
         self.browser.find_element_by_id('user_profile_link').click()
