@@ -1086,17 +1086,19 @@ class GenericReview(object):
 
     @with_call_review(permission='edit')
     def view_review_confirm_feedback(self, db, call, can, form):
-        # Get proposals for this call with decisions, including their feedback
-        # review.
+        # Get proposals for this call, including their feedback review
+        # and decision.  (Note: "with_decision" means include it in the
+        # results, not that the proposal must have one.)
         proposals = db.search_proposal(
             call_id=call.id, state=ProposalState.REVIEW,
             with_reviewers=True, with_review_info=True, with_review_text=True,
             with_review_state=True, with_reviewer_role=ReviewerRole.FEEDBACK,
             with_decision=True)
 
-        # Ignore proposals without reviews.
+        # Ignore proposals without decisions and reviews.
         for id_ in list(proposals.keys()):
-            if not proposals[id_].reviewers:
+            proposal = proposals[id_]
+            if (proposal.decision_accept is None) or (not proposal.reviewers):
                 del proposals[id_]
 
         message = None
