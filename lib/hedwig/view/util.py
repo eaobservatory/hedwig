@@ -75,7 +75,7 @@ def with_call_review(permission):
     authorization object followed by any remaining arguments.
 
     Note: this currently can only be used to decorate methods of
-    facility classes because it uses self.id_ for the facility ID.
+    facility classes because it uses `self.id_` for the facility ID.
     """
 
     def decorator(f):
@@ -122,7 +122,7 @@ def with_proposal(permission):
     is selected, no authorization object is passed on.)
 
     Note: this currently can only be used to decorate methods of
-    facility classes because it uses self.id_ for the facility ID.
+    facility classes because it uses `self.id_` for the facility ID.
     """
 
     def decorator(f):
