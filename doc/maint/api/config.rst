@@ -1,3 +1,6 @@
+Configuration Module
+====================
+
 hedwig.config
 -------------
 

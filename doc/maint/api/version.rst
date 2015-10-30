@@ -1,3 +1,6 @@
+Version Information Module
+==========================
+
 hedwig.version
 --------------
 

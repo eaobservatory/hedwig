@@ -1,3 +1,6 @@
+Web Interface Blueprint Modules
+===============================
+
 hedwig.web.blueprint.admin
 --------------------------
 

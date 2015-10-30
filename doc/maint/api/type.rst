@@ -1,3 +1,6 @@
+Type Definition Module
+======================
+
 hedwig.type
 -----------
 

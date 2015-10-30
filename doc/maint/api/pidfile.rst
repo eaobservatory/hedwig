@@ -1,3 +1,6 @@
+PID File Module
+===============
+
 hedwig.pidfile
 --------------
 

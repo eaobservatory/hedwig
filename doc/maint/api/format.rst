@@ -1,3 +1,6 @@
+Formatting Modules
+==================
+
 hedwig.format.rst
 -----------------
 

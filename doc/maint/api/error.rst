@@ -1,3 +1,6 @@
+Error Module
+============
+
 hedwig.error
 ------------
 

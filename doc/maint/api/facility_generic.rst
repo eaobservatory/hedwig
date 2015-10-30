@@ -1,3 +1,6 @@
+Facility Modules (Generic)
+==========================
+
 hedwig.facility.generic.calculator_example
 ------------------------------------------
 

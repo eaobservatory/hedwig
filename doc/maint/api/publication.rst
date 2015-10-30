@@ -1,3 +1,6 @@
+Publication Reference Processing Modules
+========================================
+
 hedwig.publication.ads
 ----------------------
 

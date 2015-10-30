@@ -1,3 +1,6 @@
+Statistical Modules
+===================
+
 hedwig.stats.quartile
 ---------------------
 

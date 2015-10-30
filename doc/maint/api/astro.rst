@@ -1,3 +1,6 @@
+Astronomical Modules
+====================
+
 hedwig.astro.catalog
 --------------------
 

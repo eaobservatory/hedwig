@@ -1,3 +1,6 @@
+Authentication Module
+=====================
+
 hedwig.auth
 -----------
 

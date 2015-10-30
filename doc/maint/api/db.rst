@@ -1,3 +1,6 @@
+Database Modules
+================
+
 hedwig.db.control
 -----------------
 

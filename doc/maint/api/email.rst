@@ -1,3 +1,6 @@
+Email Modules
+=============
+
 hedwig.email.format
 -------------------
 
