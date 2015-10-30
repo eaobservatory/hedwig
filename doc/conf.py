@@ -99,6 +99,26 @@ pygments_style = 'sphinx'
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
 
+# -- Options for autodoc processing ---------------------------------------
+
+autodoc_member_order = 'bysource'
+
+autodoc_default_flags = ['members', 'undoc-members', 'private-members']
+
+autodoc_mock_imports = [
+    'astropy', 'astropy.coordinates', 'astropy.units',
+    'flask',
+    'healpy',
+    'jcmt_itc_scuba2',
+    'magic',
+    'matplotlib',
+    'numpy',
+    'pycountry',
+    'PyPDF2', 'PyPDF2.utils',
+    'pymoc', 'pymoc.io', 'pymoc.io.fits',
+    'requests',
+    'werkzeug',
+]
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -133,7 +153,7 @@ pygments_style = 'sphinx'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+#html_static_path = ['_static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
