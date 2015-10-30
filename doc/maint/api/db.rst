@@ -8,6 +8,7 @@ hedwig.db.control
     :members:
     :member-order: bysource
     :undoc-members:
+    :private-members:
 
 hedwig.db.engine
 ----------------
