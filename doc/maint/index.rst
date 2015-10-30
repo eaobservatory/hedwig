@@ -6,3 +6,4 @@ Maintainer's Guide
 
     install
     overview
+    api/index
