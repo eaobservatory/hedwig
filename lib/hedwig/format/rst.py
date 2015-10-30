@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 import re
+import sys
 from threading import Lock
 
 from docutils import nodes
@@ -32,6 +33,8 @@ from ..web.util import HTTPError
 
 
 rst_publish_lock = Lock()
+
+named_link = re.compile('^(.*) +<(.*)>$')
 
 
 def rst_to_html(text, extract_title, start_heading):
@@ -88,12 +91,6 @@ class HedwigTocTree(Directive):
         return []
 
 
-directives.register_directive('toctree', HedwigTocTree)
-
-
-named_link = re.compile('^(.*) +<(.*)>$')
-
-
 def doc_reference_role(role, rawtext, text, lineno, inliner,
                        options={}, context=[]):
     m = named_link.match(text)
@@ -106,4 +103,8 @@ def doc_reference_role(role, rawtext, text, lineno, inliner,
     return [nodes.reference(rawtext, text, refuri=url, **options)], []
 
 
-roles.register_local_role('doc', doc_reference_role)
+# Do not register our Sphinx-emulation directives/roles if the module
+# is being imported by Sphinx to build the software documentation.
+if 'sphinx' not in sys.modules:
+    directives.register_directive('toctree', HedwigTocTree)
+    roles.register_local_role('doc', doc_reference_role)
