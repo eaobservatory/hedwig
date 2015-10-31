@@ -120,6 +120,8 @@ autodoc_mock_imports = [
     'werkzeug',
 ]
 
+execfile('mock_extra.py')
+
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
