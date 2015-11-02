@@ -1522,7 +1522,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         decision_link.click()
 
-        self.browser.find_element_by_name('decision_accept').click()
+        Select(
+            self.browser.find_element_by_name('decision_accept')
+        ).select_by_visible_text('Accept proposal')
 
         time_field = self.browser.find_element_by_name('time_new_1')
         time_field.clear()

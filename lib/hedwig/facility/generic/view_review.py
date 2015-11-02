@@ -1003,8 +1003,10 @@ class GenericReview(object):
         if form is not None:
             try:
                 # Read form inputs.
+                decision = form['decision_accept']
                 proposal = proposal._replace(
-                    decision_accept=('decision_accept' in form),
+                    decision_accept=(None if (decision == '')
+                                     else bool(int(decision))),
                     decision_exempt=('decision_exempt' in form))
                 extra_info = self._view_proposal_decision_get(db, proposal,
                                                               form)
@@ -1016,15 +1018,26 @@ class GenericReview(object):
 
                 self._view_proposal_decision_save(db, proposal, extra_info)
 
-                db.set_decision(
-                    proposal_id=proposal.id,
-                    accept=proposal.decision_accept,
-                    exempt=proposal.decision_exempt,
-                    ready=None,
-                    is_update=is_update)
+                if proposal.decision_accept is not None:
+                    db.set_decision(
+                        proposal_id=proposal.id,
+                        accept=proposal.decision_accept,
+                        exempt=proposal.decision_exempt,
+                        ready=None,
+                        is_update=is_update)
 
-                flash('The decision for proposal {} has been saved.',
-                      proposal_code)
+                    flash('The decision for proposal {} has been saved.',
+                          proposal_code)
+
+                elif is_update:
+                    db.delete_decision(proposal_id=proposal.id)
+
+                    flash('The decision for proposal {} has been removed.',
+                          proposal_code)
+
+                else:
+                    flash('The decision for proposal {} was left undecided.',
+                          proposal_code)
 
                 # Redirect back to tabulation page.
                 raise HTTPRedirect(url_for('.review_call_tabulation',

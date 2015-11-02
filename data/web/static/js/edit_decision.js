@@ -3,7 +3,7 @@ $(document).ready(function() {
     var decision_exempt = $('[name=decision_exempt]');
 
     var check_exempt_opt = (function() {
-        var is_accepted = decision_accept.prop('checked');
+        var is_accepted = (decision_accept.val() === '1');
         decision_exempt.prop('disabled', (! is_accepted));
         if (! is_accepted) {
             decision_exempt.prop('checked', false);

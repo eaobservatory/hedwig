@@ -27,9 +27,12 @@
     <ol>
         <li class="separator">Overall Decision</li>
         <li>
-            <label for="decision_accept">Accept</label>
-            <input type="checkbox" name="decision_accept" {{ 'checked="checked"' | safe if proposal.decision_accept }} />
-            <span class="checkboxlabel">Check to accept, leave unchecked to reject<span>
+            <label for="decision_accept">Decision</label>
+            <select name="decision_accept">
+                <option value="" {{ 'selected="selected"' | safe if proposal.decision_accept is none }}>Undecided</option>
+                <option value="1" {{ 'selected="selected"' | safe if (proposal.decision_accept is not none) and proposal.decision_accept }}>Accept proposal</option>
+                <option value="0" {{ 'selected="selected"' | safe if (proposal.decision_accept is not none) and (not proposal.decision_accept) }}>Reject proposal</option>
+            </select>
         </li>
         <li>
             <label for="decision_accept">Exempt</label>

@@ -286,14 +286,16 @@ class JCMT(Generic):
 
             proposal['jcmt_request'] = request
 
-            # Read the committee's time allocation, but only if there is one
-            # (which should be if the decision is defined).
+            # Read the committee's time allocation, but only if there is one.
+            # Since decisions can now be returned to "undecided", we need
+            # to search for allocations regardless of decision presence.
             allocation = None
             proposal_accepted = proposal['decision_accept']
             proposal_exempt = proposal['decision_exempt']
-            if proposal_accepted is not None:
-                allocation = db.search_jcmt_allocation(
-                    proposal_id=proposal['id']).get_total()
+            allocation_records = db.search_jcmt_allocation(
+                proposal_id=proposal['id'])
+            if allocation_records:
+                allocation = allocation_records.get_total()
 
             proposal['jcmt_allocation'] = allocation
             proposal['jcmt_allocation_different'] = \
