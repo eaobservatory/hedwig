@@ -90,6 +90,30 @@ class ReviewPart(object):
 
         return result.inserted_primary_key[0]
 
+    def delete_decision(self, proposal_id):
+        """
+        Delete a review decision record.
+
+        This will return the review decision status for the proposal
+        to the original undecided state.
+        """
+
+        with self._transaction() as conn:
+            proposal = self.get_proposal(
+                facility_id=None, proposal_id=proposal_id,
+                with_decision=True, _conn=conn)
+
+            if proposal.decision_accept is None:
+                raise ConsistencyError(
+                    'decision does not already exist for {}', proposal_id)
+
+            result = conn.execute(decision.delete().where(
+                decision.c.proposal_id == proposal_id))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no row matched deleting decision for {}', proposal_id)
+
     def delete_reviewer(self, reviewer_id=None,
                         proposal_id=None, person_id=None, role=None,
                         delete_review=False, _conn=None):

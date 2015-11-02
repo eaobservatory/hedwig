@@ -331,6 +331,19 @@ class DBReviewTest(DBTestCase):
         self.assertTrue(proposal.decision_exempt)
         self.assertTrue(proposal.decision_ready)
 
+        # Try deleting a decision record
+        self.db.delete_decision(proposal_id)
+
+        proposal = self.db.get_proposal(
+            facility_id=None, proposal_id=proposal_id, with_decision=True)
+
+        self.assertEqual(proposal.id, proposal_id)
+        self.assertIsNone(proposal.decision_accept)
+
+        with self.assertRaisesRegexp(
+                ConsistencyError, 'decision does not already exist'):
+            self.db.delete_decision(proposal_id)
+
     def _create_test_proposal(self):
         facility_id = self.db.ensure_facility('test facility')
         semester_id = self.db.add_semester(
