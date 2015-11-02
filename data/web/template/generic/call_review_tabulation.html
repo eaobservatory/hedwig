@@ -67,7 +67,7 @@
                 'pi_name': (None if proposal.member_pi is none else proposal.member_pi.person_name),
                 'title': proposal.title,
                 'state': proposal.state,
-                'decision': (0 if not proposal.decision_accept else (2 if proposal.decision_exempt else 1)),
+                'decision': (1 if proposal.decision_accept is none else (0 if not proposal.decision_accept else (3 if proposal.decision_exempt else 2))),
                 'rating': proposal.rating,
             } | json }}{% endblock %}">
                 <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
