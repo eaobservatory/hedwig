@@ -259,3 +259,7 @@ th.sideways > div > div:after {
     display: block;
     margin: -1.5em 0 100%;
 }
+
+tr.oneline td, tr.oneline th {
+    white-space: nowrap;
+}

@@ -62,7 +62,7 @@
     </thead>
     <tbody id="tabulationbody">
         {% for proposal in proposals %}
-            <tr{% if proposal.decision_accept is not none %} class="decision_{{ 'accept' if proposal.decision_accept else 'reject' }}"{% endif %} data-sortinfo="{% block row_sort_info scoped %}{{ {
+            <tr class="oneline{% if proposal.decision_accept is not none %} decision_{{ 'accept' if proposal.decision_accept else 'reject' }}{% endif %}" data-sortinfo="{% block row_sort_info scoped %}{{ {
                 'proposal_code': proposal.code,
                 'pi_name': (None if proposal.member_pi is none else proposal.member_pi.person_name),
                 'title': proposal.title,
