@@ -55,7 +55,7 @@
             {% endblock %}
             {% block heading_affiliations %}
                 {% for affiliation in affiliations %}
-                    <th class="sideways{{ ' spacer_left' if loop.first }}"><div><div>{{ affiliation.name }}</div></div></th>
+                    <th class="sideways{{ ' spacer_left' if loop.first }}"><div><div>{{ affiliation.name | abbr(15) }}</div></div></th>
                 {% endfor %}
             {% endblock %}
         </tr>
