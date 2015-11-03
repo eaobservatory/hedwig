@@ -1,3 +1,6 @@
 $(document).ready(function () {
-    enable_table_sorting($('table#tabulation'));
+    var tabulation = $('table#tabulation');
+
+    enable_table_sorting(tabulation);
+    tabulation.stickyTableHeaders();
 });
