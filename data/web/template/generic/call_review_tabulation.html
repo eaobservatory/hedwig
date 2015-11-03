@@ -35,6 +35,13 @@
     to see a table of all the proposal&rsquo;s reviews.
 </p>
 
+<p id="filter_decision">
+    Show:
+    <input type="checkbox" data-decision="undecided" checked="checked" /> <span class="checkboxlabel">Undecided</span>
+    <input type="checkbox" data-decision="accept" checked="checked" /> <span class="checkboxlabel">Accepted</span>
+    <input type="checkbox" data-decision="reject" checked="checked" /> <span class="checkboxlabel">Rejected</span>
+</p>
+
 <table id="tabulation">
     <thead>
         <tr>
@@ -62,7 +69,7 @@
     </thead>
     <tbody id="tabulationbody">
         {% for proposal in proposals %}
-            <tr class="oneline{% if proposal.decision_accept is not none %} decision_{{ 'accept' if proposal.decision_accept else 'reject' }}{% endif %}" data-sortinfo="{% block row_sort_info scoped %}{{ {
+            <tr class="oneline decision_{{ 'undecided' if proposal.decision_accept is none else ('accept' if proposal.decision_accept else 'reject') }}" data-sortinfo="{% block row_sort_info scoped %}{{ {
                 'proposal_code': proposal.code,
                 'pi_name': (None if proposal.member_pi is none else proposal.member_pi.person_name),
                 'title': proposal.title,
