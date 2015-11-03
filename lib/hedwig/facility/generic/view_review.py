@@ -243,6 +243,10 @@ class GenericReview(object):
         }
 
     @with_call_review(permission='edit')
+    def view_review_call_available(self, db, call, can, form):
+        raise ErrorPage('Time available not implemented for this facility.')
+
+    @with_call_review(permission='edit')
     def view_review_call_reviewers(self, db, call, can, args):
         role = args.get('role', None)
         if not role:

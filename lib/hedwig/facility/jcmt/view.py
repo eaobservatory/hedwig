@@ -25,12 +25,13 @@ from urllib import urlencode
 
 from ...error import NoSuchRecord, UserError
 from ...web.util import HTTPRedirect, flash, url_for
-from ...view.util import organise_collection, with_proposal
+from ...view.util import organise_collection, with_call_review, with_proposal
 from ...type import Link, ReviewerRole, ValidationMessage
 from ..generic.view import Generic
 from .calculator_heterodyne import HeterodyneCalculator
 from .calculator_scuba2 import SCUBA2Calculator
 from .type import \
+    JCMTAvailable, JCMTAvailableCollection, \
     JCMTInstrument, JCMTOptions, \
     JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, \
     JCMTWeather
@@ -552,6 +553,70 @@ class JCMT(Generic):
             'allocations': allocations.values(),
             'instruments': JCMTInstrument.get_options(),
             'weathers': JCMTWeather.get_available(),
+        }
+
+    @with_call_review(permission='edit')
+    def view_review_call_available(self, db, call, can, form):
+        message = None
+
+        weathers = JCMTWeather.get_available()
+        available = db.search_jcmt_available(call_id=call.id)
+
+        if form is not None:
+            updated_records = {}
+            added_records = {}
+            try:
+                for weather_id in weathers.keys():
+                    time = form.get('available_{}'.format(weather_id), '')
+                    if time == '':
+                        continue
+                    try:
+                        time = float(time)
+                    except ValueError:
+                        # Ignore parsing error for now so that we can return
+                        # the string to the user for correction.
+                        pass
+
+                    for record in available.values():
+                        if record.weather == weather_id:
+                            updated_records[record.id] = record._replace(
+                                time=time)
+                            break
+                    else:
+                        added_records[weather_id] = JCMTAvailable(
+                            id=None, call_id=None,
+                            weather=weather_id, time=time)
+
+                available = organise_collection(JCMTAvailableCollection,
+                                                updated_records, added_records)
+
+                updates = db.sync_jcmt_call_available(call.id, available)
+
+                if any(updates):
+                    flash('The time available has been saved.')
+
+                raise HTTPRedirect(url_for('.review_call', call_id=call.id))
+
+            except UserError as e:
+                message = e.message
+
+        # Straightforwardly organize available time by weather band (assuming
+        # no duplicated) rather than using get_total so that we can allow for
+        # unparsed strings still being present.
+        available_weather = {}
+        for record in available.values():
+            weather = record.weather
+            if not JCMTWeather.get_info(weather).available:
+                weather = 0
+            available_weather[weather] = record.time
+
+        return {
+            'title': 'Time Available: {} {}'.format(call.semester_name,
+                                                    call.queue_name),
+            'call': call,
+            'message': message,
+            'weathers': weathers,
+            'available': available_weather,
         }
 
     def get_feedback_extra(self, db, proposal):

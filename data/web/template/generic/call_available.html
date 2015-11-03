@@ -1,0 +1,16 @@
+{% extends 'layout.html' %}
+{% set navigation=[(call.semester_name + ' ' + call.queue_name, url_for('.review_call', call_id=call.id))] %}
+
+{% block content %}
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.review_call_available', call_id=call.id) }}">
+    {% block available_form %}
+    {% endblock %}
+</form>
+
+{% endblock %}
