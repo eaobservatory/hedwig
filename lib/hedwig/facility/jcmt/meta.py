@@ -40,6 +40,18 @@ jcmt_allocation = Table(
     UniqueConstraint('proposal_id', 'instrument', 'weather'),
     **_table_opts)
 
+jcmt_available = Table(
+    'jcmt_available',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('call_id', None,
+           ForeignKey('call.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('weather', Integer, nullable=False),
+    Column('time', Float, nullable=False),
+    UniqueConstraint('call_id', 'weather'),
+    **_table_opts)
+
 jcmt_options = Table(
     'jcmt_options',
     metadata,

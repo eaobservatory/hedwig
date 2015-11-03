@@ -21,10 +21,11 @@ from __future__ import absolute_import, division, print_function, \
 from sqlalchemy.sql import select
 from sqlalchemy.sql.functions import count
 
-from ...db.meta import proposal
+from ...db.meta import call, proposal
 from ...error import ConsistencyError
-from .meta import jcmt_allocation, jcmt_options, jcmt_request
+from .meta import jcmt_available, jcmt_allocation, jcmt_options, jcmt_request
 from .type import \
+    JCMTAvailable, JCMTAvailableCollection, \
     JCMTOptions, JCMTRequest, JCMTRequestCollection
 
 
@@ -57,6 +58,25 @@ class JCMTPart(object):
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(jcmt_allocation.c.id.asc())):
                 ans[row['id']] = JCMTRequest(**row)
+
+        return ans
+
+    def search_jcmt_available(self, call_id):
+        """
+        Retrieve information about the observing time available (normally
+        for a given call for proposals).
+        """
+
+        stmt = jcmt_available.select()
+
+        if call_id is not None:
+            stmt = stmt.where(jcmt_available.c.call_id == call_id)
+
+        ans = JCMTAvailableCollection()
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt.order_by(jcmt_available.c.id.asc())):
+                ans[row['id']] = JCMTAvailable(**row)
 
         return ans
 
@@ -108,6 +128,24 @@ class JCMTPart(object):
                 })
 
                 conn.execute(jcmt_options.insert().values(values))
+
+    def sync_jcmt_call_available(self, call_id, records,
+                                 _test_skip_check=False):
+        """
+        Update the records of the amount of time available for a call.
+        """
+
+        records.validate()
+
+        with self._transaction() as conn:
+            if not _test_skip_check and \
+                    not self._exists_id(conn, call, call_id):
+                raise ConsistencyError(
+                    'call does not exist with id={}', call_id)
+
+            return self._sync_records(
+                conn, jcmt_available, jcmt_available.c.call_id, call_id,
+                records, unique_columns=(jcmt_available.c.weather,))
 
     def sync_jcmt_proposal_allocation(self, proposal_id, records,
                                       _test_skip_check=False):

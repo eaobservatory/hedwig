@@ -23,6 +23,7 @@ from unittest import TestCase
 
 from hedwig.error import UserError
 from hedwig.facility.jcmt.type import \
+    JCMTAvailable, JCMTAvailableCollection, \
     JCMTInstrument, \
     JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, JCMTWeather
 from hedwig.type import ResultTable
@@ -197,4 +198,25 @@ class JCMTTypeTestCase(TestCase):
 
         c[1] = JCMTRequest(1, 0, instrument=1, weather=0, time=1.0)
         with self.assertRaisesRegexp(UserError, 'Weather band not recognised'):
+            c.validate()
+
+    def test_available_collection(self):
+        c = JCMTAvailableCollection()
+
+        c[1001] = JCMTAvailable(1001, 100, 2, 10.0)
+        c[1002] = JCMTAvailable(1002, 100, 3, 15.0)
+
+        # Test the "get_total" method.
+        total = c.get_total()
+        self.assertIsInstance(total, JCMTRequestTotal)
+        self.assertEqual(total.total, 25)
+        self.assertEqual(total.weather, {2: 10.0, 3: 15.0})
+        self.assertEqual(total.instrument, {})
+
+        # Test the "validate" method.
+        c.validate()
+
+        c[1003] = JCMTAvailable(1003, 100, 3, 20.0)
+
+        with self.assertRaisesRegexp(UserError, 'There are multiple entries'):
             c.validate()

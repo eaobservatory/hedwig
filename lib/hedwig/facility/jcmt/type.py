@@ -22,7 +22,11 @@ from collections import OrderedDict, namedtuple
 
 from ...type import ResultTable
 from ...error import UserError
-from .meta import jcmt_allocation, jcmt_options, jcmt_request
+from .meta import jcmt_available, jcmt_options, jcmt_request
+
+JCMTAvailable = namedtuple(
+    'JCMTAvailable',
+    [x.name for x in jcmt_available.columns])
 
 JCMTOptions = namedtuple(
     'JCMTOptions',
@@ -75,6 +79,60 @@ class JCMTInstrument(object):
     @classmethod
     def get_all_options(cls):
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
+
+
+class JCMTAvailableCollection(OrderedDict):
+    """
+    Class used to represent a collection of time availability records.
+    """
+
+    def validate(self):
+        """
+        Attempts to validate a collection of JCMT time availabilities.
+
+        Raises UserError is a problem is found.
+        """
+
+        weathers = set()
+
+        for record in self.values():
+            if not JCMTWeather.is_valid(record.weather):
+                raise UserError('Weather band not recognised.')
+
+            if not isinstance(record.time, float):
+                raise UserError(
+                    'Please enter time as a valid number for {0}'.format(
+                        JCMTWeather.get_name(record.weather)))
+
+            if record.weather in weathers:
+                raise UserError(
+                    'There are multiple entries for {0}'.format(
+                        JCMTWeather.get_name(record.weather)))
+
+            weathers.add(record.weather)
+
+    def get_total(self):
+        """
+        Get total by weather band.
+
+        Only weather bands currently labeled as "available" are included.
+        Other time requested is returned with identifier zero.
+        """
+
+        weathers = {}
+        total = 0.0
+
+        for record in self.values():
+            time = record.time
+
+            weather = record.weather
+            if not JCMTWeather.get_info(weather).available:
+                weather = 0
+
+            total += time
+            weathers[weather] = weathers.get(weather, 0.0) + time
+
+        return JCMTRequestTotal(total=total, weather=weathers, instrument={})
 
 
 class JCMTRequestCollection(OrderedDict):

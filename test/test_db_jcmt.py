@@ -19,8 +19,10 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from datetime import datetime
+from hedwig.error import ConsistencyError
 from hedwig.type import FormatType
 from hedwig.facility.jcmt.type import \
+    JCMTAvailable, JCMTAvailableCollection, \
     JCMTInstrument, JCMTOptions, \
     JCMTRequest, JCMTRequestCollection, JCMTWeather
 
@@ -225,7 +227,41 @@ class DBJCMTTest(DBTestCase):
             self.assertEqual(record.time, time)
             self.assertEqual(record.instrument, JCMTInstrument.SCUBA2)
 
-    def _create_test_proposal(self):
+    def test_jcmt_available(self):
+        """
+        Test methods associated with the "jcmt_available" table.
+        """
+
+        (queue_id, call_id) = self._create_test_call()
+
+        records = self.db.search_jcmt_available(call_id)
+
+        self.assertIsInstance(records, JCMTAvailableCollection)
+        self.assertEqual(len(records), 0)
+
+        records = JCMTAvailableCollection()
+        records[1] = JCMTAvailable(None, 1, JCMTWeather.BAND1, 100.0)
+
+        with self.assertRaisesRegexp(ConsistencyError, 'call does not exist'):
+            self.db.sync_jcmt_call_available(1999999, records)
+
+        n = self.db.sync_jcmt_call_available(call_id, records)
+
+        self.assertEqual(n, (1, 0, 0))
+
+        records = self.db.search_jcmt_available(call_id=call_id)
+
+        self.assertIsInstance(records, JCMTAvailableCollection)
+        self.assertEqual(len(records), 1)
+
+        for (id_, record) in records.items():
+            self.assertIsInstance(id_, int)
+            self.assertIsInstance(record, JCMTAvailable)
+            self.assertEqual(record.id, id_)
+            self.assertEqual(record.weather, JCMTWeather.BAND1)
+            self.assertEqual(record.time, 100.0)
+
+    def _create_test_call(self):
         facility_id = self.db.ensure_facility('jcmt')
         semester_id = self.db.add_semester(
             facility_id, 'test', 'test',
@@ -236,7 +272,14 @@ class DBJCMTTest(DBTestCase):
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', '',
             FormatType.PLAIN)
+
+        return (queue_id, call_id)
+
+    def _create_test_proposal(self):
+        (queue_id, call_id) = self._create_test_call()
+
         affiliation_id = self.db.add_affiliation(queue_id, 'test')
         person_id = self.db.add_person('Test Person')
+
         return self.db.add_proposal(
             call_id, person_id, affiliation_id, 'Test Title')
