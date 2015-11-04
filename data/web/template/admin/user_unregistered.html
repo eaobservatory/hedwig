@@ -1,5 +1,6 @@
 {% extends 'layout.html' %}
 {% set navigation=['site_admin'] %}
+{% set help_link=url_for('help.admin_page', page_name='user') %}
 
 {% block content %}
 {% if users %}

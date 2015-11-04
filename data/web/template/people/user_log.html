@@ -2,6 +2,7 @@
 {% if person is not none %}
     {% set navigation=['people', (person.name, url_for('.person_view', person_id=person.id))] %}
 {% endif %}
+{% set help_link=url_for('help.admin_page', page_name='user') %}
 
 {% block content %}
 {% if events %}

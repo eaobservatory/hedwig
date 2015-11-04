@@ -1,5 +1,6 @@
 {% extends 'layout.html' %}
 {% set navigation = ['site_admin', ('Messages', url_for('.message_list'))] %}
+{% set help_link=url_for('help.admin_page', page_name='messages') %}
 
 {% block content %}
 <table>
