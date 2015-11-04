@@ -524,7 +524,6 @@ class GenericProposal(object):
             proposal_id=proposal.id)
 
         return {
-            'help_link': url_for('help.user_page', page_name='abstract'),
             'categories': db.search_category(facility_id=self.id_,
                                              hidden=False),
             'categories_selected': set(x.category_id
