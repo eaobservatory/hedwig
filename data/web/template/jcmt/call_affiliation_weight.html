@@ -1,0 +1,21 @@
+{% extends 'generic/call_affiliation_weight.html' %}
+
+{% block weight_meaning_list %}
+<li>
+    The weights should be entered as percentages indicating
+    the affiliation&rsquo;s contribution.
+</li>
+<li>
+    The total time available to a call for proposals will be distributed
+    according to the weights,
+    with any remaining time (if the total is less than 100%)
+    allocated to affiliation &ldquo;Unknown&rdquo;
+    with the intention of being used for &ldquo;exempt&rdquo; (best science)
+    proposals.
+</li>
+<li>
+    For the purpose of assigning fractional affiliations to a proposal,
+    the total of the weights is not important &mdash;
+    the allocation uses the proportion of each weight to the total.
+</li>
+{% endblock %}

@@ -4,14 +4,16 @@
 
 {% block content %}
 <ul>
-    <li>
-        The affiliation weight can influence the relative assignment
-        of a proposal to its members' affiliations.
-    </li>
-    <li>
-        The exact meaning depends on the facility's specific
-        affiliation assignment rules.
-    </li>
+    {% block weight_meaning_list %}
+        <li>
+            The affiliation weight can influence the relative assignment
+            of a proposal to its members&rsquo; affiliations.
+        </li>
+        <li>
+            The exact meaning depends on the facility&rsquo;s specific
+            affiliation assignment rules.
+        </li>
+    {% endblock %}
 </ul>
 
 {% if message is not none %}
