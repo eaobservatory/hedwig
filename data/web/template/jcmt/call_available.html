@@ -9,7 +9,7 @@
     {% for (weather_id, weather) in weathers.items() %}
         <tr>
             <td>{{ weather.name }}</td>
-            <td><input type="text" name="available_{{ weather_id }}" value="{{ available.get(weather_id, '') }}" /></td>
+            <td><input type="number" name="available_{{ weather_id }}" value="{{ available.get(weather_id, '') }}" min="0" step="any" /></td>
         </tr>
     {% endfor %}
 </table>
