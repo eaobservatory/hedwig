@@ -1506,6 +1506,22 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn('The affiliation weights have been updated.',
                       self.browser.page_source)
 
+        # Enter times by weather band.
+        self.browser.find_element_by_link_text(
+            'Edit time available').click()
+
+        self.browser.find_element_by_name('available_1').send_keys('150')
+        self.browser.find_element_by_name('available_2').send_keys('250')
+        self.browser.find_element_by_name('available_3').send_keys('250')
+        self.browser.find_element_by_name('available_4').send_keys('200')
+        self.browser.find_element_by_name('available_5').send_keys('150')
+
+        self._save_screenshot(self.admin_image_root, 'time_available')
+
+        self.browser.find_element_by_name('submit').click()
+        self.assertIn('The time available has been saved.',
+                      self.browser.page_source)
+
         # Check that the feedback approval page loads (currently empty).
         self.browser.find_element_by_link_text(
             'Approve feedback reports').click()
