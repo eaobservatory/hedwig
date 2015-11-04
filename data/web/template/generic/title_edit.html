@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal.id))] %}
+{% set help_link=url_for('help.user_page', page_name='abstract') %}
 
 {% block content %}
 
