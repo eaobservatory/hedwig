@@ -370,6 +370,8 @@ class JCMT(Generic):
             'jcmt_accepted_total': accepted,
             'jcmt_request_total': total,
             'jcmt_request_original': original,
+            'jcmt_available': db.search_jcmt_available(
+                call_id=call.id).get_total(),
             'affiliation_accepted': accepted_affiliation,
             'affiliation_total': total_affiliation,
             'affiliation_original': original_affiliation,

@@ -114,6 +114,11 @@
     {{ render_jcmt_request(jcmt_accepted_total, is_total=true) }}
 {% endblock %}
 
+{% block footer_available_extra %}
+    <td colspan="2" class="{{ render_cell_class(true, false) }}">{{ jcmt_available.total | fmt('{:.1f}') }}</td>
+    {{ render_jcmt_request(jcmt_available, is_total=true) }}
+{% endblock %}
+
 {% block footer_total_extra %}
     <td colspan="2" class="{{ render_cell_class(true, false) }}">{{ jcmt_request_total.total | fmt('{:.1f}') }}</td>
     {{ render_jcmt_request(jcmt_request_total, is_total=true) }}
