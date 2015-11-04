@@ -1,15 +1,20 @@
 {% extends 'generic/call_available.html' %}
 
 {% block available_form %}
-<ol>
+<table>
+    <tr>
+        <th>Weather band</th>
+        <th>Time available (hours)</th>
+    </tr>
     {% for (weather_id, weather) in weathers.items() %}
-        <li>
-            <label for="available_{{ weather_id }}">{{ weather.name }}</label>
-            <input type="text" name="available_{{ weather_id }}" value="{{ available.get(weather_id, '') }}" />
-            hours
-        </li>
+        <tr>
+            <td>{{ weather.name }}</td>
+            <td><input type="text" name="available_{{ weather_id }}" value="{{ available.get(weather_id, '') }}" /></td>
+        </tr>
     {% endfor %}
+</table>
 
-    <li><input type="submit" name="submit" value="Save" /></li>
-</ol>
+<p>
+    <input type="submit" name="submit" value="Save" />
+</p>
 {% endblock %}
