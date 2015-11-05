@@ -363,6 +363,26 @@ class JCMT(Generic):
                         accepted_affiliation[affiliation] += \
                             allocation.total * fraction
 
+        # Fetch the amount of time available and distribute it among the
+        # affiliations under the assumption that the affiliation weights
+        # are percentages.
+        available = db.search_jcmt_available(call_id=call.id).get_total()
+
+        total_weight = 0.0
+        available_affiliation = {}
+
+        for affiliation in tabulation['affiliations']:
+            if affiliation.id == 0:
+                continue
+
+            total_weight += affiliation.weight
+            available_affiliation[affiliation.id] = \
+                available.total * affiliation.weight / 100.0
+
+        # Assign the remaining time to the "Unknown" affiliation.
+        available_affiliation[0] = \
+            (1.0 - (total_weight / 100.0)) * available.total
+
         tabulation.update({
             'jcmt_weathers': JCMTWeather.get_available(),
             'jcmt_instruments': JCMTInstrument.get_options(),
@@ -370,9 +390,9 @@ class JCMT(Generic):
             'jcmt_accepted_total': accepted,
             'jcmt_request_total': total,
             'jcmt_request_original': original,
-            'jcmt_available': db.search_jcmt_available(
-                call_id=call.id).get_total(),
+            'jcmt_available': available,
             'affiliation_accepted': accepted_affiliation,
+            'affiliation_available': available_affiliation,
             'affiliation_total': total_affiliation,
             'affiliation_original': original_affiliation,
         })
