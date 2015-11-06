@@ -566,10 +566,15 @@ class PeoplePart(object):
         """
 
         stmt = email.select()
-        stmt = stmt.where(email.c.person_id == person_id)
+
+        if person_id is not None:
+            stmt = stmt.where(email.c.person_id == person_id)
 
         if address is not None:
-            stmt = stmt.where(email.c.address == address)
+            if isinstance(address, list) or isinstance(address, tuple):
+                stmt = stmt.where(email.c.address.in_(address))
+            else:
+                stmt = stmt.where(email.c.address == address)
 
         ans = EmailCollection()
 
