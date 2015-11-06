@@ -158,6 +158,10 @@ class TypeTestCase(TestCase):
         self.assertNotIn(ProposalState.PREPARATION, states)
         self.assertIn(ProposalState.REVIEW, states)
 
+        self.assertEqual(ProposalState.by_name('accepted'),
+                         ProposalState.ACCEPTED)
+        self.assertIsNone(ProposalState.by_name('not a real state'))
+
     def test_result_collection(self):
         rc = ResultCollection()
         r = 'test result'

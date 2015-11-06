@@ -527,6 +527,21 @@ class ProposalState(object):
     def submitted_states(cls):
         return [k for (k, v) in cls._info.items() if v.submitted]
 
+    @classmethod
+    def by_name(cls, name):
+        """
+        Attempt to find a state value by name.
+
+        Returns None if no match is found.
+        """
+
+        lowername = name.lower()
+        for (state, info) in cls._info.items():
+            if lowername == info.name.lower():
+                return state
+
+        return None
+
 
 class PublicationType(object):
     PLAIN = 1
