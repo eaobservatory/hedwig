@@ -490,7 +490,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         Select(
             self.browser.find_element_by_name('affiliation_id')
-        ).select_by_visible_text('Other')
+        ).select_by_visible_text('China')
 
         self.browser.find_element_by_name('proposal_title').send_keys(
             'An Example Proposal')
