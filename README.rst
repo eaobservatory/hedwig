@@ -297,6 +297,44 @@ documenation with::
 
     sphinx-build -b html doc doc/_build/html
 
+Updating a Live Instance
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you would like to update the version of the Hedwig running in
+a live deployment, there are a number of steps which you should
+perform to ensure that the processes is completed smoothly.
+These include:
+
+* Ensure you have an up-to-date backup of your database,
+  especially if the update requires changes to the database
+  schema.
+  (See the `Database`_ section above for information about `mysqldump`.)
+* Run the `Selenium` test to generate updated screenshots for the documentation
+  (as described in the `Tests`_ section)
+  and copy them to your web server, if necessary.
+* Stop any running poll processes and temporarily disable any Cron jobs which
+  would restart them.
+* Update the software version.
+  The exact steps required would depend on how you installed Hedwig ---
+  if you have a `Git` clone installed in "editable" mode into a "virtualenv",
+  this can be as simple as performing a `Git` pull.
+* Run the unit tests, being sure that you are testing the new version
+  of the software.
+  This may indicate if there are any additional software dependencies
+  which need to be installed.
+* Update your database if the schema has changed --- see the
+  notes on using `Alembic` in the `Database`_ section.
+* Restart the web application.
+  For example, using Apache, you can touch the `hedwig.wsgi` file,
+  provided `WSGIScriptReloading` is enabled, which it is by default.
+* Try accessing the web application.
+  There may be delay loading the first page as Apache restarts Hedwig.
+* Restart your poll processes or re-enable the Cron jobs which run them.
+* Add any new database tables to your backup system.
+* From the site administration menu,
+  check the email messages and processing status pages for tasks stuck in the
+  "Processing" or "Sending" states.
+
 .. hedwigendinstall
 
 License
