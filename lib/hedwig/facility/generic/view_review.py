@@ -151,8 +151,10 @@ class GenericReview(object):
             })
 
             if can_view_review:
-                updated_proposal['rating'] = \
-                    self.calculate_overall_rating(proposal.reviewers)
+                (overall_rating, std_dev) = self.calculate_overall_rating(
+                    proposal.reviewers, with_std_dev=True)
+                updated_proposal['rating'] = overall_rating
+                updated_proposal['rating_std_dev'] = std_dev
 
             else:
                 # Remove 'reviewers' from dictionary for safety, so that
@@ -161,6 +163,7 @@ class GenericReview(object):
                 updated_proposal.update({
                     'reviewers': ReviewerCollection(),
                     'rating': None,
+                    'rating_std_dev': None,
                 })
 
             proposal_list.append(updated_proposal)
@@ -180,7 +183,7 @@ class GenericReview(object):
         return (
             [
                 'Proposal', 'PI name', 'PI affiliation', 'Title',
-                'State', 'Decision', 'Exempt', 'Rating',
+                'State', 'Decision', 'Exempt', 'Rating', 'Rating std. dev.',
             ] +
             [x.name for x in tabulation['affiliations']]
         )
@@ -204,6 +207,7 @@ class GenericReview(object):
                      else ('Accept' if decision_accept else 'Reject')),
                     ('Exempt' if proposal['decision_exempt'] else None),
                     proposal['rating'],
+                    proposal['rating_std_dev'],
                 ] +
                 [proposal['affiliations'].get(x.id) for x in affiliations]
             )

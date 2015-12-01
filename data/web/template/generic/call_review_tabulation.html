@@ -52,6 +52,7 @@
             <th rowspan="2" class="spacer_left sideways sortable" data-sortkey="state"><div><div><span>State</span></div></div></th>
             <th rowspan="2" class="sideways sortable sortreverse" data-sortkey="decision"><div><div><span>Decision</span></div></div></th>
             <th rowspan="2" class="sideways sortable sortreverse" data-sortkey="rating"><div><div><span>Rating<sup>&ddagger;</sup></span></div></div></th>
+            <th rowspan="2" class="sideways"><div><div>Rating std. dev.</div></div></th>
             {% block heading_line_one %}
             {% endblock %}
             <th colspan="{{ affiliations | length }}" class="spacer_left">Affiliation percentage</th>
@@ -202,6 +203,17 @@
                         &nbsp;
                     {% endif %}
                 </td>
+                <td class="number_right">
+                    {% if proposal.can_view_review %}
+                        {% if proposal.rating_std_dev is none %}
+                            &mdash;
+                        {% else %}
+                            {{ proposal.rating_std_dev | fmt('{:.1f}') }}
+                        {% endif %}
+                    {% else %}
+                        &nbsp;
+                    {% endif %}
+                </td>
                 {% block row_extra scoped %}
                 {% endblock %}
                 {% for affiliation in affiliations %}
@@ -219,7 +231,7 @@
     <tfoot>
         <tr>
             <th colspan="5">Total exempt (hours)</th>
-            <td colspan="3" class="total spacer_left">&nbsp;</td>
+            <td colspan="4" class="total spacer_left">&nbsp;</td>
             {% block footer_exempt_extra %}
             {% endblock %}
             {% for affiliation in affiliations %}
@@ -228,35 +240,35 @@
         </tr>
         <tr>
             <th colspan="5">Total accepted (hours)</th>
-            <td colspan="3" class="total spacer_left">&nbsp;</td>
+            <td colspan="4" class="total spacer_left">&nbsp;</td>
             {% block footer_accepted_extra %}
             {% endblock %}
             {{ render_affiliation_totals(affiliations, affiliation_accepted) }}
         </tr>
         <tr>
             <th colspan="5">Time available (hours)</th>
-            <td colspan="3" class="total spacer_left">&nbsp;</td>
+            <td colspan="4" class="total spacer_left">&nbsp;</td>
             {% block footer_available_extra %}
             {% endblock %}
             {{ render_affiliation_totals(affiliations, affiliation_available) }}
         </tr>
         <tr class="spacer_above">
             <th colspan="5">Total as shown (hours)</th>
-            <td colspan="3" class="total spacer_left">&nbsp;</td>
+            <td colspan="4" class="total spacer_left">&nbsp;</td>
             {% block footer_total_extra %}
             {% endblock %}
             {{ render_affiliation_totals(affiliations, affiliation_total) }}
         </tr>
         <tr>
             <th colspan="5">Total original request (hours)</th>
-            <td colspan="3" class="total spacer_left">&nbsp;</td>
+            <td colspan="4" class="total spacer_left">&nbsp;</td>
             {% block footer_original_extra %}
             {% endblock %}
             {{ render_affiliation_totals(affiliations, affiliation_original) }}
         </tr>
         <tr>
             <th colspan="5">&nbsp;</th>
-            <td colspan="3" class="total spacer_left">&nbsp;</td>
+            <td colspan="4" class="total spacer_left">&nbsp;</td>
             {% block footer_head_extra %}
             {% endblock %}
             {{ self.heading_line_two() }}
