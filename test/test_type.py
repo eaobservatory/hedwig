@@ -242,8 +242,15 @@ class TypeTestCase(TestCase):
     def test_reviewer_collection_rating(self):
         c = ReviewerCollection()
 
-        rating = c.get_overall_rating(include_unweighted=True)
+        rating = c.get_overall_rating(include_unweighted=True,
+                                      with_std_dev=False)
         self.assertIsNone(rating)
+        rating = c.get_overall_rating(include_unweighted=True,
+                                      with_std_dev=True)
+        self.assertIsInstance(rating, tuple)
+        self.assertEqual(len(rating), 2)
+        self.assertIsNone(rating[0])
+        self.assertIsNone(rating[1])
 
         # Add some simple review ratings.
         rr = ReviewerRole
@@ -259,8 +266,23 @@ class TypeTestCase(TestCase):
         for (r, n) in zip(rs, itertools.count(100)):
             c[n] = null_tuple(Reviewer)._replace(review_present=True, **r)
 
-        self.assertEqual(c.get_overall_rating(include_unweighted=True), 50)
-        self.assertEqual(c.get_overall_rating(include_unweighted=False), 80)
+        self.assertEqual(c.get_overall_rating(include_unweighted=True,
+                                              with_std_dev=False), 50)
+        self.assertEqual(c.get_overall_rating(include_unweighted=False,
+                                              with_std_dev=False), 80)
+
+        # Repeat test above, including calculation of standard deviation.
+        rating = c.get_overall_rating(include_unweighted=False,
+                                      with_std_dev=True)
+        self.assertIsInstance(rating, tuple)
+        self.assertEqual(len(rating), 2)
+        self.assertEqual(rating[0], 80.0)
+        self.assertEqual(rating[1], 0.0)
+
+        (rating, std_dev) = c.get_overall_rating(include_unweighted=True,
+                                                 with_std_dev=True)
+        self.assertEqual(rating, 50.0)
+        self.assertEqual(std_dev, 30.0)
 
         # Add some more reviews with non-100% weights.
         rs = [
@@ -271,7 +293,13 @@ class TypeTestCase(TestCase):
         for (r, n) in zip(rs, itertools.count(200)):
             c[n] = null_tuple(Reviewer)._replace(review_present=True, **r)
 
-        self.assertEqual(c.get_overall_rating(include_unweighted=False), 55)
+        self.assertEqual(c.get_overall_rating(include_unweighted=False,
+                                              with_std_dev=False), 55)
+
+        (rating, std_dev) = c.get_overall_rating(include_unweighted=False,
+                                                 with_std_dev=True)
+        self.assertEqual(rating, 55.0)
+        self.assertAlmostEqual(std_dev, 25.981, places=3)
 
     def test_reviewer_role(self):
         for role in [

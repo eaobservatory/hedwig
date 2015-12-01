@@ -195,13 +195,14 @@ class Generic(GenericAdmin, GenericProposal, GenericReview):
 
         return None
 
-    def calculate_overall_rating(self, reviews):
+    def calculate_overall_rating(self, reviews, with_std_dev=False):
         """
         Calculate the overall rating from a collection of reviewer
         records (including their reviews).
         """
 
-        return reviews.get_overall_rating(include_unweighted=True)
+        return reviews.get_overall_rating(include_unweighted=True,
+                                          with_std_dev=with_std_dev)
 
     def calculate_affiliation_assignment(self, db, members, affiliations):
         """

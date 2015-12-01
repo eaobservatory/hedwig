@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict, namedtuple
+from math import sqrt
 import re
 
 from .astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
@@ -939,16 +940,20 @@ class ProposalTextCollection(ResultCollection):
 
 
 class ReviewerCollection(ResultCollection):
-    def get_overall_rating(self, include_unweighted):
+    def get_overall_rating(self, include_unweighted, with_std_dev):
         """
         Create weighted average of the ratings of completed reviews.
 
         If "unweighted" review roles are included, then these are
         weighted at 100%.
+
+        If the standard deviation is requested, then this method
+        returns a pair as (overall_rating, standard_deviation).
         """
 
         total_rating = 0.0
         total_weight = 0.0
+        rating_and_weight = []
 
         for review in self.values():
             role_info = ReviewerRole.get_info(review.role)
@@ -974,10 +979,28 @@ class ReviewerCollection(ResultCollection):
             total_rating += review.review_rating * weight
             total_weight += weight
 
-        if not total_weight:
-            return None
+            # Record the validated ratings with their weights in case
+            # we want also to calculate the standard deviation.
+            rating_and_weight.append((review.review_rating, weight))
 
-        return total_rating / total_weight
+        if not total_weight:
+            return (None, None) if with_std_dev else None
+
+        overall_rating = total_rating / total_weight
+
+        if not with_std_dev:
+            return overall_rating
+
+        # If we require the standard deviation, iterate over the values
+        # again to calculate the deviation from the weighted mean.
+        total_dev = 0.0
+
+        for (rating, weight) in rating_and_weight:
+            total_dev += weight * ((rating - overall_rating) ** 2)
+
+        std_dev = sqrt(total_dev / total_weight)
+
+        return (overall_rating, std_dev)
 
     def get_person(self, person_id, roles=None):
         for member in self.values():
