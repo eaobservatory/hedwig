@@ -373,7 +373,7 @@ class JCMT(Generic):
         available_affiliation = {}
 
         for affiliation in tabulation['affiliations']:
-            if affiliation.id == 0:
+            if (affiliation.id == 0) or (affiliation.weight is None):
                 continue
 
             total_weight += affiliation.weight
