@@ -945,8 +945,6 @@ class ReviewerCollection(ResultCollection):
 
         If "unweighted" review roles are included, then these are
         weighted at 100%.
-
-        The overall rating is truncated and returned as an integer.
         """
 
         total_rating = 0.0
