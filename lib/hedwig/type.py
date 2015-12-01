@@ -1018,6 +1018,34 @@ class ReviewerCollection(ResultCollection):
 
         return [x.person_id for x in self.values() if x.role == role]
 
+    def values_in_role_order(self, cttee_role=None):
+        """
+        Iterate over the values of the collection in the order of
+        the reviewer roles.
+
+        Optionally return only committee roles (cttee_role=True) or
+        non-committee roles (cttee_role=False).
+
+        Note: operates by looping over known roles.  Any reviewers with
+        invalid (or no longer recognised) roles will not be yielded.
+        """
+
+        roles = ReviewerRole.get_options().keys()
+
+        cttee_roles = None
+        if cttee_role is not None:
+            cttee_roles = ReviewerRole.get_cttee_roles()
+
+        for role in roles:
+            if cttee_role is not None:
+                if ((cttee_role and (role not in cttee_roles)) or
+                        ((not cttee_role) and (role in cttee_roles))):
+                    continue
+
+            for member in self.values():
+                if member.role == role:
+                    yield member
+
 
 class TargetCollection(OrderedResultCollection):
     def to_formatted_collection(self):
