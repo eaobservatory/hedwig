@@ -90,7 +90,7 @@
             <th rowspan="2" class="spacer_left sideways sortable" data-sortkey="state"><div><div><span>State</span></div></div></th>
             <th rowspan="2" class="sideways sortable sortreverse" data-sortkey="decision"><div><div><span>Decision</span></div></div></th>
             <th rowspan="2" class="sideways sortable sortreverse" data-sortkey="rating"><div><div><span>Rating<sup>&ddagger;</sup></span></div></div></th>
-            <th rowspan="2" class="sideways"><div><div>Rating std. dev.</div></div></th>
+            <th rowspan="2" class="sideways sortable sortreverse" data-sortkey="rating_std_dev"><div><div><span>Rating std. dev.</span></div></div></th>
             {% block heading_line_one %}
             {% endblock %}
             <th colspan="{{ affiliations | length }}" class="spacer_left">Affiliation percentage</th>
@@ -116,6 +116,7 @@
                 'state': proposal.state,
                 'decision': (1 if proposal.decision_accept is none else (0 if not proposal.decision_accept else (3 if proposal.decision_exempt else 2))),
                 'rating': proposal.rating,
+                'rating_std_dev': proposal.rating_std_dev,
             } | json }}{% endblock %}">
                 <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
                 <td>
