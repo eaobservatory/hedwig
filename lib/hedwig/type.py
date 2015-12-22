@@ -598,17 +598,29 @@ class ReviewerRole(object):
 
     _info = OrderedDict((
         (TECH,
-            RoleInfo('Technical',     True,  True,  True,  False, False, False, True,  'tech')),
+            RoleInfo(
+                'Technical',
+                True,  True,  True,  False, False, False, True,  'tech')),
         (EXTERNAL,
-            RoleInfo('External',      False, True,  False, True,  False, False, True,  'ext')),
+            RoleInfo(
+                'External',
+                False, True,  False, True,  False, False, True,  'ext')),
         (CTTEE_PRIMARY,
-            RoleInfo('TAC Primary',   True,  True,  False, True,  True,  True,  True,  'cttee')),
+            RoleInfo(
+                'TAC Primary',
+                True,  True,  False, True,  True,  True,  True,  'cttee')),
         (CTTEE_SECONDARY,
-            RoleInfo('TAC Secondary', False, True,  False, True,  True,  True,  True,  'cttee')),
+            RoleInfo(
+                'TAC Secondary',
+                False, True,  False, True,  True,  True,  True,  'cttee')),
         (CTTEE_OTHER,
-            RoleInfo('Rating',        False, False, False, True,  True,  True,  False, 'cttee')),
+            RoleInfo(
+                'Rating',
+                False, False, False, True,  True,  True,  False, 'cttee')),
         (FEEDBACK,
-            RoleInfo('Feedback',      True,  True,  False, False, False, False, False, 'feedback')),
+            RoleInfo(
+                'Feedback',
+                True,  True,  False, False, False, False, False, 'feedback')),
     ))
 
     @classmethod

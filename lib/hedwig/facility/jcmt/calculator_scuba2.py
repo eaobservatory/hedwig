@@ -389,7 +389,8 @@ class SCUBA2Calculator(JCMTCalculator):
                 tau[filter_] = tau_wl
                 extra['tau_{}'.format(filter_)] = tau_wl
 
-                transmission_wl = self.itc.calculate_transmission(airmass, tau_wl)
+                transmission_wl = self.itc.calculate_transmission(airmass,
+                                                                  tau_wl)
                 transmission[filter_] = transmission_wl
                 extra['trans_{}'.format(filter_)] = transmission_wl
 
@@ -420,7 +421,8 @@ class SCUBA2Calculator(JCMTCalculator):
                         JCMTWeather.get_available().items():
                     weather_band_result = {}
                     for condition_name in ('rep', 'min', 'max'):
-                        condition_tau = getattr(weather_band_info, condition_name)
+                        condition_tau = getattr(weather_band_info,
+                                                condition_name)
                         if condition_tau is None:
                             weather_band_result[condition_name] = None
                             continue
@@ -431,8 +433,8 @@ class SCUBA2Calculator(JCMTCalculator):
                         time_src = self.itc.calculate_time(
                             map_mode, filter_, transmission, factor[filter_],
                             input_['rms'])
-                        time_tot = time_src + self.itc.estimate_overhead(map_mode,
-                                                                         time_src)
+                        time_tot = time_src + self.itc.estimate_overhead(
+                            map_mode, time_src)
                         weather_band_result[condition_name] = time_tot / 3600.0
 
                     weather_band_comparison[weather_band] = weather_band_result
@@ -445,16 +447,17 @@ class SCUBA2Calculator(JCMTCalculator):
                 # Convert time to seconds.
                 time_tot = input_['time'] * 3600.0
 
-                time_src = time_tot - self.itc.estimate_overhead(map_mode,
-                                                                 time_tot,
-                                                                 from_total=True)
+                time_src = time_tot - self.itc.estimate_overhead(
+                    map_mode, time_tot, from_total=True)
                 extra['time_src'] = time_src / 3600.0
 
                 output = {
                     'rms_850': self.itc.calculate_rms(
-                        map_mode, 850, transmission[850], factor[850], time_src),
+                        map_mode, 850, transmission[850], factor[850],
+                        time_src),
                     'rms_450': self.itc.calculate_rms(
-                        map_mode, 450, transmission[450], factor[450], time_src),
+                        map_mode, 450, transmission[450], factor[450],
+                        time_src),
                 }
 
                 # Make weather band comparison table.
@@ -463,7 +466,8 @@ class SCUBA2Calculator(JCMTCalculator):
                         JCMTWeather.get_available().items():
                     weather_band_result = {}
                     for condition_name in ('rep', 'min', 'max'):
-                        condition_tau = getattr(weather_band_info, condition_name)
+                        condition_tau = getattr(weather_band_info,
+                                                condition_name)
                         if condition_tau is None:
                             weather_band_result[condition_name] = None
                             continue
@@ -473,7 +477,8 @@ class SCUBA2Calculator(JCMTCalculator):
                             self.itc.calculate_tau(850, condition_tau))
                         weather_band_result[condition_name] = \
                             self.itc.calculate_rms(
-                                map_mode, 850, transmission, factor[850], time_src)
+                                map_mode, 850, transmission, factor[850],
+                                time_src)
 
                     weather_band_comparison[weather_band] = weather_band_result
 

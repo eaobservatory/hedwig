@@ -21,7 +21,9 @@
 hedwigctl - Hedwig proposal system control tool
 
 Usage:
-    hedwigctl poll [-v | -q] (email | figure | pdf | publication | feedback | all)  [--pause <delay>] [--pidfile <file>] [--logfile <file>]
+    hedwigctl poll [-v | -q]
+        (email | figure | pdf | publication | feedback | all)
+        [--pause <delay>] [--pidfile <file>] [--logfile <file>]
     hedwigctl test_server [--debug] [--https] [--port <port>]
     hedwigctl [-v | -q] initialize_database
 
