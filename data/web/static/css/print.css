@@ -29,3 +29,11 @@ span.label {
 span.label + span.label {
     padding-left: 1ex;
 }
+
+p.pdf_preview_page {
+    page-break-inside: avoid;
+}
+
+figure {
+    page-break-inside: avoid;
+}

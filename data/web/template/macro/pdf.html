@@ -1,7 +1,7 @@
 {% macro render_proposal_pdf(pdf, target_full, target_preview, proposal_id) %}
     {% if pdf.state is attachment_ready %}
         {% for page in range(1, pdf.pages + 1) %}
-            <p>
+            <p class="pdf_preview_page">
                 <a href="{{ url_for(target_full, proposal_id=proposal_id, md5sum=pdf.md5sum, _anchor=(page | fmt('page={}'))) }}">
                     <img src="{{ url_for(target_preview, proposal_id=proposal_id, page=page, md5sum=pdf.md5sum) }}" class="pdf_preview" alt="PDF file page {{ page }}" />
                 </a>
