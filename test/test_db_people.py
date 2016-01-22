@@ -20,8 +20,10 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime, timedelta
 
+from sqlalchemy.sql import select
+
 from hedwig import auth
-from hedwig.db.meta import invitation, reset_token
+from hedwig.db.meta import auth_failure, invitation, reset_token
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from hedwig.type import Email, EmailCollection, FormatType, \
@@ -126,6 +128,33 @@ class DBPeopleTest(DBTestCase):
             self.db.update_user_name(user_id, 'user1', _test_skip_check=True)
         with self.assertRaisesRegexp(UserError, 'blank'):
             self.db.update_user_name(user_id, '')
+
+    def test_user_auth_failure(self):
+        allowed_failures = 5
+        auth.password_hash_delay = 0
+
+        user_id = self.db.add_user('user1', 'pass1')
+
+        # Make the maximum number of attempts.
+        for i in range(0, allowed_failures):
+            self.assertIsNone(self.db.authenticate_user('user1', 'wrongpass'))
+
+            with self.db._transaction() as conn:
+                attempts = conn.execute(select([
+                    auth_failure.c.attempts
+                ]).where(auth_failure.c.user_name == 'user1')).scalar()
+
+            self.assertEqual(attempts, i + 1)
+
+        # The next failure should raise an error.
+        with self.assertRaisesRegexp(
+                UserError, 'Too many authentication attempts'):
+            self.assertIsNone(self.db.authenticate_user('user1', 'wrongpass'))
+
+        # Delete the failure record and ensure we can try again.
+        self.db.delete_auth_failure('user1')
+
+        self.assertIsNone(self.db.authenticate_user('user1', 'wrongpass'))
 
     def test_user_person(self):
         # Check that we can create a person and get an integer person_id.
