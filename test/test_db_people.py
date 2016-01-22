@@ -79,7 +79,7 @@ class DBPeopleTest(DBTestCase):
         self.assertEqual(self.db.authenticate_user('user1', 'pass1'), user_id)
 
         # Test unsuccessful authentication.
-        auth.password_hash_delay = 0.1
+        auth.password_hash_delay = 0
         self.assertIsNone(self.db.authenticate_user('user1', 'wrongpass'))
         self.assertIsNone(self.db.authenticate_user('user2', 'pass1'))
 
