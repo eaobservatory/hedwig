@@ -261,7 +261,7 @@ class PeoplePart(object):
                 ]).where(auth_failure.c.user_name == name)).scalar()
 
                 # Current limit: more that 5 (i.e. 6 or more failures).
-                if attempts > 5:
+                if attempts >= 5:
                     raise UserError(
                         'Too many authentication attempts for this user name.')
 
