@@ -61,6 +61,9 @@
                     {% if not person.public %}
                         <span class="label">private</span>
                     {% endif %}
+                    {% if person.user_id is none %}
+                        <span class="label">unregistered</span>
+                    {% endif %}
                 </li>
             {% endfor %}
         </ul>
