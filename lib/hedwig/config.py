@@ -324,6 +324,28 @@ def set_home(directory):
     home_directory = directory
 
 
+def get_pdf_writer(db=None, app=None):
+    """
+    Get a PDF writer object.
+    """
+
+    config = get_config()
+
+    class_ = _import_class(config.get('pdf_write', 'writer'),
+                           module_pattern='hedwig.pdf.{}',
+                           class_pattern='PDFWriter{}')
+
+    if db is None:
+        db = get_database()
+
+    if app is None:
+        from hedwig.web.app import create_web_app
+        app = create_web_app(db=db, without_logger=True)
+
+    return class_(db=db, app=app,
+                  base_url=config.get('application', 'base_url'))
+
+
 def _import_class(class_name, module_pattern, class_pattern=None):
     """
     Import the given class.

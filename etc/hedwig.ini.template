@@ -85,3 +85,6 @@ key=
 # This section lists allowed OAuth2 clients, in the form:
 # client_id=name,secret,comma-separated-redirect-uris
 [oauth_clients]
+
+[pdf_write]
+writer=WeasyPrint
