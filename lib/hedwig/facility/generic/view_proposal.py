@@ -1336,8 +1336,8 @@ class GenericProposal(object):
             'word_limit': word_limit,
             'message': message,
             'max_size': max_size,
-            'mime_types': FigureType.all_mime_types(),
-            'mime_type_names': FigureType.all_type_names(),
+            'mime_types': FigureType.allowed_mime_types(),
+            'mime_type_names': FigureType.allowed_type_names(),
             'target': target,
         }
 

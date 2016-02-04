@@ -211,7 +211,7 @@ class ProposalPart(object):
                             caption, filename, uploader_person_id,
                             _test_skip_check=False):
         if not FigureType.is_valid(type_):
-            raise Error('Invalid figure type.')
+            raise UserError('Figure type is not permitted or not recognised.')
         if not TextRole.is_valid(role):
             raise Error('Invalid text role.')
         if not figure:

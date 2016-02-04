@@ -359,7 +359,7 @@ class AttachmentState(object):
 
 
 FileTypeInfo = namedtuple('FileTypeInfo',
-                          ('name', 'mime', 'preview'))
+                          ('name', 'mime', 'preview', 'allow_user'))
 
 
 class FigureType(object):
@@ -369,15 +369,26 @@ class FigureType(object):
     PS = 4
 
     _info = OrderedDict((
-        (PNG,  FileTypeInfo('PNG',  'image/png',       False)),
-        (JPEG, FileTypeInfo('JPEG', 'image/jpeg',      False)),
-        (PDF,  FileTypeInfo('PDF',  'application/pdf', True)),
-        (PS,   FileTypeInfo('EPS',  'application/postscript', True)),
+        (PNG,  FileTypeInfo('PNG',  'image/png',              False, True)),
+        (JPEG, FileTypeInfo('JPEG', 'image/jpeg',             False, True)),
+        (PDF,  FileTypeInfo('PDF',  'application/pdf',        True,  True)),
+        (PS,   FileTypeInfo('EPS',  'application/postscript', True,  False)),
     ))
 
     @classmethod
-    def is_valid(cls, type_):
-        return type_ in cls._info
+    def is_valid(cls, type_, is_system=False):
+        """
+        Determine if the given figure type is valid.
+
+        By default only allows types where "allow_user" is enabled.
+        """
+
+        type_info = cls._info.get(type_, None)
+
+        if type_info is None:
+            return False
+
+        return is_system or type_info.allow_user
 
     @classmethod
     def get_name(cls, type_):
@@ -414,12 +425,12 @@ class FigureType(object):
                 cls.get_mime_type(type_).startswith('image/'))
 
     @classmethod
-    def all_type_names(cls):
-        return [x.name for x in cls._info.values()]
+    def allowed_type_names(cls):
+        return [x.name for x in cls._info.values() if x.allow_user]
 
     @classmethod
-    def all_mime_types(cls):
-        return [x.mime for x in cls._info.values()]
+    def allowed_mime_types(cls):
+        return [x.mime for x in cls._info.values() if x.allow_user]
 
 
 class GroupType(object):
