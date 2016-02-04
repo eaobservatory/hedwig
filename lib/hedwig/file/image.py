@@ -39,18 +39,13 @@ def create_thumbnail_and_preview(image, max_thumb=None, max_preview=None):
     if max_preview is None:
         max_preview = (500, 500)
 
-    with closing(StringIO(image)) as f:
-        im = Image.open(f)
-        im.load()
+    im = _read_image(image)
 
     orig_size = im.size
 
     new_size = _calculate_size(max_thumb, orig_size)
 
-    with closing(StringIO()) as f:
-        im_thumbnail = im.resize(new_size, resample=Image.BICUBIC)
-        im_thumbnail.save(f, format='PNG')
-        thumbnail = f.getvalue()
+    thumbnail = _write_image(im.resize(new_size, resample=Image.BICUBIC))
 
     new_size = _calculate_size(max_preview, orig_size, only_shrink=True)
 
@@ -58,12 +53,31 @@ def create_thumbnail_and_preview(image, max_thumb=None, max_preview=None):
         preview = None
 
     else:
-        with closing(StringIO()) as f:
-            im_preview = im.resize(new_size, resample=Image.BICUBIC)
-            im_preview.save(f, format='PNG')
-            preview = f.getvalue()
+        preview = _write_image(im.resize(new_size, resample=Image.BICUBIC))
 
     return ProposalFigureThumbPreview(thumbnail, preview)
+
+
+def _read_image(image):
+    """
+    Construct an image object by reading the given buffer.
+    """
+
+    with closing(StringIO(image)) as f:
+        im = Image.open(f)
+        im.load()
+
+    return im
+
+
+def _write_image(image_obj):
+    """
+    Write image to a buffer and return it.
+    """
+
+    with closing(StringIO()) as f:
+        image_obj.save(f, format='PNG')
+        return f.getvalue()
 
 
 def _calculate_size(max_size, orig_size, only_shrink=False):

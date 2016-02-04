@@ -59,32 +59,54 @@ def ps_to_png(ps, page_count=None, **kwargs):
     return _pdf_ps_to_png(ps, page_count=1, **kwargs)
 
 
-def _pdf_ps_to_png(buff, page_count, resolution=100):
+def _pdf_ps_to_png(buff, page_count, resolution=100, downscale=4):
     """
     Implements PDF or PS conversion to PDF via Ghostscript.
     """
 
     ghostscript = get_config().get('utilities', 'ghostscript')
+
+    # Determine which version of Ghostscript we have in order to tell if it
+    # has features we need.
+    try:
+        ghostscript_version = float(subprocess.check_output(
+            [ghostscript, '--version'], shell=False).strip())
+
+    except subprocess.CalledProcessError:
+        raise ConversionError('Could not determine Ghostscript version')
+
+    except ValueError:
+        raise ConversionError('Could not parse Ghostscript version')
+
+    ghostscript_has_downscale = (ghostscript_version >= 9.04)
+
+    # Prepare Ghostscript configuration.
+    ghostscript_options = [
+        '-q',
+        '-dNOPAUSE',
+        '-dBATCH',
+        '-dSAFER',
+        '-dPARANOIDSAFER',
+        '-dNOTRANSPARENCY',
+        '-sDEVICE=png16m',
+        '-r{}'.format(resolution * downscale),
+        '-dGraphicsAlphaBits=4',
+        '-dTextAlphaBits=4',
+        '-dEPSCrop',
+    ]
+
+    if ghostscript_has_downscale:
+        ghostscript_options.append('-dDownScaleFactor={}'.format(downscale))
+
+    # Convert pages to images using Ghostscript.
     pages = []
 
     try:
         for i in range(0, page_count):
             p = subprocess.Popen(
-                [
-                    ghostscript,
-                    '-q',
-                    '-dNOPAUSE',
-                    '-dBATCH',
-                    '-dSAFER',
-                    '-dPARANOIDSAFER',
-                    '-dNOTRANSPARENCY',
-                    '-sDEVICE=png16m',
-                    '-r{}'.format(resolution),
-                    '-dGraphicsAlphaBits=4',
-                    '-dTextAlphaBits=4',
+                [ghostscript] + ghostscript_options + [
                     '-dFirstPage={}'.format(i + 1),
                     '-dLastPage={}'.format(i + 1),
-                    '-dEPSCrop',
                     '-sOutputFile=-',
                     '-'
                 ],
@@ -97,6 +119,17 @@ def _pdf_ps_to_png(buff, page_count, resolution=100):
             if p.returncode:
                 raise ConversionError('PDF/PS to PNG conversion failed: ' +
                                       stderrdata.replace('\n', ' ').strip())
+
+            # If we need to downscale but our Ghostscript doesn't support that
+            # feature, scale using Pillow instead.
+            if (not ghostscript_has_downscale) and (downscale != 1):
+                from PIL import Image
+                from .image import _read_image, _write_image
+                im = _read_image(stdoutdata)
+                (width, height) = im.size
+                stdoutdata = _write_image(im.resize(
+                    (int(width / downscale), int(height / downscale)),
+                    resample=Image.BICUBIC))
 
             pages.append(stdoutdata)
 
