@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from ..config import get_config
 from ..error import ConsistencyError, ConversionError
 from ..type import AttachmentState, FigureType
 from ..util import get_logger
@@ -31,6 +32,20 @@ def process_proposal_figure(db):
     """
     Function to process pending proposal figure uploads.
     """
+
+    config = get_config()
+    thumb_preview_options = {
+        'max_thumb': (
+            int(config.get('proposal_fig', 'max_thumb_width')),
+            int(config.get('proposal_fig', 'max_thumb_height'))),
+        'max_preview': (
+            int(config.get('proposal_fig', 'max_preview_width')),
+            int(config.get('proposal_fig', 'max_preview_height'))),
+    }
+    pdf_ps_options = {
+        'resolution': int(config.get('proposal_fig', 'resolution')),
+        'downscale': int(config.get('proposal_fig', 'downscale')),
+    }
 
     n_processed = 0
 
@@ -55,7 +70,7 @@ def process_proposal_figure(db):
 
             if FigureType.needs_preview(figure.type):
                 if figure.type == FigureType.PDF:
-                    pngs = pdf_to_png(figure.data)
+                    pngs = pdf_to_png(figure.data, **pdf_ps_options)
 
                     if len(pngs) != 1:
                         raise ConversionError(
@@ -64,7 +79,7 @@ def process_proposal_figure(db):
                     preview = pngs[0]
 
                 elif figure.type == FigureType.PS:
-                    pngs = ps_to_png(figure.data)
+                    pngs = ps_to_png(figure.data, **pdf_ps_options)
 
                     if len(pngs) != 1:
                         raise ConversionError(
@@ -79,7 +94,8 @@ def process_proposal_figure(db):
 
             # Create figure thumbnail.
             tp = create_thumbnail_and_preview(
-                figure.data if preview is None else preview)
+                figure.data if preview is None else preview,
+                **thumb_preview_options)
 
             if tp.preview is not None:
                 preview = tp.preview
@@ -116,6 +132,12 @@ def process_proposal_pdf(db):
     Function to process pending proposal PDF uploads.
     """
 
+    config = get_config()
+    pdf_options = {
+        'resolution': int(config.get('proposal_pdf', 'resolution')),
+        'downscale': int(config.get('proposal_pdf', 'downscale')),
+    }
+
     n_processed = 0
 
     for pdf in db.search_proposal_pdf(
@@ -134,7 +156,7 @@ def process_proposal_pdf(db):
                                    id_=pdf.id).data
 
         try:
-            pngs = pdf_to_png(buff)
+            pngs = pdf_to_png(buff, **pdf_options)
 
             if len(pngs) != pdf.pages:
                 raise ConversionError('PDF generated wrong number of pages')
