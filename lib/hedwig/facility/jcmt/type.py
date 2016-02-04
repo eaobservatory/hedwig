@@ -45,13 +45,15 @@ class JCMTInstrument(object):
     SCUBA2 = 1
     HARP = 2
     RXA3 = 3
+    RXA3M = 4
 
     InstrumentInfo = namedtuple('InstrumentInfo', ('name', 'available'))
 
     _info = OrderedDict((
         (SCUBA2, InstrumentInfo('SCUBA-2', True)),
         (HARP,   InstrumentInfo('HARP', True)),
-        (RXA3,   InstrumentInfo('RxA3', True)),
+        (RXA3,   InstrumentInfo('RxA3', False)),
+        (RXA3M,  InstrumentInfo('RxA3m', True)),
     ))
 
     @classmethod

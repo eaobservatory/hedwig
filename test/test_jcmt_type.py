@@ -38,7 +38,7 @@ class JCMTTypeTestCase(TestCase):
         for instrument in (
                 JCMTInstrument.SCUBA2,
                 JCMTInstrument.HARP,
-                JCMTInstrument.RXA3,
+                JCMTInstrument.RXA3M,
                 ):
             # Identifiers should be unique integers.
             self.assertIsInstance(instrument, int)
@@ -126,23 +126,23 @@ class JCMTTypeTestCase(TestCase):
 
         # Add data for more instruments.
         c[4] = JCMTRequest(4, 0, instrument=2, weather=2, time=200.0)
-        c[5] = JCMTRequest(5, 0, instrument=3, weather=4, time=1000.0)
+        c[5] = JCMTRequest(5, 0, instrument=4, weather=4, time=1000.0)
         t = c.to_table()
 
         # Check the rows.
-        self.assertEqual(set(t.table.keys()), set((0, 1, 2, 3)))
-        self.assertEqual(set(t.rows.keys()), set((1, 2, 3)))
+        self.assertEqual(set(t.table.keys()), set((0, 1, 2, 4)))
+        self.assertEqual(set(t.rows.keys()), set((1, 2, 4)))
 
         # And check the combined times.
         self.assertEqual(t.table[1], {1: 30.0, 2: 100.0,            0: 130.0})
         self.assertEqual(t.table[2],          {2: 200.0,            0: 200.0})
-        self.assertEqual(t.table[3],                    {4: 1000.0, 0: 1000.0})
+        self.assertEqual(t.table[4],                    {4: 1000.0, 0: 1000.0})
         self.assertEqual(t.table[0], {1: 30.0, 2: 300.0, 4: 1000.0, 0: 1330.0})
 
         total = c.get_total()
         self.assertIsInstance(total, JCMTRequestTotal)
         self.assertEqual(total.total, 1330.0)
-        self.assertEqual(total.instrument, {1: 130.0, 2: 200.0, 3: 1000.0})
+        self.assertEqual(total.instrument, {1: 130.0, 2: 200.0, 4: 1000.0})
         self.assertEqual(total.weather, {1: 30.0, 2: 300.0, 4: 1000.0})
 
         # Check conversion to sorted list.
@@ -162,7 +162,7 @@ class JCMTTypeTestCase(TestCase):
         self.assertEqual(sorted_list[2].instrument, 'SCUBA-2')
         self.assertEqual(sorted_list[3].instrument, 'HARP')
         self.assertEqual(sorted_list[4].instrument, 'HARP')
-        self.assertEqual(sorted_list[5].instrument, 'RxA3')
+        self.assertEqual(sorted_list[5].instrument, 'RxA3m')
 
         self.assertEqual(sorted_list[0].weather, 'Band 1')
         self.assertEqual(sorted_list[1].weather, 'Band 1')
