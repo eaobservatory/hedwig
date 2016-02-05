@@ -61,6 +61,7 @@ jcmt_options = Table(
     Column('target_of_opp', Boolean, nullable=False),
     Column('daytime', Boolean, nullable=False),
     Column('time_specific', Boolean, nullable=False),
+    Column('polarimetry', Boolean, nullable=False),
     **_table_opts)
 
 jcmt_request = Table(

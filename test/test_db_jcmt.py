@@ -39,7 +39,8 @@ class DBJCMTTest(DBTestCase):
         self.assertIsNone(options)
 
         self.db.set_jcmt_options(proposal_id, target_of_opp=False,
-                                 daytime=False, time_specific=False)
+                                 daytime=False, time_specific=False,
+                                 polarimetry=False)
 
         options = self.db.get_jcmt_options(proposal_id)
         self.assertIsInstance(options, JCMTOptions)
@@ -47,9 +48,11 @@ class DBJCMTTest(DBTestCase):
         self.assertFalse(options.target_of_opp)
         self.assertFalse(options.daytime)
         self.assertFalse(options.time_specific)
+        self.assertFalse(options.polarimetry)
 
         self.db.set_jcmt_options(proposal_id, target_of_opp=True,
-                                 daytime=True, time_specific=True)
+                                 daytime=True, time_specific=True,
+                                 polarimetry=True)
 
         options = self.db.get_jcmt_options(proposal_id)
         self.assertIsInstance(options, JCMTOptions)
@@ -57,6 +60,7 @@ class DBJCMTTest(DBTestCase):
         self.assertTrue(options.target_of_opp)
         self.assertTrue(options.daytime)
         self.assertTrue(options.time_specific)
+        self.assertTrue(options.polarimetry)
 
     def test_jcmt_request(self):
         proposal_id = self._create_test_proposal()

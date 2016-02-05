@@ -47,6 +47,7 @@ class JCMT(Generic):
         ('target_of_opp', 'Target of opportunity'),
         ('daytime', 'Daytime observation'),
         ('time_specific', 'Time-specific observation'),
+        ('polarimetry', 'Polarimetry'),
     ))
 
     @classmethod
