@@ -30,7 +30,7 @@ from ...error import NoSuchRecord, UserError
 from ...view import auth
 from ...view.tool import BaseTargetTool
 from ...web.util import ErrorPage, HTTPNotFound, session, url_for
-from ...type import FileTypeInfo, Link, TargetObject
+from ...type import FileTypeInfo, Link, TargetObject, null_tuple
 
 TargetCoord = namedtuple('TargetCoord', ('x', 'y', 'system'))
 
@@ -291,5 +291,5 @@ class ClashTool(BaseTargetTool):
 
         return (
             moc_fits,
-            FileTypeInfo(name='FITS', mime='application/fits', preview=None),
+            null_tuple(FileTypeInfo)._replace(mime='application/fits'),
             '{}.fits'.format(re.sub('[^-_a-z0-9]', '_', moc.name.lower())))

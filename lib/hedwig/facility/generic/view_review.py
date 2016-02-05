@@ -99,7 +99,7 @@ class GenericReview(object):
 
         return (
             writer.get_csv(),
-            FileTypeInfo(name='CSV', mime='text/csv', preview=None),
+            null_tuple(FileTypeInfo)._replace(mime='text/csv'),
             'proposals-{}-{}.csv'.format(
                 re.sub('[^-_a-z0-9]', '_', call.semester_name.lower()),
                 re.sub('[^-_a-z0-9]', '_', call.queue_name.lower())))
