@@ -322,6 +322,9 @@ These include:
   of the software.
   This may indicate if there are any additional software dependencies
   which need to be installed.
+* Update your configuration file if necessary, for example if new
+  options have been added.  (Compare your hedwig.ini to hedwig.ini.template
+  to check.)
 * Update your database if the schema has changed --- see the
   notes on using `Alembic` in the `Database`_ section.
 * Restart the web application.
