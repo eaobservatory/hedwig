@@ -98,6 +98,7 @@ def _pdf_ps_to_png(buff, page_count, resolution=100, downscale=4):
         '-dGraphicsAlphaBits=4',
         '-dTextAlphaBits=4',
         '-dEPSCrop',
+        '-sstdout=%stderr',
     ]
 
     if ghostscript_has_downscale:
