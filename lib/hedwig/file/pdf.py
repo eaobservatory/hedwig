@@ -24,6 +24,8 @@ from ..config import get_config
 from ..error import Error, ConversionError
 from .info import determine_pdf_page_count
 
+ghostscript_version = None
+
 
 def pdf_to_png(pdf, page_count=None, **kwargs):
     """
@@ -64,19 +66,22 @@ def _pdf_ps_to_png(buff, page_count, resolution=100, downscale=4):
     Implements PDF or PS conversion to PDF via Ghostscript.
     """
 
+    global ghostscript_version
+
     ghostscript = get_config().get('utilities', 'ghostscript')
 
-    # Determine which version of Ghostscript we have in order to tell if it
-    # has features we need.
-    try:
-        ghostscript_version = float(subprocess.check_output(
-            [ghostscript, '--version'], shell=False).strip())
+    if ghostscript_version is None:
+        # Determine which version of Ghostscript we have in order to tell if it
+        # has features we need.
+        try:
+            ghostscript_version = float(subprocess.check_output(
+                [ghostscript, '--version'], shell=False).strip())
 
-    except subprocess.CalledProcessError:
-        raise ConversionError('Could not determine Ghostscript version')
+        except subprocess.CalledProcessError:
+            raise ConversionError('Could not determine Ghostscript version')
 
-    except ValueError:
-        raise ConversionError('Could not parse Ghostscript version')
+        except ValueError:
+            raise ConversionError('Could not parse Ghostscript version')
 
     ghostscript_has_downscale = (ghostscript_version >= 9.04)
 
