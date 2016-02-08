@@ -41,6 +41,6 @@ of proposals for the call.
 .. image:: image/call_list.png
 
 You can use the proposals page to navigate to any proposal
-which is has been created for this call.
+which has been created for this call.
 
 .. image:: image/call_proposals.png
