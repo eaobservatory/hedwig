@@ -367,12 +367,14 @@ class FigureType(object):
     JPEG = 2
     PDF = 3
     PS = 4
+    SVG = 5
 
     _info = OrderedDict((
         (PNG,  FileTypeInfo('PNG',  'image/png',              False, True)),
         (JPEG, FileTypeInfo('JPEG', 'image/jpeg',             False, True)),
         (PDF,  FileTypeInfo('PDF',  'application/pdf',        True,  True)),
         (PS,   FileTypeInfo('EPS',  'application/postscript', True,  False)),
+        (SVG,  FileTypeInfo('SVG',  'image/svg+xml',          True,  False)),
     ))
 
     @classmethod
