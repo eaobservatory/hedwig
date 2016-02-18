@@ -41,6 +41,7 @@ footer_email=
 [utilities]
 ghostscript=/usr/bin/gs
 firefox=/usr/bin/firefox
+pdftocairo=/usr/bin/pdftocairo
 
 [ads]
 api_token=

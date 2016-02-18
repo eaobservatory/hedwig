@@ -144,3 +144,38 @@ def _pdf_ps_to_png(buff, page_count, resolution=100, downscale=4):
                                                             e.strerror))
 
     return pages
+
+
+def pdf_to_svg(buff, page):
+    """
+    Convert a given page of the PDF file to SVG format.
+    """
+
+    pdftocairo = get_config().get('utilities', 'pdftocairo')
+
+    try:
+        p = subprocess.Popen(
+            [
+                pdftocairo,
+                '-q',
+                '-svg',
+                '-origpagesizes',
+                '-f', str(page),
+                '-l', str(page),
+                '-', '-',
+            ],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+
+        (stdoutdata, stderrdata) = p.communicate(buff)
+
+        if p.returncode:
+            raise ConversionError('PDF to SVG conversion failed: ' +
+                                  stderrdata.replace('\n', ' ').strip())
+
+        return stdoutdata
+
+    except OSError as e:
+        raise ConversionError('Failed to run {}: {}'.format(pdftocairo,
+                                                            e.strerror))

@@ -29,7 +29,7 @@ from hedwig.file.image import create_thumbnail_and_preview, \
     _calculate_size
 from hedwig.file.info import determine_figure_type, \
     determine_pdf_page_count
-from hedwig.file.pdf import pdf_to_png, ps_to_png
+from hedwig.file.pdf import pdf_to_png, pdf_to_svg, ps_to_png
 from hedwig.type import FigureType
 
 from .dummy_config import DummyConfigTestCase
@@ -78,6 +78,11 @@ class FileTest(DummyConfigTestCase):
         self.assertEqual(len(pages), 1)
 
         self.assertEqual(determine_figure_type(pages[0]), FigureType.PNG)
+
+    def test_pdf_to_svg(self):
+        page = pdf_to_svg(example_pdf, page=1)
+
+        self.assertEqual(determine_figure_type(page), FigureType.SVG)
 
     def test_ps_to_png(self):
         pages = ps_to_png(example_eps)
