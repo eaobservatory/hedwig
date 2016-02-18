@@ -74,9 +74,14 @@ class FileTest(DummyConfigTestCase):
         self.assertEqual(determine_pdf_page_count(example_pdf), 1)
 
     def test_pdf_to_png(self):
-        pages = pdf_to_png(example_pdf)
+        # Render using "ghostscript".
+        pages = pdf_to_png(example_pdf, renderer='ghostscript')
         self.assertEqual(len(pages), 1)
+        self.assertEqual(determine_figure_type(pages[0]), FigureType.PNG)
 
+        # Repeat using "pdftocairo".
+        pages = pdf_to_png(example_pdf, renderer='pdftocairo')
+        self.assertEqual(len(pages), 1)
         self.assertEqual(determine_figure_type(pages[0]), FigureType.PNG)
 
     def test_pdf_to_svg(self):

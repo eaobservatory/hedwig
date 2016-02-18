@@ -22,18 +22,23 @@ import subprocess
 
 from ..config import get_config
 from ..error import Error, ConversionError
+from ..type import FigureType
 from .info import determine_pdf_page_count
 
 ghostscript_version = None
 
 
-def pdf_to_png(pdf, page_count=None, **kwargs):
+def pdf_to_png(pdf, page_count=None, renderer='ghostscript', **kwargs):
     """
     Convert a PDF file to a list of PNG images.
 
     The page count is determined automatically if not specified.
 
-    Any additional keyword arguments are passed on to _pdf_ps_to_png.
+    The PDF renderer can be either "ghostscript" or "pdftocairo".  The
+    path to the selected program is looked up in the configuration file.
+
+    Any additional keyword arguments are passed on to _pdf_ps_to_png
+    or _pdf_to_cairo.
     """
 
     if page_count is None:
@@ -42,7 +47,25 @@ def pdf_to_png(pdf, page_count=None, **kwargs):
         except Error as e:
             raise ConversionError(e.message)
 
-    return _pdf_ps_to_png(pdf, page_count=page_count, **kwargs)
+    if renderer == 'ghostscript':
+        return _pdf_ps_to_png(pdf, page_count=page_count, **kwargs)
+
+    elif renderer == 'pdftocairo':
+        pages = range(1, page_count + 1)
+        return _pdf_to_cairo(pdf, FigureType.PNG, pages=pages, **kwargs)
+
+    else:
+        raise ConversionError('Unrecognised PDF renderer: {}', renderer)
+
+
+def pdf_to_svg(pdf, page, **kwargs):
+    """
+    Convert a given page of the PDF file to SVG format.
+    """
+
+    svg_pages = _pdf_to_cairo(pdf, FigureType.SVG, pages=[page], **kwargs)
+
+    return svg_pages[0]
 
 
 def ps_to_png(ps, page_count=None, **kwargs):
@@ -145,35 +168,64 @@ def _pdf_ps_to_png(buff, page_count, resolution=100, downscale=4):
     return pages
 
 
-def pdf_to_svg(buff, page):
+def _pdf_to_cairo(buff, type_, pages, resolution=100, downscale=None):
     """
-    Convert a given page of the PDF file to SVG format.
+    Process a PDF file using pdftocairo.
+
+    The arguments specify the desired figure type (PNG or SVG) and a list
+    of the pages (by page number) to process.
+
+    The downscale argument is ignored (it is present for compatibility
+    with the equivalent ghostscript-based method).
     """
 
     pdftocairo = get_config().get('utilities', 'pdftocairo')
 
+    pdftocairo_options = [
+        '-q',
+    ]
+
+    if type_ == FigureType.PNG:
+        pdftocairo_options.extend([
+            '-png',
+            '-singlefile',
+            '-r', str(resolution),
+        ])
+
+    elif type_ == FigureType.SVG:
+        pdftocairo_options.extend([
+            '-svg',
+            '-origpagesizes',
+        ])
+
+    else:
+        raise ConversionError('Unrecognised target type for pdftocairo: {}',
+                              type_)
+
+    # Convert pages using pdftocairo.
+    rendered_pages = []
+
     try:
-        p = subprocess.Popen(
-            [
-                pdftocairo,
-                '-q',
-                '-svg',
-                '-origpagesizes',
-                '-f', str(page),
-                '-l', str(page),
-                '-', '-',
-            ],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
+        for page in pages:
+            p = subprocess.Popen(
+                [pdftocairo] + pdftocairo_options + [
+                    '-f', str(page),
+                    '-l', str(page),
+                    '-', '-',
+                ],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
 
-        (stdoutdata, stderrdata) = p.communicate(buff)
+            (stdoutdata, stderrdata) = p.communicate(buff)
 
-        if p.returncode:
-            raise ConversionError('PDF to SVG conversion failed: ' +
-                                  stderrdata.replace('\n', ' ').strip())
+            if p.returncode:
+                raise ConversionError('PDF conversion (pdftocairo) failed: ' +
+                                      stderrdata.replace('\n', ' ').strip())
 
-        return stdoutdata
+            rendered_pages.append(stdoutdata)
 
     except OSError as e:
         raise ConversionError('Failed to run {}: {}', pdftocairo, e.strerror)
+
+    return rendered_pages
