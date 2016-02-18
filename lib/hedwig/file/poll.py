@@ -70,7 +70,10 @@ def process_proposal_figure(db):
 
             if FigureType.needs_preview(figure.type):
                 if figure.type == FigureType.PDF:
-                    pngs = pdf_to_png(figure.data, **pdf_ps_options)
+                    pngs = pdf_to_png(
+                        figure.data,
+                        renderer=config.get('proposal_fig', 'pdf_renderer'),
+                        **pdf_ps_options)
 
                     if len(pngs) != 1:
                         raise ConversionError(
@@ -134,6 +137,7 @@ def process_proposal_pdf(db):
 
     config = get_config()
     pdf_options = {
+        'renderer': config.get('proposal_pdf', 'renderer'),
         'resolution': int(config.get('proposal_pdf', 'resolution')),
         'downscale': int(config.get('proposal_pdf', 'downscale')),
     }

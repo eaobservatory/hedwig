@@ -20,6 +20,7 @@ max_pdf_size=10
 max_fig_size=1
 
 [proposal_pdf]
+renderer=ghostscript
 resolution=120
 downscale=4
 
@@ -28,6 +29,7 @@ max_thumb_width=100
 max_thumb_height=100
 max_preview_width=800
 max_preview_height=800
+pdf_renderer=ghostscript
 resolution=120
 downscale=4
 
