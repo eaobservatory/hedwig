@@ -140,8 +140,7 @@ def _pdf_ps_to_png(buff, page_count, resolution=100, downscale=4):
             pages.append(stdoutdata)
 
     except OSError as e:
-        raise ConversionError('Failed to run {}: {}'.format(ghostscript,
-                                                            e.strerror))
+        raise ConversionError('Failed to run {}: {}', ghostscript, e.strerror)
 
     return pages
 
@@ -177,5 +176,4 @@ def pdf_to_svg(buff, page):
         return stdoutdata
 
     except OSError as e:
-        raise ConversionError('Failed to run {}: {}'.format(pdftocairo,
-                                                            e.strerror))
+        raise ConversionError('Failed to run {}: {}', pdftocairo, e.strerror)
