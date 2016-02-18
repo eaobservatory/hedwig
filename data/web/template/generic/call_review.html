@@ -49,6 +49,7 @@
         <th>Title</th>
         <th>Primary Reviewer</th>
         <th>Secondary Reviewer</th>
+        <th>Categories</th>
     </tr>
     {% for proposal in proposals %}
         <tr>
@@ -81,6 +82,15 @@
             <td>{{ proposal.title | abbr }}</td>
             {{ render_reviewer_cell(proposal.reviewers_primary) }}
             {{ render_reviewer_cell(proposal.reviewers_secondary) }}
+            <td>
+                {% if proposal.categories %}
+                    {% for category in proposal.categories.values() %}
+                        <span class="label">{{ category.category_name }}</span>
+                    {% endfor %}
+                {% else %}
+                    &nbsp;
+                {% endif %}
+            </td>
         </tr>
     {% endfor %}
 </table>

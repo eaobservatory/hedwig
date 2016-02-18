@@ -54,7 +54,7 @@ class GenericReview(object):
             person_pi=True, with_reviewers=True,
             with_reviewer_role=(ReviewerRole.CTTEE_PRIMARY,
                                 ReviewerRole.CTTEE_SECONDARY),
-            with_decision=True)
+            with_decision=True, with_categories=True)
 
         return {
             'title': 'Review Process: {} {}'.format(call.semester_name,
