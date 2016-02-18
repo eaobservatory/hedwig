@@ -239,6 +239,12 @@ class TypeTestCase(TestCase):
 
         self.assertEqual(c.person_id_by_role(ReviewerRole.EXTERNAL), [2002])
 
+        reviewers = c.values_by_role(ReviewerRole.EXTERNAL)
+        self.assertIsInstance(reviewers, list)
+        self.assertEqual(len(reviewers), 1)
+        self.assertIsInstance(reviewers[0], Reviewer)
+        self.assertEqual(reviewers[0].id, 202)
+
     def test_reviewer_collection_rating(self):
         c = ReviewerCollection()
 

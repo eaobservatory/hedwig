@@ -1043,6 +1043,13 @@ class ReviewerCollection(ResultCollection):
 
         return [x.person_id for x in self.values() if x.role == role]
 
+    def values_by_role(self, role):
+        """
+        Get a list of the reviewers with the given role.
+        """
+
+        return [x for x in self.values() if x.role == role]
+
     def values_in_role_order(self, cttee_role=None):
         """
         Iterate over the values of the collection in the order of
