@@ -20,10 +20,12 @@ from __future__ import absolute_import, division, print_function, \
 
 from contextlib import closing
 from cStringIO import StringIO
+from os.path import exists
 
 from PIL import Image
 from PyPDF2 import PdfFileWriter
 
+from hedwig.config import get_config
 from hedwig.error import UserError
 from hedwig.file.image import create_thumbnail_and_preview, \
     _calculate_size
@@ -73,11 +75,18 @@ class FileTest(DummyConfigTestCase):
     def test_pdf_pages(self):
         self.assertEqual(determine_pdf_page_count(example_pdf), 1)
 
-    def test_pdf_to_png(self):
+    def test_pdf_to_png_ghostscript(self):
+        if not exists(get_config().get('utilities', 'ghostscript')):
+            self.skipTest('Ghostscript not available')
+
         # Render using "ghostscript".
         pages = pdf_to_png(example_pdf, renderer='ghostscript')
         self.assertEqual(len(pages), 1)
         self.assertEqual(determine_figure_type(pages[0]), FigureType.PNG)
+
+    def test_pdf_to_png_cairo(self):
+        if not exists(get_config().get('utilities', 'pdftocairo')):
+            self.skipTest('pdftocairo not available')
 
         # Repeat using "pdftocairo".
         pages = pdf_to_png(example_pdf, renderer='pdftocairo')
@@ -85,11 +94,17 @@ class FileTest(DummyConfigTestCase):
         self.assertEqual(determine_figure_type(pages[0]), FigureType.PNG)
 
     def test_pdf_to_svg(self):
+        if not exists(get_config().get('utilities', 'pdftocairo')):
+            self.skipTest('pdftocairo not available')
+
         page = pdf_to_svg(example_pdf, page=1)
 
         self.assertEqual(determine_figure_type(page), FigureType.SVG)
 
     def test_ps_to_png(self):
+        if not exists(get_config().get('utilities', 'ghostscript')):
+            self.skipTest('Ghostscript not available')
+
         pages = ps_to_png(example_eps)
         self.assertEqual(len(pages), 1)
 
