@@ -37,6 +37,10 @@ from ...type import Affiliation, Assessment, \
     Reviewer, ReviewerCollection, ReviewerRole, TextRole, \
     null_tuple
 
+ProposalWithReviewers = namedtuple(
+    'ProposalWithReviewers',
+    ProposalWithCode._fields + ('reviewers_primary', 'reviewers_secondary'))
+
 ProposalWithReviewerPersons = namedtuple(
     'ProposalWithReviewerPersons',
     ProposalWithCode._fields + ('person_ids_primary', 'person_ids_secondary'))
@@ -48,7 +52,8 @@ class GenericReview(object):
         proposals = db.search_proposal(
             call_id=call.id, state=ProposalState.submitted_states(),
             person_pi=True, with_reviewers=True,
-            with_reviewer_role=ReviewerRole.CTTEE_PRIMARY,
+            with_reviewer_role=(ReviewerRole.CTTEE_PRIMARY,
+                                ReviewerRole.CTTEE_SECONDARY),
             with_decision=True)
 
         return {
@@ -57,8 +62,13 @@ class GenericReview(object):
             'can_edit': can.edit,
             'call_id': call.id,
             'proposals': [
-                ProposalWithCode(*x, code=self.make_proposal_code(db, x),
-                                 facility_code=None)
+                ProposalWithReviewers(
+                    *x, code=self.make_proposal_code(db, x),
+                    reviewers_primary=x.reviewers.values_by_role(
+                        ReviewerRole.CTTEE_PRIMARY),
+                    reviewers_secondary=x.reviewers.values_by_role(
+                        ReviewerRole.CTTEE_SECONDARY),
+                    facility_code=None)
                 for x in proposals.values()],
         }
 

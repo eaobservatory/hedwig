@@ -1,5 +1,24 @@
-{% extends 'layout.html' %}
+{% extends 'layout_wide.html' %}
 {% set help_link=url_for('help.admin_page', page_name='review_process') %}
+
+{% macro render_reviewer_cell(reviewers) %}
+    <td>
+        {% if reviewers %}
+            {% for reviewer in reviewers %}
+                {% if session.is_admin or reviewer.person_public %}
+                    <a href="{{ url_for('people.person_view', person_id=reviewer.person_id) }}">{{ reviewer.person_name | abbr }}</a>
+                {% else %}
+                    {{ reviewer.person_name | abbr }}
+                {% endif %}
+                {% if not loop.last %}
+                    <br />
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            &nbsp;
+        {% endif %}
+    </td>
+{% endmacro %}
 
 {% block content %}
 <nav>
@@ -29,6 +48,7 @@
         <th>PI Name</th>
         <th>Title</th>
         <th>Primary Reviewer</th>
+        <th>Secondary Reviewer</th>
     </tr>
     {% for proposal in proposals %}
         <tr>
@@ -59,22 +79,8 @@
                 {% endif %}
             </td>
             <td>{{ proposal.title | abbr }}</td>
-            <td>
-                {% if proposal.reviewers %}
-                    {% for reviewer in proposal.reviewers.values() %}
-                        {% if session.is_admin or reviewer.person_public %}
-                            <a href="{{ url_for('people.person_view', person_id=reviewer.person_id) }}">{{ reviewer.person_name | abbr }}</a>
-                        {% else %}
-                            {{ reviewer.person_name | abbr }}
-                        {% endif %}
-                        {% if not loop.last %}
-                            <br />
-                        {% endif %}
-                    {% endfor %}
-                {% else %}
-                    &nbsp;
-                {% endif %}
-            </td>
+            {{ render_reviewer_cell(proposal.reviewers_primary) }}
+            {{ render_reviewer_cell(proposal.reviewers_secondary) }}
         </tr>
     {% endfor %}
 </table>
