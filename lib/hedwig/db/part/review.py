@@ -311,7 +311,10 @@ class ReviewPart(object):
             stmt = stmt.where(reviewer.c.proposal_id == proposal_id)
 
         if role is not None:
-            stmt = stmt.where(reviewer.c.role == role)
+            if isinstance(role, list) or isinstance(role, tuple):
+                stmt = stmt.where(reviewer.c.role.in_(role))
+            else:
+                stmt = stmt.where(reviewer.c.role == role)
 
         if reviewer_id is not None:
             stmt = stmt.where(reviewer.c.id == reviewer_id)
