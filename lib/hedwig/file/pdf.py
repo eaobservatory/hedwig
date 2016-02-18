@@ -42,7 +42,7 @@ def pdf_to_png(pdf, page_count=None, **kwargs):
         except Error as e:
             raise ConversionError(e.message)
 
-    return _pdf_ps_to_png(pdf, page_count, **kwargs)
+    return _pdf_ps_to_png(pdf, page_count=page_count, **kwargs)
 
 
 def ps_to_png(ps, page_count=None, **kwargs):
@@ -58,7 +58,7 @@ def ps_to_png(ps, page_count=None, **kwargs):
     if page_count is None:
         page_count = 1
 
-    return _pdf_ps_to_png(ps, page_count=1, **kwargs)
+    return _pdf_ps_to_png(ps, page_count=page_count, **kwargs)
 
 
 def _pdf_ps_to_png(buff, page_count, resolution=100, downscale=4):
