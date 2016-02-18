@@ -1055,6 +1055,7 @@ class ProposalPart(object):
                         with_review_info=False, with_review_text=False,
                         with_reviewer_role=None, with_review_state=None,
                         reviewer_person_id=None,
+                        with_categories=False,
                         with_decision=False,
                         decision_accept=None, decision_ready=None,
                         proposal_number=None,
@@ -1241,6 +1242,7 @@ class ProposalPart(object):
             for row in conn.execute(stmt).fetchall():
                 members = None
                 reviewers = None
+                categories = None
                 values = default.copy()
                 values.update(**row)
                 row_key = values['id']
@@ -1282,7 +1284,13 @@ class ProposalPart(object):
                         review_state=with_review_state,
                         _conn=conn)
 
+                if with_categories:
+                    categories = self.search_proposal_category(
+                        proposal_id=values['id'],
+                        _conn=conn)
+
                 ans[row_key] = Proposal(members=members, reviewers=reviewers,
+                                        categories=categories,
                                         **values)
 
         return ans
