@@ -31,6 +31,9 @@ two packages:
     and act as a thin wrapper around Flask for use by the
     view functions.
 
+    Note that there is also Flask-specific code in the Flask-based
+    PDF writing classes in the :doc:`hedwig.pdf <api/pdf>` module.
+
 :doc:`hedwig.view <api/view>`
     Defines "view" classes which contain the actual logic
     required for the web interface.

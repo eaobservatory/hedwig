@@ -19,6 +19,7 @@ Software Documentation
     facility_example
     file
     format
+    pdf
     pidfile
     publication
     stats
