@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015 East Asian Observatory.
+# Copyright (C) 2015-2016 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -153,18 +153,7 @@ def get_facilities(facility_spec=None):
             facility_spec = get_config().get('application', 'facilities')
 
         for name in facility_spec.split(','):
-            try:
-                last_dot = name.rindex('.')
-                module = import_module(name[:last_dot])
-                class_ = getattr(module, name[last_dot + 1:])
-            except ValueError:
-                # If there were no dots in the class name guess that the module
-                # is in the expected directory and has a lower case name.
-                module = import_module(
-                    'hedwig.facility.{}.view'.format(name.lower()))
-                class_ = getattr(module, name)
-
-            facilities.append(class_)
+            facilities.append(_import_class(name, 'hedwig.facility.{}.view'))
 
     return facilities
 
@@ -192,3 +181,39 @@ def set_home(directory):
     global home_directory
 
     home_directory = directory
+
+
+def _import_class(class_name, module_pattern, class_pattern=None):
+    """
+    Import the given class.
+
+    The class can either be fully specified (full module name, a dot,
+    and class name), or the name of a class installed as part of Hedwig.
+    In the latter case, the module_pattern argument is used to generate
+    the module name (using the lower-case version of the class name)
+    and the class_pattern (if given) is used to generate the class name.
+    """
+
+    try:
+        last_dot = class_name.rindex('.')
+    except ValueError:
+        last_dot = None
+
+    if last_dot is not None:
+        module = import_module(class_name[:last_dot])
+        class_ = getattr(module, class_name[last_dot + 1:])
+
+    else:
+        # If there were no dots in the class name guess that the module
+        # is in the expected directory and has a lower case name.
+        module = import_module(module_pattern.format(class_name.lower()))
+
+        if class_pattern is None:
+            full_class_name = class_name
+
+        else:
+            full_class_name = class_pattern.format(class_name)
+
+        class_ = getattr(module, full_class_name)
+
+    return class_
