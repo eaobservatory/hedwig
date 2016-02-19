@@ -490,6 +490,16 @@ def create_facility_blueprint(db, facility):
             current_user, db, proposal_id, fig_id, role, md5sum,
             'preview')
 
+    @bp.route('/proposal/<int:proposal_id>/<hedwig_text_{}:role>/'
+              'figure/<int:fig_id>/svg/<md5sum>'.format(code))
+    @require_auth()
+    @require_session_option('pdf_as_svg')
+    @send_file(fixed_type=FigureType.SVG, allow_cache=True)
+    def case_view_figure_svg(current_user, proposal_id, role, fig_id, md5sum):
+        return facility.view_case_view_figure(
+            current_user, db, proposal_id, fig_id, role, md5sum,
+            'svg')
+
     @bp.route('/proposal/<int:proposal_id>/'
               '<hedwig_text_{}:role>/pdf/edit'.format(code),
               methods=['GET', 'POST'])

@@ -28,6 +28,7 @@ from ...email.format import render_email_template
 from ...config import get_config
 from ...error import ConsistencyError, NoSuchRecord, ParseError, UserError
 from ...file.info import determine_figure_type, determine_pdf_page_count
+from ...file.pdf import pdf_to_svg
 from ...publication.url import make_publication_url
 from ...type.collection import CalculationCollection, \
     PrevProposalCollection, ResultCollection, \
@@ -2260,12 +2261,25 @@ class GenericProposal(object):
     def view_case_view_figure(
             self, current_user, db, proposal, can, fig_id, role, md5sum,
             type_=None):
-        if type_ is None:
+        if (type_ is None) or (type_ == 'svg'):
             try:
-                return db.get_proposal_figure(
+                figure = db.get_proposal_figure(
                     proposal.id, role, fig_id, md5sum=md5sum)
             except NoSuchRecord:
                 raise HTTPNotFound('Figure not found.')
+
+            if type_ is None:
+                return figure
+
+            elif type_ == 'svg':
+                if figure.type == FigureType.PDF:
+                    return pdf_to_svg(figure.data, 1)
+
+                else:
+                    raise HTTPError('Figure type cannot be converted to SVG.')
+
+            else:
+                raise HTTPError('Figure view type unexpectedly didn\'t match.')
 
         elif type_ == 'thumbnail':
             try:
