@@ -162,35 +162,6 @@ class GenericProposal(object):
                                                  with_caption=True,
                                                  with_has_preview=True)
 
-        tech_case_fig = [
-            ProposalFigureExtra(*x, target_view=url_for(
-                ('.tech_view_figure_preview'
-                    if x.has_preview
-                    else '.tech_view_figure'),
-                proposal_id=proposal.id, fig_id=x.id,
-                md5sum=x.md5sum), target_full=(
-                    url_for('.tech_view_figure',
-                            proposal_id=proposal.id, fig_id=x.id,
-                            md5sum=x.md5sum)
-                    if x.has_preview else None),
-                target_edit=None)
-            for x in proposal_fig.values()
-            if x.role == TextRole.TECHNICAL_CASE]
-        sci_case_fig = [
-            ProposalFigureExtra(*x, target_view=url_for(
-                ('.sci_view_figure_preview'
-                    if x.has_preview
-                    else '.sci_view_figure'),
-                proposal_id=proposal.id, fig_id=x.id,
-                md5sum=x.md5sum), target_full=(
-                    url_for('.sci_view_figure',
-                            proposal_id=proposal.id, fig_id=x.id,
-                            md5sum=x.md5sum)
-                    if x.has_preview else None),
-                target_edit=None)
-            for x in proposal_fig.values()
-            if x.role == TextRole.SCIENCE_CASE]
-
         targets = db.search_target(proposal_id=proposal.id)
         target_total_time = targets.total_time()
 
@@ -209,18 +180,8 @@ class GenericProposal(object):
                 links=self.make_proposal_info_urls(x.proposal_code))
             for x in db.search_prev_proposal(proposal_id=proposal.id).values()]
 
-        return {
+        extra = {
             'abstract': proposal_text.get(TextRole.ABSTRACT, None),
-            'tech_case_text': proposal_text.get(
-                TextRole.TECHNICAL_CASE, None),
-            'sci_case_text': proposal_text.get(
-                TextRole.SCIENCE_CASE, None),
-            'tech_case_fig': tech_case_fig,
-            'sci_case_fig': sci_case_fig,
-            'tech_case_pdf': proposal_pdf.get_role(
-                TextRole.TECHNICAL_CASE, None),
-            'sci_case_pdf': proposal_pdf.get_role(
-                TextRole.SCIENCE_CASE, None),
             'targets': targets,
             'target_total_time': target_total_time,
             'calculators': [
@@ -235,6 +196,32 @@ class GenericProposal(object):
                 proposal_id=proposal.id).values(),
             'prev_proposals': prev_proposals,
         }
+
+        for role in (TextRole.TECHNICAL_CASE, TextRole.SCIENCE_CASE):
+            code = TextRole.short_name(role)
+
+            extra['{}_case_text'.format(code)] = proposal_text.get(
+                role, None)
+
+            extra['{}_case_pdf'.format(code)] = proposal_pdf.get_role(
+                role, None)
+
+            extra['{}_case_fig'.format(code)] = [
+                ProposalFigureExtra(*x, target_view=url_for(
+                    ('.{}_view_figure_preview'.format(code)
+                        if x.has_preview
+                        else '.{}_view_figure'.format(code)),
+                    proposal_id=proposal.id, fig_id=x.id,
+                    md5sum=x.md5sum), target_full=(
+                        url_for('.{}_view_figure'.format(code),
+                                proposal_id=proposal.id, fig_id=x.id,
+                                md5sum=x.md5sum)
+                        if x.has_preview else None),
+                    target_edit=None)
+                for x in proposal_fig.values()
+                if x.role == role]
+
+        return extra
 
     def _get_target_tool_info(self, proposal_id):
         return [
