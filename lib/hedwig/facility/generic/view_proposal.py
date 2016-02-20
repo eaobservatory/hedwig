@@ -200,11 +200,11 @@ class GenericProposal(object):
         for role in (TextRole.TECHNICAL_CASE, TextRole.SCIENCE_CASE):
             code = TextRole.short_name(role)
 
-            extra['{}_case_text'.format(code)] = proposal_text.get(
-                role, None)
+            extra['{}_case_text'.format(code)] = \
+                proposal_text.get(role, None)
 
-            extra['{}_case_pdf'.format(code)] = proposal_pdf.get_role(
-                role, None)
+            extra['{}_case_pdf'.format(code)] = \
+                proposal_pdf.get_role(role, None)
 
             extra['{}_case_fig'.format(code)] = \
                 proposal_fig.values_by_role(role)
