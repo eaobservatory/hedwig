@@ -206,20 +206,8 @@ class GenericProposal(object):
             extra['{}_case_pdf'.format(code)] = proposal_pdf.get_role(
                 role, None)
 
-            extra['{}_case_fig'.format(code)] = [
-                ProposalFigureExtra(*x, target_view=url_for(
-                    ('.{}_view_figure_preview'.format(code)
-                        if x.has_preview
-                        else '.{}_view_figure'.format(code)),
-                    proposal_id=proposal.id, fig_id=x.id,
-                    md5sum=x.md5sum), target_full=(
-                        url_for('.{}_view_figure'.format(code),
-                                proposal_id=proposal.id, fig_id=x.id,
-                                md5sum=x.md5sum)
-                        if x.has_preview else None),
-                    target_edit=None)
-                for x in proposal_fig.values()
-                if x.role == role]
+            extra['{}_case_fig'.format(code)] = \
+                proposal_fig.values_by_role(role)
 
         return extra
 

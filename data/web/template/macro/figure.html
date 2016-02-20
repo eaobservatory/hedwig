@@ -1,13 +1,13 @@
-{% macro render_proposal_figures(figures) %}
+{% macro render_proposal_figures(figures, target_full, target_preview, proposal_id) %}
     {% if figures %}
         {% for fig in figures %}
             <figure>
                 {% if fig.state is attachment_ready %}
-                    {% if fig.target_full is none %}
-                        <img src="{{ fig.target_view }}" alt="Figure {{ loop.index }}" />
+                    {% if not fig.has_preview %}
+                        <img src="{{ url_for(target_full, proposal_id=proposal_id, fig_id=fig.id, md5sum=fig.md5sum) }}" alt="Figure {{ loop.index }}" />
                     {% else %}
-                        <a href="{{ fig.target_full }}">
-                            <img src="{{ fig.target_view }}" alt="Figure {{ loop.index }}" />
+                        <a href="{{ url_for(target_full, proposal_id=proposal_id, fig_id=fig.id, md5sum=fig.md5sum) }}">
+                            <img src="{{  url_for(target_preview, proposal_id=proposal_id, fig_id=fig.id, md5sum=fig.md5sum)}}" alt="Figure {{ loop.index }}" />
                         </a>
                     {% endif %}
                 {% elif fig.state is attachment_error %}
