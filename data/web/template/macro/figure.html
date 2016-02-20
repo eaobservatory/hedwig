@@ -3,7 +3,9 @@
         {% for fig in figures %}
             <figure>
                 {% if fig.state is attachment_ready %}
-                    {% if fig.has_preview %}
+                    {% if (fig.type is figure_type_pdf) and session.pdf_as_svg %}
+                        <img src="{{ url_for('.case_view_figure_svg', fig_id=fig.id, md5sum=fig.md5sum, **url_args) }}" alt="Figure {{ loop.index }}" />
+                    {% elif fig.has_preview %}
                         <a href="{{ url_for(url_prefix | fmt('.{}_view_figure'), fig_id=fig.id, md5sum=fig.md5sum, **url_args) }}">
                             <img src="{{  url_for(url_prefix | fmt('.{}_view_figure_preview'), fig_id=fig.id, md5sum=fig.md5sum, **url_args)}}" alt="Figure {{ loop.index }}" />
                         </a>
