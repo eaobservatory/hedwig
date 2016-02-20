@@ -964,6 +964,15 @@ class ProposalTextCollection(ResultCollection):
             return default
 
 
+class ProposalFigureCollection(ResultCollection):
+    def values_by_role(self, role):
+        """
+        Return a list of values for the given role.
+        """
+
+        return [x for x in self.values() if x.role == role]
+
+
 class ReviewerCollection(ResultCollection):
     def get_overall_rating(self, include_unweighted, with_std_dev):
         """

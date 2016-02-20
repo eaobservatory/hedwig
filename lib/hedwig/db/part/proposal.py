@@ -33,7 +33,8 @@ from ...type import Affiliation, AttachmentState, Call, Category, \
     Member, MemberCollection, MemberInfo, MemberPIInfo, \
     PrevProposal, PrevProposalCollection, PrevProposalPub, \
     Proposal, ProposalCategory, ProposalState, \
-    ProposalFigure, ProposalFigureInfo, ProposalPDFInfo, \
+    ProposalFigure, ProposalFigureCollection, \
+    ProposalFigureInfo, ProposalPDFInfo, \
     ProposalText, ProposalTextCollection, ProposalTextInfo, \
     PublicationType, \
     Queue, QueueInfo, ResultCollection, ReviewerInfo, Semester, SemesterInfo, \
@@ -1378,7 +1379,7 @@ class ProposalPart(object):
         else:
             stmt = stmt.order_by(proposal_fig.c.sort_order.asc())
 
-        ans = ResultCollection()
+        ans = ProposalFigureCollection()
 
         with self._transaction() as conn:
             for row in conn.execute(stmt):

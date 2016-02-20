@@ -27,8 +27,9 @@ from hedwig.type import Assessment, AttachmentState, \
     Email, EmailCollection, GroupType, \
     Member, MemberCollection, \
     OrderedResultCollection, \
-    ResultCollection, \
+    ResultCollection, ProposalFigureInfo, ProposalFigureCollection, \
     ProposalState, Reviewer, ReviewerRole, ReviewerCollection, \
+    TextRole, \
     null_tuple
 
 
@@ -161,6 +162,24 @@ class TypeTestCase(TestCase):
         self.assertEqual(ProposalState.by_name('accepted'),
                          ProposalState.ACCEPTED)
         self.assertIsNone(ProposalState.by_name('not a real state'))
+
+    def test_proposal_figure_collection(self):
+        fc = ProposalFigureCollection()
+
+        fc[1001] = null_tuple(ProposalFigureInfo)._replace(
+            id=1001, role=TextRole.TECHNICAL_CASE)
+        fc[1002] = null_tuple(ProposalFigureInfo)._replace(
+            id=1002, role=TextRole.TECHNICAL_CASE)
+        fc[1003] = null_tuple(ProposalFigureInfo)._replace(
+            id=1003, role=TextRole.SCIENCE_CASE)
+        fc[1004] = null_tuple(ProposalFigureInfo)._replace(
+            id=1004, role=TextRole.SCIENCE_CASE)
+
+        tech = set((x.id for x in fc.values_by_role(TextRole.TECHNICAL_CASE)))
+        sci = set((x.id for x in fc.values_by_role(TextRole.SCIENCE_CASE)))
+
+        self.assertEqual(tech, set((1001, 1002)))
+        self.assertEqual(sci, set((1003, 1004)))
 
     def test_result_collection(self):
         rc = ResultCollection()
