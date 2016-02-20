@@ -23,8 +23,8 @@ from flask import Blueprint, request
 from ...error import FormattedError
 from ...type.enum import FigureType
 from ..util import HTTPRedirect, \
-    require_admin, require_auth, send_file, send_json, \
-    templated, url_for, with_current_user
+    require_admin, require_auth, require_session_option, \
+    send_file, send_json, templated, url_for, with_current_user
 
 
 def create_facility_blueprint(db, facility):

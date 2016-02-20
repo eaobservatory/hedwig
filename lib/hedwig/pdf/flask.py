@@ -51,21 +51,30 @@ class PDFWriterFlask(PDFWriter):
         # Request and return the PDF.
         return self._request_pdf(url, pi_person_id)
 
-    def _prepare_environ(self, person_id):
+    def _prepare_environ(self, person_id=None, session_extra=None):
         """
         Prepare a request environment.
+
+        If session_extra is provided, it should be a dictionary of extra
+        entries to be added to the session.
         """
 
-        environ = create_environ(path='/', base_url=self.base_url)
-
+        person = None
         if person_id is not None:
             person = self.db.get_person(person_id)
 
-            # Emulate logging in as the proposal PI and add the session cookie
-            # to the environment.
+        environ = create_environ(path='/', base_url=self.base_url)
+
+        if (person is not None) or (session_extra is not None):
+            # Emulate logging in as the given person and set the given
+            # session values, then add the session cookie to the environment.
             with self.app.test_client() as client:
                 with client.session_transaction() as sess:
-                    _update_session_user(person.user_id, sess=sess)
+                    if person is not None:
+                        _update_session_user(person.user_id, sess=sess)
+
+                    if session_extra is not None:
+                        sess.update(session_extra)
 
                 environ['HTTP_COOKIE'] = '; '.join(map(
                     lambda x: '{}={}'.format(x.name, x.value),

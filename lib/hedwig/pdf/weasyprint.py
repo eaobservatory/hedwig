@@ -25,7 +25,11 @@ from .flask import PDFWriterFlask
 class PDFWriterWeasyPrint(PDFWriterFlask):
     def _request_pdf(self, url, person_id=None):
         # Set up request environment.
-        environ = self._prepare_environ(person_id)
+        environ = self._prepare_environ(
+            person_id=person_id,
+            session_extra={
+                'pdf_as_svg': True,
+            })
 
         # Perform the request to generate the PDF using WeasyPrint.
         with self.app.request_context(environ):

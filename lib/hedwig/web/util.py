@@ -431,6 +431,28 @@ def require_not_auth(f):
     return decorated
 
 
+def require_session_option(option):
+    """
+    Decorator to require that a certain session option is set.
+    """
+
+    def decorator(f):
+        if hasattr(f, '_hedwig_require_auth'):
+            raise Exception(
+                '@require_session_option applied after @require_auth')
+
+        @functools.wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not session.get(option, False):
+                raise HTTPForbidden('Request not permitted in this context.')
+
+            return f(*args, **kwargs)
+
+        return decorated_function
+
+    return decorator
+
+
 def send_file(fixed_type=None, **send_file_kwargs):
     """
     Decorator for route functions which send files.
