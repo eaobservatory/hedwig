@@ -3,12 +3,12 @@
         {% for fig in figures %}
             <figure>
                 {% if fig.state is attachment_ready %}
-                    {% if not fig.has_preview %}
-                        <img src="{{ url_for(target_full, proposal_id=proposal_id, fig_id=fig.id, md5sum=fig.md5sum) }}" alt="Figure {{ loop.index }}" />
-                    {% else %}
+                    {% if fig.has_preview %}
                         <a href="{{ url_for(target_full, proposal_id=proposal_id, fig_id=fig.id, md5sum=fig.md5sum) }}">
                             <img src="{{  url_for(target_preview, proposal_id=proposal_id, fig_id=fig.id, md5sum=fig.md5sum)}}" alt="Figure {{ loop.index }}" />
                         </a>
+                    {% else %}
+                        <img src="{{ url_for(target_full, proposal_id=proposal_id, fig_id=fig.id, md5sum=fig.md5sum) }}" alt="Figure {{ loop.index }}" />
                     {% endif %}
                 {% elif fig.state is attachment_error %}
                     <p class="warning">
