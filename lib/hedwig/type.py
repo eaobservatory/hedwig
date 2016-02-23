@@ -438,6 +438,7 @@ class FigureType(object):
 class GroupType(object):
     CTTEE = 1
     TECH = 2
+    COORD = 3
 
     GroupInfo = namedtuple(
         'GroupInfo', ('name', 'view_all_prop', 'private_moc'))
@@ -445,6 +446,7 @@ class GroupType(object):
     _info = OrderedDict((
         (CTTEE, GroupInfo('Committee',           True,  False)),
         (TECH,  GroupInfo('Technical assessors', False, True)),
+        (COORD, GroupInfo('Review coordinators', False, False)),
     ))
 
     @classmethod
