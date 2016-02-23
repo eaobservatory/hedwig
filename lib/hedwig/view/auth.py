@@ -28,6 +28,7 @@ Authorization = namedtuple('Authorization', ('view', 'edit'))
 
 no = Authorization(False, False)
 yes = Authorization(True, True)
+view_only = Authorization(view=True, edit=False)
 
 
 def for_call_review(db, call):
@@ -52,7 +53,7 @@ def for_call_review(db, call):
             queue_id=call.queue_id,
             group_type=GroupType.CTTEE,
             person_id=person_id):
-        return Authorization(view=True, edit=False)
+        return view_only
 
     return no
 
@@ -102,7 +103,7 @@ def for_institution(db, institution):
     elif session.get('is_admin', False) and can_be_admin(db):
         return yes
 
-    auth = Authorization(view=True, edit=False)
+    auth = view_only
 
     if 'person' not in session:
         return auth
@@ -231,7 +232,7 @@ def for_review(db, reviewer, proposal):
             queue_id=proposal.queue_id,
             group_type=GroupType.CTTEE,
             person_id=person_id):
-        return Authorization(view=True, edit=False)
+        return view_only
 
     return no
 
