@@ -446,7 +446,7 @@ class GroupType(object):
     _info = OrderedDict((
         (CTTEE, GroupInfo('Committee',           True,  False, False)),
         (TECH,  GroupInfo('Technical assessors', False, True,  False)),
-        (COORD, GroupInfo('Review coordinators', False, False, True)),
+        (COORD, GroupInfo('Review coordinators', True,  False, True)),
     ))
 
     @classmethod
