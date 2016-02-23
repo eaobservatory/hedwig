@@ -235,6 +235,8 @@ class TypeTestCase(TestCase):
         self.assertFalse(GroupType.is_valid(999999))
 
         self.assertIsInstance(GroupType.view_all_groups(), list)
+        self.assertIsInstance(GroupType.private_moc_groups(), list)
+        self.assertIsInstance(GroupType.review_coord_groups(), list)
 
     def test_group_member_collection(self):
         c = GroupMemberCollection()

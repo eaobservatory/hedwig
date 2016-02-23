@@ -441,12 +441,12 @@ class GroupType(object):
     COORD = 3
 
     GroupInfo = namedtuple(
-        'GroupInfo', ('name', 'view_all_prop', 'private_moc'))
+        'GroupInfo', ('name', 'view_all_prop', 'private_moc', 'review_coord'))
 
     _info = OrderedDict((
-        (CTTEE, GroupInfo('Committee',           True,  False)),
-        (TECH,  GroupInfo('Technical assessors', False, True)),
-        (COORD, GroupInfo('Review coordinators', False, False)),
+        (CTTEE, GroupInfo('Committee',           True,  False, False)),
+        (TECH,  GroupInfo('Technical assessors', False, True,  False)),
+        (COORD, GroupInfo('Review coordinators', False, False, True)),
     ))
 
     @classmethod
@@ -472,6 +472,10 @@ class GroupType(object):
     @classmethod
     def private_moc_groups(cls):
         return [k for (k, v) in cls._info.items() if v.private_moc]
+
+    @classmethod
+    def review_coord_groups(cls):
+        return [k for (k, v) in cls._info.items() if v.review_coord]
 
 
 class MessageState(object):

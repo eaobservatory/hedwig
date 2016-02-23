@@ -19,6 +19,10 @@
         <li>Can search private coverage maps.</li>
         {% set n_permission = n_permission + 1 %}
     {% endif %}
+    {% if group_info.review_coord %}
+        <li>Can manage review processes.</li>
+        {% set n_permission = n_permission + 1 %}
+    {% endif %}
     {% if n_permission == 0 %}
         <li>Have no special access rights.</li>
     {% endif %}

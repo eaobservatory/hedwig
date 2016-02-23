@@ -48,11 +48,16 @@ def for_call_review(db, call):
 
     person_id = session['person']['id']
 
-    # Give view access to committee members.
-    if db.search_group_member(
-            queue_id=call.queue_id,
-            group_type=GroupType.CTTEE,
-            person_id=person_id):
+    # Give full access to review coordinators and
+    # view access to committee members.
+    group_members = db.search_group_member(
+        queue_id=call.queue_id, person_id=person_id)
+
+    for group_type in GroupType.review_coord_groups():
+        if group_members.values_by_group_type(group_type):
+            return yes
+
+    if group_members.values_by_group_type(GroupType.CTTEE):
         return view_only
 
     return no
