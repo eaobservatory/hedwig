@@ -90,9 +90,20 @@ def for_person(db, person):
         for member in db.search_member(person_id=session['person']['id'],
                                        co_member_person_id=person.id).values():
             if member.editor:
-                auth = auth._replace(view=True, edit=True)
+                return yes
             else:
                 auth = auth._replace(view=True)
+
+        # Look for reviews for which this person is the reviewer and allow
+        # access to review coordinators.
+        queue_ids = set()
+        for group_member in db.search_group_member(
+                person_id=session['person']['id'],
+                group_type=GroupType.COORD).values():
+            queue_ids.add(group_member.queue_id)
+
+        if db.search_reviewer(person_id=person.id, queue_id=list(queue_ids)):
+            return yes
 
         return auth
 
