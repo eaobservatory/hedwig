@@ -53,11 +53,12 @@ def for_call_review(db, call):
     group_members = db.search_group_member(
         queue_id=call.queue_id, person_id=person_id)
 
-    for group_type in GroupType.review_coord_groups():
-        if group_members.values_by_group_type(group_type):
-            return yes
+    if any(group_members.values_by_group_type(group_type)
+            for group_type in GroupType.review_coord_groups()):
+        return yes
 
-    if group_members.values_by_group_type(GroupType.CTTEE):
+    if any(group_members.values_by_group_type(group_type)
+            for group_type in GroupType.review_view_groups()):
         return view_only
 
     return no
@@ -251,7 +252,8 @@ def for_review(db, reviewer, proposal):
         return Authorization(view=True, edit=is_under_review)
 
     # Give view access to committee members.
-    if group_members.values_by_group_type(GroupType.CTTEE):
+    if any(group_members.values_by_group_type(group_type)
+           for group_type in GroupType.review_view_groups()):
         return view_only
 
     return no

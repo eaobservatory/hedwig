@@ -259,7 +259,7 @@ class Generic(GenericAdmin, GenericProposal, GenericReview):
 
         elif ('user_id' in session) and ('person' in session):
             membership = db.search_group_member(
-                group_type=(GroupType.CTTEE, GroupType.COORD),
+                group_type=GroupType.review_view_groups(),
                 person_id=session['person']['id'])
             if membership:
                 can_view_reviews = True
