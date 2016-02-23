@@ -24,7 +24,7 @@ from unittest import TestCase
 
 from hedwig.error import MultipleRecords, NoSuchRecord, UserError
 from hedwig.type import Assessment, AttachmentState, \
-    Email, EmailCollection, GroupType, \
+    Email, EmailCollection, GroupType, GroupMember, GroupMemberCollection,  \
     Member, MemberCollection, \
     OrderedResultCollection, \
     ResultCollection, ProposalFigureInfo, ProposalFigureCollection, \
@@ -235,6 +235,30 @@ class TypeTestCase(TestCase):
         self.assertFalse(GroupType.is_valid(999999))
 
         self.assertIsInstance(GroupType.view_all_groups(), list)
+
+    def test_group_member_collection(self):
+        c = GroupMemberCollection()
+
+        c[101] = null_tuple(GroupMember)._replace(
+            id=101, group_type=GroupType.CTTEE)
+        c[102] = null_tuple(GroupMember)._replace(
+            id=102, group_type=GroupType.TECH)
+        c[103] = null_tuple(GroupMember)._replace(
+            id=103, group_type=GroupType.TECH)
+        c[104] = null_tuple(GroupMember)._replace(
+            id=104, group_type=GroupType.COORD)
+
+        self.assertEqual(
+            sorted([x.id for x in c.values_by_group_type(GroupType.CTTEE)]),
+            [101])
+
+        self.assertEqual(
+            sorted([x.id for x in c.values_by_group_type(GroupType.TECH)]),
+            [102, 103])
+
+        self.assertEqual(
+            sorted([x.id for x in c.values_by_group_type(GroupType.COORD)]),
+            [104])
 
     def test_reviewer_collection(self):
         c = ReviewerCollection()

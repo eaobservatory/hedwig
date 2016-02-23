@@ -804,7 +804,12 @@ class EmailCollection(ResultCollection):
 
 
 class GroupMemberCollection(ResultCollection):
-    pass
+    def values_by_group_type(self, group_type):
+        """
+        Get a list of the reviewers with the given role.
+        """
+
+        return [x for x in self.values() if x.group_type == group_type]
 
 
 class MemberCollection(OrderedResultCollection):
