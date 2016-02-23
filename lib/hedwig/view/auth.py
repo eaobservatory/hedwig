@@ -237,17 +237,21 @@ def for_review(db, reviewer, proposal):
         if ((person_id == reviewer.person_id) and is_under_review):
             return yes
 
-    # Allow administrators to view, with edit too if still under review.
-    # (This is to allow the administrator to adjust review ratings during
-    # the committee meeting.)
+    # Allow administrators and review coordinators to view, with edit too if
+    # still under review.  (This is to allow them to adjust review ratings
+    # during the committee meeting.)
     if session.get('is_admin', False) and can_be_admin(db):
         return Authorization(view=True, edit=is_under_review)
 
+    group_members = db.search_group_member(queue_id=proposal.queue_id,
+                                           person_id=person_id)
+
+    if any(group_members.values_by_group_type(group_type)
+           for group_type in GroupType.review_coord_groups()):
+        return Authorization(view=True, edit=is_under_review)
+
     # Give view access to committee members.
-    if db.search_group_member(
-            queue_id=proposal.queue_id,
-            group_type=GroupType.CTTEE,
-            person_id=person_id):
+    if group_members.values_by_group_type(GroupType.CTTEE):
         return view_only
 
     return no
