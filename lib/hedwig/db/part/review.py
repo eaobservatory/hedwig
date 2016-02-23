@@ -29,7 +29,7 @@ from ...error import ConsistencyError, Error, FormattedError, \
 from ...type import Assessment, FormatType, \
     GroupMember, GroupMemberCollection, GroupType, \
     Reviewer, ReviewerCollection, ReviewerRole
-from ..meta import decision, group_member, institution, person, \
+from ..meta import call, decision, group_member, institution, person, \
     proposal, queue, \
     review, reviewer
 
@@ -264,6 +264,7 @@ class ReviewPart(object):
 
     def search_reviewer(self, proposal_id=None, role=None, reviewer_id=None,
                         person_id=None, review_state=None,
+                        call_id=None, queue_id=None,
                         with_review=False, with_review_text=False,
                         _conn=None):
         select_columns = [
@@ -305,6 +306,12 @@ class ReviewPart(object):
         if (with_review or (review_state is not None)):
             select_from = select_from.outerjoin(review)
 
+        if (call_id is not None) or (queue_id is not None):
+            select_from = select_from.join(proposal)
+
+            if queue_id is not None:
+                select_from = select_from.join(call)
+
         stmt = select(select_columns).select_from(select_from)
 
         if proposal_id is not None:
@@ -327,6 +334,18 @@ class ReviewPart(object):
                 stmt = stmt.where(review.c.reviewer_id.isnot(None))
             else:
                 stmt = stmt.where(review.c.reviewer_id.is_(None))
+
+        if call_id is not None:
+            if isinstance(call_id, list) or isinstance(call_id, tuple):
+                stmt = stmt.where(proposal.c.call_id.in_(call_id))
+            else:
+                stmt = stmt.where(proposal.c.call_id == call_id)
+
+        if queue_id is not None:
+            if isinstance(queue_id, list) or isinstance(queue_id, tuple):
+                stmt = stmt.where(call.c.queue_id.in_(queue_id))
+            else:
+                stmt = stmt.where(call.c.queue_id == queue_id)
 
         ans = ReviewerCollection()
 

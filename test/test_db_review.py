@@ -186,6 +186,13 @@ class DBReviewTest(DBTestCase):
         self.assertIsNone(result.review_text)
         self.assertIsNone(result.review_format)
 
+        # Test call and queue query parameters.
+        result = self.db.search_reviewer(call_id=1999999)
+        self.assertEqual(len(result), 0)
+
+        result = self.db.search_reviewer(queue_id=1999999)
+        self.assertEqual(len(result), 0)
+
         # Try removing a reviewer.
         self.db.delete_reviewer(reviewer_id=reviewer_id_1)
 
