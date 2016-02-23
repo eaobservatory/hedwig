@@ -14,7 +14,7 @@ You should see a page with a summary information table,
 proposal abstract, category list and a table showing all of the reviews.
 
 If you are eligible to add any additional reviews of the proposal,
-you will find a set of appropriate links at the bottom of the page,
-below the table of reviews.
+you will find a set of appropriate links in the middle of the page,
+above the table of reviews.
 
 .. image:: image/proposal_reviews.png
