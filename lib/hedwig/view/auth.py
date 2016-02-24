@@ -234,9 +234,17 @@ def for_review(db, reviewer, proposal):
 
     # Allow full access to the reviewer if the proposal is still under review.
     # (But skip this test if doing a non-reviewer-specific check.)
-    if reviewer is not None:
-        if ((person_id == reviewer.person_id) and is_under_review):
+    if (reviewer is not None) and is_under_review:
+        if person_id == reviewer.person_id:
             return yes
+
+        # Special case: if this is the feedback review, allow all reviewers
+        # with suitable roles to edit it.
+        if reviewer.role == ReviewerRole.FEEDBACK:
+            if db.search_reviewer(proposal_id=reviewer.proposal_id,
+                                  person_id=person_id,
+                                  role=ReviewerRole.get_feedback_roles()):
+                return yes
 
     # Allow administrators and review coordinators to view, with edit too if
     # still under review.  (This is to allow them to adjust review ratings
