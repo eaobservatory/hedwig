@@ -308,13 +308,14 @@ def can_add_review_roles(db, proposal):
             roles.append(ReviewerRole.CTTEE_OTHER)
 
     # Determine whether the user can add a "feedback" review -- they should be
-    # the committee primary reviewer (or have administrative privileges) but
+    # a reviewer in a suitable role (or have administrative privileges) but
     # there should not already be a review of this role.
     if not proposal.reviewers.person_id_by_role(ReviewerRole.FEEDBACK):
         try:
             if not (session.get('is_admin', False) and can_be_admin(db)):
                 proposal.reviewers.get_person(
-                    person_id=person_id, roles=(ReviewerRole.CTTEE_PRIMARY,))
+                    person_id=person_id,
+                    roles=ReviewerRole.get_feedback_roles())
             roles.append(ReviewerRole.FEEDBACK)
         except KeyError:
             pass

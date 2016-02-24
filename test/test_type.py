@@ -378,3 +378,8 @@ class TypeTestCase(TestCase):
             ReviewerRole.CTTEE_SECONDARY,
             ReviewerRole.CTTEE_OTHER,
         ])
+
+        self.assertEqual(ReviewerRole.get_feedback_roles(), [
+            ReviewerRole.CTTEE_PRIMARY,
+            ReviewerRole.CTTEE_SECONDARY,
+        ])

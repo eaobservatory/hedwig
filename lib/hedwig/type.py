@@ -620,33 +620,40 @@ class ReviewerRole(object):
     RoleInfo = namedtuple(
         'RoleInfo',
         ('name', 'unique', 'text', 'assessment', 'rating', 'weight',
-         'cttee', 'name_review', 'display_class'))
+         'cttee', 'name_review', 'feedback', 'display_class'))
 
+    # Options:  Unique Text   Ass/nt Rating Weight Cttee  "Rev"  Feedback
     _info = OrderedDict((
         (TECH,
             RoleInfo(
                 'Technical',
-                True,  True,  True,  False, False, False, True,  'tech')),
+                True,  True,  True,  False, False, False, True,  False,
+                'tech')),
         (EXTERNAL,
             RoleInfo(
                 'External',
-                False, True,  False, True,  False, False, True,  'ext')),
+                False, True,  False, True,  False, False, True,  False,
+                'ext')),
         (CTTEE_PRIMARY,
             RoleInfo(
                 'TAC Primary',
-                True,  True,  False, True,  True,  True,  True,  'cttee')),
+                True,  True,  False, True,  True,  True,  True,  True,
+                'cttee')),
         (CTTEE_SECONDARY,
             RoleInfo(
                 'TAC Secondary',
-                False, True,  False, True,  True,  True,  True,  'cttee')),
+                False, True,  False, True,  True,  True,  True,  True,
+                'cttee')),
         (CTTEE_OTHER,
             RoleInfo(
                 'Rating',
-                False, False, False, True,  True,  True,  False, 'cttee')),
+                False, False, False, True,  True,  True,  False, False,
+                'cttee')),
         (FEEDBACK,
             RoleInfo(
                 'Feedback',
-                True,  True,  False, False, False, False, False, 'feedback')),
+                True,  True,  False, False, False, False, False, False,
+                'feedback')),
     ))
 
     @classmethod
@@ -660,6 +667,12 @@ class ReviewerRole(object):
     @classmethod
     def get_cttee_roles(cls):
         return [k for (k, v) in cls._info.items() if v.cttee]
+
+    @classmethod
+    def get_feedback_roles(cls):
+        """Get list of roles who can write the feedback review."""
+
+        return [k for (k, v) in cls._info.items() if v.feedback]
 
     @classmethod
     def get_options(cls):
