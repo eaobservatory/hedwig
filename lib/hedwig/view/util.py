@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -71,8 +71,9 @@ def with_call_review(permission):
     for a given call.
 
     Assumes that the first arguents are a database object and call ID.
-    The wrapped method is called with the database, call record and
-    authorization object followed by any remaining arguments.
+    The wrapped method is called with the database, call record,
+    authorization object and authorization cache followed by any remaining
+    arguments.
 
     Note: this currently can only be used to decorate methods of
     facility classes because it uses `self.id_` for the facility ID.
@@ -88,7 +89,8 @@ def with_call_review(permission):
 
             assert call.id == call_id
 
-            can = auth.for_call_review(db, call)
+            auth_cache = {}
+            can = auth.for_call_review(db, call, auth_cache=auth_cache)
 
             if permission == 'view':
                 if not can.view:
@@ -102,7 +104,7 @@ def with_call_review(permission):
             else:
                 raise HTTPError('Unknown permission type.')
 
-            return f(self, db, call, can, *args, **kwargs)
+            return f(self, db, call, can, auth_cache, *args, **kwargs)
 
         return decorated_method
 

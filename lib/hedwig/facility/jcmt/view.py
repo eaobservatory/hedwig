@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -580,7 +580,7 @@ class JCMT(Generic):
         }
 
     @with_call_review(permission='edit')
-    def view_review_call_available(self, db, call, can, form):
+    def view_review_call_available(self, db, call, can, auth_cache, form):
         message = None
 
         weathers = JCMTWeather.get_available()

@@ -48,7 +48,7 @@ ProposalWithReviewerPersons = namedtuple(
 
 class GenericReview(object):
     @with_call_review(permission='view')
-    def view_review_call(self, db, call, can):
+    def view_review_call(self, db, call, can, auth_cache):
         proposals = db.search_proposal(
             call_id=call.id, state=ProposalState.submitted_states(),
             person_pi=True, with_reviewers=True,
@@ -73,7 +73,7 @@ class GenericReview(object):
         }
 
     @with_call_review(permission='view')
-    def view_review_call_tabulation(self, db, call, can):
+    def view_review_call_tabulation(self, db, call, can, auth_cache):
         ctx = {
             'title': 'Proposal Tabulation: {} {}'.format(call.semester_name,
                                                          call.queue_name),
@@ -86,7 +86,7 @@ class GenericReview(object):
         return ctx
 
     @with_call_review(permission='view')
-    def view_review_call_tabulation_download(self, db, call, can,
+    def view_review_call_tabulation_download(self, db, call, can, auth_cache,
                                              with_cois=True):
         tabulation = self._get_proposal_tabulation(db, call)
 
@@ -228,7 +228,7 @@ class GenericReview(object):
             )
 
     @with_call_review(permission='edit')
-    def view_review_affiliation_weight(self, db, call, can, form):
+    def view_review_affiliation_weight(self, db, call, can, auth_cache, form):
         message = None
 
         affiliations = db.search_affiliation(
@@ -263,11 +263,11 @@ class GenericReview(object):
         }
 
     @with_call_review(permission='edit')
-    def view_review_call_available(self, db, call, can, form):
+    def view_review_call_available(self, db, call, can, auth_cache, form):
         raise ErrorPage('Time available not implemented for this facility.')
 
     @with_call_review(permission='edit')
-    def view_review_call_reviewers(self, db, call, can, args):
+    def view_review_call_reviewers(self, db, call, can, auth_cache, args):
         role = args.get('role', None)
         if not role:
             role = None
@@ -304,7 +304,8 @@ class GenericReview(object):
         }
 
     @with_call_review(permission='edit')
-    def view_reviewer_grid(self, db, call, can, primary_role, form):
+    def view_reviewer_grid(self, db, call, can, auth_cache,
+                           primary_role, form):
         try:
             call = db.get_call(facility_id=self.id_, call_id=call.id)
         except NoSuchRecord:
@@ -1125,7 +1126,7 @@ class GenericReview(object):
         return {}
 
     @with_call_review(permission='edit')
-    def view_review_confirm_feedback(self, db, call, can, form):
+    def view_review_confirm_feedback(self, db, call, can, auth_cache, form):
         # Get proposals for this call, including their feedback review
         # and decision.  (Note: "with_decision" means include it in the
         # results, not that the proposal must have one.)
