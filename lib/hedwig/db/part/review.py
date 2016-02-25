@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -266,6 +266,7 @@ class ReviewPart(object):
                         person_id=None, review_state=None,
                         call_id=None, queue_id=None,
                         with_review=False, with_review_text=False,
+                        with_review_note=False,
                         _conn=None):
         select_columns = [
             reviewer,
@@ -288,14 +289,20 @@ class ReviewPart(object):
             select_columns.extend((x.label('review_{}'.format(x.name))
                                    for x in review.columns
                                    if x not in (review.c.reviewer_id,
-                                                review.c.text)))
+                                                review.c.text,
+                                                review.c.note)))
+
+            default = {}
 
             if with_review_text:
                 select_columns.append(review.c.text.label('review_text'))
-                default = {}
-
             else:
-                default = {'review_text': None}
+                default['review_text'] = None
+
+            if with_review_note:
+                select_columns.append(review.c.note.label('review_note'))
+            else:
+                default['review_note'] = None
 
         else:
             default = {'review_{}'.format(x.name): None
@@ -404,12 +411,19 @@ class ReviewPart(object):
 
     def set_review(self, reviewer_id, text, format_,
                    assessment, rating, weight,
+                   note, note_format, note_public,
                    is_update):
         if text is not None:
             if not format_:
                 raise UserError('Text format not specified.')
             if not FormatType.is_valid(format_):
                 raise UserError('Text format not recognised.')
+
+        if note is not None:
+            if not note_format:
+                raise UserError('Note format not specified.')
+            if not FormatType.is_valid(note_format):
+                raise UserError('Note format not recognised.')
 
         if assessment is not None:
             if not Assessment.is_valid(assessment):
@@ -422,6 +436,9 @@ class ReviewPart(object):
             review.c.rating: rating,
             review.c.weight: weight,
             review.c.edited: datetime.utcnow(),
+            review.c.note: note,
+            review.c.note_format: (None if note is None else note_format),
+            review.c.note_public: ((note is not None) and note_public),
         }
 
         with self._transaction() as conn:
@@ -433,7 +450,7 @@ class ReviewPart(object):
             role_info = ReviewerRole.get_info(reviewer.role)
             attr_values = {k.name: v for (k, v) in values.items()}
 
-            for attr in ('text', 'assessment', 'rating', 'weight'):
+            for attr in ('text', 'assessment', 'rating', 'weight', 'note'):
                 if getattr(role_info, attr):
                     if attr_values[attr] is None:
                         raise FormattedError(

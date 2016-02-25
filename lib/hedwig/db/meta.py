@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -529,6 +529,9 @@ review = Table(
     Column('rating', Integer, nullable=True),
     Column('weight', Integer, nullable=True),
     Column('edited', DateTime(), nullable=False),
+    Column('note', UnicodeText, nullable=True),
+    Column('note_format', Integer, nullable=True),
+    Column('note_public', Boolean, nullable=False),
     **_table_opts)
 
 reviewer = Table(

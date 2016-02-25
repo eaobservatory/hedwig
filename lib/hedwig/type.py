@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -620,39 +620,39 @@ class ReviewerRole(object):
     RoleInfo = namedtuple(
         'RoleInfo',
         ('name', 'unique', 'text', 'assessment', 'rating', 'weight',
-         'cttee', 'name_review', 'feedback', 'display_class'))
+         'cttee', 'name_review', 'feedback', 'note', 'display_class'))
 
-    # Options:  Unique Text   Ass/nt Rating Weight Cttee  "Rev"  Feedback
+    # Options:  Unique Text   Ass/nt Rating Weight Cttee  "Rev"  Feedbk Note
     _info = OrderedDict((
         (TECH,
             RoleInfo(
                 'Technical',
-                True,  True,  True,  False, False, False, True,  False,
+                True,  True,  True,  False, False, False, True,  False, True,
                 'tech')),
         (EXTERNAL,
             RoleInfo(
                 'External',
-                False, True,  False, True,  False, False, True,  False,
+                False, True,  False, True,  False, False, True,  False, False,
                 'ext')),
         (CTTEE_PRIMARY,
             RoleInfo(
                 'TAC Primary',
-                True,  True,  False, True,  True,  True,  True,  True,
+                True,  True,  False, True,  True,  True,  True,  True,  True,
                 'cttee')),
         (CTTEE_SECONDARY,
             RoleInfo(
                 'TAC Secondary',
-                False, True,  False, True,  True,  True,  True,  True,
+                False, True,  False, True,  True,  True,  True,  True,  True,
                 'cttee')),
         (CTTEE_OTHER,
             RoleInfo(
                 'Rating',
-                False, False, False, True,  True,  True,  False, False,
+                False, False, False, True,  True,  True,  False, False, False,
                 'cttee')),
         (FEEDBACK,
             RoleInfo(
                 'Feedback',
-                True,  True,  False, False, False, False, False, False,
+                True,  True,  False, False, False, False, False, False, False,
                 'feedback')),
     ))
 
