@@ -81,14 +81,14 @@ class GenericReview(object):
             'can_edit': can.edit,
         }
 
-        ctx.update(self._get_proposal_tabulation(db, call))
+        ctx.update(self._get_proposal_tabulation(db, call, auth_cache))
 
         return ctx
 
     @with_call_review(permission='view')
     def view_review_call_tabulation_download(self, db, call, can, auth_cache,
                                              with_cois=True):
-        tabulation = self._get_proposal_tabulation(db, call)
+        tabulation = self._get_proposal_tabulation(db, call, auth_cache)
 
         writer = CSVWriter()
 
@@ -114,7 +114,7 @@ class GenericReview(object):
                 re.sub('[^-_a-z0-9]', '_', call.semester_name.lower()),
                 re.sub('[^-_a-z0-9]', '_', call.queue_name.lower())))
 
-    def _get_proposal_tabulation(self, db, call):
+    def _get_proposal_tabulation(self, db, call, auth_cache):
         proposals = db.search_proposal(
             call_id=call.id, state=ProposalState.submitted_states(),
             with_members=True, with_reviewers=True, with_review_info=True,
@@ -124,7 +124,6 @@ class GenericReview(object):
             queue_id=call.queue_id, hidden=False, with_weight_call_id=call.id)
 
         cs = get_countries()
-        auth_cache = {}
 
         proposal_list = []
         for proposal in proposals.values():
