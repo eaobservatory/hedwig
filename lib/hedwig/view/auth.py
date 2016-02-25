@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple
 
+from ..db.util import memoized
 from ..error import NoSuchRecord
 from ..type import GroupType, ProposalState, ReviewerRole
 from ..web.util import session, HTTPForbidden
@@ -31,7 +32,7 @@ yes = Authorization(True, True)
 view_only = Authorization(view=True, edit=False)
 
 
-def for_call_review(db, call):
+def for_call_review(db, call, auth_cache=None):
     """
     Determine the current user's authorization regarding the general
     review of proposals for a given call.
@@ -39,6 +40,10 @@ def for_call_review(db, call):
     (Authorization to view the proposals and the individual reviews
     is controlled by the more specific for_proposal and for_review
     methods below.)
+
+    When making multiple calls to this function, an auth_cache dictionary
+    can be provided.  This function can then use this to cache some
+    information which it fetches from the database.
     """
 
     if 'user_id' not in session or 'person' not in session:
@@ -50,8 +55,8 @@ def for_call_review(db, call):
 
     # Give full access to review coordinators and
     # view access to committee members.
-    group_members = db.search_group_member(
-        queue_id=call.queue_id, person_id=person_id)
+    group_members = _get_group_membership(
+        auth_cache, db, call.queue_id, person_id)
 
     if any(group_members.values_by_group_type(group_type)
             for group_type in GroupType.review_coord_groups()):
@@ -210,13 +215,17 @@ def for_proposal(db, proposal):
     return auth
 
 
-def for_review(db, reviewer, proposal):
+def for_review(db, reviewer, proposal, auth_cache=None):
     """
     Determine the current user's authorization regarding this review.
 
     "reviewer" can be set to "None" to skip reviewer-specific authorization.
     (Access will then be granted based only on proposal membership,
     administrative access and committee membership.)
+
+    When making multiple calls to this function, an auth_cache dictionary
+    can be provided.  This function can then use this to cache some
+    information which it fetches from the database.
     """
 
     if 'user_id' not in session or 'person' not in session:
@@ -252,8 +261,8 @@ def for_review(db, reviewer, proposal):
     if session.get('is_admin', False) and can_be_admin(db):
         return Authorization(view=True, edit=is_under_review)
 
-    group_members = db.search_group_member(queue_id=proposal.queue_id,
-                                           person_id=person_id)
+    group_members = _get_group_membership(
+        auth_cache, db, proposal.queue_id, person_id)
 
     if any(group_members.values_by_group_type(group_type)
            for group_type in GroupType.review_coord_groups()):
@@ -329,3 +338,8 @@ def can_add_review_roles(db, proposal):
             pass
 
     return roles
+
+
+@memoized
+def _get_group_membership(db, queue_id, person_id):
+    return db.search_group_member(queue_id=queue_id, person_id=person_id)

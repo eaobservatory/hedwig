@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -35,7 +35,7 @@ from ...type import Affiliation, Assessment, \
     FileTypeInfo, FormatType, GroupType, Link, MemberPIInfo, \
     ProposalState, ProposalWithCode, \
     Reviewer, ReviewerCollection, ReviewerRole, TextRole, \
-    null_tuple
+    null_tuple, with_can_edit
 
 ProposalWithReviewers = namedtuple(
     'ProposalWithReviewers',
@@ -124,7 +124,7 @@ class GenericReview(object):
             queue_id=call.queue_id, hidden=False, with_weight_call_id=call.id)
 
         cs = get_countries()
-        person_id = session['person']['id']
+        auth_cache = {}
 
         proposal_list = []
         for proposal in proposals.values():
@@ -133,11 +133,9 @@ class GenericReview(object):
             except KeyError:
                 member_pi = None
 
-            try:
-                proposal.members.get_person(person_id)
-                can_view_review = False
-            except KeyError:
-                can_view_review = True
+            can_view_review = auth.for_review(
+                db, reviewer=None, proposal=proposal,
+                auth_cache=auth_cache).view
 
             n_other = 0
             for member in proposal.members.values():
@@ -163,8 +161,15 @@ class GenericReview(object):
             if can_view_review:
                 (overall_rating, std_dev) = self.calculate_overall_rating(
                     proposal.reviewers, with_std_dev=True)
-                updated_proposal['rating'] = overall_rating
-                updated_proposal['rating_std_dev'] = std_dev
+                updated_proposal.update({
+                    'reviewers': ReviewerCollection(
+                        (k, with_can_edit(v, auth.for_review(
+                            db, reviewer=v, proposal=proposal,
+                            auth_cache=auth_cache).edit))
+                        for (k, v) in proposal.reviewers.items()),
+                    'rating': overall_rating,
+                    'rating_std_dev': std_dev,
+                })
 
             else:
                 # Remove 'reviewers' from dictionary for safety, so that
@@ -957,9 +962,9 @@ class GenericReview(object):
 
     @with_proposal(permission='none')
     def view_proposal_reviews(self, db, proposal):
-        can = auth.for_review(db, reviewer=None, proposal=proposal)
-
-        if not can.view:
+        auth_cache = {}
+        if not auth.for_review(db, reviewer=None, proposal=proposal,
+                               auth_cache=auth_cache).view:
             raise HTTPForbidden(
                 'Permission denied for this proposal\'s reviews.')
 
@@ -989,9 +994,12 @@ class GenericReview(object):
             'abstract': abstract,
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id).values(),
-            'reviews': reviews.values(),
+            'reviews': [
+                with_can_edit(x, auth.for_review(
+                    db, reviewer=x, proposal=proposal,
+                    auth_cache=auth_cache).edit)
+                for x in reviews.values()],
             'overall_rating': self.calculate_overall_rating(reviews),
-            'can_edit': can.edit,
             'can_add_roles': auth.can_add_review_roles(db, proposal),
         }
 
