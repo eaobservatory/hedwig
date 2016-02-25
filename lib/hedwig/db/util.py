@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -21,6 +21,31 @@ from __future__ import absolute_import, division, print_function, \
 from functools import wraps
 
 from ..error import NoSuchRecord
+
+
+def memoized(f):
+    """
+    Decorator to cache database metehod results.
+
+    Expects the cache dictionary and database object to be provided as
+    the first two arguments.  The database object is then passed as the
+    first argument to the decorated function.  If the cache object
+    is None, no memoization is performed.
+    """
+
+    @wraps(f)
+    def decorated(memo_cache, db, *args):
+        memo_key = (f.__name__,) + args
+        if (memo_cache is not None) and (memo_key in memo_cache):
+            return memo_cache[memo_key]
+
+        value = f(db, *args)
+
+        if memo_cache is not None:
+            memo_cache[memo_key] = value
+        return value
+
+    return decorated
 
 
 def require_not_none(f):
