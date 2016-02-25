@@ -1226,3 +1226,12 @@ def null_tuple(type_):
     """
 
     return type_(*((None,) * len(type_._fields)))
+
+
+def with_can_edit(obj, can_edit):
+    """
+    Add a "can_edit" field to a tuple and set it to the given value.
+    """
+
+    return namedtuple(type(obj).__name__ + 'WithCE',
+                      obj._fields + ('can_edit',))(*obj, can_edit=can_edit)

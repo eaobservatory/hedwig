@@ -30,7 +30,7 @@ from hedwig.type import Assessment, AttachmentState, \
     ResultCollection, ProposalFigureInfo, ProposalFigureCollection, \
     ProposalState, Reviewer, ReviewerRole, ReviewerCollection, \
     TextRole, \
-    null_tuple
+    null_tuple, with_can_edit
 
 
 class TypeTestCase(TestCase):
@@ -383,3 +383,20 @@ class TypeTestCase(TestCase):
             ReviewerRole.CTTEE_PRIMARY,
             ReviewerRole.CTTEE_SECONDARY,
         ])
+
+    def test_with_can_edit(self):
+        TestTuple = namedtuple('TestTuple', ('x', 'y'))
+
+        t = TestTuple(1, 2)
+
+        t_t = with_can_edit(t, True)
+        t_f = with_can_edit(t, False)
+
+        self.assertEqual(t_t.can_edit, True)
+        self.assertEqual(t_f.can_edit, False)
+
+        for t_x in (t_t, t_f):
+            self.assertEqual(type(t_x).__name__, 'TestTupleWithCE')
+            self.assertEqual(t_x._fields, ('x', 'y', 'can_edit'))
+            self.assertEqual(t_x.x, 1)
+            self.assertEqual(t_x.y, 2)
