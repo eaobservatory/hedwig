@@ -183,7 +183,8 @@ def with_review(permission):
             try:
                 reviewer = db.search_reviewer(
                     reviewer_id=reviewer_id,
-                    with_review=True, with_review_text=True).get_single()
+                    with_review=True, with_review_text=True,
+                    with_review_note=True).get_single()
             except NoSuchRecord:
                 raise HTTPNotFound('Reviewer record not found')
 

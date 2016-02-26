@@ -41,6 +41,20 @@
                 <textarea name="text" cols="80" rows="16" autofocus="autofocus">{{ reviewer.review_text if reviewer.review_text is not none }}</textarea>
             </li>
         {% endif %}
+        {% if role_info.note %}
+            <li>
+                <div class="explanation">
+                    You can use the area below to record your own notes about the proposal.
+                </div>
+                <label for="note">Personal notes</label>
+                <textarea name="note" cols="80" rows="8">{{ reviewer.review_note if reviewer.review_note is not none }}</textarea>
+            </li>
+            <li>
+                <label for="note_public">Share notes</label>
+                <input type="checkbox" name="note_public" value="yes" {{ 'checked="checked"' | safe if reviewer.review_note_public }} />
+                Notes visible to the review committee
+            </li>
+        {% endif %}
         {% if role_info.assessment %}
             <li>
                 <label for="assessment">Assessment</label>

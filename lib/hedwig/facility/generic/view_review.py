@@ -894,6 +894,12 @@ class GenericReview(object):
                         raise UserError('Please provide an integer '
                                         'self-assessment weighting.')
 
+                if role_info.note:
+                    reviewer = reviewer._replace(
+                        review_note=form['note'],
+                        review_note_format=FormatType.PLAIN,
+                        review_note_public=('note_public' in form))
+
                 # Validate the form inputs.
                 if role_info.assessment:
                     if not Assessment.is_valid(reviewer.review_assessment):
@@ -929,6 +935,9 @@ class GenericReview(object):
                     assessment=reviewer.review_assessment,
                     rating=reviewer.review_rating,
                     weight=reviewer.review_weight,
+                    note=reviewer.review_note,
+                    note_format=reviewer.review_note_format,
+                    note_public=reviewer.review_note_public,
                     is_update=reviewer.review_present)
 
                 flash('The review has been saved.')
@@ -975,8 +984,9 @@ class GenericReview(object):
         except NoSuchRecord:
             abstract = None
 
-        reviews = db.search_reviewer(proposal_id=proposal.id, with_review=True,
-                                     with_review_text=True)
+        reviews = db.search_reviewer(
+            proposal_id=proposal.id, with_review=True,
+            with_review_text=True, with_review_note=True)
 
         # Extract the PI before calling the template so that we can handle
         # the exception.
@@ -986,6 +996,16 @@ class GenericReview(object):
         except KeyError:
             pass
 
+        # Add "can_edit" fields and hide non-public notes so that we don't
+        # have to rely on the template to do this.
+        review_list = []
+        for review in reviews.values():
+            if not review.review_note_public:
+                review = review._replace(review_note=None)
+            review_list.append(with_can_edit(review, auth.for_review(
+                db, reviewer=review, proposal=proposal,
+                auth_cache=auth_cache).edit))
+
         return {
             'title': '{}: Reviews'.format(proposal_code),
             'proposal': proposal,
@@ -994,11 +1014,7 @@ class GenericReview(object):
             'abstract': abstract,
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id).values(),
-            'reviews': [
-                with_can_edit(x, auth.for_review(
-                    db, reviewer=x, proposal=proposal,
-                    auth_cache=auth_cache).edit)
-                for x in reviews.values()],
+            'reviews': review_list,
             'overall_rating': self.calculate_overall_rating(reviews),
             'can_add_roles': auth.can_add_review_roles(db, proposal),
         }
