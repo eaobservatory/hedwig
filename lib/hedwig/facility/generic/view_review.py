@@ -847,11 +847,13 @@ class GenericReview(object):
                                  reviewer_role=None):
         if reviewer is None:
             is_new_reviewer = True
+            is_own_review = True
             target = url_for('.proposal_review_new', proposal_id=proposal.id,
                              reviewer_role=reviewer_role)
             reviewer = null_tuple(Reviewer)
         else:
             is_new_reviewer = False
+            is_own_review = (reviewer.person_id == session['person']['id'])
             target = url_for('.review_edit', reviewer_id=reviewer.id)
             reviewer_role = reviewer.role
 
@@ -895,10 +897,20 @@ class GenericReview(object):
                                         'self-assessment weighting.')
 
                 if role_info.note:
-                    reviewer = reviewer._replace(
-                        review_note=form['note'],
-                        review_note_format=FormatType.PLAIN,
-                        review_note_public=('note_public' in form))
+                    # If this is our own review, the browser should have
+                    # sent the note text field.  Otherwise we preserve the
+                    # note field, only setting it if it is currently undefined,
+                    # as not to do so would trigger an error.
+                    if is_own_review:
+                        reviewer = reviewer._replace(
+                            review_note=form['note'],
+                            review_note_format=FormatType.PLAIN,
+                            review_note_public=('note_public' in form))
+                    elif reviewer.review_note is None:
+                        reviewer = reviewer._replace(
+                            review_note='',
+                            review_note_format=FormatType.PLAIN,
+                            review_note_public=False)
 
                 # Validate the form inputs.
                 if role_info.assessment:
@@ -953,6 +965,12 @@ class GenericReview(object):
         title_description = role_info.name
         if role_info.name_review:
             title_description += ' Review'
+
+        # If this is not the person's own review, hide the private note and
+        # adjust the role info to exclude it.
+        if role_info.note and not is_own_review:
+            role_info = role_info._replace(note=False)
+            reviewer = reviewer._replace(review_note=None)
 
         return {
             'title': '{}: {} {}'.format(
