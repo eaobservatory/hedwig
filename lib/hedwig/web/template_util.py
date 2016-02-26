@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -55,6 +55,10 @@ def register_template_utils(app):
         if value is None:
             return ''
         return AttachmentState.get_name(value)
+
+    @app.template_filter()
+    def count_true(list_):
+        return len(filter(None, list_))
 
     @app.template_filter()
     def fmt(value, format_):

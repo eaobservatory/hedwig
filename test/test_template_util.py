@@ -43,6 +43,16 @@ class TemplateUtilTestCase(WebAppTestCase):
 
         self.assertEqual(c.value, 13)
 
+    def test_filter_count_true(self):
+        f = self.app.jinja_env.filters['count_true']
+
+        self.assertEqual(f([]), 0)
+        self.assertEqual(f([False, False, False, False]), 0)
+        self.assertEqual(f([False, True,  False, False]), 1)
+        self.assertEqual(f([False, True,  False, True]),  2)
+        self.assertEqual(f([True,  True,  False, True]),  3)
+        self.assertEqual(f([True,  True,  True,  True]),  4)
+
     def test_filter_fmt(self):
         f = self.app.jinja_env.filters['fmt']
 
