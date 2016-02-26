@@ -23,7 +23,8 @@ import json
 
 from flask import Markup
 
-from hedwig.type import AttachmentState
+from hedwig.type import Assessment, AttachmentState, ProposalState, \
+    PublicationType, ReviewerRole, TextRole
 from hedwig.web.template_util import Counter
 
 from .dummy_app import WebAppTestCase
@@ -42,6 +43,18 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(c(), 12)
 
         self.assertEqual(c.value, 13)
+
+    def test_filter_assessment(self):
+        f = self.app.jinja_env.filters['assessment_name']
+
+        self.assertEqual(f(None), '')
+        self.assertEqual(f(Assessment.FEASIBLE), 'Feasible')
+
+    def test_filter_attachment(self):
+        f = self.app.jinja_env.filters['attachment_state_name']
+
+        self.assertEqual(f(None), '')
+        self.assertEqual(f(AttachmentState.READY), 'Ready')
 
     def test_filter_count_true(self):
         f = self.app.jinja_env.filters['count_true']
@@ -63,11 +76,13 @@ class TemplateUtilTestCase(WebAppTestCase):
     def test_filter_format_datetime(self):
         fd = self.app.jinja_env.filters['format_date']
         ft = self.app.jinja_env.filters['format_time']
+        fdt = self.app.jinja_env.filters['format_datetime']
 
         dt = datetime(2016, 4, 1, 15, 0, 0)
 
         self.assertEqual(fd(dt), '2016-04-01')
         self.assertEqual(ft(dt), '15:00')
+        self.assertEqual(fdt(dt), '2016-04-01 15:00')
 
     def test_filter_format_hours_hms(self):
         f = self.app.jinja_env.filters['format_hours_hms']
@@ -87,6 +102,39 @@ class TemplateUtilTestCase(WebAppTestCase):
         # Test usage of "extend" parameter".
         self.assertEqual(json.loads(f({'c': 'd'}, Markup(j))),
                          {'a': 'b', 'c': 'd'})
+
+    def test_filter_proposal_state(self):
+        f = self.app.jinja_env.filters['proposal_state_name']
+
+        self.assertEqual(f(ProposalState.SUBMITTED), 'Submitted')
+        self.assertEqual(f(999), 'Unknown state')
+
+        f = self.app.jinja_env.filters['proposal_state_short_name']
+
+        self.assertEqual(f(ProposalState.REVIEW), 'Rev')
+        self.assertEqual(f(999), '?')
+
+    def test_filter_publication_type(self):
+        f = self.app.jinja_env.filters['publication_type_name']
+
+        self.assertEqual(f(None), '')
+        self.assertEqual(f(PublicationType.ARXIV), 'arXiv article ID')
+
+    def test_filter_reviewer_role(self):
+        f = self.app.jinja_env.filters['reviewer_role_name']
+
+        self.assertEqual(f(None), 'Unknown role')
+        self.assertEqual(f(ReviewerRole.EXTERNAL), 'External')
+
+        f = self.app.jinja_env.filters['reviewer_role_class']
+
+        self.assertEqual(f(999), '')
+        self.assertEqual(f(ReviewerRole.EXTERNAL), 'reviewer_ext')
+
+    def test_filter_text_role(self):
+        f = self.app.jinja_env.filters['text_role_short_name']
+
+        self.assertEqual(f(TextRole.SCIENCE_CASE), 'sci')
 
     def test_filter_abbr(self):
         f = self.app.jinja_env.filters['abbr']
@@ -113,6 +161,23 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertFalse(t(AttachmentState.NEW))
         self.assertTrue(t(AttachmentState.ERROR))
         self.assertFalse(t(AttachmentState.READY))
+
+    def test_test_proposal_state(self):
+        t = self.app.jinja_env.tests['proposal_state_review']
+
+        self.assertFalse(t(ProposalState.SUBMITTED))
+        self.assertTrue(t(ProposalState.REVIEW))
+
+    def test_test_reviewer_role(self):
+        t = self.app.jinja_env.tests['reviewer_role_external']
+
+        self.assertFalse(t(ReviewerRole.TECH))
+        self.assertTrue(t(ReviewerRole.EXTERNAL))
+
+        t = self.app.jinja_env.tests['reviewer_role_review']
+
+        self.assertTrue(t(ReviewerRole.EXTERNAL))
+        self.assertFalse(t(ReviewerRole.FEEDBACK))
 
     def test_filter_format_text(self):
         f = self.app.jinja_env.filters['format_text']
