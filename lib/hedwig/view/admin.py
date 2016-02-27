@@ -142,6 +142,16 @@ class AdminView(object):
                         state_prev=state_prev)
                     n_reset += 1
 
+                elif param.startswith('moc_'):
+                    id_ = int(param[4:])
+                    state_prev = int(form['prev_{}'.format(param)])
+                    if state_prev == AttachmentState.NEW:
+                        continue
+                    db.update_moc(
+                        moc_id=id_, state=AttachmentState.NEW,
+                        state_prev=state_prev)
+                    n_reset += 1
+
             if n_reset:
                 flash('The status for {} {} has been reset.',
                       n_reset, ('entry' if n_reset == 1 else 'entries'))
@@ -166,6 +176,9 @@ class AdminView(object):
 
         ctx.update({
             'title': 'Processing Status',
+            'mocs': self._add_moc_facility(db.search_moc(
+                    facility_id=None, public=None,
+                    state=unready, order_by_date=True).values(), facilities),
         })
 
         return ctx
@@ -192,6 +205,19 @@ class AdminView(object):
             result.append(
                 namedtuple('EntryWithProposal', entry._fields + ('proposal',))(
                     *entry, proposal=proposal))
+
+        return result
+
+    def _add_moc_facility(self, entries, facilities):
+        result = []
+
+        for entry in entries:
+            facility = facilities.get(entry.facility_id)
+            if facility is None:
+                continue
+            result.append(namedtuple(
+                'EntryWithCode', entry._fields + ('facility_code',))(
+                *entry, facility_code=facility.code))
 
         return result
 

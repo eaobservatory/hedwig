@@ -94,6 +94,38 @@
         </p>
     {% endif %}
 
+    <h2>Coverage Maps</h2>
+
+    {% if mocs %}
+        <table>
+            <tr>
+                <th>State</th>
+                <th>Date (UT)</th>
+                <th>Name</th>
+                <th>Reset?</th>
+            </tr>
+            {% for moc in mocs %}
+                    <tr>
+                    <td>{{ moc.state | attachment_state_name }}</td>
+                    <td>{{ moc.uploaded | format_datetime }}</td>
+                    <td><a href="{{ url_for(moc.facility_code | fmt('{}.moc_edit'), moc_id=moc.id) }}">{{ moc.name }}</a></td>
+                    <td>
+                        {% if moc.state is attachment_new %}
+                            &nbsp;
+                        {% else %}
+                            <input type="checkbox" name="{{ moc.id | fmt('moc_{}') }}" value="1" />
+                            <input type="hidden" name="{{ moc.id | fmt('prev_moc_{}') }}" value="{{ moc.state }}" />
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p class="not_present">
+            All coverage maps appear to be ready.
+        </p>
+    {% endif %}
+
     <p>
         <input type="submit" name="submit" value="Reset marked entries" />
     </p>
