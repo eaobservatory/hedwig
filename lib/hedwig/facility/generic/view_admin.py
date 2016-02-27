@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -23,6 +23,7 @@ from datetime import datetime
 
 from ...email.format import render_email_template
 from ...error import NoSuchRecord, UserError
+from ...file.moc import read_moc
 from ...type import Affiliation, Call, Category, \
     FormatType, GroupType, MOCInfo, \
     ProposalWithCode, Queue, \
@@ -792,37 +793,29 @@ class GenericAdmin(object):
                     description_format=int(form['description_format']),
                     public=('public' in form))
 
-                moc_file = None
+                moc_object = None
                 if file_:
                     try:
-                        moc_file = file_.read(10 * 1024 * 1024)
-
-                        # Did we get all of the file within the size limit?
-                        if len(file_.read(1)):
-                            raise UserError('The uploaded file was too large.')
-
+                        moc_object = read_moc(file_=file_,
+                                              max_order=self.get_moc_order())
                     finally:
                         file_.close()
 
                 elif moc_id is None:
                     raise UserError('No new MOC file was received.')
 
-                moc_order = (None if moc_file is None
-                             else self.get_moc_order())
-
                 if moc_id is None:
                     moc_id = db.add_moc(self.id_, moc.name, moc.description,
                                         moc.description_format,
-                                        moc.public, moc_order, moc_file)
+                                        moc.public, moc_object)
                     flash('The new coverage map has been stored.')
                 else:
                     db.update_moc(
                         moc_id, name=moc.name, description=moc.description,
                         description_format=moc.description_format,
-                        public=moc.public,
-                        moc_order=moc_order, moc_file=moc_file)
+                        public=moc.public, moc_object=moc_object)
 
-                    if moc_file is None:
+                    if moc_object is None:
                         flash('The coverage map details have been updated.')
                     else:
                         flash('The updated coverage map has been stored.')

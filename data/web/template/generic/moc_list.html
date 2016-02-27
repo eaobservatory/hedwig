@@ -14,6 +14,7 @@
         <th>Uploaded</th>
         <th>Cells</th>
         <th>Area</th>
+        <th>Status</th>
         <th colspan="2">Actions</th>
     </tr>
     {% for moc in mocs %}
@@ -27,6 +28,7 @@
             <td>{{ moc.uploaded | format_datetime }} UT</td>
             <td>{{ moc.num_cells }}</td>
             <td>{{ moc.area | fmt('{:0.1f}') }} sq. deg.</td>
+            <td>{{ moc.state | attachment_state_name }}</td>
             <td><a href="{{ url_for('.moc_edit', moc_id=moc.id) }}">Edit</a></td>
             <td><a href="{{ url_for('.moc_delete', moc_id=moc.id) }}">Delete</a></td>
         </tr>
