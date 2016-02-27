@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -86,3 +86,25 @@ def get_logger(name):
     """
 
     return FormattedLogger(logging.getLogger(name))
+
+
+def list_in_blocks(iterable, block_size):
+    """
+    Given an iterable object (e.g. a list) yield a sequence of lists
+    each containing up to block_size items.
+    """
+
+    block = []
+
+    for value in iterable:
+        block.append(value)
+
+        if len(block) >= block_size:
+            yield block
+
+            # Assign a new list rather than clearing in case the caller
+            # keeps a reference to a previously yielded list.
+            block = []
+
+    if block:
+        yield block

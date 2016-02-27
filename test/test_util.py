@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict
 from unittest import TestCase
 
-from hedwig.util import get_countries
+from hedwig.util import get_countries, list_in_blocks
 
 
 class UtilTest(TestCase):
@@ -43,3 +43,16 @@ class UtilTest(TestCase):
         # Check we get the same object if we call the function again.
         cc = get_countries()
         self.assertIs(cc, c)
+
+    def test_list_in_blocks(self):
+        self.assertEqual(list(list_in_blocks(range(0, 3), 5)),
+                         [[0, 1, 2]])
+
+        self.assertEqual(list(list_in_blocks(range(0, 10), 5)),
+                         [[0, 1, 2, 3, 4], [5, 6, 7, 8, 9]])
+
+        self.assertEqual(list(list_in_blocks(range(0, 12), 5)),
+                         [[0, 1, 2, 3, 4], [5, 6, 7, 8, 9], [10, 11]])
+
+        self.assertEqual(list(list_in_blocks([], 5)),
+                         [])
