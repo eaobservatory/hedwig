@@ -22,7 +22,7 @@ hedwigctl - Hedwig proposal system control tool
 
 Usage:
     hedwigctl poll [-v | -q]
-        (email | figure | pdf | publication | feedback | all)
+        (email | figure | pdf | publication | feedback | moc | all)
         [--pause <delay>] [--pidfile <file>] [--logfile <file>]
     hedwigctl test_server [--debug] [--https] [--port <port>]
     hedwigctl [-v | -q] initialize_database
@@ -143,7 +143,8 @@ def poll(args):
 
     from hedwig.admin.poll import send_proposal_feedback
     from hedwig.config import get_database
-    from hedwig.file.poll import process_proposal_figure, process_proposal_pdf
+    from hedwig.file.poll import process_moc, \
+        process_proposal_figure, process_proposal_pdf
     from hedwig.email.poll import send_queued_messages
     from hedwig.publication.poll import process_publication_references
     from hedwig.util import get_logger
@@ -193,6 +194,13 @@ def poll(args):
 
             if n_processed:
                 logger.info('Sent feedback for {} proposal(s)', n_processed)
+
+        if args['moc'] or args['all']:
+            logger.debug('Checking for MOC files to import')
+            n_processed = process_moc(db)
+
+            if n_processed:
+                logger.info('Imported cells from {} MOC file(s)', n_processed)
 
         if args['--pause']:
             sleep(args['--pause'])

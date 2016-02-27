@@ -23,9 +23,49 @@ from ..error import ConsistencyError, ConversionError
 from ..type import AttachmentState, FigureType
 from ..util import get_logger
 from .image import create_thumbnail_and_preview
+from .moc import read_moc
 from .pdf import pdf_to_png, ps_to_png
 
 logger = get_logger(__name__)
+
+
+def process_moc(db):
+    """
+    Function to process new clash tool MOC files by importing their cells
+    into the "moc_cell" database table in order to make them searchable.
+    """
+
+    n_processed = 0
+
+    for moc_info in db.search_moc(facility_id=None, public=None,
+                                  state=AttachmentState.NEW).values():
+        logger.debug('Importing MOC {}', moc_info.id)
+
+        try:
+            db.update_moc(moc_id=moc_info.id, state=AttachmentState.PROCESSING,
+                          state_prev=AttachmentState.NEW)
+        except ConsistencyError:
+            continue
+
+        try:
+            moc = read_moc(buff=db.get_moc_fits(moc_info.id))
+
+            db.update_moc_cell(moc_info.id, moc)
+
+            try:
+                db.update_moc(moc_id=moc_info.id, state=AttachmentState.READY,
+                              state_prev=AttachmentState.PROCESSING)
+
+                n_processed += 1
+
+            except ConsistencyError:
+                continue
+
+        except Exception as e:
+            logger.error('Error importing MOC {}: {}', moc_info.id, e.message)
+            db.update_moc(moc_id=moc_info.id, state=AttachmentState.ERROR)
+
+    return n_processed
 
 
 def process_proposal_figure(db):
