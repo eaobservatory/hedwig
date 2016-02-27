@@ -152,7 +152,7 @@ class CalculatorPart(object):
         return ans
 
     def search_moc(self, facility_id, public, moc_id=None, state=None,
-                   with_description=False):
+                   with_description=False, order_by_date=False):
         """
         Search for MOC records for a facility.
         """
@@ -195,10 +195,15 @@ class CalculatorPart(object):
             else:
                 stmt = stmt.where(moc.c.state == state)
 
+        if order_by_date:
+            stmt = stmt.order_by(moc.c.uploaded.desc())
+        else:
+            stmt = stmt.order_by(moc.c.id.asc())
+
         ans = ResultCollection()
 
         with self._transaction() as conn:
-            for row in conn.execute(stmt.order_by(moc.c.id.asc())):
+            for row in conn.execute(stmt):
                 values = default.copy()
                 values.update(**row)
                 ans[row['id']] = MOCInfo(**values)
