@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -23,11 +23,12 @@ from cStringIO import StringIO
 from datetime import datetime
 
 from pymoc import MOC
-from pymoc.io.fits import write_moc_fits
 
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
-    NoSuchRecord
-from hedwig.type import Calculation, FormatType, MOCInfo, ResultCollection
+    Error, NoSuchRecord
+from hedwig.file.moc import read_moc, write_moc
+from hedwig.type import AttachmentState, Calculation, FormatType, \
+    MOCInfo, ResultCollection
 
 from .dummy_db import DBTestCase
 
@@ -99,20 +100,17 @@ class DBCalculatorTest(DBTestCase):
 
         moc_a = MOC(order=1, cells=(4, 7))
 
-        with closing(StringIO()) as f:
-            write_moc_fits(moc_a, f)
-            moc_a_fits = f.getvalue()
-
         moc_id = self.db.add_moc(facility_id, 'test',
                                  'A Test MOC', FormatType.PLAIN,
-                                 True, 2, moc_a_fits)
+                                 True, moc_a)
         self.assertIsInstance(moc_id, int)
 
         with self.assertRaises(NoSuchRecord):
             self.db.get_moc_fits(moc_id + 1)
 
         moc_a_fits_fetched = self.db.get_moc_fits(moc_id)
-        self.assertEqual(moc_a_fits_fetched, moc_a_fits)
+        moc_a_fetched = read_moc(buff=moc_a_fits_fetched)
+        self.assertEqual(moc_a_fetched, moc_a)
 
         mocs = self.db.search_moc(facility_id, None, with_description=True)
         self.assertIsInstance(mocs, ResultCollection)
@@ -126,6 +124,11 @@ class DBCalculatorTest(DBTestCase):
         self.assertIsInstance(moc_info.uploaded, datetime)
         self.assertEqual(moc_info.num_cells, 2)
         self.assertAlmostEqual(moc_info.area, 1718.873, places=3)
+        self.assertEqual(moc_info.state, AttachmentState.NEW)
+
+        # Update the moc_cell table (emulating poll process).
+        update = self.db.update_moc_cell(moc_id, moc_a)
+        self.assertEqual(update, {1: 'insert'})
 
         result = self.db.search_moc_cell(facility_id, None, 2, 16)
         self.assertIsInstance(result, ResultCollection)
@@ -147,23 +150,92 @@ class DBCalculatorTest(DBTestCase):
 
         moc_b = MOC(order=1, cells=(5, 6))
 
-        with closing(StringIO()) as f:
-            write_moc_fits(moc_b, f)
-            moc_b_fits = f.getvalue()
-
         self.db.update_moc(moc_id, 'test2',
                            'Another Test MOC', FormatType.PLAIN,
-                           False, 2, moc_b_fits)
+                           False, moc_b)
 
         moc_b_fits_fetched = self.db.get_moc_fits(moc_id)
-        self.assertEqual(moc_b_fits_fetched, moc_b_fits)
+        moc_b_fetched = read_moc(buff=moc_b_fits_fetched)
+        self.assertEqual(moc_b_fetched, moc_b)
+
+        # Update the moc_cell table (emulating poll process).
+        update = self.db.update_moc_cell(moc_id, moc_b)
+        self.assertEqual(update, {1: 'bulk'})
 
         result = self.db.search_moc_cell(facility_id, None, 2, 20)
         self.assertEqual(len(result), 1)
 
+        with self.assertRaises(ConsistencyError):
+            self.db.update_moc(moc_id, state=AttachmentState.ERROR,
+                               state_prev=AttachmentState.PROCESSING)
+
+        with self.assertRaisesRegexp(Error, 'Invalid state'):
+            self.db.update_moc(moc_id, state=999,
+                               state_prev=AttachmentState.PROCESSING)
+
+        with self.assertRaisesRegexp(Error, 'Invalid previous state'):
+            self.db.update_moc(moc_id, state=AttachmentState.ERROR,
+                               state_prev=999)
+
+        self.db.update_moc(moc_id, state=AttachmentState.ERROR,
+                           state_prev=AttachmentState.NEW)
+
+        moc_info = self.db.search_moc(facility_id, None, moc_id=moc_id,
+                                      with_description=True).get_single()
+        self.assertIsInstance(moc_info, MOCInfo)
+        self.assertEqual(moc_info.id, moc_id)
+        self.assertEqual(moc_info.name, 'test2')
+        self.assertEqual(moc_info.description, 'Another Test MOC')
+        self.assertEqual(moc_info.public, False)
+        self.assertIsInstance(moc_info.uploaded, datetime)
+        self.assertEqual(moc_info.num_cells, 2)
+        self.assertAlmostEqual(moc_info.area, 1718.873, places=3)
+        self.assertEqual(moc_info.state, AttachmentState.ERROR)
+
         self.db.delete_moc(facility_id, moc_id)
         mocs = self.db.search_moc(facility_id=None, public=None)
         self.assertEqual(len(mocs), 0)
+
+    def test_moc_update(self):
+        facility_id = self.db.ensure_facility('moc testing facility')
+
+        moc = MOC(order=5, cells=(1, 2, 3))
+
+        moc_id = self.db.add_moc(facility_id, 'test', 'test', FormatType.PLAIN,
+                                 True, moc)
+        self.assertIsInstance(moc_id, int)
+
+        self.assertEqual(self.db.update_moc_cell(moc_id, moc), {
+            5: 'insert'})
+        self.assertEqual(self.db._get_moc_from_cell(moc_id), moc)
+
+        moc.add(7, (1001, 1002, 1003))
+
+        self.assertEqual(self.db.update_moc_cell(moc_id, moc), {
+            5: 'unchanged',
+            7: 'insert'})
+        self.assertEqual(self.db._get_moc_from_cell(moc_id), moc)
+
+        moc.add(5, (11, 12, 13))
+        moc.remove(7, (1001, 1002, 1003))
+        self.assertEqual(self.db.update_moc_cell(moc_id, moc), {
+            5: 'individual',
+            7: 'delete'})
+        self.assertEqual(self.db._get_moc_from_cell(moc_id), moc)
+
+        moc.add(5, (21, 22, 23))
+        self.assertEqual(self.db.update_moc_cell(moc_id, moc), {
+            5: 'individual'})
+        self.assertEqual(self.db._get_moc_from_cell(moc_id), moc)
+
+        moc.add(5, (31, 32, 33))
+        moc.remove(5, (1, 2, 3, 11, 12, 13))
+        self.assertEqual(self.db.update_moc_cell(moc_id, moc), {
+            5: 'bulk'})
+        self.assertEqual(self.db._get_moc_from_cell(moc_id), moc)
+
+        # Check the MOC really ended up as expected.
+        self.assertEqual(list(moc), [(5, frozenset((21, 22, 23, 31, 32, 33)))])
 
     def _create_test_proposal(self):
         facility_id = self.db.ensure_facility('f')

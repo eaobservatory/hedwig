@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,19 +18,17 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from contextlib import closing
-from cStringIO import StringIO
 from datetime import datetime
 
 from pymoc import MOC
-from pymoc.io.fits import read_moc_fits
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_, not_, or_
 from sqlalchemy.sql.functions import coalesce
 from sqlalchemy.sql.functions import max as max_
 
 from ...error import ConsistencyError, Error, UserError
-from ...type import Calculation, FormatType, MOCInfo, \
+from ...file.moc import write_moc
+from ...type import AttachmentState, Calculation, FormatType, MOCInfo, \
     OrderedResultCollection, ResultCollection
 from ..meta import calculator, calculation, facility, moc, moc_cell, moc_fits
 from ..util import require_not_none
@@ -60,15 +58,9 @@ class CalculatorPart(object):
             return result.inserted_primary_key[0]
 
     def add_moc(self, facility_id, name, description, description_format,
-                public, moc_order, moc_file):
+                public, moc_object):
         if not FormatType.is_valid(description_format, is_system=True):
             raise UserError('Text format not recognised.')
-
-        moc_object = MOC()
-        with closing(StringIO(moc_file)) as f:
-            read_moc_fits(moc_object, f)
-
-        moc_object.normalize(max_order=moc_order)
 
         with self._transaction() as conn:
             result = conn.execute(moc.insert().values({
@@ -80,16 +72,15 @@ class CalculatorPart(object):
                 moc.c.uploaded: datetime.utcnow(),
                 moc.c.num_cells: moc_object.cells,
                 moc.c.area: moc_object.area_sq_deg,
+                moc.c.state: AttachmentState.NEW,
             }))
 
             moc_id = result.inserted_primary_key[0]
 
             conn.execute(moc_fits.insert().values({
                 moc_fits.c.moc_id: moc_id,
-                moc_fits.c.fits: moc_file,
+                moc_fits.c.fits: write_moc(moc_object),
             }))
-
-            self._update_moc_cells(conn, moc_id, moc_object, no_delete=True)
 
         return moc_id
 
@@ -160,7 +151,7 @@ class CalculatorPart(object):
 
         return ans
 
-    def search_moc(self, facility_id, public, moc_id=None,
+    def search_moc(self, facility_id, public, moc_id=None, state=None,
                    with_description=False):
         """
         Search for MOC records for a facility.
@@ -174,6 +165,7 @@ class CalculatorPart(object):
             moc.c.uploaded,
             moc.c.num_cells,
             moc.c.area,
+            moc.c.state,
         ]
 
         if with_description:
@@ -196,6 +188,12 @@ class CalculatorPart(object):
 
         if moc_id is not None:
             stmt = stmt.where(moc.c.id == moc_id)
+
+        if state is not None:
+            if isinstance(state, list) or isinstance(state, tuple):
+                stmt = stmt.where(moc.c.state.in_(state))
+            else:
+                stmt = stmt.where(moc.c.state == state)
 
         ans = ResultCollection()
 
@@ -240,7 +238,8 @@ class CalculatorPart(object):
                 ans[row['id']] = MOCInfo(description=None,
                                          description_format=None,
                                          uploaded=None,
-                                         num_cells=None, area=None, **row)
+                                         num_cells=None, area=None, state=None,
+                                         **row)
 
         return ans
 
@@ -280,8 +279,10 @@ class CalculatorPart(object):
 
     def update_moc(self, moc_id, name=None,
                    description=None, description_format=None, public=None,
-                   moc_order=None, moc_file=None):
+                   moc_object=None, state=None, state_prev=None):
         values = {}
+
+        stmt = moc.update().where(moc.c.id == moc_id)
 
         if name is not None:
             values[moc.c.name] = name
@@ -297,28 +298,28 @@ class CalculatorPart(object):
         if public is not None:
             values[moc.c.public] = public
 
-        moc_object = None
-        if moc_file is not None:
-            if moc_order is None:
-                raise Error('MOC order not specified with updated MOC')
-
-            moc_object = MOC()
-            with closing(StringIO(moc_file)) as f:
-                read_moc_fits(moc_object, f)
-
-            moc_object.normalize(max_order=moc_order)
-
+        if moc_object is not None:
             values[moc.c.uploaded] = datetime.utcnow()
             values[moc.c.num_cells] = moc_object.cells
             values[moc.c.area] = moc_object.area_sq_deg
+            values[moc.c.state] = AttachmentState.NEW
+
+        elif state is not None:
+            if not AttachmentState.is_valid(state):
+                raise Error('Invalid state.')
+
+            values[moc.c.state] = state
+
+        if state_prev is not None:
+            if not AttachmentState.is_valid(state_prev):
+                raise Error('Invalid previous state.')
+            stmt = stmt.where(moc.c.state == state_prev)
 
         if not values:
             raise Error('No moc updates specified')
 
         with self._transaction() as conn:
-            result = conn.execute(moc.update().where(
-                moc.c.id == moc_id
-            ).values(values))
+            result = conn.execute(stmt.values(values))
 
             if result.rowcount != 1:
                 raise ConsistencyError(
@@ -327,20 +328,124 @@ class CalculatorPart(object):
             if moc_object is not None:
                 conn.execute(moc_fits.update().where(
                     moc_fits.c.moc_id == moc_id
-                ).values({moc_fits.c.fits: moc_file}))
+                ).values({moc_fits.c.fits: write_moc(moc_object)}))
 
-                self._update_moc_cells(conn, moc_id, moc_object)
+    def update_moc_cell(self, moc_id, moc_object):
+        """
+        Update the moc_cell database table.
 
-    def _update_moc_cells(self, conn, moc_id, moc_object, no_delete=False):
-        if not no_delete:
-            conn.execute(moc_cell.delete().where(
-                moc_cell.c.moc_id == moc_id
-            ))
+        The entries for the MOC identified by moc_id are updated so that
+        they match the entries of the MOC provided as moc_object.
 
-        for (order, cells) in moc_object:
-            for cell in cells:
-                conn.execute(moc_cell.insert().values({
-                    moc_cell.c.moc_id: moc_id,
-                    moc_cell.c.order: order,
-                    moc_cell.c.cell: cell,
-                }))
+        This method works in an order-by-order manner and attempts
+        to determine the most efficient update method for each order.
+        If the number of original cells is greater than the number of
+        unchanged cells, then all exising entries are deleted and the new
+        cells inserted.  Otherwise removed cells are deleted individually
+        and newly added cells inserted.
+
+        For debugging purposes, this method returns a dictionary indicating
+        the action taken for each order.
+        """
+
+        debug_info = {}
+
+        moc_existing = self._get_moc_from_cell(moc_id)
+
+        for order in range(0, max(moc_existing.order, moc_object.order) + 1):
+            # MOC object gives us a frozenset object of cells for the order.
+            # We want to work in terms of these sets in order to have the
+            # database updated to exactly the same representation.  If we
+            # tried taking the intersection of MOCs directly, for example,
+            # then the MOC object may alter the representation, such as by
+            # split cells.
+            existing = moc_existing[order]
+            replacement = moc_object[order]
+
+            bulk_delete = False
+            delete = None
+            insert = None
+
+            # Determine what to do: simpler cases first.
+            if not replacement:
+                if not existing:
+                    # No cells in either MOC: nothing to do.
+                    pass
+
+                else:
+                    # No cells in the replacement moc: delete existing cells.
+                    debug_info[order] = 'delete'
+                    bulk_delete = True
+
+            elif not existing:
+                # No exising cells present: just insert everything.
+                debug_info[order] = 'insert'
+                insert = replacement
+
+            else:
+                # There are existing and replacement cells: determine best
+                # strategy.
+                intersection = existing.intersection(replacement)
+
+                if len(existing) > len(intersection):
+                    # Bulk deletion seems most efficient.
+                    debug_info[order] = 'bulk'
+                    bulk_delete = True
+                    insert = replacement
+                else:
+                    # Compute sets of individual deletions and replacements.
+                    delete = existing.difference(intersection)
+                    insert = replacement.difference(intersection)
+
+                    if (not delete) and (not insert):
+                        # No cells changed: nothing to do.
+                        debug_info[order] = 'unchanged'
+                        continue
+
+                    debug_info[order] = 'individual'
+
+            # Now go ahead and perform update actions.
+            if bulk_delete:
+                with self._transaction() as conn:
+                    conn.execute(moc_cell.delete().where(and_(
+                        moc_cell.c.moc_id == moc_id,
+                        moc_cell.c.order == order)))
+
+            if delete is not None:
+                with self._transaction() as conn:
+                    for cell in delete:
+                        conn.execute(moc_cell.delete().where(and_(
+                            moc_cell.c.moc_id == moc_id,
+                            moc_cell.c.order == order,
+                            moc_cell.c.cell == cell)))
+
+            if insert is not None:
+                with self._transaction() as conn:
+                    for cell in insert:
+                        conn.execute(moc_cell.insert().values({
+                            moc_cell.c.moc_id: moc_id,
+                            moc_cell.c.order: order,
+                            moc_cell.c.cell: cell,
+                        }))
+
+        return debug_info
+
+    def _get_moc_from_cell(self, moc_id, _conn=None):
+        """
+        Retrieve a MOC object from the moc_cell database table.
+
+        This routine should not generally be used to retrieve a MOC: instead
+        use get_moc_fits, or search the moc using search_moc_cell.  This
+        method is intended to be used only to optimize update operations
+        (and for use by the test suite).
+        """
+
+        moc_object = MOC()
+
+        with self._transaction(_conn=_conn) as conn:
+            for (order, cell) in conn.execute(select([
+                    moc_cell.c.order, moc_cell.c.cell,
+                    ]).where(moc_cell.c.moc_id == moc_id)):
+                moc_object.add(order, (cell,))
+
+        return moc_object

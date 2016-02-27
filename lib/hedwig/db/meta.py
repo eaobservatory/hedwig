@@ -306,6 +306,7 @@ moc = Table(
     Column('uploaded', DateTime(), nullable=False),
     Column('num_cells', Integer, nullable=False),
     Column('area', Float(precision=53, asdecimal=False), nullable=True),
+    Column('state', Integer, nullable=False, index=True),
     UniqueConstraint('facility_id', 'name'),
     **_table_opts)
 

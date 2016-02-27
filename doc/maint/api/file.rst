@@ -16,6 +16,11 @@ hedwig.file.info
 
 .. automodule:: hedwig.file.info
 
+hedwig.file.moc
+---------------
+
+.. automodule:: hedwig.file.moc
+
 hedwig.file.pdf
 ---------------
 
