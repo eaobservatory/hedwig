@@ -127,7 +127,7 @@ class DBCalculatorTest(DBTestCase):
         self.assertEqual(moc_info.state, AttachmentState.NEW)
 
         # Update the moc_cell table (emulating poll process).
-        update = self.db.update_moc_cell(moc_id, moc_a)
+        update = self.db.update_moc_cell(moc_id, moc_a, block_pause=0)
         self.assertEqual(update, {1: 'insert'})
 
         result = self.db.search_moc_cell(facility_id, None, 2, 16)
@@ -159,7 +159,7 @@ class DBCalculatorTest(DBTestCase):
         self.assertEqual(moc_b_fetched, moc_b)
 
         # Update the moc_cell table (emulating poll process).
-        update = self.db.update_moc_cell(moc_id, moc_b)
+        update = self.db.update_moc_cell(moc_id, moc_b, block_pause=0)
         self.assertEqual(update, {1: 'bulk'})
 
         result = self.db.search_moc_cell(facility_id, None, 2, 20)
@@ -205,32 +205,32 @@ class DBCalculatorTest(DBTestCase):
                                  True, moc)
         self.assertIsInstance(moc_id, int)
 
-        self.assertEqual(self.db.update_moc_cell(moc_id, moc), {
+        self.assertEqual(self.db.update_moc_cell(moc_id, moc, block_pause=0), {
             5: 'insert'})
         self.assertEqual(self.db._get_moc_from_cell(moc_id), moc)
 
         moc.add(7, (1001, 1002, 1003))
 
-        self.assertEqual(self.db.update_moc_cell(moc_id, moc), {
+        self.assertEqual(self.db.update_moc_cell(moc_id, moc, block_pause=0), {
             5: 'unchanged',
             7: 'insert'})
         self.assertEqual(self.db._get_moc_from_cell(moc_id), moc)
 
         moc.add(5, (11, 12, 13))
         moc.remove(7, (1001, 1002, 1003))
-        self.assertEqual(self.db.update_moc_cell(moc_id, moc), {
+        self.assertEqual(self.db.update_moc_cell(moc_id, moc, block_pause=0), {
             5: 'individual',
             7: 'delete'})
         self.assertEqual(self.db._get_moc_from_cell(moc_id), moc)
 
         moc.add(5, (21, 22, 23))
-        self.assertEqual(self.db.update_moc_cell(moc_id, moc), {
+        self.assertEqual(self.db.update_moc_cell(moc_id, moc, block_pause=0), {
             5: 'individual'})
         self.assertEqual(self.db._get_moc_from_cell(moc_id), moc)
 
         moc.add(5, (31, 32, 33))
         moc.remove(5, (1, 2, 3, 11, 12, 13))
-        self.assertEqual(self.db.update_moc_cell(moc_id, moc), {
+        self.assertEqual(self.db.update_moc_cell(moc_id, moc, block_pause=0), {
             5: 'bulk'})
         self.assertEqual(self.db._get_moc_from_cell(moc_id), moc)
 

@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from datetime import datetime
+from time import sleep
 
 from pymoc import MOC
 from sqlalchemy.sql import select
@@ -30,6 +31,7 @@ from ...error import ConsistencyError, Error, UserError
 from ...file.moc import write_moc
 from ...type import AttachmentState, Calculation, FormatType, MOCInfo, \
     OrderedResultCollection, ResultCollection
+from ...util import list_in_blocks
 from ..meta import calculator, calculation, facility, moc, moc_cell, moc_fits
 from ..util import require_not_none
 
@@ -335,7 +337,8 @@ class CalculatorPart(object):
                     moc_fits.c.moc_id == moc_id
                 ).values({moc_fits.c.fits: write_moc(moc_object)}))
 
-    def update_moc_cell(self, moc_id, moc_object):
+    def update_moc_cell(self, moc_id, moc_object,
+                        block_size=1000, block_pause=1):
         """
         Update the moc_cell database table.
 
@@ -417,21 +420,25 @@ class CalculatorPart(object):
                         moc_cell.c.order == order)))
 
             if delete is not None:
-                with self._transaction() as conn:
-                    for cell in delete:
-                        conn.execute(moc_cell.delete().where(and_(
-                            moc_cell.c.moc_id == moc_id,
-                            moc_cell.c.order == order,
-                            moc_cell.c.cell == cell)))
+                for delete_block in list_in_blocks(delete, block_size):
+                    sleep(block_pause)
+                    with self._transaction() as conn:
+                        for cell in delete_block:
+                            conn.execute(moc_cell.delete().where(and_(
+                                moc_cell.c.moc_id == moc_id,
+                                moc_cell.c.order == order,
+                                moc_cell.c.cell == cell)))
 
             if insert is not None:
-                with self._transaction() as conn:
-                    for cell in insert:
-                        conn.execute(moc_cell.insert().values({
-                            moc_cell.c.moc_id: moc_id,
-                            moc_cell.c.order: order,
-                            moc_cell.c.cell: cell,
-                        }))
+                for insert_block in list_in_blocks(insert, block_size):
+                    sleep(block_pause)
+                    with self._transaction() as conn:
+                        for cell in insert_block:
+                            conn.execute(moc_cell.insert().values({
+                                moc_cell.c.moc_id: moc_id,
+                                moc_cell.c.order: order,
+                                moc_cell.c.cell: cell,
+                            }))
 
         return debug_info
 
