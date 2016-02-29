@@ -30,7 +30,8 @@ from ...error import NoSuchRecord, UserError
 from ...view import auth
 from ...view.tool import BaseTargetTool
 from ...web.util import ErrorPage, HTTPNotFound, session, url_for
-from ...type import FileTypeInfo, Link, TargetObject, null_tuple
+from ...type import AttachmentState, FileTypeInfo, Link, TargetObject, \
+    null_tuple
 
 TargetCoord = namedtuple('TargetCoord', ('x', 'y', 'system'))
 
@@ -83,10 +84,10 @@ class ClashTool(BaseTargetTool):
         clashes = None
         non_clashes = None
 
-        if not form:
-            self._check_mocs_exist(db)
+        public = self._determine_public_constraint(db)
+        moc_ready = self._check_mocs_exist_and_ready(db, public)
 
-        else:
+        if form is not None:
             target = target._replace(x=form['x'], y=form['y'],
                                      system=int(form['system']))
 
@@ -97,7 +98,8 @@ class ClashTool(BaseTargetTool):
                     parse_coord(target.system, target.x, target.y,
                                 target_name))
 
-                (clashes, non_clashes) = self._do_moc_search(db, [target_obj])
+                (clashes, non_clashes) = self._do_moc_search(
+                    db, [target_obj], public=public)
 
             except UserError as e:
                 message = e.message
@@ -112,6 +114,7 @@ class ClashTool(BaseTargetTool):
             'message': message,
             'clashes': clashes,
             'non_clashes': non_clashes,
+            'moc_ready': moc_ready,
             'target_url': url_for('.tool_clash'),
             'target_moc_info': '.tool_clash_moc_info',
             'target_upload': url_for('.tool_upload_clash'),
@@ -126,10 +129,10 @@ class ClashTool(BaseTargetTool):
         clashes = None
         non_clashes = None
 
-        if form is None:
-            self._check_mocs_exist(db)
+        public = self._determine_public_constraint(db)
+        moc_ready = self._check_mocs_exist_and_ready(db, public)
 
-        else:
+        if form is not None:
             try:
                 if file_:
                     try:
@@ -146,8 +149,8 @@ class ClashTool(BaseTargetTool):
                 # and from Astropy objects twice.
                 target_objects = parse_source_list(buff).to_object_list()
 
-                (clashes, non_clashes) = self._do_moc_search(db,
-                                                             target_objects)
+                (clashes, non_clashes) = self._do_moc_search(
+                    db, target_objects, public=public)
 
             except UserError as e:
                 message = e.message
@@ -161,6 +164,7 @@ class ClashTool(BaseTargetTool):
             'message': message,
             'clashes': clashes,
             'non_clashes': non_clashes,
+            'moc_ready': moc_ready,
             'target_url': url_for('.tool_upload_clash'),
             'target_moc_info': '.tool_clash_moc_info',
         }
@@ -176,38 +180,54 @@ class ClashTool(BaseTargetTool):
                     '.proposal_view', proposal_id=proposal.id,
                     _anchor='targets'))])
 
-        self._check_mocs_exist(db)
+        public = self._determine_public_constraint(db)
+        moc_ready = self._check_mocs_exist_and_ready(db, public)
 
-        (clashes, non_clashes) = self._do_moc_search(db, target_objects)
+        (clashes, non_clashes) = self._do_moc_search(
+            db, target_objects, public=public)
 
         return {
             'title': 'Clash Tool',
             'show_input': False,
             'clashes': clashes,
             'non_clashes': non_clashes,
+            'moc_ready': moc_ready,
             'target_moc_info': '.tool_clash_moc_info',
         }
 
-    def _check_mocs_exist(self, db):
+    def _determine_public_constraint(self, db):
+        """
+        Determine the database search constraint we should use on the public
+        field.
+
+        The constraint should be that the public flag is true, unless the user
+        has access to private mocs.
+        """
+
         public = True
 
         if auth.for_private_moc(db, self.facility.id_):
-            # If the user has private access, remove public constraint.
             public = None
+
+        return public
+
+
+    def _check_mocs_exist_and_ready(self, db, public):
+        """
+        Raise an ErrorPage if there are no MOCs available and return True
+        if all available MOCs are ready.
+        """
 
         mocs = db.search_moc(facility_id=self.facility.id_, public=public)
         if not mocs:
             raise ErrorPage('No coverage maps have been set up yet.')
 
-    def _do_moc_search(self, db, targets):
+        return all(AttachmentState.is_ready(x.state) for x in mocs.values())
+
+    def _do_moc_search(self, db, targets, public):
         order = self.facility.get_moc_order()
         clashes = []
         non_clashes = []
-        public = True
-
-        if auth.for_private_moc(db, self.facility.id_):
-            # If the user has private access, remove public constraint.
-            public = None
 
         for target in targets:
             # If the coordinates weren't entered in ICRS, use the
@@ -240,10 +260,7 @@ class ClashTool(BaseTargetTool):
         return (clashes, non_clashes)
 
     def view_moc_list(self, db, args, form):
-        public = True
-        if auth.for_private_moc(db, self.facility.id_):
-            # If the user has private access, remove public constraint.
-            public = None
+        public = self._determine_public_constraint(db)
 
         mocs = db.search_moc(facility_id=self.facility.id_, public=public)
 
@@ -253,10 +270,7 @@ class ClashTool(BaseTargetTool):
         }
 
     def view_moc_info(self, db, args, form, moc_id):
-        public = True
-        if auth.for_private_moc(db, self.facility.id_):
-            # If the user has private access, remove public constraint.
-            public = None
+        public = self._determine_public_constraint(db)
 
         try:
             moc = db.search_moc(
@@ -271,10 +285,7 @@ class ClashTool(BaseTargetTool):
         }
 
     def view_moc_fits(self, db, args, form, moc_id):
-        public = True
-        if auth.for_private_moc(db, self.facility.id_):
-            # If the user has private access, remove public constraint.
-            public = None
+        public = self._determine_public_constraint(db)
 
         try:
             moc = db.search_moc(

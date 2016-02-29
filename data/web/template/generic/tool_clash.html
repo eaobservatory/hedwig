@@ -2,6 +2,12 @@
 {% set help_link=url_for('help.user_page', page_name='target', _anchor='clash-tool') %}
 
 {% block tool_output %}
+{% if not moc_ready %}
+    <p class="warning">
+        The clash tool&rsquo;s sky coverage maps are currently being updated.
+        Search results may be incomplete at this time.
+    </p>
+{% endif %}
 
 {% if clashes is not none %}
     <section>
