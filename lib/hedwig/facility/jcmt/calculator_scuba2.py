@@ -405,10 +405,14 @@ class SCUBA2Calculator(JCMTCalculator):
 
                 extra['time_src'] = time_src / 3600.0
 
-                extra['wl_alt'] = filter_alt
-                extra['rms_alt'] = self.itc.calculate_rms(
-                    map_mode, filter_alt, transmission[filter_alt],
-                    factor[filter_alt], time_src)
+                # Ignore errors calculating the alternate filter RMS.
+                try:
+                    extra['wl_alt'] = filter_alt
+                    extra['rms_alt'] = self.itc.calculate_rms(
+                        map_mode, filter_alt, transmission[filter_alt],
+                        factor[filter_alt], time_src)
+                except SCUBA2ITCError:
+                    pass
 
                 time_tot = time_src + self.itc.estimate_overhead(map_mode,
                                                                  time_src)
@@ -427,15 +431,20 @@ class SCUBA2Calculator(JCMTCalculator):
                             weather_band_result[condition_name] = None
                             continue
 
-                        transmission = self.itc.calculate_transmission(
-                            airmass,
-                            self.itc.calculate_tau(filter_, condition_tau))
-                        time_src = self.itc.calculate_time(
-                            map_mode, filter_, transmission, factor[filter_],
-                            input_['rms'])
-                        time_tot = time_src + self.itc.estimate_overhead(
-                            map_mode, time_src)
-                        weather_band_result[condition_name] = time_tot / 3600.0
+                        try:
+                            transmission = self.itc.calculate_transmission(
+                                airmass,
+                                self.itc.calculate_tau(filter_, condition_tau))
+                            time_src = self.itc.calculate_time(
+                                map_mode, filter_, transmission,
+                                factor[filter_], input_['rms'])
+                            time_tot = time_src + self.itc.estimate_overhead(
+                                map_mode, time_src)
+                            weather_band_result[condition_name] = \
+                                time_tot / 3600.0
+
+                        except SCUBA2ITCError:
+                            weather_band_result[condition_name] = None
 
                     weather_band_comparison[weather_band] = weather_band_result
 
@@ -455,10 +464,15 @@ class SCUBA2Calculator(JCMTCalculator):
                     'rms_850': self.itc.calculate_rms(
                         map_mode, 850, transmission[850], factor[850],
                         time_src),
-                    'rms_450': self.itc.calculate_rms(
-                        map_mode, 450, transmission[450], factor[450],
-                        time_src),
+                    'rms_450': None,
                 }
+
+                try:
+                    output['rms_450'] = self.itc.calculate_rms(
+                        map_mode, 450, transmission[450], factor[450],
+                        time_src)
+                except SCUBA2ITCError:
+                    pass
 
                 # Make weather band comparison table.
                 weather_band_comparison = OrderedDict()
@@ -472,13 +486,17 @@ class SCUBA2Calculator(JCMTCalculator):
                             weather_band_result[condition_name] = None
                             continue
 
-                        transmission = self.itc.calculate_transmission(
-                            airmass,
-                            self.itc.calculate_tau(850, condition_tau))
-                        weather_band_result[condition_name] = \
-                            self.itc.calculate_rms(
-                                map_mode, 850, transmission, factor[850],
-                                time_src)
+                        try:
+                            transmission = self.itc.calculate_transmission(
+                                airmass,
+                                self.itc.calculate_tau(850, condition_tau))
+                            weather_band_result[condition_name] = \
+                                self.itc.calculate_rms(
+                                    map_mode, 850, transmission, factor[850],
+                                    time_src)
+
+                        except SCUBA2ITCError:
+                            weather_band_result[condition_name] = None
 
                     weather_band_comparison[weather_band] = weather_band_result
 
