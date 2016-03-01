@@ -114,20 +114,22 @@
 {% block calculator_output_table %}
     {% for value in outputs %}
         {% with output = output_values[value.code] %}
-            <tr>
-                <th>
-                    {{ value.name }}
-                </th>
-                <td>
-                    {{ output | fmt(value.format) }}
-                    {% if value.unit is not none %}
-                        {{ value.unit }}
-                    {% endif %}
-                    {% if value.code == 'time' %}
-                        ({{ output | format_hours_hms }})
-                    {% endif %}
-                </td>
-            </tr>
+            {% if output is not none %}
+                <tr>
+                    <th>
+                        {{ value.name }}
+                    </th>
+                    <td>
+                        {{ output | fmt(value.format) }}
+                        {% if value.unit is not none %}
+                            {{ value.unit }}
+                        {% endif %}
+                        {% if value.code == 'time' %}
+                            ({{ output | format_hours_hms }})
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endif %}
         {% endwith %}
     {% endfor %}
     <tr>
