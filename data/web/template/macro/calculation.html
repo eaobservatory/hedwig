@@ -37,23 +37,25 @@
 
     <p>
         {% for value in calculation.outputs %}
-            <span class="calculator_value">
-                {% with out_val = calculation.output[value.code] %}
-                    <span class="calc_val_name">
-                        {% if value.abbr is not none %}
-                            <abbr title="{{ value.name }}">{{ value.abbr }}</abbr>
-                        {% else %}
-                            {{ value.name }}
-                        {% endif %}
+            {% with out_val = calculation.output[value.code] %}
+                {% if out_val is not none %}
+                    <span class="calculator_value">
+                        <span class="calc_val_name">
+                            {% if value.abbr is not none %}
+                                <abbr title="{{ value.name }}">{{ value.abbr }}</abbr>
+                            {% else %}
+                                {{ value.name }}
+                            {% endif %}
+                        </span>
+                        <span class="calc_val_value">
+                            {{ out_val | fmt(value.format) }}
+                            {% if value.unit is not none %}
+                                {{ value.unit }}
+                            {% endif %}
+                        </span>
                     </span>
-                    <span class="calc_val_value">
-                        {{ out_val | fmt(value.format) }}
-                        {% if value.unit is not none %}
-                            {{ value.unit }}
-                        {% endif %}
-                    </span>
-                {% endwith %}
-            </span>
+                {% endif %}
+            {% endwith %}
         {% endfor %}
     </p>
 {% endmacro %}
