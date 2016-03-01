@@ -22,7 +22,7 @@ from collections import OrderedDict
 from math import cos, radians
 import time
 
-from jcmt_itc_scuba2 import SCUBA2ITC
+from jcmt_itc_scuba2 import SCUBA2ITC, SCUBA2ITCError
 
 from ...error import CalculatorError, UserError
 from ...type import CalculatorMode, CalculatorResult, CalculatorValue
@@ -488,6 +488,9 @@ class SCUBA2Calculator(JCMTCalculator):
 
             else:
                 raise CalculatorError('Unknown mode.')
+
+        except SCUBA2ITCError as e:
+            raise UserError(e.message)
 
         except ZeroDivisionError:
             raise UserError(
