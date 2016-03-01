@@ -56,9 +56,13 @@
                     {% for value in calculation.outputs %}
                         {% with out_val = calculation.output[value.code] %}
                             {{ value.name }}:
-                            {{ out_val | fmt(value.format) }}
-                            {% if value.unit is not none %}
-                                {{ value.unit }}
+                            {% if out_val is none %}
+                                &mdash;
+                            {% else %}
+                                {{ out_val | fmt(value.format) }}
+                                {% if value.unit is not none %}
+                                    {{ value.unit }}
+                                {% endif %}
                             {% endif %}
                         {% endwith %}
                         {% if not loop.last %}
