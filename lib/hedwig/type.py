@@ -514,21 +514,33 @@ class ProposalState(object):
     REJECTED = 7
 
     StateInfo = namedtuple(
-        'StateInfo', ('short_name', 'name', 'edit', 'submitted'))
+        'StateInfo', ('short_name', 'name', 'edit', 'submitted', 'reviewed'))
 
+    #                 Abbr     Name              Edit   Sub/d  Rev/d
     _info = OrderedDict((
-        (PREPARATION, StateInfo('Prep',  'In preparation', True,  False)),
-        (SUBMITTED,   StateInfo('Sub',   'Submitted',      True,  True)),
-        (WITHDRAWN,   StateInfo('Wdwn',  'Withdrawn',      True,  False)),
-        (REVIEW,      StateInfo('Rev',   'Under review',   False, True)),
-        (ABANDONED,   StateInfo('Abnd',  'Abandoned',      False, False)),
-        (ACCEPTED,    StateInfo('Acc',   'Accepted',       False, True)),
-        (REJECTED,    StateInfo('Rej',   'Rejected',       False, True))
+        (PREPARATION,
+            StateInfo('Prep',  'In preparation', True,  False, False)),
+        (SUBMITTED,
+            StateInfo('Sub',   'Submitted',      True,  True,  False)),
+        (WITHDRAWN,
+            StateInfo('Wdwn',  'Withdrawn',      True,  False, False)),
+        (REVIEW,
+            StateInfo('Rev',   'Under review',   False, True,  False)),
+        (ABANDONED,
+            StateInfo('Abnd',  'Abandoned',      False, False, False)),
+        (ACCEPTED,
+            StateInfo('Acc',   'Accepted',       False, True,  True)),
+        (REJECTED,
+            StateInfo('Rej',   'Rejected',       False, True,  True)),
     ))
 
     @classmethod
     def is_submitted(cls, state):
         return cls._info[state].submitted
+
+    @classmethod
+    def is_reviewed(cls, state):
+        return cls._info[state].reviewed
 
     @classmethod
     def is_valid(cls, state):
@@ -553,6 +565,10 @@ class ProposalState(object):
     @classmethod
     def submitted_states(cls):
         return [k for (k, v) in cls._info.items() if v.submitted]
+
+    @classmethod
+    def reviewed_states(cls):
+        return [k for (k, v) in cls._info.items() if v.reviewed]
 
     @classmethod
     def by_name(cls, name):

@@ -159,6 +159,18 @@ class TypeTestCase(TestCase):
         self.assertNotIn(ProposalState.PREPARATION, states)
         self.assertIn(ProposalState.REVIEW, states)
 
+        states = ProposalState.reviewed_states()
+        self.assertIsInstance(states, list)
+        self.assertNotIn(ProposalState.PREPARATION, states)
+        self.assertNotIn(ProposalState.SUBMITTED, states)
+        self.assertNotIn(ProposalState.ABANDONED, states)
+        self.assertIn(ProposalState.ACCEPTED, states)
+        self.assertIn(ProposalState.REJECTED, states)
+        self.assertTrue(ProposalState.is_reviewed(ProposalState.ACCEPTED))
+        self.assertTrue(ProposalState.is_reviewed(ProposalState.REJECTED))
+        self.assertFalse(ProposalState.is_reviewed(ProposalState.REVIEW))
+        self.assertFalse(ProposalState.is_reviewed(ProposalState.ABANDONED))
+
         self.assertEqual(ProposalState.by_name('accepted'),
                          ProposalState.ACCEPTED)
         self.assertIsNone(ProposalState.by_name('not a real state'))
