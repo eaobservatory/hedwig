@@ -37,6 +37,7 @@ from hedwig import auth
 from hedwig.admin.proposal import close_call_proposals
 from hedwig.config import get_config
 from hedwig.db.meta import invitation, reset_token, verify_token
+from hedwig.admin.poll import send_proposal_feedback
 from hedwig.file.poll import process_proposal_figure, process_proposal_pdf
 from hedwig.web.app import create_web_app
 
@@ -183,6 +184,17 @@ class IntegrationTest(DummyConfigTestCase):
             self.view_proposal_reviews('jcmt')
 
             self.administer_site()
+
+            self.log_out_user()
+
+            # Log back in as the proposal author to view the feedback page.
+            # (Note changed user name and need to process feedback to put the
+            # proposal into its final state.)
+            send_proposal_feedback(self.db)
+
+            self.log_in_user(user_name='newusername')
+
+            self.view_proposal_feedback('jcmt', 1)
 
             self.log_out_user()
 
@@ -1487,13 +1499,26 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_link_text('Administrative menu').click()
         self.browser.find_element_by_link_text('Calls').click()
         self.browser.find_element_by_link_text('Review process').click()
+
+        review_process_url = self.browser.current_url
+
         self.browser.find_element_by_link_text('Reviews').click()
 
         self._save_screenshot(self.admin_image_root, 'proposal_reviews',
                               ['extra_review_links'])
 
+        # Enter feedback text.
+        self.browser.find_element_by_link_text('Add feedback').click()
+
+        self.browser.find_element_by_name('text').send_keys(
+            'This is an example feedback comment.')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn('The review has been saved.', self.browser.page_source)
+
         # Go back and enter affiliation weights.
-        self.browser.back()
+        self.browser.get(review_process_url)
         self.browser.find_element_by_link_text(
             'Edit affiliation weights').click()
 
@@ -1522,13 +1547,7 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn('The time available has been saved.',
                       self.browser.page_source)
 
-        # Check that the feedback approval page loads (currently empty).
-        self.browser.find_element_by_link_text(
-            'Approve feedback reports').click()
-        self._save_screenshot(self.admin_image_root, 'approve_feedback')
-
         # Look at the tabulation page and enter a decision.
-        self.browser.back()
         self.browser.find_element_by_link_text(
             'View detailed tabulation').click()
 
@@ -1559,6 +1578,18 @@ class IntegrationTest(DummyConfigTestCase):
 
         self._save_screenshot(self.admin_image_root,
                               'review_tabulation_updated')
+
+        # Check that the feedback approval page works.
+        self.browser.get(review_process_url)
+        self.browser.find_element_by_link_text(
+            'Approve feedback reports').click()
+        self.browser.find_element_by_xpath('//input[@type="checkbox"]').click()
+
+        self._save_screenshot(self.admin_image_root, 'approve_feedback')
+
+        self.browser.find_element_by_name('submit').click()
+        self.assertIn('The feedback approval status has been updated.',
+                      self.browser.page_source)
 
     def administer_site(self):
         self.browser.get(self.base_url)
@@ -1622,6 +1653,21 @@ class IntegrationTest(DummyConfigTestCase):
                               'institution_subsume_confirm')
 
         self.browser.find_element_by_name('submit_cancel').click()
+
+    def view_proposal_feedback(self, facility_code, proposal_id):
+        self.browser.get(self.base_url +
+                         '{}/proposal/{}'.format(facility_code, proposal_id))
+
+        feedback_link = self.browser.find_element_by_link_text('View feedback')
+
+        self._save_screenshot(self.user_image_root, 'proposal_reviewed',
+                              [feedback_link])
+
+        feedback_link.click()
+
+        self.assertIn('<h2>Comments</h2>', self.browser.page_source)
+
+        self._save_screenshot(self.user_image_root, 'proposal_feedback')
 
     def try_jcmt_itcs(self):
         self.browser.get(self.base_url + 'jcmt/calculator/scuba2/time')
