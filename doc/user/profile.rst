@@ -3,6 +3,10 @@ Your Profile
 
 Your profile page shows all the information associated
 with your account.
+To view this page, ensure that you are logged in
+and then click your name at the top right of the page.
+
+.. image:: image/profile_link.png
 
 * At the top of the page there are links to change how you
   log in to the system.
