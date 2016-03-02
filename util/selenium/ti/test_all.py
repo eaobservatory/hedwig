@@ -1049,7 +1049,15 @@ class IntegrationTest(DummyConfigTestCase):
             self.browser.page_source)
 
     def manage_account(self):
-        self.browser.find_element_by_id('user_profile_link').click()
+        # Go to the home page to loose any flashed message box.
+        self.browser.get(self.base_url)
+
+        profile_link = self.browser.find_element_by_id('user_profile_link')
+
+        self._save_screenshot(self.user_image_root, 'profile_link',
+                              [profile_link])
+
+        profile_link.click()
 
         self._save_screenshot(
             self.user_image_root, 'profile_edit_links',
