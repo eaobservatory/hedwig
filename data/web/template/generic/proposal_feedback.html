@@ -1,0 +1,24 @@
+{% extends 'layout.html' %}
+{% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
+
+{% block content %}
+<nav>
+    <p>
+        <a href="{{ url_for('.proposal_view', proposal_id=proposal_id) }}">Back to proposal</a>
+    </p>
+</nav>
+
+<h2>Comments</h2>
+{% if feedback_reviews %}
+    {% for feedback_review in feedback_reviews %}
+        {{ feedback_review.review_text | format_text(feedback_review.review_format) }}
+    {% endfor %}
+{% else %}
+    <p class="not_present">
+        No comments have been recorded for this proposal.
+    </p>
+{% endif %}
+
+{% block feedback_extra %}
+{% endblock %}
+{% endblock %}

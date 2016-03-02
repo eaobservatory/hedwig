@@ -33,7 +33,7 @@ from ...type import Affiliation, AttachmentState, \
     PrevProposal, PrevProposalCollection, PrevProposalPub, \
     ProposalCategory, ProposalFigureInfo, ProposalState, ProposalText, \
     PublicationType, \
-    Queue, ResultCollection, Semester, Target, \
+    Queue, ResultCollection, ReviewerRole, Semester, Target, \
     TargetCollection, TargetToolInfo, TextRole, \
     ValidationMessage, \
     null_tuple
@@ -133,6 +133,8 @@ class GenericProposal(object):
             'can_view_review': ((proposal.state == ProposalState.REVIEW) and
                                 auth.for_review(db, reviewer=None,
                                                 proposal=proposal).view),
+            'can_view_feedback': auth.for_proposal_feedback(
+                db, proposal=proposal).view,
             'is_submitted': ProposalState.is_submitted(proposal.state),
             'proposal': proposal._replace(members=[
                 x._replace(institution_country=countries.get(
@@ -1503,6 +1505,33 @@ class GenericProposal(object):
             'proposal_id': proposal.id,
             'proposal_code': self.make_proposal_code(db, proposal),
             'calculations': self._prepare_calculations(calculations),
+        }
+
+    @with_proposal(permission='feedback')
+    def view_proposal_feedback(self, db, proposal):
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        ctx = {
+            'title': '{}: Feedback'.format(proposal_code),
+            'proposal_id': proposal.id,
+            'proposal_code': proposal_code,
+        }
+
+        ctx.update(self._view_proposal_feedback_extra(db, proposal))
+
+        return ctx
+
+    def _view_proposal_feedback_extra(self, db, proposal):
+        """
+        Method to gather additional information for the proposal feedback page.
+        """
+
+        reviewers = db.search_reviewer(
+            proposal_id=proposal.id, role=ReviewerRole.FEEDBACK,
+            with_review=True, with_review_text=True)
+
+        return {
+            'feedback_reviews': reviewers.values(),
         }
 
     def _edit_text(self, db, proposal, role, word_limit, target, form, rows,

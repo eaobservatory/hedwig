@@ -120,8 +120,14 @@ def with_proposal(permission):
     The wrapped method is then called with the database,  proposal and
     authorization objects as the first two arguments.
 
-    "permission" should be one of: "view", "edit" or "none".  (When "none"
-    is selected, no authorization object is passed on.)
+    "permission" should be one of: "view", "edit", "feedback" or "none".
+
+    * When "feedback" is selected, view authorization to the proposal
+      feedback is required.  No authorization object is passed to the
+      decorated method, since there is currently no concept of
+      editable feedback.
+
+    * When "none" is selected, no authorization object is passed on.
 
     Note: this currently can only be used to decorate methods of
     facility classes because it uses `self.id_` for the facility ID.
@@ -140,6 +146,15 @@ def with_proposal(permission):
             assert proposal.id == proposal_id
 
             if permission == 'none':
+                return f(self, db, proposal, *args, **kwargs)
+
+            elif permission == 'feedback':
+                can = auth.for_proposal_feedback(db, proposal)
+
+                if not can.view:
+                    raise HTTPForbidden(
+                        'Permission denied for this proposal feedback.')
+
                 return f(self, db, proposal, *args, **kwargs)
 
             else:

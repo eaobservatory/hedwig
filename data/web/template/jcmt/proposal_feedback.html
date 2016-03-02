@@ -1,0 +1,17 @@
+{% extends 'generic/proposal_feedback.html' %}
+
+{% from 'jcmt/macro/request_table.html' import render_request_display %}
+
+{% block feedback_extra %}
+{% if jcmt_allocations.table %}
+    <h2>Approved Observing</h2>
+
+    {{ render_request_display(jcmt_allocations) }}
+
+    <p>
+        Times are shown in hours.
+    </p>
+{% else %}
+
+{% endif %}
+{% endblock %}

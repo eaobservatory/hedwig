@@ -70,6 +70,10 @@
                     <nav>
                         <a id="view_review_link" href="{{ url_for('.proposal_reviews', proposal_id=proposal.id) }}">View reviews</a>
                     </nav>
+                {% elif can_view_feedback %}
+                    <nav>
+                        <a id="view_feedback_link" href="{{ url_for('.proposal_feedback', proposal_id=proposal.id) }}">View feedback</a>
+                    </nav>
                 {% else %}
                     &nbsp;
                 {% endif %}

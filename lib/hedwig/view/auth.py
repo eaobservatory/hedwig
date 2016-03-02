@@ -215,6 +215,39 @@ def for_proposal(db, proposal):
     return auth
 
 
+def for_proposal_feedback(db, proposal):
+    """
+    Determine the current user's authorization regarding general feedback
+    for a proposal.
+
+    This may include, but is not limited to, the feedback review.  For more
+    specific access to that review, use the for_review function.
+    This function currently only allows view access.
+    """
+
+    if 'user_id' not in session or 'person' not in session:
+        return no
+
+    # Only allow access to the feedback information when the review is
+    # complete.
+    if not ProposalState.is_reviewed(proposal.state):
+        return no
+
+    # Allow administrators to view.
+    if session.get('is_admin', False) and can_be_admin(db):
+        return view_only
+
+    # Allow proposal members to view.
+    try:
+        member = proposal.members.get_person(session['person']['id'])
+        return view_only
+    except KeyError:
+        pass
+
+    # Otherwise deny access.
+    return no
+
+
 def for_review(db, reviewer, proposal, auth_cache=None):
     """
     Determine the current user's authorization regarding this review.

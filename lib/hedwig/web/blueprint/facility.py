@@ -462,6 +462,12 @@ def create_facility_blueprint(db, facility):
             db, proposal_id,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/proposal/<int:proposal_id>/feedback')
+    @require_auth(require_person=True)
+    @facility_template('proposal_feedback.html')
+    def proposal_feedback(proposal_id):
+        return facility.view_proposal_feedback(db, proposal_id)
+
     @bp.route('/proposal/<int:proposal_id>/reviews')
     @require_auth(require_person=True)
     @facility_template('proposal_reviews.html')
