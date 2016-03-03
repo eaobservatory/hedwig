@@ -22,7 +22,7 @@ from collections import namedtuple, OrderedDict
 import itertools
 from unittest import TestCase
 
-from hedwig.error import MultipleRecords, NoSuchRecord, UserError
+from hedwig.error import Error, MultipleRecords, NoSuchRecord, UserError
 from hedwig.type import Assessment, AttachmentState, \
     Email, EmailCollection, GroupType, GroupMember, GroupMemberCollection,  \
     Member, MemberCollection, \
@@ -412,3 +412,30 @@ class TypeTestCase(TestCase):
             self.assertEqual(t_x._fields, ('x', 'y', 'can_edit'))
             self.assertEqual(t_x.x, 1)
             self.assertEqual(t_x.y, 2)
+
+    def test_text_role(self):
+        self.assertTrue(TextRole.is_valid(TextRole.ABSTRACT))
+        self.assertFalse(TextRole.is_valid(999))
+
+        self.assertIsInstance(TextRole.get_name(TextRole.TECHNICAL_CASE),
+                              unicode)
+
+        self.assertIsInstance(TextRole.short_name(TextRole.SCIENCE_CASE),
+                              unicode)
+
+        self.assertIsInstance(TextRole.url_path(TextRole.TECHNICAL_CASE),
+                              unicode)
+
+        self.assertIsNone(TextRole.url_path(TextRole.TOOL_NOTE))
+
+        self.assertEqual(TextRole.get_url_paths(), ['technical', 'scientific'])
+
+        self.assertEqual(TextRole.by_url_path('scientific'),
+                         TextRole.SCIENCE_CASE)
+        self.assertEqual(TextRole.by_url_path('technical'),
+                         TextRole.TECHNICAL_CASE)
+
+        with self.assertRaisesRegexp(Error, 'path .* not recognised'):
+            TextRole.by_url_path('something_else')
+
+        self.assertIsNone(TextRole.by_url_path('something_else', None))

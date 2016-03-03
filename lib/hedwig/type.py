@@ -30,7 +30,7 @@ from .db.meta import affiliation, calculation, call, category, \
     prev_proposal, prev_proposal_pub, \
     proposal, proposal_category, queue, review, reviewer, \
     semester, target, user_log
-from .error import NoSuchRecord, MultipleRecords, UserError
+from .error import FormattedError, NoSuchRecord, MultipleRecords, UserError
 
 Affiliation = namedtuple(
     'Affiliation',
@@ -705,13 +705,18 @@ class TextRole(object):
     SCIENCE_CASE = 3
     TOOL_NOTE = 4
 
-    RoleInfo = namedtuple('RoleInfo', ('name', 'shortname'))
+    RoleInfo = namedtuple('RoleInfo', ('name', 'shortname', 'url_path'))
 
+    #                Name                        Short   Path
     _info = {
-        ABSTRACT:       RoleInfo('Abstract', 'abst'),
-        TECHNICAL_CASE: RoleInfo('Technical Justification', 'tech'),
-        SCIENCE_CASE:   RoleInfo('Scientific Justification', 'sci'),
-        TOOL_NOTE:      RoleInfo('Note on Tool Results', 'tool'),
+        ABSTRACT:
+            RoleInfo('Abstract',                 'abst', None),
+        TECHNICAL_CASE:
+            RoleInfo('Technical Justification',  'tech', 'technical'),
+        SCIENCE_CASE:
+            RoleInfo('Scientific Justification', 'sci',  'scientific'),
+        TOOL_NOTE:
+            RoleInfo('Note on Tool Results',     'tool', None),
     }
 
     @classmethod
@@ -725,6 +730,34 @@ class TextRole(object):
     @classmethod
     def short_name(cls, role):
         return cls._info[role].shortname
+
+    @classmethod
+    def url_path(cls, role):
+        return cls._info[role].url_path
+
+    @classmethod
+    def get_url_paths(cls):
+        return [v.url_path for v in cls._info.values()
+                if v.url_path is not None]
+
+    @classmethod
+    def by_url_path(cls, url_path, default=()):
+        """
+        Attempt to find a role by URL path.
+
+        Returns the given default, when specified, if no match is found.
+        Otherwise an exception is raised.
+        """
+
+        for (role, info) in cls._info.items():
+            if url_path == info.url_path:
+                return role
+
+        if default == ():
+            raise FormattedError('Text role URL path "{}" not recognised',
+                                 url_path)
+        else:
+            return default
 
 
 class UserLogEvent(object):
