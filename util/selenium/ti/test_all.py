@@ -38,7 +38,8 @@ from hedwig.admin.proposal import close_call_proposals
 from hedwig.config import get_config
 from hedwig.db.meta import invitation, reset_token, verify_token
 from hedwig.admin.poll import send_proposal_feedback
-from hedwig.file.poll import process_proposal_figure, process_proposal_pdf
+from hedwig.file.poll import process_moc, \
+    process_proposal_figure, process_proposal_pdf
 from hedwig.web.app import create_web_app
 
 from test.dummy_config import DummyConfigTestCase
@@ -123,11 +124,14 @@ class IntegrationTest(DummyConfigTestCase):
             self.log_out_user()
 
             # Log in as administrative user and set up a semester.
+            # (Process the MOC so that it can be searched later.)
             self.log_in_user(user_name='test')
 
             semester_name = self.set_up_facility('jcmt')
 
             self.log_out_user()
+
+            process_moc(self.db)
 
             # Log back in a normal use and create a proposal.
             self.log_in_user(user_name='username')
