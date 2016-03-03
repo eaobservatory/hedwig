@@ -324,6 +324,7 @@ class GenericProposal(object):
         for role in (TextRole.TECHNICAL_CASE, TextRole.SCIENCE_CASE):
             role_name = TextRole.get_name(role)
             role_code = TextRole.short_name(role)
+            role_path = TextRole.url_path(role)
 
             if extra['{}_case_text'.format(role_code)] is not None:
                 for fig in extra['{}_case_fig'.format(role_code)]:
@@ -358,8 +359,8 @@ class GenericProposal(object):
                     'The proposal does not have a {}.'.format(
                         role_name.lower()),
                     'Edit {}'.format(role_name.lower()),
-                    url_for('.{}_edit'.format(role_code),
-                            proposal_id=proposal.id)))
+                    url_for('.case_edit',
+                            proposal_id=proposal.id, role_path=role_path)))
 
         return messages
 
@@ -1113,6 +1114,7 @@ class GenericProposal(object):
     @with_proposal(permission='edit')
     def view_case_edit(self, db, proposal, can, role):
         code = TextRole.short_name(role)
+        role_path = TextRole.url_path(role)
         call = db.get_call(facility_id=None, call_id=proposal.call_id)
 
         text_info = db.search_proposal_text(proposal_id=proposal.id, role=role)
@@ -1124,14 +1126,17 @@ class GenericProposal(object):
         figures = [
             ProposalFigureExtra(
                 *x,
-                target_full=url_for('.{}_view_figure'.format(code),
-                                    proposal_id=proposal.id, fig_id=x.id,
+                target_full=url_for('.case_view_figure',
+                                    proposal_id=proposal.id,
+                                    role_path=role_path, fig_id=x.id,
                                     md5sum=x.md5sum),
-                target_view=url_for('.{}_view_figure_thumbnail'.format(code),
-                                    proposal_id=proposal.id, fig_id=x.id,
+                target_view=url_for('.case_view_figure_thumbnail',
+                                    proposal_id=proposal.id,
+                                    role_path=role_path, fig_id=x.id,
                                     md5sum=x.md5sum),
-                target_edit=url_for('.{}_edit_figure'.format(code),
-                                    proposal_id=proposal.id, fig_id=x.id))
+                target_edit=url_for('.case_edit_figure',
+                                    proposal_id=proposal.id,
+                                    role_path=role_path, fig_id=x.id))
             for x in db.search_proposal_figure(
                 proposal_id=proposal.id, role=role,
                 with_caption=True, with_uploader_name=True).values()]
@@ -1140,43 +1145,30 @@ class GenericProposal(object):
             'title': 'Edit {}'.format(TextRole.get_name(role).title()),
             'proposal_id': proposal.id,
             'proposal_code': self.make_proposal_code(db, proposal),
+            'role_code': code,
+            'role_path': role_path,
             'note': getattr(call, code + '_note'),
             'note_format': call.note_format,
             'word_limit': getattr(proposal, code + '_word_lim'),
             'fig_limit': getattr(proposal, code + '_fig_lim'),
             'page_limit': getattr(proposal, code + '_page_lim'),
-            'target_text': url_for(
-                '.{}_edit_text'.format(code), proposal_id=proposal.id),
-            'target_new_figure': url_for(
-                '.{}_new_figure'.format(code), proposal_id=proposal.id),
-            'target_manage_figure': url_for(
-                '.{}_manage_figure'.format(code), proposal_id=proposal.id),
-            'target_pdf': url_for(
-                '.{}_edit_pdf'.format(code), proposal_id=proposal.id),
-            'target_pdf_view': (
-                None if pdf_info is None
-                else url_for('.{}_view_pdf'.format(code),
-                             proposal_id=proposal.id, md5sum=pdf_info.md5sum)),
-            'target_back_to_proposal': url_for(
-                '.proposal_view', proposal_id=proposal.id,
-                _anchor='{}_case'.format(TextRole.short_name(role))),
             'text': text_info.get_single(None),
             'figures': figures,
             'pdf': pdf_info,
-            'help_link': url_for('help.user_page', page_name=(
-                'technical' if role == TextRole.TECHNICAL_CASE
-                else 'scientific')),
+            'help_link': url_for('help.user_page', page_name=role_path),
         }
 
     @with_proposal(permission='edit')
     def view_case_edit_text(self, db, proposal, can, role, form):
         code = TextRole.short_name(role)
+        role_path = TextRole.url_path(role)
 
         figures = [
             ProposalFigureExtra(
                 *x, target_edit=None, target_full=None,
-                target_view=url_for('.{}_view_figure_thumbnail'.format(code),
-                                    proposal_id=proposal.id, fig_id=x.id,
+                target_view=url_for('.case_view_figure_thumbnail',
+                                    proposal_id=proposal.id,
+                                    role_path=role_path, fig_id=x.id,
                                     md5sum=x.md5sum))
             for x in db.search_proposal_figure(
                 proposal_id=proposal.id, role=role).values()]
@@ -1190,15 +1182,18 @@ class GenericProposal(object):
         return self._edit_text(
             db, proposal, role,
             getattr(proposal, code + '_word_lim'),
-            url_for('.{}_edit_text'.format(code), proposal_id=proposal.id),
+            url_for('.case_edit_text',
+                    proposal_id=proposal.id, role_path=role_path),
             form, 30, figures, calculations,
-            url_for('.{}_edit'.format(code), proposal_id=proposal.id))
+            url_for('.case_edit',
+                    proposal_id=proposal.id, role_path=role_path))
 
     @with_proposal(permission='edit')
     def view_case_edit_figure(self, db, proposal, can, fig_id, role,
                               form, file):
         code = TextRole.short_name(role)
         name = TextRole.get_name(role)
+        role_path = TextRole.url_path(role)
         max_size = int(get_config().get('upload', 'max_fig_size'))
         fig_limit = getattr(proposal, code + '_fig_lim')
         word_limit = proposal.capt_word_lim
@@ -1220,16 +1215,17 @@ class GenericProposal(object):
 
             figure = null_tuple(ProposalFigureInfo)._replace(caption='')
 
-            target = url_for('.{}_new_figure'.format(code),
-                             proposal_id=proposal.id)
+            target = url_for('.case_new_figure',
+                             proposal_id=proposal.id, role_path=role_path)
 
         else:
             figure = db.search_proposal_figure(
                 proposal_id=proposal.id, role=role,
                 fig_id=fig_id, with_caption=True).get_single()
 
-            target = url_for('.{}_edit_figure'.format(code),
-                             proposal_id=proposal.id, fig_id=fig_id)
+            target = url_for('.case_edit_figure',
+                             proposal_id=proposal.id, role_path=role_path,
+                             fig_id=fig_id)
 
         if form is not None:
             try:
@@ -1299,7 +1295,8 @@ class GenericProposal(object):
                     flash('The figure caption has been updated.')
 
                 raise HTTPRedirect(url_for(
-                    '.{}_edit'.format(code), proposal_id=proposal.id))
+                    '.case_edit',
+                    proposal_id=proposal.id, role_path=role_path))
 
             except UserError as e:
                 message = e.message
@@ -1322,6 +1319,7 @@ class GenericProposal(object):
     def view_case_manage_figure(self, db, proposal, can, role, form):
         code = TextRole.short_name(role)
         name = TextRole.get_name(role)
+        role_path = TextRole.url_path(role)
         message = None
 
         figures = db.search_proposal_figure(proposal_id=proposal.id, role=role,
@@ -1345,7 +1343,8 @@ class GenericProposal(object):
                           ('figure has' if n_delete == 1 else 'figures have'))
 
                 raise HTTPRedirect(url_for(
-                    '.{}_edit'.format(code), proposal_id=proposal.id))
+                    '.case_edit',
+                    proposal_id=proposal.id, role_path=role_path))
 
             except UserError as e:
                 message = e.message
@@ -1355,14 +1354,15 @@ class GenericProposal(object):
             'proposal_id': proposal.id,
             'proposal_code': self.make_proposal_code(db, proposal),
             'message': message,
-            'target': url_for('.{}_manage_figure'.format(code),
-                              proposal_id=proposal.id),
+            'target': url_for('.case_manage_figure',
+                              proposal_id=proposal.id, role_path=role_path),
             'figures': [
                 ProposalFigureExtra(
                     *x, target_full=None, target_edit=None,
                     target_view=url_for(
-                        '.{}_view_figure_thumbnail'.format(code),
-                        proposal_id=proposal.id, fig_id=x.id, md5sum=x.md5sum))
+                        '.case_view_figure_thumbnail',
+                        proposal_id=proposal.id, role_path=role_path,
+                        fig_id=x.id, md5sum=x.md5sum))
                 for x in figures.values()],
         }
 
@@ -1397,6 +1397,7 @@ class GenericProposal(object):
     def view_case_edit_pdf(self, db, proposal, can, role, file):
         code = TextRole.short_name(role)
         name = TextRole.get_name(role)
+        role_path = TextRole.url_path(role)
         page_limit = getattr(proposal, code + '_page_lim'),
         max_size = int(get_config().get('upload', 'max_pdf_size'))
         message = None
@@ -1436,7 +1437,8 @@ class GenericProposal(object):
                 flash('The {} has been uploaded.', name.lower())
 
                 raise HTTPRedirect(url_for(
-                    '.{}_edit'.format(code), proposal_id=proposal.id))
+                    '.case_edit',
+                    proposal_id=proposal.id, role_path=role_path))
 
             except UserError as e:
                 message = e.message
@@ -1448,8 +1450,8 @@ class GenericProposal(object):
             'message': message,
             'mime_types': [FigureType.get_mime_type(FigureType.PDF)],
             'max_size': max_size,
-            'target': url_for('.{}_edit_pdf'.format(code),
-                              proposal_id=proposal.id),
+            'target': url_for('.case_edit_pdf',
+                              proposal_id=proposal.id, role_path=role_path),
         }
 
     @with_proposal(permission='view')

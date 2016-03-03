@@ -5,7 +5,7 @@
 {% block content %}
 
 <p>
-    <a href="{{ target_back_to_proposal }}">Back to proposal</a>
+    <a href="{{ url_for('.proposal_view', proposal_id=proposal_id, _anchor=(role_code | fmt('{}_case'))) }}">Back to proposal</a>
 </p>
 
 {% if note %}
@@ -70,7 +70,7 @@
 
         <nav>
             <p>
-                <a href="{{ target_text }}" id="edit_text_link">Edit text</a>
+                <a href="{{ url_for('.case_edit_text', proposal_id=proposal_id, role_path=role_path) }}" id="edit_text_link">Edit text</a>
             </p>
         </nav>
 
@@ -137,7 +137,7 @@
 
             <nav>
                 <p>
-                    <a href="{{ target_manage_figure }}" id="manage_figures_link">Manage figures</a>
+                    <a href="{{ url_for('.case_manage_figure', proposal_id=proposal_id, role_path=role_path) }}" id="manage_figures_link">Manage figures</a>
                 </p>
             </nav>
         {% endif %}
@@ -146,7 +146,7 @@
             <nav>
                 <p>
                     {% if true %}
-                        <a href="{{ target_new_figure }}">Upload new figure</a>
+                        <a href="{{ url_for('.case_new_figure', proposal_id=proposal_id, role_path=role_path) }}">Upload new figure</a>
                     {% endif %}
                 </p>
             </nav>
@@ -244,10 +244,10 @@
         <nav>
             <p>
                 {% if pdf is not none %}
-                    <a href="{{ target_pdf_view }}">View current PDF file</a>
+                    <a href="{{ url_for('.case_view_pdf', proposal_id=proposal_id, role_path=role_path, md5sum=pdf.md5sum) }}">View current PDF file</a>
                     <br />
                 {% endif %}
-                <a href="{{ target_pdf }}" id="upload_pdf_link">Upload {{ 'new' if pdf is none else 'replacement' }} PDF file</a>
+                <a href="{{ url_for( '.case_edit_pdf', proposal_id=proposal_id, role_path=role_path) }}" id="upload_pdf_link">Upload {{ 'new' if pdf is none else 'replacement' }} PDF file</a>
             </p>
         </nav>
     </section>

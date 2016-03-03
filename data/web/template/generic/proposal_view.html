@@ -118,9 +118,9 @@
 
         {% if sci_case_text is not none %}
             {{ sci_case_text | format_text }}
-            {{ render_proposal_figures(sci_case_fig, '.sci_view_figure', '.sci_view_figure_preview', proposal.id) }}
+            {{ render_proposal_figures(sci_case_fig, proposal.id, 'scientific') }}
         {% elif sci_case_pdf is not none %}
-            {{ render_proposal_pdf(sci_case_pdf, '.sci_view_pdf', '.sci_view_pdf_preview', proposal.id) }}
+            {{ render_proposal_pdf(sci_case_pdf, proposal.id, 'scientific') }}
         {% else %}
             <p class="missing">
                 This proposal does not yet have a scientific justification.
@@ -130,7 +130,7 @@
         {% if can_edit %}
             <nav>
                 <p>
-                    <a href="{{ url_for('.sci_edit', proposal_id=proposal.id) }}">Edit scientific justification</a>
+                    <a href="{{ url_for('.case_edit', proposal_id=proposal.id, role_path='scientific') }}">Edit scientific justification</a>
                 </p>
             </nav>
         {% endif %}
@@ -360,9 +360,9 @@
 
         {% if tech_case_text is not none %}
             {{ tech_case_text | format_text }}
-            {{ render_proposal_figures(tech_case_fig, '.tech_view_figure', '.tech_view_figure_preview', proposal.id) }}
+            {{ render_proposal_figures(tech_case_fig, proposal.id, 'technical') }}
         {% elif tech_case_pdf is not none %}
-            {{ render_proposal_pdf(tech_case_pdf, '.tech_view_pdf', '.tech_view_pdf_preview', proposal.id) }}
+            {{ render_proposal_pdf(tech_case_pdf, proposal.id, 'technical') }}
         {% else %}
             <p class="missing">
                 This proposal does not yet have a technical justification.
@@ -372,7 +372,7 @@
         {% if can_edit %}
             <nav>
                 <p>
-                    <a href="{{ url_for('.tech_edit', proposal_id=proposal.id) }}">Edit technical justification</a>
+                    <a href="{{ url_for('.case_edit', proposal_id=proposal.id, role_path='technical') }}">Edit technical justification</a>
                 </p>
             </nav>
         {% endif %}
