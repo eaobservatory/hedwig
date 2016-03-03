@@ -99,3 +99,7 @@ Please be aware of the different ways you can change your institution:
   institution record for everyone using it.
 
 .. image:: image/profile_view.png
+
+For more information about your profile, please see the
+:doc:`profile <profile>` page in the
+:doc:`account management <account>` section of this documentation.
