@@ -109,14 +109,12 @@ class IntegrationTest(DummyConfigTestCase):
             self.log_out_user()
 
             self.register_user(user_name='group1',
-                               person_name='Example Group Member',
-                               public_profile=True)
+                               person_name='Example Group Member')
 
             self.log_out_user()
 
             self.register_user(user_name='group2',
-                               person_name='Another Group Member',
-                               public_profile=True)
+                               person_name='Another Group Member')
 
             self.log_out_user()
 
