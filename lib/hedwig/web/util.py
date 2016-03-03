@@ -75,6 +75,17 @@ class ErrorPage(Exception):
         self.links = kwargs.get('links', None)
 
 
+def any_param(param_name, param_options):
+    """
+    Prepare a URL route variable specification for a Werkzeug
+    AnyConverter.  The possible options should be given as a
+    list of strings.
+    """
+
+    return '<any({}):{}>'.format(
+        ','.join('"{}"'.format(x) for x in param_options), param_name)
+
+
 def flash(message, *args):
     """
     Add a message to the list of messages to be flashed on
