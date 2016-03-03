@@ -58,6 +58,12 @@ and "Non-matches" (your target objects for which no search results were found).
 In the case of a match, your can click on the name of the area
 to see a description of it.
 
+A warning will be shown if the Clash Tool is in the process of being updated.
+If you see this warning, please be aware that the search results
+may be incomplete ---
+it is recommended that you return to the Clash Tool later to
+repeat your search.
+
 .. image:: image/target_clash.png
 
 There is an area on your proposal where you can enter notes on the
