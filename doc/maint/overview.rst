@@ -32,7 +32,7 @@ two packages:
     view functions.
 
 :doc:`hedwig.view <api/view>`
-    Define "view" functions which contain the actual logic
+    Defines "view" classes which contain the actual logic
     required for the web interface.
 
 The :doc:`hedwig.web <api/web>` Package
@@ -46,11 +46,11 @@ This package includes:
     This is used by the WSGI script to create the `application` object,
     and by `hedwigctl` when running a test web server.
 
-    This function defines some basic routes, such as the home page,
-    and then registers Flask "blueprints" for other aspects of
-    the system.
+    This function registers Flask "blueprints" for all aspects of
+    web interface.
 
-    It also defines a number of Jinja2 template filters and tests,
+    It also invokes :func:`hedwig.web.template_util.register_template_utils`
+    to define a number of Jinja2 template filters and tests,
     such as `fmt` which applies new-style Python string formatting.
 
 :mod:`hedwig.web.util`
@@ -94,13 +94,13 @@ This package includes:
         system and dynamically constructs routes for the facility's
         calculators and target tools.
 
-The :doc:`hedwig.view <api/view>` Functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The :doc:`hedwig.view <api/view>` Classes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The modules in the :doc:`hedwig.view <api/view>` package define view functions
+The modules in the :doc:`hedwig.view <api/view>` package define view classes
 which are used to handle the routes defined in the various
 blueprints.  (Other than facility-specific routes.)
-For example :mod:`hedwig.view.people` defines the functions used by the
+For example :mod:`hedwig.view.people` defines the methods used by the
 "people" blueprint.
 
 The package also contains some utility modules:
@@ -124,8 +124,7 @@ Facility-specific View Classes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The "view" code for facility-specific parts of the application,
-such as proposal handing, is located in the `hedwig.facility`
-package and arranged in classes.
+such as proposal handing, is located in the `hedwig.facility` package.
 The "Generic Facility" is both an example, which you can use
 to test the system before defining your specific facility class,
 and the basis for more specific classes.
