@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -23,12 +23,13 @@ import os.path
 from flask import Blueprint, send_from_directory
 
 from ...config import get_home
-from ...view.help import prepare_help_page
+from ...view.help import HelpView
 from ..util import templated
 
 
 def create_help_blueprint():
     bp = Blueprint('help', __name__)
+    view = HelpView()
 
     doc_root = os.path.join(get_home(), 'doc')
 
@@ -54,17 +55,17 @@ def create_help_blueprint():
     @bp.route('/about')
     @templated('help/help_page.html')
     def help_about():
-        return prepare_help_page(about_doc_root, None, {})
+        return view.help_page(about_doc_root, None, {})
 
     @bp.route('/user/')
     @templated('help/help_page.html')
     def user_index():
-        return prepare_help_page(user_doc_root, None, user_toc_cache)
+        return view.help_page(user_doc_root, None, user_toc_cache)
 
     @bp.route('/user/<page_name>')
     @templated('help/help_page.html')
     def user_page(page_name):
-        return prepare_help_page(user_doc_root, page_name, user_toc_cache)
+        return view.help_page(user_doc_root, page_name, user_toc_cache)
 
     @bp.route('/user/image/<path:file_name>')
     def user_image(file_name):
@@ -73,12 +74,12 @@ def create_help_blueprint():
     @bp.route('/review/')
     @templated('help/help_page.html')
     def review_index():
-        return prepare_help_page(review_doc_root, None, review_toc_cache)
+        return view.help_page(review_doc_root, None, review_toc_cache)
 
     @bp.route('/review/<page_name>')
     @templated('help/help_page.html')
     def review_page(page_name):
-        return prepare_help_page(review_doc_root, page_name, review_toc_cache)
+        return view.help_page(review_doc_root, page_name, review_toc_cache)
 
     @bp.route('/review/image/<path:file_name>')
     def review_image(file_name):
@@ -87,12 +88,12 @@ def create_help_blueprint():
     @bp.route('/admin/')
     @templated('help/help_page.html')
     def admin_index():
-        return prepare_help_page(admin_doc_root, None, admin_toc_cache)
+        return view.help_page(admin_doc_root, None, admin_toc_cache)
 
     @bp.route('/admin/<page_name>')
     @templated('help/help_page.html')
     def admin_page(page_name):
-        return prepare_help_page(admin_doc_root, page_name, admin_toc_cache)
+        return view.help_page(admin_doc_root, page_name, admin_toc_cache)
 
     @bp.route('/admin/image/<path:file_name>')
     def admin_image(file_name):

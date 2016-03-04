@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -36,67 +36,68 @@ TOCEntry = namedtuple('TOCEntry', ('mtime', 'title'))
 TreeEntry = namedtuple('TreeEntry', ('mtime', 'toc'))
 
 
-def prepare_help_page(doc_root, page_name, toc_cache):
-    """
-    Prepare template context information for viewing a help page.
+class HelpView(object):
+    def help_page(self, doc_root, page_name, toc_cache):
+        """
+        Prepare template context information for viewing a help page.
 
-    The toc_cache argument is a dictionary in which we can store
-    information about other pages for use in generating tables
-    of contents.
-    """
+        The toc_cache argument is a dictionary in which we can store
+        information about other pages for use in generating tables
+        of contents.
+        """
 
-    title_cache = toc_cache.get('_title')
-    if title_cache is None:
-        title_cache = {}
-        toc_cache['_title'] = title_cache
+        title_cache = toc_cache.get('_title')
+        if title_cache is None:
+            title_cache = {}
+            toc_cache['_title'] = title_cache
 
-    tree_cache = toc_cache.get('_tree')
-    if tree_cache is None:
-        tree_cache = {}
-        toc_cache['_tree'] = tree_cache
+        tree_cache = toc_cache.get('_tree')
+        if tree_cache is None:
+            tree_cache = {}
+            toc_cache['_tree'] = tree_cache
 
-    if page_name is None:
-        file_name = 'index'
+        if page_name is None:
+            file_name = 'index'
 
-    else:
-        m = valid_page_name.match(page_name)
+        else:
+            m = valid_page_name.match(page_name)
 
-        if not m:
-            raise HTTPError('Invalid help page name.')
+            if not m:
+                raise HTTPError('Invalid help page name.')
 
-        file_name = m.group(1)
+            file_name = m.group(1)
 
-    path_name = os.path.join(doc_root, file_name + '.rst')
+        path_name = os.path.join(doc_root, file_name + '.rst')
 
-    if not os.path.exists(path_name):
-        raise HTTPNotFound('Help page  not found.')
+        if not os.path.exists(path_name):
+            raise HTTPNotFound('Help page  not found.')
 
-    (body, title, toc) = _read_rst_file(doc_root, path_name)
+        (body, title, toc) = _read_rst_file(doc_root, path_name)
 
-    toc_entries = OrderedDict()
+        toc_entries = OrderedDict()
 
-    for toc_entry in toc:
-        toc_entry_title = _get_page_title(doc_root, toc_entry, title_cache)
+        for toc_entry in toc:
+            toc_entry_title = _get_page_title(doc_root, toc_entry, title_cache)
 
-        if toc_entry_title is None:
-            continue
+            if toc_entry_title is None:
+                continue
 
-        toc_entries[toc_entry] = toc_entry_title
+            toc_entries[toc_entry] = toc_entry_title
 
-    if page_name is None:
-        nav_link = NavLink(url_for('.help_index'), 'Help',
-                           None, None, None, None)
+        if page_name is None:
+            nav_link = NavLink(url_for('.help_index'), 'Help',
+                               None, None, None, None)
 
-    else:
-        nav_link = _find_nav_link(doc_root, page_name, 'index',
-                                  title_cache, tree_cache)
+        else:
+            nav_link = _find_nav_link(doc_root, page_name, 'index',
+                                      title_cache, tree_cache)
 
-    return {
-        'title': title,
-        'help_text': body,
-        'toc': toc_entries,
-        'nav_link': nav_link,
-    }
+        return {
+            'title': title,
+            'help_text': body,
+            'toc': toc_entries,
+            'nav_link': nav_link,
+        }
 
 
 def _read_rst_file(doc_root, path_name):
