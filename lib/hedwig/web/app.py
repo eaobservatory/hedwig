@@ -25,17 +25,14 @@ import os
 
 from ..config import get_config, get_database, get_facilities, get_home
 from ..type import FacilityInfo
-from .util import require_auth, session, templated
 from .template_util import register_template_utils
 
 from .blueprint.admin import create_admin_blueprint
 from .blueprint.facility import create_facility_blueprint
 from .blueprint.help import create_help_blueprint
+from .blueprint.home import create_home_blueprint
 from .blueprint.people import create_people_blueprint
 from .blueprint.query import create_query_blueprint
-
-from ..view.home import prepare_home, \
-    prepare_person_proposals, prepare_person_reviews, prepare_contact_page
 
 
 def create_web_app(db=None):
@@ -83,30 +80,7 @@ def create_web_app(db=None):
         secret_key = os.urandom(32)
     app.secret_key = secret_key
 
-    @app.route('/')
-    @templated('home.html')
-    def home_page():
-        return prepare_home(facilities)
-
-    @app.route('/proposals')
-    @require_auth(require_person=True)
-    @templated('person_proposals.html')
-    def person_proposals():
-        return prepare_person_proposals(
-            db, session['person']['id'], facilities)
-
-    @app.route('/reviews')
-    @require_auth(require_person=True)
-    @templated('person_reviews.html')
-    def person_reviews():
-        return prepare_person_reviews(
-            db, session['person']['id'], facilities)
-
-    @app.route('/contact-us')
-    @templated('contact.html')
-    def contact_page():
-        return prepare_contact_page()
-
+    app.register_blueprint(create_home_blueprint(db, facilities))
     app.register_blueprint(create_admin_blueprint(db, facilities),
                            url_prefix='/admin')
     app.register_blueprint(create_people_blueprint(db, facilities))

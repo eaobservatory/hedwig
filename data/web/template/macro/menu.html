@@ -1,5 +1,5 @@
 {% macro render_main_menu(facility_name, navigation, show_person_proposals_callout, proposal_code) %}
-    <li><a href="{{ url_for('home_page') }}">Home</a></li>
+    <li><a href="{{ url_for('home.home_page') }}">Home</a></li>
     <li class="callouttip">
         <a id="person_proposals_link" href="{{ url_for('person_proposals') }}">Your proposals</a>
         {% if show_person_proposals_callout %}

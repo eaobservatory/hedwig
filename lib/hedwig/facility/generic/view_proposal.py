@@ -815,7 +815,7 @@ class GenericProposal(object):
                         'before removing yourself.')
 
                 flash('You have been removed from proposal {}.', proposal_code)
-                raise HTTPRedirect(url_for('home_page'))
+                raise HTTPRedirect(url_for('home.home_page'))
 
         return {
             'title': 'Remove Yourself from Proposal',

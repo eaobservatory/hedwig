@@ -95,7 +95,7 @@ def log_in(db, args, form, referrer):
                     raise HTTPRedirect(url_for('.person_edit_institution',
                                                person_id=person.id))
                 raise HTTPRedirect(
-                    session.pop('log_in_for', url_for('home_page')))
+                    session.pop('log_in_for', url_for('home.home_page')))
 
         except UserError as e:
             message = e.message
@@ -116,7 +116,7 @@ def log_in(db, args, form, referrer):
 def log_out():
     session.clear()
     flash('You have been logged out.')
-    raise HTTPRedirect(url_for('home_page'))
+    raise HTTPRedirect(url_for('home.home_page'))
 
 
 def register_user(db, form, remote_addr):
@@ -173,7 +173,7 @@ def change_user_name(db, form, remote_addr):
                 raise HTTPRedirect(url_for('.person_view',
                                            person_id=session['person']['id']))
             else:
-                raise HTTPRedirect(url_for('home_page'))
+                raise HTTPRedirect(url_for('home.home_page'))
 
         except UserError as e:
             message = e.message
@@ -213,7 +213,7 @@ def change_password(db, form, remote_addr):
                 raise HTTPRedirect(url_for('.person_view',
                                            person_id=session['person']['id']))
             else:
-                raise HTTPRedirect(url_for('home_page'))
+                raise HTTPRedirect(url_for('home.home_page'))
 
         except UserError as e:
             message = e.message
@@ -380,14 +380,14 @@ def take_admin(db, referrer):
 
     target = session.pop('log_in_referrer', None)
     if target is None:
-        target = referrer if referrer else url_for('home_page')
+        target = referrer if referrer else url_for('home.home_page')
     raise HTTPRedirect(target)
 
 
 def drop_admin(referrer):
     session.pop('is_admin', None)
     flash('You have dropped administrative privileges.')
-    raise HTTPRedirect(referrer if referrer else url_for('home_page'))
+    raise HTTPRedirect(referrer if referrer else url_for('home.home_page'))
 
 
 def user_log(db, user_id):

@@ -21,12 +21,13 @@ from __future__ import absolute_import, division, print_function, \
 from flask import Blueprint, request
 
 from ..util import require_admin, require_auth, require_not_auth, templated
-from ...view.home import prepare_person_proposals, prepare_person_reviews
+from ...view.home import HomeView
 from ...view import people as view
 
 
 def create_people_blueprint(db, facilities):
     bp = Blueprint('people', __name__)
+    view_home = HomeView()
 
     @bp.route('/user/log_in', methods=['GET', 'POST'])
     @require_not_auth
@@ -167,15 +168,15 @@ def create_people_blueprint(db, facilities):
     @require_admin
     @templated('person_proposals.html')
     def person_view_proposals(person_id):
-        return prepare_person_proposals(db, person_id, facilities,
-                                        administrative=True)
+        return view_home.person_proposals(db, person_id, facilities,
+                                          administrative=True)
 
     @bp.route('/person/<int:person_id>/reviews')
     @require_admin
     @templated('person_reviews.html')
     def person_view_reviews(person_id):
-        return prepare_person_reviews(db, person_id, facilities,
-                                      administrative=True)
+        return view_home.person_reviews(db, person_id, facilities,
+                                        administrative=True)
 
     @bp.route('/institution/')
     @require_auth()
