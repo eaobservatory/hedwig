@@ -86,15 +86,15 @@
                         <th>{{ loop.index }}</th>
                         <td>
                             {% if figure.state is attachment_ready %}
-                                <a href="{{ figure.target_full }}">
-                                    <img src="{{ figure.target_view }}" />
+                                <a href="{{ url_for('.case_view_figure', proposal_id=proposal_id, role_path=role_path, fig_id=figure.id, md5sum=figure.md5sum) }}">
+                                    <img src="{{ url_for('.case_view_figure_thumbnail', proposal_id=proposal_id, role_path=role_path, fig_id=figure.id, md5sum=figure.md5sum) }}" />
                                 </a>
                             {% elif figure.state is attachment_error %}
                                 <p class="warning">
                                     Error during processing
                                 </p>
                                 <p>
-                                    <a href="{{ figure.target_full }}">View image</a>
+                                    <a href="{{ url_for('.case_view_figure', proposal_id=proposal_id, role_path=role_path, fig_id=figure.id, md5sum=figure.md5sum) }}">View image</a>
                                 </p>
                             {% else %}
                                 <p class="not_present">
@@ -116,7 +116,7 @@
                                 </div>
 
                                 <p>
-                                    <a href="{{ figure.target_full }}">View image</a>
+                                    <a href="{{ url_for('.case_view_figure', proposal_id=proposal_id, role_path=role_path, fig_id=figure.id, md5sum=figure.md5sum) }}">View image</a>
                                 </p>
                             {% endif %}
                         </td>
@@ -129,7 +129,7 @@
                             Uploaded:
                             {{ figure.uploaded | format_datetime }}
                             <br />
-                            <a href="{{ figure.target_edit }}" id="edit_figure_{{ figure.id }}_link">Edit figure</a>
+                            <a href="{{ url_for('.case_edit_figure', proposal_id=proposal_id, role_path=role_path, fig_id=figure.id) }}" id="edit_figure_{{ figure.id }}_link">Edit figure</a>
                         </td>
                     </tr>
                 {% endfor %}

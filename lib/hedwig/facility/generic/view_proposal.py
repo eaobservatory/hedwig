@@ -44,10 +44,6 @@ from ...web.util import ErrorPage, HTTPError, HTTPForbidden, \
     flash, session, url_for
 from ...view.util import count_words, organise_collection, with_proposal
 
-ProposalFigureExtra = namedtuple(
-    'ProposalFigureExtra',
-    ProposalFigureInfo._fields + ('target_view', 'target_edit', 'target_full'))
-
 CalculationExtra = namedtuple(
     'CalculationExtra',
     Calculation._fields + ('calculator_name',
@@ -1123,23 +1119,9 @@ class GenericProposal(object):
             proposal_id=proposal.id, role=role,
             with_uploader_name=True).get_single(None)
 
-        figures = [
-            ProposalFigureExtra(
-                *x,
-                target_full=url_for('.case_view_figure',
-                                    proposal_id=proposal.id,
-                                    role_path=role_path, fig_id=x.id,
-                                    md5sum=x.md5sum),
-                target_view=url_for('.case_view_figure_thumbnail',
-                                    proposal_id=proposal.id,
-                                    role_path=role_path, fig_id=x.id,
-                                    md5sum=x.md5sum),
-                target_edit=url_for('.case_edit_figure',
-                                    proposal_id=proposal.id,
-                                    role_path=role_path, fig_id=x.id))
-            for x in db.search_proposal_figure(
-                proposal_id=proposal.id, role=role,
-                with_caption=True, with_uploader_name=True).values()]
+        figures = db.search_proposal_figure(
+            proposal_id=proposal.id, role=role,
+            with_caption=True, with_uploader_name=True).values()
 
         return {
             'title': 'Edit {}'.format(TextRole.get_name(role).title()),
@@ -1163,15 +1145,8 @@ class GenericProposal(object):
         code = TextRole.short_name(role)
         role_path = TextRole.url_path(role)
 
-        figures = [
-            ProposalFigureExtra(
-                *x, target_edit=None, target_full=None,
-                target_view=url_for('.case_view_figure_thumbnail',
-                                    proposal_id=proposal.id,
-                                    role_path=role_path, fig_id=x.id,
-                                    md5sum=x.md5sum))
-            for x in db.search_proposal_figure(
-                proposal_id=proposal.id, role=role).values()]
+        figures = db.search_proposal_figure(
+            proposal_id=proposal.id, role=role).values()
 
         if role == TextRole.TECHNICAL_CASE:
             calculations = self._prepare_calculations(
@@ -1353,17 +1328,11 @@ class GenericProposal(object):
             'title': 'Manage {} Figures'.format(name.title()),
             'proposal_id': proposal.id,
             'proposal_code': self.make_proposal_code(db, proposal),
+            'role_path': role_path,
             'message': message,
             'target': url_for('.case_manage_figure',
                               proposal_id=proposal.id, role_path=role_path),
-            'figures': [
-                ProposalFigureExtra(
-                    *x, target_full=None, target_edit=None,
-                    target_view=url_for(
-                        '.case_view_figure_thumbnail',
-                        proposal_id=proposal.id, role_path=role_path,
-                        fig_id=x.id, md5sum=x.md5sum))
-                for x in figures.values()],
+            'figures': figures.values(),
         }
 
     @with_proposal(permission='view')
@@ -1601,6 +1570,7 @@ class GenericProposal(object):
             'figures': figures,
             'calculations': calculations,
             'show_save_reminder': is_case_text,
+            'role_path': TextRole.url_path(role),
         })
 
         return ctx
