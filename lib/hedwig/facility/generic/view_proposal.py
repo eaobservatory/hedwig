@@ -61,10 +61,6 @@ PrevProposalPubExtra = namedtuple(
     'PrevProposalPubExtra',
     PrevProposalPub._fields + ('url',))
 
-TargetToolInfoExtra = namedtuple(
-    'TargetToolInfoExtra',
-    TargetToolInfo._fields + ('target_view', ))
-
 
 class GenericProposal(object):
     def view_proposal_new(self, db, call_id, form):
@@ -188,7 +184,7 @@ class GenericProposal(object):
                     proposal_id=proposal.id))
                 for x in self.calculators.values()],
             'calculations': self._prepare_calculations(calculations),
-            'target_tools': self._get_target_tool_info(proposal.id),
+            'target_tools': self.target_tools.values(),
             'tool_note': proposal_text.get(TextRole.TOOL_NOTE, None),
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id).values(),
@@ -208,13 +204,6 @@ class GenericProposal(object):
                 proposal_fig.values_by_role(role)
 
         return extra
-
-    def _get_target_tool_info(self, proposal_id):
-        return [
-            TargetToolInfoExtra(*x, target_view=url_for(
-                '.tool_proposal_{}'.format(x.code,),
-                proposal_id=proposal_id))
-            for x in self.target_tools.values()]
 
     def _validate_proposal(self, db, proposal):
         messages = []
@@ -1100,7 +1089,7 @@ class GenericProposal(object):
         return {
             'help_link': url_for('help.user_page', page_name='target',
                                  _anchor='clash-tool'),
-            'target_tools': self._get_target_tool_info(proposal.id),
+            'target_tools': self.target_tools.values(),
         }
 
     @with_proposal(permission='edit')
