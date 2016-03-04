@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,11 +22,12 @@ from flask import Blueprint, request
 
 from ..util import require_admin, require_auth, require_not_auth, templated
 from ...view.home import HomeView
-from ...view import people as view
+from ...view.people import PeopleView
 
 
 def create_people_blueprint(db, facilities):
     bp = Blueprint('people', __name__)
+    view = PeopleView()
     view_home = HomeView()
 
     @bp.route('/user/log_in', methods=['GET', 'POST'])
