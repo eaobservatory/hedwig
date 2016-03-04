@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from flask import Blueprint
 
 from ...view.home import HomeView
-from ..util import require_auth, session, templated
+from ..util import templated
 
 
 def create_home_blueprint(db, facilities):
@@ -32,20 +32,6 @@ def create_home_blueprint(db, facilities):
     @templated('home.html')
     def home_page():
         return view.home(facilities)
-
-    @bp.route('/proposals')
-    @require_auth(require_person=True)
-    @templated('person_proposals.html')
-    def person_proposals():
-        return view.person_proposals(
-            db, session['person']['id'], facilities)
-
-    @bp.route('/reviews')
-    @require_auth(require_person=True)
-    @templated('person_reviews.html')
-    def person_reviews():
-        return view.person_reviews(
-            db, session['person']['id'], facilities)
 
     @bp.route('/contact-us')
     @templated('contact.html')

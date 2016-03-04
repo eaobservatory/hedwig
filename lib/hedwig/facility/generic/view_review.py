@@ -955,7 +955,7 @@ class GenericReview(object):
                 flash('The review has been saved.')
 
                 raise HTTPRedirect(referrer if referrer
-                                   else url_for('person_reviews'))
+                                   else url_for('people.person_reviews'))
 
             except UserError as e:
                 message = e.message

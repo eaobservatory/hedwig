@@ -19,16 +19,14 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from flask import Blueprint, request
-
-from ..util import require_admin, require_auth, require_not_auth, templated
-from ...view.home import HomeView
+from ..util import require_admin, require_auth, require_not_auth, \
+    session, templated
 from ...view.people import PeopleView
 
 
 def create_people_blueprint(db, facilities):
     bp = Blueprint('people', __name__)
     view = PeopleView()
-    view_home = HomeView()
 
     @bp.route('/user/log_in', methods=['GET', 'POST'])
     @require_not_auth
@@ -165,19 +163,33 @@ def create_people_blueprint(db, facilities):
             db, request.args,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/proposals')
+    @require_auth(require_person=True)
+    @templated('person_proposals.html')
+    def person_proposals():
+        return view.person_proposals(
+            db, session['person']['id'], facilities)
+
     @bp.route('/person/<int:person_id>/proposals')
     @require_admin
     @templated('person_proposals.html')
     def person_view_proposals(person_id):
-        return view_home.person_proposals(db, person_id, facilities,
-                                          administrative=True)
+        return view.person_proposals(db, person_id, facilities,
+                                     administrative=True)
+
+    @bp.route('/reviews')
+    @require_auth(require_person=True)
+    @templated('person_reviews.html')
+    def person_reviews():
+        return view.person_reviews(
+            db, session['person']['id'], facilities)
 
     @bp.route('/person/<int:person_id>/reviews')
     @require_admin
     @templated('person_reviews.html')
     def person_view_reviews(person_id):
-        return view_home.person_reviews(db, person_id, facilities,
-                                        administrative=True)
+        return view.person_reviews(db, person_id, facilities,
+                                   administrative=True)
 
     @bp.route('/institution/')
     @require_auth()

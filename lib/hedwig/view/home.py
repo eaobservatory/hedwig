@@ -18,93 +18,14 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import OrderedDict, namedtuple
-from itertools import groupby
-
 from ..config import get_config
-from ..error import NoSuchRecord
-from ..type import ProposalState, ProposalWithCode
-from ..web.util import HTTPNotFound, HTTPForbidden, mangle_email_address
-from . import auth
+from ..web.util import mangle_email_address
 
 
 class HomeView(object):
     def home(self, facilities):
         return {
             'facilities': facilities.values(),
-        }
-
-    def person_proposals(self, db, person_id, facilities,
-                         administrative=False):
-        if administrative:
-            if not auth.can_be_admin(db):
-                raise HTTPForbidden('Could not verify administrative access.')
-
-            try:
-                person = db.get_person(person_id=person_id)
-                title = '{}: Proposals'.format(person.name)
-            except NoSuchRecord:
-                raise HTTPNotFound('Person not found.')
-        else:
-            person = None
-            title = 'Your Proposals'
-
-        proposals = db.search_proposal(person_id=person_id)
-
-        facility_proposals = OrderedDict()
-
-        for id_, ps in groupby(proposals.values(), lambda x: x.facility_id):
-            facility = facilities.get(id_)
-            if facility is None:
-                continue
-
-            facility_proposals[facility.name] = [
-                ProposalWithCode(
-                    *p, code=facility.view.make_proposal_code(db, p),
-                    facility_code=facility.code)
-                for p in ps]
-
-        return {
-            'title': title,
-            'proposals': facility_proposals,
-            'person': person,
-        }
-
-    def person_reviews(self, db, person_id, facilities, administrative=False):
-        if administrative:
-            if not auth.can_be_admin(db):
-                raise HTTPForbidden('Could not verify administrative access.')
-
-            try:
-                person = db.get_person(person_id=person_id)
-                title = '{}: Reviews'.format(person.name)
-            except NoSuchRecord:
-                raise HTTPNotFound('Person not found.')
-        else:
-            person = None
-            title = 'Your Reviews'
-
-        proposals = db.search_proposal(
-            reviewer_person_id=person_id,
-            person_pi=True, state=ProposalState.REVIEW)
-
-        facility_proposals = OrderedDict()
-
-        for id_, ps in groupby(proposals.values(), lambda x: x.facility_id):
-            facility = facilities.get(id_)
-            if facility is None:
-                continue
-
-            facility_proposals[facility.name] = [
-                ProposalWithCode(
-                    *p, code=facility.view.make_proposal_code(db, p),
-                    facility_code=facility.code)
-                for p in ps]
-
-        return {
-            'title': title,
-            'proposals': facility_proposals,
-            'person': person,
         }
 
     def contact_page(self):
