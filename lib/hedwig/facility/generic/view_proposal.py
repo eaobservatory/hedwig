@@ -49,10 +49,6 @@ CalculationExtra = namedtuple(
     Calculation._fields + ('calculator_name',
                            'inputs', 'outputs', 'mode_info', 'target_view'))
 
-CalculatorInfoExtra = namedtuple(
-    'CalculatorInfoExtra',
-    CalculatorInfo._fields + ('target_view', ))
-
 PrevProposalExtra = namedtuple(
     'PrevProposalExtra',
     PrevProposal._fields + ('links',))
@@ -178,11 +174,7 @@ class GenericProposal(object):
             'abstract': proposal_text.get(TextRole.ABSTRACT, None),
             'targets': targets,
             'target_total_time': target_total_time,
-            'calculators': [
-                CalculatorInfoExtra(*x, target_view=url_for(
-                    '.calc_{}_{}'.format(x.code, x.modes.values()[0].code),
-                    proposal_id=proposal.id))
-                for x in self.calculators.values()],
+            'calculators': self.calculators.values(),
             'calculations': self._prepare_calculations(calculations),
             'target_tools': self.target_tools.values(),
             'tool_note': proposal_text.get(TextRole.TOOL_NOTE, None),
