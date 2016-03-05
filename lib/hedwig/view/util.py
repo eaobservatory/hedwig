@@ -174,20 +174,24 @@ def with_person(permission):
 
             assert person.id == person_id
 
-            can = auth.for_person(db, person)
-
-            if permission == 'view':
-                if not can.view:
-                    raise HTTPForbidden(
-                        'Permission denied for this person profile.')
-
-            elif permission == 'edit':
-                if not can.edit:
-                    raise HTTPForbidden(
-                        'Edit permission denied for this person profile.')
+            if permission == 'none':
+                return f(self, db, person, *args, **kwargs)
 
             else:
-                raise HTTPError('Unknown permission type.')
+                can = auth.for_person(db, person)
+
+                if permission == 'view':
+                    if not can.view:
+                        raise HTTPForbidden(
+                            'Permission denied for this person profile.')
+
+                elif permission == 'edit':
+                    if not can.edit:
+                        raise HTTPForbidden(
+                            'Edit permission denied for this person profile.')
+
+                else:
+                    raise HTTPError('Unknown permission type.')
 
             return f(self, db, person, can, *args, **kwargs)
 

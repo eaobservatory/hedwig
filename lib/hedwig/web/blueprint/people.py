@@ -19,8 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from flask import Blueprint, request
-from ..util import require_admin, require_auth, require_not_auth, \
-    session, templated
+from ..util import require_admin, require_auth, require_not_auth, templated
 from ...view.people import PeopleView
 
 
@@ -167,29 +166,25 @@ def create_people_blueprint(db, facilities):
     @require_auth(require_person=True)
     @templated('person_proposals.html')
     def person_proposals():
-        return view.person_proposals(
-            db, session['person']['id'], facilities)
+        return view.person_proposals_own(db, facilities)
 
     @bp.route('/person/<int:person_id>/proposals')
     @require_admin
     @templated('person_proposals.html')
     def person_view_proposals(person_id):
-        return view.person_proposals(db, person_id, facilities,
-                                     administrative=True)
+        return view.person_proposals_other(db, person_id, facilities)
 
     @bp.route('/reviews')
     @require_auth(require_person=True)
     @templated('person_reviews.html')
     def person_reviews():
-        return view.person_reviews(
-            db, session['person']['id'], facilities)
+        return view.person_reviews_own(db, facilities)
 
     @bp.route('/person/<int:person_id>/reviews')
     @require_admin
     @templated('person_reviews.html')
     def person_view_reviews(person_id):
-        return view.person_reviews(db, person_id, facilities,
-                                   administrative=True)
+        return view.person_reviews_other(db, person_id, facilities)
 
     @bp.route('/institution/')
     @require_auth()

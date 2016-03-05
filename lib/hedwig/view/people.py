@@ -749,21 +749,18 @@ class PeopleView(object):
             'token': token,
         }
 
-    def person_proposals(self, db, person_id, facilities,
-                         administrative=False):
-        if administrative:
-            if not auth.can_be_admin(db):
-                raise HTTPForbidden('Could not verify administrative access.')
+    def person_proposals_own(self, db, facilities):
+        return self._person_proposals(
+            db, session['person']['id'], facilities, None, 'Your Proposals')
 
-            try:
-                person = db.get_person(person_id=person_id)
-                title = '{}: Proposals'.format(person.name)
-            except NoSuchRecord:
-                raise HTTPNotFound('Person not found.')
-        else:
-            person = None
-            title = 'Your Proposals'
+    @with_verified_admin
+    @with_person(permission='none')
+    def person_proposals_other(self, db, person, facilities):
+        return self._person_proposals(
+            db, person.id, facilities, person,
+            '{}: Proposals'.format(person.name))
 
+    def _person_proposals(self, db, person_id, facilities, person, title):
         proposals = db.search_proposal(person_id=person_id)
 
         facility_proposals = OrderedDict()
@@ -785,20 +782,18 @@ class PeopleView(object):
             'person': person,
         }
 
-    def person_reviews(self, db, person_id, facilities, administrative=False):
-        if administrative:
-            if not auth.can_be_admin(db):
-                raise HTTPForbidden('Could not verify administrative access.')
+    def person_reviews_own(self, db, facilities):
+        return self._person_reviews(
+            db, session['person']['id'], facilities, None, 'Your Reviews')
 
-            try:
-                person = db.get_person(person_id=person_id)
-                title = '{}: Reviews'.format(person.name)
-            except NoSuchRecord:
-                raise HTTPNotFound('Person not found.')
-        else:
-            person = None
-            title = 'Your Reviews'
+    @with_verified_admin
+    @with_person(permission='none')
+    def person_reviews_other(self, db, person, facilities):
+        return self._person_reviews(
+            db, person.id, facilities, person,
+            '{}: Reviews'.format(person.name))
 
+    def _person_reviews(self, db, person_id, facilities, person, title):
         proposals = db.search_proposal(
             reviewer_person_id=person_id,
             person_pi=True, state=ProposalState.REVIEW)
