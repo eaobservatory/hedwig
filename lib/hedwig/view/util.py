@@ -111,6 +111,48 @@ def with_call_review(permission):
     return decorator
 
 
+def with_institution(permission):
+    """
+    Decorator for methods which deal with institution records.
+
+    Assumes that the first arguments are a database object and institution ID.
+    Checks that the uesr has the requested permission and then calls the
+    wrapped method with the database, institution and authorization
+    object as the first arguments.
+    """
+
+    def decorator(f):
+        @functools.wraps(f)
+        def decorated_method(self, db, institution_id, *args, **kwargs):
+            try:
+                institution = db.get_institution(institution_id)
+            except NoSuchRecord:
+                raise HTTPNotFound('Institution not found.')
+
+            assert institution.id == institution_id
+
+            can = auth.for_institution(db, institution)
+
+            if permission == 'view':
+                if not can.view:
+                    raise HTTPForbidden(
+                        'Permission denied for this institution.')
+
+            elif permission == 'edit':
+                if not can.edit:
+                    raise HTTPForbidden(
+                        'Edit permission denied for this institution.')
+
+            else:
+                raise HTTPError('Unknown permission type.')
+
+            return f(self, db, institution, can, *args, **kwargs)
+
+        return decorated_method
+
+    return decorator
+
+
 def with_person(permission):
     """
     Decorator for methods which deal with personal profiles.

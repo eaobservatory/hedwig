@@ -32,7 +32,8 @@ from ..type import Email, EmailCollection, \
 from ..util import get_countries
 from ..web.util import flash, mangle_email_address, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
-from .util import organise_collection, with_person, with_verified_admin
+from .util import organise_collection, with_institution, with_person, \
+    with_verified_admin
 from . import auth
 
 
@@ -831,17 +832,8 @@ class PeopleView(object):
                 for x in db.list_institution().values()],
         }
 
-    def institution_view(self, db, institution_id):
-        try:
-            institution = db.get_institution(institution_id)
-        except NoSuchRecord:
-            raise HTTPNotFound('Institution not found.')
-
-        can = auth.for_institution(db, institution)
-
-        if not can.view:
-            raise HTTPForbidden('Permission denied for this institution.')
-
+    @with_institution(permission='view')
+    def institution_view(self, db, institution, can):
         # Only show public, registered members unless the user has
         # administrative privileges.
         public = True
@@ -850,7 +842,7 @@ class PeopleView(object):
             public = None
             registered = None
 
-        persons = db.search_person(institution_id=institution_id,
+        persons = db.search_person(institution_id=institution.id,
                                    registered=registered, public=public)
 
         return {
@@ -862,16 +854,8 @@ class PeopleView(object):
             'persons': persons.values(),
         }
 
-    def institution_edit(self, db, institution_id, form):
-        try:
-            institution = db.get_institution(institution_id)
-        except NoSuchRecord:
-            raise HTTPNotFound('Institution not found.')
-
-        if not auth.for_institution(db, institution).edit:
-            raise HTTPForbidden(
-                'Permission denied for editing this institution.')
-
+    @with_institution(permission='edit')
+    def institution_edit(self, db, institution, can, form):
         show_confirm_prompt = True
         message = None
 
@@ -880,7 +864,7 @@ class PeopleView(object):
                 show_confirm_prompt = False
             elif 'submit_cancel' in form:
                 raise HTTPRedirect(url_for('.institution_view',
-                                           institution_id=institution_id))
+                                           institution_id=institution.id))
             elif 'submit-edit' in form:
                 try:
                     institution = institution._replace(
@@ -901,7 +885,7 @@ class PeopleView(object):
                                     auth.can_be_admin(db))
 
                     db.update_institution(
-                        institution_id,
+                        institution.id,
                         updater_person_id=session['person']['id'],
                         name=institution.name,
                         department=institution.department,
@@ -911,7 +895,7 @@ class PeopleView(object):
                         log_approved=log_approved)
                     flash('The institution\'s record has been updated.')
                     raise HTTPRedirect(url_for('.institution_view',
-                                               institution_id=institution_id))
+                                               institution_id=institution.id))
                 except UserError as e:
                     message = e.message
                     show_confirm_prompt = False
@@ -922,7 +906,7 @@ class PeopleView(object):
             'title': 'Edit Institution: {}'.format(institution.name),
             'show_confirm_prompt': show_confirm_prompt,
             'message': message,
-            'institution_id': institution_id,
+            'institution_id': institution.id,
             'institution': institution,
             'countries': get_countries(),
         }
