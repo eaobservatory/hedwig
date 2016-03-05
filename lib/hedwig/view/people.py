@@ -32,7 +32,7 @@ from ..type import Email, EmailCollection, \
 from ..util import get_countries
 from ..web.util import flash, mangle_email_address, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
-from .util import organise_collection
+from .util import organise_collection, with_verified_admin
 from . import auth
 
 
@@ -367,14 +367,8 @@ class PeopleView(object):
             'token': token,
         }
 
+    @with_verified_admin
     def take_admin(self, db, referrer):
-        if 'person' not in session or not session['person']['admin']:
-            raise HTTPForbidden('Permission denied.')
-
-        # Double-check the user still has administrative privileges.
-        if not auth.can_be_admin(db):
-            raise HTTPForbidden('Permission denied.')
-
         session['is_admin'] = True
         flash('You have taken administrative privileges.')
 
@@ -388,10 +382,8 @@ class PeopleView(object):
         flash('You have dropped administrative privileges.')
         raise HTTPRedirect(referrer if referrer else url_for('home.home_page'))
 
+    @with_verified_admin
     def user_log(self, db, user_id):
-        if not auth.can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
-
         person = None
         try:
             person = db.search_person(user_id=user_id).get_single()
@@ -969,16 +961,12 @@ class PeopleView(object):
             'countries': get_countries(),
         }
 
+    @with_verified_admin
     def institution_log(self, db, institution_id, form):
-        if not auth.can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
-
         return self._display_institution_log(db, institution_id, form)
 
+    @with_verified_admin
     def institution_log_approval(self, db, form):
-        if not auth.can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
-
         return self._display_institution_log(db, None, form)
 
     def _display_institution_log(self, db, institution_id, form):
@@ -1059,6 +1047,7 @@ class PeopleView(object):
             'entries': entries,
         }
 
+    @with_verified_admin
     def institution_subsume(self, db, institution_id, form):
         if not auth.can_be_admin(db):
             raise HTTPForbidden('Could not verify administrative access.')

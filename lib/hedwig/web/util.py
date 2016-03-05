@@ -153,21 +153,25 @@ def require_admin(f):
     return decorated
 
 
-def require_auth(require_person=False, require_institution=False,
+def require_auth(require_person=False, require_person_admin=False,
+                 require_institution=False,
                  register_user_only=False, record_referrer=False):
     """
     Decorator to require that the user is authenticated.
 
     Can optionally require the user to have a profile,
     and to have an institution associated with that profile.
+    With the "require_person_admin" option, also check that the
+    person record in the session has the admin flag.  (This
+    is not the same as the session "is_admin" flag -- use require_admin
+    for that.)
 
     If "register_user_only" is set, then we want the user to log in or
     create a user account but not to complete a profile before
     proceeding.  This is to support accepting invitation tokens.
 
     If "record_referrer" is specified then the referrer is added to the
-    session as "log_in_referrer" if log in is required.  (Currently only
-    for plain log in, not requiring person/institution.)
+    session as "log_in_referrer" if log in is required.
 
     This needs to be the outermost route decorator, because under
     certain circumstances (namely requiring the user to authenticate
@@ -185,46 +189,53 @@ def require_auth(require_person=False, require_institution=False,
             if not record_referrer:
                 session.pop('log_in_referrer', None)
 
-            if 'user_id' not in session:
-                if _flask_request.method == 'POST':
-                    # If someone logged out (in another tab) or their session
-                    # expired while they were filling in a form, we should
-                    # show a help page.  (Otherwise after logging in they
-                    # are redirected back to a blank copy of the form they
-                    # were working on.)
+            try:
+                if 'user_id' not in session:
+                    if _flask_request.method == 'POST':
+                        # If someone logged out (in another tab) or their session
+                        # expired while they were filling in a form, we should
+                        # show a help page.  (Otherwise after logging in they
+                        # are redirected back to a blank copy of the form they
+                        # were working on.)
 
-                    session['log_in_for'] = url_for('people.log_in_post_done')
+                        session['log_in_for'] = url_for('people.log_in_post_done')
 
-                    return _make_response('people/log_in_post.html', {
-                        'title': 'Reauthentication Required',
-                        'message': None,
-                        'without_links': True,
-                    })
+                        return _make_response('people/log_in_post.html', {
+                            'title': 'Reauthentication Required',
+                            'message': None,
+                            'without_links': True,
+                        })
 
-                flash('Please log in or register for an account to proceed.')
+                    flash('Please log in or register for an account to proceed.')
 
-                if register_user_only:
-                    session['register_user_for'] = _flask_request.url
-                else:
+                    if register_user_only:
+                        session['register_user_for'] = _flask_request.url
+                    else:
+                        session['log_in_for'] = _flask_request.url
+
+                    raise HTTPRedirect(url_for('people.log_in'))
+
+                elif ((require_person or require_person_admin or
+                        require_institution) and 'person' not in session):
+                    flash('Please complete your profile before proceeding.')
                     session['log_in_for'] = _flask_request.url
+                    raise HTTPRedirect(url_for('people.register_person'))
 
+                elif (require_institution and
+                        session['person']['institution_id'] is None):
+                    flash('Please select your institution before proceeding.')
+                    session['log_in_for'] = _flask_request.url
+                    raise HTTPRedirect(url_for('people.person_edit_institution',
+                                               person_id=session['person']['id']))
+
+            except HTTPRedirect as redirect:
                 if record_referrer:
                     session['log_in_referrer'] = _flask_request.referrer
 
-                raise HTTPRedirect(url_for('people.log_in'))
+                raise redirect
 
-            elif ((require_person or require_institution) and
-                    'person' not in session):
-                flash('Please complete your profile before proceeding.')
-                session['log_in_for'] = _flask_request.url
-                raise HTTPRedirect(url_for('people.register_person'))
-
-            elif (require_institution and
-                    session['person']['institution_id'] is None):
-                flash('Please select your institution before proceeding.')
-                session['log_in_for'] = _flask_request.url
-                raise HTTPRedirect(url_for('people.person_edit_institution',
-                                           person_id=session['person']['id']))
+            if require_person_admin and not session['person']['admin']:
+                raise HTTPForbidden('Permission denied.')
 
             return f(*args, **kwargs)
 

@@ -88,7 +88,7 @@ def create_people_blueprint(db, facilities):
             request.remote_addr)
 
     @bp.route('/user/admin/take')
-    @require_auth(record_referrer=True)
+    @require_auth(require_person_admin=True, record_referrer=True)
     def take_admin():
         return view.take_admin(db, request.referrer)
 
