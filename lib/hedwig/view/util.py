@@ -111,6 +111,49 @@ def with_call_review(permission):
     return decorator
 
 
+def with_person(permission):
+    """
+    Decorator for methods which deal with personal profiles.
+
+    Assumes that the first arguments are a database object and person ID.
+    Checks that the user has the requested permission and then calls the
+    wwrapped method with the database, proposal and authorization
+    object as the first arguments.
+    """
+
+    def decorator(f):
+        @functools.wraps(f)
+        def decorated_method(self, db, person_id, *args, **kwargs):
+            try:
+                person = db.get_person(person_id=person_id,
+                                       with_institution=True, with_email=True)
+            except NoSuchRecord:
+                raise HTTPNotFound('Person profile not found.')
+
+            assert person.id == person_id
+
+            can = auth.for_person(db, person)
+
+            if permission == 'view':
+                if not can.view:
+                    raise HTTPForbidden(
+                        'Permission denied for this person profile.')
+
+            elif permission == 'edit':
+                if not can.edit:
+                    raise HTTPForbidden(
+                        'Edit permission denied for this person profile.')
+
+            else:
+                raise HTTPError('Unknown permission type.')
+
+            return f(self, db, person, can, *args, **kwargs)
+
+        return decorated_method
+
+    return decorator
+
+
 def with_proposal(permission):
     """
     Decorator for methods which deal with proposals.

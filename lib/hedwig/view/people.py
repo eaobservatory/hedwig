@@ -32,7 +32,7 @@ from ..type import Email, EmailCollection, \
 from ..util import get_countries
 from ..web.util import flash, mangle_email_address, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
-from .util import organise_collection, with_verified_admin
+from .util import organise_collection, with_person, with_verified_admin
 from . import auth
 
 
@@ -464,18 +464,8 @@ class PeopleView(object):
                 for p in persons.values()],
         }
 
-    def person_view(self, db, person_id):
-        try:
-            person = db.get_person(person_id,
-                                   with_institution=True, with_email=True)
-        except NoSuchRecord:
-            raise HTTPNotFound('Person profile not found.')
-
-        can = auth.for_person(db, person)
-
-        if not can.view:
-            raise HTTPForbidden('Permission denied for this person profile.')
-
+    @with_person(permission='view')
+    def person_view(self, db, person, can):
         is_current_user = person.user_id == session['user_id']
 
         # Show all email addresses if:
@@ -507,14 +497,8 @@ class PeopleView(object):
             'person': person,
         }
 
-    def person_edit(self, db, person_id, form):
-        try:
-            person = db.get_person(person_id)
-        except NoSuchRecord:
-            raise HTTPNotFound('Person profile not found.')
-        if not auth.for_person(db, person).edit:
-            raise HTTPForbidden('Permission denied for this person profile.')
-
+    @with_person(permission='edit')
+    def person_edit(self, db, person, can, form):
         message = None
 
         if form is not None:
@@ -526,35 +510,29 @@ class PeopleView(object):
                 if not person.name:
                     raise UserError('Please enter your full name.')
                 db.update_person(
-                    person_id, name=person.name,
+                    person.id, name=person.name,
                     public=(person.public and person.user_id is not None))
 
                 if session['user_id'] == person.user_id:
                     flash('Your user profile has been saved.')
-                    _update_session_person(db.get_person(person_id))
+                    _update_session_person(db.get_person(person.id))
                 else:
                     flash('The user profile has been saved.')
                 raise HTTPRedirect(url_for(
-                    '.person_view', person_id=person_id))
+                    '.person_view', person_id=person.id))
 
             except UserError as e:
                 message = e.message
 
         return {
             'title': '{}: Edit Profile'.format(person.name),
-            'target': url_for('.person_edit', person_id=person_id),
+            'target': url_for('.person_edit', person_id=person.id),
             'message': message,
             'person': person,
         }
 
-    def person_edit_institution(self, db, person_id, form):
-        try:
-            person = db.get_person(person_id)
-        except NoSuchRecord:
-            raise HTTPNotFound('Person profile not found.')
-        if not auth.for_person(db, person).edit:
-            raise HTTPForbidden('Permission denied for this person profile.')
-
+    @with_person(permission='edit')
+    def person_edit_institution(self, db, person, can, form):
         message = None
 
         is_current_user = person.user_id == session['user_id']
@@ -572,7 +550,7 @@ class PeopleView(object):
                     institution_id = int(form['institution_id'])
                     if institution_id not in institutions:
                         raise HTTPError('Institution not found.')
-                    db.update_person(person_id, institution_id=institution_id)
+                    db.update_person(person.id, institution_id=institution_id)
                     action = 'selected'
 
                 elif 'submit_add' in form:
@@ -592,14 +570,14 @@ class PeopleView(object):
                         institution.name, institution.department,
                         institution.organization,
                         institution.address, institution.country)
-                    db.update_person(person_id, institution_id=institution_id)
+                    db.update_person(person.id, institution_id=institution_id)
                     action = 'recorded'
 
                 else:
                     raise ErrorPage('Unknown action')
 
                 if is_current_user:
-                    _update_session_person(db.get_person(person_id))
+                    _update_session_person(db.get_person(person.id))
                     flash('Your institution has been {}.', action)
                 else:
                     flash('The institution has been {}.', action)
@@ -610,7 +588,7 @@ class PeopleView(object):
 
                 raise HTTPRedirect(session.pop(
                     'log_in_for',
-                    url_for('.person_view', person_id=person_id)))
+                    url_for('.person_view', person_id=person.id)))
 
             except UserError as e:
                 message = e.message
@@ -628,14 +606,8 @@ class PeopleView(object):
             'is_current_user': is_current_user,
         }
 
-    def person_edit_email(self, db, person_id, form):
-        try:
-            person = db.get_person(person_id, with_email=True)
-        except NoSuchRecord:
-            raise HTTPNotFound('Person profile not found.')
-        if not auth.for_person(db, person).edit:
-            raise HTTPForbidden('Permission denied for this person profile.')
-
+    @with_person(permission='edit')
+    def person_edit_email(self, db, person, can, form):
         message = None
         is_current_user = person.user_id == session['user_id']
         records = person.email
@@ -661,7 +633,7 @@ class PeopleView(object):
                         # Temporarily use the "new" number.
                         email_id = int(id_[4:])
                         added_records[email_id] = Email(
-                            email_id, person_id, form[param],
+                            email_id, person.id, form[param],
                             is_primary, False, is_public)
 
                     else:
@@ -674,7 +646,7 @@ class PeopleView(object):
                             verified = person.email[email_id].verified
 
                         updated_records[email_id] = Email(
-                            email_id, person_id, form[param],
+                            email_id, person.id, form[param],
                             is_primary, verified, is_public)
 
                 # Create new record collection: overwrite "records" variable
@@ -683,15 +655,15 @@ class PeopleView(object):
                 records = organise_collection(EmailCollection, updated_records,
                                               added_records)
 
-                db.sync_person_email(person_id, records)
+                db.sync_person_email(person.id, records)
 
                 if is_current_user:
                     flash('Your email addresses have been updated.')
-                    _update_session_person(db.get_person(person_id))
+                    _update_session_person(db.get_person(person.id))
                 else:
                     flash('The email addresses have been updated.')
                 raise HTTPRedirect(url_for(
-                    '.person_view', person_id=person_id))
+                    '.person_view', person_id=person.id))
 
             except UserError as e:
                 message = e.message
@@ -703,14 +675,8 @@ class PeopleView(object):
             'emails': records.values(),
         }
 
-    def person_email_verify_get(self, db, person_id, email_id, form):
-        try:
-            person = db.get_person(person_id, with_email=True)
-        except NoSuchRecord:
-            raise HTTPNotFound('Person profile not found.')
-        if not auth.for_person(db, person).edit:
-            raise HTTPForbidden('Permission denied for this person profile.')
-
+    @with_person(permission='edit')
+    def person_email_verify_get(self, db, person, can, email_id, form):
         try:
             email = person.email[email_id]
         except KeyError:
@@ -722,7 +688,7 @@ class PeopleView(object):
 
         if form:
             (token, expiry) = db.get_email_verify_token(
-                person_id, email.address)
+                person.id, email.address)
             db.add_message(
                 'Email verification code',
                 render_email_template('email_verify.txt', {
