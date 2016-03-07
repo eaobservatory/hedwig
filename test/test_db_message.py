@@ -21,7 +21,8 @@ from __future__ import absolute_import, division, print_function, \
 from datetime import datetime
 
 from hedwig.error import ConsistencyError, DatabaseIntegrityError
-from hedwig.type import Message, MessageRecipient, ResultCollection
+from hedwig.type import Message, MessageRecipient, MessageState, \
+    ResultCollection
 from .dummy_db import DBTestCase
 
 
@@ -66,6 +67,7 @@ class DBMessageTest(DBTestCase):
         self.assertIsNone(message.timestamp_sent)
         self.assertIsNone(message.identifier)
         self.assertIsNone(message.recipients)
+        self.assertEqual(message.state, MessageState.UNSENT)
 
         # Test "get_unsent_message" method.
         message = self.db.get_unsent_message(mark_sending=True)
@@ -104,6 +106,7 @@ class DBMessageTest(DBTestCase):
         self.assertIsInstance(message.timestamp_sent, datetime)
         self.assertEqual(message.identifier, '<1@localhost>')
         self.assertIsNone(message.recipients)
+        self.assertEqual(message.state, MessageState.SENT)
 
         with self.assertRaisesRegexp(ConsistencyError, '^message does not ex'):
             self.db.mark_message_sent(1999999, '<2@localhost>')

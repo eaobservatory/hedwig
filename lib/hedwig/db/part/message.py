@@ -22,7 +22,7 @@ from datetime import datetime
 from itertools import izip_longest
 
 from sqlalchemy.sql import select
-from sqlalchemy.sql.expression import and_, case
+from sqlalchemy.sql.expression import and_, case, column
 from sqlalchemy.sql.functions import coalesce
 
 from ...error import ConsistencyError, FormattedError, \
@@ -195,6 +195,13 @@ class MessagePart(object):
             message.c.timestamp_send,
             message.c.timestamp_sent,
             message.c.identifier,
+            case([
+                (and_(message.c.timestamp_send.is_(None),
+                      message.c.timestamp_sent.is_(None)),
+                 MessageState.UNSENT),
+                (message.c.timestamp_sent.is_(None),
+                 MessageState.SENDING),
+            ], else_=MessageState.SENT).label('state'),
         ])
 
         if person_id is not None:
@@ -202,22 +209,7 @@ class MessagePart(object):
                 message_recipient.c.person_id == person_id)
 
         if state is not None:
-            if state == MessageState.UNSENT:
-                stmt = stmt.where(and_(
-                    message.c.timestamp_send.is_(None),
-                    message.c.timestamp_sent.is_(None)))
-
-            elif state == MessageState.SENDING:
-                stmt = stmt.where(and_(
-                    message.c.timestamp_send.isnot(None),
-                    message.c.timestamp_sent.is_(None)))
-
-            elif state == MessageState.SENT:
-                stmt = stmt.where(
-                    message.c.timestamp_sent.isnot(None))
-
-            else:
-                raise FormattedError('unexpected state {}', state)
+            stmt = stmt.where(column('state') == state)
 
         if message_id_lt is not None:
             stmt = stmt.where(message.c.id < message_id_lt)
@@ -229,14 +221,6 @@ class MessagePart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(message.c.id.desc())):
-                if row['timestamp_sent'] is not None:
-                    state = MessageState.SENT
-                elif row['timestamp_send'] is not None:
-                    state = MessageState.SENDING
-                else:
-                    state = MessageState.UNSENT
-
-                ans[row['id']] = Message(body=None, recipients=None,
-                                         state=state, **row)
+                ans[row['id']] = Message(body=None, recipients=None, **row)
 
         return ans
