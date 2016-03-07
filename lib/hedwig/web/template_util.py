@@ -23,7 +23,7 @@ import json as json_module
 from flask import Markup
 from jinja2.runtime import Undefined
 
-from ..type import Assessment, AttachmentState, ProposalState, \
+from ..type import Assessment, AttachmentState, CallState, ProposalState, \
     PublicationType, ReviewerRole, TextRole
 
 from .format import format_text
@@ -55,6 +55,12 @@ def register_template_utils(app):
         if value is None:
             return ''
         return AttachmentState.get_name(value)
+
+    @app.template_filter()
+    def call_state_name(value):
+        if value is None:
+            return ''
+        return CallState.get_name(value)
 
     @app.template_filter()
     def count_true(list_):

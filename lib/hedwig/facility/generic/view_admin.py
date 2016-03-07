@@ -35,10 +35,6 @@ from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
     flash, parse_datetime, session, url_for
 from ...view.util import organise_collection, with_verified_admin
 
-CallExtra = namedtuple(
-    'CallExtra',
-    Call._fields + ('status',))
-
 
 class GenericAdmin(object):
     def view_facility_admin(self, db):
@@ -232,11 +228,7 @@ class GenericAdmin(object):
 
         return {
             'title': 'Call List',
-            'calls': [CallExtra(*x, status=(
-                      'Closed' if date_current > x.date_close
-                      else ('Open' if date_current >= x.date_open
-                            else 'Not yet open')))
-                      for x in calls.values()],
+            'calls': calls.values(),
         }
 
     def view_call_view(self, db, call_id):
@@ -260,17 +252,14 @@ class GenericAdmin(object):
         if call_id is None:
             # We are creating a new call, so need to be able to offer
             # menus of semesters and queues.
-            call = Call(None, semester_id=None, queue_id=None,
-                        date_open=None, date_close=None,
-                        facility_id=None, semester_name='',
-                        queue_name='', queue_description=None,
-                        queue_description_format=None,
-                        abst_word_lim=200,
-                        tech_word_lim=1000, tech_fig_lim=0, tech_page_lim=1,
-                        sci_word_lim=2000, sci_fig_lim=4, sci_page_lim=3,
-                        capt_word_lim=200, expl_word_lim=200,
-                        tech_note='', sci_note='', prev_prop_note='',
-                        note_format=FormatType.PLAIN)
+            call = null_tuple(Call)._replace(
+                semester_name='', queue_name='',
+                abst_word_lim=200,
+                tech_word_lim=1000, tech_fig_lim=0, tech_page_lim=1,
+                sci_word_lim=2000, sci_fig_lim=4, sci_page_lim=3,
+                capt_word_lim=200, expl_word_lim=200,
+                tech_note='', sci_note='', prev_prop_note='',
+                note_format=FormatType.PLAIN)
             semesters = db.search_semester(facility_id=self.id_)
             queues = db.search_queue(facility_id=self.id_)
             title = 'Add New Call'

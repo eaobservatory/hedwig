@@ -28,7 +28,8 @@ from ...error import ConsistencyError, NoSuchRecord, UserError
 from ...file.info import determine_figure_type, determine_pdf_page_count
 from ...publication.url import make_publication_url
 from ...type import Affiliation, AttachmentState, \
-    Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
+    Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, \
+    Call, CallState, \
     FigureType, FormatType, \
     PrevProposal, PrevProposalCollection, PrevProposalPub, \
     ProposalCategory, ProposalFigureInfo, ProposalState, ProposalText, \
@@ -62,7 +63,7 @@ class GenericProposal(object):
     def view_proposal_new(self, db, call_id, form):
         try:
             call = db.search_call(
-                facility_id=self.id_, call_id=call_id, is_open=True
+                facility_id=self.id_, call_id=call_id, state=CallState.OPEN
             ).get_single()
         except NoSuchRecord:
             raise HTTPNotFound('Call not found')

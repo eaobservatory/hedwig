@@ -23,7 +23,8 @@ from datetime import datetime
 from hedwig.db.meta import member
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
-from hedwig.type import Affiliation, AttachmentState, Call, Category, \
+from hedwig.type import Affiliation, AttachmentState, \
+    Call, CallState, Category, \
     Facility, FigureType, FormatType, \
     Member, MemberCollection, MemberInstitution,  \
     Proposal, ProposalCategory, \
@@ -307,6 +308,7 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(list(result.keys()), [call_id])
         expected = Call(id=call_id, semester_id=semester_id, queue_id=queue_id,
                         date_open=date_open, date_close=date_close,
+                        state=CallState.CLOSED,
                         facility_id=facility_id,
                         semester_name='My Semester', queue_name='My Queue',
                         queue_description=None, queue_description_format=None,
@@ -356,6 +358,36 @@ class DBProposalTest(DBTestCase):
 
         with self.assertRaises(NoSuchRecord):
             self.db.get_call_facility(1999999)
+
+        # Test the call state filtering.
+        result = self.db.search_call()
+        self.assertEqual(set(result.keys()), set((call_id, call_id_2)))
+        for value in result.values():
+            self.assertEqual(value.state, CallState.CLOSED)
+
+        result = self.db.search_call(state=CallState.CLOSED)
+        self.assertEqual(set(result.keys()), set((call_id, call_id_2)))
+
+        result = self.db.search_call(state=CallState.UNOPENED)
+        self.assertEqual(set(result.keys()), set())
+
+        self.db.update_call(call_id, date_close=datetime(2099, 1, 1))
+        result = self.db.search_call(state=CallState.CLOSED)
+        self.assertEqual(set(result.keys()), set((call_id_2,)))
+
+        result = self.db.search_call(state=CallState.OPEN)
+        self.assertEqual(set(result.keys()), set((call_id,)))
+        for value in result.values():
+            self.assertEqual(value.state, CallState.OPEN)
+
+        self.db.update_call(call_id, date_open=datetime(2099, 1, 1))
+        result = self.db.search_call(state=CallState.OPEN)
+        self.assertEqual(set(result.keys()), set(()))
+
+        result = self.db.search_call(state=CallState.UNOPENED)
+        self.assertEqual(set(result.keys()), set((call_id,)))
+        for value in result.values():
+            self.assertEqual(value.state, CallState.UNOPENED)
 
     def test_add_proposal(self):
         (call_id_1, affiliation_id_1) = self._create_test_call(

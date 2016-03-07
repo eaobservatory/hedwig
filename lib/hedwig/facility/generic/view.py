@@ -22,7 +22,7 @@ from collections import defaultdict, OrderedDict
 
 from ...config import get_config
 from ...error import NoSuchRecord, UserError
-from ...type import GroupType
+from ...type import CallState, GroupType
 from ...web.util import ErrorPage, HTTPNotFound, session, url_for
 from .calculator_example import ExampleCalculator
 from .tool_clash import ClashTool
@@ -245,7 +245,7 @@ class Generic(GenericAdmin, GenericProposal, GenericReview):
         # Determine which semesters have open calls for proposals.
         open_semesters = OrderedDict()
         for call in db.search_call(facility_id=self.id_,
-                                   is_open=True).values():
+                                   state=CallState.OPEN).values():
             if call.semester_id not in open_semesters:
                 open_semesters[call.semester_id] = call.semester_name
 
@@ -284,7 +284,8 @@ class Generic(GenericAdmin, GenericProposal, GenericReview):
             raise HTTPNotFound('Semester not found')
 
         calls = db.search_call(facility_id=self.id_, semester_id=semester_id,
-                               is_open=True, with_queue_description=True)
+                               state=CallState.OPEN,
+                               with_queue_description=True)
         if not calls:
             raise ErrorPage('No calls are currently open for this semester.')
 

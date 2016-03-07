@@ -22,7 +22,8 @@ from ..config import get_facilities
 from ..email.format import render_email_template
 from ..error import FormattedError, NoSuchRecord, UserError
 from ..stats.quartile import label_quartiles
-from ..type import FormatType, MemberInstitution, ProposalState, ReviewerRole
+from ..type import CallState, FormatType, MemberInstitution, \
+    ProposalState, ReviewerRole
 from ..util import get_logger
 
 logger = get_logger(__name__)
@@ -42,9 +43,10 @@ def close_call_proposals(db, call_id):
     """
 
     try:
-        call = db.search_call(call_id=call_id, is_open=False).get_single()
+        call = db.search_call(
+            call_id=call_id, state=CallState.CLOSED).get_single()
     except NoSuchRecord:
-        raise UserError('Call with id={} not found or still open.', call_id)
+        raise UserError('Call with id={} not found or not closed.', call_id)
 
     for proposal in db.search_proposal(call_id=call_id,
                                        with_members=True).values():

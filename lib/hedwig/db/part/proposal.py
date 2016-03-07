@@ -22,13 +22,13 @@ from datetime import datetime
 from hashlib import md5
 
 from sqlalchemy.sql import select
-from sqlalchemy.sql.expression import and_, case, not_
+from sqlalchemy.sql.expression import and_, case, column, not_
 from sqlalchemy.sql.functions import coalesce, count
 from sqlalchemy.sql.functions import max as max_
 
 from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
-from ...type import Affiliation, AttachmentState, Call, Category, \
+from ...type import Affiliation, AttachmentState, Call, CallState, Category, \
     Facility, FigureType, FormatType, \
     Member, MemberCollection, MemberInfo, MemberPIInfo, \
     PrevProposal, PrevProposalCollection, PrevProposalPub, \
@@ -764,7 +764,7 @@ class ProposalPart(object):
         return ans
 
     def search_call(self, call_id=None, facility_id=None, semester_id=None,
-                    queue_id=None, is_open=None, with_queue_description=False,
+                    queue_id=None, state=None, with_queue_description=False,
                     with_case_notes=False,
                     _conn=None):
         """
@@ -783,7 +783,13 @@ class ProposalPart(object):
             default['sci_note'] = None
             default['prev_prop_note'] = None
 
+        dt_current = datetime.utcnow()
+
         fields.extend([
+            case([
+                (call.c.date_open > dt_current, CallState.UNOPENED),
+                (call.c.date_close >= dt_current, CallState.OPEN),
+            ], else_=CallState.CLOSED).label('state'),
             semester.c.facility_id,
             semester.c.name.label('semester_name'),
             queue.c.name.label('queue_name')
@@ -816,14 +822,8 @@ class ProposalPart(object):
             else:
                 stmt = stmt.where(call.c.queue_id == queue_id)
 
-        if is_open is not None:
-            dt_current = datetime.utcnow()
-            condition = and_(call.c.date_open <= dt_current,
-                             call.c.date_close >= dt_current)
-            if is_open:
-                stmt = stmt.where(condition)
-            else:
-                stmt = stmt.where(not_(condition))
+        if state is not None:
+            stmt = stmt.where(column('state') == state)
 
         ans = ResultCollection()
 

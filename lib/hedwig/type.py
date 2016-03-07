@@ -59,7 +59,7 @@ Calculation = namedtuple(
 Call = namedtuple(
     'Call',
     map(lambda x: x.name, call.columns) +
-    ['facility_id', 'semester_name', 'queue_name',
+    ['state', 'facility_id', 'semester_name', 'queue_name',
      'queue_description', 'queue_description_format'])
 
 Category = namedtuple(
@@ -256,6 +256,25 @@ QueueInfo = namedtuple(
 ValidationMessage = namedtuple(
     'ValidationMessage',
     ['is_error', 'description', 'link_text', 'link_url'])
+
+
+class CallState(object):
+    UNOPENED = 1
+    OPEN = 2
+    CLOSED = 3
+
+    StateInfo = namedtuple(
+        'StateInfo', ('name',))
+
+    _info = OrderedDict((
+        (UNOPENED,  StateInfo('Not yet open')),
+        (OPEN,      StateInfo('Open')),
+        (CLOSED,    StateInfo('Closed')),
+    ))
+
+    @classmethod
+    def get_name(cls, state):
+        return cls._info[state].name
 
 
 class FormatType(object):

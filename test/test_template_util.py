@@ -23,7 +23,8 @@ import json
 
 from flask import Markup
 
-from hedwig.type import Assessment, AttachmentState, ProposalState, \
+from hedwig.type import Assessment, AttachmentState, CallState, \
+    ProposalState, \
     PublicationType, ReviewerRole, TextRole
 from hedwig.web.template_util import Counter
 
@@ -55,6 +56,12 @@ class TemplateUtilTestCase(WebAppTestCase):
 
         self.assertEqual(f(None), '')
         self.assertEqual(f(AttachmentState.READY), 'Ready')
+
+    def test_filter_call(self):
+        f = self.app.jinja_env.filters['call_state_name']
+
+        self.assertEqual(f(None), '')
+        self.assertEqual(f(CallState.OPEN), 'Open')
 
     def test_filter_count_true(self):
         f = self.app.jinja_env.filters['count_true']

@@ -29,7 +29,7 @@
                     {{ call.queue_name }}
                 </a>
             </td>
-            <td>{{ call.status }}</td>
+            <td>{{ call.state | call_state_name }}</td>
             <td>
                 <a href="{{ url_for('.call_view', call_id=call.id) }}">
                     View call
