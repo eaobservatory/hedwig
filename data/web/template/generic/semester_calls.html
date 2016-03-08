@@ -17,49 +17,53 @@
     </tr>
 </table>
 
-<table>
-    <tr>
-        <th>Queue</th>
-        {% for call in calls %}
-            <td><a href="#queue_{{ call.queue_id }}">{{ call.queue_name }}</a></td>
-        {% endfor %}
-    </tr>
-    <tr>
-        <th>Call for proposals closing date</th>
-        {% for call in calls %}
-            <td>{{ call.date_close | format_datetime }} UT</td>
-        {% endfor %}
-    </tr>
-</table>
+{% if calls %}
+    <table>
+        <tr>
+            <th>Queue</th>
+            {% for call in calls %}
+                <td><a href="#queue_{{ call.queue_id }}">{{ call.queue_name }}</a></td>
+            {% endfor %}
+        </tr>
+        <tr>
+            <th>Call for proposals closing date</th>
+            {% for call in calls %}
+                <td>{{ call.date_close | format_datetime }} UT</td>
+            {% endfor %}
+        </tr>
+    </table>
+{% endif %}
 
 {{ semester.description | format_text(semester.description_format) }}
 
-<h2>Available Queues</h2>
-
-<p>
-    The following queues have open calls for this semester.
-    Please select a queue to start a new proposal.
-</p>
-
-{% for call in calls %}
-    <h3 id="queue_{{ call.queue_id }}">{{ call.queue_name }}</h3>
-
-    <table>
-        <tr>
-            <th>Call for proposals opens</th>
-            <td>{{ call.date_open | format_datetime }} UT</td>
-        </tr>
-        <tr>
-            <th>Call for proposals closes</th>
-            <td>{{ call.date_close | format_datetime }} UT</td>
-        </tr>
-    </table>
+{% if calls %}
+    <h2>Available Queues</h2>
 
     <p>
-        <a id="call_{{ call.id }}_link" class="create_proposal_link" href="{{ url_for('.proposal_new', call_id=call.id) }}">Create a proposal for the {{ call.queue_name }} Queue</a>
+        The following queues have open calls for this semester.
+        Please select a queue to start a new proposal.
     </p>
 
-    {{ call.queue_description | format_text(call.queue_description_format) }}
-{% endfor %}
+    {% for call in calls %}
+        <h3 id="queue_{{ call.queue_id }}">{{ call.queue_name }}</h3>
+
+        <table>
+            <tr>
+                <th>Call for proposals opens</th>
+                <td>{{ call.date_open | format_datetime }} UT</td>
+            </tr>
+            <tr>
+                <th>Call for proposals closes</th>
+                <td>{{ call.date_close | format_datetime }} UT</td>
+            </tr>
+        </table>
+
+        <p>
+            <a id="call_{{ call.id }}_link" class="create_proposal_link" href="{{ url_for('.proposal_new', call_id=call.id) }}">Create a proposal for the {{ call.queue_name }} Queue</a>
+        </p>
+
+        {{ call.queue_description | format_text(call.queue_description_format) }}
+    {% endfor %}
+{% endif %}
 
 {% endblock %}

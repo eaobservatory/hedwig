@@ -76,8 +76,6 @@ class GenericHome(object):
         calls = db.search_call(facility_id=self.id_, semester_id=semester_id,
                                state=CallState.OPEN,
                                with_queue_description=True)
-        if not calls:
-            raise ErrorPage('No calls are currently open for this semester.')
 
         return {
             'title': 'Call for Semester {}'.format(semester.name),
