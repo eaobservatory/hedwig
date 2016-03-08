@@ -60,13 +60,17 @@ def close_call_proposals(db, call_id):
                                 ProposalState.WITHDRAWN):
             new_state = ProposalState.ABANDONED
 
-        if new_state is not None:
-            logger.info('Setting state of proposal {} to {}',
-                        proposal.id, ProposalState.get_name(new_state))
-            db.update_proposal(proposal.id, state=new_state)
-        else:
+        if new_state is None:
+            # If the proposal is in an unexpected state, issue a warning
+            # and skip to the next proposal.  (We don't want a poll process
+            # to repeatedly perform the member institution freezing step.)
             logger.warning('Proposal {} is in unexpected state "{}"',
                            proposal.id, ProposalState.get_name(proposal.state))
+            continue
+
+        logger.info('Setting state of proposal {} to {}',
+                    proposal.id, ProposalState.get_name(new_state))
+        db.update_proposal(proposal.id, state=new_state)
 
         # Freeze the current institution ID values in the member table.
         records = {}
