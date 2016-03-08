@@ -857,6 +857,28 @@ class OrderedResultCollection(ResultCollection):
 ResultTable = namedtuple('ResultTable', ('table', 'columns', 'rows'))
 
 
+class CallCollection(ResultCollection):
+    def values_by_state(self, state):
+        """
+        Get a list of the reviewers with the given state.
+        """
+
+        return [x for x in self.values() if x.state == state]
+
+    def values_by_queue(self, queue_id):
+        """
+        Get a list of the reviewers with the given queue ID.
+
+        The queue ID can also be specified as a list or tuple of possible
+        values.
+        """
+
+        if not(isinstance(queue_id, list) or isinstance(queue_id, tuple)):
+            queue_id = (queue_id,)
+
+        return [x for x in self.values() if x.queue_id in queue_id]
+
+
 class EmailCollection(ResultCollection):
     def get_primary(self):
         for email in self.values():

@@ -24,7 +24,7 @@ from hedwig.db.meta import member
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from hedwig.type import Affiliation, AttachmentState, \
-    Call, CallState, Category, \
+    Call, CallCollection, CallState, Category, \
     Facility, FigureType, FormatType, \
     Member, MemberCollection, MemberInstitution,  \
     Proposal, ProposalCategory, \
@@ -304,7 +304,7 @@ class DBProposalTest(DBTestCase):
 
         # Try the search_call method.
         result = self.db.search_call(call_id=call_id)
-        self.assertIsInstance(result, ResultCollection)
+        self.assertIsInstance(result, CallCollection)
         self.assertEqual(list(result.keys()), [call_id])
         expected = Call(id=call_id, semester_id=semester_id, queue_id=queue_id,
                         date_open=date_open, date_close=date_close,

@@ -28,7 +28,8 @@ from sqlalchemy.sql.functions import max as max_
 
 from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
-from ...type import Affiliation, AttachmentState, Call, CallState, Category, \
+from ...type import Affiliation, AttachmentState, \
+    Call, CallCollection, CallState, Category, \
     Facility, FigureType, FormatType, \
     Member, MemberCollection, MemberInfo, MemberPIInfo, \
     PrevProposal, PrevProposalCollection, PrevProposalPub, \
@@ -825,7 +826,7 @@ class ProposalPart(object):
         if state is not None:
             stmt = stmt.where(column('state') == state)
 
-        ans = ResultCollection()
+        ans = CallCollection()
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(semester.c.id.desc(),

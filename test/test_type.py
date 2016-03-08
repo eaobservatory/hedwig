@@ -23,7 +23,8 @@ import itertools
 from unittest import TestCase
 
 from hedwig.error import Error, MultipleRecords, NoSuchRecord, UserError
-from hedwig.type import Assessment, AttachmentState, CallState, \
+from hedwig.type import Assessment, AttachmentState, \
+    Call, CallCollection, CallState, \
     Email, EmailCollection, GroupType, GroupMember, GroupMemberCollection,  \
     Member, MemberCollection, \
     OrderedResultCollection, \
@@ -72,6 +73,39 @@ class TypeTestCase(TestCase):
                 self.assertTrue(AttachmentState.is_error(state))
             else:
                 self.assertFalse(AttachmentState.is_error(state))
+
+    def test_call_collection(self):
+        c = CallCollection()
+
+        c[1] = null_tuple(Call)._replace(
+            id=1, queue_id=11, state=CallState.OPEN)
+        c[2] = null_tuple(Call)._replace(
+            id=2, queue_id=12, state=CallState.OPEN)
+        c[3] = null_tuple(Call)._replace(
+            id=3, queue_id=13, state=CallState.UNOPENED)
+        c[4] = null_tuple(Call)._replace(
+            id=4, queue_id=13, state=CallState.CLOSED)
+
+        self.assertEqual([x.id for x in c.values_by_state(CallState.OPEN)],
+                         [1, 2])
+
+        self.assertEqual([x.id for x in c.values_by_state(CallState.UNOPENED)],
+                         [3])
+
+        self.assertEqual([x.id for x in c.values_by_state(CallState.CLOSED)],
+                         [4])
+
+        self.assertEqual([x.id for x in c.values_by_queue(11)],
+                         [1])
+
+        self.assertEqual([x.id for x in c.values_by_queue(12)],
+                         [2])
+
+        self.assertEqual([x.id for x in c.values_by_queue(13)],
+                         [3, 4])
+
+        self.assertEqual([x.id for x in c.values_by_queue((11, 12))],
+                         [1, 2])
 
     def test_call_state(self):
         states = [CallState.UNOPENED, CallState.OPEN, CallState.CLOSED]
