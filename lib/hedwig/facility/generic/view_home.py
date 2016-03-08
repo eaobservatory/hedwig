@@ -27,32 +27,29 @@ from ...web.util import ErrorPage, HTTPNotFound, session
 
 class GenericHome(object):
     def view_facility_home(self, db):
+        # Retrieve all calls for this facility.
+        facility_calls = db.search_call(facility_id=self.id_)
+
         # Determine which semesters have open calls for proposals.
         open_semesters = OrderedDict()
-        for call in db.search_call(facility_id=self.id_,
-                                   state=CallState.OPEN).values():
+        for call in facility_calls.values_by_state(CallState.OPEN):
             if call.semester_id not in open_semesters:
                 open_semesters[call.semester_id] = call.semester_name
 
         # Determine whether the person is a committee member (or administrator)
         # and if so, create a list of the review processes.
         review_calls = None
-        can_view_reviews = False
         if ('user_id' in session) and session.get('is_admin', False):
-            can_view_reviews = True
-            queue_id = None
+            # Administrators can see reviews for all calls.
+            review_calls = facility_calls.values()
 
         elif ('user_id' in session) and ('person' in session):
             membership = db.search_group_member(
                 group_type=GroupType.review_view_groups(),
                 person_id=session['person']['id'])
             if membership:
-                can_view_reviews = True
-                queue_id = [x.queue_id for x in membership.values()]
-
-        if can_view_reviews:
-            review_calls = db.search_call(facility_id=self.id_,
-                                          queue_id=queue_id).values()
+                review_calls = facility_calls.values_by_queue(
+                    [x.queue_id for x in membership.values()])
 
         return {
             'title': self.get_name(),
