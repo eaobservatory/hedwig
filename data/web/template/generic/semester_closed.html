@@ -1,0 +1,15 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+<p>
+    The following calls for proposals are no longer open:
+</p>
+
+<ul>
+    {% for semester_id, semester_name in closed_semesters.items() %}
+        <li><a id="semester_{{ semester_id }}_link" href="{{ url_for('.semester_calls', semester_id=semester_id) }}">{{ semester_name }}</a></li>
+    {% endfor %}
+</ul>
+
+{% endblock %}

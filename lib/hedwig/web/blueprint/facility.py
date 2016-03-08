@@ -61,6 +61,11 @@ def create_facility_blueprint(db, facility):
     def semester_calls(semester_id):
         return facility.view_semester_calls(db, semester_id)
 
+    @bp.route('/closed')
+    @facility_template('semester_closed.html')
+    def semester_closed():
+        return facility.view_semester_closed(db)
+
     @bp.route('/call/<int:call_id>/new_proposal',
               methods=['GET', 'POST'])
     @require_auth(require_institution=True)

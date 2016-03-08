@@ -30,6 +30,14 @@
     </p>
 {% endif %}
 
+{% if closed_semesters %}
+    <nav>
+        <p>
+            <a href="{{ url_for('.semester_closed') }}">Previous calls for proposals</a>
+        </p>
+    </nav>
+{% endif %}
+
 <h2 id="calc">Calculators</h2>
 
 {% if calculators %}

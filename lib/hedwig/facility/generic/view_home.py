@@ -36,6 +36,13 @@ class GenericHome(object):
             if call.semester_id not in open_semesters:
                 open_semesters[call.semester_id] = call.semester_name
 
+        # Determine if there are any semesters with only closed calls.
+        closed_semesters = False
+        for call in facility_calls.values_by_state(CallState.CLOSED):
+            if call.semester_id not in open_semesters:
+                closed_semesters = True
+                break
+
         # Determine whether the person is a committee member (or administrator)
         # and if so, create a list of the review processes.
         review_calls = None
@@ -54,6 +61,7 @@ class GenericHome(object):
         return {
             'title': self.get_name(),
             'open_semesters': open_semesters,
+            'closed_semesters': closed_semesters,
             'calculators': self.calculators.values(),
             'target_tools': self.target_tools.values(),
             'review_calls': review_calls,
@@ -75,4 +83,26 @@ class GenericHome(object):
             'title': 'Call for Semester {}'.format(semester.name),
             'semester': semester,
             'calls': list(calls.values()),
+        }
+
+    def view_semester_closed(self, db):
+        calls = db.search_call(facility_id=self.id_)
+
+        open_semesters = set(
+            x.semester_id for x in calls.values_by_state(CallState.OPEN))
+
+        # Determine which semesters have closed, but no open, calls for
+        # proposals.
+        closed_semesters = OrderedDict()
+        for call in calls.values_by_state(CallState.CLOSED):
+            if ((call.semester_id not in open_semesters) and
+                    (call.semester_id not in closed_semesters)):
+                closed_semesters[call.semester_id] = call.semester_name
+
+        if not closed_semesters:
+            raise ErrorPage('No previous calls for proposals were found.')
+
+        return {
+            'title': 'Previous Calls for Proposals',
+            'closed_semesters': closed_semesters,
         }
