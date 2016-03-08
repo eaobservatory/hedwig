@@ -12,6 +12,7 @@ name=Hedwig
 secret_key=
 facilities=Generic
 log_file=
+grace_period=5
 
 # The maximum file upload sizes for proposal PDFs and figures are specified
 # here in MiB.

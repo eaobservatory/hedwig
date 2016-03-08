@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015 East Asian Observatory.
+# Copyright (C) 2015-2016 East Asian Observatory.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ hedwigctl - Hedwig proposal system control tool
 
 Usage:
     hedwigctl poll [-v | -q]
-        (email | figure | pdf | publication | feedback | moc | all)
+        (close | email | figure | pdf | publication | feedback | moc | all)
         [--pause <delay>] [--pidfile <file>] [--logfile <file>]
     hedwigctl test_server [--debug] [--https] [--port <port>]
     hedwigctl [-v | -q] initialize_database
@@ -141,7 +141,7 @@ def poll(args):
         pidfile_write(pidfile, os.getpid())
         atexit.register(pidfile_delete, pidfile)
 
-    from hedwig.admin.poll import send_proposal_feedback
+    from hedwig.admin.poll import close_completed_call, send_proposal_feedback
     from hedwig.config import get_database
     from hedwig.file.poll import process_moc, \
         process_proposal_figure, process_proposal_pdf
@@ -156,6 +156,13 @@ def poll(args):
     logger = get_logger(script_name)
 
     while True:
+        if args['close'] or args['all']:
+            logger.debug('Checking for calls to close')
+            n_closed = close_completed_call(db=db)
+
+            if n_closed:
+                logger.info('Closed {} call(s)', n_closed)
+
         if args['email'] or args['all']:
             logger.debug('Checking for queued email messages')
             try:

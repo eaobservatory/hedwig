@@ -534,6 +534,9 @@ class ProposalState(object):
 
     StateInfo = namedtuple(
         'StateInfo', ('short_name', 'name', 'edit', 'submitted', 'reviewed'))
+    # Note: currently edit=True implies a proposal for which the the call
+    # has not been closed.  An extra entry must be added to the tuple (and
+    # the "open_states" method adjusted) if this changes.
 
     #                 Abbr     Name              Edit   Sub/d  Rev/d
     _info = OrderedDict((
@@ -588,6 +591,12 @@ class ProposalState(object):
     @classmethod
     def reviewed_states(cls):
         return [k for (k, v) in cls._info.items() if v.reviewed]
+
+    @classmethod
+    def open_states(cls):
+        # Note: we currently assume the state is "open" if it is editable,
+        # but this extra accessor method is provided in case this fact changes.
+        return [k for (k, v) in cls._info.items() if v.edit]
 
     @classmethod
     def by_name(cls, name):

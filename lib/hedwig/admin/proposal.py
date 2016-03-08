@@ -42,6 +42,8 @@ def close_call_proposals(db, call_id):
     * Writes the member institutions into the member table.
     """
 
+    logger.debug('Preparing to close call {}', call_id)
+
     try:
         call = db.search_call(
             call_id=call_id, state=CallState.CLOSED).get_single()
@@ -50,6 +52,8 @@ def close_call_proposals(db, call_id):
 
     for proposal in db.search_proposal(call_id=call_id,
                                        with_members=True).values():
+        logger.debug('Closing call {} proposal {}', call_id, proposal.id)
+
         # Change the proposal state.
         new_state = None
 
@@ -78,7 +82,8 @@ def close_call_proposals(db, call_id):
             records[member.id] = MemberInstitution(
                 member.id, member.resolved_institution_id)
 
-        logger.debug('Synchronizing institution_id values into member table')
+        logger.debug('Sync institution IDs into proposal {} member table',
+                     proposal.id)
         db.sync_proposal_member_institution(proposal.id, records)
 
 
