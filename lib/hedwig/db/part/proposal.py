@@ -765,8 +765,9 @@ class ProposalPart(object):
         return ans
 
     def search_call(self, call_id=None, facility_id=None, semester_id=None,
-                    queue_id=None, state=None, with_queue_description=False,
-                    with_case_notes=False,
+                    queue_id=None, state=None,
+                    has_proposal_state=None, date_close_before=None,
+                    with_queue_description=False, with_case_notes=False,
                     _conn=None):
         """
         Search for call records.
@@ -825,6 +826,22 @@ class ProposalPart(object):
 
         if state is not None:
             stmt = stmt.where(column('state') == state)
+
+        if has_proposal_state is not None:
+            proposal_calls = select([proposal.c.call_id])
+
+            if (isinstance(has_proposal_state, list) or
+                    isinstance(has_proposal_state, tuple)):
+                proposal_calls = proposal_calls.where(
+                    proposal.c.state.in_(has_proposal_state))
+            else:
+                proposal_calls = proposal_calls.where(
+                    proposal.c.state == has_proposal_state)
+
+            stmt = stmt.where(call.c.id.in_(proposal_calls.distinct()))
+
+        if date_close_before is not None:
+            stmt = stmt.where(call.c.date_close < date_close_before)
 
         ans = CallCollection()
 
