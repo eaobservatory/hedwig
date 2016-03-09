@@ -57,10 +57,10 @@ def send_proposal_feedback(db):
     """
     Send feedback for proposals when have been reviewed.
 
-    Finds proposals which are:
+    Finds proposals which:
 
-        * In the REVIEW state.
-        * Have decisions "ready".
+        * Are in the REVIEW state.
+        * Have decisions defined and marked "ready".
 
     and then groups the proposals by call and passes them to send_call_feedback
     so that the feedback email messages can include aggregate information about
@@ -71,7 +71,7 @@ def send_proposal_feedback(db):
         state=ProposalState.REVIEW, with_members=True,
         with_reviewers=True, with_review_info=True, with_review_text=True,
         with_review_state=True, with_reviewer_role=ReviewerRole.FEEDBACK,
-        with_decision=True, decision_ready=True)
+        with_decision=True, decision_ready=True, decision_accept_defined=True)
 
     # Organise the proposals by call.
     calls = defaultdict(list)

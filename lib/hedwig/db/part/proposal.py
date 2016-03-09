@@ -488,7 +488,7 @@ class ProposalPart(object):
 
     def get_proposal(self, facility_id, proposal_id,
                      with_members=False, with_reviewers=False,
-                     with_decision=False,
+                     with_decision=False, with_decision_note=False,
                      _conn=None):
         """
         Get a proposal record.
@@ -497,7 +497,7 @@ class ProposalPart(object):
         return self.search_proposal(
             facility_id=facility_id, proposal_id=proposal_id,
             with_members=with_members, with_reviewers=with_reviewers,
-            with_decision=with_decision,
+            with_decision=with_decision, with_decision_note=with_decision_note,
             _conn=_conn
         ).get_single()
 
@@ -1075,8 +1075,9 @@ class ProposalPart(object):
                         with_reviewer_role=None, with_review_state=None,
                         reviewer_person_id=None,
                         with_categories=False,
-                        with_decision=False,
+                        with_decision=False, with_decision_note=False,
                         decision_accept=None, decision_ready=None,
+                        decision_accept_defined=None,
                         proposal_number=None,
                         semester_code=None, queue_code=None,
                         _conn=None):
@@ -1172,19 +1173,36 @@ class ProposalPart(object):
 
         if with_decision:
             select_columns.extend([
+                case([
+                    (decision.c.proposal_id.isnot(None), True)
+                ], else_=False).label('has_decision'),
                 decision.c.accept.label('decision_accept'),
                 decision.c.exempt.label('decision_exempt'),
                 decision.c.ready.label('decision_ready'),
             ])
         else:
             default.update({
+                'has_decision': None,
                 'decision_accept': None,
                 'decision_exempt': None,
                 'decision_ready': None,
             })
 
-        if (with_decision or (decision_accept is not None) or
-                (decision_ready is not None)):
+        if with_decision_note:
+            select_columns.extend([
+                decision.c.note.label('decision_note'),
+                decision.c.note_format.label('decision_note_format'),
+            ])
+        else:
+            default.update({
+                'decision_note': None,
+                'decision_note_format': None,
+            })
+
+        if (with_decision or with_decision_note or
+                (decision_accept is not None) or
+                (decision_ready is not None) or
+                (decision_accept_defined is not None)):
 
             select_from = select_from.outerjoin(
                 decision,
@@ -1231,6 +1249,12 @@ class ProposalPart(object):
                 stmt = stmt.where(decision.c.ready)
             else:
                 stmt = stmt.where(not_(decision.c.ready))
+
+        if decision_accept_defined is not None:
+            if decision_accept_defined:
+                stmt = stmt.where(decision.c.accept.isnot(None))
+            else:
+                stmt = stmt.where(decision.c.accept.is_(None))
 
         if proposal_number is not None:
             stmt = stmt.where(proposal.c.number == proposal_number)

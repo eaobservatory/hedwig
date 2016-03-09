@@ -152,7 +152,7 @@ decision = Table(
     Column('proposal_id', None,
            ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            primary_key=True, nullable=False),
-    Column('accept', Boolean, nullable=False,
+    Column('accept', Boolean, nullable=True,
            doc='Indicates whether the time allocation committee decided '
                'to accept the proposal'),
     Column('exempt', Boolean, default=False, nullable=False,
@@ -162,6 +162,8 @@ decision = Table(
     Column('ready', Boolean, default=False, nullable=False,
            doc='True if the committee is ready for an email message to be '
                'sent to the proposal members to inform them of the decision.'),
+    Column('note', UnicodeText, nullable=False),
+    Column('note_format', Integer, nullable=False),
     **_table_opts)
 
 email = Table(

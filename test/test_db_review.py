@@ -332,6 +332,7 @@ class DBReviewTest(DBTestCase):
             facility_id=None, proposal_id=proposal_id, with_decision=True)
 
         self.assertEqual(proposal.id, proposal_id)
+        self.assertFalse(proposal.has_decision)
         self.assertIsNone(proposal.decision_accept)
         self.assertIsNone(proposal.decision_exempt)
         self.assertIsNone(proposal.decision_ready)
@@ -339,30 +340,42 @@ class DBReviewTest(DBTestCase):
         # Try creating a decision record.
         with self.assertRaisesRegexp(
                 ConsistencyError, 'decision does not already exist'):
-            self.db.set_decision(proposal_id, False, False, False, True)
+            self.db.set_decision(proposal_id, False, False, False,
+                                 note='', note_format=FormatType.PLAIN,
+                                 is_update=True)
 
-        self.db.set_decision(proposal_id, False, False, False, False)
+        self.db.set_decision(proposal_id, False, False, False, note='A note.',
+                             note_format=FormatType.PLAIN, is_update=False)
 
         proposal = self.db.get_proposal(
-            facility_id=None, proposal_id=proposal_id, with_decision=True)
+            facility_id=None, proposal_id=proposal_id,
+            with_decision=True, with_decision_note=True)
 
         self.assertEqual(proposal.id, proposal_id)
+        self.assertTrue(proposal.has_decision)
         self.assertIsNotNone(proposal.decision_accept)
         self.assertIsNotNone(proposal.decision_exempt)
         self.assertIsNotNone(proposal.decision_ready)
         self.assertFalse(proposal.decision_accept)
         self.assertFalse(proposal.decision_exempt)
         self.assertFalse(proposal.decision_ready)
+        self.assertEqual(proposal.decision_note, 'A note.')
+        self.assertEqual(proposal.decision_note_format, FormatType.PLAIN)
 
         # Try updating a decision record.
         with self.assertRaisesRegexp(
                 ConsistencyError, 'decision already exists'):
-            self.db.set_decision(proposal_id, True, True, True, False)
+            self.db.set_decision(proposal_id, True, True, True,
+                                 note='', note_format=FormatType.PLAIN,
+                                 is_update=False)
 
-        self.db.set_decision(proposal_id, True, True, True, True)
+        self.db.set_decision(proposal_id, True, True, True,
+                             note='Edited note.', note_format=FormatType.PLAIN,
+                             is_update=True)
 
         proposal = self.db.get_proposal(
-            facility_id=None, proposal_id=proposal_id, with_decision=True)
+            facility_id=None, proposal_id=proposal_id,
+            with_decision=True, with_decision_note=True)
 
         self.assertEqual(proposal.id, proposal_id)
         self.assertIsNotNone(proposal.decision_accept)
@@ -371,19 +384,17 @@ class DBReviewTest(DBTestCase):
         self.assertTrue(proposal.decision_accept)
         self.assertTrue(proposal.decision_exempt)
         self.assertTrue(proposal.decision_ready)
+        self.assertEqual(proposal.decision_note, 'Edited note.')
+        self.assertEqual(proposal.decision_note_format, FormatType.PLAIN)
 
         # Try deleting a decision record
-        self.db.delete_decision(proposal_id)
+        self.db.set_decision(proposal_id, accept=None, is_update=True)
 
         proposal = self.db.get_proposal(
             facility_id=None, proposal_id=proposal_id, with_decision=True)
 
         self.assertEqual(proposal.id, proposal_id)
         self.assertIsNone(proposal.decision_accept)
-
-        with self.assertRaisesRegexp(
-                ConsistencyError, 'decision does not already exist'):
-            self.db.delete_decision(proposal_id)
 
     def _create_test_proposal(self):
         facility_id = self.db.ensure_facility('test facility')

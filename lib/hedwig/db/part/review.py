@@ -90,30 +90,6 @@ class ReviewPart(object):
 
         return result.inserted_primary_key[0]
 
-    def delete_decision(self, proposal_id):
-        """
-        Delete a review decision record.
-
-        This will return the review decision status for the proposal
-        to the original undecided state.
-        """
-
-        with self._transaction() as conn:
-            proposal = self.get_proposal(
-                facility_id=None, proposal_id=proposal_id,
-                with_decision=True, _conn=conn)
-
-            if proposal.decision_accept is None:
-                raise ConsistencyError(
-                    'decision does not already exist for {}', proposal_id)
-
-            result = conn.execute(decision.delete().where(
-                decision.c.proposal_id == proposal_id))
-
-            if result.rowcount != 1:
-                raise ConsistencyError(
-                    'no row matched deleting decision for {}', proposal_id)
-
     def delete_reviewer(self, reviewer_id=None,
                         proposal_id=None, person_id=None, role=None,
                         delete_review=False, _conn=None):
@@ -365,15 +341,23 @@ class ReviewPart(object):
 
         return ans
 
-    def set_decision(self, proposal_id, accept, exempt, ready, is_update):
+    def set_decision(self, proposal_id, accept=(), exempt=None, ready=None,
+                     note=None, note_format=None, is_update=False):
         values = {}
 
-        if accept is not None:
+        if accept != ():
             values[decision.c.accept] = accept
         if exempt is not None:
             values[decision.c.exempt] = exempt
         if ready is not None:
             values[decision.c.ready] = ready
+        if note is not None:
+            if not note_format:
+                raise UserError('Note format not specified.')
+            if not FormatType.is_valid(note_format):
+                raise UserError('Note format not recognised.')
+            values[decision.c.note] = note
+            values[decision.c.note_format] = note_format
 
         if not values:
             raise Error('no decision update specified')
@@ -383,12 +367,10 @@ class ReviewPart(object):
                 facility_id=None, proposal_id=proposal_id,
                 with_decision=True, _conn=conn)
 
-            already_exists = (proposal.decision_accept is not None)
-
-            if is_update and not already_exists:
+            if is_update and not proposal.has_decision:
                 raise ConsistencyError(
                     'decision does not already exist for {}', proposal_id)
-            elif already_exists and not is_update:
+            elif proposal.has_decision and not is_update:
                 raise ConsistencyError(
                     'decision already exists for {}', proposal_id)
 

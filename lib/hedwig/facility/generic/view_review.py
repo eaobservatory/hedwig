@@ -1040,8 +1040,8 @@ class GenericReview(object):
     def view_proposal_decision(self, db, proposal_id, form):
         try:
             proposal = db.search_proposal(
-                facility_id=self.id_, proposal_id=proposal_id,
-                person_pi=True, with_decision=True).get_single()
+                facility_id=self.id_, proposal_id=proposal_id, person_pi=True,
+                with_decision=True, with_decision_note=True).get_single()
         except NoSuchRecord:
             raise HTTPError('The proposal was not found.')
 
@@ -1059,7 +1059,6 @@ class GenericReview(object):
         message = None
         extra_info = None
         proposal_code = self.make_proposal_code(db, proposal)
-        is_update = (proposal.decision_accept is not None)
 
         if form is not None:
             try:
@@ -1068,7 +1067,9 @@ class GenericReview(object):
                 proposal = proposal._replace(
                     decision_accept=(None if (decision == '')
                                      else bool(int(decision))),
-                    decision_exempt=('decision_exempt' in form))
+                    decision_exempt=('decision_exempt' in form),
+                    decision_note=form['decision_note'],
+                    decision_note_format=FormatType.PLAIN)
                 extra_info = self._view_proposal_decision_get(db, proposal,
                                                               form)
 
@@ -1079,26 +1080,16 @@ class GenericReview(object):
 
                 self._view_proposal_decision_save(db, proposal, extra_info)
 
-                if proposal.decision_accept is not None:
-                    db.set_decision(
-                        proposal_id=proposal.id,
-                        accept=proposal.decision_accept,
-                        exempt=proposal.decision_exempt,
-                        ready=None,
-                        is_update=is_update)
+                db.set_decision(
+                    proposal_id=proposal.id,
+                    accept=proposal.decision_accept,
+                    exempt=proposal.decision_exempt,
+                    note=proposal.decision_note,
+                    note_format=proposal.decision_note_format,
+                    is_update=proposal.has_decision)
 
-                    flash('The decision for proposal {} has been saved.',
-                          proposal_code)
-
-                elif is_update:
-                    db.delete_decision(proposal_id=proposal.id)
-
-                    flash('The decision for proposal {} has been removed.',
-                          proposal_code)
-
-                else:
-                    flash('The decision for proposal {} was left undecided.',
-                          proposal_code)
+                flash('The decision for proposal {} has been saved.',
+                      proposal_code)
 
                 # Redirect back to tabulation page.
                 raise HTTPRedirect(url_for('.review_call_tabulation',
@@ -1161,18 +1152,18 @@ class GenericReview(object):
     @with_call_review(permission='edit')
     def view_review_confirm_feedback(self, db, call, can, auth_cache, form):
         # Get proposals for this call, including their feedback review
-        # and decision.  (Note: "with_decision" means include it in the
-        # results, not that the proposal must have one.)
+        # and decision.  Note: "with_decision" means include it in the
+        # results, decision_accept_defined that the proposal must have one.
         proposals = db.search_proposal(
             call_id=call.id, state=ProposalState.REVIEW,
             with_reviewers=True, with_review_info=True, with_review_text=True,
             with_review_state=True, with_reviewer_role=ReviewerRole.FEEDBACK,
-            with_decision=True)
+            with_decision=True, decision_accept_defined=True)
 
-        # Ignore proposals without decisions and reviews.
+        # Ignore proposals without reviews.
         for id_ in list(proposals.keys()):
             proposal = proposals[id_]
-            if (proposal.decision_accept is None) or (not proposal.reviewers):
+            if not proposal.reviewers:
                 del proposals[id_]
 
         message = None
@@ -1201,8 +1192,7 @@ class GenericReview(object):
                 if ready_updates:
                     for (id_, ready) in ready_updates.items():
                         db.set_decision(
-                            proposal_id=id_, accept=None, exempt=None,
-                            ready=ready, is_update=True)
+                            proposal_id=id_, ready=ready, is_update=True)
 
                     flash('The feedback approval status has been updated.')
 
