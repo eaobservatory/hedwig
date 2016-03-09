@@ -34,7 +34,7 @@ from ...type import Affiliation, AttachmentState, \
     PrevProposal, PrevProposalCollection, PrevProposalPub, \
     ProposalCategory, ProposalFigureInfo, ProposalState, ProposalText, \
     PublicationType, \
-    Queue, ResultCollection, ReviewerRole, Semester, Target, \
+    Queue, ResultCollection, ReviewerRole, ProposalText, Semester, Target, \
     TargetCollection, TargetToolInfo, TextRole, \
     ValidationMessage, \
     null_tuple
@@ -1460,7 +1460,7 @@ class GenericProposal(object):
             'calculations': self._prepare_calculations(calculations),
         }
 
-    @with_proposal(permission='feedback')
+    @with_proposal(permission='feedback', with_decision_note=True)
     def view_proposal_feedback(self, db, proposal):
         proposal_code = self.make_proposal_code(db, proposal)
 
@@ -1483,8 +1483,18 @@ class GenericProposal(object):
             proposal_id=proposal.id, role=ReviewerRole.FEEDBACK,
             with_review=True, with_review_text=True)
 
+        # Show the decision note if viewing as an administrator.
+        if (session.get('is_admin', False) and auth.can_be_admin(db) and
+                (proposal.decision_note is not None)):
+            decision_note = ProposalText(
+                text=proposal.decision_note,
+                format=proposal.decision_note_format)
+        else:
+            decision_note = None
+
         return {
             'feedback_reviews': reviewers.values(),
+            'decision_note': decision_note,
         }
 
     def _edit_text(self, db, proposal, role, word_limit, target, form, rows,

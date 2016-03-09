@@ -22,4 +22,10 @@
 
 {% block feedback_extra %}
 {% endblock %}
+
+{% if decision_note is not none %}
+    <h2>Review Committee Note</h2>
+
+    {{ decision_note | format_text }}
+{% endif %}
 {% endblock %}
