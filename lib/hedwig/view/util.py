@@ -200,7 +200,7 @@ def with_person(permission):
     return decorator
 
 
-def with_proposal(permission):
+def with_proposal(permission, **get_proposal_kwargs):
     """
     Decorator for methods which deal with proposals.
 
@@ -218,6 +218,9 @@ def with_proposal(permission):
 
     * When "none" is selected, no authorization object is passed on.
 
+    Additional keyword arguments are passed to the get_proposal database
+    method.
+
     Note: this currently can only be used to decorate methods of
     facility classes because it uses `self.id_` for the facility ID.
     """
@@ -228,7 +231,8 @@ def with_proposal(permission):
             try:
                 proposal = db.get_proposal(self.id_, proposal_id,
                                            with_members=True,
-                                           with_reviewers=True)
+                                           with_reviewers=True,
+                                           **get_proposal_kwargs)
             except NoSuchRecord:
                 raise HTTPNotFound('Proposal not found')
 
