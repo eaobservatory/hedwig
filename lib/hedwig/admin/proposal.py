@@ -149,6 +149,12 @@ def send_call_proposal_feedback(db, call_id, proposals):
                     'Proposal {} has different facility from the call',
                     proposal.id)
 
+            # Double-check the call assignment.
+            if proposal.call_id != call_id:
+                raise FeedbackError(
+                    'Proposal {} has different call ({}) from specified ({})',
+                    proposal.call_id, call_id)
+
             # Filter reviews in case the proposal record contains more than
             # just the feedback report.  Also check the reviews are plain text
             # so that we can include them in the email message.
