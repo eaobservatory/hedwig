@@ -30,7 +30,8 @@ from .db.meta import affiliation, calculation, call, category, \
     prev_proposal, prev_proposal_pub, \
     proposal, proposal_category, queue, review, reviewer, \
     semester, target, user_log
-from .error import FormattedError, NoSuchRecord, MultipleRecords, UserError
+from .error import NoSuchRecord, MultipleRecords, UserError
+from .type_base import EnumURLPath
 
 Affiliation = namedtuple(
     'Affiliation',
@@ -456,7 +457,7 @@ class FigureType(object):
         return [x.mime for x in cls._info.values() if x.allow_user]
 
 
-class GroupType(object):
+class GroupType(EnumURLPath):
     CTTEE = 1
     TECH = 2
     COORD = 3
@@ -485,10 +486,6 @@ class GroupType(object):
         return cls._info[type_]
 
     @classmethod
-    def url_path(cls, type_):
-        return cls._info[type_].url_path
-
-    @classmethod
     def get_options(cls, by_url_path=False):
         """
         Get an OrderedDict of type names by type numbers.
@@ -515,26 +512,6 @@ class GroupType(object):
     @classmethod
     def review_view_groups(cls):
         return [k for (k, v) in cls._info.items() if v.review_view]
-
-    @classmethod
-    def get_url_paths(cls):
-        return [v.url_path for v in cls._info.values()]
-
-    @classmethod
-    def by_url_path(cls, url_path, default=()):
-        """
-        Attempt to find a group by its URL path.
-        """
-
-        for (type_, info) in cls._info.items():
-            if url_path == info.url_path:
-                return type_
-
-        if default == ():
-            raise FormattedError('Group URL path "{}" not recognised',
-                                 url_path)
-        else:
-            return default
 
 
 class MessageState(object):
@@ -760,7 +737,7 @@ class ReviewerRole(object):
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
 
-class TextRole(object):
+class TextRole(EnumURLPath):
     ABSTRACT = 1
     TECHNICAL_CASE = 2
     SCIENCE_CASE = 3
@@ -791,37 +768,6 @@ class TextRole(object):
     @classmethod
     def short_name(cls, role):
         return cls._info[role].shortname
-
-    @classmethod
-    def url_path(cls, role):
-        path = cls._info[role].url_path
-        if path is None:
-            raise FormattedError('Text role {} has no URL path', role)
-        return path
-
-    @classmethod
-    def get_url_paths(cls):
-        return [v.url_path for v in cls._info.values()
-                if v.url_path is not None]
-
-    @classmethod
-    def by_url_path(cls, url_path, default=()):
-        """
-        Attempt to find a role by URL path.
-
-        Returns the given default, when specified, if no match is found.
-        Otherwise an exception is raised.
-        """
-
-        for (role, info) in cls._info.items():
-            if url_path == info.url_path:
-                return role
-
-        if default == ():
-            raise FormattedError('Text role URL path "{}" not recognised',
-                                 url_path)
-        else:
-            return default
 
 
 class UserLogEvent(object):
