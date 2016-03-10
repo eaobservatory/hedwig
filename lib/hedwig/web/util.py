@@ -101,6 +101,34 @@ def flash(message, *args):
         _flask_flash(message)
 
 
+def make_enum_converter(enum_class):
+    """
+    Make a Werkzeug routing converter for a Hedwig enum-style class.
+
+    The given class must have support for URL paths: it should have
+    methods get_url_paths, by_url_path and url_path.
+    """
+
+    class EnumTypeConverter(_werkzeug_routing.AnyConverter):
+        def __init__(self, map_):
+            super(EnumTypeConverter, self).__init__(
+                map_, *(enum_class.get_url_paths()))
+
+        def to_python(self, value):
+            try:
+                return enum_class.by_url_path(value)
+            except:
+                raise _werkzeug_routing.ValidationError()
+
+        def to_url(self, value):
+            try:
+                return enum_class.url_path(value)
+            except:
+                raise _werkzeug_routing.ValidationError()
+
+    return EnumTypeConverter
+
+
 def mangle_email_address(email_address):
     """
     Mangles an email address by turning it into a JSON-encoded list of
