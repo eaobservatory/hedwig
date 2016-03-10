@@ -115,7 +115,7 @@ The package also contains some utility modules:
     :func:`~hedwig.view.util.with_proposal` decorator,
     which checks the user's authorization for a proposal,
     and, if successful, calls the decorated function with a
-    :class:`~hedwig.type.Proposal` and
+    :class:`~hedwig.type.simple.Proposal` and
     :class:`~hedwig.view.auth.Authorization`
     object in place of the route's
     `proposal_id` number.
@@ -263,30 +263,45 @@ Other modules which are worth mentioning in this overview are:
     class which has a constructor that applies
     new-style Python string formatting to its arguments.
 
-:mod:`hedwig.type`
+:doc:`hedwig.type <api/type>`
     Defines a large number of data types used by Hedwig.
     Some of these are `namedtuple` types and some are custom classes.
+    They are divided into separate modules:
 
-    * Many of the `namedtuple` types are defined in terms of the columns
-      of a database table (as defined in :mod:`hedwig.db.meta`).
-      For example the :class:`~hedwig.type.Person` `namedtuple`
-      contains the columns of the
-      `person` database table with a few added attributes.
+    :mod:`hedwig.type.simple`
+        Many of the `namedtuple` types are defined in terms of the columns
+        of a database table (as defined in :mod:`hedwig.db.meta`).
+        For example the :class:`~hedwig.type.simple.Person` `namedtuple`
+        contains the columns of the
+        `person` database table with a few added attributes.
 
-    * There a some enumeration-type classes, such as
-      :class:`~hedwig.type.ProposalState`.
-      These contain a series of upper case class attributes
-      with integer values.  There is often also a table of information
-      about the enumeration values and a set of methods for working with them.
+    :mod:`hedwig.type.enum`
+        There are some enumeration-type classes, such as
+        :class:`~hedwig.type.enum.ProposalState`.
+        These contain a series of upper case class attributes
+        with integer values.  There is often also a table of information
+        about the enumeration values and a set of methods for working with
+        them.
 
-    * Finally there is a :class:`~hedwig.type.ResultCollection` class
-      (which inherits from `OrderedDict`) and a few more specific classes
-      which inherit from it.
-      These are used by database methods which return multiple results.
-      The use of `OrderedDict` as the basis for these classes rather than
-      a simple list may not always seem necessary, but at some times
-      it can be very useful, such as when trying to "sync" sets of
-      database methods.
+    :mod:`hedwig.type.collection`
+        There is a :class:`~hedwig.type.collection.ResultCollection`
+        class (which inherits from `OrderedDict`) and a few more specific classes
+        which inherit from it.
+        These are used by database methods which return multiple results.
+        The use of `OrderedDict` as the basis for these classes rather than
+        a simple list may not always seem necessary, but at some times
+        it can be very useful, such as when trying to "sync" sets of
+        database methods.
+
+    :mod:`hedwig.type.util`
+        This module contains utility functions for working with the
+        Hedwig types.  One very useful function is
+        :func:`hedwig.type.util.null_tuple`.  This creates a tuple
+        of the given type containing null values.  It should be used
+        to generate the custom `namedtuple` instances to avoid errors when
+        the number of entries in the tuple changes.  For example::
+
+            person = null_tuple(Person)._replace(name='', public=False)
 
 :mod:`hedwig.util`
     Contains general utilities.
