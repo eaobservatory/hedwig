@@ -1485,7 +1485,7 @@ class GenericProposal(object):
 
         # Show the decision note if viewing as an administrator.
         if (session.get('is_admin', False) and auth.can_be_admin(db) and
-                (proposal.decision_note is not None)):
+                proposal.decision_note):
             decision_note = ProposalText(
                 text=proposal.decision_note,
                 format=proposal.decision_note_format)
