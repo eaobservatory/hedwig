@@ -30,8 +30,9 @@ from ...error import NoSuchRecord, UserError
 from ...view import auth
 from ...view.tool import BaseTargetTool
 from ...web.util import ErrorPage, HTTPNotFound, session, url_for
-from ...type import AttachmentState, FileTypeInfo, Link, TargetObject, \
-    null_tuple
+from ...type.simple import Link, TargetObject
+from ...type.enum import AttachmentState, FileTypeInfo
+from ...type.util import null_tuple
 
 TargetCoord = namedtuple('TargetCoord', ('x', 'y', 'system'))
 

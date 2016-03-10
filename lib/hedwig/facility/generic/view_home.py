@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict
 
 from ...error import NoSuchRecord
-from ...type import CallState, GroupType
+from ...type.enum import CallState, GroupType
 from ...web.util import ErrorPage, HTTPNotFound, session
 
 

@@ -23,8 +23,8 @@ import json as json_module
 from flask import Markup
 from jinja2.runtime import Undefined
 
-from ..type import Assessment, AttachmentState, CallState, ProposalState, \
-    PublicationType, ReviewerRole, TextRole
+from ..type.enum import Assessment, AttachmentState, CallState, \
+    ProposalState, PublicationType, ReviewerRole, TextRole
 
 from .format import format_text
 

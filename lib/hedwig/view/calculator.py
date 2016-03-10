@@ -21,7 +21,8 @@ from __future__ import absolute_import, division, print_function, \
 from collections import namedtuple
 
 from ..error import NoSuchRecord, UserError
-from ..type import CalculatorResult, Proposal, ProposalState
+from ..type.enum import ProposalState
+from ..type.simple import CalculatorResult, Proposal
 from ..web.util import HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
 from . import auth

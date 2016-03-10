@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,25 +18,26 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from urllib import quote
+from collections import namedtuple
+from unittest import TestCase
 
-from ..type.enum import PublicationType
+from hedwig.type.util import with_can_edit
 
 
-def make_publication_url(type_, reference):
-    """
-    Make an URL for the given reference, if possible, or return None
-    otherwise.
-    """
+class TypeUtilTestCase(TestCase):
+    def test_with_can_edit(self):
+        TestTuple = namedtuple('TestTuple', ('x', 'y'))
 
-    if type_ == PublicationType.DOI:
-        return 'http://doi.org/' + quote(reference)
+        t = TestTuple(1, 2)
 
-    elif type_ == PublicationType.ADS:
-        return 'http://adsabs.harvard.edu/abs/' + quote(reference)
+        t_t = with_can_edit(t, True)
+        t_f = with_can_edit(t, False)
 
-    elif type_ == PublicationType.ARXIV:
-        return 'http://arxiv.org/abs/' + quote(reference)
+        self.assertEqual(t_t.can_edit, True)
+        self.assertEqual(t_f.can_edit, False)
 
-    else:
-        return None
+        for t_x in (t_t, t_f):
+            self.assertEqual(type(t_x).__name__, 'TestTupleWithCE')
+            self.assertEqual(t_x._fields, ('x', 'y', 'can_edit'))
+            self.assertEqual(t_x.x, 1)
+            self.assertEqual(t_x.y, 2)

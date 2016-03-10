@@ -20,8 +20,8 @@ from __future__ import absolute_import, division, print_function, \
 
 from flask import Blueprint, request
 
-from ...type import CalculatorInfo, FigureType, ReviewerRole, \
-    TargetToolInfo, TextRole
+from ...type.enum import FigureType, ReviewerRole, TextRole
+from ...type.simple import CalculatorInfo, TargetToolInfo
 from ..util import HTTPRedirect, \
     require_admin, require_auth, send_file, templated, url_for
 

@@ -34,7 +34,7 @@ from flask import Response as _FlaskResponse
 from werkzeug import exceptions as _werkzeug_exceptions
 from werkzeug import routing as _werkzeug_routing
 
-from ..type import FigureType, FileTypeInfo
+from ..type.enum import FigureType, FileTypeInfo
 
 
 class HTTPError(_werkzeug_exceptions.InternalServerError):

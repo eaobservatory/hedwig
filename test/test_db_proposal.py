@@ -23,15 +23,14 @@ from datetime import datetime
 from hedwig.db.meta import member
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
-from hedwig.type import Affiliation, AttachmentState, \
-    Call, CallCollection, CallState, Category, \
-    Facility, FigureType, FormatType, \
-    Member, MemberCollection, MemberInstitution,  \
-    Proposal, ProposalCategory, \
-    ProposalFigureInfo, ProposalPDFInfo, \
-    ProposalState, \
-    ProposalText, ProposalTextCollection, ProposalTextInfo, \
-    ResultCollection, Target, TargetCollection, TextRole
+from hedwig.type.collection import CallCollection, MemberCollection, \
+    ProposalTextCollection, ResultCollection, TargetCollection
+from hedwig.type.enum import AttachmentState, CallState, FigureType, \
+    FormatType, ProposalState, TextRole
+from hedwig.type.simple import Affiliation, Call, Category, \
+    Facility, Member, MemberInstitution, \
+    Proposal, ProposalCategory, ProposalFigureInfo, ProposalPDFInfo, \
+    ProposalText, ProposalTextInfo, Target
 from .dummy_db import DBTestCase
 
 

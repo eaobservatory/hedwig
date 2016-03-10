@@ -22,7 +22,9 @@ from codecs import utf_8_decode
 import csv
 
 from ..error import UserError
-from ..type import Target, TargetCollection, null_tuple
+from ..type.collection import TargetCollection
+from ..type.simple import Target
+from ..type.util import null_tuple
 from .coord import CoordSystem
 
 

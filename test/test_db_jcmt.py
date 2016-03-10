@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime
 from hedwig.error import ConsistencyError
-from hedwig.type import FormatType
+from hedwig.type.enum import FormatType
 from hedwig.facility.jcmt.type import \
     JCMTAvailable, JCMTAvailableCollection, \
     JCMTInstrument, JCMTOptions, \

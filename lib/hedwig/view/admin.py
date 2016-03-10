@@ -21,7 +21,8 @@ from __future__ import absolute_import, division, print_function, \
 from collections import namedtuple
 
 from ..error import NoSuchRecord
-from ..type import AttachmentState, MessageState, ProposalWithCode
+from ..type.simple import ProposalWithCode
+from ..type.enum import AttachmentState, MessageState
 from ..web.util import ErrorPage, HTTPNotFound, HTTPRedirect, flash, url_for
 from .util import with_verified_admin
 

@@ -24,7 +24,7 @@ import warnings
 
 from PIL import Image
 
-from ..type import ProposalFigureThumbPreview
+from ..type.simple import ProposalFigureThumbPreview
 
 warnings.simplefilter('error', Image.DecompressionBombWarning)
 

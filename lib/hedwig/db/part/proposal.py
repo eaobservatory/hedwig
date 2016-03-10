@@ -28,18 +28,19 @@ from sqlalchemy.sql.functions import max as max_
 
 from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
-from ...type import Affiliation, AttachmentState, \
-    Call, CallCollection, CallState, Category, \
-    Facility, FigureType, FormatType, \
-    Member, MemberCollection, MemberInfo, MemberPIInfo, \
-    PrevProposal, PrevProposalCollection, PrevProposalPub, \
-    Proposal, ProposalCategory, ProposalState, \
-    ProposalFigure, ProposalFigureCollection, \
+from ...type.collection import CallCollection, MemberCollection, \
+    PrevProposalCollection, ProposalFigureCollection, ProposalTextCollection, \
+    ResultCollection, TargetCollection
+from ...type.enum import AttachmentState, CallState, FigureType, FormatType, \
+    ProposalState, PublicationType, TextRole
+from ...type.simple import Affiliation, \
+    Call, Category, Facility, \
+    Member, MemberInfo, MemberPIInfo, \
+    PrevProposal, PrevProposalPub, \
+    Proposal, ProposalCategory, ProposalFigure, \
     ProposalFigureInfo, ProposalPDFInfo, \
-    ProposalText, ProposalTextCollection, ProposalTextInfo, \
-    PublicationType, \
-    Queue, QueueInfo, ResultCollection, ReviewerInfo, Semester, SemesterInfo, \
-    Target, TargetCollection, TextRole
+    ProposalText, ProposalTextInfo, \
+    Queue, QueueInfo, ReviewerInfo, Semester, SemesterInfo, Target
 from ..meta import affiliation, affiliation_weight, call, category, decision, \
     facility, institution, \
     member, person, prev_proposal, prev_proposal_pub, \

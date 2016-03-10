@@ -24,7 +24,7 @@ from jcmt_itc_heterodyne import HeterodyneITC, HeterodyneITCError
 from jcmt_itc_heterodyne.receiver import HeterodyneReceiver, ReceiverInfo
 
 from ...error import CalculatorError, UserError
-from ...type import CalculatorMode, CalculatorResult, CalculatorValue
+from ...type.simple import CalculatorMode, CalculatorResult, CalculatorValue
 from ...view.util import parse_time
 from .calculator_jcmt import JCMTCalculator
 from .type import JCMTWeather

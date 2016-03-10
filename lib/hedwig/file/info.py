@@ -26,7 +26,7 @@ from PyPDF2 import PdfFileReader
 from PyPDF2.utils import PdfReadError
 
 from ..error import UserError
-from ..type import FigureType
+from ..type.enum import FigureType
 
 
 def determine_figure_type(buff):

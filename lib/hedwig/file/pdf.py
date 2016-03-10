@@ -22,7 +22,7 @@ import subprocess
 
 from ..config import get_config
 from ..error import Error, ConversionError
-from ..type import FigureType
+from ..type.enum import FigureType
 from .info import determine_pdf_page_count
 
 ghostscript_version = None

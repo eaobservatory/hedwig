@@ -22,9 +22,9 @@ from datetime import datetime
 
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, Error, \
     NoSuchRecord, UserError
-from hedwig.type import Assessment, FormatType, \
-    GroupMember, GroupMemberCollection, GroupType, \
-    Reviewer, ReviewerCollection, ReviewerRole
+from hedwig.type.collection import GroupMemberCollection, ReviewerCollection
+from hedwig.type.enum import Assessment, FormatType, GroupType, ReviewerRole
+from hedwig.type.simple import GroupMember, Reviewer
 
 from .dummy_db import DBTestCase
 

@@ -27,7 +27,9 @@ from sqlalchemy.sql.functions import coalesce
 
 from ...error import ConsistencyError, FormattedError, \
     NoSuchRecord, MultipleRecords
-from ...type import Message, MessageRecipient, MessageState, ResultCollection
+from ...type.collection import ResultCollection
+from ...type.enum import MessageState
+from ...type.simple import Message, MessageRecipient
 from ..meta import email, message, message_recipient, person
 
 

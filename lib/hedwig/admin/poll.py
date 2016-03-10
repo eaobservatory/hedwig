@@ -22,7 +22,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 
 from ..config import get_config
-from ..type import ProposalState, ReviewerRole
+from ..type.enum import ProposalState, ReviewerRole
 from ..util import get_logger
 from .proposal import close_call_proposals, send_call_proposal_feedback
 

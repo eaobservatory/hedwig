@@ -22,7 +22,7 @@ from collections import namedtuple
 
 from ..db.util import memoized
 from ..error import NoSuchRecord
-from ..type import GroupType, ProposalState, ReviewerRole
+from ..type.enum import GroupType, ProposalState, ReviewerRole
 from ..web.util import session, HTTPForbidden
 
 Authorization = namedtuple('Authorization', ('view', 'edit'))

@@ -27,8 +27,9 @@ from pymoc import MOC
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord
 from hedwig.file.moc import read_moc, write_moc
-from hedwig.type import AttachmentState, Calculation, FormatType, \
-    MOCInfo, ResultCollection
+from hedwig.type.collection import ResultCollection
+from hedwig.type.enum import AttachmentState, FormatType
+from hedwig.type.simple import Calculation, MOCInfo
 
 from .dummy_db import DBTestCase
 

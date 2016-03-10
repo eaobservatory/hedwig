@@ -29,7 +29,7 @@ from sqlalchemy.sql.functions import count
 
 from ..error import ConsistencyError, Error, \
     DatabaseError, DatabaseIntegrityError, UserError
-from ..type import ResultCollection
+from ..type.collection import ResultCollection
 from .part.calculator import CalculatorPart
 from .part.message import MessagePart
 from .part.people import PeoplePart

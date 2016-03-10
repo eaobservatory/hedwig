@@ -26,7 +26,7 @@ from hedwig.facility.jcmt.type import \
     JCMTAvailable, JCMTAvailableCollection, \
     JCMTInstrument, \
     JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, JCMTWeather
-from hedwig.type import ResultTable
+from hedwig.type.collection import ResultTable
 
 
 class JCMTTypeTestCase(TestCase):

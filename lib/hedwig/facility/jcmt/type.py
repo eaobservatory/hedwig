@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict, namedtuple
 
-from ...type import ResultTable
+from ...type.collection import ResultTable
 from ...error import UserError
 from .meta import jcmt_available, jcmt_options, jcmt_request
 

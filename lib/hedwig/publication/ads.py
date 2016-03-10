@@ -24,7 +24,8 @@ from time import sleep
 import requests
 
 from ..config import get_config
-from ..type import PrevProposalPub, null_tuple
+from ..type.simple import PrevProposalPub
+from ..type.util import null_tuple
 from ..util import get_logger
 
 logger = get_logger(__name__)

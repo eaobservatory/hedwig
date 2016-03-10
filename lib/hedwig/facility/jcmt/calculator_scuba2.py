@@ -25,7 +25,7 @@ import time
 from jcmt_itc_scuba2 import SCUBA2ITC, SCUBA2ITCError
 
 from ...error import CalculatorError, UserError
-from ...type import CalculatorMode, CalculatorResult, CalculatorValue
+from ...type.simple import CalculatorMode, CalculatorResult, CalculatorValue
 from ...view.util import parse_time
 from .calculator_jcmt import JCMTCalculator
 from .type import JCMTWeather

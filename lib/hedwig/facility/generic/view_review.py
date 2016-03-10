@@ -31,11 +31,12 @@ from ...view.util import with_proposal, with_call_review, with_review
 from ...web.util import ErrorPage, \
     HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
-from ...type import Affiliation, Assessment, \
-    FileTypeInfo, FormatType, GroupType, Link, MemberPIInfo, \
-    ProposalState, ProposalWithCode, \
-    Reviewer, ReviewerCollection, ReviewerRole, TextRole, \
-    null_tuple, with_can_edit
+from ...type.collection import ReviewerCollection
+from ...type.enum import Assessment, FileTypeInfo, FormatType, GroupType, \
+    ProposalState, ReviewerRole, TextRole
+from ...type.simple import Affiliation, Link, MemberPIInfo, \
+    ProposalWithCode, Reviewer
+from ...type.util import null_tuple, with_can_edit
 
 ProposalWithReviewers = namedtuple(
     'ProposalWithReviewers',

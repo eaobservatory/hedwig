@@ -26,9 +26,9 @@ from sqlalchemy.sql.functions import count
 
 from ...error import ConsistencyError, Error, FormattedError, \
     NoSuchRecord, UserError
-from ...type import Assessment, FormatType, \
-    GroupMember, GroupMemberCollection, GroupType, \
-    Reviewer, ReviewerCollection, ReviewerRole
+from ...type.collection import GroupMemberCollection, ReviewerCollection
+from ...type.enum import Assessment, FormatType, GroupType, ReviewerRole
+from ...type.simple import GroupMember, Reviewer
 from ..meta import call, decision, group_member, institution, person, \
     proposal, queue, \
     review, reviewer

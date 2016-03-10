@@ -24,11 +24,11 @@ from datetime import datetime
 from ...email.format import render_email_template
 from ...error import NoSuchRecord, UserError
 from ...file.moc import read_moc
-from ...type import Affiliation, Call, Category, \
-    FormatType, GroupType, MOCInfo, \
-    ProposalWithCode, Queue, \
-    ResultCollection, Semester, \
-    null_tuple
+from ...type.collection import ResultCollection
+from ...type.enum import FormatType, GroupType
+from ...type.simple import Affiliation, Call, Category, \
+    MOCInfo, ProposalWithCode, Queue, Semester
+from ...type.util import null_tuple
 from ...util import get_countries
 from ...view import auth
 from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \

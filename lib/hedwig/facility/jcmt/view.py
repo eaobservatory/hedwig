@@ -26,9 +26,10 @@ from urllib import urlencode
 from ...error import NoSuchRecord, UserError
 from ...web.util import HTTPRedirect, flash, url_for
 from ...view.util import organise_collection, with_call_review, with_proposal
-from ...type import Link, ProposalState, \
-    ResultTable, ReviewerRole, ValidationMessage, \
-    null_tuple
+from ...type.collection import ResultTable
+from ...type.enum import ProposalState, ReviewerRole
+from ...type.simple import Link, ValidationMessage
+from ...type.util import null_tuple
 from ..generic.view import Generic
 from .calculator_heterodyne import HeterodyneCalculator
 from .calculator_scuba2 import SCUBA2Calculator

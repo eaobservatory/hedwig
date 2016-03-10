@@ -22,8 +22,8 @@ from ..config import get_facilities
 from ..email.format import render_email_template
 from ..error import FormattedError, NoSuchRecord, UserError
 from ..stats.quartile import label_quartiles
-from ..type import CallState, FormatType, MemberInstitution, \
-    ProposalState, ReviewerRole
+from ..type.enum import CallState, FormatType, ProposalState, ReviewerRole
+from ..type.simple import MemberInstitution
 from ..util import get_logger
 
 logger = get_logger(__name__)

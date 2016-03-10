@@ -29,8 +29,9 @@ from sqlalchemy.sql.functions import max as max_
 
 from ...error import ConsistencyError, Error, UserError
 from ...file.moc import write_moc
-from ...type import AttachmentState, Calculation, FormatType, MOCInfo, \
-    OrderedResultCollection, ResultCollection
+from ...type.collection import OrderedResultCollection, ResultCollection
+from ...type.enum import AttachmentState, FormatType
+from ...type.simple import Calculation, MOCInfo
 from ...util import list_in_blocks
 from ..meta import calculator, calculation, facility, moc, moc_cell, moc_fits
 from ..util import require_not_none

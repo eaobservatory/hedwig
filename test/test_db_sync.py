@@ -19,7 +19,8 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from hedwig.error import UserError
-from hedwig.type import Affiliation, Category, ResultCollection
+from hedwig.type.collection import ResultCollection
+from hedwig.type.simple import Affiliation, Category
 
 from .dummy_db import DBTestCase
 

@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from .error import FormattedError
+from ..error import FormattedError
 
 
 class EnumURLPath(object):

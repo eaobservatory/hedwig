@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from ..config import get_config
 from ..error import ConsistencyError, ConversionError
-from ..type import AttachmentState, FigureType
+from ..type.enum import AttachmentState, FigureType
 from ..util import get_logger
 from .image import create_thumbnail_and_preview
 from .moc import read_moc

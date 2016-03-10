@@ -24,7 +24,8 @@ import logging
 import os
 
 from ..config import get_config, get_database, get_facilities, get_home
-from ..type import FacilityInfo, GroupType, TextRole
+from ..type.enum import GroupType, TextRole
+from ..type.simple import FacilityInfo
 from .template_util import register_template_utils
 from .util import make_enum_converter
 

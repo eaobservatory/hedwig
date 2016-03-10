@@ -29,10 +29,11 @@ from ... import auth
 from ...auth import check_password_hash, create_password_hash, generate_token
 from ...error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
-from ...type import Email, EmailCollection, \
+from ...type.collection import EmailCollection, ResultCollection
+from ...type.enum import UserLogEvent
+from ...type.simple import Email, \
     Institution, InstitutionInfo, InstitutionLog, \
-    Person, PersonInfo, ResultCollection, \
-    UserInfo, UserLog, UserLogEvent
+    Person, PersonInfo, UserInfo, UserLog
 from ...util import get_countries
 from ..meta import auth_failure, email, group_member, \
     institution, institution_log, \

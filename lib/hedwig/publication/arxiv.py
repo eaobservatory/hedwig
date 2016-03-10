@@ -26,7 +26,8 @@ from time import sleep
 from xml.etree import ElementTree as etree
 import requests
 
-from ..type import PrevProposalPub, null_tuple
+from ..type.simple import PrevProposalPub
+from ..type.util import null_tuple
 from ..util import get_logger
 
 logger = get_logger(__name__)

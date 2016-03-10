@@ -26,9 +26,11 @@ from hedwig import auth
 from hedwig.db.meta import auth_failure, invitation, reset_token
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
-from hedwig.type import Email, EmailCollection, FormatType, \
+from hedwig.type.collection import EmailCollection, ResultCollection
+from hedwig.type.enum import FormatType
+from hedwig.type.simple import Email, \
     Institution, InstitutionInfo, MemberInstitution, \
-    Person, ResultCollection, UserInfo
+    Person, UserInfo
 from .dummy_db import DBTestCase
 
 

@@ -22,7 +22,7 @@ from collections import namedtuple
 
 from ..error import ConsistencyError
 from ..util import get_logger
-from ..type import AttachmentState, PublicationType
+from ..type.enum import AttachmentState, PublicationType
 from .arxiv import get_pub_info_arxiv
 from .ads import get_pub_info_ads, get_pub_info_doi
 

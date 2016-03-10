@@ -20,7 +20,8 @@ from __future__ import absolute_import, division, print_function, \
 
 from unittest import TestCase
 
-from hedwig.type import FormatType, ProposalText
+from hedwig.type.enum import FormatType
+from hedwig.type.simple import ProposalText
 from hedwig.web.format import format_text, format_text_plain
 from hedwig.web.util import HTTPError
 

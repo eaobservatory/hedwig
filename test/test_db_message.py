@@ -21,8 +21,9 @@ from __future__ import absolute_import, division, print_function, \
 from datetime import datetime
 
 from hedwig.error import ConsistencyError, DatabaseIntegrityError
-from hedwig.type import Message, MessageRecipient, MessageState, \
-    ResultCollection
+from hedwig.type.enum import MessageState
+from hedwig.type.collection import ResultCollection
+from hedwig.type.simple import Message, MessageRecipient
 from .dummy_db import DBTestCase
 
 

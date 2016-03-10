@@ -23,7 +23,7 @@ import json
 
 from flask import Markup
 
-from hedwig.type import Assessment, AttachmentState, CallState, \
+from hedwig.type.enum import Assessment, AttachmentState, CallState, \
     ProposalState, \
     PublicationType, ReviewerRole, TextRole
 from hedwig.web.template_util import Counter

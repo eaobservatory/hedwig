@@ -27,17 +27,17 @@ from ...config import get_config
 from ...error import ConsistencyError, NoSuchRecord, UserError
 from ...file.info import determine_figure_type, determine_pdf_page_count
 from ...publication.url import make_publication_url
-from ...type import Affiliation, AttachmentState, \
-    Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, \
-    Call, CallState, \
-    FigureType, FormatType, \
-    PrevProposal, PrevProposalCollection, PrevProposalPub, \
-    ProposalCategory, ProposalFigureInfo, ProposalState, ProposalText, \
-    PublicationType, \
-    Queue, ResultCollection, ReviewerRole, ProposalText, Semester, Target, \
-    TargetCollection, TargetToolInfo, TextRole, \
-    ValidationMessage, \
-    null_tuple
+from ...type.collection import PrevProposalCollection, ResultCollection, \
+    TargetCollection
+from ...type.enum import AttachmentState, CallState, FigureType, FormatType, \
+    ProposalState, PublicationType, ReviewerRole, TextRole
+from ...type.simple import Affiliation, \
+    Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
+    PrevProposal, PrevProposalPub, \
+    ProposalCategory, ProposalFigureInfo, ProposalText, \
+    Queue, ProposalText, Semester, Target, \
+    TargetToolInfo, ValidationMessage
+from ...type.util import null_tuple
 from ...util import get_countries
 from ...view import auth
 from ...web.util import ErrorPage, HTTPError, HTTPForbidden, \

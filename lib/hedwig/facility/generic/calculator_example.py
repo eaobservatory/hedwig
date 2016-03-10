@@ -22,7 +22,7 @@ from collections import OrderedDict
 import time
 
 from ...error import CalculatorError, UserError
-from ...type import CalculatorMode, CalculatorResult, CalculatorValue
+from ...type.simple import CalculatorMode, CalculatorResult, CalculatorValue
 from ...view.calculator import BaseCalculator
 
 

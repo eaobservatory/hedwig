@@ -25,10 +25,11 @@ from itertools import groupby
 from ..email.format import render_email_template
 from ..error import ConsistencyError, Error, MultipleRecords, NoSuchRecord, \
     UserError
-from ..type import Email, EmailCollection, \
-    Institution, InstitutionLog, Person, \
-    ProposalState, ProposalWithCode, UserLogEvent, \
-    null_tuple
+from ..type.collection import EmailCollection
+from ..type.enum import ProposalState, UserLogEvent
+from ..type.simple import Email, \
+    Institution, InstitutionLog, Person, ProposalWithCode
+from ..type.util import null_tuple
 from ..util import get_countries
 from ..web.util import flash, mangle_email_address, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect

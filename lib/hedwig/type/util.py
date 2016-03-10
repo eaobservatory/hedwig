@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,25 +18,22 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from urllib import quote
-
-from ..type.enum import PublicationType
+from collections import namedtuple
 
 
-def make_publication_url(type_, reference):
+def null_tuple(type_):
     """
-    Make an URL for the given reference, if possible, or return None
-    otherwise.
+    Make a named tuple instance of the given type with all entries
+    set to None.
     """
 
-    if type_ == PublicationType.DOI:
-        return 'http://doi.org/' + quote(reference)
+    return type_(*((None,) * len(type_._fields)))
 
-    elif type_ == PublicationType.ADS:
-        return 'http://adsabs.harvard.edu/abs/' + quote(reference)
 
-    elif type_ == PublicationType.ARXIV:
-        return 'http://arxiv.org/abs/' + quote(reference)
+def with_can_edit(obj, can_edit):
+    """
+    Add a "can_edit" field to a tuple and set it to the given value.
+    """
 
-    else:
-        return None
+    return namedtuple(type(obj).__name__ + 'WithCE',
+                      obj._fields + ('can_edit',))(*obj, can_edit=can_edit)

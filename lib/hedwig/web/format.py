@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from flask import Markup
 
 from ..format.rst import rst_to_html
-from ..type import FormatType
+from ..type.enum import FormatType
 from .util import HTTPError
 
 
