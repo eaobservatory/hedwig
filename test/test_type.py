@@ -284,13 +284,23 @@ class TypeTestCase(TestCase):
             self.assertIsInstance(i.name, unicode)
             self.assertIsInstance(i.view_all_prop, bool)
             self.assertIsInstance(i.private_moc, bool)
+            self.assertIsInstance(i.url_path, unicode)
             self.assertEqual(i.name, v)
+
+            self.assertEqual(GroupType.url_path(k), i.url_path)
+
+            self.assertEqual(GroupType.by_url_path(i.url_path), k)
 
         self.assertFalse(GroupType.is_valid(999999))
 
         self.assertIsInstance(GroupType.view_all_groups(), list)
         self.assertIsInstance(GroupType.private_moc_groups(), list)
         self.assertIsInstance(GroupType.review_coord_groups(), list)
+
+        url_paths = GroupType.get_url_paths()
+        self.assertIsInstance(url_paths, list)
+        for url_path in url_paths:
+            self.assertIsInstance(url_path, unicode)
 
     def test_group_member_collection(self):
         c = GroupMemberCollection()

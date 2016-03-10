@@ -464,13 +464,16 @@ class GroupType(object):
     GroupInfo = namedtuple(
         'GroupInfo',
         ('name', 'view_all_prop', 'private_moc',
-         'review_coord', 'review_view'))
+         'review_coord', 'review_view', 'url_path'))
 
     _info = OrderedDict((
-        #                         Authorization: Prop   MOC    Rv Ed  Rv Vw
-        (CTTEE, GroupInfo('Committee',           True,  False, False, True)),
-        (TECH,  GroupInfo('Technical assessors', False, True,  False, False)),
-        (COORD, GroupInfo('Review coordinators', True,  False, True,  True)),
+        #           Authorization: Prop   MOC    Rv Ed  Rv Vw
+        (CTTEE, GroupInfo(
+            'Committee',           True,  False, False, True,  'committee')),
+        (TECH,  GroupInfo(
+            'Technical assessors', False, True,  False, False, 'technical')),
+        (COORD, GroupInfo(
+            'Review coordinators', True,  False, True,  True,  'coordinator')),
     ))
 
     @classmethod
@@ -482,10 +485,18 @@ class GroupType(object):
         return cls._info[type_]
 
     @classmethod
-    def get_options(cls):
+    def url_path(cls, type_):
+        return cls._info[type_].url_path
+
+    @classmethod
+    def get_options(cls, by_url_path=False):
         """
         Get an OrderedDict of type names by type numbers.
         """
+
+        if by_url_path:
+            return OrderedDict(((v.url_path, v.name)
+                                for v in cls._info.values()))
 
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
@@ -504,6 +515,26 @@ class GroupType(object):
     @classmethod
     def review_view_groups(cls):
         return [k for (k, v) in cls._info.items() if v.review_view]
+
+    @classmethod
+    def get_url_paths(cls):
+        return [v.url_path for v in cls._info.values()]
+
+    @classmethod
+    def by_url_path(cls, url_path, default=()):
+        """
+        Attempt to find a group by its URL path.
+        """
+
+        for (type_, info) in cls._info.items():
+            if url_path == info.url_path:
+                return type_
+
+        if default == ():
+            raise FormattedError('Group URL path "{}" not recognised',
+                                 url_path)
+        else:
+            return default
 
 
 class MessageState(object):
