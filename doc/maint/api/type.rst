@@ -11,16 +11,20 @@ hedwig.type.collection
 ----------------------
 
 .. automodule:: hedwig.type.collection
+    :no-inherited-members:
+    :no-private-members:
 
 hedwig.type.enum
 ----------------
 
 .. automodule:: hedwig.type.enum
+    :no-private-members:
 
 hedwig.type.simple
 ------------------
 
 .. automodule:: hedwig.type.simple
+    :no-private-members:
 
 hedwig.type.util
 ----------------
