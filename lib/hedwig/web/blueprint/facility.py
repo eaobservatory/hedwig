@@ -509,13 +509,14 @@ def create_facility_blueprint(db, facility):
             db, queue_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/admin/queue/<int:queue_id>/group/<int:group_type>')
+    @bp.route('/admin/queue/<int:queue_id>/group/<hedwig_group:group_type>')
     @facility_template('group_view.html')
     @require_admin
     def group_view(queue_id, group_type):
         return facility.view_group_view(db, queue_id, group_type)
 
-    @bp.route('/admin/queue/<int:queue_id>/group/<int:group_type>/add',
+    @bp.route('/admin/queue/<int:queue_id>/group/<hedwig_group:group_type>/'
+              'add',
               methods=['GET', 'POST'])
     @facility_template('person_select.html')
     @require_admin
@@ -524,7 +525,8 @@ def create_facility_blueprint(db, facility):
             db, queue_id, group_type,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/admin/queue/<int:queue_id>/group/<int:group_type>/edit',
+    @bp.route('/admin/queue/<int:queue_id>/group/<hedwig_group:group_type>/'
+              'edit',
               methods=['GET', 'POST'])
     @facility_template('group_member_edit.html')
     @require_admin
@@ -533,7 +535,7 @@ def create_facility_blueprint(db, facility):
             db, queue_id, group_type,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/admin/queue/<int:queue_id>/group/<int:group_type>/'
+    @bp.route('/admin/queue/<int:queue_id>/group/<hedwig_group:group_type>/'
               'reinvite/<int:member_id>',
               methods=['GET', 'POST'])
     @templated('confirm.html')

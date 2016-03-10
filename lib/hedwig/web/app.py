@@ -24,8 +24,9 @@ import logging
 import os
 
 from ..config import get_config, get_database, get_facilities, get_home
-from ..type import FacilityInfo
+from ..type import FacilityInfo, GroupType
 from .template_util import register_template_utils
+from .util import make_enum_converter
 
 from .blueprint.admin import create_admin_blueprint
 from .blueprint.facility import create_facility_blueprint
@@ -79,6 +80,9 @@ def create_web_app(db=None):
         app.logger.warning('Generating temporary secret key')
         secret_key = os.urandom(32)
     app.secret_key = secret_key
+
+    # Set up routing converters.
+    app.url_map.converters['hedwig_group'] = make_enum_converter(GroupType)
 
     app.register_blueprint(create_home_blueprint(db, facilities))
     app.register_blueprint(create_admin_blueprint(db, facilities),
