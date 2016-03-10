@@ -116,11 +116,11 @@
     <section>
         <h2 id="sci_case">Scientific Justification</h2>
 
-        {% if sci_case_text is not none %}
-            {{ sci_case_text | format_text }}
-            {{ render_proposal_figures(sci_case_fig, proposal.id, 'scientific') }}
-        {% elif sci_case_pdf is not none %}
-            {{ render_proposal_pdf(sci_case_pdf, proposal.id, 'scientific') }}
+        {% if sci_case.text is not none %}
+            {{ sci_case.text | format_text }}
+            {{ render_proposal_figures(sci_case.fig, proposal.id, sci_case.role) }}
+        {% elif sci_case.pdf is not none %}
+            {{ render_proposal_pdf(sci_case.pdf, proposal.id, sci_case.role) }}
         {% else %}
             <p class="missing">
                 This proposal does not yet have a scientific justification.
@@ -130,7 +130,7 @@
         {% if can_edit %}
             <nav>
                 <p>
-                    <a href="{{ url_for('.case_edit', proposal_id=proposal.id, role_path='scientific') }}">Edit scientific justification</a>
+                    <a href="{{ url_for('.case_edit', proposal_id=proposal.id, role=sci_case.role) }}">Edit scientific justification</a>
                 </p>
             </nav>
         {% endif %}
@@ -358,11 +358,11 @@
     <section>
         <h2 id="tech_case">Technical Justification</h2>
 
-        {% if tech_case_text is not none %}
-            {{ tech_case_text | format_text }}
-            {{ render_proposal_figures(tech_case_fig, proposal.id, 'technical') }}
-        {% elif tech_case_pdf is not none %}
-            {{ render_proposal_pdf(tech_case_pdf, proposal.id, 'technical') }}
+        {% if tech_case.text is not none %}
+            {{ tech_case.text | format_text }}
+            {{ render_proposal_figures(tech_case.fig, proposal.id, tech_case.role) }}
+        {% elif tech_case.pdf is not none %}
+            {{ render_proposal_pdf(tech_case.pdf, proposal.id, tech_case.role) }}
         {% else %}
             <p class="missing">
                 This proposal does not yet have a technical justification.
@@ -372,7 +372,7 @@
         {% if can_edit %}
             <nav>
                 <p>
-                    <a href="{{ url_for('.case_edit', proposal_id=proposal.id, role_path='technical') }}">Edit technical justification</a>
+                    <a href="{{ url_for('.case_edit', proposal_id=proposal.id, role=tech_case.role) }}">Edit technical justification</a>
                 </p>
             </nav>
         {% endif %}

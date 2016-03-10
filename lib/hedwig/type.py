@@ -794,7 +794,10 @@ class TextRole(object):
 
     @classmethod
     def url_path(cls, role):
-        return cls._info[role].url_path
+        path = cls._info[role].url_path
+        if path is None:
+            raise FormattedError('Text role {} has no URL path', role)
+        return path
 
     @classmethod
     def get_url_paths(cls):

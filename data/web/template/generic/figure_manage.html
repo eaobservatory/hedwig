@@ -21,7 +21,7 @@
             <tr id="figrow_{{ figure.id }}">
                 <td>
                     {% if figure.state is attachment_ready %}
-                        <img src="{{ url_for('.case_view_figure_thumbnail', proposal_id=proposal_id, role_path=role_path, fig_id=figure.id, md5sum=figure.md5sum) }}" />
+                        <img src="{{ url_for('.case_view_figure_thumbnail', proposal_id=proposal_id, role=role, fig_id=figure.id, md5sum=figure.md5sum) }}" />
                     {% elif figure.state is attachment_error %}
                         <p class="warning">
                             Error during processing

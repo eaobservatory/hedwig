@@ -1,9 +1,9 @@
-{% macro render_proposal_pdf(pdf, proposal_id, role_path) %}
+{% macro render_proposal_pdf(pdf, proposal_id, role) %}
     {% if pdf.state is attachment_ready %}
         {% for page in range(1, pdf.pages + 1) %}
             <p class="pdf_preview_page">
-                <a href="{{ url_for('.case_view_pdf', proposal_id=proposal_id, role_path=role_path, md5sum=pdf.md5sum) }}#{{ page | fmt('page={}') }}">
-                    <img src="{{ url_for('.case_view_pdf_preview', proposal_id=proposal_id, role_path=role_path, page=page, md5sum=pdf.md5sum) }}" class="pdf_preview" alt="PDF file page {{ page }}" />
+                <a href="{{ url_for('.case_view_pdf', proposal_id=proposal_id, role=role, md5sum=pdf.md5sum) }}#{{ page | fmt('page={}') }}">
+                    <img src="{{ url_for('.case_view_pdf_preview', proposal_id=proposal_id, role=role, page=page, md5sum=pdf.md5sum) }}" class="pdf_preview" alt="PDF file page {{ page }}" />
                 </a>
             </p>
         {% endfor %}

@@ -24,7 +24,7 @@ import logging
 import os
 
 from ..config import get_config, get_database, get_facilities, get_home
-from ..type import FacilityInfo, GroupType
+from ..type import FacilityInfo, GroupType, TextRole
 from .template_util import register_template_utils
 from .util import make_enum_converter
 
@@ -83,6 +83,7 @@ def create_web_app(db=None):
 
     # Set up routing converters.
     app.url_map.converters['hedwig_group'] = make_enum_converter(GroupType)
+    app.url_map.converters['hedwig_text'] = make_enum_converter(TextRole)
 
     app.register_blueprint(create_home_blueprint(db, facilities))
     app.register_blueprint(create_admin_blueprint(db, facilities),

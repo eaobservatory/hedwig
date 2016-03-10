@@ -478,7 +478,8 @@ class TypeTestCase(TestCase):
         self.assertIsInstance(TextRole.url_path(TextRole.TECHNICAL_CASE),
                               unicode)
 
-        self.assertIsNone(TextRole.url_path(TextRole.TOOL_NOTE))
+        with self.assertRaisesRegexp(Error, 'has no URL path'):
+            TextRole.url_path(TextRole.TOOL_NOTE)
 
         self.assertEqual(TextRole.get_url_paths(), ['technical', 'scientific'])
 

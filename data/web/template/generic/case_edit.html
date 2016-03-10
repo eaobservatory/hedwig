@@ -70,7 +70,7 @@
 
         <nav>
             <p>
-                <a href="{{ url_for('.case_edit_text', proposal_id=proposal_id, role_path=role_path) }}" id="edit_text_link">Edit text</a>
+                <a href="{{ url_for('.case_edit_text', proposal_id=proposal_id, role=role) }}" id="edit_text_link">Edit text</a>
             </p>
         </nav>
 
@@ -86,15 +86,15 @@
                         <th>{{ loop.index }}</th>
                         <td>
                             {% if figure.state is attachment_ready %}
-                                <a href="{{ url_for('.case_view_figure', proposal_id=proposal_id, role_path=role_path, fig_id=figure.id, md5sum=figure.md5sum) }}">
-                                    <img src="{{ url_for('.case_view_figure_thumbnail', proposal_id=proposal_id, role_path=role_path, fig_id=figure.id, md5sum=figure.md5sum) }}" />
+                                <a href="{{ url_for('.case_view_figure', proposal_id=proposal_id, role=role, fig_id=figure.id, md5sum=figure.md5sum) }}">
+                                    <img src="{{ url_for('.case_view_figure_thumbnail', proposal_id=proposal_id, role=role, fig_id=figure.id, md5sum=figure.md5sum) }}" />
                                 </a>
                             {% elif figure.state is attachment_error %}
                                 <p class="warning">
                                     Error during processing
                                 </p>
                                 <p>
-                                    <a href="{{ url_for('.case_view_figure', proposal_id=proposal_id, role_path=role_path, fig_id=figure.id, md5sum=figure.md5sum) }}">View image</a>
+                                    <a href="{{ url_for('.case_view_figure', proposal_id=proposal_id, role=role, fig_id=figure.id, md5sum=figure.md5sum) }}">View image</a>
                                 </p>
                             {% else %}
                                 <p class="not_present">
@@ -116,7 +116,7 @@
                                 </div>
 
                                 <p>
-                                    <a href="{{ url_for('.case_view_figure', proposal_id=proposal_id, role_path=role_path, fig_id=figure.id, md5sum=figure.md5sum) }}">View image</a>
+                                    <a href="{{ url_for('.case_view_figure', proposal_id=proposal_id, role=role, fig_id=figure.id, md5sum=figure.md5sum) }}">View image</a>
                                 </p>
                             {% endif %}
                         </td>
@@ -129,7 +129,7 @@
                             Uploaded:
                             {{ figure.uploaded | format_datetime }}
                             <br />
-                            <a href="{{ url_for('.case_edit_figure', proposal_id=proposal_id, role_path=role_path, fig_id=figure.id) }}" id="edit_figure_{{ figure.id }}_link">Edit figure</a>
+                            <a href="{{ url_for('.case_edit_figure', proposal_id=proposal_id, role=role, fig_id=figure.id) }}" id="edit_figure_{{ figure.id }}_link">Edit figure</a>
                         </td>
                     </tr>
                 {% endfor %}
@@ -137,7 +137,7 @@
 
             <nav>
                 <p>
-                    <a href="{{ url_for('.case_manage_figure', proposal_id=proposal_id, role_path=role_path) }}" id="manage_figures_link">Manage figures</a>
+                    <a href="{{ url_for('.case_manage_figure', proposal_id=proposal_id, role=role) }}" id="manage_figures_link">Manage figures</a>
                 </p>
             </nav>
         {% endif %}
@@ -146,7 +146,7 @@
             <nav>
                 <p>
                     {% if true %}
-                        <a href="{{ url_for('.case_new_figure', proposal_id=proposal_id, role_path=role_path) }}">Upload new figure</a>
+                        <a href="{{ url_for('.case_new_figure', proposal_id=proposal_id, role=role) }}">Upload new figure</a>
                     {% endif %}
                 </p>
             </nav>
@@ -244,10 +244,10 @@
         <nav>
             <p>
                 {% if pdf is not none %}
-                    <a href="{{ url_for('.case_view_pdf', proposal_id=proposal_id, role_path=role_path, md5sum=pdf.md5sum) }}">View current PDF file</a>
+                    <a href="{{ url_for('.case_view_pdf', proposal_id=proposal_id, role=role, md5sum=pdf.md5sum) }}">View current PDF file</a>
                     <br />
                 {% endif %}
-                <a href="{{ url_for( '.case_edit_pdf', proposal_id=proposal_id, role_path=role_path) }}" id="upload_pdf_link">Upload {{ 'new' if pdf is none else 'replacement' }} PDF file</a>
+                <a href="{{ url_for( '.case_edit_pdf', proposal_id=proposal_id, role=role) }}" id="upload_pdf_link">Upload {{ 'new' if pdf is none else 'replacement' }} PDF file</a>
             </p>
         </nav>
     </section>

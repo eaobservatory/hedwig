@@ -1,14 +1,14 @@
-{% macro render_proposal_figures(figures, proposal_id, role_path) %}
+{% macro render_proposal_figures(figures, proposal_id, role) %}
     {% if figures %}
         {% for fig in figures %}
             <figure>
                 {% if fig.state is attachment_ready %}
                     {% if fig.has_preview %}
-                        <a href="{{ url_for('.case_view_figure', proposal_id=proposal_id, role_path=role_path, fig_id=fig.id, md5sum=fig.md5sum) }}">
-                            <img src="{{  url_for('.case_view_figure_preview', proposal_id=proposal_id, role_path=role_path, fig_id=fig.id, md5sum=fig.md5sum)}}" alt="Figure {{ loop.index }}" />
+                        <a href="{{ url_for('.case_view_figure', proposal_id=proposal_id, role=role, fig_id=fig.id, md5sum=fig.md5sum) }}">
+                            <img src="{{  url_for('.case_view_figure_preview', proposal_id=proposal_id, role=role, fig_id=fig.id, md5sum=fig.md5sum)}}" alt="Figure {{ loop.index }}" />
                         </a>
                     {% else %}
-                        <img src="{{ url_for('.case_view_figure', proposal_id=proposal_id, role_path=role_path, fig_id=fig.id, md5sum=fig.md5sum) }}" alt="Figure {{ loop.index }}" />
+                        <img src="{{ url_for('.case_view_figure', proposal_id=proposal_id, role=role, fig_id=fig.id, md5sum=fig.md5sum) }}" alt="Figure {{ loop.index }}" />
                     {% endif %}
                 {% elif fig.state is attachment_error %}
                     <p class="warning">
