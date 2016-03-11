@@ -22,10 +22,10 @@ from collections import OrderedDict, namedtuple
 import re
 
 from ..error import UserError
-from .base import EnumURLPath
+from .base import EnumBasic, EnumURLPath
 
 
-class CallState(object):
+class CallState(EnumBasic):
     UNOPENED = 1
     OPEN = 2
     CLOSED = 3
@@ -38,10 +38,6 @@ class CallState(object):
         (OPEN,      StateInfo('Open')),
         (CLOSED,    StateInfo('Closed')),
     ))
-
-    @classmethod
-    def get_name(cls, state):
-        return cls._info[state].name
 
 
 class FormatType(object):
@@ -81,7 +77,7 @@ class FormatType(object):
                             if is_system or v.allow_user])
 
 
-class Assessment(object):
+class Assessment(EnumBasic):
     FEASIBLE = 1
     PROBLEM = 2
     INFEASIBLE = 3
@@ -95,19 +91,11 @@ class Assessment(object):
     ))
 
     @classmethod
-    def is_valid(cls, assessment):
-        return assessment in cls._info
-
-    @classmethod
-    def get_name(cls, assessment):
-        return cls._info[assessment].name
-
-    @classmethod
     def get_options(cls):
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
 
-class AttachmentState(object):
+class AttachmentState(EnumBasic):
     NEW = 1
     PROCESSING = 2
     READY = 3
@@ -122,14 +110,6 @@ class AttachmentState(object):
         (READY,       AttachmentStateInfo('Ready',      True,  False)),
         (ERROR,       AttachmentStateInfo('Error',      False, True)),
     ))
-
-    @classmethod
-    def is_valid(cls, state):
-        return state in cls._info
-
-    @classmethod
-    def get_name(cls, state):
-        return cls._info[state].name
 
     @classmethod
     def is_ready(cls, state):
@@ -221,7 +201,7 @@ class FigureType(object):
         return [x.mime for x in cls._info.values() if x.allow_user]
 
 
-class GroupType(EnumURLPath):
+class GroupType(EnumBasic, EnumURLPath):
     CTTEE = 1
     TECH = 2
     COORD = 3
@@ -240,14 +220,6 @@ class GroupType(EnumURLPath):
         (COORD, GroupInfo(
             'Review coordinators', True,  False, True,  True,  'coordinator')),
     ))
-
-    @classmethod
-    def is_valid(cls, type_):
-        return type_ in cls._info
-
-    @classmethod
-    def get_info(cls, type_):
-        return cls._info[type_]
 
     @classmethod
     def get_options(cls, by_url_path=False):
@@ -297,7 +269,7 @@ class MessageState(object):
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
 
-class ProposalState(object):
+class ProposalState(EnumBasic):
     PREPARATION = 1
     SUBMITTED = 2
     WITHDRAWN = 3
@@ -337,14 +309,6 @@ class ProposalState(object):
     @classmethod
     def is_reviewed(cls, state):
         return cls._info[state].reviewed
-
-    @classmethod
-    def is_valid(cls, state):
-        return state in cls._info
-
-    @classmethod
-    def get_name(cls, state):
-        return cls._info[state].name
 
     @classmethod
     def get_short_name(cls, state):
@@ -388,7 +352,7 @@ class ProposalState(object):
         return None
 
 
-class PublicationType(object):
+class PublicationType(EnumBasic):
     PLAIN = 1
     DOI = 2
     ADS = 3
@@ -413,19 +377,11 @@ class PublicationType(object):
     ))
 
     @classmethod
-    def is_valid(cls, type_):
-        return type_ in cls._info
-
-    @classmethod
     def get_options(cls):
         return cls._info.copy()
 
-    @classmethod
-    def get_info(cls, type_):
-        return cls._info[type_]
 
-
-class ReviewerRole(object):
+class ReviewerRole(EnumBasic):
     TECH = 1
     EXTERNAL = 2
     CTTEE_PRIMARY = 3
@@ -475,14 +431,6 @@ class ReviewerRole(object):
     ))
 
     @classmethod
-    def is_valid(cls, role):
-        return role in cls._info
-
-    @classmethod
-    def get_info(cls, role):
-        return cls._info[role]
-
-    @classmethod
     def get_cttee_roles(cls):
         return [k for (k, v) in cls._info.items() if v.cttee]
 
@@ -501,7 +449,7 @@ class ReviewerRole(object):
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
 
-class TextRole(EnumURLPath):
+class TextRole(EnumBasic, EnumURLPath):
     ABSTRACT = 1
     TECHNICAL_CASE = 2
     SCIENCE_CASE = 3
@@ -522,19 +470,11 @@ class TextRole(EnumURLPath):
     }
 
     @classmethod
-    def is_valid(cls, role):
-        return role in cls._info
-
-    @classmethod
-    def get_name(cls, role):
-        return cls._info[role].name
-
-    @classmethod
     def short_name(cls, role):
         return cls._info[role].shortname
 
 
-class UserLogEvent(object):
+class UserLogEvent(EnumBasic):
     CREATE = 1
     LINK_PROFILE = 2
     CHANGE_NAME = 3
@@ -554,11 +494,3 @@ class UserLogEvent(object):
         USE_TOKEN:    EventInfo('Used password reset code'),
         USE_INVITE:   EventInfo('Profile linked via invitation'),
     }
-
-    @classmethod
-    def is_valid(cls, event):
-        return event in cls._info
-
-    @classmethod
-    def get_info(cls, event):
-        return cls._info[event]

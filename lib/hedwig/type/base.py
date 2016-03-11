@@ -21,6 +21,24 @@ from __future__ import absolute_import, division, print_function, \
 from ..error import FormattedError
 
 
+class EnumBasic(object):
+    """
+    Mix-in for enum-style classes which have an _info dictionary.
+    """
+
+    @classmethod
+    def is_valid(cls, value):
+        return value in cls._info
+
+    @classmethod
+    def get_info(cls, value):
+        return cls._info[value]
+
+    @classmethod
+    def get_name(cls, value):
+        return cls._info[value].name
+
+
 class EnumURLPath(object):
     """
     Mix-in for enum-style classes which have an _info dictionary
