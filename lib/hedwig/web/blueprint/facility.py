@@ -378,7 +378,7 @@ def create_facility_blueprint(db, facility):
     def proposal_feedback(proposal_id):
         return facility.view_proposal_feedback(db, proposal_id)
 
-    @bp.route('/proposal/<int:proposal_id>/reviews')
+    @bp.route('/proposal/<int:proposal_id>/review/')
     @require_auth(require_person=True)
     @facility_template('proposal_reviews.html')
     def proposal_reviews(proposal_id):
@@ -395,7 +395,7 @@ def create_facility_blueprint(db, facility):
             (request.form if request.method == 'POST' else None),
             request.referrer)
 
-    @bp.route('/proposal/<int:proposal_id>/reviewers/external/add',
+    @bp.route('/proposal/<int:proposal_id>/review/external/add',
               methods=['GET', 'POST'])
     @require_auth(require_person=True)
     @facility_template('reviewer_select.html')
@@ -404,7 +404,7 @@ def create_facility_blueprint(db, facility):
             db, proposal_id, ReviewerRole.EXTERNAL,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/reviewers/external/remove/'
+    @bp.route('/proposal/<int:proposal_id>/review/external/remove/'
               '<int:reviewer_id>',
               methods=['GET', 'POST'])
     @require_auth(require_person=True)
@@ -414,7 +414,7 @@ def create_facility_blueprint(db, facility):
             db, proposal_id, ReviewerRole.EXTERNAL, reviewer_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/reviewers/external/reinvite/'
+    @bp.route('/proposal/<int:proposal_id>/review/external/reinvite/'
               '<int:reviewer_id>',
               methods=['GET', 'POST'])
     @require_auth(require_person=True)
