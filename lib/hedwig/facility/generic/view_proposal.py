@@ -737,6 +737,9 @@ class GenericProposal(object):
         if member is None:
             raise HTTPNotFound('Proposal member not found.')
 
+        if member.person_registered:
+            raise ErrorPage('This proposal member has already registered.')
+
         proposal_code = self.make_proposal_code(db, proposal)
 
         if form:
