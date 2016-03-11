@@ -106,9 +106,15 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertIsInstance(j, str)
         self.assertEqual(json.loads(j), d)
 
-        # Test usage of "extend" parameter".
-        self.assertEqual(json.loads(f({'c': 'd'}, Markup(j))),
+        # Test usage of the "extend" parameter".
+        self.assertEqual(json.loads(f({'c': 'd'}, extend=Markup(j))),
                          {'a': 'b', 'c': 'd'})
+
+        # Test usage of the "dynamic" parameter.
+        self.assertEqual(
+            json.loads(f({'e': 'f'}, dynamic=[
+                ('test', [1, 2, 3], False, {1: 'one', 2: 'two'}, 'null')])),
+            {'e': 'f', 'test_1': 'one', 'test_2': 'two', 'test_3': 'null'})
 
     def test_filter_proposal_state(self):
         f = self.app.jinja_env.filters['proposal_state_name']

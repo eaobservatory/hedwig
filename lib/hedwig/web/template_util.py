@@ -106,19 +106,36 @@ def register_template_utils(app):
         return '{:d}:{:02d}:{:02d}'.format(h, m, s)
 
     @app.template_filter()
-    def json(value, extend=None):
+    def json(value, extend=None, dynamic=None):
         """
         Convert given "value" dictionary to JSON representation.
 
         If an "extend" option is given, it should be an existing JSON
         representation via markupsafe, e.g. from the parent template.
         The given values will be added to it.
+
+        If a "dynamic" option is given, extra so-called dynamic elements
+        will be added to the dictionary.  This option is a list of tuples,
+        one for each set of dynamic elements, containing:
+        * The element prefix.
+        * The list of elements to generate.
+        * A true value if we need to use the "id" attribute of the elements.
+        * A dictionary in which to look up the elements.
+        * The default value to supply for undefined entries.
         """
 
         if extend is not None:
             extend = json_module.loads(extend.unescape())
             extend.update(value)
             value = extend
+
+        if dynamic is not None:
+            for (prefix, elements, use_id, values, default) in dynamic:
+                for element in elements:
+                    if use_id:
+                        element = element.id
+                    value['{}_{}'.format(prefix, element)] = \
+                        values.get(element, default)
 
         return json_module.dumps(value)
 
