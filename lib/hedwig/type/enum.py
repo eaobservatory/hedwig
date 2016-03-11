@@ -436,6 +436,10 @@ class ReviewerRole(EnumBasic, EnumURLPath):
         return [k for (k, v) in cls._info.items() if v.cttee]
 
     @classmethod
+    def get_display_class(cls, role):
+        return cls._info[role].display_class
+
+    @classmethod
     def get_feedback_roles(cls):
         """Get list of roles who can write the feedback review."""
 
@@ -448,6 +452,10 @@ class ReviewerRole(EnumBasic, EnumURLPath):
         """
 
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
+
+    @classmethod
+    def is_name_review(cls, role):
+        return cls._info[role].name_review
 
 
 class TextRole(EnumBasic, EnumURLPath):

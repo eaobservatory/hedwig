@@ -145,7 +145,7 @@ def register_template_utils(app):
     @app.template_filter()
     def reviewer_role_name(value):
         try:
-            return ReviewerRole.get_info(value).name
+            return ReviewerRole.get_name(value)
         except KeyError:
             return 'Unknown role'
 
@@ -153,7 +153,7 @@ def register_template_utils(app):
     def reviewer_role_class(value):
         try:
             return 'reviewer_{}'.format(
-                ReviewerRole.get_info(value).display_class)
+                ReviewerRole.get_display_class(value))
         except KeyError:
             return ''
 
@@ -200,7 +200,7 @@ def register_template_utils(app):
 
     @app.template_test()
     def reviewer_role_review(value):
-        return ReviewerRole.get_info(value).name_review
+        return ReviewerRole.is_name_review(value)
 
     app.add_template_filter(format_text)
 
