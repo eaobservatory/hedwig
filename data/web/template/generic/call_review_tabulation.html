@@ -102,7 +102,7 @@
             {% endblock %}
             {% block heading_affiliations %}
                 {% for affiliation in affiliations %}
-                    <th class="sideways{{ ' spacer_left' if loop.first }}"><div><div>{{ affiliation.name | abbr(15) }}</div></div></th>
+                    <th class="sideways sortable sortreverse{{ ' spacer_left' if loop.first }}" data-sortkey="affiliation_{{ affiliation.id }}"><div><div><span>{{ affiliation.name | abbr(15) }}</span></div></div></th>
                 {% endfor %}
             {% endblock %}
         </tr>
@@ -117,7 +117,7 @@
                 'decision': (1 if proposal.decision_accept is none else (0 if not proposal.decision_accept else (3 if proposal.decision_exempt else 2))),
                 'rating': proposal.rating,
                 'rating_std_dev': proposal.rating_std_dev,
-            } | json }}{% endblock %}">
+            } | json(dynamic=[('affiliation', affiliations, true, proposal.affiliations, 0)]) }}{% endblock %}">
                 <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
                 <td>
                     {% if proposal.reviewers %}

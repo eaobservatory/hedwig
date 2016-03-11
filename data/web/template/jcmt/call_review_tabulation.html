@@ -37,20 +37,23 @@
 {% endblock %}
 
 {% block heading_line_two %}
-    {% for weather in jcmt_weathers.values() %}
-        <th class="sideways{{ ' spacer_left' if loop.first }}"><div><div>{{ weather.name }}</div></div></th>
+    {% for (weather_id, weather) in jcmt_weathers.items() %}
+        <th class="sideways sortable sortreverse{{ ' spacer_left' if loop.first }}" data-sortkey="jcmt_weather_{{ weather_id }}"><div><div><span>{{ weather.name }}</span></div></div></th>
     {% endfor %}
-    <th class="sideways"><div><div>Unknown</div></div></th>
-    {% for instrument in jcmt_instruments.values() %}
-        <th class="sideways{{ ' spacer_left' if loop.first }}"><div><div>{{ instrument }}</div></div></th>
+    <th class="sideways sortable sortreverse" data-sortkey="jcmt_weather_0"><div><div><span>Unknown</span></div></div></th>
+    {% for (instrument_id, instrument_name) in jcmt_instruments.items() %}
+        <th class="sideways sortable sortreverse{{ ' spacer_left' if loop.first }}" data-sortkey="jcmt_instrument_{{ instrument_id }}"><div><div><span>{{ instrument_name }}</span></div></div></th>
     {% endfor %}
-    <th class="sideways"><div><div>Unknown</div></div></th>
+    <th class="sideways sortable sortreverse" data-sortkey="jcmt_instrument_0"><div><div><span>Unknown</span></div></div></th>
 {% endblock %}
 
 {% block row_sort_info %}{{ {
     'jcmt_request': proposal.jcmt_request.total,
     'jcmt_allocation': (None if (proposal.jcmt_allocation is none) else proposal.jcmt_allocation.total),
-} | json(extend=super()) }}{% endblock %}
+} | json(extend=super(), dynamic=[
+    ('jcmt_weather', jcmt_weathers.keys() + [0], false, (proposal.jcmt_request.weather if proposal.jcmt_allocation is none else proposal.jcmt_allocation.weather), 0),
+    ('jcmt_instrument', jcmt_instruments.keys() + [0], false, (proposal.jcmt_request.instrument if proposal.jcmt_allocation is none else proposal.jcmt_allocation.instrument), 0),
+]) }}{% endblock %}
 
 {% macro render_cell_class(is_total, is_first) %}number_right{{ ' total' if is_total }}{{ ' spacer_left' if is_first }}{% endmacro %}
 
