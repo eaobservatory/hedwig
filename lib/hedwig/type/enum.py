@@ -381,7 +381,7 @@ class PublicationType(EnumBasic):
         return cls._info.copy()
 
 
-class ReviewerRole(EnumBasic):
+class ReviewerRole(EnumBasic, EnumURLPath):
     TECH = 1
     EXTERNAL = 2
     CTTEE_PRIMARY = 3
@@ -394,7 +394,8 @@ class ReviewerRole(EnumBasic):
     RoleInfo = namedtuple(
         'RoleInfo',
         ('name', 'unique', 'text', 'assessment', 'rating', 'weight',
-         'cttee', 'name_review', 'feedback', 'note', 'display_class'))
+         'cttee', 'name_review', 'feedback', 'note',
+         'display_class', 'url_path'))
 
     # Options:  Unique Text   Ass/nt Rating Weight Cttee  "Rev"  Feedbk Note
     _info = OrderedDict((
@@ -402,32 +403,32 @@ class ReviewerRole(EnumBasic):
             RoleInfo(
                 'Technical',
                 True,  True,  True,  False, False, False, True,  False, True,
-                'tech')),
+                'tech', None)),
         (EXTERNAL,
             RoleInfo(
                 'External',
                 False, True,  False, True,  False, False, True,  False, False,
-                'ext')),
+                'ext', None)),
         (CTTEE_PRIMARY,
             RoleInfo(
                 'TAC Primary',
                 True,  True,  False, True,  True,  True,  True,  True,  True,
-                'cttee')),
+                'cttee', None)),
         (CTTEE_SECONDARY,
             RoleInfo(
                 'TAC Secondary',
                 False, True,  False, True,  True,  True,  True,  True,  True,
-                'cttee')),
+                'cttee', None)),
         (CTTEE_OTHER,
             RoleInfo(
                 'Rating',
                 False, False, False, True,  True,  True,  False, False, False,
-                'cttee')),
+                'cttee', 'rating')),
         (FEEDBACK,
             RoleInfo(
                 'Feedback',
                 True,  True,  False, False, False, False, False, False, False,
-                'feedback')),
+                'feedback', 'feedback')),
     ))
 
     @classmethod

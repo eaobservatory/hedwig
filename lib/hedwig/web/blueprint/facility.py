@@ -384,7 +384,8 @@ def create_facility_blueprint(db, facility):
     def proposal_reviews(proposal_id):
         return facility.view_proposal_reviews(db, proposal_id)
 
-    @bp.route('/proposal/<int:proposal_id>/review/new/<int:reviewer_role>',
+    @bp.route('/proposal/<int:proposal_id>/review/'
+              '<hedwig_review:reviewer_role>/new',
               methods=['GET', 'POST'])
     @require_auth(require_person=True)
     @facility_template('review_edit.html')
