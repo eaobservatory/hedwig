@@ -1339,7 +1339,7 @@ class GenericProposal(object):
     def view_case_edit_pdf(self, db, proposal, can, role, file):
         code = TextRole.short_name(role)
         name = TextRole.get_name(role)
-        page_limit = getattr(proposal, code + '_page_lim'),
+        page_limit = getattr(proposal, code + '_page_lim')
         max_size = int(get_config().get('upload', 'max_pdf_size'))
         message = None
 
