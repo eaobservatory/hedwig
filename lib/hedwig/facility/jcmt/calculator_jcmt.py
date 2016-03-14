@@ -20,12 +20,22 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple, OrderedDict
 
+from ...error import UserError
 from ...web.util import ErrorPage
 from ...view.calculator import BaseCalculator
 from .type import JCMTWeather
 
 
 class JCMTCalculator(BaseCalculator):
+    PositionTypeInfo = namedtuple('PositionTypeInfo', ('name', 'no_unit'))
+
+    position_type = OrderedDict((
+        ('dec', PositionTypeInfo('declination',  False)),
+        ('el',  PositionTypeInfo('elevation',    False)),
+        ('zen', PositionTypeInfo('zenith angle', False)),
+        ('am',  PositionTypeInfo('airmass',      True)),
+    ))
+
     def get_tau_band(self, tau):
         """
         Finds the band number matching the given tau.
@@ -88,10 +98,15 @@ class JCMTCalculator(BaseCalculator):
         for (val_a, val_b) in value_tuples:
             if (values[val_a] is not None) and (values[val_b] is not None):
                 value = calculation.inputs[values[val_a]]
+                input_a = calculation.input[val_a]
+                input_b = calculation.input[val_b]
                 calculation.input[val_a] = ' '.join([
-                    value.format.format(calculation.input[val_a]),
-                    ('' if value.unit is None else value.unit),
-                    calculation.input[val_b],
+                    value.format.format(input_a),
+                    ('' if (value.unit is None or
+                            (val_a == 'pos' and
+                             self.position_type[input_b].no_unit)) else
+                     value.unit),
+                    input_b,
                 ])
                 calculation.inputs[values[val_a]] = \
                     calculation.inputs[values[val_a]]._replace(
@@ -103,3 +118,23 @@ class JCMTCalculator(BaseCalculator):
         # are removed).
         for i in sorted(to_remove, reverse=True):
             del calculation.inputs[i]
+
+    @classmethod
+    def _validate_position(self, pos, pos_type):
+        """
+        Validate the position, with the given position type,
+        raising UserError if a problem is detected.
+        """
+
+        if pos_type == 'dec':
+            if not -90 <= pos <= 90:
+                raise UserError(
+                    'Source declination should be between -90 and 90.')
+        elif pos_type == 'am':
+            if not 1 <= pos <= 5:
+                raise UserError(
+                    'Airmass should be between 1 and 5.')
+        elif not 0 <= pos <= 90:
+            raise UserError(
+                'Source zenith angle / elevation '
+                'should be between 0 and 90.')

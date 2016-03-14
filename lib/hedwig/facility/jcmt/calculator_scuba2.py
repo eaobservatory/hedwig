@@ -301,6 +301,7 @@ class SCUBA2Calculator(JCMTCalculator):
                 'wl': 'Requirement',
                 'time': 'Requirement',
             },
+            'position_types': self.position_type,
         }
 
     def parse_input(self, mode, input_, defaults=None):
@@ -329,14 +330,7 @@ class SCUBA2Calculator(JCMTCalculator):
                 else:
                     raise UserError('Invalid value for {}.', field.name)
 
-        if parsed['pos_type'] == 'dec':
-            if not -90 <= parsed['pos'] <= 90:
-                raise UserError(
-                    'Source declination should be between -90 and 90.')
-        elif not 0 <= parsed['pos'] <= 90:
-            raise UserError(
-                'Source zenith angle / elevation '
-                'should be between 0 and 90.')
+        self._validate_position(parsed['pos'], parsed['pos_type'])
 
         # Remove irrelevant pixel sizes when using matched filter.
         if parsed['mf']:
@@ -375,10 +369,13 @@ class SCUBA2Calculator(JCMTCalculator):
             airmass = 1.0 / cos(radians(input_['pos']))
         elif input_['pos_type'] == 'el':
             airmass = 1.0 / cos(radians(90.0 - input_['pos']))
+        elif input_['pos_type'] == 'am':
+            airmass = input_['pos']
         else:
             raise UserError('Unknown source position type.')
 
-        extra['airmass'] = airmass
+        if input_['pos_type'] != 'am':
+            extra['airmass'] = airmass
 
         try:
             # Determine tau and transmission at each wavelength.

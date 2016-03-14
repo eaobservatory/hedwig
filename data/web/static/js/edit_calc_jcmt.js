@@ -9,4 +9,19 @@ $(document).ready(function () {
             tau_box.val(tau_select.find(':selected').data('representative'));
         }
     });
+
+    var pos_unit_span = $('#calc_unit_pos');
+    var pos_type_select = $('[name=pos_type]');
+
+    var check_pos_type_opt = (function() {
+        if (pos_type_select.find(':selected').data('no_unit')) {
+            pos_unit_span.hide();
+        } else {
+            pos_unit_span.show();
+        }
+    });
+
+    pos_type_select.change(check_pos_type_opt);
+
+    check_pos_type_opt();
 });

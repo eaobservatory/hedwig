@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import namedtuple, OrderedDict
+from math import acos, degrees
 
 from jcmt_itc_heterodyne import HeterodyneITC, HeterodyneITCError
 from jcmt_itc_heterodyne.receiver import HeterodyneReceiver, ReceiverInfo
@@ -473,6 +474,7 @@ class HeterodyneCalculator(JCMTCalculator):
                 'int_time': 'Requirement',
             },
             'int_time_minimum': self.itc.int_time_minimum,
+            'position_types': self.position_type,
         }
 
     def parse_input(self, mode, input_, defaults=None):
@@ -523,14 +525,7 @@ class HeterodyneCalculator(JCMTCalculator):
                 else:
                     raise UserError('Invalid value for {}.', field.name)
 
-        if parsed['pos_type'] == 'dec':
-            if not -90 <= parsed['pos'] <= 90:
-                raise UserError(
-                    'Source declination should be between -90 and 90.')
-        elif not 0 <= parsed['pos'] <= 90:
-            raise UserError(
-                'Source zenith angle / elevation '
-                'should be between 0 and 90.')
+        self._validate_position(parsed['pos'], parsed['pos_type'])
 
         map_mode = self.map_modes[parsed['mm']].id
 
@@ -573,14 +568,17 @@ class HeterodyneCalculator(JCMTCalculator):
         if input_['pos_type'] == 'dec':
             zenith_angle_deg = self.itc.estimate_zenith_angle_deg(
                 input_['pos'])
-            extra_output['zenith_angle'] = zenith_angle_deg
         elif input_['pos_type'] == 'zen':
             zenith_angle_deg = input_['pos']
         elif input_['pos_type'] == 'el':
             zenith_angle_deg = 90.0 - input_['pos']
-            extra_output['zenith_angle'] = zenith_angle_deg
+        elif input_['pos_type'] == 'am':
+            zenith_angle_deg = degrees(acos(1.0 / input_['pos']))
         else:
             raise UserError('Unknown source position type.')
+
+        if input_['pos_type'] != 'zen':
+            extra_output['zenith_angle'] = zenith_angle_deg
 
         receiver = self.get_receiver_by_name(input_['rx'], as_object=True)
 

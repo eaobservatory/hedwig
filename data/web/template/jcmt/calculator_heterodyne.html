@@ -203,7 +203,7 @@
                     <input type="text" name="{{ value.code }}" value="{{ input }}" />
                 {% endif %}
                 {% if value.unit is not none %}
-                    {{ value.unit }}
+                    <span id="calc_unit_{{ value.code }}">{{ value.unit }}</span>
                 {% endif %}
                 {% if value.code == 'elapsed' %}
                     <span class="explanation">decimal hours or hours:minutes:seconds</span>
@@ -228,8 +228,8 @@
                     {% endfor %}
                 {% elif value.code == 'pos' %}
                     <select name="pos_type">
-                        {% for (pos_type, pos_type_name) in [['dec', 'declination'], ['el', 'elevation'], ['zen', 'zenith angle']] %}
-                            <option value="{{ pos_type }}" {{ 'selected="selected"' | safe if pos_type == input_values.pos_type }}>{{ pos_type_name }}</option>
+                        {% for (pos_type, pos_type_info) in position_types.items() %}
+                            <option value="{{ pos_type }}" {{ 'selected="selected"' | safe if pos_type == input_values.pos_type }} data-no_unit="{{ 'true' if pos_type_info.no_unit else 'false' }}">{{ pos_type_info.name }}</option>
                         {% endfor %}
                     </select>
                 {% endif %}
