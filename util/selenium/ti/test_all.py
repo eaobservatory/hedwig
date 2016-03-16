@@ -1023,7 +1023,12 @@ class IntegrationTest(DummyConfigTestCase):
             'Please log in or register for an account to proceed.',
             self.browser.page_source)
 
-        self.browser.find_element_by_link_text('register').click()
+        register_link = self.browser.find_element_by_link_text('register')
+
+        self._save_screenshot(screenshot_path, 'log_in_register',
+                              [register_link])
+
+        register_link.click()
 
         self._do_register_user(user_name, 'password')
 

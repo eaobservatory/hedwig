@@ -26,6 +26,8 @@ choosing a user name and password,
 as most of the necessary information will already have
 been entered by the person who invited you to their proposal.
 
+.. image:: image/log_in_register.png
+
 Then you will see a page giving the details of the invitation
 you have received.
 Don't worry if the details aren't quite right --- you will be
