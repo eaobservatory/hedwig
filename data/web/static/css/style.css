@@ -105,6 +105,10 @@ tr.decision_reject > td {
     background: #FBB;
 }
 
+tr.decision_exempt > td.cell_affiliation {
+    color: #888;
+}
+
 td.reviewer_tech {
     background: #EEE;
 }

@@ -109,7 +109,7 @@
     </thead>
     <tbody id="tabulationbody">
         {% for proposal in proposals %}
-            <tr class="oneline decision_{{ 'undecided' if proposal.decision_accept is none else ('accept' if proposal.decision_accept else 'reject') }}" data-sortinfo="{% block row_sort_info scoped %}{{ {
+            <tr class="oneline decision_{{ 'undecided' if proposal.decision_accept is none else ('accept' if proposal.decision_accept else 'reject') }}{{ ' decision_exempt' if proposal.decision_exempt else '' }}" data-sortinfo="{% block row_sort_info scoped %}{{ {
                 'proposal_code': proposal.code,
                 'pi_name': (None if proposal.member_pi is none else proposal.member_pi.person_name),
                 'title': proposal.title,
@@ -227,7 +227,7 @@
                 {% block row_extra scoped %}
                 {% endblock %}
                 {% for affiliation in affiliations %}
-                    <td class="number_right{{ ' spacer_left' if loop.first }}">
+                    <td class="number_right cell_affiliation{{ ' spacer_left' if loop.first }}">
                         {% if affiliation.id in proposal.affiliations %}
                             {{ (100.0 * proposal.affiliations[affiliation.id]) | fmt('{:.1f}') }}
                         {% else %}
