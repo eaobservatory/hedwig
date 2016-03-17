@@ -405,7 +405,17 @@ class PeopleView(object):
 
     def register_person(self, db, form, remote_addr):
         if 'person' in session:
-            raise ErrorPage('You have already created a profile')
+            raise ErrorPage('You have already created a profile.')
+
+        # Check if the user already created a profile in another session.
+        user_id = session['user_id']
+        try:
+            person = db.search_person(user_id=user_id).get_single()
+            _update_session_person(person)
+            raise ErrorPage(
+                'You have already created a profile in another session.')
+        except NoSuchRecord:
+            pass
 
         message = None
 
@@ -423,7 +433,6 @@ class PeopleView(object):
                 elif not email:
                     raise UserError('Please enter your email address.')
 
-                user_id = session['user_id']
                 person_id = db.add_person(
                     person.name, public=person.public,
                     user_id=user_id, remote_addr=remote_addr)
