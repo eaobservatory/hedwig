@@ -788,11 +788,13 @@ class ProposalPart(object):
 
         dt_current = datetime.utcnow()
 
+        state_expr = case([
+            (call.c.date_open > dt_current, CallState.UNOPENED),
+            (call.c.date_close >= dt_current, CallState.OPEN),
+        ], else_=CallState.CLOSED)
+
         fields.extend([
-            case([
-                (call.c.date_open > dt_current, CallState.UNOPENED),
-                (call.c.date_close >= dt_current, CallState.OPEN),
-            ], else_=CallState.CLOSED).label('state'),
+            state_expr.label('state'),
             semester.c.facility_id,
             semester.c.name.label('semester_name'),
             queue.c.name.label('queue_name')
@@ -826,7 +828,7 @@ class ProposalPart(object):
                 stmt = stmt.where(call.c.queue_id == queue_id)
 
         if state is not None:
-            stmt = stmt.where(column('state') == state)
+            stmt = stmt.where(state_expr == state)
 
         if has_proposal_state is not None:
             proposal_calls = select([proposal.c.call_id])

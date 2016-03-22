@@ -190,6 +190,12 @@ class MessagePart(object):
         optional keyword arguments.
         """
 
+        state_expr = case([
+            (and_(message.c.timestamp_send.is_(None),
+                  message.c.timestamp_sent.is_(None)), MessageState.UNSENT),
+            (message.c.timestamp_sent.is_(None), MessageState.SENDING),
+        ], else_=MessageState.SENT)
+
         stmt = select([
             message.c.id,
             message.c.date,
@@ -197,13 +203,7 @@ class MessagePart(object):
             message.c.timestamp_send,
             message.c.timestamp_sent,
             message.c.identifier,
-            case([
-                (and_(message.c.timestamp_send.is_(None),
-                      message.c.timestamp_sent.is_(None)),
-                 MessageState.UNSENT),
-                (message.c.timestamp_sent.is_(None),
-                 MessageState.SENDING),
-            ], else_=MessageState.SENT).label('state'),
+            state_expr.label('state'),
         ])
 
         if person_id is not None:
@@ -211,7 +211,7 @@ class MessagePart(object):
                 message_recipient.c.person_id == person_id)
 
         if state is not None:
-            stmt = stmt.where(column('state') == state)
+            stmt = stmt.where(state_expr == state)
 
         if message_id_lt is not None:
             stmt = stmt.where(message.c.id < message_id_lt)
