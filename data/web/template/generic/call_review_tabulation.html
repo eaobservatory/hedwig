@@ -5,6 +5,12 @@
 
 {% from 'macro/institution.html' import render_member_institution %}
 
+{% macro render_affiliation_heading(affiliations, sortable=false) %}
+    {% for affiliation in affiliations %}
+        <th class="sideways{{ ' sortable sortreverse' if sortable }}{{ ' spacer_left' if loop.first }}" data-sortkey="affiliation_{{ affiliation.id }}"><div><div><span>{{ affiliation.name | abbr(15) }}</span></div></div></th>
+    {% endfor %}
+{% endmacro %}
+
 {% macro render_affiliation_totals(affiliations, affiliation_totals) %}
     {% for affiliation in affiliations %}
         <td class="number_right total{{ ' spacer_left' if loop.first }}">
@@ -100,11 +106,7 @@
             <th class="sideways"><div><div>Others<sup>&dagger;</sup></div></div></th>
             {% block heading_line_two %}
             {% endblock %}
-            {% block heading_affiliations %}
-                {% for affiliation in affiliations %}
-                    <th class="sideways sortable sortreverse{{ ' spacer_left' if loop.first }}" data-sortkey="affiliation_{{ affiliation.id }}"><div><div><span>{{ affiliation.name | abbr(15) }}</span></div></div></th>
-                {% endfor %}
-            {% endblock %}
+            {{ render_affiliation_heading(affiliations, sortable=true) }}
         </tr>
     </thead>
     <tbody id="tabulationbody">
@@ -281,8 +283,7 @@
             <td colspan="4" class="total spacer_left">&nbsp;</td>
             {% block footer_head_extra %}
             {% endblock %}
-            {{ self.heading_line_two() }}
-            {{ self.heading_affiliations() }}
+            {{ render_affiliation_heading(affiliations) }}
         </tr>
     </tfoot>
 </table>

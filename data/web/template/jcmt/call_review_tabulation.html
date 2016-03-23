@@ -29,6 +29,17 @@
     </ul>
 {% endblock %}
 
+{% macro render_jcmt_heading(weathers, instruments, sortable=false) %}
+    {% for (weather_id, weather) in weathers.items() %}
+        <th class="sideways{{ ' sortable sortreverse' if sortable }}{{ ' spacer_left' if loop.first }}" data-sortkey="jcmt_weather_{{ weather_id }}"><div><div><span>{{ weather.name }}</span></div></div></th>
+    {% endfor %}
+    <th class="sideways{{' sortable sortreverse' if sortable }}" data-sortkey="jcmt_weather_0"><div><div><span>Unknown</span></div></div></th>
+    {% for (instrument_id, instrument_name) in instruments.items() %}
+        <th class="sideways{{ ' sortable sortreverse' if sortable }}{{ ' spacer_left' if loop.first }}" data-sortkey="jcmt_instrument_{{ instrument_id }}"><div><div><span>{{ instrument_name }}</span></div></div></th>
+    {% endfor %}
+    <th class="sideways{{ ' sortable sortreverse' if sortable }}" data-sortkey="jcmt_instrument_0"><div><div><span>Unknown</span></div></div></th>
+{% endmacro %}
+
 {% block heading_line_one %}
     <th rowspan="2" class="sideways sortable sortreverse" data-sortkey="jcmt_request"><div><div><span>Request (hours)</span></div></div></th>
     <th rowspan="2" class="sideways sortable sortreverse" data-sortkey="jcmt_allocation"><div><div><span>Allocation (hours)</span></div></div></th>
@@ -37,14 +48,7 @@
 {% endblock %}
 
 {% block heading_line_two %}
-    {% for (weather_id, weather) in jcmt_weathers.items() %}
-        <th class="sideways sortable sortreverse{{ ' spacer_left' if loop.first }}" data-sortkey="jcmt_weather_{{ weather_id }}"><div><div><span>{{ weather.name }}</span></div></div></th>
-    {% endfor %}
-    <th class="sideways sortable sortreverse" data-sortkey="jcmt_weather_0"><div><div><span>Unknown</span></div></div></th>
-    {% for (instrument_id, instrument_name) in jcmt_instruments.items() %}
-        <th class="sideways sortable sortreverse{{ ' spacer_left' if loop.first }}" data-sortkey="jcmt_instrument_{{ instrument_id }}"><div><div><span>{{ instrument_name }}</span></div></div></th>
-    {% endfor %}
-    <th class="sideways sortable sortreverse" data-sortkey="jcmt_instrument_0"><div><div><span>Unknown</span></div></div></th>
+    {{ render_jcmt_heading(jcmt_weathers, jcmt_instruments, sortable=true) }}
 {% endblock %}
 
 {% block row_sort_info %}{{ {
@@ -134,4 +138,5 @@
 
 {% block footer_head_extra %}
     <th colspan="2" class="sideways"><div><div>Time (hours)</div></div></th>
+    {{ render_jcmt_heading(jcmt_weathers, jcmt_instruments) }}
 {% endblock %}
