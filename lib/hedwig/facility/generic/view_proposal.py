@@ -113,15 +113,16 @@ class GenericProposal(object):
     def view_proposal_view(self, db, proposal, can, args):
         countries = get_countries()
 
+        review_can = auth.for_review(db, reviewer=None, proposal=proposal)
+
         ctx = {
             'title': proposal.title,
             'can_edit': can.edit,
             'can_remove_self': (ProposalState.can_edit(proposal.state) and
                                 any(x.person_id == session['person']['id']
                                     for x in proposal.members.values())),
-            'can_view_review': ((proposal.state == ProposalState.REVIEW) and
-                                auth.for_review(db, reviewer=None,
-                                                proposal=proposal).view),
+            'can_view_review': review_can.view,
+            'can_edit_review': review_can.edit,
             'can_view_feedback': auth.for_proposal_feedback(
                 db, proposal=proposal).view,
             'is_submitted': ProposalState.is_submitted(proposal.state),
