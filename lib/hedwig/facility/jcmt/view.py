@@ -234,19 +234,24 @@ class JCMT(Generic):
         requests = db.search_jcmt_request(proposal_id=proposal.id)
 
         option_values = db.get_jcmt_options(proposal_id=proposal.id)
+
+        ctx.update({
+            'requests': requests.to_table(),
+            'jcmt_options': self._get_option_names(option_values),
+            'jcmt_option_values': option_values,
+        })
+
+        return ctx
+
+    def _get_option_names(self, option_values):
         options = []
+
         if option_values is not None:
             for (option, option_name) in self.options.items():
                 if getattr(option_values, option):
                     options.append(option_name)
 
-        ctx.update({
-            'requests': requests.to_table(),
-            'jcmt_options': options,
-            'jcmt_option_values': option_values,
-        })
-
-        return ctx
+        return options
 
     def _view_proposal_feedback_extra(self, db, proposal):
         ctx = super(JCMT, self)._view_proposal_feedback_extra(db, proposal)
@@ -307,6 +312,10 @@ class JCMT(Generic):
                 proposal_id=proposal['id']).get_total()
 
             proposal['jcmt_request'] = request
+
+            if with_extra:
+                proposal['jcmt_options'] = self._get_option_names(
+                    db.get_jcmt_options(proposal_id=proposal['id']))
 
             # Read the committee's time allocation, but only if there is one.
             # Since decisions can now be returned to "undecided", we need
@@ -423,7 +432,7 @@ class JCMT(Generic):
     def _get_proposal_tabulation_titles(self, tabulation):
         return (
             super(JCMT, self)._get_proposal_tabulation_titles(tabulation) +
-            ['Request'] +
+            ['Options', 'Request'] +
             [x.name for x in tabulation['jcmt_weathers'].values()] +
             ['Unknown weather'] +
             [x for x in tabulation['jcmt_instruments'].values()] +
@@ -449,7 +458,10 @@ class JCMT(Generic):
 
             yield (
                 row +
-                [request.total] +
+                [
+                    ', '.join(proposal['jcmt_options']),
+                    request.total,
+                ] +
                 [request.weather.get(x) for x in weathers] +
                 [request.instrument.get(x) for x in instruments] +
                 [allocation.total] +
