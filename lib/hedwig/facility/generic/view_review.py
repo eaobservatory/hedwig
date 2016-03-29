@@ -89,7 +89,8 @@ class GenericReview(object):
     @with_call_review(permission='view')
     def view_review_call_tabulation_download(self, db, call, can, auth_cache,
                                              with_cois=True):
-        tabulation = self._get_proposal_tabulation(db, call, auth_cache)
+        tabulation = self._get_proposal_tabulation(
+            db, call, auth_cache, with_extra=True)
 
         writer = CSVWriter()
 
@@ -115,11 +116,20 @@ class GenericReview(object):
                 re.sub('[^-_a-z0-9]', '_', call.semester_name.lower()),
                 re.sub('[^-_a-z0-9]', '_', call.queue_name.lower())))
 
-    def _get_proposal_tabulation(self, db, call, auth_cache):
+    def _get_proposal_tabulation(self, db, call, auth_cache, with_extra=False):
+        """Prepare information for the detailed tabulation of proposals.
+
+        This is used to prepare the information both for the online
+        version and the downloadable CSV file.  For the CSV file, the
+        `with_extra` option is enabled and additional information,
+        beyond that which can be displayed on the online version,
+        is retrieved.
+        """
+
         proposals = db.search_proposal(
             call_id=call.id, state=ProposalState.submitted_states(),
             with_members=True, with_reviewers=True, with_review_info=True,
-            with_decision=True)
+            with_decision=True, with_categories=with_extra)
 
         affiliations = db.search_affiliation(
             queue_id=call.queue_id, hidden=False, with_weight_call_id=call.id)
@@ -199,6 +209,7 @@ class GenericReview(object):
             [
                 'Proposal', 'PI name', 'PI affiliation', 'Title',
                 'State', 'Decision', 'Exempt', 'Rating', 'Rating std. dev.',
+                'Categories',
             ] +
             [x.name for x in tabulation['affiliations']]
         )
@@ -223,6 +234,8 @@ class GenericReview(object):
                     ('Exempt' if proposal['decision_exempt'] else None),
                     proposal['rating'],
                     proposal['rating_std_dev'],
+                    ', '.join(x.category_name
+                              for x in proposal['categories'].values()),
                 ] +
                 [proposal['affiliations'].get(x.id) for x in affiliations]
             )
