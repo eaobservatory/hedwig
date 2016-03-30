@@ -24,6 +24,16 @@ from .send import send_email_message
 
 
 def send_queued_messages(db=None):
+    """
+    Attempts to send any unsent email messages.
+
+    Repeatedly queries the database for an unsent message.  If a message
+    is found, it is sent and then marked as sent in the database.
+    If no message is found then the loop exits.
+
+    Returns the number of messages sent.
+    """
+
     if db is None:
         db = get_database()
 

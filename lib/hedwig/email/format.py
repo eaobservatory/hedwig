@@ -32,6 +32,28 @@ paragraph_break = re.compile('\n\n+')
 
 
 def get_environment():
+    """
+    Get Jinja environment for processing email templates.
+
+    If an environment has already been constructed, it is stored in the
+    `environment` global variable and will be returned.  Otherwise
+    a new environment is prepared.  The environment configuration has:
+
+    * The `data/home` directory (within the Hedwig home directory) configured
+      as the template loading path.
+
+    * Template globals:
+        * From the `application` section of the configuration file:
+            * `application_name`
+        * From the `email` section of the configuration file:
+            * `email_footer_title`
+            * `email_footer_url`
+            * `email_footer_email`
+
+    * Filters:
+        * `format_datetime`
+    """
+
     global environment
 
     if environment is None:
@@ -60,6 +82,28 @@ def render_email_template(name, context, facility=None):
     """
     Render a template and then attempt to line-wrap the output
     sensibly.
+
+    If a `facility` (view class) is given then the template will be loaded
+    from a directory of the facility's code, if it exists, otherwise
+    from the `generic` directory.  The template context will also be
+    extended to include:
+
+    * `facility_name`
+    * `facility_definite_name`
+
+    Currently line-wraps the email message, after generating the text
+    by applying the template, as follows:
+
+    * The message is broken into paragraphs, at multiple line breaks.
+    * Each paragraph itself is line-wrapped.
+    * A trailing space is added to each line of the paragraph, except the last
+      (flowed email format).
+    * The lines of the email are rejoined, with a blank line between
+      paragraphs.
+
+    Note: with the above scheme there is no way to insert a single
+    manual line break.  (A single break is considered to be within a
+    paragraph and the whole paragraph is re-flowed.)
     """
 
     # Apply the template.

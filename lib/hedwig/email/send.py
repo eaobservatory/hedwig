@@ -36,6 +36,13 @@ logger = get_logger(__name__)
 
 @contextmanager
 def quitting(smtp):
+    """
+    Context manager which calls the `quit` method on the given
+    object at the end of the block.
+
+    This function is analogous to the standard `contextlib.closing` function.
+    """
+
     try:
         yield smtp
     finally:
@@ -43,6 +50,10 @@ def quitting(smtp):
 
 
 class MIMETextFlowed(MIMENonMultipart):
+    """
+    MIME message class for flowed text.
+    """
+
     def __init__(self, text, charset='utf-8'):
         """
         Based on email.mime.text.MIMEText but adds format=flowed
