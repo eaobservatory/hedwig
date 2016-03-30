@@ -32,7 +32,7 @@ def null_tuple(type_):
 
 def with_can_edit(obj, can_edit):
     """
-    Add a "can_edit" field to a tuple and set it to the given value.
+    Add a `can_edit` field to a tuple and set it to the given value.
     """
 
     return namedtuple(type(obj).__name__ + 'WithCE',

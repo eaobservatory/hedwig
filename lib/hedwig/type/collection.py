@@ -31,7 +31,26 @@ ResultTable = namedtuple('ResultTable', ('table', 'columns', 'rows'))
 
 
 class ResultCollection(OrderedDict):
+    """
+    Class used to store the results of a database search.
+
+    This is a subclass of `OrderedDict`, ususally indexed by the
+    identifier of a row in the database.
+    """
+
     def get_single(self, default=()):
+        """
+        Assuming that the collection contains a single value, return
+        that value.
+
+        If the collection is empty, a `NoSuchRecord` exception is raised
+        unless a value is given as the `default`, in which case it is
+        returned.
+
+        If there are multiple values in the collection, a `MultipleRecords`
+        exception is raised.
+        """
+
         n = len(self)
         if n == 0:
             if default == ():
@@ -47,17 +66,17 @@ class ResultCollection(OrderedDict):
 
 class OrderedResultCollection(ResultCollection):
     """
-    Subclass of ResultCollection for results from tables with a sort_order
+    Subclass of `ResultCollection` for results from tables with a `sort_order`
     column.
     """
 
     def ensure_sort_order(self):
         """
-        Ensure all records have a non-None sort_order entry.
+        Ensure all records have a non-`None` `sort_order` entry.
 
         Iterates through the entries in this collection finding the maximum
         sort_order used and all the entries without a sort order.  Then those
-        entries are assigned sort_order values above the previous maximum
+        entries are assigned `sort_order` values above the previous maximum
         in the order in which they appear in the collection.
         """
 
@@ -76,16 +95,20 @@ class OrderedResultCollection(ResultCollection):
 
 
 class CallCollection(ResultCollection):
+    """
+    Class to hold the results of a search for calls for proposals.
+    """
+
     def values_by_state(self, state):
         """
-        Get a list of the reviewers with the given state.
+        Get a list of the calls with the given state.
         """
 
         return [x for x in self.values() if x.state == state]
 
     def values_by_queue(self, queue_id):
         """
-        Get a list of the reviewers with the given queue ID.
+        Get a list of the calls with the given queue ID.
 
         The queue ID can also be specified as a list or tuple of possible
         values.
@@ -98,7 +121,19 @@ class CallCollection(ResultCollection):
 
 
 class EmailCollection(ResultCollection):
+    """
+    Class to hold a collection of email addresses.
+    """
+
     def get_primary(self):
+        """
+        Return the primary email address.
+
+        This is the first email address found with a true value of the
+        `primary` attribute.  If no such address is found, a `KeyError`
+        exception is raised.
+        """
+
         for email in self.values():
             if email.primary:
                 return email
@@ -114,7 +149,7 @@ class EmailCollection(ResultCollection):
         * There is exactly one primary address.
         * No email addresses are duplicated.
 
-        Raises UserError for any problems found.
+        Raises a `UserError` exception for any problems found.
         """
 
         n_primary = 0
@@ -136,16 +171,32 @@ class EmailCollection(ResultCollection):
 
 
 class GroupMemberCollection(ResultCollection):
+    """
+    Class to hold a collection of review group members.
+    """
+
     def values_by_group_type(self, group_type):
         """
-        Get a list of the reviewers with the given role.
+        Get a list of the group members with the given role.
         """
 
         return [x for x in self.values() if x.group_type == group_type]
 
 
 class MemberCollection(OrderedResultCollection):
+    """
+    Class to hold a collection of proposal members.
+    """
+
     def get_pi(self):
+        """
+        Retrive the record corresponding to the principal investigator (PI).
+
+        Returns the first member found with a true value for the `pi`
+        attribute.  If no such member is found, a `KeyError` exception
+        is raised.
+        """
+
         for member in self.values():
             if member.pi:
                 return member
@@ -153,6 +204,13 @@ class MemberCollection(OrderedResultCollection):
         raise KeyError('no pi member')
 
     def get_person(self, person_id):
+        """
+        Retrieve the record corresponding to the given person.
+
+        If no member with this `person_id` is found, a `KeyError`
+        exception is raised.
+        """
+
         for member in self.values():
             if member.person_id == person_id:
                 return member
@@ -160,6 +218,13 @@ class MemberCollection(OrderedResultCollection):
         raise KeyError('person not in member collection')
 
     def get_students(self):
+        """
+        Get a list of student members.
+
+        This constructs a list of the members with the `student` attribute
+        set to a true value.
+        """
+
         ans = []
 
         for member in self.values():
@@ -179,9 +244,9 @@ class MemberCollection(OrderedResultCollection):
         * The given person ID is an editor.  (To prevent people removing
           their own editor permission.)
 
-        Raises UserError for any problems found.
+        Raises a `UserError` exception for any problems found.
 
-        "editor_person_id" can be set to "None" to disable the person checks.
+        `editor_person_id` can be set to `None` to disable the person checks.
         """
 
         n_pi = 0
@@ -217,6 +282,10 @@ class MemberCollection(OrderedResultCollection):
 
 
 class PrevProposalCollection(ResultCollection):
+    """
+    Class to represent a collection of previous proposals.
+    """
+
     def validate(self):
         """
         Attempt to validate the previous proposal collection.
@@ -227,7 +296,7 @@ class PrevProposalCollection(ResultCollection):
         * No entry has more than 6 publications.
         * No code or identifier is repeated.
 
-        Raises UserError for any problems found.
+        Raises a `UserError` exception for any problems found.
         """
 
         seen_codes = set()
@@ -292,7 +361,22 @@ class PrevProposalCollection(ResultCollection):
 
 
 class ProposalTextCollection(ResultCollection):
+    """
+    Class to represent a collection of pieces of text for a proposal.
+
+    This is also used for PDF files attached to the proposals in
+    place of text.
+    """
+
     def get_role(self, role, default=()):
+        """
+        Retrieve the entry corresponding to the given role.
+
+        If no entry with a `role` attribute matching the given value
+        is found, a `KeyError` exception is raised unless a `default`
+        value is given, in which case that value is returned.
+        """
+
         for pdf in self.values():
             if pdf.role == role:
                 return pdf
@@ -304,6 +388,10 @@ class ProposalTextCollection(ResultCollection):
 
 
 class ProposalFigureCollection(ResultCollection):
+    """
+    Class representing a collection of figures attached to a proposal.
+    """
+
     def values_by_role(self, role):
         """
         Return a list of values for the given role.
@@ -313,6 +401,11 @@ class ProposalFigureCollection(ResultCollection):
 
 
 class ReviewerCollection(ResultCollection):
+    """
+    Collection class for reviewers of a proposal, possibly also
+    including their reviews.
+    """
+
     def get_overall_rating(self, include_unweighted, with_std_dev):
         """
         Create weighted average of the ratings of completed reviews.
@@ -376,6 +469,16 @@ class ReviewerCollection(ResultCollection):
         return (overall_rating, std_dev)
 
     def get_person(self, person_id, roles=None):
+        """
+        Get the entry for a given person.
+
+        Returns the first entry matching the given `person_id`.  Optionally
+        also checks that the reviewer `role` attribute is in the given
+        set of `roles`.
+
+        Raises a `KeyError` if no matching record is found.
+        """
+
         for member in self.values():
             if ((member.person_id == person_id) and
                     ((roles is None) or (member.role in roles))):
@@ -403,11 +506,11 @@ class ReviewerCollection(ResultCollection):
         Iterate over the values of the collection in the order of
         the reviewer roles.
 
-        Optionally return only committee roles (cttee_role=True) or
-        non-committee roles (cttee_role=False).
+        Optionally return only committee roles (`cttee_role` = `True`) or
+        non-committee roles (`cttee_role` = `False`).
 
         Note: operates by looping over known roles.  Any reviewers with
-        invalid (or no longer recognised) roles will not be yielded.
+        invalid (or no longer recognized) roles will not be yielded.
         """
 
         roles = ReviewerRole.get_options().keys()
@@ -428,7 +531,16 @@ class ReviewerCollection(ResultCollection):
 
 
 class TargetCollection(OrderedResultCollection):
+    """
+    Collection for target objects listed on a proposal.
+    """
+
     def to_formatted_collection(self):
+        """
+        Construct an `OrderedDict` in which the target values
+        (`x`, `y`, `time`, `priority`) are replaced with formatted strings.
+        """
+
         ans = OrderedDict()
 
         for (k, v) in self.items():
@@ -454,6 +566,13 @@ class TargetCollection(OrderedResultCollection):
 
     @classmethod
     def from_formatted_collection(cls, records):
+        """
+        Construct an instance of this class where, for every entry in the
+        input collection, the `x`, `y`, `time` and `priority` values are
+        parsed.  (As decimal degrees (`float`), `float` and `int`
+        respectively.)
+        """
+
         ans = cls()
 
         for (k, v) in records.items():
@@ -496,7 +615,7 @@ class TargetCollection(OrderedResultCollection):
 
     def to_object_list(self):
         """
-        Returns a list of target objects representing members of the
+        Returns a list of `TargetObject` instances representing members of the
         collection for which coordinates have been defined.
         """
 

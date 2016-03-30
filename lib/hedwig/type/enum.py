@@ -26,6 +26,13 @@ from .base import EnumBasic, EnumURLPath
 
 
 class CallState(EnumBasic):
+    """
+    Class representing states of a call for proposals.
+
+    Note that this state is not stored directly in the database -- it is
+    determined based on the open and close dates.
+    """
+
     UNOPENED = 1
     OPEN = 2
     CLOSED = 3
@@ -41,6 +48,17 @@ class CallState(EnumBasic):
 
 
 class FormatType(object):
+    """
+    Class representing possible formatting methods for pieces of text.
+
+    One of the enumerated values of this class should be stored with pieces
+    of text in order for the system to know how to format them for display.
+
+    A subset of the formats are marked with the `allow_user` flag: these are
+    the formats which the system should allow end users to select, e.g. in
+    proposals or reviews.
+    """
+
     PLAIN = 1
     RST = 2
 
@@ -56,8 +74,8 @@ class FormatType(object):
         """
         Determines whether the given format is allowed.
 
-        By default only allows formats for which "allow_user" is enabled.
-        However with the "is_system" flag, allows any format.
+        By default only allows formats for which `allow_user` is enabled.
+        However with the `is_system` flag, allows any format.
         """
 
         format_info = cls._info.get(format_, None)
@@ -71,6 +89,9 @@ class FormatType(object):
     def get_options(cls, is_system=False):
         """
         Get an OrderedDict of type names by type numbers.
+
+        By default only returns formats for which `allow_user` is enabled.
+        However with the `is_system` flag, all formats are returned.
         """
 
         return OrderedDict([(k, v.name) for (k, v) in cls._info.items()
@@ -78,6 +99,10 @@ class FormatType(object):
 
 
 class Assessment(EnumBasic):
+    """
+    Class representing possible outcomes of a technical assessment.
+    """
+
     FEASIBLE = 1
     PROBLEM = 2
     INFEASIBLE = 3
@@ -96,6 +121,13 @@ class Assessment(EnumBasic):
 
 
 class AttachmentState(EnumBasic):
+    """
+    Class representing possible processing states for proposal attachments.
+
+    While originally intended for proposal figures and PDF files, this is
+    also used to represent the processing state of other items.
+    """
+
     NEW = 1
     PROCESSING = 2
     READY = 3
@@ -113,14 +145,28 @@ class AttachmentState(EnumBasic):
 
     @classmethod
     def is_ready(cls, state):
+        """
+        Determine whether a state represents succesfully completed
+        processing.
+        """
+
         return cls._info[state].ready
 
     @classmethod
     def is_error(cls, state):
+        """
+        Determine whether a state represents unsuccessful processing.
+        """
+
         return cls._info[state].error
 
     @classmethod
     def unready_states(cls):
+        """
+        Return a list of states values which do not correspond to
+        successfully completed processing.
+        """
+
         return [k for (k, v) in cls._info.items() if not v.ready]
 
 
@@ -129,12 +175,20 @@ FileTypeInfo = namedtuple('FileTypeInfo',
 
 
 class FigureType(object):
+    """
+    Class representing graphics formats handled by the system.
+
+    As for text `FormatType` values, only certain graphics formats are made
+    available to users when uploading figures to their proposals.
+    """
+
     PNG = 1
     JPEG = 2
     PDF = 3
     PS = 4
     SVG = 5
 
+    #                       Name     MIME                     Prev.  User
     _info = OrderedDict((
         (PNG,  FileTypeInfo('PNG',  'image/png',              False, True)),
         (JPEG, FileTypeInfo('JPEG', 'image/jpeg',             False, True)),
@@ -148,7 +202,7 @@ class FigureType(object):
         """
         Determine if the given figure type is valid.
 
-        By default only allows types where "allow_user" is enabled.
+        By default only allows types where `allow_user` is enabled.
         """
 
         type_info = cls._info.get(type_, None)
@@ -160,18 +214,38 @@ class FigureType(object):
 
     @classmethod
     def get_name(cls, type_):
+        """Get the name of the given type."""
+
         return cls._info[type_].name
 
     @classmethod
     def get_mime_type(cls, type_):
+        """Get the MIME type to be used for the given figure type."""
+
         return cls._info[type_].mime
 
     @classmethod
     def needs_preview(cls, type_):
+        """
+        Determine whether a figure type requires a preview image.
+
+        This indicates that, when processing a figure, we should store
+        a preview image which will be shown on the proposal in place
+        of the original figure, even if it was of a suitable size to be
+        shown directly.  This is used, for example, for types which the
+        browser is not expected to be able to display, such as EPS.
+        """
+
         return cls._info[type_].preview
 
     @classmethod
     def from_mime_type(cls, mime_type):
+        """
+        Determine a figure type based on the MIME type.
+
+        Raises a `UserError` if the MIME type is not recognised.
+        """
+
         for (type_, info) in cls._info.items():
             if info.mime == mime_type:
                 return type_
@@ -185,8 +259,11 @@ class FigureType(object):
         Determine whether the type of figure is suitable for sending to the
         browser to view inline.
 
-        Currently implemented as any image/* MIME type or PDF, which
-        means it returns True for all types at the time of writing.
+        This refers to the `Content-Disposition` heading, rather than whether
+        we wish to show the original figure directly in a proposal -- see
+        the `needs_preview` method for the latter.
+
+        Currently implemented as any "image/\*" MIME type or PDF.
         """
 
         return (type_ == cls.PDF or
@@ -194,14 +271,23 @@ class FigureType(object):
 
     @classmethod
     def allowed_type_names(cls):
+        """Return list of allowed type names."""
+
         return [x.name for x in cls._info.values() if x.allow_user]
 
     @classmethod
     def allowed_mime_types(cls):
+        """Return list of allowed MIME types."""
+
         return [x.mime for x in cls._info.values() if x.allow_user]
 
 
 class GroupType(EnumBasic, EnumURLPath):
+    """
+    Class representing groups of people related to the proposal review
+    process.
+    """
+
     CTTEE = 1
     TECH = 2
     COORD = 3
@@ -235,22 +321,37 @@ class GroupType(EnumBasic, EnumURLPath):
 
     @classmethod
     def view_all_groups(cls):
+        """Get a list of groups with the `view_all_prop` privilege."""
+
         return [k for (k, v) in cls._info.items() if v.view_all_prop]
 
     @classmethod
     def private_moc_groups(cls):
+        """Get a list of groups with the `private_moc` privilege."""
+
         return [k for (k, v) in cls._info.items() if v.private_moc]
 
     @classmethod
     def review_coord_groups(cls):
+        """Get a list of groups with the `review_coord` privilege."""
+
         return [k for (k, v) in cls._info.items() if v.review_coord]
 
     @classmethod
     def review_view_groups(cls):
+        """Get a list of groups with the `review_view` privilege."""
+
         return [k for (k, v) in cls._info.items() if v.review_view]
 
 
 class MessageState(object):
+    """
+    Class representing possible status values for email messages.
+
+    Note that this state is not stored directly in the database -- it is
+    determined based on the send and sent timestamps.
+    """
+
     UNSENT = 1
     SENDING = 2
     SENT = 3
@@ -266,10 +367,44 @@ class MessageState(object):
 
     @classmethod
     def get_options(cls):
+        """
+        Get an OrderedDict of state names by state numbers.
+        """
+
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
 
 class ProposalState(EnumBasic):
+    """
+    Class representing various states a proposal can be in.
+
+    The proposal state is used to control which operations are permitted
+    for any given proposal.  Note that the call closing process
+    (:func:`hedwig.admin.proposal.close_call_proposals`)
+    and decision feedback sending process
+    (:func:`hedwig.admin.proposal.send_call_proposal_feedback`)
+    update the proposa state automatically.
+
+    Proposals transition between states as follows::
+
+        PREPARATION ----------------------------
+            |                                   |
+        submission                              |
+            |                                   |
+            V      -- withdrawl ->              |
+        SUBMITTED                     WITHDRAWN |
+            |      <- submission --       |     |
+        . . | . . . . . . . . . . . . . . | . . | . . . . call closing
+            |                             |     |
+            V                             V     V
+        REVIEW -----------------         ABANDONED
+            |.                  |
+        . . | . . . . . . . . . | . . . . . . . . . . . . decision ready
+            |                   |
+            V                   V
+        ACCEPTED            REJECTED
+    """
+
     PREPARATION = 1
     SUBMITTED = 2
     WITHDRAWN = 3
@@ -280,7 +415,7 @@ class ProposalState(EnumBasic):
 
     StateInfo = namedtuple(
         'StateInfo', ('short_name', 'name', 'edit', 'submitted', 'reviewed'))
-    # Note: currently edit=True implies a proposal for which the the call
+    # Note: currently edit=True implies a proposal for which the call
     # has not been closed.  An extra entry must be added to the tuple (and
     # the "open_states" method adjusted) if this changes.
 
@@ -304,36 +439,56 @@ class ProposalState(EnumBasic):
 
     @classmethod
     def is_submitted(cls, state):
+        """Determine whether a proposal has been submitted."""
+
         return cls._info[state].submitted
 
     @classmethod
     def is_reviewed(cls, state):
+        """Determine whether a proposal has been reviewed."""
+
         return cls._info[state].reviewed
 
     @classmethod
     def get_short_name(cls, state):
+        """Get the abbreviated name for a proposal state."""
+
         return cls._info[state].short_name
 
     @classmethod
     def can_edit(cls, state):
+        """Determine whether a proposal can be edited."""
+
         return cls._info[state].edit
 
     @classmethod
     def editable_states(cls):
+        """Return a list of states in which proposals can be edited."""
+
         return [k for (k, v) in cls._info.items() if v.edit]
 
     @classmethod
     def submitted_states(cls):
+        """Return a list of states corresponding to submitted proposals."""
+
         return [k for (k, v) in cls._info.items() if v.submitted]
 
     @classmethod
     def reviewed_states(cls):
+        """Return a list of states corresponding to reviewed proposals."""
+
         return [k for (k, v) in cls._info.items() if v.reviewed]
 
     @classmethod
     def open_states(cls):
-        # Note: we currently assume the state is "open" if it is editable,
-        # but this extra accessor method is provided in case this fact changes.
+        """
+        Return a list of states corresponding to proposals in open calls
+        for proposals.
+
+        Note: we currently assume the state is "open" if it is editable,
+        but this extra accessor method is provided in case this fact changes.
+        """
+
         return [k for (k, v) in cls._info.items() if v.edit]
 
     @classmethod
@@ -353,6 +508,11 @@ class ProposalState(EnumBasic):
 
 
 class PublicationType(EnumBasic):
+    """
+    Class representing different ways in which a publication can be
+    identified.
+    """
+
     PLAIN = 1
     DOI = 2
     ADS = 3
@@ -378,10 +538,21 @@ class PublicationType(EnumBasic):
 
     @classmethod
     def get_options(cls):
+        """
+        Get information about all options.
+
+        This currently returns a copy of the private info ordered dictionary.
+        """
+
         return cls._info.copy()
 
 
 class ReviewerRole(EnumBasic, EnumURLPath):
+    """
+    Class representing roles in which a person may provide a review for
+    a proposal.
+    """
+
     TECH = 1
     EXTERNAL = 2
     CTTEE_PRIMARY = 3
@@ -433,10 +604,14 @@ class ReviewerRole(EnumBasic, EnumURLPath):
 
     @classmethod
     def get_cttee_roles(cls):
+        """Get a list of roles corresponding to committee reviews."""
+
         return [k for (k, v) in cls._info.items() if v.cttee]
 
     @classmethod
     def get_display_class(cls, role):
+        """Get a CSS class which can be used to display a given role."""
+
         return cls._info[role].display_class
 
     @classmethod
@@ -455,10 +630,18 @@ class ReviewerRole(EnumBasic, EnumURLPath):
 
     @classmethod
     def is_name_review(cls, role):
+        """
+        Determine whether a role name should be followed by the word "Review".
+        """
+
         return cls._info[role].name_review
 
 
 class TextRole(EnumBasic, EnumURLPath):
+    """
+    Class representing roles which a piece of text may have on a proposal.
+    """
+
     ABSTRACT = 1
     TECHNICAL_CASE = 2
     SCIENCE_CASE = 3
@@ -480,10 +663,17 @@ class TextRole(EnumBasic, EnumURLPath):
 
     @classmethod
     def short_name(cls, role):
+        """Get the short name of a role."""
+
         return cls._info[role].shortname
 
 
 class UserLogEvent(EnumBasic):
+    """
+    Class representing different types of events which are stored in the
+    user account log.
+    """
+
     CREATE = 1
     LINK_PROFILE = 2
     CHANGE_NAME = 3
