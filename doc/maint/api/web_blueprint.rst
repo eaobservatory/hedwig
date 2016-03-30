@@ -16,6 +16,11 @@ hedwig.web.blueprint.help
 
 .. automodule:: hedwig.web.blueprint.help
 
+hedwig.web.blueprint.home
+-------------------------
+
+.. automodule:: hedwig.web.blueprint.home
+
 hedwig.web.blueprint.people
 ---------------------------
 
