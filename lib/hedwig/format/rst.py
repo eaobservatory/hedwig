@@ -38,6 +38,15 @@ named_link = re.compile('^(.*) +<(.*)>$')
 
 
 def rst_to_html(text, extract_title, start_heading):
+    """
+    Convert RST to HTML.
+
+    :param extract_title: whether to extract a document title
+    :param start_heading: initial heading level
+
+    :return: a tuple containing the body, title and a list of TOC items
+    """
+
     settings = {
         'file_insertion_enabled': False,
         'raw_enabled': False,
@@ -63,18 +72,40 @@ def rst_to_html(text, extract_title, start_heading):
 
 
 class HedwigDocReader(Reader):
+    """
+    RST reader sub-class which replaces the `DocTitle` transform with
+    our `DocTitleNoSubtitle` class.
+    """
+
     def get_transforms(self):
+        """
+        Returns the standard `Reader` transforms with `DocTitle` replaced.
+        """
+
         transforms = list(Reader.get_transforms(self))
         transforms[transforms.index(DocTitle)] = DocTitleNoSubtitle
         return transforms
 
 
 class DocTitleNoSubtitle(DocTitle):
+    """
+    Sub-class of the `DocTitle` transform which does not process a
+    sub-title.
+    """
+
     def promote_subtitle(self, *args, **kwargs):
+        """Does nothing."""
+
         pass
 
 
 class HedwigTocTree(Directive):
+    """
+    Handler for the `toctree` directive.
+
+    This allows the use of TOC trees in the Hedwig online help system.
+    """
+
     has_content = True
     option_spec = {
         'maxdepth': int,
@@ -93,6 +124,13 @@ class HedwigTocTree(Directive):
 
 def doc_reference_role(role, rawtext, text, lineno, inliner,
                        options={}, context=[]):
+    """
+    Handler for the `:doc:` reference role.
+
+    This allows the Sphinx cross-reference syntax to be used in document
+    served though Hedwig's online help system.
+    """
+
     m = named_link.match(text)
 
     if m:
