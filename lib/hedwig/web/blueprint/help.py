@@ -28,6 +28,10 @@ from ..util import templated
 
 
 def create_help_blueprint():
+    """
+    Create Flask Blueprint for the online help system.
+    """
+
     bp = Blueprint('help', __name__)
     view = HelpView()
 

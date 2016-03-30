@@ -39,9 +39,12 @@ def create_facility_blueprint(db, facility):
     def facility_template(template):
         """
         Decorator which uses the template from the facility's directory if it
-        exists, otherwise the generic template.  It does this by providing a
-        list of alternative templates, from which Flask's "render_template"
-        method will pick the first which exists.
+        exists, otherwise the generic template.
+
+        It does this by providing a list of alternative templates,
+        from which Flask's `render_template` method will pick the first which
+        exists.  The list of possible templates is passed to the normal
+        Hedwig :func:`~hedwg.web.util.templated` decorator.
         """
 
         def decorator(f):
@@ -760,6 +763,20 @@ def make_target_tool_views(db, tool, facility_code, tool_code):
 def make_custom_route(db, template, func):
     """
     Create a custom view function.
+
+    Creates a route handled which calls the specified function `func` with
+    the arguments:
+
+    * Database control object.
+    * Request arguments.
+    * Request form (if the request is a POST, or `None` otherwise).
+    * Any other keyword arguments.
+
+    If the `template` argument is specified then the view function
+    is wrapped by the :func:`~hedwig.web.util.templated` decorator.
+    Otherwise it is assumed that a file is being generated
+    and the :func:`~hedwig.web.util.send_file` decorator is
+    applied instead.
     """
 
     def view_func(**kwargs):

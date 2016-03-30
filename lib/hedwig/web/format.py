@@ -52,6 +52,16 @@ def format_text(text, format=None):
 
 
 def format_text_plain(text):
+    """
+    Format plain text for display as HTML.
+
+    The text is broken into paragraphs at double line breaks.
+    Within each paragraph, a line break tag (`<br />`) is inserted
+    at remaining (single) line breaks.
+
+    :return: Flask Markup object containing the formatted text
+    """
+
     result = Markup('')
 
     for paragraph in text.replace('\r', '').split('\n\n'):
@@ -66,6 +76,21 @@ def format_text_plain(text):
 
 
 def format_text_rst(text, extract_title_toc=False, start_heading=3):
+    """
+    Format RST for display as HTML.
+
+    This applies the :func:`hedwig.format.rst.rst_to_html` function.
+
+    :param text: text marked up as RST for formatting
+    :param extract_title_toc: indicate whether to extract title and TOC
+    :param start_heading: initial heading level
+
+    :return: Flask Markup object containing the formatted text, unless
+        `extract_title_toc` is specified, in which case a tuple
+        of the Markup object, a Markup object containing the title,
+        and a list of TOC items.
+    """
+
     (body, title, toc) = rst_to_html(text, extract_title=extract_title_toc,
                                      start_heading=start_heading)
 

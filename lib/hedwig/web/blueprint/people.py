@@ -24,6 +24,11 @@ from ...view.people import PeopleView
 
 
 def create_people_blueprint(db, facilities):
+    """
+    Create Flask Blueprint for pages related to users, personal profiles
+    and institutions.
+    """
+
     bp = Blueprint('people', __name__)
     view = PeopleView()
 

@@ -25,6 +25,10 @@ from ..util import templated
 
 
 def create_home_blueprint(db, facilities):
+    """
+    Create Flask Blueprint for the home and other related pages.
+    """
+
     bp = Blueprint('home', __name__)
     view = HomeView()
 

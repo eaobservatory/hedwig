@@ -95,7 +95,9 @@ def make_enum_converter(enum_class):
     Make a Werkzeug routing converter for a Hedwig enum-style class.
 
     The given class must have support for URL paths: it should have
-    methods get_url_paths, by_url_path and url_path.
+    methods `get_url_paths`, `by_url_path` and `url_path`.
+    Such a class can be constructed by defining an `url_path` attribute
+    and inheriting from the :class:`hedwig.type.base.EnumURLPath` mix-in.
     """
 
     class EnumTypeConverter(_werkzeug_routing.AnyConverter):
@@ -123,7 +125,11 @@ def mangle_email_address(email_address):
     Mangles an email address by turning it into a JSON-encoded list of
     HTML character entities.
 
-    The "unmangle.js" script can be used to reconstruct such addresses.
+    The `unmangle.js` script can be used to reconstruct such addresses
+    when they are placed in the `mangled` data attribute of a span of
+    class `mangled_address`, e.g.::
+
+        <span class="mangled_address" data-mangled="{{ email_address }}">&nbsp;</span>
     """
 
     mangled = []
@@ -139,8 +145,9 @@ def parse_datetime(name, form):
     Parses date and time fields from the form and returns a combined
     datetime object.
 
-    "name" is the root name of the form parameters -- there should
-    be fields <name>_date and <name>_time.
+    :param name: the root name of the form parameters -- there should
+        be fields `<name>_date` and `<name>_time`.
+    :param form: the form to process
     """
 
     return datetime.combine(
@@ -153,9 +160,10 @@ def require_admin(f):
     Decorator to require that the user has administrative access.
 
     Simply checks that the user is logged in and has administrative
-    privileges enabled.  Views should double-check that the user is
+    privileges enabled -- i.e. that the session `is_admin` flag
+    is set.  Views should double-check that the user is
     still entitled to administrative privileges (e.g. using
-    view.auth.can_be_admin).
+    :func:`hedwig.view.auth.can_be_admin`).
     """
     @functools.wraps(f)
     def decorated(*args, **kwargs):
@@ -176,26 +184,32 @@ def require_auth(require_person=False, require_person_admin=False,
     """
     Decorator to require that the user is authenticated.
 
-    Can optionally require the user to have a profile,
-    and to have an institution associated with that profile.
-    With the "require_person_admin" option, also check that the
-    person record in the session has the admin flag.  (This
-    is not the same as the session "is_admin" flag -- use require_admin
-    for that.)
+    :param require_person: require the user to have a profile.
 
-    If "register_user_only" is set, then we want the user to log in or
-    create a user account but not to complete a profile before
-    proceeding.  This is to support accepting invitation tokens.
+    :param require_person_admin: also check that the
+        person record in the session has the admin flag.
+        (This is not the same as the session `is_admin` flag -- use
+        :func:`require_admin` for that.)
 
-    If "record_referrer" is specified then the referrer is added to the
-    session as "log_in_referrer" if log in is required.
+    :param require_institution: require the user to have an institution
+        associated with thir profile.
 
-    This needs to be the outermost route decorator, because under
-    certain circumstances (namely requiring the user to authenticate
-    from a POST request) it needs to be able to write a response
-    directly.  To help ensure this, it sets an attribute
-    `_hedwig_require_auth` on the decorated function which other
-    decorators can use to detect the problem.
+    :param register_user_only: used when we want the user to log in or
+        create a user account but not to complete a profile before
+        proceeding.  This is to support accepting invitation tokens.
+
+    :param record_referrer: if specified then the referrer is added to the
+        session as `log_in_referrer` if log in is required.
+
+    .. note::
+        This needs to be the outermost route decorator, because under
+        certain circumstances (namely requiring the user to authenticate
+        from a POST request) it needs to be able to write a response
+        directly.
+
+        To help ensure this, it sets an attribute
+        `_hedwig_require_auth` on the decorated function which other
+        decorators can use to detect the problem.
     """
 
     def decorator(f):
@@ -267,8 +281,9 @@ def require_not_auth(f):
     """
     Decorator to require that the user is not authenticated.
 
-    WARNING: "ErrorPage" can not be raised here because this decorator
-    is normally applied outside of the "templated" decorator.
+    .. warning::
+        `ErrorPage` can not be raised here because this decorator
+        is normally applied outside of the "templated" decorator.
     """
 
     @functools.wraps(f)
@@ -290,16 +305,18 @@ def send_file(fixed_type=None, allow_cache=False):
 
     If there is a fixed MIME type, it can be set in the decorator
     argument and the function just returns the data.  Otherwise
-    the function must return a ProposalFigure(data, type, filename) tuple
-    where the type is a value from FigureType.
+    the function must return a :class:`~hedwig.type.simple.ProposalFigure`
+    `(data, type, filename)` tuple where the type is a value from
+    :class:`~hedwig.type.enum.FigureType`.
 
-    If "allow_cache" is enabled, HTTP headers will be added to enable
-    caching.  In this case it is assumed that the caller will ensure
-    the resource hasn't changed, e.g. by including a checksum in the URL.
+    :param fixed_type: fixed MIME type, if appropriate (see above).
+    :param allow_cache: if enabled, HTTP headers will be added to enable
+        caching.  In this case it is assumed that the caller will ensure
+        the resource hasn't changed, e.g. by including a checksum in the URL.
 
-    Raises an exception if applied to a function with an attribute
-    `_hedwig_require_auth` because require_auth should be the outermost
-    decorator.
+    :raises Exception: if applied to a function with an attribute
+        `_hedwig_require_auth` because :func:`require_auth` should be
+        the outermost decorator.
     """
 
     def decorator(f):
@@ -351,15 +368,16 @@ def templated(template):
     """
     Template application decorator.
 
-    Based on the example in the Flask documentation at:
-    http://flask.pocoo.org/docs/patterns/viewdecorators/
+    Based on the
+    `templating decorator <http://flask.pocoo.org/docs/patterns/viewdecorators/#templating-decorator>`_
+    example in the Flask documentation.
 
-    The ErrorPage exception is caught, and rendered using
-    the error_page_repsonse method.
+    The :class:`ErrorPage` exception is caught, and rendered using
+    the :func:`_error_page_response` method.
 
-    Raises an exception if applied to a function with an attribute
-    `_hedwig_require_auth` because require_auth should be the outermost
-    decorator.
+    :raises Exception: if applied to a function with an attribute
+        `_hedwig_require_auth` because require_auth should be the outermost
+        decorator.
     """
 
     def decorator(f):
@@ -380,7 +398,11 @@ def templated(template):
 
 
 def _error_page_response(err):
-    """Prepare flask response for an error page."""
+    """
+    Prepare flask response for an error page.
+
+    :param err: the :class:`ErrorPage` exception object.
+    """
 
     return _make_response('error.html', {
         'title': 'Error',
@@ -390,7 +412,11 @@ def _error_page_response(err):
 
 
 def _make_response(template, result):
-    """Prepare flask repsonse via a template."""
+    """
+    Prepare flask repsonse via a template.
+
+    :raises HTTPError: if the view function returns `None`.
+    """
 
     if result is None:
         raise HTTPError('View function returned None as result.')
@@ -402,6 +428,21 @@ def _make_response(template, result):
 
 
 def _check_session_expiry():
+    """
+    Clear the user's session if it has expired.
+
+    This function manages the `date_set` session variable in order to detect
+    when the user has been idle for too long.
+
+    * If over 2 hours ago, the session is cleared.
+    * If over 10 minutes ago, `date_set` is set to the current time.
+
+    This is invoked by the :func:`require_admin` and :func:`require_auth`
+    functions before they examine the session.  `date_set` is originally
+    written when the user logs in by the
+    :func:`~hedwig.view.people._update_session_user` function.
+    """
+
     date_set = session.get('date_set', None)
 
     if date_set is None:

@@ -38,6 +38,8 @@ def register_template_utils(app):
     * Global functions.
     * Filters.
     * Tests.
+
+    :param app: Flask application in which to register the utilities.
     """
 
     @app.template_global()
@@ -223,10 +225,28 @@ def register_template_utils(app):
 
 
 class Counter(object):
+    """
+    Counter object for use in Jinja templates.
+    """
+
     def __init__(self, start_value):
+        """
+        Initialize the counter with a given start value.
+
+        This value will be the first value returned by the counter.
+        """
+
         self.value = start_value
 
     def __call__(self):
+        """
+        Get the next counter value.
+
+        The current value is returned and the internal counter incremented.
+        This ensures that the given starting value is returned first and
+        subsequent calls return values increasing by one each time.
+        """
+
         current_value = self.value
         self.value += 1
         return current_value

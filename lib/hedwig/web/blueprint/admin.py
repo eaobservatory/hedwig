@@ -25,6 +25,10 @@ from ...view.admin import AdminView
 
 
 def create_admin_blueprint(db, facilities):
+    """
+    Create Flask Blueprint for the site-wide administrative interface.
+    """
+
     bp = Blueprint('admin', __name__)
     view = AdminView()
 

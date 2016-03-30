@@ -25,6 +25,11 @@ from ..util import HTTPError
 
 
 def create_query_blueprint(db):
+    """
+    Create Flask Blueprint for services to be queried by our JavaScript
+    code.
+    """
+
     bp = Blueprint('query', __name__)
 
     @bp.route('/nameresolver')
