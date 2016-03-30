@@ -37,7 +37,7 @@ def get_pub_info_arxiv(article_ids):
     """
     Get information on a list of article IDs.
 
-    Returns a dictionary by article ID.
+    :return: a dictionary by article ID
     """
 
     url = 'http://export.arxiv.org/api/query'

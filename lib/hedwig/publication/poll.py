@@ -34,6 +34,13 @@ PubTypeInfo = namedtuple('PubTypeInfo', ('set', 'query_function'))
 def process_publication_references(db):
     """
     Function to process newly added publication references.
+
+    Searches for publication references in the `NEW` state
+    and organizes them by type.  Then the collection of
+    references of each type is passed to the :func:`_process_ref_type`
+    function.
+
+    :return: the total number of references processed
     """
 
     n_processed = 0
@@ -65,6 +72,26 @@ def process_publication_references(db):
 
 
 def _process_ref_type(db, type_, query_function, references):
+    """
+    Look up references of a given type using the specified query function
+    and update their entries in the database.
+
+    The state of the publication reference is set to `READY` if
+    it is processed successfully or `ERROR` otherwise.
+
+    Note that references should be given as a `set` (of unique values)
+    and database updates are performed by matching by `type_` and
+    reference `description` (rather than by `prev_proposal_pub` ID)
+    to allow multiple copies of the same reference to be resolved together.
+
+    :param db: database control object
+    :param `type_`: type of reference being updated
+    :param query_function: function to look up lists of references
+    :param references: set of references to update
+
+    :return: the number of references successfully processed
+    """
+
     type_name = PublicationType.get_info(type_).name
 
     logger.debug('Retreiving {} references', type_name)

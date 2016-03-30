@@ -35,7 +35,7 @@ def get_pub_info_ads(bibcodes):
     """
     Get information on a list of bibcodes.
 
-    Returns a dictionary by bibcode.
+    :return: a dictionary by bibcode
     """
 
     return _get_pub_info_ads_generic('bibcode', bibcodes)
@@ -45,7 +45,7 @@ def get_pub_info_doi(dois):
     """
     Get information on a list of DOIs.
 
-    Returns a dictionary by DOI.
+    :return: a dictionary by DOI.
     """
 
     return _get_pub_info_ads_generic('doi', dois)
@@ -55,7 +55,8 @@ def _get_pub_info_ads_generic(type_, codes):
     """
     Get information via ADS for a given type of code.
 
-    This can be "bibcodee" or "doi".
+    :param `type_`: can be "bibcode" or "doi"
+    :param codes:  list of codes to query
     """
 
     url = 'https://api.adsabs.harvard.edu/v1/search/query'
