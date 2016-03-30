@@ -37,8 +37,8 @@ def pdf_to_png(pdf, page_count=None, renderer='ghostscript', **kwargs):
     The PDF renderer can be either "ghostscript" or "pdftocairo".  The
     path to the selected program is looked up in the configuration file.
 
-    Any additional keyword arguments are passed on to _pdf_ps_to_png
-    or _pdf_to_cairo.
+    Any additional keyword arguments are passed on to :func:`_pdf_ps_to_png`
+    (for "ghostscript") or :func:`_pdf_to_cairo` (for "pdftocairo").
     """
 
     if page_count is None:
@@ -75,7 +75,7 @@ def ps_to_png(ps, page_count=None, **kwargs):
     Currently assumes there is only one page if no page_count is given,
     so one PNG should be created in that case.
 
-    Any additional keyword arguments are passed on to _pdf_ps_to_png.
+    Any additional keyword arguments are passed on to :func:`_pdf_ps_to_png`.
     """
 
     if page_count is None:
@@ -175,7 +175,7 @@ def _pdf_to_cairo(buff, type_, pages, resolution=100, downscale=None):
     The arguments specify the desired figure type (PNG or SVG) and a list
     of the pages (by page number) to process.
 
-    The downscale argument is ignored (it is present for compatibility
+    The `downscale` argument is ignored (it is present for compatibility
     with the equivalent ghostscript-based method).
     """
 

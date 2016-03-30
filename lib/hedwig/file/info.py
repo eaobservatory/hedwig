@@ -30,13 +30,26 @@ from ..type.enum import FigureType
 
 
 def determine_figure_type(buff):
+    """
+    Attempt to determine the figure type of an image file stored in a buffer.
+
+    Uses the `magic` module to try to determine the MIME type of the
+    image and then converts that to a Hedwig `FigureType` enum value.
+
+    Raises a `UserError` exception if the determined MIME type is not
+    recognised as a Hedwig figure type.
+    """
+
     m = Magic(mime=True)
 
-    # Raises a UserError exception if the MIME type is not recognised.
     return FigureType.from_mime_type(m.from_buffer(buff))
 
 
 def determine_pdf_page_count(buff):
+    """
+    Determine the number of pages in a PDF file stored in a buffer.
+    """
+
     with closing(StringIO(buff)) as s:
         try:
             r = PdfFileReader(s)

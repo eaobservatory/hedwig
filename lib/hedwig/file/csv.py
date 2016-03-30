@@ -47,12 +47,27 @@ class CSVDialect(csv.Dialect):
 
 
 class CSVWriter(object):
+    """
+    CSV writing utility class.
+
+    This class sets up a CSV writer (using the standard library `csv` module)
+    which writes to a `StringIO` buffer.
+    """
+
     def __init__(self):
         self._buffer = StringIO()
         self._writer = csv.writer(self._buffer, dialect=CSVDialect)
 
     def add_row(self, row):
+        """
+        Add a row to the CSV file.
+        """
+
         self._writer.writerow([encode_string(x) for x in row])
 
     def get_csv(self):
+        """
+        Return the contents of the buffer.
+        """
+
         return self._buffer.getvalue()
