@@ -6,4 +6,5 @@ Maintainer's Guide
 
     install
     overview
+    customize
     api/index

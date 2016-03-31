@@ -14,6 +14,7 @@ Software Documentation
     error
     facility_generic
     facility_jcmt
+    facility_example
     file
     format
     pidfile

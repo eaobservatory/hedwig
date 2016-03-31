@@ -65,6 +65,8 @@ There are also facility-specific requirements:
   * jcmt_itc_heterodyne
   * jcmt_itc_scuba2
 
+.. _installation_configuration:
+
 Configuration
 ~~~~~~~~~~~~~
 
@@ -201,6 +203,8 @@ Unfortunately this means that you may need to adjust the path
 to Firefox in this file so that it points to a (typically older)
 version of Firefox supported by Selenium.
 
+.. _installation_database:
+
 Database
 ~~~~~~~~
 
@@ -242,6 +246,8 @@ For example, with MySQL and the default `max_pdf_size` of 10MiB
 you might wish to set the maximum packet size to 15MiB::
 
     max_allowed_packet=15M
+
+.. _installation_test_server:
 
 Running a Test Server
 ~~~~~~~~~~~~~~~~~~~~~

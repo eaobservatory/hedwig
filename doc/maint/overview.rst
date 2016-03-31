@@ -120,6 +120,8 @@ The package also contains some utility modules:
     object in place of the route's
     `proposal_id` number.
 
+.. _facility_view_classes:
+
 Facility-specific View Classes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -225,6 +227,8 @@ This is organized as follows:
 
 :mod:`hedwig.db.util`
     Contains utility functions.
+
+.. _facility_database_access:
 
 Facility-specific Database Access
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
