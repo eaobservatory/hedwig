@@ -164,3 +164,261 @@ before proceeding.
     should also include the facility code.  For example the JCMT
     facility include a table `jcmt_request` with access methods
     `search_jcmt_request` and `sync_jcmt_proposal_request`.
+
+Overriding Display Templates
+----------------------------
+
+Hedwig uses `Jinja2 <http://jinja.pocoo.org/>`_ templates
+for HTML pages and email messages.
+
+* **HTML pages**
+
+  These templates are rendered by the Jinja2 environment provided by Flask.
+  In Hedwig this is done by the :func:`hedwig.web.util.templated` decorator
+  and :func:`hedwig.web.util._make_response` function which in turn calls
+  `flask.render_template`.
+
+  A number of extra template utilities
+  (global functions, filters and tests)
+  are added to the Jinja2 enviroment by the
+  :func:`hedwig.web.template_util.register_template_utils` function.
+
+  Templates are located in the following directories:
+
+  * `data/web/template/`
+
+    This contains the base `layout.html` template from which most
+    other templates inherit.
+
+  * `data/web/template/generic/`
+
+    Contains the generic version of the facility-specific templates.
+
+  * `data/web/template/<facility code>/`
+
+    Contains templates which override the generic versions for a
+    particular facility, along with any additional templates used
+    by the facility.
+
+* **Email messages**
+
+  Email messages are formatted by a Jinja2 enviroment set up by the
+  :func:`hedwig.email.format.get_environment` function and applied by
+  :func:`hedwig.email.format.render_email_template`.  This function also
+  adjusts the line wrapping of the message in preparation for it to be
+  sent in flowed format.
+
+  * `data/email/`
+
+    Again this contains a basic `layout.txt` template used by other templates.
+
+  * `data/email/generic/`
+  * `data/email/<facility code>/`
+
+The templates make use of Jinja2's
+`template inheritance <http://jinja.pocoo.org/docs/dev/templates/#template-inheritance>`_
+mechanism.  For example the generic `proposal_view.html` template
+includes a placeholder block for the observing request:
+
+.. code-block:: html+jinja
+
+    {% block proposal_request %}
+    {% endblock %}
+
+This can be overridden in a facility-specific template to fill
+in the observing request section:
+
+.. code-block:: html+jinja
+
+    {% extends 'generic/proposal_view.html' %}
+
+    {% block proposal_request %}
+        <section>
+            <h2 id="request">Observing Request</h2>
+
+            <p>...</p>
+        </section>
+    {% endblock %}
+
+When overriding the generic templates, you may find that the section you
+wish to change is already marked as a block, like the `proposal_request`
+block above.  It may or may not already include a generic implementation.
+Sometimes the part may not yet be enclosed in a block --- then you should
+consider editing the generic template to insert a block in order to make
+it easier for you to create a child template.
+
+Note that a template block can also call `super` to include the
+content of the parent block.
+
+.. code-block:: html+jinja
+
+    {% extends 'generic/some_template.html' %}
+
+    {% block content %}
+    <p>
+        This is an extra note which this facility
+        needs to show on this page.
+    </p>
+
+    {{ super() }}
+    {% endblock %}
+
+
+Overriding View Methods
+-----------------------
+
+To customize the behavior of Hedwig for your facility,
+you will also need to override and add new methods
+to the facility view class.  Some of these are used by
+the system to get information about your facility,
+while others implement handling code for the
+various web pages which make up the user interface.
+
+Informational Methods
+~~~~~~~~~~~~~~~~~~~~~
+
+You may have noticed that the generic facility's
+:class:`~hedwig.facility.generic.view.Generic` class
+includes most of its functionality through mix-in classes.
+This is done simply to help organize the source code
+into manageable components.
+If you browse through the
+:class:`~hedwig.facility.generic.view.Generic` class
+itself, you will find a number of methods you may
+wish to override, following on from the
+:meth:`~hedwig.facility.generic.view.Generic.get_code` and
+:meth:`~hedwig.facility.generic.view.Generic.get_name` methods
+discussed above.
+Some examples of such methods are:
+
+* :meth:`~hedwig.facility.generic.view.Generic.make_proposal_code` and
+  :meth:`~hedwig.facility.generic.view.Generic._parse_proposal_code`
+
+  These methods should implement your facility's scheme for numbering
+  proposals.
+  Provided you can extract the semester, queue and proposal number
+  from a formatted proposal code, you should only
+  need to override the protected method
+  :meth:`~hedwig.facility.generic.view.Generic._parse_proposal_code`
+  and you can leave the generic public method
+  :meth:`~hedwig.facility.generic.view.Generic.parse_proposal_code`
+  to look up the project in the database.
+  If this is not possible you may have to override the
+  :meth:`~hedwig.facility.generic.view.Generic.parse_proposal_code`
+  method itself.
+
+* :meth:`~hedwig.facility.generic.view.Generic.make_archive_search_url`
+
+  If your facility has a data archive which can be searched by sky coordinates,
+  you can override this method to provide a routine capable of producing
+  a suitable URL.
+
+* :meth:`~hedwig.facility.generic.view.Generic.make_proposal_info_urls`
+
+  This can be used to make a list of URLs related to previous proposals,
+  for example search your archive for observations for a given project,
+  or to see the project's details in any online tracking system you may have.
+
+* :meth:`~hedwig.facility.generic.view.Generic.calculate_overall_rating`
+
+  During the review process, the reviewers may enter numerical ratings
+  for each proposal.
+  This method should implement your facility's algorithm for combining
+  these ratings into a single overall rating for each proposal.
+
+* :meth:`~hedwig.facility.generic.view.Generic.calculate_affiliation_assignment`
+
+  This method should implement your rules for determining the affiliation
+  of a proposal based on the affiliations of its members.
+
+Web Interface Handling Methods
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The majority of the methods defined in the facility view class are
+used to handle requests made to the web interface.
+These methods are attached to routes by the
+:func:`hedwig.web.blueprint.facility.create_facility_blueprint`
+function.
+Each view function accepts a number of arguments,
+such as the database access object,
+information from the URL path and query parameters,
+and information from an HTML form, if the request was a POST.
+If the route is associated with a Jinja2 template,
+then the view function should return the context dictionary
+to be used to render the template.
+
+For example, the
+:class:`~hedwig.facility.generic.view_proposal.GenericProposal`
+mix-in which forms part of the
+:class:`~hedwig.facility.generic.view.Generic`
+view class includes a method
+:meth:`~hedwig.facility.generic.view_proposal.GenericProposal.view_proposal_view`
+which is used to show a complete proposal.
+This method creates an initial context dictionary and then
+calls an additional private method
+:meth:`~hedwig.facility.generic.view_proposal.GenericProposal._view_proposal_extra`
+to gather more information.
+Here is an abbreviated version of these methods:
+
+.. code-block:: python
+
+    @with_proposal(permission='view')
+    def view_proposal_view(self, db, proposal, can, args):
+        ctx = {
+            'title': proposal.title,
+        }
+
+        ctx.update(self._view_proposal_extra(db, proposal))
+
+        return ctx
+
+    def _view_proposal_extra(self, db, proposal):
+        proposal_text = db.get_all_proposal_text(proposal.id)
+
+        extra = {
+            'abstract': proposal_text.get(TextRole.ABSTRACT, None),
+        }
+
+        return extra
+
+To extend this for another facility we need only override the
+:meth:`~hedwig.facility.generic.view_proposal.GenericProposal._view_proposal_extra`
+private method, for example:
+
+.. code-block:: python
+
+    def _view_proposal_extra(self, db, proposal):
+        ctx = super(Example, self)._view_proposal_extra(db, proposal)
+
+        requests = db.search_example_request(proposal.id)
+
+        ctx.update({
+            'example_requests': requests.values(),
+        })
+
+        return ctx
+
+This example illustrates how we can get the "extra" context
+from the superclass (normally the
+:class:`~hedwig.facility.generic.view.Generic` facility),
+when it is appropriate to do so,
+and add additional information to it.
+You will probably encounter this pattern of methods in
+several places within Hedwig.
+As with overriding templates, where this mechanism
+is already established, you can use it to easily extend
+the system's functionality.
+Otherwise, you should consider breaking up the appropriate
+method into a public (fixed) part and protected part (for overriding)
+so that you can add facility-specific behavior without
+having to re-implement the whole view function.
+
+The above example also includes the
+:func:`hedwig.view.util.with_proposal` decorator.
+This is a convenience routine which intercepts the
+`db` and `proposal_id` arguments and fetches the proposal from the database.
+It then gets the current authorization object ("`can`") for the proposal
+and checks that the user has the specified permission.
+The decorated function is then called with the `db` object, `proposal`
+(in place of the `proposal_id`), "`can`" authorization object
+(as an additional argument) and any remaining arguments.
