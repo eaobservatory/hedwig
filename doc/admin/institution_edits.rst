@@ -4,7 +4,7 @@ Institution Edits
 Since there is a single collection of institution database
 records shared amongst all users of the system,
 it is important to keep an eye on edits made to these records.
-This is because if a user make an inappropriate edit
+This is because if a user makes an inappropriate edit
 to an institution record
 (such as 'recycling' it to represent a different institution)
 then the change will effect all members of the institution.

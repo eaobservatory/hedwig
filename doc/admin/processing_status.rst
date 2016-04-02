@@ -9,6 +9,7 @@ these include:
 * Processing uploaded PDF files.
 * Processing uploaded figures.
 * Looking up publication references.
+* Storing clash tool coverage maps.
 
 The processing status page shows the status of these processing tasks,
 for entries which are not "ready".
