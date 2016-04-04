@@ -37,12 +37,18 @@ class DBSyncTest(DBTestCase):
         self.assertIsInstance(queue_id, int)
 
         records = ResultCollection()
-        records[0] = Affiliation(None, queue_id, 'Aff A', False, False, None)
-        records[1] = Affiliation(None, queue_id, 'Aff B', False, False, None)
-        records[2] = Affiliation(None, queue_id, 'Aff C', False, False, None)
-        records[3] = Affiliation(None, queue_id, 'Aff D', False, False, None)
-        records[4] = Affiliation(None, queue_id, 'Aff E', False, False, None)
-        records[5] = Affiliation(None, queue_id, 'Aff F', False, False, None)
+        records[0] = Affiliation(
+            None, queue_id, 'Aff A', False, False, False, None)
+        records[1] = Affiliation(
+            None, queue_id, 'Aff B', False, False, False, None)
+        records[2] = Affiliation(
+            None, queue_id, 'Aff C', False, False, False, None)
+        records[3] = Affiliation(
+            None, queue_id, 'Aff D', False, False, False, None)
+        records[4] = Affiliation(
+            None, queue_id, 'Aff E', False, False, False, None)
+        records[5] = Affiliation(
+            None, queue_id, 'Aff F', False, False, False, None)
 
         n = self.db.sync_queue_affiliation(queue_id, records)
         self.assertEqual(n, (6, 0, 0))
@@ -86,11 +92,16 @@ class DBSyncTest(DBTestCase):
         self.assertIsInstance(queue_id, int)
 
         records = ResultCollection()
-        records[0] = Affiliation(None, queue_id, 'Aff A', False, False, None)
-        records[1] = Affiliation(None, queue_id, 'Aff B', False, False, None)
-        records[2] = Affiliation(None, queue_id, 'Aff C', False, False, None)
-        records[3] = Affiliation(None, queue_id, 'Aff D', False, False, None)
-        records[4] = Affiliation(None, queue_id, 'Aff E', False, False, None)
+        records[0] = Affiliation(
+            None, queue_id, 'Aff A', False, False, False, None)
+        records[1] = Affiliation(
+            None, queue_id, 'Aff B', False, False, False, None)
+        records[2] = Affiliation(
+            None, queue_id, 'Aff C', False, False, False, None)
+        records[3] = Affiliation(
+            None, queue_id, 'Aff D', False, False, False, None)
+        records[4] = Affiliation(
+            None, queue_id, 'Aff E', False, False, False, None)
 
         n = self.db.sync_queue_affiliation(queue_id, records)
         self.assertEqual(n, (5, 0, 0))

@@ -32,7 +32,8 @@
         (Attempting to do so should be an error.)
     </li>
     <li>
-        The exact meaning of the &ldquo;exclude from assignment&rdquo; column
+        The exact meaning of the &ldquo;exclude from assignment&rdquo;
+        and &ldquo;shared assignment&rdquo; columns
         depends on the facility-specific affiliation assignment rules.
     </li>
 </ul>
@@ -49,6 +50,7 @@
             <th>Affiliation</th>
             <th>Hidden</th>
             <th>Exclude from assignment</th>
+            <th>Shared assignment</th>
             <th>Actions</th>
         </tr>
         {% for affiliation in affiliations %}
@@ -56,6 +58,7 @@
                 <td><input type="text" name="name_{{ affiliation.id }}" value="{{ affiliation.name }}" required="required" /></td>
                 <td><input type="checkbox" name="hidden_{{ affiliation.id }}" value="yes" {{ 'checked="checked"' | safe if affiliation.hidden }} /></td>
                 <td><input type="checkbox" name="exclude_{{ affiliation.id }}" value="yes" {{ 'checked="checked"' | safe if affiliation.exclude }} /></td>
+                <td><input type="checkbox" name="shared_{{ affiliation.id }}" value="yes" {{ 'checked="checked"' | safe if affiliation.shared }} /></td>
                 <td><input type="button" id="delete_{{ affiliation.id }}" value="Delete" />
             </tr>
         {% endfor %}
@@ -65,6 +68,7 @@
             <td><input type="text" name="name" value="" /></td>
             <td><input type="checkbox" name="hidden" value="yes" /></td>
             <td><input type="checkbox" name="exclude" value="yes" /></td>
+            <td><input type="checkbox" name="shared" value="yes" /></td>
             <td><input type="button" id="delete_template" value="Delete" />
         </tr>
     </table>

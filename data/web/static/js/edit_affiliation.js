@@ -7,6 +7,7 @@ function addAffiliationRow(newRowNumber) {
     newname.attr('required', 'required');
     newrow.find('[name=hidden]').attr('name', 'hidden_' + nid);
     newrow.find('[name=exclude]').attr('name', 'exclude_' + nid);
+    newrow.find('[name=shared]').attr('name', 'shared_' + nid);
     var deletelink = newrow.find('#delete_template');
     deletelink.attr('id', 'delete_' + nid);
     deletelink.click(function (event) {

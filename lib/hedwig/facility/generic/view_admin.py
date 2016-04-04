@@ -402,18 +402,19 @@ class GenericAdmin(object):
                     id_ = param[5:]
                     is_hidden = ('hidden_' + id_) in form
                     is_exclude = ('exclude_' + id_) in form
+                    is_shared = ('shared_' + id_) in form
 
                     if id_.startswith('new_'):
                         id_ = int(id_[4:])
                         added_records[id_] = Affiliation(
                             id_, queue_id, form[param], is_hidden,
-                            is_exclude, None)
+                            is_exclude, is_shared, None)
 
                     else:
                         id_ = int(id_)
                         updated_records[id_] = Affiliation(
                             id_, queue_id, form[param], is_hidden,
-                            is_exclude, None)
+                            is_exclude, is_shared, None)
 
                 records = organise_collection(
                     ResultCollection, updated_records, added_records)

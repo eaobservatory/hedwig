@@ -25,6 +25,7 @@
             <li>
                 {{ affiliation.name }}
                 {% if affiliation.exclude %}<span class="label">exclude</span>{% endif %}
+                {% if affiliation.shared %}<span class="label">shared</span>{% endif %}
             </li>
         {% endfor %}
     </ul>

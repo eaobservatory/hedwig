@@ -69,8 +69,10 @@ class DBProposalTest(DBTestCase):
 
         # Generate a collection of 2 records and sync it.
         records = ResultCollection()
-        records[0] = Affiliation(None, queue_id, 'Aff 1', True, False, None)
-        records[1] = Affiliation(None, queue_id, 'Aff 2', False, False, None)
+        records[0] = Affiliation(
+            None, queue_id, 'Aff 1', True, False, False, None)
+        records[1] = Affiliation(
+            None, queue_id, 'Aff 2', False, False, False, None)
 
         n = self.db.sync_queue_affiliation(queue_id, records)
         self.assertEqual(n, (2, 0, 0))

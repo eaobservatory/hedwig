@@ -46,6 +46,9 @@ affiliation = Table(
     Column('exclude', Boolean, default=False, nullable=False,
            doc='True if affiliation is excluded from assignment calculations. '
            'The exact meaning of this column is facility-specific.'),
+    Column('shared', Boolean, default=False, nullable=False,
+           doc='True if the affiliation is to be replaced by a share of '
+           'other affiliations.  The exact meaning is facility-specific.'),
     UniqueConstraint('queue_id', 'name'),
     **_table_opts)
 
