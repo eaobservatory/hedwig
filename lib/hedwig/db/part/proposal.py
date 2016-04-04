@@ -28,7 +28,8 @@ from sqlalchemy.sql.functions import max as max_
 
 from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
-from ...type.collection import CallCollection, MemberCollection, \
+from ...type.collection import AffiliationCollection, \
+    CallCollection, MemberCollection, \
     PrevProposalCollection, ProposalFigureCollection, ProposalTextCollection, \
     ResultCollection, TargetCollection
 from ...type.enum import AttachmentState, CallState, FigureType, FormatType, \
@@ -755,7 +756,7 @@ class ProposalPart(object):
             stmt = stmt.order_by(affiliation.c.exclude.asc(),
                                  affiliation.c.name.asc())
 
-        ans = ResultCollection()
+        ans = AffiliationCollection()
 
         with self._transaction() as conn:
             for row in conn.execute(stmt):
@@ -1992,6 +1993,8 @@ class ProposalPart(object):
         Update the affiliation records for a queue to match those
         given by "records".
         """
+
+        records.validate()
 
         with self._transaction() as conn:
             if not self._exists_id(conn, queue, queue_id):

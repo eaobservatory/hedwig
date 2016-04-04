@@ -23,7 +23,8 @@ from datetime import datetime
 from hedwig.db.meta import member
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
-from hedwig.type.collection import CallCollection, MemberCollection, \
+from hedwig.type.collection import AffiliationCollection, \
+    CallCollection, MemberCollection, \
     ProposalTextCollection, ResultCollection, TargetCollection
 from hedwig.type.enum import AttachmentState, CallState, FigureType, \
     FormatType, ProposalState, TextRole
@@ -64,11 +65,11 @@ class DBProposalTest(DBTestCase):
 
         # Check we have no affiliations to start.
         result = self.db.search_affiliation(queue_id=queue_id)
-        self.assertIsInstance(result, ResultCollection)
+        self.assertIsInstance(result, AffiliationCollection)
         self.assertEqual(len(result), 0)
 
         # Generate a collection of 2 records and sync it.
-        records = ResultCollection()
+        records = AffiliationCollection()
         records[0] = Affiliation(
             None, queue_id, 'Aff 1', True, False, False, None)
         records[1] = Affiliation(
@@ -79,7 +80,7 @@ class DBProposalTest(DBTestCase):
 
         # Check that we now have the expected 2 records.
         result = self.db.search_affiliation(queue_id=queue_id)
-        self.assertIsInstance(result, ResultCollection)
+        self.assertIsInstance(result, AffiliationCollection)
         self.assertEqual(len(result), 2)
         for (row, expect_name, expect_hidden) in zip(
                 result.values(), ('Aff 1', 'Aff 2'), (True, False)):

@@ -94,6 +94,29 @@ class OrderedResultCollection(ResultCollection):
             self[key] = self[key]._replace(sort_order=i)
 
 
+class AffiliationCollection(ResultCollection):
+    """
+    Class to hold th results of an affiliation search,
+    """
+
+    def validate(self):
+        """
+        Validates a set of affiliation records.
+
+        Checks:
+
+        * That no affiliation has both "exclude" and "shared" set.
+
+        :raises UserError: if any problems are found
+        """
+
+        for affiliation in self.values():
+            if affiliation.exclude and affiliation.shared:
+                raise UserError(
+                    'Affiliation "{}" has both "exclude" and "shared" '
+                    'specified', affiliation.name)
+
+
 class CallCollection(ResultCollection):
     """
     Class to hold the results of a search for calls for proposals.

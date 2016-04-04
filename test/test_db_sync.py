@@ -19,7 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from hedwig.error import UserError
-from hedwig.type.collection import ResultCollection
+from hedwig.type.collection import AffiliationCollection, ResultCollection
 from hedwig.type.simple import Affiliation, Category
 
 from .dummy_db import DBTestCase
@@ -36,7 +36,7 @@ class DBSyncTest(DBTestCase):
         queue_id = self.db.add_queue(facility_id, 'Queue1', 'Q1')
         self.assertIsInstance(queue_id, int)
 
-        records = ResultCollection()
+        records = AffiliationCollection()
         records[0] = Affiliation(
             None, queue_id, 'Aff A', False, False, False, None)
         records[1] = Affiliation(
@@ -91,7 +91,7 @@ class DBSyncTest(DBTestCase):
         queue_id = self.db.add_queue(facility_id, 'Queue1', 'Q1')
         self.assertIsInstance(queue_id, int)
 
-        records = ResultCollection()
+        records = AffiliationCollection()
         records[0] = Affiliation(
             None, queue_id, 'Aff A', False, False, False, None)
         records[1] = Affiliation(

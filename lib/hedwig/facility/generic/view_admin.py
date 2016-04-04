@@ -24,7 +24,7 @@ from datetime import datetime
 from ...email.format import render_email_template
 from ...error import NoSuchRecord, UserError
 from ...file.moc import read_moc
-from ...type.collection import ResultCollection
+from ...type.collection import AffiliationCollection, ResultCollection
 from ...type.enum import FormatType, GroupType
 from ...type.simple import Affiliation, Call, Category, \
     MOCInfo, ProposalWithCode, Queue, Semester
@@ -417,7 +417,7 @@ class GenericAdmin(object):
                             is_exclude, is_shared, None)
 
                 records = organise_collection(
-                    ResultCollection, updated_records, added_records)
+                    AffiliationCollection, updated_records, added_records)
 
                 db.sync_queue_affiliation(queue_id, records)
 
