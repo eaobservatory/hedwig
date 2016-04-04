@@ -27,7 +27,7 @@ from ..config import get_config, get_database, get_facilities, get_home
 from ..type.enum import GroupType, ReviewerRole, TextRole
 from ..type.simple import FacilityInfo
 from .template_util import register_template_utils
-from .util import make_enum_converter
+from .util import make_enum_converter, register_error_handlers
 
 from .blueprint.admin import create_admin_blueprint
 from .blueprint.facility import create_facility_blueprint
@@ -115,6 +115,7 @@ def create_web_app(db=None):
             'application_name': application_name,
         }
 
+    register_error_handlers(app)
     register_template_utils(app)
 
     return app

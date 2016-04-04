@@ -155,6 +155,22 @@ def parse_datetime(name, form):
         datetime.strptime(form[name + '_time'], '%H:%M').time())
 
 
+def register_error_handlers(app):
+    """
+    Register error handlers with the given Flask app.
+
+    :param app: Flask application with which to register error handlers.
+    """
+
+    for error_class in (HTTPError, HTTPForbidden, HTTPNotFound):
+        @app.errorhandler(error_class.code)
+        def error_handler(error):
+            return _make_response(
+                'error.html',
+                {'title': error.name, 'message': error.description},
+                status=error.code)
+
+
 def require_admin(f):
     """
     Decorator to require that the user has administrative access.
@@ -411,9 +427,13 @@ def _error_page_response(err):
     })
 
 
-def _make_response(template, result):
+def _make_response(template, result, status=None):
     """
     Prepare flask repsonse via a template.
+
+    :param template: the file name of the template to use
+    :param result: the template context dictionary
+    :param status: the HTTP response status
 
     :raises HTTPError: if the view function returns `None`.
     """
@@ -421,7 +441,13 @@ def _make_response(template, result):
     if result is None:
         raise HTTPError('View function returned None as result.')
 
-    resp = _flask_make_response(_flask_render_template(template, **result))
+    args = []
+    if status is not None:
+        args.append(status)
+
+    resp = _flask_make_response(
+        _flask_render_template(template, **result), *args)
+
     resp.headers['Content-Language'] = 'en'
 
     return resp
