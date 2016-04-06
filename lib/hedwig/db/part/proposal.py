@@ -32,7 +32,8 @@ from ...type.collection import AffiliationCollection, \
     CallCollection, MemberCollection, \
     PrevProposalCollection, ProposalFigureCollection, ProposalTextCollection, \
     ResultCollection, TargetCollection
-from ...type.enum import AttachmentState, CallState, FigureType, FormatType, \
+from ...type.enum import AffiliationType, AttachmentState, \
+    CallState, FigureType, FormatType, \
     ProposalState, PublicationType, TextRole
 from ...type.simple import Affiliation, \
     Call, Category, Facility, \
@@ -53,17 +54,21 @@ from ..util import require_not_none
 
 
 class ProposalPart(object):
-    def add_affiliation(self, queue_id, name, hidden=False, exclude=False):
+    def add_affiliation(self, queue_id, name, type_=None):
         """
         Add an affiliation to the database.
         """
+
+        if type_ is None:
+            type_ = AffiliationType.STANDARD
+        elif not AffiliationType.is_valid(type_):
+            raise FormattedError('Invalid affiliation type {}', type_)
 
         with self._transaction() as conn:
             result = conn.execute(affiliation.insert().values({
                 affiliation.c.queue_id: queue_id,
                 affiliation.c.name: name,
-                affiliation.c.hidden: hidden,
-                affiliation.c.exclude: exclude,
+                affiliation.c.type: type_,
             }))
 
         return result.inserted_primary_key[0]
@@ -746,14 +751,16 @@ class ProposalPart(object):
 
         if exclude is not None:
             if exclude:
-                stmt = stmt.where(affiliation.c.exclude)
+                stmt = stmt.where(
+                    affiliation.c.type == AffiliationType.EXCLUDED)
             else:
-                stmt = stmt.where(not_(affiliation.c.exclude))
+                stmt = stmt.where(
+                    affiliation.c.type != AffiliationType.EXCLUDED)
 
         if order_by_id:
             stmt = stmt.order_by(affiliation.c.id.asc())
         else:
-            stmt = stmt.order_by(affiliation.c.exclude.asc(),
+            stmt = stmt.order_by(affiliation.c.type.asc(),
                                  affiliation.c.name.asc())
 
         ans = AffiliationCollection()

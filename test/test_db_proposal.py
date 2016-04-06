@@ -26,7 +26,8 @@ from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
 from hedwig.type.collection import AffiliationCollection, \
     CallCollection, MemberCollection, \
     ProposalTextCollection, ResultCollection, TargetCollection
-from hedwig.type.enum import AttachmentState, CallState, FigureType, \
+from hedwig.type.enum import AffiliationType, AttachmentState, \
+    CallState, FigureType, \
     FormatType, ProposalState, TextRole
 from hedwig.type.simple import Affiliation, Call, Category, \
     Facility, Member, MemberInstitution, \
@@ -71,9 +72,9 @@ class DBProposalTest(DBTestCase):
         # Generate a collection of 2 records and sync it.
         records = AffiliationCollection()
         records[0] = Affiliation(
-            None, queue_id, 'Aff 1', True, False, False, None)
+            None, queue_id, 'Aff 1', True, AffiliationType.STANDARD, None)
         records[1] = Affiliation(
-            None, queue_id, 'Aff 2', False, False, False, None)
+            None, queue_id, 'Aff 2', False, AffiliationType.STANDARD, None)
 
         n = self.db.sync_queue_affiliation(queue_id, records)
         self.assertEqual(n, (2, 0, 0))

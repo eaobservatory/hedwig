@@ -27,7 +27,7 @@ from ...error import NoSuchRecord, UserError
 from ...web.util import HTTPRedirect, flash, url_for
 from ...view.util import organise_collection, with_call_review, with_proposal
 from ...type.collection import ResultTable
-from ...type.enum import ProposalState, ReviewerRole
+from ...type.enum import AffiliationType, ProposalState, ReviewerRole
 from ...type.simple import Link, ValidationMessage
 from ...type.util import null_tuple
 from ..generic.view import Generic
@@ -166,7 +166,8 @@ class JCMT(Generic):
         total_weight = 0.0
         max_weight = 0.0
         for affiliation in affiliations.values():
-            if (affiliation.exclude or affiliation.shared or
+            if ((affiliation.type == AffiliationType.EXCLUDED) or
+                    (affiliation.type == AffiliationType.SHARED) or
                     (affiliation.weight is None)):
                 continue
 
@@ -179,7 +180,8 @@ class JCMT(Generic):
         # members with shared affiliation.
         affiliation_fraction = {}
         for affiliation in affiliations.values():
-            if (affiliation.exclude or affiliation.shared or
+            if ((affiliation.type == AffiliationType.EXCLUDED) or
+                    (affiliation.type == AffiliationType.SHARED) or
                     (affiliation.weight is None)):
                 continue
 
@@ -195,10 +197,11 @@ class JCMT(Generic):
             # excluded-affiliation members.
             if ((pi_affiliation is None) or
                     (pi_affiliation not in affiliations) or
-                    (affiliations[pi_affiliation].exclude)):
+                    (affiliations[pi_affiliation].type ==
+                        AffiliationType.EXCLUDED)):
                 pi_affiliation = 0
 
-            elif affiliations[pi_affiliation].shared:
+            elif affiliations[pi_affiliation].type == AffiliationType.SHARED:
                 # Use special value "None" for shared affiliation (not to be
                 # confused with "0" meaning unknown).
                 pi_affiliation = None
@@ -219,11 +222,11 @@ class JCMT(Generic):
             affiliation = member.affiliation_id
             if (affiliation is None) or (affiliation not in affiliations):
                 affiliation = 0
-            elif affiliations[affiliation].exclude:
+            elif affiliations[affiliation].type == AffiliationType.EXCLUDED:
                 # Members with excluded affiliations count as the PI's
                 # affiliation.
                 affiliation = pi_affiliation
-            elif affiliations[affiliation].shared:
+            elif affiliations[affiliation].type == AffiliationType.SHARED:
                 affiliation = None
 
             if affiliation is None:

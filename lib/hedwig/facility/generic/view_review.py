@@ -32,7 +32,8 @@ from ...web.util import ErrorPage, \
     HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
 from ...type.collection import ReviewerCollection
-from ...type.enum import Assessment, FileTypeInfo, FormatType, GroupType, \
+from ...type.enum import AffiliationType, Assessment, \
+    FileTypeInfo, FormatType, GroupType, \
     ProposalState, ReviewerRole, TextRole
 from ...type.simple import Affiliation, Link, MemberPIInfo, \
     ProposalWithCode, Reviewer
@@ -196,7 +197,8 @@ class GenericReview(object):
         return {
             'proposals': proposal_list,
             'affiliations':
-                [x for x in affiliations.values() if not x.exclude] +
+                [x for x in affiliations.values()
+                 if x.type != AffiliationType.EXCLUDED] +
                 [null_tuple(Affiliation)._replace(id=0, name='Unknown')],
             'affiliation_total': {},
             'affiliation_accepted': {},

@@ -23,7 +23,8 @@ import json as json_module
 from flask import Markup
 from jinja2.runtime import Undefined
 
-from ..type.enum import Assessment, AttachmentState, CallState, \
+from ..type.enum import AffiliationType, Assessment, \
+    AttachmentState, CallState, \
     ProposalState, PublicationType, ReviewerRole, TextRole
 
 from .format import format_text
@@ -45,6 +46,12 @@ def register_template_utils(app):
     @app.template_global()
     def create_counter(start_value=1):
         return Counter(start_value)
+
+    @app.template_filter()
+    def affiliation_type_name(value):
+        if value is None:
+            return ''
+        return AffiliationType.get_name(value)
 
     @app.template_filter()
     def assessment_name(value):
@@ -196,6 +203,10 @@ def register_template_utils(app):
 
         return Markup('<abbr title="') + value + Markup('">') + \
             value[:length] + Markup('&hellip;</abbr>')
+
+    @app.template_test()
+    def affiliation_type_standard(value):
+        return (value == AffiliationType.STANDARD)
 
     @app.template_test()
     def attachment_new(value):

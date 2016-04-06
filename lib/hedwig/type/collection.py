@@ -24,7 +24,7 @@ from math import sqrt
 from ..astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
 from ..error import NoSuchRecord, MultipleRecords, UserError
-from .enum import ReviewerRole, PublicationType
+from .enum import AffiliationType, ReviewerRole, PublicationType
 from .simple import TargetObject
 
 ResultTable = namedtuple('ResultTable', ('table', 'columns', 'rows'))
@@ -105,16 +105,15 @@ class AffiliationCollection(ResultCollection):
 
         Checks:
 
-        * That no affiliation has both "exclude" and "shared" set.
+        * All affiliation types must be valid.
 
         :raises UserError: if any problems are found
         """
 
         for affiliation in self.values():
-            if affiliation.exclude and affiliation.shared:
+            if not AffiliationType.is_valid(affiliation.type):
                 raise UserError(
-                    'Affiliation "{}" has both "exclude" and "shared" '
-                    'specified', affiliation.name)
+                    'Affiliation "{}" has invalid type', affiliation.name)
 
 
 class CallCollection(ResultCollection):

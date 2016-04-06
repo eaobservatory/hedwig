@@ -25,6 +25,29 @@ from ..error import UserError
 from .base import EnumBasic, EnumURLPath
 
 
+class AffiliationType(EnumBasic):
+    """
+    Class representing types of affiliations.
+    """
+
+    STANDARD = 1
+    EXCLUDED = 2
+    SHARED = 3
+
+    TypeInfo = namedtuple(
+        'TypeInfo', ('name',))
+
+    _info = OrderedDict((
+        (STANDARD, TypeInfo('Standard')),
+        (EXCLUDED, TypeInfo('Excluded')),
+        (SHARED,   TypeInfo('Shared')),
+    ))
+
+    @classmethod
+    def get_options(cls):
+        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
+
+
 class CallState(EnumBasic):
     """
     Class representing states of a call for proposals.

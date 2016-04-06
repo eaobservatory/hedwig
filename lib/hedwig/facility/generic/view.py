@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import defaultdict, OrderedDict
 
 from ...error import NoSuchRecord
+from ...type.enum import AffiliationType
 from .calculator_example import ExampleCalculator
 from .tool_clash import ClashTool
 from .view_admin import GenericAdmin
@@ -214,7 +215,7 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
 
         Note: this is a simple example implementation which just counts
         the members of each affiliation (skipping those where the affiliation
-        "exclude" setting is true) and ignoring the affiliation weight values.
+        type is "EXCLUDED") and ignoring the affiliation weight values.
 
         Each facility will need to override this method with a method
         implementing its own actual assignment rules.
@@ -227,7 +228,7 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
             affiliation = member.affiliation_id
             if (affiliation is None) or (affiliation not in affiliations):
                 affiliation = 0
-            elif affiliations[affiliation].exclude:
+            elif affiliations[affiliation].type == AffiliationType.EXCLUDED:
                 continue
 
             affiliation_count[affiliation] += 1.0

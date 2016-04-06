@@ -405,7 +405,9 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_name('name_new_1').send_keys('China')
         self.browser.find_element_by_name('name_new_2').send_keys('Japan')
         self.browser.find_element_by_name('name_new_3').send_keys('Other')
-        self.browser.find_element_by_name('exclude_new_3').click()
+        Select(
+            self.browser.find_element_by_name('type_new_3')
+        ).select_by_visible_text('Excluded')
 
         self._save_screenshot(self.admin_image_root, 'queue_affiliation',
                               [affiliation_add])

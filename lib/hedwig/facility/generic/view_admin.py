@@ -25,7 +25,7 @@ from ...email.format import render_email_template
 from ...error import NoSuchRecord, UserError
 from ...file.moc import read_moc
 from ...type.collection import AffiliationCollection, ResultCollection
-from ...type.enum import FormatType, GroupType
+from ...type.enum import AffiliationType, FormatType, GroupType
 from ...type.simple import Affiliation, Call, Category, \
     MOCInfo, ProposalWithCode, Queue, Semester
 from ...type.util import null_tuple
@@ -401,20 +401,19 @@ class GenericAdmin(object):
 
                     id_ = param[5:]
                     is_hidden = ('hidden_' + id_) in form
-                    is_exclude = ('exclude_' + id_) in form
-                    is_shared = ('shared_' + id_) in form
+                    type_ = int(form['type_' + id_])
 
                     if id_.startswith('new_'):
                         id_ = int(id_[4:])
                         added_records[id_] = Affiliation(
                             id_, queue_id, form[param], is_hidden,
-                            is_exclude, is_shared, None)
+                            type_, None)
 
                     else:
                         id_ = int(id_)
                         updated_records[id_] = Affiliation(
                             id_, queue_id, form[param], is_hidden,
-                            is_exclude, is_shared, None)
+                            type_, None)
 
                 records = organise_collection(
                     AffiliationCollection, updated_records, added_records)
@@ -431,6 +430,7 @@ class GenericAdmin(object):
             'title': 'Edit Affiliations',
             'message': message,
             'affiliations': records.values(),
+            'affiliation_types': AffiliationType.get_options(),
             'queue': queue,
         }
 

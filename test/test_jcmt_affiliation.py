@@ -22,6 +22,7 @@ from unittest import TestCase
 
 from hedwig.facility.jcmt.view import JCMT
 from hedwig.type.collection import AffiliationCollection, MemberCollection
+from hedwig.type.enum import AffiliationType
 from hedwig.type.simple import Affiliation, Member
 from hedwig.type.util import null_tuple
 
@@ -42,19 +43,19 @@ class JCMTAffiliationTestCase(TestCase):
 
         affiliations[AFF_1] = Affiliation(
             AFF_1, None, 'Aff 1',
-            hidden=False, exclude=False, shared=False, weight=50)
+            hidden=False, type=AffiliationType.STANDARD, weight=50)
         affiliations[AFF_2] = Affiliation(
             AFF_2, None, 'Aff 2',
-            hidden=False, exclude=False, shared=False, weight=20)
+            hidden=False, type=AffiliationType.STANDARD, weight=20)
         affiliations[AFF_3] = Affiliation(
             AFF_3, None, 'Aff 3',
-            hidden=False, exclude=False, shared=False, weight=20)
+            hidden=False, type=AffiliationType.STANDARD, weight=20)
         affiliations[STAFF] = Affiliation(
             STAFF, None, 'Staff',
-            hidden=False, exclude=False, shared=True,  weight=None)
+            hidden=False, type=AffiliationType.SHARED, weight=None)
         affiliations[OTHER] = Affiliation(
             OTHER, None, 'Other',
-            hidden=False, exclude=True,  shared=False, weight=None)
+            hidden=False, type=AffiliationType.EXCLUDED, weight=None)
 
         # Compute weighting scale factor for shared CoIs.
         sum_sq_frac = (50 / 90) ** 2 + 2 * (20 / 90) ** 2
