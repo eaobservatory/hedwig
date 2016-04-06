@@ -247,7 +247,8 @@ class GenericReview(object):
         message = None
 
         affiliations = db.search_affiliation(
-            queue_id=call.queue_id, hidden=False, exclude=False,
+            queue_id=call.queue_id, hidden=False,
+            type_=AffiliationType.STANDARD,
             with_weight_call_id=call.id)
 
         if form is not None:
