@@ -29,7 +29,8 @@ from ...file.info import determine_figure_type, determine_pdf_page_count
 from ...publication.url import make_publication_url
 from ...type.collection import PrevProposalCollection, ResultCollection, \
     TargetCollection
-from ...type.enum import AttachmentState, CallState, FigureType, FormatType, \
+from ...type.enum import AffiliationType, AttachmentState, \
+    CallState, FigureType, FormatType, \
     ProposalState, PublicationType, ReviewerRole, TextRole
 from ...type.simple import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
@@ -239,7 +240,7 @@ class GenericProposal(object):
             # should have generated an error for that.
             if member_pi is not None:
                 exclude = db.search_affiliation(queue_id=proposal.queue_id,
-                                                exclude=True)
+                                                type_=AffiliationType.EXCLUDED)
 
                 if member_pi.affiliation_id in exclude:
                     exclude_names = [
