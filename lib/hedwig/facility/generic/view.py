@@ -235,7 +235,8 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
             affiliation_total += 1.0
 
         if not affiliation_total:
-            return {}
+            # If no valid affiliations were found, return 100% unknown.
+            return {0: 1.0}
 
         return {k: (v / affiliation_total)
                 for (k, v) in affiliation_count.items()}
