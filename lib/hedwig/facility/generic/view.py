@@ -215,7 +215,7 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
 
         Note: this is a simple example implementation which just counts
         the members of each affiliation (skipping those where the affiliation
-        type is "EXCLUDED") and ignoring the affiliation weight values.
+        type is not "STANDARD") and ignoring the affiliation weight values.
 
         Each facility will need to override this method with a method
         implementing its own actual assignment rules.
@@ -228,7 +228,7 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
             affiliation = member.affiliation_id
             if (affiliation is None) or (affiliation not in affiliations):
                 affiliation = 0
-            elif affiliations[affiliation].type == AffiliationType.EXCLUDED:
+            elif affiliations[affiliation].type != AffiliationType.STANDARD:
                 continue
 
             affiliation_count[affiliation] += 1.0
