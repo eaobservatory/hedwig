@@ -162,6 +162,30 @@ class JCMT(Generic):
         affiliation_count = defaultdict(float)
         affiliation_total = 0.0
 
+        # Determine total and maximum affiliation weight.
+        total_weight = 0.0
+        max_weight = 0.0
+        for affiliation in affiliations.values():
+            if (affiliation.exclude or affiliation.shared or
+                    (affiliation.weight is None)):
+                continue
+
+            total_weight += affiliation.weight
+
+            if affiliation.weight > max_weight:
+                max_weight = affiliation.weight
+
+        # Determine affiliation fractions, in case there are any proposal
+        # members with shared affiliation.
+        affiliation_fraction = {}
+        for affiliation in affiliations.values():
+            if (affiliation.exclude or affiliation.shared or
+                    (affiliation.weight is None)):
+                continue
+
+            affiliation_fraction[affiliation.id] = \
+                affiliation.weight / total_weight
+
         # Find the PI (if present) and their affiliation.
         try:
             pi = members.get_pi()
@@ -174,17 +198,17 @@ class JCMT(Generic):
                     (affiliations[pi_affiliation].exclude)):
                 pi_affiliation = 0
 
+            elif affiliations[pi_affiliation].shared:
+                # Use special value "None" for shared affiliation (not to be
+                # confused with "0" meaning unknown).
+                pi_affiliation = None
+
         except KeyError:
+            # KeyError is raised if MemberCollection.get_pi fails to find a
+            # PI: record that there is no PI and their affiliation is therefore
+            # unknown (represented by "0").
             pi = None
             pi_affiliation = 0
-
-        # Determine maximum affiliation weight.
-        max_weight = 0.0
-        for affiliation in affiliations.values():
-            if affiliation.exclude or (affiliation.weight is None):
-                continue
-            if affiliation.weight > max_weight:
-                max_weight = affiliation.weight
 
         # Add up weighted affiliation counts for non-PI members.
         for member in members.values():
@@ -199,31 +223,59 @@ class JCMT(Generic):
                 # Members with excluded affiliations count as the PI's
                 # affiliation.
                 affiliation = pi_affiliation
+            elif affiliations[affiliation].shared:
+                affiliation = None
 
-            if affiliation == 0:
-                # Weight "unknown" as the maximum of all the other weights. In
-                # practise there should never be any members in this state.
-                weight = max_weight
+            if affiliation is None:
+                # Affiliation is shared -- assign by squared affiliation
+                # fractions because the CoI's affiliation is shared
+                # based on the affiliation weights and each of those
+                # affiliations also gets weighted by the same weight.
+                for (aff_id, aff_frac) in affiliation_fraction.items():
+                    affiliation_count[aff_id] += aff_frac ** 2
+                    affiliation_total += aff_frac ** 2
+
             else:
-                weight = affiliations[affiliation].weight
-                if weight is None:
-                    weight = 0.0
+                # Non-shared affiliation -- determine weighting factor to use.
+                if affiliation == 0:
+                    # Weight "unknown" as the maximum of all the other
+                    # weights. In practise there should never be any members
+                    # in this state.
+                    weight = max_weight / total_weight
+                else:
+                    weight = affiliation_fraction[affiliation]
+                    if weight is None:
+                        weight = 0.0
 
-            affiliation_count[affiliation] += weight
-            affiliation_total += weight
+                affiliation_count[affiliation] += weight
+                affiliation_total += weight
 
         if not affiliation_total:
             # We didn't find any non-PI members (or they had zero weight),
-            # simply return the PI affiliation (which already defaulted to
-            # 0 i.e. "unknown" if there is no PI).
-            return {pi_affiliation: 1.0}
+            # so set the PI weight to 1.0.  Otherwise prepare to add the PI
+            # affiliation at the same total weight.  But if there is also
+            # no PI, return 100% unknown.
+            if pi is None:
+                return {0: 1.0}
+
+            pi_weight = 1.0
+
+        else:
+            pi_weight = affiliation_total
 
         if pi is not None:
             # 50% of the assigment is supposed to be apportioned to the PI
             # affiliation, so add the PI with the same weight as all the other
             # members combined.
-            affiliation_count[pi_affiliation] += affiliation_total
-            affiliation_total *= 2.0
+            if pi_affiliation is None:
+                # Affiliation is shared -- assign by affiliation fractions
+                # multiplied by the PI's weighting factor.
+                for (aff_id, aff_frac) in affiliation_fraction.items():
+                    affiliation_count[aff_id] += pi_weight * aff_frac
+            else:
+                affiliation_count[pi_affiliation] += pi_weight
+
+            affiliation_total += pi_weight
 
         return {k: (v / affiliation_total)
                 for (k, v) in affiliation_count.items()}
