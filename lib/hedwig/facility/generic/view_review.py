@@ -198,7 +198,7 @@ class GenericReview(object):
             'proposals': proposal_list,
             'affiliations':
                 [x for x in affiliations.values()
-                 if x.type != AffiliationType.EXCLUDED] +
+                 if x.type == AffiliationType.STANDARD] +
                 [null_tuple(Affiliation)._replace(id=0, name='Unknown')],
             'affiliation_total': {},
             'affiliation_accepted': {},
