@@ -721,6 +721,7 @@ class ProposalPart(object):
         return Queue(**result)
 
     def search_affiliation(self, queue_id=None, hidden=None, exclude=None,
+                           type_=None,
                            with_weight_call_id=None, order_by_id=False):
         """
         Search for affiliation records.
@@ -756,6 +757,9 @@ class ProposalPart(object):
             else:
                 stmt = stmt.where(
                     affiliation.c.type != AffiliationType.EXCLUDED)
+
+        if type_ is not None:
+            stmt = stmt.where(affiliation.c.type == type_)
 
         if order_by_id:
             stmt = stmt.order_by(affiliation.c.id.asc())
