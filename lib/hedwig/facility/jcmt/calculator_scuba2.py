@@ -48,7 +48,7 @@ class SCUBA2Calculator(JCMTCalculator):
     @classmethod
     def get_code(cls):
         """
-        The the calculator "code".
+        Get the calculator "code".
 
         This is a short string used to uniquely identify the calculator
         within the facility which uses it.
