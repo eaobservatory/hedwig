@@ -422,3 +422,140 @@ and checks that the user has the specified permission.
 The decorated function is then called with the `db` object, `proposal`
 (in place of the `proposal_id`), "`can`" authorization object
 (as an additional argument) and any remaining arguments.
+
+How Hedwig Configures Facilities
+--------------------------------
+
+This section gives description of how Hedwig loads facility-specific
+code and sets up the web application.
+
+The web application is constructed by
+:func:`hedwig.web.app.create_web_app`
+which in turn uses the
+:func:`~hedwig.config.get_database` and
+:func:`~hedwig.config.get_facilities`
+functions from the :mod:`hedwig.config` module
+to obtain the necessary information before calling
+:func:`~hedwig.web.blueprint.facility.create_facility_blueprint`.
+
+#.  :func:`~hedwig.config.get_database` uses a private function
+    :func:`~hedwig.config._get_db_class` which reads the list of facilities
+    from the configuration file.
+
+    See also the :ref:`facility_database_access` section of the
+    :doc:`overview` for an introduction to this process.
+
+    * If the facility is given with a complete package and class name
+      then the function tries to load `meta` and `control` modules
+      from the same package.
+
+      For example if the facility class was `mypackage.view.MyFacility`,
+      we would try to import modules `mypackage.meta` and `mypackage.control`.
+
+    * If the facility is given as a plain class name, it is assumed to
+      be located in a module `hedwig.facility.<lower case name>.view`.
+      We try to import modules `hedwig.facility.<lower case name>.meta`
+      and `hedwig.facility.<lower case name>.control`.
+
+    * Importing the `meta` module will cause the database table information
+      to be associated with the `metadata` object in
+      :mod:`hedwig.db.meta`.
+
+    * A class `<facility name>Part` is loaded from the `control`
+      module and used as part of the dynamically-generated
+      `CombinedDatabase` class.
+
+    * Finally an instance of the `CombinedDatabase` class is
+      constructed, using the SQLAlchemy engine object
+      prepared by :func:`hedwig.db.engine.get_engine`.
+
+#.  :func:`~hedwig.config.get_facilities` gets a list of facility
+    classes with the assistance of the private function
+    :func:`~hedwig.config._import_class`.
+
+    See also the :ref:`facility_view_classes` section of the
+    :doc:`overview` for an introduction to this process.
+
+    * If a complete package and class name is provided then that
+      class is loaded.
+
+    * Otherwise if a plain class name is given, it is loaded from the
+      module `hedwig.facility.<lower case name>.view`.
+
+#.  The :func:`hedwig.web.app.create_web_app` function now has a database
+    control object and list of facility classes.
+    It can then go ahead and construct an instance of each
+    facility class as follows:
+
+    * It obtains the facility's code using the
+      class method :meth:`~hedwig.facility.generic.view.Generic.get_code`.
+
+    * It calls the database's
+      :meth:`~hedwig.db.part.proposal.ProposalPart.ensure_facility`
+      method to get the facility identifier.
+      This is a unique integer used within the database to refer to the
+      facility.
+      If the facility code was not found, this database method
+      adds it to the database and returns the newly-assigned
+      identifying number.
+
+    * The facility identifier is passed to the facility class constructor
+      which records it as the `id_` attribute.
+      Therefore within a facility method, the identifier can always
+      be obtained from `self.id_`.
+
+#.  A :class:`~hedwig.type.simple.FacilityInfo` instance,
+    with the constructed facility view object stored in the
+    `view` attribute, is added to the `facilities` ordered dictionary.
+    This is used by some of the other blueprints --- for example the
+    "home" blueprint uses it to show each of the facilities on the
+    home page.
+
+#.  :func:`~hedwig.web.blueprint.facility.create_facility_blueprint`
+    is then passed the facility view object in order to create
+    a Flask blueprint which will be registered in the application
+    with an URL prefix containing the facility code.
+
+    * An additional template context parameter `facility_name` is
+      set up using the value returned by the
+      :meth:`~hedwig.facility.generic.view.Generic.get_name` method.
+
+    * All of the fixed facility routes are registered with the
+      blueprint, using functions which invoke the methods of the
+      view object.
+
+    * The facility's
+      :meth:`~hedwig.facility.generic.view.Generic.get_calculator_classes`
+      method is used to get a tuple of calculator classes.
+
+      * For each calculator,
+        :meth:`~hedwig.view.calculator.BaseCalculator.get_code`
+        is called to get the short code name.
+        This is converted to an identifier using
+        :meth:`~hedwig.db.part.calculator.CalculatorPart.ensure_calculator`
+        and then the calculator can be constructed,
+        giving the facility view object and calculator identifier.
+
+      * Calculator routes are then registered with the blueprint.
+
+      * A default redirect route is added for the calculator's first mode,
+        allowing links to be created to the calculator without
+        specifying a mode.
+
+    * The facility's
+      :meth:`~hedwig.facility.generic.view.Generic.get_target_tool_classes`
+      method is used to get a tuple of target tool classes.
+
+      * As for calculators, for each tool the code is obtained from the
+        :meth:`~hedwig.view.tool.BaseTargetTool.get_code` method.
+        There are currently no tool identifiers since no database
+        tables refer to target tools --- a placeholder tool identifier
+        of 0 is passed to the tool constructor along with the facility
+        view object.
+
+      * Various routes for each target tool are registered.
+
+      * The target tool's
+        :meth:`~hedwig.view.tool.BaseTargetTool.get_custom_routes`
+        method is called to determine whether it has any additional
+        routes which should be registered with the blueprint.
