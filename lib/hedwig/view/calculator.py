@@ -240,7 +240,7 @@ class BaseCalculator(object):
                     default_input = calculation.input
                 else:
                     default_input = self.convert_input_version(
-                        calculation.version, calculation.input)
+                        mode, calculation.version, calculation.input)
 
                 calculation_id = calculation.id
                 calculation_proposal = proposal_id

@@ -100,7 +100,7 @@ class ExampleCalculator(BaseCalculator):
 
         return new_input
 
-    def convert_input_version(self, old_version, input_):
+    def convert_input_version(self, mode, old_version, input_):
         """
         Converts the inputs from an older version so that they can be
         used with the current version of the calculator.
