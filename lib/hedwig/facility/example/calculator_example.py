@@ -55,7 +55,7 @@ class ExampleCalculator(BaseCalculator):
         is intended to be used by multiple facilities.
         """
 
-        return 'generic'
+        return 'example'
 
     def get_name(self):
         return 'Example Calculator'

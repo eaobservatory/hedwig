@@ -1,11 +1,6 @@
 Facility Modules (Generic)
 ==========================
 
-hedwig.facility.generic.calculator_example
-------------------------------------------
-
-.. automodule:: hedwig.facility.generic.calculator_example
-
 hedwig.facility.generic.tool_clash
 ----------------------------------
 

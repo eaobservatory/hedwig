@@ -4,6 +4,11 @@ Facility Modules (Example)
 This is an example facility used in the
 :doc:`guide to customizing Hedwig for a new facility <../customize>`.
 
+hedwig.facility.example.calculator_example
+------------------------------------------
+
+.. automodule:: hedwig.facility.example.calculator_example
+
 hedwig.facility.example.control
 -------------------------------
 

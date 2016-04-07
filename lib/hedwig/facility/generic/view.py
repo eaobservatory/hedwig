@@ -22,7 +22,6 @@ from collections import defaultdict, OrderedDict
 
 from ...error import NoSuchRecord
 from ...type.enum import AffiliationType
-from .calculator_example import ExampleCalculator
 from .tool_clash import ClashTool
 from .view_admin import GenericAdmin
 from .view_home import GenericHome
@@ -89,7 +88,7 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
         list of calculators.
         """
 
-        return (ExampleCalculator,)
+        return ()
 
     def get_moc_order(self):
         """

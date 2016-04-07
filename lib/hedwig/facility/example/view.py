@@ -20,6 +20,7 @@ from __future__ import \
     unicode_literals
 
 from ..generic.view import Generic
+from .calculator_example import ExampleCalculator
 
 
 class Example(Generic):
@@ -38,3 +39,11 @@ class Example(Generic):
         """
 
         return 'Example Facility'
+
+    def get_calculator_classes(self):
+        """
+        Get a tuple of calculator classes which can be used
+        with this facility.
+        """
+
+        return (ExampleCalculator,)
