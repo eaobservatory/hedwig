@@ -35,6 +35,18 @@ class BaseCalculator(object):
         self.facility = facility
         self.id_ = id_
 
+    @classmethod
+    def get_code(cls):
+        """
+        Get the calculator "code".
+
+        This is a short string used to uniquely identify the calculator
+        within facilities which use it.  It will correspond to an entry
+        in the "calculator" table and be used in URLs.
+        """
+
+        return NotImplementedError()
+
     def get_default_facility_code(self):
         """
         Get the code of the facility for which this calculator is

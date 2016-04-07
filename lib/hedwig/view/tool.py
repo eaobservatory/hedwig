@@ -28,6 +28,19 @@ class BaseTargetTool(object):
         self.facility = facility
         self.id_ = id_
 
+    @classmethod
+    def get_code(cls):
+        """
+        Get the target tool "code".
+
+        This is a short string used to uniquely identify the target tool
+        within facilities which use it.  It will be used in URLs and
+        would correspond to an entry in a "tool" database table if there
+        is ever a need to store target tool results in the database.
+        """
+
+        return NotImplementedError()
+
     def get_custom_routes(self):
         """
         Method used to find any custom routes required by this tool.
