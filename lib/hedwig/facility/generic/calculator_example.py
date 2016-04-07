@@ -48,6 +48,15 @@ class ExampleCalculator(BaseCalculator):
 
         return 'example'
 
+    def get_default_facility_code(self):
+        """
+        Get the code for the facility which has the template for this
+        calculator.  This method need only be overridden if the calculator
+        is intended to be used by multiple facilities.
+        """
+
+        return 'generic'
+
     def get_name(self):
         return 'Example Calculator'
 

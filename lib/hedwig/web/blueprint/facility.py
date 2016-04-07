@@ -719,10 +719,39 @@ def make_calculator_view(db, calculator, facility_code, calculator_code,
 
     This is done in a separate function in order to create the proper
     scope for a closure.
+
+    A list of possible HTML templates to use for the calculator
+    is constructed as follows:
+
+    * `<facility_code>/calculator_<calculator_code>.html`
+
+      The template for this particular calculator in the current
+      facility's template directory.
+
+    * `<calculator_facility_code>/calculator_<calculator_code>.html`
+
+      The template for this particular calculator in the template
+      directory for the facility (code) returned by the calculator's
+      :meth:`~hedwig.view.calculator.BaseCalculator.get_default_facility_code`
+      method, if that method returns a value other than `None`.
+
+    * `generic/calculator_base.html`
+
+      The base calculator template.
     """
 
-    @templated(('{}/calculator_{}.html'.format(facility_code, calculator_code),
-                'generic/calculator_base.html'))
+    # Prepare information to generate list of templates to use.
+    templates = [(facility_code, calculator_code)]
+
+    default_facility_code = calculator.get_default_facility_code()
+    if ((default_facility_code is not None) and
+            (default_facility_code != facility_code)):
+        templates.append((default_facility_code, calculator_code))
+
+    templates.append(('generic', 'base'))
+
+    # Create the view function.
+    @templated(['{}/calculator_{}.html'.format(*x) for x in templates])
     def view_func():
         return calculator.view(
             db, calculator_mode_id, request.args,

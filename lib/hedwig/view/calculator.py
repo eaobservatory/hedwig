@@ -35,6 +35,27 @@ class BaseCalculator(object):
         self.facility = facility
         self.id_ = id_
 
+    def get_default_facility_code(self):
+        """
+        Get the code of the facility for which this calculator is
+        designed.
+
+        This is used by the
+        :func:`~hedwig.web.blueprint.facility.make_calculator_view`
+        function when constructing the names of the templates to use for
+        the calculator view.
+        If this method returns a value other than `None` then it
+        is used as an additional facility directory in which to
+        search for the calculator's HTML template.
+
+        Calculators need only override this method if the calculator
+        is intended to be used with multiple facilities.
+
+        :return: a facility code if necessary, or `None` otherwise
+        """
+
+        return None
+
     def view(self, db, mode, args, form):
         """
         Web view handler for a generic calculator.
