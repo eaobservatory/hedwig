@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,9 +18,17 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from ..error import NoSuchRecord
-from ..web.util import HTTPForbidden, HTTPNotFound
+from collections import namedtuple
+
+from ..astro.coord import CoordSystem, parse_coord
+from ..astro.catalog import parse_source_list
+from ..error import NoSuchRecord, UserError
+from ..type.simple import Link, TargetObject
+from ..view import auth
+from ..web.util import ErrorPage, HTTPForbidden, HTTPNotFound, url_for
 from . import auth
+
+TargetCoord = namedtuple('TargetCoord', ('x', 'y', 'system'))
 
 
 class BaseTargetTool(object):
@@ -65,7 +73,96 @@ class BaseTargetTool(object):
 
         return []
 
+    def view_single(self, db, args, form):
+        """
+        View handler function for stand-alone usage of a target tool.
+        """
+
+        target = TargetCoord('', '', CoordSystem.ICRS)
+        message = None
+        target_object = None
+
+        if form is not None:
+            target = target._replace(x=form['x'], y=form['y'],
+                                     system=int(form['system']))
+
+            try:
+                target_name = 'Input coordinates'
+                target_object = TargetObject(
+                    target_name, target.system,
+                    parse_coord(target.system, target.x, target.y,
+                                target_name))
+
+            except UserError as e:
+                message = e.message
+
+        tool_code = self.get_code()
+
+        ctx = {
+            'title': self.get_name(),
+            'show_input': True,
+            'show_input_upload': False,
+            'run_button': 'Check',
+            'systems': CoordSystem.get_options(),
+            'target': target,
+            'message': message,
+            'target_url': url_for('.tool_{}'.format(tool_code)),
+            'target_upload': url_for('.tool_upload_{}'.format(tool_code)),
+        }
+
+        ctx.update(self._view_single(db, target_object, args))
+
+        return ctx
+
+    def view_upload(self, db, args, form, file_):
+        """
+        View handler for stand-alone usage by file upload.
+        """
+
+        message = None
+        target_objects = None
+
+        if form is not None:
+            try:
+                if file_:
+                    try:
+                        buff = file_.read(64 * 1024)
+                        if len(file_.read(1)):
+                            raise UserError('The uploaded file was too large.')
+                    finally:
+                        file_.close()
+                else:
+                    raise UserError('No target list file was received.')
+
+                # TODO: would be more efficient to update parse_source_list
+                # to be able to return a list directly: this converts to
+                # and from Astropy objects twice.
+                target_objects = parse_source_list(buff).to_object_list()
+
+            except UserError as e:
+                message = e.message
+
+        tool_code = self.get_code()
+
+        ctx = {
+            'title': self.get_name(),
+            'show_input': True,
+            'show_input_upload': True,
+            'run_button': 'Check',
+            'mime_types': ['text/plain', 'text/csv'],
+            'message': message,
+            'target_url': url_for('.tool_upload_{}'.format(tool_code)),
+        }
+
+        ctx.update(self._view_upload(db, target_objects, args))
+
+        return ctx
+
     def view_proposal(self, db, proposal_id, args):
+        """
+        View handler function for proposal-based usage of a target tool.
+        """
+
         try:
             proposal = db.get_proposal(self.facility.id_, proposal_id,
                                        with_members=True, with_reviewers=True)
@@ -79,11 +176,23 @@ class BaseTargetTool(object):
 
         targets = db.search_target(proposal_id=proposal_id)
 
-        ctx = self._view_proposal(db, proposal, targets, args)
+        target_objects = targets.to_object_list()
 
-        ctx.update({
+        if not target_objects:
+            raise ErrorPage(
+                'The proposal does not appear to have any targets '
+                'with coordinates.',
+                links=[Link('Back to proposal', url_for(
+                    '.proposal_view', proposal_id=proposal.id,
+                    _anchor='targets'))])
+
+        ctx = {
+            'title': self.get_name(),
+            'show_input': False,
             'proposal_id': proposal.id,
             'proposal_code': self.facility.make_proposal_code(db, proposal),
-        })
+        }
+
+        ctx.update(self._view_proposal(db, proposal, target_objects, args))
 
         return ctx

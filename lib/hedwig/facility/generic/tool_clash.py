@@ -24,17 +24,13 @@ import re
 
 from healpy import ang2pix
 
-from ...astro.coord import CoordSystem, format_coord, parse_coord
-from ...astro.catalog import parse_source_list
-from ...error import NoSuchRecord, UserError
+from ...astro.coord import CoordSystem, format_coord
+from ...error import NoSuchRecord
 from ...view import auth
 from ...view.tool import BaseTargetTool
-from ...web.util import ErrorPage, HTTPNotFound, session, url_for
-from ...type.simple import Link, TargetObject
+from ...web.util import ErrorPage, HTTPNotFound
 from ...type.enum import AttachmentState, FileTypeInfo
 from ...type.util import null_tuple
-
-TargetCoord = namedtuple('TargetCoord', ('x', 'y', 'system'))
 
 TargetClash = namedtuple('TargetClash', ('target', 'mocs', 'target_search',
                                          'display_coord'))
@@ -83,112 +79,45 @@ class ClashTool(BaseTargetTool):
              {}),
         ]
 
-    def view_single(self, db, args, form):
-        """
-        View handler function for stand-alone usage of the clash tool.
-        """
-
-        target = TargetCoord('', '', CoordSystem.ICRS)
-        message = None
+    def _view_single(self, db, target_object, args):
         clashes = None
         non_clashes = None
 
         public = self._determine_public_constraint(db)
         moc_ready = self._check_mocs_exist_and_ready(db, public)
 
-        if form is not None:
-            target = target._replace(x=form['x'], y=form['y'],
-                                     system=int(form['system']))
-
-            try:
-                target_name = 'Input coordinates'
-                target_obj = TargetObject(
-                    target_name, target.system,
-                    parse_coord(target.system, target.x, target.y,
-                                target_name))
-
-                (clashes, non_clashes) = self._do_moc_search(
-                    db, [target_obj], public=public)
-
-            except UserError as e:
-                message = e.message
+        if target_object is not None:
+            (clashes, non_clashes) = self._do_moc_search(
+                db, [target_object], public=public)
 
         return {
-            'title': 'Clash Tool',
-            'show_input': True,
-            'show_input_upload': False,
-            'systems': CoordSystem.get_options(),
             'run_button': 'Search',
-            'target': target,
-            'message': message,
             'clashes': clashes,
             'non_clashes': non_clashes,
             'moc_ready': moc_ready,
-            'target_url': url_for('.tool_clash'),
             'target_moc_info': '.tool_clash_moc_info',
-            'target_upload': url_for('.tool_upload_clash'),
         }
 
-    def view_upload(self, db, args, form, file_):
-        """
-        View handler for stand-alone usage by file upload.
-        """
-
-        message = None
+    def _view_upload(self, db, target_objects, args):
         clashes = None
         non_clashes = None
 
         public = self._determine_public_constraint(db)
         moc_ready = self._check_mocs_exist_and_ready(db, public)
 
-        if form is not None:
-            try:
-                if file_:
-                    try:
-                        buff = file_.read(64 * 1024)
-                        if len(file_.read(1)):
-                            raise UserError('The uploaded file was too large.')
-                    finally:
-                        file_.close()
-                else:
-                    raise UserError('No target list file was received.')
-
-                # TODO: would be more efficient to update parse_source_list
-                # to be able to return a list directly: this converts to
-                # and from Astropy objects twice.
-                target_objects = parse_source_list(buff).to_object_list()
-
-                (clashes, non_clashes) = self._do_moc_search(
-                    db, target_objects, public=public)
-
-            except UserError as e:
-                message = e.message
+        if target_objects is not None:
+            (clashes, non_clashes) = self._do_moc_search(
+                db, target_objects, public=public)
 
         return {
-            'title': 'Clash Tool',
-            'show_input': True,
-            'show_input_upload': True,
             'run_button': 'Search',
-            'mime_types': ['text/plain', 'text/csv'],
-            'message': message,
             'clashes': clashes,
             'non_clashes': non_clashes,
             'moc_ready': moc_ready,
-            'target_url': url_for('.tool_upload_clash'),
             'target_moc_info': '.tool_clash_moc_info',
         }
 
-    def _view_proposal(self, db, proposal, targets, args):
-        target_objects = targets.to_object_list()
-
-        if not target_objects:
-            raise ErrorPage(
-                'The proposal does not appear to have any targets '
-                'with coordinates.',
-                links=[Link('Back to proposal', url_for(
-                    '.proposal_view', proposal_id=proposal.id,
-                    _anchor='targets'))])
-
+    def _view_proposal(self, db, proposal, target_objects, args):
         public = self._determine_public_constraint(db)
         moc_ready = self._check_mocs_exist_and_ready(db, public)
 
@@ -196,8 +125,6 @@ class ClashTool(BaseTargetTool):
             db, target_objects, public=public)
 
         return {
-            'title': 'Clash Tool',
-            'show_input': False,
             'clashes': clashes,
             'non_clashes': non_clashes,
             'moc_ready': moc_ready,
@@ -219,7 +146,6 @@ class ClashTool(BaseTargetTool):
             public = None
 
         return public
-
 
     def _check_mocs_exist_and_ready(self, db, public):
         """
