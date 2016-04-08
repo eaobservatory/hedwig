@@ -8,6 +8,7 @@ hedwig.facility.example.calculator_example
 ------------------------------------------
 
 .. automodule:: hedwig.facility.example.calculator_example
+    :special-members: __call__
 
 hedwig.facility.example.control
 -------------------------------

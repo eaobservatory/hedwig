@@ -559,3 +559,193 @@ to obtain the necessary information before calling
         :meth:`~hedwig.view.tool.BaseTargetTool.get_custom_routes`
         method is called to determine whether it has any additional
         routes which should be registered with the blueprint.
+
+Adding Calculators
+------------------
+
+A "calculator" is a class which can perform any kind of calculation
+relevant for the preparation of proposals.
+These are typically integration time calculators,
+used to estimate the time required for an observation,
+but in principle other types of calculators can be added.
+
+The calculator class is often just a type of "wrapper" which
+interfaces an existing Python package with the Hedwig calculation system.
+The existing package would already implement the required numerical
+routines but would not want to be contain Hedwig-specific functionality.
+Even if you are creating an entirely new calculator,
+you should consider structuring your calculator in this way
+because it will make it easy for you to use the separate
+calculation package from other code unrelated to Hedwig.
+
+Calculators have the following properties:
+
+* A proposal needs to record the exact input and ouput of the calculator
+  as it was at the time the proposal was prepared.
+  Therefore calculations, including their results,
+  are stored in the `calculation` database table.
+
+  The input and output values of each calculation are stored
+  as JSON-encoded dictionaries using a custom
+  database columm class :class:`~hedwig.db.type.JSONEncoded`.
+
+* A calculator can have several modes of operation.
+  The first defined mode is considerered to be the "default"
+  mode and will be the mode accessed by an URL which omits the mode code.
+  The calculator should be able to convert calculations between
+  its different modes.  For example if an integration time calculator has
+  "time" (as a function of sensitivity) and
+  "sensitivity" (as a function of time) modes,
+  it should be able to convert a "sensitivity" calculation
+  to a "time" calculation by taking the output sensitivity
+  and making it an input to the "time" calculation.
+
+* A calculator must have a (integer) version number
+  which will be saved in the `calculation` table with any
+  calculations attached to proposals.
+  It must support the following version-specific operations:
+
+  * Getting a list of input parameters for any version of the calculator.
+    This is necessary for proposals to know how to format the inputs
+    of calculations saved with a previous version.
+
+  * Converting a set of input parameters from any version into a
+    set of inputs usable with the current version.
+    This is used whenever someone tries to re-open a saved
+    calculation.
+
+  * Getting a list of output parameters for any version.
+    Again this is so that a calculation can be formatted for display
+    on a proposal.
+
+* The calculator should also be able to determine the version
+  of the underlying calculation code.
+  When the calculations are performed by a separate Python module,
+  this can be the version (string) of that module.
+
+When you are ready to start implementing a new calculator
+class for Hedwig, you can begin as follows:
+
+#.  Add a new module to your facility directory which implements
+    a class derived from the
+    :class:`hedwig.view.calculator.BaseCalculator` class.
+
+#.  Import your calculator class in your facility's `view` module
+    and add it to the tuple returned by your
+    :meth:`~hedwig.facility.generic.view.Generic.get_calculator_classes`
+    method.
+
+#.  Override the :meth:`~hedwig.view.calculator.BaseCalculator.get_code`
+    method so that it returns a short code name which will be unique
+    in all facilities which may use the calculator.
+
+    Also override :meth:`~hedwig.facility.example.calculator_example.ExampleCalculator.get_name`
+    to return the calculator's name for display purposes and define
+    an integer class `version` attribute.
+
+#.  Define the modes implemented by your calculator.
+    Each mode needs:
+
+    * An integer identifier.
+    * A short unique code name.
+    * A display name.
+
+    A calculator class will normally define "constant" variables
+    for the mode identifiers.
+    It must then define a class variable `modes` which is an
+    ordered dictionary mapping mode identifiers to
+    :class:`~hedwig.type.simple.CalculatorMode` tuples
+    containing the code and name.  For example:
+
+    .. code-block:: python
+
+        class AnotherExampleCalculator(BaseCalculator):
+            TIME = 1
+            SENSITIVITY = 2
+
+            modes = OrderedDict((
+                (TIME, CalculatorMode(
+                    'time',
+                    'Time for given sensitivity')),
+                (SENSITIVITY, CalculatorMode(
+                    'sensitivity',
+                    'Sensitivity for given time')),
+            ))
+
+            version = 1
+
+#.  Next you will need to define the inputs and outputs of your
+    calculator.  Each of these values is specified by a
+    :class:`~hedwig.type.simple.CalculatorValue` tuple.
+
+    The inputs and outputs are defined by implementing the methods
+    :meth:`~hedwig.facility.example.calculator_example.ExampleCalculator.get_inputs` and
+    :meth:`~hedwig.facility.example.calculator_example.ExampleCalculator.get_outputs`.
+    Both of these take the calculator mode and version as
+    arguments and return a list of values.
+
+#.  Completing the calculator class involves overriding several more
+    methods in order to implement your calculator's functionality.
+    Please take a look at the source code for the
+    :class:`~hedwig.view.calculator.BaseCalculator` and
+    :class:`~hedwig.facility.example.calculator_example.ExampleCalculator`
+    classes.
+
+    The main view handling method is
+    :meth:`hedwig.view.calculator.BaseCalculator.view`
+    and this is intended to be used for most calculators.
+    It calls other calculator methods which implement the
+    functionality which is expected to change for different calculators.
+    It is therefore recommended that you do not override the
+    :meth:`~hedwig.view.calculator.BaseCalculator.view`
+    method unless you are writing an unusual type of
+    calculator for which it is not appropriate.
+
+    Methods which you are likely to wish to customize include:
+
+    :meth:`~hedwig.facility.example.calculator_example.ExampleCalculator.get_calc_version`
+        This returns the version (string) of the underlying calculation
+        routine.  This is just used for information in order to allow
+        users to identify the version of a calculator which produced
+        a given result.
+
+        This should not be confused with the `version` attribute which
+        controls the version of the interface with Hedwig --- i.e.
+        the list of input and output values for a given mode and version.
+
+    :meth:`~hedwig.facility.example.calculator_example.ExampleCalculator.get_default_input`
+        This should return sensible default input parameters for any mode.
+
+    :meth:`~hedwig.facility.example.calculator_example.ExampleCalculator.convert_input_mode`
+        Adjusts the input parameters when changing mode.
+
+    :meth:`~hedwig.facility.example.calculator_example.ExampleCalculator.convert_input_version`
+        Converts the input parameters for any given version of the calculator
+        so that they will work with the current version.
+
+    :meth:`~hedwig.facility.example.calculator_example.ExampleCalculator.parse_input`
+        Parses values retrieved from the input form.
+
+        This is separate from the
+        :meth:`~hedwig.view.calculator.BaseCalculator.get_form_input`
+        method, which you may not need to override,
+        in order to improve handing of invalid input.
+
+    :meth:`~hedwig.facility.example.calculator_example.ExampleCalculator.__call__`
+        Performs the actual calcuation, returning a
+        :class:`~hedwig.type.simple.CalculatorResult` tuple.
+
+#.  Finally you will probably need to customize the HTML
+    template used for your calculator.
+    Your template should be named `tool_<tool code>.html` and
+    located in your facility's template directory.
+    Most calculator templates will extend the
+    `generic/calculator_base.html` template which contains a large number of
+    inheritance blocks for easy customization.
+
+    Here is the template for the example calculator which adds
+    sections to display additional information from the
+    `extra` component of the :class:`~hedwig.type.simple.CalculatorResult`.
+
+    .. literalinclude:: /../data/web/template/example/calculator_example.html
+        :language: html+jinja
