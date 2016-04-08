@@ -56,6 +56,14 @@ class ClashTool(BaseTargetTool):
 
         return 'Clash Tool'
 
+    def get_default_facility_code(self):
+        """
+        Get the code of the facility for which this target tool is
+        designed.
+        """
+
+        return 'generic'
+
     def get_custom_routes(self):
         return [
             ('generic/moc_view.html',

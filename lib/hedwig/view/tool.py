@@ -41,6 +41,20 @@ class BaseTargetTool(object):
 
         return NotImplementedError()
 
+    def get_default_facility_code(self):
+        """
+        Get the code of the facility for which this target tool is
+        designed.
+
+        Target tools need only override this method if the tool
+        is intended to be used with multiple facilities.
+
+        :return: `None` if the tool is not expected to be used with
+                 multiple facilities, or the facility code otherwise
+        """
+
+        return None
+
     def get_custom_routes(self):
         """
         Method used to find any custom routes required by this tool.
