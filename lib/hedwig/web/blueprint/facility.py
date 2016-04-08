@@ -763,25 +763,46 @@ def make_calculator_view(db, calculator, facility_code, calculator_code,
 def make_target_tool_views(db, tool, facility_code, tool_code):
     """
     Create view functions for a target tool.
+
+    A list of possible HTML templates to use for the target tool
+    is constructed as follows:
+
+    * `<facility code>/tool_<tool code>.html`
+
+      The template for the specific tool and current facility.
+
+    * `<tool facility code>/tool_<tool code>.html`
+
+      The template for the specific tall and its default facility.
+
+    * `generic/tool_base.html`
+
+      The base target tool template.
     """
 
-    @templated(('generic/tool_{}.html'.format(tool_code),
-                'generic/tool_base.html'))
+    templates = [(facility_code, tool_code)]
+
+    default_facility_code = tool.get_default_facility_code()
+    if ((default_facility_code is not None) and
+            (default_facility_code != facility_code)):
+        templates.append((default_facility_code, tool_code))
+
+    templates.append(('generic', 'base'))
+
+    @templated(['{}/tool_{}.html'.format(*x) for x in templates])
     def single_view_func():
         return tool.view_single(
             db, request.args,
             (request.form if request.method == 'POST' else None))
 
-    @templated(('generic/tool_{}.html'.format(tool_code),
-                'generic/tool_base.html'))
+    @templated(['{}/tool_{}.html'.format(*x) for x in templates])
     def upload_view_func():
         return tool.view_upload(
             db, request.args,
             (request.form if request.method == 'POST' else None),
             (request.files['file'] if request.method == 'POST' else None))
 
-    @templated(('generic/tool_{}.html'.format(tool_code),
-                'generic/tool_base.html'))
+    @templated(['{}/tool_{}.html'.format(*x) for x in templates])
     def proposal_view_func(proposal_id):
         return tool.view_proposal(
             db, proposal_id, request.args)
