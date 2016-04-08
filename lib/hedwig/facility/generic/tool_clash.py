@@ -79,26 +79,7 @@ class ClashTool(BaseTargetTool):
              {}),
         ]
 
-    def _view_single(self, db, target_object, args):
-        clashes = None
-        non_clashes = None
-
-        public = self._determine_public_constraint(db)
-        moc_ready = self._check_mocs_exist_and_ready(db, public)
-
-        if target_object is not None:
-            (clashes, non_clashes) = self._do_moc_search(
-                db, [target_object], public=public)
-
-        return {
-            'run_button': 'Search',
-            'clashes': clashes,
-            'non_clashes': non_clashes,
-            'moc_ready': moc_ready,
-            'target_moc_info': '.tool_clash_moc_info',
-        }
-
-    def _view_upload(self, db, target_objects, args):
+    def _view_any_mode(self, db, target_objects, args, form):
         clashes = None
         non_clashes = None
 
@@ -111,20 +92,6 @@ class ClashTool(BaseTargetTool):
 
         return {
             'run_button': 'Search',
-            'clashes': clashes,
-            'non_clashes': non_clashes,
-            'moc_ready': moc_ready,
-            'target_moc_info': '.tool_clash_moc_info',
-        }
-
-    def _view_proposal(self, db, proposal, target_objects, args):
-        public = self._determine_public_constraint(db)
-        moc_ready = self._check_mocs_exist_and_ready(db, public)
-
-        (clashes, non_clashes) = self._do_moc_search(
-            db, target_objects, public=public)
-
-        return {
             'clashes': clashes,
             'non_clashes': non_clashes,
             'moc_ready': moc_ready,

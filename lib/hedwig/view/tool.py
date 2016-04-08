@@ -110,9 +110,14 @@ class BaseTargetTool(object):
             'target_upload': url_for('.tool_upload_{}'.format(tool_code)),
         }
 
-        ctx.update(self._view_single(db, target_object, args))
+        ctx.update(self._view_single(db, target_object, args, form))
 
         return ctx
+
+    def _view_single(self, db, target_object, args, form):
+        return self._view_any_mode(
+            db, (None if target_object is None else [target_object]),
+            args, form)
 
     def view_upload(self, db, args, form, file_):
         """
@@ -154,9 +159,12 @@ class BaseTargetTool(object):
             'target_url': url_for('.tool_upload_{}'.format(tool_code)),
         }
 
-        ctx.update(self._view_upload(db, target_objects, args))
+        ctx.update(self._view_upload(db, target_objects, args, form))
 
         return ctx
+
+    def _view_upload(self, db, target_objects, args, form):
+        return self._view_any_mode(db, target_objects, args, form)
 
     def view_proposal(self, db, proposal_id, args):
         """
@@ -196,3 +204,9 @@ class BaseTargetTool(object):
         ctx.update(self._view_proposal(db, proposal, target_objects, args))
 
         return ctx
+
+    def _view_proposal(self, db, proposal, target_objects, args):
+        return self._view_any_mode(db, target_objects, args, None)
+
+    def _view_any_mode(self, db, target_objects, args, form):
+        return NotImplementedError()
