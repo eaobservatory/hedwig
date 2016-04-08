@@ -67,8 +67,8 @@ class BaseTargetTool(object):
         """
         Method used to find any custom routes required by this tool.
 
-        Returns a list of (template, rule, endpoint, view_func, options)
-        tuples.
+        :return: a list of (template, rule, endpoint, view_func, options)
+                 tuples
         """
 
         return []
@@ -76,6 +76,12 @@ class BaseTargetTool(object):
     def view_single(self, db, args, form):
         """
         View handler function for stand-alone usage of a target tool.
+
+        This is a generic implementation of the view for the target tool's
+        "single" mode.  It parses coordinates entered by the user
+        and calls the `_view_single` method with these coordinates, or
+        `None` if no coordinate was available --- e.g. when the form
+        is first displayed for input or in the case of a parsing error.
         """
 
         target = TargetCoord('', '', CoordSystem.ICRS)
@@ -115,6 +121,16 @@ class BaseTargetTool(object):
         return ctx
 
     def _view_single(self, db, target_object, args, form):
+        """
+        Prepare extra template context for target tool in "single" mode.
+
+        Target tool sub-classes should override this method if they need to
+        behave differently in different modes --- otherwise they need only
+        override `_view_any_mode`.
+
+        :return: template context dictionary
+        """
+
         return self._view_any_mode(
             db, (None if target_object is None else [target_object]),
             args, form)
@@ -122,6 +138,12 @@ class BaseTargetTool(object):
     def view_upload(self, db, args, form, file_):
         """
         View handler for stand-alone usage by file upload.
+
+        This is a generic implementation of the view for the target tool's
+        "upload" mode.  It parses the file uploaded by the user
+        and calls the `_view_upload` method with a list of coordinates, or
+        `None` if no coordinates were available --- e.g. when the form
+        is first displayed for input or in the case of a parsing error.
         """
 
         message = None
@@ -164,11 +186,32 @@ class BaseTargetTool(object):
         return ctx
 
     def _view_upload(self, db, target_objects, args, form):
+        """
+        Prepare extra template context for target tool in "upload" mode.
+
+        Target tool sub-classes should override this method if they need to
+        behave differently in different modes --- otherwise they need only
+        override `_view_any_mode`.
+
+        :return: template context dictionary
+        """
+
         return self._view_any_mode(db, target_objects, args, form)
 
     def view_proposal(self, db, proposal_id, args):
         """
         View handler function for proposal-based usage of a target tool.
+
+        This is a generic implementation of the view for the target tool's
+        "proposal" mode.  It retrieves target coordinates from the given
+        proposal and calls the `_view_proposal` method with this list.
+        Unlike other target tool modes, in this mode we (currently)
+        always perform the target analysis immediately on the HTTP GET request.
+        So there is normally no input form stage and `_view_proposal`
+        should not be called without a list of targets to process.
+
+        :raises ErrorPage: if the proposal did not have any targets with
+                           coordinates
         """
 
         try:
@@ -206,7 +249,35 @@ class BaseTargetTool(object):
         return ctx
 
     def _view_proposal(self, db, proposal, target_objects, args):
+        """
+        Prepare extra template context for target tool in "proposal" mode.
+
+        Target tool sub-classes should override this method if they need to
+        behave differently in different modes --- otherwise they need only
+        override `_view_any_mode`.
+
+        :return: template context dictionary
+        """
+
         return self._view_any_mode(db, target_objects, args, None)
 
     def _view_any_mode(self, db, target_objects, args, form):
+        """
+        Prepare extra template context for target tool in any mode.
+
+        Target tool sub-classes should override this method
+        to implement the analysis routine which the tool is
+        intended to perform.
+
+        If the tool needs to behave differently in different modes
+        it can override the specific mode protected methods instead.
+
+        :param db: database access object
+        :param target_object: list of TargetObject instances
+        :param args: HTTP arguments
+        :param form: HTTP form or `None` if not a POST request
+
+        :return: template context dictionary
+        """
+
         return NotImplementedError()

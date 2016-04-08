@@ -61,6 +61,10 @@ class ClashTool(BaseTargetTool):
         return 'generic'
 
     def get_custom_routes(self):
+        """
+        Get list of custom routes used by the clash tool.
+        """
+
         return [
             ('generic/moc_view.html',
              '/tool/clash/moc/<int:moc_id>',
@@ -80,6 +84,13 @@ class ClashTool(BaseTargetTool):
         ]
 
     def _view_any_mode(self, db, target_objects, args, form):
+        """
+        Prepare clash tool template context for all tool modes.
+
+        This performs a MOC search if the `target_objects`
+        list is not `None`.
+        """
+
         clashes = None
         non_clashes = None
 
@@ -116,8 +127,10 @@ class ClashTool(BaseTargetTool):
 
     def _check_mocs_exist_and_ready(self, db, public):
         """
-        Raise an ErrorPage if there are no MOCs available and return True
-        if all available MOCs are ready.
+        Check the status of coverage maps (MOCs) for this facility.
+
+        :return: True if all available MOCs are ready.
+        :raise ErrorPage: if there are no MOCs available
         """
 
         mocs = db.search_moc(facility_id=self.facility.id_, public=public)
@@ -127,6 +140,23 @@ class ClashTool(BaseTargetTool):
         return all(AttachmentState.is_ready(x.state) for x in mocs.values())
 
     def _do_moc_search(self, db, targets, public):
+        """
+        Search the coverage maps (MOCs) for the given list of targets.
+
+        Iterates over the list of targets and converts each to a
+        HEALPix cell at the facility's specified (maximum) MOC order.
+        Then searches the MOC cell database table to determine whether
+        the target clashes or not.
+
+        :param db: database access object
+        :param targets: list of targets
+        :param public: database MOC search "public" constraint as determined by
+                       :meth:`_determine_public_constraint`
+
+        :return: tuple of lists `(clashes, non_clashes)` where each
+                 entry is a `TargetClash` tuple
+        """
+
         order = self.facility.get_moc_order()
         clashes = []
         non_clashes = []
@@ -162,6 +192,10 @@ class ClashTool(BaseTargetTool):
         return (clashes, non_clashes)
 
     def view_moc_list(self, db, args, form):
+        """
+        View handler for MOC listing custom route.
+        """
+
         public = self._determine_public_constraint(db)
 
         mocs = db.search_moc(facility_id=self.facility.id_, public=public)
@@ -172,6 +206,10 @@ class ClashTool(BaseTargetTool):
         }
 
     def view_moc_info(self, db, args, form, moc_id):
+        """
+        View handler for MOC info custom route.
+        """
+
         public = self._determine_public_constraint(db)
 
         try:
@@ -187,6 +225,10 @@ class ClashTool(BaseTargetTool):
         }
 
     def view_moc_fits(self, db, args, form, moc_id):
+        """
+        View handler for MOC FITS download custom route.
+        """
+
         public = self._determine_public_constraint(db)
 
         try:
