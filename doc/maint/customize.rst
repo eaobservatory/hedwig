@@ -737,7 +737,7 @@ class for Hedwig, you can begin as follows:
 
 #.  Finally you will probably need to customize the HTML
     template used for your calculator.
-    Your template should be named `tool_<tool code>.html` and
+    Your template should be named `calculator_<calculator code>.html` and
     located in your facility's template directory.
     Most calculator templates will extend the
     `generic/calculator_base.html` template which contains a large number of
