@@ -749,3 +749,123 @@ class for Hedwig, you can begin as follows:
 
     .. literalinclude:: /../data/web/template/example/calculator_example.html
         :language: html+jinja
+
+Adding Target Tools
+-------------------
+
+A "target tool" is a class which can perform some kind of analysis
+of one or more observing target positions.
+One target tool --- the "Clash Tool"
+(implemented in the :class:`~hedwig.facility.generic.tool_clash.ClashTool`
+class) is integrated with Hedwig.
+It queries the coverage regions stored in the `moc`, `moc_cell`
+and `moc_fits` database tables and managed through the
+facility administrative interface.
+Properties of target tools are:
+
+* We are generally only interested in the current analysis of the
+  target positions from the most recent version of the tool
+  and its associated data.
+  Therefore tool results are currently not stored in the database.
+  If it ever becomes necessary for a proposal author to refer to exact
+  results from a target tool, or if a target tool becomes
+  computationally expensive to run, then we will need to add
+  database structures to allow target tool results to be saved.
+
+* Target tools can be run on a single target specified by the user,
+  or applied to a list of targets retrieved from a proposal
+  or uploaded by a user.
+  These comprise the three operational modes of a target tool:
+  "single", "proposal" and "upload".
+
+* In general target tools are simpler than calculators as they
+  do not deal with storing results and tracking version information.
+  However it is not anticipated that their output will fit into a
+  common structure --- each tool will likely need a
+  completely different HTML template, at least for the output block.
+
+If you would like to implement a new target tool for use with
+Hedwig, you can get started as follows:
+
+#.  Add a new module to your facility directory which implements
+    a class derived from the
+    :class:`hedwig.view.tool.BaseTargetTool` class.
+    If your new target tool is intended to be more generally
+    useful, you might wish to consider adding it to Hedwig's
+    generic facility instead.
+
+#.  Import your target tool class in your facility's `view` module
+    and add it to the tuple returned by your
+    :meth:`~hedwig.facility.generic.view.Generic.get_target_tool_classes`
+    method.
+
+#.  Override the :meth:`~hedwig.view.tool.BaseTargetTool.get_code`
+    method so that it returns a short code name which will be unique
+    in all facilities which may use the target tool.
+
+    Also override :meth:`~hedwig.view.tool.BaseTargetTool.get_name`
+    to provide the name of the target tool and
+    :meth:`~hedwig.view.tool.BaseTargetTool.get_default_facility_code`
+    if you intend it to be used by multiple facilities.
+
+#.  Provide an implementation of the main target analysis method
+    :meth:`~hedwig.view.tool.BaseTargetTool._view_any_mode`.
+    By default this will be called with a list of target objects
+    for all of the target tool's modes (single target, uploaded list
+    and proposal-based).
+
+    If you need to implement different behavior in different modes,
+    you can instead override the
+    :meth:`~hedwig.view.tool.BaseTargetTool._view_single`,
+    :meth:`~hedwig.view.tool.BaseTargetTool._view_upload` and
+    :meth:`~hedwig.view.tool.BaseTargetTool._view_proposal`
+    methods directly.
+
+    Any of these view methods returns a dictionary which is
+    used to update the template context.
+    You can add any output from your target tool,
+    any additional information you wish to display on the
+    target tool's web pages
+    and override existing entries such as the
+    `message` indicating errors with the user input and the
+    `run_button` text used for the form's submit button.
+
+#.  Take a look at the source code of the
+    :class:`~hedwig.view.tool.BaseTargetTool` and
+    :class:`~hedwig.facility.generic.tool_clash.ClashTool`
+    (as an example)
+    classes in case there are any other methods you would
+    like to override.
+
+#.  You will need to provide an HTML template to display your
+    target tool's output.  This should be named
+    `tool_<tool code>.html` and be located in the facility's
+    template directory.
+    The template should almost always inherit from the
+    `generic/tool_base.html` template which provides the
+    input form for single targets and target list uploads.
+
+    Here is a simple example target tool HTML template.
+    Note that we check whether we have output to display --- the
+    base template calls this block in either case, because
+    there may be fixed information we wish to show.
+    Here we check if some output, assumed to be stored in the
+    template context value `tool_output`, is `None`.
+    The view function would need to ensure that it sets
+    this value to `None` if called without a list of target
+    objects to analyze.
+
+    .. code-block:: html+jinja
+
+        {% extends 'generic/tool_base.html' %}
+
+        {% block tool_output %}
+            {% if tool_output is not none %}
+                <p>Target tool output here...</p>
+            {% endif %}
+        {% endblock %}
+
+#.  If necessary for your target tool, you can add custom routes
+    by overriding the
+    :meth:`~hedwig.view.tool.BaseTargetTool.get_custom_routes`
+    method and writing the appropriate view functions and HTML templates.
