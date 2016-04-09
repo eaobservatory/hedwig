@@ -24,7 +24,7 @@ from sqlalchemy.schema import Column, ForeignKey, \
 
 from sqlalchemy.types import Float, Integer
 
-from ...db.meta import metadata, _table_opts
+from ...db.meta import metadata, table_opts
 
 
 example_request = Table(
@@ -39,4 +39,4 @@ example_request = Table(
     Column('instrument', Integer, nullable=False),
     Column('time', Float, nullable=False),
     UniqueConstraint('proposal_id', 'instrument'),
-    **_table_opts)
+    **table_opts)

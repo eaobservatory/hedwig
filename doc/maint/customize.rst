@@ -93,7 +93,7 @@ before proceeding.
     This file should declare any database tables which your facility needs.
 
     You should import the SQLAlchemy `Metadata` container `metadata`
-    and table options `_table_opts` from the
+    and table options `table_opts` from the
     :mod:`hedwig.db.meta` module and use them in each table defined.
 
     In the example below we declare one new database table, `example_request`.
@@ -107,7 +107,7 @@ before proceeding.
     * A foreign key referencing the `proposal` table.
     * A unique constraint to prevent the insertion of multiple rows
       for the same proposal and instrument.
-    * Additional options provided by the `_table_opts` value
+    * Additional options provided by the `table_opts` value
       from :mod:`hedwig.db.meta`.
 
     .. literalinclude:: /../lib/hedwig/facility/example/meta.py

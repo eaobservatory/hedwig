@@ -24,7 +24,7 @@ from sqlalchemy.schema import Column, ForeignKey, Index, MetaData, Table, \
 from sqlalchemy.types import Boolean, DateTime, Float, Integer, \
     String, Unicode, UnicodeText
 
-from ...db.meta import metadata, _table_opts
+from ...db.meta import metadata, table_opts
 
 
 jcmt_allocation = Table(
@@ -38,7 +38,7 @@ jcmt_allocation = Table(
     Column('weather', Integer, nullable=False),
     Column('time', Float, nullable=False),
     UniqueConstraint('proposal_id', 'instrument', 'weather'),
-    **_table_opts)
+    **table_opts)
 
 jcmt_available = Table(
     'jcmt_available',
@@ -50,7 +50,7 @@ jcmt_available = Table(
     Column('weather', Integer, nullable=False),
     Column('time', Float, nullable=False),
     UniqueConstraint('call_id', 'weather'),
-    **_table_opts)
+    **table_opts)
 
 jcmt_options = Table(
     'jcmt_options',
@@ -62,7 +62,7 @@ jcmt_options = Table(
     Column('daytime', Boolean, nullable=False),
     Column('time_specific', Boolean, nullable=False),
     Column('polarimetry', Boolean, nullable=False),
-    **_table_opts)
+    **table_opts)
 
 jcmt_request = Table(
     'jcmt_request',
@@ -75,4 +75,4 @@ jcmt_request = Table(
     Column('weather', Integer, nullable=False),
     Column('time', Float, nullable=False),
     UniqueConstraint('proposal_id', 'instrument', 'weather'),
-    **_table_opts)
+    **table_opts)

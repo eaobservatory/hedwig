@@ -28,7 +28,7 @@ from .type import JSONEncoded
 
 metadata = MetaData()
 
-_table_opts = {
+table_opts = {
     'mysql_engine': 'InnoDB',
     'mysql_charset': 'utf8',
     'sqlite_autoincrement': True,
@@ -46,7 +46,7 @@ affiliation = Table(
     Column('type', Integer, nullable=False,
            doc='Type of affiliation (facility-specific meaning).'),
     UniqueConstraint('queue_id', 'name'),
-    **_table_opts)
+    **table_opts)
 
 affiliation_weight = Table(
     'affiliation_weight',
@@ -63,7 +63,7 @@ affiliation_weight = Table(
            doc='Weighting factor for assignment calculations, if necessary. '
            'The actual calculation will be facility-specific.'),
     UniqueConstraint('affiliation_id', 'call_id'),
-    **_table_opts)
+    **table_opts)
 
 auth_failure = Table(
     'auth_failure',
@@ -71,7 +71,7 @@ auth_failure = Table(
     Column('user_name', Unicode(255), primary_key=True, nullable=False),
     Column('attempts', Integer, nullable=False),
     Column('expiry', DateTime(), nullable=False, index=True),
-    **_table_opts)
+    **table_opts)
 
 calculator = Table(
     'calculator',
@@ -82,7 +82,7 @@ calculator = Table(
            nullable=False),
     Column('code', Unicode(31), nullable=False),
     UniqueConstraint('code', 'facility_id'),
-    **_table_opts)
+    **table_opts)
 
 calculation = Table(
     'calculation',
@@ -103,7 +103,7 @@ calculation = Table(
     Column('date_run', DateTime(), nullable=False),
     Column('calc_version', Unicode(31), nullable=False),
     Column('title', Unicode(255), nullable=False),
-    **_table_opts)
+    **table_opts)
 
 call = Table(
     'call',
@@ -131,7 +131,7 @@ call = Table(
     Column('prev_prop_note', UnicodeText, nullable=False),
     Column('note_format', Integer, nullable=False),
     UniqueConstraint('semester_id', 'queue_id'),
-    **_table_opts)
+    **table_opts)
 
 category = Table(
     'category',
@@ -143,7 +143,7 @@ category = Table(
     Column('name', Unicode(255), nullable=False),
     Column('hidden', Boolean, default=False, nullable=False),
     UniqueConstraint('facility_id', 'name'),
-    **_table_opts)
+    **table_opts)
 
 decision = Table(
     'decision',
@@ -163,7 +163,7 @@ decision = Table(
                'sent to the proposal members to inform them of the decision.'),
     Column('note', UnicodeText, nullable=False),
     Column('note_format', Integer, nullable=False),
-    **_table_opts)
+    **table_opts)
 
 email = Table(
     'email',
@@ -177,14 +177,14 @@ email = Table(
     Column('verified', Boolean, default=False, nullable=False),
     Column('public', Boolean, default=False, nullable=False),
     UniqueConstraint('person_id', 'address'),
-    **_table_opts)
+    **table_opts)
 
 facility = Table(
     'facility',
     metadata,
     Column('id', Integer, primary_key=True),
     Column('code', Unicode(31), nullable=False, unique=True),
-    **_table_opts)
+    **table_opts)
 
 group_member = Table(
     'group_member',
@@ -198,7 +198,7 @@ group_member = Table(
            ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
     UniqueConstraint('queue_id', 'group_type', 'person_id'),
-    **_table_opts)
+    **table_opts)
 
 institution = Table(
     'institution',
@@ -209,7 +209,7 @@ institution = Table(
     Column('organization', Unicode(255), nullable=False),
     Column('address', UnicodeText, nullable=False),
     Column('country', Unicode(2), nullable=False),
-    **_table_opts)
+    **table_opts)
 
 institution_log = Table(
     'institution_log',
@@ -229,7 +229,7 @@ institution_log = Table(
     Column('prev_address', UnicodeText, nullable=False),
     Column('prev_country', Unicode(2), nullable=False),
     Column('approved', Boolean, default=False, nullable=False),
-    **_table_opts)
+    **table_opts)
 
 invitation = Table(
     'invitation',
@@ -239,7 +239,7 @@ invitation = Table(
            ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            unique=True, nullable=False),
     Column('expiry', DateTime(), nullable=False, index=True),
-    **_table_opts)
+    **table_opts)
 
 member = Table(
     'member',
@@ -265,7 +265,7 @@ member = Table(
                       ondelete='RESTRICT'),
            nullable=True),
     UniqueConstraint('proposal_id', 'person_id'),
-    **_table_opts)
+    **table_opts)
 
 message = Table(
     'message',
@@ -277,7 +277,7 @@ message = Table(
     Column('timestamp_send', DateTime(), default=None, index=True),
     Column('timestamp_sent', DateTime(), default=None),
     Column('identifier', Unicode(255), default=None),
-    **_table_opts)
+    **table_opts)
 
 message_recipient = Table(
     'message_recipient',
@@ -291,7 +291,7 @@ message_recipient = Table(
     Column('email_address', Unicode(255), nullable=True),
     PrimaryKeyConstraint('message_id', 'person_id',
                          name='message_recipient_pk'),
-    **_table_opts)
+    **table_opts)
 
 moc = Table(
     'moc',
@@ -309,7 +309,7 @@ moc = Table(
     Column('area', Float(precision=53, asdecimal=False), nullable=True),
     Column('state', Integer, nullable=False, index=True),
     UniqueConstraint('facility_id', 'name'),
-    **_table_opts)
+    **table_opts)
 
 moc_cell = Table(
     'moc_cell',
@@ -320,7 +320,7 @@ moc_cell = Table(
     Column('order', Integer, nullable=False),
     Column('cell', Integer, nullable=False),
     Index('idx_moc_cell', 'moc_id', 'order', 'cell', unique=True),
-    **_table_opts)
+    **table_opts)
 
 moc_fits = Table(
     'moc_fits',
@@ -329,7 +329,7 @@ moc_fits = Table(
            ForeignKey('moc.id', onupdate='RESTRICT', ondelete='CASCADE'),
            primary_key=True, nullable=False),
     Column('fits', LargeBinary(2**32 - 1), nullable=False),
-    **_table_opts)
+    **table_opts)
 
 person = Table(
     'person',
@@ -344,7 +344,7 @@ person = Table(
            ForeignKey('institution.id', onupdate='RESTRICT',
                       ondelete='RESTRICT')),
     Column('admin', Boolean, default=False, nullable=False),
-    **_table_opts)
+    **table_opts)
 
 prev_proposal = Table(
     'prev_proposal',
@@ -358,7 +358,7 @@ prev_proposal = Table(
            nullable=True),
     Column('proposal_code', Unicode(255), nullable=False),
     Column('continuation', Boolean, nullable=False),
-    **_table_opts)
+    **table_opts)
 
 prev_proposal_pub = Table(
     'prev_proposal_pub',
@@ -375,7 +375,7 @@ prev_proposal_pub = Table(
     Column('author', Unicode(255), nullable=True),
     Column('year', Unicode(31), nullable=True),
     Column('edited', DateTime(), nullable=False),
-    **_table_opts)
+    **table_opts)
 
 proposal = Table(
     'proposal',
@@ -388,7 +388,7 @@ proposal = Table(
     Column('state', Integer, nullable=False),
     Column('title', Unicode(255), nullable=False),
     UniqueConstraint('call_id', 'number'),
-    **_table_opts)
+    **table_opts)
 
 proposal_category = Table(
     'proposal_category',
@@ -400,7 +400,7 @@ proposal_category = Table(
     Column('category_id', None,
            ForeignKey('category.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
-    **_table_opts)
+    **table_opts)
 
 proposal_text = Table(
     'proposal_text',
@@ -418,7 +418,7 @@ proposal_text = Table(
            ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
     Index('idx_text_prop_role', 'proposal_id', 'role', unique=True),
-    **_table_opts)
+    **table_opts)
 
 proposal_fig = Table(
     'proposal_fig',
@@ -439,7 +439,7 @@ proposal_fig = Table(
            ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
     Column('caption', UnicodeText, nullable=False),
-    **_table_opts)
+    **table_opts)
 
 proposal_fig_preview = Table(
     'proposal_fig_preview',
@@ -449,7 +449,7 @@ proposal_fig_preview = Table(
                       onupdate='RESTRICT', ondelete='CASCADE'),
            primary_key=True, nullable=False),
     Column('preview', LargeBinary(2**24 - 1), nullable=False),
-    **_table_opts)
+    **table_opts)
 
 proposal_fig_thumbnail = Table(
     'proposal_fig_thumbnail',
@@ -459,7 +459,7 @@ proposal_fig_thumbnail = Table(
                       onupdate='RESTRICT', ondelete='CASCADE'),
            primary_key=True, nullable=False),
     Column('thumbnail', LargeBinary(2**24 - 1), nullable=False),
-    **_table_opts)
+    **table_opts)
 
 proposal_pdf = Table(
     'proposal_pdf',
@@ -479,7 +479,7 @@ proposal_pdf = Table(
            ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
     Index('idx_pdf_prop_role', 'proposal_id', 'role', unique=True),
-    **_table_opts)
+    **table_opts)
 
 proposal_pdf_preview = Table(
     'proposal_pdf_preview',
@@ -492,7 +492,7 @@ proposal_pdf_preview = Table(
     Column('page', Integer, nullable=False),
     Column('preview', LargeBinary(2**24 - 1), nullable=False),
     Index('idx_pdf_id_page', 'pdf_id', 'page', unique=True),
-    **_table_opts)
+    **table_opts)
 
 queue = Table(
     'queue',
@@ -507,7 +507,7 @@ queue = Table(
     Column('description_format', Integer, nullable=False),
     UniqueConstraint('facility_id', 'name'),
     UniqueConstraint('facility_id', 'code'),
-    **_table_opts)
+    **table_opts)
 
 reset_token = Table(
     'reset_token',
@@ -517,7 +517,7 @@ reset_token = Table(
            ForeignKey('user.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            unique=True, nullable=False),
     Column('expiry', DateTime(), nullable=False, index=True),
-    **_table_opts)
+    **table_opts)
 
 review = Table(
     'review',
@@ -534,7 +534,7 @@ review = Table(
     Column('note', UnicodeText, nullable=True),
     Column('note_format', Integer, nullable=True),
     Column('note_public', Boolean, nullable=False),
-    **_table_opts)
+    **table_opts)
 
 reviewer = Table(
     'reviewer',
@@ -548,7 +548,7 @@ reviewer = Table(
            nullable=False),
     Column('role', Integer, nullable=False),
     UniqueConstraint('proposal_id', 'person_id', 'role'),
-    **_table_opts)
+    **table_opts)
 
 semester = Table(
     'semester',
@@ -565,7 +565,7 @@ semester = Table(
     Column('description_format', Integer, nullable=False),
     UniqueConstraint('facility_id', 'name'),
     UniqueConstraint('facility_id', 'code'),
-    **_table_opts)
+    **table_opts)
 
 target = Table(
     'target',
@@ -581,7 +581,7 @@ target = Table(
     Column('y', Float(precision=53, asdecimal=False), nullable=True),
     Column('time', Float(precision=53, asdecimal=False), nullable=True),
     Column('priority', Integer, nullable=True),
-    **_table_opts)
+    **table_opts)
 
 user = Table(
     'user',
@@ -590,7 +590,7 @@ user = Table(
     Column('name', Unicode(255), unique=True, nullable=False),
     Column('password', String(255)),
     Column('salt', String(255)),
-    **_table_opts)
+    **table_opts)
 
 user_log = Table(
     'user_log',
@@ -602,7 +602,7 @@ user_log = Table(
     Column('date', DateTime(), nullable=False),
     Column('event', Integer, nullable=False),
     Column('remote_addr', String(50), nullable=True),
-    **_table_opts)
+    **table_opts)
 
 verify_token = Table(
     'verify_token',
@@ -614,4 +614,4 @@ verify_token = Table(
     Column('email_address', Unicode(255), nullable=False),
     Column('expiry', DateTime(), nullable=False, index=True),
     UniqueConstraint('person_id', 'email_address'),
-    **_table_opts)
+    **table_opts)
