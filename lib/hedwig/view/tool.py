@@ -49,6 +49,13 @@ class BaseTargetTool(object):
 
         return NotImplementedError()
 
+    def get_name(self):
+        """
+        Get the target tool's name.
+        """
+
+        return NotImplementedError()
+
     def get_default_facility_code(self):
         """
         Get the code of the facility for which this target tool is
