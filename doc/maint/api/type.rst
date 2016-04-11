@@ -20,6 +20,11 @@ hedwig.type.enum
 .. automodule:: hedwig.type.enum
     :no-private-members:
 
+hedwig.type.misc
+----------------
+
+.. automodule:: hedwig.type.misc
+
 hedwig.type.simple
 ------------------
 
