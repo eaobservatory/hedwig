@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -25,6 +25,7 @@ import time
 from jcmt_itc_scuba2 import SCUBA2ITC, SCUBA2ITCError
 
 from ...error import CalculatorError, UserError
+from ...type.misc import SectionedList
 from ...type.simple import CalculatorMode, CalculatorResult, CalculatorValue
 from ...view.util import parse_time
 from .calculator_jcmt import JCMTCalculator
@@ -83,8 +84,10 @@ class SCUBA2Calculator(JCMTCalculator):
         if version is None:
             version = self.version
 
+        inputs = SectionedList()
+
         if version == 1:
-            common_inputs = [
+            inputs.extend([
                 CalculatorValue(
                     'pos',    'Source position', 'Pos.', '{:.1f}', '\u00b0'),
                 CalculatorValue(
@@ -93,7 +96,9 @@ class SCUBA2Calculator(JCMTCalculator):
                 CalculatorValue(
                     'tau',    '225 GHz opacity',
                     '\u03c4\u2082\u2082\u2085', '{}', None),
+            ], section='src', section_name='Source and Conditions')
 
+            inputs.extend([
                 CalculatorValue(
                     'map',    'Map type', 'Map', '{}', None),
                 CalculatorValue(
@@ -105,33 +110,37 @@ class SCUBA2Calculator(JCMTCalculator):
                 CalculatorValue(
                     'pix450', '450 \u00b5m pixel size',
                     'Pixel\u2084\u2085\u2080', '{}', '"'),
-            ]
+            ], section='obs', section_name='Observation')
         else:
             raise CalculatorError('Unknown version.')
 
+        inputs.add_section('req', 'Requirement')
+
         if mode == self.CALC_TIME:
             if version == 1:
-                return common_inputs + [
+                inputs.extend([
                     CalculatorValue(
                         'wl',  'Wavelength', '\u03bb', '{}', '\u00b5m'),
                     CalculatorValue(
                         'rms', 'Target sensitivity', '\u03c3',
                         '{:.3f}', 'mJy/beam'),
-                ]
+                ], section='req')
             else:
                 raise CalculatorError('Unknown version.')
 
         elif mode == self.CALC_RMS:
             if version == 1:
-                return common_inputs + [
+                inputs.extend([
                     CalculatorValue(
                         'time', 'Observing time', 'Time', '{:.3f}', 'hours'),
-                ]
+                ], section='req')
             else:
                 raise CalculatorError('Unknown version.')
 
         else:
             raise CalculatorError('Unknown mode.')
+
+        return inputs
 
     def get_default_input(self, mode):
         """
@@ -294,12 +303,6 @@ class SCUBA2Calculator(JCMTCalculator):
             'default': {
                 'pix850': self.default_pix850,
                 'pix450': self.default_pix450,
-            },
-            'input_separators': {
-                'pos': 'Source and Conditions',
-                'map': 'Observation',
-                'wl': 'Requirement',
-                'time': 'Requirement',
             },
             'position_types': self.position_type,
         }

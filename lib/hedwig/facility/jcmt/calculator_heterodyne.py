@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -25,6 +25,7 @@ from jcmt_itc_heterodyne import HeterodyneITC, HeterodyneITCError
 from jcmt_itc_heterodyne.receiver import HeterodyneReceiver, ReceiverInfo
 
 from ...error import CalculatorError, UserError
+from ...type.misc import SectionedList
 from ...type.simple import CalculatorMode, CalculatorResult, CalculatorValue
 from ...view.util import parse_time
 from .calculator_jcmt import JCMTCalculator
@@ -125,8 +126,10 @@ class HeterodyneCalculator(JCMTCalculator):
         if version is None:
             version = self.version
 
+        inputs = SectionedList()
+
         if version == 1:
-            common_inputs = [
+            inputs.extend([
                 CalculatorValue('rx', 'Receiver', 'Receiver', '{}', None),
                 CalculatorValue('freq', 'Frequency',
                                 '\u03bd', '{:.3f}', 'GHz'),
@@ -140,14 +143,18 @@ class HeterodyneCalculator(JCMTCalculator):
                                 'DP', '{}', None),
                 CalculatorValue('cont', 'Continuum mode',
                                 'CM', '{}', None),
+            ], section='rx', section_name='Receiver')
 
+            inputs.extend([
                 CalculatorValue('pos', 'Source position',
                                 'Pos.', '{:.1f}', '\u00b0'),
                 CalculatorValue('pos_type', 'Source position type',
                                 'Pos. type', '{}', None),
                 CalculatorValue('tau', '225 GHz opacity',
                                 '\u03c4\u2082\u2082\u2085', '{:.3f}', None),
+            ], section='src', section_name='Source and Conditions')
 
+            inputs.extend([
                 CalculatorValue('mm', 'Mapping mode', 'Mode', '{}', None),
                 CalculatorValue('sw', 'Switching mode', 'Switch', '{}', None),
                 CalculatorValue('n_pt', 'Number of points',
@@ -165,40 +172,44 @@ class HeterodyneCalculator(JCMTCalculator):
                                 'dy', '{}', '"'),
                 CalculatorValue('basket', 'Basket weave',
                                 'BW', '{}', None),
-            ]
+            ], section='obs', section_name='Observation')
 
         else:
             raise CalculatorError('Unknown version.')
 
+        inputs.add_section('req', 'Requirement')
+
         if mode == self.CALC_TIME:
             if version == 1:
-                return common_inputs + [
+                inputs.extend([
                     CalculatorValue('rms', 'Target sensitivity',
                                     '\u03c3', '{:.3f}', 'K TA*'),
-                ]
+                ], section='req')
             else:
                 raise CalculatorError('Unknown version.')
 
         elif mode == self.CALC_RMS_FROM_ELAPSED_TIME:
             if version == 1:
-                return common_inputs + [
+                inputs.extend([
                     CalculatorValue('elapsed', 'Elapsed time',
                                     'Elapsed', '{:.3f}', 'hours'),
-                ]
+                ], section='req')
             else:
                 raise CalculatorError('Unknown version.')
 
         elif mode == self.CALC_RMS_FROM_INT_TIME:
             if version == 1:
-                return common_inputs + [
+                inputs.extend([
                     CalculatorValue('int_time', 'Integration time',
                                     'Int. time', '{:.3f}', 'seconds'),
-                ]
+                ], section='req')
             else:
                 raise CalculatorError('Unknown version.')
 
         else:
             raise CalculatorError('Unknown mode.')
+
+        return inputs
 
     def get_default_input(self, mode):
         """
@@ -465,14 +476,6 @@ class HeterodyneCalculator(JCMTCalculator):
             'switch_modes': self.switch_modes,
             'jiggle_patterns': self.itc.get_jiggle_patterns(),
             'acsis_modes': self.acsis_modes,
-            'input_separators': {
-                'rx': 'Receiver',
-                'pos': 'Source and Conditions',
-                'mm': 'Observation',
-                'rms': 'Requirement',
-                'elapsed': 'Requirement',
-                'int_time': 'Requirement',
-            },
             'int_time_minimum': self.itc.int_time_minimum,
             'position_types': self.position_type,
         }
