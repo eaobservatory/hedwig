@@ -3,256 +3,249 @@
 {% set help_link = url_for('help.user_page', page_name='calculation_jcmt_het') %}
 {% set help_link_text = 'Help on this calculator' %}
 
-{% block calculator_input_list %}
-    {% for (section_key, section_label, section_items) in inputs.by_section() %}
-        {% if section_label is not none %}
-            <li class="separator">{{ section_label }}</li>
+{% block calculator_input_item %}
+    {% if value.code not in ('dim_y', 'dy', 'res_unit', 'pos_type') %}
+        {% if value.code == 'dim_x' %}
+            <li>&nbsp;</li>
         {% endif %}
-        {% for value in section_items %}{% if value.code not in ('dim_y', 'dy', 'res_unit', 'pos_type') %}
-            {% if value.code == 'dim_x' %}
-                <li>&nbsp;</li>
+        <li>
+            {% if value.code not in ('dim_x', 'dx') %}
+                <label for="a">{{ value.name }}</label>
             {% endif %}
-            {% with input = input_values[value.code] %}
-                <li>
-                    {% if value.code not in ('dim_x', 'dx') %}
-                        <label for="a">{{ value.name }}</label>
-                    {% endif %}
-                    {% if value.code == 'rx' %}
-                        <select name="{{ value.code }}">
-                            {% for receiver_info in receivers %}
-                                <option value="{{ receiver_info.name }}" {{ 'selected="selected"' | safe if receiver_info.name == input }}
-                                    data-f_min="{{ receiver_info.f_min }}"
-                                    data-f_max="{{ receiver_info.f_max }}"
-                                    data-ssb_available="{{ 'true' if receiver_info.ssb_available else 'false' }}"
-                                    data-dsb_available="{{ 'true' if receiver_info.dsb_available else 'false' }}"
-                                    data-dual_pol_available="{{ 'true' if receiver_info.n_mix > 1 else 'false' }}"
-                                    data-pixel_size="{{ receiver_info.pixel_size }}"
-                                    data-is_array="{{ 'false' if receiver_info.array is none else 'true' }}"
-                                >{{ receiver_info.name }}</option>
+            {% if value.code == 'rx' %}
+                <select name="{{ value.code }}">
+                    {% for receiver_info in receivers %}
+                        <option value="{{ receiver_info.name }}" {{ 'selected="selected"' | safe if receiver_info.name == input }}
+                            data-f_min="{{ receiver_info.f_min }}"
+                            data-f_max="{{ receiver_info.f_max }}"
+                            data-ssb_available="{{ 'true' if receiver_info.ssb_available else 'false' }}"
+                            data-dsb_available="{{ 'true' if receiver_info.dsb_available else 'false' }}"
+                            data-dual_pol_available="{{ 'true' if receiver_info.n_mix > 1 else 'false' }}"
+                            data-pixel_size="{{ receiver_info.pixel_size }}"
+                            data-is_array="{{ 'false' if receiver_info.array is none else 'true' }}"
+                        >{{ receiver_info.name }}</option>
+                    {% endfor %}
+                </select>
+            {% elif value.code == 'mm' %}
+                <select name="{{ value.code }}">
+                    {% for (mode_code, map_mode) in map_modes.items() %}
+                        <option value="{{ mode_code }}" {{ 'selected="selected"' | safe if mode_code == input }}
+                            {% for sw_code in switch_modes.keys() %}
+                                data-{{ sw_code }}_allowed="{{ 'true' if sw_code in map_mode.sw_modes else 'false' }}"
                             {% endfor %}
-                        </select>
-                    {% elif value.code == 'mm' %}
-                        <select name="{{ value.code }}">
-                            {% for (mode_code, map_mode) in map_modes.items() %}
-                                <option value="{{ mode_code }}" {{ 'selected="selected"' | safe if mode_code == input }}
-                                    {% for sw_code in switch_modes.keys() %}
-                                        data-{{ sw_code }}_allowed="{{ 'true' if sw_code in map_mode.sw_modes else 'false' }}"
-                                    {% endfor %}
-                                >{{ map_mode.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <div class="formtip">
-                            <div>
-                                <p>
-                                    <b>Grid:</b>
-                                    the telescope moves to one or more individual points.
-                                    <br />
-                                    <b>Jiggle:</b>
-                                    the secondary mirror of the telescope moves in a pre-defined pattern.
-                                    <br />
-                                    <b>Raster:</b>
-                                    data are recorded while the telescope scans an area.
-                                </p>
-                                <p>
-                                    <a href="http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/observing-modes/" target="_blank">Heterodyne observing modes</a>
-                                </p>
-                            </div>
-                        </div>
-                    {% elif value.code == 'sw' %}
-                        {% for (mode_code, switch_mode) in switch_modes.items() %}
-                            <input type="radio" name="{{ value.code }}" value="{{ mode_code }}" {{ 'checked="checked"' | safe if mode_code == input }} /><span class="checkboxlabel">{{ switch_mode.name }}</span>
-                        {% endfor %}
-                        <div class="formtip">
-                            <div>
-                                <p>
-                                    <b>Beam:</b>
-                                    the secondary mirror of the telescope &ldquo;chops&rdquo;
-                                    a short distance (&leq; 180 arc-seconds) to either side.
-                                    <br />
-                                    <b>Position:</b>
-                                    the whole telescope moves between the source and offset position.
-                                    <br />
-                                    <b>Frequency:</b>
-                                    the observing frequency alternates during the observation.
-                                    <i>(Not currently available in this calculator.)</i>
-                                </p>
-                                <p>
-                                    <a href="http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/observing-modes/" target="_blank">Heterodyne observing modes</a>
-                                </p>
-                            </div>
-                        </div>
-                    {% elif value.code == 'freq' %}
-                        <input type="number" name="{{ value.code }}" value="{{ input }}" step="any" />
-                    {% elif value.code == 'res' %}
-                        <select name="acsis_mode">
-                            {% for (acsis_mode_num, acsis_mode_info) in acsis_modes.items() %}
-                                <option value="{{ acsis_mode_num }}" {{ 'selected="selected"' | safe if acsis_mode_num == input_values.acsis_mode }} data-resolution="{{ acsis_mode_info.freq_res }}" data-array_only="{{ 'true' if acsis_mode_info.array_only else 'false' }}">
-                                    {{ acsis_mode_info.name }} mode
-                                </option>
-                            {% endfor %}
-                            <option value="other" {{ 'selected="selected"' | safe if input_values.acsis_mode is none }} data-array_only="false">Other</option>
-                        </select>
-                        <input type="number" name="{{ value.code }}" value="{{ input }}" min="0" step="any" {{ 'disabled="disabled"' | safe if input_values.acsis_mode is not none }} />
-                        <select name="res_unit" {{ 'disabled="disabled"' | safe if input_values.acsis_mode is not none }}>
-                            {% for res_unit in ('MHz', 'km/s') %}
-                                <option value="{{ res_unit }}" {{ 'selected="selected"' | safe if res_unit == input_values['res_unit'] }} >{{ res_unit }}</option>
-                            {% endfor %}
-                        </select>
-                        <div class="formtip">
-                            <div>
-                                <p>
-                                    ACSIS can use 250 MHz or 1000 MHz sub-bands.
-                                    In the case of HARP these can either be &ldquo;chained&rdquo;
-                                    for higher resolution or overlapped as a
-                                    400 MHz or 1600 MHz &ldquo;hybrid&rdquo; band.
-                                    Other receivers can use one of these &ldquo;hybrid&rdquo; modes
-                                    without a loss of resolution.
-                                </p>
-                                <p>
-                                    Please see the
-                                    <a href="http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/acsis/" target="_blank">ACSIS spectrometer information</a>
-                                    for more information, including the resolution
-                                    constraints when observing multiple simultaneous
-                                    frequencies.
-                                </p>
-                                <p>
-                                    Please select &ldquo;Other&rdquo; to enter
-                                    a specific resolution in MHz or km/s.
-                                </p>
-                            </div>
-                        </div>
-                    {% elif value.code == 'tau' %}
-                        <select name="tau_band">
-                            {% for (band_num, band_info) in weather_bands.items() %}
-                                <option value="{{ band_num }}" {{ 'selected="selected"' | safe if band_num == input_values.tau_band }} data-representative="{{ band_info.rep }}">
-                                    {{ band_info.name }}:
-                                    {% if band_info.min is not none %}
-                                        {{ band_info.min }} &lt;
-                                    {% endif %}
-                                    &tau;
-                                    {% if band_info.max is not none %}
-                                        &le; {{ band_info.max }}
-                                    {% endif %}
-                                </option>
-                            {% endfor %}
-                            <option value="other" {{ 'selected="selected"' | safe if input_values.tau_band is none }}>Other</option>
-                        </select>
-                        <input type="text" name="tau_value" value="{{ input }}" {{ 'disabled="disabled"' | safe if input_values.tau_band is not none }} />
-                        <div class="formtip">
-                            <div>
-                                <p>
-                                    Opacity conditions at JCMT are divided into 5 bands.
-                                    You may select a band to use a representative value for that band
-                                    or select &ldquo;Other&rdquo; to enter a specific
-                                    225 GHz opacity value.
-                                </p>
-                                <p>
-                                    <a href="http://www.eaobservatory.org/jcmt/observing/weather-bands/" target="_blank">Weather band information</a>
-                                </p>
-                            </div>
-                        </div>
-                    {% elif value.code == 'pos' %}
-                        <input type="number" name="{{ value.code }}" value="{{ input }}" min="-90" max="90" step="any" />
-                    {% elif value.code == 'sb' %}
-                        <input type="radio" name="{{ value.code }}" value="ssb" {{ 'checked="checked"' | safe if input == 'ssb' }} /><span class="checkboxlabel">Single sideband</span>
-                        <input type="radio" name="{{ value.code }}" value="dsb" {{ 'checked="checked"' | safe if input == 'dsb' }} /><span class="checkboxlabel">Dual sideband</span>
-                    {% elif value.code == 'dual_pol' %}
-                        <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
-                    {% elif value.code == 'n_pt' %}
-                        <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="1" />
-                    {% elif value.code == 'dim_x' %}
-                        <label>Raster map size</label>
-                        <input type="number" name="dim_x" value="{{ input_values['dim_x'] }}" min="1" step="any" />
-                        &times;
-                        <input type="number" name="dim_y" value="{{ input_values['dim_y'] }}" min="1" step="any" />
-                    {% elif value.code == 'dx' %}
-                        <label>Raster pixel size</label>
-                        <input type="number" name="dx" value="{{ input_values['dx'] }}" min="1" step="any" />
-                        &times;
-                        <input type="number" name="dy" value="{{ input_values['dy'] }}" min="1" step="any" />
-                    {% elif value.code in ('dim_x', 'dim_y', 'dx', 'dy') %}
-                        <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="any" />
-                    {% elif value.code == 'basket' %}
-                        <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
-                        <div class="formtip">
-                            <div>
-                                <p>
-                                    In a basket-weaved observation the telescope scans the map area
-                                    in two orthogonal directions (along the height and width)
-                                    to minimize the effects of sky and system uncertainties.
-                                </p>
-                            </div>
-                        </div>
-                    {% elif value.code == 'sep_off' %}
-                        <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
-                    {% elif value.code == 'cont' %}
-                        <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
-                        <div class="formtip">
-                            <div>
-                                <p>
-                                    Continuum mode can be selected when you are interested in the
-                                    continuum level (e.g. for planets)
-                                    at the expense of reduced observing efficiency.
-                                </p>
-                                <p>
-                                    <a href="http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/observing-modes/" target="_blank">Heterodyne observing modes</a>
-                                </p>
-                            </div>
-                        </div>
-                    {% else %}
-                        <input type="text" name="{{ value.code }}" value="{{ input }}" />
-                    {% endif %}
-                    {% if value.unit is not none %}
-                        <span id="calc_unit_{{ value.code }}">{{ value.unit }}</span>
-                    {% endif %}
-                    {% if value.code == 'elapsed' %}
-                        <span class="explanation">decimal hours or hours:minutes:seconds</span>
-                    {% elif value.code == 'int_time' %}
-                        <span class="explanation">minimum {{ int_time_minimum | fmt('{:.3f}') }} {{ value.unit }}</span>
-                    {% elif value.code == 'freq' %}
-                        <span class="explanation"><span id="freq_min"></span> &mdash; <span id="freq_max"></span> {{ value.unit }}</span>
-                    {% elif value.code == 'n_pt' %}
-                        <select name="n_pt_jiggle">
-                            {% for (jiggle_pattern_name, jiggle_pattern_pts) in jiggle_patterns.items() %}
+                        >{{ map_mode.name }}</option>
+                    {% endfor %}
+                </select>
+                <div class="formtip">
+                    <div>
+                        <p>
+                            <b>Grid:</b>
+                            the telescope moves to one or more individual points.
+                            <br />
+                            <b>Jiggle:</b>
+                            the secondary mirror of the telescope moves in a pre-defined pattern.
+                            <br />
+                            <b>Raster:</b>
+                            data are recorded while the telescope scans an area.
+                        </p>
+                        <p>
+                            <a href="http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/observing-modes/" target="_blank">Heterodyne observing modes</a>
+                        </p>
+                    </div>
+                </div>
+            {% elif value.code == 'sw' %}
+                {% for (mode_code, switch_mode) in switch_modes.items() %}
+                    <input type="radio" name="{{ value.code }}" value="{{ mode_code }}" {{ 'checked="checked"' | safe if mode_code == input }} /><span class="checkboxlabel">{{ switch_mode.name }}</span>
+                {% endfor %}
+                <div class="formtip">
+                    <div>
+                        <p>
+                            <b>Beam:</b>
+                            the secondary mirror of the telescope &ldquo;chops&rdquo;
+                            a short distance (&leq; 180 arc-seconds) to either side.
+                            <br />
+                            <b>Position:</b>
+                            the whole telescope moves between the source and offset position.
+                            <br />
+                            <b>Frequency:</b>
+                            the observing frequency alternates during the observation.
+                            <i>(Not currently available in this calculator.)</i>
+                        </p>
+                        <p>
+                            <a href="http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/observing-modes/" target="_blank">Heterodyne observing modes</a>
+                        </p>
+                    </div>
+                </div>
+            {% elif value.code == 'freq' %}
+                <input type="number" name="{{ value.code }}" value="{{ input }}" step="any" />
+            {% elif value.code == 'res' %}
+                <select name="acsis_mode">
+                    {% for (acsis_mode_num, acsis_mode_info) in acsis_modes.items() %}
+                        <option value="{{ acsis_mode_num }}" {{ 'selected="selected"' | safe if acsis_mode_num == input_values.acsis_mode }} data-resolution="{{ acsis_mode_info.freq_res }}" data-array_only="{{ 'true' if acsis_mode_info.array_only else 'false' }}">
+                            {{ acsis_mode_info.name }} mode
+                        </option>
+                    {% endfor %}
+                    <option value="other" {{ 'selected="selected"' | safe if input_values.acsis_mode is none }} data-array_only="false">Other</option>
+                </select>
+                <input type="number" name="{{ value.code }}" value="{{ input }}" min="0" step="any" {{ 'disabled="disabled"' | safe if input_values.acsis_mode is not none }} />
+                <select name="res_unit" {{ 'disabled="disabled"' | safe if input_values.acsis_mode is not none }}>
+                    {% for res_unit in ('MHz', 'km/s') %}
+                        <option value="{{ res_unit }}" {{ 'selected="selected"' | safe if res_unit == input_values['res_unit'] }} >{{ res_unit }}</option>
+                    {% endfor %}
+                </select>
+                <div class="formtip">
+                    <div>
+                        <p>
+                            ACSIS can use 250 MHz or 1000 MHz sub-bands.
+                            In the case of HARP these can either be &ldquo;chained&rdquo;
+                            for higher resolution or overlapped as a
+                            400 MHz or 1600 MHz &ldquo;hybrid&rdquo; band.
+                            Other receivers can use one of these &ldquo;hybrid&rdquo; modes
+                            without a loss of resolution.
+                        </p>
+                        <p>
+                            Please see the
+                            <a href="http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/acsis/" target="_blank">ACSIS spectrometer information</a>
+                            for more information, including the resolution
+                            constraints when observing multiple simultaneous
+                            frequencies.
+                        </p>
+                        <p>
+                            Please select &ldquo;Other&rdquo; to enter
+                            a specific resolution in MHz or km/s.
+                        </p>
+                    </div>
+                </div>
+            {% elif value.code == 'tau' %}
+                <select name="tau_band">
+                    {% for (band_num, band_info) in weather_bands.items() %}
+                        <option value="{{ band_num }}" {{ 'selected="selected"' | safe if band_num == input_values.tau_band }} data-representative="{{ band_info.rep }}">
+                            {{ band_info.name }}:
+                            {% if band_info.min is not none %}
+                                {{ band_info.min }} &lt;
+                            {% endif %}
+                            &tau;
+                            {% if band_info.max is not none %}
+                                &le; {{ band_info.max }}
+                            {% endif %}
+                        </option>
+                    {% endfor %}
+                    <option value="other" {{ 'selected="selected"' | safe if input_values.tau_band is none }}>Other</option>
+                </select>
+                <input type="text" name="tau_value" value="{{ input }}" {{ 'disabled="disabled"' | safe if input_values.tau_band is not none }} />
+                <div class="formtip">
+                    <div>
+                        <p>
+                            Opacity conditions at JCMT are divided into 5 bands.
+                            You may select a band to use a representative value for that band
+                            or select &ldquo;Other&rdquo; to enter a specific
+                            225 GHz opacity value.
+                        </p>
+                        <p>
+                            <a href="http://www.eaobservatory.org/jcmt/observing/weather-bands/" target="_blank">Weather band information</a>
+                        </p>
+                    </div>
+                </div>
+            {% elif value.code == 'pos' %}
+                <input type="number" name="{{ value.code }}" value="{{ input }}" min="-90" max="90" step="any" />
+            {% elif value.code == 'sb' %}
+                <input type="radio" name="{{ value.code }}" value="ssb" {{ 'checked="checked"' | safe if input == 'ssb' }} /><span class="checkboxlabel">Single sideband</span>
+                <input type="radio" name="{{ value.code }}" value="dsb" {{ 'checked="checked"' | safe if input == 'dsb' }} /><span class="checkboxlabel">Dual sideband</span>
+            {% elif value.code == 'dual_pol' %}
+                <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
+            {% elif value.code == 'n_pt' %}
+                <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="1" />
+            {% elif value.code == 'dim_x' %}
+                <label>Raster map size</label>
+                <input type="number" name="dim_x" value="{{ input_values['dim_x'] }}" min="1" step="any" />
+                &times;
+                <input type="number" name="dim_y" value="{{ input_values['dim_y'] }}" min="1" step="any" />
+            {% elif value.code == 'dx' %}
+                <label>Raster pixel size</label>
+                <input type="number" name="dx" value="{{ input_values['dx'] }}" min="1" step="any" />
+                &times;
+                <input type="number" name="dy" value="{{ input_values['dy'] }}" min="1" step="any" />
+            {% elif value.code in ('dim_x', 'dim_y', 'dx', 'dy') %}
+                <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="any" />
+            {% elif value.code == 'basket' %}
+                <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
+                <div class="formtip">
+                    <div>
+                        <p>
+                            In a basket-weaved observation the telescope scans the map area
+                            in two orthogonal directions (along the height and width)
+                            to minimize the effects of sky and system uncertainties.
+                        </p>
+                    </div>
+                </div>
+            {% elif value.code == 'sep_off' %}
+                <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
+            {% elif value.code == 'cont' %}
+                <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
+                <div class="formtip">
+                    <div>
+                        <p>
+                            Continuum mode can be selected when you are interested in the
+                            continuum level (e.g. for planets)
+                            at the expense of reduced observing efficiency.
+                        </p>
+                        <p>
+                            <a href="http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/observing-modes/" target="_blank">Heterodyne observing modes</a>
+                        </p>
+                    </div>
+                </div>
+            {% else %}
+                <input type="text" name="{{ value.code }}" value="{{ input }}" />
+            {% endif %}
+            {% if value.unit is not none %}
+                <span id="calc_unit_{{ value.code }}">{{ value.unit }}</span>
+            {% endif %}
+            {% if value.code == 'elapsed' %}
+                <span class="explanation">decimal hours or hours:minutes:seconds</span>
+            {% elif value.code == 'int_time' %}
+                <span class="explanation">minimum {{ int_time_minimum | fmt('{:.3f}') }} {{ value.unit }}</span>
+            {% elif value.code == 'freq' %}
+                <span class="explanation"><span id="freq_min"></span> &mdash; <span id="freq_max"></span> {{ value.unit }}</span>
+            {% elif value.code == 'n_pt' %}
+                <select name="n_pt_jiggle">
+                    {% for (jiggle_pattern_name, jiggle_pattern_pts) in jiggle_patterns.items() %}
+                        <option value="{{ jiggle_pattern_pts }}" {{ 'selected="selected"' | safe if jiggle_pattern_pts == input_values.n_pt }}>{{ jiggle_pattern_name }}</option>
+                    {% endfor %}
+                </select>
+                {% for receiver in receivers %}
+                    {% if receiver.array is not none %}
+                        <select name="n_pt_jiggle_{{ receiver.name }}">
+                            {% for (jiggle_pattern_name, jiggle_pattern_pts) in receiver.array.jiggle_patterns.items() %}
                                 <option value="{{ jiggle_pattern_pts }}" {{ 'selected="selected"' | safe if jiggle_pattern_pts == input_values.n_pt }}>{{ jiggle_pattern_name }}</option>
                             {% endfor %}
                         </select>
-                        {% for receiver in receivers %}
-                            {% if receiver.array is not none %}
-                                <select name="n_pt_jiggle_{{ receiver.name }}">
-                                    {% for (jiggle_pattern_name, jiggle_pattern_pts) in receiver.array.jiggle_patterns.items() %}
-                                        <option value="{{ jiggle_pattern_pts }}" {{ 'selected="selected"' | safe if jiggle_pattern_pts == input_values.n_pt }}>{{ jiggle_pattern_name }}</option>
-                                    {% endfor %}
-                                </select>
-                            {% endif %}
-                        {% endfor %}
-                    {% elif value.code == 'pos' %}
-                        <select name="pos_type">
-                            {% for (pos_type, pos_type_info) in position_types.items() %}
-                                <option value="{{ pos_type }}" {{ 'selected="selected"' | safe if pos_type == input_values.pos_type }} data-no_unit="{{ 'true' if pos_type_info.no_unit else 'false' }}">{{ pos_type_info.name }}</option>
+                    {% endif %}
+                {% endfor %}
+            {% elif value.code == 'pos' %}
+                <select name="pos_type">
+                    {% for (pos_type, pos_type_info) in position_types.items() %}
+                        <option value="{{ pos_type }}" {{ 'selected="selected"' | safe if pos_type == input_values.pos_type }} data-no_unit="{{ 'true' if pos_type_info.no_unit else 'false' }}">{{ pos_type_info.name }}</option>
+                    {% endfor %}
+                </select>
+            {% endif %}
+        </li>
+        {% if value.code == 'dx' %}
+            <li>
+                <label>Raster scan spacing</label>
+                {% for receiver in receivers %}
+                    {% if receiver.array is not none %}
+                        <select name="dy_spacing_{{ receiver.name }}">
+                            {% for (spacing_name, spacing_spacing) in receiver.array.scan_spacings.items() %}
+                                {% with spacing_str = spacing_spacing | fmt('{:.3f}') %}
+                                    <option value="{{ spacing_str }}" {{ 'selected="selected"' | safe if input_values['dy_spacing'] == spacing_str }} >{{ spacing_name }} ({{ spacing_spacing }}")</option>
+                                {% endwith %}
                             {% endfor %}
                         </select>
                     {% endif %}
-                </li>
-            {% endwith %}
-            {% if value.code == 'dx' %}
-                <li>
-                    <label>Raster scan spacing</label>
-                    {% for receiver in receivers %}
-                        {% if receiver.array is not none %}
-                            <select name="dy_spacing_{{ receiver.name }}">
-                                {% for (spacing_name, spacing_spacing) in receiver.array.scan_spacings.items() %}
-                                    {% with spacing_str = spacing_spacing | fmt('{:.3f}') %}
-                                        <option value="{{ spacing_str }}" {{ 'selected="selected"' | safe if input_values['dy_spacing'] == spacing_str }} >{{ spacing_name }} ({{ spacing_spacing }}")</option>
-                                    {% endwith %}
-                                {% endfor %}
-                            </select>
-                        {% endif %}
-                    {% endfor %}
-                </li>
-            {% endif %}
-        {% endif %}{% endfor %}
-    {% endfor %}
+                {% endfor %}
+            </li>
+        {% endif %}
+    {% endif %}
 {% endblock %}
 
 {% block calculator_output_table %}

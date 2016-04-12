@@ -3,117 +3,110 @@
 {% set help_link = url_for('help.user_page', page_name='calculation_scuba2') %}
 {% set help_link_text = 'Help on this calculator' %}
 
-{% block calculator_input_list %}
-    {% for (section_key, section_label, section_items) in inputs.by_section() %}
-        {% if section_label is not none %}
-            <li class="separator">{{ section_label }}</li>
-        {% endif %}
-        {% for value in section_items %}{% if value.code not in ('pos_type',) %}
-            {% with input = input_values[value.code] %}
-                <li>
-                    <label for="a">{{ value.name }}</label>
-                    {% if value.code == 'map' %}
-                        <select name="map">
-                            {% for mode_code, mode_name in map_modes.items() %}
-                                <option value="{{ mode_code }}" {{ 'selected="selected"' | safe if mode_code == input }}>{{ mode_name }}</option>
-                            {% endfor %}
-                        </select>
-                    {% elif value.code == 'pos' %}
-                        <input type="number" name="{{ value.code }}" value="{{ input }}" min="-90" max="90" step="any" />
-                    {% elif value.code == 'mf' %}
-                        <input type="checkbox" name="mf" value="yes" {{ 'checked="checked"' | safe if input }} />
-                    {% elif value.code == 'tau' %}
-                        <select name="tau_band">
-                            {% for (band_num, band_info) in weather_bands.items() %}
-                                <option value="{{ band_num }}" {{ 'selected="selected"' | safe if band_num == input_values.tau_band }} data-representative="{{ band_info.rep }}">
-                                    {{ band_info.name }}:
-                                    {% if band_info.min is not none %}
-                                        {{ band_info.min }} &lt;
-                                    {% endif %}
-                                    &tau;
-                                    {% if band_info.max is not none %}
-                                        &le; {{ band_info.max }}
-                                    {% endif %}
-                                </option>
-                            {% endfor %}
-                            <option value="other" {{ 'selected="selected"' | safe if input_values.tau_band is none }}>Other</option>
-                        </select>
-                        <input type="text" name="tau_value" value="{{ input }}" {{ 'disabled="disabled"' | safe if input_values.tau_band is not none }} />
-                    {% elif value.code == 'wl' %}
-                        <select name="wl">
-                            {% for wl_filt in (850, 450) %}
-                                <option value="{{ wl_filt }}" {{ 'selected="selected"' | safe if input == wl_filt }}>{{ wl_filt }}</option>
-                            {% endfor %}
-                        </select>
-                    {% elif value.code == 'pix850' or value.code == 'pix450' %}
-                        <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="any" {{ 'disabled="disabled"' | safe if input_values.mf }} data-default="{{ default[value.code] }}" />
-                    {% else %}
-                        <input type="text" name="{{ value.code }}" value="{{ input }}" />
-                    {% endif %}
-                    {% if value.unit is not none %}
-                        <span id="calc_unit_{{ value.code }}">{{ value.unit }}</span>
-                    {% endif %}
-                    {% if value.code == 'time' %}
-                        <span class="explanation">decimal hours or hours:minutes:seconds</span>
-                    {% elif value.code == 'pos' %}
-                        <select name="pos_type">
-                            {% for (pos_type, pos_type_info) in position_types.items() %}
-                                <option value="{{ pos_type }}" {{ 'selected="selected"' | safe if pos_type == input_values.pos_type }} data-no_unit="{{ 'true' if pos_type_info.no_unit else 'false' }}">{{ pos_type_info.name }}</option>
-                            {% endfor %}
-                        </select>
-                    {% elif value.code == 'map' %}
-                        <div class="formtip">
-                            <div>
-                                <p>
-                                    SCUBA-2 offers two types of standard observing mode:
-                                    &ldquo;daisy&rdquo; for compact sources (&lsim; 3 arc-minutes)
-                                    and &ldquo;pong&rdquo; patterns of various sizes.
-                                </p>
-                                <p>
-                                    An additional observing mode is offered for
-                                    polarimetry with
-                                    <a href="http://www.eaobservatory.org/jcmt/instrumentation/continuum/scuba-2/pol-2/" target="_blank">POL-2</a>.
-                                </p>
-                                <p>
-                                    <a href="http://www.eaobservatory.org/jcmt/instrumentation/continuum/scuba-2/observing-modes/" target="_blank">SCUBA-2 observing modes</a>
-                                </p>
-                            </div>
-                        </div>
-                    {% elif value.code == 'mf' %}
-                        <div class="formtip">
-                            <div>
-                                <p>
-                                    For point-source detections, the signal-to-noise ratio
-                                    can be improved by applying a matched-beam filter.
-                                </p>
-                                <p>
-                                    If you select this option, the ITC will apply
-                                    suitable sampling factors for the use of this filter.
-                                </p>
-                                <p>
-                                    <a href="http://www.eaobservatory.org/jcmt/instrumentation/continuum/scuba-2/time-and-sensitivity/" target="_blank">SCUBA-2 sensitivity</a>
-                                </p>
-                            </div>
-                        </div>
-                    {% elif value.code == 'tau' %}
-                        <div class="formtip">
-                            <div>
-                                <p>
-                                    Opacity conditions at JCMT are divided into 5 bands.
-                                    You may select a band to use a representative value for that band
-                                    or select &ldquo;Other&rdquo; to enter a specific
-                                    225 GHz opacity value.
-                                </p>
-                                <p>
-                                    <a href="http://www.eaobservatory.org/jcmt/observing/weather-bands/" target="_blank">Weather band information</a>
-                                </p>
-                            </div>
-                        </div>
-                    {% endif %}
-                </li>
-            {% endwith %}
-        {% endif %}{% endfor %}
-    {% endfor %}
+{% block calculator_input_item %}
+    {% if value.code not in ('pos_type',) %}
+        <li>
+            <label for="a">{{ value.name }}</label>
+            {% if value.code == 'map' %}
+                <select name="map">
+                    {% for mode_code, mode_name in map_modes.items() %}
+                        <option value="{{ mode_code }}" {{ 'selected="selected"' | safe if mode_code == input }}>{{ mode_name }}</option>
+                    {% endfor %}
+                </select>
+            {% elif value.code == 'pos' %}
+                <input type="number" name="{{ value.code }}" value="{{ input }}" min="-90" max="90" step="any" />
+            {% elif value.code == 'mf' %}
+                <input type="checkbox" name="mf" value="yes" {{ 'checked="checked"' | safe if input }} />
+            {% elif value.code == 'tau' %}
+                <select name="tau_band">
+                    {% for (band_num, band_info) in weather_bands.items() %}
+                        <option value="{{ band_num }}" {{ 'selected="selected"' | safe if band_num == input_values.tau_band }} data-representative="{{ band_info.rep }}">
+                            {{ band_info.name }}:
+                            {% if band_info.min is not none %}
+                                {{ band_info.min }} &lt;
+                            {% endif %}
+                            &tau;
+                            {% if band_info.max is not none %}
+                                &le; {{ band_info.max }}
+                            {% endif %}
+                        </option>
+                    {% endfor %}
+                    <option value="other" {{ 'selected="selected"' | safe if input_values.tau_band is none }}>Other</option>
+                </select>
+                <input type="text" name="tau_value" value="{{ input }}" {{ 'disabled="disabled"' | safe if input_values.tau_band is not none }} />
+            {% elif value.code == 'wl' %}
+                <select name="wl">
+                    {% for wl_filt in (850, 450) %}
+                        <option value="{{ wl_filt }}" {{ 'selected="selected"' | safe if input == wl_filt }}>{{ wl_filt }}</option>
+                    {% endfor %}
+                </select>
+            {% elif value.code == 'pix850' or value.code == 'pix450' %}
+                <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="any" {{ 'disabled="disabled"' | safe if input_values.mf }} data-default="{{ default[value.code] }}" />
+            {% else %}
+                <input type="text" name="{{ value.code }}" value="{{ input }}" />
+            {% endif %}
+            {% if value.unit is not none %}
+                <span id="calc_unit_{{ value.code }}">{{ value.unit }}</span>
+            {% endif %}
+            {% if value.code == 'time' %}
+                <span class="explanation">decimal hours or hours:minutes:seconds</span>
+            {% elif value.code == 'pos' %}
+                <select name="pos_type">
+                    {% for (pos_type, pos_type_info) in position_types.items() %}
+                        <option value="{{ pos_type }}" {{ 'selected="selected"' | safe if pos_type == input_values.pos_type }} data-no_unit="{{ 'true' if pos_type_info.no_unit else 'false' }}">{{ pos_type_info.name }}</option>
+                    {% endfor %}
+                </select>
+            {% elif value.code == 'map' %}
+                <div class="formtip">
+                    <div>
+                        <p>
+                            SCUBA-2 offers two types of standard observing mode:
+                            &ldquo;daisy&rdquo; for compact sources (&lsim; 3 arc-minutes)
+                            and &ldquo;pong&rdquo; patterns of various sizes.
+                        </p>
+                        <p>
+                            An additional observing mode is offered for
+                            polarimetry with
+                            <a href="http://www.eaobservatory.org/jcmt/instrumentation/continuum/scuba-2/pol-2/" target="_blank">POL-2</a>.
+                        </p>
+                        <p>
+                            <a href="http://www.eaobservatory.org/jcmt/instrumentation/continuum/scuba-2/observing-modes/" target="_blank">SCUBA-2 observing modes</a>
+                        </p>
+                    </div>
+                </div>
+            {% elif value.code == 'mf' %}
+                <div class="formtip">
+                    <div>
+                        <p>
+                            For point-source detections, the signal-to-noise ratio
+                            can be improved by applying a matched-beam filter.
+                        </p>
+                        <p>
+                            If you select this option, the ITC will apply
+                            suitable sampling factors for the use of this filter.
+                        </p>
+                        <p>
+                            <a href="http://www.eaobservatory.org/jcmt/instrumentation/continuum/scuba-2/time-and-sensitivity/" target="_blank">SCUBA-2 sensitivity</a>
+                        </p>
+                    </div>
+                </div>
+            {% elif value.code == 'tau' %}
+                <div class="formtip">
+                    <div>
+                        <p>
+                            Opacity conditions at JCMT are divided into 5 bands.
+                            You may select a band to use a representative value for that band
+                            or select &ldquo;Other&rdquo; to enter a specific
+                            225 GHz opacity value.
+                        </p>
+                        <p>
+                            <a href="http://www.eaobservatory.org/jcmt/observing/weather-bands/" target="_blank">Weather band information</a>
+                        </p>
+                    </div>
+                </div>
+            {% endif %}
+        </li>
+    {% endif %}
 {% endblock %}
 
 {% block calculator_output_table %}
