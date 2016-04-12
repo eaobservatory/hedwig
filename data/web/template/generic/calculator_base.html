@@ -68,16 +68,21 @@
 
         <ol>
             {% block calculator_input_list %}
-                {% for value in inputs %}
-                    {% with input = input_values[value.code] %}
-                        <li>
-                            <label for="a">{{ value.name }}</label>
-                            <input type="text" name="{{ value.code }}" value="{{ input }}" />
-                            {% if value.unit is not none %}
-                                {{ value.unit }}
-                            {% endif %}
-                        </li>
-                    {% endwith %}
+                {% for (section_key, section_label, section_inputs) in inputs.by_section() %}
+                    {% if section_label is not none %}
+                        <li class="separator">{{ section_label }}</li>
+                    {% endif %}
+                    {% for value in section_inputs %}
+                        {% with input = input_values[value.code] %}
+                            <li>
+                                <label for="a">{{ value.name }}</label>
+                                <input type="text" name="{{ value.code }}" value="{{ input }}" />
+                                {% if value.unit is not none %}
+                                    {{ value.unit }}
+                                {% endif %}
+                            </li>
+                        {% endwith %}
+                    {% endfor %}
                 {% endfor %}
             {% endblock %}
             <li>

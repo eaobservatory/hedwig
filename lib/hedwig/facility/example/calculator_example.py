@@ -22,6 +22,7 @@ from collections import OrderedDict
 import time
 
 from ...error import CalculatorError, UserError
+from ...type.misc import SectionedList
 from ...type.simple import CalculatorMode, CalculatorResult, CalculatorValue
 from ...view.calculator import BaseCalculator
 
@@ -67,19 +68,31 @@ class ExampleCalculator(BaseCalculator):
         """
         Get the list of calculator inputs for a given version of the
         calculator.
+
+        Should return a :class:`~hedwig.type.misc.SectionedList` because
+        the base HTML template uses the
+        :meth:`~hedwig.type.misc.SectionedList.by_section` method.
+        Each value of the list is a
+        :class:`~hedwig.type.simple.CalculatorValue` tuple.
+
+        :return SectionedList: list of inputs
         """
 
         if version is None:
             version = self.version
 
+        inputs = SectionedList()
+
         if mode in (self.ADDITION, self.SUBTRACTION) and version == 1:
-            return [
+            inputs.extend([
                 CalculatorValue('a', 'First input', None, '{}', 'm'),
                 CalculatorValue('b', 'Second input', None, '{}', 'm'),
-            ]
+            ])
 
         else:
             raise CalculatorError('Unknown mode or version.')
+
+        return inputs
 
     def get_default_input(self, mode):
         """
