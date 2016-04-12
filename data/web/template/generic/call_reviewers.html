@@ -67,7 +67,7 @@
                         <td colspan="3"><span class="missing_data">none {{ 'assigned' if ((current_role is none) and (current_state is none)) else 'matching filter' }}</span></td>
                     {% else %}
                         <td class="{{ reviewer.role | reviewer_role_class }}">
-                            <a href="{{ url_for('.review_edit', reviewer_id=reviewer.id) }}">{{ reviewer.role | reviewer_role_name }}</a>
+                            <a href="{{ url_for('.review_edit', reviewer_id=reviewer.id, referrer='cr') }}">{{ reviewer.role | reviewer_role_name }}</a>
                         </td>
                         <td class="{{ reviewer.role | reviewer_role_class }}">
                             <a href="{{ url_for('people.person_view', person_id=reviewer.person_id) }}">{{ reviewer.person_name | abbr(25) }}</a>

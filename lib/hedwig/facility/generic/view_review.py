@@ -821,8 +821,7 @@ class GenericReview(object):
         }
 
     @with_proposal(permission='none')
-    def view_review_new(self, db, proposal, reviewer_role,
-                        form, referrer=None):
+    def view_review_new(self, db, proposal, reviewer_role, form):
         try:
             role_info = ReviewerRole.get_info(reviewer_role)
         except KeyError:
@@ -842,7 +841,7 @@ class GenericReview(object):
                     role_info.name))
 
         return self._view_review_new_or_edit(
-            db, None, proposal, form, referrer, reviewer_role=reviewer_role)
+            db, None, proposal, None, form, reviewer_role=reviewer_role)
 
     @with_review(permission='edit')
     def view_review_info(self, db, reviewer, proposal, can):
@@ -855,23 +854,24 @@ class GenericReview(object):
         }
 
     @with_review(permission='edit')
-    def view_review_edit(self, db, reviewer, proposal, can, form,
-                         referrer=None):
+    def view_review_edit(self, db, reviewer, proposal, can, args, form):
         return self._view_review_new_or_edit(
-            db, reviewer, proposal, form, referrer)
+            db, reviewer, proposal, args, form)
 
-    def _view_review_new_or_edit(self, db, reviewer, proposal, form, referrer,
+    def _view_review_new_or_edit(self, db, reviewer, proposal, args, form,
                                  reviewer_role=None):
         if reviewer is None:
             is_new_reviewer = True
             is_own_review = True
             target = url_for('.proposal_review_new', proposal_id=proposal.id,
                              reviewer_role=reviewer_role)
+            referrer = 'pr'
             reviewer = null_tuple(Reviewer)
         else:
             is_new_reviewer = False
             is_own_review = (reviewer.person_id == session['person']['id'])
             target = url_for('.review_edit', reviewer_id=reviewer.id)
+            referrer = args.get('referrer')
             reviewer_role = reviewer.role
 
         try:
@@ -971,8 +971,26 @@ class GenericReview(object):
 
                 flash('The review has been saved.')
 
-                raise HTTPRedirect(referrer if referrer
-                                   else url_for('people.person_reviews'))
+                # Determine where to redirect the user.  Look for a
+                # "referrer" value identifying a suitable page.
+                if referrer == 'pr':
+                    target_redir = url_for('.proposal_reviews',
+                                           proposal_id=proposal.id)
+
+                elif referrer == 'cr':
+                    target_redir = url_for('.review_call_reviewers',
+                                           call_id=proposal.call_id)
+
+                elif referrer == 'tab':
+                    target_redir = url_for('.review_call_tabulation',
+                                           call_id=proposal.call_id)
+
+                else:
+                    # Otherwise, by default redirect back to the person's
+                    # "your reviews" page.
+                    target_redir = url_for('people.person_reviews')
+
+                raise HTTPRedirect(target_redir)
 
             except UserError as e:
                 message = e.message

@@ -395,8 +395,7 @@ def create_facility_blueprint(db, facility):
     def proposal_review_new(proposal_id, reviewer_role):
         return facility.view_review_new(
             db, proposal_id, reviewer_role,
-            (request.form if request.method == 'POST' else None),
-            request.referrer)
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/review/external/add',
               methods=['GET', 'POST'])
@@ -619,9 +618,8 @@ def create_facility_blueprint(db, facility):
     @facility_template('review_edit.html')
     def review_edit(reviewer_id):
         return facility.view_review_edit(
-            db, reviewer_id,
-            (request.form if request.method == 'POST' else None),
-            request.referrer)
+            db, reviewer_id, request.args,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/review/<int:reviewer_id>/information')
     @require_auth(require_person=True)

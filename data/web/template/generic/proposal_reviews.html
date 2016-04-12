@@ -46,7 +46,7 @@
             <tr class="spacer_above">
                 <td {{ ((show_review, show_note) | count_true + 1) | fmt('rowspan="{}"') | safe }}>
                     {% if review.can_edit %}
-                        <a href="{{ url_for('.review_edit', reviewer_id=review.id) }}">{{ review.role | reviewer_role_name }}</a>
+                        <a href="{{ url_for('.review_edit', reviewer_id=review.id, referrer='pr') }}">{{ review.role | reviewer_role_name }}</a>
                     {% else %}
                         {{ review.role | reviewer_role_name }}
                     {% endif %}
