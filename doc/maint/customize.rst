@@ -683,6 +683,15 @@ class for Hedwig, you can begin as follows:
     :meth:`~hedwig.facility.example.calculator_example.ExampleCalculator.get_outputs`.
     Both of these take the calculator mode and version as
     arguments and return a list of values.
+    In the case of the input values, this list should be an instance of
+    :class:`~hedwig.type.misc.SectionedList`
+    because the `calculator_base.html` template displays the section
+    names as separators between parts of the HTML form.
+    This class may also make it easier to constuct the
+    input value list for different versions/modes of a calculator.
+    However if you override the whole `calculator_input_list` template block
+    then a :class:`~hedwig.type.misc.SectionedList` is not required
+    and the standard list type can be used.
 
 #.  Completing the calculator class involves overriding several more
     methods in order to implement your calculator's functionality.
