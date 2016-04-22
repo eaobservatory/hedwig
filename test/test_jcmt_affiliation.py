@@ -57,9 +57,6 @@ class JCMTAffiliationTestCase(TestCase):
             OTHER, None, 'Other',
             hidden=False, type=AffiliationType.EXCLUDED, weight=None)
 
-        # Compute weighting scale factor for shared CoIs.
-        sum_sq_frac = (50 / 90) ** 2 + 2 * (20 / 90) ** 2
-
         # Perform test: no members at all.
         self._test_affiliation_assignment(
             'No members',
@@ -217,79 +214,76 @@ class JCMTAffiliationTestCase(TestCase):
         self._test_affiliation_assignment(
             'Simple PI and shared CoI',
             affiliations, AFF_1, [STAFF],
-            {AFF_1: 0.5 + 0.5 * ((50 / 90) ** 2 / sum_sq_frac),
-             AFF_2: 0.5 * ((20 / 90) ** 2 / sum_sq_frac),
-             AFF_3: 0.5 * ((20 / 90) ** 2 / sum_sq_frac)})
+            {AFF_1: 0.5 + 0.5 * (50 / 90),
+             AFF_2: 0.5 * (20 / 90),
+             AFF_3: 0.5 * (20 / 90)})
 
         self._test_affiliation_assignment(
             'Simple PI and 2 shared CoIs',
             affiliations, AFF_1, [STAFF, STAFF],
-            {AFF_1: 0.5 + 0.5 * ((50 / 90) ** 2 / sum_sq_frac),
-             AFF_2: 0.5 * ((20 / 90) ** 2 / sum_sq_frac),
-             AFF_3: 0.5 * ((20 / 90) ** 2 / sum_sq_frac)})
+            {AFF_1: 0.5 + 0.5 * (50 / 90),
+             AFF_2: 0.5 * (20 / 90),
+             AFF_3: 0.5 * (20 / 90)})
 
         self._test_affiliation_assignment(
             'Simple PI and shared and normal (low weight) CoIs',
             affiliations, AFF_1, [AFF_2, STAFF],
-            {AFF_1: 0.5 + 0.5 * (((50 / 90) ** 2) /
-                                 (sum_sq_frac + 20 / 90)),
-             AFF_2: 0.5 * (((20 / 90) ** 2 + 20 / 90) /
-                           (sum_sq_frac + 20 / 90)),
-             AFF_3: 0.5 * (((20 / 90) ** 2) /
-                           (sum_sq_frac + 20 / 90))})
+            {AFF_1: 0.5 + 0.5 * (((50 / 90) * 50) /
+                                 (50 + 20)),
+             AFF_2: 0.5 * (((20 / 90) * 50 + 20) /
+                           (50 + 20)),
+             AFF_3: 0.5 * (((20 / 90) * 50) /
+                           (50 + 20))})
 
         self._test_affiliation_assignment(
             'Simple PI and shared and normal (high weight) CoIs',
             affiliations, AFF_1, [AFF_1, STAFF],
-            {AFF_1: 0.5 + 0.5 * (((50 / 90) ** 2 + 50 / 90) /
-                                 (sum_sq_frac + 50 / 90)),
-             AFF_2: 0.5 * (((20 / 90) ** 2) / (sum_sq_frac + 50 / 90)),
-             AFF_3: 0.5 * (((20 / 90) ** 2) / (sum_sq_frac + 50 / 90))})
+            {AFF_1: 0.5 + 0.5 * (((50 / 90) * 50 + 50) /
+                                 (50 + 50)),
+             AFF_2: 0.5 * (((20 / 90) * 50) / (50 + 50)),
+             AFF_3: 0.5 * (((20 / 90) * 50) / (50 + 50))})
 
         self._test_affiliation_assignment(
             'Simple PI and shared and missing CoIs',
             affiliations, AFF_1, [UNKNOWN, STAFF],
-            {AFF_1: 0.5 + 0.5 * (((50 / 90) ** 2) / (sum_sq_frac + 50 / 90)),
-             AFF_2: 0.5 * (((20 / 90) ** 2) / (sum_sq_frac + 50 / 90)),
-             AFF_3: 0.5 * (((20 / 90) ** 2) / (sum_sq_frac + 50 / 90)),
-             UNKNOWN: 0.5 * ((50 / 90) / (sum_sq_frac + 50 / 90))})
+            {AFF_1: 0.5 + 0.5 * (((50 / 90) * 50) / (50 + 50)),
+             AFF_2: 0.5 * (((20 / 90) * 50) / (50 + 50)),
+             AFF_3: 0.5 * (((20 / 90) * 50) / (50 + 50)),
+             UNKNOWN: 0.5 * (50 / (50 + 50))})
 
         self._test_affiliation_assignment(
             'Shared PI and excluded CoI',
             affiliations, STAFF, [OTHER],
-            {AFF_1: 0.5 * (50 / 90) + 0.5 * (((50 / 90) ** 2) / sum_sq_frac),
-             AFF_2: 0.5 * (20 / 90) + 0.5 * (((20 / 90) ** 2) / sum_sq_frac),
-             AFF_3: 0.5 * (20 / 90) + 0.5 * (((20 / 90) ** 2) / sum_sq_frac)})
+            {AFF_1: 0.5 * (50 / 90) + 0.5 * (50 / 90),
+             AFF_2: 0.5 * (20 / 90) + 0.5 * (20 / 90),
+             AFF_3: 0.5 * (20 / 90) + 0.5 * (20 / 90)})
 
         self._test_affiliation_assignment(
             'Shared PI and shared CoI',
             affiliations, STAFF, [STAFF],
-            {AFF_1: 0.5 * (50 / 90) + 0.5 * (((50 / 90) ** 2) / sum_sq_frac),
-             AFF_2: 0.5 * (20 / 90) + 0.5 * (((20 / 90) ** 2) / sum_sq_frac),
-             AFF_3: 0.5 * (20 / 90) + 0.5 * (((20 / 90) ** 2) / sum_sq_frac)})
+            {AFF_1: (50 / 90),
+             AFF_2: (20 / 90),
+             AFF_3: (20 / 90)})
 
         self._test_affiliation_assignment(
             'Shared PI and shared and normal CoI',
             affiliations, STAFF, [STAFF, AFF_2],
             {AFF_1: 0.5 * (50 / 90) +
-                0.5 * (((50 / 90) ** 2) / (sum_sq_frac + 20 / 90)),
+                0.5 * (((50 / 90) * 50) / (50 + 20)),
              AFF_2: 0.5 * (20 / 90) +
-                0.5 * (((20 / 90) ** 2 + 20 / 90) / (sum_sq_frac + 20 / 90)),
+                0.5 * (((20 / 90) * 50 + 20) / (50 + 20)),
              AFF_3: 0.5 * (20 / 90) +
-                0.5 * (((20 / 90) ** 2) / (sum_sq_frac + 20 / 90))})
+                0.5 * (((20 / 90) * 50) / (50 + 20))})
 
         self._test_affiliation_assignment(
             'Shared PI and multiple CoIs',
             affiliations, STAFF, [AFF_1, AFF_2, AFF_2, STAFF, OTHER],
             {AFF_1: 0.5 * (50 / 90) +
-                0.5 * ((2 * (50 / 90) ** 2 + 50 / 90) /
-                       (2 * sum_sq_frac + 90 / 90)),
+                0.5 * ((2 * (50 / 90) * 50 + 50) / 190),
              AFF_2: 0.5 * (20 / 90) +
-                0.5 * ((2 * (20 / 90) ** 2 + 2 * 20 / 90) /
-                       (2 * sum_sq_frac + 90 / 90)),
+                0.5 * ((2 * (20 / 90) * 50 + 2 * 20) / 190),
              AFF_3: 0.5 * (20 / 90) +
-                0.5 * ((2 * (20 / 90) ** 2) /
-                       (2 * sum_sq_frac + 90 / 90))})
+                0.5 * ((2 * (20 / 90) * 50) / 190)})
 
     def _test_affiliation_assignment(self, title, affiliations, pi, cois,
                                      ref_assignment):

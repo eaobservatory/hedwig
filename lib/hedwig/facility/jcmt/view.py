@@ -235,8 +235,9 @@ class JCMT(Generic):
                 # based on the affiliation weights and each of those
                 # affiliations also gets weighted by the same weight.
                 for (aff_id, aff_frac) in affiliation_fraction.items():
-                    affiliation_count[aff_id] += aff_frac ** 2
-                    affiliation_total += aff_frac ** 2
+                    affiliation_count[aff_id] += aff_frac * max_weight
+
+                affiliation_total += max_weight
 
             else:
                 # Non-shared affiliation -- determine weighting factor to use.
@@ -244,9 +245,9 @@ class JCMT(Generic):
                     # Weight "unknown" as the maximum of all the other
                     # weights. In practise there should never be any members
                     # in this state.
-                    weight = max_weight / total_weight
+                    weight = max_weight
                 else:
-                    weight = affiliation_fraction[affiliation]
+                    weight = affiliations[affiliation].weight
                     if weight is None:
                         weight = 0.0
 
