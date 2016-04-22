@@ -436,18 +436,20 @@ class JCMT(Generic):
                 if fraction is None:
                     continue
 
-                original_affiliation[affiliation] += request.total * fraction
+                original_affiliation[affiliation] += \
+                    request.total_non_free * fraction
 
                 if allocation is None:
-                    total_affiliation[affiliation] += request.total * fraction
+                    total_affiliation[affiliation] += \
+                        request.total_non_free * fraction
 
                 else:
                     total_affiliation[affiliation] += \
-                        allocation.total * fraction
+                        allocation.total_non_free * fraction
 
                     if proposal_accepted and not proposal_exempt:
                         accepted_affiliation[affiliation] += \
-                            allocation.total * fraction
+                            allocation.total_non_free * fraction
 
         # Fetch the amount of time available and distribute it among the
         # affiliations under the assumption that the affiliation weights
