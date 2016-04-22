@@ -165,6 +165,7 @@ class JCMT(Generic):
         # Determine total and maximum affiliation weight.
         total_weight = 0.0
         max_weight = 0.0
+        affiliation_weight = {}
         for affiliation in affiliations.values():
             if ((affiliation.type == AffiliationType.EXCLUDED) or
                     (affiliation.type == AffiliationType.SHARED) or
@@ -176,17 +177,12 @@ class JCMT(Generic):
             if affiliation.weight > max_weight:
                 max_weight = affiliation.weight
 
+            affiliation_weight[affiliation.id] = affiliation.weight
+
         # Determine affiliation fractions, in case there are any proposal
         # members with shared affiliation.
-        affiliation_fraction = {}
-        for affiliation in affiliations.values():
-            if ((affiliation.type == AffiliationType.EXCLUDED) or
-                    (affiliation.type == AffiliationType.SHARED) or
-                    (affiliation.weight is None)):
-                continue
-
-            affiliation_fraction[affiliation.id] = \
-                affiliation.weight / total_weight
+        affiliation_fraction = {k: v / total_weight
+                                for (k, v) in affiliation_weight.items()}
 
         # Find the PI (if present) and their affiliation.
         try:
