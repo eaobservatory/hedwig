@@ -345,13 +345,17 @@ class JCMT(Generic):
             db, call, auth_cache, with_extra)
 
         exempt = JCMTRequestTotal(total=0.0, weather=defaultdict(float),
-                                  instrument=defaultdict(float))
+                                  instrument=defaultdict(float),
+                                  total_non_free=None)
         accepted = JCMTRequestTotal(total=0.0, weather=defaultdict(float),
-                                    instrument=defaultdict(float))
+                                    instrument=defaultdict(float),
+                                    total_non_free=None)
         total = JCMTRequestTotal(total=0.0, weather=defaultdict(float),
-                                 instrument=defaultdict(float))
+                                 instrument=defaultdict(float),
+                                 total_non_free=None)
         original = JCMTRequestTotal(total=0.0, weather=defaultdict(float),
-                                    instrument=defaultdict(float))
+                                    instrument=defaultdict(float),
+                                    total_non_free=None)
 
         accepted_affiliation = defaultdict(float)
         total_affiliation = defaultdict(float)

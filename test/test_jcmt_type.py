@@ -98,6 +98,7 @@ class JCMTTypeTestCase(TestCase):
         self.assertEqual(total.total, 0.0)
         self.assertEqual(total.instrument, {})
         self.assertEqual(total.weather, {})
+        self.assertEqual(total.total_non_free, 0.0)
 
         # Add some rows.
         c[1] = JCMTRequest(1, 0, instrument=1, weather=1, time=10.0)
@@ -126,7 +127,7 @@ class JCMTTypeTestCase(TestCase):
 
         # Add data for more instruments.
         c[4] = JCMTRequest(4, 0, instrument=2, weather=2, time=200.0)
-        c[5] = JCMTRequest(5, 0, instrument=4, weather=4, time=1000.0)
+        c[5] = JCMTRequest(5, 0, instrument=4, weather=5, time=1000.0)
         t = c.to_table()
 
         # Check the rows.
@@ -136,14 +137,15 @@ class JCMTTypeTestCase(TestCase):
         # And check the combined times.
         self.assertEqual(t.table[1], {1: 30.0, 2: 100.0,            0: 130.0})
         self.assertEqual(t.table[2],          {2: 200.0,            0: 200.0})
-        self.assertEqual(t.table[4],                    {4: 1000.0, 0: 1000.0})
-        self.assertEqual(t.table[0], {1: 30.0, 2: 300.0, 4: 1000.0, 0: 1330.0})
+        self.assertEqual(t.table[4],                    {5: 1000.0, 0: 1000.0})
+        self.assertEqual(t.table[0], {1: 30.0, 2: 300.0, 5: 1000.0, 0: 1330.0})
 
         total = c.get_total()
         self.assertIsInstance(total, JCMTRequestTotal)
         self.assertEqual(total.total, 1330.0)
         self.assertEqual(total.instrument, {1: 130.0, 2: 200.0, 4: 1000.0})
-        self.assertEqual(total.weather, {1: 30.0, 2: 300.0, 4: 1000.0})
+        self.assertEqual(total.weather, {1: 30.0, 2: 300.0, 5: 1000.0})
+        self.assertEqual(total.total_non_free, 330.0)
 
         # Check conversion to sorted list.
         c[6] = JCMTRequest(6, 0, instrument=2, weather=1, time=500.0)
@@ -169,7 +171,7 @@ class JCMTTypeTestCase(TestCase):
         self.assertEqual(sorted_list[2].weather, 'Band 2')
         self.assertEqual(sorted_list[3].weather, 'Band 1')
         self.assertEqual(sorted_list[4].weather, 'Band 2')
-        self.assertEqual(sorted_list[5].weather, 'Band 4')
+        self.assertEqual(sorted_list[5].weather, 'Band 5')
 
         self.assertEqual(sorted_list[0].time, 10.0)
         self.assertEqual(sorted_list[1].time, 20.0)
@@ -212,6 +214,7 @@ class JCMTTypeTestCase(TestCase):
         self.assertEqual(total.total, 25)
         self.assertEqual(total.weather, {2: 10.0, 3: 15.0})
         self.assertEqual(total.instrument, {})
+        self.assertIsNone(total.total_non_free)
 
         # Test the "validate" method.
         c.validate()

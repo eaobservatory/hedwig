@@ -38,7 +38,7 @@ JCMTRequest = namedtuple(
 
 JCMTRequestTotal = namedtuple(
     'JCMTRequestTotal',
-    ('total', 'weather', 'instrument'))
+    ('total', 'weather', 'instrument', 'total_non_free'))
 
 
 class JCMTInstrument(object):
@@ -134,7 +134,8 @@ class JCMTAvailableCollection(OrderedDict):
             total += time
             weathers[weather] = weathers.get(weather, 0.0) + time
 
-        return JCMTRequestTotal(total=total, weather=weathers, instrument={})
+        return JCMTRequestTotal(total=total, weather=weathers, instrument={},
+                                total_non_free=None)
 
 
 class JCMTRequestCollection(OrderedDict):
@@ -243,12 +244,14 @@ class JCMTRequestCollection(OrderedDict):
         weathers = {}
         instruments = {}
         total = 0.0
+        total_non_free = 0.0
 
         for request in self.values():
             time = request.time
 
             weather = request.weather
-            if not JCMTWeather.get_info(weather).available:
+            weather_info = JCMTWeather.get_info(weather)
+            if not weather_info.available:
                 weather = 0
 
             instrument = request.instrument
@@ -259,8 +262,12 @@ class JCMTRequestCollection(OrderedDict):
             weathers[weather] = weathers.get(weather, 0.0) + time
             instruments[instrument] = instruments.get(instrument, 0.0) + time
 
+            if not weather_info.free:
+                total_non_free += time
+
         return JCMTRequestTotal(total=total, weather=weathers,
-                                instrument=instruments)
+                                instrument=instruments,
+                                total_non_free=total_non_free)
 
     def to_sorted_list(self):
         """
@@ -303,14 +310,14 @@ class JCMTWeather(object):
     BAND5 = 5
 
     WeatherInfo = namedtuple('WeatherInfo',
-                             ('name', 'available', 'rep', 'min', 'max'))
+                             ('name', 'available', 'rep', 'min', 'max', 'free'))
 
     _info = OrderedDict((
-        (BAND1, WeatherInfo('Band 1', True, 0.045, None, 0.05)),
-        (BAND2, WeatherInfo('Band 2', True, 0.065, 0.05, 0.08)),
-        (BAND3, WeatherInfo('Band 3', True, 0.1,   0.08, 0.12)),
-        (BAND4, WeatherInfo('Band 4', True, 0.16,  0.12, 0.2)),
-        (BAND5, WeatherInfo('Band 5', True, 0.25,  0.2,  None)),
+        (BAND1, WeatherInfo('Band 1', True, 0.045, None, 0.05, False)),
+        (BAND2, WeatherInfo('Band 2', True, 0.065, 0.05, 0.08, False)),
+        (BAND3, WeatherInfo('Band 3', True, 0.1,   0.08, 0.12, False)),
+        (BAND4, WeatherInfo('Band 4', True, 0.16,  0.12, 0.2,  False)),
+        (BAND5, WeatherInfo('Band 5', True, 0.25,  0.2,  None, True)),
     ))
 
     @classmethod
