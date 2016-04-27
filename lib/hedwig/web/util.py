@@ -162,7 +162,8 @@ def register_error_handlers(app):
     :param app: Flask application with which to register error handlers.
     """
 
-    for error_class in (HTTPError, HTTPForbidden, HTTPNotFound):
+    for error_class in (HTTPError, HTTPForbidden, HTTPNotFound,
+                        _werkzeug_exceptions.BadRequest):
         @app.errorhandler(error_class.code)
         def error_handler(error):
             # Flask matches error handlers for HTTP exception classes by
