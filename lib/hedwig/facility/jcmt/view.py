@@ -512,7 +512,7 @@ class JCMT(Generic):
             request = proposal['jcmt_request']
             allocation = proposal['jcmt_allocation']
             if (allocation is None) or (not proposal['decision_accept']):
-                allocation = JCMTRequestTotal(None, {}, {})
+                allocation = JCMTRequestTotal(None, {}, {}, {})
 
             yield (
                 row +
