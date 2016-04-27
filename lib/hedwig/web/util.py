@@ -165,6 +165,17 @@ def register_error_handlers(app):
     for error_class in (HTTPError, HTTPForbidden, HTTPNotFound):
         @app.errorhandler(error_class.code)
         def error_handler(error):
+            # Flask matches error handlers for HTTP exception classes by
+            # code which means it might call our error handler with an
+            # exception class which isn't actually one of those we registered.
+            # One place this happens is that the handle_exception method
+            # uses the handler for code 500 (same as our HTTPError).
+            # Flask will already have logged the error, so just replace it
+            # with a standard HTTPError.
+            if not all((hasattr(error, x) for x in
+                        ['name', 'description', 'code'])):
+                error = HTTPError()
+
             return _make_response(
                 'error.html',
                 {'title': error.name, 'message': error.description},
