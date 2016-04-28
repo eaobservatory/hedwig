@@ -215,7 +215,7 @@ you can create the initial database structure using the `hedwigctl` tool::
 
 If you need to update an existing Hedwig database when an update to the
 software leads to a change to the database structure, you can use
-`Alembic <https://alembic.readthedocs.org/>`_ to help you make the change.
+`Alembic <https://alembic.readthedocs.io/>`_ to help you make the change.
 Configuration for Alembic is included with Hedwig.
 You can generate a migration script with::
 
