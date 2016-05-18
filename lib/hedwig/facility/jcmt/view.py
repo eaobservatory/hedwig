@@ -465,11 +465,11 @@ class JCMT(Generic):
 
             total_weight += affiliation.weight
             available_affiliation[affiliation.id] = \
-                available.total * affiliation.weight / 100.0
+                available.total_non_free * affiliation.weight / 100.0
 
         # Assign the remaining time to the "Unknown" affiliation.
         available_affiliation[0] = \
-            (1.0 - (total_weight / 100.0)) * available.total
+            (1.0 - (total_weight / 100.0)) * available.total_non_free
 
         tabulation.update({
             'jcmt_weathers': JCMTWeather.get_available(),

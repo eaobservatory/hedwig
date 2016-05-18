@@ -123,19 +123,24 @@ class JCMTAvailableCollection(OrderedDict):
 
         weathers = {}
         total = 0.0
+        total_non_free = 0.0
 
         for record in self.values():
             time = record.time
 
             weather = record.weather
-            if not JCMTWeather.get_info(weather).available:
+            weather_info = JCMTWeather.get_info(weather)
+            if not weather_info.available:
                 weather = 0
 
             total += time
             weathers[weather] = weathers.get(weather, 0.0) + time
 
+            if not weather_info.free:
+                total_non_free += time
+
         return JCMTRequestTotal(total=total, weather=weathers, instrument={},
-                                total_non_free=None)
+                                total_non_free=total_non_free)
 
 
 class JCMTRequestCollection(OrderedDict):

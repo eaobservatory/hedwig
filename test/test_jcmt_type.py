@@ -206,20 +206,20 @@ class JCMTTypeTestCase(TestCase):
         c = JCMTAvailableCollection()
 
         c[1001] = JCMTAvailable(1001, 100, 2, 10.0)
-        c[1002] = JCMTAvailable(1002, 100, 3, 15.0)
+        c[1002] = JCMTAvailable(1002, 100, 5, 15.0)
 
         # Test the "get_total" method.
         total = c.get_total()
         self.assertIsInstance(total, JCMTRequestTotal)
         self.assertEqual(total.total, 25)
-        self.assertEqual(total.weather, {2: 10.0, 3: 15.0})
+        self.assertEqual(total.weather, {2: 10.0, 5: 15.0})
         self.assertEqual(total.instrument, {})
-        self.assertIsNone(total.total_non_free)
+        self.assertEqual(total.total_non_free, 10)
 
         # Test the "validate" method.
         c.validate()
 
-        c[1003] = JCMTAvailable(1003, 100, 3, 20.0)
+        c[1003] = JCMTAvailable(1003, 100, 5, 20.0)
 
         with self.assertRaisesRegexp(UserError, 'There are multiple entries'):
             c.validate()
