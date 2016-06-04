@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from datetime import datetime
+import logging
 import os
 from threading import Thread
 from time import sleep
@@ -50,6 +51,10 @@ class DummyServer(Thread):
     def __init__(self, db):
         Thread.__init__(self)
         self.app = create_web_app(db=db)
+
+        log_handler = logging.StreamHandler()
+        log_handler.setLevel(logging.WARNING)
+        self.app.logger.addHandler(log_handler)
 
         @self.app.route('/shutdown')
         def shutdown():
