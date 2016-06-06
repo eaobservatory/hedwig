@@ -27,7 +27,7 @@ from sqlalchemy.sql.functions import count
 from ...error import ConsistencyError, Error, FormattedError, \
     NoSuchRecord, UserError
 from ...type.collection import GroupMemberCollection, ReviewerCollection
-from ...type.enum import Assessment, FormatType, GroupType, ReviewerRole
+from ...type.enum import Assessment, FormatType, GroupType
 from ...type.simple import GroupMember, Reviewer
 from ..meta import call, decision, group_member, institution, person, \
     proposal, queue, \
@@ -57,10 +57,10 @@ class ReviewPart(object):
 
         return result.inserted_primary_key[0]
 
-    def add_reviewer(self, proposal_id, person_id, role,
+    def add_reviewer(self, role_class, proposal_id, person_id, role,
                      _test_skip_check=False, _conn=None):
         try:
-            role_info = ReviewerRole.get_info(role)
+            role_info = role_class.get_info(role)
         except KeyError:
             raise Error('invalid reviewer role')
 
@@ -137,7 +137,7 @@ class ReviewPart(object):
                 raise ConsistencyError(
                     'no row matched deleting reviewer {}', reviewer_id)
 
-    def multiple_reviewer_update(self, remove=None, add=None):
+    def multiple_reviewer_update(self, role_class, remove=None, add=None):
         """
         Perform multiple reviewer updates.
 
@@ -146,6 +146,9 @@ class ReviewPart(object):
         transaction.  The removals are performed first to avoid
         triggering the uniqueness constraint when the reviewer for
         a "unique" role is being changed.
+
+        The "role_class" for the relevant facility must be provided -- this
+        will be passed to "add_reviewer".
 
         "remove" and "add" are lists of kwargs dictionaries to be passed
         to "delete_reviewer" and "add_reviewer" respectively.
@@ -158,7 +161,8 @@ class ReviewPart(object):
 
             if add is not None:
                 for kwargs in add:
-                    self.add_reviewer(_conn=conn, **kwargs)
+                    self.add_reviewer(role_class=role_class,
+                                      _conn=conn, **kwargs)
 
     def search_group_member(self, queue_id=None, group_type=None,
                             person_id=None, facility_id=None,
@@ -238,7 +242,8 @@ class ReviewPart(object):
 
         return ans
 
-    def search_reviewer(self, proposal_id=None, role=None, reviewer_id=None,
+    def search_reviewer(self, role_class,
+                        proposal_id=None, role=None, reviewer_id=None,
                         person_id=None, review_state=None,
                         call_id=None, queue_id=None,
                         with_review=False, with_review_text=False,
@@ -330,7 +335,7 @@ class ReviewPart(object):
             else:
                 stmt = stmt.where(call.c.queue_id == queue_id)
 
-        ans = ReviewerCollection()
+        ans = ReviewerCollection(role_class)
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(
@@ -391,7 +396,7 @@ class ReviewPart(object):
 
                 result = conn.execute(decision.insert().values(values))
 
-    def set_review(self, reviewer_id, text, format_,
+    def set_review(self, role_class, reviewer_id, text, format_,
                    assessment, rating, weight,
                    note, note_format, note_public,
                    is_update):
@@ -426,10 +431,10 @@ class ReviewPart(object):
         with self._transaction() as conn:
             # Find out what type of review this is so that we can
             # determine which attributes are appropriate.
-            reviewer = self.search_reviewer(reviewer_id=reviewer_id,
-                                            _conn=conn).get_single()
+            reviewer = self.search_reviewer(
+                role_class, reviewer_id=reviewer_id, _conn=conn).get_single()
 
-            role_info = ReviewerRole.get_info(reviewer.role)
+            role_info = role_class.get_info(reviewer.role)
             attr_values = {k.name: v for (k, v) in values.items()}
 
             for attr in ('text', 'assessment', 'rating', 'weight', 'note'):

@@ -23,7 +23,8 @@ from datetime import datetime
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, Error, \
     NoSuchRecord, UserError
 from hedwig.type.collection import GroupMemberCollection, ReviewerCollection
-from hedwig.type.enum import Assessment, FormatType, GroupType, ReviewerRole
+from hedwig.type.enum import Assessment, BaseReviewerRole, \
+    FormatType, GroupType
 from hedwig.type.simple import GroupMember, Reviewer
 
 from .dummy_db import DBTestCase
@@ -124,35 +125,40 @@ class DBReviewTest(DBTestCase):
         person_id_3 = self.db.add_person('Reviewer 3')
 
         # Try null search.
-        result = self.db.search_reviewer(proposal_id)
+        result = self.db.search_reviewer(BaseReviewerRole, proposal_id)
         self.assertIsInstance(result, ReviewerCollection)
         self.assertEqual(len(result), 0)
 
         # Try adding reviewers.
-        reviewer_id_1 = self.db.add_reviewer(proposal_id, person_id_1,
-                                             ReviewerRole.CTTEE_PRIMARY)
+        reviewer_id_1 = self.db.add_reviewer(
+            BaseReviewerRole, proposal_id, person_id_1,
+            BaseReviewerRole.CTTEE_PRIMARY)
         self.assertIsInstance(reviewer_id_1, int)
 
         with self.assertRaisesRegexp(UserError, '^There is already'):
-            self.db.add_reviewer(proposal_id, person_id_2,
-                                 ReviewerRole.CTTEE_PRIMARY)
+            self.db.add_reviewer(
+                BaseReviewerRole, proposal_id, person_id_2,
+                BaseReviewerRole.CTTEE_PRIMARY)
 
-        reviewer_id_2 = self.db.add_reviewer(proposal_id, person_id_2,
-                                             ReviewerRole.CTTEE_SECONDARY)
+        reviewer_id_2 = self.db.add_reviewer(
+            BaseReviewerRole, proposal_id, person_id_2,
+            BaseReviewerRole.CTTEE_SECONDARY)
         self.assertIsInstance(reviewer_id_2, int)
 
-        reviewer_id_3 = self.db.add_reviewer(proposal_id, person_id_3,
-                                             ReviewerRole.CTTEE_SECONDARY)
+        reviewer_id_3 = self.db.add_reviewer(
+            BaseReviewerRole, proposal_id, person_id_3,
+            BaseReviewerRole.CTTEE_SECONDARY)
         self.assertIsInstance(reviewer_id_3, int)
 
         # Try searching for reviewers.
-        result = self.db.search_reviewer(proposal_id=proposal_id)
+        result = self.db.search_reviewer(BaseReviewerRole,
+                                         proposal_id=proposal_id)
         self.assertEqual(len(result), 3)
 
         for ((k, v), ref) in zip(result.items(), (
-                (person_id_1, 'Reviewer 1', ReviewerRole.CTTEE_PRIMARY),
-                (person_id_2, 'Reviewer 2', ReviewerRole.CTTEE_SECONDARY),
-                (person_id_3, 'Reviewer 3', ReviewerRole.CTTEE_SECONDARY))):
+                (person_id_1, 'Reviewer 1', BaseReviewerRole.CTTEE_PRIMARY),
+                (person_id_2, 'Reviewer 2', BaseReviewerRole.CTTEE_SECONDARY),
+                (person_id_3, 'Reviewer 3', BaseReviewerRole.CTTEE_SECONDARY))):
             self.assertIsInstance(k, int)
             self.assertIsInstance(v, Reviewer)
             self.assertEqual(k, v.id)
@@ -175,6 +181,7 @@ class DBReviewTest(DBTestCase):
                               institution_id=institution_id)
 
         result = self.db.search_reviewer(
+            BaseReviewerRole,
             reviewer_id=reviewer_id_3,
             with_review=True, with_review_text=True).get_single()
 
@@ -187,21 +194,23 @@ class DBReviewTest(DBTestCase):
         self.assertIsNone(result.review_format)
 
         # Test call and queue query parameters.
-        result = self.db.search_reviewer(call_id=1999999)
+        result = self.db.search_reviewer(BaseReviewerRole, call_id=1999999)
         self.assertEqual(len(result), 0)
 
-        result = self.db.search_reviewer(queue_id=1999999)
+        result = self.db.search_reviewer(BaseReviewerRole, queue_id=1999999)
         self.assertEqual(len(result), 0)
 
         # Try removing a reviewer.
         self.db.delete_reviewer(reviewer_id=reviewer_id_1)
 
-        result = self.db.search_reviewer(proposal_id=proposal_id)
+        result = self.db.search_reviewer(BaseReviewerRole,
+                                         proposal_id=proposal_id)
         self.assertEqual(len(result), 2)
 
         self.assertFalse(reviewer_id_1 in result.keys())
 
-        result = self.db.search_reviewer(proposal_id=proposal_id,
+        result = self.db.search_reviewer(BaseReviewerRole,
+                                         proposal_id=proposal_id,
                                          person_id=person_id_2)
 
         self.assertEqual(list(result.keys()), [reviewer_id_2])
@@ -209,6 +218,7 @@ class DBReviewTest(DBTestCase):
         # Try specifying a review.
         with self.assertRaisesRegexp(ConsistencyError, '^review does not'):
             self.db.set_review(
+                BaseReviewerRole,
                 reviewer_id=reviewer_id_2,
                 text='A review', format_=FormatType.PLAIN,
                 assessment=None, rating=50, weight=50,
@@ -216,6 +226,7 @@ class DBReviewTest(DBTestCase):
                 is_update=True)
 
         self.db.set_review(
+            BaseReviewerRole,
             reviewer_id=reviewer_id_2,
             text='A review', format_=FormatType.PLAIN,
             assessment=None, rating=50, weight=50,
@@ -225,6 +236,7 @@ class DBReviewTest(DBTestCase):
         # Try updating a review.
         with self.assertRaisesRegexp(ConsistencyError, '^review already'):
             self.db.set_review(
+                BaseReviewerRole,
                 reviewer_id=reviewer_id_2,
                 text='An updated review', format_=FormatType.PLAIN,
                 assessment=None, rating=51, weight=51,
@@ -232,6 +244,7 @@ class DBReviewTest(DBTestCase):
                 is_update=False)
 
         self.db.set_review(
+            BaseReviewerRole,
             reviewer_id=reviewer_id_2,
             text='An updated review', format_=FormatType.PLAIN,
             assessment=None, rating=52, weight=52,
@@ -240,6 +253,7 @@ class DBReviewTest(DBTestCase):
 
         # Retrieve the review.
         result = self.db.search_reviewer(
+            BaseReviewerRole,
             reviewer_id=reviewer_id_2, with_review=True).get_single()
         self.assertTrue(result.review_present)
         self.assertIsNone(result.review_text)
@@ -251,6 +265,7 @@ class DBReviewTest(DBTestCase):
         self.assertEqual(result.review_note_public, False)
 
         result = self.db.search_reviewer(
+            BaseReviewerRole,
             reviewer_id=reviewer_id_2, with_review=True,
             with_review_text=True).get_single()
         self.assertEqual(result.review_text, 'An updated review')
@@ -265,6 +280,7 @@ class DBReviewTest(DBTestCase):
         # Test review constraints.
         with self.assertRaisesRegexp(Error, 'The rating should be specified'):
             self.db.set_review(
+                BaseReviewerRole,
                 reviewer_id=reviewer_id_3,
                 text='Another review', format_=FormatType.PLAIN,
                 assessment=None, rating=None, weight=None,
@@ -273,6 +289,7 @@ class DBReviewTest(DBTestCase):
 
         with self.assertRaisesRegexp(Error, 'Text format not specified'):
             self.db.set_review(
+                BaseReviewerRole,
                 reviewer_id=reviewer_id_3,
                 text='Another review', format_=None,
                 assessment=None, rating=25, weight=75,
@@ -281,6 +298,7 @@ class DBReviewTest(DBTestCase):
 
         with self.assertRaisesRegexp(Error, 'Text format not recognised'):
             self.db.set_review(
+                BaseReviewerRole,
                 reviewer_id=reviewer_id_3,
                 text='Another review', format_=999,
                 assessment=None, rating=25, weight=75,
@@ -289,6 +307,7 @@ class DBReviewTest(DBTestCase):
 
         with self.assertRaisesRegexp(Error, 'The assessment should not'):
             self.db.set_review(
+                BaseReviewerRole,
                 reviewer_id=reviewer_id_3,
                 text='Another review', format_=FormatType.PLAIN,
                 assessment=Assessment.PROBLEM, rating=25, weight=75,
@@ -297,6 +316,7 @@ class DBReviewTest(DBTestCase):
 
         with self.assertRaisesRegexp(Error, 'Note format not recognised'):
             self.db.set_review(
+                BaseReviewerRole,
                 reviewer_id=reviewer_id_3,
                 text='Another review', format_=FormatType.PLAIN,
                 assessment=None, rating=25, weight=75,
@@ -305,6 +325,7 @@ class DBReviewTest(DBTestCase):
 
         with self.assertRaisesRegexp(Error, 'The note should be specified'):
             self.db.set_review(
+                BaseReviewerRole,
                 reviewer_id=reviewer_id_3,
                 text='Another review', format_=FormatType.PLAIN,
                 assessment=None, rating=25, weight=75,
@@ -312,12 +333,14 @@ class DBReviewTest(DBTestCase):
                 is_update=False)
 
         person_id_4 = self.db.add_person('Reviewer Four')
-        reviewer_id_4 = self.db.add_reviewer(proposal_id, person_id_4,
-                                             ReviewerRole.TECH)
+        reviewer_id_4 = self.db.add_reviewer(
+            BaseReviewerRole, proposal_id, person_id_4,
+            BaseReviewerRole.TECH)
         self.assertIsInstance(reviewer_id_4, int)
 
         with self.assertRaisesRegexp(Error, 'Assessment value not recognised'):
             self.db.set_review(
+                BaseReviewerRole,
                 reviewer_id=reviewer_id_4,
                 text='Technical review', format_=FormatType.PLAIN,
                 assessment=999, rating=None, weight=None,

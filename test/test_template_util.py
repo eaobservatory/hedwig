@@ -23,9 +23,10 @@ import json
 
 from flask import Markup
 
-from hedwig.type.enum import Assessment, AttachmentState, CallState, \
+from hedwig.type.enum import Assessment, AttachmentState, \
+    BaseReviewerRole, CallState, \
     ProposalState, \
-    PublicationType, ReviewerRole, TextRole
+    PublicationType, TextRole
 from hedwig.web.template_util import Counter
 
 from .dummy_app import WebAppTestCase
@@ -136,13 +137,17 @@ class TemplateUtilTestCase(WebAppTestCase):
     def test_filter_reviewer_role(self):
         f = self.app.jinja_env.filters['reviewer_role_name']
 
-        self.assertEqual(f(None), 'Unknown role')
-        self.assertEqual(f(ReviewerRole.EXTERNAL), 'External')
+        self.assertEqual(f(None, BaseReviewerRole),
+                         'Unknown role')
+        self.assertEqual(f(BaseReviewerRole.EXTERNAL, BaseReviewerRole),
+                         'External')
 
         f = self.app.jinja_env.filters['reviewer_role_class']
 
-        self.assertEqual(f(999), '')
-        self.assertEqual(f(ReviewerRole.EXTERNAL), 'reviewer_ext')
+        self.assertEqual(f(999, BaseReviewerRole),
+                         '')
+        self.assertEqual(f(BaseReviewerRole.EXTERNAL, BaseReviewerRole),
+                         'reviewer_ext')
 
     def test_filter_text_role(self):
         f = self.app.jinja_env.filters['text_role_short_name']
@@ -184,13 +189,13 @@ class TemplateUtilTestCase(WebAppTestCase):
     def test_test_reviewer_role(self):
         t = self.app.jinja_env.tests['reviewer_role_external']
 
-        self.assertFalse(t(ReviewerRole.TECH))
-        self.assertTrue(t(ReviewerRole.EXTERNAL))
+        self.assertFalse(t(BaseReviewerRole.TECH, BaseReviewerRole))
+        self.assertTrue(t(BaseReviewerRole.EXTERNAL, BaseReviewerRole))
 
         t = self.app.jinja_env.tests['reviewer_role_review']
 
-        self.assertTrue(t(ReviewerRole.EXTERNAL))
-        self.assertFalse(t(ReviewerRole.FEEDBACK))
+        self.assertTrue(t(BaseReviewerRole.EXTERNAL, BaseReviewerRole))
+        self.assertFalse(t(BaseReviewerRole.FEEDBACK, BaseReviewerRole))
 
     def test_filter_format_text(self):
         f = self.app.jinja_env.filters['format_text']

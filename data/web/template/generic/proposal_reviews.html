@@ -16,7 +16,7 @@
     <nav>
         <p id="extra_review_links">
             {% for role in can_add_roles %}
-                <a href="{{ url_for('.proposal_review_new', proposal_id=proposal.id, reviewer_role=role) }}">Add {{ role | reviewer_role_name | lower }}{{ ' review' if role is reviewer_role_review }}</a>
+                <a href="{{ url_for('.proposal_review_new', proposal_id=proposal.id, reviewer_role=role) }}">Add {{ role | reviewer_role_name(facility_role_class) | lower }}{{ ' review' if role is reviewer_role_review(facility_role_class) }}</a>
                 {% if not loop.last %}
                     <br />
                 {% endif %}
@@ -46,9 +46,9 @@
             <tr class="spacer_above">
                 <td {{ ((show_review, show_note) | count_true + 1) | fmt('rowspan="{}"') | safe }}>
                     {% if review.can_edit %}
-                        <a href="{{ url_for('.review_edit', reviewer_id=review.id, referrer='pr') }}">{{ review.role | reviewer_role_name }}</a>
+                        <a href="{{ url_for('.review_edit', reviewer_id=review.id, referrer='pr') }}">{{ review.role | reviewer_role_name(facility_role_class) }}</a>
                     {% else %}
-                        {{ review.role | reviewer_role_name }}
+                        {{ review.role | reviewer_role_name(facility_role_class) }}
                     {% endif %}
                 </td>
                 <td>

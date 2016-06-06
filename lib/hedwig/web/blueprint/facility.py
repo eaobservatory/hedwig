@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from flask import Blueprint, request
 
-from ...type.enum import FigureType, ReviewerRole, TextRole
+from ...type.enum import FigureType, TextRole
 from ...type.simple import CalculatorInfo, TargetToolInfo
 from ..util import HTTPRedirect, \
     require_admin, require_auth, send_file, templated, url_for
@@ -33,6 +33,7 @@ def create_facility_blueprint(db, facility):
 
     code = facility.get_code()
     name = facility.get_name()
+    role_class = facility.get_reviewer_roles()
 
     bp = Blueprint(code, __name__)
 
@@ -126,7 +127,7 @@ def create_facility_blueprint(db, facility):
     @facility_template('reviewer_grid.html')
     def review_call_technical(call_id):
         return facility.view_reviewer_grid(
-            db, call_id, ReviewerRole.TECH,
+            db, call_id, role_class.TECH,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/call/<int:call_id>/reviewers/committee',
@@ -135,7 +136,7 @@ def create_facility_blueprint(db, facility):
     @facility_template('reviewer_grid.html')
     def review_call_committee(call_id):
         return facility.view_reviewer_grid(
-            db, call_id, ReviewerRole.CTTEE_PRIMARY,
+            db, call_id, role_class.CTTEE_PRIMARY,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>')
@@ -388,7 +389,7 @@ def create_facility_blueprint(db, facility):
         return facility.view_proposal_reviews(db, proposal_id)
 
     @bp.route('/proposal/<int:proposal_id>/review/'
-              '<hedwig_review:reviewer_role>/new',
+              '<hedwig_review_{}:reviewer_role>/new'.format(code),
               methods=['GET', 'POST'])
     @require_auth(require_person=True)
     @facility_template('review_edit.html')
@@ -403,7 +404,7 @@ def create_facility_blueprint(db, facility):
     @facility_template('reviewer_select.html')
     def review_external_add(proposal_id):
         return facility.view_reviewer_add(
-            db, proposal_id, ReviewerRole.EXTERNAL,
+            db, proposal_id, role_class.EXTERNAL,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/review/external/remove/'
@@ -413,7 +414,7 @@ def create_facility_blueprint(db, facility):
     @templated('confirm.html')
     def review_external_remove(proposal_id, reviewer_id):
         return facility.view_reviewer_remove(
-            db, proposal_id, ReviewerRole.EXTERNAL, reviewer_id,
+            db, proposal_id, role_class.EXTERNAL, reviewer_id,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/review/external/reinvite/'
@@ -423,7 +424,7 @@ def create_facility_blueprint(db, facility):
     @templated('confirm.html')
     def review_external_reinvite(proposal_id, reviewer_id):
         return facility.view_reviewer_reinvite(
-            db, proposal_id, ReviewerRole.EXTERNAL, reviewer_id,
+            db, proposal_id, role_class.EXTERNAL, reviewer_id,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/decision', methods=['GET', 'POST'])
@@ -691,6 +692,7 @@ def create_facility_blueprint(db, facility):
     def add_to_context():
         return {
             'facility_name': name,
+            'facility_role_class': role_class,
         }
 
     return bp

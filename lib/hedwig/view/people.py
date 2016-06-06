@@ -808,18 +808,23 @@ class PeopleView(object):
             reviewer_person_id=person_id,
             person_pi=True, state=ProposalState.REVIEW)
 
-        facility_proposals = OrderedDict()
+        facility_proposals = []
 
         for id_, ps in groupby(proposals.values(), lambda x: x.facility_id):
             facility = facilities.get(id_)
             if facility is None:
                 continue
 
-            facility_proposals[facility.name] = [
-                ProposalWithCode(
-                    *p, code=facility.view.make_proposal_code(db, p),
-                    facility_code=facility.code)
-                for p in ps]
+            facility_proposals.append((
+                facility.name,
+                facility.code,
+                facility.view.get_reviewer_roles(),
+                [
+                    ProposalWithCode(
+                        *p, code=facility.view.make_proposal_code(db, p),
+                        facility_code=None)
+                    for p in ps
+                ]))
 
         return {
             'title': title,

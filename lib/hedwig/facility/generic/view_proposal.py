@@ -31,7 +31,7 @@ from ...type.collection import PrevProposalCollection, ResultCollection, \
     TargetCollection
 from ...type.enum import AffiliationType, AttachmentState, \
     CallState, FigureType, FormatType, \
-    ProposalState, PublicationType, ReviewerRole, TextRole
+    ProposalState, PublicationType, TextRole
 from ...type.simple import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
     PrevProposal, PrevProposalPub, \
@@ -114,7 +114,8 @@ class GenericProposal(object):
     def view_proposal_view(self, db, proposal, can, args):
         countries = get_countries()
 
-        review_can = auth.for_review(db, reviewer=None, proposal=proposal)
+        review_can = auth.for_review(self.get_reviewer_roles(),
+                                     db, reviewer=None, proposal=proposal)
 
         ctx = {
             'title': proposal.title,
@@ -1470,8 +1471,11 @@ class GenericProposal(object):
         Method to gather additional information for the proposal feedback page.
         """
 
+        role_class = self.get_reviewer_roles()
+
         reviewers = db.search_reviewer(
-            proposal_id=proposal.id, role=ReviewerRole.FEEDBACK,
+            role_class=role_class,
+            proposal_id=proposal.id, role=role_class.FEEDBACK,
             with_review=True, with_review_text=True)
 
         # Show the decision note if viewing as an administrator.

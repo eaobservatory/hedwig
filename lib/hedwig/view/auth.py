@@ -22,7 +22,7 @@ from collections import namedtuple
 
 from ..db.util import memoized
 from ..error import NoSuchRecord
-from ..type.enum import GroupType, ProposalState, ReviewerRole
+from ..type.enum import GroupType, ProposalState
 from ..web.util import session, HTTPForbidden
 
 Authorization = namedtuple('Authorization', ('view', 'edit'))
@@ -108,7 +108,8 @@ def for_person(db, person):
                 group_type=GroupType.COORD).values():
             queue_ids.add(group_member.queue_id)
 
-        if db.search_reviewer(person_id=person.id, queue_id=list(queue_ids)):
+        if db.search_reviewer(role_class=None,
+                              person_id=person.id, queue_id=list(queue_ids)):
             return yes
 
         return auth
@@ -248,7 +249,7 @@ def for_proposal_feedback(db, proposal):
     return no
 
 
-def for_review(db, reviewer, proposal, auth_cache=None):
+def for_review(role_class, db, reviewer, proposal, auth_cache=None):
     """
     Determine the current user's authorization regarding this review.
 
@@ -282,10 +283,11 @@ def for_review(db, reviewer, proposal, auth_cache=None):
 
         # Special case: if this is the feedback review, allow all reviewers
         # with suitable roles to edit it.
-        if reviewer.role == ReviewerRole.FEEDBACK:
-            if db.search_reviewer(proposal_id=reviewer.proposal_id,
+        if reviewer.role == role_class.FEEDBACK:
+            if db.search_reviewer(role_class=role_class,
+                                  proposal_id=reviewer.proposal_id,
                                   person_id=person_id,
-                                  role=ReviewerRole.get_feedback_roles()):
+                                  role=role_class.get_feedback_roles()):
                 return yes
 
     # Allow administrators and review coordinators to view, with edit too if
@@ -322,7 +324,7 @@ def can_be_admin(db):
         raise HTTPForbidden('Could not verify administrative access.')
 
 
-def can_add_review_roles(db, proposal):
+def can_add_review_roles(role_class, db, proposal):
     """
     Determine for which reviewer roles a person can add a review to
     a proposal.
@@ -349,24 +351,24 @@ def can_add_review_roles(db, proposal):
     # review.
     try:
         proposal.reviewers.get_person(person_id=person_id,
-                                      roles=ReviewerRole.get_cttee_roles())
+                                      roles=role_class.get_cttee_roles())
     except KeyError:
         if db.search_group_member(
                 queue_id=proposal.queue_id,
                 group_type=GroupType.CTTEE,
                 person_id=person_id):
-            roles.append(ReviewerRole.CTTEE_OTHER)
+            roles.append(role_class.CTTEE_OTHER)
 
     # Determine whether the user can add a "feedback" review -- they should be
     # a reviewer in a suitable role (or have administrative privileges) but
     # there should not already be a review of this role.
-    if not proposal.reviewers.person_id_by_role(ReviewerRole.FEEDBACK):
+    if not proposal.reviewers.person_id_by_role(role_class.FEEDBACK):
         try:
             if not (session.get('is_admin', False) and can_be_admin(db)):
                 proposal.reviewers.get_person(
                     person_id=person_id,
-                    roles=ReviewerRole.get_feedback_roles())
-            roles.append(ReviewerRole.FEEDBACK)
+                    roles=role_class.get_feedback_roles())
+            roles.append(role_class.FEEDBACK)
         except KeyError:
             pass
 

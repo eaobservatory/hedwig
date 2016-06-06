@@ -34,7 +34,7 @@ from ...web.util import ErrorPage, \
 from ...type.collection import ReviewerCollection
 from ...type.enum import AffiliationType, Assessment, \
     FileTypeInfo, FormatType, GroupType, \
-    ProposalState, ReviewerRole, TextRole
+    ProposalState, TextRole
 from ...type.simple import Affiliation, Link, MemberPIInfo, \
     ProposalWithCode, Reviewer
 from ...type.util import null_tuple, with_can_edit
@@ -51,11 +51,13 @@ ProposalWithReviewerPersons = namedtuple(
 class GenericReview(object):
     @with_call_review(permission='view')
     def view_review_call(self, db, call, can, auth_cache):
+        role_class = self.get_reviewer_roles()
+
         proposals = db.search_proposal(
             call_id=call.id, state=ProposalState.submitted_states(),
             person_pi=True, with_reviewers=True,
-            with_reviewer_role=(ReviewerRole.CTTEE_PRIMARY,
-                                ReviewerRole.CTTEE_SECONDARY),
+            with_reviewer_role=(role_class.CTTEE_PRIMARY,
+                                role_class.CTTEE_SECONDARY),
             with_decision=True, with_categories=True)
 
         return {
@@ -67,9 +69,9 @@ class GenericReview(object):
                 ProposalWithReviewers(
                     *x, code=self.make_proposal_code(db, x),
                     reviewers_primary=x.reviewers.values_by_role(
-                        ReviewerRole.CTTEE_PRIMARY),
+                        role_class.CTTEE_PRIMARY),
                     reviewers_secondary=x.reviewers.values_by_role(
-                        ReviewerRole.CTTEE_SECONDARY),
+                        role_class.CTTEE_SECONDARY),
                     facility_code=None)
                 for x in proposals.values()],
         }
@@ -127,10 +129,13 @@ class GenericReview(object):
         is retrieved.
         """
 
+        role_class = self.get_reviewer_roles()
+
         proposals = db.search_proposal(
             call_id=call.id, state=ProposalState.submitted_states(),
             with_members=True, with_reviewers=True, with_review_info=True,
-            with_decision=True, with_categories=with_extra)
+            with_decision=True, with_categories=with_extra,
+            reviewer_role_class=role_class)
 
         affiliations = db.search_affiliation(
             queue_id=call.queue_id, hidden=False, with_weight_call_id=call.id)
@@ -145,7 +150,7 @@ class GenericReview(object):
                 member_pi = None
 
             can_view_review = auth.for_review(
-                db, reviewer=None, proposal=proposal,
+                role_class, db, reviewer=None, proposal=proposal,
                 auth_cache=auth_cache).view
 
             n_other = 0
@@ -174,10 +179,11 @@ class GenericReview(object):
                     proposal.reviewers, with_std_dev=True)
                 updated_proposal.update({
                     'reviewers': ReviewerCollection(
-                        (k, with_can_edit(v, auth.for_review(
-                            db, reviewer=v, proposal=proposal,
+                        proposal.reviewers.role_class,
+                        ((k, with_can_edit(v, auth.for_review(
+                            role_class, db, reviewer=v, proposal=proposal,
                             auth_cache=auth_cache).edit))
-                        for (k, v) in proposal.reviewers.items()),
+                        for (k, v) in proposal.reviewers.items())),
                     'rating': overall_rating,
                     'rating_std_dev': std_dev,
                 })
@@ -187,7 +193,8 @@ class GenericReview(object):
                 # we don't have to rely on the template hiding reviews
                 # which the user can't see.
                 updated_proposal.update({
-                    'reviewers': ReviewerCollection(),
+                    'reviewers': ReviewerCollection(
+                        proposal.reviewers.role_class),
                     'rating': None,
                     'rating_std_dev': None,
                 })
@@ -284,6 +291,8 @@ class GenericReview(object):
 
     @with_call_review(permission='edit')
     def view_review_call_reviewers(self, db, call, can, auth_cache, args):
+        role_class = self.get_reviewer_roles()
+
         role = args.get('role', None)
         if not role:
             role = None
@@ -314,7 +323,7 @@ class GenericReview(object):
                      url_for('.review_call_technical', call_id=call.id)),
                 Link('Assign committee members',
                      url_for('.review_call_committee', call_id=call.id))],
-            'roles': ReviewerRole.get_options(),
+            'roles': role_class.get_options(),
             'current_role': role,
             'current_state': state,
         }
@@ -322,27 +331,29 @@ class GenericReview(object):
     @with_call_review(permission='edit')
     def view_reviewer_grid(self, db, call, can, auth_cache,
                            primary_role, form):
+        role_class = self.get_reviewer_roles()
+
         try:
             call = db.get_call(facility_id=self.id_, call_id=call.id)
         except NoSuchRecord:
             raise HTTPNotFound('Call or semester not found')
 
-        if primary_role == ReviewerRole.TECH:
+        if primary_role == role_class.TECH:
             group_type = GroupType.TECH
             secondary_role = None
             target = url_for('.review_call_technical', call_id=call.id)
 
-        elif primary_role == ReviewerRole.CTTEE_PRIMARY:
+        elif primary_role == role_class.CTTEE_PRIMARY:
             group_type = GroupType.CTTEE
-            secondary_role = ReviewerRole.CTTEE_SECONDARY
+            secondary_role = role_class.CTTEE_SECONDARY
             target = url_for('.review_call_committee', call_id=call.id)
 
         else:
             raise ErrorPage('Unexpected reviewer role')
 
-        primary_role_info = ReviewerRole.get_info(primary_role)
+        primary_role_info = role_class.get_info(primary_role)
         secondary_role_info = (None if secondary_role is None else
-                               ReviewerRole.get_info(secondary_role))
+                               role_class.get_info(secondary_role))
 
         group_info = GroupType.get_info(group_type)
 
@@ -468,6 +479,7 @@ class GenericReview(object):
 
                 try:
                     db.multiple_reviewer_update(
+                        role_class=role_class,
                         remove=reviewer_remove, add=reviewer_add)
                 except DatabaseIntegrityError:
                     raise UserError(
@@ -500,8 +512,10 @@ class GenericReview(object):
 
     @with_proposal(permission='none')
     def view_reviewer_add(self, db, proposal, role, form):
+        role_class = self.get_reviewer_roles()
+
         try:
-            role_info = ReviewerRole.get_info(role)
+            role_info = role_class.get_info(role)
         except KeyError:
             raise HTTPError('Unknown reviewer role')
 
@@ -524,6 +538,7 @@ class GenericReview(object):
 
         existing_person_ids = [
             x.person_id for x in db.search_reviewer(
+                role_class=role_class,
                 proposal_id=proposal.id, role=role).values()
         ]
 
@@ -567,6 +582,7 @@ class GenericReview(object):
                             'This person already has this role.')
 
                     reviewer_id = db.add_reviewer(
+                        role_class=role_class,
                         proposal_id=proposal.id,
                         person_id=person.id, role=role)
 
@@ -601,6 +617,7 @@ class GenericReview(object):
                     person_id = db.add_person(member['name'])
                     db.add_email(person_id, member['email'], primary=True)
                     reviewer_id = db.add_reviewer(
+                        role_class=role_class,
                         proposal_id=proposal.id,
                         person_id=person_id, role=role)
                     (token, expiry) = db.add_invitation(person_id)
@@ -653,7 +670,7 @@ class GenericReview(object):
                                       with_institution=True).values()
             if p.id not in exclude_person_ids]
 
-        if role == ReviewerRole.EXTERNAL:
+        if role == role_class.EXTERNAL:
             target = url_for('.review_external_add', proposal_id=proposal.id)
         else:
             raise HTTPError('Unexpected reviewer role.')
@@ -695,8 +712,10 @@ class GenericReview(object):
 
     @with_proposal(permission='none')
     def view_reviewer_remove(self, db, proposal, role, reviewer_id, form):
+        role_class = self.get_reviewer_roles()
+
         try:
-            role_info = ReviewerRole.get_info(role)
+            role_info = role_class.get_info(role)
         except KeyError:
             raise HTTPError('Unknown reviewer role')
 
@@ -713,6 +732,7 @@ class GenericReview(object):
 
         try:
             reviewer = db.search_reviewer(
+                role_class=role_class,
                 proposal_id=proposal.id, role=role, reviewer_id=reviewer_id,
                 with_review=True).get_single()
         except NoSuchRecord:
@@ -743,8 +763,10 @@ class GenericReview(object):
 
     @with_proposal(permission='none')
     def view_reviewer_reinvite(self, db, proposal, role, reviewer_id, form):
+        role_class = self.get_reviewer_roles()
+
         try:
-            role_info = ReviewerRole.get_info(role)
+            role_info = role_class.get_info(role)
         except KeyError:
             raise HTTPError('Unknown reviewer role')
 
@@ -761,6 +783,7 @@ class GenericReview(object):
 
         try:
             reviewer = db.search_reviewer(
+                role_class=role_class,
                 proposal_id=proposal.id, role=role, reviewer_id=reviewer_id,
                 with_review=True).get_single()
         except NoSuchRecord:
@@ -822,8 +845,10 @@ class GenericReview(object):
 
     @with_proposal(permission='none')
     def view_review_new(self, db, proposal, reviewer_role, form):
+        role_class = self.get_reviewer_roles()
+
         try:
-            role_info = ReviewerRole.get_info(reviewer_role)
+            role_info = role_class.get_info(reviewer_role)
         except KeyError:
             raise HTTPError('Unknown reviewer role')
 
@@ -833,7 +858,7 @@ class GenericReview(object):
                 'There is already a "{}" reviewer for this proposal.',
                 role_info.name)
 
-        can_add_roles = auth.can_add_review_roles(db, proposal)
+        can_add_roles = auth.can_add_review_roles(role_class, db, proposal)
 
         if reviewer_role not in can_add_roles:
             raise HTTPForbidden(
@@ -860,6 +885,8 @@ class GenericReview(object):
 
     def _view_review_new_or_edit(self, db, reviewer, proposal, args, form,
                                  reviewer_role=None):
+        role_class = self.get_reviewer_roles()
+
         if reviewer is None:
             is_new_reviewer = True
             is_own_review = True
@@ -875,7 +902,7 @@ class GenericReview(object):
             reviewer_role = reviewer.role
 
         try:
-            role_info = ReviewerRole.get_info(reviewer_role)
+            role_info = role_class.get_info(reviewer_role)
         except KeyError:
             raise HTTPError('Unknown reviewer role')
 
@@ -946,6 +973,7 @@ class GenericReview(object):
 
                 if is_new_reviewer:
                     reviewer_id = db.add_reviewer(
+                        role_class=role_class,
                         proposal_id=proposal.id,
                         person_id=session['person']['id'],
                         role=reviewer_role)
@@ -958,6 +986,7 @@ class GenericReview(object):
                     reviewer_id = reviewer.id
 
                 db.set_review(
+                    role_class=role_class,
                     reviewer_id=reviewer_id,
                     text=reviewer.review_text,
                     format_=reviewer.review_format,
@@ -1024,8 +1053,11 @@ class GenericReview(object):
 
     @with_proposal(permission='none')
     def view_proposal_reviews(self, db, proposal):
+        role_class = self.get_reviewer_roles()
+
         auth_cache = {}
-        if not auth.for_review(db, reviewer=None, proposal=proposal,
+        if not auth.for_review(role_class, db,
+                               reviewer=None, proposal=proposal,
                                auth_cache=auth_cache).view:
             raise HTTPForbidden(
                 'Permission denied for this proposal\'s reviews.')
@@ -1038,6 +1070,7 @@ class GenericReview(object):
             abstract = None
 
         reviews = db.search_reviewer(
+            role_class=role_class,
             proposal_id=proposal.id, with_review=True,
             with_review_text=True, with_review_note=True)
 
@@ -1056,7 +1089,7 @@ class GenericReview(object):
             if not review.review_note_public:
                 review = review._replace(review_note=None)
             review_list.append(with_can_edit(review, auth.for_review(
-                db, reviewer=review, proposal=proposal,
+                role_class, db, reviewer=review, proposal=proposal,
                 auth_cache=auth_cache).edit))
 
         return {
@@ -1069,7 +1102,8 @@ class GenericReview(object):
                 proposal_id=proposal.id).values(),
             'reviews': review_list,
             'overall_rating': self.calculate_overall_rating(reviews),
-            'can_add_roles': auth.can_add_review_roles(db, proposal),
+            'can_add_roles': auth.can_add_review_roles(role_class, db,
+                                                       proposal),
         }
 
     def view_proposal_decision(self, db, proposal_id, form):
@@ -1186,13 +1220,15 @@ class GenericReview(object):
 
     @with_call_review(permission='edit')
     def view_review_confirm_feedback(self, db, call, can, auth_cache, form):
+        role_class = self.get_reviewer_roles()
+
         # Get proposals for this call, including their feedback review
         # and decision.  Note: "with_decision" means include it in the
         # results, decision_accept_defined that the proposal must have one.
         proposals = db.search_proposal(
             call_id=call.id, state=ProposalState.REVIEW,
             with_reviewers=True, with_review_info=True, with_review_text=True,
-            with_review_state=True, with_reviewer_role=ReviewerRole.FEEDBACK,
+            with_review_state=True, with_reviewer_role=role_class.FEEDBACK,
             with_decision=True, decision_accept_defined=True)
 
         # Ignore proposals without reviews.

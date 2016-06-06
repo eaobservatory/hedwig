@@ -27,7 +27,7 @@ from hedwig.type.collection import \
     CallCollection, EmailCollection, GroupMemberCollection, MemberCollection, \
     OrderedResultCollection, ResultCollection, \
     ProposalFigureCollection, ReviewerCollection
-from hedwig.type.enum import CallState, GroupType, ReviewerRole, TextRole
+from hedwig.type.enum import BaseReviewerRole, CallState, GroupType, TextRole
 from hedwig.type.simple import \
     Call, Email, GroupMember, Member, \
     ProposalFigureInfo, Reviewer
@@ -193,12 +193,12 @@ class CollectionTypeTestCase(TestCase):
             [104])
 
     def test_reviewer_collection(self):
-        c = ReviewerCollection()
+        c = ReviewerCollection(BaseReviewerRole)
 
         c[201] = null_tuple(Reviewer)._replace(id=201, person_id=2001,
-                                               role=ReviewerRole.TECH)
+                                               role=BaseReviewerRole.TECH)
         c[202] = null_tuple(Reviewer)._replace(id=202, person_id=2002,
-                                               role=ReviewerRole.EXTERNAL)
+                                               role=BaseReviewerRole.EXTERNAL)
 
         # hedwig.view.auth.for_proposal relies on this exception being
         # raised when the current user isn't a reviewer of the proposal.
@@ -208,20 +208,22 @@ class CollectionTypeTestCase(TestCase):
         self.assertEqual(c.get_person(2001).id, 201)
 
         with self.assertRaises(KeyError):
-            c.get_person(2001, roles=[ReviewerRole.EXTERNAL])
+            c.get_person(2001, roles=[BaseReviewerRole.EXTERNAL])
 
-        self.assertEqual(c.get_person(2001, roles=[ReviewerRole.TECH]).id, 201)
+        self.assertEqual(c.get_person(2001, roles=[BaseReviewerRole.TECH]).id,
+                         201)
 
-        self.assertEqual(c.person_id_by_role(ReviewerRole.EXTERNAL), [2002])
+        self.assertEqual(c.person_id_by_role(BaseReviewerRole.EXTERNAL),
+                         [2002])
 
-        reviewers = c.values_by_role(ReviewerRole.EXTERNAL)
+        reviewers = c.values_by_role(BaseReviewerRole.EXTERNAL)
         self.assertIsInstance(reviewers, list)
         self.assertEqual(len(reviewers), 1)
         self.assertIsInstance(reviewers[0], Reviewer)
         self.assertEqual(reviewers[0].id, 202)
 
     def test_reviewer_collection_rating(self):
-        c = ReviewerCollection()
+        c = ReviewerCollection(BaseReviewerRole)
 
         rating = c.get_overall_rating(include_unweighted=True,
                                       with_std_dev=False)
@@ -234,7 +236,7 @@ class CollectionTypeTestCase(TestCase):
         self.assertIsNone(rating[1])
 
         # Add some simple review ratings.
-        rr = ReviewerRole
+        rr = BaseReviewerRole
         rs = [
             dict(role=rr.TECH),
             dict(role=rr.EXTERNAL),

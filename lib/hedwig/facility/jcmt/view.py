@@ -27,7 +27,7 @@ from ...error import NoSuchRecord, UserError
 from ...web.util import HTTPRedirect, flash, url_for
 from ...view.util import organise_collection, with_call_review, with_proposal
 from ...type.collection import ResultTable
-from ...type.enum import AffiliationType, ProposalState, ReviewerRole
+from ...type.enum import AffiliationType, ProposalState
 from ...type.simple import Link, ValidationMessage
 from ...type.util import null_tuple
 from ..generic.view import Generic
@@ -134,7 +134,9 @@ class JCMT(Generic):
         if the role is external.
         """
 
-        if role == ReviewerRole.EXTERNAL:
+        role_class = self.get_reviewer_roles()
+
+        if role == role_class.EXTERNAL:
             return url_for('help.review_page', page_name='external_jcmt',
                            _external=True)
 

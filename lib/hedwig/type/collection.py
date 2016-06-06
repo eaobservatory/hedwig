@@ -24,7 +24,7 @@ from math import sqrt
 from ..astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
 from ..error import NoSuchRecord, MultipleRecords, UserError
-from .enum import AffiliationType, ReviewerRole, PublicationType
+from .enum import AffiliationType, PublicationType
 from .simple import TargetObject
 
 ResultTable = namedtuple('ResultTable', ('table', 'columns', 'rows'))
@@ -428,6 +428,11 @@ class ReviewerCollection(ResultCollection):
     including their reviews.
     """
 
+    def __init__(self, role_class, *args, **kwargs):
+        super(ReviewerCollection, self).__init__(*args, **kwargs)
+
+        self.role_class = role_class
+
     def get_overall_rating(self, include_unweighted, with_std_dev):
         """
         Create weighted average of the ratings of completed reviews.
@@ -444,7 +449,7 @@ class ReviewerCollection(ResultCollection):
         rating_and_weight = []
 
         for review in self.values():
-            role_info = ReviewerRole.get_info(review.role)
+            role_info = self.role_class.get_info(review.role)
 
             # Skip unweighted reviews if we don't want to include them.
             if not (include_unweighted or role_info.weight):
@@ -535,11 +540,11 @@ class ReviewerCollection(ResultCollection):
         invalid (or no longer recognized) roles will not be yielded.
         """
 
-        roles = ReviewerRole.get_options().keys()
+        roles = self.role_class.get_options().keys()
 
         cttee_roles = None
         if cttee_role is not None:
-            cttee_roles = ReviewerRole.get_cttee_roles()
+            cttee_roles = self.role_class.get_cttee_roles()
 
         for role in roles:
             if cttee_role is not None:

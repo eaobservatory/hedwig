@@ -25,7 +25,7 @@ from jinja2.runtime import Undefined
 
 from ..type.enum import AffiliationType, Assessment, \
     AttachmentState, CallState, \
-    ProposalState, PublicationType, ReviewerRole, TextRole
+    ProposalState, PublicationType, TextRole
 
 from .format import format_text
 
@@ -169,17 +169,17 @@ def register_template_utils(app):
         return PublicationType.get_info(value).name
 
     @app.template_filter()
-    def reviewer_role_name(value):
+    def reviewer_role_name(value, role_class):
         try:
-            return ReviewerRole.get_name(value)
+            return role_class.get_name(value)
         except KeyError:
             return 'Unknown role'
 
     @app.template_filter()
-    def reviewer_role_class(value):
+    def reviewer_role_class(value, role_class):
         try:
             return 'reviewer_{}'.format(
-                ReviewerRole.get_display_class(value))
+                role_class.get_display_class(value))
         except KeyError:
             return ''
 
@@ -225,12 +225,12 @@ def register_template_utils(app):
         return (value == ProposalState.REVIEW)
 
     @app.template_test()
-    def reviewer_role_external(value):
-        return (value == ReviewerRole.EXTERNAL)
+    def reviewer_role_external(value, role_class):
+        return (value == role_class.EXTERNAL)
 
     @app.template_test()
-    def reviewer_role_review(value):
-        return ReviewerRole.is_name_review(value)
+    def reviewer_role_review(value, role_class):
+        return role_class.is_name_review(value)
 
     app.add_template_filter(format_text)
 

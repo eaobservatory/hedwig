@@ -570,10 +570,16 @@ class PublicationType(EnumBasic):
         return cls._info.copy()
 
 
-class ReviewerRole(EnumBasic, EnumURLPath):
+class BaseReviewerRole(EnumBasic, EnumURLPath):
     """
-    Class representing roles in which a person may provide a review for
-    a proposal.
+    Base for classes representing roles in which a person may provide a review
+    for a proposal.
+
+    Each facility should provide a version of this class customized as
+    required for that facility.  Meanwhile this base class defines some
+    basic roles which are used by general parts of the Hedwig system.
+    An example is FEEDBACK, which is used when sending feedback
+    to proposal members at the end of the review process.
     """
 
     TECH = 1

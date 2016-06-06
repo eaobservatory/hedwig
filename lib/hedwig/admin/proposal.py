@@ -22,7 +22,7 @@ from ..config import get_facilities
 from ..email.format import render_email_template
 from ..error import FormattedError, NoSuchRecord, UserError
 from ..stats.quartile import label_quartiles
-from ..type.enum import CallState, FormatType, ProposalState, ReviewerRole
+from ..type.enum import CallState, FormatType, ProposalState
 from ..type.simple import MemberInstitution
 from ..util import get_logger
 
@@ -120,11 +120,14 @@ def send_call_proposal_feedback(db, call_id, proposals):
                      call_id, facility_info.code)
         return 0
 
+    role_class = facility.get_reviewer_roles()
+
     # Compute overall ratings for all submitted proposals in the call.
     proposal_rating = {}
     for proposal in db.search_proposal(
             call_id=call_id, state=ProposalState.submitted_states(),
-            with_reviewers=True, with_review_info=True).values():
+            with_reviewers=True, with_review_info=True,
+            reviewer_role_class=role_class).values():
         rating = facility.calculate_overall_rating(proposal.reviewers)
         if rating is not None:
             proposal_rating[proposal.id] = rating
@@ -160,7 +163,7 @@ def send_call_proposal_feedback(db, call_id, proposals):
             # so that we can include them in the email message.
             feedback = []
             for review in proposal.reviewers.values():
-                if review.role != ReviewerRole.FEEDBACK:
+                if review.role != role_class.FEEDBACK:
                     continue
 
                 if review.review_format != FormatType.PLAIN:

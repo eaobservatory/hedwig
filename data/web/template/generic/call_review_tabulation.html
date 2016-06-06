@@ -26,9 +26,9 @@
 {% macro render_review_row(review, proposal) %}
     <td>
         {% if review.can_edit %}
-            <a href="{{ url_for('.review_edit', reviewer_id=review.id, referrer='tab') }}">{{ review.role | reviewer_role_name }}</a>
+            <a href="{{ url_for('.review_edit', reviewer_id=review.id, referrer='tab') }}">{{ review.role | reviewer_role_name(facility_role_class) }}</a>
         {% else %}
-            {{ review.role | reviewer_role_name }}
+            {{ review.role | reviewer_role_name(facility_role_class) }}
         {% endif %}
     </td>
     <td>

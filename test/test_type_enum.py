@@ -23,8 +23,8 @@ from unittest import TestCase
 
 from hedwig.error import Error
 from hedwig.type.enum import \
-    Assessment, AttachmentState, CallState, GroupType, \
-    ProposalState, ReviewerRole, TextRole
+    Assessment, AttachmentState, BaseReviewerRole, CallState, GroupType, \
+    ProposalState, TextRole
 
 
 class EnumTypeTestCase(TestCase):
@@ -164,14 +164,14 @@ class EnumTypeTestCase(TestCase):
 
     def test_reviewer_role(self):
         for role in [
-                ReviewerRole.TECH,
-                ReviewerRole.EXTERNAL,
-                ReviewerRole.CTTEE_PRIMARY,
-                ReviewerRole.CTTEE_SECONDARY,
-                ReviewerRole.CTTEE_OTHER]:
-            self.assertTrue(ReviewerRole.is_valid(role))
+                BaseReviewerRole.TECH,
+                BaseReviewerRole.EXTERNAL,
+                BaseReviewerRole.CTTEE_PRIMARY,
+                BaseReviewerRole.CTTEE_SECONDARY,
+                BaseReviewerRole.CTTEE_OTHER]:
+            self.assertTrue(BaseReviewerRole.is_valid(role))
 
-            info = ReviewerRole.get_info(role)
+            info = BaseReviewerRole.get_info(role)
 
             self.assertIsInstance(info, tuple)
             self.assertIsInstance(info.name, unicode)
@@ -181,17 +181,17 @@ class EnumTypeTestCase(TestCase):
             self.assertIsInstance(info.rating, bool)
             self.assertIsInstance(info.weight, bool)
 
-        self.assertFalse(ReviewerRole.is_valid(999999))
+        self.assertFalse(BaseReviewerRole.is_valid(999999))
 
-        self.assertEqual(ReviewerRole.get_cttee_roles(), [
-            ReviewerRole.CTTEE_PRIMARY,
-            ReviewerRole.CTTEE_SECONDARY,
-            ReviewerRole.CTTEE_OTHER,
+        self.assertEqual(BaseReviewerRole.get_cttee_roles(), [
+            BaseReviewerRole.CTTEE_PRIMARY,
+            BaseReviewerRole.CTTEE_SECONDARY,
+            BaseReviewerRole.CTTEE_OTHER,
         ])
 
-        self.assertEqual(ReviewerRole.get_feedback_roles(), [
-            ReviewerRole.CTTEE_PRIMARY,
-            ReviewerRole.CTTEE_SECONDARY,
+        self.assertEqual(BaseReviewerRole.get_feedback_roles(), [
+            BaseReviewerRole.CTTEE_PRIMARY,
+            BaseReviewerRole.CTTEE_SECONDARY,
         ])
 
     def test_text_role(self):

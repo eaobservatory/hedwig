@@ -24,7 +24,7 @@ import logging
 import os
 
 from ..config import get_config, get_database, get_facilities, get_home
-from ..type.enum import GroupType, ReviewerRole, TextRole
+from ..type.enum import GroupType, TextRole
 from ..type.simple import FacilityInfo
 from .template_util import register_template_utils
 from .util import make_enum_converter, register_error_handlers
@@ -48,8 +48,20 @@ def create_web_app(db=None):
     if db is None:
         db = get_database()
 
+    # Load facilities as specified in the configuration.
     facilities = OrderedDict()
 
+    for facility_class in get_facilities():
+        # Create facility object.
+        facility_code = facility_class.get_code()
+        facility_id = db.ensure_facility(facility_code)
+        facility = facility_class(facility_id)
+
+        # Store in our facilities list.
+        facilities[facility_id] = FacilityInfo(
+            facility_id, facility_code, facility.get_name(), facility)
+
+    # Configure the web application.
     application_name = config.get('application', 'name')
 
     app = Flask(
@@ -85,7 +97,10 @@ def create_web_app(db=None):
     # Set up routing converters.
     app.url_map.converters['hedwig_group'] = make_enum_converter(GroupType)
     app.url_map.converters['hedwig_text'] = make_enum_converter(TextRole)
-    app.url_map.converters['hedwig_review'] = make_enum_converter(ReviewerRole)
+
+    for facility in facilities.values():
+        app.url_map.converters['hedwig_review_{}'.format(facility.code)] = \
+            make_enum_converter(facility.view.get_reviewer_roles())
 
     app.register_blueprint(create_home_blueprint(db, facilities))
     app.register_blueprint(create_admin_blueprint(db, facilities),
@@ -95,19 +110,9 @@ def create_web_app(db=None):
     app.register_blueprint(create_query_blueprint(db), url_prefix='/query')
 
     # Register blueprints for each facility.
-    for facility_class in get_facilities():
-        # Create facility object.
-        facility_code = facility_class.get_code()
-        facility_id = db.ensure_facility(facility_code)
-        facility = facility_class(facility_id)
-
-        # Store in our facilities list.
-        facilities[facility_id] = FacilityInfo(
-            facility_id, facility_code, facility.get_name(), facility)
-
-        # Register blueprint for the facility.
-        app.register_blueprint(create_facility_blueprint(db, facility),
-                               url_prefix='/' + facility_code)
+    for facility in facilities.values():
+        app.register_blueprint(create_facility_blueprint(db, facility.view),
+                               url_prefix='/' + facility.code)
 
     @app.context_processor
     def add_to_context():

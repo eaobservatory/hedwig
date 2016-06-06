@@ -496,6 +496,7 @@ class ProposalPart(object):
     def get_proposal(self, facility_id, proposal_id,
                      with_members=False, with_reviewers=False,
                      with_decision=False, with_decision_note=False,
+                     reviewer_role_class=None,
                      _conn=None):
         """
         Get a proposal record.
@@ -505,6 +506,7 @@ class ProposalPart(object):
             facility_id=facility_id, proposal_id=proposal_id,
             with_members=with_members, with_reviewers=with_reviewers,
             with_decision=with_decision, with_decision_note=with_decision_note,
+            reviewer_role_class=reviewer_role_class,
             _conn=_conn
         ).get_single()
 
@@ -1086,6 +1088,7 @@ class ProposalPart(object):
                         decision_accept_defined=None,
                         proposal_number=None,
                         semester_code=None, queue_code=None,
+                        reviewer_role_class=None,
                         _conn=None):
         """
         Search for proposals.
@@ -1326,6 +1329,7 @@ class ProposalPart(object):
 
                 elif with_reviewers:
                     reviewers = self.search_reviewer(
+                        role_class=reviewer_role_class,
                         proposal_id=values['id'],
                         with_review=with_review_info,
                         with_review_text=with_review_text,

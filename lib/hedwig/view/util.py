@@ -288,8 +288,11 @@ def with_review(permission):
     def decorator(f):
         @functools.wraps(f)
         def decorated_method(self, db, reviewer_id, *args, **kwargs):
+            role_class = self.get_reviewer_roles()
+
             try:
                 reviewer = db.search_reviewer(
+                    role_class=role_class,
                     reviewer_id=reviewer_id,
                     with_review=True, with_review_text=True,
                     with_review_note=True).get_single()
@@ -310,7 +313,7 @@ def with_review(permission):
 
             assert proposal.id == proposal_id
 
-            can = auth.for_review(db, reviewer, proposal)
+            can = auth.for_review(role_class, db, reviewer, proposal)
 
             if permission == 'view':
                 if not can.view:
