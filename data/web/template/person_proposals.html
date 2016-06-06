@@ -11,7 +11,7 @@
             You do not yet have any proposals in this system.
         </p>
     {% else %}
-        {% for facility_name, facility_proposals in proposals.items() %}
+        {% for (facility_name, facility_code, facility_proposals) in proposals %}
             <h2>{{ facility_name }}</h2>
 
             <table>
@@ -34,7 +34,7 @@
                                 {% if loop.first %}
                                     <td rowspan="{{ loop.length }}">{{ proposal.queue_name }}</td>
                                 {% endif %}
-                                <td><a href="{{ url_for(proposal.facility_code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+                                <td><a href="{{ url_for(facility_code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
                                 <td>{{ proposal.title | abbr(35) }}</td>
                                 <td>{{ proposal.state | proposal_state_name }}</td>
                                 <td>
