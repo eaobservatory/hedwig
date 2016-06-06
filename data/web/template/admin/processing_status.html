@@ -47,13 +47,13 @@
     <h2>PDF Files</h2>
 
     {% call(entry) processing_table(pdfs, 'pdf_{}') %}
-        <a href="{{ url_for((entry.proposal.facility_code, entry.role | text_role_short_name) | fmt('{}.{}_view_pdf'), proposal_id=entry.proposal_id, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
+        <a href="{{ url_for(entry.proposal.facility_code | fmt('{}.case_view_pdf'), proposal_id=entry.proposal_id, role=entry.role, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
     {% endcall %}
 
     <h2>Figures</h2>
 
     {% call(entry) processing_table(figures, 'fig_{}') %}
-        <a href="{{ url_for((entry.proposal.facility_code, entry.role | text_role_short_name) | fmt('{}.{}_view_figure'), proposal_id=entry.proposal_id, fig_id=entry.id, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
+        <a href="{{ url_for(entry.proposal.facility_code | fmt('{}.case_view_figure'), proposal_id=entry.proposal_id, role=entry.role, fig_id=entry.id, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
     {% endcall %}
 
     <h2>Publications</h2>
