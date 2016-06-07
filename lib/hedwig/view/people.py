@@ -785,8 +785,7 @@ class PeopleView(object):
                 facility.code,
                 [
                     ProposalWithCode(
-                        *p, code=facility.view.make_proposal_code(db, p),
-                        facility_code=None)
+                        *p, code=facility.view.make_proposal_code(db, p))
                     for p in ps
                 ]))
 
@@ -825,8 +824,7 @@ class PeopleView(object):
                 facility.view.get_reviewer_roles(),
                 [
                     ProposalWithCode(
-                        *p, code=facility.view.make_proposal_code(db, p),
-                        facility_code=None)
+                        *p, code=facility.view.make_proposal_code(db, p))
                     for p in ps
                 ]))
 

@@ -71,8 +71,7 @@ class GenericReview(object):
                     reviewers_primary=x.reviewers.values_by_role(
                         role_class.CTTEE_PRIMARY),
                     reviewers_secondary=x.reviewers.values_by_role(
-                        role_class.CTTEE_SECONDARY),
-                    facility_code=None)
+                        role_class.CTTEE_SECONDARY))
                 for x in proposals.values()],
         }
 
@@ -315,8 +314,7 @@ class GenericReview(object):
                                                call.queue_name),
             'call': call,
             'proposals': [
-                ProposalWithCode(*x, code=self.make_proposal_code(db, x),
-                                 facility_code=None)
+                ProposalWithCode(*x, code=self.make_proposal_code(db, x))
                 for x in proposals.values()],
             'targets': [
                 Link('Assign technical assessors',
@@ -386,7 +384,6 @@ class GenericReview(object):
 
             proposals.append(ProposalWithReviewerPersons(
                 *proposal, code=self.make_proposal_code(db, proposal),
-                facility_code=None,
                 person_ids_primary=(
                     proposal.reviewers.person_id_by_role(primary_role)),
                 person_ids_secondary=(
@@ -1277,8 +1274,7 @@ class GenericReview(object):
                                               call.queue_name),
             'call': call,
             'proposals': [
-                ProposalWithCode(*x, code=self.make_proposal_code(db, x),
-                                 facility_code=None)
+                ProposalWithCode(*x, code=self.make_proposal_code(db, x))
                 for x in proposals.values()],
             'message': message,
         }

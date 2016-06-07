@@ -169,10 +169,12 @@ class AdminView(object):
                 with_proposal_id=True, state=unready, order_by_date=True),
         }
 
-        # Create empty proposal cache dictionary.
+        # Create empty proposal cache dictionaries.
         proposals = {}
+        proposal_facilities = {}
 
-        ctx = {k: self._add_proposal(db, v.values(), facilities, proposals)
+        ctx = {k: self._add_proposal(db, v.values(), facilities,
+                                     proposals, proposal_facilities)
                for (k, v) in status.items()}
 
         ctx.update({
@@ -184,7 +186,8 @@ class AdminView(object):
 
         return ctx
 
-    def _add_proposal(self, db, entries, facilities, proposals):
+    def _add_proposal(self, db, entries, facilities, proposals,
+                      proposal_facilities):
         result = []
 
         for entry in entries:
@@ -199,13 +202,19 @@ class AdminView(object):
                     continue
                 proposal = ProposalWithCode(
                     *proposal,
-                    code=facility.view.make_proposal_code(db, proposal),
-                    facility_code=facility.code)
+                    code=facility.view.make_proposal_code(db, proposal))
                 proposals[proposal_id] = proposal
 
+                facility_code = facility.code
+                proposal_facilities[proposal_id] = facility_code
+
+            else:
+                facility_code = proposal_facilities[proposal_id]
+
             result.append(
-                namedtuple('EntryWithProposal', entry._fields + ('proposal',))(
-                    *entry, proposal=proposal))
+                namedtuple('EntryWithProposal',
+                           entry._fields + ('proposal', 'facility_code'))(
+                    *entry, proposal=proposal, facility_code=facility_code))
 
         return result
 

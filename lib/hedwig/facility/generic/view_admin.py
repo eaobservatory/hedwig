@@ -374,8 +374,7 @@ class GenericAdmin(object):
                                                call.queue_name),
             'call': call,
             'proposals': [
-                ProposalWithCode(*x, code=self.make_proposal_code(db, x),
-                                 facility_code=None)
+                ProposalWithCode(*x, code=self.make_proposal_code(db, x))
                 for x in proposals.values()],
         }
 

@@ -168,8 +168,7 @@ Proposal = namedtuple(
         'members', 'reviewers', 'categories',
     ])
 
-ProposalWithCode = namedtuple('ProposalWithCode',
-                              Proposal._fields + ('code', 'facility_code'))
+ProposalWithCode = namedtuple('ProposalWithCode', Proposal._fields + ('code',))
 
 ProposalCategory = namedtuple(
     'ProposalCategory',

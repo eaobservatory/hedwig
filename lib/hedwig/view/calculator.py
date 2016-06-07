@@ -22,12 +22,10 @@ from collections import namedtuple
 
 from ..error import NoSuchRecord, UserError
 from ..type.enum import ProposalState
-from ..type.simple import CalculatorResult, Proposal
+from ..type.simple import CalculatorResult, ProposalWithCode
 from ..web.util import HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
 from . import auth
-
-ProposalWithCode = namedtuple('ProposalWithCode', Proposal._fields + ('code',))
 
 
 class BaseCalculator(object):

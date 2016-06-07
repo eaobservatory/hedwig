@@ -19,7 +19,7 @@
                 <tr>
                     <td>{{ entry.state | attachment_state_name }}</td>
                     <td>{{ entry.uploaded | format_datetime }}</td>
-                    <td><a href="{{ url_for(entry.proposal.facility_code | fmt('{}.proposal_view'), proposal_id=entry.proposal_id) }}">{{ entry.proposal.code }}</a></td>
+                    <td><a href="{{ url_for(entry.facility_code | fmt('{}.proposal_view'), proposal_id=entry.proposal_id) }}">{{ entry.proposal.code }}</a></td>
                     <td>{{ entry.proposal.state | proposal_state_name }}</td>
                     <td><a href="{{ url_for('people.person_view', person_id=entry.uploader) }}">{{ entry.uploader_name }}</a></td>
                     <td>{{ caller(entry) }}</td>
@@ -47,13 +47,13 @@
     <h2>PDF Files</h2>
 
     {% call(entry) processing_table(pdfs, 'pdf_{}') %}
-        <a href="{{ url_for(entry.proposal.facility_code | fmt('{}.case_view_pdf'), proposal_id=entry.proposal_id, role=entry.role, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
+        <a href="{{ url_for(entry.facility_code | fmt('{}.case_view_pdf'), proposal_id=entry.proposal_id, role=entry.role, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
     {% endcall %}
 
     <h2>Figures</h2>
 
     {% call(entry) processing_table(figures, 'fig_{}') %}
-        <a href="{{ url_for(entry.proposal.facility_code | fmt('{}.case_view_figure'), proposal_id=entry.proposal_id, role=entry.role, fig_id=entry.id, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
+        <a href="{{ url_for(entry.facility_code | fmt('{}.case_view_figure'), proposal_id=entry.proposal_id, role=entry.role, fig_id=entry.id, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
     {% endcall %}
 
     <h2>Publications</h2>
@@ -73,7 +73,7 @@
                 <tr>
                     <td>{{ pub.state | attachment_state_name }}</td>
                     <td>{{ pub.edited | format_datetime }}</td>
-                    <td><a href="{{ url_for(pub.proposal.facility_code | fmt('{}.proposal_view'), proposal_id=pub.proposal_id) }}">{{ pub.proposal.code }}</a></td>
+                    <td><a href="{{ url_for(pub.facility_code | fmt('{}.proposal_view'), proposal_id=pub.proposal_id) }}">{{ pub.proposal.code }}</a></td>
                     <td>{{ pub.proposal.state | proposal_state_name }}</td>
                     <td>{{ pub.type | publication_type_name }}</td>
                     <td>{{ pub.description }}</td>
