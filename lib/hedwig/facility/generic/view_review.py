@@ -527,8 +527,6 @@ class GenericReview(object):
         if not auth.for_call_review(db, call).edit:
             raise HTTPForbidden('Edit permission denied for this call.')
 
-        proposal_code = self.make_proposal_code(db, proposal)
-
         proposal_person_ids = [
             x.person_id for x in proposal.members.values()
         ]
@@ -549,16 +547,6 @@ class GenericReview(object):
                 member['person_id'] = int(form['person_id'])
             member['name'] = form.get('name', '')
             member['email'] = form.get('email', '')
-
-            email_ctx = {
-                'proposal': proposal,
-                'proposal_code': proposal_code,
-                'role_info': role_info,
-                'inviter_name': session['person']['name'],
-                'target_proposal': url_for(
-                    '.proposal_view', proposal_id=proposal.id, _external=True),
-                'target_guideline': self.make_review_guidelines_url(role=role),
-            }
 
             if 'submit_link' in form:
                 try:
@@ -583,18 +571,14 @@ class GenericReview(object):
                         proposal_id=proposal.id,
                         person_id=person.id, role=role)
 
-                    email_ctx.update({
-                        'recipient_name': person.name,
-                        'target_review': url_for(
-                            '.review_edit',
-                            reviewer_id=reviewer_id, _external=True),
-                    })
-
-                    db.add_message(
-                        'Proposal {} review'.format(proposal_code),
-                        render_email_template('review_invitation.txt',
-                                              email_ctx, facility=self),
-                        [person.id])
+                    self._message_review_invite(
+                        db,
+                        proposal=proposal,
+                        role=role,
+                        person_id=person.id,
+                        person_name=person.name,
+                        reviewer_id=reviewer_id,
+                        send_token=False)
 
                     flash('{} has been added as a reviewer.', person.name)
 
@@ -617,28 +601,15 @@ class GenericReview(object):
                         role_class=role_class,
                         proposal_id=proposal.id,
                         person_id=person_id, role=role)
-                    (token, expiry) = db.add_invitation(person_id)
 
-                    email_ctx.update({
-                        'token': token,
-                        'expiry': expiry,
-                        'recipient_name': member['name'],
-                        'target_review': url_for(
-                            '.review_edit',
-                            reviewer_id=reviewer_id, _external=True),
-                        'target_url': url_for(
-                            'people.invitation_token_enter',
-                            token=token, _external=True),
-                        'target_plain': url_for(
-                            'people.invitation_token_enter',
-                            _external=True),
-                    })
-
-                    db.add_message(
-                        'Proposal {} review'.format(proposal_code),
-                        render_email_template('review_invitation.txt',
-                                              email_ctx, facility=self),
-                        [person_id])
+                    self._message_review_invite(
+                        db,
+                        proposal=proposal,
+                        role=role,
+                        person_id=person_id,
+                        person_name=member['name'],
+                        reviewer_id=reviewer_id,
+                        send_token=True)
 
                     flash('{} has been invited to register.', member['name'])
 
@@ -685,6 +656,8 @@ class GenericReview(object):
         except KeyError:
             pass
 
+        proposal_code = self.make_proposal_code(db, proposal)
+
         return {
             'title': '{}: Add {} Reviewer'.format(
                 proposal_code, role_info.name.title()),
@@ -706,6 +679,47 @@ class GenericReview(object):
                 proposal_id=proposal.id).values(),
             'person_pi': person_pi,
         }
+
+    def _message_review_invite(self, db, proposal, role,
+                               person_id, person_name, reviewer_id,
+                               send_token):
+        role_class = self.get_reviewer_roles()
+        role_info = role_class.get_info(role)
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        email_ctx = {
+            'recipient_name': person_name,
+            'proposal': proposal,
+            'proposal_code': proposal_code,
+            'role_info': role_info,
+            'inviter_name': session['person']['name'],
+            'target_proposal': url_for(
+                '.proposal_view', proposal_id=proposal.id, _external=True),
+            'target_review': url_for(
+                '.review_edit',
+                reviewer_id=reviewer_id, _external=True),
+            'target_guideline': self.make_review_guidelines_url(role=role),
+        }
+
+        if send_token:
+            (token, expiry) = db.add_invitation(person_id)
+
+            email_ctx.update({
+                'token': token,
+                'expiry': expiry,
+                'target_url': url_for(
+                    'people.invitation_token_enter',
+                    token=token, _external=True),
+                'target_plain': url_for(
+                    'people.invitation_token_enter',
+                    _external=True),
+            })
+
+        db.add_message(
+            'Proposal {} review'.format(proposal_code),
+            render_email_template('review_invitation.txt',
+                                  email_ctx, facility=self),
+            [person_id])
 
     @with_proposal(permission='none')
     def view_reviewer_remove(self, db, proposal, role, reviewer_id, form):
@@ -789,47 +803,24 @@ class GenericReview(object):
         if reviewer.person_registered:
             raise ErrorPage('This reviewer is already registered.')
 
-        proposal_code = self.make_proposal_code(db, proposal)
-
         if form is not None:
             if 'submit_confirm' in form:
-                (token, expiry) = db.add_invitation(reviewer.person_id)
-
-                email_ctx = {
-                    'proposal': proposal,
-                    'proposal_code': proposal_code,
-                    'role_info': role_info,
-                    'inviter_name': session['person']['name'],
-                    'target_proposal': url_for(
-                        '.proposal_view', proposal_id=proposal.id,
-                        _external=True),
-                    'target_guideline': self.make_review_guidelines_url(
-                        role=role),
-                    'token': token,
-                    'expiry': expiry,
-                    'recipient_name': reviewer.person_name,
-                    'target_review': url_for(
-                        '.review_edit',
-                        reviewer_id=reviewer.id, _external=True),
-                    'target_url': url_for(
-                        'people.invitation_token_enter',
-                        token=token, _external=True),
-                    'target_plain': url_for(
-                        'people.invitation_token_enter',
-                        _external=True),
-                }
-
-                db.add_message(
-                    'Proposal {} review'.format(proposal_code),
-                    render_email_template('review_invitation.txt',
-                                          email_ctx, facility=self),
-                    [reviewer.person_id])
+                self._message_review_invite(
+                    db,
+                    proposal=proposal,
+                    role=role,
+                    person_id=reviewer.person_id,
+                    person_name=reviewer.person_name,
+                    reviewer_id=reviewer.id,
+                    send_token=True)
 
                 flash('{} has been re-invited to register.',
                       reviewer.person_name)
 
             raise HTTPRedirect(url_for('.review_call_reviewers',
                                        call_id=call.id))
+
+        proposal_code = self.make_proposal_code(db, proposal)
 
         return {
             'title': '{}: Re-invite {} Reviewer'.format(

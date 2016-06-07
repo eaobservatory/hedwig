@@ -515,29 +515,13 @@ class GenericAdmin(object):
                     person_id = db.add_person(member['name'])
                     db.add_email(person_id, member['email'], primary=True)
                     db.add_group_member(queue_id, group_type, person_id)
-                    (token, expiry) = db.add_invitation(person_id,
-                                                        days_valid=7)
 
-                    email_ctx = {
-                        'inviter_name': session['person']['name'],
-                        'recipient_name': member['name'],
-                        'group': group_info,
-                        'queue': queue,
-                        'token': token,
-                        'expiry': expiry,
-                        'target_url': url_for(
-                            'people.invitation_token_enter',
-                            token=token, _external=True),
-                        'target_plain': url_for(
-                            'people.invitation_token_enter',
-                            _external=True),
-                    }
-
-                    db.add_message(
-                        '{} invitation'.format(group_info.name),
-                        render_email_template('group_invitation.txt',
-                                              email_ctx, facility=self),
-                        [person_id])
+                    self._message_group_invite(
+                        db,
+                        group_info=group_info,
+                        queue=queue,
+                        person_id=person_id,
+                        person_name=member['name'])
 
                     flash('{} has been added to the group.', member['name'])
 
@@ -590,6 +574,31 @@ class GenericAdmin(object):
                                           group_type=group_type))],
             'help_link': url_for('help.admin_page', page_name='review_group'),
         }
+
+    def _message_group_invite(self, db, group_info, queue,
+                              person_id, person_name):
+        (token, expiry) = db.add_invitation(person_id, days_valid=7)
+
+        email_ctx = {
+            'inviter_name': session['person']['name'],
+            'recipient_name': person_name,
+            'group': group_info,
+            'queue': queue,
+            'token': token,
+            'expiry': expiry,
+            'target_url': url_for(
+                'people.invitation_token_enter',
+                token=token, _external=True),
+            'target_plain': url_for(
+                'people.invitation_token_enter',
+                _external=True),
+        }
+
+        db.add_message(
+            '{} invitation'.format(group_info.name),
+            render_email_template('group_invitation.txt',
+                                  email_ctx, facility=self),
+            [person_id])
 
     @with_verified_admin
     def view_group_member_edit(self, db, queue_id, group_type, form):
@@ -660,29 +669,12 @@ class GenericAdmin(object):
 
         if form:
             if 'submit_confirm' in form:
-                (token, expiry) = db.add_invitation(member.person_id,
-                                                    days_valid=7)
-
-                email_ctx = {
-                    'inviter_name': session['person']['name'],
-                    'recipient_name': member.person_name,
-                    'group': group_info,
-                    'queue': queue,
-                    'token': token,
-                    'expiry': expiry,
-                    'target_url': url_for(
-                        'people.invitation_token_enter',
-                        token=token, _external=True),
-                    'target_plain': url_for(
-                        'people.invitation_token_enter',
-                        _external=True),
-                }
-
-                db.add_message(
-                    '{} invitation'.format(group_info.name),
-                    render_email_template('group_invitation.txt',
-                                          email_ctx, facility=self),
-                    [member.person_id])
+                self._message_group_invite(
+                    db,
+                    group_info=group_info,
+                    queue=queue,
+                    person_id=member.person_id,
+                    person_name=member.person_name)
 
                 flash('{} has been re-invited to the group.',
                       member.person_name)

@@ -357,21 +357,7 @@ class GenericProposal(object):
 
                 db.update_proposal(proposal.id, state=ProposalState.SUBMITTED)
 
-                proposal_code = self.make_proposal_code(db, proposal)
-
-                db.add_message(
-                    'Proposal {} submitted'.format(proposal_code),
-                    render_email_template(
-                        'proposal_submitted.txt', {
-                            'proposal': proposal,
-                            'proposal_code': proposal_code,
-                            'target_url': url_for(
-                                '.proposal_view',
-                                proposal_id=proposal.id, _external=True),
-                            'submitter_name': session['person']['name'],
-                        },
-                        facility=self),
-                    [x.person_id for x in proposal.members.values()])
+                self._message_proposal_submit(db, proposal)
 
                 flash('The proposal has been submitted.')
 
@@ -390,6 +376,23 @@ class GenericProposal(object):
             'can_edit': True,
             'is_submit_page': True,
         }
+
+    def _message_proposal_submit(self, db, proposal):
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        db.add_message(
+            'Proposal {} submitted'.format(proposal_code),
+            render_email_template(
+                'proposal_submitted.txt', {
+                    'proposal': proposal,
+                    'proposal_code': proposal_code,
+                    'target_url': url_for(
+                        '.proposal_view',
+                        proposal_id=proposal.id, _external=True),
+                    'submitter_name': session['person']['name'],
+                },
+                facility=self),
+            [x.person_id for x in proposal.members.values()])
 
     @with_proposal(permission='view')
     def view_proposal_validate(self, db, proposal, can):
@@ -413,18 +416,7 @@ class GenericProposal(object):
             if 'submit_confirm' in form:
                 db.update_proposal(proposal.id, state=ProposalState.WITHDRAWN)
 
-                proposal_code = self.make_proposal_code(db, proposal)
-
-                db.add_message(
-                    'Proposal {} withdrawn'.format(proposal_code),
-                    render_email_template(
-                        'proposal_withdrawn.txt', {
-                            'proposal': proposal,
-                            'proposal_code': proposal_code,
-                            'withdrawer_name': session['person']['name'],
-                        },
-                        facility=self),
-                    [x.person_id for x in proposal.members.values()])
+                self._message_proposal_withdraw(db, proposal)
 
                 flash('The proposal has been withdrawn.')
 
@@ -439,6 +431,20 @@ class GenericProposal(object):
             'proposal': proposal,
             'proposal_code': self.make_proposal_code(db, proposal),
         }
+
+    def _message_proposal_withdraw(self, db, proposal):
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        db.add_message(
+            'Proposal {} withdrawn'.format(proposal_code),
+            render_email_template(
+                'proposal_withdrawn.txt', {
+                    'proposal': proposal,
+                    'proposal_code': proposal_code,
+                    'withdrawer_name': session['person']['name'],
+                },
+                facility=self),
+            [x.person_id for x in proposal.members.values()])
 
     @with_proposal(permission='edit')
     def view_title_edit(self, db, proposal, can, form):
@@ -601,16 +607,6 @@ class GenericProposal(object):
             if affiliation is None:
                 raise ErrorPage('Selected affiliation not found.')
 
-            email_ctx = {
-                'proposal': proposal,
-                'inviter_name': session['person']['name'],
-                'affiliation': affiliation.name,
-                'is_editor': member['editor'],
-                'target_semester': url_for('.semester_calls',
-                                           semester_id=proposal.semester_id,
-                                           _external=True),
-            }
-
             if 'submit_link' in form:
                 try:
                     if member['person_id'] is None:
@@ -622,27 +618,23 @@ class GenericProposal(object):
                     except NoSuchRecord:
                         raise ErrorPage('This person\'s record was not found')
 
+                    assert person.id == member['person_id']
+
                     if not person.public:
                         raise ErrorPage('This person\'s record is private.')
 
-                    db.add_member(proposal.id, member['person_id'],
+                    db.add_member(proposal.id, person.id,
                                   member['affiliation_id'],
                                   editor=member['editor'],
                                   observer=member['observer'])
 
-                    email_ctx.update({
-                        'recipient_name': person.name,
-                        'target_url': url_for(
-                            '.proposal_view',
-                            proposal_id=proposal.id, _external=True),
-                    })
-
-                    db.add_message(
-                        'Proposal {} invitation'.format(
-                            self.make_proposal_code(db, proposal)),
-                        render_email_template('proposal_invitation.txt',
-                                              email_ctx, facility=self),
-                        [member['person_id']])
+                    self._message_proposal_invite(
+                        db, proposal=proposal,
+                        person_id=person.id,
+                        person_name=person.name,
+                        is_editor=member['editor'],
+                        affiliation_name=affiliation.name,
+                        send_token=False)
 
                     flash('{} has been added to the proposal.', person.name)
                     raise HTTPRedirect(url_for('.proposal_view',
@@ -665,26 +657,14 @@ class GenericProposal(object):
                                   member['affiliation_id'],
                                   editor=member['editor'],
                                   observer=member['observer'])
-                    (token, expiry) = db.add_invitation(person_id)
 
-                    email_ctx.update({
-                        'token': token,
-                        'expiry': expiry,
-                        'recipient_name': member['name'],
-                        'target_url': url_for(
-                            'people.invitation_token_enter',
-                            token=token, _external=True),
-                        'target_plain': url_for(
-                            'people.invitation_token_enter',
-                            _external=True),
-                    })
-
-                    db.add_message(
-                        'Proposal {} invitation'.format(
-                            self.make_proposal_code(db, proposal)),
-                        render_email_template('proposal_invitation.txt',
-                                              email_ctx, facility=self),
-                        [person_id])
+                    self._message_proposal_invite(
+                        db, proposal=proposal,
+                        person_id=person_id,
+                        person_name=member['name'],
+                        is_editor=member['editor'],
+                        affiliation_name=affiliation.name,
+                        send_token=True)
 
                     flash('{} has been added to the proposal.',
                           member['name'])
@@ -734,6 +714,49 @@ class GenericProposal(object):
             'label_link': 'Member',
         }
 
+    def _message_proposal_invite(
+            self, db, proposal, person_id, person_name,
+            is_editor, affiliation_name, send_token):
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        email_ctx = {
+            'recipient_name': person_name,
+            'proposal': proposal,
+            'inviter_name': session['person']['name'],
+            'affiliation': affiliation_name,
+            'is_editor': is_editor,
+            'target_semester': url_for(
+                '.semester_calls', semester_id=proposal.semester_id,
+                _external=True),
+        }
+
+        if send_token:
+            (token, expiry) = db.add_invitation(person_id)
+
+            email_ctx.update({
+                'token': token,
+                'expiry': expiry,
+                'target_url': url_for(
+                    'people.invitation_token_enter', token=token,
+                    _external=True),
+                'target_plain': url_for(
+                    'people.invitation_token_enter',
+                    _external=True),
+            })
+
+        else:
+            email_ctx.update({
+                'target_url': url_for(
+                    '.proposal_view',
+                    proposal_id=proposal.id, _external=True),
+            })
+
+        db.add_message(
+            'Proposal {} invitation'.format(proposal_code),
+            render_email_template('proposal_invitation.txt',
+                                  email_ctx, facility=self),
+            [person_id])
+
     @with_proposal(permission='edit')
     def view_member_reinvite(self, db, proposal, can, member_id, form):
         member = proposal.members.get(member_id)
@@ -747,34 +770,13 @@ class GenericProposal(object):
 
         if form:
             if 'submit_confirm' in form:
-                person_id = member.person_id
-
-                (token, expiry) = db.add_invitation(person_id)
-
-                email_ctx = {
-                    'proposal': proposal,
-                    'inviter_name': session['person']['name'],
-                    'affiliation': member.affiliation_name,
-                    'is_editor': member.editor,
-                    'target_semester': url_for(
-                        '.semester_calls',
-                        semester_id=proposal.semester_id, _external=True),
-                    'token': token,
-                    'expiry': expiry,
-                    'recipient_name': member.person_name,
-                    'target_url': url_for(
-                        'people.invitation_token_enter',
-                        token=token, _external=True),
-                    'target_plain': url_for(
-                        'people.invitation_token_enter',
-                        _external=True),
-                }
-
-                db.add_message(
-                    'Proposal {} invitation'.format(proposal_code),
-                    render_email_template('proposal_invitation.txt',
-                                          email_ctx, facility=self),
-                    [person_id])
+                self._message_proposal_invite(
+                    db, proposal=proposal,
+                    person_id=member.person_id,
+                    person_name=member.person_name,
+                    is_editor=member.editor,
+                    affiliation_name=member.affiliation_name,
+                    send_token=True)
 
                 flash('{} has been re-invited to the proposal.',
                       member.person_name)
