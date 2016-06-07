@@ -11,18 +11,23 @@
             You do not currently have any active reviews in this system.
         </p>
     {% else %}
+        <p>
+            The following
+            {% if (proposals | length) > 1 %}
+                tables show
+            {% else %}
+                table shows
+            {% endif %}
+            proposals for which you have active reviews.
+        </p>
+
+        <ul>
+            <li>Click the proposal identifier to view a proposal.</li>
+            <li>Click a review role to edit the corresponding review.</li>
+        </ul>
+
         {% for (facility_name, facility_code, facility_role_class, facility_proposals) in proposals %}
             <h2>{{ facility_name }}</h2>
-
-            <p>
-                The following table shows proposals for which you have
-                active reviews.
-            </p>
-
-            <ul>
-                <li>Click the proposal identifier to view a proposal.</li>
-                <li>Click a review role to edit the corresponding review.</li>
-            </ul>
 
             <table>
                 <tr>
