@@ -872,12 +872,12 @@ class PeopleView(object):
         message = None
 
         if form is not None:
-            if 'submit-confirm' in form:
+            if 'submit_confirm' in form:
                 show_confirm_prompt = False
             elif 'submit_cancel' in form:
                 raise HTTPRedirect(url_for('.institution_view',
                                            institution_id=institution.id))
-            elif 'submit-edit' in form:
+            elif 'submit_edit' in form:
                 try:
                     institution = institution._replace(
                         name=form['institution_name'],

@@ -29,13 +29,13 @@
     </p>
     <p>
         <input type="submit" name="submit_cancel" value="Cancel" />
-        <input type="submit" value="Confirm edit" name="submit-confirm" />
+        <input type="submit" name="submit_confirm" value="Confirm edit" />
     </p>
 {% else %}
     <ol>
         {{ render_institution_form(institution, countries) }}
         <li>
-            <input type="submit" value="Save" name="submit-edit" />
+            <input type="submit" name="submit_edit" value="Save" />
         </li>
     </ol>
 {% endif %}

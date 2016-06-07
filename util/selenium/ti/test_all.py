@@ -518,7 +518,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         self._save_screenshot(self.user_image_root, 'proposal_new')
 
-        self.browser.find_element_by_name('submit-new').click()
+        self.browser.find_element_by_name('submit_new').click()
 
         self.assertIn(
             'Your new proposal has been created.',
@@ -685,7 +685,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         self._save_screenshot(self.user_image_root, 'request_edit')
 
-        self.browser.find_element_by_name('submit-save').click()
+        self.browser.find_element_by_name('submit_save').click()
 
         self.assertIn(
             'The observing request has been saved.',
@@ -1041,7 +1041,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         self._save_screenshot(screenshot_path, 'invitation_accept')
 
-        self.browser.find_element_by_name('submit-accept').click()
+        self.browser.find_element_by_name('submit_accept').click()
 
         self.assertIn(
             'The invitation has been accepted successfully.',
@@ -1217,11 +1217,11 @@ class IntegrationTest(DummyConfigTestCase):
             'Are you sure you want to edit this institution?',
             self.browser.page_source)
 
-        self.browser.find_element_by_name('submit-confirm').click()
+        self.browser.find_element_by_name('submit_confirm').click()
 
         self._save_screenshot(self.user_image_root, 'institution_edit')
 
-        self.browser.find_element_by_name('submit-edit').click()
+        self.browser.find_element_by_name('submit_edit').click()
 
         self.assertIn(
             'The institution\'s record has been updated.',
