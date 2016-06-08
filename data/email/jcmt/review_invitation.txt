@@ -1,13 +1,27 @@
 {% extends 'generic/review_invitation.txt' %}
 
 {% block invitation_introduction %}
+{% if is_reminder %}
+The JCMT Time Allocation Committee would like to remind you
+of their recent request that you assist with the review
+of an observing proposal.
+{% else %}
 The JCMT Time Allocation Committee have asked for your opinion
 on an observing proposal submitted recently.
+{% endif %}
 The proposal, {{ proposal_code }},
 entitled "{{ proposal.title }}",
 is a proposal in the {{ proposal.queue_name }} Queue
 for Semester {{ proposal.semester_name }}.
+{% if is_reminder %}
+We hope that you received the original message regarding
+the review of this proposal, but in case you did not receive it,
+the details are repeated below.
+Please contact us at the address below if you are
+unable to provide a review.
+{% else %}
 We hope you can oblige and provide a review within 10 days.
+{% endif %}
 {% endblock %}
 
 {% block invitation_footer %}

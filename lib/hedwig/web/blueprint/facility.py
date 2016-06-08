@@ -421,9 +421,19 @@ def create_facility_blueprint(db, facility):
               '<int:reviewer_id>',
               methods=['GET', 'POST'])
     @require_auth(require_person=True)
-    @templated('confirm.html')
+    @facility_template('reviewer_reinvite_confirm.html')
     def review_external_reinvite(proposal_id, reviewer_id):
         return facility.view_reviewer_reinvite(
+            db, proposal_id, role_class.EXTERNAL, reviewer_id,
+            (request.form if request.method == 'POST' else None))
+
+    @bp.route('/proposal/<int:proposal_id>/review/external/remind/'
+              '<int:reviewer_id>',
+              methods=['GET', 'POST'])
+    @require_auth(require_person=True)
+    @facility_template('reviewer_reinvite_confirm.html')
+    def review_external_remind(proposal_id, reviewer_id):
+        return facility.view_reviewer_remind(
             db, proposal_id, role_class.EXTERNAL, reviewer_id,
             (request.form if request.method == 'POST' else None))
 

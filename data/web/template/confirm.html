@@ -1,12 +1,16 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-
+{% block confirm_message %}
 {% if message is not none %}
     <p>
         {{ message }}
     </p>
 {% endif %}
+{% endblock %}
+
+{% block confirm_extra %}
+{% endblock %}
 
 <form method="POST" action="{{ target }}">
     <p>
@@ -14,5 +18,4 @@
         <input type="submit" name="submit_confirm" value="Confirm" />
     </p>
 </form>
-
 {% endblock %}

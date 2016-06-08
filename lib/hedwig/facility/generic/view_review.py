@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import namedtuple, OrderedDict
+from datetime import datetime
 from itertools import izip
 import re
 
@@ -577,8 +578,9 @@ class GenericReview(object):
                         role=role,
                         person_id=person.id,
                         person_name=person.name,
+                        person_registered=True,
                         reviewer_id=reviewer_id,
-                        send_token=False)
+                        is_reminder=False)
 
                     flash('{} has been added as a reviewer.', person.name)
 
@@ -608,8 +610,9 @@ class GenericReview(object):
                         role=role,
                         person_id=person_id,
                         person_name=member['name'],
+                        person_registered=False,
                         reviewer_id=reviewer_id,
-                        send_token=True)
+                        is_reminder=False)
 
                     flash('{} has been invited to register.', member['name'])
 
@@ -681,8 +684,14 @@ class GenericReview(object):
         }
 
     def _message_review_invite(self, db, proposal, role,
-                               person_id, person_name, reviewer_id,
-                               send_token):
+                               person_id, person_name, person_registered,
+                               reviewer_id, is_reminder=False,
+                               reminder_token=None, reminder_expiry=None):
+        """
+        Send a review invitation or reminder email message.
+        """
+
+        # Prepare basic email context.
         role_class = self.get_reviewer_roles()
         role_info = role_class.get_info(role)
         proposal_code = self.make_proposal_code(db, proposal)
@@ -699,10 +708,21 @@ class GenericReview(object):
                 '.review_edit',
                 reviewer_id=reviewer_id, _external=True),
             'target_guideline': self.make_review_guidelines_url(role=role),
+            'is_reminder': is_reminder,
         }
 
-        if send_token:
-            (token, expiry) = db.add_invitation(person_id)
+        # If the person is not registered, generate a new token if this is
+        # not a reminder, or if the previous token expired.
+        if not person_registered:
+            if (is_reminder
+                    and (reminder_token is not None)
+                    and (reminder_expiry is not None)
+                    and (reminder_expiry > datetime.utcnow())):
+                token = reminder_token
+                expiry = reminder_expiry
+
+            else:
+                (token, expiry) = db.add_invitation(person_id)
 
             email_ctx.update({
                 'token': token,
@@ -715,8 +735,16 @@ class GenericReview(object):
                     _external=True),
             })
 
+        # Prepare the message appropriately for either an invitation or
+        # reminder.
+        email_subject = 'Proposal {} review'.format(proposal_code)
+
+        if is_reminder:
+            email_subject = 'Re: ' + email_subject
+
+        # Generate and store the message.
         db.add_message(
-            'Proposal {} review'.format(proposal_code),
+            email_subject,
             render_email_template('review_invitation.txt',
                                   email_ctx, facility=self),
             [person_id])
@@ -774,6 +802,16 @@ class GenericReview(object):
 
     @with_proposal(permission='none')
     def view_reviewer_reinvite(self, db, proposal, role, reviewer_id, form):
+        return self._view_reviewer_reinvite_remind(
+            db, proposal, role, reviewer_id, form, is_reminder=False)
+
+    @with_proposal(permission='none')
+    def view_reviewer_remind(self, db, proposal, role, reviewer_id, form):
+        return self._view_reviewer_reinvite_remind(
+            db, proposal, role, reviewer_id, form, is_reminder=True)
+
+    def _view_reviewer_reinvite_remind(self, db, proposal, role, reviewer_id,
+                                       form, is_reminder):
         role_class = self.get_reviewer_roles()
 
         try:
@@ -796,11 +834,11 @@ class GenericReview(object):
             reviewer = db.search_reviewer(
                 role_class=role_class,
                 proposal_id=proposal.id, role=role, reviewer_id=reviewer_id,
-                with_review=True).get_single()
+                with_review=True, with_invitation=True).get_single()
         except NoSuchRecord:
             raise HTTPNotFound('Reviewer record not found.')
 
-        if reviewer.person_registered:
+        if reviewer.person_registered and not is_reminder:
             raise ErrorPage('This reviewer is already registered.')
 
         if form is not None:
@@ -811,11 +849,17 @@ class GenericReview(object):
                     role=role,
                     person_id=reviewer.person_id,
                     person_name=reviewer.person_name,
+                    person_registered=reviewer.person_registered,
                     reviewer_id=reviewer.id,
-                    send_token=True)
+                    is_reminder=is_reminder,
+                    reminder_token=reviewer.invitation_token,
+                    reminder_expiry=reviewer.invitation_expiry)
 
-                flash('{} has been re-invited to register.',
-                      reviewer.person_name)
+                flash(
+                    '{} has been {}.',
+                    reviewer.person_name,
+                    ('sent a reminder message' if is_reminder
+                     else 're-invited to register'))
 
             raise HTTPRedirect(url_for('.review_call_reviewers',
                                        call_id=call.id))
@@ -823,12 +867,18 @@ class GenericReview(object):
         proposal_code = self.make_proposal_code(db, proposal)
 
         return {
-            'title': '{}: Re-invite {} Reviewer'.format(
-                proposal_code, role_info.name.title()),
+            'title': '{}: {} {} Reviewer'.format(
+                proposal_code,
+                ('Remind' if is_reminder else 'Re-invite'),
+                role_info.name.title()),
             'message':
                 'Would you like to re-send an invitation to {} '
                 'to review proposal {}?'.format(
                     reviewer.person_name, proposal_code),
+            'is_reminder': is_reminder,
+            'proposal_id': proposal.id,
+            'reviewer_id': reviewer_id,
+            'person_registered': reviewer.person_registered,
         }
 
     @with_proposal(permission='none')

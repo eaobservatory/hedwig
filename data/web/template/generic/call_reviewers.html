@@ -82,6 +82,7 @@
                                 Not done
                                 {% if reviewer.role is reviewer_role_external(facility_role_class) %}
                                     <a href="{{ url_for('.review_external_remove', proposal_id=proposal.id, reviewer_id=reviewer.id) }}">Remove</a>
+                                    <a href="{{ url_for('.review_external_remind', proposal_id=proposal.id, reviewer_id=reviewer.id) }}">Send reminder</a>
                                 {% endif %}
                             {% endif %}
                             {% if (not reviewer.person_registered) and (reviewer.role is reviewer_role_external(facility_role_class)) %}

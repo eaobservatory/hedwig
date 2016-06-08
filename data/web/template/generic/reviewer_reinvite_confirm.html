@@ -1,0 +1,48 @@
+{% extends 'confirm.html' %}
+
+{% block confirm_extra %}
+{% if is_reminder %}
+    <ul>
+        <li>
+            This will send an additional reminder message to the reviewer.
+        </li>
+        <li>
+            It will include their existing invitation code unless it has
+            expired.
+        </li>
+        {% if not person_registered %}
+            <li>
+                If you have reason to believe that they never received the
+                original message, it may be better to
+                <a href="{{ url_for('.review_external_reinvite', proposal_id=proposal_id, reviewer_id=reviewer_id) }}">re-send the invitation</a>
+                instead, after you have resolved any problems which
+                prevented them receiving it.
+            </li>
+        {% endif %}
+    </ul>
+{% else %}
+    <ul>
+        <li>
+            This will send a completely new invitation to the reviewer
+            including a new invitation code.
+        </li>
+        <li>
+            You should <b>only do this if you think they never received the
+            original message</b>, in order to avoid generating multiple
+            invitation codes.
+        </li>
+        <li>
+            Unless you are correcting a problem with the original invitation
+            (such as an incorrect email address),
+            it may be better to
+            <a href="{{ url_for('.review_external_remind', proposal_id=proposal_id, reviewer_id=reviewer_id) }}">send a reminder</a>
+            instead.
+        </li>
+    </ul>
+
+    <p class="caution">
+        Sending a new invitation code will cause
+        their existing invitation code to be invalidated.
+    </p>
+{% endif %}
+{% endblock %}

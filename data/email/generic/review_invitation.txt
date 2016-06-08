@@ -2,14 +2,27 @@
 
 {% block content %}
 {% block invitation_introduction %}
+{% if is_reminder %}
+This is a reminder message sent on behalf of {{ inviter_name }}
+with regard to the recent request that you assist with the
+review of proposal {{ proposal_code }} to use {{ facility_definite_name }}.
+{% else %}
 You have been invited by {{ inviter_name }}
 to review proposal {{ proposal_code }}
 to use {{ facility_definite_name }}.
+{% endif %}
 This proposal, entitled "{{ proposal.title }}",
 is a proposal in the {{ proposal.queue_name }} Queue
 for Semester {{ proposal.semester_name }}
 and it is requested that you provide the
 {{ role_info.name.lower() }} review.
+{% if is_reminder %}
+We hope that you received the original message regarding
+the review of this proposal, but in case you did not receive it,
+the details are repeated below.
+Please contact us at the address below if you are
+unable to provide a review.
+{% endif %}
 {% endblock %}
 
 {% block invitation_links %}
