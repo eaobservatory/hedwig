@@ -385,10 +385,10 @@ class PeoplePart(object):
         of this rare use-case).
 
         .. note:: if `with_reviews` is requested then the returned object
-        contains a ReviewerCollection in its reviews attribute.  However this
-        collection will not have its reviewer `role_class` set (it will be
-        None) so none of its methods which require the `role_class` can
-        be used.
+            contains a ReviewerCollection in its reviews attribute.
+            However this collection will not have its reviewer `role_class`
+            set (it will be None) so none of its methods which require
+            the `role_class` can be used.
 
         Raises NoSuchRecord if the person_id doesn't exist.
         """
