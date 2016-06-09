@@ -29,7 +29,8 @@ from ...error import ConsistencyError, Error, FormattedError, \
 from ...type.collection import GroupMemberCollection, ReviewerCollection
 from ...type.enum import Assessment, FormatType, GroupType
 from ...type.simple import GroupMember, Reviewer
-from ..meta import call, decision, group_member, institution, person, \
+from ..meta import call, decision, group_member, \
+    institution, invitation, person, \
     proposal, queue, \
     review, reviewer
 
@@ -248,6 +249,7 @@ class ReviewPart(object):
                         call_id=None, queue_id=None,
                         with_review=False, with_review_text=False,
                         with_review_note=False,
+                        with_invitation=False,
                         _conn=None):
         select_columns = [
             reviewer,
@@ -263,6 +265,22 @@ class ReviewPart(object):
 
         select_from = reviewer.join(person).outerjoin(institution)
 
+        default = {}
+
+        if with_invitation:
+            select_columns.extend((
+                invitation.c.token.label('invitation_token'),
+                invitation.c.expiry.label('invitation_expiry'),
+            ))
+
+            select_from = select_from.outerjoin(invitation)
+
+        else:
+            default.update({
+                'invitation_token': None,
+                'invitation_expiry': None,
+            })
+
         if with_review:
             select_columns.append(
                 (review.c.reviewer_id.isnot(None)).label('review_present'))
@@ -272,8 +290,6 @@ class ReviewPart(object):
                                    if x not in (review.c.reviewer_id,
                                                 review.c.text,
                                                 review.c.note)))
-
-            default = {}
 
             if with_review_text:
                 select_columns.append(review.c.text.label('review_text'))
@@ -286,8 +302,9 @@ class ReviewPart(object):
                 default['review_note'] = None
 
         else:
-            default = {'review_{}'.format(x.name): None
-                       for x in review.columns if x != review.c.reviewer_id}
+            default.update({
+                'review_{}'.format(x.name): None
+                for x in review.columns if x != review.c.reviewer_id})
 
             default['review_present'] = None
 
