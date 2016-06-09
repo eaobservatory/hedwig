@@ -367,7 +367,7 @@ class GroupType(EnumBasic, EnumURLPath):
         return [k for (k, v) in cls._info.items() if v.review_view]
 
 
-class MessageState(object):
+class MessageState(EnumBasic):
     """
     Class representing possible status values for email messages.
 
@@ -381,22 +381,43 @@ class MessageState(object):
     DISCARD = 4
 
     StateInfo = namedtuple(
-        'StateInfo', ('name',))
+        'StateInfo', ('name', 'active', 'settable'))
 
     _info = OrderedDict((
-        (UNSENT,  StateInfo('Unsent')),
-        (SENDING, StateInfo('Sending')),
-        (SENT,    StateInfo('Sent')),
-        (DISCARD, StateInfo('Discarded')),
+        (UNSENT,  StateInfo('Unsent',    False, True)),
+        (SENDING, StateInfo('Sending',   True,  False)),
+        (SENT,    StateInfo('Sent',      False, False)),
+        (DISCARD, StateInfo('Discarded', False, True)),
     ))
 
     @classmethod
-    def get_options(cls):
+    def is_valid(cls, value, allow_unsettable=False):
         """
-        Get an OrderedDict of state names by state numbers.
+        Determines whether the message state is allowed.
+
+        By default only settable states are considered valid.
+        If `allow_unsettable` is specified then all states are accepted.
         """
 
-        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
+        state_info = cls._info.get(value, None)
+
+        if state_info is None:
+            return False
+
+        return (allow_unsettable or state_info.settable)
+
+    @classmethod
+    def get_options(cls, settable=None):
+        """
+        Get an OrderedDict of state names by state numbers.
+
+        This can optionally be only the settable states.
+        """
+
+        return OrderedDict((
+            (k, v.name)
+            for (k, v) in cls._info.items()
+            if ((settable is None) or (settable == v.settable))))
 
 
 class ProposalState(EnumBasic):

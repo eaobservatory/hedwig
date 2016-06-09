@@ -30,6 +30,12 @@
             <td>{{ message.identifier }}</td>
         </tr>
     {% endif %}
+    {% if message.discard %}
+        <tr>
+            <th>Discard</th>
+            <td>Message has been discarded</td>
+        </tr>
+    {% endif %}
 </table>
 
 <table>

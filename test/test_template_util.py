@@ -25,7 +25,7 @@ from flask import Markup
 
 from hedwig.type.enum import Assessment, AttachmentState, \
     BaseReviewerRole, CallState, \
-    ProposalState, \
+    MessageState, ProposalState, \
     PublicationType, TextRole
 from hedwig.web.template_util import Counter
 
@@ -117,6 +117,12 @@ class TemplateUtilTestCase(WebAppTestCase):
                 ('test', [1, 2, 3], False, {1: 'one', 2: 'two'}, 'null')])),
             {'e': 'f', 'test_1': 'one', 'test_2': 'two', 'test_3': 'null'})
 
+    def test_filter_message_state(self):
+        f = self.app.jinja_env.filters['message_state_name']
+
+        self.assertEqual(f(MessageState.UNSENT), 'Unsent')
+        self.assertEqual(f(999), 'Unknown state')
+
     def test_filter_proposal_state(self):
         f = self.app.jinja_env.filters['proposal_state_name']
 
@@ -179,6 +185,12 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertFalse(t(AttachmentState.NEW))
         self.assertTrue(t(AttachmentState.ERROR))
         self.assertFalse(t(AttachmentState.READY))
+
+    def test_test_message_state(self):
+        t = self.app.jinja_env.tests['message_state_active']
+
+        self.assertTrue(t(MessageState.SENDING))
+        self.assertFalse(t(MessageState.DISCARD))
 
     def test_test_proposal_state(self):
         t = self.app.jinja_env.tests['proposal_state_review']

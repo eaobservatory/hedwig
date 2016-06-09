@@ -38,11 +38,13 @@ def create_admin_blueprint(db, facilities):
     def admin_home():
         return view.home(facilities)
 
-    @bp.route('/message/')
+    @bp.route('/message/', methods=['GET', 'POST'])
     @templated('admin/message_list.html')
     @require_admin
     def message_list():
-        return view.message_list(db, request.args)
+        return view.message_list(
+            db, request.args,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/message/<int:message_id>')
     @templated('admin/message_view.html')

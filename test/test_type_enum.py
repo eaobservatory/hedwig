@@ -24,7 +24,7 @@ from unittest import TestCase
 from hedwig.error import Error
 from hedwig.type.enum import \
     Assessment, AttachmentState, BaseReviewerRole, CallState, GroupType, \
-    ProposalState, TextRole
+    MessageState, ProposalState, TextRole
 
 
 class EnumTypeTestCase(TestCase):
@@ -74,6 +74,37 @@ class EnumTypeTestCase(TestCase):
 
         for state in states:
             self.assertIsInstance(CallState.get_name(state), unicode)
+
+    def test_message_state(self):
+        # Test "get_name" method.
+        self.assertEqual(MessageState.get_name(MessageState.UNSENT), 'Unsent')
+
+        # Test "get_info" method.
+        state = MessageState.get_info(MessageState.DISCARD)
+        self.assertEqual(state.name, 'Discarded')
+        self.assertFalse(state.active)
+        self.assertTrue(state.settable)
+
+        # Test "is_valid" method.
+        self.assertFalse(MessageState.is_valid(999))
+        self.assertFalse(MessageState.is_valid(MessageState.SENDING))
+        self.assertTrue(MessageState.is_valid(MessageState.SENDING,
+                                              allow_unsettable=True))
+        self.assertTrue(MessageState.is_valid(MessageState.UNSENT,
+                                              allow_unsettable=True))
+        self.assertTrue(MessageState.is_valid(MessageState.UNSENT))
+
+        # Test "get_options" method.
+        states = MessageState.get_options()
+        self.assertIsInstance(states, dict)
+        self.assertEqual(set(states.keys()),
+                         set((MessageState.UNSENT, MessageState.SENDING,
+                              MessageState.SENT, MessageState.DISCARD)))
+
+        states = MessageState.get_options(settable=True)
+        self.assertIsInstance(states, dict)
+        self.assertEqual(set(states.keys()),
+                         set((MessageState.UNSENT, MessageState.DISCARD)))
 
     def test_proposal_state(self):
         states = set()

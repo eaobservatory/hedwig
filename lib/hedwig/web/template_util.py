@@ -24,7 +24,7 @@ from flask import Markup
 from jinja2.runtime import Undefined
 
 from ..type.enum import AffiliationType, Assessment, \
-    AttachmentState, CallState, \
+    AttachmentState, CallState, MessageState, \
     ProposalState, PublicationType, TextRole
 
 from .format import format_text
@@ -149,6 +149,13 @@ def register_template_utils(app):
         return json_module.dumps(value)
 
     @app.template_filter()
+    def message_state_name(value):
+        try:
+            return MessageState.get_name(value)
+        except KeyError:
+            return 'Unknown state'
+
+    @app.template_filter()
     def proposal_state_name(value):
         try:
             return ProposalState.get_name(value)
@@ -219,6 +226,10 @@ def register_template_utils(app):
     @app.template_test()
     def attachment_error(value):
         return AttachmentState.is_error(value)
+
+    @app.template_test()
+    def message_state_active(value):
+        return MessageState.get_info(value).active
 
     @app.template_test()
     def proposal_state_review(value):

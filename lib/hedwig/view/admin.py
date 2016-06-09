@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -35,13 +35,45 @@ class AdminView(object):
         }
 
     @with_verified_admin
-    def message_list(self, db, args):
+    def message_list(self, db, args, form):
+        # Apply state updates if a form was submitted via a POST request.
+        if form is not None:
+            n_update = 0
+
+            state_new = int(form['state_new'])
+
+            if not MessageState.is_valid(state_new):
+                raise ErrorPage('Requested new message state is invalid.')
+
+            for param in form:
+                if param.startswith('message_'):
+                    id_ = int(param[8:])
+
+                    db.update_message(message_id=id_, state=state_new)
+
+                    n_update += 1
+
+            if n_update:
+                flash('The status for {} {} has been set to {}.',
+                      n_update, ('message' if n_update == 1 else 'messages'),
+                      MessageState.get_name(state_new).lower())
+
+            # While preparing the display, use input values from the POST
+            # form.
+            current_input = form
+
+        else:
+            # While preparing the display, use input values from the query
+            # parameters.
+            current_input = args
+
         num_per_page = 100
         url_params = {}
+        set_form_params = {}
         kwargs = {'limit': num_per_page}
 
         person = None
-        person_id = args.get('person_id')
+        person_id = current_input.get('person_id')
         if person_id is not None:
             person_id = int(person_id)
             kwargs['person_id'] = person_id
@@ -52,7 +84,7 @@ class AdminView(object):
                 raise ErrorPage(
                     'Message list requested for non-existent person.')
 
-        state = args.get('state')
+        state = current_input.get('state')
         if not state:
             state = None
         if state is not None:
@@ -60,12 +92,12 @@ class AdminView(object):
             kwargs['state'] = state
             url_params['state'] = state
 
-        id_lt = args.get('id_lt')
+        id_lt = current_input.get('id_lt')
         if id_lt is not None:
             id_lt = int(id_lt)
             kwargs['message_id_lt'] = id_lt
+            set_form_params['id_lt'] = id_lt
 
-        states = MessageState.get_options()
         messages = db.search_message(**kwargs)
 
         # Prepare pagination URLs.  Give only "first" and "next" links as
@@ -83,17 +115,23 @@ class AdminView(object):
             target_next = url_for('.message_list', id_lt=min(messages.keys()),
                                   **url_params)
 
+        # Include all URL params in the setting form.
+        set_form_params.update(url_params)
+
         return {
             'title': ('Message List' if person is None
                       else '{}: Messages'.format(person.name)),
-            'messages': [x._replace(state=states[x.state])
-                         for x in messages.values()],
+            'messages': messages.values(),
             'target_first': target_first,
             'target_next': target_next,
+            # Parameters for the filtering form at the top of the page:
             'form_params': {k: v for (k, v) in url_params.items()
                             if k != 'state'},
+            # Parameters for the state setting form (submit at bottom of page).
+            'set_form_params': set_form_params,
             'current_state': state,
-            'states': states,
+            'states': MessageState.get_options(),
+            'states_settable': MessageState.get_options(settable=True),
         }
 
     @with_verified_admin
