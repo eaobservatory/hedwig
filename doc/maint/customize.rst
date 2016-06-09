@@ -331,6 +331,12 @@ Some examples of such methods are:
   This method should implement your rules for determining the affiliation
   of a proposal based on the affiliations of its members.
 
+* :meth:`~hedwig.facility.generic.view.Generic.get_reviewer_roles`
+
+  This method should return the enum-style class defining reviewer roles
+  for the facility.  This will usually be a subclass of
+  :class:`~hedwig.type.enum.BaseReviewerRole`.
+
 Web Interface Handling Methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
