@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime
 
-from hedwig.error import ConsistencyError, DatabaseIntegrityError
+from hedwig.error import ConsistencyError, DatabaseIntegrityError, Error
 from hedwig.type.enum import MessageState
 from hedwig.type.collection import ResultCollection
 from hedwig.type.simple import Message, MessageRecipient
@@ -68,6 +68,7 @@ class DBMessageTest(DBTestCase):
         self.assertIsNone(message.timestamp_sent)
         self.assertIsNone(message.identifier)
         self.assertIsNone(message.recipients)
+        self.assertFalse(message.discard)
         self.assertEqual(message.state, MessageState.UNSENT)
 
         # Test "get_unsent_message" method.
@@ -115,6 +116,51 @@ class DBMessageTest(DBTestCase):
         with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
             self.db.mark_message_sent(1999999, '<2@localhost>',
                                       _test_skip_check=True)
+
+        # Test "update_message" method.
+        self.db.update_message(message_id=message_id,
+                               state=MessageState.UNSENT)
+
+        message = self.db.get_message(message_id)
+        self.assertIsNone(message.timestamp_send)
+        self.assertIsNone(message.timestamp_sent)
+        self.assertFalse(message.discard)
+
+        self.db.update_message(message_id=message_id,
+                               state=MessageState.DISCARD)
+
+        messages = self.db.search_message()
+        self.assertEqual(set(messages.keys()), set((message_id,)))
+        message = messages[message_id]
+        self.assertIsNone(message.timestamp_send)
+        self.assertIsNone(message.timestamp_sent)
+        self.assertTrue(message.discard)
+        self.assertEqual(message.state, MessageState.DISCARD)
+
+        message = self.db.get_unsent_message()
+        self.assertIsNone(message)
+
+        self.db.update_message(message_id=message_id,
+                               state=MessageState.UNSENT)
+
+        message = self.db.get_unsent_message()
+        self.assertIsNotNone(message)
+        self.assertEqual(message.id, message_id)
+
+        with self.assertRaisesRegexp(ConsistencyError, '^message does not'):
+            self.db.update_message(
+                message_id=1999999, state=MessageState.DISCARD)
+
+        with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
+            self.db.update_message(
+                message_id=1999999, state=MessageState.DISCARD,
+                _test_skip_check=True)
+
+        with self.assertRaisesRegexp(Error, '^invalid state'):
+            self.db.update_message(message_id=message_id, state=999)
+
+        with self.assertRaisesRegexp(Error, '^no message updates specified'):
+            self.db.update_message(message_id=message_id)
 
     def test_multiple_message(self):
         # Create some person records with multiple email addresses.

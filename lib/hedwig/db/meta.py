@@ -277,6 +277,7 @@ message = Table(
     Column('timestamp_send', DateTime(), default=None, index=True),
     Column('timestamp_sent', DateTime(), default=None),
     Column('identifier', Unicode(255), default=None),
+    Column('discard', Boolean, nullable=False, default=False),
     **table_opts)
 
 message_recipient = Table(

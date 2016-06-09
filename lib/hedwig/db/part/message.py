@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,7 +22,7 @@ from datetime import datetime
 from itertools import izip_longest
 
 from sqlalchemy.sql import select
-from sqlalchemy.sql.expression import and_, case, column
+from sqlalchemy.sql.expression import and_, case, column, not_
 from sqlalchemy.sql.functions import coalesce
 
 from ...error import ConsistencyError, FormattedError, \
@@ -106,6 +106,7 @@ class MessagePart(object):
 
         with self._transaction() as conn:
             result = conn.execute(message.select().where(and_(
+                not_(message.c.discard),
                 message.c.timestamp_send.is_(None),
                 message.c.timestamp_sent.is_(None)
             )).order_by(
@@ -191,6 +192,7 @@ class MessagePart(object):
         """
 
         state_expr = case([
+            (message.c.discard, MessageState.DISCARD),
             (and_(message.c.timestamp_send.is_(None),
                   message.c.timestamp_sent.is_(None)), MessageState.UNSENT),
             (message.c.timestamp_sent.is_(None), MessageState.SENDING),
@@ -203,6 +205,7 @@ class MessagePart(object):
             message.c.timestamp_send,
             message.c.timestamp_sent,
             message.c.identifier,
+            message.c.discard,
             state_expr.label('state'),
         ])
 
@@ -226,3 +229,45 @@ class MessagePart(object):
                 ans[row['id']] = Message(body=None, recipients=None, **row)
 
         return ans
+
+    def update_message(self, message_id, state=None,
+                       _test_skip_check=False):
+        """
+        Update a message record.
+        """
+
+        values = {}
+
+        if state is not None:
+            if state == MessageState.UNSENT:
+                values.update({
+                    'timestamp_send': None,
+                    'timestamp_sent': None,
+                    'discard': False,
+                })
+
+            elif state == MessageState.DISCARD:
+                values.update({
+                    'discard': True,
+                })
+
+            else:
+                raise FormattedError('invalid state {} for message update',
+                                     state)
+
+        if not values:
+            raise FormattedError('no message updates specified')
+
+        with self._transaction() as conn:
+            if not _test_skip_check and not self._exists_id(
+                    conn, message, message_id):
+                raise ConsistencyError(
+                    'message does not exist with id={}', message_id)
+
+            result = conn.execute(message.update().where(
+                message.c.id == message_id
+            ).values(values))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched updating message with id={}', message_id)

@@ -378,6 +378,7 @@ class MessageState(object):
     UNSENT = 1
     SENDING = 2
     SENT = 3
+    DISCARD = 4
 
     StateInfo = namedtuple(
         'StateInfo', ('name',))
@@ -386,6 +387,7 @@ class MessageState(object):
         (UNSENT,  StateInfo('Unsent')),
         (SENDING, StateInfo('Sending')),
         (SENT,    StateInfo('Sent')),
+        (DISCARD, StateInfo('Discarded')),
     ))
 
     @classmethod
