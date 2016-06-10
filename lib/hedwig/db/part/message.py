@@ -28,13 +28,14 @@ from sqlalchemy.sql.functions import coalesce
 from ...error import ConsistencyError, FormattedError, \
     NoSuchRecord, MultipleRecords
 from ...type.collection import ResultCollection
-from ...type.enum import MessageState
+from ...type.enum import MessageState, MessageThreadType
 from ...type.simple import Message, MessageRecipient
 from ..meta import email, message, message_recipient, person
 
 
 class MessagePart(object):
     def add_message(self, subject, body, person_ids, email_addresses=[],
+                    thread_type=None, thread_id=None,
                     _test_skip_check=False):
         """
         Add a message to the database.
@@ -44,6 +45,13 @@ class MessagePart(object):
         then it can be a list with email addresses in the same order as the
         person_ids list.
         """
+
+        if thread_type is not None:
+            if not MessageThreadType.is_valid(thread_type):
+                raise FormattedError('invalid thread type {}', thread_type)
+
+        elif thread_id is not None:
+            raise ConsistencyError('thread_id specified without thread_type')
 
         if not _test_skip_check:
             if ((not isinstance(person_ids, set)) and
@@ -55,6 +63,8 @@ class MessagePart(object):
                 message.c.date: datetime.utcnow(),
                 message.c.subject: subject,
                 message.c.body: body,
+                message.c.thread_type: thread_type,
+                message.c.thread_id: thread_id,
             }))
 
             message_id = result.inserted_primary_key[0]
@@ -91,7 +101,8 @@ class MessagePart(object):
             if row is None:
                 raise NoSuchRecord('message not found with id {}', message_id)
 
-            ans = Message(recipients=recipients, state=None, **row)
+            ans = Message(recipients=recipients, thread_identifiers=None,
+                          state=None, **row)
 
         return ans
 
@@ -118,11 +129,27 @@ class MessagePart(object):
 
             message_id = result['id']
 
-            recipients = []
+            # Find the identifiers for previous messages in the same thread,
+            # oldest first.
+            thread_type = result['thread_type']
+            thread_id = result['thread_id']
+            thread_identifiers = []
+
+            if (thread_type is not None) and (thread_id is not None):
+                for row in conn.execute(select([
+                        message.c.identifier,
+                        ]).select_from(message).where(and_(
+                            message.c.thread_type == thread_type,
+                            message.c.thread_id == thread_id,
+                            message.c.id < message_id
+                        )).order_by(message.c.id.asc())):
+                    thread_identifiers.append(row['identifier'])
 
             # Find the recipients of the message: perform an outer join
             # with the email table in case the address is not there -- in that
             # case assume the address is not public.
+            recipients = []
+
             for row in conn.execute(select([
                     message_recipient.c.person_id,
                     person.c.name,
@@ -154,7 +181,9 @@ class MessagePart(object):
                     raise ConsistencyError(
                         'no rows matched marking message as sending')
 
-        return Message(recipients=recipients, state=None, **result)
+        return Message(
+            recipients=recipients, thread_identifiers=thread_identifiers,
+            state=None, **result)
 
     def mark_message_sent(self, message_id, identifier,
                           _test_skip_check=False):
@@ -206,6 +235,8 @@ class MessagePart(object):
             message.c.timestamp_sent,
             message.c.identifier,
             message.c.discard,
+            message.c.thread_type,
+            message.c.thread_id,
             state_expr.label('state'),
         ])
 
@@ -226,7 +257,8 @@ class MessagePart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(message.c.id.desc())):
-                ans[row['id']] = Message(body=None, recipients=None, **row)
+                ans[row['id']] = Message(body=None, recipients=None,
+                                         thread_identifiers=None, **row)
 
         return ans
 

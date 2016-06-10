@@ -420,6 +420,24 @@ class MessageState(EnumBasic):
             if ((settable is None) or (settable == v.settable))))
 
 
+class MessageThreadType(EnumBasic, EnumURLPath):
+    """
+    Class representing different properties which could be
+    used to group messages in a thread.
+    """
+
+    PROPOSAL_STATUS = 1
+    REVIEW_INVITATION = 2
+
+    TypeInfo = namedtuple(
+        'TypeInfo', ('name', 'url_path'))
+
+    _info = OrderedDict((
+        (PROPOSAL_STATUS,   TypeInfo('Proposal status',   'prop_stat')),
+        (REVIEW_INVITATION, TypeInfo('Review invitation', 'rev_inv')),
+    ))
+
+
 class ProposalState(EnumBasic):
     """
     Class representing various states a proposal can be in.

@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from datetime import datetime
 
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, Error
-from hedwig.type.enum import MessageState
+from hedwig.type.enum import MessageState, MessageThreadType
 from hedwig.type.collection import ResultCollection
 from hedwig.type.simple import Message, MessageRecipient
 from .dummy_db import DBTestCase
@@ -69,6 +69,8 @@ class DBMessageTest(DBTestCase):
         self.assertIsNone(message.identifier)
         self.assertIsNone(message.recipients)
         self.assertFalse(message.discard)
+        self.assertIsNone(message.thread_type)
+        self.assertIsNone(message.thread_id)
         self.assertEqual(message.state, MessageState.UNSENT)
 
         # Test "get_unsent_message" method.
@@ -252,3 +254,64 @@ class DBMessageTest(DBTestCase):
         self.assertEqual(message.recipients, [
             MessageRecipient(person_1, 'Person One', '1@d', False),
         ])
+
+    def test_message_thread(self):
+        person = self.db.add_person('Test Person')
+        self.db.add_email(person, 'test@email', primary=True, public=True)
+
+        message_args = ['test', 'test message', [person]]
+
+        with self.assertRaisesRegexp(Error, '^invalid thread type'):
+            message = self.db.add_message(
+                *message_args, thread_type=999, thread_id=123)
+
+        with self.assertRaisesRegexp(
+                Error, '^thread_id specified without thread_type'):
+            message = self.db.add_message(
+                *message_args, thread_type=None, thread_id=123)
+
+        # Store a message not in our thread.
+        message_0 = self.db.add_message(
+            *message_args, thread_type=MessageThreadType.PROPOSAL_STATUS,
+            thread_id=321)
+
+        # Store multiple messages in a thread.
+        message_kwargs = {
+            'thread_type': MessageThreadType.PROPOSAL_STATUS,
+            'thread_id': 123,
+        }
+
+        message_1 = self.db.add_message(*message_args, **message_kwargs)
+        message_2 = self.db.add_message(*message_args, **message_kwargs)
+        message_3 = self.db.add_message(*message_args, **message_kwargs)
+        message_4 = self.db.add_message(*message_args, **message_kwargs)
+
+        # Retrieve the messages and check the thread identifiers.
+        message = self.db.get_unsent_message(mark_sending=True)
+        self.assertIsNotNone(message)
+        self.assertEqual(message.id, message_0)
+        self.assertEqual(message.thread_identifiers, [])
+        self.db.mark_message_sent(message_0, '<0@id>')
+
+        message = self.db.get_unsent_message(mark_sending=True)
+        self.assertIsNotNone(message)
+        self.assertEqual(message.id, message_1)
+        self.assertEqual(message.thread_identifiers, [])
+
+        self.db.mark_message_sent(message_1, '<1@id>')
+
+        # Send message 4 out of order -- we shouldn't see its identifer
+        # in query results as it comes after the other messages.
+        self.db.mark_message_sent(message_4, '<4@id>')
+
+        message = self.db.get_unsent_message(mark_sending=True)
+        self.assertIsNotNone(message)
+        self.assertEqual(message.id, message_2)
+        self.assertEqual(message.thread_identifiers, ['<1@id>'])
+
+        self.db.mark_message_sent(message_2, '<2@id>')
+
+        message = self.db.get_unsent_message(mark_sending=True)
+        self.assertIsNotNone(message)
+        self.assertEqual(message.id, message_3)
+        self.assertEqual(message.thread_identifiers, ['<1@id>', '<2@id>'])

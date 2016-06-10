@@ -278,6 +278,8 @@ message = Table(
     Column('timestamp_sent', DateTime(), default=None),
     Column('identifier', Unicode(255), default=None),
     Column('discard', Boolean, nullable=False, default=False),
+    Column('thread_type', Integer, default=None),
+    Column('thread_id', Integer, default=None),
     **table_opts)
 
 message_recipient = Table(
