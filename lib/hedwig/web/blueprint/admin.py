@@ -52,6 +52,12 @@ def create_admin_blueprint(db, facilities):
     def message_view(message_id):
         return view.message_view(db, message_id)
 
+    @bp.route('/message_thread/<hedwig_thread:thread_type>/<int:thread_id>')
+    @templated('admin/message_thread.html')
+    @require_admin
+    def message_thread(thread_type, thread_id):
+        return view.message_thread(db, thread_type, thread_id)
+
     @bp.route('/processing', methods=['GET', 'POST'])
     @templated('admin/processing_status.html')
     @require_admin

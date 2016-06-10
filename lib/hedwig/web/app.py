@@ -24,7 +24,7 @@ import logging
 import os
 
 from ..config import get_config, get_database, get_facilities, get_home
-from ..type.enum import GroupType, TextRole
+from ..type.enum import GroupType, MessageThreadType, TextRole
 from ..type.simple import FacilityInfo
 from .template_util import register_template_utils
 from .util import make_enum_converter, register_error_handlers
@@ -97,6 +97,8 @@ def create_web_app(db=None):
     # Set up routing converters.
     app.url_map.converters['hedwig_group'] = make_enum_converter(GroupType)
     app.url_map.converters['hedwig_text'] = make_enum_converter(TextRole)
+    app.url_map.converters['hedwig_thread'] = \
+        make_enum_converter(MessageThreadType)
 
     for facility in facilities.values():
         app.url_map.converters['hedwig_review_{}'.format(facility.code)] = \

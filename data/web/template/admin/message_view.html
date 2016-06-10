@@ -36,6 +36,12 @@
             <td>Message has been discarded</td>
         </tr>
     {% endif %}
+    {% if (message.thread_type is not none) and (message.thread_id is not none) %}
+        <tr>
+            <th>Thread</th>
+            <td><a href="{{ url_for('.message_thread', thread_type=message.thread_type, thread_id=message.thread_id) }}">{{ message.thread_type | message_thread_type_name }}</a></td>
+        </tr>
+    {% endif %}
 </table>
 
 <table>

@@ -1,0 +1,20 @@
+{% extends 'layout.html' %}
+{% set navigation = ['site_admin', ('Messages', url_for('.message_list'))] %}
+{% set help_link=url_for('help.admin_page', page_name='messages') %}
+
+{% block content %}
+<table>
+    <tr>
+        <th>Status</th>
+        <th>Date (UT)</th>
+        <th>Subject</th>
+    </tr>
+    {% for message in messages %}
+        <tr>
+            <td>{{ message.state | message_state_name }}</td>
+            <td>{{ message.date | format_datetime }}</td>
+            <td><a href="{{ url_for('.message_view', message_id=message.id) }}">{{ message.subject }}</a></td>
+        </tr>
+    {% endfor %}
+</table>
+{% endblock %}

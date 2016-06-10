@@ -22,7 +22,7 @@ from collections import namedtuple
 
 from ..error import NoSuchRecord
 from ..type.simple import ProposalWithCode
-from ..type.enum import AttachmentState, MessageState
+from ..type.enum import AttachmentState, MessageState, MessageThreadType
 from ..web.util import ErrorPage, HTTPNotFound, HTTPRedirect, flash, url_for
 from .util import with_verified_admin
 
@@ -144,6 +144,17 @@ class AdminView(object):
         return {
             'title': 'Message: {}'.format(message.subject),
             'message': message,
+        }
+
+    @with_verified_admin
+    def message_thread(self, db, thread_type, thread_id):
+        messages = db.search_message(
+            thread_type=thread_type, thread_id=thread_id)
+
+        return {
+            'title': 'Message thread: {}'.format(
+                MessageThreadType.get_name(thread_type)),
+            'messages': messages.values(),
         }
 
     @with_verified_admin

@@ -24,7 +24,7 @@ from flask import Markup
 from jinja2.runtime import Undefined
 
 from ..type.enum import AffiliationType, Assessment, \
-    AttachmentState, CallState, MessageState, \
+    AttachmentState, CallState, MessageState, MessageThreadType, \
     ProposalState, PublicationType, TextRole
 
 from .format import format_text
@@ -154,6 +154,13 @@ def register_template_utils(app):
             return MessageState.get_name(value)
         except KeyError:
             return 'Unknown state'
+
+    @app.template_filter()
+    def message_thread_type_name(value):
+        try:
+            return MessageThreadType.get_name(value)
+        except KeyError:
+            return 'Unknown thread type'
 
     @app.template_filter()
     def proposal_state_name(value):

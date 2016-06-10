@@ -25,7 +25,7 @@ from flask import Markup
 
 from hedwig.type.enum import Assessment, AttachmentState, \
     BaseReviewerRole, CallState, \
-    MessageState, ProposalState, \
+    MessageState, MessageThreadType, ProposalState, \
     PublicationType, TextRole
 from hedwig.web.template_util import Counter
 
@@ -122,6 +122,13 @@ class TemplateUtilTestCase(WebAppTestCase):
 
         self.assertEqual(f(MessageState.UNSENT), 'Unsent')
         self.assertEqual(f(999), 'Unknown state')
+
+    def test_filter_message_thread(self):
+        f = self.app.jinja_env.filters['message_thread_type_name']
+
+        self.assertEqual(f(MessageThreadType.REVIEW_INVITATION),
+                         'Review invitation')
+        self.assertEqual(f(999), 'Unknown thread type')
 
     def test_filter_proposal_state(self):
         f = self.app.jinja_env.filters['proposal_state_name']
