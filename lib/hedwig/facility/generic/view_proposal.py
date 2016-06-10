@@ -30,7 +30,7 @@ from ...publication.url import make_publication_url
 from ...type.collection import PrevProposalCollection, ResultCollection, \
     TargetCollection
 from ...type.enum import AffiliationType, AttachmentState, \
-    CallState, FigureType, FormatType, \
+    CallState, FigureType, FormatType, MessageThreadType, \
     ProposalState, PublicationType, TextRole
 from ...type.simple import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
@@ -392,7 +392,9 @@ class GenericProposal(object):
                     'submitter_name': session['person']['name'],
                 },
                 facility=self),
-            [x.person_id for x in proposal.members.values()])
+            [x.person_id for x in proposal.members.values()],
+            thread_type=MessageThreadType.PROPOSAL_STATUS,
+            thread_id=proposal.id)
 
     @with_proposal(permission='view')
     def view_proposal_validate(self, db, proposal, can):
@@ -444,7 +446,9 @@ class GenericProposal(object):
                     'withdrawer_name': session['person']['name'],
                 },
                 facility=self),
-            [x.person_id for x in proposal.members.values()])
+            [x.person_id for x in proposal.members.values()],
+            thread_type=MessageThreadType.PROPOSAL_STATUS,
+            thread_id=proposal.id)
 
     @with_proposal(permission='edit')
     def view_title_edit(self, db, proposal, can, form):

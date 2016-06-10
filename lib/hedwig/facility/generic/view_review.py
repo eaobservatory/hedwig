@@ -35,7 +35,7 @@ from ...web.util import ErrorPage, \
 from ...type.collection import ReviewerCollection
 from ...type.enum import AffiliationType, Assessment, \
     FileTypeInfo, FormatType, GroupType, \
-    ProposalState, TextRole
+    MessageThreadType, ProposalState, TextRole
 from ...type.simple import Affiliation, Link, MemberPIInfo, \
     ProposalWithCode, Reviewer
 from ...type.util import null_tuple, with_can_edit
@@ -747,7 +747,9 @@ class GenericReview(object):
             email_subject,
             render_email_template('review_invitation.txt',
                                   email_ctx, facility=self),
-            [person_id])
+            [person_id],
+            thread_type=MessageThreadType.REVIEW_INVITATION,
+            thread_id=reviewer_id)
 
     @with_proposal(permission='none')
     def view_reviewer_remove(self, db, proposal, role, reviewer_id, form):
