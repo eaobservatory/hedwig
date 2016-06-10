@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -99,6 +99,13 @@ def send_email_message(message):
     msg['From'] = Header(from_)
     msg['To'] = Header(', '.join(recipients_public))
     msg['Message-ID'] = identifier
+    if message.thread_identifiers:
+        # Currently set this to the last message in the thread,
+        # to create a nested thread structure.
+        # Alternatively could set "In-Reply-To" to be the first message
+        # in the thread to make a thread with a flat structure.
+        msg['In-Reply-To'] = Header(message.thread_identifiers[-1])
+        msg['References'] = Header(' '.join(message.thread_identifiers))
 
     with closing(StringIO()) as f:
         Generator(f, mangle_from_=False).flatten(msg)
