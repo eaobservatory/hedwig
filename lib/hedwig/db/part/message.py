@@ -212,6 +212,7 @@ class MessagePart(object):
                     'no rows matched marking message as sent')
 
     def search_message(self, person_id=None, state=None, message_id_lt=None,
+                       thread_type=None, thread_id=None,
                        limit=None):
         """
         Searches for messages.
@@ -249,6 +250,15 @@ class MessagePart(object):
 
         if message_id_lt is not None:
             stmt = stmt.where(message.c.id < message_id_lt)
+
+        if thread_type is not None:
+            stmt = stmt.where(message.c.thread_type == thread_type)
+
+            if thread_id is not None:
+                stmt = stmt.where(message.c.thread_id == thread_id)
+
+        elif thread_id is not None:
+            raise ConsistencyError('thread_id specified without thread_type')
 
         if limit is not None:
             stmt = stmt.limit(limit)
