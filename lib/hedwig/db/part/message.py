@@ -213,7 +213,7 @@ class MessagePart(object):
 
     def search_message(self, person_id=None, state=None, message_id_lt=None,
                        thread_type=None, thread_id=None,
-                       limit=None):
+                       limit=None, oldest_first=False):
         """
         Searches for messages.
 
@@ -265,8 +265,13 @@ class MessagePart(object):
 
         ans = ResultCollection()
 
+        if oldest_first:
+            stmt = stmt.order_by(message.c.id.asc())
+        else:
+            stmt = stmt.order_by(message.c.id.desc())
+
         with self._transaction() as conn:
-            for row in conn.execute(stmt.order_by(message.c.id.desc())):
+            for row in conn.execute(stmt):
                 ans[row['id']] = Message(body=None, recipients=None,
                                          thread_identifiers=None, **row)
 

@@ -149,7 +149,7 @@ class AdminView(object):
     @with_verified_admin
     def message_thread(self, db, thread_type, thread_id):
         messages = db.search_message(
-            thread_type=thread_type, thread_id=thread_id)
+            thread_type=thread_type, thread_id=thread_id, oldest_first=True)
 
         return {
             'title': 'Message thread: {}'.format(
