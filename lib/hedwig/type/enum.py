@@ -663,7 +663,7 @@ class BaseReviewerRole(EnumBasic, EnumURLPath):
         (CTTEE_OTHER,
             RoleInfo(
                 'Rating',
-                False, False, False, True,  True,  True,  False, False, False,
+                False, True,  False, True,  True,  True,  False, False, True,
                 'cttee', 'rating')),
         (FEEDBACK,
             RoleInfo(
