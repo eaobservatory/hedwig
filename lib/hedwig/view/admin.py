@@ -228,9 +228,11 @@ class AdminView(object):
 
         ctx.update({
             'title': 'Processing Status',
-            'mocs': self._add_moc_facility(db.search_moc(
+            'mocs': self._add_moc_facility(
+                db.search_moc(
                     facility_id=None, public=None,
-                    state=unready, order_by_date=True).values(), facilities),
+                    state=unready, order_by_date=True).values(),
+                facilities),
         })
 
         return ctx

@@ -183,7 +183,7 @@ class GenericReview(object):
                         ((k, with_can_edit(v, auth.for_review(
                             role_class, db, reviewer=v, proposal=proposal,
                             auth_cache=auth_cache).edit))
-                        for (k, v) in proposal.reviewers.items())),
+                         for (k, v) in proposal.reviewers.items())),
                     'rating': overall_rating,
                     'rating_std_dev': std_dev,
                 })

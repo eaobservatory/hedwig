@@ -314,8 +314,9 @@ class JCMTWeather(object):
     BAND4 = 4
     BAND5 = 5
 
-    WeatherInfo = namedtuple('WeatherInfo',
-                             ('name', 'available', 'rep', 'min', 'max', 'free'))
+    WeatherInfo = namedtuple(
+        'WeatherInfo',
+        ('name', 'available', 'rep', 'min', 'max', 'free'))
 
     _info = OrderedDict((
         (BAND1, WeatherInfo('Band 1', True, 0.045, None, 0.05, False)),

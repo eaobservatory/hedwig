@@ -251,13 +251,15 @@ def require_auth(require_person=False, require_person_admin=False,
             try:
                 if 'user_id' not in session:
                     if _flask_request.method == 'POST':
-                        # If someone logged out (in another tab) or their session
-                        # expired while they were filling in a form, we should
-                        # show a help page.  (Otherwise after logging in they
-                        # are redirected back to a blank copy of the form they
-                        # were working on.)
+                        # If someone logged out (in another tab) or their
+                        # session expired while they were filling in a form,
+                        # we should # show a help page.
+                        # (Otherwise after logging in they are redirected
+                        # back to a blank copy of the form they were
+                        # working on.)
 
-                        session['log_in_for'] = url_for('people.log_in_post_done')
+                        session['log_in_for'] = url_for(
+                            'people.log_in_post_done')
 
                         return _make_response('people/log_in_post.html', {
                             'title': 'Reauthentication Required',
@@ -265,7 +267,8 @@ def require_auth(require_person=False, require_person_admin=False,
                             'without_links': True,
                         })
 
-                    flash('Please log in or register for an account to proceed.')
+                    flash(
+                        'Please log in or register for an account to proceed.')
 
                     if register_user_only:
                         session['register_user_for'] = _flask_request.url
@@ -284,8 +287,9 @@ def require_auth(require_person=False, require_person_admin=False,
                         session['person']['institution_id'] is None):
                     flash('Please select your institution before proceeding.')
                     session['log_in_for'] = _flask_request.url
-                    raise HTTPRedirect(url_for('people.person_edit_institution',
-                                               person_id=session['person']['id']))
+                    raise HTTPRedirect(
+                        url_for('people.person_edit_institution',
+                                person_id=session['person']['id']))
 
             except HTTPRedirect as redirect:
                 if record_referrer:
