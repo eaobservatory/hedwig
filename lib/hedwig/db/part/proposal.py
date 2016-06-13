@@ -2189,6 +2189,7 @@ class ProposalPart(object):
                     semester_id)
 
     def update_proposal(self, proposal_id, state=None, title=None,
+                        state_prev=None,
                         _test_skip_check=False):
         """
         Update a proposal record.
@@ -2196,10 +2197,17 @@ class ProposalPart(object):
 
         values = {}
 
+        stmt = proposal.update().where(proposal.c.id == proposal_id)
+
         if state is not None:
             if not ProposalState.is_valid(state):
                 raise Error('Invalid state.')
             values['state'] = state
+
+        if state_prev is not None:
+            if not ProposalState.is_valid(state_prev):
+                raise Error('Invalid previous state.')
+            stmt = stmt.where(proposal.c.state == state_prev)
 
         if title is not None:
             if not title:
@@ -2215,9 +2223,7 @@ class ProposalPart(object):
                 raise ConsistencyError(
                     'proposal does not exist with id={}', proposal_id)
 
-            result = conn.execute(proposal.update().where(
-                proposal.c.id == proposal_id
-            ).values(values))
+            result = conn.execute(stmt.values(values))
 
             if result.rowcount != 1:
                 raise ConsistencyError(

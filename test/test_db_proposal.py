@@ -434,8 +434,20 @@ class DBProposalTest(DBTestCase):
                 self.assertFalse(member.observer)
 
                 # Try updating the proposal.
+                with self.assertRaisesRegexp(ConsistencyError,
+                                             '^no rows matched'):
+                    self.db.update_proposal(
+                        proposal_id, state=ProposalState.SUBMITTED,
+                        state_prev=ProposalState.REVIEW)
+
+                proposal_updated = self.db.get_proposal(None, proposal_id)
+                self.assertEqual(proposal_updated, proposal._replace(
+                    state=ProposalState.PREPARATION,
+                    members=None))
+
                 self.db.update_proposal(proposal_id,
-                                        state=ProposalState.SUBMITTED)
+                                        state=ProposalState.SUBMITTED,
+                                        state_prev=ProposalState.PREPARATION)
                 proposal_updated = self.db.get_proposal(None, proposal_id)
                 self.assertEqual(proposal_updated, proposal._replace(
                     state=ProposalState.SUBMITTED,
