@@ -72,19 +72,26 @@ def close_call_proposals(db, call_id):
                            proposal.id, ProposalState.get_name(proposal.state))
             continue
 
-        logger.info('Setting state of proposal {} to {}',
-                    proposal.id, ProposalState.get_name(new_state))
-        db.update_proposal(proposal.id, state=new_state)
+        try:
+            logger.info('Setting state of proposal {} to {}',
+                        proposal.id, ProposalState.get_name(new_state))
+            db.update_proposal(proposal.id, state=new_state,
+                               state_prev=proposal.state)
 
-        # Freeze the current institution ID values in the member table.
-        records = {}
-        for member in proposal.members.values():
-            records[member.id] = MemberInstitution(
-                member.id, member.resolved_institution_id)
+            # Freeze the current institution ID values in the member table.
+            records = {}
+            for member in proposal.members.values():
+                records[member.id] = MemberInstitution(
+                    member.id, member.resolved_institution_id)
 
-        logger.debug('Sync institution IDs into proposal {} member table',
-                     proposal.id)
-        db.sync_proposal_member_institution(proposal.id, records)
+            logger.debug('Sync institution IDs into proposal {} member table',
+                         proposal.id)
+            db.sync_proposal_member_institution(proposal.id, records)
+
+        except ConsistencyError:
+            logger.exception(
+                'Consistency error closing call for proposal {}',
+                proposal.id)
 
 
 def send_call_proposal_feedback(db, call_id, proposals):
@@ -198,7 +205,8 @@ def send_call_proposal_feedback(db, call_id, proposals):
             logger.info('Setting state of proposal {} to {}',
                         proposal.id, ProposalState.get_name(new_state))
 
-            db.update_proposal(proposal.id, state=new_state)
+            db.update_proposal(proposal.id, state=new_state,
+                               state_prev=ProposalState.REVIEW)
 
             # Write feedback email message into the database.  Do this after
             # setting the state (see comment above for why).
@@ -209,7 +217,13 @@ def send_call_proposal_feedback(db, call_id, proposals):
                            [x.person_id for x in proposal.members.values()])
 
         except FeedbackError:
-            logger.exception('Failed to send feedback for proposal {}',
-                             proposal.id)
+            logger.exception(
+                'Failed to send feedback for proposal {}',
+                proposal.id)
+
+        except ConsistencyError:
+            logger.exception(
+                'Consistency error sending feedback for proposal {}',
+                proposal.id)
 
     return n_processed
