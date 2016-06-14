@@ -121,22 +121,14 @@ def create_facility_blueprint(db, facility):
     def review_call_reviewers(call_id):
         return facility.view_review_call_reviewers(db, call_id, request.args)
 
-    @bp.route('/call/<int:call_id>/reviewers/technical',
+    @bp.route('/call/<int:call_id>/reviewers/'
+              '<hedwig_review_{}:reviewer_role>'.format(code),
               methods=['GET', 'POST'])
     @require_auth(require_person=True)
     @facility_template('reviewer_grid.html')
-    def review_call_technical(call_id):
+    def review_call_grid(call_id, reviewer_role):
         return facility.view_reviewer_grid(
-            db, call_id, role_class.TECH,
-            (request.form if request.method == 'POST' else None))
-
-    @bp.route('/call/<int:call_id>/reviewers/committee',
-              methods=['GET', 'POST'])
-    @require_auth(require_person=True)
-    @facility_template('reviewer_grid.html')
-    def review_call_committee(call_id):
-        return facility.view_reviewer_grid(
-            db, call_id, role_class.CTTEE_PRIMARY,
+            db, call_id, reviewer_role,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>')
@@ -398,43 +390,41 @@ def create_facility_blueprint(db, facility):
             db, proposal_id, reviewer_role,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/review/external/add',
+    @bp.route('/proposal/<int:proposal_id>/review/'
+              '<hedwig_review_{}:reviewer_role>/add'.format(code),
               methods=['GET', 'POST'])
     @require_auth(require_person=True)
     @facility_template('reviewer_select.html')
-    def review_external_add(proposal_id):
+    def proposal_reviewer_add(proposal_id, reviewer_role):
         return facility.view_reviewer_add(
-            db, proposal_id, role_class.EXTERNAL,
+            db, proposal_id, reviewer_role,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/review/external/remove/'
-              '<int:reviewer_id>',
+    @bp.route('/review/<int:reviewer_id>/remove',
               methods=['GET', 'POST'])
     @require_auth(require_person=True)
     @templated('confirm.html')
-    def review_external_remove(proposal_id, reviewer_id):
+    def proposal_reviewer_remove(reviewer_id):
         return facility.view_reviewer_remove(
-            db, proposal_id, role_class.EXTERNAL, reviewer_id,
+            db, reviewer_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/review/external/reinvite/'
-              '<int:reviewer_id>',
+    @bp.route('/review/<int:reviewer_id>/reinvite',
               methods=['GET', 'POST'])
     @require_auth(require_person=True)
     @facility_template('reviewer_reinvite_confirm.html')
-    def review_external_reinvite(proposal_id, reviewer_id):
+    def proposal_reviewer_reinvite(reviewer_id):
         return facility.view_reviewer_reinvite(
-            db, proposal_id, role_class.EXTERNAL, reviewer_id,
+            db, reviewer_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/review/external/remind/'
-              '<int:reviewer_id>',
+    @bp.route('/review/<int:reviewer_id>/remind',
               methods=['GET', 'POST'])
     @require_auth(require_person=True)
     @facility_template('reviewer_reinvite_confirm.html')
-    def review_external_remind(proposal_id, reviewer_id):
+    def proposal_reviewer_remind(reviewer_id):
         return facility.view_reviewer_remind(
-            db, proposal_id, role_class.EXTERNAL, reviewer_id,
+            db, reviewer_id,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/decision', methods=['GET', 'POST'])

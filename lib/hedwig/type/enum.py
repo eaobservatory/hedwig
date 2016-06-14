@@ -635,41 +635,42 @@ class BaseReviewerRole(EnumBasic, EnumURLPath):
     RoleInfo = namedtuple(
         'RoleInfo',
         ('name', 'unique', 'text', 'assessment', 'rating', 'weight',
-         'cttee', 'name_review', 'feedback', 'note',
+         'cttee', 'name_review', 'feedback', 'note', 'invite',
          'display_class', 'url_path'))
 
     # Options:  Unique Text   Ass/nt Rating Weight Cttee  "Rev"  Feedbk Note
+    #           Invite Disp.cl. URL
     _info = OrderedDict((
         (TECH,
             RoleInfo(
                 'Technical',
                 True,  True,  True,  False, False, False, True,  False, True,
-                'tech', None)),
+                False, 'tech', 'technical')),
         (EXTERNAL,
             RoleInfo(
                 'External',
                 False, True,  False, True,  False, False, True,  False, False,
-                'ext', None)),
+                True,  'ext', 'external')),
         (CTTEE_PRIMARY,
             RoleInfo(
                 'TAC Primary',
                 True,  True,  False, True,  True,  True,  True,  True,  True,
-                'cttee', None)),
+                False, 'cttee', 'committee')),
         (CTTEE_SECONDARY,
             RoleInfo(
                 'TAC Secondary',
                 False, True,  False, True,  True,  True,  True,  True,  True,
-                'cttee', None)),
+                False, 'cttee', None)),
         (CTTEE_OTHER,
             RoleInfo(
                 'Rating',
                 False, True,  False, True,  True,  True,  False, False, True,
-                'cttee', 'rating')),
+                False, 'cttee', 'rating')),
         (FEEDBACK,
             RoleInfo(
                 'Feedback',
                 True,  True,  False, False, False, False, False, False, False,
-                'feedback', 'feedback')),
+                False, 'feedback', 'feedback')),
     ))
 
     @classmethod
@@ -691,12 +692,24 @@ class BaseReviewerRole(EnumBasic, EnumURLPath):
         return [k for (k, v) in cls._info.items() if v.feedback]
 
     @classmethod
+    def get_invited_roles(cls):
+        """Get list of roles for invited reviewers."""
+
+        return [k for (k, v) in cls._info.items() if v.invite]
+
+    @classmethod
     def get_options(cls):
         """
         Get an OrderedDict of role names by role numbers.
         """
 
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
+
+    @classmethod
+    def is_invited_review(cls, role):
+        """Indicate whether the given role is for invited reviews."""
+
+        return cls._info[role].invite
 
     @classmethod
     def is_name_review(cls, role):

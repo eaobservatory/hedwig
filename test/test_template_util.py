@@ -206,7 +206,7 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertTrue(t(ProposalState.REVIEW))
 
     def test_test_reviewer_role(self):
-        t = self.app.jinja_env.tests['reviewer_role_external']
+        t = self.app.jinja_env.tests['reviewer_role_invited']
 
         self.assertFalse(t(BaseReviewerRole.TECH, BaseReviewerRole))
         self.assertTrue(t(BaseReviewerRole.EXTERNAL, BaseReviewerRole))

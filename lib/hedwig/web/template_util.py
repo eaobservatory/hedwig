@@ -243,8 +243,8 @@ def register_template_utils(app):
         return (value == ProposalState.REVIEW)
 
     @app.template_test()
-    def reviewer_role_external(value, role_class):
-        return (value == role_class.EXTERNAL)
+    def reviewer_role_invited(value, role_class):
+        return role_class.is_invited_review(value)
 
     @app.template_test()
     def reviewer_role_review(value, role_class):

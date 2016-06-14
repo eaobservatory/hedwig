@@ -313,21 +313,26 @@ def with_review(permission):
 
             assert proposal.id == proposal_id
 
-            can = auth.for_review(role_class, db, reviewer, proposal)
-
-            if permission == 'view':
-                if not can.view:
-                    raise HTTPForbidden('Permission denied for this review.')
-
-            elif permission == 'edit':
-                if not can.edit:
-                    raise HTTPForbidden(
-                        'Edit permission denied for this review.')
+            if permission == 'none':
+                return f(self, db, reviewer, proposal, *args, **kwargs)
 
             else:
-                raise HTTPError('Unknown permission type.')
+                can = auth.for_review(role_class, db, reviewer, proposal)
 
-            return f(self, db, reviewer, proposal, can, *args, **kwargs)
+                if permission == 'view':
+                    if not can.view:
+                        raise HTTPForbidden(
+                            'Permission denied for this review.')
+
+                elif permission == 'edit':
+                    if not can.edit:
+                        raise HTTPForbidden(
+                            'Edit permission denied for this review.')
+
+                else:
+                    raise HTTPError('Unknown permission type.')
+
+                return f(self, db, reviewer, proposal, can, *args, **kwargs)
 
         return decorated_method
 

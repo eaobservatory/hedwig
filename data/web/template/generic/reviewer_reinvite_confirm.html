@@ -14,7 +14,7 @@
             <li>
                 If you have reason to believe that they never received the
                 original message, it may be better to
-                <a href="{{ url_for('.review_external_reinvite', proposal_id=proposal_id, reviewer_id=reviewer_id) }}">re-send the invitation</a>
+                <a href="{{ url_for('.proposal_reviewer_reinvite', proposal_id=proposal_id, reviewer_id=reviewer_id) }}">re-send the invitation</a>
                 instead, after you have resolved any problems which
                 prevented them receiving it.
             </li>
@@ -35,7 +35,7 @@
             Unless you are correcting a problem with the original invitation
             (such as an incorrect email address),
             it may be better to
-            <a href="{{ url_for('.review_external_remind', proposal_id=proposal_id, reviewer_id=reviewer_id) }}">send a reminder</a>
+            <a href="{{ url_for('.proposal_reviewer_remind', proposal_id=proposal_id, reviewer_id=reviewer_id) }}">send a reminder</a>
             instead.
         </li>
     </ul>

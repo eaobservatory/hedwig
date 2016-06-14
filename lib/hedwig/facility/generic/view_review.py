@@ -317,11 +317,14 @@ class GenericReview(object):
             'proposals': [
                 ProposalWithCode(*x, code=self.make_proposal_code(db, x))
                 for x in proposals.values()],
+            'invite_roles': role_class.get_invited_roles(),
             'targets': [
                 Link('Assign technical assessors',
-                     url_for('.review_call_technical', call_id=call.id)),
+                     url_for('.review_call_grid', call_id=call.id,
+                             reviewer_role=role_class.TECH)),
                 Link('Assign committee members',
-                     url_for('.review_call_committee', call_id=call.id))],
+                     url_for('.review_call_grid', call_id=call.id,
+                             reviewer_role=role_class.CTTEE_PRIMARY))],
             'roles': role_class.get_options(),
             'current_role': role,
             'current_state': state,
@@ -340,12 +343,10 @@ class GenericReview(object):
         if primary_role == role_class.TECH:
             group_type = GroupType.TECH
             secondary_role = None
-            target = url_for('.review_call_technical', call_id=call.id)
 
         elif primary_role == role_class.CTTEE_PRIMARY:
             group_type = GroupType.CTTEE
             secondary_role = role_class.CTTEE_SECONDARY
-            target = url_for('.review_call_committee', call_id=call.id)
 
         else:
             raise ErrorPage('Unexpected reviewer role')
@@ -499,7 +500,8 @@ class GenericReview(object):
                                         call.semester_name, call.queue_name),
             'call': call,
             'proposals': proposals,
-            'target': target,
+            'target': url_for('.review_call_grid', call_id=call.id,
+                              reviewer_role=primary_role),
             'group_members': list(group_members.values()),
             'primary_unique': primary_role_info.unique,
             'secondary_unique': (None if secondary_role_info is None else
@@ -516,6 +518,9 @@ class GenericReview(object):
             role_info = role_class.get_info(role)
         except KeyError:
             raise HTTPError('Unknown reviewer role')
+
+        if not role_info.invite:
+            raise HTTPError('Unexpected reviewer role.')
 
         if proposal.state != ProposalState.REVIEW:
             raise ErrorPage('This proposal is not under review.')
@@ -641,11 +646,6 @@ class GenericReview(object):
                                       with_institution=True).values()
             if p.id not in exclude_person_ids]
 
-        if role == role_class.EXTERNAL:
-            target = url_for('.review_external_add', proposal_id=proposal.id)
-        else:
-            raise HTTPError('Unexpected reviewer role.')
-
         try:
             abstract = db.get_proposal_text(proposal.id, TextRole.ABSTRACT)
         except NoSuchRecord:
@@ -668,7 +668,8 @@ class GenericReview(object):
             'member': member,
             'message_link': message_link,
             'message_invite': message_invite,
-            'target': target,
+            'target': url_for('.proposal_reviewer_add',
+                              proposal_id=proposal.id, reviewer_role=role),
             'title_link': 'Select Reviewer from the Directory',
             'title_invite': 'Invite a Reviewer to Register',
             'submit_link': 'Select reviewer',
@@ -751,14 +752,9 @@ class GenericReview(object):
             thread_type=MessageThreadType.REVIEW_INVITATION,
             thread_id=reviewer_id)
 
-    @with_proposal(permission='none')
-    def view_reviewer_remove(self, db, proposal, role, reviewer_id, form):
+    @with_review(permission='none')
+    def view_reviewer_remove(self, db, reviewer, proposal, form):
         role_class = self.get_reviewer_roles()
-
-        try:
-            role_info = role_class.get_info(role)
-        except KeyError:
-            raise HTTPError('Unknown reviewer role')
 
         if proposal.state != ProposalState.REVIEW:
             raise ErrorPage('This proposal is not under review.')
@@ -771,22 +767,22 @@ class GenericReview(object):
         if not auth.for_call_review(db, call).edit:
             raise HTTPForbidden('Edit permission denied for this call.')
 
-        try:
-            reviewer = db.search_reviewer(
-                role_class=role_class,
-                proposal_id=proposal.id, role=role, reviewer_id=reviewer_id,
-                with_review=True).get_single()
-        except NoSuchRecord:
-            raise HTTPNotFound('Reviewer record not found.')
-
         if reviewer.review_present:
             raise ErrorPage('This reviewer already submitted a review.')
+
+        try:
+            role_info = role_class.get_info(reviewer.role)
+        except KeyError:
+            raise HTTPError('Unknown reviewer role')
+
+        if not role_info.invite:
+            raise HTTPError('Unexpected reviewer role.')
 
         proposal_code = self.make_proposal_code(db, proposal)
 
         if form is not None:
             if 'submit_confirm' in form:
-                db.delete_reviewer(reviewer_id=reviewer_id)
+                db.delete_reviewer(reviewer_id=reviewer.id)
 
                 flash('{} has been removed as a reviewer of proposal {}.',
                       reviewer.person_name, proposal_code)
@@ -800,26 +796,23 @@ class GenericReview(object):
             'message': 'Are you sure you wish to remove {} '
                        'as a reviewer of this proposal?'.format(
                            reviewer.person_name),
+            'target': url_for('.proposal_reviewer_remove',
+                              reviewer_id=reviewer.id),
         }
 
-    @with_proposal(permission='none')
-    def view_reviewer_reinvite(self, db, proposal, role, reviewer_id, form):
+    @with_review(permission='none')
+    def view_reviewer_reinvite(self, db, reviewer, proposal, form):
         return self._view_reviewer_reinvite_remind(
-            db, proposal, role, reviewer_id, form, is_reminder=False)
+            db, reviewer, proposal, form, is_reminder=False)
 
-    @with_proposal(permission='none')
-    def view_reviewer_remind(self, db, proposal, role, reviewer_id, form):
+    @with_review(permission='none')
+    def view_reviewer_remind(self, db, reviewer, proposal, form):
         return self._view_reviewer_reinvite_remind(
-            db, proposal, role, reviewer_id, form, is_reminder=True)
+            db, reviewer, proposal, form, is_reminder=True)
 
-    def _view_reviewer_reinvite_remind(self, db, proposal, role, reviewer_id,
+    def _view_reviewer_reinvite_remind(self, db, reviewer, proposal,
                                        form, is_reminder):
         role_class = self.get_reviewer_roles()
-
-        try:
-            role_info = role_class.get_info(role)
-        except KeyError:
-            raise HTTPError('Unknown reviewer role')
 
         if proposal.state != ProposalState.REVIEW:
             raise ErrorPage('This proposal is not under review.')
@@ -832,23 +825,23 @@ class GenericReview(object):
         if not auth.for_call_review(db, call).edit:
             raise HTTPForbidden('Edit permission denied for this call.')
 
-        try:
-            reviewer = db.search_reviewer(
-                role_class=role_class,
-                proposal_id=proposal.id, role=role, reviewer_id=reviewer_id,
-                with_review=True, with_invitation=True).get_single()
-        except NoSuchRecord:
-            raise HTTPNotFound('Reviewer record not found.')
-
         if reviewer.person_registered and not is_reminder:
             raise ErrorPage('This reviewer is already registered.')
+
+        try:
+            role_info = role_class.get_info(reviewer.role)
+        except KeyError:
+            raise HTTPError('Unknown reviewer role')
+
+        if not role_info.invite:
+            raise HTTPError('Unexpected reviewer role.')
 
         if form is not None:
             if 'submit_confirm' in form:
                 self._message_review_invite(
                     db,
                     proposal=proposal,
-                    role=role,
+                    role=reviewer.role,
                     person_id=reviewer.person_id,
                     person_name=reviewer.person_name,
                     person_registered=reviewer.person_registered,
@@ -877,9 +870,13 @@ class GenericReview(object):
                 'Would you like to re-send an invitation to {} '
                 'to review proposal {}?'.format(
                     reviewer.person_name, proposal_code),
+            'target': url_for(
+                '.proposal_reviewer_{}'.format(
+                    'remind' if is_reminder else 'reinvite'),
+                reviewer_id=reviewer.id),
             'is_reminder': is_reminder,
             'proposal_id': proposal.id,
-            'reviewer_id': reviewer_id,
+            'reviewer_id': reviewer.id,
             'person_registered': reviewer.person_registered,
         }
 
