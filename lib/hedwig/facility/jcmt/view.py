@@ -342,9 +342,10 @@ class JCMT(Generic):
 
         return messages
 
-    def _get_proposal_tabulation(self, db, call, auth_cache, with_extra=False):
+    def _get_proposal_tabulation(self, db, call, can, auth_cache,
+                                 with_extra=False):
         tabulation = super(JCMT, self)._get_proposal_tabulation(
-            db, call, auth_cache, with_extra)
+            db, call, can, auth_cache, with_extra)
 
         exempt = JCMTRequestTotal(total=0.0, weather=defaultdict(float),
                                   instrument=defaultdict(float),

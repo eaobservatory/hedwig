@@ -1569,6 +1569,17 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn('The time available has been saved.',
                       self.browser.page_source)
 
+        # Advance to the final review phase.
+        self.browser.find_element_by_link_text(
+            'Advance to final review phase').click()
+
+        self._save_screenshot(self.admin_image_root, 'review_final')
+
+        self.browser.find_element_by_name('submit_confirm').click()
+
+        self.assertIn('1 proposal advanced to the final review state',
+                      self.browser.page_source)
+
         # Look at the tabulation page and enter a decision.
         self.browser.find_element_by_link_text(
             'View detailed tabulation').click()

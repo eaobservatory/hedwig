@@ -144,6 +144,12 @@ class EnumTypeTestCase(TestCase):
         self.assertNotIn(ProposalState.PREPARATION, states)
         self.assertIn(ProposalState.REVIEW, states)
 
+        states = ProposalState.review_states()
+        self.assertIsInstance(states, list)
+        self.assertEqual(
+            set(states),
+            set((ProposalState.REVIEW, ProposalState.FINAL_REVIEW)))
+
         states = ProposalState.reviewed_states()
         self.assertIsInstance(states, list)
         self.assertNotIn(ProposalState.PREPARATION, states)

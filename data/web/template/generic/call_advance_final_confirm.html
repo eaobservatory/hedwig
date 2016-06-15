@@ -1,0 +1,18 @@
+{% extends 'confirm.html' %}
+{% set navigation=[(call.semester_name + ' ' + call.queue_name, url_for('.review_call', call_id=call.id))] %}
+{% set help_link=url_for('help.admin_page', page_name='review_final') %}
+
+{% block confirm_extra %}
+<ul>
+    <li>
+        This will update the state of the proposals to the final review state.
+    </li>
+    <li>
+        External reviewers will no longer be able to access proposals
+        and edit their reviews.
+    </li>
+    <li>
+        Committee ratings will be made visible.
+    </li>
+</ul>
+{% endblock %}

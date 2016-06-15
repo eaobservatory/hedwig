@@ -23,6 +23,7 @@ from datetime import datetime
 from itertools import izip
 import re
 
+from ...admin.proposal import finalize_call_review
 from ...email.format import render_email_template
 from ...error import DatabaseIntegrityError, NoSuchRecord, UserError
 from ...file.csv import CSVWriter
@@ -82,10 +83,9 @@ class GenericReview(object):
             'title': 'Proposal Tabulation: {} {}'.format(call.semester_name,
                                                          call.queue_name),
             'call': call,
-            'can_edit': can.edit,
         }
 
-        ctx.update(self._get_proposal_tabulation(db, call, auth_cache))
+        ctx.update(self._get_proposal_tabulation(db, call, can, auth_cache))
 
         return ctx
 
@@ -93,7 +93,7 @@ class GenericReview(object):
     def view_review_call_tabulation_download(self, db, call, can, auth_cache,
                                              with_cois=True):
         tabulation = self._get_proposal_tabulation(
-            db, call, auth_cache, with_extra=True)
+            db, call, can, auth_cache, with_extra=True)
 
         writer = CSVWriter()
 
@@ -119,7 +119,8 @@ class GenericReview(object):
                 re.sub('[^-_a-z0-9]', '_', call.semester_name.lower()),
                 re.sub('[^-_a-z0-9]', '_', call.queue_name.lower())))
 
-    def _get_proposal_tabulation(self, db, call, auth_cache, with_extra=False):
+    def _get_proposal_tabulation(self, db, call, can, auth_cache,
+                                 with_extra=False):
         """Prepare information for the detailed tabulation of proposals.
 
         This is used to prepare the information both for the online
@@ -172,6 +173,8 @@ class GenericReview(object):
                 'code': self.make_proposal_code(db, proposal),
                 'affiliations': self.calculate_affiliation_assignment(
                     db, proposal.members, affiliations),
+                'can_edit_decision': (
+                    can.edit and proposal.state == ProposalState.FINAL_REVIEW),
             })
 
             if can_view_review:
@@ -306,7 +309,7 @@ class GenericReview(object):
             state = bool(int(state))
 
         proposals = db.search_proposal(
-            call_id=call.id, state=ProposalState.REVIEW,
+            call_id=call.id, state=ProposalState.review_states(),
             person_pi=True, with_reviewers=True, with_review_info=True,
             with_reviewer_role=role, with_review_state=state)
 
@@ -1151,8 +1154,8 @@ class GenericReview(object):
         except NoSuchRecord:
             raise HTTPError('The proposal was not found.')
 
-        if proposal.state != ProposalState.REVIEW:
-            raise ErrorPage('This proposal is not under review.')
+        if proposal.state != ProposalState.FINAL_REVIEW:
+            raise ErrorPage('This proposal is not under final review.')
 
         try:
             call = db.get_call(facility_id=self.id_, call_id=proposal.call_id)
@@ -1256,6 +1259,35 @@ class GenericReview(object):
         return {}
 
     @with_call_review(permission='edit')
+    def view_review_advance_final(self, db, call, can, auth_cache, form):
+        if form is not None:
+            if 'submit_confirm' in form:
+                (n_update, n_error) = finalize_call_review(db, call_id=call.id)
+
+                if n_update:
+                    flash('{} {} advanced to the final review state.',
+                          n_update,
+                          ('proposals' if n_update > 1 else 'proposal'))
+
+                if n_error:
+                    raise ErrorPage(
+                        'Errors encountered advancing {} {} '
+                        'to the final review state.',
+                        n_error,
+                        ('proposals' if n_error > 1 else 'proposal'))
+
+            raise HTTPRedirect(url_for('.review_call', call_id=call.id))
+
+        return {
+            'title': 'Final Review: {} {}'.format(call.semester_name,
+                                                  call.queue_name),
+            'message':
+                'Are you sure you wish to advance to the final review phase?',
+            'target': url_for('.review_call_advance_final', call_id=call.id),
+            'call': call,
+        }
+
+    @with_call_review(permission='edit')
     def view_review_confirm_feedback(self, db, call, can, auth_cache, form):
         role_class = self.get_reviewer_roles()
 
@@ -1263,7 +1295,7 @@ class GenericReview(object):
         # and decision.  Note: "with_decision" means include it in the
         # results, decision_accept_defined that the proposal must have one.
         proposals = db.search_proposal(
-            call_id=call.id, state=ProposalState.REVIEW,
+            call_id=call.id, state=ProposalState.FINAL_REVIEW,
             with_reviewers=True, with_review_info=True, with_review_text=True,
             with_review_state=True, with_reviewer_role=role_class.FEEDBACK,
             with_decision=True, decision_accept_defined=True)

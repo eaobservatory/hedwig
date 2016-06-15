@@ -173,7 +173,7 @@
                 <td>{{ proposal.title | abbr }}</td>
                 <td class="spacer_left"><abbr title="{{ proposal.state | proposal_state_name }}">{{ proposal.state | proposal_state_short_name }}</abbr></td>
                 <td>
-                    {% if (can_edit and (proposal.state is proposal_state_review)) %}<a href="{{ url_for('.proposal_decision', proposal_id=proposal.id) }}" class="undecorated" id="{{ proposal.id | fmt('decision_{}_link') }}">{% endif %}
+                    {% if proposal.can_edit_decision %}<a href="{{ url_for('.proposal_decision', proposal_id=proposal.id) }}" class="undecorated" id="{{ proposal.id | fmt('decision_{}_link') }}">{% endif %}
                         {% if proposal.decision_accept is none %}
                             &mdash;
                         {% elif proposal.decision_accept %}
@@ -181,7 +181,7 @@
                         {% else %}
                             &cross;
                         {% endif %}
-                    {% if can_edit %}</a>{% endif %}
+                    {% if proposal.can_edit_decision %}</a>{% endif %}
                 </td>
                 <td class="number_right">
                     {% if proposal.can_view_review %}

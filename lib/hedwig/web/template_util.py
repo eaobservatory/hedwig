@@ -239,10 +239,6 @@ def register_template_utils(app):
         return MessageState.get_info(value).active
 
     @app.template_test()
-    def proposal_state_review(value):
-        return (value == ProposalState.REVIEW)
-
-    @app.template_test()
     def reviewer_role_invited(value, role_class):
         return role_class.is_invited_review(value)
 

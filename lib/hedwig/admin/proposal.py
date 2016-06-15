@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from ..config import get_facilities
 from ..email.format import render_email_template
-from ..error import FormattedError, NoSuchRecord, UserError
+from ..error import ConsistencyError, FormattedError, NoSuchRecord, UserError
 from ..stats.quartile import label_quartiles
 from ..type.enum import CallState, FormatType, ProposalState
 from ..type.simple import MemberInstitution
@@ -94,6 +94,37 @@ def close_call_proposals(db, call_id):
                 proposal.id)
 
 
+def finalize_call_review(db, call_id):
+    """
+    Function to update the status of proposals at the closure of a
+    review process, prior to the final decision making process
+    of the time allocation committee.
+
+    * Sets the status to FINAL_REVIEW.
+
+    .. note::
+        This function simply sets the state of the corresponding proposals,
+        so it can be used from the web interface.  If it ever needs to do
+        more work than this, it should be run offline in the poll process
+        and gain logger output.
+    """
+
+    n_update = 0
+    n_error = 0
+
+    for proposal in db.search_proposal(
+            call_id=call_id, state=ProposalState.REVIEW).values():
+        try:
+            db.update_proposal(proposal.id, state=ProposalState.FINAL_REVIEW,
+                               state_prev=ProposalState.REVIEW)
+            n_update += 1
+
+        except ConsistencyError:
+            n_error += 1
+
+    return (n_update, n_error)
+
+
 def send_call_proposal_feedback(db, call_id, proposals):
     """
     Sends feedback for the given proposals.
@@ -148,9 +179,9 @@ def send_call_proposal_feedback(db, call_id, proposals):
         logger.debug('Preparing to send feedback for proposal {}', proposal.id)
 
         try:
-            # Check that the proposal is still in the REVIEW state.
-            if proposal.state != ProposalState.REVIEW:
-                raise FeedbackError('Proposal {} is not under review',
+            # Check that the proposal is still in the FINAL_REVIEW state.
+            if proposal.state != ProposalState.FINAL_REVIEW:
+                raise FeedbackError('Proposal {} is not in final review',
                                     proposal.id)
 
             # Double-check facility assignment.
@@ -206,7 +237,7 @@ def send_call_proposal_feedback(db, call_id, proposals):
                         proposal.id, ProposalState.get_name(new_state))
 
             db.update_proposal(proposal.id, state=new_state,
-                               state_prev=ProposalState.REVIEW)
+                               state_prev=ProposalState.FINAL_REVIEW)
 
             # Write feedback email message into the database.  Do this after
             # setting the state (see comment above for why).

@@ -34,6 +34,8 @@
             <br />
             <a href="{{ url_for('.review_call_available', call_id=call_id) }}">Edit time available</a>
             <br />
+            <a href="{{ url_for('.review_call_advance_final', call_id=call_id) }}">Advance to final review phase</a>
+            <br />
             <a href="{{ url_for('.review_confirm_feedback', call_id=call_id) }}">Approve feedback reports</a>
         {% endif %}
     </p>

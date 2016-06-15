@@ -9,5 +9,6 @@ Review Processes
     review_proposal
     affiliation_weight
     time_available
+    review_final
     tabulation_decision
     feedback

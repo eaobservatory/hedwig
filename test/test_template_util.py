@@ -199,12 +199,6 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertTrue(t(MessageState.SENDING))
         self.assertFalse(t(MessageState.DISCARD))
 
-    def test_test_proposal_state(self):
-        t = self.app.jinja_env.tests['proposal_state_review']
-
-        self.assertFalse(t(ProposalState.SUBMITTED))
-        self.assertTrue(t(ProposalState.REVIEW))
-
     def test_test_reviewer_role(self):
         t = self.app.jinja_env.tests['reviewer_role_invited']
 

@@ -444,10 +444,12 @@ class ProposalState(EnumBasic):
 
     The proposal state is used to control which operations are permitted
     for any given proposal.  Note that the call closing process
-    (:func:`hedwig.admin.proposal.close_call_proposals`)
+    (:func:`hedwig.admin.proposal.close_call_proposals`),
+    review closing processess
+    (:func:`hedwig.admin.proposal.finalize_call_review`)
     and decision feedback sending process
     (:func:`hedwig.admin.proposal.send_call_proposal_feedback`)
-    update the proposa state automatically.
+    update the proposal state automatically.
 
     Proposals transition between states as follows::
 
@@ -461,8 +463,13 @@ class ProposalState(EnumBasic):
         . . | . . . . . . . . . . . . . . | . . | . . . . call closing
             |                             |     |
             V                             V     V
-        REVIEW -----------------         ABANDONED
-            |.                  |
+        REVIEW                           ABANDONED
+            |
+        . . | . . . . . . . . . . . . . . . . . . . . . . review closing
+            |
+            V
+        FINAL_REVIEW -----------
+            |                   |
         . . | . . . . . . . . . | . . . . . . . . . . . . decision ready
             |                   |
             V                   V
@@ -476,29 +483,33 @@ class ProposalState(EnumBasic):
     ABANDONED = 5
     ACCEPTED = 6
     REJECTED = 7
+    FINAL_REVIEW = 8
 
     StateInfo = namedtuple(
-        'StateInfo', ('short_name', 'name', 'edit', 'submitted', 'reviewed'))
+        'StateInfo',
+        ('short_name', 'name', 'edit', 'submitted', 'review', 'reviewed'))
     # Note: currently edit=True implies a proposal for which the call
     # has not been closed.  An extra entry must be added to the tuple (and
     # the "open_states" method adjusted) if this changes.
 
-    #                 Abbr     Name              Edit   Sub/d  Rev/d
+    #                 Abbr     Name              Edit   Sub/d  Rev    Rev/d
     _info = OrderedDict((
         (PREPARATION,
-            StateInfo('Prep',  'In preparation', True,  False, False)),
+            StateInfo('Prep',  'In preparation', True,  False, False, False)),
         (SUBMITTED,
-            StateInfo('Sub',   'Submitted',      True,  True,  False)),
+            StateInfo('Sub',   'Submitted',      True,  True,  False, False)),
         (WITHDRAWN,
-            StateInfo('Wdwn',  'Withdrawn',      True,  False, False)),
+            StateInfo('Wdwn',  'Withdrawn',      True,  False, False, False)),
         (REVIEW,
-            StateInfo('Rev',   'Under review',   False, True,  False)),
+            StateInfo('Rev',   'Under review',   False, True,  True,  False)),
+        (FINAL_REVIEW,
+            StateInfo('FR',    'Final review',   False, True,  True,  False)),
         (ABANDONED,
-            StateInfo('Abnd',  'Abandoned',      False, False, False)),
+            StateInfo('Abnd',  'Abandoned',      False, False, False, False)),
         (ACCEPTED,
-            StateInfo('Acc',   'Accepted',       False, True,  True)),
+            StateInfo('Acc',   'Accepted',       False, True,  False, True)),
         (REJECTED,
-            StateInfo('Rej',   'Rejected',       False, True,  True)),
+            StateInfo('Rej',   'Rejected',       False, True,  False, True)),
     ))
 
     @classmethod
@@ -536,6 +547,12 @@ class ProposalState(EnumBasic):
         """Return a list of states corresponding to submitted proposals."""
 
         return [k for (k, v) in cls._info.items() if v.submitted]
+
+    @classmethod
+    def review_states(cls):
+        """Return a list of states corresponding to the review process.'"""
+
+        return [k for (k, v) in cls._info.items() if v.review]
 
     @classmethod
     def reviewed_states(cls):

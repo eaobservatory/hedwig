@@ -59,7 +59,7 @@ def send_proposal_feedback(db):
 
     Finds proposals which:
 
-        * Are in the REVIEW state.
+        * Are in the FINAL_REVIEW state.
         * Have decisions defined and marked "ready".
 
     and then groups the proposals by call and passes them to send_call_feedback
@@ -68,7 +68,7 @@ def send_proposal_feedback(db):
     """
 
     proposals = db.search_proposal(
-        state=ProposalState.REVIEW, with_members=True,
+        state=ProposalState.FINAL_REVIEW, with_members=True,
         with_reviewers=True, with_review_info=True, with_review_text=True,
         with_review_state=True, with_reviewer_role=BaseReviewerRole.FEEDBACK,
         with_decision=True, decision_ready=True, decision_accept_defined=True)
