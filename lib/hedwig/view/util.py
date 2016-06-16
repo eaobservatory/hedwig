@@ -228,6 +228,8 @@ def with_proposal(permission, **get_proposal_kwargs):
     def decorator(f):
         @functools.wraps(f)
         def decorated_method(self, db, proposal_id, *args, **kwargs):
+            role_class = self.get_reviewer_roles()
+
             try:
                 proposal = db.get_proposal(self.id_, proposal_id,
                                            with_members=True,
@@ -242,7 +244,7 @@ def with_proposal(permission, **get_proposal_kwargs):
                 return f(self, db, proposal, *args, **kwargs)
 
             elif permission == 'feedback':
-                can = auth.for_proposal_feedback(db, proposal)
+                can = auth.for_proposal_feedback(role_class, db, proposal)
 
                 if not can.view:
                     raise HTTPForbidden(
@@ -251,7 +253,7 @@ def with_proposal(permission, **get_proposal_kwargs):
                 return f(self, db, proposal, *args, **kwargs)
 
             else:
-                can = auth.for_proposal(db, proposal)
+                can = auth.for_proposal(role_class, db, proposal)
 
                 if permission == 'view':
                     if not can.view:

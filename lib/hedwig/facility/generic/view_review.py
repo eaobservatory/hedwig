@@ -41,6 +41,11 @@ from ...type.simple import Affiliation, Link, MemberPIInfo, \
     ProposalWithCode, Reviewer
 from ...type.util import null_tuple, with_can_edit
 
+
+ProposalWithInviteRoles = namedtuple(
+    'ProposalWithInviteRoles',
+    ProposalWithCode._fields + ('invite_roles',))
+
 ProposalWithReviewers = namedtuple(
     'ProposalWithReviewers',
     ProposalWithCode._fields + ('reviewers_primary', 'reviewers_secondary'))
@@ -308,19 +313,30 @@ class GenericReview(object):
         else:
             state = bool(int(state))
 
-        proposals = db.search_proposal(
-            call_id=call.id, state=ProposalState.review_states(),
-            person_pi=True, with_reviewers=True, with_review_info=True,
-            with_reviewer_role=role, with_review_state=state)
+        proposals = []
+        invite_roles = role_class.get_invited_roles()
+        state_editable_roles = {}
+
+        for proposal in db.search_proposal(
+                call_id=call.id, state=ProposalState.review_states(),
+                person_pi=True, with_reviewers=True, with_review_info=True,
+                with_reviewer_role=role, with_review_state=state).values():
+            state = proposal.state
+            roles = state_editable_roles.get(state)
+            if roles is None:
+                roles = role_class.get_editable_roles(state)
+                state_editable_roles[state] = roles
+
+            proposals.append(ProposalWithInviteRoles(
+                *proposal,
+                invite_roles=[x for x in invite_roles if x in roles],
+                code=self.make_proposal_code(db, proposal)))
 
         return {
             'title': 'Reviewers: {} {}'.format(call.semester_name,
                                                call.queue_name),
             'call': call,
-            'proposals': [
-                ProposalWithCode(*x, code=self.make_proposal_code(db, x))
-                for x in proposals.values()],
-            'invite_roles': role_class.get_invited_roles(),
+            'proposals': proposals,
             'targets': [
                 Link('Assign technical assessors',
                      url_for('.review_call_grid', call_id=call.id,
@@ -372,7 +388,8 @@ class GenericReview(object):
 
         proposals = []
         for proposal in db.search_proposal(
-                call_id=call.id, state=ProposalState.REVIEW,
+                call_id=call.id,
+                state=role_class.get_editable_states(primary_role),
                 with_members=True, with_reviewers=True).values():
 
             for member in proposal.members.values():
@@ -525,8 +542,10 @@ class GenericReview(object):
         if not role_info.invite:
             raise HTTPError('Unexpected reviewer role.')
 
-        if proposal.state != ProposalState.REVIEW:
-            raise ErrorPage('This proposal is not under review.')
+        if proposal.state not in role_class.get_editable_states(role):
+            raise ErrorPage(
+                'This proposal is not in a suitable state '
+                'for this type of review.')
 
         try:
             call = db.get_call(facility_id=self.id_, call_id=proposal.call_id)
@@ -759,8 +778,10 @@ class GenericReview(object):
     def view_reviewer_remove(self, db, reviewer, proposal, form):
         role_class = self.get_reviewer_roles()
 
-        if proposal.state != ProposalState.REVIEW:
-            raise ErrorPage('This proposal is not under review.')
+        if proposal.state not in role_class.get_editable_states(reviewer.role):
+            raise ErrorPage(
+                'This proposal is not in a suitable state '
+                'for this type of review.')
 
         try:
             call = db.get_call(facility_id=self.id_, call_id=proposal.call_id)
@@ -817,8 +838,10 @@ class GenericReview(object):
                                        form, is_reminder):
         role_class = self.get_reviewer_roles()
 
-        if proposal.state != ProposalState.REVIEW:
-            raise ErrorPage('This proposal is not under review.')
+        if proposal.state not in role_class.get_editable_states(reviewer.role):
+            raise ErrorPage(
+                'This proposal is not in a suitable state '
+                'for this type of review.')
 
         try:
             call = db.get_call(facility_id=self.id_, call_id=proposal.call_id)

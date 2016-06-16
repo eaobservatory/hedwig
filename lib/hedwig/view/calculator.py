@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -154,7 +154,9 @@ class BaseCalculator(object):
                     proposal = db.get_proposal(self.facility.id_, proposal_id,
                                                with_members=True)
 
-                    if not auth.for_proposal(db, proposal).edit:
+                    if not auth.for_proposal(
+                            self.facility.get_reviewer_roles(),
+                            db, proposal).edit:
                         raise HTTPForbidden(
                             'Edit permission denied for this proposal.')
 
@@ -228,7 +230,8 @@ class BaseCalculator(object):
                     self.facility.id_, calculation.proposal_id,
                     with_members=True, with_reviewers=True)
 
-                can = auth.for_proposal(db, proposal)
+                can = auth.for_proposal(self.facility.get_reviewer_roles(),
+                                        db, proposal)
                 if not can.view:
                     raise HTTPForbidden('Access denied for that proposal.')
 

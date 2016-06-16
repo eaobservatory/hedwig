@@ -200,21 +200,26 @@ class CollectionTypeTestCase(TestCase):
         c[202] = null_tuple(Reviewer)._replace(id=202, person_id=2002,
                                                role=BaseReviewerRole.EXTERNAL)
 
-        # hedwig.view.auth.for_proposal relies on this exception being
-        # raised when the current user isn't a reviewer of the proposal.
-        with self.assertRaises(KeyError):
-            c.get_person(9999)
+        self.assertFalse(c.has_person(9999))
 
-        self.assertEqual(c.get_person(2001).id, 201)
+        self.assertTrue(c.has_person(2001))
 
-        with self.assertRaises(KeyError):
-            c.get_person(2001, roles=[BaseReviewerRole.EXTERNAL])
+        self.assertFalse(c.has_person(2001, roles=[BaseReviewerRole.EXTERNAL]))
 
-        self.assertEqual(c.get_person(2001, roles=[BaseReviewerRole.TECH]).id,
-                         201)
+        self.assertTrue(c.has_person(2001, roles=[BaseReviewerRole.TECH]))
 
         self.assertEqual(c.person_id_by_role(BaseReviewerRole.EXTERNAL),
                          [2002])
+
+        self.assertFalse(c.has_role(BaseReviewerRole.FEEDBACK))
+
+        self.assertTrue(c.has_role(BaseReviewerRole.EXTERNAL))
+
+        self.assertEqual(c.role_by_person_id(2001),
+                         [BaseReviewerRole.TECH])
+
+        self.assertEqual(c.role_by_person_id(2002),
+                         [BaseReviewerRole.EXTERNAL])
 
         reviewers = c.values_by_role(BaseReviewerRole.EXTERNAL)
         self.assertIsInstance(reviewers, list)

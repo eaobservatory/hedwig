@@ -80,19 +80,19 @@
                                 Done
                             {% else %}
                                 Not done
-                                {% if reviewer.role is reviewer_role_invited(facility_role_class) %}
+                                {% if reviewer.role in proposal.invite_roles %}
                                     <a href="{{ url_for('.proposal_reviewer_remove', reviewer_id=reviewer.id) }}">Remove</a>
                                     <a href="{{ url_for('.proposal_reviewer_remind', reviewer_id=reviewer.id) }}">Send reminder</a>
                                 {% endif %}
                             {% endif %}
-                            {% if (not reviewer.person_registered) and (reviewer.role is reviewer_role_invited(facility_role_class)) %}
+                            {% if (not reviewer.person_registered) and (reviewer.role in proposal.invite_roles) %}
                                     <a href="{{ url_for('.proposal_reviewer_reinvite', reviewer_id=reviewer.id) }}">Re-send invitation</a>
                             {% endif %}
                         </td>
                     {% endif %}
                     {% if loop.first %}
                         <td rowspan="{{ reviewers | length }}">
-                            {% for reviewer_role in invite_roles %}
+                            {% for reviewer_role in proposal.invite_roles %}
                                 <a href="{{ url_for('.proposal_reviewer_add', proposal_id=proposal.id, reviewer_role=reviewer_role) }}">Add {{ reviewer_role | reviewer_role_name(facility_role_class) | lower }} reviewer</a>
                                 <br />
                             {% endfor %}

@@ -175,7 +175,7 @@ def for_private_moc(db, facility_id):
     return False
 
 
-def for_proposal(db, proposal):
+def for_proposal(role_class, db, proposal):
     """
     Determine the current user's authorization regarding this proposal.
     """
@@ -196,14 +196,12 @@ def for_proposal(db, proposal):
     except KeyError:
         pass
 
-    if ((proposal.reviewers is not None) and
-            (proposal.state == ProposalState.REVIEW)):
+    if proposal.reviewers is not None:
         # Give access to people assigned as reviewers of the proposal.
-        try:
-            proposal.reviewers.get_person(session['person']['id'])
-            return auth._replace(view=True)
-        except KeyError:
-            pass
+        for reviewer_role in proposal.reviewers.role_by_person_id(
+                session['person']['id']):
+            if proposal.state in role_class.get_editable_states(reviewer_role):
+                return auth._replace(view=True)
 
     if ProposalState.is_submitted(proposal.state):
         # Give access to review groups with access to view all proposals.
@@ -216,7 +214,7 @@ def for_proposal(db, proposal):
     return auth
 
 
-def for_proposal_feedback(db, proposal):
+def for_proposal_feedback(role_class, db, proposal):
     """
     Determine the current user's authorization regarding general feedback
     for a proposal.
@@ -266,7 +264,6 @@ def for_review(role_class, db, reviewer, proposal, auth_cache=None):
         return no
 
     person_id = session['person']['id']
-    is_under_review = (proposal.state == ProposalState.REVIEW)
 
     # Forbid access if the person is a member of the proposal.
     try:
@@ -275,33 +272,45 @@ def for_review(role_class, db, reviewer, proposal, auth_cache=None):
     except KeyError:
         pass
 
-    # Allow full access to the reviewer if the proposal is still under review.
-    # (But skip this test if doing a non-reviewer-specific check.)
-    if (reviewer is not None) and is_under_review:
-        if person_id == reviewer.person_id:
-            return yes
-
-        # Special case: if this is the feedback review, allow all reviewers
-        # with suitable roles to edit it.
-        if reviewer.role == role_class.FEEDBACK:
-            if db.search_reviewer(role_class=role_class,
-                                  proposal_id=reviewer.proposal_id,
-                                  person_id=person_id,
-                                  role=role_class.get_feedback_roles()):
+    # Determine whether the proposal is in a state where this review is
+    # editable.  If we have a specific reviewer, check that role's states.
+    if (reviewer is not None):
+        if proposal.state in role_class.get_editable_states(reviewer.role):
+            # Allow full access to the reviewer while the review is editable.
+            if person_id == reviewer.person_id:
                 return yes
+
+            # Special case: if this is the feedback review, allow all reviewers
+            # with suitable roles to edit it.
+            if reviewer.role == role_class.FEEDBACK:
+                if db.search_reviewer(role_class=role_class,
+                                      proposal_id=reviewer.proposal_id,
+                                      person_id=person_id,
+                                      role=role_class.get_feedback_roles()):
+                    return yes
+
+            review_is_editable = True
+
+        else:
+            review_is_editable = False
+
+    else:
+        # If doing a non-reviewer-specific check, consider all
+        # review states.
+        review_is_editable = (proposal.state in ProposalState.review_states())
 
     # Allow administrators and review coordinators to view, with edit too if
     # still under review.  (This is to allow them to adjust review ratings
     # during the committee meeting.)
     if session.get('is_admin', False) and can_be_admin(db):
-        return Authorization(view=True, edit=is_under_review)
+        return Authorization(view=True, edit=review_is_editable)
 
     group_members = _get_group_membership(
         auth_cache, db, proposal.queue_id, person_id)
 
     if any(group_members.values_by_group_type(group_type)
            for group_type in GroupType.review_coord_groups()):
-        return Authorization(view=True, edit=is_under_review)
+        return Authorization(view=True, edit=review_is_editable)
 
     # Give view access to committee members.
     if any(group_members.values_by_group_type(group_type)
@@ -329,11 +338,8 @@ def can_add_review_roles(role_class, db, proposal):
     Determine for which reviewer roles a person can add a review to
     a proposal.
 
-    If the proposal's state is not REVIEW then an empty list is returned.
+    If no reviews can be added then an empty list is returned.
     """
-
-    if proposal.state != ProposalState.REVIEW:
-        return []
 
     person_id = session['person']['id']
 
@@ -349,28 +355,27 @@ def can_add_review_roles(role_class, db, proposal):
     # Determine whether the user can add a committee "other" review -- they
     # should be a committee member who doesn't already have a committee
     # review.
-    try:
-        proposal.reviewers.get_person(person_id=person_id,
-                                      roles=role_class.get_cttee_roles())
-    except KeyError:
-        if db.search_group_member(
-                queue_id=proposal.queue_id,
-                group_type=GroupType.CTTEE,
-                person_id=person_id):
-            roles.append(role_class.CTTEE_OTHER)
+    if proposal.state in role_class.get_editable_states(
+            role_class.CTTEE_OTHER):
+        if not proposal.reviewers.has_person(
+                person_id=person_id, roles=role_class.get_cttee_roles()):
+            if db.search_group_member(
+                    queue_id=proposal.queue_id,
+                    group_type=GroupType.CTTEE,
+                    person_id=person_id):
+                roles.append(role_class.CTTEE_OTHER)
 
     # Determine whether the user can add a "feedback" review -- they should be
     # a reviewer in a suitable role (or have administrative privileges) but
     # there should not already be a review of this role.
-    if not proposal.reviewers.person_id_by_role(role_class.FEEDBACK):
-        try:
-            if not (session.get('is_admin', False) and can_be_admin(db)):
-                proposal.reviewers.get_person(
-                    person_id=person_id,
-                    roles=role_class.get_feedback_roles())
-            roles.append(role_class.FEEDBACK)
-        except KeyError:
-            pass
+    if proposal.state in role_class.get_editable_states(
+            role_class.FEEDBACK):
+        if not proposal.reviewers.has_role(role_class.FEEDBACK):
+            if ((session.get('is_admin', False) and can_be_admin(db))
+                    or proposal.reviewers.has_person(
+                        person_id=person_id,
+                        roles=role_class.get_feedback_roles())):
+                roles.append(role_class.FEEDBACK)
 
     return roles
 

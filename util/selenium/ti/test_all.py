@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1524,23 +1524,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         review_process_url = self.browser.current_url
 
-        self.browser.find_element_by_link_text('Reviews').click()
-
-        self._save_screenshot(self.admin_image_root, 'proposal_reviews',
-                              ['extra_review_links'])
-
-        # Enter feedback text.
-        self.browser.find_element_by_link_text('Add feedback').click()
-
-        self.browser.find_element_by_name('text').send_keys(
-            'This is an example feedback comment.')
-
-        self.browser.find_element_by_name('submit').click()
-
-        self.assertIn('The review has been saved.', self.browser.page_source)
-
-        # Go back and enter affiliation weights.
-        self.browser.get(review_process_url)
+        # Enter affiliation weights.
         self.browser.find_element_by_link_text(
             'Edit affiliation weights').click()
 
@@ -1611,6 +1595,23 @@ class IntegrationTest(DummyConfigTestCase):
 
         self._save_screenshot(self.admin_image_root,
                               'review_tabulation_updated')
+
+        # View reviews page.
+        self.browser.get(review_process_url)
+        self.browser.find_element_by_link_text('Reviews').click()
+
+        self._save_screenshot(self.admin_image_root, 'proposal_reviews',
+                              ['extra_review_links'])
+
+        # Enter feedback text.
+        self.browser.find_element_by_link_text('Add feedback').click()
+
+        self.browser.find_element_by_name('text').send_keys(
+            'This is an example feedback comment.')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn('The review has been saved.', self.browser.page_source)
 
         # Check that the feedback approval page works.
         self.browser.get(review_process_url)

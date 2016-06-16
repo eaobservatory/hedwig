@@ -649,45 +649,49 @@ class BaseReviewerRole(EnumBasic, EnumURLPath):
 
     # Type which describes how the reviewer roles are defined, where:
     # * name_review indicates whether the name can be suffixed with "review".
+    # * edit_rev and edit_fr indicate which states the review can be edited in.
+    # * rating_hide indicates whether the rating should be hidden until
+    #   the proposal is in the final review state.
     RoleInfo = namedtuple(
         'RoleInfo',
         ('name', 'unique', 'text', 'assessment', 'rating', 'weight',
          'cttee', 'name_review', 'feedback', 'note', 'invite',
+         'edit_rev', 'edit_fr', 'rating_hide',
          'display_class', 'url_path'))
 
     # Options:  Unique Text   Ass/nt Rating Weight Cttee  "Rev"  Feedbk Note
-    #           Invite Disp.cl. URL
+    #           Invite E.Rev  E.FR   Ra.Hi. Disp.cl. URL
     _info = OrderedDict((
         (TECH,
             RoleInfo(
                 'Technical',
                 True,  True,  True,  False, False, False, True,  False, True,
-                False, 'tech', 'technical')),
+                False, True,  True,  False, 'tech', 'technical')),
         (EXTERNAL,
             RoleInfo(
                 'External',
                 False, True,  False, True,  False, False, True,  False, False,
-                True,  'ext', 'external')),
+                True,  True,  False, False, 'ext', 'external')),
         (CTTEE_PRIMARY,
             RoleInfo(
                 'TAC Primary',
                 True,  True,  False, True,  True,  True,  True,  True,  True,
-                False, 'cttee', 'committee')),
+                False, True,  True,  True,  'cttee', 'committee')),
         (CTTEE_SECONDARY,
             RoleInfo(
                 'TAC Secondary',
                 False, True,  False, True,  True,  True,  True,  True,  True,
-                False, 'cttee', None)),
+                False, True,  True,  True,  'cttee', None)),
         (CTTEE_OTHER,
             RoleInfo(
                 'Rating',
                 False, True,  False, True,  True,  True,  False, False, True,
-                False, 'cttee', 'rating')),
+                False, True,  True,  True,  'cttee', 'rating')),
         (FEEDBACK,
             RoleInfo(
                 'Feedback',
                 True,  True,  False, False, False, False, False, False, False,
-                False, 'feedback', 'feedback')),
+                False, False, True,  False, 'feedback', 'feedback')),
     ))
 
     @classmethod
@@ -701,6 +705,36 @@ class BaseReviewerRole(EnumBasic, EnumURLPath):
         """Get a CSS class which can be used to display a given role."""
 
         return cls._info[role].display_class
+
+    @classmethod
+    def get_editable_roles(cls, state):
+        """Get a list of roles which are editable in a specific state."""
+
+        roles = []
+
+        for (role_id, role_info) in cls._info.items():
+            if ((role_info.edit_rev and (state == ProposalState.REVIEW))
+                    or (role_info.edit_fr
+                        and (state == ProposalState.FINAL_REVIEW))):
+                roles.append(role_id)
+
+        return roles
+
+    @classmethod
+    def get_editable_states(cls, role):
+        """Get a list of the states in which a review is editable."""
+
+        role_info = cls._info[role]
+
+        states = []
+
+        if role_info.edit_rev:
+            states.append(ProposalState.REVIEW)
+
+        if role_info.edit_fr:
+            states.append(ProposalState.FINAL_REVIEW)
+
+        return states
 
     @classmethod
     def get_feedback_roles(cls):

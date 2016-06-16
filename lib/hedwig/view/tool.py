@@ -229,7 +229,8 @@ class BaseTargetTool(object):
 
         assert proposal.id == proposal_id
 
-        if not auth.for_proposal(db, proposal).view:
+        if not auth.for_proposal(self.facility.get_reviewer_roles(),
+                                 db, proposal).view:
             raise HTTPForbidden('Permission denied for this proposal.')
 
         targets = db.search_target(proposal_id=proposal_id)

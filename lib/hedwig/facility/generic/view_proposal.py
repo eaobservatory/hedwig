@@ -126,6 +126,7 @@ class GenericProposal(object):
             'can_view_review': review_can.view,
             'can_edit_review': review_can.edit,
             'can_view_feedback': auth.for_proposal_feedback(
+                self.get_reviewer_roles(),
                 db, proposal=proposal).view,
             'is_submitted': ProposalState.is_submitted(proposal.state),
             'proposal': proposal._replace(members=[

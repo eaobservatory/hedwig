@@ -807,25 +807,53 @@ class PeopleView(object):
             '{}: Reviews'.format(person.name))
 
     def _person_reviews(self, db, person_id, facilities, person, title):
-        proposals = db.search_proposal(
+        # Get a list of proposals, in all review states, for which this
+        # person has reviews.  (Will filter later to list only those
+        # which are editable in each proposal's actual state.)
+        review_proposals = db.search_proposal(
             reviewer_person_id=person_id,
-            person_pi=True, state=ProposalState.REVIEW)
+            person_pi=True, state=ProposalState.review_states())
 
+        # Organize proposals by facility and attach extra information
+        # as necessary.
         facility_proposals = []
 
-        for id_, ps in groupby(proposals.values(), lambda x: x.facility_id):
+        for id_, facility_review_proposals in groupby(
+                review_proposals.values(), lambda x: x.facility_id):
             facility = facilities.get(id_)
             if facility is None:
+                continue
+
+            role_class = facility.view.get_reviewer_roles()
+            # Use cache dictionary for editable roles in each state.
+            state_editable_roles = {}
+
+            proposals = []
+
+            for proposal in facility_review_proposals:
+                state = proposal.state
+                roles = state_editable_roles.get(state)
+                if roles is None:
+                    roles = role_class.get_editable_roles(state)
+                    state_editable_roles[state] = roles
+
+                if proposal.reviewers.role not in roles:
+                    continue
+
+                proposals.append(proposal)
+
+            # If, after filtering, no proposals are left, skip this facility.
+            if not proposals:
                 continue
 
             facility_proposals.append((
                 facility.name,
                 facility.code,
-                facility.view.get_reviewer_roles(),
+                role_class,
                 [
                     ProposalWithCode(
                         *p, code=facility.view.make_proposal_code(db, p))
-                    for p in ps
+                    for p in proposals
                 ]))
 
         return {

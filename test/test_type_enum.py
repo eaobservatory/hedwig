@@ -231,6 +231,43 @@ class EnumTypeTestCase(TestCase):
             BaseReviewerRole.CTTEE_SECONDARY,
         ])
 
+        self.assertEqual(
+            BaseReviewerRole.get_editable_states(
+                BaseReviewerRole.EXTERNAL),
+            [ProposalState.REVIEW])
+
+        self.assertEqual(
+            BaseReviewerRole.get_editable_states(
+                BaseReviewerRole.CTTEE_PRIMARY),
+            [ProposalState.REVIEW, ProposalState.FINAL_REVIEW])
+
+        self.assertEqual(
+            BaseReviewerRole.get_editable_states(
+                BaseReviewerRole.FEEDBACK),
+            [ProposalState.FINAL_REVIEW])
+
+        self.assertEqual(
+            BaseReviewerRole.get_editable_roles(ProposalState.PREPARATION), [])
+
+        self.assertEqual(
+            BaseReviewerRole.get_editable_roles(ProposalState.REVIEW), [
+                BaseReviewerRole.TECH,
+                BaseReviewerRole.EXTERNAL,
+                BaseReviewerRole.CTTEE_PRIMARY,
+                BaseReviewerRole.CTTEE_SECONDARY,
+                BaseReviewerRole.CTTEE_OTHER])
+
+        self.assertEqual(
+            BaseReviewerRole.get_editable_roles(ProposalState.FINAL_REVIEW), [
+                BaseReviewerRole.TECH,
+                BaseReviewerRole.CTTEE_PRIMARY,
+                BaseReviewerRole.CTTEE_SECONDARY,
+                BaseReviewerRole.CTTEE_OTHER,
+                BaseReviewerRole.FEEDBACK])
+
+        self.assertEqual(
+            BaseReviewerRole.get_editable_roles(ProposalState.ACCEPTED), [])
+
     def test_text_role(self):
         self.assertTrue(TextRole.is_valid(TextRole.ABSTRACT))
         self.assertFalse(TextRole.is_valid(999))

@@ -495,23 +495,34 @@ class ReviewerCollection(ResultCollection):
 
         return (overall_rating, std_dev)
 
-    def get_person(self, person_id, roles=None):
+    def has_person(self, person_id, roles=None):
         """
-        Get the entry for a given person.
+        Check for an entry for a given person.
 
-        Returns the first entry matching the given `person_id`.  Optionally
-        also checks that the reviewer `role` attribute is in the given
-        set of `roles`.
+        Returns True if entry is found matching the given `person_id`.
+        Optionally also checks that the reviewer `role` attribute is
+        in the given set of `roles`.
 
-        Raises a `KeyError` if no matching record is found.
+        Returns False if no matching record is found.
         """
 
         for member in self.values():
             if ((member.person_id == person_id) and
                     ((roles is None) or (member.role in roles))):
-                return member
+                return True
 
-        raise KeyError('person not in reviewer collection')
+        return False
+
+    def has_role(self, role):
+        """
+        Check if the collection has an entry in the given role.
+        """
+
+        for member in self.values():
+            if member.role == role:
+                return True
+
+        return False
 
     def person_id_by_role(self, role):
         """
@@ -520,6 +531,13 @@ class ReviewerCollection(ResultCollection):
         """
 
         return [x.person_id for x in self.values() if x.role == role]
+
+    def role_by_person_id(self, person_id):
+        """
+        Get a list of the reviewer roles for the given person.
+        """
+
+        return [x.role for x in self.values() if x.person_id == person_id]
 
     def values_by_role(self, role):
         """
