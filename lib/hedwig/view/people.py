@@ -42,6 +42,14 @@ InstitutionLogExtra = namedtuple(
     'InstitutionLogExtra',
     InstitutionLog._fields + ('new',))
 
+ProposalsByFacility = namedtuple(
+    'ProposalsByFacility',
+    ('name', 'code', 'proposals'))
+
+ReviewsByFacility = namedtuple(
+    'ReviewsByFacility',
+    ('name', 'code', 'role_class', 'proposals'))
+
 
 class PeopleView(object):
     def log_in(self, db, args, form, referrer):
@@ -780,7 +788,7 @@ class PeopleView(object):
             if facility is None:
                 continue
 
-            facility_proposals.append((
+            facility_proposals.append(ProposalsByFacility(
                 facility.name,
                 facility.code,
                 [
@@ -846,7 +854,7 @@ class PeopleView(object):
             if not proposals:
                 continue
 
-            facility_proposals.append((
+            facility_proposals.append(ReviewsByFacility(
                 facility.name,
                 facility.code,
                 role_class,

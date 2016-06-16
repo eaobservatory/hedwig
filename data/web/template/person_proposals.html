@@ -11,8 +11,8 @@
             You do not yet have any proposals in this system.
         </p>
     {% else %}
-        {% for (facility_name, facility_code, facility_proposals) in proposals %}
-            <h2>{{ facility_name }}</h2>
+        {% for facility in proposals %}
+            <h2>{{ facility.name }}</h2>
 
             <table>
                 <tr>
@@ -23,7 +23,7 @@
                     <th>State</th>
                     <th>Your role</th>
                 </tr>
-                {% for semester, semester_proposals in facility_proposals | groupby('semester_id') %}
+                {% for semester, semester_proposals in facility.proposals | groupby('semester_id') %}
                     {% for queue, queue_proposals in semester_proposals | groupby('queue_id') %}
                     {% set semester_loop = loop %}
                         {% for proposal in queue_proposals %}
@@ -34,7 +34,7 @@
                                 {% if loop.first %}
                                     <td rowspan="{{ loop.length }}">{{ proposal.queue_name }}</td>
                                 {% endif %}
-                                <td><a href="{{ url_for(facility_code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+                                <td><a href="{{ url_for(facility.code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
                                 <td>{{ proposal.title | abbr(35) }}</td>
                                 <td>{{ proposal.state | proposal_state_name }}</td>
                                 <td>
