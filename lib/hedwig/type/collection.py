@@ -255,6 +255,17 @@ class MemberCollection(OrderedResultCollection):
 
         return ans
 
+    def has_person(self, person_id):
+        """
+        Check for an entry for a given person.
+        """
+
+        for member in self.values():
+            if member.person_id == person_id:
+                return True
+
+        return False
+
     def validate(self, editor_person_id):
         """
         Attempts to validate the members of a proposal.

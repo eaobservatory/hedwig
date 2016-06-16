@@ -237,11 +237,8 @@ def for_proposal_feedback(role_class, db, proposal):
         return view_only
 
     # Allow proposal members to view.
-    try:
-        member = proposal.members.get_person(session['person']['id'])
+    if proposal.members.has_person(session['person']['id']):
         return view_only
-    except KeyError:
-        pass
 
     # Otherwise deny access.
     return no
@@ -266,11 +263,8 @@ def for_review(role_class, db, reviewer, proposal, auth_cache=None):
     person_id = session['person']['id']
 
     # Forbid access if the person is a member of the proposal.
-    try:
-        proposal.members.get_person(person_id)
+    if proposal.members.has_person(person_id):
         return no
-    except KeyError:
-        pass
 
     # Determine whether the proposal is in a state where this review is
     # editable.  If we have a specific reviewer, check that role's states.
@@ -344,11 +338,8 @@ def can_add_review_roles(role_class, db, proposal):
     person_id = session['person']['id']
 
     # If the person is a member of the proposal, they can't add any reviews.
-    try:
-        proposal.members.get_person(person_id=person_id)
+    if proposal.members.has_person(person_id=person_id):
         return []
-    except KeyError:
-        pass
 
     roles = []
 

@@ -116,6 +116,9 @@ class CollectionTypeTestCase(TestCase):
         with self.assertRaises(KeyError):
             c.get_person(999999)
 
+        self.assertTrue(c.has_person(9001))
+        self.assertFalse(c.has_person(999999))
+
     def test_proposal_figure_collection(self):
         fc = ProposalFigureCollection()
 
