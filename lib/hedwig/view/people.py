@@ -346,26 +346,21 @@ class PeopleView(object):
             try:
                 token = form['token']
                 password = form['password']
-                if not password:
-                    # Detect this error now before using the reset token.
-                    # (Otherwise if update_user_password finds the problem, the
-                    # token has already been deleted.)
-                    raise UserError('The password can not be blank.')
+
                 if password != form['password_check']:
                     raise UserError('The passwords did not match.')
+
                 try:
-                    user_id = db.use_password_reset_token(
-                        token, remote_addr=remote_addr)
+                    user_name = db.use_password_reset_token(
+                        token, password, remote_addr=remote_addr)
                 except NoSuchRecord:
                     raise UserError('Your reset code was not recognised. '
                                     'It may have expired or been superceded '
                                     'by a newer reset code.')
-                db.update_user_password(
-                    user_id, password, remote_addr=remote_addr)
+
                 flash('Your password has been changed.'
                       ' You may now log in using your new password.')
-                user_name = db.get_user_name(user_id)
-                db.delete_auth_failure(user_name=user_name)
+
                 raise HTTPRedirect(url_for('.log_in', user_name=user_name))
 
             except UserError as e:

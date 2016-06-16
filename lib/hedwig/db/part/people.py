@@ -315,7 +315,7 @@ class PeoplePart(object):
                     auth_failure.c.attempts: auth_failure.c.attempts + 1,
                 }))
 
-    def delete_auth_failure(self, user_name):
+    def _delete_auth_failure(self, user_name, _conn=None):
         """
         Delete authentication failure records for a given user name.
 
@@ -323,7 +323,7 @@ class PeoplePart(object):
         via the password reset system.
         """
 
-        with self._transaction() as conn:
+        with self._transaction(_conn=_conn) as conn:
             conn.execute(auth_failure.delete().where(
                 auth_failure.c.user_name == user_name))
 
@@ -446,12 +446,12 @@ class PeoplePart(object):
             )).scalar()
 
     @require_not_none
-    def get_user_name(self, user_id):
+    def get_user_name(self, user_id, _conn=None):
         """
         Get the user name associated with the given user_id.
         """
 
-        with self._transaction() as conn:
+        with self._transaction(_conn=_conn) as conn:
             return conn.execute(select([user.c.name]).where(
                 user.c.id == user_id
             )).scalar()
@@ -987,15 +987,12 @@ class PeoplePart(object):
                 conn, user_id, UserLogEvent.CHANGE_NAME, remote_addr)
 
     def update_user_password(self, user_id, password_raw, remote_addr=None,
-                             _test_skip_check=False):
+                             _test_skip_check=False, _skip_log=False,
+                             _conn=None):
         """
         Update a user's password.
 
-        Note that this raises UserError if the password is blank.  When an
-        error cannot be tolerated (e.g. after consuming a password reset
-        token, the caller must make this check first.  (Any similar checks
-        added to this function should therefore also be added to
-        hedwig.view.people.password_reset_token_use.)
+        :raises UserError: if the password is blank.
         """
 
         if not password_raw:
@@ -1003,7 +1000,7 @@ class PeoplePart(object):
 
         (password_hash, password_salt) = create_password_hash(password_raw)
 
-        with self._transaction() as conn:
+        with self._transaction(_conn=_conn) as conn:
             if (not _test_skip_check and
                     not self._exists_id(conn, user, user_id)):
                 raise ConsistencyError(
@@ -1020,8 +1017,9 @@ class PeoplePart(object):
                 raise ConsistencyError(
                     'no rows matched updating user with id={}', user_id)
 
-            self._add_user_log_entry(
-                conn, user_id, UserLogEvent.CHANGE_PASS, remote_addr)
+            if not _skip_log:
+                self._add_user_log_entry(
+                    conn, user_id, UserLogEvent.CHANGE_PASS, remote_addr)
 
     def use_email_verify_token(self, person_id, token):
         """
@@ -1062,11 +1060,13 @@ class PeoplePart(object):
 
         return email_address
 
-    def use_password_reset_token(self, token, remote_addr):
+    def use_password_reset_token(self, token, password_raw, remote_addr):
         """
         Tries to use the given password reset token.
 
-        If successful returns the user_id.  Otherwise returns None.
+        :return: the user_name corresponding to the given token, if successful.
+
+        :raises NoSuchRecord: if the token is not found.
         """
 
         with self._transaction() as conn:
@@ -1085,14 +1085,24 @@ class PeoplePart(object):
 
             user_id = result['user_id']
 
-            # If we found it, consider it used and delete it.
-            conn.execute(reset_token.delete().where(
-                reset_token.c.token == token))
-
+            # Log the usage of this token.
             self._add_user_log_entry(
                 conn, user_id, UserLogEvent.USE_TOKEN, remote_addr)
 
-        return user_id
+            # Apply the password change, without adding another log entry.
+            self.update_user_password(user_id, password_raw, remote_addr,
+                                      _skip_log=True, _conn=conn)
+
+            # Delete the used password reset token.
+            conn.execute(reset_token.delete().where(
+                reset_token.c.token == token))
+
+            # Clear the auth failure record for this user.
+            user_name = self.get_user_name(user_id, _conn=conn)
+
+            self._delete_auth_failure(user_name=user_name, _conn=conn)
+
+        return user_name
 
     def use_invitation(self, token, user_id=None, new_person_id=None,
                        remote_addr=None, _test_skip_check=False):
