@@ -183,15 +183,27 @@ class GenericReview(object):
             })
 
             if can_view_review:
+                # Determine authorization for each review.  Hide ratings
+                # which cannot be viewed.
+                reviewers = ReviewerCollection(proposal.reviewers.role_class)
+
+                for reviewer_id, reviewer in proposal.reviewers.items():
+                    reviewer_can = auth.for_review(
+                        role_class, db, reviewer=reviewer, proposal=proposal,
+                        auth_cache=auth_cache)
+
+                    if not reviewer_can.view_rating:
+                        reviewer = reviewer._replace(
+                            review_rating=None, review_weight=None)
+
+                    reviewers[reviewer_id] = with_can_edit(
+                        reviewer, reviewer_can.edit)
+
                 (overall_rating, std_dev) = self.calculate_overall_rating(
-                    proposal.reviewers, with_std_dev=True)
+                    reviewers, with_std_dev=True)
+
                 updated_proposal.update({
-                    'reviewers': ReviewerCollection(
-                        proposal.reviewers.role_class,
-                        ((k, with_can_edit(v, auth.for_review(
-                            role_class, db, reviewer=v, proposal=proposal,
-                            auth_cache=auth_cache).edit))
-                         for (k, v) in proposal.reviewers.items())),
+                    'reviewers': reviewers,
                     'rating': overall_rating,
                     'rating_std_dev': std_dev,
                 })
@@ -1132,11 +1144,6 @@ class GenericReview(object):
         except NoSuchRecord:
             abstract = None
 
-        reviews = db.search_reviewer(
-            role_class=role_class,
-            proposal_id=proposal.id, with_review=True,
-            with_review_text=True, with_review_note=True)
-
         # Extract the PI before calling the template so that we can handle
         # the exception.
         person_pi = None
@@ -1146,14 +1153,26 @@ class GenericReview(object):
             pass
 
         # Add "can_edit" fields and hide non-public notes so that we don't
-        # have to rely on the template to do this.
-        review_list = []
-        for review in reviews.values():
-            if not review.review_note_public:
-                review = review._replace(review_note=None)
-            review_list.append(with_can_edit(review, auth.for_review(
-                role_class, db, reviewer=review, proposal=proposal,
-                auth_cache=auth_cache).edit))
+        # have to rely on the template to do this.  Also hide the rating
+        # if not viewable.
+        reviewers = ReviewerCollection(role_class)
+
+        for (reviewer_id, reviewer) in db.search_reviewer(
+                role_class=role_class,
+                proposal_id=proposal.id, with_review=True,
+                with_review_text=True, with_review_note=True).items():
+            reviewer_can = auth.for_review(
+                role_class, db, reviewer=reviewer, proposal=proposal,
+                auth_cache=auth_cache)
+
+            if not reviewer.review_note_public:
+                reviewer = reviewer._replace(review_note=None)
+
+            if not reviewer_can.view_rating:
+                reviewer = reviewer._replace(
+                    review_rating=None, review_weight=None)
+
+            reviewers[reviewer_id] = with_can_edit(reviewer, reviewer_can.edit)
 
         return {
             'title': '{}: Reviews'.format(proposal_code),
@@ -1163,8 +1182,8 @@ class GenericReview(object):
             'abstract': abstract,
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id).values(),
-            'reviews': review_list,
-            'overall_rating': self.calculate_overall_rating(reviews),
+            'reviews': list(reviewers.values()),
+            'overall_rating': self.calculate_overall_rating(reviewers),
             'can_add_roles': auth.can_add_review_roles(role_class, db,
                                                        proposal),
         }

@@ -737,6 +737,17 @@ class BaseReviewerRole(EnumBasic, EnumURLPath):
         return states
 
     @classmethod
+    def get_rating_viewable_states(cls, role):
+        """Get a list of states in which the rating is viewable."""
+
+        states = [ProposalState.FINAL_REVIEW] + ProposalState.reviewed_states()
+
+        if not cls._info[role].rating_hide:
+            states.append(ProposalState.REVIEW)
+
+        return states
+
+    @classmethod
     def get_feedback_roles(cls):
         """Get list of roles who can write the feedback review."""
 

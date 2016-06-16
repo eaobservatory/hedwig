@@ -268,6 +268,18 @@ class EnumTypeTestCase(TestCase):
         self.assertEqual(
             BaseReviewerRole.get_editable_roles(ProposalState.ACCEPTED), [])
 
+        self.assertEqual(
+            set(BaseReviewerRole.get_rating_viewable_states(
+                BaseReviewerRole.EXTERNAL)),
+            set((ProposalState.REVIEW, ProposalState.FINAL_REVIEW,
+                 ProposalState.ACCEPTED, ProposalState.REJECTED)))
+
+        self.assertEqual(
+            set(BaseReviewerRole.get_rating_viewable_states(
+                BaseReviewerRole.CTTEE_PRIMARY)),
+            set((ProposalState.FINAL_REVIEW,
+                 ProposalState.ACCEPTED, ProposalState.REJECTED)))
+
     def test_text_role(self):
         self.assertTrue(TextRole.is_valid(TextRole.ABSTRACT))
         self.assertFalse(TextRole.is_valid(999))

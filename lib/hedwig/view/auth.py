@@ -31,6 +31,9 @@ no = Authorization(False, False)
 yes = Authorization(True, True)
 view_only = Authorization(view=True, edit=False)
 
+AuthorizationWithRating = namedtuple(
+    'AuthorizationWithRating', Authorization._fields + ('view_rating',))
+
 
 def for_call_review(db, call, auth_cache=None):
     """
@@ -255,16 +258,19 @@ def for_review(role_class, db, reviewer, proposal, auth_cache=None):
     When making multiple calls to this function, an auth_cache dictionary
     can be provided.  This function can then use this to cache some
     information which it fetches from the database.
+
+    :return AuthorizationWithRating: including field indicating whether
+        the ratings can be viewed.
     """
 
     if 'user_id' not in session or 'person' not in session:
-        return no
+        return AuthorizationWithRating(*no, view_rating=False)
 
     person_id = session['person']['id']
 
     # Forbid access if the person is a member of the proposal.
     if proposal.members.has_person(person_id):
-        return no
+        return AuthorizationWithRating(*no, view_rating=False)
 
     # Determine whether the proposal is in a state where this review is
     # editable.  If we have a specific reviewer, check that role's states.
@@ -272,7 +278,7 @@ def for_review(role_class, db, reviewer, proposal, auth_cache=None):
         if proposal.state in role_class.get_editable_states(reviewer.role):
             # Allow full access to the reviewer while the review is editable.
             if person_id == reviewer.person_id:
-                return yes
+                return AuthorizationWithRating(*yes, view_rating=True)
 
             # Special case: if this is the feedback review, allow all reviewers
             # with suitable roles to edit it.
@@ -281,37 +287,45 @@ def for_review(role_class, db, reviewer, proposal, auth_cache=None):
                                       proposal_id=reviewer.proposal_id,
                                       person_id=person_id,
                                       role=role_class.get_feedback_roles()):
-                    return yes
+                    return AuthorizationWithRating(*yes, view_rating=True)
 
             review_is_editable = True
 
         else:
             review_is_editable = False
 
+        rating_is_viewable = (
+            proposal.state
+            in role_class.get_rating_viewable_states(reviewer.role))
+
     else:
         # If doing a non-reviewer-specific check, consider all
         # review states.
         review_is_editable = (proposal.state in ProposalState.review_states())
+        rating_is_viewable = False
 
     # Allow administrators and review coordinators to view, with edit too if
     # still under review.  (This is to allow them to adjust review ratings
     # during the committee meeting.)
     if session.get('is_admin', False) and can_be_admin(db):
-        return Authorization(view=True, edit=review_is_editable)
+        return AuthorizationWithRating(
+            view=True, edit=review_is_editable, view_rating=rating_is_viewable)
 
     group_members = _get_group_membership(
         auth_cache, db, proposal.queue_id, person_id)
 
     if any(group_members.values_by_group_type(group_type)
            for group_type in GroupType.review_coord_groups()):
-        return Authorization(view=True, edit=review_is_editable)
+        return AuthorizationWithRating(
+            view=True, edit=review_is_editable, view_rating=rating_is_viewable)
 
     # Give view access to committee members.
     if any(group_members.values_by_group_type(group_type)
            for group_type in GroupType.review_view_groups()):
-        return view_only
+        return AuthorizationWithRating(
+            view=True, edit=False, view_rating=rating_is_viewable)
 
-    return no
+    return AuthorizationWithRating(*no, view_rating=False)
 
 
 def can_be_admin(db):
