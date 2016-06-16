@@ -46,6 +46,10 @@ abbr {
     text-shadow: 0px 0px 10px white;
 }
 
+#navbar .callouttip > div a:hover {
+    text-shadow: none;
+}
+
 nav:first-child ul.navlink {
     border-bottom: 1px solid #AAA;
     margin-bottom: 4ex;
