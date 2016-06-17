@@ -674,19 +674,19 @@ class BaseReviewerRole(EnumBasic, EnumURLPath):
                 True,  True,  False, False, 'ext', 'external')),
         (CTTEE_PRIMARY,
             RoleInfo(
-                'TAC Primary',
+                'Committee Primary',
                 True,  True,  False, True,  True,  True,  True,  True,  True,
                 False, True,  True,  True,  'cttee', 'committee')),
         (CTTEE_SECONDARY,
             RoleInfo(
-                'TAC Secondary',
+                'Committee Secondary',
                 False, True,  False, True,  True,  True,  True,  True,  True,
                 False, True,  True,  True,  'cttee', None)),
         (CTTEE_OTHER,
             RoleInfo(
-                'Rating',
-                False, True,  False, True,  True,  True,  False, False, True,
-                False, True,  True,  True,  'cttee', 'rating')),
+                'Committee Other',
+                False, True,  False, True,  True,  True,  True,  False, True,
+                False, True,  True,  True,  'cttee', 'other')),
         (FEEDBACK,
             RoleInfo(
                 'Feedback',

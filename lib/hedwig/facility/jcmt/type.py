@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict, namedtuple
 
+from ...type.enum import BaseReviewerRole
 from ...type.collection import ResultTable
 from ...error import UserError
 from .meta import jcmt_available, jcmt_options, jcmt_request
@@ -305,6 +306,34 @@ class JCMTRequestCollection(OrderedDict):
                         instrument=instrument_name, weather=weather_name))
 
         return sorted_list
+
+
+class JCMTReviewerRole(BaseReviewerRole):
+    """
+    Class providing information about reviewer roles for JCMT.
+    """
+
+    RoleInfo = namedtuple(
+        'RoleInfo', BaseReviewerRole.RoleInfo._fields + ())
+
+    # Define JCMT-specific role information.
+    _jcmt_info = {
+        BaseReviewerRole.CTTEE_PRIMARY: (
+            (),
+            {'name': 'TAC Primary'}),
+        BaseReviewerRole.CTTEE_SECONDARY: (
+            (),
+            {'name': 'TAC Secondary', 'unique': True}),
+        BaseReviewerRole.CTTEE_OTHER: (
+            (),
+            {'name': 'Rating', 'name_review': False, 'url_path': 'rating'}),
+    }
+
+    # Merge with base role information.
+    _info = OrderedDict()
+    for role_id, role_info in BaseReviewerRole._info.items():
+        (extra, override) = _jcmt_info.get(role_id, ((), {}))
+        _info[role_id] = RoleInfo(*(role_info._replace(**override) + extra))
 
 
 class JCMTWeather(object):

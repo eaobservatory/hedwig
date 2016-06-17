@@ -37,6 +37,7 @@ from .type import \
     JCMTAvailable, JCMTAvailableCollection, \
     JCMTInstrument, JCMTOptions, \
     JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, \
+    JCMTReviewerRole, \
     JCMTWeather
 
 
@@ -59,6 +60,9 @@ class JCMT(Generic):
 
     def get_name(self):
         return 'JCMT'
+
+    def get_reviewer_roles(self):
+        return JCMTReviewerRole
 
     def make_proposal_code(self, db, proposal):
         return 'M{}{}{:03d}'.format(
