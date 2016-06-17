@@ -1451,7 +1451,7 @@ class PeopleView(object):
         return None
 
 
-def _update_session_user(user_id):
+def _update_session_user(user_id, sess=session):
     """
     Clears the session and inserts the given user identifier.
 
@@ -1459,19 +1459,19 @@ def _update_session_user(user_id):
     previous session remains.
     """
 
-    session.clear()
-    session['user_id'] = user_id
-    session['date_set'] = datetime.utcnow()
+    sess.clear()
+    sess['user_id'] = user_id
+    sess['date_set'] = datetime.utcnow()
 
 
-def _update_session_person(person):
+def _update_session_person(person, sess=session):
     """
     Adds the given person information to the session.
 
     :param PersonInfo person: record from `db.search_person(...).get_single()`
     """
 
-    session['person'] = person._asdict()
+    sess['person'] = person._asdict()
 
 
 def _update_session_person_from_db(db, person_id):
