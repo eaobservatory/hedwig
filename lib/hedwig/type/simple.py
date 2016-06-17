@@ -53,7 +53,7 @@ Calculation = namedtuple(
 
 Call = namedtuple(
     'Call',
-    map(lambda x: x.name, call.columns) +
+    [x.name for x in call.columns] +
     ['state', 'facility_id', 'semester_name', 'queue_name',
      'queue_description', 'queue_description_format'])
 
@@ -63,7 +63,7 @@ Category = namedtuple(
 
 Email = namedtuple(
     'Email',
-    map(lambda x: x.name, email.columns))
+    [x.name for x in email.columns])
 
 Facility = namedtuple(
     'Facility',
@@ -82,7 +82,7 @@ GroupMember = namedtuple(
 
 Institution = namedtuple(
     'Institution',
-    map(lambda x: x.name, institution.columns))
+    [x.name for x in institution.columns])
 
 InstitutionInfo = namedtuple(
     'InstitutionInfo',
@@ -134,7 +134,7 @@ MOCInfo = namedtuple(
 
 Person = namedtuple(
     'Person',
-    map(lambda x: x.name, person.columns) +
+    [x.name for x in person.columns] +
     ['email', 'institution', 'proposals', 'reviews'])
 
 PersonInfo = namedtuple(
@@ -154,7 +154,7 @@ PrevProposalPub = namedtuple(
 
 Proposal = namedtuple(
     'Proposal',
-    map(lambda x: x.name, proposal.columns) + [
+    [x.name for x in proposal.columns] + [
         'semester_id', 'semester_name', 'semester_code',
         'queue_id', 'queue_name', 'queue_code',
         'facility_id',
@@ -218,7 +218,7 @@ ReviewerInfo = namedtuple(
 
 Semester = namedtuple(
     'Semester',
-    map(lambda x: x.name, semester.columns))
+    [x.name for x in semester.columns])
 
 SemesterInfo = namedtuple(
     'SemesterInfo',
@@ -244,7 +244,7 @@ UserLog = namedtuple(
 
 Queue = namedtuple(
     'Queue',
-    map(lambda x: x.name, queue.columns))
+    [x.name for x in queue.columns])
 
 QueueInfo = namedtuple(
     'Queue',
