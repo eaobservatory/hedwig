@@ -36,6 +36,9 @@ class BasicWebAppTestCase(WebAppTestCase):
             'User name or password not recognised.',
             rv.data)
 
+        with self.client.session_transaction() as sess:
+            self.assertNotIn('user_id', sess)
+
         self.db.add_user('user1', 'pass1')
 
         rv = self.log_in('user1', 'pass1')
@@ -43,7 +46,13 @@ class BasicWebAppTestCase(WebAppTestCase):
             '<li>You have been logged in.</li>',
             rv.data)
 
+        with self.client.session_transaction() as sess:
+            self.assertIn('user_id', sess)
+
         rv = self.log_out()
         self.assertIn(
             '<li>You have been logged out.</li>',
             rv.data)
+
+        with self.client.session_transaction() as sess:
+            self.assertNotIn('user_id', sess)
