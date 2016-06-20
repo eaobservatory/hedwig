@@ -48,7 +48,9 @@ ProposalWithInviteRoles = namedtuple(
 
 ProposalWithReviewers = namedtuple(
     'ProposalWithReviewers',
-    ProposalWithCode._fields + ('reviewers_primary', 'reviewers_secondary'))
+    ProposalWithCode._fields + (
+        'reviewers_primary', 'reviewers_secondary',
+        'can_view_review', 'member_pi'))
 
 ProposalWithReviewerPersons = namedtuple(
     'ProposalWithReviewerPersons',
@@ -60,26 +62,38 @@ class GenericReview(object):
     def view_review_call(self, db, call, can, auth_cache):
         role_class = self.get_reviewer_roles()
 
-        proposals = db.search_proposal(
-            call_id=call.id, state=ProposalState.submitted_states(),
-            person_pi=True, with_reviewers=True,
-            with_reviewer_role=(role_class.CTTEE_PRIMARY,
-                                role_class.CTTEE_SECONDARY),
-            with_decision=True, with_categories=True)
+        proposals = []
+
+        for proposal in db.search_proposal(
+                call_id=call.id, state=ProposalState.submitted_states(),
+                with_members=True, with_reviewers=True,
+                with_reviewer_role=(role_class.CTTEE_PRIMARY,
+                                    role_class.CTTEE_SECONDARY),
+                with_decision=True, with_categories=True).values():
+            try:
+                member_pi = proposal.members.get_pi()
+            except KeyError:
+                member_pi = None
+
+            review_can = auth.for_review(
+                role_class, db, reviewer=None, proposal=proposal,
+                auth_cache=auth_cache)
+
+            proposals.append(ProposalWithReviewers(
+                *proposal, code=self.make_proposal_code(db, proposal),
+                reviewers_primary=proposal.reviewers.values_by_role(
+                    role_class.CTTEE_PRIMARY),
+                reviewers_secondary=proposal.reviewers.values_by_role(
+                    role_class.CTTEE_SECONDARY),
+                can_view_review=review_can.view,
+                member_pi=member_pi))
 
         return {
             'title': 'Review Process: {} {}'.format(call.semester_name,
                                                     call.queue_name),
             'can_edit': can.edit,
             'call_id': call.id,
-            'proposals': [
-                ProposalWithReviewers(
-                    *x, code=self.make_proposal_code(db, x),
-                    reviewers_primary=x.reviewers.values_by_role(
-                        role_class.CTTEE_PRIMARY),
-                    reviewers_secondary=x.reviewers.values_by_role(
-                        role_class.CTTEE_SECONDARY))
-                for x in proposals.values()],
+            'proposals': proposals,
         }
 
     @with_call_review(permission='view')

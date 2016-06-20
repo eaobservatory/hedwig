@@ -56,7 +56,13 @@
     {% for proposal in proposals %}
         <tr>
             <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
-            <td><a href="{{ url_for('.proposal_reviews', proposal_id=proposal.id) }}">Reviews</a></td>
+            <td>
+                {% if proposal.can_view_review %}
+                    <a href="{{ url_for('.proposal_reviews', proposal_id=proposal.id) }}">Reviews</a>
+                {% else %}
+                    &nbsp;
+                {% endif %}
+            </td>
             <td>{{ proposal.state | proposal_state_name }}</td>
             <td>
                 {% if proposal.decision_accept is none %}
@@ -71,11 +77,11 @@
                 {% endif %}
             </td>
             <td>
-                {% if proposal.members.person_id is not none %}
-                    {% if session.is_admin or proposal.members.person_public %}
-                        <a href="{{ url_for('people.person_view', person_id=proposal.members.person_id) }}">{{ proposal.members.person_name | abbr }}</a>
+                {% if proposal.member_pi is not none %}
+                    {% if session.is_admin or proposal.member_pi.person_public %}
+                        <a href="{{ url_for('people.person_view', person_id=proposal.member_pi.person_id) }}">{{ proposal.member_pi.person_name | abbr }}</a>
                     {% else %}
-                        {{ proposal.members.person_name | abbr }}
+                        {{ proposal.member_pi.person_name | abbr }}
                     {% endif %}
                 {% else %}
                     &nbsp;
