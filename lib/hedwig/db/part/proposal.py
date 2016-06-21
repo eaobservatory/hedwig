@@ -1094,7 +1094,7 @@ class ProposalPart(object):
         Search for proposals.
 
         If "person_id" is specified, then this method searches for proposals
-        with this person as a member, and also sets "members" in the
+        with this person as a member, and also sets "member" in the
         returned "Proposal" object to a "MemberInfo" object summarizing
         that person's role.  Alternatively if "person_pi" is enabled, then
         the PI's information is returned as a "MemberPIInfo" object.
@@ -1292,6 +1292,7 @@ class ProposalPart(object):
             # Fetch all results before loop so that we can also query for
             # members if requested.
             for row in conn.execute(stmt).fetchall():
+                member_info = None
                 members = None
                 reviewers = None
                 categories = None
@@ -1300,13 +1301,13 @@ class ProposalPart(object):
                 row_key = values['id']
 
                 if person_id is not None:
-                    members = MemberInfo(
+                    member_info = MemberInfo(
                         values.pop('pi'),
                         values.pop('editor'),
                         values.pop('observer'))
 
                 elif person_pi:
-                    members = MemberPIInfo(
+                    member_info = MemberPIInfo(
                         values.pop('person_id'),
                         values.pop('pi_name'),
                         values.pop('pi_public'),
@@ -1342,9 +1343,10 @@ class ProposalPart(object):
                         proposal_id=values['id'],
                         _conn=conn)
 
-                ans[row_key] = Proposal(members=members, reviewers=reviewers,
-                                        categories=categories,
-                                        **values)
+                ans[row_key] = Proposal(
+                    member=member_info, members=members,
+                    reviewers=reviewers, categories=categories,
+                    **values)
 
         return ans
 

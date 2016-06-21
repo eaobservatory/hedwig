@@ -43,8 +43,8 @@
                             {% if loop.first %}
                                 <td rowspan="{{ proposal_reviews | length }}"><a href="{{ url_for(facility.code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
                                 <td rowspan="{{ proposal_reviews | length }}">
-                                    {% if proposal.members.person_name is not none %}
-                                        {{ proposal.members.person_name | abbr(25) }}
+                                    {% if proposal.member.person_name is not none %}
+                                        {{ proposal.member.person_name | abbr(25) }}
                                     {% else %}
                                         &nbsp;
                                     {% endif %}

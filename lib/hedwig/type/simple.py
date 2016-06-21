@@ -152,6 +152,10 @@ PrevProposalPub = namedtuple(
     'PrevProposalPub',
     [x.name for x in prev_proposal_pub.columns] + ['proposal_id'])
 
+# Note that the Proposal tuple has fields "members", for when all members of a
+# proposal are represented, and "member" for when information about a single
+# member is retrieved.  This is to avoid confusion where the "members" field
+# was previously used to hold only a single member information object.
 Proposal = namedtuple(
     'Proposal',
     [x.name for x in proposal.columns] + [
@@ -166,7 +170,7 @@ Proposal = namedtuple(
         'has_decision',
         'decision_accept', 'decision_exempt', 'decision_ready',
         'decision_note', 'decision_note_format',
-        'members', 'reviewers', 'categories',
+        'member', 'members', 'reviewers', 'categories',
     ])
 
 ProposalWithCode = namedtuple('ProposalWithCode', Proposal._fields + ('code',))

@@ -49,8 +49,7 @@ ProposalWithInviteRoles = namedtuple(
 ProposalWithReviewers = namedtuple(
     'ProposalWithReviewers',
     ProposalWithCode._fields + (
-        'reviewers_primary', 'reviewers_secondary',
-        'can_view_review', 'member_pi'))
+        'reviewers_primary', 'reviewers_secondary', 'can_view_review'))
 
 ProposalWithReviewerPersons = namedtuple(
     'ProposalWithReviewerPersons',
@@ -80,13 +79,13 @@ class GenericReview(object):
                 auth_cache=auth_cache)
 
             proposals.append(ProposalWithReviewers(
-                *proposal, code=self.make_proposal_code(db, proposal),
+                *proposal._replace(member=member_pi),
+                code=self.make_proposal_code(db, proposal),
                 reviewers_primary=proposal.reviewers.values_by_role(
                     role_class.CTTEE_PRIMARY),
                 reviewers_secondary=proposal.reviewers.values_by_role(
                     role_class.CTTEE_SECONDARY),
-                can_view_review=review_can.view,
-                member_pi=member_pi))
+                can_view_review=review_can.view))
 
         return {
             'title': 'Review Process: {} {}'.format(call.semester_name,
@@ -408,27 +407,19 @@ class GenericReview(object):
 
         group_person_ids = [x.person_id for x in group_members.values()]
 
-        # Set of proposals and person identifiers to use to avoid allocating
-        # someone the review of their own proposal.
-        proposal_members = set()
-
         proposals = []
         for proposal in db.search_proposal(
                 call_id=call.id,
                 state=role_class.get_editable_states(primary_role),
                 with_members=True, with_reviewers=True).values():
-
-            for member in proposal.members.values():
-                proposal_members.add((proposal.id, member.person_id))
-
             try:
                 proposal_pi = proposal.members.get_pi()
             except KeyError:
                 proposal_pi = null_tuple(MemberPIInfo)
 
             # Emulate search_proposal(person_pi=True) behaviour by setting
-            # the "members" attribute to just the PI.
-            proposal = proposal._replace(members=proposal_pi)
+            # the "member" attribute to just the PI.
+            proposal = proposal._replace(member=proposal_pi)
 
             proposals.append(ProposalWithReviewerPersons(
                 *proposal, code=self.make_proposal_code(db, proposal),
@@ -502,8 +493,7 @@ class GenericReview(object):
                             if person_id in orig:
                                 orig.remove(person_id)
                             else:
-                                if ((proposal.id, person_id)
-                                        in proposal_members):
+                                if proposal.members.has_person(person_id):
                                     raise UserError(
                                         'A proposal member has been selected '
                                         'as a reviewer for proposal {}.',
@@ -553,7 +543,6 @@ class GenericReview(object):
             'secondary_unique': (None if secondary_role_info is None else
                                  secondary_role_info.unique),
             'message': message,
-            'proposal_members': proposal_members,
         }
 
     @with_proposal(permission='none')
@@ -1263,7 +1252,7 @@ class GenericReview(object):
             except UserError as e:
                 message = e.message
 
-        person_pi = proposal.members
+        person_pi = proposal.member
         if person_pi.person_id is None:
             person_pi = None
 

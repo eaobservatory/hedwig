@@ -77,11 +77,11 @@
                 {% endif %}
             </td>
             <td>
-                {% if proposal.member_pi is not none %}
-                    {% if session.is_admin or proposal.member_pi.person_public %}
-                        <a href="{{ url_for('people.person_view', person_id=proposal.member_pi.person_id) }}">{{ proposal.member_pi.person_name | abbr }}</a>
+                {% if proposal.member is not none %}
+                    {% if session.is_admin or proposal.member.person_public %}
+                        <a href="{{ url_for('people.person_view', person_id=proposal.member.person_id) }}">{{ proposal.member.person_name | abbr }}</a>
                     {% else %}
-                        {{ proposal.member_pi.person_name | abbr }}
+                        {{ proposal.member.person_name | abbr }}
                     {% endif %}
                 {% else %}
                     &nbsp;

@@ -21,11 +21,11 @@
             </td>
             <td>{{ proposal.title }}</td>
             <td>{{ proposal.state | proposal_state_name }}</td>
-            {% if proposal.members.person_id is not none %}
+            {% if proposal.member.person_id is not none %}
                 <td>
-                    <a href="{{ url_for('people.person_view', person_id=proposal.members.person_id) }}">{{ proposal.members.person_name }}</a>
+                    <a href="{{ url_for('people.person_view', person_id=proposal.member.person_id) }}">{{ proposal.member.person_name }}</a>
                 </td>
-                <td>{{ proposal.members.affiliation_name }}</td>
+                <td>{{ proposal.member.affiliation_name }}</td>
             {% else %}
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>

@@ -37,8 +37,8 @@
             <tr>
                 <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
                 <td>
-                    {% if proposal.members.person_id is not none %}
-                        <a href="{{ url_for('people.person_view', person_id=proposal.members.person_id) }}">{{ proposal.members.person_name | abbr(25) }}</a>
+                    {% if proposal.member.person_id is not none %}
+                        <a href="{{ url_for('people.person_view', person_id=proposal.member.person_id) }}">{{ proposal.member.person_name | abbr(25) }}</a>
                     {% else %}
                         &nbsp;
                     {% endif %}
@@ -46,7 +46,7 @@
                 <td>{{ proposal.title | abbr(25) }}</td>
                 {% for member in group_members %}
                     <td>
-                        {% if (proposal.id, member.person_id) in proposal_members %}
+                        {% if proposal.members.has_person(member.person_id) %}
                             &nbsp;
                         {% else %}
                             {% if primary_unique %}
