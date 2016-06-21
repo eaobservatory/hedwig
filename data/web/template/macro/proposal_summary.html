@@ -1,4 +1,4 @@
-{% macro render_proposal_summary(facility_name, proposal, proposal_code, abstract=None, categories=None, person_pi=None) %}
+{% macro render_proposal_summary(facility_name, proposal, proposal_code, abstract=None, categories=None) %}
     <table>
         <tr>
             <th>Facility</th>
@@ -26,14 +26,14 @@
             <th>Proposal title</th>
             <td>{{ proposal.title }}</td>
         </tr>
-        {% if person_pi is not none %}
+        {% if proposal.member is not none %}
             <tr>
                 <th>Proposal PI</th>
                 <td>
-                    {% if session.is_admin or person_pi.person_public %}
-                        <a href="{{ url_for('people.person_view', person_id=person_pi.person_id) }}">{{ person_pi.person_name }}</a>
+                    {% if session.is_admin or proposal.member.person_public %}
+                        <a href="{{ url_for('people.person_view', person_id=proposal.member.person_id) }}">{{ proposal.member.person_name }}</a>
                     {% else %}
-                        {{ person_pi.person_name }}
+                        {{ proposal.member.person_name }}
                     {% endif %}
                 </td>
             </tr>

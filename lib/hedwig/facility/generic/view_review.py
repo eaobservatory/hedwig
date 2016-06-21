@@ -679,9 +679,9 @@ class GenericReview(object):
         except NoSuchRecord:
             abstract = None
 
-        # Extract the PI before calling the template so that we can handle
-        # the exception.
-        person_pi = proposal.members.get_pi(default=None)
+        # Attach the PI to the proposal (as for a with_member_pi search).
+        proposal = proposal._replace(
+            member=proposal.members.get_pi(default=None))
 
         proposal_code = self.make_proposal_code(db, proposal)
 
@@ -705,7 +705,6 @@ class GenericReview(object):
             'abstract': abstract,
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id).values(),
-            'person_pi': person_pi,
         }
 
     def _message_review_invite(self, db, proposal, role,
@@ -1134,9 +1133,9 @@ class GenericReview(object):
         except NoSuchRecord:
             abstract = None
 
-        # Extract the PI before calling the template so that we can handle
-        # the exception.
-        person_pi = proposal.members.get_pi(default=None)
+        # Attach the PI to the proposal (as for a with_member_pi search).
+        proposal = proposal._replace(
+            member=proposal.members.get_pi(default=None))
 
         # Add "can_edit" fields and hide non-public notes so that we don't
         # have to rely on the template to do this.  Also hide the rating
@@ -1164,7 +1163,6 @@ class GenericReview(object):
             'title': '{}: Reviews'.format(proposal_code),
             'proposal': proposal,
             'proposal_code': proposal_code,
-            'person_pi': person_pi,
             'abstract': abstract,
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id).values(),
@@ -1240,7 +1238,6 @@ class GenericReview(object):
             'title': '{}: Decision'.format(proposal_code),
             'proposal': proposal,
             'proposal_code': proposal_code,
-            'person_pi': proposal.member,
             'message': message,
         }
 
