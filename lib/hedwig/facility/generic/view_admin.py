@@ -367,7 +367,7 @@ class GenericAdmin(object):
         except NoSuchRecord:
             raise HTTPNotFound('Call not found')
 
-        proposals = db.search_proposal(call_id=call_id, person_pi=True)
+        proposals = db.search_proposal(call_id=call_id, with_member_pi=True)
 
         return {
             'title': 'Proposals: {} {}'.format(call.semester_name,

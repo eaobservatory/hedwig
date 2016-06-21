@@ -815,7 +815,7 @@ class PeopleView(object):
         # which are editable in each proposal's actual state.)
         review_proposals = db.search_proposal(
             reviewer_person_id=person_id,
-            person_pi=True, state=ProposalState.review_states())
+            with_member_pi=True, state=ProposalState.review_states())
 
         # Organize proposals by facility and attach extra information
         # as necessary.

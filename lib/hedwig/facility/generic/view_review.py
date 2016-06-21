@@ -338,7 +338,8 @@ class GenericReview(object):
 
         for proposal in db.search_proposal(
                 call_id=call.id, state=ProposalState.review_states(),
-                person_pi=True, with_reviewers=True, with_review_info=True,
+                with_member_pi=True, with_reviewers=True,
+                with_review_info=True,
                 with_reviewer_role=role, with_review_state=state).values():
             state = proposal.state
             roles = state_editable_roles.get(state)
@@ -406,7 +407,7 @@ class GenericReview(object):
                 call_id=call.id,
                 state=role_class.get_editable_states(primary_role),
                 with_members=True, with_reviewers=True).values():
-            # Emulate search_proposal(person_pi=True) behaviour by setting
+            # Emulate search_proposal(with_member_pi=True) behaviour by setting
             # the "member" attribute to just the PI.
             proposal = proposal._replace(
                 member=proposal.members.get_pi(default=None))
@@ -1176,7 +1177,8 @@ class GenericReview(object):
     def view_proposal_decision(self, db, proposal_id, form):
         try:
             proposal = db.search_proposal(
-                facility_id=self.id_, proposal_id=proposal_id, person_pi=True,
+                facility_id=self.id_, proposal_id=proposal_id,
+                with_member_pi=True,
                 with_decision=True, with_decision_note=True).get_single()
         except NoSuchRecord:
             raise HTTPError('The proposal was not found.')

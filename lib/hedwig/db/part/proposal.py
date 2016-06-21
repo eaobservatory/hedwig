@@ -1077,8 +1077,9 @@ class ProposalPart(object):
         return ans
 
     def search_proposal(self, call_id=None, facility_id=None, proposal_id=None,
-                        person_id=None, person_is_editor=None, person_pi=False,
-                        state=None, with_members=False, with_reviewers=False,
+                        person_id=None, person_is_editor=None, state=None,
+                        with_member_pi=False, with_members=False,
+                        with_reviewers=False,
                         with_review_info=False, with_review_text=False,
                         with_reviewer_role=None, with_review_state=None,
                         reviewer_person_id=None,
@@ -1096,7 +1097,7 @@ class ProposalPart(object):
         If "person_id" is specified, then this method searches for proposals
         with this person as a member, and also sets "member" in the
         returned "Proposal" object to a "MemberInfo" object summarizing
-        that person's role.  Alternatively if "person_pi" is enabled, then
+        that person's role.  Alternatively if "with_member_pi" is enabled, then
         the PI's information is returned as a "MemberPIInfo" object.
 
         Otherwise if "with_members" is set, then the "Proposal" object's
@@ -1150,7 +1151,7 @@ class ProposalPart(object):
             ])
             select_from = select_from.join(member)
 
-        elif person_pi:
+        elif with_member_pi:
             select_columns.extend([
                 member.c.person_id,
                 person.c.name.label('pi_name'),
@@ -1306,7 +1307,7 @@ class ProposalPart(object):
                         values.pop('editor'),
                         values.pop('observer'))
 
-                elif person_pi:
+                elif with_member_pi:
                     member_info = MemberPIInfo(
                         values.pop('person_id'),
                         values.pop('pi_name'),
