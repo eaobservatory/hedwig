@@ -69,10 +69,7 @@ class GenericReview(object):
                 with_reviewer_role=(role_class.CTTEE_PRIMARY,
                                     role_class.CTTEE_SECONDARY),
                 with_decision=True, with_categories=True).values():
-            try:
-                member_pi = proposal.members.get_pi()
-            except KeyError:
-                member_pi = None
+            member_pi = proposal.members.get_pi(default=None)
 
             review_can = auth.for_review(
                 role_class, db, reviewer=None, proposal=proposal,
@@ -163,10 +160,7 @@ class GenericReview(object):
 
         proposal_list = []
         for proposal in proposals.values():
-            try:
-                member_pi = proposal.members.get_pi()
-            except KeyError:
-                member_pi = None
+            member_pi = proposal.members.get_pi(default=None)
 
             can_view_review = auth.for_review(
                 role_class, db, reviewer=None, proposal=proposal,
@@ -690,11 +684,7 @@ class GenericReview(object):
 
         # Extract the PI before calling the template so that we can handle
         # the exception.
-        person_pi = None
-        try:
-            person_pi = proposal.members.get_pi()
-        except KeyError:
-            pass
+        person_pi = proposal.members.get_pi(default=None)
 
         proposal_code = self.make_proposal_code(db, proposal)
 
@@ -1149,11 +1139,7 @@ class GenericReview(object):
 
         # Extract the PI before calling the template so that we can handle
         # the exception.
-        person_pi = None
-        try:
-            person_pi = proposal.members.get_pi()
-        except KeyError:
-            pass
+        person_pi = proposal.members.get_pi(default=None)
 
         # Add "can_edit" fields and hide non-public notes so that we don't
         # have to rely on the template to do this.  Also hide the rating

@@ -210,20 +210,25 @@ class MemberCollection(OrderedResultCollection):
     Class to hold a collection of proposal members.
     """
 
-    def get_pi(self):
+    def get_pi(self, default=()):
         """
         Retrive the record corresponding to the principal investigator (PI).
 
-        Returns the first member found with a true value for the `pi`
-        attribute.  If no such member is found, a `KeyError` exception
-        is raised.
+        :return: the first member found with a true value for the `pi`
+            attribute, or if no such member is found, the given default
+            value.
+
+        :raises KeyError: if no PI member is found and no default is given.
         """
 
         for member in self.values():
             if member.pi:
                 return member
 
-        raise KeyError('no pi member')
+        if default == ():
+            raise KeyError('no pi member')
+        else:
+            return default
 
     def get_person(self, person_id):
         """

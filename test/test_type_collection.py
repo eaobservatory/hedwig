@@ -99,6 +99,8 @@ class CollectionTypeTestCase(TestCase):
         with self.assertRaises(KeyError):
             c.get_pi()
 
+        self.assertIsNone(c.get_pi(default=None))
+
         c[102] = null_tuple(Member)._replace(
             id=102, person_id=9002, pi=True, person_name='Person Two')
 

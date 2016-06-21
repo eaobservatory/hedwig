@@ -232,11 +232,7 @@ class GenericProposal(object):
         messages = []
 
         if check_excluded_pi:
-            member_pi = None
-            try:
-                member_pi = proposal.members.get_pi()
-            except KeyError:
-                pass
+            member_pi = proposal.members.get_pi(default=None)
 
             # Ignore if there's no PI: the previous members.validate test
             # should have generated an error for that.
