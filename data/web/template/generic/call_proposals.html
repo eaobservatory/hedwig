@@ -21,7 +21,7 @@
             </td>
             <td>{{ proposal.title }}</td>
             <td>{{ proposal.state | proposal_state_name }}</td>
-            {% if proposal.member.person_id is not none %}
+            {% if proposal.member is not none %}
                 <td>
                     <a href="{{ url_for('people.person_view', person_id=proposal.member.person_id) }}">{{ proposal.member.person_name }}</a>
                 </td>

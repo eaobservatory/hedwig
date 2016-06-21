@@ -55,7 +55,7 @@
                         <td rowspan="{{ reviewers | length }}"><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
                         <td rowspan="{{ reviewers | length }}">{{ proposal.state | proposal_state_name }}</td>
                         <td rowspan="{{ reviewers | length }}">
-                            {% if proposal.member.person_id is not none %}
+                            {% if proposal.member is not none %}
                                 <a href="{{ url_for('people.person_view', person_id=proposal.member.person_id) }}">{{ proposal.member.person_name | abbr(25) }}</a>
                             {% else %}
                                 &nbsp;

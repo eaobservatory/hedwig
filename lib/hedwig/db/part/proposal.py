@@ -1313,6 +1313,11 @@ class ProposalPart(object):
                         values.pop('pi_public'),
                         values.pop('pi_affiliation'))
 
+                    # If there was no such person, set the whole "member_info"
+                    # to None, but do this after popping the values.
+                    if member_info.person_id is None:
+                        member_info = None
+
                 elif with_members:
                     members = self.search_member(proposal_id=values['id'],
                                                  _conn=conn)

@@ -406,14 +406,10 @@ class GenericReview(object):
                 call_id=call.id,
                 state=role_class.get_editable_states(primary_role),
                 with_members=True, with_reviewers=True).values():
-            try:
-                proposal_pi = proposal.members.get_pi()
-            except KeyError:
-                proposal_pi = null_tuple(MemberPIInfo)
-
             # Emulate search_proposal(person_pi=True) behaviour by setting
             # the "member" attribute to just the PI.
-            proposal = proposal._replace(member=proposal_pi)
+            proposal = proposal._replace(
+                member=proposal.members.get_pi(default=None))
 
             proposals.append(ProposalWithReviewerPersons(
                 *proposal, code=self.make_proposal_code(db, proposal),
@@ -1238,15 +1234,11 @@ class GenericReview(object):
             except UserError as e:
                 message = e.message
 
-        person_pi = proposal.member
-        if person_pi.person_id is None:
-            person_pi = None
-
         ctx = {
             'title': '{}: Decision'.format(proposal_code),
             'proposal': proposal,
             'proposal_code': proposal_code,
-            'person_pi': person_pi,
+            'person_pi': proposal.member,
             'message': message,
         }
 
