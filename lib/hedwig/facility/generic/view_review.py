@@ -36,7 +36,7 @@ from ...web.util import ErrorPage, \
 from ...type.collection import ReviewerCollection
 from ...type.enum import AffiliationType, Assessment, \
     FileTypeInfo, FormatType, GroupType, \
-    MessageThreadType, ProposalState, TextRole
+    MessageThreadType, PermissionType, ProposalState, TextRole
 from ...type.simple import Affiliation, Link, MemberPIInfo, \
     ProposalWithCode, Reviewer
 from ...type.util import null_tuple, with_can_edit
@@ -57,7 +57,7 @@ ProposalWithReviewerPersons = namedtuple(
 
 
 class GenericReview(object):
-    @with_call_review(permission='view')
+    @with_call_review(permission=PermissionType.VIEW)
     def view_review_call(self, db, call, can, auth_cache):
         role_class = self.get_reviewer_roles()
 
@@ -92,7 +92,7 @@ class GenericReview(object):
             'proposals': proposals,
         }
 
-    @with_call_review(permission='view')
+    @with_call_review(permission=PermissionType.VIEW)
     def view_review_call_tabulation(self, db, call, can, auth_cache):
         ctx = {
             'title': 'Proposal Tabulation: {} {}'.format(call.semester_name,
@@ -104,7 +104,7 @@ class GenericReview(object):
 
         return ctx
 
-    @with_call_review(permission='view')
+    @with_call_review(permission=PermissionType.VIEW)
     def view_review_call_tabulation_download(self, db, call, can, auth_cache,
                                              with_cois=True):
         tabulation = self._get_proposal_tabulation(
@@ -276,7 +276,7 @@ class GenericReview(object):
                 [proposal['affiliations'].get(x.id) for x in affiliations]
             )
 
-    @with_call_review(permission='edit')
+    @with_call_review(permission=PermissionType.EDIT)
     def view_review_affiliation_weight(self, db, call, can, auth_cache, form):
         message = None
 
@@ -312,11 +312,11 @@ class GenericReview(object):
             'affiliations': affiliations.values(),
         }
 
-    @with_call_review(permission='edit')
+    @with_call_review(permission=PermissionType.EDIT)
     def view_review_call_available(self, db, call, can, auth_cache, form):
         raise ErrorPage('Time available not implemented for this facility.')
 
-    @with_call_review(permission='edit')
+    @with_call_review(permission=PermissionType.EDIT)
     def view_review_call_reviewers(self, db, call, can, auth_cache, args):
         role_class = self.get_reviewer_roles()
 
@@ -369,7 +369,7 @@ class GenericReview(object):
             'current_state': state,
         }
 
-    @with_call_review(permission='edit')
+    @with_call_review(permission=PermissionType.EDIT)
     def view_reviewer_grid(self, db, call, can, auth_cache,
                            primary_role, form):
         role_class = self.get_reviewer_roles()
@@ -536,7 +536,7 @@ class GenericReview(object):
             'message': message,
         }
 
-    @with_proposal(permission='none')
+    @with_proposal(permission=PermissionType.NONE)
     def view_reviewer_add(self, db, proposal, role, form):
         role_class = self.get_reviewer_roles()
 
@@ -775,7 +775,7 @@ class GenericReview(object):
             thread_type=MessageThreadType.REVIEW_INVITATION,
             thread_id=reviewer_id)
 
-    @with_review(permission='none')
+    @with_review(permission=PermissionType.NONE)
     def view_reviewer_remove(self, db, reviewer, proposal, form):
         role_class = self.get_reviewer_roles()
 
@@ -825,12 +825,12 @@ class GenericReview(object):
                               reviewer_id=reviewer.id),
         }
 
-    @with_review(permission='none')
+    @with_review(permission=PermissionType.NONE)
     def view_reviewer_reinvite(self, db, reviewer, proposal, form):
         return self._view_reviewer_reinvite_remind(
             db, reviewer, proposal, form, is_reminder=False)
 
-    @with_review(permission='none')
+    @with_review(permission=PermissionType.NONE)
     def view_reviewer_remind(self, db, reviewer, proposal, form):
         return self._view_reviewer_reinvite_remind(
             db, reviewer, proposal, form, is_reminder=True)
@@ -907,7 +907,7 @@ class GenericReview(object):
             'person_registered': reviewer.person_registered,
         }
 
-    @with_proposal(permission='none')
+    @with_proposal(permission=PermissionType.NONE)
     def view_review_new(self, db, proposal, reviewer_role, form):
         role_class = self.get_reviewer_roles()
 
@@ -932,7 +932,7 @@ class GenericReview(object):
         return self._view_review_new_or_edit(
             db, None, proposal, None, form, reviewer_role=reviewer_role)
 
-    @with_review(permission='edit')
+    @with_review(permission=PermissionType.EDIT)
     def view_review_info(self, db, reviewer, proposal, can):
         proposal_code = self.make_proposal_code(db, proposal)
 
@@ -942,7 +942,7 @@ class GenericReview(object):
             'proposal_code': proposal_code,
         }
 
-    @with_review(permission='edit')
+    @with_review(permission=PermissionType.EDIT)
     def view_review_edit(self, db, reviewer, proposal, can, args, form):
         return self._view_review_new_or_edit(
             db, reviewer, proposal, args, form)
@@ -1115,7 +1115,7 @@ class GenericReview(object):
             'referrer': referrer,
         }
 
-    @with_proposal(permission='none')
+    @with_proposal(permission=PermissionType.NONE)
     def view_proposal_reviews(self, db, proposal):
         role_class = self.get_reviewer_roles()
 
@@ -1280,7 +1280,7 @@ class GenericReview(object):
 
         return {}
 
-    @with_call_review(permission='edit')
+    @with_call_review(permission=PermissionType.EDIT)
     def view_review_advance_final(self, db, call, can, auth_cache, form):
         if form is not None:
             if 'submit_confirm' in form:
@@ -1309,7 +1309,7 @@ class GenericReview(object):
             'call': call,
         }
 
-    @with_call_review(permission='edit')
+    @with_call_review(permission=PermissionType.EDIT)
     def view_review_confirm_feedback(self, db, call, can, auth_cache, form):
         role_class = self.get_reviewer_roles()
 

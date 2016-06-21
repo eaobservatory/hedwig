@@ -27,7 +27,7 @@ from ...error import NoSuchRecord, UserError
 from ...web.util import HTTPRedirect, flash, url_for
 from ...view.util import organise_collection, with_call_review, with_proposal
 from ...type.collection import ResultTable
-from ...type.enum import AffiliationType, ProposalState
+from ...type.enum import AffiliationType, PermissionType, ProposalState
 from ...type.simple import Link, ValidationMessage
 from ...type.util import null_tuple
 from ..generic.view import Generic
@@ -534,7 +534,7 @@ class JCMT(Generic):
                 [allocation.instrument.get(x) for x in instruments]
             )
 
-    @with_proposal(permission='edit')
+    @with_proposal(permission=PermissionType.EDIT)
     def view_request_edit(self, db, proposal, can, form):
         message = None
 
@@ -675,7 +675,7 @@ class JCMT(Generic):
             'weathers': JCMTWeather.get_available(),
         }
 
-    @with_call_review(permission='edit')
+    @with_call_review(permission=PermissionType.EDIT)
     def view_review_call_available(self, db, call, can, auth_cache, form):
         message = None
 

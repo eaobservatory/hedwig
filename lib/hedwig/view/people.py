@@ -26,7 +26,7 @@ from ..email.format import render_email_template
 from ..error import ConsistencyError, Error, MultipleRecords, NoSuchRecord, \
     UserError
 from ..type.collection import EmailCollection
-from ..type.enum import ProposalState, UserLogEvent
+from ..type.enum import PermissionType, ProposalState, UserLogEvent
 from ..type.simple import Email, \
     Institution, InstitutionLog, Person, ProposalWithCode
 from ..type.util import null_tuple
@@ -478,7 +478,7 @@ class PeopleView(object):
                 for p in persons.values()],
         }
 
-    @with_person(permission='view')
+    @with_person(permission=PermissionType.VIEW)
     def person_view(self, db, person, can):
         is_current_user = person.user_id == session['user_id']
 
@@ -511,7 +511,7 @@ class PeopleView(object):
             'person': person,
         }
 
-    @with_person(permission='edit')
+    @with_person(permission=PermissionType.EDIT)
     def person_edit(self, db, person, can, form):
         message = None
 
@@ -545,7 +545,7 @@ class PeopleView(object):
             'person': person,
         }
 
-    @with_person(permission='edit')
+    @with_person(permission=PermissionType.EDIT)
     def person_edit_institution(self, db, person, can, form):
         message = None
 
@@ -620,7 +620,7 @@ class PeopleView(object):
             'is_current_user': is_current_user,
         }
 
-    @with_person(permission='edit')
+    @with_person(permission=PermissionType.EDIT)
     def person_edit_email(self, db, person, can, form):
         message = None
         is_current_user = person.user_id == session['user_id']
@@ -689,7 +689,7 @@ class PeopleView(object):
             'emails': records.values(),
         }
 
-    @with_person(permission='edit')
+    @with_person(permission=PermissionType.EDIT)
     def person_email_verify_get(self, db, person, can, email_id, form):
         try:
             email = person.email[email_id]
@@ -767,7 +767,7 @@ class PeopleView(object):
             db, session['person']['id'], facilities, None, 'Your Proposals')
 
     @with_verified_admin
-    @with_person(permission='none')
+    @with_person(permission=PermissionType.NONE)
     def person_proposals_other(self, db, person, facilities):
         return self._person_proposals(
             db, person.id, facilities, person,
@@ -803,7 +803,7 @@ class PeopleView(object):
             db, session['person']['id'], facilities, None, 'Your Reviews')
 
     @with_verified_admin
-    @with_person(permission='none')
+    @with_person(permission=PermissionType.NONE)
     def person_reviews_other(self, db, person, facilities):
         return self._person_reviews(
             db, person.id, facilities, person,
@@ -875,7 +875,7 @@ class PeopleView(object):
                 for x in db.list_institution().values()],
         }
 
-    @with_institution(permission='view')
+    @with_institution(permission=PermissionType.VIEW)
     def institution_view(self, db, institution, can):
         # Only show public, registered members unless the user has
         # administrative privileges.
@@ -897,7 +897,7 @@ class PeopleView(object):
             'persons': persons.values(),
         }
 
-    @with_institution(permission='edit')
+    @with_institution(permission=PermissionType.EDIT)
     def institution_edit(self, db, institution, can, form):
         show_confirm_prompt = True
         message = None

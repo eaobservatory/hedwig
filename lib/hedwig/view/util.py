@@ -22,6 +22,7 @@ import functools
 import re
 
 from ..error import NoSuchRecord
+from ..type.enum import PermissionType
 from ..web.util import HTTPError, HTTPForbidden, HTTPNotFound
 from . import auth
 
@@ -92,11 +93,11 @@ def with_call_review(permission):
             auth_cache = {}
             can = auth.for_call_review(db, call, auth_cache=auth_cache)
 
-            if permission == 'view':
+            if permission == PermissionType.VIEW:
                 if not can.view:
                     raise HTTPForbidden('Permission denied for this call.')
 
-            elif permission == 'edit':
+            elif permission == PermissionType.EDIT:
                 if not can.edit:
                     raise HTTPForbidden(
                         'Edit permission denied for this call.')
@@ -133,12 +134,12 @@ def with_institution(permission):
 
             can = auth.for_institution(db, institution)
 
-            if permission == 'view':
+            if permission == PermissionType.VIEW:
                 if not can.view:
                     raise HTTPForbidden(
                         'Permission denied for this institution.')
 
-            elif permission == 'edit':
+            elif permission == PermissionType.EDIT:
                 if not can.edit:
                     raise HTTPForbidden(
                         'Edit permission denied for this institution.')
@@ -174,18 +175,18 @@ def with_person(permission):
 
             assert person.id == person_id
 
-            if permission == 'none':
+            if permission == PermissionType.NONE:
                 return f(self, db, person, *args, **kwargs)
 
             else:
                 can = auth.for_person(db, person)
 
-                if permission == 'view':
+                if permission == PermissionType.VIEW:
                     if not can.view:
                         raise HTTPForbidden(
                             'Permission denied for this person profile.')
 
-                elif permission == 'edit':
+                elif permission == PermissionType.EDIT:
                     if not can.edit:
                         raise HTTPForbidden(
                             'Edit permission denied for this person profile.')
@@ -209,14 +210,14 @@ def with_proposal(permission, **get_proposal_kwargs):
     The wrapped method is then called with the database,  proposal and
     authorization objects as the first two arguments.
 
-    "permission" should be one of: "view", "edit", "feedback" or "none".
+    "permission" should be one of: "VIEW", "EDIT", "FEEDBACK" or "NONE".
 
-    * When "feedback" is selected, view authorization to the proposal
+    * When "FEEDBACK" is selected, view authorization to the proposal
       feedback is required.  No authorization object is passed to the
       decorated method, since there is currently no concept of
       editable feedback.
 
-    * When "none" is selected, no authorization object is passed on.
+    * When "NONE" is selected, no authorization object is passed on.
 
     Additional keyword arguments are passed to the get_proposal database
     method.
@@ -240,10 +241,10 @@ def with_proposal(permission, **get_proposal_kwargs):
 
             assert proposal.id == proposal_id
 
-            if permission == 'none':
+            if permission == PermissionType.NONE:
                 return f(self, db, proposal, *args, **kwargs)
 
-            elif permission == 'feedback':
+            elif permission == PermissionType.FEEDBACK:
                 can = auth.for_proposal_feedback(role_class, db, proposal)
 
                 if not can.view:
@@ -255,12 +256,12 @@ def with_proposal(permission, **get_proposal_kwargs):
             else:
                 can = auth.for_proposal(role_class, db, proposal)
 
-                if permission == 'view':
+                if permission == PermissionType.VIEW:
                     if not can.view:
                         raise HTTPForbidden(
                             'Permission denied for this proposal.')
 
-                elif permission == 'edit':
+                elif permission == PermissionType.EDIT:
                     if not can.edit:
                         raise HTTPForbidden(
                             'Edit permission denied for this proposal.  '
@@ -315,18 +316,18 @@ def with_review(permission):
 
             assert proposal.id == proposal_id
 
-            if permission == 'none':
+            if permission == PermissionType.NONE:
                 return f(self, db, reviewer, proposal, *args, **kwargs)
 
             else:
                 can = auth.for_review(role_class, db, reviewer, proposal)
 
-                if permission == 'view':
+                if permission == PermissionType.VIEW:
                     if not can.view:
                         raise HTTPForbidden(
                             'Permission denied for this review.')
 
-                elif permission == 'edit':
+                elif permission == PermissionType.EDIT:
                     if not can.edit:
                         raise HTTPForbidden(
                             'Edit permission denied for this review.')

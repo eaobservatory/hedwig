@@ -438,6 +438,26 @@ class MessageThreadType(EnumBasic, EnumURLPath):
     ))
 
 
+class PermissionType(object):
+    """
+    Class representing different permission levels which may be required
+    to interact with a particular resource.
+
+    These are used as the `permission` argument to the "with" decorators
+    in the :mod:`hedwig.view.util` module.
+    """
+
+    # General permission types, shared by multiple resources.
+    # Note we give a specific value for NONE rather than simply using `None`
+    # so that we can't mistake an undefined value for a valid permission type.
+    NONE = 1
+    VIEW = 2
+    EDIT = 3
+
+    # Special permission types for particular types of resource.
+    FEEDBACK = 10
+
+
 class ProposalState(EnumBasic):
     """
     Class representing various states a proposal can be in.
