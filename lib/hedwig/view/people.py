@@ -840,7 +840,7 @@ class PeopleView(object):
                     roles = role_class.get_editable_roles(state)
                     state_editable_roles[state] = roles
 
-                if proposal.reviewers.role not in roles:
+                if proposal.reviewer.role not in roles:
                     continue
 
                 proposals.append(proposal)

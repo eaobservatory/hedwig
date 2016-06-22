@@ -1110,7 +1110,7 @@ class ProposalPart(object):
         by the "with_review_info", "with_review_text", "with_reviewer_role" and
         "with_review_state" arguments.
 
-        However if "reviewer_person_id" is set then the "reviewers" attribute
+        However if "reviewer_person_id" is set then the "reviewer" attribute
         in the results is a "ReviewerInfo" object describing the role of
         the given person.  Since in this mode there may be more than one
         result per proposal, the keys in the returned result collection
@@ -1295,6 +1295,7 @@ class ProposalPart(object):
             for row in conn.execute(stmt).fetchall():
                 member_info = None
                 members = None
+                reviewer_info = None
                 reviewers = None
                 categories = None
                 values = default.copy()
@@ -1329,7 +1330,7 @@ class ProposalPart(object):
                     # reviewer ID as the result collection key.
                     row_key = values['reviewer_id']
 
-                    reviewers = ReviewerInfo(
+                    reviewer_info = ReviewerInfo(
                         id=values.pop('reviewer_id'),
                         role=values.pop('reviewer_role'),
                         review_state=values.pop('review_state'))
@@ -1351,7 +1352,8 @@ class ProposalPart(object):
 
                 ans[row_key] = Proposal(
                     member=member_info, members=members,
-                    reviewers=reviewers, categories=categories,
+                    reviewer=reviewer_info, reviewers=reviewers,
+                    categories=categories,
                     **values)
 
         return ans
