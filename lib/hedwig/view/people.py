@@ -901,6 +901,8 @@ class PeopleView(object):
     def institution_edit(self, db, institution, can, form):
         show_confirm_prompt = True
         message = None
+        person_affected_list = []
+        person_affected_other = 0
 
         if form is not None:
             if 'submit_confirm' in form:
@@ -945,10 +947,26 @@ class PeopleView(object):
             else:
                 raise ErrorPage('Unknown action.')
 
+        if show_confirm_prompt:
+            # Get information to show about the people who will be affected.
+            # Fetch all users for the institution and then split into
+            # public, registered people and a simple count of the others.
+            for person in db.search_person(
+                    institution_id=institution.id).values():
+                if person.id == session['person']['id']:
+                    continue
+
+                if person.public and (person.user_id is not None):
+                    person_affected_list.append(person)
+                else:
+                    person_affected_other += 1
+
         return {
             'title': 'Edit Institution: {}'.format(institution.name),
             'show_confirm_prompt': show_confirm_prompt,
             'message': message,
+            'person_affected_list': person_affected_list,
+            'person_affected_other': person_affected_other,
             'institution_id': institution.id,
             'institution': institution,
             'countries': get_countries(),

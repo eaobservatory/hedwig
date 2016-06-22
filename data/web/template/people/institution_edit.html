@@ -16,13 +16,34 @@
 {% if show_confirm_prompt %}
     <p>
         Are you sure you want to edit this institution?
-    </p>
-    <p>
-        <b>This institution record may be shared with other people.</b>
         If you have moved, please
         <a href="{{ url_for('people.person_edit_institution', person_id=session.person.id) }}">update the institution associated with your profile</a>
-        rather than editing the details of this institution.
+        instead.
     </p>
+    {% if person_affected_list or person_affected_other %}
+        <p>
+            <b>This will also affect:</b>
+        </p>
+        <ul>
+            {% for person in person_affected_list %}
+                <li><a href="{{ url_for('.person_view', person_id=person.id) }}">{{ person.name }}</a></li>
+            {% endfor %}
+            {% if person_affected_other %}
+                <li>
+                    {{ person_affected_other }}
+                    {% if person_affected_list %}
+                        other
+                    {% endif %}
+                    {% if person_affected_other == 1 %}
+                        person
+                    {% else %}
+                        people
+                    {% endif %}
+                    <i>(private profile / unregistered)</i>
+                </li>
+            {% endif %}
+        </ul>
+    {% endif %}
     <p>
         If you would like to edit the details of this
         institution, please confirm to proceed.
