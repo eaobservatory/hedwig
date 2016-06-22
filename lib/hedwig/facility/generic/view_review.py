@@ -341,11 +341,10 @@ class GenericReview(object):
                 with_member_pi=True, with_reviewers=True,
                 with_review_info=True,
                 with_reviewer_role=role, with_review_state=state).values():
-            state = proposal.state
-            roles = state_editable_roles.get(state)
+            roles = state_editable_roles.get(proposal.state)
             if roles is None:
-                roles = role_class.get_editable_roles(state)
-                state_editable_roles[state] = roles
+                roles = role_class.get_editable_roles(proposal.state)
+                state_editable_roles[proposal.state] = roles
 
             proposals.append(ProposalWithInviteRoles(
                 *proposal,
