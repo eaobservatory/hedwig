@@ -1174,7 +1174,7 @@ class ProposalPart(object):
             select_columns.extend([
                 reviewer.c.id.label('reviewer_id'),
                 reviewer.c.role.label('reviewer_role'),
-                review.c.reviewer_id.isnot(None).label('review_present'),
+                self._expr_review_state().label('review_state'),
             ])
             select_from = select_from.join(
                 reviewer,
@@ -1332,7 +1332,7 @@ class ProposalPart(object):
                     reviewers = ReviewerInfo(
                         id=values.pop('reviewer_id'),
                         role=values.pop('reviewer_role'),
-                        review_present=values.pop('review_present'))
+                        review_state=values.pop('review_state'))
 
                 elif with_reviewers:
                     reviewers = self.search_reviewer(

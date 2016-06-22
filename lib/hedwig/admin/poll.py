@@ -22,7 +22,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 
 from ..config import get_config
-from ..type.enum import BaseReviewerRole, ProposalState
+from ..type.enum import BaseReviewerRole, ProposalState, ReviewState
 from ..util import get_logger
 from .proposal import close_call_proposals, send_call_proposal_feedback
 
@@ -70,7 +70,8 @@ def send_proposal_feedback(db):
     proposals = db.search_proposal(
         state=ProposalState.FINAL_REVIEW, with_members=True,
         with_reviewers=True, with_review_info=True, with_review_text=True,
-        with_review_state=True, with_reviewer_role=BaseReviewerRole.FEEDBACK,
+        with_review_state=ReviewState.DONE,
+        with_reviewer_role=BaseReviewerRole.FEEDBACK,
         with_decision=True, decision_ready=True, decision_accept_defined=True)
 
     # Organise the proposals by call.

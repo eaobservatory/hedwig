@@ -26,8 +26,9 @@
         </select>
         <select name="state">
             <option value="" {{ 'selected="selected"' | safe if (current_state is none) }} >Any status</option>
-            <option value="0" {{ 'selected="selected"' | safe if ((current_state is not none) and (not current_state)) }}>Not done</option>
-            <option value="1" {{ 'selected="selected"' | safe if current_state }}>Done</option>
+            {% for (state_num, state_name) in states.items() %}
+                <option value="{{ state_num }}" {{ 'selected="selected"' | safe if (current_state == state_num) }}>{{ state_name }}</option>
+            {% endfor %}
         </select>
         <input type="submit" value="Filter" />
     </p>
@@ -75,13 +76,13 @@
                                 <span class="label">unregistered</span>
                             {% endif %}
                         </td>
-                        <td class="{{ 'review_done' if reviewer.review_present else 'review_not_done' }}">
-                            {% if reviewer.review_present %}
-                                Done
-                            {% else %}
-                                Not done
-                                {% if reviewer.role in proposal.invite_roles %}
+                        <td class="{{ 'review_done' if (reviewer.review_state is review_state_done) else 'review_not_done' }}">
+                            {{ reviewer.review_state | review_state_name }}
+                            {% if reviewer.role in proposal.invite_roles %}
+                                {% if reviewer.review_state is review_state_not_done %}
                                     <a href="{{ url_for('.proposal_reviewer_remove', reviewer_id=reviewer.id) }}">Remove</a>
+                                {% endif %}
+                                {% if reviewer.review_state is not review_state_done %}
                                     <a href="{{ url_for('.proposal_reviewer_remind', reviewer_id=reviewer.id) }}">Send reminder</a>
                                 {% endif %}
                             {% endif %}

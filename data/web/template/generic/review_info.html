@@ -13,7 +13,7 @@
 
 <ul id="review_action_links">
     <li><a href="{{ url_for('.proposal_view', proposal_id=reviewer.proposal_id) }}">View proposal {{ proposal_code }}</a></li>
-    <li><a href="{{ url_for('.review_edit', reviewer_id=reviewer.id) }}">{{ 'Edit' if reviewer.review_present else 'Write' }} your review</a></li>
+    <li><a href="{{ url_for('.review_edit', reviewer_id=reviewer.id) }}">{{ 'Write' if (reviewer.review_state is review_state_not_done) else 'Edit' }} your review</a></li>
 </ul>
 
 <p>

@@ -27,7 +27,8 @@ from hedwig.type.collection import \
     CallCollection, EmailCollection, GroupMemberCollection, MemberCollection, \
     OrderedResultCollection, ResultCollection, \
     ProposalFigureCollection, ReviewerCollection
-from hedwig.type.enum import BaseReviewerRole, CallState, GroupType, TextRole
+from hedwig.type.enum import BaseReviewerRole, CallState, GroupType, \
+    ReviewState, TextRole
 from hedwig.type.simple import \
     Call, Email, GroupMember, Member, \
     ProposalFigureInfo, Reviewer
@@ -257,7 +258,8 @@ class CollectionTypeTestCase(TestCase):
         ]
 
         for (r, n) in zip(rs, itertools.count(100)):
-            c[n] = null_tuple(Reviewer)._replace(review_present=True, **r)
+            c[n] = null_tuple(Reviewer)._replace(
+                review_state=ReviewState.DONE, **r)
 
         self.assertEqual(c.get_overall_rating(include_unweighted=True,
                                               with_std_dev=False), 50)
@@ -284,7 +286,8 @@ class CollectionTypeTestCase(TestCase):
         ]
 
         for (r, n) in zip(rs, itertools.count(200)):
-            c[n] = null_tuple(Reviewer)._replace(review_present=True, **r)
+            c[n] = null_tuple(Reviewer)._replace(
+                review_state=ReviewState.DONE, **r)
 
         self.assertEqual(c.get_overall_rating(include_unweighted=False,
                                               with_std_dev=False), 55)

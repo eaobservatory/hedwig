@@ -24,7 +24,7 @@ from unittest import TestCase
 from hedwig.error import Error
 from hedwig.type.enum import \
     Assessment, AttachmentState, BaseReviewerRole, CallState, GroupType, \
-    MessageState, ProposalState, TextRole
+    MessageState, ProposalState, ReviewState, TextRole
 
 
 class EnumTypeTestCase(TestCase):
@@ -198,6 +198,14 @@ class EnumTypeTestCase(TestCase):
         self.assertIsInstance(url_paths, list)
         for url_path in url_paths:
             self.assertIsInstance(url_path, unicode)
+
+    def test_review_state(self):
+        self.assertEqual(ReviewState.get_name(ReviewState.NOT_DONE),
+                         'Not done')
+
+        self.assertTrue(ReviewState.is_valid(ReviewState.DONE))
+
+        self.assertFalse(ReviewState.is_valid(999))
 
     def test_reviewer_role(self):
         for role in [

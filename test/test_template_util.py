@@ -26,7 +26,7 @@ from flask import Markup
 from hedwig.type.enum import Assessment, AttachmentState, \
     BaseReviewerRole, CallState, \
     MessageState, MessageThreadType, ProposalState, \
-    PublicationType, TextRole
+    PublicationType, ReviewState, TextRole
 from hedwig.web.template_util import Counter
 
 from .dummy_app import WebAppTestCase
@@ -147,6 +147,13 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(f(None), '')
         self.assertEqual(f(PublicationType.ARXIV), 'arXiv article ID')
 
+    def test_filter_review_state(self):
+        f = self.app.jinja_env.filters['review_state_name']
+
+        self.assertEqual(f(ReviewState.NOT_DONE), 'Not done')
+
+        self.assertEqual(f(999), 'Unknown review state')
+
     def test_filter_reviewer_role(self):
         f = self.app.jinja_env.filters['reviewer_role_name']
 
@@ -198,6 +205,17 @@ class TemplateUtilTestCase(WebAppTestCase):
 
         self.assertTrue(t(MessageState.SENDING))
         self.assertFalse(t(MessageState.DISCARD))
+
+    def test_test_review_state(self):
+        t = self.app.jinja_env.tests['review_state_done']
+
+        self.assertTrue(t(ReviewState.DONE))
+        self.assertFalse(t(ReviewState.NOT_DONE))
+
+        t = self.app.jinja_env.tests['review_state_not_done']
+
+        self.assertFalse(t(ReviewState.DONE))
+        self.assertTrue(t(ReviewState.NOT_DONE))
 
     def test_test_reviewer_role(self):
         t = self.app.jinja_env.tests['reviewer_role_invited']

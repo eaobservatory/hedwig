@@ -36,7 +36,7 @@ from ...web.util import ErrorPage, \
 from ...type.collection import ReviewerCollection
 from ...type.enum import AffiliationType, Assessment, \
     FileTypeInfo, FormatType, GroupType, \
-    MessageThreadType, PermissionType, ProposalState, TextRole
+    MessageThreadType, PermissionType, ProposalState, ReviewState, TextRole
 from ...type.simple import Affiliation, Link, MemberPIInfo, \
     ProposalWithCode, Reviewer
 from ...type.util import null_tuple, with_can_edit
@@ -330,7 +330,7 @@ class GenericReview(object):
         if not state:
             state = None
         else:
-            state = bool(int(state))
+            state = int(state)
 
         proposals = []
         invite_roles = role_class.get_invited_roles()
@@ -365,6 +365,7 @@ class GenericReview(object):
                      url_for('.review_call_grid', call_id=call.id,
                              reviewer_role=role_class.CTTEE_PRIMARY))],
             'roles': role_class.get_options(),
+            'states': ReviewState.get_options(),
             'current_role': role,
             'current_state': state,
         }
@@ -792,8 +793,8 @@ class GenericReview(object):
         if not auth.for_call_review(db, call).edit:
             raise HTTPForbidden('Edit permission denied for this call.')
 
-        if reviewer.review_present:
-            raise ErrorPage('This reviewer already submitted a review.')
+        if reviewer.review_state != ReviewState.NOT_DONE:
+            raise ErrorPage('This reviewer already started a review.')
 
         try:
             role_info = role_class.get_info(reviewer.role)
@@ -1060,7 +1061,9 @@ class GenericReview(object):
                     note=reviewer.review_note,
                     note_format=reviewer.review_note_format,
                     note_public=reviewer.review_note_public,
-                    is_update=reviewer.review_present)
+                    is_update=(not (
+                        is_new_reviewer
+                        or (reviewer.review_state == ReviewState.NOT_DONE))))
 
                 flash('The review has been saved.')
 
@@ -1319,7 +1322,8 @@ class GenericReview(object):
         proposals = db.search_proposal(
             call_id=call.id, state=ProposalState.FINAL_REVIEW,
             with_reviewers=True, with_review_info=True, with_review_text=True,
-            with_review_state=True, with_reviewer_role=role_class.FEEDBACK,
+            with_review_state=ReviewState.DONE,
+            with_reviewer_role=role_class.FEEDBACK,
             with_decision=True, decision_accept_defined=True)
 
         # Ignore proposals without reviews.

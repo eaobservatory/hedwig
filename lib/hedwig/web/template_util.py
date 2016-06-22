@@ -25,7 +25,7 @@ from jinja2.runtime import Undefined
 
 from ..type.enum import AffiliationType, Assessment, \
     AttachmentState, CallState, MessageState, MessageThreadType, \
-    ProposalState, PublicationType, TextRole
+    ProposalState, PublicationType, ReviewState, TextRole
 
 from .format import format_text
 
@@ -183,6 +183,13 @@ def register_template_utils(app):
         return PublicationType.get_info(value).name
 
     @app.template_filter()
+    def review_state_name(value):
+        try:
+            return ReviewState.get_name(value)
+        except KeyError:
+            return 'Unknown review state'
+
+    @app.template_filter()
     def reviewer_role_name(value, role_class):
         try:
             return role_class.get_name(value)
@@ -237,6 +244,14 @@ def register_template_utils(app):
     @app.template_test()
     def message_state_active(value):
         return MessageState.get_info(value).active
+
+    @app.template_test()
+    def review_state_done(value):
+        return (value == ReviewState.DONE)
+
+    @app.template_test()
+    def review_state_not_done(value):
+        return (value == ReviewState.NOT_DONE)
 
     @app.template_test()
     def reviewer_role_invited(value, role_class):

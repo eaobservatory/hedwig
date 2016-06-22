@@ -24,7 +24,7 @@ from math import sqrt
 from ..astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
 from ..error import NoSuchRecord, MultipleRecords, UserError
-from .enum import AffiliationType, PublicationType
+from .enum import AffiliationType, PublicationType, ReviewState
 from .simple import TargetObject
 
 ResultTable = namedtuple('ResultTable', ('table', 'columns', 'rows'))
@@ -472,7 +472,7 @@ class ReviewerCollection(ResultCollection):
                 continue
 
             # Skip incomplete reviews.
-            if not review.review_present:
+            if review.review_state != ReviewState.DONE:
                 continue
             if (not role_info.rating) or (review.review_rating is None):
                 continue

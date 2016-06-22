@@ -21,13 +21,13 @@ from __future__ import absolute_import, division, print_function, \
 from datetime import datetime
 
 from sqlalchemy.sql import select
-from sqlalchemy.sql.expression import and_
+from sqlalchemy.sql.expression import and_, case
 from sqlalchemy.sql.functions import count
 
 from ...error import ConsistencyError, Error, FormattedError, \
     NoSuchRecord, UserError
 from ...type.collection import GroupMemberCollection, ReviewerCollection
-from ...type.enum import Assessment, FormatType, GroupType
+from ...type.enum import Assessment, FormatType, GroupType, ReviewState
 from ...type.simple import GroupMember, Reviewer
 from ..meta import call, decision, group_member, \
     institution, invitation, person, \
@@ -283,7 +283,7 @@ class ReviewPart(object):
 
         if with_review:
             select_columns.append(
-                (review.c.reviewer_id.isnot(None)).label('review_present'))
+                self._expr_review_state().label('review_state'))
 
             select_columns.extend((x.label('review_{}'.format(x.name))
                                    for x in review.columns
@@ -306,7 +306,7 @@ class ReviewPart(object):
                 'review_{}'.format(x.name): None
                 for x in review.columns if x != review.c.reviewer_id})
 
-            default['review_present'] = None
+            default['review_state'] = None
 
         if (with_review or (review_state is not None)):
             select_from = select_from.outerjoin(review)
@@ -335,10 +335,7 @@ class ReviewPart(object):
             stmt = stmt.where(reviewer.c.person_id == person_id)
 
         if review_state is not None:
-            if review_state:
-                stmt = stmt.where(review.c.reviewer_id.isnot(None))
-            else:
-                stmt = stmt.where(review.c.reviewer_id.is_(None))
+            stmt = stmt.where(self._expr_review_state() == review_state)
 
         if call_id is not None:
             if isinstance(call_id, list) or isinstance(call_id, tuple):
@@ -362,6 +359,11 @@ class ReviewPart(object):
                 ans[row['id']] = Reviewer(**values)
 
         return ans
+
+    def _expr_review_state(self):
+        return case([
+            (review.c.reviewer_id.isnot(None), ReviewState.DONE),
+        ], else_=ReviewState.NOT_DONE)
 
     def set_decision(self, proposal_id, accept=(), exempt=None, ready=None,
                      note=None, note_format=None, is_update=False):

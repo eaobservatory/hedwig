@@ -24,7 +24,7 @@ from hedwig.error import ConsistencyError, DatabaseIntegrityError, Error, \
     NoSuchRecord, UserError
 from hedwig.type.collection import GroupMemberCollection, ReviewerCollection
 from hedwig.type.enum import Assessment, BaseReviewerRole, \
-    FormatType, GroupType
+    FormatType, GroupType, ReviewState
 from hedwig.type.simple import GroupMember, Reviewer
 
 from .dummy_db import DBTestCase
@@ -171,7 +171,7 @@ class DBReviewTest(DBTestCase):
             self.assertIsNone(v.institution_department)
             self.assertIsNone(v.institution_organization)
             self.assertIsNone(v.institution_country)
-            self.assertIsNone(v.review_present)
+            self.assertIsNone(v.review_state)
             self.assertIsNone(v.review_text)
             self.assertIsNone(v.review_format)
 
@@ -189,7 +189,7 @@ class DBReviewTest(DBTestCase):
         self.assertEqual(result.institution_department, 'Dept')
         self.assertEqual(result.institution_organization, 'Org')
         self.assertEqual(result.institution_country, 'AX')
-        self.assertFalse(result.review_present)
+        self.assertEqual(result.review_state, ReviewState.NOT_DONE)
         self.assertIsNone(result.review_text)
         self.assertIsNone(result.review_format)
 
@@ -255,7 +255,7 @@ class DBReviewTest(DBTestCase):
         result = self.db.search_reviewer(
             BaseReviewerRole,
             reviewer_id=reviewer_id_2, with_review=True).get_single()
-        self.assertTrue(result.review_present)
+        self.assertEqual(result.review_state, ReviewState.DONE)
         self.assertIsNone(result.review_text)
         self.assertEqual(result.review_format, FormatType.PLAIN)
         self.assertIsNone(result.review_assessment)

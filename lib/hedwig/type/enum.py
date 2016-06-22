@@ -802,6 +802,30 @@ class BaseReviewerRole(EnumBasic, EnumURLPath):
         return cls._info[role].name_review
 
 
+class ReviewState(EnumBasic):
+    """
+    Class representing states of a review.
+
+    Not that this is not currently stored in the database, but is determined
+    from whether a review has been entered for a given reviewer record.
+    """
+
+    NOT_DONE = 1
+    DONE = 2
+
+    StateInfo = namedtuple(
+        'StateInfo', ('name',))
+
+    _info = OrderedDict((
+        (NOT_DONE, StateInfo('Not done')),
+        (DONE,     StateInfo('Done')),
+    ))
+
+    @classmethod
+    def get_options(cls):
+        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
+
+
 class TextRole(EnumBasic, EnumURLPath):
     """
     Class representing roles which a piece of text may have on a proposal.

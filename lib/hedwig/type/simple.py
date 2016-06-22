@@ -212,13 +212,13 @@ Reviewer = namedtuple(
     ['person_name', 'person_public', 'person_registered',
      'institution_id', 'institution_name', 'institution_department',
      'institution_organization', 'institution_country',
-     'review_present', 'invitation_token', 'invitation_expiry'] +
+     'review_state', 'invitation_token', 'invitation_expiry'] +
     ['review_{}'.format(x.name) for x in review.columns
      if x != review.c.reviewer_id])
 
 ReviewerInfo = namedtuple(
     'ReviewerInfo',
-    ['id', 'role', 'review_present'])
+    ['id', 'role', 'review_state'])
 
 Semester = namedtuple(
     'Semester',

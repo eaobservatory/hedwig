@@ -51,7 +51,7 @@
                                     </td>
                                 <td rowspan="{{ proposal_reviews | length }}">{{ proposal.title | abbr(25) }}</td>
                             {% endif %}
-                            <td>{{ 'Done' if proposal.reviewers.review_present else 'Not done' }}</td>
+                            <td>{{ proposal.reviewers.review_state | review_state_name }}</td>
                             <td><a href="{{ url_for(facility.code + '.review_edit', reviewer_id=proposal.reviewers.id) }}">{{ proposal.reviewers.role | reviewer_role_name(facility.role_class) }}</a></td>
                         </tr>
                     {% endfor %}
