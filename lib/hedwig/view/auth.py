@@ -111,9 +111,11 @@ def for_person(db, person):
                 group_type=GroupType.COORD).values():
             queue_ids.add(group_member.queue_id)
 
-        if db.search_reviewer(role_class=None,
-                              person_id=person.id, queue_id=list(queue_ids)):
-            return yes
+        if queue_ids:
+            if db.search_reviewer(role_class=None,
+                                  person_id=person.id,
+                                  queue_id=list(queue_ids)):
+                return yes
 
         return auth
 
