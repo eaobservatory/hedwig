@@ -22,7 +22,7 @@ from collections import OrderedDict, namedtuple
 import re
 
 from ..error import UserError
-from .base import EnumBasic, EnumURLPath
+from .base import EnumBasic, EnumDisplayClass, EnumURLPath
 
 
 class AffiliationType(EnumBasic):
@@ -648,7 +648,7 @@ class PublicationType(EnumBasic):
         return cls._info.copy()
 
 
-class BaseReviewerRole(EnumBasic, EnumURLPath):
+class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
     """
     Base for classes representing roles in which a person may provide a review
     for a proposal.
@@ -719,12 +719,6 @@ class BaseReviewerRole(EnumBasic, EnumURLPath):
         """Get a list of roles corresponding to committee reviews."""
 
         return [k for (k, v) in cls._info.items() if v.cttee]
-
-    @classmethod
-    def get_display_class(cls, role):
-        """Get a CSS class which can be used to display a given role."""
-
-        return cls._info[role].display_class
 
     @classmethod
     def get_editable_roles(cls, state):
@@ -802,7 +796,7 @@ class BaseReviewerRole(EnumBasic, EnumURLPath):
         return cls._info[role].name_review
 
 
-class ReviewState(EnumBasic):
+class ReviewState(EnumBasic, EnumDisplayClass):
     """
     Class representing states of a review.
 
@@ -814,11 +808,11 @@ class ReviewState(EnumBasic):
     DONE = 2
 
     StateInfo = namedtuple(
-        'StateInfo', ('name',))
+        'StateInfo', ('name', 'display_class'))
 
     _info = OrderedDict((
-        (NOT_DONE, StateInfo('Not done')),
-        (DONE,     StateInfo('Done')),
+        (NOT_DONE, StateInfo('Not done', 'not_done')),
+        (DONE,     StateInfo('Done', 'done')),
     ))
 
     @classmethod

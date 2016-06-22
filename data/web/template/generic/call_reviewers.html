@@ -76,7 +76,7 @@
                                 <span class="label">unregistered</span>
                             {% endif %}
                         </td>
-                        <td class="{{ 'review_done' if (reviewer.review_state is review_state_done) else 'review_not_done' }}">
+                        <td class="{{ reviewer.review_state | review_state_class }}">
                             {{ reviewer.review_state | review_state_name }}
                             {% if reviewer.role in proposal.invite_roles %}
                                 {% if reviewer.review_state is review_state_not_done %}

@@ -57,6 +57,19 @@ class EnumBasic(object):
         return cls._info[value].name
 
 
+class EnumDisplayClass(object):
+    """
+    Mix-in for enum-style classes with an `_info` dictionary
+    including a `display_class` attribute.
+    """
+
+    @classmethod
+    def get_display_class(cls, value):
+        """Get a CSS class which can be used to display a given value."""
+
+        return cls._info[value].display_class
+
+
 class EnumURLPath(object):
     """
     Mix-in for enum-style classes which have an `_info` dictionary

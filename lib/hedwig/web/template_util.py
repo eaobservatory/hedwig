@@ -190,6 +190,14 @@ def register_template_utils(app):
             return 'Unknown review state'
 
     @app.template_filter()
+    def review_state_class(value):
+        try:
+            return 'review_{}'.format(
+                ReviewState.get_display_class(value))
+        except KeyError:
+            return ''
+
+    @app.template_filter()
     def reviewer_role_name(value, role_class):
         try:
             return role_class.get_name(value)

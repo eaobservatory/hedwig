@@ -154,6 +154,12 @@ class TemplateUtilTestCase(WebAppTestCase):
 
         self.assertEqual(f(999), 'Unknown review state')
 
+        f = self.app.jinja_env.filters['review_state_class']
+
+        self.assertEqual(f(ReviewState.NOT_DONE), 'review_not_done')
+        self.assertEqual(f(ReviewState.DONE), 'review_done')
+        self.assertEqual(f(999), '')
+
     def test_filter_reviewer_role(self):
         f = self.app.jinja_env.filters['reviewer_role_name']
 
