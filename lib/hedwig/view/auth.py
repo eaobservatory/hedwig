@@ -348,7 +348,7 @@ def can_be_admin(db):
         raise HTTPForbidden('Could not verify administrative access.')
 
 
-def can_add_review_roles(role_class, db, proposal):
+def can_add_review_roles(role_class, db, proposal, auth_cache=None):
     """
     Determine for which reviewer roles a person can add a review to
     a proposal.
@@ -364,6 +364,9 @@ def can_add_review_roles(role_class, db, proposal):
 
     roles = []
 
+    group_members = _get_group_membership(
+        auth_cache, db, proposal.queue_id, person_id)
+
     # Determine whether the user can add a committee "other" review -- they
     # should be a committee member who doesn't already have a committee
     # review.
@@ -371,10 +374,7 @@ def can_add_review_roles(role_class, db, proposal):
             role_class.CTTEE_OTHER):
         if not proposal.reviewers.has_person(
                 person_id=person_id, roles=role_class.get_cttee_roles()):
-            if db.search_group_member(
-                    queue_id=proposal.queue_id,
-                    group_type=GroupType.CTTEE,
-                    person_id=person_id):
+            if group_members.values_by_group_type(GroupType.CTTEE):
                 roles.append(role_class.CTTEE_OTHER)
 
     # Determine whether the user can add a "feedback" review -- they should be

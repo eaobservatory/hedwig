@@ -502,7 +502,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (30, person_a1x2,  False, proposal_a1, {}),
                 (31, person_a2x1,  False, proposal_a2, {}),
                 ]:
-            self._test_auth_add_review(role_class, *test_case)
+            self._test_auth_add_review(role_class, auth_cache, *test_case)
 
     def _test_auth_call_review(self, auth_cache,
                                case_number, person_id, is_admin,
@@ -604,7 +604,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                     expect, 'auth review case {} state {}'.format(
                         case_number, ProposalState.get_name(state)))
 
-    def _test_auth_add_review(self, role_class,
+    def _test_auth_add_review(self, role_class, auth_cache,
                               case_number, person_id, is_admin,
                               proposal_id, expect_by_state):
         if self.quick_proposal_state:
@@ -624,7 +624,7 @@ class WebAppAuthTestCase(WebAppTestCase):
             with self._as_person(person_id, is_admin):
                 self.assertEqual(
                     set(auth.can_add_review_roles(
-                        role_class, self.db, proposal)),
+                        role_class, self.db, proposal, auth_cache=auth_cache)),
                     expect, 'add review case {} state {}'.format(
                         case_number, ProposalState.get_name(state)))
 

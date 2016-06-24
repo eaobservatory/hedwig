@@ -1170,8 +1170,8 @@ class GenericReview(object):
                 proposal_id=proposal.id).values(),
             'reviews': list(reviewers.values()),
             'overall_rating': self.calculate_overall_rating(reviewers),
-            'can_add_roles': auth.can_add_review_roles(role_class, db,
-                                                       proposal),
+            'can_add_roles': auth.can_add_review_roles(
+                role_class, db, proposal, auth_cache=auth_cache),
         }
 
     def view_proposal_decision(self, db, proposal_id, form):
