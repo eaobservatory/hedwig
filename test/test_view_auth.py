@@ -168,7 +168,7 @@ class WebAppAuthTestCase(WebAppTestCase):
         reviewer_b1reu = self.db.add_reviewer(
             role_class, proposal_b1, person_b1reu, role_class.EXTERNAL)
 
-        # -- committee reviwers:
+        # -- committee reviewers:
         user_a1rc1 = self.db.add_user('a1rc1', 'pass')
         person_a1rc1 = self.db.add_person('Person A 1 RC1', user_id=user_a1rc1)
         self.db.add_group_member(queue_a, GroupType.CTTEE, person_a1rc1)
@@ -180,6 +180,41 @@ class WebAppAuthTestCase(WebAppTestCase):
         self.db.add_group_member(queue_a, GroupType.CTTEE, person_a1rc2)
         reviewer_a1rc2 = self.db.add_reviewer(
             role_class, proposal_a1, person_a1rc2, role_class.CTTEE_SECONDARY)
+
+        # -- feedback reviewers:
+        user_a1rf = self.db.add_user('a1rf', 'pass')
+        person_a1rf = self.db.add_person('Person A 1 RF', user_id=user_a1rf)
+        self.db.add_group_member(queue_a, GroupType.CTTEE, person_a1rf)
+        reviewer_a1rf = self.db.add_reviewer(
+            role_class, proposal_a1, person_a1rf, role_class.FEEDBACK)
+
+        user_b1rf = self.db.add_user('b1rf', 'pass')
+        person_b1rf = self.db.add_person('Person A 2 RF', user_id=user_b1rf)
+        self.db.add_group_member(queue_b, GroupType.CTTEE, person_b1rf)
+        reviewer_b1rf = self.db.add_reviewer(
+            role_class, proposal_b1, person_b1rf, role_class.FEEDBACK)
+
+        # -- members who are also reviewers / committee / coordinator / admin:
+        user_a1x1 = self.db.add_user('a1x1', 'pass')
+        person_a1x1 = self.db.add_person('Person A 1 X1', user_id=user_a1x1)
+        self.db.add_member(proposal_a1, person_a1x1, affiliation_a)
+        reviewer_a1x1 = self.db.add_reviewer(
+            role_class, proposal_a1, person_a1x1, role_class.EXTERNAL)
+
+        user_a1x2 = self.db.add_user('a1x2', 'pass')
+        person_a1x2 = self.db.add_person('Person A 1 X2', user_id=user_a1x2)
+        self.db.add_member(proposal_a1, person_a1x2, affiliation_a)
+        self.db.add_group_member(queue_a, GroupType.CTTEE, person_a1x2)
+
+        user_a1x3 = self.db.add_user('a1x3', 'pass')
+        person_a1x3 = self.db.add_person('Person A 1 X3', user_id=user_a1x3)
+        self.db.add_member(proposal_a1, person_a1x3, affiliation_a)
+        self.db.add_group_member(queue_a, GroupType.COORD, person_a1x3)
+
+        user_a1x4 = self.db.add_user('a1x4', 'pass')
+        person_a1x4 = self.db.add_person('Person A 1 X4', user_id=user_a1x4)
+        self.db.add_member(proposal_a1, person_a1x4, affiliation_a)
+        self.db.update_person(person_a1x4, admin=True)
 
         # Test authorization for call reviews.
         for test_case in [
@@ -346,6 +381,70 @@ class WebAppAuthTestCase(WebAppTestCase):
                 ]:
             self._test_auth_proposal(role_class, *test_case)
 
+        # Test authorization for reviews.
+        for test_case in [
+                # No general access.
+                (1,  person_a1rt,  False, reviewer_a1re,  'oooooooo'),
+                (2,  person_a1rt,  False, reviewer_a1rc1, 'oooooooo'),
+                (3,  person_a1rt,  False, reviewer_a1rc2, 'oooooooo'),
+                (4,  person_a1re,  False, reviewer_a1rt,  'oooooooo'),
+                (5,  person_a1re,  False, reviewer_a1rc1, 'oooooooo'),
+                (6,  person_a1re,  False, reviewer_a1rc2, 'oooooooo'),
+                # Ensure no proposal members have access.
+                (10, person_a1e,   False, reviewer_a1re,  'oooooooo'),
+                (11, person_b1e,   False, reviewer_b1reu, 'oooooooo'),
+                (12, person_a1x1,  False, reviewer_a1x1,  'oooooooo'),
+                (13, person_a1x2,  False, reviewer_a1re,  'oooooooo'),
+                (14, person_a1x3,  False, reviewer_a1re,  'oooooooo'),
+                (15, person_a1x4,  True,  reviewer_a1re,  'oooooooo'),
+                # Admin has access but only when is_admin is set.
+                (20, person_admin, False, reviewer_a1rt,  'oooooooo'),
+                (21, person_admin, False, reviewer_a1re,  'oooooooo'),
+                (22, person_admin, False, reviewer_a1rc1, 'oooooooo'),
+                (23, person_admin, False, reviewer_a1rc2, 'oooooooo'),
+                (24, person_admin, False, reviewer_b1reu, 'oooooooo'),
+                (25, person_admin, True,  reviewer_a1rt,  'vvvEEVVv'),
+                (26, person_admin, True,  reviewer_a1re,  'vvvEVVVv'),
+                (27, person_admin, True,  reviewer_a1rc1, 'vvveEVVv'),
+                (28, person_admin, True,  reviewer_a1rc2, 'vvveEVVv'),
+                (29, person_admin, True,  reviewer_b1reu, 'vvvEVVVv'),
+                # Admin-like access for review coordinators.
+                (30, person_a_rc,  False, reviewer_a1rt,  'vvvEEVVv'),
+                (31, person_a_rc,  False, reviewer_a1re,  'vvvEVVVv'),
+                (32, person_a_rc,  False, reviewer_a1rc1, 'vvveEVVv'),
+                (33, person_a_rc,  False, reviewer_a1rc2, 'vvveEVVv'),
+                (34, person_b_rc,  False, reviewer_a1rt,  'oooooooo'),
+                (35, person_b_rc,  False, reviewer_a1re,  'oooooooo'),
+                (36, person_b_rc,  False, reviewer_a1rc1, 'oooooooo'),
+                (37, person_b_rc,  False, reviewer_a1rc2, 'oooooooo'),
+                (38, person_a_rc,  False, reviewer_b1reu, 'oooooooo'),
+                (39, person_b_rc,  False, reviewer_b1reu, 'vvvEVVVv'),
+                # View access for committee members.
+                (40, person_a1rc1, False, reviewer_a1rt,  'vvvVVVVv'),
+                (41, person_a1rc1, False, reviewer_a1re,  'vvvVVVVv'),
+                (42, person_a1rc1, False, reviewer_a1rc2, 'vvvvVVVv'),
+                (43, person_a1rc1, False, reviewer_b1reu, 'oooooooo'),
+                (44, person_a1rc2, False, reviewer_a1rt,  'vvvVVVVv'),
+                (45, person_a1rc2, False, reviewer_a1re,  'vvvVVVVv'),
+                (46, person_a1rc2, False, reviewer_a1rc1, 'vvvvVVVv'),
+                (47, person_a1rc2, False, reviewer_b1reu, 'oooooooo'),
+                # Allow reviewers access to their own reviews.
+                (50, person_a1rt,  False, reviewer_a1rt,  'oooEEooo'),
+                (51, person_a1re,  False, reviewer_a1re,  'oooEoooo'),
+                (52, person_a1reu, False, reviewer_a1reu, 'oooEoooo'),
+                (54, person_b1reu, False, reviewer_b1reu, 'oooEoooo'),
+                (55, person_a1rc1, False, reviewer_a1rc1, 'vvvEEVVv'),
+                (56, person_a1rc2, False, reviewer_a1rc2, 'vvvEEVVv'),
+                (57, person_a1rf,  False, reviewer_a1rf,  'vvvVEVVv'),
+                (58, person_b1rf,  False, reviewer_b1rf,  'vvvVEVVv'),
+                # Committee member special case access to feedback review.
+                (60, person_a1rc1, False, reviewer_a1rf,  'vvvVEVVv'),
+                (61, person_a1rc2, False, reviewer_a1rf,  'vvvVEVVv'),
+                (62, person_a1rc1, False, reviewer_b1rf,  'oooooooo'),
+                (63, person_a1rc2, False, reviewer_b1rf,  'oooooooo'),
+                ]:
+            self._test_auth_review(role_class, *test_case)
+
     def _test_auth_call_review(self, case_number, person_id, is_admin,
                                call_id, expect):
         call = self.db.get_call(None, call_id)
@@ -403,16 +502,52 @@ class WebAppAuthTestCase(WebAppTestCase):
                     expect_fb, 'auth proposal fb case {} state {}'.format(
                         case_number, ProposalState.get_name(state)))
 
-    def _expect_code(self, case_type, case_number, code):
+    def _test_auth_review(self, role_class, case_number, person_id, is_admin,
+                          reviewer_id, expect_codes):
+        self.assertEqual(len(expect_codes), len(proposal_states),
+                         'codes for review case {}'.format(case_number))
+        reviewer = self.db.search_reviewer(
+            role_class, reviewer_id=reviewer_id,
+            with_review=True).get_single()
+
+        for (state, expect_code) in zip(proposal_states, expect_codes):
+            expect = self._expect_code('review', case_number, expect_code,
+                                       rating=True)
+            self.db.update_proposal(reviewer.proposal_id, state=state)
+            proposal = self.db.get_proposal(
+                None, reviewer.proposal_id, with_members=True)
+            with self._as_person(person_id, is_admin):
+                self.assertEqual(
+                    auth.for_review(role_class, self.db, reviewer, proposal),
+                    expect, 'auth review case {} state {}'.format(
+                        case_number, ProposalState.get_name(state)))
+
+    def _expect_code(self, case_type, case_number, code, rating=False):
+        expect = None
+        view_rating = False
+
         if code == 'e':
-            return auth.yes
+            expect = auth.yes
+        elif code == 'E':
+            expect = auth.yes
+            view_rating = True
         elif code == 'v':
-            return auth.view_only
+            expect = auth.view_only
+        elif code == 'V':
+            expect = auth.view_only
+            view_rating = True
         elif code == 'o':
-            return auth.no
-        else:
+            expect = auth.no
+
+        if expect is None:
             self.fail('invalid code for {} case {}'.format(
                 case_type, case_number))
+
+        if rating:
+            expect = auth.AuthorizationWithRating(*expect,
+                                                  view_rating=view_rating)
+
+        return expect
 
     @contextmanager
     def _as_person(self, person_id, is_admin):
