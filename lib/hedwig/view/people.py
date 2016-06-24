@@ -1060,9 +1060,6 @@ class PeopleView(object):
 
     @with_verified_admin
     def institution_subsume(self, db, institution_id, form):
-        if not auth.can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
-
         try:
             institution = db.get_institution(institution_id)
         except NoSuchRecord:
