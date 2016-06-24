@@ -184,6 +184,18 @@ class WebAppAuthTestCase(WebAppTestCase):
         reviewer_a1rc2 = self.db.add_reviewer(
             role_class, proposal_a1, person_a1rc2, role_class.CTTEE_SECONDARY)
 
+        user_b2rc1 = self.db.add_user('b2rc1', 'pass')
+        person_b2rc1 = self.db.add_person('Person B 2 RC1', user_id=user_b2rc1)
+        self.db.add_group_member(queue_b, GroupType.CTTEE, person_b2rc1)
+        reviewer_b2rc1 = self.db.add_reviewer(
+            role_class, proposal_b2, person_b2rc1, role_class.CTTEE_PRIMARY)
+
+        user_b2rc2 = self.db.add_user('b2rc2', 'pass')
+        person_b2rc2 = self.db.add_person('Person B 2 RC2', user_id=user_b2rc2)
+        self.db.add_group_member(queue_b, GroupType.CTTEE, person_b2rc2)
+        reviewer_b2rc2 = self.db.add_reviewer(
+            role_class, proposal_b2, person_b2rc2, role_class.CTTEE_SECONDARY)
+
         # -- feedback reviewers:
         user_a1rf = self.db.add_user('a1rf', 'pass')
         person_a1rf = self.db.add_person('Person A 1 RF', user_id=user_a1rf)
@@ -218,6 +230,12 @@ class WebAppAuthTestCase(WebAppTestCase):
         person_a1x4 = self.db.add_person('Person A 1 X4', user_id=user_a1x4)
         self.db.add_member(proposal_a1, person_a1x4, affiliation_a)
         self.db.update_person(person_a1x4, admin=True)
+
+        user_a2x1 = self.db.add_user('a2x1', 'pass')
+        person_a2x1 = self.db.add_person('Person A 2 X1', user_id=user_a2x1)
+        self.db.add_member(proposal_a2, person_a2x1, affiliation_a)
+        reviewer_a2x1 = self.db.add_reviewer(
+            role_class, proposal_a2, person_a2x1, role_class.CTTEE_SECONDARY)
 
         # Create auth cache dictionary.  The database should not be updated
         # in ways which would affect the information which the auth module
@@ -453,6 +471,39 @@ class WebAppAuthTestCase(WebAppTestCase):
                 ]:
             self._test_auth_review(role_class, auth_cache, *test_case)
 
+        # Test authorization to add new reviews.
+        for test_case in [
+                # Admin can add feedback when is_admin is set.
+                (1,  person_admin, False, proposal_a1, {}),
+                (2,  person_admin, False, proposal_a2, {}),
+                (3,  person_admin, True,  proposal_a1, {}),
+                (4,  person_admin, True,  proposal_a2, {
+                    ProposalState.FINAL_REVIEW: [role_class.FEEDBACK],
+                }),
+                # Committee primary/secondary can add feedback.
+                (10, person_a1rc1, False, proposal_a1, {}),
+                (11, person_a1rc2, False, proposal_a1, {}),
+                (12, person_b2rc1, False, proposal_b2, {
+                    ProposalState.FINAL_REVIEW: [role_class.FEEDBACK],
+                }),
+                (13, person_b2rc2, False, proposal_b2, {
+                    ProposalState.FINAL_REVIEW: [role_class.FEEDBACK],
+                }),
+                # Committee members can add other reviews.
+                (20, person_a1rc1, False, proposal_a2, {
+                    ProposalState.REVIEW: [role_class.CTTEE_OTHER],
+                    ProposalState.FINAL_REVIEW: [role_class.CTTEE_OTHER],
+                }),
+                (21, person_a1rc2, False, proposal_a2, {
+                    ProposalState.REVIEW: [role_class.CTTEE_OTHER],
+                    ProposalState.FINAL_REVIEW: [role_class.CTTEE_OTHER],
+                }),
+                # No access to add reviews to own proposals.
+                (30, person_a1x2,  False, proposal_a1, {}),
+                (31, person_a2x1,  False, proposal_a2, {}),
+                ]:
+            self._test_auth_add_review(role_class, *test_case)
+
     def _test_auth_call_review(self, auth_cache,
                                case_number, person_id, is_admin,
                                call_id, expect):
@@ -551,6 +602,30 @@ class WebAppAuthTestCase(WebAppTestCase):
                     auth.for_review(role_class, self.db, reviewer, proposal,
                                     auth_cache=auth_cache),
                     expect, 'auth review case {} state {}'.format(
+                        case_number, ProposalState.get_name(state)))
+
+    def _test_auth_add_review(self, role_class,
+                              case_number, person_id, is_admin,
+                              proposal_id, expect_by_state):
+        if self.quick_proposal_state:
+            proposal_orig = self.db.get_proposal(
+                None, proposal_id, with_members=True, with_reviewers=True)
+
+        for state in proposal_states:
+            expect = set(expect_by_state.get(state, []))
+
+            if self.quick_proposal_state:
+                proposal = proposal_orig._replace(state=state)
+            else:
+                self.db.update_proposal(proposal_id, state=state)
+                proposal = self.db.get_proposal(
+                    None, proposal_id, with_members=True, with_reviewers=True)
+
+            with self._as_person(person_id, is_admin):
+                self.assertEqual(
+                    set(auth.can_add_review_roles(
+                        role_class, self.db, proposal)),
+                    expect, 'add review case {} state {}'.format(
                         case_number, ProposalState.get_name(state)))
 
     def _expect_code(self, case_type, case_number, code, rating=False):
