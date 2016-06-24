@@ -120,7 +120,7 @@ class ClashTool(BaseTargetTool):
 
         public = True
 
-        if auth.for_private_moc(db, self.facility.id_):
+        if auth.for_private_moc(db, self.facility.id_).view:
             public = None
 
         return public

@@ -336,18 +336,18 @@ class WebAppAuthTestCase(WebAppTestCase):
         # Test authorization for private MOCs.
         for test_case in [
                 # No general access.
-                (1,  person_a1e,   False, facility_id,    False),
-                (2,  person_a1e,   False, facility_id,    False),
-                (3,  person_a1e,   False, facility_other, False),
-                (4,  person_a1e,   False, facility_other, False),
+                (1,  person_a1e,   False, facility_id,    auth.no),
+                (2,  person_a1e,   False, facility_id,    auth.no),
+                (3,  person_a1e,   False, facility_other, auth.no),
+                (4,  person_a1e,   False, facility_other, auth.no),
                 # Admin has access but only when is_admin is set.
-                (5,  person_admin, False, facility_id,    False),
-                (6,  person_admin, False, facility_other, False),
-                (7,  person_admin, True,  facility_id,    True),
-                (8,  person_admin, True,  facility_other, True),
+                (5,  person_admin, False, facility_id,    auth.no),
+                (6,  person_admin, False, facility_other, auth.no),
+                (7,  person_admin, True,  facility_id,    auth.view_only),
+                (8,  person_admin, True,  facility_other, auth.view_only),
                 # Tech. assessors have access to the corresponding facility.
-                (9,  person_a1rt,  False, facility_id,    True),
-                (10, person_a1rt,  False, facility_other, False),
+                (9,  person_a1rt,  False, facility_id,    auth.view_only),
+                (10, person_a1rt,  False, facility_other, auth.no),
                 ]:
             self._test_auth_private_moc(*test_case)
 

@@ -159,15 +159,19 @@ def for_institution(db, institution):
 def for_private_moc(db, facility_id):
     """
     Determine whether the current user can view/search private MOCs.
+
+    Currently only "view" authorization is considered.
     """
 
     if 'user_id' not in session or 'person' not in session:
-        return False
+        return no
 
     # If user is an administrator, allow access.
     # Probably not worthwhile to re-validate administrative access here.
+    # NOTE: If this function is updated to also control editing MOCs
+    # then administrative access should be verified.
     if session.get('is_admin', False):
-        return True
+        return view_only
 
     # Otherwise check groups for the given facility.
     # TODO: consider caching this information in the session object?
@@ -175,9 +179,9 @@ def for_private_moc(db, facility_id):
             person_id=session['person']['id'],
             group_type=GroupType.private_moc_groups(),
             facility_id=facility_id).values():
-        return True
+        return view_only
 
-    return False
+    return no
 
 
 def for_proposal(role_class, db, proposal, auth_cache=None):
