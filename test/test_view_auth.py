@@ -216,6 +216,11 @@ class WebAppAuthTestCase(WebAppTestCase):
         self.db.add_member(proposal_a1, person_a1x4, affiliation_a)
         self.db.update_person(person_a1x4, admin=True)
 
+        # Create auth cache dictionary.  The database should not be updated
+        # in ways which would affect the information which the auth module
+        # might memoize beyond this point.
+        auth_cache = {}
+
         # Test authorization for call reviews.
         for test_case in [
                 # No general access to call reviews.
@@ -237,7 +242,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (13, person_a1rc1, False, call_b, auth.no),
                 (14, person_a1rc2, False, call_b, auth.no),
                 ]:
-            self._test_auth_call_review(*test_case)
+            self._test_auth_call_review(auth_cache, *test_case)
 
         # Test authorization for person profiles.
         for test_case in [
@@ -379,7 +384,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (66, person_b1reu, False, proposal_b1, 'ooovoooo', 'oooooooo'),
                 (67, person_b1reu, False, proposal_b2, 'oooooooo', 'oooooooo'),
                 ]:
-            self._test_auth_proposal(role_class, *test_case)
+            self._test_auth_proposal(role_class, auth_cache, *test_case)
 
         # Test authorization for reviews.
         for test_case in [
@@ -443,14 +448,15 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (62, person_a1rc1, False, reviewer_b1rf,  'oooooooo'),
                 (63, person_a1rc2, False, reviewer_b1rf,  'oooooooo'),
                 ]:
-            self._test_auth_review(role_class, *test_case)
+            self._test_auth_review(role_class, auth_cache, *test_case)
 
-    def _test_auth_call_review(self, case_number, person_id, is_admin,
+    def _test_auth_call_review(self, auth_cache,
+                               case_number, person_id, is_admin,
                                call_id, expect):
         call = self.db.get_call(None, call_id)
         with self._as_person(person_id, is_admin):
             self.assertEqual(
-                auth.for_call_review(self.db, call),
+                auth.for_call_review(self.db, call, auth_cache=auth_cache),
                 expect, 'auth call review case {}'.format(case_number))
 
     def _test_auth_person(self, case_number, person_id, is_admin,
@@ -477,7 +483,8 @@ class WebAppAuthTestCase(WebAppTestCase):
         else:
             self.assertFalse(can, 'auth private moc {}'.format(case_number))
 
-    def _test_auth_proposal(self, role_class, case_number, person_id, is_admin,
+    def _test_auth_proposal(self, role_class, auth_cache,
+                            case_number, person_id, is_admin,
                             proposal_id, expect_codes, expect_codes_fb):
         self.assertEqual(len(expect_codes), len(proposal_states),
                          'codes for proposal case {}'.format(case_number))
@@ -494,7 +501,8 @@ class WebAppAuthTestCase(WebAppTestCase):
                 None, proposal_id, with_members=True, with_reviewers=True)
             with self._as_person(person_id, is_admin):
                 self.assertEqual(
-                    auth.for_proposal(role_class, self.db, proposal),
+                    auth.for_proposal(role_class, self.db, proposal,
+                                      auth_cache=auth_cache),
                     expect, 'auth proposal case {} state {}'.format(
                         case_number, ProposalState.get_name(state)))
                 self.assertEqual(
@@ -502,7 +510,8 @@ class WebAppAuthTestCase(WebAppTestCase):
                     expect_fb, 'auth proposal fb case {} state {}'.format(
                         case_number, ProposalState.get_name(state)))
 
-    def _test_auth_review(self, role_class, case_number, person_id, is_admin,
+    def _test_auth_review(self, role_class, auth_cache,
+                          case_number, person_id, is_admin,
                           reviewer_id, expect_codes):
         self.assertEqual(len(expect_codes), len(proposal_states),
                          'codes for review case {}'.format(case_number))
@@ -518,7 +527,8 @@ class WebAppAuthTestCase(WebAppTestCase):
                 None, reviewer.proposal_id, with_members=True)
             with self._as_person(person_id, is_admin):
                 self.assertEqual(
-                    auth.for_review(role_class, self.db, reviewer, proposal),
+                    auth.for_review(role_class, self.db, reviewer, proposal,
+                                    auth_cache=auth_cache),
                     expect, 'auth review case {} state {}'.format(
                         case_number, ProposalState.get_name(state)))
 

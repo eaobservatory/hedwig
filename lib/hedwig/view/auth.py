@@ -180,7 +180,7 @@ def for_private_moc(db, facility_id):
     return False
 
 
-def for_proposal(role_class, db, proposal):
+def for_proposal(role_class, db, proposal, auth_cache=None):
     """
     Determine the current user's authorization regarding this proposal.
     """
@@ -210,10 +210,11 @@ def for_proposal(role_class, db, proposal):
 
     if ProposalState.is_submitted(proposal.state):
         # Give access to review groups with access to view all proposals.
-        if db.search_group_member(
-                queue_id=proposal.queue_id,
-                group_type=GroupType.view_all_groups(),
-                person_id=session['person']['id']):
+        group_members = _get_group_membership(
+            auth_cache, db, proposal.queue_id, session['person']['id'])
+
+        if any(group_members.values_by_group_type(group_type)
+                for group_type in GroupType.view_all_groups()):
             return auth._replace(view=True)
 
     return auth
