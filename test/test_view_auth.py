@@ -501,6 +501,15 @@ class WebAppAuthTestCase(WebAppTestCase):
                 # No access to add reviews to own proposals.
                 (30, person_a1x2,  False, proposal_a1, {}),
                 (31, person_a2x1,  False, proposal_a2, {}),
+                # Review coordinators can add feedback.
+                (40, person_a_rc,  False, proposal_a2, {
+                    ProposalState.FINAL_REVIEW: [role_class.FEEDBACK],
+                }),
+                (41, person_a_rc,  False, proposal_b2, {}),
+                (42, person_b_rc,  False, proposal_a2, {}),
+                (43, person_b_rc,  False, proposal_b2, {
+                    ProposalState.FINAL_REVIEW: [role_class.FEEDBACK],
+                }),
                 ]:
             self._test_auth_add_review(role_class, auth_cache, *test_case)
 

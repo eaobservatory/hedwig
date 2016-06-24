@@ -384,6 +384,8 @@ def can_add_review_roles(role_class, db, proposal, auth_cache=None):
             role_class.FEEDBACK):
         if not proposal.reviewers.has_role(role_class.FEEDBACK):
             if ((session.get('is_admin', False) and can_be_admin(db))
+                    or any(group_members.values_by_group_type(group_type)
+                           for group_type in GroupType.review_coord_groups())
                     or proposal.reviewers.has_person(
                         person_id=person_id,
                         roles=role_class.get_feedback_roles())):
