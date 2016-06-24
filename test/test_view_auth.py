@@ -52,6 +52,9 @@ class WebAppAuthTestCase(WebAppTestCase):
         # Use basic reviewer role class.
         role_class = BaseReviewerRole
 
+        # Select whether to simulate proposal state updates.
+        self.quick_proposal_state = True
+
         # Set up test database entries.
         facility_id = self.db.ensure_facility('test')
         facility_other = self.db.ensure_facility('other')
@@ -491,14 +494,23 @@ class WebAppAuthTestCase(WebAppTestCase):
         self.assertEqual(len(expect_codes_fb), len(proposal_states),
                          'fb codes for proposal case {}'.format(case_number))
 
+        if self.quick_proposal_state:
+            proposal_orig = self.db.get_proposal(
+                None, proposal_id, with_members=True, with_reviewers=True)
+
         for (state, expect_code, expect_code_fb) in zip(
                 proposal_states, expect_codes, expect_codes_fb):
             expect = self._expect_code('proposal', case_number, expect_code)
             expect_fb = self._expect_code('proposal fb', case_number,
                                           expect_code_fb)
-            self.db.update_proposal(proposal_id, state=state)
-            proposal = self.db.get_proposal(
-                None, proposal_id, with_members=True, with_reviewers=True)
+
+            if self.quick_proposal_state:
+                proposal = proposal_orig._replace(state=state)
+            else:
+                self.db.update_proposal(proposal_id, state=state)
+                proposal = self.db.get_proposal(
+                    None, proposal_id, with_members=True, with_reviewers=True)
+
             with self._as_person(person_id, is_admin):
                 self.assertEqual(
                     auth.for_proposal(role_class, self.db, proposal,
@@ -519,12 +531,21 @@ class WebAppAuthTestCase(WebAppTestCase):
             role_class, reviewer_id=reviewer_id,
             with_review=True).get_single()
 
+        if self.quick_proposal_state:
+            proposal_orig = self.db.get_proposal(
+                None, reviewer.proposal_id, with_members=True)
+
         for (state, expect_code) in zip(proposal_states, expect_codes):
             expect = self._expect_code('review', case_number, expect_code,
                                        rating=True)
-            self.db.update_proposal(reviewer.proposal_id, state=state)
-            proposal = self.db.get_proposal(
-                None, reviewer.proposal_id, with_members=True)
+
+            if self.quick_proposal_state:
+                proposal = proposal_orig._replace(state=state)
+            else:
+                self.db.update_proposal(reviewer.proposal_id, state=state)
+                proposal = self.db.get_proposal(
+                    None, reviewer.proposal_id, with_members=True)
+
             with self._as_person(person_id, is_admin):
                 self.assertEqual(
                     auth.for_review(role_class, self.db, reviewer, proposal,
