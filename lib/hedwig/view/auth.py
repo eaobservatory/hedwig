@@ -51,7 +51,8 @@ def for_call_review(db, call, auth_cache=None):
 
     if 'user_id' not in session or 'person' not in session:
         return no
-    elif session.get('is_admin', False) and can_be_admin(db):
+    elif (session.get('is_admin', False)
+            and can_be_admin(db, auth_cache=auth_cache)):
         return yes
 
     person_id = session['person']['id']
@@ -194,7 +195,8 @@ def for_proposal(role_class, db, proposal, auth_cache=None):
 
     auth = no
 
-    if session.get('is_admin', False) and can_be_admin(db):
+    if (session.get('is_admin', False)
+            and can_be_admin(db, auth_cache=auth_cache)):
         auth = auth._replace(view=True)
 
     try:
@@ -314,7 +316,8 @@ def for_review(role_class, db, reviewer, proposal, auth_cache=None):
     # Allow administrators and review coordinators to view, with edit too if
     # still under review.  (This is to allow them to adjust review ratings
     # during the committee meeting.)
-    if session.get('is_admin', False) and can_be_admin(db):
+    if (session.get('is_admin', False)
+            and can_be_admin(db, auth_cache=auth_cache)):
         return AuthorizationWithRating(
             view=True, edit=review_is_editable, view_rating=rating_is_viewable)
 
@@ -335,17 +338,17 @@ def for_review(role_class, db, reviewer, proposal, auth_cache=None):
     return AuthorizationWithRating(*no, view_rating=False)
 
 
-def can_be_admin(db):
+def can_be_admin(db, auth_cache=None):
     """
     Check whether the user is permitted to take administrative
     privileges.
     """
 
-    try:
-        person = db.get_person(person_id=None, user_id=session['user_id'])
-        return person.admin
-    except NoSuchRecord:
+    person = _get_user_profile(auth_cache, db, session['user_id'])
+    if person is None:
         raise HTTPForbidden('Could not verify administrative access.')
+
+    return person.admin
 
 
 def can_add_review_roles(role_class, db, proposal, auth_cache=None):
@@ -383,7 +386,8 @@ def can_add_review_roles(role_class, db, proposal, auth_cache=None):
     if proposal.state in role_class.get_editable_states(
             role_class.FEEDBACK):
         if not proposal.reviewers.has_role(role_class.FEEDBACK):
-            if ((session.get('is_admin', False) and can_be_admin(db))
+            if ((session.get('is_admin', False)
+                    and can_be_admin(db, auth_cache=auth_cache))
                     or any(group_members.values_by_group_type(group_type)
                            for group_type in GroupType.review_coord_groups())
                     or proposal.reviewers.has_person(
@@ -397,3 +401,11 @@ def can_add_review_roles(role_class, db, proposal, auth_cache=None):
 @memoized
 def _get_group_membership(db, queue_id, person_id):
     return db.search_group_member(queue_id=queue_id, person_id=person_id)
+
+
+@memoized
+def _get_user_profile(db, user_id):
+    try:
+        return db.get_person(person_id=None, user_id=user_id)
+    except NoSuchRecord:
+        return None

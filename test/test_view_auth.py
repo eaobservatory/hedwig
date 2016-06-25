@@ -23,9 +23,10 @@ from datetime import datetime
 
 from hedwig.type.enum import BaseReviewerRole, FormatType, GroupType, \
     ProposalState
+from hedwig.type.simple import Person
 from hedwig.view import auth
 from hedwig.view.people import _update_session_user, _update_session_person
-from hedwig.web.util import session
+from hedwig.web.util import session, HTTPForbidden
 
 from .dummy_app import WebAppTestCase
 
@@ -44,6 +45,56 @@ proposal_states = [
 
 
 class WebAppAuthTestCase(WebAppTestCase):
+    def test_can_be_admin(self):
+        # Create test user accounts.
+        user = self.db.add_user('user', 'pass')
+        person_user = self.db.add_person('user', user_id=user)
+
+        admin = self.db.add_user('admin', 'pass')
+        person_admin = self.db.add_person('admin', user_id=admin)
+        self.db.update_person(person_admin, admin=True)
+
+        unreg = self.db.add_user('unreg', 'pass')
+
+        # Basic tests with no auth cache.
+        with self._as_person(person_user):
+            self.assertFalse(auth.can_be_admin(self.db))
+
+        with self._as_person(person_admin):
+            self.assertTrue(auth.can_be_admin(self.db))
+
+        with self._as_person(None, user_id=unreg):
+            with self.assertRaises(HTTPForbidden):
+                self.assertFalse(auth.can_be_admin(self.db))
+
+        # Repeat tests with auth cache.
+        auth_cache = {}
+
+        with self._as_person(person_user):
+            self.assertFalse(auth.can_be_admin(self.db, auth_cache=auth_cache))
+
+        with self._as_person(person_admin):
+            self.assertTrue(auth.can_be_admin(self.db, auth_cache=auth_cache))
+
+        with self._as_person(None, user_id=unreg):
+            with self.assertRaises(HTTPForbidden):
+                self.assertFalse(auth.can_be_admin(self.db,
+                                                   auth_cache=auth_cache))
+
+        # Check contents of auth cache.
+        self.assertEqual(len(auth_cache), 3)
+
+        value = auth_cache[('_get_user_profile', user)]
+        self.assertIsInstance(value, Person)
+        self.assertEqual(value.id, person_user)
+
+        value = auth_cache[('_get_user_profile', admin)]
+        self.assertIsInstance(value, Person)
+        self.assertEqual(value.id, person_admin)
+
+        value = auth_cache[('_get_user_profile', unreg)]
+        self.assertIsNone(value)
+
     def test_view_auth(self):
         # Display default assert method failure messages as well as our
         # identifiers.
@@ -665,12 +716,25 @@ class WebAppAuthTestCase(WebAppTestCase):
         return expect
 
     @contextmanager
-    def _as_person(self, person_id, is_admin):
-        person = self.db.get_person(person_id)
+    def _as_person(self, person_id, is_admin=False, user_id=None):
+        """
+        Simulate logging in as the given person.
+
+        Sets session user and person values based on the given `person_id`.
+
+        If `person_id` is `None` then sets jus tthe user value based on the
+        `user_id` argument.
+        """
+
+        if person_id is not None:
+            person = self.db.get_person(person_id)
 
         with self.app.test_request_context():
-            _update_session_user(person.user_id)
-            _update_session_person(person)
+            if person_id is None:
+                _update_session_user(user_id)
+            else:
+                _update_session_user(person.user_id)
+                _update_session_person(person)
 
             if is_admin:
                 session['is_admin'] = True
