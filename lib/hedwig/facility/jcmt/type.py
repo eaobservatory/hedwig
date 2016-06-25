@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict, namedtuple
 
+from ...type.base import EnumBasic
 from ...type.enum import BaseReviewerRole
 from ...type.collection import ResultTable
 from ...error import UserError
@@ -42,7 +43,7 @@ JCMTRequestTotal = namedtuple(
     ('total', 'weather', 'instrument', 'total_non_free'))
 
 
-class JCMTInstrument(object):
+class JCMTInstrument(EnumBasic):
     SCUBA2 = 1
     HARP = 2
     RXA3 = 3
@@ -56,18 +57,6 @@ class JCMTInstrument(object):
         (RXA3,   InstrumentInfo('RxA3', False)),
         (RXA3M,  InstrumentInfo('RxA3m', True)),
     ))
-
-    @classmethod
-    def is_valid(cls, state):
-        return state in cls._info
-
-    @classmethod
-    def get_name(cls, state):
-        return cls._info[state].name
-
-    @classmethod
-    def get_info(cls, instrument):
-        return cls._info[instrument]
 
     @classmethod
     def get_options(cls):
@@ -336,7 +325,7 @@ class JCMTReviewerRole(BaseReviewerRole):
         _info[role_id] = RoleInfo(*(role_info._replace(**override) + extra))
 
 
-class JCMTWeather(object):
+class JCMTWeather(EnumBasic):
     BAND1 = 1
     BAND2 = 2
     BAND3 = 3
@@ -354,18 +343,6 @@ class JCMTWeather(object):
         (BAND4, WeatherInfo('Band 4', True, 0.16,  0.12, 0.2,  False)),
         (BAND5, WeatherInfo('Band 5', True, 0.25,  0.2,  None, True)),
     ))
-
-    @classmethod
-    def is_valid(cls, state):
-        return state in cls._info
-
-    @classmethod
-    def get_name(cls, state):
-        return cls._info[state].name
-
-    @classmethod
-    def get_info(cls, type_):
-        return cls._info[type_]
 
     @classmethod
     def get_available(cls):
