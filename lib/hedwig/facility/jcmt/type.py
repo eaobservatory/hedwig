@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict, namedtuple
 
-from ...type.base import EnumBasic
+from ...type.base import EnumAvailable, EnumBasic
 from ...type.enum import BaseReviewerRole
 from ...type.collection import ResultTable
 from ...error import UserError
@@ -43,7 +43,7 @@ JCMTRequestTotal = namedtuple(
     ('total', 'weather', 'instrument', 'total_non_free'))
 
 
-class JCMTInstrument(EnumBasic):
+class JCMTInstrument(EnumBasic, EnumAvailable):
     SCUBA2 = 1
     HARP = 2
     RXA3 = 3
@@ -57,20 +57,6 @@ class JCMTInstrument(EnumBasic):
         (RXA3,   InstrumentInfo('RxA3', False)),
         (RXA3M,  InstrumentInfo('RxA3m', True)),
     ))
-
-    @classmethod
-    def get_options(cls):
-        ans = OrderedDict()
-
-        for (k, v) in cls._info.items():
-            if v.available:
-                ans[k] = v.name
-
-        return ans
-
-    @classmethod
-    def get_all_options(cls):
-        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
 
 class JCMTAvailableCollection(OrderedDict):
@@ -277,8 +263,8 @@ class JCMTRequestCollection(OrderedDict):
         # looking for matching allocations -- this allows us to place the
         # allocations into a list which is correctly ordered by instrument
         # and then by weather band.
-        instruments = JCMTInstrument.get_all_options()
-        weathers = JCMTWeather.get_all_options()
+        instruments = JCMTInstrument.get_options(include_unavailable=True)
+        weathers = JCMTWeather.get_options(include_unavailable=True)
 
         sorted_list = []
 
@@ -325,7 +311,7 @@ class JCMTReviewerRole(BaseReviewerRole):
         _info[role_id] = RoleInfo(*(role_info._replace(**override) + extra))
 
 
-class JCMTWeather(EnumBasic):
+class JCMTWeather(EnumBasic, EnumAvailable):
     BAND1 = 1
     BAND2 = 2
     BAND3 = 3
@@ -348,7 +334,3 @@ class JCMTWeather(EnumBasic):
     def get_available(cls):
         return OrderedDict(((k, v) for (k, v) in cls._info.items()
                             if v.available))
-
-    @classmethod
-    def get_all_options(cls):
-        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))

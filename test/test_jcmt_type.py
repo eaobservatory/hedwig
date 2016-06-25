@@ -47,18 +47,31 @@ class JCMTTypeTestCase(TestCase):
 
             # is_valid and get_name should work on these values.
             self.assertTrue(JCMTInstrument.is_valid(instrument))
-            self.assertIsInstance(JCMTInstrument.get_name(instrument), unicode)
+            instrument_name = JCMTInstrument.get_name(instrument)
+            self.assertIsInstance(instrument_name, unicode)
 
             # It should also be in the list of options.
             self.assertIn(instrument, options)
             self.assertIsInstance(options[instrument], unicode)
+            self.assertEqual(options[instrument], instrument_name)
 
         self.assertFalse(JCMTInstrument.is_valid(0))
         self.assertFalse(JCMTInstrument.is_valid(999))
 
+        # Check set of instruments considered to be available.
+        self.assertEqual(set(options.keys()), instruments)
+
+        instruments.add(JCMTInstrument.RXA3)
+        self.assertEqual(
+            set(JCMTInstrument.get_options(include_unavailable=True).keys()),
+            instruments)
+
     def test_weather(self):
         options = JCMTWeather.get_available()
         self.assertIsInstance(options, OrderedDict)
+
+        option_names = JCMTWeather.get_options()
+        self.assertIsInstance(option_names, OrderedDict)
 
         weathers = set()
         for weather in (
@@ -75,14 +88,29 @@ class JCMTTypeTestCase(TestCase):
 
             # is_valid and get_name should work on these values.
             self.assertTrue(JCMTWeather.is_valid(weather))
-            self.assertIsInstance(JCMTWeather.get_name(weather), unicode)
+            weather_name = JCMTWeather.get_name(weather)
+            self.assertIsInstance(weather_name, unicode)
 
             # It should also be in the list of options.
             self.assertIn(weather, options)
             self.assertIsInstance(options[weather].name, unicode)
+            self.assertEqual(options[weather].name, weather_name)
+
+            self.assertIn(weather, option_names)
+            self.assertIsInstance(option_names[weather], unicode)
+            self.assertEqual(option_names[weather], weather_name)
 
         self.assertFalse(JCMTWeather.is_valid(0))
         self.assertFalse(JCMTWeather.is_valid(999))
+
+        # Check set of weathers considered to be available.
+        self.assertEqual(set(options.keys()), weathers)
+
+        self.assertEqual(set(JCMTWeather.get_options().keys()), weathers)
+
+        self.assertEqual(
+            set(JCMTWeather.get_options(include_unavailable=True).keys()),
+            weathers)
 
     def test_request_collection(self):
         c = JCMTRequestCollection()

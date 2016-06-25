@@ -18,7 +18,21 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import OrderedDict
+
 from ..error import FormattedError
+
+
+class EnumAvailable(object):
+    """
+    Mix-in for enum-style classes where the `_info` dictionary
+    has names and an `available` boolean field.
+    """
+
+    @classmethod
+    def get_options(cls, include_unavailable=False):
+        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()
+                            if (v.available or include_unavailable)))
 
 
 class EnumBasic(object):
