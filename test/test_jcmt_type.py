@@ -25,7 +25,9 @@ from hedwig.error import UserError
 from hedwig.facility.jcmt.type import \
     JCMTAvailable, JCMTAvailableCollection, \
     JCMTInstrument, \
-    JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, JCMTWeather
+    JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, \
+    JCMTReviewerExpertise, \
+    JCMTWeather
 from hedwig.type.collection import ResultTable
 
 
@@ -65,6 +67,33 @@ class JCMTTypeTestCase(TestCase):
         self.assertEqual(
             set(JCMTInstrument.get_options(include_unavailable=True).keys()),
             instruments)
+
+    def test_reviewer_expertise(self):
+        options = JCMTReviewerExpertise.get_options()
+        self.assertIsInstance(options, OrderedDict)
+
+        for expertise in (
+                JCMTReviewerExpertise.NON_EXPERT,
+                JCMTReviewerExpertise.INTERMEDIATE,
+                JCMTReviewerExpertise.EXPERT,
+                ):
+            self.assertIsInstance(expertise, int)
+            self.assertTrue(JCMTReviewerExpertise.is_valid(expertise))
+
+            weight = JCMTReviewerExpertise.get_weight(expertise)
+            self.assertIsInstance(weight, int)
+            self.assertGreaterEqual(weight, 0)
+            self.assertLessEqual(weight, 100)
+
+            name = JCMTReviewerExpertise.get_name(expertise)
+            self.assertIsInstance(name, unicode)
+
+            self.assertIn(expertise, options)
+            option_name = options.pop(expertise)
+            self.assertEqual(option_name, name)
+
+        self.assertFalse(JCMTReviewerExpertise.is_valid(999))
+        self.assertFalse(options)
 
     def test_weather(self):
         options = JCMTWeather.get_available()

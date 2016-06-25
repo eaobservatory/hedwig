@@ -283,6 +283,30 @@ class JCMTRequestCollection(OrderedDict):
         return sorted_list
 
 
+class JCMTReviewerExpertise(EnumBasic, EnumAvailable):
+    """
+    Class representing reviewer expertise levels.
+    """
+
+    NON_EXPERT = 1
+    INTERMEDIATE = 2
+    EXPERT = 3
+
+    ExpertiseInfo = namedtuple(
+        'ExpertiseInfo', ('name', 'weight', 'available'))
+
+    #                                Name            Wt.  Avail
+    _info = OrderedDict((
+        (NON_EXPERT,   ExpertiseInfo('Non-expert',   50,  True)),
+        (INTERMEDIATE, ExpertiseInfo('Intermediate', 75,  True)),
+        (EXPERT,       ExpertiseInfo('Expert',       100, True)),
+    ))
+
+    @classmethod
+    def get_weight(cls, expertise):
+        return cls._info[expertise].weight
+
+
 class JCMTReviewerRole(BaseReviewerRole):
     """
     Class providing information about reviewer roles for JCMT.
