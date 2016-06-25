@@ -331,14 +331,10 @@ class GroupType(EnumBasic, EnumURLPath):
     ))
 
     @classmethod
-    def get_options(cls, by_url_path=False):
+    def get_options(cls):
         """
         Get an OrderedDict of type names by type numbers.
         """
-
-        if by_url_path:
-            return OrderedDict(((v.url_path, v.name)
-                                for v in cls._info.values()))
 
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
