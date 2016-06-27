@@ -1,0 +1,14 @@
+{% extends 'generic/review_edit.html' %}
+
+{% block form_list_extra %}
+    {% if role_info.jcmt_expertise %}
+        <li>
+            <label for="jcmt_expertise">Expertise</label>
+            <select name="jcmt_expertise">
+                {% for (expertise_num, expertise_name) in jcmt_expertise_levels.items() %}
+                    <option value="{{ expertise_num }}" {{ 'selected="selected"' | safe if expertise_num == jcmt_review.expertise }}>{{ expertise_name }}</option>
+                {% endfor %}
+            </select>
+        </li>
+    {% endif %}
+{% endblock %}

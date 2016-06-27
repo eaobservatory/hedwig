@@ -37,7 +37,7 @@ from .type import \
     JCMTAvailable, JCMTAvailableCollection, \
     JCMTInstrument, JCMTOptions, \
     JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, \
-    JCMTReviewerRole, \
+    JCMTReview, JCMTReviewerExpertise, JCMTReviewerRole, \
     JCMTWeather
 
 
@@ -623,6 +623,58 @@ class JCMT(Generic):
 
         return organise_collection(JCMTRequestCollection,
                                    updated_records, added_records)
+
+    def _view_review_edit_get(self, db, reviewer, proposal, form):
+        """
+        Read JCMT-specific review form values.
+        """
+
+        role_class = self.get_reviewer_roles()
+        role_info = role_class.get_info(reviewer.role)
+
+        if reviewer.id is None:
+            jcmt_review = null_tuple(JCMTReview)
+        else:
+            jcmt_review = db.get_jcmt_review(reviewer.id)
+            if jcmt_review is None:
+                jcmt_review = null_tuple(JCMTReview)
+
+        if role_info.jcmt_expertise:
+            try:
+                jcmt_review = jcmt_review._replace(
+                    expertise=int(form['jcmt_expertise']))
+            except:
+                raise UserError('Please select an expertise level.')
+
+        return jcmt_review
+
+    def _view_review_edit_save(self, db, reviewer, proposal, info):
+        """
+        Save JCMT-specific review parts.
+        """
+
+        role_class = self.get_reviewer_roles()
+
+        db.set_jcmt_review(
+            role_class=role_class,
+            reviewer_id=reviewer.id,
+            expertise=info.expertise,
+            is_update=(info.reviewer_id is not None))
+
+    def _view_review_edit_extra(self, db, reviewer, proposal, info):
+        if info is None:
+            if reviewer.id is None:
+                jcmt_review = None
+            else:
+                jcmt_review = db.get_jcmt_review(reviewer.id)
+
+            info = (jcmt_review if jcmt_review is not None
+                    else null_tuple(JCMTReview))
+
+        return {
+            'jcmt_expertise_levels': JCMTReviewerExpertise.get_options(),
+            'jcmt_review': info,
+        }
 
     def _view_proposal_decision_get(self, db, proposal, form):
         """
