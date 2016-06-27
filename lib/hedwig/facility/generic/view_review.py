@@ -957,20 +957,20 @@ class GenericReview(object):
             target = url_for('.proposal_review_new', proposal_id=proposal.id,
                              reviewer_role=reviewer_role)
             referrer = 'pr'
-            reviewer = null_tuple(Reviewer)
+            reviewer = null_tuple(Reviewer)._replace(role=reviewer_role)
         else:
             is_new_reviewer = False
             is_own_review = (reviewer.person_id == session['person']['id'])
             target = url_for('.review_edit', reviewer_id=reviewer.id)
             referrer = args.get('referrer')
-            reviewer_role = reviewer.role
 
         try:
-            role_info = role_class.get_info(reviewer_role)
+            role_info = role_class.get_info(reviewer.role)
         except KeyError:
             raise HTTPError('Unknown reviewer role')
 
         message = None
+        extra_info = None
 
         if form is not None:
             try:
@@ -1020,6 +1020,9 @@ class GenericReview(object):
                             review_note_format=FormatType.PLAIN,
                             review_note_public=False)
 
+                extra_info = self._view_review_edit_get(
+                    db, reviewer, proposal, form)
+
                 # Validate the form inputs.
                 if role_info.assessment:
                     if not Assessment.is_valid(reviewer.review_assessment):
@@ -1036,22 +1039,21 @@ class GenericReview(object):
                                         'weighting between 0 and 100.')
 
                 if is_new_reviewer:
-                    reviewer_id = db.add_reviewer(
+                    reviewer = reviewer._replace(id=db.add_reviewer(
                         role_class=role_class,
                         proposal_id=proposal.id,
                         person_id=session['person']['id'],
-                        role=reviewer_role)
+                        role=reviewer.role))
 
                     # Change target in case of a UserError occurring while
                     # setting the review.
-                    target = url_for('.review_edit', reviewer_id=reviewer_id)
+                    target = url_for('.review_edit', reviewer_id=reviewer.id)
 
-                else:
-                    reviewer_id = reviewer.id
+                self._view_review_edit_save(db, reviewer, proposal, extra_info)
 
                 db.set_review(
                     role_class=role_class,
-                    reviewer_id=reviewer_id,
+                    reviewer_id=reviewer.id,
                     text=reviewer.review_text,
                     format_=reviewer.review_format,
                     assessment=reviewer.review_assessment,
@@ -1102,7 +1104,7 @@ class GenericReview(object):
             role_info = role_info._replace(note=False)
             reviewer = reviewer._replace(review_note=None)
 
-        return {
+        ctx = {
             'title': '{}: {} {}'.format(
                 proposal_code,
                 ('Add' if is_new_reviewer else 'Edit'),
@@ -1116,8 +1118,47 @@ class GenericReview(object):
             'message': message,
             'referrer': referrer,
             'target_guideline': self.make_review_guidelines_url(
-                role=reviewer_role),
+                role=reviewer.role),
         }
+
+        ctx.update(self._view_review_edit_extra(
+            db, reviewer, proposal, extra_info))
+
+        return ctx
+
+    def _view_review_edit_get(self, db, reviewer, proposal, form):
+        """
+        Placeholder for facility-specific method to read form values
+        containing extra information for the review.
+
+        Parsing errors should be left for later.
+
+        :return: an object containing any additional information which
+            the facility class requires.
+        """
+
+        return None
+
+    def _view_review_edit_save(self, db, reviewer, proposal, info):
+        """
+        Placeholder for facility-specific method to parse previously-read
+        form inputs and store them in the database.
+
+        :raises UserError: in  the event of a problem with the input
+        """
+
+        pass
+
+    def _view_review_edit_extra(self, db, reviewer, proposal, info):
+        """
+        Placeholder for facility-specific method to generate extra
+        information to show in the proposal edit page.
+
+        `info` will be the object returned by _view_review_edit_get
+        if a POST is being handled, or None otherwise.
+        """
+
+        return {}
 
     @with_proposal(permission=PermissionType.NONE)
     def view_proposal_reviews(self, db, proposal):
