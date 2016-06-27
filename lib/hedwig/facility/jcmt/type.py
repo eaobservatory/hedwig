@@ -24,7 +24,7 @@ from ...type.base import EnumAvailable, EnumBasic
 from ...type.enum import BaseReviewerRole
 from ...type.collection import ResultTable
 from ...error import UserError
-from .meta import jcmt_available, jcmt_options, jcmt_request
+from .meta import jcmt_available, jcmt_options, jcmt_request, jcmt_review
 
 JCMTAvailable = namedtuple(
     'JCMTAvailable',
@@ -41,6 +41,10 @@ JCMTRequest = namedtuple(
 JCMTRequestTotal = namedtuple(
     'JCMTRequestTotal',
     ('total', 'weather', 'instrument', 'total_non_free'))
+
+JCMTReview = namedtuple(
+    'JCMTReview',
+    [x.name for x in jcmt_review.columns])
 
 
 class JCMTInstrument(EnumBasic, EnumAvailable):

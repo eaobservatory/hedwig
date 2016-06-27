@@ -22,11 +22,13 @@ from sqlalchemy.sql import select
 from sqlalchemy.sql.functions import count
 
 from ...db.meta import call, proposal
-from ...error import ConsistencyError
-from .meta import jcmt_available, jcmt_allocation, jcmt_options, jcmt_request
+from ...error import ConsistencyError, FormattedError, UserError
+from .meta import jcmt_available, jcmt_allocation, jcmt_options, \
+    jcmt_request, jcmt_review
 from .type import \
     JCMTAvailable, JCMTAvailableCollection, \
-    JCMTOptions, JCMTRequest, JCMTRequestCollection
+    JCMTOptions, JCMTRequest, JCMTRequestCollection, \
+    JCMTReview, JCMTReviewerExpertise
 
 
 class JCMTPart(object):
@@ -44,6 +46,21 @@ class JCMTPart(object):
 
             else:
                 return JCMTOptions(**row)
+
+    def get_jcmt_review(self, reviewer_id):
+        """
+        Retrieve the JCMT-specific parts of a review.
+        """
+
+        with self._transaction() as conn:
+            row = conn.execute(jcmt_review.select().where(
+                jcmt_review.c.reviewer_id == reviewer_id)).first()
+
+            if row is None:
+                return None
+
+            else:
+                return JCMTReview(**row)
 
     def search_jcmt_allocation(self, proposal_id):
         """
@@ -130,6 +147,62 @@ class JCMTPart(object):
 
                 conn.execute(jcmt_options.insert().values(values))
 
+    def set_jcmt_review(self, role_class, reviewer_id, expertise, is_update):
+        if expertise is not None:
+            if not JCMTReviewerExpertise.is_valid(expertise):
+                raise UserError('Reviewer expertise level not recognised.')
+
+        values = {
+            jcmt_review.c.expertise: expertise,
+        }
+
+        with self._transaction() as conn:
+            # Determine type of review and check values are valid for it.
+            reviewer = self.search_reviewer(
+                role_class, reviewer_id=reviewer_id, _conn=conn).get_single()
+
+            role_info = role_class.get_info(reviewer.role)
+            attr_req = {
+                jcmt_review.c.expertise: role_info.jcmt_expertise,
+            }
+
+            for (attr, attr_allowed) in attr_req.items():
+                if attr_allowed:
+                    if values[attr] is None:
+                        raise FormattedError(
+                            '{} should be specified', attr.name)
+                else:
+                    if values[attr] is not None:
+                        raise FormattedError(
+                            '{} should not be specified', attr.name)
+
+            # Check if the review already exists.
+            already_exists = self._exists_jcmt_review(
+                conn, reviewer_id=reviewer_id)
+            if is_update and not already_exists:
+                raise ConsistencyError(
+                    'JCMT review does not exist for reviewer {}', reviewer_id)
+            elif already_exists and not is_update:
+                raise ConsistencyError(
+                    'JCMT review already exists for reviewer {}', reviewer_id)
+
+            # Perform the insert/update.
+            if is_update:
+                result = conn.execute(jcmt_review.update().where(
+                    jcmt_review.c.reviewer_id == reviewer_id
+                ).values(values))
+
+                if result.rowcount != 1:
+                    raise ConsistencyError(
+                        'no rows matched updating JCMT review {}', reviewer_id)
+
+            else:
+                values.update({
+                    jcmt_review.c.reviewer_id: reviewer_id,
+                })
+
+                result = conn.execute(jcmt_review.insert().values(values))
+
     def sync_jcmt_call_available(self, call_id, records,
                                  _test_skip_check=False):
         """
@@ -187,3 +260,14 @@ class JCMTPart(object):
                 conn, jcmt_request, jcmt_request.c.proposal_id, proposal_id,
                 records, unique_columns=(
                     jcmt_request.c.instrument, jcmt_request.c.weather))
+
+    def _exists_jcmt_review(self, conn, reviewer_id):
+        """
+        Test whether a JCMT review record exists.
+        """
+
+        return 0 < conn.execute(select([
+            count(jcmt_review.c.reviewer_id)
+        ]).where(
+            jcmt_review.c.reviewer_id == reviewer_id
+        )).scalar()

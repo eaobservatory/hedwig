@@ -19,12 +19,14 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from datetime import datetime
-from hedwig.error import ConsistencyError
+from hedwig.error import ConsistencyError, Error, UserError
 from hedwig.type.enum import FormatType
 from hedwig.facility.jcmt.type import \
     JCMTAvailable, JCMTAvailableCollection, \
     JCMTInstrument, JCMTOptions, \
-    JCMTRequest, JCMTRequestCollection, JCMTWeather
+    JCMTRequest, JCMTRequestCollection, \
+    JCMTReview, JCMTReviewerExpertise, JCMTReviewerRole, \
+    JCMTWeather
 
 from .dummy_db import DBTestCase
 
@@ -264,6 +266,77 @@ class DBJCMTTest(DBTestCase):
             self.assertEqual(record.id, id_)
             self.assertEqual(record.weather, JCMTWeather.BAND1)
             self.assertEqual(record.time, 100.0)
+
+    def test_jcmt_review(self):
+        """
+        Test methods associated with the "jcmt_review" table.
+        """
+
+        role_class = JCMTReviewerRole
+
+        proposal_id = self._create_test_proposal()
+        person_id = self.db.add_person('Test Reviewer')
+
+        reviewer_id = self.db.add_reviewer(
+            role_class, proposal_id, person_id, role_class.CTTEE_PRIMARY)
+
+        self.assertIsInstance(reviewer_id, int)
+
+        jcmt_review = self.db.get_jcmt_review(reviewer_id)
+
+        self.assertIsNone(jcmt_review)
+
+        with self.assertRaisesRegexp(
+                ConsistencyError, 'JCMT review does not exist'):
+            self.db.set_jcmt_review(
+                role_class, reviewer_id,
+                expertise=JCMTReviewerExpertise.INTERMEDIATE,
+                is_update=True)
+
+        with self.assertRaisesRegexp(
+                UserError, 'expertise level not recognised'):
+            self.db.set_jcmt_review(
+                role_class, reviewer_id,
+                expertise=999,
+                is_update=False)
+
+        with self.assertRaisesRegexp(
+                Error, 'expertise should be specified'):
+            self.db.set_jcmt_review(
+                role_class, reviewer_id,
+                expertise=None,
+                is_update=False)
+
+        self.db.set_jcmt_review(
+            role_class, reviewer_id,
+            expertise=JCMTReviewerExpertise.INTERMEDIATE,
+            is_update=False)
+
+        jcmt_review = self.db.get_jcmt_review(reviewer_id)
+
+        self.assertIsNotNone(jcmt_review)
+        self.assertIsInstance(jcmt_review, JCMTReview)
+        self.assertEqual(jcmt_review.expertise,
+                         JCMTReviewerExpertise.INTERMEDIATE)
+
+        with self.assertRaisesRegexp(
+                ConsistencyError, 'JCMT review already exist'):
+            self.db.set_jcmt_review(
+                role_class, reviewer_id,
+                expertise=JCMTReviewerExpertise.INTERMEDIATE,
+                is_update=False)
+
+        self.db.set_jcmt_review(
+            role_class, reviewer_id,
+            expertise=JCMTReviewerExpertise.EXPERT,
+            is_update=True)
+
+        jcmt_review = self.db.get_jcmt_review(reviewer_id)
+
+        self.assertIsNotNone(jcmt_review)
+        self.assertIsInstance(jcmt_review, JCMTReview)
+        self.assertEqual(jcmt_review.expertise,
+                         JCMTReviewerExpertise.EXPERT)
 
     def _create_test_call(self):
         facility_id = self.db.ensure_facility('jcmt')

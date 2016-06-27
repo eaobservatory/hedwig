@@ -76,3 +76,12 @@ jcmt_request = Table(
     Column('time', Float, nullable=False),
     UniqueConstraint('proposal_id', 'instrument', 'weather'),
     **table_opts)
+
+jcmt_review = Table(
+    'jcmt_review',
+    metadata,
+    Column('reviewer_id', None,
+           ForeignKey('reviewer.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           primary_key=True, nullable=False),
+    Column('expertise', Integer, nullable=True),
+    **table_opts)
