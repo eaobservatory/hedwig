@@ -4,7 +4,7 @@
 {% from 'macro/proposal_summary.html' import render_proposal_summary %}
 
 {% block content %}
-<h2>Proposal Information</h2>
+<h2>Proposal and Review Information</h2>
 
 {% call render_proposal_summary(facility_name, proposal, proposal_code) %}
     <tr>
@@ -24,6 +24,12 @@
         </tr>
     {% endif %}
 {% endcall %}
+
+{% if target_guideline is not none %}
+    <p>
+        <a href="{{ target_guideline }}" target="_blank">Guidelines for this review</a>
+    </p>
+{% endif %}
 
 <h2>{{ 'Review' if role_info.name_review else role_info.name }}</h2>
 

@@ -1115,6 +1115,8 @@ class GenericReview(object):
             'assessment_options': Assessment.get_options(),
             'message': message,
             'referrer': referrer,
+            'target_guideline': self.make_review_guidelines_url(
+                role=reviewer_role),
         }
 
     @with_proposal(permission=PermissionType.NONE)
