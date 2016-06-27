@@ -400,7 +400,7 @@ class ReviewPart(object):
 
             if is_update:
                 result = conn.execute(decision.update().where(
-                    decision.c.proposal_id == proposal_id,
+                    decision.c.proposal_id == proposal_id
                 ).values(values))
 
                 if result.rowcount != 1:
@@ -478,7 +478,7 @@ class ReviewPart(object):
             # Perform the insert/update.
             if is_update:
                 result = conn.execute(review.update().where(
-                    review.c.reviewer_id == reviewer_id,
+                    review.c.reviewer_id == reviewer_id
                 ).values(values))
 
                 if result.rowcount != 1:
@@ -535,5 +535,5 @@ class ReviewPart(object):
         """
 
         return 0 < conn.execute(select([count(review.c.reviewer_id)]).where(
-            review.c.reviewer_id == reviewer_id,
+            review.c.reviewer_id == reviewer_id
         )).scalar()

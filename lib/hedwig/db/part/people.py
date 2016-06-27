@@ -1225,11 +1225,11 @@ class PeoplePart(object):
     def _exists_person_user(self, conn, user_id):
         """Test whether a person exists with the given user_id."""
         return 0 < conn.execute(select([count(person.c.id)]).where(
-            person.c.user_id == user_id,
+            person.c.user_id == user_id
         )).scalar()
 
     def _exists_user_name(self, conn, name):
         """Test whether a user exists by name."""
         return 0 < conn.execute(select([count(user.c.id)]).where(
-            user.c.name == name,
+            user.c.name == name
         )).scalar()
