@@ -21,8 +21,10 @@ from __future__ import absolute_import, division, print_function, \
 from sqlalchemy.sql import select
 from sqlalchemy.sql.functions import count
 
-from ...db.meta import call, proposal
+from ...db.meta import call, proposal, reviewer
 from ...error import ConsistencyError, FormattedError, UserError
+from ...type.collection import ResultCollection
+from ...util import list_in_blocks
 from .meta import jcmt_available, jcmt_allocation, jcmt_options, \
     jcmt_request, jcmt_review
 from .type import \
@@ -52,15 +54,7 @@ class JCMTPart(object):
         Retrieve the JCMT-specific parts of a review.
         """
 
-        with self._transaction() as conn:
-            row = conn.execute(jcmt_review.select().where(
-                jcmt_review.c.reviewer_id == reviewer_id)).first()
-
-            if row is None:
-                return None
-
-            else:
-                return JCMTReview(**row)
+        return self.search_jcmt_review(reviewer_id=reviewer_id).get_single()
 
     def search_jcmt_allocation(self, proposal_id):
         """
@@ -110,6 +104,56 @@ class JCMTPart(object):
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(jcmt_request.c.id.asc())):
                 ans[row['id']] = JCMTRequest(**row)
+
+        return ans
+
+    def search_jcmt_review(self, reviewer_id=None, proposal_id=None):
+        """
+        Search for JCMT review entries.
+        """
+
+        stmt = jcmt_review.select()
+        select_from = jcmt_review
+
+        iter_field = None
+        iter_list = None
+
+        if reviewer_id is not None:
+            if isinstance(reviewer_id, list) or isinstance(reviewer_id, tuple):
+                if iter_field is not None:
+                    raise Error('multiple iterable constraints')
+                iter_field = jcmt_review.c.reviewer_id
+                iter_list = reviewer_id
+            else:
+                stmt = stmt.where(jcmt_review.c.reviewer_id == reviewer_id)
+
+        if proposal_id is not None:
+            select_from = select_from.join(reviewer)
+
+            if isinstance(proposal_id, list) or isinstance(proposal_id, tuple):
+                if iter_field is not None:
+                    raise Error('multiple iterable constraints')
+                iter_field = reviewer.c.proposal_id
+                iter_list = proposal_id
+            else:
+                stmt = stmt.where(reviewer.c.proposal_id == proposal_id)
+
+        stmt = stmt.select_from(select_from)
+
+        ans = ResultCollection()
+
+        with self._transaction() as conn:
+            if iter_field is not None:
+                for iter_block in list_in_blocks(
+                        iter_list, self.query_block_size):
+                    iter_stmt = stmt.where(iter_field.in_(iter_block))
+
+                    for row in conn.execute(iter_stmt):
+                        ans[row['reviewer_id']] = JCMTReview(*row)
+
+            else:
+                for row in conn.execute(stmt):
+                    ans[row['reviewer_id']] = JCMTReview(*row)
 
         return ans
 

@@ -635,8 +635,9 @@ class JCMT(Generic):
         if reviewer.id is None:
             jcmt_review = null_tuple(JCMTReview)
         else:
-            jcmt_review = db.get_jcmt_review(reviewer.id)
-            if jcmt_review is None:
+            try:
+                jcmt_review = db.get_jcmt_review(reviewer.id)
+            except NoSuchRecord:
                 jcmt_review = null_tuple(JCMTReview)
 
         if role_info.jcmt_expertise:
@@ -664,12 +665,12 @@ class JCMT(Generic):
     def _view_review_edit_extra(self, db, reviewer, proposal, info):
         if info is None:
             if reviewer.id is None:
-                jcmt_review = None
+                info = null_tuple(JCMTReview)
             else:
-                jcmt_review = db.get_jcmt_review(reviewer.id)
-
-            info = (jcmt_review if jcmt_review is not None
-                    else null_tuple(JCMTReview))
+                try:
+                    info = db.get_jcmt_review(reviewer.id)
+                except NoSuchRecord:
+                    info = null_tuple(JCMTReview)
 
         return {
             'jcmt_expertise_levels': JCMTReviewerExpertise.get_options(),

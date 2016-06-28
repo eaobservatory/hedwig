@@ -19,7 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from datetime import datetime
-from hedwig.error import ConsistencyError, Error, UserError
+from hedwig.error import ConsistencyError, Error, NoSuchRecord, UserError
 from hedwig.type.enum import FormatType
 from hedwig.facility.jcmt.type import \
     JCMTAvailable, JCMTAvailableCollection, \
@@ -282,9 +282,8 @@ class DBJCMTTest(DBTestCase):
 
         self.assertIsInstance(reviewer_id, int)
 
-        jcmt_review = self.db.get_jcmt_review(reviewer_id)
-
-        self.assertIsNone(jcmt_review)
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_jcmt_review(reviewer_id)
 
         with self.assertRaisesRegexp(
                 ConsistencyError, 'JCMT review does not exist'):
@@ -314,7 +313,6 @@ class DBJCMTTest(DBTestCase):
 
         jcmt_review = self.db.get_jcmt_review(reviewer_id)
 
-        self.assertIsNotNone(jcmt_review)
         self.assertIsInstance(jcmt_review, JCMTReview)
         self.assertEqual(jcmt_review.expertise,
                          JCMTReviewerExpertise.INTERMEDIATE)
