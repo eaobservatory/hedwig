@@ -265,7 +265,7 @@ class ReviewPart(object):
 
         select_from = reviewer.join(person).outerjoin(institution)
 
-        default = {}
+        default = {'review_extra': None}
 
         if with_invitation:
             select_columns.extend((
