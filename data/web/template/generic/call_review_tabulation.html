@@ -199,12 +199,12 @@
                                     <th>Rating</th>
                                     <th>Weighting</th>
                                 </tr>
-                                {% for review in proposal.reviewers.values_in_role_order(cttee_role=True) %}
+                                {% for review in proposal.reviewers.values_in_role_order(facility_role_class, cttee_role=True) %}
                                     <tr>
                                         {{ render_review_row(review, proposal) }}
                                     </tr>
                                 {% endfor %}
-                                {% for review in proposal.reviewers.values_in_role_order(cttee_role=False) %}
+                                {% for review in proposal.reviewers.values_in_role_order(facility_role_class, cttee_role=False) %}
                                     <tr {{ 'class="spacer_above"' | safe if loop.first }}>
                                         {{ render_review_row(review, proposal) }}
                                     </tr>

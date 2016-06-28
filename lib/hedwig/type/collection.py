@@ -559,7 +559,7 @@ class ReviewerCollection(ResultCollection):
 
         return [x for x in self.values() if x.role == role]
 
-    def values_in_role_order(self, cttee_role=None):
+    def values_in_role_order(self, role_class, cttee_role=None):
         """
         Iterate over the values of the collection in the order of
         the reviewer roles.
@@ -571,13 +571,11 @@ class ReviewerCollection(ResultCollection):
         invalid (or no longer recognized) roles will not be yielded.
         """
 
-        roles = self.role_class.get_options().keys()
-
         cttee_roles = None
         if cttee_role is not None:
-            cttee_roles = self.role_class.get_cttee_roles()
+            cttee_roles = role_class.get_cttee_roles()
 
-        for role in roles:
+        for role in role_class.get_options().keys():
             if cttee_role is not None:
                 if ((cttee_role and (role not in cttee_roles)) or
                         ((not cttee_role) and (role in cttee_roles))):
