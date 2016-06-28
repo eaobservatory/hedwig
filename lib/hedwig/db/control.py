@@ -45,13 +45,15 @@ RecordUpdate = namedtuple(
 
 class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                ReviewPart):
-    def __init__(self, engine):
+    def __init__(self, engine, query_block_size=50):
         """
         Create database controller object.
         """
 
         self._engine = engine
         self._lock = Lock()
+
+        self.query_block_size = query_block_size
 
     @contextmanager
     def _transaction(self, _conn=None):
