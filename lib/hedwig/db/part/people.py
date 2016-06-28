@@ -384,12 +384,6 @@ class PeoplePart(object):
         person_id must be explicitly set to None (to prevent accidental use
         of this rare use-case).
 
-        .. note:: if `with_reviews` is requested then the returned object
-            contains a ReviewerCollection in its reviews attribute.
-            However this collection will not have its reviewer `role_class`
-            set (it will be None) so none of its methods which require
-            the `role_class` can be used.
-
         Raises NoSuchRecord if the person_id doesn't exist.
         """
 
@@ -428,8 +422,7 @@ class PeoplePart(object):
                 proposals = self.search_member(person_id=person_id, _conn=conn)
 
             if with_reviews:
-                reviews = self.search_reviewer(role_class=None,
-                                               person_id=person_id, _conn=conn)
+                reviews = self.search_reviewer(person_id=person_id, _conn=conn)
 
         return Person(email=email, institution=institution,
                       proposals=proposals, reviews=reviews, **result)

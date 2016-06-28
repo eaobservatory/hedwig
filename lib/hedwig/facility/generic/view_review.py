@@ -150,8 +150,7 @@ class GenericReview(object):
         proposals = db.search_proposal(
             call_id=call.id, state=ProposalState.submitted_states(),
             with_members=True, with_reviewers=True, with_review_info=True,
-            with_decision=True, with_categories=with_extra,
-            reviewer_role_class=role_class)
+            with_decision=True, with_categories=with_extra)
 
         self.attach_review_extra(db, proposals)
 
@@ -194,7 +193,7 @@ class GenericReview(object):
             if can_view_review:
                 # Determine authorization for each review.  Hide ratings
                 # which cannot be viewed.
-                reviewers = ReviewerCollection(proposal.reviewers.role_class)
+                reviewers = ReviewerCollection()
 
                 for reviewer_id, reviewer in proposal.reviewers.items():
                     reviewer_can = auth.for_review(
@@ -222,8 +221,7 @@ class GenericReview(object):
                 # we don't have to rely on the template hiding reviews
                 # which the user can't see.
                 updated_proposal.update({
-                    'reviewers': ReviewerCollection(
-                        proposal.reviewers.role_class),
+                    'reviewers': ReviewerCollection(),
                     'rating': None,
                     'rating_std_dev': None,
                 })
@@ -569,7 +567,6 @@ class GenericReview(object):
 
         existing_person_ids = [
             x.person_id for x in db.search_reviewer(
-                role_class=role_class,
                 proposal_id=proposal.id, role=role).values()
         ]
 
@@ -1182,7 +1179,7 @@ class GenericReview(object):
 
         # Attach the PI to the proposal (as for a with_member_pi search).
         # Also attach a reviewer collection.
-        reviewers = ReviewerCollection(role_class)
+        reviewers = ReviewerCollection()
         proposal = proposal._replace(
             member=proposal.members.get_pi(default=None),
             reviewers=reviewers)
@@ -1191,7 +1188,6 @@ class GenericReview(object):
         # have to rely on the template to do this.  Also hide the rating
         # if not viewable.
         for (reviewer_id, reviewer) in db.search_reviewer(
-                role_class=role_class,
                 proposal_id=proposal.id, with_review=True,
                 with_review_text=True, with_review_note=True).items():
             reviewer_can = auth.for_review(

@@ -113,8 +113,7 @@ def for_person(db, person):
             queue_ids.add(group_member.queue_id)
 
         if queue_ids:
-            if db.search_reviewer(role_class=None,
-                                  person_id=person.id,
+            if db.search_reviewer(person_id=person.id,
                                   queue_id=list(queue_ids)):
                 return yes
 
@@ -292,8 +291,7 @@ def for_review(role_class, db, reviewer, proposal, auth_cache=None):
             # Special case: if this is the feedback review, allow all reviewers
             # with suitable roles to edit it.
             if reviewer.role == role_class.FEEDBACK:
-                if db.search_reviewer(role_class=role_class,
-                                      proposal_id=reviewer.proposal_id,
+                if db.search_reviewer(proposal_id=reviewer.proposal_id,
                                       person_id=person_id,
                                       role=role_class.get_feedback_roles()):
                     return AuthorizationWithRating(*yes, view_rating=True)

@@ -629,7 +629,7 @@ class WebAppAuthTestCase(WebAppTestCase):
         self.assertEqual(len(expect_codes), len(proposal_states),
                          'codes for review case {}'.format(case_number))
         reviewer = self.db.search_reviewer(
-            role_class, reviewer_id=reviewer_id,
+            reviewer_id=reviewer_id,
             with_review=True).get_single()
 
         if self.quick_proposal_state:

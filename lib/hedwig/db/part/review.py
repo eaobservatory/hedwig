@@ -243,7 +243,7 @@ class ReviewPart(object):
 
         return ans
 
-    def search_reviewer(self, role_class,
+    def search_reviewer(self,
                         proposal_id=None, role=None, reviewer_id=None,
                         person_id=None, review_state=None,
                         call_id=None, queue_id=None,
@@ -349,7 +349,7 @@ class ReviewPart(object):
             else:
                 stmt = stmt.where(call.c.queue_id == queue_id)
 
-        ans = ReviewerCollection(role_class)
+        ans = ReviewerCollection()
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(
@@ -451,7 +451,7 @@ class ReviewPart(object):
             # Find out what type of review this is so that we can
             # determine which attributes are appropriate.
             reviewer = self.search_reviewer(
-                role_class, reviewer_id=reviewer_id, _conn=conn).get_single()
+                reviewer_id=reviewer_id, _conn=conn).get_single()
 
             role_info = role_class.get_info(reviewer.role)
             attr_values = {k.name: v for (k, v) in values.items()}

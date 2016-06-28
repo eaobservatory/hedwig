@@ -444,11 +444,6 @@ class ReviewerCollection(ResultCollection):
     including their reviews.
     """
 
-    def __init__(self, role_class, *args, **kwargs):
-        super(ReviewerCollection, self).__init__(*args, **kwargs)
-
-        self.role_class = role_class
-
     def get_overall_rating(self, rating_weight_function, with_std_dev):
         """
         Create weighted average of the ratings of completed reviews.

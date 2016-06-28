@@ -125,7 +125,7 @@ class DBReviewTest(DBTestCase):
         person_id_3 = self.db.add_person('Reviewer 3')
 
         # Try null search.
-        result = self.db.search_reviewer(BaseReviewerRole, proposal_id)
+        result = self.db.search_reviewer(proposal_id)
         self.assertIsInstance(result, ReviewerCollection)
         self.assertEqual(len(result), 0)
 
@@ -151,8 +151,7 @@ class DBReviewTest(DBTestCase):
         self.assertIsInstance(reviewer_id_3, int)
 
         # Try searching for reviewers.
-        result = self.db.search_reviewer(BaseReviewerRole,
-                                         proposal_id=proposal_id)
+        result = self.db.search_reviewer(proposal_id=proposal_id)
         self.assertEqual(len(result), 3)
 
         for ((k, v), ref) in zip(result.items(), (
@@ -181,7 +180,6 @@ class DBReviewTest(DBTestCase):
                               institution_id=institution_id)
 
         result = self.db.search_reviewer(
-            BaseReviewerRole,
             reviewer_id=reviewer_id_3,
             with_review=True, with_review_text=True).get_single()
 
@@ -194,23 +192,21 @@ class DBReviewTest(DBTestCase):
         self.assertIsNone(result.review_format)
 
         # Test call and queue query parameters.
-        result = self.db.search_reviewer(BaseReviewerRole, call_id=1999999)
+        result = self.db.search_reviewer(call_id=1999999)
         self.assertEqual(len(result), 0)
 
-        result = self.db.search_reviewer(BaseReviewerRole, queue_id=1999999)
+        result = self.db.search_reviewer(queue_id=1999999)
         self.assertEqual(len(result), 0)
 
         # Try removing a reviewer.
         self.db.delete_reviewer(reviewer_id=reviewer_id_1)
 
-        result = self.db.search_reviewer(BaseReviewerRole,
-                                         proposal_id=proposal_id)
+        result = self.db.search_reviewer(proposal_id=proposal_id)
         self.assertEqual(len(result), 2)
 
         self.assertFalse(reviewer_id_1 in result.keys())
 
-        result = self.db.search_reviewer(BaseReviewerRole,
-                                         proposal_id=proposal_id,
+        result = self.db.search_reviewer(proposal_id=proposal_id,
                                          person_id=person_id_2)
 
         self.assertEqual(list(result.keys()), [reviewer_id_2])
@@ -253,7 +249,6 @@ class DBReviewTest(DBTestCase):
 
         # Retrieve the review.
         result = self.db.search_reviewer(
-            BaseReviewerRole,
             reviewer_id=reviewer_id_2, with_review=True).get_single()
         self.assertEqual(result.review_state, ReviewState.DONE)
         self.assertIsNone(result.review_text)
@@ -265,7 +260,6 @@ class DBReviewTest(DBTestCase):
         self.assertEqual(result.review_note_public, False)
 
         result = self.db.search_reviewer(
-            BaseReviewerRole,
             reviewer_id=reviewer_id_2, with_review=True,
             with_review_text=True).get_single()
         self.assertEqual(result.review_text, 'An updated review')

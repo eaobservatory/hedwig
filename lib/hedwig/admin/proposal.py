@@ -165,8 +165,7 @@ def send_call_proposal_feedback(db, call_id, proposals):
 
     call_proposals = db.search_proposal(
         call_id=call_id, state=ProposalState.submitted_states(),
-        with_reviewers=True, with_review_info=True,
-        reviewer_role_class=role_class)
+        with_reviewers=True, with_review_info=True)
 
     facility.attach_review_extra(db, call_proposals)
 

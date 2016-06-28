@@ -295,7 +295,6 @@ def with_review(permission):
 
             try:
                 reviewer = db.search_reviewer(
-                    role_class=role_class,
                     reviewer_id=reviewer_id,
                     with_review=True, with_review_text=True,
                     with_review_note=True).get_single()

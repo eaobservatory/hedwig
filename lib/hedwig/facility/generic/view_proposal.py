@@ -1477,7 +1477,6 @@ class GenericProposal(object):
         role_class = self.get_reviewer_roles()
 
         reviewers = db.search_reviewer(
-            role_class=role_class,
             proposal_id=proposal.id, role=role_class.FEEDBACK,
             with_review=True, with_review_text=True)
 

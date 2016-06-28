@@ -203,7 +203,7 @@ class JCMTPart(object):
         with self._transaction() as conn:
             # Determine type of review and check values are valid for it.
             reviewer = self.search_reviewer(
-                role_class, reviewer_id=reviewer_id, _conn=conn).get_single()
+                reviewer_id=reviewer_id, _conn=conn).get_single()
 
             role_info = role_class.get_info(reviewer.role)
             attr_req = {

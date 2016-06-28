@@ -199,7 +199,7 @@ class CollectionTypeTestCase(TestCase):
             [104])
 
     def test_reviewer_collection(self):
-        c = ReviewerCollection(BaseReviewerRole)
+        c = ReviewerCollection()
 
         c[201] = null_tuple(Reviewer)._replace(id=201, person_id=2001,
                                                role=BaseReviewerRole.TECH)
@@ -234,7 +234,7 @@ class CollectionTypeTestCase(TestCase):
         self.assertEqual(reviewers[0].id, 202)
 
     def test_reviewer_collection_rating(self):
-        c = ReviewerCollection(BaseReviewerRole)
+        c = ReviewerCollection()
 
         rr = BaseReviewerRole
 
