@@ -31,19 +31,6 @@ from hedwig.web.util import session, HTTPForbidden
 from .dummy_app import WebAppTestCase
 
 
-# States for which we will perform tests.  (In vaguely chronological order.)
-proposal_states = [
-    ProposalState.PREPARATION,
-    ProposalState.WITHDRAWN,
-    ProposalState.SUBMITTED,
-    ProposalState.REVIEW,
-    ProposalState.FINAL_REVIEW,
-    ProposalState.ACCEPTED,
-    ProposalState.REJECTED,
-    ProposalState.ABANDONED,
-]
-
-
 class WebAppAuthTestCase(WebAppTestCase):
     def test_can_be_admin(self):
         # Create test user accounts.
@@ -600,6 +587,7 @@ class WebAppAuthTestCase(WebAppTestCase):
     def _test_auth_proposal(self, role_class, auth_cache,
                             case_number, person_id, is_admin,
                             proposal_id, expect_codes, expect_codes_fb):
+        proposal_states = ProposalState.get_options()
         self.assertEqual(len(expect_codes), len(proposal_states),
                          'codes for proposal case {}'.format(case_number))
         self.assertEqual(len(expect_codes_fb), len(proposal_states),
@@ -609,8 +597,9 @@ class WebAppAuthTestCase(WebAppTestCase):
             proposal_orig = self.db.get_proposal(
                 None, proposal_id, with_members=True, with_reviewers=True)
 
-        for (state, expect_code, expect_code_fb) in zip(
-                proposal_states, expect_codes, expect_codes_fb):
+        for (state_info, expect_code, expect_code_fb) in zip(
+                proposal_states.items(), expect_codes, expect_codes_fb):
+            (state, state_name) = state_info
             expect = self._expect_code('proposal', case_number, expect_code)
             expect_fb = self._expect_code('proposal fb', case_number,
                                           expect_code_fb)
@@ -627,15 +616,16 @@ class WebAppAuthTestCase(WebAppTestCase):
                     auth.for_proposal(role_class, self.db, proposal,
                                       auth_cache=auth_cache),
                     expect, 'auth proposal case {} state {}'.format(
-                        case_number, ProposalState.get_name(state)))
+                        case_number, state_name))
                 self.assertEqual(
                     auth.for_proposal_feedback(role_class, self.db, proposal),
                     expect_fb, 'auth proposal fb case {} state {}'.format(
-                        case_number, ProposalState.get_name(state)))
+                        case_number, state_name))
 
     def _test_auth_review(self, role_class, auth_cache,
                           case_number, person_id, is_admin,
                           reviewer_id, expect_codes):
+        proposal_states = ProposalState.get_options()
         self.assertEqual(len(expect_codes), len(proposal_states),
                          'codes for review case {}'.format(case_number))
         reviewer = self.db.search_reviewer(
@@ -646,7 +636,9 @@ class WebAppAuthTestCase(WebAppTestCase):
             proposal_orig = self.db.get_proposal(
                 None, reviewer.proposal_id, with_members=True)
 
-        for (state, expect_code) in zip(proposal_states, expect_codes):
+        for (state_info, expect_code) in zip(
+                proposal_states.items(), expect_codes):
+            (state, state_name) = state_info
             expect = self._expect_code('review', case_number, expect_code,
                                        rating=True)
 
@@ -662,7 +654,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                     auth.for_review(role_class, self.db, reviewer, proposal,
                                     auth_cache=auth_cache),
                     expect, 'auth review case {} state {}'.format(
-                        case_number, ProposalState.get_name(state)))
+                        case_number, state_name))
 
     def _test_auth_add_review(self, role_class, auth_cache,
                               case_number, person_id, is_admin,
@@ -671,7 +663,7 @@ class WebAppAuthTestCase(WebAppTestCase):
             proposal_orig = self.db.get_proposal(
                 None, proposal_id, with_members=True, with_reviewers=True)
 
-        for state in proposal_states:
+        for (state, state_name) in ProposalState.get_options().items():
             expect = set(expect_by_state.get(state, []))
 
             if self.quick_proposal_state:
@@ -686,7 +678,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                     set(auth.can_add_review_roles(
                         role_class, self.db, proposal, auth_cache=auth_cache)),
                     expect, 'add review case {} state {}'.format(
-                        case_number, ProposalState.get_name(state)))
+                        case_number, state_name))
 
     def _expect_code(self, case_type, case_number, code, rating=False):
         expect = None

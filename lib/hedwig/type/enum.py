@@ -512,20 +512,20 @@ class ProposalState(EnumBasic):
     _info = OrderedDict((
         (PREPARATION,
             StateInfo('Prep',  'In preparation', True,  False, False, False)),
-        (SUBMITTED,
-            StateInfo('Sub',   'Submitted',      True,  True,  False, False)),
         (WITHDRAWN,
             StateInfo('Wdwn',  'Withdrawn',      True,  False, False, False)),
+        (SUBMITTED,
+            StateInfo('Sub',   'Submitted',      True,  True,  False, False)),
         (REVIEW,
             StateInfo('Rev',   'Under review',   False, True,  True,  False)),
         (FINAL_REVIEW,
             StateInfo('FR',    'Final review',   False, True,  True,  False)),
-        (ABANDONED,
-            StateInfo('Abnd',  'Abandoned',      False, False, False, False)),
         (ACCEPTED,
             StateInfo('Acc',   'Accepted',       False, True,  False, True)),
         (REJECTED,
             StateInfo('Rej',   'Rejected',       False, True,  False, True)),
+        (ABANDONED,
+            StateInfo('Abnd',  'Abandoned',      False, False, False, False)),
     ))
 
     @classmethod
@@ -602,6 +602,16 @@ class ProposalState(EnumBasic):
                 return state
 
         return None
+
+    @classmethod
+    def get_options(cls):
+        """
+        Get states and names.
+
+        :return OrderedDict: state names by state number
+        """
+
+        return OrderedDict((k, v.name) for (k, v) in cls._info.items())
 
 
 class PublicationType(EnumBasic):

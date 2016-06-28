@@ -107,6 +107,9 @@ class EnumTypeTestCase(TestCase):
                          set((MessageState.UNSENT, MessageState.DISCARD)))
 
     def test_proposal_state(self):
+        options = ProposalState.get_options()
+        self.assertIsInstance(options, OrderedDict)
+
         states = set()
         for state in (
                 ProposalState.PREPARATION,
@@ -131,6 +134,11 @@ class EnumTypeTestCase(TestCase):
 
             # State should have boolean "can_edit" property.
             self.assertIn(ProposalState.can_edit(state), (True, False))
+
+            # State should be in the options list.
+            self.assertIn(state, options)
+            self.assertIsInstance(options[state], unicode)
+            self.assertEqual(options[state], ProposalState.get_name(state))
 
         self.assertFalse(ProposalState.is_valid(999))
 
