@@ -162,10 +162,15 @@ def send_call_proposal_feedback(db, call_id, proposals):
 
     # Compute overall ratings for all submitted proposals in the call.
     proposal_rating = {}
-    for proposal in db.search_proposal(
-            call_id=call_id, state=ProposalState.submitted_states(),
-            with_reviewers=True, with_review_info=True,
-            reviewer_role_class=role_class).values():
+
+    call_proposals = db.search_proposal(
+        call_id=call_id, state=ProposalState.submitted_states(),
+        with_reviewers=True, with_review_info=True,
+        reviewer_role_class=role_class)
+
+    facility.attach_review_extra(db, call_proposals)
+
+    for proposal in call_proposals.values():
         rating = facility.calculate_overall_rating(proposal.reviewers)
         if rating is not None:
             proposal_rating[proposal.id] = rating

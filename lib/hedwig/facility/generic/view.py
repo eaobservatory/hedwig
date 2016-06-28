@@ -248,6 +248,19 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
         return {k: (v / affiliation_total)
                 for (k, v) in affiliation_count.items()}
 
+    def attach_review_extra(self, db, proposals):
+        """
+        Get additional review information from the database.
+
+        Placeholder method for facility-specific review information
+        retrieval method.
+
+        The reviewer records attached to each of the proposals in the
+        given collection should be modified as appropriate.
+        """
+
+        pass
+
     def get_feedback_extra(self, db, proposal):
         """
         Get additional context to include in the proposal feedback email

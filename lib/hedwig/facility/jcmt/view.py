@@ -792,6 +792,28 @@ class JCMT(Generic):
             'available': available_weather,
         }
 
+    def attach_review_extra(self, db, proposals):
+        """
+        Attach JCMT review information to each review associated with the
+        given collection of proposals.
+        """
+
+        # Use list comprehension to extract proposal IDs in case proposal ID
+        # isn't the collection key.
+        jcmt_reviews = db.search_jcmt_review(
+            proposal_id=[x.id for x in proposals.values()])
+
+        # Update reviewer collections associated with proposals.
+        for proposal in proposals.values():
+            for reviewer_id in list(proposal.reviewers.keys()):
+                jcmt_review = jcmt_reviews.get(reviewer_id, None)
+                if jcmt_review is None:
+                    jcmt_review = null_tuple(JCMTReview)
+
+                proposal.reviewers[reviewer_id] = \
+                    proposal.reviewers[reviewer_id]._replace(
+                        review_extra=jcmt_review)
+
     def get_feedback_extra(self, db, proposal):
         """
         Get additional context to include in the proposal feedback email

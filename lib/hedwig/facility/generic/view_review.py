@@ -153,6 +153,8 @@ class GenericReview(object):
             with_decision=True, with_categories=with_extra,
             reviewer_role_class=role_class)
 
+        self.attach_review_extra(db, proposals)
+
         affiliations = db.search_affiliation(
             queue_id=call.queue_id, hidden=False, with_weight_call_id=call.id)
 
@@ -1179,14 +1181,15 @@ class GenericReview(object):
             abstract = None
 
         # Attach the PI to the proposal (as for a with_member_pi search).
+        # Also attach a reviewer collection.
+        reviewers = ReviewerCollection(role_class)
         proposal = proposal._replace(
-            member=proposal.members.get_pi(default=None))
+            member=proposal.members.get_pi(default=None),
+            reviewers=reviewers)
 
         # Add "can_edit" fields and hide non-public notes so that we don't
         # have to rely on the template to do this.  Also hide the rating
         # if not viewable.
-        reviewers = ReviewerCollection(role_class)
-
         for (reviewer_id, reviewer) in db.search_reviewer(
                 role_class=role_class,
                 proposal_id=proposal.id, with_review=True,
@@ -1203,6 +1206,8 @@ class GenericReview(object):
                     review_rating=None, review_weight=None)
 
             reviewers[reviewer_id] = with_can_edit(reviewer, reviewer_can.edit)
+
+        self.attach_review_extra(db, {None: proposal})
 
         return {
             'title': '{}: Reviews'.format(proposal_code),
