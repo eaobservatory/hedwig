@@ -153,7 +153,28 @@ class JCMT(Generic):
         records (including their reviews).
         """
 
-        return reviews.get_overall_rating(include_unweighted=False,
+        role_class = self.get_reviewer_roles()
+
+        def rating_weight_function(reviewer):
+            role_info = role_class.get_info(reviewer.role)
+
+            if ((not role_info.rating)
+                    or (not role_info.jcmt_expertise)
+                    or (reviewer.review_rating is None)):
+                return (None, None)
+
+            expertise = reviewer.review_extra.expertise
+
+            if expertise is None:
+                # TODO: fall back to weight parameter when handling
+                # pre-expertise-level reviews?
+                return (None, None)
+
+            weight = JCMTReviewerExpertise.get_weight(expertise) / 100.0
+
+            return (reviewer.review_rating, weight)
+
+        return reviews.get_overall_rating(rating_weight_function,
                                           with_std_dev=with_std_dev)
 
     def calculate_affiliation_assignment(self, db, members, affiliations):

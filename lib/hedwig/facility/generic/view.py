@@ -207,7 +207,28 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
         records (including their reviews).
         """
 
-        return reviews.get_overall_rating(include_unweighted=True,
+        role_class = self.get_reviewer_roles()
+
+        def rating_weight_function(reviewer):
+            role_info = role_class.get_info(reviewer.role)
+
+            if (not role_info.rating) or (reviewer.review_rating is None):
+                return (None, None)
+
+            if role_info.weight:
+                if reviewer.review_weight is None:
+                    return (None, None)
+                else:
+                    weight = reviewer.review_weight / 100.0
+            else:
+                # NOTE: weighting for unrated reviews could be configurable,
+                # perhaps in the facility view or perhaps in the roles class.
+                # However for now assume a weighting of 100%.
+                weight = 1.0
+
+            return (reviewer.review_rating, weight)
+
+        return reviews.get_overall_rating(rating_weight_function,
                                           with_std_dev=with_std_dev)
 
     def calculate_affiliation_assignment(self, db, members, affiliations):

@@ -449,15 +449,21 @@ class ReviewerCollection(ResultCollection):
 
         self.role_class = role_class
 
-    def get_overall_rating(self, include_unweighted, with_std_dev):
+    def get_overall_rating(self, rating_weight_function, with_std_dev):
         """
         Create weighted average of the ratings of completed reviews.
 
-        If "unweighted" review roles are included, then these are
-        weighted at 100%.
+        :param rating_weight_function: a function to be called for each
+            review in the collection.  It should return a pair of
+            (rating, weight) where the review will be ignored if the
+            rating or weight is None.  The weight should be a fractional
+            value from 0.0 to 1.0.
 
-        If the standard deviation is requested, then this method
-        returns a pair as (overall_rating, standard_deviation).
+        :param with_std_dev: requests calculation of the standard deviation.
+
+        :return: the overall rating (floating point number), unless the
+            standard deviation is requested, when a pair retuned as
+            (overall_rating, standard_deviation).
         """
 
         total_rating = 0.0
@@ -465,27 +471,18 @@ class ReviewerCollection(ResultCollection):
         rating_and_weight = []
 
         for review in self.values():
-            role_info = self.role_class.get_info(review.role)
-
-            # Skip unweighted reviews if we don't want to include them.
-            if not (include_unweighted or role_info.weight):
-                continue
-
             # Skip incomplete reviews.
             if review.review_state != ReviewState.DONE:
                 continue
-            if (not role_info.rating) or (review.review_rating is None):
-                continue
-            if role_info.weight and (review.review_weight is None):
+
+            # Get rating and weight for this review.
+            (rating, weight) = rating_weight_function(review)
+
+            if (rating is None) or (weight) is None:
                 continue
 
             # Add to running totals.
-            if role_info.weight:
-                weight = (review.review_weight / 100.0)
-            else:
-                weight = 1.0
-
-            total_rating += review.review_rating * weight
+            total_rating += rating * weight
             total_weight += weight
 
             # Record the validated ratings with their weights in case

@@ -236,10 +236,24 @@ class CollectionTypeTestCase(TestCase):
     def test_reviewer_collection_rating(self):
         c = ReviewerCollection(BaseReviewerRole)
 
-        rating = c.get_overall_rating(include_unweighted=True,
+        rr = BaseReviewerRole
+
+        def rwf_inc_unweighted(reviewer):
+            if reviewer.review_weight is None:
+                if rr.get_info(reviewer.role).weight:
+                    return (None, None)
+                return (reviewer.review_rating, 1.0)
+            return (reviewer.review_rating, reviewer.review_weight / 100.0)
+
+        def rwf_exc_unweighted(reviewer):
+            if reviewer.review_weight is None:
+                return (None, None)
+            return (reviewer.review_rating, reviewer.review_weight / 100.0)
+
+        rating = c.get_overall_rating(rwf_inc_unweighted,
                                       with_std_dev=False)
         self.assertIsNone(rating)
-        rating = c.get_overall_rating(include_unweighted=True,
+        rating = c.get_overall_rating(rwf_inc_unweighted,
                                       with_std_dev=True)
         self.assertIsInstance(rating, tuple)
         self.assertEqual(len(rating), 2)
@@ -247,7 +261,6 @@ class CollectionTypeTestCase(TestCase):
         self.assertIsNone(rating[1])
 
         # Add some simple review ratings.
-        rr = BaseReviewerRole
         rs = [
             dict(role=rr.TECH),
             dict(role=rr.EXTERNAL),
@@ -261,20 +274,20 @@ class CollectionTypeTestCase(TestCase):
             c[n] = null_tuple(Reviewer)._replace(
                 review_state=ReviewState.DONE, **r)
 
-        self.assertEqual(c.get_overall_rating(include_unweighted=True,
+        self.assertEqual(c.get_overall_rating(rwf_inc_unweighted,
                                               with_std_dev=False), 50)
-        self.assertEqual(c.get_overall_rating(include_unweighted=False,
+        self.assertEqual(c.get_overall_rating(rwf_exc_unweighted,
                                               with_std_dev=False), 80)
 
         # Repeat test above, including calculation of standard deviation.
-        rating = c.get_overall_rating(include_unweighted=False,
+        rating = c.get_overall_rating(rwf_exc_unweighted,
                                       with_std_dev=True)
         self.assertIsInstance(rating, tuple)
         self.assertEqual(len(rating), 2)
         self.assertEqual(rating[0], 80.0)
         self.assertEqual(rating[1], 0.0)
 
-        (rating, std_dev) = c.get_overall_rating(include_unweighted=True,
+        (rating, std_dev) = c.get_overall_rating(rwf_inc_unweighted,
                                                  with_std_dev=True)
         self.assertEqual(rating, 50.0)
         self.assertEqual(std_dev, 30.0)
@@ -289,10 +302,10 @@ class CollectionTypeTestCase(TestCase):
             c[n] = null_tuple(Reviewer)._replace(
                 review_state=ReviewState.DONE, **r)
 
-        self.assertEqual(c.get_overall_rating(include_unweighted=False,
+        self.assertEqual(c.get_overall_rating(rwf_exc_unweighted,
                                               with_std_dev=False), 55)
 
-        (rating, std_dev) = c.get_overall_rating(include_unweighted=False,
+        (rating, std_dev) = c.get_overall_rating(rwf_exc_unweighted,
                                                  with_std_dev=True)
         self.assertEqual(rating, 55.0)
         self.assertAlmostEqual(std_dev, 25.981, places=3)
