@@ -259,29 +259,29 @@ class JCMT(Generic):
                 # affiliation.
                 affiliation = pi_affiliation
             elif affiliations[affiliation].type == AffiliationType.SHARED:
-                affiliation = None
+                # Count type "SHARED" as if it were "EXCLUDED" for non-PIs.
+                affiliation = pi_affiliation
 
             if affiliation is None:
-                # Affiliation is shared -- assign by affiliation fractions.
-                for (aff_id, aff_frac) in affiliation_fraction.items():
-                    affiliation_count[aff_id] += aff_frac * max_weight
+                # Affiliation is shared -- this will not happen directly but
+                # the member may have "inherited" the PIs's shared affiliation.
+                # No rules have been specified for this situation, so mark as
+                # "unknown", i.e. affiliation "0".
+                affiliation = 0
 
-                affiliation_total += max_weight
-
+            # Determine weighting factor to use.
+            if affiliation == 0:
+                # Weight "unknown" as the maximum of all the other
+                # weights. In practise there should never be any members
+                # in this state.
+                weight = max_weight
             else:
-                # Non-shared affiliation -- determine weighting factor to use.
-                if affiliation == 0:
-                    # Weight "unknown" as the maximum of all the other
-                    # weights. In practise there should never be any members
-                    # in this state.
-                    weight = max_weight
-                else:
-                    weight = affiliations[affiliation].weight
-                    if weight is None:
-                        weight = 0.0
+                weight = affiliations[affiliation].weight
+                if weight is None:
+                    weight = 0.0
 
-                affiliation_count[affiliation] += weight
-                affiliation_total += weight
+            affiliation_count[affiliation] += weight
+            affiliation_total += weight
 
         if not affiliation_total:
             # We didn't find any non-PI members (or they had zero weight),
