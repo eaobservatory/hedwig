@@ -262,10 +262,7 @@ class JCMT(Generic):
                 affiliation = None
 
             if affiliation is None:
-                # Affiliation is shared -- assign by squared affiliation
-                # fractions because the CoI's affiliation is shared
-                # based on the affiliation weights and each of those
-                # affiliations also gets weighted by the same weight.
+                # Affiliation is shared -- assign by affiliation fractions.
                 for (aff_id, aff_frac) in affiliation_fraction.items():
                     affiliation_count[aff_id] += aff_frac * max_weight
 
