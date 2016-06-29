@@ -23,44 +23,6 @@
     {% endfor %}
 {% endmacro %}
 
-{% macro render_review_row(review, proposal) %}
-    <td>
-        {% if review.can_edit %}
-            <a href="{{ url_for('.review_edit', reviewer_id=review.id, referrer='tab') }}">{{ review.role | reviewer_role_name(facility_role_class) }}</a>
-        {% else %}
-            {{ review.role | reviewer_role_name(facility_role_class) }}
-        {% endif %}
-    </td>
-    <td>
-        {% if session.is_admin or review.person_public %}
-            <a href="{{ url_for('people.person_view', person_id=review.person_id) }}">{{ review.person_name | abbr(25) }}</a>
-        {% else %}
-            {{ review.person_name | abbr(25) }}
-        {% endif %}
-    </td>
-    <td>
-        {% if review.review_assessment is not none %}
-            {{ review.review_assessment | assessment_name }}
-        {% else %}
-            &nbsp;
-        {% endif %}
-    </td>
-    <td>
-        {% if review.review_rating is not none %}
-            {{ review.review_rating }}
-        {% else %}
-            &nbsp;
-        {% endif %}
-    </td>
-    <td>
-        {% if review.review_weight is not none %}
-            {{ review.review_weight }}
-        {% else %}
-            &nbsp;
-        {% endif %}
-    </td>
-{% endmacro %}
-
 {% block content %}
 
 <nav>
@@ -199,15 +161,46 @@
                                     <th>Rating</th>
                                     <th>Weighting</th>
                                 </tr>
-                                {% for review in proposal.reviewers.values_in_role_order(facility_role_class, cttee_role=True) %}
-                                    <tr>
-                                        {{ render_review_row(review, proposal) }}
-                                    </tr>
-                                {% endfor %}
-                                {% for review in proposal.reviewers.values_in_role_order(facility_role_class, cttee_role=False) %}
-                                    <tr {{ 'class="spacer_above"' | safe if loop.first }}>
-                                        {{ render_review_row(review, proposal) }}
-                                    </tr>
+                                {% for cttee_role in [True, False] %}
+                                    {% for review in proposal.reviewers.values_in_role_order(facility_role_class, cttee_role=cttee_role) %}
+                                        <tr {{ 'class="spacer_above"' | safe if loop.first }}>
+                                            <td>
+                                                {% if review.can_edit %}
+                                                    <a href="{{ url_for('.review_edit', reviewer_id=review.id, referrer='tab') }}">{{ review.role | reviewer_role_name(facility_role_class) }}</a>
+                                                {% else %}
+                                                    {{ review.role | reviewer_role_name(facility_role_class) }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if session.is_admin or review.person_public %}
+                                                    <a href="{{ url_for('people.person_view', person_id=review.person_id) }}">{{ review.person_name | abbr(25) }}</a>
+                                                {% else %}
+                                                    {{ review.person_name | abbr(25) }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if review.review_assessment is not none %}
+                                                    {{ review.review_assessment | assessment_name }}
+                                                {% else %}
+                                                    &nbsp;
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if review.review_rating is not none %}
+                                                    {{ review.review_rating }}
+                                                {% else %}
+                                                    &nbsp;
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if review.review_weight is not none %}
+                                                    {{ review.review_weight }}
+                                                {% else %}
+                                                    &nbsp;
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
                                 {% endfor %}
                             </table>
                         </div>
