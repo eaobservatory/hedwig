@@ -64,6 +64,15 @@ class JCMT(Generic):
     def get_reviewer_roles(self):
         return JCMTReviewerRole
 
+    def get_custom_filters(self):
+        def expertise_name(value):
+            try:
+                return JCMTReviewerExpertise.get_name(value)
+            except KeyError:
+                return 'Unknown expertise'
+
+        return [v for (k, v) in locals().items() if k != 'self']
+
     def make_proposal_code(self, db, proposal):
         return 'M{}{}{:03d}'.format(
             proposal.semester_code, proposal.queue_code, proposal.number

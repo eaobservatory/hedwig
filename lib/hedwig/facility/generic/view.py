@@ -125,6 +125,16 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
 
         return BaseReviewerRole
 
+    def get_custom_filters(self):
+        """
+        Return list of custom template filter functions.
+
+        These will be registed with the web application with their names
+        prefixed with the facility code and an underscore.
+        """
+
+        return []
+
     def make_proposal_code(self, db, proposal):
         """
         Generate the proposal identifying code for a given proposal.

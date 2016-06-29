@@ -104,6 +104,10 @@ def create_web_app(db=None):
         app.url_map.converters['hedwig_review_{}'.format(facility.code)] = \
             make_enum_converter(facility.view.get_reviewer_roles())
 
+        for filter_ in facility.view.get_custom_filters():
+            app.add_template_filter(
+                filter_, '{}_{}'.format(facility.code, filter_.__name__))
+
     app.register_blueprint(create_home_blueprint(db, facilities))
     app.register_blueprint(create_admin_blueprint(db, facilities),
                            url_prefix='/admin')
