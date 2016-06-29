@@ -74,8 +74,7 @@ class BaseTargetTool(object):
         """
         Method used to find any custom routes required by this tool.
 
-        :return: a list of (template, rule, endpoint, view_func, options)
-                 tuples
+        :return: a list of RouteInfo tuples
         """
 
         return []

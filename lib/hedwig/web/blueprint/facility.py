@@ -690,10 +690,10 @@ def create_facility_blueprint(db, facility):
             'tool_proposal_{}'.format(tool_code),
             proposal_view)
 
-        for (template, rule, endpoint, func,
-                options) in tool.get_custom_routes():
-            bp.add_url_rule(rule, endpoint,
-                            make_custom_route(db, template, func), **options)
+        for route in tool.get_custom_routes():
+            bp.add_url_rule(route.rule, route.endpoint,
+                            make_custom_route(db, route.template, route.func),
+                            **route.options)
 
     @bp.context_processor
     def add_to_context():

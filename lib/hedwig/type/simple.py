@@ -221,6 +221,10 @@ ReviewerInfo = namedtuple(
     'ReviewerInfo',
     ['id', 'role', 'review_state'])
 
+RouteInfo = namedtuple(
+    'RouteInfo',
+    ['template', 'rule', 'endpoint', 'func', 'options'])
+
 Semester = namedtuple(
     'Semester',
     [x.name for x in semester.columns])

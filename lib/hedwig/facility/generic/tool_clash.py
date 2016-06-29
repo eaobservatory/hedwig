@@ -30,6 +30,7 @@ from ...view import auth
 from ...view.tool import BaseTargetTool
 from ...web.util import ErrorPage, HTTPNotFound
 from ...type.enum import AttachmentState, FileTypeInfo
+from ...type.simple import RouteInfo
 from ...type.util import null_tuple
 
 TargetClash = namedtuple('TargetClash', ('target', 'mocs', 'target_search',
@@ -66,21 +67,24 @@ class ClashTool(BaseTargetTool):
         """
 
         return [
-            ('generic/moc_view.html',
-             '/tool/clash/moc/<int:moc_id>',
-             'tool_clash_moc_info',
-             self.view_moc_info,
-             {}),
-            (None,
-             '/tool/clash/moc/<int:moc_id>/fits',
-             'tool_clash_moc_fits',
-             self.view_moc_fits,
-             {}),
-            ('generic/moc_view_list.html',
-             '/tool/clash/moc/',
-             'tool_clash_moc_list',
-             self.view_moc_list,
-             {}),
+            RouteInfo(
+                'generic/moc_view.html',
+                '/tool/clash/moc/<int:moc_id>',
+                'tool_clash_moc_info',
+                self.view_moc_info,
+                {}),
+            RouteInfo(
+                None,
+                '/tool/clash/moc/<int:moc_id>/fits',
+                'tool_clash_moc_fits',
+                self.view_moc_fits,
+                {}),
+            RouteInfo(
+                'generic/moc_view_list.html',
+                '/tool/clash/moc/',
+                'tool_clash_moc_list',
+                self.view_moc_list,
+                {}),
         ]
 
     def _view_any_mode(self, db, target_objects, args, form):
