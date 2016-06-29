@@ -26,6 +26,10 @@
     {% endif %}
 {% endblock %}
 
+{% if review_info_columns is not defined %}
+    {% set review_info_columns=['Assessment', 'Rating', 'Weighting'] %}
+{% endif %}
+
 {% if not reviews %}
     <p class="not_present">
         There are no reviews for this proposal.
@@ -35,9 +39,9 @@
         <tr>
             <th>Role</th>
             <th>Reviewer</th>
-            <th>Assessment</th>
-            <th>Rating</th>
-            <th>Weighting</th>
+            {% for info_column in review_info_columns %}
+                <th>{{ info_column }}</th>
+            {% endfor %}
             <th>Edited</th>
         </tr>
         {% for review in reviews %}
@@ -67,6 +71,7 @@
                     {% endif %}
                 </td>
                 #}
+                {% block review_info scoped %}
                 <td>
                     {% if review.review_assessment is not none %}
                         {{ review.review_assessment | assessment_name }}
@@ -88,6 +93,7 @@
                         &nbsp;
                     {% endif %}
                 </td>
+                {% endblock %}
                 <td>
                     {% if review.review_edited is not none %}
                         {{ review.review_edited | format_datetime }}
@@ -98,12 +104,12 @@
             </tr>
             {% if show_review %}
                 <tr>
-                    <td colspan="5">{{ review.review_text | format_text(review.review_format) }}</td>
+                    <td colspan="{{ review_info_columns | length + 2 }}">{{ review.review_text | format_text(review.review_format) }}</td>
                 </tr>
             {% endif %}
             {% if show_note %}
                 <tr>
-                    <td colspan="5">{{ review.review_note | format_text(review.review_note_format) }}</td>
+                    <td colspan="{{ review_info_columns | length + 2 }}">{{ review.review_note | format_text(review.review_note_format) }}</td>
                 </tr>
             {% endif %}
         {% endfor %}

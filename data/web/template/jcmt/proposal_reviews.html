@@ -1,0 +1,27 @@
+{% extends 'generic/proposal_reviews.html' %}
+
+{% set review_info_columns=['Assessment', 'Rating', 'Expertise'] %}
+
+{% block review_info %}
+    <td>
+        {% if review.review_assessment is not none %}
+            {{ review.review_assessment | assessment_name }}
+        {% else %}
+            &nbsp;
+        {% endif %}
+    </td>
+    <td>
+        {% if review.review_rating is not none %}
+            {{ review.review_rating }}
+        {% else %}
+            &nbsp;
+        {% endif %}
+    </td>
+    <td>
+        {% if review.review_extra.expertise is not none %}
+            {{ review.review_extra.expertise | jcmt_expertise_name }}
+        {% else %}
+            &nbsp;
+        {% endif %}
+    </td>
+{% endblock %}
