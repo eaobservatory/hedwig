@@ -767,9 +767,14 @@ def create_facility_blueprint(db, facility):
                 options['methods'] = ['GET', 'POST']
 
             bp.add_url_rule(
-                route.rule, route.endpoint,
+                '/tool/{}/{}'.format(tool_code, route.rule),
+                'tool_{}_{}'.format(tool_code, route.endpoint),
                 make_custom_route(
-                    db, route.template, route.func,
+                    db,
+                    (None if route.template is None
+                     else ['{}/tool_{}_{}'.format(*(x + (route.template,)))
+                           for x in template_params]),
+                    route.func,
                     **route.options),
                 **options)
 

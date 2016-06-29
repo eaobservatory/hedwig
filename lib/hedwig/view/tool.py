@@ -74,6 +74,13 @@ class BaseTargetTool(object):
         """
         Method used to find any custom routes required by this tool.
 
+        Note that the route information will automatically be prefixed
+        as follows:
+
+        * `template`: `<facility code>/tool_<tool code>_`
+        * `rule`: `/tool/<tool code>/`
+        * `endpoint`: `tool_<tool code>_`
+
         :return: a list of RouteInfo tuples
         """
 

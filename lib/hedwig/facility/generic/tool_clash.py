@@ -68,21 +68,21 @@ class ClashTool(BaseTargetTool):
 
         return [
             RouteInfo(
-                'generic/moc_view.html',
-                '/tool/clash/moc/<int:moc_id>',
-                'tool_clash_moc_info',
+                'moc_view.html',
+                'moc/<int:moc_id>',
+                'moc_info',
                 self.view_moc_info,
                 {}),
             RouteInfo(
                 None,
-                '/tool/clash/moc/<int:moc_id>/fits',
-                'tool_clash_moc_fits',
+                'moc/<int:moc_id>/fits',
+                'moc_fits',
                 self.view_moc_fits,
                 {}),
             RouteInfo(
-                'generic/moc_view_list.html',
-                '/tool/clash/moc/',
-                'tool_clash_moc_list',
+                'moc_list.html',
+                'moc/',
+                'moc_list',
                 self.view_moc_list,
                 {}),
         ]
