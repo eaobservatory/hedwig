@@ -119,7 +119,7 @@ class BaseTargetTool(object):
             'target': target,
             'message': message,
             'target_url': url_for('.tool_{}'.format(tool_code)),
-            'target_upload': url_for('.tool_upload_{}'.format(tool_code)),
+            'target_upload': url_for('.tool_{}_upload'.format(tool_code)),
         }
 
         ctx.update(self._view_single(db, target_object, args, form))
@@ -184,7 +184,7 @@ class BaseTargetTool(object):
             'run_button': 'Check',
             'mime_types': ['text/plain', 'text/csv'],
             'message': message,
-            'target_url': url_for('.tool_upload_{}'.format(tool_code)),
+            'target_url': url_for('.tool_{}_upload'.format(tool_code)),
         }
 
         ctx.update(self._view_upload(db, target_objects, args, form))

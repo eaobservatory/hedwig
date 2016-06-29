@@ -682,12 +682,12 @@ def create_facility_blueprint(db, facility):
 
         bp.add_url_rule(
             '/tool/{}/upload'.format(tool_code),
-            'tool_upload_{}'.format(tool_code),
+            'tool_{}_upload'.format(tool_code),
             upload_view, methods=['GET', 'POST'])
 
         bp.add_url_rule(
             '/tool/{}/proposal/<int:proposal_id>'.format(tool_code),
-            'tool_proposal_{}'.format(tool_code),
+            'tool_{}_proposal'.format(tool_code),
             proposal_view)
 
         for route in tool.get_custom_routes():

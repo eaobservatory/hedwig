@@ -5,7 +5,7 @@
 
 <ul>
     {% for target_tool in target_tools %}
-        <li><a href="{{ url_for(target_tool.code | fmt('.tool_proposal_{}'), proposal_id=proposal_id) }}" target="_blank">{{ target_tool.name }}</a></li>
+        <li><a href="{{ url_for(target_tool.code | fmt('.tool_{}_proposal'), proposal_id=proposal_id) }}" target="_blank">{{ target_tool.name }}</a></li>
     {% endfor %}
 </ul>
 
