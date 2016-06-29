@@ -111,6 +111,36 @@
     {% endif %}
 {% endblock %}
 
+{% block review_info_heading %}
+    <th>Assessment</th>
+    <th>Rating</th>
+    <th>Expertise</th>
+{% endblock %}
+
+{% block review_info_row %}
+    <td>
+        {% if review.review_assessment is not none %}
+            {{ review.review_assessment | assessment_name }}
+        {% else %}
+            &nbsp;
+        {% endif %}
+    </td>
+    <td>
+        {% if review.review_rating is not none %}
+            {{ review.review_rating }}
+        {% else %}
+            &nbsp;
+        {% endif %}
+    </td>
+    <td>
+        {% if review.review_extra.expertise is not none %}
+            {{ review.review_extra.expertise | jcmt_expertise_name }}
+        {% else %}
+            &nbsp;
+        {% endif %}
+    </td>
+{% endblock %}
+
 {% block footer_exempt_extra %}
     <td colspan="2" class="{{ render_cell_class(true, false) }}">{{ jcmt_exempt_total.total | fmt('{:.1f}') }}</td>
     {{ render_jcmt_request(jcmt_exempt_total, is_total=true) }}
