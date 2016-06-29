@@ -195,7 +195,7 @@ class ClashTool(BaseTargetTool):
 
         return (clashes, non_clashes)
 
-    def view_moc_list(self, db, args, form):
+    def view_moc_list(self, db):
         """
         View handler for MOC listing custom route.
         """
@@ -209,7 +209,7 @@ class ClashTool(BaseTargetTool):
             'mocs': mocs.values(),
         }
 
-    def view_moc_info(self, db, args, form, moc_id):
+    def view_moc_info(self, db, moc_id):
         """
         View handler for MOC info custom route.
         """
@@ -228,7 +228,7 @@ class ClashTool(BaseTargetTool):
             'moc': moc,
         }
 
-    def view_moc_fits(self, db, args, form, moc_id):
+    def view_moc_fits(self, db, moc_id):
         """
         View handler for MOC FITS download custom route.
         """
