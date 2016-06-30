@@ -72,27 +72,27 @@
                 </td>
                 #}
                 {% block review_info scoped %}
-                <td>
-                    {% if review.review_assessment is not none %}
-                        {{ review.review_assessment | assessment_name }}
-                    {% else %}
-                        &nbsp;
-                    {% endif %}
-                </td>
-                <td>
-                    {% if review.review_rating is not none %}
-                        {{ review.review_rating }}
-                    {% else %}
-                        &nbsp;
-                    {% endif %}
-                </td>
-                <td>
-                    {% if review.review_weight is not none %}
-                        {{ review.review_weight }}
-                    {% else %}
-                        &nbsp;
-                    {% endif %}
-                </td>
+                    <td>
+                        {% if review.review_assessment is not none %}
+                            {{ review.review_assessment | assessment_name }}
+                        {% else %}
+                            &nbsp;
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if review.review_rating is not none %}
+                            {{ review.review_rating }}
+                        {% else %}
+                            &nbsp;
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if review.review_weight is not none %}
+                            {{ review.review_weight }}
+                        {% else %}
+                            &nbsp;
+                        {% endif %}
+                    </td>
                 {% endblock %}
                 <td>
                     {% if review.review_edited is not none %}
@@ -104,7 +104,11 @@
             </tr>
             {% if show_review %}
                 <tr>
-                    <td colspan="{{ review_info_columns | length + 2 }}">{{ review.review_text | format_text(review.review_format) }}</td>
+                    <td colspan="{{ review_info_columns | length + 2 }}">
+                        {% block review_text scoped %}
+                            {{ review.review_text | format_text(review.review_format) }}
+                        {% endblock %}
+                    </td>
                 </tr>
             {% endif %}
             {% if show_note %}
