@@ -835,6 +835,7 @@ class TextRole(EnumBasic, EnumURLPath):
     TECHNICAL_CASE = 2
     SCIENCE_CASE = 3
     TOOL_NOTE = 4
+    PR_SUMMARY = 5
 
     RoleInfo = namedtuple('RoleInfo', ('name', 'shortname', 'url_path'))
 
@@ -848,6 +849,8 @@ class TextRole(EnumBasic, EnumURLPath):
             RoleInfo('Scientific Justification', 'sci',  'scientific'),
         TOOL_NOTE:
             RoleInfo('Note on Tool Results',     'tool', None),
+        PR_SUMMARY:
+            RoleInfo('Public Summary',           'pr',   None),
     }
 
     @classmethod

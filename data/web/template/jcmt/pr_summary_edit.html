@@ -1,0 +1,39 @@
+{% extends 'generic/text_edit.html' %}
+
+{% block content %}
+<p>
+In the interest of informing the public of the science undertaken at the
+telescope, the JCMT requires a summary of the project to be provided. This
+summary should be succinct (one/two paragraphs) and we ask that complex
+concepts are simplified and acronyms expanded.
+</p>
+
+<p>
+Please be aware that the summary text provided may be used at any time
+(once the project is accepted) and may be used before the project obtains
+data. For this reason please do not include any proprietary or sensitive
+information in this summary.
+</p>
+
+<p>
+We hope the following questions may guide you in writing this summary:
+</p>
+
+<ul>
+    <li>
+        What do you plan to observe?
+    </li>
+    <li>
+        Why is it scientifically important?
+    </li>
+    <li>
+        Why do you require the use of the JCMT?
+    </li>
+    <li>
+        Does/will your program make use of other telescopes
+        (particularly those on Maunakea) &mdash; if so, which ones and why?
+    </li>
+</ul>
+
+{{ super() }}
+{% endblock %}

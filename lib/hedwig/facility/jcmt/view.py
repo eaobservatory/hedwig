@@ -27,8 +27,9 @@ from ...error import NoSuchRecord, UserError
 from ...web.util import HTTPRedirect, flash, url_for
 from ...view.util import organise_collection, with_call_review, with_proposal
 from ...type.collection import ResultTable
-from ...type.enum import AffiliationType, PermissionType, ProposalState
-from ...type.simple import Link, ValidationMessage
+from ...type.enum import AffiliationType, PermissionType, ProposalState, \
+    TextRole
+from ...type.simple import Link, RouteInfo, ValidationMessage
 from ...type.util import null_tuple
 from ..generic.view import Generic
 from .calculator_heterodyne import HeterodyneCalculator
@@ -72,6 +73,16 @@ class JCMT(Generic):
                 return 'Unknown expertise'
 
         return [v for (k, v) in locals().items() if k != 'self']
+
+    def get_custom_routes(self):
+        return [
+            RouteInfo(
+                'pr_summary_edit.html',
+                '/proposal/<int:proposal_id>/pr_summary',
+                'pr_summary_edit',
+                self.view_pr_summary_edit,
+                {'allow_post': True, 'init_route_params': ['proposal_id']}),
+        ]
 
     def make_proposal_code(self, db, proposal):
         return 'M{}{}{:03d}'.format(
@@ -857,3 +868,9 @@ class JCMT(Generic):
         return {
             'jcmt_allocation': allocations.to_sorted_list(),
         }
+
+    @with_proposal(permission=PermissionType.EDIT)
+    def view_pr_summary_edit(self, db, proposal, can, form):
+        return self._edit_text(
+            db, proposal, TextRole.PR_SUMMARY, 300,
+            url_for('.pr_summary_edit', proposal_id=proposal.id), form, 10)
