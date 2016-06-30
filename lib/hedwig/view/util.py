@@ -201,7 +201,7 @@ def with_person(permission):
     return decorator
 
 
-def with_proposal(permission, **get_proposal_kwargs):
+def with_proposal(permission, indirect_facility=False, **get_proposal_kwargs):
     """
     Decorator for methods which deal with proposals.
 
@@ -229,10 +229,11 @@ def with_proposal(permission, **get_proposal_kwargs):
     def decorator(f):
         @functools.wraps(f)
         def decorated_method(self, db, proposal_id, *args, **kwargs):
-            role_class = self.get_reviewer_roles()
+            facility = (self.facility if indirect_facility else self)
+            role_class = facility.get_reviewer_roles()
 
             try:
-                proposal = db.get_proposal(self.id_, proposal_id,
+                proposal = db.get_proposal(facility.id_, proposal_id,
                                            with_members=True,
                                            with_reviewers=True,
                                            **get_proposal_kwargs)

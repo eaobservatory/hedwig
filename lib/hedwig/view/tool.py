@@ -24,8 +24,9 @@ from ..astro.coord import CoordSystem, parse_coord
 from ..astro.catalog import parse_source_list
 from ..error import NoSuchRecord, UserError
 from ..type.simple import Link, TargetObject
-from ..view import auth
+from ..type.enum import PermissionType
 from ..web.util import ErrorPage, HTTPForbidden, HTTPNotFound, url_for
+from .util import with_proposal
 from . import auth
 
 TargetCoord = namedtuple('TargetCoord', ('x', 'y', 'system'))
@@ -211,7 +212,8 @@ class BaseTargetTool(object):
 
         return self._view_any_mode(db, target_objects, args, form)
 
-    def view_proposal(self, db, proposal_id, args):
+    @with_proposal(permission=PermissionType.VIEW, indirect_facility=True)
+    def view_proposal(self, db, proposal, can, args):
         """
         View handler function for proposal-based usage of a target tool.
 
@@ -227,19 +229,7 @@ class BaseTargetTool(object):
                            coordinates
         """
 
-        try:
-            proposal = db.get_proposal(self.facility.id_, proposal_id,
-                                       with_members=True, with_reviewers=True)
-        except NoSuchRecord:
-            raise HTTPNotFound('Proposal not found')
-
-        assert proposal.id == proposal_id
-
-        if not auth.for_proposal(self.facility.get_reviewer_roles(),
-                                 db, proposal).view:
-            raise HTTPForbidden('Permission denied for this proposal.')
-
-        targets = db.search_target(proposal_id=proposal_id)
+        targets = db.search_target(proposal_id=proposal.id)
 
         target_objects = targets.to_object_list()
 
