@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict, namedtuple
 
 from ...type.base import EnumAvailable, EnumBasic
-from ...type.enum import BaseReviewerRole
+from ...type.enum import BaseReviewerRole, BaseTextRole
 from ...type.collection import ResultTable
 from ...error import UserError
 from .meta import jcmt_available, jcmt_options, jcmt_request, jcmt_review
@@ -341,6 +341,23 @@ class JCMTReviewerRole(BaseReviewerRole):
     for role_id, role_info in BaseReviewerRole._info.items():
         (extra, override) = _jcmt_info.get(role_id, (_jcmt_default_info, {}))
         _info[role_id] = RoleInfo(*(role_info._replace(**override) + extra))
+
+
+class JCMTTextRole(BaseTextRole):
+    """
+    Class providing information about proposal text roles for JCMT.
+    """
+
+    PR_SUMMARY = 101
+
+    RoleInfo = BaseTextRole.RoleInfo
+
+    #                Name                        Short   Path
+    _info = BaseTextRole._info.copy()
+    _info.update({
+        PR_SUMMARY:
+            RoleInfo('Public Summary',           'pr',   None),
+    })
 
 
 class JCMTWeather(EnumBasic, EnumAvailable):

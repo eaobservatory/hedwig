@@ -38,6 +38,7 @@ from .type import \
     JCMTInstrument, JCMTOptions, \
     JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, \
     JCMTReview, JCMTReviewerExpertise, JCMTReviewerRole, \
+    JCMTTextRole, \
     JCMTWeather
 
 
@@ -60,6 +61,9 @@ class JCMT(Generic):
 
     def get_name(self):
         return 'JCMT'
+
+    def get_text_roles(self):
+        return JCMTTextRole
 
     def get_reviewer_roles(self):
         return JCMTReviewerRole
