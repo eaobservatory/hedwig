@@ -369,6 +369,13 @@ class JCMT(Generic):
     def _validate_proposal_extra(self, db, proposal, extra):
         messages = []
 
+        if extra['jcmt_pr_summary'] is None:
+            messages.append(ValidationMessage(
+                False,
+                'The proposal does not have a public summary.',
+                'Edit the public summary',
+                url_for('.pr_summary_edit', proposal_id=proposal.id)))
+
         if not extra['requests'].table:
             messages.append(ValidationMessage(
                 True,
