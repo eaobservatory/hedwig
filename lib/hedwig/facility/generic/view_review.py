@@ -36,7 +36,7 @@ from ...web.util import ErrorPage, \
 from ...type.collection import ReviewerCollection
 from ...type.enum import AffiliationType, Assessment, \
     FileTypeInfo, FormatType, GroupType, \
-    MessageThreadType, PermissionType, ProposalState, ReviewState, TextRole
+    MessageThreadType, PermissionType, ProposalState, ReviewState
 from ...type.simple import Affiliation, Link, MemberPIInfo, \
     ProposalWithCode, Reviewer
 from ...type.util import null_tuple, with_can_edit
@@ -539,6 +539,7 @@ class GenericReview(object):
     @with_proposal(permission=PermissionType.NONE)
     def view_reviewer_add(self, db, proposal, role, form):
         role_class = self.get_reviewer_roles()
+        text_role_class = self.get_text_roles()
 
         try:
             role_info = role_class.get_info(role)
@@ -674,7 +675,8 @@ class GenericReview(object):
             if p.id not in exclude_person_ids]
 
         try:
-            abstract = db.get_proposal_text(proposal.id, TextRole.ABSTRACT)
+            abstract = db.get_proposal_text(proposal.id,
+                                            text_role_class.ABSTRACT)
         except NoSuchRecord:
             abstract = None
 
@@ -1162,6 +1164,7 @@ class GenericReview(object):
     @with_proposal(permission=PermissionType.NONE)
     def view_proposal_reviews(self, db, proposal):
         role_class = self.get_reviewer_roles()
+        text_role_class = self.get_text_roles()
 
         auth_cache = {}
         if not auth.for_review(role_class, db,
@@ -1173,7 +1176,8 @@ class GenericReview(object):
         proposal_code = self.make_proposal_code(db, proposal)
 
         try:
-            abstract = db.get_proposal_text(proposal.id, TextRole.ABSTRACT)
+            abstract = db.get_proposal_text(proposal.id,
+                                            text_role_class.ABSTRACT)
         except NoSuchRecord:
             abstract = None
 

@@ -26,7 +26,7 @@ from flask import Markup
 from hedwig.type.enum import Assessment, AttachmentState, \
     BaseReviewerRole, CallState, \
     MessageState, MessageThreadType, ProposalState, \
-    PublicationType, ReviewState, TextRole
+    PublicationType, ReviewState
 from hedwig.web.template_util import Counter
 
 from .dummy_app import WebAppTestCase
@@ -174,11 +174,6 @@ class TemplateUtilTestCase(WebAppTestCase):
                          '')
         self.assertEqual(f(BaseReviewerRole.EXTERNAL, BaseReviewerRole),
                          'reviewer_ext')
-
-    def test_filter_text_role(self):
-        f = self.app.jinja_env.filters['text_role_short_name']
-
-        self.assertEqual(f(TextRole.SCIENCE_CASE), 'sci')
 
     def test_filter_abbr(self):
         f = self.app.jinja_env.filters['abbr']

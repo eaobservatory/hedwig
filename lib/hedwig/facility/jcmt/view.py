@@ -27,8 +27,7 @@ from ...error import NoSuchRecord, UserError
 from ...web.util import HTTPRedirect, flash, url_for
 from ...view.util import organise_collection, with_call_review, with_proposal
 from ...type.collection import ResultTable
-from ...type.enum import AffiliationType, PermissionType, ProposalState, \
-    TextRole
+from ...type.enum import AffiliationType, PermissionType, ProposalState
 from ...type.simple import Link, RouteInfo, ValidationMessage
 from ...type.util import null_tuple
 from ..generic.view import Generic
@@ -325,9 +324,10 @@ class JCMT(Generic):
                 for (k, v) in affiliation_count.items()}
 
     def _view_proposal_extra(self, db, proposal):
+        role_class = self.get_text_roles()
         ctx = super(JCMT, self)._view_proposal_extra(
             db, proposal,
-            extra_text_roles={'jcmt_pr_summary': TextRole.PR_SUMMARY})
+            extra_text_roles={'jcmt_pr_summary': role_class.PR_SUMMARY})
 
         requests = db.search_jcmt_request(proposal_id=proposal.id)
 
@@ -880,8 +880,9 @@ class JCMT(Generic):
 
     @with_proposal(permission=PermissionType.EDIT)
     def view_pr_summary_edit(self, db, proposal, can, form):
+        role_class = self.get_text_roles()
         return self._edit_text(
-            db, proposal, TextRole.PR_SUMMARY, 300,
+            db, proposal, role_class.PR_SUMMARY, 300,
             url_for('.pr_summary_edit', proposal_id=proposal.id), form, 10,
             target_redir=url_for('.proposal_view', proposal_id=proposal.id,
                                  _anchor='jcmt_pr_summary'))

@@ -34,7 +34,7 @@ from ...type.collection import AffiliationCollection, \
     ResultCollection, TargetCollection
 from ...type.enum import AffiliationType, AttachmentState, \
     CallState, FigureType, FormatType, \
-    ProposalState, PublicationType, TextRole
+    ProposalState, PublicationType
 from ...type.simple import Affiliation, \
     Call, Category, Facility, \
     Member, MemberInfo, MemberPIInfo, \
@@ -216,12 +216,12 @@ class ProposalPart(object):
 
         return proposal_id
 
-    def add_proposal_figure(self, proposal_id, role, type_, figure,
+    def add_proposal_figure(self, role_class, proposal_id, role, type_, figure,
                             caption, filename, uploader_person_id,
                             _test_skip_check=False):
         if not FigureType.is_valid(type_):
             raise UserError('Figure type is not permitted or not recognised.')
-        if not TextRole.is_valid(role):
+        if not role_class.is_valid(role):
             raise Error('Invalid text role.')
         if not figure:
             # Shouldn't happen as we should have already checked the figure
@@ -610,10 +610,6 @@ class ProposalPart(object):
         stmt = select([proposal_pdf.c.pdf, proposal_pdf.c.filename])
 
         if (proposal_id is not None) and (role is not None):
-            if not TextRole.is_valid(role):
-                raise FormattedError('proposal text role not recognised: {}',
-                                     role)
-
             stmt = stmt.where(and_(
                 proposal_pdf.c.proposal_id == proposal_id,
                 proposal_pdf.c.role == role
@@ -667,10 +663,6 @@ class ProposalPart(object):
         """
         Get the given text associated with a proposal.
         """
-
-        if not TextRole.is_valid(role):
-            raise FormattedError('proposal text role not recognised: {}',
-                                 role)
 
         with self._transaction() as conn:
             row = conn.execute(proposal_text.select().where(and_(
@@ -1591,15 +1583,15 @@ class ProposalPart(object):
                     column: alternate,
                 }))
 
-    def set_proposal_pdf(self, proposal_id, role, pdf, pages, filename,
-                         uploader_person_id, _test_skip_check=False):
+    def set_proposal_pdf(self, role_class, proposal_id, role, pdf, pages,
+                         filename, uploader_person_id, _test_skip_check=False):
         """
         Insert or update a given proposal PDF.
 
         Returns the PDF identifier.
         """
 
-        if not TextRole.is_valid(role):
+        if not role_class.is_valid(role):
             raise FormattedError('proposal text role not recognised: {}',
                                  role)
 
@@ -1684,7 +1676,7 @@ class ProposalPart(object):
                     proposal_pdf_preview.c.preview: png,
                 }))
 
-    def set_proposal_text(self, proposal_id, role, text, format,
+    def set_proposal_text(self, role_class, proposal_id, role, text, format,
                           words, editor_person_id, is_update,
                           _test_skip_check=False):
         """
@@ -1699,7 +1691,7 @@ class ProposalPart(object):
             raise UserError('Text format not specified.')
         if not FormatType.is_valid(format):
             raise UserError('Text format not recognised.')
-        if not TextRole.is_valid(role):
+        if not role_class.is_valid(role):
             raise FormattedError('proposal text role not recognised: {}',
                                  role)
 

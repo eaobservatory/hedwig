@@ -331,6 +331,12 @@ Some examples of such methods are:
   This method should implement your rules for determining the affiliation
   of a proposal based on the affiliations of its members.
 
+* :meth:`~hedwig.facility.generic.view.Generic.get_text_roles`
+
+  This method should return the enum-style class defining text roles
+  for the facility.  This will usually be a subclass of
+  :class:`~hedwig.type.enum.BaseTextRole`.
+
 * :meth:`~hedwig.facility.generic.view.Generic.get_reviewer_roles`
 
   This method should return the enum-style class defining reviewer roles
@@ -379,10 +385,11 @@ Here is an abbreviated version of these methods:
         return ctx
 
     def _view_proposal_extra(self, db, proposal):
+        role_class = self.get_text_roles()
         proposal_text = db.get_all_proposal_text(proposal.id)
 
         extra = {
-            'abstract': proposal_text.get(TextRole.ABSTRACT, None),
+            'abstract': proposal_text.get(role_class.ABSTRACT, None),
         }
 
         return extra

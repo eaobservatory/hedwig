@@ -23,8 +23,9 @@ from unittest import TestCase
 
 from hedwig.error import Error
 from hedwig.type.enum import \
-    Assessment, AttachmentState, BaseReviewerRole, CallState, GroupType, \
-    MessageState, ProposalState, ReviewState, TextRole
+    Assessment, AttachmentState, BaseReviewerRole, BaseTextRole, \
+    CallState, GroupType, \
+    MessageState, ProposalState, ReviewState
 
 
 class EnumTypeTestCase(TestCase):
@@ -297,29 +298,33 @@ class EnumTypeTestCase(TestCase):
                  ProposalState.ACCEPTED, ProposalState.REJECTED)))
 
     def test_text_role(self):
-        self.assertTrue(TextRole.is_valid(TextRole.ABSTRACT))
-        self.assertFalse(TextRole.is_valid(999))
+        self.assertTrue(BaseTextRole.is_valid(BaseTextRole.ABSTRACT))
+        self.assertFalse(BaseTextRole.is_valid(999))
 
-        self.assertIsInstance(TextRole.get_name(TextRole.TECHNICAL_CASE),
-                              unicode)
+        self.assertIsInstance(
+            BaseTextRole.get_name(BaseTextRole.TECHNICAL_CASE),
+            unicode)
 
-        self.assertIsInstance(TextRole.short_name(TextRole.SCIENCE_CASE),
-                              unicode)
+        self.assertIsInstance(
+            BaseTextRole.short_name(BaseTextRole.SCIENCE_CASE),
+            unicode)
 
-        self.assertIsInstance(TextRole.url_path(TextRole.TECHNICAL_CASE),
-                              unicode)
+        self.assertIsInstance(
+            BaseTextRole.url_path(BaseTextRole.TECHNICAL_CASE),
+            unicode)
 
         with self.assertRaisesRegexp(Error, 'has no URL path'):
-            TextRole.url_path(TextRole.TOOL_NOTE)
+            BaseTextRole.url_path(BaseTextRole.TOOL_NOTE)
 
-        self.assertEqual(TextRole.get_url_paths(), ['technical', 'scientific'])
+        self.assertEqual(
+            BaseTextRole.get_url_paths(), ['technical', 'scientific'])
 
-        self.assertEqual(TextRole.by_url_path('scientific'),
-                         TextRole.SCIENCE_CASE)
-        self.assertEqual(TextRole.by_url_path('technical'),
-                         TextRole.TECHNICAL_CASE)
+        self.assertEqual(BaseTextRole.by_url_path('scientific'),
+                         BaseTextRole.SCIENCE_CASE)
+        self.assertEqual(BaseTextRole.by_url_path('technical'),
+                         BaseTextRole.TECHNICAL_CASE)
 
         with self.assertRaisesRegexp(Error, 'path .* not recognised'):
-            TextRole.by_url_path('something_else')
+            BaseTextRole.by_url_path('something_else')
 
-        self.assertIsNone(TextRole.by_url_path('something_else', None))
+        self.assertIsNone(BaseTextRole.by_url_path('something_else', None))

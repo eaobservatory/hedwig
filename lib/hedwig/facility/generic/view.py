@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import defaultdict, OrderedDict
 
 from ...error import NoSuchRecord
-from ...type.enum import AffiliationType, BaseReviewerRole
+from ...type.enum import AffiliationType, BaseReviewerRole, BaseTextRole
 from .tool_clash import ClashTool
 from .view_admin import GenericAdmin
 from .view_home import GenericHome
@@ -116,6 +116,14 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
         """
 
         return (ClashTool,)
+
+    def get_text_roles(self):
+        """
+        Get the text roles enum-style class to be used with this
+        facility.
+        """
+
+        return BaseTextRole
 
     def get_reviewer_roles(self):
         """

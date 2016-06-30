@@ -26,9 +26,9 @@ from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
 from hedwig.type.collection import AffiliationCollection, \
     CallCollection, MemberCollection, \
     ProposalTextCollection, ResultCollection, TargetCollection
-from hedwig.type.enum import AffiliationType, AttachmentState, \
+from hedwig.type.enum import AffiliationType, AttachmentState, BaseTextRole, \
     CallState, FigureType, \
-    FormatType, ProposalState, TextRole
+    FormatType, ProposalState
 from hedwig.type.simple import Affiliation, Call, Category, \
     Facility, Member, MemberInstitution, \
     Proposal, ProposalCategory, ProposalFigureInfo, ProposalPDFInfo, \
@@ -713,8 +713,8 @@ class DBProposalTest(DBTestCase):
     def test_proposal_text(self):
         # "Define" extra text roles for the purpose of testing this
         # method before multiple roles are implemented.
-        TextRole._info[40] = TextRole.RoleInfo('Role 40', 'r40', None)
-        TextRole._info[41] = TextRole.RoleInfo('Role 41', 'r41', None)
+        BaseTextRole._info[40] = BaseTextRole.RoleInfo('Role 40', 'r40', None)
+        BaseTextRole._info[41] = BaseTextRole.RoleInfo('Role 41', 'r41', None)
 
         (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
         person_id = self.db.add_person('Person 1')
@@ -730,68 +730,71 @@ class DBProposalTest(DBTestCase):
 
         # Test we can't use an invalid format code or role number.
         with self.assertRaisesRegexp(UserError, 'format not recognised'):
-            self.db.set_proposal_text(proposal_id_1, TextRole.ABSTRACT,
-                                      'test', 999, 1, person_id, False)
+            self.db.set_proposal_text(
+                BaseTextRole, proposal_id_1, BaseTextRole.ABSTRACT,
+                'test', 999, 1, person_id, False)
         with self.assertRaisesRegexp(Error, 'text role not recognised'):
-            self.db.set_proposal_text(proposal_id_1, 999, 'test',
-                                      FormatType.PLAIN, 1, person_id, False)
+            self.db.set_proposal_text(
+                BaseTextRole, proposal_id_1, 999, 'test',
+                FormatType.PLAIN, 1, person_id, False)
 
         # Test we can't get, delete or update a non-existant record.
         with self.assertRaisesRegexp(NoSuchRecord, '^text does not exist'):
-            self.db.get_proposal_text(proposal_id_1, TextRole.ABSTRACT)
+            self.db.get_proposal_text(
+                proposal_id_1, BaseTextRole.ABSTRACT)
 
         with self.assertRaisesRegexp(ConsistencyError, '^text does not exist'):
             self.db.delete_proposal_text(proposal_id_1,
-                                         TextRole.ABSTRACT)
+                                         BaseTextRole.ABSTRACT)
 
         with self.assertRaisesRegexp(ConsistencyError, '^no row matched'):
             self.db.delete_proposal_text(proposal_id_1,
-                                         TextRole.ABSTRACT,
+                                         BaseTextRole.ABSTRACT,
                                          _test_skip_check=True)
 
         with self.assertRaisesRegexp(ConsistencyError, '^text does not exist'):
-            self.db.set_proposal_text(proposal_id_1,
-                                      TextRole.TECHNICAL_CASE, 'test',
+            self.db.set_proposal_text(BaseTextRole, proposal_id_1,
+                                      BaseTextRole.TECHNICAL_CASE, 'test',
                                       FormatType.PLAIN, 1, person_id, True)
 
         with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
-            self.db.set_proposal_text(proposal_id_1,
-                                      TextRole.TECHNICAL_CASE, 'test',
+            self.db.set_proposal_text(BaseTextRole, proposal_id_1,
+                                      BaseTextRole.TECHNICAL_CASE, 'test',
                                       FormatType.PLAIN, 1, person_id, True,
                                       _test_skip_check=True)
 
         # Try creating and updating some text.
         self.db.set_proposal_text(
-            proposal_id_1, TextRole.SCIENCE_CASE, 'test',
+            BaseTextRole, proposal_id_1, BaseTextRole.SCIENCE_CASE, 'test',
             FormatType.PLAIN, 1, person_id, False)
         self.assertEqual(self.db.get_proposal_text(
-            proposal_id_1, TextRole.SCIENCE_CASE),
+            proposal_id_1, BaseTextRole.SCIENCE_CASE),
             ProposalText('test', FormatType.PLAIN))
         self.db.set_proposal_text(
-            proposal_id_1, TextRole.SCIENCE_CASE, 'change',
+            BaseTextRole, proposal_id_1, BaseTextRole.SCIENCE_CASE, 'change',
             FormatType.PLAIN, 1, person_id, True)
         self.assertEqual(self.db.get_proposal_text(
-            proposal_id_1, TextRole.SCIENCE_CASE),
+            proposal_id_1, BaseTextRole.SCIENCE_CASE),
             ProposalText('change', FormatType.PLAIN))
 
         # Check we can't re-create an existing text record.
         with self.assertRaisesRegexp(ConsistencyError, '^text already exists'):
             self.db.set_proposal_text(
-                proposal_id_1, TextRole.SCIENCE_CASE, 'new',
+                BaseTextRole, proposal_id_1, BaseTextRole.SCIENCE_CASE, 'new',
                 FormatType.PLAIN, 1, person_id, False)
 
         with self.assertRaises(DatabaseIntegrityError):
             self.db.set_proposal_text(
-                proposal_id_1, TextRole.SCIENCE_CASE, 'new',
+                BaseTextRole, proposal_id_1, BaseTextRole.SCIENCE_CASE, 'new',
                 FormatType.PLAIN, 1, person_id, False,
                 _test_skip_check=True)
 
         # Now delete the record.
         self.db.delete_proposal_text(
-            proposal_id_1, TextRole.SCIENCE_CASE)
+            proposal_id_1, BaseTextRole.SCIENCE_CASE)
         with self.assertRaises(NoSuchRecord):
             self.db.get_proposal_text(
-                proposal_id_1, TextRole.SCIENCE_CASE)
+                proposal_id_1, BaseTextRole.SCIENCE_CASE)
 
         # "Define" some extra format types just for the purpose of testing
         # this method before multiple formats have been implemented.
@@ -800,27 +803,30 @@ class DBProposalTest(DBTestCase):
         FormatType._info[993] = FormatType.FormatTypeInfo('RST', True)
 
         # Add and change multiple records.
-        self.db.set_proposal_text(proposal_id_1, 40, 'a',
+        self.db.set_proposal_text(BaseTextRole, proposal_id_1, 40, 'a',
                                   FormatType.PLAIN, 1, person_id, False)
-        self.db.set_proposal_text(proposal_id_1, 41, 'b',
+        self.db.set_proposal_text(BaseTextRole, proposal_id_1, 41, 'b',
                                   FormatType.PLAIN, 1, person_id, False)
-        self.db.set_proposal_text(proposal_id_2, 40, 'c',
+        self.db.set_proposal_text(BaseTextRole, proposal_id_2, 40, 'c',
                                   991, 1, person_id, False)
-        self.db.set_proposal_text(proposal_id_2, 41, 'd',
+        self.db.set_proposal_text(BaseTextRole, proposal_id_2, 41, 'd',
                                   992, 1, person_id, False)
 
-        self.db.set_proposal_text(proposal_id_2, 40, 'cc', 993,
+        self.db.set_proposal_text(BaseTextRole, proposal_id_2, 40, 'cc', 993,
                                   1, person_id, True)
         self.db.delete_proposal_text(proposal_id_1, 41)
 
-        self.assertEqual(self.db.get_proposal_text(proposal_id_1, 40),
-                         ProposalText('a', FormatType.PLAIN))
+        self.assertEqual(
+            self.db.get_proposal_text(proposal_id_1, 40),
+            ProposalText('a', FormatType.PLAIN))
         with self.assertRaises(NoSuchRecord):
             self.db.get_proposal_text(proposal_id_1, 41)
-        self.assertEqual(self.db.get_proposal_text(proposal_id_2, 40),
-                         ProposalText('cc', 993))
-        self.assertEqual(self.db.get_proposal_text(proposal_id_2, 41),
-                         ProposalText('d', 992))
+        self.assertEqual(
+            self.db.get_proposal_text(proposal_id_2, 40),
+            ProposalText('cc', 993))
+        self.assertEqual(
+            self.db.get_proposal_text(proposal_id_2, 41),
+            ProposalText('d', 992))
 
         # Try searching for text.
         result = self.db.search_proposal_text(proposal_id=proposal_id_2)
@@ -842,7 +848,7 @@ class DBProposalTest(DBTestCase):
     def test_proposal_pdf(self):
         (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
         pdf = b'dummy PDF file'
-        role = TextRole.TECHNICAL_CASE
+        role = BaseTextRole.TECHNICAL_CASE
 
         person_id = self.db.add_person('Person 1')
         proposal_id = self.db.add_proposal(call_id, person_id,
@@ -852,13 +858,18 @@ class DBProposalTest(DBTestCase):
         result = self.db.search_proposal_pdf(proposal_id=proposal_id)
         self.assertEqual(len(result), 0)
 
-        pdf_id = self.db.set_proposal_pdf(proposal_id, role, pdf, 4,
-                                          'test.pdf', person_id)
+        pdf_id = self.db.set_proposal_pdf(
+            BaseTextRole, proposal_id, role, pdf, 4,
+            'test.pdf', person_id)
         self.assertIsInstance(pdf_id, int)
 
-        self.assertEqual(self.db.get_proposal_pdf(proposal_id, role).data, pdf)
-        self.assertEqual(self.db.get_proposal_pdf(None, None, id_=pdf_id).data,
-                         pdf)
+        self.assertEqual(
+            self.db.get_proposal_pdf(proposal_id, role).data,
+            pdf)
+        self.assertEqual(
+            self.db.get_proposal_pdf(None, None,
+                                     id_=pdf_id).data,
+            pdf)
 
         result = self.db.search_proposal_pdf(proposal_id=proposal_id)
         self.assertEqual(len(result), 1)
@@ -921,7 +932,7 @@ class DBProposalTest(DBTestCase):
     def test_proposal_fig(self):
         (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
         fig = b'dummy figure'
-        role = TextRole.TECHNICAL_CASE
+        role = BaseTextRole.TECHNICAL_CASE
         type_ = FigureType.PNG
 
         person_id = self.db.add_person('Person 1')
@@ -932,7 +943,8 @@ class DBProposalTest(DBTestCase):
         result = self.db.search_proposal_figure(proposal_id=proposal_id)
         self.assertEqual(len(result), 0)
 
-        fig_id = self.db.add_proposal_figure(proposal_id, role, type_, fig,
+        fig_id = self.db.add_proposal_figure(BaseTextRole,
+                                             proposal_id, role, type_, fig,
                                              'Figure caption.', 'test.png',
                                              person_id)
         self.assertIsInstance(fig_id, int)

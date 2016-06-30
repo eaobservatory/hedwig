@@ -826,9 +826,13 @@ class ReviewState(EnumBasic, EnumDisplayClass):
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
 
-class TextRole(EnumBasic, EnumURLPath):
+class BaseTextRole(EnumBasic, EnumURLPath):
     """
-    Class representing roles which a piece of text may have on a proposal.
+    Base for classes representing roles which a piece of text may have
+    on a proposal.
+
+    It is recommended that facility-specific subclasses allocate higher
+    identifier numbers for facility-specific roles, e.g. numbers above 100.
     """
 
     ABSTRACT = 1

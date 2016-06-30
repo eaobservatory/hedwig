@@ -27,8 +27,9 @@ from hedwig.type.collection import \
     CallCollection, EmailCollection, GroupMemberCollection, MemberCollection, \
     OrderedResultCollection, ResultCollection, \
     ProposalFigureCollection, ReviewerCollection
-from hedwig.type.enum import BaseReviewerRole, CallState, GroupType, \
-    ReviewState, TextRole
+from hedwig.type.enum import BaseReviewerRole, BaseTextRole, \
+    CallState, GroupType, \
+    ReviewState
 from hedwig.type.simple import \
     Call, Email, GroupMember, Member, \
     ProposalFigureInfo, Reviewer
@@ -126,16 +127,18 @@ class CollectionTypeTestCase(TestCase):
         fc = ProposalFigureCollection()
 
         fc[1001] = null_tuple(ProposalFigureInfo)._replace(
-            id=1001, role=TextRole.TECHNICAL_CASE)
+            id=1001, role=BaseTextRole.TECHNICAL_CASE)
         fc[1002] = null_tuple(ProposalFigureInfo)._replace(
-            id=1002, role=TextRole.TECHNICAL_CASE)
+            id=1002, role=BaseTextRole.TECHNICAL_CASE)
         fc[1003] = null_tuple(ProposalFigureInfo)._replace(
-            id=1003, role=TextRole.SCIENCE_CASE)
+            id=1003, role=BaseTextRole.SCIENCE_CASE)
         fc[1004] = null_tuple(ProposalFigureInfo)._replace(
-            id=1004, role=TextRole.SCIENCE_CASE)
+            id=1004, role=BaseTextRole.SCIENCE_CASE)
 
-        tech = set((x.id for x in fc.values_by_role(TextRole.TECHNICAL_CASE)))
-        sci = set((x.id for x in fc.values_by_role(TextRole.SCIENCE_CASE)))
+        tech = set((x.id for x in fc.values_by_role(
+            BaseTextRole.TECHNICAL_CASE)))
+        sci = set((x.id for x in fc.values_by_role(
+            BaseTextRole.SCIENCE_CASE)))
 
         self.assertEqual(tech, set((1001, 1002)))
         self.assertEqual(sci, set((1003, 1004)))

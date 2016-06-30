@@ -25,7 +25,7 @@ from jinja2.runtime import Undefined
 
 from ..type.enum import AffiliationType, Assessment, \
     AttachmentState, CallState, MessageState, MessageThreadType, \
-    ProposalState, PublicationType, ReviewState, TextRole
+    ProposalState, PublicationType, ReviewState
 
 from .format import format_text
 
@@ -211,10 +211,6 @@ def register_template_utils(app):
                 role_class.get_display_class(value))
         except KeyError:
             return ''
-
-    @app.template_filter()
-    def text_role_short_name(value):
-        return TextRole.short_name(value)
 
     @app.template_filter()
     def abbr(value, length=20):

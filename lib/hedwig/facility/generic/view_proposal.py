@@ -31,7 +31,7 @@ from ...type.collection import PrevProposalCollection, ResultCollection, \
     TargetCollection
 from ...type.enum import AffiliationType, AttachmentState, \
     CallState, FigureType, FormatType, MessageThreadType, \
-    PermissionType, ProposalState, PublicationType, TextRole
+    PermissionType, ProposalState, PublicationType
 from ...type.simple import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
     PrevProposal, PrevProposalPub, \
@@ -150,6 +150,8 @@ class GenericProposal(object):
         to the proposal.
         """
 
+        role_class = self.get_text_roles()
+
         proposal_text = db.get_all_proposal_text(proposal.id)
         proposal_pdf = db.search_proposal_pdf(proposal.id)
 
@@ -176,20 +178,20 @@ class GenericProposal(object):
             for x in db.search_prev_proposal(proposal_id=proposal.id).values()]
 
         extra = {
-            'abstract': proposal_text.get(TextRole.ABSTRACT, None),
+            'abstract': proposal_text.get(role_class.ABSTRACT, None),
             'targets': targets,
             'target_total_time': target_total_time,
             'calculators': self.calculators.values(),
             'calculations': self._prepare_calculations(calculations),
             'target_tools': self.target_tools.values(),
-            'tool_note': proposal_text.get(TextRole.TOOL_NOTE, None),
+            'tool_note': proposal_text.get(role_class.TOOL_NOTE, None),
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id).values(),
             'prev_proposals': prev_proposals,
         }
 
-        for role in (TextRole.TECHNICAL_CASE, TextRole.SCIENCE_CASE):
-            extra['{}_case'.format(TextRole.short_name(role))] = {
+        for role in (role_class.TECHNICAL_CASE, role_class.SCIENCE_CASE):
+            extra['{}_case'.format(role_class.short_name(role))] = {
                 'role': role,
                 'text': proposal_text.get(role, None),
                 'pdf': proposal_pdf.get_role(role, None),
@@ -232,6 +234,7 @@ class GenericProposal(object):
     def _validate_proposal_extra(self, db, proposal, extra,
                                  skip_missing_targets=False,
                                  check_excluded_pi=False):
+        role_class = self.get_text_roles()
         messages = []
 
         if check_excluded_pi:
@@ -298,9 +301,9 @@ class GenericProposal(object):
                 'See available calculators',
                 url_for('.facility_home', _anchor='calc')))
 
-        for role in (TextRole.TECHNICAL_CASE, TextRole.SCIENCE_CASE):
-            role_name = TextRole.get_name(role)
-            case = extra['{}_case'.format(TextRole.short_name(role))]
+        for role in (role_class.TECHNICAL_CASE, role_class.SCIENCE_CASE):
+            role_name = role_class.get_name(role)
+            case = extra['{}_case'.format(role_class.short_name(role))]
 
             if case['text'] is not None:
                 for fig in case['fig']:
@@ -474,8 +477,9 @@ class GenericProposal(object):
 
     @with_proposal(permission=PermissionType.EDIT)
     def view_abstract_edit(self, db, proposal, can, form):
+        role_class = self.get_text_roles()
         return self._edit_text(
-            db, proposal, TextRole.ABSTRACT, proposal.abst_word_lim,
+            db, proposal, role_class.ABSTRACT, proposal.abst_word_lim,
             url_for('.abstract_edit', proposal_id=proposal.id), form, 10,
             extra_initialization=self._view_abstract_edit_init,
             extra_form_read=self._view_abstract_edit_read,
@@ -1078,8 +1082,9 @@ class GenericProposal(object):
 
     @with_proposal(permission=PermissionType.EDIT)
     def view_tool_note_edit(self, db, proposal, can, form):
+        role_class = self.get_text_roles()
         return self._edit_text(
-            db, proposal, TextRole.TOOL_NOTE, proposal.expl_word_lim,
+            db, proposal, role_class.TOOL_NOTE, proposal.expl_word_lim,
             url_for('.tool_note_edit', proposal_id=proposal.id), form, 10,
             extra_initialization=self._view_tool_note_edit_init,
             target_redir=url_for('.proposal_view', proposal_id=proposal.id,
@@ -1098,7 +1103,8 @@ class GenericProposal(object):
 
     @with_proposal(permission=PermissionType.EDIT)
     def view_case_edit(self, db, proposal, can, role):
-        code = TextRole.short_name(role)
+        role_class = self.get_text_roles()
+        code = role_class.short_name(role)
         call = db.get_call(facility_id=None, call_id=proposal.call_id)
 
         text_info = db.search_proposal_text(proposal_id=proposal.id, role=role)
@@ -1112,7 +1118,7 @@ class GenericProposal(object):
             with_caption=True, with_uploader_name=True).values()
 
         return {
-            'title': 'Edit {}'.format(TextRole.get_name(role).title()),
+            'title': 'Edit {}'.format(role_class.get_name(role).title()),
             'proposal_id': proposal.id,
             'proposal_code': self.make_proposal_code(db, proposal),
             'role_code': code,
@@ -1126,17 +1132,18 @@ class GenericProposal(object):
             'figures': figures,
             'pdf': pdf_info,
             'help_link': url_for('help.user_page',
-                                 page_name=TextRole.url_path(role)),
+                                 page_name=role_class.url_path(role)),
         }
 
     @with_proposal(permission=PermissionType.EDIT)
     def view_case_edit_text(self, db, proposal, can, role, form):
-        code = TextRole.short_name(role)
+        role_class = self.get_text_roles()
+        code = role_class.short_name(role)
 
         figures = db.search_proposal_figure(
             proposal_id=proposal.id, role=role).values()
 
-        if role == TextRole.TECHNICAL_CASE:
+        if role == role_class.TECHNICAL_CASE:
             calculations = self._prepare_calculations(
                 db.search_calculation(proposal_id=proposal.id))
         else:
@@ -1152,8 +1159,9 @@ class GenericProposal(object):
     @with_proposal(permission=PermissionType.EDIT)
     def view_case_edit_figure(self, db, proposal, can, fig_id, role,
                               form, file):
-        code = TextRole.short_name(role)
-        name = TextRole.get_name(role)
+        role_class = self.get_text_roles()
+        code = role_class.short_name(role)
+        name = role_class.get_name(role)
         max_size = int(get_config().get('upload', 'max_fig_size'))
         fig_limit = getattr(proposal, code + '_fig_lim')
         word_limit = proposal.capt_word_lim
@@ -1230,7 +1238,7 @@ class GenericProposal(object):
                     if figure.id is None:
                         # Add new figure.
                         db.add_proposal_figure(
-                            proposal.id, role, **figure_args)
+                            role_class, proposal.id, role, **figure_args)
 
                         flash('The new figure has been uploaded.')
 
@@ -1276,8 +1284,9 @@ class GenericProposal(object):
 
     @with_proposal(permission=PermissionType.EDIT)
     def view_case_manage_figure(self, db, proposal, can, role, form):
-        code = TextRole.short_name(role)
-        name = TextRole.get_name(role)
+        role_class = self.get_text_roles()
+        code = role_class.short_name(role)
+        name = role_class.get_name(role)
         message = None
 
         figures = db.search_proposal_figure(proposal_id=proposal.id, role=role,
@@ -1346,8 +1355,9 @@ class GenericProposal(object):
 
     @with_proposal(permission=PermissionType.EDIT)
     def view_case_edit_pdf(self, db, proposal, can, role, file):
-        code = TextRole.short_name(role)
-        name = TextRole.get_name(role)
+        role_class = self.get_text_roles()
+        code = role_class.short_name(role)
+        name = role_class.get_name(role)
         page_limit = getattr(proposal, code + '_page_lim')
         max_size = int(get_config().get('upload', 'max_pdf_size'))
         message = None
@@ -1381,8 +1391,9 @@ class GenericProposal(object):
                         page_count, page_limit,
                         ('page' if page_limit == 1 else 'pages'))
 
-                db.set_proposal_pdf(proposal.id, role, buff, page_count,
-                                    filename, session['person']['id'])
+                db.set_proposal_pdf(
+                    role_class, proposal.id, role, buff, page_count,
+                    filename, session['person']['id'])
 
                 flash('The {} has been uploaded.', name.lower())
 
@@ -1409,7 +1420,7 @@ class GenericProposal(object):
             return db.get_proposal_pdf(proposal.id, role, md5sum=md5sum)
         except NoSuchRecord:
             raise HTTPNotFound('{} PDF not found.'.format(
-                TextRole.get_name(role).capitalize()))
+                role_class.get_name(role).capitalize()))
 
     @with_proposal(permission=PermissionType.VIEW)
     def view_case_view_pdf_preview(self, db, proposal, can, page, role,
@@ -1501,7 +1512,8 @@ class GenericProposal(object):
                    figures=None, calculations=None, target_redir=None,
                    extra_initialization=None, extra_form_read=None,
                    extra_form_proc=None):
-        name = TextRole.get_name(role)
+        role_class = self.get_text_roles()
+        name = role_class.get_name(role)
         message = None
 
         try:
@@ -1530,7 +1542,7 @@ class GenericProposal(object):
                         '{} is too long: {} / {} words',
                         name.capitalize(), word_count, word_limit)
 
-                db.set_proposal_text(proposal.id, role,
+                db.set_proposal_text(role_class, proposal.id, role,
                                      text.text, text.format, word_count,
                                      session['person']['id'], is_update)
 
@@ -1546,7 +1558,7 @@ class GenericProposal(object):
                 message = e.message
 
         is_case_text = (role in
-                        (TextRole.TECHNICAL_CASE, TextRole.SCIENCE_CASE))
+                        (role_class.TECHNICAL_CASE, role_class.SCIENCE_CASE))
 
         title_suffix = 'Text' if is_case_text else ''
 
