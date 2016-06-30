@@ -659,6 +659,21 @@ class IntegrationTest(DummyConfigTestCase):
             'The abstract has been saved.',
             self.browser.page_source)
 
+        # Edit the public summary.
+        self.browser.find_element_by_partial_link_text(
+            'Edit public summary').click()
+
+        self.browser.find_element_by_name('text').send_keys(
+            'We are observing ...')
+
+        self._save_screenshot(self.user_image_root, 'jcmt_pr_summary_edit')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The public summary has been saved.',
+            self.browser.page_source)
+
         # Create an observing request.
         self.browser.find_element_by_link_text(
             'Edit observing request').click()
