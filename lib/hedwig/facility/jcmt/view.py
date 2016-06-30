@@ -27,7 +27,8 @@ from ...error import NoSuchRecord, UserError
 from ...web.util import HTTPRedirect, flash, url_for
 from ...view.util import organise_collection, with_call_review, with_proposal
 from ...type.collection import ResultTable
-from ...type.enum import AffiliationType, PermissionType, ProposalState
+from ...type.enum import AffiliationType, FormatType, \
+    PermissionType, ProposalState
 from ...type.simple import Link, RouteInfo, ValidationMessage
 from ...type.util import null_tuple
 from ..generic.view import Generic
@@ -38,6 +39,8 @@ from .type import \
     JCMTInstrument, JCMTOptions, \
     JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, \
     JCMTReview, JCMTReviewerExpertise, JCMTReviewerRole, \
+    JCMTReviewRatingJustification, JCMTReviewRatingTechnical, \
+    JCMTReviewRatingUrgency, \
     JCMTTextRole, \
     JCMTWeather
 
@@ -74,6 +77,24 @@ class JCMT(Generic):
                 return JCMTReviewerExpertise.get_name(value)
             except KeyError:
                 return 'Unknown expertise'
+
+        def review_rating_justification(value):
+            try:
+                return JCMTReviewRatingJustification.get_name(value)
+            except KeyError:
+                return 'Unknown justification rating'
+
+        def review_rating_technical(value):
+            try:
+                return JCMTReviewRatingTechnical.get_name(value)
+            except KeyError:
+                return 'Unknown technical rating'
+
+        def review_rating_urgency(value):
+            try:
+                return JCMTReviewRatingUrgency.get_name(value)
+            except KeyError:
+                return 'Unknown urgency rating'
 
         return [v for (k, v) in locals().items() if k != 'self']
 
@@ -698,6 +719,27 @@ class JCMT(Generic):
             except:
                 raise UserError('Please select an expertise level.')
 
+        if role_info.jcmt_external:
+            # Read text fields.
+            jcmt_review = jcmt_review._replace(
+                review_aims=form['jcmt_review_aims'],
+                review_goals=form['jcmt_review_goals'],
+                review_difficulties=form['jcmt_review_difficulties'],
+                review_details=form['jcmt_review_details'],
+                review_obj_inst=form['jcmt_review_obj_inst'],
+                review_telescope=form['jcmt_review_telescope'],
+                review_format=FormatType.PLAIN)
+
+            # Read integer fields with try-except to catch parse errors.
+            try:
+                jcmt_review = jcmt_review._replace(
+                    rating_justification=int(
+                        form['jcmt_rating_justification']),
+                    rating_technical=int(form['jcmt_rating_technical']),
+                    rating_urgency=int(form['jcmt_rating_urgency']))
+            except:
+                raise UserError('Please select a rating from each scale.')
+
         return jcmt_review
 
     def _view_review_edit_save(self, db, reviewer, proposal, info):
@@ -710,7 +752,7 @@ class JCMT(Generic):
         db.set_jcmt_review(
             role_class=role_class,
             reviewer_id=reviewer.id,
-            expertise=info.expertise,
+            review=info,
             is_update=(info.reviewer_id is not None))
 
     def _view_review_edit_extra(self, db, reviewer, proposal, info):
@@ -725,6 +767,10 @@ class JCMT(Generic):
 
         return {
             'jcmt_expertise_levels': JCMTReviewerExpertise.get_options(),
+            'jcmt_ratings_justification':
+                JCMTReviewRatingJustification.get_options(),
+            'jcmt_ratings_technical': JCMTReviewRatingTechnical.get_options(),
+            'jcmt_ratings_urgency': JCMTReviewRatingUrgency.get_options(),
             'jcmt_review': info,
         }
 

@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from datetime import datetime
 from hedwig.error import ConsistencyError, Error, NoSuchRecord, UserError
 from hedwig.type.enum import FormatType
+from hedwig.type.util import null_tuple
 from hedwig.facility.jcmt.type import \
     JCMTAvailable, JCMTAvailableCollection, \
     JCMTInstrument, JCMTOptions, \
@@ -289,26 +290,28 @@ class DBJCMTTest(DBTestCase):
                 ConsistencyError, 'JCMT review does not exist'):
             self.db.set_jcmt_review(
                 role_class, reviewer_id,
-                expertise=JCMTReviewerExpertise.INTERMEDIATE,
+                review=null_tuple(JCMTReview)._replace(
+                    expertise=JCMTReviewerExpertise.INTERMEDIATE),
                 is_update=True)
 
         with self.assertRaisesRegexp(
                 UserError, 'expertise level not recognised'):
             self.db.set_jcmt_review(
                 role_class, reviewer_id,
-                expertise=999,
+                review=null_tuple(JCMTReview)._replace(expertise=999),
                 is_update=False)
 
         with self.assertRaisesRegexp(
                 Error, 'expertise should be specified'):
             self.db.set_jcmt_review(
                 role_class, reviewer_id,
-                expertise=None,
+                review=null_tuple(JCMTReview)._replace(expertise=None),
                 is_update=False)
 
         self.db.set_jcmt_review(
             role_class, reviewer_id,
-            expertise=JCMTReviewerExpertise.INTERMEDIATE,
+            review=null_tuple(JCMTReview)._replace(
+                expertise=JCMTReviewerExpertise.INTERMEDIATE),
             is_update=False)
 
         jcmt_review = self.db.get_jcmt_review(reviewer_id)
@@ -321,12 +324,14 @@ class DBJCMTTest(DBTestCase):
                 ConsistencyError, 'JCMT review already exist'):
             self.db.set_jcmt_review(
                 role_class, reviewer_id,
-                expertise=JCMTReviewerExpertise.INTERMEDIATE,
+                review=null_tuple(JCMTReview)._replace(
+                    expertise=JCMTReviewerExpertise.INTERMEDIATE),
                 is_update=False)
 
         self.db.set_jcmt_review(
             role_class, reviewer_id,
-            expertise=JCMTReviewerExpertise.EXPERT,
+            review=null_tuple(JCMTReview)._replace(
+                expertise=JCMTReviewerExpertise.EXPERT),
             is_update=True)
 
         jcmt_review = self.db.get_jcmt_review(reviewer_id)

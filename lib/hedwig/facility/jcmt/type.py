@@ -317,21 +317,25 @@ class JCMTReviewerRole(BaseReviewerRole):
     """
 
     RoleInfo = namedtuple(
-        'RoleInfo', BaseReviewerRole.RoleInfo._fields + ('jcmt_expertise',))
+        'RoleInfo', BaseReviewerRole.RoleInfo._fields + (
+            'jcmt_expertise', 'jcmt_external'))
 
-    _jcmt_default_info = (False,)
+    _jcmt_default_info = (False, False)
 
     # Define JCMT-specific role information.
-    #        Exp.
+    #        Exp.   Ext.Q.
     _jcmt_info = {
+        BaseReviewerRole.EXTERNAL: (
+            (False, True),
+            {}),
         BaseReviewerRole.CTTEE_PRIMARY: (
-            (True,),
+            (True, False),
             {'name': 'TAC Primary', 'weight': False}),
         BaseReviewerRole.CTTEE_SECONDARY: (
-            (True,),
+            (True, False),
             {'name': 'TAC Secondary', 'unique': True, 'weight': False}),
         BaseReviewerRole.CTTEE_OTHER: (
-            (True,),
+            (True, False),
             {'name': 'Rating', 'name_review': False, 'url_path': 'rating',
              'weight': False}),
     }
@@ -341,6 +345,39 @@ class JCMTReviewerRole(BaseReviewerRole):
     for role_id, role_info in BaseReviewerRole._info.items():
         (extra, override) = _jcmt_info.get(role_id, (_jcmt_default_info, {}))
         _info[role_id] = RoleInfo(*(role_info._replace(**override) + extra))
+
+
+class JCMTReviewRatingJustification(EnumBasic, EnumAvailable):
+    RatingInfo = namedtuple('RatingInfo', ('name', 'available'))
+
+    _info = OrderedDict((
+        (1, RatingInfo('Extremely thorough and compelling', True)),
+        (2, RatingInfo('Convincing and well described', True)),
+        (3, RatingInfo('Adequate, with minor problems', True)),
+        (4, RatingInfo('Inadequate (too brief, confusing, incomplete '
+                       'or incorrect)', True)),
+    ))
+
+
+class JCMTReviewRatingTechnical(EnumBasic, EnumAvailable):
+    RatingInfo = namedtuple('RatingInfo', ('name', 'available'))
+
+    _info = OrderedDict((
+        (1, RatingInfo('Thorough and clearly understood', True)),
+        (2, RatingInfo('Correct and well described', True)),
+        (3, RatingInfo('Adequate, with minor problems', True)),
+        (4, RatingInfo('Inadequately described or poorly understood', True)),
+    ))
+
+
+class JCMTReviewRatingUrgency(EnumBasic, EnumAvailable):
+    RatingInfo = namedtuple('RatingInfo', ('name', 'available'))
+
+    _info = OrderedDict((
+        (1, RatingInfo('Timely and competitive: must be done now', True)),
+        (2, RatingInfo('Should be done now', True)),
+        (3, RatingInfo('Urgency is not a major consideration', True)),
+    ))
 
 
 class JCMTTextRole(BaseTextRole):

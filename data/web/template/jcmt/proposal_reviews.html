@@ -25,3 +25,67 @@
         {% endif %}
     </td>
 {% endblock %}
+
+{% block review_text %}
+    {% if facility_role_class.get_info(review.role).jcmt_external %}
+        {% if review.review_extra.review_aims is not none %}
+            <p><b>How do you rate the scientific aims of the proposal?</b></p>
+
+            {{ review.review_extra.review_aims | format_text(review.review_extra.review_format) }}
+        {% endif %}
+
+        {% if review.review_extra.review_goals is not none %}
+            <p><i>Are there conflicting / confusing goals?</i></p>
+
+            {{ review.review_extra.review_goals | format_text(review.review_extra.review_format) }}
+        {% endif %}
+
+        {% if review.review_extra.review_difficulties is not none %}
+            <p><i>Have the potential difficulties been raised and discussed?</i></p>
+
+            {{ review.review_extra.review_difficulties | format_text(review.review_extra.review_format) }}
+        {% endif %}
+
+        {% if review.review_extra.rating_justification is not none %}
+            <p>
+                <b>Justification:</b>
+                {{ review.review_extra.rating_justification | jcmt_review_rating_justification }}
+            </p>
+        {% endif %}
+
+        {% if review.review_extra.review_details is not none %}
+            <p><b>Are the details of the program dealt with / understood?</b></p>
+
+            {{ review.review_extra.review_details | format_text(review.review_extra.review_format) }}
+        {% endif %}
+
+        {% if review.review_extra.review_obj_inst is not none %}
+            <p><i>Are the target objects, coordinates and instrumentation correct?</i></p>
+
+            {{ review.review_extra.review_obj_inst | format_text(review.review_extra.review_format) }}
+        {% endif %}
+
+        {% if review.review_extra.review_telescope is not none %}
+            <p><i>Is the telescope requested the correct one?</i></p>
+
+            {{ review.review_extra.review_telescope | format_text(review.review_extra.review_format) }}
+        {% endif %}
+
+        {% if review.review_extra.rating_technical is not none %}
+            <p>
+                <b>Technical case:</b>
+                {{ review.review_extra.rating_technical | jcmt_review_rating_technical }}
+            </p>
+        {% endif %}
+
+        {% if review.review_extra.rating_urgency is not none %}
+            <p>
+                <b>Urgency:</b>
+                {{ review.review_extra.rating_urgency | jcmt_review_rating_urgency }}
+            </p>
+        {% endif %}
+
+        <p><b>Additional Comments</b></p>
+    {% endif %}
+    {{ review.review_text | format_text(review.review_format) }}
+{% endblock %}

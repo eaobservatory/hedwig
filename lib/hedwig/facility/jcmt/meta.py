@@ -84,4 +84,15 @@ jcmt_review = Table(
            ForeignKey('reviewer.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            primary_key=True, nullable=False),
     Column('expertise', Integer, nullable=True),
+    # Detailed information for external reviews:
+    Column('review_aims', UnicodeText, nullable=True),
+    Column('review_goals', UnicodeText, nullable=True),
+    Column('review_difficulties', UnicodeText, nullable=True),
+    Column('rating_justification', Integer, nullable=True),
+    Column('review_details', UnicodeText, nullable=True),
+    Column('review_obj_inst', UnicodeText, nullable=True),
+    Column('review_telescope', UnicodeText, nullable=True),
+    Column('rating_technical', Integer, nullable=True),
+    Column('rating_urgency', Integer, nullable=True),
+    Column('review_format', Integer, nullable=True),
     **table_opts)

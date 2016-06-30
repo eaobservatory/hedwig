@@ -11,7 +11,7 @@ The proposal identifier is a link which you can use to view the proposal.
 Below the table is the form where you may enter your review.
 The exact details of this form may vary depending on the type of review,
 but for an external review it will typically consist of
-a text area for your comments
+one or more text areas for your comments
 followed by a numerical rating.
 
 You will be able to view the proposal and return to edit

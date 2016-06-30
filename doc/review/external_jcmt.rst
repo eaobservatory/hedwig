@@ -20,7 +20,8 @@ After :doc:`accepting your invitation <invitation>`
 or from :doc:`your review list <review_list>`
 you can view the proposal and :doc:`edit your review <external>`.
 You may 'Save' your report at any time, and any number of times.
-You might want to consider the following aspects of the proposal
+The review editing page will guide you through
+the following aspects of the proposal
 in making your assessment of its suitability:
 
 Scientific justification
@@ -60,9 +61,9 @@ Where would you place this proposal within the following scale?
 *  Should be done now.
 *  Urgency is not a major consideration.
 
-The bulk of your report is intended to be free-format, but
-it would be helpful to address the above issues in some order.
-In addition, if you feel this application is not, as it stands,
+There is also a free-format space on the review page for
+any additional comments you may have about the proposal.
+If you feel this application is not, as it stands,
 of the highest scientific quality, please suggest how it
 might be improved in future submissions.
 You might also wish to comment on the applicants' competence to carry
@@ -78,12 +79,11 @@ and instrument will perform the observations as requested, etc.
 Any such comments, however, perhaps from your own previous experience,
 will be welcomed.
 
-In addition, there is one box on the form to complete:
-
 "Rating"
 ~~~~~~~~
 
-Please give this proposal a numerical rating on the following scale:
+Finally, there is a box on the form for an overall rating of the proposal.
+Please give a numerical rating on the following scale:
 
 +-----+-----------------------------------------------------------------------+
 | 100 | A clear proposal with potentially seminal results.                    |

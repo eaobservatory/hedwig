@@ -24,13 +24,16 @@ from sqlalchemy.sql.functions import count
 from ...db.meta import call, proposal, reviewer
 from ...error import ConsistencyError, FormattedError, UserError
 from ...type.collection import ResultCollection
+from ...type.enum import FormatType
 from ...util import list_in_blocks
 from .meta import jcmt_available, jcmt_allocation, jcmt_options, \
     jcmt_request, jcmt_review
 from .type import \
     JCMTAvailable, JCMTAvailableCollection, \
     JCMTOptions, JCMTRequest, JCMTRequestCollection, \
-    JCMTReview, JCMTReviewerExpertise
+    JCMTReview, JCMTReviewerExpertise, \
+    JCMTReviewRatingJustification, JCMTReviewRatingTechnical, \
+    JCMTReviewRatingUrgency
 
 
 class JCMTPart(object):
@@ -191,14 +194,31 @@ class JCMTPart(object):
 
                 conn.execute(jcmt_options.insert().values(values))
 
-    def set_jcmt_review(self, role_class, reviewer_id, expertise, is_update):
-        if expertise is not None:
-            if not JCMTReviewerExpertise.is_valid(expertise):
+    def set_jcmt_review(self, role_class, reviewer_id, review, is_update):
+        if review.expertise is not None:
+            if not JCMTReviewerExpertise.is_valid(review.expertise):
                 raise UserError('Reviewer expertise level not recognised.')
 
+        if review.rating_justification is not None:
+            if not JCMTReviewRatingJustification.is_valid(
+                    review.rating_justification):
+                raise UserError('Justification rating not recognised.')
+
+        if review.rating_technical is not None:
+            if not JCMTReviewRatingTechnical.is_valid(review.rating_technical):
+                raise UserError('Technical rating not recognised.')
+
+        if review.rating_urgency is not None:
+            if not JCMTReviewRatingUrgency.is_valid(review.rating_urgency):
+                raise UserError('Urgency rating not recognised.')
+
+        if review.review_format is not None:
+            if not FormatType.is_valid(review.review_format):
+                raise UserError('Question response format not recognised.')
+
         values = {
-            jcmt_review.c.expertise: expertise,
-        }
+            x: getattr(review, x.name)
+            for x in jcmt_review.columns if x.name != 'reviewer_id'}
 
         with self._transaction() as conn:
             # Determine type of review and check values are valid for it.
@@ -208,6 +228,16 @@ class JCMTPart(object):
             role_info = role_class.get_info(reviewer.role)
             attr_req = {
                 jcmt_review.c.expertise: role_info.jcmt_expertise,
+                jcmt_review.c.review_aims: role_info.jcmt_external,
+                jcmt_review.c.review_goals: role_info.jcmt_external,
+                jcmt_review.c.review_difficulties: role_info.jcmt_external,
+                jcmt_review.c.rating_justification: role_info.jcmt_external,
+                jcmt_review.c.review_details: role_info.jcmt_external,
+                jcmt_review.c.review_obj_inst: role_info.jcmt_external,
+                jcmt_review.c.review_telescope: role_info.jcmt_external,
+                jcmt_review.c.rating_technical: role_info.jcmt_external,
+                jcmt_review.c.rating_urgency: role_info.jcmt_external,
+                jcmt_review.c.review_format: role_info.jcmt_external,
             }
 
             for (attr, attr_allowed) in attr_req.items():
