@@ -142,7 +142,7 @@ class GenericProposal(object):
 
         return ctx
 
-    def _view_proposal_extra(self, db, proposal):
+    def _view_proposal_extra(self, db, proposal, extra_text_roles={}):
         """
         Method to gather additional information for the proposal view page.
 
@@ -195,6 +195,9 @@ class GenericProposal(object):
                 'pdf': proposal_pdf.get_role(role, None),
                 'fig': proposal_fig.values_by_role(role),
             }
+
+        for (role_attr, role) in extra_text_roles.items():
+            extra[role_attr] = proposal_text.get(role, None)
 
         return extra
 

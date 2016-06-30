@@ -325,7 +325,9 @@ class JCMT(Generic):
                 for (k, v) in affiliation_count.items()}
 
     def _view_proposal_extra(self, db, proposal):
-        ctx = super(JCMT, self)._view_proposal_extra(db, proposal)
+        ctx = super(JCMT, self)._view_proposal_extra(
+            db, proposal,
+            extra_text_roles={'jcmt_pr_summary': TextRole.PR_SUMMARY})
 
         requests = db.search_jcmt_request(proposal_id=proposal.id)
 
@@ -873,4 +875,6 @@ class JCMT(Generic):
     def view_pr_summary_edit(self, db, proposal, can, form):
         return self._edit_text(
             db, proposal, TextRole.PR_SUMMARY, 300,
-            url_for('.pr_summary_edit', proposal_id=proposal.id), form, 10)
+            url_for('.pr_summary_edit', proposal_id=proposal.id), form, 10,
+            target_redir=url_for('.proposal_view', proposal_id=proposal.id,
+                                 _anchor='jcmt_pr_summary'))
