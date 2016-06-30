@@ -135,6 +135,20 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
 
         return []
 
+    def get_custom_routes(self):
+        """
+        Return list of custom routes required for this facility.
+
+        Note that the route information will automatically be prefixed
+        as follows:
+
+        * `template`: `<facility code>/`
+
+        :return: a list of RouteInfo tuples
+        """
+
+        return []
+
     def make_proposal_code(self, db, proposal):
         """
         Generate the proposal identifying code for a given proposal.

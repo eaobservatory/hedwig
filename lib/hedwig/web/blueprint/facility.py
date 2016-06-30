@@ -673,6 +673,23 @@ def create_facility_blueprint(db, facility):
     def review_info(reviewer_id):
         return facility.view_review_info(db, reviewer_id)
 
+    # Register custom routes.
+    for route in facility.get_custom_routes():
+        options = {}
+        if route.options.get('allow_post', False):
+            options['methods'] = ['GET', 'POST']
+
+        bp.add_url_rule(
+            route.rule, route.endpoint,
+            make_custom_route(
+                db,
+                (None if route.template is None
+                 else ['{}/{}'.format(x, route.template)
+                       for x in (code, 'generic')]),
+                route.func,
+                **route.options),
+            **options)
+
     # Configure the facility's calculators.
     for calculator_class in facility.get_calculator_classes():
         calculator_code = calculator_class.get_code()
