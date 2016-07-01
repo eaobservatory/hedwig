@@ -23,7 +23,7 @@ from hedwig.error import ConsistencyError, Error, NoSuchRecord, UserError
 from hedwig.type.enum import FormatType
 from hedwig.type.util import null_tuple
 from hedwig.facility.jcmt.type import \
-    JCMTAvailable, JCMTAvailableCollection, \
+    JCMTAncillary, JCMTAvailable, JCMTAvailableCollection, \
     JCMTInstrument, JCMTOptions, \
     JCMTRequest, JCMTRequestCollection, \
     JCMTReview, JCMTReviewerExpertise, JCMTReviewerRole, \
@@ -75,9 +75,11 @@ class DBJCMTTest(DBTestCase):
 
         records = JCMTRequestCollection()
         records[1] = JCMTRequest(
-            None, None, JCMTInstrument.HARP, JCMTWeather.BAND4, 5.0)
+            None, None, JCMTInstrument.HARP, JCMTAncillary.NONE,
+            JCMTWeather.BAND4, 5.0)
         records[2] = JCMTRequest(
-            None, None, JCMTInstrument.SCUBA2, JCMTWeather.BAND2, 10.0)
+            None, None, JCMTInstrument.SCUBA2, JCMTAncillary.NONE,
+            JCMTWeather.BAND2, 10.0)
 
         self.db.sync_jcmt_proposal_request(proposal_id, records)
 
@@ -92,6 +94,7 @@ class DBJCMTTest(DBTestCase):
         self.assertEqual(request[0].id, request_id[0])
         self.assertEqual(request[0].proposal_id, proposal_id)
         self.assertEqual(request[0].instrument, JCMTInstrument.HARP)
+        self.assertEqual(request[0].ancillary, JCMTAncillary.NONE)
         self.assertEqual(request[0].weather, JCMTWeather.BAND4)
         self.assertEqual(request[0].time, 5.0)
 
@@ -100,6 +103,7 @@ class DBJCMTTest(DBTestCase):
         self.assertEqual(request[1].id, request_id[1])
         self.assertEqual(request[1].proposal_id, proposal_id)
         self.assertEqual(request[1].instrument, JCMTInstrument.SCUBA2)
+        self.assertEqual(request[1].ancillary, JCMTAncillary.NONE)
         self.assertEqual(request[1].weather, JCMTWeather.BAND2)
         self.assertEqual(request[1].time, 10.0)
 
@@ -113,9 +117,11 @@ class DBJCMTTest(DBTestCase):
 
         records = JCMTRequestCollection()
         records[0] = JCMTRequest(
-            None, None, JCMTInstrument.HARP, JCMTWeather.BAND1, 10.0)
+            None, None, JCMTInstrument.HARP, JCMTAncillary.NONE,
+            JCMTWeather.BAND1, 10.0)
         records[1] = JCMTRequest(
-            None, None, JCMTInstrument.HARP, JCMTWeather.BAND5, 20.0)
+            None, None, JCMTInstrument.HARP, JCMTAncillary.NONE,
+            JCMTWeather.BAND5, 20.0)
 
         n = self.db.sync_jcmt_proposal_request(proposal_id, records)
         self.assertEqual(n, (2, 0, 0))
@@ -157,9 +163,11 @@ class DBJCMTTest(DBTestCase):
 
         records = JCMTRequestCollection()
         records[0] = JCMTRequest(
-            None, None, JCMTInstrument.HARP, JCMTWeather.BAND2, 25.0)
+            None, None, JCMTInstrument.HARP, JCMTAncillary.NONE,
+            JCMTWeather.BAND2, 25.0)
         records[1] = JCMTRequest(
-            None, None, JCMTInstrument.HARP, JCMTWeather.BAND5, 75.0)
+            None, None, JCMTInstrument.HARP, JCMTAncillary.NONE,
+            JCMTWeather.BAND5, 75.0)
 
         self.db.sync_jcmt_proposal_allocation(proposal_id, records)
 
@@ -175,6 +183,7 @@ class DBJCMTTest(DBTestCase):
         self.assertEqual(allocation[0].id, allocation_id[0])
         self.assertEqual(allocation[0].proposal_id, proposal_id)
         self.assertEqual(allocation[0].instrument, JCMTInstrument.HARP)
+        self.assertEqual(allocation[0].ancillary, JCMTAncillary.NONE)
         self.assertEqual(allocation[0].weather, JCMTWeather.BAND2)
         self.assertEqual(allocation[0].time, 25.0)
 
@@ -183,6 +192,7 @@ class DBJCMTTest(DBTestCase):
         self.assertEqual(allocation[1].id, allocation_id[1])
         self.assertEqual(allocation[1].proposal_id, proposal_id)
         self.assertEqual(allocation[1].instrument, JCMTInstrument.HARP)
+        self.assertEqual(allocation[1].ancillary, JCMTAncillary.NONE)
         self.assertEqual(allocation[1].weather, JCMTWeather.BAND5)
         self.assertEqual(allocation[1].time, 75.0)
 
@@ -196,11 +206,14 @@ class DBJCMTTest(DBTestCase):
 
         records = JCMTRequestCollection()
         records[0] = JCMTRequest(
-            None, None, JCMTInstrument.SCUBA2, JCMTWeather.BAND1, 10.0)
+            None, None, JCMTInstrument.SCUBA2, JCMTAncillary.NONE,
+            JCMTWeather.BAND1, 10.0)
         records[1] = JCMTRequest(
-            None, None, JCMTInstrument.SCUBA2, JCMTWeather.BAND2, 20.0)
+            None, None, JCMTInstrument.SCUBA2, JCMTAncillary.NONE,
+            JCMTWeather.BAND2, 20.0)
         records[2] = JCMTRequest(
-            None, None, JCMTInstrument.SCUBA2, JCMTWeather.BAND3, 30.0)
+            None, None, JCMTInstrument.SCUBA2, JCMTAncillary.NONE,
+            JCMTWeather.BAND3, 30.0)
 
         n = self.db.sync_jcmt_proposal_allocation(proposal_id, records)
         self.assertEqual(n, (3, 0, 0))

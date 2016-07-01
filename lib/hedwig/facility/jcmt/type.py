@@ -47,20 +47,67 @@ JCMTReview = namedtuple(
     [x.name for x in jcmt_review.columns])
 
 
+class JCMTAncillary(EnumBasic):
+    NONE = 0  # Must be non-null in database for constraints to apply.
+    ROVER = 1
+    POL2 = 2
+    FTS2 = 3
+
+    AncillaryInfo = namedtuple('AncillaryInfo', ('name', 'available'))
+
+    _info = OrderedDict((
+        (ROVER, AncillaryInfo('Rover', False)),
+        (POL2,  AncillaryInfo('POL-2', True)),
+        (FTS2,  AncillaryInfo('FTS-2', False)),
+    ))
+
+
 class JCMTInstrument(EnumBasic, EnumAvailable):
     SCUBA2 = 1
     HARP = 2
     RXA3 = 3
     RXA3M = 4
 
-    InstrumentInfo = namedtuple('InstrumentInfo', ('name', 'available'))
+    InstrumentInfo = namedtuple(
+        'InstrumentInfo', ('name', 'available', 'ancillary'))
 
     _info = OrderedDict((
-        (SCUBA2, InstrumentInfo('SCUBA-2', True)),
-        (HARP,   InstrumentInfo('HARP', True)),
-        (RXA3,   InstrumentInfo('RxA3', False)),
-        (RXA3M,  InstrumentInfo('RxA3m', True)),
+        (SCUBA2, InstrumentInfo('SCUBA-2', True,  (JCMTAncillary.POL2,
+                                                   JCMTAncillary.FTS2))),
+        (HARP,   InstrumentInfo('HARP',    True,  (JCMTAncillary.ROVER,))),
+        (RXA3,   InstrumentInfo('RxA3',    False, (JCMTAncillary.ROVER,))),
+        (RXA3M,  InstrumentInfo('RxA3m',   True,  (JCMTAncillary.ROVER,))),
     ))
+
+    @classmethod
+    def get_ancillary(cls, instrument):
+        return cls._info[instrument].ancillary
+
+    @classmethod
+    def get_name_with_ancillary(cls, instrument, ancillary):
+        name = cls.get_name(instrument)
+        if ancillary != JCMTAncillary.NONE:
+            name = '{} + {}'.format(name, JCMTAncillary.get_name(ancillary))
+        return name
+
+    @classmethod
+    def get_options_with_ancillary(cls, include_unavailable=False):
+        result = OrderedDict()
+
+        for (instrument, instrument_info) in cls._info.items():
+            if not (include_unavailable or instrument_info.available):
+                continue
+            result[(instrument, JCMTAncillary.NONE)] = instrument_info.name
+
+            for ancillary in instrument_info.ancillary:
+                ancillary_info = JCMTAncillary.get_info(ancillary)
+                if not (include_unavailable or ancillary_info.available):
+                    continue
+
+                result[(instrument, ancillary)] = '{} + {}'.format(
+                    instrument_info.name, ancillary_info.name)
+
+        return result
 
 
 class JCMTAvailableCollection(OrderedDict):
@@ -154,6 +201,17 @@ class JCMTRequestCollection(OrderedDict):
             if not JCMTInstrument.is_valid(record.instrument):
                 raise UserError('Instrument not recognised.')
 
+            if record.ancillary == JCMTAncillary.NONE:
+                pass
+            else:
+                if not JCMTAncillary.is_valid(record.ancillary):
+                    raise UserError('Ancillary instrument not recognised.')
+
+                if (record.ancillary not in
+                        JCMTInstrument.get_ancillary(record.instrument)):
+                    raise UserError(
+                        'Ancillary not permitted for this instrument.')
+
             if not JCMTWeather.is_valid(record.weather):
                 raise UserError('Weather band not recognised.')
 
@@ -163,12 +221,14 @@ class JCMTRequestCollection(OrderedDict):
                         JCMTInstrument.get_name(record.instrument),
                         JCMTWeather.get_name(record.weather)))
 
-            request_tuple = (record.instrument, record.weather)
+            request_tuple = (
+                record.instrument, record.ancillary, record.weather)
 
             if request_tuple in requests:
                 raise UserError(
                     'There are multiple entries for {}, {}'.format(
-                        JCMTInstrument.get_name(record.instrument),
+                        JCMTInstrument.get_name_with_ancillary(
+                            record.instrument, record.ancillary),
                         JCMTWeather.get_name(record.weather)))
 
             requests.add(request_tuple)
@@ -271,29 +331,33 @@ class JCMTRequestCollection(OrderedDict):
 
         The collection is returned as a sorted list of JCMTRequest objects
         with the instrument and weather entries replaced by the names of the
-        corresponding instrument and weather band.
+        corresponding instrument (including ancillary) and weather band.
         """
 
         # Get all the instrument and weather options, then iterate over them
         # looking for matching allocations -- this allows us to place the
         # allocations into a list which is correctly ordered by instrument
         # and then by weather band.
-        instruments = JCMTInstrument.get_options(include_unavailable=True)
+        instruments = JCMTInstrument.get_options_with_ancillary(
+            include_unavailable=True)
         weathers = JCMTWeather.get_options(include_unavailable=True)
 
         sorted_list = []
 
-        for (instrument, instrument_name) in instruments.items():
+        for (instrument_ancillary, instrument_name) in instruments.items():
+            (instrument, ancillary) = instrument_ancillary
             for (weather, weather_name) in weathers.items():
                 for request in self.values():
                     if ((request.instrument != instrument) or
+                            (request.ancillary != ancillary) or
                             (request.weather != weather)):
                         continue
 
                     # Place the request in the sorted list and insert
                     # the instrument and weather band names.
                     sorted_list.append(request._replace(
-                        instrument=instrument_name, weather=weather_name))
+                        instrument=instrument_name, ancillary=None,
+                        weather=weather_name))
 
         return sorted_list
 

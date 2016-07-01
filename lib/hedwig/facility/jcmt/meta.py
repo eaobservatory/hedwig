@@ -35,9 +35,10 @@ jcmt_allocation = Table(
            ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
     Column('instrument', Integer, nullable=False),
+    Column('ancillary', Integer, nullable=False),
     Column('weather', Integer, nullable=False),
     Column('time', Float, nullable=False),
-    UniqueConstraint('proposal_id', 'instrument', 'weather'),
+    UniqueConstraint('proposal_id', 'instrument', 'ancillary', 'weather'),
     **table_opts)
 
 jcmt_available = Table(
@@ -72,9 +73,10 @@ jcmt_request = Table(
            ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
     Column('instrument', Integer, nullable=False),
+    Column('ancillary', Integer, nullable=False),
     Column('weather', Integer, nullable=False),
     Column('time', Float, nullable=False),
-    UniqueConstraint('proposal_id', 'instrument', 'weather'),
+    UniqueConstraint('proposal_id', 'instrument', 'ancillary', 'weather'),
     **table_opts)
 
 jcmt_review = Table(

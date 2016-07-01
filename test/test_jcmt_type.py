@@ -158,9 +158,12 @@ class JCMTTypeTestCase(TestCase):
         self.assertEqual(total.total_non_free, 0.0)
 
         # Add some rows.
-        c[1] = JCMTRequest(1, 0, instrument=1, weather=1, time=10.0)
-        c[2] = JCMTRequest(2, 0, instrument=1, weather=1, time=20.0)
-        c[3] = JCMTRequest(3, 0, instrument=1, weather=2, time=100.0)
+        c[1] = JCMTRequest(1, 0, instrument=1, ancillary=0,
+                           weather=1, time=10.0)
+        c[2] = JCMTRequest(2, 0, instrument=1, ancillary=0,
+                           weather=1, time=20.0)
+        c[3] = JCMTRequest(3, 0, instrument=1, ancillary=0,
+                           weather=2, time=100.0)
 
         # The table's table attribute is now true.
         t = c.to_table()
@@ -183,8 +186,10 @@ class JCMTTypeTestCase(TestCase):
                          list(JCMTWeather.get_available().keys()))
 
         # Add data for more instruments.
-        c[4] = JCMTRequest(4, 0, instrument=2, weather=2, time=200.0)
-        c[5] = JCMTRequest(5, 0, instrument=4, weather=5, time=1000.0)
+        c[4] = JCMTRequest(4, 0, instrument=2, ancillary=0,
+                           weather=2, time=200.0)
+        c[5] = JCMTRequest(5, 0, instrument=4, ancillary=0,
+                           weather=5, time=1000.0)
         t = c.to_table()
 
         # Check the rows.
@@ -205,7 +210,8 @@ class JCMTTypeTestCase(TestCase):
         self.assertEqual(total.total_non_free, 330.0)
 
         # Check conversion to sorted list.
-        c[6] = JCMTRequest(6, 0, instrument=2, weather=1, time=500.0)
+        c[6] = JCMTRequest(6, 0, instrument=2, ancillary=0,
+                           weather=1, time=500.0)
         sorted_list = c.to_sorted_list()
         self.assertIsInstance(sorted_list, list)
         self.assertEqual(len(sorted_list), 6)
@@ -247,15 +253,30 @@ class JCMTTypeTestCase(TestCase):
         c.validate()
 
         # Check the other validation constraints.
-        c[1] = JCMTRequest(1, 0, instrument=1, weather=1, time='')
+        c[1] = JCMTRequest(1, 0, instrument=1, ancillary=0,
+                           weather=1, time='')
         with self.assertRaisesRegexp(UserError, 'valid number'):
             c.validate()
 
-        c[1] = JCMTRequest(1, 0, instrument=0, weather=1, time=1.0)
+        c[1] = JCMTRequest(1, 0, instrument=0, ancillary=0,
+                           weather=1, time=1.0)
         with self.assertRaisesRegexp(UserError, 'Instrument not recognised'):
             c.validate()
 
-        c[1] = JCMTRequest(1, 0, instrument=1, weather=0, time=1.0)
+        c[1] = JCMTRequest(1, 0, instrument=1, ancillary=999,
+                           weather=1, time=1.0)
+        with self.assertRaisesRegexp(
+                UserError, 'Ancillary instrument not recognised'):
+            c.validate()
+
+        c[1] = JCMTRequest(1, 0, instrument=1,
+                           ancillary=1, weather=1, time=1.0)
+        with self.assertRaisesRegexp(
+                UserError, 'Ancillary not permitted for this instrument'):
+            c.validate()
+
+        c[1] = JCMTRequest(1, 0, instrument=1, ancillary=0,
+                           weather=0, time=1.0)
         with self.assertRaisesRegexp(UserError, 'Weather band not recognised'):
             c.validate()
 

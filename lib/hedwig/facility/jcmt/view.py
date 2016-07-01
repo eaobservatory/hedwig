@@ -637,7 +637,7 @@ class JCMT(Generic):
             'message': message,
             'proposal_id': proposal.id,
             'requests': records.values(),
-            'instruments': JCMTInstrument.get_options(),
+            'instruments': JCMTInstrument.get_options_with_ancillary(),
             'weathers': JCMTWeather.get_available(),
             'options': JCMTOptionValue.get_options(),
             'option_values': option_values,
@@ -681,9 +681,12 @@ class JCMT(Generic):
                 # whatever the user typed in to form for them to correct.
                 pass
 
+            (instrument, ancillary) = form['instrument_' + id_].split('_', 1)
+
             destination[request_id] = JCMTRequest(
                 request_id, proposal.id,
-                int(form['instrument_' + id_]),
+                int(instrument),
+                int(ancillary),
                 int(form['weather_' + id_]),
                 request_time)
 
@@ -815,7 +818,7 @@ class JCMT(Generic):
             'original_request': original_request.to_table(),
             'is_prefilled': is_prefilled,
             'allocations': allocations.values(),
-            'instruments': JCMTInstrument.get_options(),
+            'instruments': JCMTInstrument.get_options_with_ancillary(),
             'weathers': JCMTWeather.get_available(),
         }
 
