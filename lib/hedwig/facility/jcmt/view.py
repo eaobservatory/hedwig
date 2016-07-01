@@ -36,7 +36,7 @@ from .calculator_heterodyne import HeterodyneCalculator
 from .calculator_scuba2 import SCUBA2Calculator
 from .type import \
     JCMTAvailable, JCMTAvailableCollection, \
-    JCMTInstrument, JCMTOptions, \
+    JCMTInstrument, JCMTOptionValue, JCMTOptions, \
     JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, \
     JCMTReview, JCMTReviewerExpertise, JCMTReviewerRole, \
     JCMTReviewRatingJustification, JCMTReviewRatingTechnical, \
@@ -50,13 +50,6 @@ class JCMT(Generic):
         'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/search/'
 
     omp_cgi_bin = 'http://omp.eao.hawaii.edu/cgi-bin/'
-
-    options = OrderedDict((
-        ('target_of_opp', 'Target of opportunity'),
-        ('daytime', 'Daytime observation'),
-        ('time_specific', 'Time-specific observation'),
-        ('polarimetry', 'Polarimetry'),
-    ))
 
     @classmethod
     def get_code(cls):
@@ -370,7 +363,8 @@ class JCMT(Generic):
         options = []
 
         if option_values is not None:
-            for (option, option_name) in self.options.items():
+            for (option, option_name) in JCMTOptionValue.get_options(
+                    include_unavailable=True).items():
                 if getattr(option_values, option):
                     options.append(option_name)
 
@@ -620,7 +614,7 @@ class JCMT(Generic):
             records = self._read_request_form(proposal, form)
 
             option_update = {}
-            for option in self.options.keys():
+            for option in JCMTOptionValue.get_options().keys():
                 option_update[option] = 'option_{}'.format(option) in form
             option_values = option_values._replace(**option_update)
 
@@ -645,7 +639,7 @@ class JCMT(Generic):
             'requests': records.values(),
             'instruments': JCMTInstrument.get_options(),
             'weathers': JCMTWeather.get_available(),
-            'options': self.options,
+            'options': JCMTOptionValue.get_options(),
             'option_values': option_values,
             'proposal_code': self.make_proposal_code(db, proposal),
         }

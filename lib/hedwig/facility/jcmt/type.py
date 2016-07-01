@@ -123,6 +123,17 @@ class JCMTAvailableCollection(OrderedDict):
                                 total_non_free=total_non_free)
 
 
+class JCMTOptionValue(EnumAvailable):
+    OptionInfo = namedtuple('OptionInfo', ('name', 'available'))
+
+    _info = OrderedDict((
+        ('target_of_opp', OptionInfo('Target of opportunity', True)),
+        ('daytime',       OptionInfo('Daytime observation', True)),
+        ('time_specific', OptionInfo('Time-specific observation', True)),
+        ('polarimetry',   OptionInfo('Polarimetry', False)),
+    ))
+
+
 class JCMTRequestCollection(OrderedDict):
     """
     Class used for collections of JCMT requests.  Also used for JCMT
