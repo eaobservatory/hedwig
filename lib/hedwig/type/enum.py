@@ -22,7 +22,7 @@ from collections import OrderedDict, namedtuple
 import re
 
 from ..error import UserError
-from .base import EnumBasic, EnumDisplayClass, EnumURLPath
+from .base import EnumAvailable, EnumBasic, EnumDisplayClass, EnumURLPath
 
 
 class AffiliationType(EnumBasic):
@@ -121,7 +121,7 @@ class FormatType(object):
                             if is_system or v.allow_user])
 
 
-class Assessment(EnumBasic):
+class Assessment(EnumBasic, EnumAvailable):
     """
     Class representing possible outcomes of a technical assessment.
     """
@@ -130,17 +130,13 @@ class Assessment(EnumBasic):
     PROBLEM = 2
     INFEASIBLE = 3
 
-    AssessmentInfo = namedtuple('AssessmentInfo', ('name',))
+    AssessmentInfo = namedtuple('AssessmentInfo', ('name', 'available'))
 
     _info = OrderedDict((
-        (FEASIBLE,   AssessmentInfo('Feasible')),
-        (PROBLEM,    AssessmentInfo('Problematic')),
-        (INFEASIBLE, AssessmentInfo('Infeasible')),
+        (FEASIBLE,   AssessmentInfo('Feasible', True)),
+        (PROBLEM,    AssessmentInfo('Problematic', True)),
+        (INFEASIBLE, AssessmentInfo('Infeasible', True)),
     ))
-
-    @classmethod
-    def get_options(cls):
-        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
 
 class AttachmentState(EnumBasic):
