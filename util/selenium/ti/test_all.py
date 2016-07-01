@@ -1508,6 +1508,37 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element_by_link_text('Write your review').click()
 
+        self.browser.find_element_by_name('jcmt_review_aims').send_keys(
+            'The aims of this proposal ...')
+
+        self.browser.find_element_by_name('jcmt_review_goals').send_keys(
+            'The goals of this proposal ...')
+
+        self.browser.find_element_by_name(
+            'jcmt_review_difficulties').send_keys(
+            'Difficulties with this proposal are ...')
+
+        Select(
+            self.browser.find_element_by_name('jcmt_rating_justification')
+        ).select_by_visible_text('Convincing and well described')
+
+        self.browser.find_element_by_name('jcmt_review_details').send_keys(
+            'The technical details in this program ...')
+
+        self.browser.find_element_by_name('jcmt_review_obj_inst').send_keys(
+            'The target objects and instrumentation ...')
+
+        self.browser.find_element_by_name('jcmt_review_telescope').send_keys(
+            'The choice of telescope for this proposal is ...')
+
+        Select(
+            self.browser.find_element_by_name('jcmt_rating_technical')
+        ).select_by_visible_text('Correct and well described')
+
+        Select(
+            self.browser.find_element_by_name('jcmt_rating_urgency')
+        ).select_by_visible_text('Should be done now')
+
         self.browser.find_element_by_name('text').send_keys(
             'My opinion of this proposal is...')
         self.browser.find_element_by_name('rating').send_keys('50')
