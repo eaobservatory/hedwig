@@ -461,7 +461,7 @@ class JCMT(Generic):
             proposal['jcmt_allocation_different'] = \
                 ((allocation is not None) and (allocation != request))
 
-            if proposal_accepted:
+            if proposal_accepted and allocation is not None:
                 if proposal_exempt:
                     exempt = exempt._replace(
                         total=(exempt.total + allocation.total))
