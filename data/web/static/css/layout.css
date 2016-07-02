@@ -207,7 +207,7 @@ div.hovertable {
     position: relative;
 }
 
-div.hovertable table {
+div.hovertable > table {
     position: absolute;
     left: 0ex;
     top: 0ex;
@@ -216,7 +216,7 @@ div.hovertable table {
     border: 5px solid #AAA;
 }
 
-div.hovertable:hover table {
+div.hovertable:hover > table {
     visibility: visible;
 }
 
