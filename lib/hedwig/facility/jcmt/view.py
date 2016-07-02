@@ -35,7 +35,7 @@ from ..generic.view import Generic
 from .calculator_heterodyne import HeterodyneCalculator
 from .calculator_scuba2 import SCUBA2Calculator
 from .type import \
-    JCMTAvailable, JCMTAvailableCollection, \
+    JCMTAvailable, JCMTAvailableCollection, JCMTAncillary, \
     JCMTInstrument, JCMTOptionValue, JCMTOptions, \
     JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, \
     JCMTReview, JCMTReviewerExpertise, JCMTReviewerRole, \
@@ -352,7 +352,8 @@ class JCMT(Generic):
         option_values = db.get_jcmt_options(proposal_id=proposal.id)
 
         ctx.update({
-            'requests': requests.to_table(),
+            'requests': requests.to_table(
+                ancillary_mode=JCMTRequestCollection.ANCILLARY_SEPARATE),
             'jcmt_options': self._get_option_names(option_values),
             'jcmt_option_values': option_values,
         })
@@ -375,7 +376,8 @@ class JCMT(Generic):
 
         if proposal.state == ProposalState.ACCEPTED:
             allocations = db.search_jcmt_allocation(
-                proposal_id=proposal.id).to_table()
+                proposal_id=proposal.id).to_table(
+                    ancillary_mode=JCMTRequestCollection.ANCILLARY_SEPARATE)
         else:
             allocations = null_tuple(ResultTable)
 
@@ -434,11 +436,16 @@ class JCMT(Generic):
         total_affiliation = defaultdict(float)
         original_affiliation = defaultdict(float)
 
+        # Process ancillary instruments separately if with_extra is set.
+        ancillary_mode = (JCMTRequestCollection.ANCILLARY_SEPARATE
+                          if with_extra else
+                          JCMTRequestCollection.ANCILLARY_GROUP)
+
         affiliation_ids = [x.id for x in tabulation['affiliations']]
 
         for proposal in tabulation['proposals']:
             request = db.search_jcmt_request(
-                proposal_id=proposal['id']).get_total()
+                proposal_id=proposal['id']).get_total(ancillary_mode)
 
             proposal['jcmt_request'] = request
 
@@ -455,7 +462,7 @@ class JCMT(Generic):
             allocation_records = db.search_jcmt_allocation(
                 proposal_id=proposal['id'])
             if allocation_records:
-                allocation = allocation_records.get_total()
+                allocation = allocation_records.get_total(ancillary_mode)
 
             proposal['jcmt_allocation'] = allocation
             proposal['jcmt_allocation_different'] = \
@@ -491,12 +498,16 @@ class JCMT(Generic):
                     total.weather[weather] += time
 
             for (instrument, time) in request.instrument.items():
+                if ancillary_mode == JCMTRequestCollection.ANCILLARY_GROUP:
+                    time = sum(time.values())
                 original.instrument[instrument] += time
                 if allocation is None:
                     total.instrument[instrument] += time
 
             if allocation is not None:
                 for (instrument, time) in allocation.instrument.items():
+                    if ancillary_mode == JCMTRequestCollection.ANCILLARY_GROUP:
+                        time = sum(time.values())
                     if proposal_accepted:
                         if proposal_exempt:
                             exempt.instrument[instrument] += time
@@ -546,7 +557,12 @@ class JCMT(Generic):
 
         tabulation.update({
             'jcmt_weathers': JCMTWeather.get_available(),
-            'jcmt_instruments': JCMTInstrument.get_options(),
+            'jcmt_instruments': (
+                JCMTInstrument.get_options_with_ancillary()
+                if (ancillary_mode == JCMTRequestCollection.ANCILLARY_SEPARATE)
+                else JCMTInstrument.get_options()),
+            'jcmt_ancillary_none': JCMTAncillary.NONE,
+            'jcmt_ancillaries': JCMTAncillary.get_options(),
             'jcmt_exempt_total': exempt,
             'jcmt_accepted_total': accepted,
             'jcmt_request_total': total,
@@ -815,7 +831,8 @@ class JCMT(Generic):
             allocations = info
 
         return {
-            'original_request': original_request.to_table(),
+            'original_request': original_request.to_table(
+                ancillary_mode=JCMTRequestCollection.ANCILLARY_SEPARATE),
             'is_prefilled': is_prefilled,
             'allocations': allocations.values(),
             'instruments': JCMTInstrument.get_options_with_ancillary(),

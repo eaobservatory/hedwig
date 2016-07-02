@@ -74,7 +74,41 @@
     {% for instrument in (jcmt_instruments.keys() + [0]) %}
         <td class="{{ render_cell_class(is_total, loop.first) }}">
             {% if instrument in req_or_alloc.instrument %}
-                {{ req_or_alloc.instrument[instrument] | fmt('{:.1f}')}}
+                {% with instrument_value = req_or_alloc.instrument[instrument] %}
+                    {% if is_total %}
+                        {{ instrument_value | fmt('{:.1f}')}}
+                    {% else %}
+                        {% if (instrument_value | length > 1) or (0 not in instrument_value) %}
+                            <div class="hovertable">
+                                <b>{{ instrument_value.values() | sum | fmt('{:.1f}')}}</b>
+                                <table style="width: 35ex;">
+                                    {% if jcmt_ancillary_none in instrument_value %}
+                                        <tr>
+                                            <th>No ancillary</th>
+                                            <td class="number_right">{{ instrument_value[jcmt_ancillary_none] | fmt('{:.1f}') }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% for (ancillary, ancillary_name) in jcmt_ancillaries.items() %}
+                                        {% if ancillary in instrument_value %}
+                                            <tr>
+                                                <th>{{ ancillary_name }}</th>
+                                                <td class="number_right">{{ instrument_value[ancillary] | fmt('{:.1f}') }}</td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if none in instrument_value %}
+                                        <tr>
+                                            <th>Unknown ancillary</th>
+                                            <td class="number_right">{{ instrument_value[none] | fmt('{:.1f}') }}</td>
+                                        </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                        {% else %}
+                            {{ instrument_value.values() | sum | fmt('{:.1f}')}}
+                        {% endif %}
+                    {% endif %}
+                {% endwith %}
             {% else %}
                 &nbsp;
             {% endif %}
