@@ -34,6 +34,10 @@ class EnumAvailable(object):
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()
                             if (v.available or include_unavailable)))
 
+    @classmethod
+    def is_available(cls, value):
+        return cls._info[value].available
+
 
 class EnumBasic(object):
     """
