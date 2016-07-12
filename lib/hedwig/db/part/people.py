@@ -34,7 +34,7 @@ from ...type.enum import UserLogEvent
 from ...type.simple import Email, \
     Institution, InstitutionInfo, InstitutionLog, \
     Person, PersonInfo, UserInfo, UserLog
-from ...util import get_countries
+from ...util import get_countries, is_list_like
 from ..meta import auth_failure, email, group_member, \
     institution, institution_log, \
     invitation, member, message_recipient, person, \
@@ -572,7 +572,7 @@ class PeoplePart(object):
             stmt = stmt.where(email.c.person_id == person_id)
 
         if address is not None:
-            if isinstance(address, list) or isinstance(address, tuple):
+            if is_list_like(address):
                 stmt = stmt.where(email.c.address.in_(address))
             else:
                 stmt = stmt.where(email.c.address == address)

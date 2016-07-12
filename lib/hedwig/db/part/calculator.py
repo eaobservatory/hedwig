@@ -32,7 +32,7 @@ from ...file.moc import write_moc
 from ...type.collection import OrderedResultCollection, ResultCollection
 from ...type.enum import AttachmentState, FormatType
 from ...type.simple import Calculation, MOCInfo
-from ...util import list_in_blocks
+from ...util import is_list_like, list_in_blocks
 from ..meta import calculator, calculation, facility, moc, moc_cell, moc_fits
 from ..util import require_not_none
 
@@ -193,7 +193,7 @@ class CalculatorPart(object):
             stmt = stmt.where(moc.c.id == moc_id)
 
         if state is not None:
-            if isinstance(state, list) or isinstance(state, tuple):
+            if is_list_like(state):
                 stmt = stmt.where(moc.c.state.in_(state))
             else:
                 stmt = stmt.where(moc.c.state == state)

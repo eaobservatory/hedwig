@@ -29,6 +29,7 @@ from ...error import ConsistencyError, Error, FormattedError, \
 from ...type.collection import GroupMemberCollection, ReviewerCollection
 from ...type.enum import Assessment, FormatType, GroupType, ReviewState
 from ...type.simple import GroupMember, Reviewer
+from ...util import is_list_like
 from ..meta import call, decision, group_member, \
     institution, invitation, person, \
     proposal, queue, \
@@ -210,7 +211,7 @@ class ReviewPart(object):
             stmt = stmt.where(group_member.c.queue_id == queue_id)
 
         if group_type is not None:
-            if isinstance(group_type, list) or isinstance(group_type, tuple):
+            if is_list_like(group_type):
                 stmt = stmt.where(group_member.c.group_type.in_(group_type))
             else:
                 stmt = stmt.where(group_member.c.group_type == group_type)
@@ -323,7 +324,7 @@ class ReviewPart(object):
             stmt = stmt.where(reviewer.c.proposal_id == proposal_id)
 
         if role is not None:
-            if isinstance(role, list) or isinstance(role, tuple):
+            if is_list_like(role):
                 stmt = stmt.where(reviewer.c.role.in_(role))
             else:
                 stmt = stmt.where(reviewer.c.role == role)
@@ -338,13 +339,13 @@ class ReviewPart(object):
             stmt = stmt.where(self._expr_review_state() == review_state)
 
         if call_id is not None:
-            if isinstance(call_id, list) or isinstance(call_id, tuple):
+            if is_list_like(call_id):
                 stmt = stmt.where(proposal.c.call_id.in_(call_id))
             else:
                 stmt = stmt.where(proposal.c.call_id == call_id)
 
         if queue_id is not None:
-            if isinstance(queue_id, list) or isinstance(queue_id, tuple):
+            if is_list_like(queue_id):
                 stmt = stmt.where(call.c.queue_id.in_(queue_id))
             else:
                 stmt = stmt.where(call.c.queue_id == queue_id)

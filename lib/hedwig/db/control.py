@@ -30,6 +30,7 @@ from sqlalchemy.sql.functions import count
 from ..error import ConsistencyError, Error, \
     DatabaseError, DatabaseIntegrityError, UserError
 from ..type.collection import ResultCollection
+from ..util import is_list_like
 from .part.calculator import CalculatorPart
 from .part.message import MessagePart
 from .part.people import PeoplePart
@@ -144,8 +145,7 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
         n_insert = n_update = n_delete = 0
 
         # Determine if key_column and key_value are plain strings.
-        # Warning: matches specific "list" and "tuple" types.
-        if isinstance(key_column, list) or isinstance(key_column, tuple):
+        if is_list_like(key_column):
             if len(key_column) != len(key_value):
                 raise Error('key_column and key_value differ in length')
             condition = and_(*(k == v for k, v in zip(key_column, key_value)))

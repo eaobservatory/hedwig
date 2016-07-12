@@ -88,6 +88,16 @@ def get_logger(name):
     return FormattedLogger(logging.getLogger(name))
 
 
+def is_list_like(value):
+    """
+    Returns true if the value is a list-like object such as a list or a tuple.
+
+    Currently just returns true if it is a list or tuple.
+    """
+
+    return (isinstance(value, list) or isinstance(value, tuple))
+
+
 def list_in_blocks(iterable, block_size):
     """
     Given an iterable object (e.g. a list) yield a sequence of lists

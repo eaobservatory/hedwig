@@ -25,7 +25,7 @@ from ...db.meta import call, proposal, reviewer
 from ...error import ConsistencyError, FormattedError, UserError
 from ...type.collection import ResultCollection
 from ...type.enum import FormatType
-from ...util import list_in_blocks
+from ...util import is_list_like, list_in_blocks
 from .meta import jcmt_available, jcmt_allocation, jcmt_options, \
     jcmt_request, jcmt_review
 from .type import \
@@ -122,7 +122,7 @@ class JCMTPart(object):
         iter_list = None
 
         if reviewer_id is not None:
-            if isinstance(reviewer_id, list) or isinstance(reviewer_id, tuple):
+            if is_list_like(reviewer_id):
                 if iter_field is not None:
                     raise Error('multiple iterable constraints')
                 iter_field = jcmt_review.c.reviewer_id
@@ -133,7 +133,7 @@ class JCMTPart(object):
         if proposal_id is not None:
             select_from = select_from.join(reviewer)
 
-            if isinstance(proposal_id, list) or isinstance(proposal_id, tuple):
+            if is_list_like(proposal_id):
                 if iter_field is not None:
                     raise Error('multiple iterable constraints')
                 iter_field = reviewer.c.proposal_id

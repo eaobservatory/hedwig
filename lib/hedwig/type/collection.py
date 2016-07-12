@@ -24,6 +24,7 @@ from math import sqrt
 from ..astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
 from ..error import NoSuchRecord, MultipleRecords, UserError
+from ..util import is_list_like
 from .enum import AffiliationType, PublicationType, ReviewState
 from .simple import TargetObject
 
@@ -136,7 +137,7 @@ class CallCollection(ResultCollection):
         values.
         """
 
-        if not(isinstance(queue_id, list) or isinstance(queue_id, tuple)):
+        if not is_list_like(queue_id):
             queue_id = (queue_id,)
 
         return [x for x in self.values() if x.queue_id in queue_id]

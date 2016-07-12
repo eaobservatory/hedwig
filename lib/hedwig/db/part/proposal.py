@@ -43,6 +43,7 @@ from ...type.simple import Affiliation, \
     ProposalFigureInfo, ProposalPDFInfo, \
     ProposalText, ProposalTextInfo, \
     Queue, QueueInfo, ReviewerInfo, Semester, SemesterInfo, Target
+from ...util import is_list_like
 from ..meta import affiliation, affiliation_weight, call, category, decision, \
     facility, institution, \
     member, person, prev_proposal, prev_proposal_pub, \
@@ -817,7 +818,7 @@ class ProposalPart(object):
             stmt = stmt.where(call.c.semester_id == semester_id)
 
         if queue_id is not None:
-            if isinstance(queue_id, list) or isinstance(queue_id, tuple):
+            if is_list_like(queue_id):
                 stmt = stmt.where(call.c.queue_id.in_(queue_id))
             else:
                 stmt = stmt.where(call.c.queue_id == queue_id)
@@ -828,8 +829,7 @@ class ProposalPart(object):
         if has_proposal_state is not None:
             proposal_calls = select([proposal.c.call_id])
 
-            if (isinstance(has_proposal_state, list) or
-                    isinstance(has_proposal_state, tuple)):
+            if is_list_like(has_proposal_state):
                 proposal_calls = proposal_calls.where(
                     proposal.c.state.in_(has_proposal_state))
             else:
@@ -1042,13 +1042,13 @@ class ProposalPart(object):
         stmt = select(select_columns).select_from(select_from)
 
         if state is not None:
-            if isinstance(state, list) or isinstance(state, tuple):
+            if is_list_like(state):
                 stmt = stmt.where(prev_proposal_pub.c.state.in_(state))
             else:
                 stmt = stmt.where(prev_proposal_pub.c.state == state)
 
         if type_ is not None:
-            if isinstance(type_, list) or isinstance(type_, tuple):
+            if is_list_like(type_):
                 stmt = stmt.where(prev_proposal_pub.c.type.in_(type_))
             else:
                 stmt = stmt.where(prev_proposal_pub.c.type == type_)
@@ -1232,7 +1232,7 @@ class ProposalPart(object):
             stmt = stmt.where(reviewer.c.person_id == reviewer_person_id)
 
         if state is not None:
-            if isinstance(state, list) or isinstance(state, tuple):
+            if is_list_like(state):
                 stmt = stmt.where(proposal.c.state.in_(state))
             else:
                 stmt = stmt.where(proposal.c.state == state)
@@ -1416,7 +1416,7 @@ class ProposalPart(object):
             stmt = stmt.where(proposal_fig.c.role == role)
 
         if state is not None:
-            if isinstance(state, list) or isinstance(state, tuple):
+            if is_list_like(state):
                 stmt = stmt.where(proposal_fig.c.state.in_(state))
             else:
                 stmt = stmt.where(proposal_fig.c.state == state)
@@ -1473,7 +1473,7 @@ class ProposalPart(object):
             stmt = stmt.where(proposal_pdf.c.role == role)
 
         if state is not None:
-            if isinstance(state, list) or isinstance(state, tuple):
+            if is_list_like(state):
                 stmt = stmt.where(proposal_pdf.c.state.in_(state))
             else:
                 stmt = stmt.where(proposal_pdf.c.state == state)
