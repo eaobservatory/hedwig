@@ -66,6 +66,19 @@ class DBJCMTTest(DBTestCase):
         self.assertTrue(options.time_specific)
         self.assertTrue(options.polarimetry)
 
+        # Try search interface.
+        result = self.db.search_jcmt_options(proposal_id=[proposal_id])
+        self.assertIsInstance(result, ResultCollection)
+        self.assertEqual(set(result.keys()), set((proposal_id,)))
+
+        result_options = result[proposal_id]
+        self.assertIsInstance(result_options, JCMTOptions)
+        self.assertEqual(result_options, options)
+
+        result = self.db.search_jcmt_options(proposal_id=[1999998, 1999999])
+        self.assertIsInstance(result, ResultCollection)
+        self.assertEqual(len(result), 0)
+
     def test_jcmt_request(self):
         proposal_id = self._create_test_proposal()
 

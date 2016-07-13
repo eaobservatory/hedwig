@@ -42,15 +42,8 @@ class JCMTPart(object):
         Retrieve the JCMT proposal options for a given proposal.
         """
 
-        with self._transaction() as conn:
-            row = conn.execute(jcmt_options.select().where(
-                jcmt_options.c.proposal_id == proposal_id)).first()
-
-            if row is None:
-                return None
-
-            else:
-                return JCMTOptions(**row)
+        return self.search_jcmt_options(
+            proposal_id=proposal_id).get_single(default=None)
 
     def get_jcmt_review(self, reviewer_id):
         """
@@ -104,6 +97,33 @@ class JCMTPart(object):
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(jcmt_available.c.id.asc())):
                 ans[row['id']] = JCMTAvailable(**row)
+
+        return ans
+
+    def search_jcmt_options(self, proposal_id=None):
+        """
+        Retrieve JCMT options for one or more proposals.
+        """
+
+        iter_field = None
+        iter_list = None
+
+        stmt = jcmt_options.select()
+
+        if proposal_id is not None:
+            if is_list_like(proposal_id):
+                assert iter_field is None
+                iter_field = jcmt_options.c.proposal_id
+                iter_list = proposal_id
+            else:
+                stmt = stmt.where(jcmt_options.c.proposal_id == proposal_id)
+
+        ans = ResultCollection()
+
+        with self._transaction() as conn:
+            for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
+                for row in conn.execute(iter_stmt):
+                    ans[row['proposal_id']] = JCMTOptions(**row)
 
         return ans
 
