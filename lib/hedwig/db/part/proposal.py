@@ -910,8 +910,16 @@ class ProposalPart(object):
                     member.c.institution_id, person.c.institution_id
                 )))
 
+        iter_field = None
+        iter_list = None
+
         if proposal_id is not None:
-            stmt = stmt.where(member.c.proposal_id == proposal_id)
+            if is_list_like(proposal_id):
+                assert iter_field is None
+                iter_field = member.c.proposal_id
+                iter_list = proposal_id
+            else:
+                stmt = stmt.where(member.c.proposal_id == proposal_id)
         if person_id is not None:
             stmt = stmt.where(member.c.person_id == person_id)
         if co_member_person_id is not None:
@@ -940,8 +948,10 @@ class ProposalPart(object):
         ans = MemberCollection()
 
         with self._transaction(_conn=_conn) as conn:
-            for row in conn.execute(stmt.order_by(member.c.sort_order.asc())):
-                ans[row['id']] = Member(**row)
+            for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
+                for row in conn.execute(
+                        iter_stmt.order_by(member.c.sort_order.asc())):
+                    ans[row['id']] = Member(**row)
 
         return ans
 
@@ -1278,19 +1288,17 @@ class ProposalPart(object):
 
         # Perform query and collect results.
         ans = ResultCollection()
+        proposal_ids = set()
+        extra = {}
 
         with self._transaction(_conn=_conn) as conn:
-            # Fetch all results before loop so that we can also query for
-            # members if requested.
-            for row in conn.execute(stmt).fetchall():
+            for row in conn.execute(stmt):
                 member_info = None
-                members = None
                 reviewer_info = None
-                reviewers = None
-                categories = None
                 values = default.copy()
                 values.update(**row)
                 row_key = values['id']
+                proposal_ids.add(row_key)
 
                 if person_id is not None:
                     member_info = MemberInfo(
@@ -1310,10 +1318,6 @@ class ProposalPart(object):
                     if member_info.person_id is None:
                         member_info = None
 
-                elif with_members:
-                    members = self.search_member(proposal_id=values['id'],
-                                                 _conn=conn)
-
                 if reviewer_person_id is not None:
                     # There may be more than one reviewer record per person
                     # and proposal, therefore in this case we need to use the
@@ -1325,25 +1329,39 @@ class ProposalPart(object):
                         role=values.pop('reviewer_role'),
                         review_state=values.pop('review_state'))
 
-                elif with_reviewers:
-                    reviewers = self.search_reviewer(
-                        proposal_id=values['id'],
-                        with_review=with_review_info,
-                        with_review_text=with_review_text,
-                        role=with_reviewer_role,
-                        review_state=with_review_state,
-                        _conn=conn)
-
-                if with_categories:
-                    categories = self.search_proposal_category(
-                        proposal_id=values['id'],
-                        _conn=conn)
-
                 ans[row_key] = Proposal(
-                    member=member_info, members=members,
-                    reviewer=reviewer_info, reviewers=reviewers,
-                    categories=categories,
+                    member=member_info, members=None,
+                    reviewer=reviewer_info, reviewers=None,
+                    categories=None,
                     **values)
+
+            # Now check if there is extra information which we need to attach.
+            if with_members:
+                extra['members'] = self.search_member(
+                    proposal_id=proposal_ids, _conn=conn)
+
+            if with_reviewers:
+                extra['reviewers'] = self.search_reviewer(
+                    proposal_id=proposal_ids,
+                    with_review=with_review_info,
+                    with_review_text=with_review_text,
+                    role=with_reviewer_role,
+                    review_state=with_review_state,
+                    _conn=conn)
+
+            if with_categories:
+                extra['categories'] = self.search_proposal_category(
+                    proposal_id=proposal_ids, _conn=conn)
+
+        # Attach extra information to the proposal records.
+        # Do this outside the database transaction block as the
+        # database querying process is complete.
+        if extra:
+            for key in list(ans.keys()):
+                row = ans[key]
+
+                ans[key] = row._replace(**{k: v.subset_by_proposal(row.id)
+                                           for (k, v) in extra.items()})
 
         return ans
 
@@ -1357,14 +1375,25 @@ class ProposalPart(object):
             category.c.name.label('category_name')
         ]).select_from(proposal_category.join(category))
 
+        iter_field = None
+        iter_list = None
+
         if proposal_id is not None:
-            stmt = stmt.where(proposal_category.c.proposal_id == proposal_id)
+            if is_list_like(proposal_id):
+                assert iter_field is None
+                iter_field = proposal_category.c.proposal_id
+                iter_list = proposal_id
+            else:
+                stmt = stmt.where(
+                    proposal_category.c.proposal_id == proposal_id)
 
         ans = ProposalCategoryCollection()
 
         with self._transaction(_conn=_conn) as conn:
-            for row in conn.execute(stmt.order_by(category.c.name.asc())):
-                ans[row['id']] = ProposalCategory(**row)
+            for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
+                for row in conn.execute(
+                        iter_stmt.order_by(category.c.name.asc())):
+                    ans[row['id']] = ProposalCategory(**row)
 
         return ans
 

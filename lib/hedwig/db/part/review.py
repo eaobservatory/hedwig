@@ -266,6 +266,9 @@ class ReviewPart(object):
 
         select_from = reviewer.join(person).outerjoin(institution)
 
+        iter_field = None
+        iter_list = None
+
         default = {'review_extra': None}
 
         if with_invitation:
@@ -321,7 +324,12 @@ class ReviewPart(object):
         stmt = select(select_columns).select_from(select_from)
 
         if proposal_id is not None:
-            stmt = stmt.where(reviewer.c.proposal_id == proposal_id)
+            if is_list_like(proposal_id):
+                assert iter_field is None
+                iter_field = reviewer.c.proposal_id
+                iter_list = proposal_id
+            else:
+                stmt = stmt.where(reviewer.c.proposal_id == proposal_id)
 
         if role is not None:
             if is_list_like(role):
@@ -353,11 +361,12 @@ class ReviewPart(object):
         ans = ReviewerCollection()
 
         with self._transaction(_conn=_conn) as conn:
-            for row in conn.execute(stmt.order_by(
-                    reviewer.c.role, person.c.name, reviewer.c.id)):
-                values = default.copy()
-                values.update(**row)
-                ans[row['id']] = Reviewer(**values)
+            for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
+                for row in conn.execute(iter_stmt.order_by(
+                        reviewer.c.role, person.c.name, reviewer.c.id)):
+                    values = default.copy()
+                    values.update(**row)
+                    ans[row['id']] = Reviewer(**values)
 
         return ans
 
