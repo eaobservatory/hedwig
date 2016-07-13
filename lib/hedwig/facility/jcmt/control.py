@@ -64,14 +64,27 @@ class JCMTPart(object):
         Retrieve the observing allocations for the given proposal.
         """
 
+        iter_field = None
+        iter_list = None
+
+        stmt = jcmt_allocation.select()
+
+        if proposal_id is not None:
+            if is_list_like(proposal_id):
+                assert iter_field is None
+                iter_field = jcmt_allocation.c.proposal_id
+                iter_list = proposal_id
+            else:
+                stmt = stmt.where(
+                    jcmt_allocation.c.proposal_id == proposal_id)
+
         ans = JCMTRequestCollection()
 
-        stmt = jcmt_allocation.select().where(
-            jcmt_allocation.c.proposal_id == proposal_id)
-
         with self._transaction() as conn:
-            for row in conn.execute(stmt.order_by(jcmt_allocation.c.id.asc())):
-                ans[row['id']] = JCMTRequest(**row)
+            for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
+                for row in conn.execute(
+                        iter_stmt.order_by(jcmt_allocation.c.id.asc())):
+                    ans[row['id']] = JCMTRequest(**row)
 
         return ans
 
@@ -99,14 +112,26 @@ class JCMTPart(object):
         Retrieve the observing requests for the given proposal.
         """
 
+        iter_field = None
+        iter_list = None
+
+        stmt = jcmt_request.select()
+
+        if proposal_id is not None:
+            if is_list_like(proposal_id):
+                assert iter_field is None
+                iter_field = jcmt_request.c.proposal_id
+                iter_list = proposal_id
+            else:
+                stmt = stmt.where(jcmt_request.c.proposal_id == proposal_id)
+
         ans = JCMTRequestCollection()
 
-        stmt = jcmt_request.select().where(
-            jcmt_request.c.proposal_id == proposal_id)
-
         with self._transaction() as conn:
-            for row in conn.execute(stmt.order_by(jcmt_request.c.id.asc())):
-                ans[row['id']] = JCMTRequest(**row)
+            for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
+                for row in conn.execute(
+                        iter_stmt.order_by(jcmt_request.c.id.asc())):
+                    ans[row['id']] = JCMTRequest(**row)
 
         return ans
 
@@ -123,8 +148,7 @@ class JCMTPart(object):
 
         if reviewer_id is not None:
             if is_list_like(reviewer_id):
-                if iter_field is not None:
-                    raise Error('multiple iterable constraints')
+                assert iter_field is None
                 iter_field = jcmt_review.c.reviewer_id
                 iter_list = reviewer_id
             else:
@@ -134,8 +158,7 @@ class JCMTPart(object):
             select_from = select_from.join(reviewer)
 
             if is_list_like(proposal_id):
-                if iter_field is not None:
-                    raise Error('multiple iterable constraints')
+                assert iter_field is None
                 iter_field = reviewer.c.proposal_id
                 iter_list = proposal_id
             else:
