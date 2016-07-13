@@ -20,9 +20,9 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict, namedtuple
 
-from ...type.base import EnumAvailable, EnumBasic
+from ...type.base import CollectionByProposal, EnumAvailable, EnumBasic
 from ...type.enum import BaseReviewerRole, BaseTextRole
-from ...type.collection import ResultTable
+from ...type.collection import ResultCollection, ResultTable
 from ...error import UserError
 from .meta import jcmt_available, jcmt_options, jcmt_request, jcmt_review
 
@@ -116,7 +116,7 @@ class JCMTInstrument(EnumBasic, EnumAvailable):
                     and JCMTAncillary.is_available(ancillary)))
 
 
-class JCMTAvailableCollection(OrderedDict):
+class JCMTAvailableCollection(ResultCollection):
     """
     Class used to represent a collection of time availability records.
     """
@@ -176,6 +176,14 @@ class JCMTAvailableCollection(OrderedDict):
                                 total_non_free=total_non_free)
 
 
+class JCMTOptionsCollection(ResultCollection, CollectionByProposal):
+    """
+    Class to hold results of a search for JCMT options.
+    """
+
+    pass
+
+
 class JCMTOptionValue(EnumAvailable):
     OptionInfo = namedtuple('OptionInfo', ('name', 'available'))
 
@@ -187,7 +195,7 @@ class JCMTOptionValue(EnumAvailable):
     ))
 
 
-class JCMTRequestCollection(OrderedDict):
+class JCMTRequestCollection(ResultCollection, CollectionByProposal):
     """
     Class used for collections of JCMT requests.  Also used for JCMT
     allocations (by the time allocation committee) since these have the

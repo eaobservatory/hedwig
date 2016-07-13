@@ -30,7 +30,7 @@ from .meta import jcmt_available, jcmt_allocation, jcmt_options, \
     jcmt_request, jcmt_review
 from .type import \
     JCMTAvailable, JCMTAvailableCollection, \
-    JCMTOptions, JCMTRequest, JCMTRequestCollection, \
+    JCMTOptions, JCMTOptionsCollection, JCMTRequest, JCMTRequestCollection, \
     JCMTReview, JCMTReviewerExpertise, \
     JCMTReviewRatingJustification, JCMTReviewRatingTechnical, \
     JCMTReviewRatingUrgency
@@ -118,7 +118,7 @@ class JCMTPart(object):
             else:
                 stmt = stmt.where(jcmt_options.c.proposal_id == proposal_id)
 
-        ans = ResultCollection()
+        ans = JCMTOptionsCollection()
 
         with self._transaction() as conn:
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):

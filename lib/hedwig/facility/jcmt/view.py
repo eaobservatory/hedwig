@@ -443,15 +443,25 @@ class JCMT(Generic):
 
         affiliation_ids = [x.id for x in tabulation['affiliations']]
 
+        # Make list of proposal_id values and query all JCMT-specific
+        # information from the database.
+        proposal_ids = [x['id'] for x in tabulation['proposals']]
+        jcmt_requests = db.search_jcmt_request(proposal_id=proposal_ids)
+        jcmt_allocations = db.search_jcmt_allocation(proposal_id=proposal_ids)
+        jcmt_options = None
+        if with_extra:
+            jcmt_options = db.search_jcmt_options(proposal_id=proposal_ids)
+
+        # Loop through proposals and attach JCMT-specific information.
         for proposal in tabulation['proposals']:
-            request = db.search_jcmt_request(
-                proposal_id=proposal['id']).get_total(ancillary_mode)
+            request = jcmt_requests.subset_by_proposal(
+                proposal['id']).get_total(ancillary_mode)
 
             proposal['jcmt_request'] = request
 
-            if with_extra:
+            if jcmt_options is not None:
                 proposal['jcmt_options'] = self._get_option_names(
-                    db.get_jcmt_options(proposal_id=proposal['id']))
+                    jcmt_options.get_proposal(proposal['id'], default=None))
 
             # Read the committee's time allocation, but only if there is one.
             # Since decisions can now be returned to "undecided", we need
@@ -459,8 +469,8 @@ class JCMT(Generic):
             allocation = None
             proposal_accepted = proposal['decision_accept']
             proposal_exempt = proposal['decision_exempt']
-            allocation_records = db.search_jcmt_allocation(
-                proposal_id=proposal['id'])
+            allocation_records = jcmt_allocations.subset_by_proposal(
+                proposal['id'])
             if allocation_records:
                 allocation = allocation_records.get_total(ancillary_mode)
 
