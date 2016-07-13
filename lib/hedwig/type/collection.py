@@ -379,6 +379,14 @@ class PrevProposalCollection(ResultCollection):
                 seen_ids[pp.proposal_id] = pp.proposal_code
 
 
+class ProposalCategoryCollection(ResultCollection, CollectionByProposal):
+    """
+    Class to represent results of a search for propossal categories.
+    """
+
+    pass
+
+
 class ProposalTextCollection(ResultCollection):
     """
     Class to represent a collection of pieces of text for a proposal.

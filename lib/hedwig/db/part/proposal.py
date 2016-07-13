@@ -30,7 +30,8 @@ from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
 from ...type.collection import AffiliationCollection, \
     CallCollection, MemberCollection, \
-    PrevProposalCollection, ProposalFigureCollection, ProposalTextCollection, \
+    PrevProposalCollection, ProposalCategoryCollection, \
+    ProposalFigureCollection, ProposalTextCollection, \
     ResultCollection, TargetCollection
 from ...type.enum import AffiliationType, AttachmentState, \
     CallState, FigureType, FormatType, \
@@ -1359,7 +1360,7 @@ class ProposalPart(object):
         if proposal_id is not None:
             stmt = stmt.where(proposal_category.c.proposal_id == proposal_id)
 
-        ans = ResultCollection()
+        ans = ProposalCategoryCollection()
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(category.c.name.asc())):

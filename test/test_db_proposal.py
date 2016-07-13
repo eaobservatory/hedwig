@@ -25,7 +25,8 @@ from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from hedwig.type.collection import AffiliationCollection, \
     CallCollection, MemberCollection, \
-    ProposalTextCollection, ResultCollection, TargetCollection
+    ProposalCategoryCollection, ProposalTextCollection, \
+    ResultCollection, TargetCollection
 from hedwig.type.enum import AffiliationType, AttachmentState, BaseTextRole, \
     CallState, FigureType, \
     FormatType, ProposalState
@@ -1135,7 +1136,7 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(n_delete, 0)
 
         result = self.db.search_proposal_category(proposal_id=proposal_id)
-        self.assertIsInstance(result, ResultCollection)
+        self.assertIsInstance(result, ProposalCategoryCollection)
         self.assertEqual(len(result), 1)
         proposal_cat = list(result.values())[0]
         self.assertIsInstance(proposal_cat, ProposalCategory)
@@ -1153,7 +1154,7 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(n_delete, 1)
 
         result = self.db.search_proposal_category(proposal_id=proposal_id)
-        self.assertIsInstance(result, ResultCollection)
+        self.assertIsInstance(result, ProposalCategoryCollection)
         self.assertEqual(len(result), 1)
         proposal_cat = list(result.values())[0]
         self.assertIsInstance(proposal_cat, ProposalCategory)
