@@ -23,9 +23,10 @@ import itertools
 from unittest import TestCase
 
 from hedwig.error import MultipleRecords, NoSuchRecord, UserError
+from hedwig.type.base import CollectionOrdered
 from hedwig.type.collection import \
     CallCollection, EmailCollection, GroupMemberCollection, MemberCollection, \
-    OrderedResultCollection, ResultCollection, \
+    ResultCollection, \
     ProposalFigureCollection, ReviewerCollection
 from hedwig.type.enum import BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, \
@@ -160,6 +161,9 @@ class CollectionTypeTestCase(TestCase):
             rc.get_single()
 
     def test_ordered_result_collection(self):
+        class OrderedResultCollection(ResultCollection, CollectionOrdered):
+            pass
+
         SortOrdered = namedtuple('SortOrdered', ('id', 'sort_order'))
 
         rc = OrderedResultCollection()

@@ -23,6 +23,35 @@ from collections import OrderedDict
 from ..error import FormattedError
 
 
+class CollectionOrdered(object):
+    """
+    Mix-in for collections with a `sort_order` attribute.
+    """
+
+    def ensure_sort_order(self):
+        """
+        Ensure all records have a non-`None` `sort_order` entry.
+
+        Iterates through the entries in this collection finding the maximum
+        sort_order used and all the entries without a sort order.  Then those
+        entries are assigned `sort_order` values above the previous maximum
+        in the order in which they appear in the collection.
+        """
+
+        i = 0
+        unordered = []
+
+        for (key, value) in self.items():
+            if value.sort_order is None:
+                unordered.append(key)
+            elif value.sort_order > i:
+                i = value.sort_order
+
+        for key in unordered:
+            i += 1
+            self[key] = self[key]._replace(sort_order=i)
+
+
 class EnumAvailable(object):
     """
     Mix-in for enum-style classes where the `_info` dictionary

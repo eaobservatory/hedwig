@@ -29,7 +29,7 @@ from sqlalchemy.sql.functions import max as max_
 
 from ...error import ConsistencyError, Error, UserError
 from ...file.moc import write_moc
-from ...type.collection import OrderedResultCollection, ResultCollection
+from ...type.collection import CalculationCollection, ResultCollection
 from ...type.enum import AttachmentState, FormatType
 from ...type.simple import Calculation, MOCInfo
 from ...util import is_list_like, list_in_blocks
@@ -145,7 +145,7 @@ class CalculatorPart(object):
         if proposal_id is not None:
             stmt = stmt.where(calculation.c.proposal_id == proposal_id)
 
-        ans = OrderedResultCollection()
+        ans = CalculationCollection()
 
         with self._transaction() as conn:
             for row in conn.execute(

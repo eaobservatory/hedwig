@@ -25,6 +25,7 @@ from ..astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
 from ..error import NoSuchRecord, MultipleRecords, UserError
 from ..util import is_list_like
+from .base import CollectionOrdered
 from .enum import AffiliationType, PublicationType, ReviewState
 from .simple import TargetObject
 
@@ -65,36 +66,6 @@ class ResultCollection(OrderedDict):
             return self.values()[0]
 
 
-class OrderedResultCollection(ResultCollection):
-    """
-    Subclass of `ResultCollection` for results from tables with a `sort_order`
-    column.
-    """
-
-    def ensure_sort_order(self):
-        """
-        Ensure all records have a non-`None` `sort_order` entry.
-
-        Iterates through the entries in this collection finding the maximum
-        sort_order used and all the entries without a sort order.  Then those
-        entries are assigned `sort_order` values above the previous maximum
-        in the order in which they appear in the collection.
-        """
-
-        i = 0
-        unordered = []
-
-        for (key, value) in self.items():
-            if value.sort_order is None:
-                unordered.append(key)
-            elif value.sort_order > i:
-                i = value.sort_order
-
-        for key in unordered:
-            i += 1
-            self[key] = self[key]._replace(sort_order=i)
-
-
 class AffiliationCollection(ResultCollection):
     """
     Class to hold th results of an affiliation search,
@@ -115,6 +86,14 @@ class AffiliationCollection(ResultCollection):
             if not AffiliationType.is_valid(affiliation.type):
                 raise UserError(
                     'Affiliation "{}" has invalid type', affiliation.name)
+
+
+class CalculationCollection(ResultCollection, CollectionOrdered):
+    """
+    Class to hold the results of a search for calculations.
+    """
+
+    pass
 
 
 class CallCollection(ResultCollection):
@@ -206,7 +185,7 @@ class GroupMemberCollection(ResultCollection):
         return [x for x in self.values() if x.group_type == group_type]
 
 
-class MemberCollection(OrderedResultCollection):
+class MemberCollection(ResultCollection, CollectionOrdered):
     """
     Class to hold a collection of proposal members.
     """
@@ -582,7 +561,7 @@ class ReviewerCollection(ResultCollection):
                     yield member
 
 
-class TargetCollection(OrderedResultCollection):
+class TargetCollection(ResultCollection, CollectionOrdered):
     """
     Collection for target objects listed on a proposal.
     """
