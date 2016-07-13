@@ -21,9 +21,21 @@ from __future__ import \
 
 from collections import namedtuple
 
+from ...type.base import CollectionByProposal
+from ...type.collection import ResultCollection
 from .meta import example_request
 
 
 ExampleRequest = namedtuple(
     'ExampleRequest',
     [x.name for x in example_request.columns])
+
+
+class ExampleRequestCollection(
+        ResultCollection, CollectionByProposal):
+    """
+    Class to hold a collection of requests to use
+    the Example Facility.
+    """
+
+    pass

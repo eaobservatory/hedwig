@@ -21,27 +21,42 @@ from __future__ import \
 
 from ...type.collection import ResultCollection
 from ...db.meta import proposal
+from ...util import is_list_like
 from .meta import example_request
-from .type import ExampleRequest
+from .type import ExampleRequest, ExampleRequestCollection
 
 
 class ExamplePart(object):
-    def search_example_request(
-            self, proposal_id):
+    def search_example_request(self, proposal_id):
         """
         Retrieve observing requests
-        for the given proposal.
+        for the given proposal or proposals.
         """
 
-        stmt = example_request.select().where(
-            example_request.c.proposal_id == proposal_id
-        ).order_by(example_request.c.id.asc())
+        stmt = example_request.select()
 
-        ans = ResultCollection()
+        iter_field = None
+        iter_list = None
+
+        if proposal_id is not None:
+            if is_list_like(proposal_id):
+                assert iter_field is None
+                iter_field = example_request.c.proposal_id
+                iter_list = proposal_id
+            else:
+                stmt = stmt.where(
+                    example_request.c.proposal_id
+                    == proposal_id)
+
+        ans = ExampleRequestCollection()
 
         with self._transaction() as conn:
-            for row in conn.execute(stmt):
-                ans[row['id']] = ExampleRequest(**row)
+            for iter_stmt in self._iter_stmt(
+                    stmt, iter_field, iter_list):
+                for row in conn.execute(
+                        iter_stmt.order_by(
+                            example_request.c.id.asc())):
+                    ans[row['id']] = ExampleRequest(**row)
 
         return ans
 

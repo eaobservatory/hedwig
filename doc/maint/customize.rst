@@ -124,6 +124,10 @@ before proceeding.
     You can do this in a file `type.py` in your facility directory.
     This file can also contain any enum-style classes and collection
     classes which you wish to define.
+    The following example contains a collection class to be used to
+    contain the results of retieving requests from the database.
+    This includes the :class:`~hedwig.type.base.CollectionByProposal`
+    mix-in since the results will include a `proposal_id` field.
 
     .. literalinclude:: /../lib/hedwig/facility/example/type.py
         :lines: 18-
@@ -136,6 +140,21 @@ before proceeding.
     Hedwig database access methods are typically given names
     starting with a verb such as `add`, `delete`, `get`, `search`,
     `set`, `sync` or `update`.
+
+    In the following example we allow queries to be performed for
+    multiple proposals at once by using :func:`~hedwig.util.is_list_like`
+    to check whether multiple `proposal_id` values have been given.
+    If so we assign the corresponding column to `iter_field` and
+    then, in the transaction `with` block, use
+    :meth:`~hedwig.db.control.Database._iter_stmt` to generate a series of
+    queries, each for a block of proposals.
+    (The size of these blocks is controlled by the database access
+    object's `query_block_size` attribute.)
+    If `iter_field` is `None` then
+    :meth:`~hedwig.db.control.Database._iter_stmt`
+    simply returns the statement as-is,
+    so we don't need a second version of the query execution step
+    for the single-proposal case.
 
     .. literalinclude:: /../lib/hedwig/facility/example/control.py
         :lines: 18-
