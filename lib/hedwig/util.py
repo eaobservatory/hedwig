@@ -92,10 +92,12 @@ def is_list_like(value):
     """
     Returns true if the value is a list-like object such as a list or a tuple.
 
-    Currently just returns true if it is a list or tuple.
+    Currently just returns true if it is a list or tuple or set.
     """
 
-    return (isinstance(value, list) or isinstance(value, tuple))
+    return (isinstance(value, list)
+            or isinstance(value, tuple)
+            or isinstance(value, set))
 
 
 def list_in_blocks(iterable, block_size):
