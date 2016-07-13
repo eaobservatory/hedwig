@@ -30,7 +30,7 @@ from sqlalchemy.sql.functions import count
 from ..error import ConsistencyError, Error, \
     DatabaseError, DatabaseIntegrityError, UserError
 from ..type.collection import ResultCollection
-from ..util import is_list_like
+from ..util import is_list_like, list_in_blocks
 from .part.calculator import CalculatorPart
 from .part.message import MessagePart
 from .part.people import PeoplePart
@@ -91,6 +91,31 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
         return 0 < conn.execute(select([count(table.c.id)]).where(
             table.c.id == id_,
         )).scalar()
+
+    def _iter_stmt(self, stmt, iter_field, iter_list):
+        """
+        Generate sequence of query statements.
+
+        This method takes an SQLAlchemy statement and yields a number
+        of statements with an additional where clause.  This clause
+        requires the field `iter_field` to have a value in `iter_list`.
+        When `iter_list` is larger than the object's `query_block_size`
+        attribute then multiple statements will be returned, where the
+        list is broken into blocks of this size.
+
+        If `iter_field` is `None` then the given `stmt` is yielded as-is.
+
+        :param stmt: statement to be modified.
+        :param iter_field: field being searched.
+        :param iter_list: list (or other iterable) or search values.
+        """
+
+        if iter_field is None:
+            yield stmt
+
+        else:
+            for iter_block in list_in_blocks(iter_list, self.query_block_size):
+                yield stmt.where(iter_field.in_(iter_block))
 
     def _sync_records(self, conn, table, key_column, key_value, records,
                       update_columns=None, verified_columns=(),

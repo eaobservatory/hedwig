@@ -25,7 +25,7 @@ from ...db.meta import call, proposal, reviewer
 from ...error import ConsistencyError, FormattedError, UserError
 from ...type.collection import ResultCollection
 from ...type.enum import FormatType
-from ...util import is_list_like, list_in_blocks
+from ...util import is_list_like
 from .meta import jcmt_available, jcmt_allocation, jcmt_options, \
     jcmt_request, jcmt_review
 from .type import \
@@ -146,16 +146,8 @@ class JCMTPart(object):
         ans = ResultCollection()
 
         with self._transaction() as conn:
-            if iter_field is not None:
-                for iter_block in list_in_blocks(
-                        iter_list, self.query_block_size):
-                    iter_stmt = stmt.where(iter_field.in_(iter_block))
-
-                    for row in conn.execute(iter_stmt):
-                        ans[row['reviewer_id']] = JCMTReview(*row)
-
-            else:
-                for row in conn.execute(stmt):
+            for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
+                for row in conn.execute(iter_stmt):
                     ans[row['reviewer_id']] = JCMTReview(*row)
 
         return ans

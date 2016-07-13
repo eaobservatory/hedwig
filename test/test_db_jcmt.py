@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime
 from hedwig.error import ConsistencyError, Error, NoSuchRecord, UserError
+from hedwig.type.collection import ResultCollection
 from hedwig.type.enum import FormatType
 from hedwig.type.util import null_tuple
 from hedwig.facility.jcmt.type import \
@@ -353,6 +354,25 @@ class DBJCMTTest(DBTestCase):
         self.assertIsInstance(jcmt_review, JCMTReview)
         self.assertEqual(jcmt_review.expertise,
                          JCMTReviewerExpertise.EXPERT)
+
+        # Add a second review and try a multiple-reviewer search.
+        reviewer_id_2 = self.db.add_reviewer(
+            role_class, proposal_id, person_id, role_class.CTTEE_SECONDARY)
+
+        self.assertIsInstance(reviewer_id_2, int)
+
+        self.db.set_jcmt_review(
+            role_class, reviewer_id_2,
+            review=null_tuple(JCMTReview)._replace(
+                expertise=JCMTReviewerExpertise.INTERMEDIATE),
+            is_update=False)
+
+        result = self.db.search_jcmt_review(
+            reviewer_id=[reviewer_id, reviewer_id_2])
+
+        self.assertIsInstance(result, ResultCollection)
+
+        self.assertEqual(set(result.keys()), set((reviewer_id, reviewer_id_2)))
 
     def _create_test_call(self):
         facility_id = self.db.ensure_facility('jcmt')
