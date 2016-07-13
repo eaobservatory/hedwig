@@ -23,6 +23,35 @@ from collections import OrderedDict
 from ..error import FormattedError
 
 
+class CollectionByProposal(object):
+    """
+    Mix-in for collections of items with a `proposal_id` attribute.
+    """
+
+    def get_proposal(self, proposal_id, default=()):
+        """
+        Retrieve the (first found) entry for the given proposal.
+        """
+
+        for item in self.values():
+            if item.proposal_id == proposal_id:
+                return item
+
+        if default == ():
+            raise KeyError('no entry for proposal {}'.format(proposal_id))
+
+        return default
+
+    def subset_by_proposal(self, proposal_id):
+        """
+        Create a subset of the collection (of the same type) containing
+        the entries which match the given proposal.
+        """
+
+        return type(self)((k, v) for (k, v) in self.items()
+                          if v.proposal_id == proposal_id)
+
+
 class CollectionOrdered(object):
     """
     Mix-in for collections with a `sort_order` attribute.

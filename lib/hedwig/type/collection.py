@@ -25,7 +25,7 @@ from ..astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
 from ..error import NoSuchRecord, MultipleRecords, UserError
 from ..util import is_list_like
-from .base import CollectionOrdered
+from .base import CollectionByProposal, CollectionOrdered
 from .enum import AffiliationType, PublicationType, ReviewState
 from .simple import TargetObject
 
@@ -185,7 +185,8 @@ class GroupMemberCollection(ResultCollection):
         return [x for x in self.values() if x.group_type == group_type]
 
 
-class MemberCollection(ResultCollection, CollectionOrdered):
+class MemberCollection(ResultCollection, CollectionByProposal,
+                       CollectionOrdered):
     """
     Class to hold a collection of proposal members.
     """
@@ -418,7 +419,7 @@ class ProposalFigureCollection(ResultCollection):
         return [x for x in self.values() if x.role == role]
 
 
-class ReviewerCollection(ResultCollection):
+class ReviewerCollection(ResultCollection, CollectionByProposal):
     """
     Collection class for reviewers of a proposal, possibly also
     including their reviews.
