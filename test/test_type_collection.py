@@ -23,7 +23,7 @@ import itertools
 from unittest import TestCase
 
 from hedwig.error import MultipleRecords, NoSuchRecord, UserError
-from hedwig.type.base import CollectionOrdered
+from hedwig.type.base import CollectionByProposal, CollectionOrdered
 from hedwig.type.collection import \
     CallCollection, EmailCollection, GroupMemberCollection, MemberCollection, \
     ResultCollection, \
@@ -38,6 +38,54 @@ from hedwig.type.util import null_tuple
 
 
 class CollectionTypeTestCase(TestCase):
+    def test_by_proposal_collection(self):
+        class BPCollection(ResultCollection, CollectionByProposal):
+            pass
+
+        BP = namedtuple('BP', ('id', 'proposal_id'))
+
+        c = BPCollection()
+        c[101] = BP(101, 1)
+        c[102] = BP(102, 1)
+        c[103] = BP(103, 1)
+        c[201] = BP(201, 2)
+        c[202] = BP(202, 2)
+
+        # Test get_proposal method.
+
+        r = c.get_proposal(1)
+        self.assertEqual(r, BP(101, 1))
+
+        r = c.get_proposal(2)
+        self.assertEqual(r, BP(201, 2))
+
+        with self.assertRaises(KeyError):
+            c.get_proposal(3)
+
+        r = c.get_proposal(3, default=None)
+        self.assertIsNone(r)
+
+        # Test subset_by_proposal method.
+
+        s = c.subset_by_proposal(1)
+        self.assertIsInstance(s, BPCollection)
+        self.assertEqual(len(s), 3)
+
+        self.assertEqual(list(s.keys()), [101, 102, 103])
+        self.assertEqual(list(s.values()),
+                         [BP(101, 1), BP(102, 1), BP(103, 1)])
+
+        s = c.subset_by_proposal(2)
+        self.assertIsInstance(s, BPCollection)
+        self.assertEqual(len(s), 2)
+
+        self.assertEqual(list(s.keys()), [201, 202])
+        self.assertEqual(list(s.values()), [BP(201, 2), BP(202, 2)])
+
+        s = c.subset_by_proposal(3)
+        self.assertIsInstance(s, BPCollection)
+        self.assertEqual(len(s), 0)
+
     def test_call_collection(self):
         c = CallCollection()
 
