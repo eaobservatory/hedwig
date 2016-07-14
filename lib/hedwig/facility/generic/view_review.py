@@ -114,7 +114,7 @@ class GenericReview(object):
 
         titles = self._get_proposal_tabulation_titles(tabulation)
         if with_cois:
-            titles.append('Co-Investigators')
+            titles.append('Co-Investigator names')
         writer.add_row(titles)
 
         for (row, proposal) in izip(
@@ -243,8 +243,9 @@ class GenericReview(object):
     def _get_proposal_tabulation_titles(self, tabulation):
         return (
             [
-                'Proposal', 'PI name', 'PI affiliation', 'Title',
-                'State', 'Decision', 'Exempt', 'Rating', 'Rating std. dev.',
+                'Proposal', 'PI name', 'PI affiliation', 'Co-Investigators',
+                'Title', 'State',
+                'Decision', 'Exempt', 'Rating', 'Rating std. dev.',
                 'Categories',
             ] +
             [x.name for x in tabulation['affiliations']]
@@ -263,6 +264,7 @@ class GenericReview(object):
                      else proposal['member_pi'].person_name),
                     (None if proposal['member_pi'] is None
                      else proposal['member_pi'].affiliation_name),
+                    proposal['members_other'],
                     proposal['title'],
                     ProposalState.get_name(proposal['state']),
                     (None if decision_accept is None
