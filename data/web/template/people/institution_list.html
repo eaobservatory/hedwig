@@ -14,7 +14,7 @@
             <td><a href="{{ url_for('.institution_view', institution_id=institution.id)}}">{{ institution.name }}</a></td>
             <td>{{ institution.department }}</td>
             <td>{{ institution.organization }}</td>
-            <td>{{ institution.country }} </td>
+            <td>{{ institution.country | country_name }} </td>
         </tr>
     {% endfor %}
 </table>

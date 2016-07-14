@@ -22,8 +22,8 @@
     <li>
         <label for="country_code">Country</label>
         <select name="country_code">
-            {% for (country_code, country_name) in countries.items() %}
-                <option value="{{ country_code }}" {{ 'selected="selected"' | safe if country_code == institution.country }}>{{ country_name }}</option>
+            {% for (country_code, country_display_name) in countries.items() %}
+                <option value="{{ country_code }}" {{ 'selected="selected"' | safe if country_code == institution.country }}>{{ country_display_name }}</option>
             {% endfor %}
         </select>
     </li>
@@ -34,7 +34,7 @@
     {% if institution.organization %}
         {{ institution.organization | truncate(15, killwords=True, end='\u2026') }},
     {% endif %}
-    {{ institution.country | truncate(15, killwords=True, end='\u2026') }}
+    {{ institution.country | country_name | truncate(15, killwords=True, end='\u2026') }}
 {% endmacro %}
 
 {% macro render_member_institution(member, part_truncate=100) %}
@@ -42,5 +42,5 @@
     {% if member.institution_organization %}
         {{ member.institution_organization | abbr(part_truncate) }},
     {% endif %}
-    {{ member.institution_country | abbr(part_truncate) }}
+    {{ member.institution_country | country_name | abbr(part_truncate) }}
 {% endmacro %}

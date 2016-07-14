@@ -71,7 +71,7 @@
                     {{ person.institution.organization }}
                     <br />
                 {% endif %}
-                {{ person.institution.country }}
+                {{ person.institution.country | country_name }}
                 <br />
                 <a href="{{ url_for('.institution_view', institution_id=person.institution.id) }}">View this institution's information</a>
             </td>

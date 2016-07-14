@@ -39,7 +39,6 @@ from ...type.simple import Affiliation, \
     Queue, ProposalText, Semester, Target, \
     TargetToolInfo, ValidationMessage
 from ...type.util import null_tuple
-from ...util import get_countries
 from ...view import auth
 from ...web.util import ErrorPage, HTTPError, HTTPForbidden, \
     HTTPNotFound, HTTPRedirect, \
@@ -112,8 +111,6 @@ class GenericProposal(object):
 
     @with_proposal(permission=PermissionType.VIEW)
     def view_proposal_view(self, db, proposal, can, args):
-        countries = get_countries()
-
         review_can = auth.for_review(self.get_reviewer_roles(),
                                      db, reviewer=None, proposal=proposal)
 
@@ -129,10 +126,8 @@ class GenericProposal(object):
                 self.get_reviewer_roles(),
                 db, proposal=proposal).view,
             'is_submitted': ProposalState.is_submitted(proposal.state),
-            'proposal': proposal._replace(members=[
-                x._replace(institution_country=countries.get(
-                    x.institution_country, 'Unknown country'))
-                for x in proposal.members.values()]),
+            'proposal': proposal._replace(
+                members=list(proposal.members.values())),
             'students': proposal.members.get_students(),
             'proposal_code': self.make_proposal_code(db, proposal),
             'show_person_proposals_callout': ('first_view' in args),
@@ -694,13 +689,10 @@ class GenericProposal(object):
 
         # Prepare list of people to display as the registered member
         # directory, filtering out current proposal members.
-        countries = get_countries()
         current_persons = [m.person_id for m in proposal.members.values()]
         persons = [
-            p._replace(institution_country=countries.get(
-                p.institution_country))
-            for p in db.search_person(registered=True, public=True,
-                                      with_institution=True).values()
+            p for p in db.search_person(registered=True, public=True,
+                                        with_institution=True).values()
             if p.id not in current_persons
         ]
 

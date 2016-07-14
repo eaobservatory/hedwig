@@ -72,8 +72,8 @@
                     <tr>
                         <th>Country</th>
                         {% set cell_class = ('class="no_change"' | safe if entry.prev.country == entry.new.country else '') %}
-                        <td {{ cell_class }}>{{ entry.prev.country }}</td>
-                        <td {{ cell_class }}>{{ entry.new.country }}</td>
+                        <td {{ cell_class }}>{{ entry.prev.country | country_name }}</td>
+                        <td {{ cell_class }}>{{ entry.new.country | country_name }}</td>
                     </tr>
                 {% endfor %}
             {% endfor %}

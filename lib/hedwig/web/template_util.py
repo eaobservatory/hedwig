@@ -26,6 +26,7 @@ from jinja2.runtime import Undefined
 from ..type.enum import AffiliationType, Assessment, \
     AttachmentState, CallState, MessageState, MessageThreadType, \
     ProposalState, PublicationType, ReviewState
+from ..util import get_countries
 
 from .format import format_text
 
@@ -74,6 +75,13 @@ def register_template_utils(app):
     @app.template_filter()
     def count_true(list_):
         return len(filter(None, list_))
+
+    @app.template_filter()
+    def country_name(value):
+        if value is None:
+            return ''
+
+        return get_countries().get(value, 'Unknown country')
 
     @app.template_filter()
     def fmt(value, format_):

@@ -29,7 +29,6 @@ from ...type.enum import AffiliationType, FormatType, GroupType
 from ...type.simple import Affiliation, Call, Category, \
     MOCInfo, ProposalWithCode, Queue, Semester
 from ...type.util import null_tuple
-from ...util import get_countries
 from ...view import auth
 from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
     flash, parse_datetime, session, url_for
@@ -448,17 +447,12 @@ class GenericAdmin(object):
         members = db.search_group_member(
             queue_id=queue_id, group_type=group_type, with_person=True)
 
-        countries = get_countries()
-
         return {
             'title': '{}: {}'.format(queue.name, group_info.name),
             'queue': queue,
             'group_type': group_type,
             'group_info': group_info,
-            'members': [
-                x._replace(institution_country=countries.get(
-                    x.institution_country, 'Unknown country'))
-                for x in members.values()],
+            'members': members.values(),
         }
 
     @with_verified_admin
@@ -543,14 +537,12 @@ class GenericAdmin(object):
         # Prepare list of people to display as the registered member directory.
         # Note that this includes people without public profiles as this page
         # is restricted to administrators.
-        cs = get_countries()
         existing_person_ids = [
             x.person_id for x in db.search_group_member(
                 queue_id=queue_id, group_type=group_type).values()]
         persons = [
-            p._replace(institution_country=cs.get(p.institution_country))
-            for p in db.search_person(registered=True,
-                                      with_institution=True).values()
+            p for p in db.search_person(registered=True,
+                                        with_institution=True).values()
             if p.id not in existing_person_ids]
 
         return {

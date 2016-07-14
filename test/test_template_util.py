@@ -74,6 +74,13 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(f([True,  True,  False, True]),  3)
         self.assertEqual(f([True,  True,  True,  True]),  4)
 
+    def test_filter_country_name(self):
+        f = self.app.jinja_env.filters['country_name']
+
+        self.assertEqual(f(None), '')
+        self.assertEqual(f('US'), 'United States')
+        self.assertEqual(f('BX'), 'Unknown country')
+
     def test_filter_fmt(self):
         f = self.app.jinja_env.filters['fmt']
 

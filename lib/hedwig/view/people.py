@@ -468,14 +468,9 @@ class PeopleView(object):
         persons = db.search_person(registered=True, public=public,
                                    with_institution=True)
 
-        countries = get_countries()
-
         return {
             'title': 'Directory of Users',
-            'persons': [
-                p._replace(institution_country=countries.get(
-                    p.institution_country, 'Unknown country'))
-                for p in persons.values()],
+            'persons': persons.values(),
         }
 
     @with_person(permission=PermissionType.VIEW)
@@ -497,12 +492,6 @@ class PeopleView(object):
             email=[x._replace(address=mangle_email_address(x.address))
                    for x in person.email.values()
                    if x.public or view_all_email])
-
-        if person.institution is not None:
-            person = person._replace(
-                institution=person.institution._replace(
-                    country=get_countries().get(person.institution.country,
-                                                'Unknown country')))
 
         return {
             'title': '{}: Profile'.format(person.name),
@@ -613,9 +602,7 @@ class PeopleView(object):
             'person': person,
             'institution': institution,
             'institution_id': person.institution_id,
-            'institutions': [i._replace(
-                country=get_countries().get(i.country, 'Unknown country'))
-                for i in institutions.values()],
+            'institutions': institutions.values(),
             'countries': get_countries(),
             'is_current_user': is_current_user,
         }
@@ -866,13 +853,9 @@ class PeopleView(object):
         }
 
     def institution_list(self, db):
-        countries = get_countries()
-
         return {
             'title': 'Institutions',
-            'institutions': [
-                x._replace(country=countries.get(x.country, 'Unknown country'))
-                for x in db.list_institution().values()],
+            'institutions': db.list_institution().values(),
         }
 
     @with_institution(permission=PermissionType.VIEW)
@@ -890,9 +873,7 @@ class PeopleView(object):
 
         return {
             'title': 'Institution: {}'.format(institution.name),
-            'institution': institution._replace(
-                country=get_countries().get(institution.country,
-                                            'Unknown country')),
+            'institution': institution,
             'can_edit': can.edit,
             'persons': persons.values(),
         }
@@ -1000,7 +981,6 @@ class PeopleView(object):
                 raise HTTPRedirect(url_for('.institution_view',
                                            institution_id=int(institution_id)))
 
-        countries = get_countries()
         current = {}
 
         if institution_id is None:
@@ -1016,9 +996,6 @@ class PeopleView(object):
             except NoSuchRecord:
                 raise HTTPNotFound('Institution not found.')
 
-            institution = institution._replace(
-                country=countries.get(institution.country, 'Unknown country'))
-
             raw_entries = db.search_institution_log(
                 institution_id=institution_id)
 
@@ -1029,9 +1006,6 @@ class PeopleView(object):
         entries = []
 
         for entry in raw_entries.values():
-            prev = entry.prev._replace(
-                country=countries.get(entry.prev.country, 'Unknown country'))
-
             if entry.institution_id in current:
                 new = current[entry.institution_id]
             else:
@@ -1041,16 +1015,12 @@ class PeopleView(object):
                     raise HTTPError('Institution {} not found',
                                     entry.institution_id)
 
-                new = new._replace(
-                    country=countries.get(new.country, 'Unknown country'))
-
             # Only display non-approved entries if we are not displaying an
             # institution-specific log.
-            if not ((entry.approved) and (institution_id is None)):
-                entries.append(InstitutionLogExtra(
-                    *(entry._replace(prev=prev)), new=new))
+            if not (entry.approved and (institution_id is None)):
+                entries.append(InstitutionLogExtra(*entry, new=new))
 
-            current[entry.institution_id] = prev
+            current[entry.institution_id] = entry.prev
 
         return {
             'title': title,
@@ -1065,20 +1035,16 @@ class PeopleView(object):
         except NoSuchRecord:
             raise HTTPNotFound('Institution not found.')
 
-        countries = get_countries()
         ctx = {
             'title': 'Subsume Duplicate: {}'.format(institution.name),
-            'institution': institution._replace(
-                country=countries.get(institution.country, 'Unknown country')),
+            'institution': institution,
         }
 
         if form is None:
             ctx.update({
                 'show_confirm_prompt': False,
                 'institutions': [
-                    i._replace(
-                        country=countries.get(i.country, 'Unknown country'))
-                    for i in db.list_institution().values()
+                    i for i in db.list_institution().values()
                     if i.id != institution_id]
             })
 
@@ -1111,8 +1077,7 @@ class PeopleView(object):
                 ctx.update({
                     'show_confirm_prompt': True,
                     'institution_id': duplicate_id,
-                    'duplicate': duplicate._replace(country=countries.get(
-                        duplicate.country, 'Unknown country'))
+                    'duplicate': duplicate,
                 })
 
         return ctx

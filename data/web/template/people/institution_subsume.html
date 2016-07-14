@@ -2,7 +2,7 @@
 {% set navigation=[('Institutions', url_for('.institution_list')), (institution.name, url_for('.institution_view', institution_id=institution.id))] %}
 {% set help_link=url_for('help.admin_page', page_name='institution_edits') %}
 
-{% from 'macro/institution.html' import render_institution_form, render_institution_summary %}
+{% from 'macro/institution.html' import render_institution_summary %}
 
 {% block content %}
 {% if show_confirm_prompt %}
@@ -43,8 +43,8 @@
         </tr>
         <tr>
             <th>Country</th>
-            <td>{{ institution.country }}</td>
-            <td>{{ duplicate.country }}</td>
+            <td>{{ institution.country | country_name }}</td>
+            <td>{{ duplicate.country | country_name }}</td>
         </tr>
     </table>
 
