@@ -149,7 +149,7 @@
                 <th>Institution</th>
                 <th>Role</th>
             </tr>
-            {% for member in proposal.members %}
+            {% for member in proposal.members.values() %}
                 <tr>
                     <td>
                         {% if session.is_admin or member.person_public or (can_edit and not member.person_registered) %}

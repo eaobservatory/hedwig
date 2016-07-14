@@ -126,8 +126,7 @@ class GenericProposal(object):
                 self.get_reviewer_roles(),
                 db, proposal=proposal).view,
             'is_submitted': ProposalState.is_submitted(proposal.state),
-            'proposal': proposal._replace(
-                members=list(proposal.members.values())),
+            'proposal': proposal,
             'students': proposal.members.get_students(),
             'proposal_code': self.make_proposal_code(db, proposal),
             'show_person_proposals_callout': ('first_view' in args),
