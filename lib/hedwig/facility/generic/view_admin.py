@@ -25,7 +25,8 @@ from ...email.format import render_email_template
 from ...error import NoSuchRecord, UserError
 from ...file.moc import read_moc
 from ...type.collection import AffiliationCollection, ResultCollection
-from ...type.enum import AffiliationType, FormatType, GroupType, PersonTitle
+from ...type.enum import AffiliationType, FormatType, GroupType, \
+    PersonTitle, SemesterState
 from ...type.simple import Affiliation, Call, Category, \
     MOCInfo, ProposalWithCode, Queue, Semester
 from ...type.util import null_tuple
@@ -259,8 +260,14 @@ class GenericAdmin(object):
                 capt_word_lim=200, expl_word_lim=200,
                 tech_note='', sci_note='', prev_prop_note='',
                 note_format=FormatType.PLAIN)
-            semesters = db.search_semester(facility_id=self.id_)
+            semesters = db.search_semester(
+                facility_id=self.id_,
+                state=(SemesterState.FUTURE, SemesterState.CURRENT))
+            if not semesters:
+                raise ErrorPage('No semesters are available for this call.')
             queues = db.search_queue(facility_id=self.id_)
+            if not queues:
+                raise ErrorPage('No queues are available for this call.')
             title = 'Add New Call'
             target = url_for('.call_new')
         else:
