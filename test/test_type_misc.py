@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from unittest import TestCase
 
-from hedwig.type.misc import SectionedList
+from hedwig.type.misc import SectionedList, SectionedListSection
 
 
 class MiscTypeTestCase(TestCase):
@@ -41,7 +41,7 @@ class MiscTypeTestCase(TestCase):
             sl.get_section_name('alpha')
         self.assertEqual(list(sl.by_section()), [])
         self.assertEqual(list(sl.by_section(include_empty=True)), [
-            (None, None, [])])
+            SectionedListSection(None, None, [])])
 
         # Add items to default section.
         sl.append('x')
@@ -50,14 +50,14 @@ class MiscTypeTestCase(TestCase):
         self.assertEqual(sl.list_sections(), [None])
         self.assertEqual(sl.get_section(None), ['x'])
         self.assertEqual(list(sl.by_section()), [
-            (None, None, ['x'])])
+            SectionedListSection(None, None, ['x'])])
 
         sl.extend(['y', 'z'])
         self.assertEqual(len(sl), 3)
         self.assertEqual(list(sl), ['x', 'y', 'z'])
         self.assertEqual(sl.get_section(None), ['x', 'y', 'z'])
         self.assertEqual(list(sl.by_section()), [
-            (None, None, ['x', 'y', 'z'])])
+            SectionedListSection(None, None, ['x', 'y', 'z'])])
 
         # Add items to more sections.
         sl.append('a', section='alpha', section_name='Alphanumeric')
@@ -75,9 +75,9 @@ class MiscTypeTestCase(TestCase):
         self.assertEqual(sl.get_section_name('num'), 'Numbers')
 
         self.assertEqual(list(sl.by_section()), [
-            (None, None, ['x', 'y', 'z']),
-            ('alpha', 'Alphanumeric', ['a']),
-            ('num', 'Numbers', ['1', '2', '3']),
+            SectionedListSection(None, None, ['x', 'y', 'z']),
+            SectionedListSection('alpha', 'Alphanumeric', ['a']),
+            SectionedListSection('num', 'Numbers', ['1', '2', '3']),
         ])
 
         # Try indexing operations.
@@ -146,7 +146,7 @@ class MiscTypeTestCase(TestCase):
         self.assertEqual(list(sl), ['xxx', 'u', 'v', 't'])
 
         self.assertEqual(list(sl.by_section()), [
-            (None, None, ['xxx']),
-            ('new_1', 'New section one', ['u', 'v']),
-            ('new_2', 'New section two', ['t']),
+            SectionedListSection(None, None, ['xxx']),
+            SectionedListSection('new_1', 'New section one', ['u', 'v']),
+            SectionedListSection('new_2', 'New section two', ['t']),
         ])

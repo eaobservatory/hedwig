@@ -21,6 +21,10 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict, namedtuple
 
 
+SectionedListSection = namedtuple(
+    'SectionedListSection', ('section', 'name', 'items'))
+
+
 class SectionedList(object):
     """
     List-like class where the list can be divided into labeled sections.
@@ -164,8 +168,9 @@ class SectionedList(object):
         """
         Iterate over the list on a section-by-section basis.
 
-        For each section, yields a tuple `(section, section_name,
-        items)` where items is the list of items for that section.
+        For each section, yields a SectionedListSection namedtuple
+        `(section, name, items)` where items is the list of items
+        for that section.
 
         :param include_empty: indicates whether empty sections should
                               be included
@@ -177,7 +182,8 @@ class SectionedList(object):
 
         for (section, items) in self.data.items():
             if items or include_empty:
-                yield (section, self.sections.get(section), items)
+                yield SectionedListSection(
+                    section, self.sections.get(section), items)
 
     def delete_section(self, section):
         """

@@ -68,11 +68,11 @@
 
         <ol>
             {% block calculator_input_list %}
-                {% for (section_key, section_label, section_inputs) in inputs.by_section() %}
-                    {% if section_label is not none %}
-                        <li class="separator">{{ section_label }}</li>
+                {% for section in inputs.by_section() %}
+                    {% if section.name is not none %}
+                        <li class="separator">{{ section.name }}</li>
                     {% endif %}
-                    {% for value in section_inputs %}
+                    {% for value in section.items %}
                         {% with input = input_values[value.code] %}
                             {% block calculator_input_item scoped %}
                                 <li>
