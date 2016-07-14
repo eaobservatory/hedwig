@@ -1068,7 +1068,7 @@ class PeopleView(object):
 
             if 'submit_cancel' in form:
                 raise HTTPRedirect(url_for('.institution_view',
-                                           institution_id=int(institution_id)))
+                                           institution_id=institution_id))
 
             elif 'submit_confirm' in form:
                 db.merge_institution_records(
@@ -1078,7 +1078,7 @@ class PeopleView(object):
                 flash('The institution records have been merged.')
 
                 raise HTTPRedirect(url_for('.institution_view',
-                                           institution_id=int(institution_id)))
+                                           institution_id=institution_id))
 
             else:
                 ctx.update({
