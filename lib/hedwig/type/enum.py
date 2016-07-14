@@ -839,6 +839,28 @@ class ReviewState(EnumBasic, EnumDisplayClass):
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
 
+class SemesterState(EnumBasic):
+    """
+    Class representing states of a semester.
+
+    Note that this state is not stored directly in the database -- it is
+    determined based on the start and end dates.
+    """
+
+    FUTURE = 1
+    CURRENT = 2
+    PAST = 3
+
+    StateInfo = namedtuple(
+        'StateInfo', ('name',))
+
+    _info = OrderedDict((
+        (FUTURE,  StateInfo('Future')),
+        (CURRENT, StateInfo('Current')),
+        (PAST,    StateInfo('Past')),
+    ))
+
+
 class BaseTextRole(EnumBasic, EnumURLPath):
     """
     Base for classes representing roles which a piece of text may have

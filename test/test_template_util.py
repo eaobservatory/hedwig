@@ -26,7 +26,7 @@ from flask import Markup
 from hedwig.type.enum import Assessment, AttachmentState, \
     BaseReviewerRole, CallState, \
     MessageState, MessageThreadType, ProposalState, \
-    PublicationType, ReviewState
+    PublicationType, ReviewState, SemesterState
 from hedwig.web.template_util import Counter
 
 from .dummy_app import WebAppTestCase
@@ -187,6 +187,12 @@ class TemplateUtilTestCase(WebAppTestCase):
 
         self.assertEqual(f(999), '')
         self.assertEqual(f(1), 'Dr.')
+
+    def test_filter_semester_state(self):
+        f = self.app.jinja_env.filters['semester_state_name']
+
+        self.assertEqual(f(999), 'Unknown state')
+        self.assertEqual(f(SemesterState.PAST), 'Past')
 
     def test_filter_abbr(self):
         f = self.app.jinja_env.filters['abbr']

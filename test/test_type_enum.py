@@ -25,7 +25,7 @@ from hedwig.error import Error
 from hedwig.type.enum import \
     Assessment, AttachmentState, BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, \
-    MessageState, PersonTitle, ProposalState, ReviewState
+    MessageState, PersonTitle, ProposalState, ReviewState, SemesterState
 
 
 class EnumTypeTestCase(TestCase):
@@ -317,6 +317,16 @@ class EnumTypeTestCase(TestCase):
                 BaseReviewerRole.CTTEE_PRIMARY)),
             set((ProposalState.FINAL_REVIEW,
                  ProposalState.ACCEPTED, ProposalState.REJECTED)))
+
+    def test_semester_state(self):
+        states = [SemesterState.FUTURE, SemesterState.CURRENT,
+                  SemesterState.PAST]
+
+        self.assertEqual(SemesterState.get_name(SemesterState.FUTURE),
+                         'Future')
+
+        for state in states:
+            self.assertIsInstance(SemesterState.get_name(state), unicode)
 
     def test_text_role(self):
         self.assertTrue(BaseTextRole.is_valid(BaseTextRole.ABSTRACT))
