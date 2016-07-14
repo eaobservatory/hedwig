@@ -28,6 +28,7 @@
                     <option value="{{ title_num }}" {{ 'selected="selected"' | safe if title_num == person.title }}>{{ title_display_name }}</option>
                 {% endfor %}
             </select>
+            <span class="explanation">optional</span>
         </li>
         <li>
             <label for="person_name">Full name</label>
