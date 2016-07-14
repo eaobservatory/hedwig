@@ -35,7 +35,7 @@ from ...type.collection import AffiliationCollection, \
     ResultCollection, TargetCollection
 from ...type.enum import AffiliationType, AttachmentState, \
     CallState, FigureType, FormatType, \
-    ProposalState, PublicationType
+    ProposalState, PublicationType, SemesterState
 from ...type.simple import Affiliation, \
     Call, Category, Facility, \
     Member, MemberInfo, MemberPIInfo, \
@@ -955,7 +955,13 @@ class ProposalPart(object):
 
         return ans
 
-    def search_semester(self, facility_id=None):
+    def search_semester(self, facility_id=None, state=None):
+        dt_current = datetime.utcnow()
+        state_expr = case([
+            (semester.c.date_start > dt_current, SemesterState.FUTURE),
+            (semester.c.date_end >= dt_current, SemesterState.CURRENT),
+        ], else_=SemesterState.PAST)
+
         stmt = select([
             semester.c.id,
             semester.c.facility_id,
@@ -963,15 +969,23 @@ class ProposalPart(object):
             semester.c.code,
             semester.c.date_start,
             semester.c.date_end,
+            state_expr.label('state'),
         ])
 
         if facility_id is not None:
             stmt = stmt.where(semester.c.facility_id == facility_id)
 
+        if state is not None:
+            if is_list_like(state):
+                stmt = stmt.where(state_expr.in_(state))
+            else:
+                stmt = stmt.where(state_expr == state)
+
         ans = ResultCollection()
 
         with self._transaction() as conn:
-            for row in conn.execute(stmt.order_by(semester.c.id.desc())):
+            for row in conn.execute(
+                    stmt.order_by(semester.c.date_start.desc())):
                 ans[row['id']] = SemesterInfo(**row)
 
         return ans

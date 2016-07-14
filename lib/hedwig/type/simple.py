@@ -231,7 +231,7 @@ Semester = namedtuple(
 
 SemesterInfo = namedtuple(
     'SemesterInfo',
-    ['id', 'facility_id', 'name', 'code', 'date_start', 'date_end'])
+    ['id', 'facility_id', 'name', 'code', 'date_start', 'date_end', 'state'])
 
 Target = namedtuple(
     'Target',
