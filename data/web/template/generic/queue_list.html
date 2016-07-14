@@ -8,10 +8,17 @@
     <a href="{{ url_for('.queue_new') }}">New queue</a>
 </p>
 
-<ul>
+<table>
+    <tr>
+        <th>Queue</th>
+        <th>Code</th>
+    </tr>
     {% for queue in queues.values() %}
-        <li><a href="{{ url_for('.queue_view', queue_id=queue.id) }}">{{ queue.name }}</a></li>
+        <tr>
+            <td><a href="{{ url_for('.queue_view', queue_id=queue.id) }}">{{ queue.name }}</a></td>
+            <td>{{ queue.code }}</td>
+        </tr>
     {% endfor %}
-</ul>
+</table>
 
 {% endblock %}
