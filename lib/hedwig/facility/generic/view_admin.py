@@ -25,7 +25,7 @@ from ...email.format import render_email_template
 from ...error import NoSuchRecord, UserError
 from ...file.moc import read_moc
 from ...type.collection import AffiliationCollection, ResultCollection
-from ...type.enum import AffiliationType, FormatType, GroupType
+from ...type.enum import AffiliationType, FormatType, GroupType, PersonTitle
 from ...type.simple import Affiliation, Call, Category, \
     MOCInfo, ProposalWithCode, Queue, Semester
 from ...type.util import null_tuple
@@ -470,12 +470,15 @@ class GenericAdmin(object):
         message_link = None
         message_invite = None
 
-        member = dict(person_id=None, name='', email='')
+        member = dict(person_id=None, name='', title=None, email='')
 
         if form is not None:
             if 'person_id' in form:
                 member['person_id'] = int(form['person_id'])
             member['name'] = form.get('name', '')
+            if 'person_title' in form:
+                member['title'] = (None if (form['person_title'] == '')
+                                   else int(form['person_title']))
             member['email'] = form.get('email', '')
 
             if 'submit_link' in form:
@@ -506,7 +509,8 @@ class GenericAdmin(object):
                     if not member['email']:
                         raise UserError('Please enter an email address.')
 
-                    person_id = db.add_person(member['name'])
+                    person_id = db.add_person(member['name'],
+                                              title=member['title'])
                     db.add_email(person_id, member['email'], primary=True)
                     db.add_group_member(queue_id, group_type, person_id)
 
@@ -565,6 +569,7 @@ class GenericAdmin(object):
                 (group_info.name, url_for('.group_view', queue_id=queue.id,
                                           group_type=group_type))],
             'help_link': url_for('help.admin_page', page_name='review_group'),
+            'titles': PersonTitle.get_options(),
         }
 
     def _message_group_invite(self, db, group_info, queue,

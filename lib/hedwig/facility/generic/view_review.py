@@ -35,7 +35,7 @@ from ...web.util import ErrorPage, \
 from ...type.collection import ReviewerCollection
 from ...type.enum import AffiliationType, Assessment, \
     FileTypeInfo, FormatType, GroupType, \
-    MessageThreadType, PermissionType, ProposalState, ReviewState
+    MessageThreadType, PermissionType, PersonTitle, ProposalState, ReviewState
 from ...type.simple import Affiliation, Link, MemberPIInfo, \
     ProposalWithCode, Reviewer
 from ...type.util import null_tuple, with_can_edit
@@ -570,12 +570,15 @@ class GenericReview(object):
         message_link = None
         message_invite = None
 
-        member = dict(person_id=None, name='', email='')
+        member = dict(person_id=None, name='', title=None, email='')
 
         if form is not None:
             if 'person_id' in form:
                 member['person_id'] = int(form['person_id'])
             member['name'] = form.get('name', '')
+            if 'person_title' in form:
+                member['title'] = (None if (form['person_title'] == '')
+                                   else int(form['person_title']))
             member['email'] = form.get('email', '')
 
             if 'submit_link' in form:
@@ -626,7 +629,8 @@ class GenericReview(object):
                     if not member['email']:
                         raise UserError('Please enter an email address.')
 
-                    person_id = db.add_person(member['name'])
+                    person_id = db.add_person(member['name'],
+                                              title=member['title'])
                     db.add_email(person_id, member['email'], primary=True)
                     reviewer_id = db.add_reviewer(
                         role_class=role_class,
@@ -700,6 +704,7 @@ class GenericReview(object):
             'abstract': abstract,
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id).values(),
+            'titles': PersonTitle.get_options(),
         }
 
     def _message_review_invite(self, db, proposal, role,

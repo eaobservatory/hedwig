@@ -182,6 +182,12 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(f(BaseReviewerRole.EXTERNAL, BaseReviewerRole),
                          'reviewer_ext')
 
+    def test_filter_person_title(self):
+        f = self.app.jinja_env.filters['title_name']
+
+        self.assertEqual(f(999), '')
+        self.assertEqual(f(1), 'Dr.')
+
     def test_filter_abbr(self):
         f = self.app.jinja_env.filters['abbr']
 

@@ -30,7 +30,7 @@ from ...auth import check_password_hash, create_password_hash, generate_token
 from ...error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from ...type.collection import EmailCollection, ResultCollection
-from ...type.enum import UserLogEvent
+from ...type.enum import PersonTitle, UserLogEvent
 from ...type.simple import Email, \
     Institution, InstitutionInfo, InstitutionLog, \
     Person, PersonInfo, UserInfo, UserLog
@@ -129,7 +129,8 @@ class PeoplePart(object):
 
         return (token, expiry)
 
-    def add_person(self, name, public=False, user_id=None, remote_addr=None,
+    def add_person(self, name, title=None, public=False,
+                   user_id=None, remote_addr=None,
                    _test_skip_check=False):
         """
         Add a person to the database.
@@ -147,8 +148,12 @@ class PeoplePart(object):
                     raise ConsistencyError(
                         'person already exists with user_id={}', user_id)
 
+            if not ((title is None) or PersonTitle.is_valid(title)):
+                raise UserError('Invalid title selection.')
+
             result = conn.execute(person.insert().values({
                 person.c.name: name,
+                person.c.title: title,
                 person.c.public: public,
                 person.c.user_id: user_id,
                 person.c.admin: False,
@@ -911,7 +916,7 @@ class PeoplePart(object):
                     institution_id)
 
     def update_person(self, person_id,
-                      name=None, public=None, institution_id=(),
+                      name=None, title=(), public=None, institution_id=(),
                       admin=None,
                       _test_skip_check=False):
         """
@@ -923,6 +928,10 @@ class PeoplePart(object):
 
         if name is not None:
             values['name'] = name
+        if title != ():
+            if not ((title is None) or PersonTitle.is_valid(title)):
+                raise UserError('Invalid title selection.')
+            values['title'] = title
         if public is not None:
             values['public'] = public
         if institution_id != ():

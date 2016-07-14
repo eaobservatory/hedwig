@@ -25,7 +25,7 @@ from hedwig.error import Error
 from hedwig.type.enum import \
     Assessment, AttachmentState, BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, \
-    MessageState, ProposalState, ReviewState
+    MessageState, PersonTitle, ProposalState, ReviewState
 
 
 class EnumTypeTestCase(TestCase):
@@ -106,6 +106,27 @@ class EnumTypeTestCase(TestCase):
         self.assertIsInstance(states, dict)
         self.assertEqual(set(states.keys()),
                          set((MessageState.UNSENT, MessageState.DISCARD)))
+
+    def test_person_title(self):
+        # Since the PersonTitle class doesn't provide value attributes,
+        # assume that Dr. corresponds to the integer 1.
+        DR = 1
+
+        self.assertEqual(PersonTitle.get_name(DR), 'Dr.')
+
+        self.assertTrue(PersonTitle.is_valid(DR))
+
+        self.assertFalse(PersonTitle.is_valid(999))
+
+        options = PersonTitle.get_options()
+
+        for (key, title) in options.items():
+            self.assertIsInstance(key, int)
+            self.assertIsInstance(title, unicode)
+
+        option_values = list(options.values())
+        for title in ('Dr. Miss Mr. Mrs. Ms. Prof.'.split(' ')):
+            self.assertIn(title, option_values)
 
     def test_proposal_state(self):
         options = ProposalState.get_options()

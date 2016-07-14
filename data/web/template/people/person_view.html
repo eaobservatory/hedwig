@@ -49,7 +49,10 @@
 <table>
     <tr>
         <th>Full name</th>
-        <td>{{ person.name }}</td>
+        <td>
+            {% if person.title is not none %}{{ person.title | title_name }}{% endif %}
+            {{ person.name }}
+        </td>
     </tr>
     {% if is_current_user or session.is_admin %}
         <tr>

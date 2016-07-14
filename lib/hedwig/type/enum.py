@@ -450,6 +450,23 @@ class PermissionType(object):
     FEEDBACK = 10
 
 
+class PersonTitle(EnumBasic, EnumAvailable):
+    """
+    Class containing a list of personal titles.
+    """
+
+    TitleInfo = namedtuple('TitleInfo', ('name', 'available'))
+
+    _info = OrderedDict((
+        (1, TitleInfo('Dr.', True)),
+        (2, TitleInfo('Miss', True)),
+        (3, TitleInfo('Mr.', True)),
+        (4, TitleInfo('Mrs.', True)),
+        (5, TitleInfo('Ms.', True)),
+        (6, TitleInfo('Prof.', True)),
+    ))
+
+
 class ProposalState(EnumBasic):
     """
     Class representing various states a proposal can be in.

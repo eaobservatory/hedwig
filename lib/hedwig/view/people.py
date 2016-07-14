@@ -26,7 +26,8 @@ from ..email.format import render_email_template
 from ..error import ConsistencyError, Error, MultipleRecords, NoSuchRecord, \
     UserError
 from ..type.collection import EmailCollection
-from ..type.enum import PermissionType, ProposalState, UserLogEvent
+from ..type.enum import PermissionType, PersonTitle, ProposalState, \
+    UserLogEvent
 from ..type.simple import Email, \
     Institution, InstitutionLog, Person, ProposalWithCode
 from ..type.util import null_tuple
@@ -427,6 +428,8 @@ class PeopleView(object):
         if form is not None:
             person = person._replace(
                 name=form['person_name'],
+                title=(None if (form['person_title'] == '')
+                       else int(form['person_title'])),
                 public=('person_public' in form))
             email = form['single_email']
 
@@ -437,7 +440,7 @@ class PeopleView(object):
                     raise UserError('Please enter your email address.')
 
                 person_id = db.add_person(
-                    person.name, public=person.public,
+                    person.name, title=person.title, public=person.public,
                     user_id=user_id, remote_addr=remote_addr)
                 db.add_email(person_id, email, primary=True)
                 flash('Your user profile has been saved.')
@@ -456,7 +459,8 @@ class PeopleView(object):
             'target': url_for('.register_person'),
             'message': message,
             'person': person,
-            'single_email': email
+            'single_email': email,
+            'titles': PersonTitle.get_options(),
         }
 
     def person_list(self, db):
@@ -507,13 +511,15 @@ class PeopleView(object):
         if form is not None:
             person = person._replace(
                 name=form['person_name'],
+                title=(None if (form['person_title'] == '')
+                       else int(form['person_title'])),
                 public=('person_public' in form))
 
             try:
                 if not person.name:
                     raise UserError('Please enter your full name.')
                 db.update_person(
-                    person.id, name=person.name,
+                    person.id, name=person.name, title=person.title,
                     public=(person.public and person.user_id is not None))
 
                 if session['user_id'] == person.user_id:
@@ -532,6 +538,7 @@ class PeopleView(object):
             'target': url_for('.person_edit', person_id=person.id),
             'message': message,
             'person': person,
+            'titles': PersonTitle.get_options(),
         }
 
     @with_person(permission=PermissionType.EDIT)

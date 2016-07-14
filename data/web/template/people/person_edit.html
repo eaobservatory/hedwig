@@ -21,6 +21,15 @@
 <form method="POST" action="{{ target }}">
     <ol>
         <li>
+            <label for="person_title">Title</label>
+            <select name="person_title">
+                <option value="" {{ 'selected="selected"' | safe if person.title is none }}></option>
+                {% for (title_num, title_display_name) in titles.items() %}
+                    <option value="{{ title_num }}" {{ 'selected="selected"' | safe if title_num == person.title }}>{{ title_display_name }}</option>
+                {% endfor %}
+            </select>
+        </li>
+        <li>
             <label for="person_name">Full name</label>
             <input type="text" name="person_name" value="{{ person.name }}" autofocus="autofocus" required="required" size="40" />
         </li>

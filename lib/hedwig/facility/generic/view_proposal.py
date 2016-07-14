@@ -31,7 +31,7 @@ from ...type.collection import PrevProposalCollection, ResultCollection, \
     TargetCollection
 from ...type.enum import AffiliationType, AttachmentState, \
     CallState, FigureType, FormatType, MessageThreadType, \
-    PermissionType, ProposalState, PublicationType
+    PermissionType, PersonTitle, ProposalState, PublicationType
 from ...type.simple import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
     PrevProposal, PrevProposalPub, \
@@ -589,7 +589,7 @@ class GenericProposal(object):
     def view_member_add(self, db, proposal, can, form):
         message_link = message_invite = None
         member = dict(editor=None, observer=None, person_id=None,
-                      name='', email='')
+                      name='', title=None, email='')
 
         affiliations = db.search_affiliation(
             queue_id=proposal.queue_id, hidden=False)
@@ -602,6 +602,9 @@ class GenericProposal(object):
             if 'person_id' in form:
                 member['person_id'] = int(form['person_id'])
             member['name'] = form.get('name', '')
+            if 'person_title' in form:
+                member['title'] = (None if (form['person_title'] == '')
+                                   else int(form['person_title']))
             member['email'] = form.get('email', '')
             member['affiliation_id'] = int(form['affiliation_id'])
 
@@ -653,7 +656,8 @@ class GenericProposal(object):
                     if not member['email']:
                         raise UserError('Please enter an email address.')
 
-                    person_id = db.add_person(member['name'])
+                    person_id = db.add_person(member['name'],
+                                              title=member['title'])
                     db.add_email(person_id, member['email'], primary=True)
                     db.add_member(proposal.id, person_id,
                                   member['affiliation_id'],
@@ -711,6 +715,7 @@ class GenericProposal(object):
             'submit_link': 'Add to proposal',
             'submit_invite': 'Invite to register',
             'label_link': 'Member',
+            'titles': PersonTitle.get_options(),
         }
 
     def _message_proposal_invite(

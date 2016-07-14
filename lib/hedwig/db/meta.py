@@ -339,6 +339,7 @@ person = Table(
     metadata,
     Column('id', Integer, primary_key=True),
     Column('name', Unicode(255), nullable=False),
+    Column('title', Integer, nullable=True),
     Column('public', Boolean, default=False, nullable=False),
     Column('user_id', None,
            ForeignKey('user.id', onupdate='RESTRICT', ondelete='RESTRICT'),
