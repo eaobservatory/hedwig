@@ -112,7 +112,8 @@ def for_person(db, person, auth_cache=None):
 
         queue_ids = set((
             x.queue_id
-            for x in group_members.values_by_group_type(GroupType.COORD)))
+            for x in group_members.values_by_group_type(
+                GroupType.review_coord_groups())))
 
         if queue_ids:
             if db.search_reviewer(person_id=person.id, queue_id=queue_ids):

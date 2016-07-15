@@ -198,7 +198,8 @@ class GroupMemberCollection(ResultCollection):
         Get a list of the group members with the given role.
         """
 
-        return [x for x in self.values() if x.group_type == group_type]
+        return [x for x in self.values()
+                if matches_constraint(x.group_type, group_type)]
 
 
 class MemberCollection(ResultCollection, CollectionByProposal,
