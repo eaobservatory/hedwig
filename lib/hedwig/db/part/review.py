@@ -170,13 +170,15 @@ class ReviewPart(object):
                             person_id=None, facility_id=None,
                             group_member_id=None,
                             with_person=False, _conn=None):
-        select_from = group_member
+        select_from = group_member.join(queue)
 
-        if facility_id is not None:
-            select_from = select_from.join(queue)
+        select_columns = [
+            group_member,
+            queue.c.facility_id,
+        ]
 
         if with_person:
-            stmt = select([
+            select_columns.extend([
                 group_member,
                 person.c.name.label('person_name'),
                 person.c.public.label('person_public'),
@@ -192,8 +194,6 @@ class ReviewPart(object):
 
             default = None
         else:
-            stmt = group_member.select()
-
             default = {
                 'person_name': None,
                 'person_public': None,
@@ -205,7 +205,7 @@ class ReviewPart(object):
                 'institution_country': None,
             }
 
-        stmt = stmt.select_from(select_from)
+        stmt = select(select_columns).select_from(select_from)
 
         if queue_id is not None:
             stmt = stmt.where(group_member.c.queue_id == queue_id)

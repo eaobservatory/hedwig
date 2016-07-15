@@ -97,6 +97,7 @@ class DBReviewTest(DBTestCase):
             self.assertEqual(v.group_type, GroupType.CTTEE)
             self.assertEqual(v.person_id, person_id)
             self.assertEqual(v.person_name, person_name)
+            self.assertEqual(v.facility_id, facility_id)
 
         # Check additional search criteria.
         result = self.db.search_group_member(person_id=person_id_1)
