@@ -21,7 +21,8 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict
 from unittest import TestCase
 
-from hedwig.util import get_countries, list_in_blocks
+from hedwig.util import get_countries, is_list_like, list_in_blocks, \
+    matches_constraint
 
 
 class UtilTest(TestCase):
@@ -56,3 +57,24 @@ class UtilTest(TestCase):
 
         self.assertEqual(list(list_in_blocks([], 5)),
                          [])
+
+    def test_is_list_like(self):
+        self.assertTrue(is_list_like([1, 2]))
+        self.assertTrue(is_list_like((3, 4)))
+        self.assertTrue(is_list_like(set((5, 6))))
+        self.assertFalse(is_list_like(7))
+        self.assertFalse(is_list_like('8'))
+        self.assertFalse(is_list_like(None))
+
+    def test_matches_constraint(self):
+        self.assertTrue(matches_constraint(1, None))
+        self.assertTrue(matches_constraint(2, None))
+        self.assertTrue(matches_constraint(3, None))
+
+        self.assertTrue(matches_constraint(1, 1))
+        self.assertFalse(matches_constraint(2, 1))
+        self.assertFalse(matches_constraint(3, 1))
+
+        self.assertTrue(matches_constraint(1, (1, 2)))
+        self.assertTrue(matches_constraint(2, (1, 2)))
+        self.assertFalse(matches_constraint(3, (1, 2)))

@@ -24,7 +24,7 @@ from math import sqrt
 from ..astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
 from ..error import NoSuchRecord, MultipleRecords, UserError
-from ..util import is_list_like
+from ..util import is_list_like, matches_constraint
 from .base import CollectionByProposal, CollectionOrdered
 from .enum import AffiliationType, PublicationType, ReviewState
 from .simple import TargetObject
@@ -176,6 +176,22 @@ class GroupMemberCollection(ResultCollection):
     """
     Class to hold a collection of review group members.
     """
+
+    def has_entry(self, group_type=None, queue_id=None,
+                  person_id=None, facility_id=None):
+        """
+        Check whether the collection has an entry matching the given
+        criteria.
+        """
+
+        for x in self.values():
+            if (all((matches_constraint(x.group_type, group_type),
+                     matches_constraint(x.queue_id, queue_id),
+                     matches_constraint(x.person_id, person_id),
+                     matches_constraint(x.facility_id, facility_id)))):
+                return True
+
+        return False
 
     def values_by_group_type(self, group_type):
         """

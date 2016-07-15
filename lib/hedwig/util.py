@@ -120,3 +120,22 @@ def list_in_blocks(iterable, block_size):
 
     if block:
         yield block
+
+
+def matches_constraint(value, constraint):
+    """
+    Check whether a value matches a constraint.
+
+    * If the constraint is None, returns True.
+    * If the constraint appears like-like, return True if the value
+      is in it.
+    * Otherwise return True if the value is equal to the constraint.
+    """
+
+    if constraint is None:
+        return True
+
+    if is_list_like(constraint):
+        return (value in constraint)
+
+    return (value == constraint)
