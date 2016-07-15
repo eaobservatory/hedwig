@@ -137,6 +137,10 @@ td.review_not_done {
     background: #FFA;
 }
 
+td.review_addable {
+    background: #4F4;
+}
+
 td.no_change {
     color: #888;
 }

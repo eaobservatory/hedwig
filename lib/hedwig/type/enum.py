@@ -815,28 +815,31 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
         return cls._info[role].name_review
 
 
-class ReviewState(EnumBasic, EnumDisplayClass):
+class ReviewState(EnumBasic, EnumAvailable, EnumDisplayClass):
     """
     Class representing states of a review.
 
     Not that this is not currently stored in the database, but is determined
     from whether a review has been entered for a given reviewer record.
+
+    The "available" flag indicates which states are offered as search
+    criteria in the web interface.  This excludes ADDABLE as review
+    searches will not find reviews in this state.
     """
 
     NOT_DONE = 1
     DONE = 2
+    ADDABLE = 3
 
     StateInfo = namedtuple(
-        'StateInfo', ('name', 'display_class'))
+        'StateInfo', ('name', 'display_class', 'available'))
 
+    #                        name        class       avail.
     _info = OrderedDict((
-        (NOT_DONE, StateInfo('Not done', 'not_done')),
-        (DONE,     StateInfo('Done', 'done')),
+        (NOT_DONE, StateInfo('Not done', 'not_done', True)),
+        (DONE,     StateInfo('Done',     'done',     True)),
+        (ADDABLE,  StateInfo('Addable',  'addable',  False)),
     ))
-
-    @classmethod
-    def get_options(cls):
-        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
 
 class SemesterState(EnumBasic):
