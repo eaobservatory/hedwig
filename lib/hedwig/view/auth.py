@@ -157,7 +157,7 @@ def for_institution(db, institution):
     return auth
 
 
-def for_private_moc(db, facility_id):
+def for_private_moc(db, facility_id, auth_cache=None):
     """
     Determine whether the current user can view/search private MOCs.
 
@@ -175,11 +175,12 @@ def for_private_moc(db, facility_id):
         return view_only
 
     # Otherwise check groups for the given facility.
-    # TODO: consider caching this information in the session object?
-    if db.search_group_member(
-            person_id=session['person']['id'],
+    group_members = _get_group_membership(
+        auth_cache, db, session['person']['id'])
+
+    if group_members.has_entry(
             group_type=GroupType.private_moc_groups(),
-            facility_id=facility_id).values():
+            facility_id=facility_id):
         return view_only
 
     return no

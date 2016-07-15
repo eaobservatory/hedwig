@@ -387,7 +387,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (9,  person_a1rt,  False, facility_id,    auth.view_only),
                 (10, person_a1rt,  False, facility_other, auth.no),
                 ]:
-            self._test_auth_private_moc(*test_case)
+            self._test_auth_private_moc(auth_cache, *test_case)
 
         # Test authorization for proposals and feedback.
         # Checks authorization in each state via codes -- see _expect_code().
@@ -575,14 +575,14 @@ class WebAppAuthTestCase(WebAppTestCase):
                 auth.for_institution(self.db, institution),
                 expect, 'auth institution case {}'.format(case_number))
 
-    def _test_auth_private_moc(self, case_number, person_id, is_admin,
+    def _test_auth_private_moc(self, auth_cache,
+                               case_number, person_id, is_admin,
                                facility_id, expect):
         with self._as_person(person_id, is_admin):
-            can = auth.for_private_moc(self.db, facility_id)
-        if expect:
-            self.assertTrue(can, 'auth private moc {}'.format(case_number))
-        else:
-            self.assertFalse(can, 'auth private moc {}'.format(case_number))
+            self.assertEqual(
+                auth.for_private_moc(self.db, facility_id,
+                                     auth_cache=auth_cache),
+                expect, 'auth private moc {}'.format(case_number))
 
     def _test_auth_proposal(self, role_class, auth_cache,
                             case_number, person_id, is_admin,

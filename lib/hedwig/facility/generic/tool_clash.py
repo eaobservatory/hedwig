@@ -113,7 +113,7 @@ class ClashTool(BaseTargetTool):
             'target_moc_info': '.tool_clash_moc_info',
         }
 
-    def _determine_public_constraint(self, db):
+    def _determine_public_constraint(self, db, auth_cache=None):
         """
         Determine the database search constraint we should use on the public
         field.
@@ -124,7 +124,8 @@ class ClashTool(BaseTargetTool):
 
         public = True
 
-        if auth.for_private_moc(db, self.facility.id_).view:
+        if auth.for_private_moc(db, self.facility.id_,
+                                auth_cache=auth_cache).view:
             public = None
 
         return public
