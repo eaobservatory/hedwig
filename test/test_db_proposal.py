@@ -25,7 +25,7 @@ from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from hedwig.type.collection import AffiliationCollection, \
     CallCollection, MemberCollection, \
-    ProposalCategoryCollection, ProposalTextCollection, \
+    ProposalCollection, ProposalCategoryCollection, ProposalTextCollection, \
     ResultCollection, TargetCollection
 from hedwig.type.enum import AffiliationType, AttachmentState, BaseTextRole, \
     CallState, FigureType, \
@@ -456,7 +456,7 @@ class DBProposalTest(DBTestCase):
 
                 # Try searching for proposals.
                 result = self.db.search_proposal(call_id=call_id)
-                self.assertIsInstance(result, ResultCollection)
+                self.assertIsInstance(result, ProposalCollection)
                 self.assertEqual(len(result), i)
                 self.assertIn(proposal_id, result)
                 proposal = result[proposal_id]

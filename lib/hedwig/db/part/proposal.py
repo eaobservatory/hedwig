@@ -30,7 +30,7 @@ from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
 from ...type.collection import AffiliationCollection, \
     CallCollection, MemberCollection, \
-    PrevProposalCollection, ProposalCategoryCollection, \
+    PrevProposalCollection, ProposalCollection, ProposalCategoryCollection, \
     ProposalFigureCollection, ProposalTextCollection, \
     ResultCollection, TargetCollection
 from ...type.enum import AffiliationType, AttachmentState, \
@@ -1293,6 +1293,9 @@ class ProposalPart(object):
         # This ordering is intended for the personal proposal list.  If other
         # pages start using this method, perhaps the ordering should be
         # controlled by more arguments.
+        # NOTE: the person proposal / review list pages no longer
+        # strictly require ordering by facility since they use
+        # ProposalCollection.values_by_facility instead of group_by.
         if proposal_id is None:
             stmt = stmt.order_by(
                 semester.c.facility_id,
@@ -1301,7 +1304,7 @@ class ProposalPart(object):
                 proposal.c.number)
 
         # Perform query and collect results.
-        ans = ResultCollection()
+        ans = ProposalCollection()
         proposal_ids = set()
         extra = {}
 

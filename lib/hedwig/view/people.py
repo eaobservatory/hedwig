@@ -20,7 +20,6 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict, namedtuple
 from datetime import datetime
-from itertools import groupby
 
 from ..email.format import render_email_template
 from ..error import ConsistencyError, Error, MultipleRecords, NoSuchRecord, \
@@ -768,27 +767,25 @@ class PeopleView(object):
             '{}: Proposals'.format(person.name))
 
     def _person_proposals(self, db, person_id, facilities, person, title):
-        proposals = db.search_proposal(person_id=person_id)
+        all_proposals = db.search_proposal(person_id=person_id)
 
-        facility_proposals = []
+        proposals = []
 
-        for id_, ps in groupby(proposals.values(), lambda x: x.facility_id):
-            facility = facilities.get(id_)
-            if facility is None:
+        for facility in facilities.values():
+            facility_proposals = [
+                ProposalWithCode(
+                    *p, code=facility.view.make_proposal_code(db, p))
+                for p in all_proposals.values_by_facility(facility.id)]
+
+            if not facility_proposals:
                 continue
 
-            facility_proposals.append(ProposalsByFacility(
-                facility.name,
-                facility.code,
-                [
-                    ProposalWithCode(
-                        *p, code=facility.view.make_proposal_code(db, p))
-                    for p in ps
-                ]))
+            proposals.append(ProposalsByFacility(
+                facility.name, facility.code, facility_proposals))
 
         return {
             'title': title,
-            'proposals': facility_proposals,
+            'proposals': proposals,
             'person': person,
         }
 
@@ -807,27 +804,23 @@ class PeopleView(object):
         # Get a list of proposals, in all review states, for which this
         # person has reviews.  (Will filter later to list only those
         # which are editable in each proposal's actual state.)
-        review_proposals = db.search_proposal(
+        all_proposals = db.search_proposal(
             reviewer_person_id=person_id,
             with_member_pi=True, state=ProposalState.review_states())
 
         # Organize proposals by facility and attach extra information
         # as necessary.
-        facility_proposals = []
+        proposals = []
 
-        for id_, facility_review_proposals in groupby(
-                review_proposals.values(), lambda x: x.facility_id):
-            facility = facilities.get(id_)
-            if facility is None:
-                continue
-
+        for facility in facilities.values():
             role_class = facility.view.get_reviewer_roles()
+
             # Use cache dictionary for editable roles in each state.
             state_editable_roles = {}
 
-            proposals = []
+            facility_proposals = []
 
-            for proposal in facility_review_proposals:
+            for proposal in all_proposals.values_by_facility(facility.id):
                 state = proposal.state
                 roles = state_editable_roles.get(state)
                 if roles is None:
@@ -837,25 +830,20 @@ class PeopleView(object):
                 if proposal.reviewer.role not in roles:
                     continue
 
-                proposals.append(proposal)
+                facility_proposals.append(ProposalWithCode(
+                    *proposal,
+                    code=facility.view.make_proposal_code(db, proposal)))
 
             # If, after filtering, no proposals are left, skip this facility.
-            if not proposals:
+            if not facility_proposals:
                 continue
 
-            facility_proposals.append(ReviewsByFacility(
-                facility.name,
-                facility.code,
-                role_class,
-                [
-                    ProposalWithCode(
-                        *p, code=facility.view.make_proposal_code(db, p))
-                    for p in proposals
-                ]))
+            proposals.append(ReviewsByFacility(
+                facility.name, facility.code, role_class, facility_proposals))
 
         return {
             'title': title,
-            'proposals': facility_proposals,
+            'proposals': proposals,
             'person': person,
         }
 

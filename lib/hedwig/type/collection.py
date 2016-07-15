@@ -396,6 +396,21 @@ class PrevProposalCollection(ResultCollection):
                 seen_ids[pp.proposal_id] = pp.proposal_code
 
 
+class ProposalCollection(ResultCollection):
+    """
+    Class to contain results of a proposal search.
+    """
+
+    def values_by_facility(self, facility_id):
+        """
+        Iterate values for the given facility identifier.
+        """
+
+        for value in self.values():
+            if value.facility_id == facility_id:
+                yield value
+
+
 class ProposalCategoryCollection(ResultCollection, CollectionByProposal):
     """
     Class to represent results of a search for propossal categories.

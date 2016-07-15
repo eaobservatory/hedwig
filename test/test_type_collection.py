@@ -27,13 +27,13 @@ from hedwig.type.base import CollectionByProposal, CollectionOrdered
 from hedwig.type.collection import \
     CallCollection, EmailCollection, GroupMemberCollection, MemberCollection, \
     ResultCollection, \
-    ProposalFigureCollection, ReviewerCollection
+    ProposalCollection, ProposalFigureCollection, ReviewerCollection
 from hedwig.type.enum import BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, \
     ReviewState
 from hedwig.type.simple import \
     Call, Email, GroupMember, Member, \
-    ProposalFigureInfo, Reviewer
+    Proposal, ProposalFigureInfo, Reviewer
 from hedwig.type.util import null_tuple
 
 
@@ -271,6 +271,25 @@ class CollectionTypeTestCase(TestCase):
                                     facility_id=2))
         self.assertFalse(c.has_entry(group_type=GroupType.COORD,
                                      facility_id=1))
+
+    def test_proposal_collection(self):
+        c = ProposalCollection()
+
+        c[101] = null_tuple(Proposal)._replace(id=101, facility_id=1)
+        c[102] = null_tuple(Proposal)._replace(id=102, facility_id=1)
+        c[103] = null_tuple(Proposal)._replace(id=103, facility_id=1)
+        c[201] = null_tuple(Proposal)._replace(id=201, facility_id=2)
+        c[202] = null_tuple(Proposal)._replace(id=202, facility_id=2)
+        c[203] = null_tuple(Proposal)._replace(id=203, facility_id=2)
+
+        fl = list(c.values_by_facility(facility_id=1))
+        self.assertEqual([x.id for x in fl], [101, 102, 103])
+
+        fl = list(c.values_by_facility(facility_id=2))
+        self.assertEqual([x.id for x in fl], [201, 202, 203])
+
+        fl = list(c.values_by_facility(facility_id=3))
+        self.assertEqual(fl, [])
 
     def test_reviewer_collection(self):
         c = ReviewerCollection()
