@@ -74,7 +74,7 @@ def for_call_review(db, call, auth_cache=None):
     return no
 
 
-def for_person(db, person):
+def for_person(db, person, auth_cache=None):
     """
     Determine the current user's authorization regarding this
     profile.
@@ -107,15 +107,15 @@ def for_person(db, person):
 
         # Look for reviews for which this person is the reviewer and allow
         # access to review coordinators.
-        queue_ids = set()
-        for group_member in db.search_group_member(
-                person_id=session['person']['id'],
-                group_type=GroupType.COORD).values():
-            queue_ids.add(group_member.queue_id)
+        group_members = _get_group_membership(
+            auth_cache, db, session['person']['id'])
+
+        queue_ids = set((
+            x.queue_id
+            for x in group_members.values_by_group_type(GroupType.COORD)))
 
         if queue_ids:
-            if db.search_reviewer(person_id=person.id,
-                                  queue_id=list(queue_ids)):
+            if db.search_reviewer(person_id=person.id, queue_id=queue_ids):
                 return yes
 
         return auth

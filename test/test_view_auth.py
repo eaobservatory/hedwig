@@ -347,7 +347,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (33, person_a1re,  False, person_a2e,   auth.no),
                 (34, person_a1re,  False, person_a2p,   auth.view_only),
                 ]:
-            self._test_auth_person(*test_case)
+            self._test_auth_person(auth_cache, *test_case)
 
         # Test authorization for institution profiles.
         for test_case in [
@@ -560,11 +560,12 @@ class WebAppAuthTestCase(WebAppTestCase):
                 auth.for_call_review(self.db, call, auth_cache=auth_cache),
                 expect, 'auth call review case {}'.format(case_number))
 
-    def _test_auth_person(self, case_number, person_id, is_admin,
+    def _test_auth_person(self, auth_cache, case_number, person_id, is_admin,
                           for_person_id, expect):
         with self._as_person(person_id, is_admin):
             self.assertEqual(
-                auth.for_person(self.db, self.db.get_person(for_person_id)),
+                auth.for_person(self.db, self.db.get_person(for_person_id),
+                                auth_cache=auth_cache),
                 expect, 'auth person case {}'.format(case_number))
 
     def _test_auth_institution(self, case_number, person_id, is_admin,
