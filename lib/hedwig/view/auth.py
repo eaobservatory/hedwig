@@ -59,15 +59,16 @@ def for_call_review(db, call, auth_cache=None):
 
     # Give full access to review coordinators and
     # view access to committee members.
-    group_members = _get_group_membership(
-        auth_cache, db, call.queue_id, person_id)
+    group_members = _get_group_membership(auth_cache, db, person_id)
 
-    if any(group_members.values_by_group_type(group_type)
-            for group_type in GroupType.review_coord_groups()):
+    if group_members.has_entry(
+            queue_id=call.queue_id,
+            group_type=GroupType.review_coord_groups()):
         return yes
 
-    if any(group_members.values_by_group_type(group_type)
-            for group_type in GroupType.review_view_groups()):
+    if group_members.has_entry(
+            queue_id=call.queue_id,
+            group_type=GroupType.review_view_groups()):
         return view_only
 
     return no
@@ -216,10 +217,11 @@ def for_proposal(role_class, db, proposal, auth_cache=None):
     if ProposalState.is_submitted(proposal.state):
         # Give access to review groups with access to view all proposals.
         group_members = _get_group_membership(
-            auth_cache, db, proposal.queue_id, session['person']['id'])
+            auth_cache, db, session['person']['id'])
 
-        if any(group_members.values_by_group_type(group_type)
-                for group_type in GroupType.view_all_groups()):
+        if group_members.has_entry(
+                queue_id=proposal.queue_id,
+                group_type=GroupType.view_all_groups()):
             return auth._replace(view=True)
 
     return auth
@@ -319,17 +321,18 @@ def for_review(role_class, db, reviewer, proposal, auth_cache=None):
         return AuthorizationWithRating(
             view=True, edit=review_is_editable, view_rating=rating_is_viewable)
 
-    group_members = _get_group_membership(
-        auth_cache, db, proposal.queue_id, person_id)
+    group_members = _get_group_membership(auth_cache, db, person_id)
 
-    if any(group_members.values_by_group_type(group_type)
-           for group_type in GroupType.review_coord_groups()):
+    if group_members.has_entry(
+            queue_id=proposal.queue_id,
+            group_type=GroupType.review_coord_groups()):
         return AuthorizationWithRating(
             view=True, edit=review_is_editable, view_rating=rating_is_viewable)
 
     # Give view access to committee members.
-    if any(group_members.values_by_group_type(group_type)
-           for group_type in GroupType.review_view_groups()):
+    if group_members.has_entry(
+            queue_id=proposal.queue_id,
+            group_type=GroupType.review_view_groups()):
         return AuthorizationWithRating(
             view=True, edit=False, view_rating=rating_is_viewable)
 
@@ -365,8 +368,7 @@ def can_add_review_roles(role_class, db, proposal, auth_cache=None):
 
     roles = []
 
-    group_members = _get_group_membership(
-        auth_cache, db, proposal.queue_id, person_id)
+    group_members = _get_group_membership(auth_cache, db, person_id)
 
     # Determine whether the user can add a committee "other" review -- they
     # should be a committee member who doesn't already have a committee
@@ -375,7 +377,8 @@ def can_add_review_roles(role_class, db, proposal, auth_cache=None):
             role_class.CTTEE_OTHER):
         if not proposal.reviewers.has_person(
                 person_id=person_id, roles=role_class.get_cttee_roles()):
-            if group_members.values_by_group_type(GroupType.CTTEE):
+            if group_members.has_entry(
+                    queue_id=proposal.queue_id, group_type=GroupType.CTTEE):
                 roles.append(role_class.CTTEE_OTHER)
 
     # Determine whether the user can add a "feedback" review -- they should be
@@ -386,8 +389,9 @@ def can_add_review_roles(role_class, db, proposal, auth_cache=None):
         if not proposal.reviewers.has_role(role_class.FEEDBACK):
             if ((session.get('is_admin', False)
                     and can_be_admin(db, auth_cache=auth_cache))
-                    or any(group_members.values_by_group_type(group_type)
-                           for group_type in GroupType.review_coord_groups())
+                    or group_members.has_entry(
+                        queue_id=proposal.queue_id,
+                        group_type=GroupType.review_coord_groups())
                     or proposal.reviewers.has_person(
                         person_id=person_id,
                         roles=role_class.get_feedback_roles())):
@@ -397,8 +401,8 @@ def can_add_review_roles(role_class, db, proposal, auth_cache=None):
 
 
 @memoized
-def _get_group_membership(db, queue_id, person_id):
-    return db.search_group_member(queue_id=queue_id, person_id=person_id)
+def _get_group_membership(db, person_id):
+    return db.search_group_member(person_id=person_id)
 
 
 @memoized
