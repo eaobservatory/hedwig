@@ -791,7 +791,8 @@ class PeopleView(object):
 
     def person_reviews_own(self, db, facilities):
         return self._person_reviews(
-            db, session['person']['id'], facilities, None, 'Your Reviews')
+            db, session['person']['id'], facilities, None, 'Your Reviews',
+            include_addable=True)
 
     @with_verified_admin
     @with_person(permission=PermissionType.NONE)
@@ -800,13 +801,20 @@ class PeopleView(object):
             db, person.id, facilities, person,
             '{}: Reviews'.format(person.name))
 
-    def _person_reviews(self, db, person_id, facilities, person, title):
+    def _person_reviews(self, db, person_id, facilities, person, title,
+                        include_addable=False):
         # Get a list of proposals, in all review states, for which this
         # person has reviews.  (Will filter later to list only those
         # which are editable in each proposal's actual state.)
         all_proposals = db.search_proposal(
             reviewer_person_id=person_id,
             with_member_pi=True, state=ProposalState.review_states())
+
+        if include_addable:
+            all_addable = auth.find_addable_reviews(
+                db, facilities, auth_cache={})
+        else:
+            all_addable = None
 
         # Organize proposals by facility and attach extra information
         # as necessary.
@@ -833,6 +841,18 @@ class PeopleView(object):
                 facility_proposals.append(ProposalWithCode(
                     *proposal,
                     code=facility.view.make_proposal_code(db, proposal)))
+
+            if all_addable is not None:
+                for proposal in all_addable.values_by_facility(facility.id):
+                    proposal_code = facility.view.make_proposal_code(
+                        db, proposal)
+
+                    for reviewer in proposal.reviewers.values():
+                        facility_proposals.append(ProposalWithCode(
+                            *proposal, code=proposal_code)._replace(
+                                member=proposal.members.get_pi(default=None),
+                                reviewer=reviewer,
+                                members=None, reviewers=None))
 
             # If, after filtering, no proposals are left, skip this facility.
             if not facility_proposals:

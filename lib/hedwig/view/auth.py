@@ -22,7 +22,10 @@ from collections import namedtuple
 
 from ..db.util import memoized
 from ..error import NoSuchRecord
-from ..type.enum import GroupType, ProposalState
+from ..type.collection import ProposalCollection, ReviewerCollection
+from ..type.enum import GroupType, ProposalState, ReviewState
+from ..type.simple import Reviewer
+from ..type.util import null_tuple
 from ..web.util import session, HTTPForbidden
 
 Authorization = namedtuple('Authorization', ('view', 'edit'))
@@ -400,6 +403,57 @@ def can_add_review_roles(role_class, db, proposal, auth_cache=None):
                 roles.append(role_class.FEEDBACK)
 
     return roles
+
+
+def find_addable_reviews(db, facilities, auth_cache=None):
+    """
+    Find proposals for which the user can add reviews.
+
+    :param db: database control object/
+    :param facilities: dictionary of FacilityInfo objects.
+    :param auth_cache: authentication cache dictionary.
+        **Providing this dictionary is strongly recommended.**
+
+    :return ProposalCollection: proposals for which the user can add reviews,
+        with the reviewers attribute containing a ReviewerCollection of dummy
+        Review namedtuples for those reviews.
+    """
+
+    ans = ProposalCollection()
+
+    # Assume that they can't add a review if they're not a member of any
+    # review groups, so give up now if that is the case.
+    group_members = _get_group_membership(
+        auth_cache, db, session['person']['id'])
+    if not group_members:
+        return ans
+
+    # Assume that reviews can only be added when proposals are in review
+    # states -- find such proposals.  Also search only for relevant queues.
+    proposals = db.search_proposal(
+        state=ProposalState.review_states(),
+        with_members=True, with_reviewers=True,
+        queue_id=set((x.queue_id for x in group_members.values())))
+
+    if not proposals:
+        return ans
+
+    for facility in facilities.values():
+        role_class = facility.view.get_reviewer_roles()
+
+        for proposal in proposals.values_by_facility(facility.id):
+            roles = can_add_review_roles(role_class, db, proposal,
+                                         auth_cache=auth_cache)
+            if not roles:
+                continue
+
+            ans[proposal.id] = proposal._replace(reviewers=ReviewerCollection(
+                (i, null_tuple(Reviewer)._replace(
+                    role=role, review_state=ReviewState.ADDABLE))
+                for (i, role) in enumerate(roles)
+            ))
+
+    return ans
 
 
 @memoized
