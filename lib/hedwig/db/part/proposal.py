@@ -1103,7 +1103,7 @@ class ProposalPart(object):
                         decision_accept=None, decision_ready=None,
                         decision_accept_defined=None,
                         proposal_number=None,
-                        semester_code=None, queue_code=None,
+                        semester_code=None, queue_code=None, queue_id=None,
                         _conn=None):
         """
         Search for proposals.
@@ -1239,7 +1239,16 @@ class ProposalPart(object):
             stmt = stmt.where(proposal.c.call_id == call_id)
 
         if facility_id is not None:
-            stmt = stmt.where(semester.c.facility_id == facility_id)
+            if is_list_like(facility_id):
+                stmt = stmt.where(semester.c.facility_id.in_(facility_id))
+            else:
+                stmt = stmt.where(semester.c.facility_id == facility_id)
+
+        if queue_id is not None:
+            if is_list_like(queue_id):
+                stmt = stmt.where(call.c.queue_id.in_(queue_id))
+            else:
+                stmt = stmt.where(call.c.queue_id == queue_id)
 
         if proposal_id is not None:
             stmt = stmt.where(proposal.c.id == proposal_id)
