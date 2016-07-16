@@ -48,6 +48,24 @@ class AffiliationType(EnumBasic):
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
 
+class BaseCallType(EnumBasic, EnumAvailable):
+    """
+    Class representing types of calls for proposals.
+    """
+
+    STANDARD = 1
+    IMMEDIATE = 2
+
+    TypeInfo = namedtuple(
+        'TypeInfo', ('name', 'available'))
+
+    #                        Name         Avail.
+    _info = OrderedDict((
+        (STANDARD,  TypeInfo('Standard',  True)),
+        (IMMEDIATE, TypeInfo('Immediate', True)),
+    ))
+
+
 class CallState(EnumBasic):
     """
     Class representing states of a call for proposals.

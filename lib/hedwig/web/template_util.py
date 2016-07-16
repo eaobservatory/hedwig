@@ -73,6 +73,12 @@ def register_template_utils(app):
         return CallState.get_name(value)
 
     @app.template_filter()
+    def call_type_name(value, type_class):
+        if value is None:
+            return ''
+        return type_class.get_name(value)
+
+    @app.template_filter()
     def count_true(list_):
         return len(filter(None, list_))
 

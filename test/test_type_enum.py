@@ -23,7 +23,8 @@ from unittest import TestCase
 
 from hedwig.error import Error
 from hedwig.type.enum import \
-    Assessment, AttachmentState, BaseReviewerRole, BaseTextRole, \
+    Assessment, AttachmentState, \
+    BaseCallType, BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, \
     MessageState, PersonTitle, ProposalState, ReviewState, SemesterState
 
@@ -75,6 +76,19 @@ class EnumTypeTestCase(TestCase):
 
         for state in states:
             self.assertIsInstance(CallState.get_name(state), unicode)
+
+    def test_call_type(self):
+        self.assertTrue(BaseCallType.is_valid(BaseCallType.STANDARD))
+        self.assertFalse(BaseCallType.is_valid(999))
+
+        options = BaseCallType.get_options()
+        self.assertIsInstance(options, OrderedDict)
+
+        self.assertIn(BaseCallType.STANDARD, options)
+
+        for (type_, type_name) in options.items():
+            self.assertIsInstance(type_, int)
+            self.assertIsInstance(type_name, unicode)
 
     def test_message_state(self):
         # Test "get_name" method.
