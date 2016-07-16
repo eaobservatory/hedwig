@@ -274,6 +274,12 @@ def for_review(role_class, db, reviewer, proposal, auth_cache=None):
     can be provided.  This function can then use this to cache some
     information which it fetches from the database.
 
+    If the `proposal` has a non-`None` reviewers attribute, then this
+    may be used in determining authorization in cases where it may
+    depend on other roles.  (The only example so far is allowing
+    reviewers in "feedback roles" to edit the "feedback" review.)
+    **This means that if some reviewers are attached, they all must be.**
+
     :return AuthorizationWithRating: including field indicating whether
         the ratings can be viewed.
     """
@@ -297,11 +303,19 @@ def for_review(role_class, db, reviewer, proposal, auth_cache=None):
 
             # Special case: if this is the feedback review, allow all reviewers
             # with suitable roles to edit it.
+            # NOTE: if the proposal has its reviewers attached, use them rather
+            # than making a new database search.
             if reviewer.role == role_class.FEEDBACK:
-                if db.search_reviewer(proposal_id=reviewer.proposal_id,
-                                      person_id=person_id,
-                                      role=role_class.get_feedback_roles()):
-                    return AuthorizationWithRating(*yes, view_rating=True)
+                if proposal.reviewers is None:
+                    if db.search_reviewer(
+                            proposal_id=reviewer.proposal_id,
+                            person_id=person_id,
+                            role=role_class.get_feedback_roles()):
+                        return AuthorizationWithRating(*yes, view_rating=True)
+                else:
+                    if proposal.reviewers.has_person(
+                            person_id, roles=role_class.get_feedback_roles()):
+                        return AuthorizationWithRating(*yes, view_rating=True)
 
             review_is_editable = True
 
