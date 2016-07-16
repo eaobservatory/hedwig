@@ -220,7 +220,7 @@ Reviewer = namedtuple(
 
 ReviewerInfo = namedtuple(
     'ReviewerInfo',
-    ['id', 'role', 'review_state'])
+    ['id', 'role', 'review_state', 'person_id', 'proposal_id'])
 
 RouteInfo = namedtuple(
     'RouteInfo',

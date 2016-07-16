@@ -269,6 +269,7 @@ def for_review(role_class, db, reviewer, proposal, auth_cache=None):
     "reviewer" can be set to "None" to skip reviewer-specific authorization.
     (Access will then be granted based only on proposal membership,
     administrative access and committee membership.)
+    Otherwise this can be either a `Reviewer` or `ReviewerInfo` object.
 
     When making multiple calls to this function, an auth_cache dictionary
     can be provided.  This function can then use this to cache some
