@@ -803,16 +803,18 @@ class PeopleView(object):
 
     def _person_reviews(self, db, person_id, facilities, person, title,
                         include_addable=False):
+        auth_cache = {}
+
         # Get a list of proposals, in all review states, for which this
         # person has reviews.  (Will filter later to list only those
         # which are editable in each proposal's actual state.)
         all_proposals = db.search_proposal(
             reviewer_person_id=person_id,
-            with_member_pi=True, state=ProposalState.review_states())
+            with_members=True, state=ProposalState.review_states())
 
         if include_addable:
             all_addable = auth.find_addable_reviews(
-                db, facilities, auth_cache={})
+                db, facilities, auth_cache=auth_cache)
         else:
             all_addable = None
 
@@ -823,24 +825,18 @@ class PeopleView(object):
         for facility in facilities.values():
             role_class = facility.view.get_reviewer_roles()
 
-            # Use cache dictionary for editable roles in each state.
-            state_editable_roles = {}
-
             facility_proposals = []
 
             for proposal in all_proposals.values_by_facility(facility.id):
-                state = proposal.state
-                roles = state_editable_roles.get(state)
-                if roles is None:
-                    roles = role_class.get_editable_roles(state)
-                    state_editable_roles[state] = roles
-
-                if proposal.reviewer.role not in roles:
-                    continue
-
-                facility_proposals.append(ProposalWithCode(
-                    *proposal,
-                    code=facility.view.make_proposal_code(db, proposal)))
+                if auth.for_review(
+                        role_class, db, proposal.reviewer, proposal,
+                        auth_cache=auth_cache).edit:
+                    facility_proposals.append(ProposalWithCode(
+                        *proposal,
+                        code=facility.view.make_proposal_code(
+                            db, proposal))._replace(
+                        member=proposal.members.get_pi(default=None),
+                        members=None))
 
             if all_addable is not None:
                 for proposal in all_addable.values_by_facility(facility.id):
