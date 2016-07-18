@@ -426,7 +426,7 @@ class IntegrationTest(DummyConfigTestCase):
         # Create a call.
         self.browser.get(admin_menu_url)
         self.browser.find_element_by_link_text('Calls').click()
-        self.browser.find_element_by_link_text('New call').click()
+        self.browser.find_element_by_link_text('Standard').click()
 
         current_year = str(current_date.year)
         self.browser.find_element_by_name('open_date').send_keys(

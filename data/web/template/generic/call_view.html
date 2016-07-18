@@ -14,6 +14,10 @@
         <td><a href="{{ url_for('.queue_view', queue_id=call.queue_id) }}">{{ call.queue_name }}</a></td>
     </tr>
     <tr>
+        <th>Type</th>
+        <td>{{ call.type | call_type_name(facility_call_type_class) }}</td>
+    </tr>
+    <tr>
         <th>Open</th>
         <td>{{ call.date_open | format_datetime }}</td>
     </tr>

@@ -5,15 +5,20 @@
 {% block content %}
 
 <nav>
-    <p>
-        <a href="{{ url_for('.call_new') }}">New call</a>
-    </p>
+    <p>New call:</p>
+
+    <ul>
+        {% for (type_num, type_name) in facility_call_type_class.get_options().items() %}
+            <li><a href="{{ url_for('.call_new', call_type=type_num) }}">{{ type_name }}</a></li>
+        {% endfor %}
+    </ul>
 </nav>
 
 <table>
     <tr>
         <th>Semester</th>
         <th>Queue</th>
+        <th>Type</th>
         <th>Status</th>
         <th colspan="3">Links</th>
     </tr>
@@ -29,6 +34,7 @@
                     {{ call.queue_name }}
                 </a>
             </td>
+            <td>{{ call.type | call_type_name(facility_call_type_class) }}</td>
             <td>{{ call.state | call_state_name }}</td>
             <td>
                 <a href="{{ url_for('.call_view', call_id=call.id) }}">

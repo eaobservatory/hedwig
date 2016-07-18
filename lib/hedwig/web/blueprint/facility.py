@@ -71,7 +71,6 @@ def create_facility_blueprint(db, facility):
 
     code = facility.get_code()
     name = facility.get_name()
-    role_class = facility.get_reviewer_roles()
 
     bp = Blueprint(code, __name__)
 
@@ -599,12 +598,13 @@ def create_facility_blueprint(db, facility):
     def call_list():
         return facility.view_call_list(db)
 
-    @bp.route('/admin/call/new', methods=['GET', 'POST'])
+    @bp.route('/admin/call/new/<hedwig_call_type_{}:call_type>'.format(code),
+              methods=['GET', 'POST'])
     @facility_template('call_edit.html')
     @require_admin
-    def call_new():
+    def call_new(call_type):
         return facility.view_call_edit(
-            db, None,
+            db, None, call_type,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/admin/call/<int:call_id>')
@@ -618,7 +618,7 @@ def create_facility_blueprint(db, facility):
     @require_admin
     def call_edit(call_id):
         return facility.view_call_edit(
-            db, call_id,
+            db, call_id, None,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/admin/call/<int:call_id>/proposals')
@@ -803,7 +803,8 @@ def create_facility_blueprint(db, facility):
     def add_to_context():
         return {
             'facility_name': name,
-            'facility_role_class': role_class,
+            'facility_role_class': facility.get_reviewer_roles(),
+            'facility_call_type_class': facility.get_call_types(),
         }
 
     return bp

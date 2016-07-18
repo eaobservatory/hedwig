@@ -237,17 +237,22 @@ class GenericAdmin(object):
         except NoSuchRecord:
             raise HTTPNotFound('Call or semester not found')
 
+        type_class = self.get_call_types()
+
         return {
-            'title': 'Call: {} {}'.format(call.semester_name,
-                                          call.queue_name),
+            'title': 'Call: {} {} {}'.format(
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type)),
             'call': call,
         }
 
     @with_verified_admin
-    def view_call_edit(self, db, call_id, form):
+    def view_call_edit(self, db, call_id, call_type, form):
         """
         Create or edit a call.
         """
+
+        type_class = self.get_call_types()
 
         if call_id is None:
             # We are creating a new call, so need to be able to offer
@@ -269,7 +274,7 @@ class GenericAdmin(object):
             if not queues:
                 raise ErrorPage('No queues are available for this call.')
             title = 'Add New Call'
-            target = url_for('.call_new')
+            target = url_for('.call_new', call_type=call_type)
         else:
             # Fetch the existing call record.
             try:
@@ -279,8 +284,9 @@ class GenericAdmin(object):
 
             semesters = None
             queues = None
-            title = 'Edit Call: {} {}'.format(call.semester_name,
-                                              call.queue_name)
+            title = 'Edit Call: {} {} {}'.format(
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type))
             target = url_for('.call_edit', call_id=call_id)
 
         message = None
@@ -311,8 +317,10 @@ class GenericAdmin(object):
                         queue_id=int(form['queue_id']))
 
                     new_call_id = db.add_call(
+                        type_class=type_class,
                         semester_id=call.semester_id,
                         queue_id=call.queue_id,
+                        type_=call_type,
                         date_open=call.date_open,
                         date_close=call.date_close,
                         abst_word_lim=call.abst_word_lim,
@@ -361,6 +369,7 @@ class GenericAdmin(object):
             'target': target,
             'message': message,
             'call': call,
+            'call_type': call_type,
             'semesters': (None if semesters is None else semesters.values()),
             'queues': (None if queues is None else queues.values()),
             'format_types': FormatType.get_options(is_system=True),

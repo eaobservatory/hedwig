@@ -48,7 +48,7 @@ class AffiliationType(EnumBasic):
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
 
-class BaseCallType(EnumBasic, EnumAvailable):
+class BaseCallType(EnumBasic, EnumAvailable, EnumURLPath):
     """
     Class representing types of calls for proposals.
     """
@@ -57,12 +57,12 @@ class BaseCallType(EnumBasic, EnumAvailable):
     IMMEDIATE = 2
 
     TypeInfo = namedtuple(
-        'TypeInfo', ('name', 'available'))
+        'TypeInfo', ('name', 'available', 'url_path'))
 
     #                        Name         Avail.
     _info = OrderedDict((
-        (STANDARD,  TypeInfo('Standard',  True)),
-        (IMMEDIATE, TypeInfo('Immediate', True)),
+        (STANDARD,  TypeInfo('Standard',  True,  'standard')),
+        (IMMEDIATE, TypeInfo('Immediate', True,  'immediate')),
     ))
 
 

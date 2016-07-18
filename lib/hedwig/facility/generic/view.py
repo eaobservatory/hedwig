@@ -21,7 +21,8 @@ from __future__ import absolute_import, division, print_function, \
 from collections import defaultdict, OrderedDict
 
 from ...error import NoSuchRecord
-from ...type.enum import AffiliationType, BaseReviewerRole, BaseTextRole
+from ...type.enum import AffiliationType, \
+    BaseCallType, BaseReviewerRole, BaseTextRole
 from .tool_clash import ClashTool
 from .view_admin import GenericAdmin
 from .view_home import GenericHome
@@ -116,6 +117,13 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
         """
 
         return (ClashTool,)
+
+    def get_call_types(self):
+        """
+        Get the call type enum-style class to be used with this facility.
+        """
+
+        return BaseCallType
 
     def get_text_roles(self):
         """

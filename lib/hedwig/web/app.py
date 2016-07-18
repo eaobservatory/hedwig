@@ -100,6 +100,9 @@ def create_web_app(db=None):
         make_enum_converter(MessageThreadType)
 
     for facility in facilities.values():
+        app.url_map.converters['hedwig_call_type_{}'.format(facility.code)] = \
+            make_enum_converter(facility.view.get_call_types())
+
         app.url_map.converters['hedwig_review_{}'.format(facility.code)] = \
             make_enum_converter(facility.view.get_reviewer_roles())
 
