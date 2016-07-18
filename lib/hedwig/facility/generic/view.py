@@ -22,7 +22,10 @@ from collections import defaultdict, OrderedDict
 
 from ...error import NoSuchRecord
 from ...type.enum import AffiliationType, \
-    BaseCallType, BaseReviewerRole, BaseTextRole
+    BaseCallType, BaseReviewerRole, BaseTextRole, \
+    FormatType
+from ...type.simple import Call
+from ...type.util import null_tuple
 from .tool_clash import ClashTool
 from .view_admin import GenericAdmin
 from .view_home import GenericHome
@@ -164,6 +167,23 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
         """
 
         return []
+
+    def get_new_call_default(self, type_):
+        """
+        Get the default parameters for a new call.
+
+        This method is used to determine the default call parameters
+        used to populate the "new call" page when it is first displayed.
+        """
+
+        return null_tuple(Call)._replace(
+            semester_name='', queue_name='',
+            abst_word_lim=200,
+            tech_word_lim=1000, tech_fig_lim=0, tech_page_lim=1,
+            sci_word_lim=2000, sci_fig_lim=4, sci_page_lim=3,
+            capt_word_lim=200, expl_word_lim=200,
+            tech_note='', sci_note='', prev_prop_note='',
+            note_format=FormatType.PLAIN)
 
     def make_proposal_code(self, db, proposal):
         """

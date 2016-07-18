@@ -27,7 +27,7 @@ from ...file.moc import read_moc
 from ...type.collection import AffiliationCollection, ResultCollection
 from ...type.enum import AffiliationType, FormatType, GroupType, \
     PersonTitle, SemesterState
-from ...type.simple import Affiliation, Call, Category, \
+from ...type.simple import Affiliation, Category, \
     MOCInfo, ProposalWithCode, Queue, Semester
 from ...type.util import null_tuple
 from ...view import auth
@@ -257,14 +257,7 @@ class GenericAdmin(object):
         if call_id is None:
             # We are creating a new call, so need to be able to offer
             # menus of semesters and queues.
-            call = null_tuple(Call)._replace(
-                semester_name='', queue_name='',
-                abst_word_lim=200,
-                tech_word_lim=1000, tech_fig_lim=0, tech_page_lim=1,
-                sci_word_lim=2000, sci_fig_lim=4, sci_page_lim=3,
-                capt_word_lim=200, expl_word_lim=200,
-                tech_note='', sci_note='', prev_prop_note='',
-                note_format=FormatType.PLAIN)
+            call = self.get_new_call_default(call_type)
             semesters = db.search_semester(
                 facility_id=self.id_,
                 state=(SemesterState.FUTURE, SemesterState.CURRENT))
