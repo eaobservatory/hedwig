@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from datetime import datetime
 from hedwig.error import ConsistencyError, Error, NoSuchRecord, UserError
 from hedwig.type.collection import ResultCollection
-from hedwig.type.enum import FormatType
+from hedwig.type.enum import BaseCallType, FormatType
 from hedwig.type.util import null_tuple
 from hedwig.facility.jcmt.type import \
     JCMTAncillary, JCMTAvailable, JCMTAvailableCollection, \
@@ -394,7 +394,7 @@ class DBJCMTTest(DBTestCase):
             datetime(2000, 1, 1), datetime(2000, 6, 30))
         queue_id = self.db.add_queue(facility_id, 'test', 'test')
         call_id = self.db.add_call(
-            semester_id, queue_id,
+            BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', '',
             FormatType.PLAIN)

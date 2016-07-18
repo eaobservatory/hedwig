@@ -75,7 +75,7 @@ class ProposalPart(object):
 
         return result.inserted_primary_key[0]
 
-    def add_call(self, semester_id, queue_id,
+    def add_call(self, type_class, semester_id, queue_id, type_,
                  date_open, date_close,
                  abst_word_lim,
                  tech_word_lim, tech_fig_lim, tech_page_lim,
@@ -86,6 +86,9 @@ class ProposalPart(object):
         """
         Add a call for proposals to the database.
         """
+
+        if not type_class.is_valid(type_):
+            raise UserError('The selected call type is not recognised.')
 
         if date_close < date_open:
             raise UserError('Closing date is before opening date.')
@@ -113,6 +116,7 @@ class ProposalPart(object):
             result = conn.execute(call.insert().values({
                 call.c.semester_id: semester_id,
                 call.c.queue_id: queue_id,
+                call.c.type: type_,
                 call.c.date_open: date_open,
                 call.c.date_close: date_close,
                 call.c.abst_word_lim: abst_word_lim,

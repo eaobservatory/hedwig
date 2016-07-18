@@ -115,6 +115,7 @@ call = Table(
     Column('queue_id', None,
            ForeignKey('queue.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
+    Column('type', Integer, nullable=False),
     Column('date_open', DateTime(), nullable=False),
     Column('date_close', DateTime(), nullable=False),
     Column('abst_word_lim', Integer, nullable=False),
@@ -130,7 +131,7 @@ call = Table(
     Column('sci_note', UnicodeText, nullable=False),
     Column('prev_prop_note', UnicodeText, nullable=False),
     Column('note_format', Integer, nullable=False),
-    UniqueConstraint('semester_id', 'queue_id'),
+    UniqueConstraint('semester_id', 'queue_id', 'type'),
     **table_opts)
 
 category = Table(

@@ -28,7 +28,7 @@ from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord
 from hedwig.file.moc import read_moc, write_moc
 from hedwig.type.collection import ResultCollection
-from hedwig.type.enum import AttachmentState, FormatType
+from hedwig.type.enum import AttachmentState, BaseCallType, FormatType
 from hedwig.type.simple import Calculation, MOCInfo
 
 from .dummy_db import DBTestCase
@@ -245,7 +245,7 @@ class DBCalculatorTest(DBTestCase):
             datetime(2000, 1, 1), datetime(2000, 12, 31))
         queue_id = self.db.add_queue(facility_id, 'q', 'q')
         call_id = self.db.add_call(
-            semester_id, queue_id,
+            BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
             datetime(1999, 4, 1), datetime(1999, 4, 2),
             100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', '',
             FormatType.PLAIN)

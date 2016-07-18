@@ -21,7 +21,8 @@ from __future__ import absolute_import, division, print_function, \
 from contextlib import contextmanager
 from datetime import datetime
 
-from hedwig.type.enum import BaseReviewerRole, FormatType, GroupType, \
+from hedwig.type.enum import BaseCallType, BaseReviewerRole, \
+    FormatType, GroupType, \
     ProposalState
 from hedwig.type.simple import Person
 from hedwig.view import auth
@@ -107,12 +108,15 @@ class WebAppAuthTestCase(WebAppTestCase):
         affiliation_a = self.db.add_affiliation(queue_a, 'Test')
         affiliation_b = self.db.add_affiliation(queue_b, 'Test')
 
-        call_options = (datetime(1999, 9, 1), datetime(1999, 9, 30),
+        call_options = (BaseCallType.STANDARD,
+                        datetime(1999, 9, 1), datetime(1999, 9, 30),
                         100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', '',
                         FormatType.PLAIN)
 
-        call_a = self.db.add_call(semester_id, queue_a, *call_options)
-        call_b = self.db.add_call(semester_id, queue_b, *call_options)
+        call_a = self.db.add_call(
+            BaseCallType, semester_id, queue_a, *call_options)
+        call_b = self.db.add_call(
+            BaseCallType, semester_id, queue_b, *call_options)
 
         institution_1 = self.db.add_institution('Inst 1', '', '', '', 'AX')
         institution_2 = self.db.add_institution('Inst 2', '', '', '', 'AX')

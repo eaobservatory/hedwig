@@ -27,7 +27,7 @@ from hedwig.db.meta import auth_failure, invitation, reset_token
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from hedwig.type.collection import EmailCollection, ResultCollection
-from hedwig.type.enum import FormatType
+from hedwig.type.enum import BaseCallType, FormatType
 from hedwig.type.simple import Email, \
     Institution, InstitutionInfo, MemberInstitution, \
     Person, UserInfo
@@ -906,11 +906,11 @@ class DBPeopleTest(DBTestCase):
                                            datetime(2000, 1, 1),
                                            datetime(2000, 6, 30))
         queue_id = self.db.add_queue(facility_id, 'test', 'test')
-        call_id = self.db.add_call(semester_id, queue_id,
-                                   datetime(1999, 9, 1),
-                                   datetime(1999, 9, 30),
-                                   100, 1000, 0, 1, 2000, 4, 3, 100, 100,
-                                   '', '', '', FormatType.PLAIN)
+        call_id = self.db.add_call(
+            BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
+            datetime(1999, 9, 1), datetime(1999, 9, 30),
+            100, 1000, 0, 1, 2000, 4, 3, 100, 100,
+            '', '', '', FormatType.PLAIN)
         affiliation_id = self.db.add_affiliation(queue_id, 'Aff/n 1')
         proposal_id = self.db.add_proposal(call_id, person_id,
                                            affiliation_id, 'Proposal 1')
