@@ -23,7 +23,7 @@ from itertools import count, izip
 import re
 from urllib import urlencode
 
-from ...error import NoSuchRecord, UserError
+from ...error import NoSuchRecord, NoSuchValue, UserError
 from ...web.util import HTTPRedirect, flash, url_for
 from ...view.util import organise_collection, with_call_review, with_proposal
 from ...type.collection import ResultTable
@@ -36,7 +36,7 @@ from .calculator_heterodyne import HeterodyneCalculator
 from .calculator_scuba2 import SCUBA2Calculator
 from .type import \
     JCMTAvailable, JCMTAvailableCollection, JCMTAncillary, \
-    JCMTInstrument, JCMTOptionValue, JCMTOptions, \
+    JCMTCallType, JCMTInstrument, JCMTOptionValue, JCMTOptions, \
     JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, \
     JCMTReview, JCMTReviewerExpertise, JCMTReviewerRole, \
     JCMTReviewRatingJustification, JCMTReviewRatingTechnical, \
@@ -57,6 +57,9 @@ class JCMT(Generic):
 
     def get_name(self):
         return 'JCMT'
+
+    def get_call_types(self):
+        return JCMTCallType
 
     def get_text_roles(self):
         return JCMTTextRole
@@ -102,8 +105,12 @@ class JCMT(Generic):
         ]
 
     def make_proposal_code(self, db, proposal):
-        return 'M{}{}{:03d}'.format(
-            proposal.semester_code, proposal.queue_code, proposal.number
+        type_class = self.get_call_types()
+        type_code = type_class.get_code(proposal.call_type)
+
+        return '{}{}{}{:03d}'.format(
+            type_code, proposal.semester_code,
+            proposal.queue_code, proposal.number
         ).upper()
 
     def _parse_proposal_code(self, proposal_code):
@@ -114,19 +121,26 @@ class JCMT(Generic):
         and proposal number.
         """
 
+        type_class = self.get_call_types()
+
         try:
-            m = re.match('M(\d\d[AB])([A-Z])(\d\d\d)', proposal_code)
+            m = re.match('([A-Z])(\d\d[AB])([A-Z])(\d\d\d)', proposal_code)
 
             if not m:
                 raise NoSuchRecord(
                     'Proposal code did not match expected pattern')
 
-            (semester_code, queue_code, proposal_number) = m.groups()
+            (call_type, semester_code, queue_code,
+                proposal_number) = m.groups()
 
-            return (semester_code, queue_code, int(proposal_number))
+            return (semester_code, queue_code, type_class.by_code(call_type),
+                    int(proposal_number))
 
         except ValueError:
-            raise NoSuchRecord('Could not parse proposal code')
+            raise NoSuchRecord('Could not parse proposal number ')
+
+        except NoSuchValue:
+            raise NoSuchRecord('Did not recognise call type code')
 
     def get_calculator_classes(self):
         return (SCUBA2Calculator, HeterodyneCalculator)

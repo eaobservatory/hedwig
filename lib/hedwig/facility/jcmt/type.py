@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict, namedtuple
 
 from ...type.base import CollectionByProposal, EnumAvailable, EnumBasic
-from ...type.enum import BaseReviewerRole, BaseTextRole
+from ...type.enum import BaseCallType, BaseReviewerRole, BaseTextRole
 from ...type.collection import ResultCollection, ResultTable
 from ...error import UserError
 from .meta import jcmt_available, jcmt_options, jcmt_request, jcmt_review
@@ -60,6 +60,23 @@ class JCMTAncillary(EnumBasic, EnumAvailable):
         (POL2,  AncillaryInfo('POL-2', True)),
         (FTS2,  AncillaryInfo('FTS-2', False)),
     ))
+
+
+class JCMTCallType(BaseCallType):
+    """
+    Class providing information about JCMT call types.
+    """
+
+    _jcmt_info = {
+        BaseCallType.STANDARD: {'code': 'M'},
+        BaseCallType.IMMEDIATE: {'code': 'S'},
+    }
+
+    _info = OrderedDict()
+    for (role_id, role_info) in BaseCallType._info.items():
+        override = _jcmt_info.get(role_id, {})
+        _info[role_id] = BaseCallType.TypeInfo(
+            *(role_info._replace(**override)))
 
 
 class JCMTInstrument(EnumBasic, EnumAvailable):
