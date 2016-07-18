@@ -41,7 +41,7 @@ Once you have selected a queue, you will see the "New Proposal" page.
 Please check that the fixed information presented on the page is correct
 before proceeding.
 This information comprises the facility, semester and queue for which
-you are creating a proposal and your name.
+you are creating a proposal, the type of call and your name.
 
 Each queue will have a list of applicable affiliations.
 You should select the affiliation which applies to you personally.

@@ -1145,6 +1145,7 @@ class ProposalPart(object):
             call.c.queue_id,
             queue.c.name.label('queue_name'),
             queue.c.code.label('queue_code'),
+            call.c.type.label('call_type'),
             semester.c.facility_id,
             call.c.abst_word_lim,
             call.c.tech_word_lim,

@@ -23,6 +23,10 @@
             {{ call.semester_name }}
         </li>
         <li>
+            <label>Call type</label>
+            {{ call.type | call_type_name(facility_call_type_class) }}
+        </li>
+        <li>
             <label>Queue</label>
             {{ call.queue_name }}
         </li>

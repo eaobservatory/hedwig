@@ -1,4 +1,4 @@
-{% macro render_proposal_summary(facility_name, proposal, proposal_code, abstract=None, categories=None) %}
+{% macro render_proposal_summary(facility_name, facility_call_type_class, proposal, proposal_code, abstract=None, categories=None) %}
     <table>
         <tr>
             <th>Facility</th>
@@ -11,6 +11,10 @@
         <tr>
             <th>Queue</th>
             <td>{{ proposal.queue_name }}</td>
+        </tr>
+        <tr>
+            <th>Call type</th>
+            <td>{{ proposal.call_type | call_type_name(facility_call_type_class) }}</td>
         </tr>
         <tr>
             <th>Proposal identifier</th>

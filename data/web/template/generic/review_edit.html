@@ -6,7 +6,7 @@
 {% block content %}
 <h2>Proposal and Review Information</h2>
 
-{% call render_proposal_summary(facility_name, proposal, proposal_code) %}
+{% call render_proposal_summary(facility_name, facility_call_type_class, proposal, proposal_code) %}
     <tr>
         <th>Review role</th>
         <td>{{ role_info.name }}</td>

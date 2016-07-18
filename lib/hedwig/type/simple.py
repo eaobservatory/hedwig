@@ -162,7 +162,7 @@ Proposal = namedtuple(
     'Proposal',
     [x.name for x in proposal.columns] + [
         'semester_id', 'semester_name', 'semester_code',
-        'queue_id', 'queue_name', 'queue_code',
+        'queue_id', 'queue_name', 'queue_code', 'call_type',
         'facility_id',
         'abst_word_lim',
         'tech_word_lim', 'tech_fig_lim', 'tech_page_lim',

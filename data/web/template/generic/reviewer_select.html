@@ -6,7 +6,7 @@
 {% from 'macro/proposal_summary.html' import render_proposal_summary %}
 
 {% block content %}
-    {{ render_proposal_summary(facility_name, proposal, proposal_code, abstract=abstract, categories=categories) }}
+    {{ render_proposal_summary(facility_name, facility_call_type_class, proposal, proposal_code, abstract=abstract, categories=categories) }}
 
     {{ super() }}
 {% endblock %}

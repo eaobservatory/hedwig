@@ -48,6 +48,11 @@
             <td class="borderless">&nbsp;</td>
         </tr>
         <tr>
+            <th>Call type</th>
+            <td>{{ proposal.call_type | call_type_name(facility_call_type_class) }}</td>
+            <td class="borderless">&nbsp;</td>
+        </tr>
+        <tr>
             <th>Proposal identifier</th>
             <td id="proposal_identifier_cell">{{ proposal_code }}</td>
             <td class="borderless">&nbsp;</td>
