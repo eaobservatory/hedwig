@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict
 
-from ..error import FormattedError
+from ..error import FormattedError, NoSuchValue
 
 
 class CollectionByProposal(object):
@@ -188,6 +188,6 @@ class EnumURLPath(object):
                 return value
 
         if default == ():
-            raise FormattedError('URL path "{}" not recognised', url_path)
+            raise NoSuchValue('URL path "{}" not recognised', url_path)
         else:
             return default

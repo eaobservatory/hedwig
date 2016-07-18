@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict
 from unittest import TestCase
 
-from hedwig.error import Error
+from hedwig.error import Error, NoSuchValue
 from hedwig.type.enum import \
     Assessment, AttachmentState, \
     BaseCallType, BaseReviewerRole, BaseTextRole, \
@@ -208,7 +208,8 @@ class EnumTypeTestCase(TestCase):
 
         self.assertEqual(ProposalState.by_name('accepted'),
                          ProposalState.ACCEPTED)
-        self.assertIsNone(ProposalState.by_name('not a real state'))
+        with self.assertRaisesRegexp(NoSuchValue, 'not recognised'):
+            ProposalState.by_name('not a real state')
 
     def test_group_type(self):
         options = GroupType.get_options()
@@ -369,7 +370,7 @@ class EnumTypeTestCase(TestCase):
         self.assertEqual(BaseTextRole.by_url_path('technical'),
                          BaseTextRole.TECHNICAL_CASE)
 
-        with self.assertRaisesRegexp(Error, 'path .* not recognised'):
+        with self.assertRaisesRegexp(NoSuchValue, 'path .* not recognised'):
             BaseTextRole.by_url_path('something_else')
 
         self.assertIsNone(BaseTextRole.by_url_path('something_else', None))

@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict, namedtuple
 import re
 
-from ..error import UserError
+from ..error import NoSuchValue, UserError
 from .base import EnumAvailable, EnumBasic, EnumDisplayClass, EnumURLPath
 
 
@@ -632,7 +632,7 @@ class ProposalState(EnumBasic):
             if lowername == info.name.lower():
                 return state
 
-        return None
+        raise NoSuchValue('State name "{}" not recognised', name)
 
     @classmethod
     def get_options(cls):

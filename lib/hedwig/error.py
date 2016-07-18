@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -81,6 +81,14 @@ class NoSuchRecord(FormattedError):
     record primary key such that the record non-existance is
     clearly unexpected.  In a searching operation, methods should
     instead return None or an empty collection as appropriate.
+    """
+
+    pass
+
+
+class NoSuchValue(FormattedError):
+    """
+    Error for when the given value is not recognised.
     """
 
     pass
