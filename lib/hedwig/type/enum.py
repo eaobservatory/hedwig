@@ -22,7 +22,8 @@ from collections import OrderedDict, namedtuple
 import re
 
 from ..error import NoSuchValue, UserError
-from .base import EnumAvailable, EnumBasic, EnumDisplayClass, EnumURLPath
+from .base import EnumAvailable, EnumBasic, EnumCode, \
+    EnumDisplayClass, EnumURLPath
 
 
 class AffiliationType(EnumBasic):
@@ -48,7 +49,7 @@ class AffiliationType(EnumBasic):
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
 
-class BaseCallType(EnumBasic, EnumAvailable, EnumURLPath):
+class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
     """
     Class representing types of calls for proposals.
     """
@@ -57,12 +58,12 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumURLPath):
     IMMEDIATE = 2
 
     TypeInfo = namedtuple(
-        'TypeInfo', ('name', 'available', 'url_path'))
+        'TypeInfo', ('code', 'name', 'available', 'url_path'))
 
-    #                        Name         Avail.
+    #                        Code  Name         Avail.  URL
     _info = OrderedDict((
-        (STANDARD,  TypeInfo('Standard',  True,  'standard')),
-        (IMMEDIATE, TypeInfo('Immediate', True,  'immediate')),
+        (STANDARD,  TypeInfo(None, 'Standard',  True,  'standard')),
+        (IMMEDIATE, TypeInfo('I',  'Immediate', True,  'immediate')),
     ))
 
 

@@ -1106,7 +1106,7 @@ class ProposalPart(object):
                         with_decision=False, with_decision_note=False,
                         decision_accept=None, decision_ready=None,
                         decision_accept_defined=None,
-                        proposal_number=None,
+                        proposal_number=None, call_type=None,
                         semester_code=None, queue_code=None, queue_id=None,
                         _conn=None):
         """
@@ -1297,6 +1297,9 @@ class ProposalPart(object):
 
         if proposal_number is not None:
             stmt = stmt.where(proposal.c.number == proposal_number)
+
+        if call_type is not None:
+            stmt = stmt.where(call.c.type == call_type)
 
         if semester_code is not None:
             stmt = stmt.where(semester.c.code == semester_code)

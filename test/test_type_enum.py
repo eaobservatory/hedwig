@@ -90,6 +90,25 @@ class EnumTypeTestCase(TestCase):
             self.assertIsInstance(type_, int)
             self.assertIsInstance(type_name, unicode)
 
+        self.assertIsNone(BaseCallType.get_code(BaseCallType.STANDARD))
+        self.assertIsInstance(BaseCallType.get_code(BaseCallType.IMMEDIATE),
+                              unicode)
+
+        self.assertEqual(BaseCallType.by_code(None), BaseCallType.STANDARD)
+        self.assertEqual(BaseCallType.by_code('I'), BaseCallType.IMMEDIATE)
+
+        with self.assertRaisesRegexp(NoSuchValue, 'Code "X" not recognised'):
+            BaseCallType.by_code('X')
+
+        class NoNullCallType(BaseCallType):
+            _info = OrderedDict(((
+                BaseCallType.IMMEDIATE,
+                BaseCallType.get_info(BaseCallType.IMMEDIATE)),))
+
+        self.assertEqual(NoNullCallType.by_code('I'), NoNullCallType.IMMEDIATE)
+        with self.assertRaisesRegexp(NoSuchValue, 'Null code not recognised'):
+            NoNullCallType.by_code(None)
+
     def test_message_state(self):
         # Test "get_name" method.
         self.assertEqual(MessageState.get_name(MessageState.UNSENT), 'Unsent')

@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import defaultdict, OrderedDict
 
-from ...error import NoSuchRecord
+from ...error import NoSuchRecord, NoSuchValue
 from ...type.enum import AffiliationType, \
     BaseCallType, BaseReviewerRole, BaseTextRole, \
     FormatType
@@ -193,8 +193,17 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
         scheme in use at each facility.
         """
 
-        return '{}-{}-{}'.format(
-            proposal.semester_code, proposal.queue_code, proposal.number)
+        type_class = self.get_call_types()
+        type_code = type_class.get_code(proposal.call_type)
+
+        if type_code is None:
+            suffix = ''
+        else:
+            suffix = '-' + type_code
+
+        return '{}-{}-{}{}'.format(
+            proposal.semester_code, proposal.queue_code, proposal.number,
+            suffix)
 
     def parse_proposal_code(self, db, proposal_code):
         """
@@ -204,31 +213,50 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
         it up in the database to get the identifier number.
         """
 
-        (semester_code, queue_code, proposal_number) = \
+        (semester_code, queue_code, call_type, proposal_number) = \
             self._parse_proposal_code(proposal_code)
 
         return db.search_proposal(
             facility_id=self.id_,
             semester_code=semester_code,
             queue_code=queue_code,
+            call_type=call_type,
             proposal_number=proposal_number).get_single().id
 
     def _parse_proposal_code(self, proposal_code):
         """
         Perform the parsing step of processing a proposal code.
 
-        This splits the code into the semester code, queue code
-        and proposal number.
+        This splits the code into the semester code, queue code,
+        call type and proposal number.
         """
 
-        try:
-            (semester_code, queue_code, proposal_number) = \
-                proposal_code.split('-', 2)
+        type_class = self.get_call_types()
 
-            return (semester_code, queue_code, int(proposal_number))
+        try:
+            components = proposal_code.split('-')
+            if len(components) < 3:
+                raise NoSuchRecord('Insufficient proposal code components')
+
+            (semester_code, queue_code, proposal_number) = components[0:3]
+
+            if len(components) == 3:
+                call_type = None
+
+            elif len(components) == 4:
+                call_type = components[3]
+
+            else:
+                raise NoSuchRecord('Excess proposal code components')
+
+            return (semester_code, queue_code, type_class.by_code(call_type),
+                    int(proposal_number))
 
         except ValueError:
-            raise NoSuchRecord('Could not parse proposal code')
+            raise NoSuchRecord('Could not parse proposal number')
+
+        except NoSuchValue:
+            raise NoSuchRecord('Did not recognise call type component')
 
     def make_archive_search_url(self, ra_deg, dec_deg):
         """

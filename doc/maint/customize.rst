@@ -315,7 +315,7 @@ Some examples of such methods are:
 
   These methods should implement your facility's scheme for numbering
   proposals.
-  Provided you can extract the semester, queue and proposal number
+  Provided you can extract the semester, queue, call type and proposal number
   from a formatted proposal code, you should only
   need to override the protected method
   :meth:`~hedwig.facility.generic.view.Generic._parse_proposal_code`

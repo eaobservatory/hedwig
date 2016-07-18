@@ -133,6 +133,36 @@ class EnumBasic(object):
         return cls._info[value].name
 
 
+class EnumCode(object):
+    """
+    Mix-in for enum-style classes with an `_info` dictionary including a
+    `code` attribute.
+    """
+
+    @classmethod
+    def get_code(cls, value):
+        """
+        Get the code for an entry.
+        """
+
+        return cls._info[value].code
+
+    @classmethod
+    def by_code(cls, code):
+        """
+        Attempt to find a value by its code.
+        """
+
+        for (value, info) in cls._info.items():
+            if info.code == code:
+                return value
+
+        if code is None:
+            raise NoSuchValue('Null code not recognised')
+
+        raise NoSuchValue('Code "{}" not recognised', code)
+
+
 class EnumDisplayClass(object):
     """
     Mix-in for enum-style classes with an `_info` dictionary
