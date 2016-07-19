@@ -30,7 +30,7 @@ from ...publication.url import make_publication_url
 from ...type.collection import PrevProposalCollection, ResultCollection, \
     TargetCollection
 from ...type.enum import AffiliationType, AttachmentState, \
-    CallState, FigureType, FormatType, MessageThreadType, \
+    CallState, FigureType, FormatType, GroupType, MessageThreadType, \
     PermissionType, PersonTitle, ProposalState, PublicationType
 from ...type.simple import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
@@ -362,6 +362,14 @@ class GenericProposal(object):
                 self._message_proposal_submit(
                     db, proposal, immediate_review=immediate_review)
 
+                if immediate_review:
+                    recipients = set((
+                        x.person_id for x in db.search_group_member(
+                            queue_id=proposal.queue_id,
+                            group_type=GroupType.CTTEE).values()))
+                    self._message_proposal_review_notification(
+                        db, proposal, recipients)
+
                 flash('The proposal has been submitted.')
 
             else:
@@ -399,6 +407,39 @@ class GenericProposal(object):
                 facility=self),
             [x.person_id for x in proposal.members.values()],
             thread_type=MessageThreadType.PROPOSAL_STATUS,
+            thread_id=proposal.id)
+
+    def _message_proposal_review_notification(self, db, proposal, recipients):
+        """
+        Send message to notify committee members about a proposal
+        having been submitted for immediate review.
+
+        :param db: database control object.
+        :param proposal: the Proposal object.
+        :param recipients: list of person identifiers to send the message to.
+        """
+
+        type_class = self.get_call_types()
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        db.add_message(
+            'Proposal {} submitted for immediate review'.format(
+                proposal_code),
+            render_email_template(
+                'proposal_review_notification.txt', {
+                    'proposal': proposal,
+                    'proposal_code': proposal_code,
+                    'call_type': type_class.get_name(proposal.call_type),
+                    'target_view': url_for(
+                        '.proposal_view',
+                        proposal_id=proposal.id, _external=True),
+                    'target_reviews': url_for(
+                        '.proposal_reviews',
+                        proposal_id=proposal.id, _external=True),
+                },
+                facility=self),
+            recipients,
+            thread_type=MessageThreadType.PROPOSAL_REVIEW,
             thread_id=proposal.id)
 
     @with_proposal(permission=PermissionType.VIEW)

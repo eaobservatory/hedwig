@@ -444,6 +444,7 @@ class MessageThreadType(EnumBasic, EnumURLPath):
 
     PROPOSAL_STATUS = 1
     REVIEW_INVITATION = 2
+    PROPOSAL_REVIEW = 3
 
     TypeInfo = namedtuple(
         'TypeInfo', ('name', 'url_path'))
@@ -451,6 +452,7 @@ class MessageThreadType(EnumBasic, EnumURLPath):
     _info = OrderedDict((
         (PROPOSAL_STATUS,   TypeInfo('Proposal status',   'prop_stat')),
         (REVIEW_INVITATION, TypeInfo('Review invitation', 'rev_inv')),
+        (PROPOSAL_REVIEW,   TypeInfo('Proposal review',   'prop_rev')),
     ))
 
 

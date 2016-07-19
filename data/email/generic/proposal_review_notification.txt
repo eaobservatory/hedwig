@@ -1,0 +1,19 @@
+{% extends 'layout.txt' %}
+
+{% block content %}
+This is to inform you that a proposal to use {{ facility_definite_name }}
+has been submitted for immediate review.
+Proposal {{ proposal_code }}, entitled "{{ proposal.title}}",
+has been submitted to the {{ proposal.queue_name }} Queue
+for Semester {{ proposal.semester_name }} ({{ call_type }} Call).
+
+You may use the following links to access the proposal and its reviews.
+
+To view the proposal:
+
+{{ target_view }}
+
+To view / edit reviews of the proposal:
+
+{{ target_reviews }}
+{% endblock %}
