@@ -12,7 +12,7 @@ on an observing proposal submitted recently.
 The proposal, {{ proposal_code }},
 entitled "{{ proposal.title }}",
 is a proposal in the {{ proposal.queue_name }} Queue
-for Semester {{ proposal.semester_name }}.
+for Semester {{ proposal.semester_name }} ({{ call_type }} Call).
 {% if is_reminder %}
 We hope that you received the original message regarding
 the review of this proposal, but in case you did not receive it,

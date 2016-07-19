@@ -359,7 +359,8 @@ class GenericProposal(object):
                     ProposalState.REVIEW if immediate_review else
                     ProposalState.SUBMITTED))
 
-                self._message_proposal_submit(db, proposal)
+                self._message_proposal_submit(
+                    db, proposal, immediate_review=immediate_review)
 
                 flash('The proposal has been submitted.')
 
@@ -380,7 +381,7 @@ class GenericProposal(object):
             'immediate_review': immediate_review,
         }
 
-    def _message_proposal_submit(self, db, proposal):
+    def _message_proposal_submit(self, db, proposal, immediate_review):
         proposal_code = self.make_proposal_code(db, proposal)
 
         db.add_message(
@@ -389,6 +390,7 @@ class GenericProposal(object):
                 'proposal_submitted.txt', {
                     'proposal': proposal,
                     'proposal_code': proposal_code,
+                    'immediate_review': immediate_review,
                     'target_url': url_for(
                         '.proposal_view',
                         proposal_id=proposal.id, _external=True),
@@ -727,11 +729,14 @@ class GenericProposal(object):
     def _message_proposal_invite(
             self, db, proposal, person_id, person_name,
             is_editor, affiliation_name, send_token):
+        type_class = self.get_call_types()
         proposal_code = self.make_proposal_code(db, proposal)
 
         email_ctx = {
             'recipient_name': person_name,
             'proposal': proposal,
+            'proposal_code': proposal_code,
+            'call_type': type_class.get_name(proposal.call_type),
             'inviter_name': session['person']['name'],
             'affiliation': affiliation_name,
             'is_editor': is_editor,

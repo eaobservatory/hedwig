@@ -9,8 +9,13 @@ The proposal may be viewed at:
 {{ target_url }}
 
 The proposal was submitted by {{ submitter_name }}.
+{% if immediate_review %}
+Please note that this proposal may no longer be edited
+because proposals for this call are sent for immediate review.
+{% else %}
 Please note that our system allows submitted proposals to be edited
 until the proposal deadline.
 Another message like this will only be sent if the proposal is
 withdrawn from consideration.
+{% endif %}
 {% endblock %}

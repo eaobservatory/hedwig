@@ -13,7 +13,7 @@ to use {{ facility_definite_name }}.
 {% endif %}
 This proposal, entitled "{{ proposal.title }}",
 is a proposal in the {{ proposal.queue_name }} Queue
-for Semester {{ proposal.semester_name }}
+for Semester {{ proposal.semester_name }} ({{ call_type }} Call)
 and it is requested that you provide the
 {{ role_info.name.lower() }} review.
 {% if is_reminder %}

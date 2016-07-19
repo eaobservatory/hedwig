@@ -716,6 +716,7 @@ class GenericReview(object):
         """
 
         # Prepare basic email context.
+        type_class = self.get_call_types()
         role_class = self.get_reviewer_roles()
         role_info = role_class.get_info(role)
         proposal_code = self.make_proposal_code(db, proposal)
@@ -724,6 +725,7 @@ class GenericReview(object):
             'recipient_name': person_name,
             'proposal': proposal,
             'proposal_code': proposal_code,
+            'call_type': type_class.get_name(proposal.call_type),
             'role_info': role_info,
             'inviter_name': session['person']['name'],
             'target_proposal': url_for(
