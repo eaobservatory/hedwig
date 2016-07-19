@@ -342,6 +342,9 @@ class GenericProposal(object):
         if ProposalState.is_submitted(proposal.state):
             raise ErrorPage('The proposal has already been submitted.')
 
+        type_class = self.get_call_types()
+        immediate_review = type_class.has_immediate_review(proposal.call_type)
+
         messages = self._validate_proposal(db, proposal)
         has_error = any(x.is_error for x in messages)
 
@@ -352,7 +355,9 @@ class GenericProposal(object):
                         'The proposal can not be submitted while there are '
                         'errors in validation.')
 
-                db.update_proposal(proposal.id, state=ProposalState.SUBMITTED)
+                db.update_proposal(proposal.id, state=(
+                    ProposalState.REVIEW if immediate_review else
+                    ProposalState.SUBMITTED))
 
                 self._message_proposal_submit(db, proposal)
 
@@ -372,6 +377,7 @@ class GenericProposal(object):
             'can_submit': (not has_error),
             'can_edit': True,
             'is_submit_page': True,
+            'immediate_review': immediate_review,
         }
 
     def _message_proposal_submit(self, db, proposal):

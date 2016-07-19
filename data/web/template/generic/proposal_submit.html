@@ -54,6 +54,13 @@
             </p>
         {% endif %}
 
+        {% if immediate_review %}
+            <p class="caution">
+                Proposals for this call are sent for immediate review.
+                You will not be able to edit the proposal after submission.
+            </p>
+        {% endif %}
+
         <form method="POST" action="{{ url_for('.proposal_submit', proposal_id=proposal.id) }}">
             <p>
                 <input type="submit" name="submit_confirm" value="Submit proposal" />

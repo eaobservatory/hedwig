@@ -58,13 +58,18 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
     IMMEDIATE = 2
 
     TypeInfo = namedtuple(
-        'TypeInfo', ('code', 'name', 'available', 'url_path'))
+        'TypeInfo',
+        ('code', 'name', 'available', 'url_path', 'immediate_review'))
 
-    #                        Code  Name         Avail.  URL
+    #                        Code  Name         Avail.  URL         Im. Rv.
     _info = OrderedDict((
-        (STANDARD,  TypeInfo(None, 'Standard',  True,  'standard')),
-        (IMMEDIATE, TypeInfo('I',  'Immediate', True,  'immediate')),
+        (STANDARD,  TypeInfo(None, 'Standard',  True,  'standard',  False)),
+        (IMMEDIATE, TypeInfo('I',  'Immediate', True,  'immediate', True)),
     ))
+
+    @classmethod
+    def has_immediate_review(cls, value):
+        return cls._info[value].immediate_review
 
 
 class CallState(EnumBasic):
@@ -522,6 +527,11 @@ class ProposalState(EnumBasic):
             |                   |
             V                   V
         ACCEPTED            REJECTED
+
+    .. note::
+        For calls with the "immediate_review" attribute set, submission
+        of the proposal changes the state directly from PREPARATION
+        to REVIEW.
     """
 
     PREPARATION = 1
