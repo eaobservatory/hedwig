@@ -1,0 +1,36 @@
+{% extends 'layout.html' %}
+
+{% set help_link=url_for('help.user_page', page_name='proposal_create') %}
+
+{% block content %}
+
+<p>
+    The following special calls for proposals are open:
+</p>
+
+<ul>
+    {% for (semester_id, semester_info) in semesters.items() %}
+        <li>
+            {{ semester_info.name }}
+
+            <ul>
+                {% for call_type in semester_info.call_types %}
+                    <li><a href="{{ url_for('.semester_calls', semester_id=semester_id, call_type=call_type) }}">
+                        {{ call_type | call_type_name(facility_call_type_class) }}
+                    </a>
+                {% endfor %}
+            </ul>
+        </li>
+    {% endfor %}
+</ul>
+
+<nav>
+    <p>
+        For
+        {{ facility_call_type_class.STANDARD | call_type_name(facility_call_type_class) | lower }}
+        calls for proposals, please see the
+        <a href="{{ url_for('.facility_home') }}">facility home page</a>.
+    </p>
+</nav>
+
+{% endblock %}

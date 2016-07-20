@@ -767,7 +767,7 @@ class ProposalPart(object):
         return ans
 
     def search_call(self, call_id=None, facility_id=None, semester_id=None,
-                    queue_id=None, state=None,
+                    queue_id=None, type_=None, state=None,
                     has_proposal_state=None, date_close_before=None,
                     with_queue_description=False, with_case_notes=False,
                     _conn=None):
@@ -827,6 +827,12 @@ class ProposalPart(object):
                 stmt = stmt.where(call.c.queue_id.in_(queue_id))
             else:
                 stmt = stmt.where(call.c.queue_id == queue_id)
+
+        if type_ is not None:
+            if is_list_like(type_):
+                stmt = stmt.where(call.c.type.in_(type_))
+            else:
+                stmt = stmt.where(call.c.type == type_)
 
         if state is not None:
             stmt = stmt.where(state_expr == state)

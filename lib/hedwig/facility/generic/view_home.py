@@ -18,27 +18,37 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import OrderedDict
+from collections import namedtuple, OrderedDict
 
 from ...error import NoSuchRecord
 from ...type.enum import CallState, GroupType
 from ...web.util import ErrorPage, HTTPNotFound, session
 
 
+SpecialSemesterInfo = namedtuple('SpecialSemesterInfo', ('name', 'call_types'))
+
+
 class GenericHome(object):
     def view_facility_home(self, db):
+        type_class = self.get_call_types()
+
         # Retrieve all calls for this facility.
         facility_calls = db.search_call(facility_id=self.id_)
 
-        # Determine which semesters have open calls for proposals.
+        # Determine which semesters have standard open calls for proposals.
         open_semesters = OrderedDict()
+        open_nonstandard_semesters = False
         for call in facility_calls.values_matching(state=CallState.OPEN):
-            if call.semester_id not in open_semesters:
-                open_semesters[call.semester_id] = call.semester_name
+            if call.type == type_class.STANDARD:
+                if call.semester_id not in open_semesters:
+                    open_semesters[call.semester_id] = call.semester_name
+            else:
+                open_nonstandard_semesters = True
 
-        # Determine if there are any semesters with only closed calls.
+        # Determine if there are any semesters with only closed standard calls.
         closed_semesters = False
-        for call in facility_calls.values_matching(state=CallState.CLOSED):
+        for call in facility_calls.values_matching(state=CallState.CLOSED,
+                                                   type_=type_class.STANDARD):
             if call.semester_id not in open_semesters:
                 closed_semesters = True
                 break
@@ -61,30 +71,38 @@ class GenericHome(object):
         return {
             'title': self.get_name(),
             'open_semesters': open_semesters,
+            'open_nonstandard_semesters': open_nonstandard_semesters,
             'closed_semesters': closed_semesters,
             'calculators': self.calculators.values(),
             'target_tools': self.target_tools.values(),
             'review_calls': review_calls,
         }
 
-    def view_semester_calls(self, db, semester_id):
+    def view_semester_calls(self, db, semester_id, call_type):
+        type_class = self.get_call_types()
+
         try:
             semester = db.get_semester(self.id_, semester_id)
         except NoSuchRecord:
             raise HTTPNotFound('Semester not found')
 
         calls = db.search_call(facility_id=self.id_, semester_id=semester_id,
-                               state=CallState.OPEN,
+                               state=CallState.OPEN, type_=call_type,
                                with_queue_description=True)
 
         return {
-            'title': 'Call for Semester {}'.format(semester.name),
+            'title': '{} Call for Semester {}'.format(
+                type_class.get_name(call_type), semester.name),
             'semester': semester,
             'calls': list(calls.values()),
+            'call_type': call_type,
         }
 
     def view_semester_closed(self, db):
-        calls = db.search_call(facility_id=self.id_)
+        type_class = self.get_call_types()
+
+        # Get list of calls, considering only those of standard type.
+        calls = db.search_call(facility_id=self.id_, type_=type_class.STANDARD)
 
         open_semesters = set(
             x.semester_id for x in calls.values_matching(state=CallState.OPEN))
@@ -103,4 +121,33 @@ class GenericHome(object):
         return {
             'title': 'Previous Calls for Proposals',
             'closed_semesters': closed_semesters,
+        }
+
+    def view_semester_non_standard(self, db):
+        type_class = self.get_call_types()
+
+        # Get list of open, non-standard calls.
+        calls = db.search_call(
+            facility_id=self.id_,
+            state=CallState.OPEN,
+            type_=[x for x in type_class.get_options()
+                   if x != type_class.STANDARD])
+
+        if not calls:
+            raise ErrorPage('No open special calls for proposals were found.')
+
+        # Group into semesters.
+        semesters = OrderedDict()
+        for call in calls.values():
+            if call.semester_id in semesters:
+                semester_info = semesters[call.semester_id]
+                if call.type not in semester_info.call_types:
+                    semester_info.call_types.append(call.type)
+            else:
+                semesters[call.semester_id] = SpecialSemesterInfo(
+                    call.semester_name, [call.type])
+
+        return {
+            'title': 'Special Calls for Proposals',
+            'semesters': semesters,
         }

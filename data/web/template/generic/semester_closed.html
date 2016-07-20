@@ -8,7 +8,7 @@
 
 <ul>
     {% for semester_id, semester_name in closed_semesters.items() %}
-        <li><a id="semester_{{ semester_id }}_link" href="{{ url_for('.semester_calls', semester_id=semester_id) }}">{{ semester_name }}</a></li>
+        <li><a id="semester_{{ semester_id }}_link" href="{{ url_for('.semester_calls', semester_id=semester_id, call_type=facility_call_type_class.STANDARD) }}">{{ semester_name }}</a></li>
     {% endfor %}
 </ul>
 

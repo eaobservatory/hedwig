@@ -24,7 +24,7 @@
                 <option value="{{ affiliation.id }}" {{ 'selected="selected"' | safe if affiliation.id == member.affiliation_id }}>{{ affiliation.name }}</option>
             {% endfor %}
         </select>
-        {{ render_affiliation_tip(semester_id) }}
+        {{ render_affiliation_tip(semester_id, call_type) }}
     </li>
 {% endmacro %}
 

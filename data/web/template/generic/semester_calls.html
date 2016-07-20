@@ -59,7 +59,11 @@
         </table>
 
         <p>
-            <a id="call_{{ call.id }}_link" class="create_proposal_link" href="{{ url_for('.proposal_new', call_id=call.id) }}">Create a proposal for the {{ call.queue_name }} Queue</a>
+            <a id="call_{{ call.id }}_link" class="create_proposal_link" href="{{ url_for('.proposal_new', call_id=call.id) }}">Create a proposal for the {{ call.queue_name }} Queue
+                {% if call_type != facility_call_type_class.STANDARD %}
+                    ({{ call_type | call_type_name(facility_call_type_class) }} Call)
+                {% endif %}
+            </a>
         </p>
 
         {{ call.queue_description | format_text(call.queue_description_format) }}

@@ -16,18 +16,30 @@
 
 {% if open_semesters %}
     <p>
-        The following calls for proposals are open:
+        The following
+        {{ facility_call_type_class.STANDARD | call_type_name(facility_call_type_class) | lower }}
+        calls for proposals are open:
     </p>
 
     <ul>
         {% for semester_id, semester_name in open_semesters.items() %}
-            <li><a id="semester_{{ semester_id }}_link" href="{{ url_for('.semester_calls', semester_id=semester_id) }}">{{ semester_name }}</a></li>
+            <li><a id="semester_{{ semester_id }}_link" href="{{ url_for('.semester_calls', semester_id=semester_id, call_type=facility_call_type_class.STANDARD) }}">{{ semester_name }}</a></li>
         {% endfor %}
     </ul>
 {% else %}
     <p>
-        There are currently no open calls for proposals.
+        There are currently no open
+        {{ facility_call_type_class.STANDARD | call_type_name(facility_call_type_class) | lower }}
+        calls for proposals.
     </p>
+{% endif %}
+
+{% if open_nonstandard_semesters %}
+    <nav>
+        <p>
+            <a href="{{ url_for('.semester_non_standard') }}">Other calls for proposals</a>
+        </p>
+    </nav>
 {% endif %}
 
 {% if closed_semesters %}

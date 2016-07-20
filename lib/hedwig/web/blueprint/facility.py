@@ -94,15 +94,21 @@ def create_facility_blueprint(db, facility):
     def facility_home():
         return facility.view_facility_home(db)
 
-    @bp.route('/semester/<int:semester_id>')
+    @bp.route('/semester/<int:semester_id>/'
+              '<hedwig_call_type_{}:call_type>'.format(code))
     @facility_template('semester_calls.html')
-    def semester_calls(semester_id):
-        return facility.view_semester_calls(db, semester_id)
+    def semester_calls(semester_id, call_type):
+        return facility.view_semester_calls(db, semester_id, call_type)
 
-    @bp.route('/closed')
+    @bp.route('/semester/closed')
     @facility_template('semester_closed.html')
     def semester_closed():
         return facility.view_semester_closed(db)
+
+    @bp.route('/semester/other')
+    @facility_template('semester_non_standard.html')
+    def semester_non_standard():
+        return facility.view_semester_non_standard(db)
 
     @bp.route('/call/<int:call_id>/new_proposal',
               methods=['GET', 'POST'])

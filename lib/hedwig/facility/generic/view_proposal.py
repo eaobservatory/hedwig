@@ -629,6 +629,7 @@ class GenericProposal(object):
             'message': message,
             'proposal_id': proposal.id,
             'semester_id': proposal.semester_id,
+            'call_type': proposal.call_type,
             'members': records.values(),
             'affiliations': affiliations.values(),
             'proposal_code': self.make_proposal_code(db, proposal),
@@ -754,6 +755,7 @@ class GenericProposal(object):
             'message_invite': message_invite,
             'proposal_id': proposal.id,
             'semester_id': proposal.semester_id,
+            'call_type': proposal.call_type,
             'persons': persons,
             'affiliations': affiliations.values(),
             'member': member,
@@ -783,7 +785,7 @@ class GenericProposal(object):
             'is_editor': is_editor,
             'target_semester': url_for(
                 '.semester_calls', semester_id=proposal.semester_id,
-                _external=True),
+                call_type=proposal.call_type, _external=True),
         }
 
         if send_token:
