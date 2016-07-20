@@ -32,13 +32,13 @@ class GenericHome(object):
 
         # Determine which semesters have open calls for proposals.
         open_semesters = OrderedDict()
-        for call in facility_calls.values_by_state(CallState.OPEN):
+        for call in facility_calls.values_matching(state=CallState.OPEN):
             if call.semester_id not in open_semesters:
                 open_semesters[call.semester_id] = call.semester_name
 
         # Determine if there are any semesters with only closed calls.
         closed_semesters = False
-        for call in facility_calls.values_by_state(CallState.CLOSED):
+        for call in facility_calls.values_matching(state=CallState.CLOSED):
             if call.semester_id not in open_semesters:
                 closed_semesters = True
                 break
@@ -55,8 +55,8 @@ class GenericHome(object):
                 group_type=GroupType.review_view_groups(),
                 person_id=session['person']['id'])
             if membership:
-                review_calls = facility_calls.values_by_queue(
-                    [x.queue_id for x in membership.values()])
+                review_calls = list(facility_calls.values_matching(
+                    queue_id=[x.queue_id for x in membership.values()]))
 
         return {
             'title': self.get_name(),
@@ -87,12 +87,12 @@ class GenericHome(object):
         calls = db.search_call(facility_id=self.id_)
 
         open_semesters = set(
-            x.semester_id for x in calls.values_by_state(CallState.OPEN))
+            x.semester_id for x in calls.values_matching(state=CallState.OPEN))
 
         # Determine which semesters have closed, but no open, calls for
         # proposals.
         closed_semesters = OrderedDict()
-        for call in calls.values_by_state(CallState.CLOSED):
+        for call in calls.values_matching(state=CallState.CLOSED):
             if ((call.semester_id not in open_semesters) and
                     (call.semester_id not in closed_semesters)):
                 closed_semesters[call.semester_id] = call.semester_name

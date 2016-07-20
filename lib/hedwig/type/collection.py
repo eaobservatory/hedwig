@@ -101,25 +101,16 @@ class CallCollection(ResultCollection):
     Class to hold the results of a search for calls for proposals.
     """
 
-    def values_by_state(self, state):
+    def values_matching(self, state=None, queue_id=None, type_=None):
         """
-        Get a list of the calls with the given state.
-        """
-
-        return [x for x in self.values() if x.state == state]
-
-    def values_by_queue(self, queue_id):
-        """
-        Get a list of the calls with the given queue ID.
-
-        The queue ID can also be specified as a list or tuple of possible
-        values.
+        Iterate values matching the given criteria.
         """
 
-        if not is_list_like(queue_id):
-            queue_id = (queue_id,)
-
-        return [x for x in self.values() if x.queue_id in queue_id]
+        for call in self.values():
+            if all((matches_constraint(call.state, state),
+                    matches_constraint(call.queue_id, queue_id),
+                    matches_constraint(call.type, type_))):
+                yield call
 
 
 class EmailCollection(ResultCollection):

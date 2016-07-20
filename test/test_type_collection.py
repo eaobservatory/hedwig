@@ -98,26 +98,33 @@ class CollectionTypeTestCase(TestCase):
         c[4] = null_tuple(Call)._replace(
             id=4, queue_id=13, state=CallState.CLOSED)
 
-        self.assertEqual([x.id for x in c.values_by_state(CallState.OPEN)],
-                         [1, 2])
+        self.assertEqual(
+            [x.id for x in c.values_matching(state=CallState.OPEN)],
+            [1, 2])
 
-        self.assertEqual([x.id for x in c.values_by_state(CallState.UNOPENED)],
-                         [3])
+        self.assertEqual(
+            [x.id for x in c.values_matching(state=CallState.UNOPENED)],
+            [3])
 
-        self.assertEqual([x.id for x in c.values_by_state(CallState.CLOSED)],
-                         [4])
+        self.assertEqual(
+            [x.id for x in c.values_matching(state=CallState.CLOSED)],
+            [4])
 
-        self.assertEqual([x.id for x in c.values_by_queue(11)],
-                         [1])
+        self.assertEqual(
+            [x.id for x in c.values_matching(queue_id=11)],
+            [1])
 
-        self.assertEqual([x.id for x in c.values_by_queue(12)],
-                         [2])
+        self.assertEqual(
+            [x.id for x in c.values_matching(queue_id=12)],
+            [2])
 
-        self.assertEqual([x.id for x in c.values_by_queue(13)],
-                         [3, 4])
+        self.assertEqual(
+            [x.id for x in c.values_matching(queue_id=13)],
+            [3, 4])
 
-        self.assertEqual([x.id for x in c.values_by_queue((11, 12))],
-                         [1, 2])
+        self.assertEqual(
+            [x.id for x in c.values_matching(queue_id=(11, 12))],
+            [1, 2])
 
     def test_email_collection(self):
         c = EmailCollection()
