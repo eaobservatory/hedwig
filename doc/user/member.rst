@@ -51,7 +51,7 @@ overwrite each other's changes.
 Editing the List of Members
 ---------------------------
 
-You an also use the "Edit members" link on the proposal page to edit the
+You can also use the "Edit members" link on the proposal page to edit the
 existing members of a proposal (including yourself).
 You will need to use this page to designate someone else as the PI,
 or to mark yourself as a potential observer for the project.
