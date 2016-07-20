@@ -24,7 +24,8 @@ from datetime import datetime
 from ..email.format import render_email_template
 from ..error import ConsistencyError, Error, MultipleRecords, NoSuchRecord, \
     UserError
-from ..type.collection import EmailCollection
+from ..type.collection import EmailCollection, \
+    ProposalCollection, ReviewerCollection
 from ..type.enum import PermissionType, PersonTitle, ProposalState, \
     UserLogEvent
 from ..type.simple import Email, \
@@ -819,36 +820,56 @@ class PeopleView(object):
             all_addable = None
 
         # Organize proposals by facility and attach extra information
-        # as necessary.
+        # as necessary.  Note that we re-assemble the reviewers for each
+        # proposal into a ReviewerCollection reviewers attribute, rather
+        # than having multiple entries for each proposal with a single
+        # reviewer attribute.  Conversely we switch from a MemberCollection
+        # members attribute to a single member attribute (the PI).
         proposals = []
 
         for facility in facilities.values():
             role_class = facility.view.get_reviewer_roles()
 
-            facility_proposals = []
+            facility_proposals = ProposalCollection()
 
             for proposal in all_proposals.values_by_facility(facility.id):
                 if auth.for_review(
                         role_class, db, proposal.reviewer, proposal,
                         auth_cache=auth_cache).edit:
-                    facility_proposals.append(ProposalWithCode(
-                        *proposal,
-                        code=facility.view.make_proposal_code(
-                            db, proposal))._replace(
-                        member=proposal.members.get_pi(default=None),
-                        members=None))
+                    if proposal.id in facility_proposals:
+                        proposal_reviewers = \
+                            facility_proposals[proposal.id].reviewers
+                    else:
+                        proposal_reviewers = ReviewerCollection()
+                        facility_proposals[proposal.id] = ProposalWithCode(
+                            *proposal,
+                            code=facility.view.make_proposal_code(
+                                db, proposal))._replace(
+                            member=proposal.members.get_pi(default=None),
+                            reviewers=proposal_reviewers,
+                            members=None, reviewer=None)
+
+                    proposal_reviewers[proposal.reviewer.id] = \
+                        proposal.reviewer
 
             if all_addable is not None:
                 for proposal in all_addable.values_by_facility(facility.id):
-                    proposal_code = facility.view.make_proposal_code(
-                        db, proposal)
+                    if proposal.id in facility_proposals:
+                        proposal_reviewers = \
+                            facility_proposals[proposal.id].reviewers
+                    else:
+                        proposal_reviewers = ReviewerCollection()
+                        facility_proposals[proposal.id] = ProposalWithCode(
+                            *proposal,
+                            code=facility.view.make_proposal_code(
+                                db, proposal))._replace(
+                            member=proposal.members.get_pi(default=None),
+                            reviewers=proposal_reviewers,
+                            members=None, reviewer=None)
 
-                    for reviewer in proposal.reviewers.values():
-                        facility_proposals.append(ProposalWithCode(
-                            *proposal, code=proposal_code)._replace(
-                                member=proposal.members.get_pi(default=None),
-                                reviewer=reviewer,
-                                members=None, reviewers=None))
+                    for (i, reviewer) in enumerate(
+                            proposal.reviewers.values()):
+                        proposal_reviewers['addable_{}'.format(i)] = reviewer
 
             # If, after filtering, no proposals are left, skip this facility.
             if not facility_proposals:

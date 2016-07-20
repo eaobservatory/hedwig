@@ -37,22 +37,22 @@
                     <th>Review state</th>
                     <th>Review role</th>
                 </tr>
-                {% for proposal_id, proposal_reviews in facility.proposals | groupby('id') %}
-                    {% for proposal in proposal_reviews %}
+                {% for proposal in facility.proposals.values() %}
+                    {% for reviewer in proposal.reviewers.values_in_role_order(facility.role_class) %}
                         <tr>
                             {% if loop.first %}
-                                <td rowspan="{{ proposal_reviews | length }}"><a href="{{ url_for(facility.code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
-                                <td rowspan="{{ proposal_reviews | length }}">
+                                <td rowspan="{{ proposal.reviewers | length }}"><a href="{{ url_for(facility.code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+                                <td rowspan="{{ proposal.reviewers | length }}">
                                     {% if proposal.member is not none %}
                                         {{ proposal.member.person_name | abbr(25) }}
                                     {% else %}
                                         &nbsp;
                                     {% endif %}
                                     </td>
-                                <td rowspan="{{ proposal_reviews | length }}">{{ proposal.title | abbr(25) }}</td>
+                                <td rowspan="{{ proposal.reviewers | length }}">{{ proposal.title | abbr(25) }}</td>
                             {% endif %}
-                            <td class="{{ proposal.reviewer.review_state | review_state_class }}">{{ proposal.reviewer.review_state | review_state_name }}</td>
-                            <td><a href="{{ url_for(facility.code + '.proposal_review_new', proposal_id=proposal.id, reviewer_role=proposal.reviewer.role) if proposal.reviewer.id is none else url_for(facility.code + '.review_edit', reviewer_id=proposal.reviewer.id) }}">{{ proposal.reviewer.role | reviewer_role_name(facility.role_class) }}</a></td>
+                            <td class="{{ reviewer.review_state | review_state_class }}">{{ reviewer.review_state | review_state_name }}</td>
+                            <td><a href="{{ url_for(facility.code + '.proposal_review_new', proposal_id=proposal.id, reviewer_role=reviewer.role) if reviewer.id is none else url_for(facility.code + '.review_edit', reviewer_id=reviewer.id) }}">{{ reviewer.role | reviewer_role_name(facility.role_class) }}</a></td>
                         </tr>
                     {% endfor %}
                 {% endfor %}
