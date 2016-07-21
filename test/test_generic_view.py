@@ -19,6 +19,10 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from hedwig.error import NoSuchRecord
+from hedwig.type.collection import ReviewerCollection
+from hedwig.type.enum import ReviewState
+from hedwig.type.simple import Reviewer
+from hedwig.type.util import null_tuple
 
 from .dummy_facility import FacilityTestCase
 
@@ -62,3 +66,44 @@ class GenericFacilityTestCase(FacilityTestCase):
 
         with self.assertRaisesRegexp(NoSuchRecord, "^Did not recognise"):
             self.view.parse_proposal_code(self.db, '20A-X-1-X')
+
+    def test_overall_rating(self):
+        role_class = self.view.get_reviewer_roles()
+
+        c = ReviewerCollection()
+
+        self.assertIsNone(self.view.calculate_overall_rating(c))
+
+        def make_review(id, role, rating, weight):
+            return null_tuple(Reviewer)._replace(
+                id=101, role=role, review_rating=rating,
+                review_weight=weight, review_state=ReviewState.DONE)
+
+        # Add reviews without ratings.
+        c[101] = make_review(101, role_class.TECH, None, None)
+        c[102] = make_review(102, role_class.TECH, None, None)
+
+        self.assertIsNone(self.view.calculate_overall_rating(c))
+
+        (r, s) = self.view.calculate_overall_rating(c, with_std_dev=True)
+        self.assertIsNone(r)
+        self.assertIsNone(s)
+
+        # Add some equally-weighted reviews.
+        c[201] = make_review(201, role_class.CTTEE_OTHER, 40, 50)
+        c[202] = make_review(202, role_class.CTTEE_OTHER, 60, 50)
+
+        self.assertAlmostEqual(self.view.calculate_overall_rating(c), 50)
+
+        (r, s) = self.view.calculate_overall_rating(c, with_std_dev=True)
+        self.assertAlmostEqual(r, 50)
+        self.assertIsNotNone(s)
+
+        # Add a higher-weighted review.
+        c[301] = make_review(301, role_class.CTTEE_PRIMARY, 90, 100)
+
+        self.assertAlmostEqual(self.view.calculate_overall_rating(c), 70)
+
+        (r, s) = self.view.calculate_overall_rating(c, with_std_dev=True)
+        self.assertAlmostEqual(r, 70)
+        self.assertIsNotNone(s)

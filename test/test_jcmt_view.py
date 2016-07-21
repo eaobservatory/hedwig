@@ -19,6 +19,11 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from hedwig.error import NoSuchRecord
+from hedwig.facility.jcmt.type import JCMTReview, JCMTReviewerExpertise
+from hedwig.type.collection import ReviewerCollection
+from hedwig.type.enum import ReviewState
+from hedwig.type.simple import Reviewer
+from hedwig.type.util import null_tuple
 
 from .dummy_facility import FacilityTestCase
 
@@ -60,3 +65,49 @@ class JCMTFacilityTestCase(FacilityTestCase):
         with self.assertRaisesRegexp(
                 NoSuchRecord, "^Did not recognise call type code"):
             self.view.parse_proposal_code(self.db, 'X11AP111')
+
+    def test_overall_rating(self):
+        role_class = self.view.get_reviewer_roles()
+
+        c = ReviewerCollection()
+
+        self.assertIsNone(self.view.calculate_overall_rating(c))
+
+        def make_review(id, role, rating, expertise):
+            return null_tuple(Reviewer)._replace(
+                id=101, role=role, review_rating=rating,
+                review_state=ReviewState.DONE,
+                review_extra=null_tuple(JCMTReview)._replace(
+                    expertise=expertise))
+
+        # Add reviews without ratings included in the calculation.
+        c[101] = make_review(101, role_class.TECH, None, None)
+        c[102] = make_review(102, role_class.EXTERNAL, 100, None)
+
+        self.assertIsNone(self.view.calculate_overall_rating(c))
+
+        (r, s) = self.view.calculate_overall_rating(c, with_std_dev=True)
+        self.assertIsNone(r)
+        self.assertIsNone(s)
+
+        # Add some equally-weighted reviews.
+        c[201] = make_review(
+            201, role_class.CTTEE_OTHER, 20, JCMTReviewerExpertise.NON_EXPERT)
+        c[202] = make_review(
+            202, role_class.CTTEE_OTHER, 40, JCMTReviewerExpertise.NON_EXPERT)
+
+        self.assertAlmostEqual(self.view.calculate_overall_rating(c), 30)
+
+        (r, s) = self.view.calculate_overall_rating(c, with_std_dev=True)
+        self.assertAlmostEqual(r, 30)
+        self.assertIsNotNone(s)
+
+        # Add a higher-weighted review.
+        c[301] = make_review(
+            301, role_class.CTTEE_PRIMARY, 70, JCMTReviewerExpertise.EXPERT)
+
+        self.assertAlmostEqual(self.view.calculate_overall_rating(c), 50)
+
+        (r, s) = self.view.calculate_overall_rating(c, with_std_dev=True)
+        self.assertAlmostEqual(r, 50)
+        self.assertIsNotNone(s)
