@@ -1035,7 +1035,7 @@ class PeopleView(object):
 
             title = 'Institution Edit Log: {}'.format(institution.name)
 
-        entries = []
+        entries = OrderedDict()
 
         for entry in raw_entries.values():
             if entry.institution_id in current:
@@ -1050,7 +1050,12 @@ class PeopleView(object):
             # Only display non-approved entries if we are not displaying an
             # institution-specific log.
             if not (entry.approved and (institution_id is None)):
-                entries.append(InstitutionLogExtra(*entry, new=new))
+                if entry.institution_id in entries:
+                    entry_list = entries[entry.institution_id]
+                else:
+                    entry_list = []
+                    entries[entry.institution_id] = entry_list
+                entry_list.append(InstitutionLogExtra(*entry, new=new))
 
             current[entry.institution_id] = entry.prev
 

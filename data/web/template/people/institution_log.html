@@ -26,7 +26,7 @@
                 <th>Previous</th>
                 <th>New</th>
             </tr>
-            {% for (entry_institution_id, institution_entries) in entries | groupby('institution_id') %}
+            {% for (entry_institution_id, institution_entries) in entries.items() %}
                 {% for entry in institution_entries | reverse %}
                     <tr class="spacer_above">
                         {% if (institution is none) and (loop.first) %}
