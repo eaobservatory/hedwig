@@ -81,6 +81,29 @@ class CollectionOrdered(object):
             self[key] = self[key]._replace(sort_order=i)
 
 
+class CollectionSortable(object):
+    """
+    Mix-in for collections with a `sort_attr` class attribute.
+    """
+
+    def values_in_sorted_order(self):
+        """
+        Iterate values in a suitably sorted order.
+
+        This operates by forming a "key" tuple for each value in the collection
+        containing the attributes listed in the class's `sort_attr` attribute.
+        It sorts these keys and then yields each corresponding value in turn.
+        """
+
+        keys = {}
+
+        for (id_, value) in self.items():
+            keys[tuple((getattr(value, a) for a in self.sort_attr))] = id_
+
+        for key in sorted(keys.keys()):
+            yield self[keys[key]]
+
+
 class EnumAvailable(object):
     """
     Mix-in for enum-style classes where the `_info` dictionary

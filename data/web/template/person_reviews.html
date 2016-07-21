@@ -37,7 +37,7 @@
                     <th>Review state</th>
                     <th>Review role</th>
                 </tr>
-                {% for proposal in facility.proposals.values() %}
+                {% for proposal in facility.proposals.values_in_sorted_order() %}
                     {% for reviewer in proposal.reviewers.values_in_role_order(facility.role_class) %}
                         <tr>
                             {% if loop.first %}

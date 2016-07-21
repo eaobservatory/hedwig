@@ -25,7 +25,7 @@ from ..astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
 from ..error import NoSuchRecord, MultipleRecords, UserError
 from ..util import is_list_like, matches_constraint
-from .base import CollectionByProposal, CollectionOrdered
+from .base import CollectionByProposal, CollectionOrdered, CollectionSortable
 from .enum import AffiliationType, PublicationType, ReviewState
 from .simple import TargetObject
 
@@ -387,10 +387,13 @@ class PrevProposalCollection(ResultCollection):
                 seen_ids[pp.proposal_id] = pp.proposal_code
 
 
-class ProposalCollection(ResultCollection):
+class ProposalCollection(ResultCollection, CollectionSortable):
     """
     Class to contain results of a proposal search.
     """
+
+    sort_attr = ('facility_id', 'date_close', 'semester_code', 'queue_code',
+                 'call_type', 'number')
 
     def values_by_facility(self, facility_id):
         """
