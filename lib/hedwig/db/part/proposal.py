@@ -1325,6 +1325,7 @@ class ProposalPart(object):
                 semester.c.facility_id,
                 call.c.semester_id.desc(),
                 call.c.queue_id,
+                call.c.type,
                 proposal.c.number)
 
         # Perform query and collect results.
