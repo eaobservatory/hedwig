@@ -23,7 +23,8 @@ import itertools
 from unittest import TestCase
 
 from hedwig.error import MultipleRecords, NoSuchRecord, UserError
-from hedwig.type.base import CollectionByProposal, CollectionOrdered
+from hedwig.type.base import CollectionByProposal, CollectionOrdered, \
+    CollectionSortable
 from hedwig.type.collection import \
     CallCollection, EmailCollection, GroupMemberCollection, MemberCollection, \
     ResultCollection, \
@@ -85,6 +86,40 @@ class CollectionTypeTestCase(TestCase):
         s = c.subset_by_proposal(3)
         self.assertIsInstance(s, BPCollection)
         self.assertEqual(len(s), 0)
+
+    def test_sortable_collection(self):
+        class TSCollection(ResultCollection, CollectionSortable):
+            sort_attr = ('a', 'b')
+
+        TS = namedtuple('TC', ('id', 'a', 'b'))
+
+        c = TSCollection()
+
+        c[101] = TS(101, 1, 3)
+        c[102] = TS(102, 3, 2)
+        c[103] = TS(103, 2, 1)
+        c[104] = TS(104, 3, 1)
+        c[105] = TS(105, 2, 3)
+        c[106] = TS(106, 1, 1)
+        c[107] = TS(107, 3, 3)
+        c[108] = TS(108, 1, 2)
+        c[109] = TS(109, 2, 2)
+
+        c[201] = TS(201, 2, 1)
+        c[202] = TS(202, 3, 1)
+        c[203] = TS(203, 1, 3)
+        c[204] = TS(204, 3, 2)
+        c[205] = TS(205, 2, 3)
+        c[206] = TS(206, 2, 2)
+        c[207] = TS(207, 3, 3)
+        c[208] = TS(208, 1, 2)
+        c[209] = TS(209, 1, 1)
+
+        self.assertEqual(
+            [x.id for x in c.values_in_sorted_order()],
+            [106, 209, 108, 208, 101, 203,
+             103, 201, 109, 206, 105, 205,
+             104, 202, 102, 204, 107, 207])
 
     def test_call_collection(self):
         c = CallCollection()

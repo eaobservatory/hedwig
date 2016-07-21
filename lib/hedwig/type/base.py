@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 from ..error import FormattedError, NoSuchValue
 
@@ -95,13 +95,14 @@ class CollectionSortable(object):
         It sorts these keys and then yields each corresponding value in turn.
         """
 
-        keys = {}
+        keys = defaultdict(list)
 
-        for (id_, value) in self.items():
-            keys[tuple((getattr(value, a) for a in self.sort_attr))] = id_
+        for (id_, val) in self.items():
+            keys[tuple((getattr(val, a) for a in self.sort_attr))].append(id_)
 
         for key in sorted(keys.keys()):
-            yield self[keys[key]]
+            for entry in keys[key]:
+                yield self[entry]
 
 
 class EnumAvailable(object):
