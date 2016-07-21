@@ -773,10 +773,10 @@ class PeopleView(object):
         proposals = []
 
         for facility in facilities.values():
-            facility_proposals = [
-                ProposalWithCode(
-                    *p, code=facility.view.make_proposal_code(db, p))
-                for p in all_proposals.values_by_facility(facility.id)]
+            facility_proposals = ProposalCollection((
+                (p.id, ProposalWithCode(
+                    *p, code=facility.view.make_proposal_code(db, p)))
+                for p in all_proposals.values_by_facility(facility.id)))
 
             if not facility_proposals:
                 continue
