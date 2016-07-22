@@ -1592,7 +1592,7 @@ class ProposalPart(object):
 
         return ans
 
-    def search_queue(self, facility_id=None):
+    def search_queue(self, facility_id=None, has_affiliation=None):
         stmt = select([
             queue.c.id,
             queue.c.facility_id,
@@ -1602,6 +1602,14 @@ class ProposalPart(object):
 
         if facility_id is not None:
             stmt = stmt.where(queue.c.facility_id == facility_id)
+
+        if has_affiliation is not None:
+            affiliation_queues = select([affiliation.c.queue_id]).distinct()
+
+            if has_affiliation:
+                stmt = stmt.where(queue.c.id.in_(affiliation_queues))
+            else:
+                stmt = stmt.where(queue.c.id.notin_(affiliation_queues))
 
         ans = ResultCollection()
 

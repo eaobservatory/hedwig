@@ -239,6 +239,31 @@ class DBProposalTest(DBTestCase):
         queues = self.db.search_queue(facility_id=facility_id_2)
         self.assertEqual(list(queues.keys()), [queue_id_3])
 
+        # Test affiliation constraint of search.
+        self.assertEqual(
+            list(self.db.search_queue(
+                facility_id=facility_id, has_affiliation=False).keys()),
+            [queue_id, queue_id_2])
+        self.assertEqual(
+            list(self.db.search_queue(
+                facility_id=facility_id, has_affiliation=True).keys()),
+            [])
+
+        self.db.add_affiliation(queue_id, 'Test affiliation')
+
+        self.assertEqual(
+            list(self.db.search_queue(
+                facility_id=facility_id, has_affiliation=None).keys()),
+            [queue_id, queue_id_2])
+        self.assertEqual(
+            list(self.db.search_queue(
+                facility_id=facility_id, has_affiliation=True).keys()),
+            [queue_id])
+        self.assertEqual(
+            list(self.db.search_queue(
+                facility_id=facility_id, has_affiliation=False).keys()),
+            [queue_id_2])
+
         # Try updating a record.
         queue = self.db.get_queue(facility_id_2, queue_id_3)
         self.assertEqual(queue.name, '???')
