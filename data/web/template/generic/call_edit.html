@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 {% set navigation=['facility_admin', ('Calls', url_for('.call_list'))] %}
 {% set help_link=url_for('help.admin_page', page_name='call') %}
+{% set scripts=['edit_call'] %}
 
 {% from 'macro/text.html' import render_format_control %}
 
@@ -17,7 +18,7 @@
         {% if semesters is not none %}
             <li>
                 <label for="semester_id">Semester</label>
-                <select name="semester_id">
+                <select name="semester_id" data-existing="{{ existing_calls | json }}">
                     {% for semester in semesters %}
                         <option value="{{ semester.id }}" {{'selected="selected"' | safe if semester.id == call.semester_id }}>{{ semester.name }}</option>
                     {% endfor %}
@@ -32,6 +33,7 @@
                         <option value="{{ queue.id }}" {{'selected="selected"' | safe if queue.id == call.queue_id }}>{{ queue.name }}</option>
                     {% endfor %}
                 </select>
+                <span id="queue_warning" class="forminfo_bad">call already exists for this semester and queue</span>
             </li>
         {% endif %}
         {% if call_type is not none %}

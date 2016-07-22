@@ -254,6 +254,9 @@ class GenericAdmin(object):
 
         type_class = self.get_call_types()
 
+        existing_calls = None
+        message = None
+
         if call_id is None:
             # We are creating a new call, so need to be able to offer
             # menus of semesters and queues.
@@ -271,6 +274,13 @@ class GenericAdmin(object):
                     'for this call.')
             title = 'Add New Call'
             target = url_for('.call_new', call_type=call_type)
+
+            # Get list of existing calls for this type.
+            existing_calls = [
+                (c.semester_id, c.queue_id)
+                for c in db.search_call(
+                    facility_id=self.id_, type_=call_type).values()]
+
         else:
             # Fetch the existing call record.
             try:
@@ -284,8 +294,6 @@ class GenericAdmin(object):
                 call.semester_name, call.queue_name,
                 type_class.get_name(call.type))
             target = url_for('.call_edit', call_id=call_id)
-
-        message = None
 
         if form is not None:
             try:
@@ -311,6 +319,11 @@ class GenericAdmin(object):
                     call = call._replace(
                         semester_id=int(form['semester_id']),
                         queue_id=int(form['queue_id']))
+
+                    if (call.semester_id, call.queue_id) in existing_calls:
+                        raise UserError(
+                            'A call of this type for the selected semester '
+                            'and queue already exists.')
 
                     new_call_id = db.add_call(
                         type_class=type_class,
@@ -369,6 +382,7 @@ class GenericAdmin(object):
             'semesters': (None if semesters is None else semesters.values()),
             'queues': (None if queues is None else queues.values()),
             'format_types': FormatType.get_options(is_system=True),
+            'existing_calls': existing_calls,
         }
 
     @with_verified_admin
