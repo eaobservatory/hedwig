@@ -45,7 +45,7 @@ InstitutionLogExtra = namedtuple(
 
 ProposalsByFacility = namedtuple(
     'ProposalsByFacility',
-    ('name', 'code', 'proposals'))
+    ('name', 'code', 'type_class', 'proposals'))
 
 ReviewsByFacility = namedtuple(
     'ReviewsByFacility',
@@ -782,7 +782,8 @@ class PeopleView(object):
                 continue
 
             proposals.append(ProposalsByFacility(
-                facility.name, facility.code, facility_proposals))
+                facility.name, facility.code, facility.view.get_call_types(),
+                facility_proposals))
 
         return {
             'title': title,

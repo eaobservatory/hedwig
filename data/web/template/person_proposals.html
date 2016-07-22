@@ -18,6 +18,7 @@
                 <tr>
                     <th>Semester</th>
                     <th>Queue</th>
+                    <Th>Type</th>
                     <th>Proposal</th>
                     <th>Title</th>
                     <th>State</th>
@@ -25,24 +26,30 @@
                 </tr>
                 {% for semester_proposals in facility.proposals.values_in_sorted_order() | plain_group_by('semester_id') %}
                     {% for queue_proposals in semester_proposals | plain_group_by('queue_id') %}
-                    {% set semester_loop = loop %}
-                        {% for proposal in queue_proposals %}
-                            <tr>
-                                {% if loop.first and semester_loop.first %}
-                                    <td rowspan="{{ semester_proposals | length }}">{{ proposal.semester_name }}</td>
-                                {% endif %}
-                                {% if loop.first %}
-                                    <td rowspan="{{ loop.length }}">{{ proposal.queue_name }}</td>
-                                {% endif %}
-                                <td><a href="{{ url_for(facility.code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
-                                <td>{{ proposal.title | abbr(35) }}</td>
-                                <td>{{ proposal.state | proposal_state_name }}</td>
-                                <td>
-                                    {% if proposal.member.pi %}<span class="label">PI</span>{% endif %}
-                                    {% if proposal.member.editor %}<span class="label">editor</span>{% endif %}
-                                    {% if proposal.member.observer%}<span class="label">observer</span>{% endif %}
-                                </td>
-                            </tr>
+                        {% set queue_loop = loop %}
+                        {% for type_proposals in queue_proposals | plain_group_by('call_type') %}
+                            {% set type_loop = loop %}
+                            {% for proposal in type_proposals %}
+                                <tr>
+                                    {% if loop.first and type_loop.first and queue_loop.first %}
+                                        <td rowspan="{{ semester_proposals | length }}">{{ proposal.semester_name }}</td>
+                                    {% endif %}
+                                    {% if loop.first and type_loop.first %}
+                                        <td rowspan="{{ queue_proposals | length }}">{{ proposal.queue_name }}</td>
+                                    {% endif %}
+                                    {% if loop.first %}
+                                        <td rowspan="{{ type_proposals | length }}">{{ proposal.call_type | call_type_name(facility.type_class) }}</td>
+                                    {% endif %}
+                                    <td><a href="{{ url_for(facility.code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+                                    <td>{{ proposal.title | abbr(35) }}</td>
+                                    <td>{{ proposal.state | proposal_state_name }}</td>
+                                    <td>
+                                        {% if proposal.member.pi %}<span class="label">PI</span>{% endif %}
+                                        {% if proposal.member.editor %}<span class="label">editor</span>{% endif %}
+                                        {% if proposal.member.observer%}<span class="label">observer</span>{% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
                         {% endfor %}
                     {% endfor %}
                 {% endfor %}
