@@ -1315,16 +1315,16 @@ class ProposalPart(object):
             stmt = stmt.where(queue.c.code == queue_code)
 
         # Determine ordering: don't sort if only selecting one proposal.
-        # This ordering is intended for the personal proposal list.  If other
-        # pages start using this method, perhaps the ordering should be
-        # controlled by more arguments.
-        # NOTE: the person proposal / review list pages no longer
-        # strictly require ordering by facility since they use
-        # ProposalCollection.values_by_facility instead of group_by.
+        # This ordering was originally intended for the personal proposal list
+        # and personal review list.  However these pages now perform their own
+        # sorting of the proposals.  (The ordering specified here should still
+        # be useful as a pre-sort for those operations.)
+        # If other pages rely on the sort order of results of this method,
+        # perhaps the ordering should be controlled by more arguments.
         if proposal_id is None:
             stmt = stmt.order_by(
                 semester.c.facility_id,
-                call.c.semester_id.desc(),
+                call.c.semester_id,
                 call.c.queue_id,
                 call.c.type,
                 proposal.c.number)
