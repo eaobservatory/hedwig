@@ -18,7 +18,9 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from itertools import groupby
 import json as json_module
+from operator import attrgetter
 
 from flask import Markup
 from jinja2.runtime import Undefined
@@ -175,6 +177,20 @@ def register_template_utils(app):
             return MessageThreadType.get_name(value)
         except KeyError:
             return 'Unknown thread type'
+
+    @app.template_filter()
+    def plain_group_by(value, attr):
+        """
+        Simple grouping filter.
+
+        This filter is an alternative to the Jinja built-in `groupby`
+        filter which does not sort by the grouping key.  The data
+        should already be sorted, as for the standard Python
+        `itertools.groupby` method` (which this filter is based on).
+        """
+
+        for (group_id, group_iter) in groupby(value, attrgetter(attr)):
+            yield list(group_iter)
 
     @app.template_filter()
     def proposal_state_name(value):

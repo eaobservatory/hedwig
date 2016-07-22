@@ -23,8 +23,8 @@
                     <th>State</th>
                     <th>Your role</th>
                 </tr>
-                {% for semester, semester_proposals in facility.proposals.values_in_sorted_order() | groupby('semester_id') %}
-                    {% for queue, queue_proposals in semester_proposals | groupby('queue_id') %}
+                {% for semester_proposals in facility.proposals.values_in_sorted_order() | plain_group_by('semester_id') %}
+                    {% for queue_proposals in semester_proposals | plain_group_by('queue_id') %}
                     {% set semester_loop = loop %}
                         {% for proposal in queue_proposals %}
                             <tr>
