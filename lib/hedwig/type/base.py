@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict, defaultdict
+from operator import attrgetter
 
 from ..error import FormattedError, NoSuchValue
 
@@ -84,25 +85,28 @@ class CollectionOrdered(object):
 class CollectionSortable(object):
     """
     Mix-in for collections with a `sort_attr` class attribute.
+
+    The `sort_attr` should be a sequence of `(reverse, tuple)`
+    pairs where `reverse` indicates whether the sort should be
+    reversed and `tuple` is a tuple containing attribute names.
+    Sorting parameters are specified in top-down order, both
+    in the attributes tuples and in the sequence as a whole.
     """
 
     def values_in_sorted_order(self):
         """
-        Iterate values in a suitably sorted order.
+        Return values in a suitably sorted order.
 
-        This operates by forming a "key" tuple for each value in the collection
-        containing the attributes listed in the class's `sort_attr` attribute.
-        It sorts these keys and then yields each corresponding value in turn.
+        This operates by placing the values in a list and applying each sort
+        operation specified by `sort_attr` in reverse order.
         """
 
-        keys = defaultdict(list)
+        ans = list(self.values())
 
-        for (id_, val) in self.items():
-            keys[tuple((getattr(val, a) for a in self.sort_attr))].append(id_)
+        for (reverse, attrs) in reversed(self.sort_attr):
+            ans.sort(key=attrgetter(*attrs), reverse=reverse)
 
-        for key in sorted(keys.keys()):
-            for entry in keys[key]:
-                yield self[entry]
+        return ans
 
 
 class EnumAvailable(object):

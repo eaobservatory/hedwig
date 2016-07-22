@@ -392,8 +392,15 @@ class ProposalCollection(ResultCollection, CollectionSortable):
     Class to contain results of a proposal search.
     """
 
-    sort_attr = ('facility_id', 'date_close', 'semester_code', 'queue_code',
-                 'call_type', 'number')
+    # Specify how the collection should be sorted.  Note that we specify
+    # "semester_code" in the first (lowest level) sort so that, within
+    # each semester, proposals are sorted properly by queue, type and
+    # number.  The second (higher level) sort then re-orders the semesters
+    # into the correct order.
+    sort_attr = (
+        (True, ('semester_start',)),
+        (False, ('semester_name', 'queue_name', 'call_type', 'number')),
+    )
 
     def values_by_facility(self, facility_id):
         """

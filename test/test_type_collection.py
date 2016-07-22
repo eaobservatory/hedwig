@@ -89,7 +89,7 @@ class CollectionTypeTestCase(TestCase):
 
     def test_sortable_collection(self):
         class TSCollection(ResultCollection, CollectionSortable):
-            sort_attr = ('a', 'b')
+            sort_attr = ((False, ('a', 'b')),)
 
         TS = namedtuple('TC', ('id', 'a', 'b'))
 
