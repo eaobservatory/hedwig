@@ -27,12 +27,12 @@ from ...file.moc import read_moc
 from ...type.collection import AffiliationCollection, ResultCollection
 from ...type.enum import AffiliationType, FormatType, GroupType, \
     PersonTitle, SemesterState
-from ...type.simple import Affiliation, Category, \
+from ...type.simple import Affiliation, Category, DateAndTime, \
     MOCInfo, ProposalWithCode, Queue, Semester
 from ...type.util import null_tuple
 from ...view import auth
 from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
-    flash, parse_datetime, session, url_for
+    flash, format_datetime, parse_datetime, session, url_for
 from ...view.util import organise_collection, with_verified_admin
 
 
@@ -90,22 +90,28 @@ class GenericAdmin(object):
             target = url_for('.semester_edit', semester_id=semester_id)
 
         message = None
+        semester = semester._replace(
+            date_start=format_datetime(semester.date_start),
+            date_end=format_datetime(semester.date_end))
 
         if form is not None:
             semester = semester._replace(
                 name=form['semester_name'],
                 code=form['semester_code'],
-                date_start=parse_datetime('start', form),
-                date_end=parse_datetime('end', form),
+                date_start=DateAndTime(form['start_date'], form['start_time']),
+                date_end=DateAndTime(form['end_date'], form['end_time']),
                 description=form['description'],
                 description_format=int(form['description_format']))
 
             try:
+                parsed_date_start = parse_datetime(semester.date_start)
+                parsed_date_end = parse_datetime(semester.date_end)
+
                 if semester_id is None:
                     # Create the new semester.
                     new_semester_id = db.add_semester(
                         self.id_, semester.name, semester.code,
-                        semester.date_start, semester.date_end,
+                        parsed_date_start, parsed_date_end,
                         semester.description, semester.description_format)
                     flash('New semester "{}" has been created.',
                           semester.name)
@@ -117,8 +123,8 @@ class GenericAdmin(object):
                     db.update_semester(
                         semester_id, name=semester.name,
                         code=semester.code,
-                        date_start=semester.date_start,
-                        date_end=semester.date_end,
+                        date_start=parsed_date_start,
+                        date_end=parsed_date_end,
                         description=semester.description,
                         description_format=semester.description_format)
                     flash('Semester "{}" has been updated.', semester.name)
@@ -295,24 +301,31 @@ class GenericAdmin(object):
                 type_class.get_name(call.type))
             target = url_for('.call_edit', call_id=call_id)
 
+        call = call._replace(
+            date_open=format_datetime(call.date_open),
+            date_close=format_datetime(call.date_close))
+
         if form is not None:
+            call = call._replace(
+                date_open=DateAndTime(form['open_date'], form['open_time']),
+                date_close=DateAndTime(form['close_date'], form['close_time']),
+                abst_word_lim=int(form['abst_word_lim']),
+                tech_word_lim=int(form['tech_word_lim']),
+                tech_fig_lim=int(form['tech_fig_lim']),
+                tech_page_lim=int(form['tech_page_lim']),
+                sci_word_lim=int(form['sci_word_lim']),
+                sci_fig_lim=int(form['sci_fig_lim']),
+                sci_page_lim=int(form['sci_page_lim']),
+                capt_word_lim=int(form['capt_word_lim']),
+                expl_word_lim=int(form['expl_word_lim']),
+                tech_note=form['tech_note'],
+                sci_note=form['sci_note'],
+                prev_prop_note=form['prev_prop_note'],
+                note_format=int(form['note_format']))
+
             try:
-                call = call._replace(
-                    date_open=parse_datetime('open', form),
-                    date_close=parse_datetime('close', form),
-                    abst_word_lim=int(form['abst_word_lim']),
-                    tech_word_lim=int(form['tech_word_lim']),
-                    tech_fig_lim=int(form['tech_fig_lim']),
-                    tech_page_lim=int(form['tech_page_lim']),
-                    sci_word_lim=int(form['sci_word_lim']),
-                    sci_fig_lim=int(form['sci_fig_lim']),
-                    sci_page_lim=int(form['sci_page_lim']),
-                    capt_word_lim=int(form['capt_word_lim']),
-                    expl_word_lim=int(form['expl_word_lim']),
-                    tech_note=form['tech_note'],
-                    sci_note=form['sci_note'],
-                    prev_prop_note=form['prev_prop_note'],
-                    note_format=int(form['note_format']))
+                parsed_date_open = parse_datetime(call.date_open)
+                parsed_date_close = parse_datetime(call.date_close)
 
                 if call_id is None:
                     # Create new call.
@@ -330,8 +343,8 @@ class GenericAdmin(object):
                         semester_id=call.semester_id,
                         queue_id=call.queue_id,
                         type_=call_type,
-                        date_open=call.date_open,
-                        date_close=call.date_close,
+                        date_open=parsed_date_open,
+                        date_close=parsed_date_close,
                         abst_word_lim=call.abst_word_lim,
                         tech_word_lim=call.tech_word_lim,
                         tech_fig_lim=call.tech_fig_lim,
@@ -352,8 +365,8 @@ class GenericAdmin(object):
                 else:
                     # Update existing call.
                     db.update_call(
-                        call_id, date_open=call.date_open,
-                        date_close=call.date_close,
+                        call_id, date_open=parsed_date_open,
+                        date_close=parsed_date_close,
                         abst_word_lim=call.abst_word_lim,
                         tech_word_lim=call.tech_word_lim,
                         tech_fig_lim=call.tech_fig_lim,

@@ -34,6 +34,8 @@ from flask import Response as _FlaskResponse
 from werkzeug import exceptions as _werkzeug_exceptions
 from werkzeug import routing as _werkzeug_routing
 
+from ..error import UserError
+from ..type.simple import DateAndTime
 from ..type.enum import FigureType, FileTypeInfo
 
 
@@ -140,19 +142,56 @@ def mangle_email_address(email_address):
     return json.dumps(mangled)
 
 
-def parse_datetime(name, form):
+def parse_datetime(date_and_time):
     """
-    Parses date and time fields from the form and returns a combined
-    datetime object.
+    Parses date and time strings as received from a form.
 
-    :param name: the root name of the form parameters -- there should
-        be fields `<name>_date` and `<name>_time`.
-    :param form: the form to process
+    The intention is that this function is used in conjunction with
+    :func:`format_datetime` to pass datetimes to and from forms.
+    The values from a form (which will be strings) are read into
+    a `DateAndTime` tuple.  This tuple can be returned to the form
+    (in the event of parsing errors) to allow the user to make corrections.
+    Otherwise it is parsed by this function to obtain a `datetime` object.
+    For the reverse process --- populating an edit form with existing
+    data --- :func:`format_datetime` is used to convert a `datetime` object
+    to a `DateAndTime` tuple which the form template can use for
+    default values.
+
+    :param date_time_pair: a `DateAndTime` tuple of strings.
+
+    :return: combined `datetime` object.
+
+    :raises UserError: if the date or time can not be parsed.
     """
 
-    return datetime.combine(
-        datetime.strptime(form[name + '_date'], '%Y-%m-%d').date(),
-        datetime.strptime(form[name + '_time'], '%H:%M').time())
+    try:
+        return datetime.combine(
+            datetime.strptime(date_and_time.date, '%Y-%m-%d').date(),
+            datetime.strptime(date_and_time.time, '%H:%M').time())
+
+    except ValueError:
+        raise UserError('Could not parse date and time {} {}.',
+                        date_and_time.date, date_and_time.time)
+
+
+def format_datetime(value):
+    """
+    Converts datetime object to date and time string pair.
+
+    If the object is `None`, returns a pair of empty strings.
+
+    Please see :func:`parse_datetime` for a description of the
+    intended usage of this function.
+
+    :param value: `datetime` object.
+
+    :return: a `DateAndTime` tuple containing formatted strings.
+    """
+
+    if value is None:
+        return DateAndTime('', '')
+
+    return DateAndTime(value.strftime('%Y-%m-%d'), value.strftime('%H:%M'))
 
 
 def register_error_handlers(app):

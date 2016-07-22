@@ -94,14 +94,10 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(f((30, 40), '<{}, {}>'), '<30, 40>')
 
     def test_filter_format_datetime(self):
-        fd = self.app.jinja_env.filters['format_date']
-        ft = self.app.jinja_env.filters['format_time']
         fdt = self.app.jinja_env.filters['format_datetime']
 
         dt = datetime(2016, 4, 1, 15, 0, 0)
 
-        self.assertEqual(fd(dt), '2016-04-01')
-        self.assertEqual(ft(dt), '15:00')
         self.assertEqual(fdt(dt), '2016-04-01 15:00')
 
     def test_filter_format_hours_hms(self):

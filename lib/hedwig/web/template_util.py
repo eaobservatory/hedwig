@@ -107,18 +107,6 @@ def register_template_utils(app):
         return format_.format(value)
 
     @app.template_filter()
-    def format_date(value):
-        if value is None:
-            return ''
-        return value.strftime('%Y-%m-%d')
-
-    @app.template_filter()
-    def format_time(value):
-        if value is None:
-            return ''
-        return value.strftime('%H:%M')
-
-    @app.template_filter()
     def format_datetime(value):
         if value is None:
             return ''
