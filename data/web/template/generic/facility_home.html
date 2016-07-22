@@ -34,18 +34,17 @@
     </p>
 {% endif %}
 
-{% if open_nonstandard_semesters %}
+{% if open_nonstandard_semesters or closed_semesters %}
     <nav>
         <p>
-            <a href="{{ url_for('.semester_non_standard') }}">Other calls for proposals</a>
-        </p>
-    </nav>
-{% endif %}
+            {% if open_nonstandard_semesters %}
+                <a href="{{ url_for('.semester_non_standard') }}">Other calls for proposals</a>
+                <br />
+            {% endif %}
 
-{% if closed_semesters %}
-    <nav>
-        <p>
-            <a href="{{ url_for('.semester_closed') }}">Previous calls for proposals</a>
+            {% if closed_semesters %}
+                <a href="{{ url_for('.semester_closed') }}">Previous calls for proposals</a>
+            {% endif %}
         </p>
     </nav>
 {% endif %}
