@@ -263,9 +263,12 @@ class GenericAdmin(object):
                 state=(SemesterState.FUTURE, SemesterState.CURRENT))
             if not semesters:
                 raise ErrorPage('No semesters are available for this call.')
-            queues = db.search_queue(facility_id=self.id_)
+            queues = db.search_queue(facility_id=self.id_,
+                                     has_affiliation=True)
             if not queues:
-                raise ErrorPage('No queues are available for this call.')
+                raise ErrorPage(
+                    'No queues (with affiliations) are available '
+                    'for this call.')
             title = 'Add New Call'
             target = url_for('.call_new', call_type=call_type)
         else:
