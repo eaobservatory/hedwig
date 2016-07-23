@@ -68,8 +68,10 @@ class JCMTCallType(BaseCallType):
     """
 
     _jcmt_info = {
-        BaseCallType.STANDARD: {'name': 'Regular', 'code': 'M'},
-        BaseCallType.IMMEDIATE: {'name': 'Service', 'code': 'S'},
+        BaseCallType.STANDARD: {
+            'name': 'Regular', 'code': 'M', 'url_path': 'regular'},
+        BaseCallType.IMMEDIATE: {
+            'name': 'Service', 'code': 'S', 'url_path': 'service'},
     }
 
     _info = OrderedDict()
