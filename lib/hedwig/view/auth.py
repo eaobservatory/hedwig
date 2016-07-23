@@ -101,8 +101,11 @@ def for_person(db, person, auth_cache=None):
         # access based on the proposal settings.
         auth = no
 
-        for member in db.search_member(person_id=session['person']['id'],
-                                       co_member_person_id=person.id).values():
+        for member in db.search_member(
+                person_id=session['person']['id'],
+                co_member_person_id=person.id,
+                co_member_proposal_state=ProposalState.editable_states()
+                ).values():
             if member.editor:
                 return yes
             else:
@@ -151,11 +154,14 @@ def for_institution(db, institution):
         # institution?  In that case allow them to edit it unless it has
         # registered representatives.
 
-        if (db.search_member(person_id=session['person']['id'],
-                             editor=True,
-                             co_member_institution_id=institution.id) and
-                not db.search_person(registered=True,
-                                     institution_id=institution.id)):
+        if (db.search_member(
+                person_id=session['person']['id'],
+                editor=True,
+                co_member_institution_id=institution.id,
+                co_member_proposal_state=ProposalState.editable_states())
+                and not
+                db.search_person(registered=True,
+                                 institution_id=institution.id)):
             auth = auth._replace(edit=True)
 
     return auth

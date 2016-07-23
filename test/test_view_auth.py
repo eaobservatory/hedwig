@@ -353,6 +353,14 @@ class WebAppAuthTestCase(WebAppTestCase):
                 ]:
             self._test_auth_person(auth_cache, *test_case)
 
+        self.db.update_proposal(proposal_a2, state=ProposalState.REVIEW)
+        for test_case in [
+                # Unregistered co-member: no special access when not editable.
+                (91, person_a2m,   False, person_a2u,   auth.no),
+                (92, person_a2e,   False, person_a2u,   auth.no),
+                ]:
+            self._test_auth_person(auth_cache, *test_case)
+
         # Test authorization for institution profiles.
         for test_case in [
                 # Allow full access to own institution.
@@ -372,6 +380,14 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (11, person_a2e,   False, institution_3, auth.view_only),
                 (12, person_b1e,   False, institution_3, auth.yes),
                 (13, person_b2e,   False, institution_3, auth.yes),
+                ]:
+            self._test_auth_institution(*test_case)
+
+        self.db.update_proposal(proposal_b1, state=ProposalState.REVIEW)
+        for test_case in [
+                # Proposal editor co-member has no special access when
+                # proposal not editable.
+                (91, person_b1e,   False, institution_3, auth.view_only),
                 ]:
             self._test_auth_institution(*test_case)
 
