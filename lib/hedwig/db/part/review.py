@@ -248,7 +248,7 @@ class ReviewPart(object):
                         proposal_id=None, role=None, reviewer_id=None,
                         person_id=None, review_state=None,
                         call_id=None, queue_id=None,
-                        proposal_state=None,
+                        proposal_state=None, institution_id=None,
                         with_review=False, with_review_text=False,
                         with_review_note=False,
                         with_invitation=False,
@@ -366,6 +366,9 @@ class ReviewPart(object):
                 stmt = stmt.where(proposal.c.state.in_(proposal_state))
             else:
                 stmt = stmt.where(proposal.c.state == proposal_state)
+
+        if institution_id is not None:
+            stmt = stmt.where(person.c.institution_id == institution_id)
 
         ans = ReviewerCollection()
 
