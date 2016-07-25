@@ -665,7 +665,8 @@ class WebAppAuthTestCase(WebAppTestCase):
                     expect, 'auth proposal case {} state {}'.format(
                         case_number, state_name))
                 self.assertEqual(
-                    auth.for_proposal_feedback(role_class, self.db, proposal),
+                    auth.for_proposal_feedback(role_class, self.db, proposal,
+                                               auth_cache=auth_cache),
                     expect_fb, 'auth proposal fb case {} state {}'.format(
                         case_number, state_name))
 

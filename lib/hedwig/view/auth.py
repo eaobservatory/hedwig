@@ -255,7 +255,7 @@ def for_proposal(role_class, db, proposal, auth_cache=None):
     return auth
 
 
-def for_proposal_feedback(role_class, db, proposal):
+def for_proposal_feedback(role_class, db, proposal, auth_cache=None):
     """
     Determine the current user's authorization regarding general feedback
     for a proposal.
@@ -274,7 +274,8 @@ def for_proposal_feedback(role_class, db, proposal):
         return no
 
     # Allow administrators to view.
-    if session.get('is_admin', False) and can_be_admin(db):
+    if (session.get('is_admin', False)
+            and can_be_admin(db, auth_cache=auth_cache)):
         return view_only
 
     # Allow proposal members to view.
