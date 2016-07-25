@@ -248,6 +248,7 @@ class ReviewPart(object):
                         proposal_id=None, role=None, reviewer_id=None,
                         person_id=None, review_state=None,
                         call_id=None, queue_id=None,
+                        proposal_state=None,
                         with_review=False, with_review_text=False,
                         with_review_note=False,
                         with_invitation=False,
@@ -315,7 +316,9 @@ class ReviewPart(object):
         if (with_review or (review_state is not None)):
             select_from = select_from.outerjoin(review)
 
-        if (call_id is not None) or (queue_id is not None):
+        if ((call_id is not None)
+                or (queue_id is not None)
+                or (proposal_state is not None)):
             select_from = select_from.join(proposal)
 
             if queue_id is not None:
@@ -357,6 +360,12 @@ class ReviewPart(object):
                 stmt = stmt.where(call.c.queue_id.in_(queue_id))
             else:
                 stmt = stmt.where(call.c.queue_id == queue_id)
+
+        if proposal_state is not None:
+            if is_list_like(proposal_state):
+                stmt = stmt.where(proposal.c.state.in_(proposal_state))
+            else:
+                stmt = stmt.where(proposal.c.state == proposal_state)
 
         ans = ReviewerCollection()
 
