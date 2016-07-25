@@ -130,7 +130,7 @@ def for_person(db, person, auth_cache=None):
         return auth
 
 
-def for_institution(db, institution):
+def for_institution(db, institution, auth_cache=None):
     """
     Determine the current user's authorization regarding this
     institution.
@@ -141,32 +141,47 @@ def for_institution(db, institution):
     elif session.get('is_admin', False) and can_be_admin(db):
         return yes
 
-    auth = view_only
-
     if 'person' not in session:
-        return auth
+        return view_only
 
     if institution.id == session['person']['institution_id']:
         # If this is the person's institution, allow them to edit it.
 
-        auth = auth._replace(edit=True)
+        return yes
 
     else:
-        # Is the person an editor for a proposal with a representative of this
-        # institution?  In that case allow them to edit it unless it has
+        # Allow for special access to edit the institution unless it has
         # registered representatives.
 
-        if (db.search_member(
-                person_id=session['person']['id'],
-                editor=True,
-                co_member_institution_id=institution.id,
-                co_member_proposal_state=ProposalState.editable_states())
-                and not
-                db.search_person(registered=True,
-                                 institution_id=institution.id)):
-            auth = auth._replace(edit=True)
+        if not db.search_person(registered=True,
+                                institution_id=institution.id):
+            # Is the person an editor for a proposal with a representative of
+            # this institution?
+            if db.search_member(
+                    person_id=session['person']['id'],
+                    editor=True,
+                    co_member_institution_id=institution.id,
+                    co_member_proposal_state=ProposalState.editable_states()):
 
-    return auth
+                return yes
+
+            # Look for reviews for which a representative of the institution
+            # is the reviewer and allow access to review coordinators.
+            group_members = _get_group_membership(
+                auth_cache, db, session['person']['id'])
+
+            queue_ids = set((
+                x.queue_id
+                for x in group_members.values_by_group_type(
+                    GroupType.review_coord_groups())))
+
+            if queue_ids:
+                if db.search_reviewer(
+                        institution_id=institution.id, queue_id=queue_ids,
+                        proposal_state=ProposalState.review_states()):
+                    return yes
+
+    return view_only
 
 
 def for_private_moc(db, facility_id, auth_cache=None):

@@ -206,6 +206,7 @@ class WebAppAuthTestCase(WebAppTestCase):
             role_class, proposal_a1, person_a1re, role_class.EXTERNAL)
 
         person_a1reu = self.db.add_person('Person A 1 REU', user_id=None)
+        self.db.update_person(person_a1reu, institution_id=institution_3)
         reviewer_a1reu = self.db.add_reviewer(
             role_class, proposal_a1, person_a1reu, role_class.EXTERNAL)
 
@@ -391,8 +392,14 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (11, person_a2e,   False, institution_3, auth.view_only),
                 (12, person_b1e,   False, institution_3, auth.yes),
                 (13, person_b2e,   False, institution_3, auth.yes),
+                # Review coordinators: no special access when not in review
+                # state.
+                (14, person_a_rc,  False, institution_1, auth.view_only),
+                (15, person_a_rc,  False, institution_2, auth.view_only),
+                (16, person_a_rc,  False, institution_3, auth.view_only),
+                (17, person_b_rc,  False, institution_3, auth.view_only),
                 ]:
-            self._test_auth_institution(*test_case)
+            self._test_auth_institution(auth_cache, *test_case)
 
         self._set_state(all_proposals, ProposalState.REVIEW)
 
@@ -400,8 +407,13 @@ class WebAppAuthTestCase(WebAppTestCase):
                 # Proposal editor co-member has no special access when
                 # proposal not editable.
                 (91, person_b1e,   False, institution_3, auth.view_only),
+                # Review coordinators: has special access when in review state.
+                (92, person_a_rc,  False, institution_1, auth.view_only),
+                (93, person_a_rc,  False, institution_2, auth.view_only),
+                (94, person_a_rc,  False, institution_3, auth.yes),
+                (95, person_b_rc,  False, institution_3, auth.view_only),
                 ]:
-            self._test_auth_institution(*test_case)
+            self._test_auth_institution(auth_cache, *test_case)
 
         # Test authorization for private MOCs.
         for test_case in [
@@ -600,12 +612,14 @@ class WebAppAuthTestCase(WebAppTestCase):
                                 auth_cache=auth_cache),
                 expect, 'auth person case {}'.format(case_number))
 
-    def _test_auth_institution(self, case_number, person_id, is_admin,
+    def _test_auth_institution(self, auth_cache,
+                               case_number, person_id, is_admin,
                                institution_id, expect):
         institution = self.db.get_institution(institution_id)
         with self._as_person(person_id, is_admin):
             self.assertEqual(
-                auth.for_institution(self.db, institution),
+                auth.for_institution(self.db, institution,
+                                     auth_cache=auth_cache),
                 expect, 'auth institution case {}'.format(case_number))
 
     def _test_auth_private_moc(self, auth_cache,
