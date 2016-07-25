@@ -122,7 +122,9 @@ def for_person(db, person, auth_cache=None):
                 GroupType.review_coord_groups())))
 
         if queue_ids:
-            if db.search_reviewer(person_id=person.id, queue_id=queue_ids):
+            if db.search_reviewer(
+                    person_id=person.id, queue_id=queue_ids,
+                    proposal_state=ProposalState.review_states()):
                 return yes
 
         return auth

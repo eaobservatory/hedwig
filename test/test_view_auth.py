@@ -279,6 +279,8 @@ class WebAppAuthTestCase(WebAppTestCase):
         reviewer_a2x1 = self.db.add_reviewer(
             role_class, proposal_a2, person_a2x1, role_class.CTTEE_SECONDARY)
 
+        all_proposals = [proposal_a1, proposal_a2, proposal_b1, proposal_b2]
+
         # Create auth cache dictionary.  The database should not be updated
         # in ways which would affect the information which the auth module
         # might memoize beyond this point.
@@ -340,11 +342,12 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (24, person_a1e,   False, person_a1re,  auth.no),
                 (25, person_admin, False, person_a1re,  auth.no),
                 (26, person_admin, True,  person_a1re,  auth.yes),
-                # Unregistered reviewer: editable by review coordinators.
-                (27, person_a_rc,  False, person_a1reu, auth.yes),
+                # Unregistered reviewer: not editable by review coordinators
+                # until proposal in review state.
+                (27, person_a_rc,  False, person_a1reu, auth.no),
                 (28, person_b_rc,  False, person_a1reu, auth.no),
                 (29, person_a_rc,  False, person_b1reu, auth.no),
-                (30, person_b_rc,  False, person_b1reu, auth.yes),
+                (30, person_b_rc,  False, person_b1reu, auth.no),
                 # Reviewers: no special access to proposal members / reviewers.
                 (31, person_a1re,  False, person_a1reu, auth.no),
                 (32, person_a1re,  False, person_a1e,   auth.no),
@@ -353,13 +356,21 @@ class WebAppAuthTestCase(WebAppTestCase):
                 ]:
             self._test_auth_person(auth_cache, *test_case)
 
-        self.db.update_proposal(proposal_a2, state=ProposalState.REVIEW)
+        self._set_state(all_proposals, ProposalState.REVIEW)
+
         for test_case in [
                 # Unregistered co-member: no special access when not editable.
                 (91, person_a2m,   False, person_a2u,   auth.no),
                 (92, person_a2e,   False, person_a2u,   auth.no),
+                # Unregistered reviewer: editable by review coordinators.
+                (93, person_a_rc,  False, person_a1reu, auth.yes),
+                (94, person_b_rc,  False, person_a1reu, auth.no),
+                (95, person_a_rc,  False, person_b1reu, auth.no),
+                (96, person_b_rc,  False, person_b1reu, auth.yes),
                 ]:
             self._test_auth_person(auth_cache, *test_case)
+
+        self._set_state(all_proposals, ProposalState.PREPARATION)
 
         # Test authorization for institution profiles.
         for test_case in [
@@ -383,7 +394,8 @@ class WebAppAuthTestCase(WebAppTestCase):
                 ]:
             self._test_auth_institution(*test_case)
 
-        self.db.update_proposal(proposal_b1, state=ProposalState.REVIEW)
+        self._set_state(all_proposals, ProposalState.REVIEW)
+
         for test_case in [
                 # Proposal editor co-member has no special access when
                 # proposal not editable.
@@ -755,3 +767,11 @@ class WebAppAuthTestCase(WebAppTestCase):
             yield
 
             session.clear()
+
+    def _set_state(self, proposal_ids, state):
+        """
+        Set the state of multiple proposals.
+        """
+
+        for proposal_id in proposal_ids:
+            self.db.update_proposal(proposal_id, state=state)
