@@ -25,6 +25,7 @@ from hedwig.error import UserError
 from hedwig.type.simple import DateAndTime
 from hedwig.web.util import format_datetime, parse_datetime
 
+
 class WebUtilTestCase(TestCase):
     def test_format_datetime(self):
         dt = datetime(2016, 4, 1, 15, 0, 0)
