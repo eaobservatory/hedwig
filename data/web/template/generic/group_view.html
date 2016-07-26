@@ -42,7 +42,13 @@
                     <span class="label">unregistered</span>
                 {% endif %}
             </td>
-            <td>{{ render_member_institution(member) }}</td>
+            <td>
+                {% if member.institution_id is none %}
+                    &nbsp;
+                {% else %}
+                    {{ render_member_institution(member) }}
+                {% endif %}
+            </td>
             <td>
                 {% if not member.person_registered %}
                     <a href="{{ url_for('.group_member_reinvite', queue_id=queue.id, group_type=group_type, member_id=member.id) }}">Re-send invitation</a>
