@@ -385,8 +385,9 @@ class JCMT(Generic):
 
         return options
 
-    def _view_proposal_feedback_extra(self, db, proposal):
-        ctx = super(JCMT, self)._view_proposal_feedback_extra(db, proposal)
+    def _view_proposal_feedback_extra(self, db, proposal, can):
+        ctx = super(JCMT, self)._view_proposal_feedback_extra(
+            db, proposal, can)
 
         if proposal.state == ProposalState.ACCEPTED:
             allocations = db.search_jcmt_allocation(
@@ -428,10 +429,9 @@ class JCMT(Generic):
 
         return messages
 
-    def _get_proposal_tabulation(self, db, call, can, auth_cache,
-                                 with_extra=False):
+    def _get_proposal_tabulation(self, db, call, can, with_extra=False):
         tabulation = super(JCMT, self)._get_proposal_tabulation(
-            db, call, can, auth_cache, with_extra)
+            db, call, can, with_extra)
 
         exempt = JCMTRequestTotal(total=0.0, weather=defaultdict(float),
                                   instrument=defaultdict(float),
@@ -864,7 +864,7 @@ class JCMT(Generic):
         }
 
     @with_call_review(permission=PermissionType.EDIT)
-    def view_review_call_available(self, db, call, can, auth_cache, form):
+    def view_review_call_available(self, db, call, can, form):
         message = None
 
         weathers = JCMTWeather.get_available()

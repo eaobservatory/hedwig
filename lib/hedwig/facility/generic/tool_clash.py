@@ -87,7 +87,7 @@ class ClashTool(BaseTargetTool):
                 {}),
         ]
 
-    def _view_any_mode(self, db, target_objects, args, form):
+    def _view_any_mode(self, db, target_objects, args, form, auth_cache):
         """
         Prepare clash tool template context for all tool modes.
 
@@ -98,7 +98,7 @@ class ClashTool(BaseTargetTool):
         clashes = None
         non_clashes = None
 
-        public = self._determine_public_constraint(db)
+        public = self._determine_public_constraint(db, auth_cache=auth_cache)
         moc_ready = self._check_mocs_exist_and_ready(db, public)
 
         if target_objects is not None:

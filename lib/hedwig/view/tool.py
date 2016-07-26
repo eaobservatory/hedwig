@@ -147,7 +147,7 @@ class BaseTargetTool(object):
 
         return self._view_any_mode(
             db, (None if target_object is None else [target_object]),
-            args, form)
+            args, form, None)
 
     def view_upload(self, db, args, form, file_):
         """
@@ -210,7 +210,7 @@ class BaseTargetTool(object):
         :return: template context dictionary
         """
 
-        return self._view_any_mode(db, target_objects, args, form)
+        return self._view_any_mode(db, target_objects, args, form, None)
 
     @with_proposal(permission=PermissionType.VIEW, indirect_facility=True)
     def view_proposal(self, db, proposal, can, args):
@@ -248,11 +248,12 @@ class BaseTargetTool(object):
             'proposal_code': self.facility.make_proposal_code(db, proposal),
         }
 
-        ctx.update(self._view_proposal(db, proposal, target_objects, args))
+        ctx.update(self._view_proposal(
+            db, proposal, target_objects, args, can.cache))
 
         return ctx
 
-    def _view_proposal(self, db, proposal, target_objects, args):
+    def _view_proposal(self, db, proposal, target_objects, args, auth_cache):
         """
         Prepare extra template context for target tool in "proposal" mode.
 
@@ -263,9 +264,9 @@ class BaseTargetTool(object):
         :return: template context dictionary
         """
 
-        return self._view_any_mode(db, target_objects, args, None)
+        return self._view_any_mode(db, target_objects, args, None, auth_cache)
 
-    def _view_any_mode(self, db, target_objects, args, form):
+    def _view_any_mode(self, db, target_objects, args, form, auth_cache):
         """
         Prepare extra template context for target tool in any mode.
 

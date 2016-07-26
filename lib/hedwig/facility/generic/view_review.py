@@ -57,7 +57,7 @@ ProposalWithReviewerPersons = namedtuple(
 
 class GenericReview(object):
     @with_call_review(permission=PermissionType.VIEW)
-    def view_review_call(self, db, call, can, auth_cache):
+    def view_review_call(self, db, call, can):
         role_class = self.get_reviewer_roles()
 
         proposals = []
@@ -72,7 +72,7 @@ class GenericReview(object):
 
             review_can = auth.for_review(
                 role_class, db, reviewer=None, proposal=proposal,
-                auth_cache=auth_cache)
+                auth_cache=can.cache)
 
             proposals.append(ProposalWithReviewers(
                 *proposal._replace(member=member_pi),
@@ -92,22 +92,22 @@ class GenericReview(object):
         }
 
     @with_call_review(permission=PermissionType.VIEW)
-    def view_review_call_tabulation(self, db, call, can, auth_cache):
+    def view_review_call_tabulation(self, db, call, can):
         ctx = {
             'title': 'Proposal Tabulation: {} {}'.format(call.semester_name,
                                                          call.queue_name),
             'call': call,
         }
 
-        ctx.update(self._get_proposal_tabulation(db, call, can, auth_cache))
+        ctx.update(self._get_proposal_tabulation(db, call, can))
 
         return ctx
 
     @with_call_review(permission=PermissionType.VIEW)
-    def view_review_call_tabulation_download(self, db, call, can, auth_cache,
+    def view_review_call_tabulation_download(self, db, call, can,
                                              with_cois=True):
         tabulation = self._get_proposal_tabulation(
-            db, call, can, auth_cache, with_extra=True)
+            db, call, can, with_extra=True)
 
         writer = CSVWriter()
 
@@ -133,8 +133,7 @@ class GenericReview(object):
                 re.sub('[^-_a-z0-9]', '_', call.semester_name.lower()),
                 re.sub('[^-_a-z0-9]', '_', call.queue_name.lower())))
 
-    def _get_proposal_tabulation(self, db, call, can, auth_cache,
-                                 with_extra=False):
+    def _get_proposal_tabulation(self, db, call, can, with_extra=False):
         """Prepare information for the detailed tabulation of proposals.
 
         This is used to prepare the information both for the online
@@ -162,7 +161,7 @@ class GenericReview(object):
 
             can_view_review = auth.for_review(
                 role_class, db, reviewer=None, proposal=proposal,
-                auth_cache=auth_cache).view
+                auth_cache=can.cache).view
 
             n_other = 0
             for member in proposal.members.values():
@@ -192,7 +191,7 @@ class GenericReview(object):
                 for reviewer_id, reviewer in proposal.reviewers.items():
                     reviewer_can = auth.for_review(
                         role_class, db, reviewer=reviewer, proposal=proposal,
-                        auth_cache=auth_cache)
+                        auth_cache=can.cache)
 
                     if not reviewer_can.view_rating:
                         reviewer = reviewer._replace(
@@ -273,7 +272,7 @@ class GenericReview(object):
             )
 
     @with_call_review(permission=PermissionType.EDIT)
-    def view_review_affiliation_weight(self, db, call, can, auth_cache, form):
+    def view_review_affiliation_weight(self, db, call, can, form):
         message = None
 
         affiliations = db.search_affiliation(
@@ -309,11 +308,11 @@ class GenericReview(object):
         }
 
     @with_call_review(permission=PermissionType.EDIT)
-    def view_review_call_available(self, db, call, can, auth_cache, form):
+    def view_review_call_available(self, db, call, can, form):
         raise ErrorPage('Time available not implemented for this facility.')
 
     @with_call_review(permission=PermissionType.EDIT)
-    def view_review_call_reviewers(self, db, call, can, auth_cache, args):
+    def view_review_call_reviewers(self, db, call, can, args):
         role_class = self.get_reviewer_roles()
 
         role = args.get('role', None)
@@ -366,7 +365,7 @@ class GenericReview(object):
         }
 
     @with_call_review(permission=PermissionType.EDIT)
-    def view_reviewer_grid(self, db, call, can, auth_cache,
+    def view_reviewer_grid(self, db, call, can,
                            primary_role, form):
         role_class = self.get_reviewer_roles()
 
@@ -1332,7 +1331,7 @@ class GenericReview(object):
         return {}
 
     @with_call_review(permission=PermissionType.EDIT)
-    def view_review_advance_final(self, db, call, can, auth_cache, form):
+    def view_review_advance_final(self, db, call, can, form):
         if form is not None:
             if 'submit_confirm' in form:
                 (n_update, n_error) = finalize_call_review(db, call_id=call.id)
@@ -1361,7 +1360,7 @@ class GenericReview(object):
         }
 
     @with_call_review(permission=PermissionType.EDIT)
-    def view_review_confirm_feedback(self, db, call, can, auth_cache, form):
+    def view_review_confirm_feedback(self, db, call, can, form):
         role_class = self.get_reviewer_roles()
 
         # Get proposals for this call, including their feedback review

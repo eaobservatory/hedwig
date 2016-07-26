@@ -37,3 +37,12 @@ def with_can_edit(obj, can_edit):
 
     return namedtuple(type(obj).__name__ + 'WithCE',
                       obj._fields + ('can_edit',))(*obj, can_edit=can_edit)
+
+
+def with_cache(obj, cache):
+    """
+    Add a `cache` field to a tuple and set it to the given value.
+    """
+
+    return namedtuple(type(obj).__name__ + 'WithCache',
+                      obj._fields + ('cache',))(*obj, cache=cache)

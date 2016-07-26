@@ -24,6 +24,7 @@ import re
 from ..error import NoSuchRecord
 from ..type.enum import PermissionType
 from ..web.util import HTTPError, HTTPForbidden, HTTPNotFound
+from ..type.util import with_cache
 from . import auth
 
 
@@ -72,9 +73,8 @@ def with_call_review(permission):
     for a given call.
 
     Assumes that the first arguents are a database object and call ID.
-    The wrapped method is called with the database, call record,
-    authorization object and authorization cache followed by any remaining
-    arguments.
+    The wrapped method is called with the database, call record and
+    authorization object followed by any remaining arguments.
 
     Note: this currently can only be used to decorate methods of
     facility classes because it uses `self.id_` for the facility ID.
@@ -105,7 +105,8 @@ def with_call_review(permission):
             else:
                 raise HTTPError('Unknown permission type.')
 
-            return f(self, db, call, can, auth_cache, *args, **kwargs)
+            return f(self, db, call, with_cache(can, auth_cache),
+                     *args, **kwargs)
 
         return decorated_method
 
@@ -132,7 +133,8 @@ def with_institution(permission):
 
             assert institution.id == institution_id
 
-            can = auth.for_institution(db, institution)
+            auth_cache = {}
+            can = auth.for_institution(db, institution, auth_cache=auth_cache)
 
             if permission == PermissionType.VIEW:
                 if not can.view:
@@ -147,7 +149,8 @@ def with_institution(permission):
             else:
                 raise HTTPError('Unknown permission type.')
 
-            return f(self, db, institution, can, *args, **kwargs)
+            return f(self, db, institution, with_cache(can, auth_cache),
+                     *args, **kwargs)
 
         return decorated_method
 
@@ -179,7 +182,8 @@ def with_person(permission):
                 return f(self, db, person, *args, **kwargs)
 
             else:
-                can = auth.for_person(db, person)
+                auth_cache = {}
+                can = auth.for_person(db, person, auth_cache=auth_cache)
 
                 if permission == PermissionType.VIEW:
                     if not can.view:
@@ -194,7 +198,8 @@ def with_person(permission):
                 else:
                     raise HTTPError('Unknown permission type.')
 
-            return f(self, db, person, can, *args, **kwargs)
+                return f(self, db, person, with_cache(can, auth_cache),
+                         *args, **kwargs)
 
         return decorated_method
 
@@ -207,15 +212,13 @@ def with_proposal(permission, indirect_facility=False, **get_proposal_kwargs):
 
     Assumes that the first arguments are a database object and proposal ID.
     Then checks that the current user has the requested permission.
-    The wrapped method is then called with the database,  proposal and
-    authorization objects as the first two arguments.
+    The wrapped method is then called with the database, proposal and
+    authorization objects as the first three arguments.
 
     "permission" should be one of: "VIEW", "EDIT", "FEEDBACK" or "NONE".
 
     * When "FEEDBACK" is selected, view authorization to the proposal
-      feedback is required.  No authorization object is passed to the
-      decorated method, since there is currently no concept of
-      editable feedback.
+      feedback is required.
 
     * When "NONE" is selected, no authorization object is passed on.
 
@@ -231,6 +234,7 @@ def with_proposal(permission, indirect_facility=False, **get_proposal_kwargs):
         def decorated_method(self, db, proposal_id, *args, **kwargs):
             facility = (self.facility if indirect_facility else self)
             role_class = facility.get_reviewer_roles()
+            auth_cache = {}
 
             try:
                 proposal = db.get_proposal(facility.id_, proposal_id,
@@ -246,16 +250,19 @@ def with_proposal(permission, indirect_facility=False, **get_proposal_kwargs):
                 return f(self, db, proposal, *args, **kwargs)
 
             elif permission == PermissionType.FEEDBACK:
-                can = auth.for_proposal_feedback(role_class, db, proposal)
+                can = auth.for_proposal_feedback(role_class, db, proposal,
+                                                 auth_cache=auth_cache)
 
                 if not can.view:
                     raise HTTPForbidden(
                         'Permission denied for this proposal feedback.')
 
-                return f(self, db, proposal, *args, **kwargs)
+                return f(self, db, proposal, with_cache(can, auth_cache),
+                         *args, **kwargs)
 
             else:
-                can = auth.for_proposal(role_class, db, proposal)
+                can = auth.for_proposal(role_class, db, proposal,
+                                        auth_cache=auth_cache)
 
                 if permission == PermissionType.VIEW:
                     if not can.view:
@@ -272,7 +279,8 @@ def with_proposal(permission, indirect_facility=False, **get_proposal_kwargs):
                 else:
                     raise HTTPError('Unknown permission type.')
 
-                return f(self, db, proposal, can, *args, **kwargs)
+                return f(self, db, proposal, with_cache(can, auth_cache),
+                         *args, **kwargs)
 
         return decorated_method
 
@@ -320,7 +328,9 @@ def with_review(permission):
                 return f(self, db, reviewer, proposal, *args, **kwargs)
 
             else:
-                can = auth.for_review(role_class, db, reviewer, proposal)
+                auth_cache = {}
+                can = auth.for_review(role_class, db, reviewer, proposal,
+                                      auth_cache=auth_cache)
 
                 if permission == PermissionType.VIEW:
                     if not can.view:
@@ -335,7 +345,8 @@ def with_review(permission):
                 else:
                     raise HTTPError('Unknown permission type.')
 
-                return f(self, db, reviewer, proposal, can, *args, **kwargs)
+                return f(self, db, reviewer, proposal,
+                         with_cache(can, auth_cache), *args, **kwargs)
 
         return decorated_method
 

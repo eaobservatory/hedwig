@@ -111,8 +111,12 @@ class GenericProposal(object):
 
     @with_proposal(permission=PermissionType.VIEW)
     def view_proposal_view(self, db, proposal, can, args):
-        review_can = auth.for_review(self.get_reviewer_roles(),
-                                     db, reviewer=None, proposal=proposal)
+        role_class = self.get_reviewer_roles()
+        review_can = auth.for_review(
+            role_class, db, reviewer=None, proposal=proposal,
+            auth_cache=can.cache)
+        feedback_can = auth.for_proposal_feedback(
+            role_class, db, proposal=proposal, auth_cache=can.cache)
 
         ctx = {
             'title': proposal.title,
@@ -122,9 +126,7 @@ class GenericProposal(object):
                                     for x in proposal.members.values())),
             'can_view_review': review_can.view,
             'can_edit_review': review_can.edit,
-            'can_view_feedback': auth.for_proposal_feedback(
-                self.get_reviewer_roles(),
-                db, proposal=proposal).view,
+            'can_view_feedback': feedback_can.view,
             'is_submitted': ProposalState.is_submitted(proposal.state),
             'proposal': proposal,
             'students': proposal.members.get_students(),
@@ -1520,7 +1522,7 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.FEEDBACK, with_decision_note=True)
-    def view_proposal_feedback(self, db, proposal):
+    def view_proposal_feedback(self, db, proposal, can):
         proposal_code = self.make_proposal_code(db, proposal)
 
         ctx = {
@@ -1529,11 +1531,11 @@ class GenericProposal(object):
             'proposal_code': proposal_code,
         }
 
-        ctx.update(self._view_proposal_feedback_extra(db, proposal))
+        ctx.update(self._view_proposal_feedback_extra(db, proposal, can))
 
         return ctx
 
-    def _view_proposal_feedback_extra(self, db, proposal):
+    def _view_proposal_feedback_extra(self, db, proposal, can):
         """
         Method to gather additional information for the proposal feedback page.
         """
@@ -1545,8 +1547,9 @@ class GenericProposal(object):
             with_review=True, with_review_text=True)
 
         # Show the decision note if viewing as an administrator.
-        if (session.get('is_admin', False) and auth.can_be_admin(db) and
-                proposal.decision_note):
+        if (session.get('is_admin', False)
+                and auth.can_be_admin(db, auth_cache=can.cache)
+                and proposal.decision_note):
             decision_note = ProposalText(
                 text=proposal.decision_note,
                 format=proposal.decision_note_format)
