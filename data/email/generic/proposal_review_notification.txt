@@ -2,7 +2,7 @@
 
 {% block content %}
 This is to inform you that a proposal to use {{ facility_definite_name }}
-has been submitted for immediate review.
+has been submitted{% if immediate_review %} for immediate review{% endif %}.
 Proposal {{ proposal_code }}, entitled "{{ proposal.title}}",
 has been submitted to the {{ proposal.queue_name }} Queue
 for Semester {{ proposal.semester_name }} ({{ call_type }} Call).

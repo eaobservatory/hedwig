@@ -49,29 +49,6 @@ class AffiliationType(EnumBasic):
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
 
-class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
-    """
-    Class representing types of calls for proposals.
-    """
-
-    STANDARD = 1
-    IMMEDIATE = 2
-
-    TypeInfo = namedtuple(
-        'TypeInfo',
-        ('code', 'name', 'available', 'url_path', 'immediate_review'))
-
-    #                        Code  Name         Avail.  URL         Im. Rv.
-    _info = OrderedDict((
-        (STANDARD,  TypeInfo(None, 'Standard',  True,  'standard',  False)),
-        (IMMEDIATE, TypeInfo('I',  'Immediate', True,  'immediate', True)),
-    ))
-
-    @classmethod
-    def has_immediate_review(cls, value):
-        return cls._info[value].immediate_review
-
-
 class CallState(EnumBasic):
     """
     Class representing states of a call for proposals.
@@ -381,6 +358,44 @@ class GroupType(EnumBasic, EnumURLPath):
         """Get a list of groups with the `review_view` privilege."""
 
         return [k for (k, v) in cls._info.items() if v.review_view]
+
+
+# NOTE: this is defined after GroupType since it refers to values from that
+# class.
+class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
+    """
+    Class representing types of calls for proposals.
+    """
+
+    STANDARD = 1
+    IMMEDIATE = 2
+
+    TypeInfo = namedtuple(
+        'TypeInfo',
+        ('code', 'name', 'available', 'url_path', 'immediate_review',
+         'notify_group'))
+
+    #                        Code  Name         Avail.  URL         Im. Rv.
+    #                        (Notify groups)
+    _info = OrderedDict((
+        (STANDARD,  TypeInfo(None, 'Standard',  True,  'standard',  False,
+                             ())),
+        (IMMEDIATE, TypeInfo('I',  'Immediate', True,  'immediate', True,
+                             (GroupType.CTTEE,))),
+    ))
+
+    @classmethod
+    def has_immediate_review(cls, value):
+        return cls._info[value].immediate_review
+
+    @classmethod
+    def get_notify_group(cls, value):
+        """
+        Get tuple of groups which should be notified about submissions
+        to calls of this type.
+        """
+
+        return cls._info[value].notify_group
 
 
 class MessageState(EnumBasic):

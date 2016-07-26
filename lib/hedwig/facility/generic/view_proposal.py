@@ -361,16 +361,9 @@ class GenericProposal(object):
                     ProposalState.REVIEW if immediate_review else
                     ProposalState.SUBMITTED))
 
-                self._message_proposal_submit(
-                    db, proposal, immediate_review=immediate_review)
+                self._message_proposal_submit(db, proposal)
 
-                if immediate_review:
-                    recipients = set((
-                        x.person_id for x in db.search_group_member(
-                            queue_id=proposal.queue_id,
-                            group_type=GroupType.CTTEE).values()))
-                    self._message_proposal_review_notification(
-                        db, proposal, recipients)
+                self._message_proposal_review_notification(db, proposal)
 
                 flash('The proposal has been submitted.')
 
@@ -391,8 +384,10 @@ class GenericProposal(object):
             'immediate_review': immediate_review,
         }
 
-    def _message_proposal_submit(self, db, proposal, immediate_review):
+    def _message_proposal_submit(self, db, proposal):
+        type_class = self.get_call_types()
         proposal_code = self.make_proposal_code(db, proposal)
+        immediate_review = type_class.has_immediate_review(proposal.call_type)
 
         db.add_message(
             'Proposal {} submitted'.format(proposal_code),
@@ -411,27 +406,40 @@ class GenericProposal(object):
             thread_type=MessageThreadType.PROPOSAL_STATUS,
             thread_id=proposal.id)
 
-    def _message_proposal_review_notification(self, db, proposal, recipients):
+    def _message_proposal_review_notification(self, db, proposal):
         """
         Send message to notify committee members about a proposal
-        having been submitted for immediate review.
+        having been submitted, perhaps for immediate review.
 
         :param db: database control object.
         :param proposal: the Proposal object.
-        :param recipients: list of person identifiers to send the message to.
         """
 
         type_class = self.get_call_types()
         proposal_code = self.make_proposal_code(db, proposal)
+        immediate_review = type_class.has_immediate_review(proposal.call_type)
+
+        notify_group = type_class.get_notify_group(proposal.call_type)
+
+        if not notify_group:
+            return
+
+        recipients = db.search_group_member(queue_id=proposal.queue_id,
+                                            group_type=notify_group)
+
+        if not recipients:
+            return
 
         db.add_message(
-            'Proposal {} submitted for immediate review'.format(
-                proposal_code),
+            'Proposal {} received{}'.format(
+                proposal_code,
+                (' for immediate review' if immediate_review else '')),
             render_email_template(
                 'proposal_review_notification.txt', {
                     'proposal': proposal,
                     'proposal_code': proposal_code,
                     'call_type': type_class.get_name(proposal.call_type),
+                    'immediate_review': immediate_review,
                     'target_view': url_for(
                         '.proposal_view',
                         proposal_id=proposal.id, _external=True),
@@ -440,7 +448,7 @@ class GenericProposal(object):
                         proposal_id=proposal.id, _external=True),
                 },
                 facility=self),
-            recipients,
+            set((x.person_id for x in recipients.values())),
             thread_type=MessageThreadType.PROPOSAL_REVIEW,
             thread_id=proposal.id)
 

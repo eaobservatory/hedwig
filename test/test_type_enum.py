@@ -109,6 +109,19 @@ class EnumTypeTestCase(TestCase):
         with self.assertRaisesRegexp(NoSuchValue, 'Null code not recognised'):
             NoNullCallType.by_code(None)
 
+        self.assertFalse(
+            BaseCallType.has_immediate_review(BaseCallType.STANDARD))
+        self.assertTrue(
+            BaseCallType.has_immediate_review(BaseCallType.IMMEDIATE))
+
+        g = BaseCallType.get_notify_group(BaseCallType.STANDARD)
+        self.assertIsInstance(g, tuple)
+        self.assertEqual(g, ())
+
+        g = BaseCallType.get_notify_group(BaseCallType.IMMEDIATE)
+        self.assertIsInstance(g, tuple)
+        self.assertEqual(g, (GroupType.CTTEE,))
+
     def test_message_state(self):
         # Test "get_name" method.
         self.assertEqual(MessageState.get_name(MessageState.UNSENT), 'Unsent')
