@@ -38,8 +38,13 @@ class WebAppTestCase(DummyConfigTestCase):
         auth._rounds = 10
         auth.password_hash_delay = 0
 
-        self.app = create_web_app(db=self.db)
+        app_info = create_web_app(db=self.db, facility_spec=self.facility_spec,
+                                  _test_return_extra=True)
+
+        self.app = app_info['app']
         self.app.config['TESTING'] = True
+
+        self.facilities = app_info['facilities']
 
         self.client = self.app.test_client()
 
@@ -56,3 +61,10 @@ class WebAppTestCase(DummyConfigTestCase):
 
     def log_out(self):
         return self.client.get('/user/log_out', follow_redirects=True)
+
+    def _get_facility_view(self, code):
+        for facility in self.facilities.values():
+            if facility.code == code:
+                return facility.view
+
+        raise Exception('facility {} not found'.format(code))

@@ -37,21 +37,30 @@ from .blueprint.people import create_people_blueprint
 from .blueprint.query import create_query_blueprint
 
 
-def create_web_app(db=None):
+def create_web_app(db=None, facility_spec=None, _test_return_extra=False):
     """
     Function to prepare the Flask web application.
+
+    :param db: database access object to use.  If `None` then one will be
+        constructed based on the configuration (and `facility_spec`).
+    :param facility_spec: facility specification used to construct the
+        facility list (via :func:`hedwig.config.get_config`) and database
+        object (if not given, via :func:`hedwig.config.get_database`).
+    :param _test_return_extra: if true, instead of just returning the
+        application object, return a dictionary of values useful for
+        debugging.  (Currently just returns the output of `locals()`.)
     """
 
     home = get_home()
     config = get_config()
 
     if db is None:
-        db = get_database()
+        db = get_database(facility_spec=facility_spec)
 
     # Load facilities as specified in the configuration.
     facilities = OrderedDict()
 
-    for facility_class in get_facilities():
+    for facility_class in get_facilities(facility_spec=facility_spec):
         # Create facility object.
         facility_code = facility_class.get_code()
         facility_id = db.ensure_facility(facility_code)
@@ -133,5 +142,8 @@ def create_web_app(db=None):
 
     register_error_handlers(app)
     register_template_utils(app)
+
+    if _test_return_extra:
+        return locals()
 
     return app
