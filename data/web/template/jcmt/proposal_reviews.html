@@ -66,7 +66,7 @@
         {% endif %}
 
         {% if review.review_extra.review_telescope is not none %}
-            <p><i>Is the telescope requested the correct one?</i></p>
+            <p><i>Does the selected telescope / wavelength / instrument best address the science goals of the proposal?</i></p>
 
             {{ review.review_extra.review_telescope | format_text(review.review_extra.review_format) }}
         {% endif %}

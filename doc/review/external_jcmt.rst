@@ -43,7 +43,8 @@ The plan for observing and data reduction
 
 * Are the details of the program dealt with / understood?
 * Are the target objects, coordinates and instrumentation correct?
-* Is the telescope requested the correct one?
+* Does the selected telescope / wavelength / instrument best address
+  the science goals of the proposal?
 
 Where would you place this proposal within the following scale?
 
