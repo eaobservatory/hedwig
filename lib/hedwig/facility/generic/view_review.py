@@ -909,7 +909,7 @@ class GenericReview(object):
         }
 
     @with_proposal(permission=PermissionType.NONE)
-    def view_review_new(self, db, proposal, reviewer_role, form):
+    def view_review_new(self, db, proposal, reviewer_role, args, form):
         role_class = self.get_reviewer_roles()
 
         try:
@@ -931,7 +931,7 @@ class GenericReview(object):
                     role_info.name))
 
         return self._view_review_new_or_edit(
-            db, None, proposal, None, form, reviewer_role=reviewer_role)
+            db, None, proposal, args, form, reviewer_role=reviewer_role)
 
     @with_review(permission=PermissionType.EDIT)
     def view_review_info(self, db, reviewer, proposal, can):
@@ -957,13 +957,13 @@ class GenericReview(object):
             is_own_review = True
             target = url_for('.proposal_review_new', proposal_id=proposal.id,
                              reviewer_role=reviewer_role)
-            referrer = 'pr'
             reviewer = null_tuple(Reviewer)._replace(role=reviewer_role)
         else:
             is_new_reviewer = False
             is_own_review = (reviewer.person_id == session['person']['id'])
             target = url_for('.review_edit', reviewer_id=reviewer.id)
-            referrer = args.get('referrer')
+
+        referrer = args.get('referrer')
 
         try:
             role_info = role_class.get_info(reviewer.role)

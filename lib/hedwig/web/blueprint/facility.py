@@ -441,7 +441,7 @@ def create_facility_blueprint(db, facility):
     @facility_template('review_edit.html')
     def proposal_review_new(proposal_id, reviewer_role):
         return facility.view_review_new(
-            db, proposal_id, reviewer_role,
+            db, proposal_id, reviewer_role, request.args,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/proposal/<int:proposal_id>/review/'
