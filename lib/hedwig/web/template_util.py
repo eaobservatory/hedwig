@@ -278,6 +278,10 @@ def register_template_utils(app):
         return AttachmentState.is_error(value)
 
     @app.template_test()
+    def call_type_standard(value, type_class):
+        return (value == type_class.STANDARD)
+
+    @app.template_test()
     def message_state_active(value):
         return MessageState.get_info(value).active
 

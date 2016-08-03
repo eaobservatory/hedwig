@@ -221,6 +221,12 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertTrue(t(AttachmentState.ERROR))
         self.assertFalse(t(AttachmentState.READY))
 
+    def test_test_call(self):
+        t = self.app.jinja_env.tests['call_type_standard']
+
+        self.assertTrue(t(BaseCallType.STANDARD, BaseCallType))
+        self.assertFalse(t(BaseCallType.IMMEDIATE, BaseCallType))
+
     def test_test_message_state(self):
         t = self.app.jinja_env.tests['message_state_active']
 

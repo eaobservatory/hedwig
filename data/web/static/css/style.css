@@ -153,7 +153,7 @@ p.warning {
     border-radius: 1ex;
 }
 
-p.missing {
+p.missing, p.minor_warning {
     font-style: italic;
     background: #FFA;
     color: black;

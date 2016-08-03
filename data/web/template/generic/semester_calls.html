@@ -4,6 +4,16 @@
 
 {% block content %}
 
+{% if call_type is not call_type_standard(facility_call_type_class) %}
+    <p class="minor_warning">
+        This is a {{ call_type | call_type_name(facility_call_type_class) | lower }}
+        call for proposals.
+        For {{ facility_call_type_class.STANDARD | call_type_name(facility_call_type_class) | lower }}
+        calls, please see the
+        <a href="{{ url_for('.facility_home') }}">facility home page</a>.
+    </p>
+{% endif %}
+
 <h2>Semester Information</h2>
 
 <table>
@@ -60,7 +70,7 @@
 
         <p>
             <a id="call_{{ call.id }}_link" class="create_proposal_link" href="{{ url_for('.proposal_new', call_id=call.id) }}">Create a proposal for the {{ call.queue_name }} Queue
-                {% if call_type != facility_call_type_class.STANDARD %}
+                {% if call_type is not call_type_standard(facility_call_type_class) %}
                     ({{ call_type | call_type_name(facility_call_type_class) }} Call)
                 {% endif %}
             </a>
