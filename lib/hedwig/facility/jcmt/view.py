@@ -448,11 +448,6 @@ class JCMT(Generic):
         total_affiliation = defaultdict(float)
         original_affiliation = defaultdict(float)
 
-        # Process ancillary instruments separately if with_extra is set.
-        ancillary_mode = (JCMTRequestCollection.ANCILLARY_SEPARATE
-                          if with_extra else
-                          JCMTRequestCollection.ANCILLARY_GROUP)
-
         affiliation_ids = [x.id for x in tabulation['affiliations']]
 
         # Make list of proposal_id values and query all JCMT-specific
@@ -467,7 +462,7 @@ class JCMT(Generic):
         # Loop through proposals and attach JCMT-specific information.
         for proposal in tabulation['proposals']:
             request = jcmt_requests.subset_by_proposal(
-                proposal['id']).get_total(ancillary_mode)
+                proposal['id']).get_total()
 
             proposal['jcmt_request'] = request
 
@@ -484,7 +479,7 @@ class JCMT(Generic):
             allocation_records = jcmt_allocations.subset_by_proposal(
                 proposal['id'])
             if allocation_records:
-                allocation = allocation_records.get_total(ancillary_mode)
+                allocation = allocation_records.get_total()
 
             proposal['jcmt_allocation'] = allocation
             proposal['jcmt_allocation_different'] = \
@@ -520,16 +515,12 @@ class JCMT(Generic):
                     total.weather[weather] += time
 
             for (instrument, time) in request.instrument.items():
-                if ancillary_mode == JCMTRequestCollection.ANCILLARY_GROUP:
-                    time = sum(time.values())
                 original.instrument[instrument] += time
                 if allocation is None:
                     total.instrument[instrument] += time
 
             if allocation is not None:
                 for (instrument, time) in allocation.instrument.items():
-                    if ancillary_mode == JCMTRequestCollection.ANCILLARY_GROUP:
-                        time = sum(time.values())
                     if proposal_accepted:
                         if proposal_exempt:
                             exempt.instrument[instrument] += time
@@ -579,10 +570,9 @@ class JCMT(Generic):
 
         tabulation.update({
             'jcmt_weathers': JCMTWeather.get_available(),
-            'jcmt_instruments': (
-                JCMTInstrument.get_options_with_ancillary()
-                if (ancillary_mode == JCMTRequestCollection.ANCILLARY_SEPARATE)
-                else JCMTInstrument.get_options()),
+            'jcmt_instruments': JCMTInstrument.get_options(),
+            'jcmt_instruments_ancillary':
+                JCMTInstrument.get_options_with_ancillary(),
             'jcmt_ancillary_none': JCMTAncillary.NONE,
             'jcmt_ancillaries': JCMTAncillary.get_options(),
             'jcmt_exempt_total': exempt,
@@ -604,18 +594,19 @@ class JCMT(Generic):
             ['Options', 'Request'] +
             [x.name for x in tabulation['jcmt_weathers'].values()] +
             ['Unknown weather'] +
-            [x for x in tabulation['jcmt_instruments'].values()] +
+            [x for x in tabulation['jcmt_instruments_ancillary'].values()] +
             ['Unknown instrument'] +
             ['Allocation'] +
             [x.name for x in tabulation['jcmt_weathers'].values()] +
             ['Unknown weather'] +
-            [x for x in tabulation['jcmt_instruments'].values()] +
+            [x for x in tabulation['jcmt_instruments_ancillary'].values()] +
             ['Unknown instrument']
         )
 
     def _get_proposal_tabulation_rows(self, tabulation):
         weathers = list(tabulation['jcmt_weathers'].keys()) + [0]
-        instruments = list(tabulation['jcmt_instruments'].keys()) + [0]
+        instruments = list(
+            tabulation['jcmt_instruments_ancillary'].keys()) + [0]
 
         for (row, proposal) in izip(
                 super(JCMT, self)._get_proposal_tabulation_rows(tabulation),

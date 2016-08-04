@@ -38,13 +38,55 @@ JCMTRequest = namedtuple(
     'JCMTRequest',
     [x.name for x in jcmt_request.columns])
 
-JCMTRequestTotal = namedtuple(
-    'JCMTRequestTotal',
-    ('total', 'weather', 'instrument', 'total_non_free'))
-
 JCMTReview = namedtuple(
     'JCMTReview',
     [x.name for x in jcmt_review.columns])
+
+
+class JCMTRequestTotal(namedtuple(
+        'JCMTRequestTotal',
+        ('total', 'weather', 'instrument', 'total_non_free'))):
+    @property
+    def instrument_total(self):
+        """
+        Calculate totals by instrument, instead of by (instrument, ancillary)
+        pair.
+        """
+
+        total = {}
+
+        for (instrument, time) in self.instrument.items():
+            if instrument != 0:
+                (instrument, ancillary) = instrument
+            total[instrument] = total.get(instrument, 0.0) + time
+
+        return total
+
+    @property
+    def instrument_grouped(self):
+        """
+        Group instrument values by instrument.  I.e. instead of a dictionary
+        by (instrument, ancillary) returns a dictionary (by instrument)
+        of sub-dictionaries by ancillary.  The sub-dictionary for the unknown
+        instrument (if present) just contains an entry for
+        ancillary `JCMTAncillary.NONE`.
+        """
+
+        group = {}
+
+        for (instrument, time) in self.instrument.items():
+            if instrument == 0:
+                ancillary = JCMTAncillary.NONE
+            else:
+                (instrument, ancillary) = instrument
+
+            record = group.get(instrument, None)
+            if record is None:
+                group[instrument] = {ancillary: time}
+            else:
+                record[ancillary] = record.get(ancillary, 0.0) + time
+
+        return group
 
 
 class JCMTAncillary(EnumBasic, EnumAvailable):
@@ -221,9 +263,6 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
     same structure.
     """
 
-    ANCILLARY_SEPARATE = 1
-    ANCILLARY_GROUP = 2
-
     def validate(self):
         """
         Attempts to validate a collection of JCMT observing requests.
@@ -331,7 +370,7 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
                          for (k, v) in instrument_names.items()
                          if k in instruments]))
 
-    def get_total(self, ancillary_mode=None):
+    def get_total(self):
         """
         Get total by instrument and weather band.
 
@@ -339,8 +378,7 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
         "available" are included.  Other time requested is
         returned with identifier zero.
 
-        :param ancillary_mode: determines how ancillary instruments should be
-            handled
+        Instruments are identified by a (instrument, ancillary) pair.
         """
 
         weathers = {}
@@ -357,34 +395,17 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
                 weather = 0
 
             instrument = request.instrument
-            if not JCMTInstrument.get_info(instrument).available:
+            ancillary = request.ancillary
+            if (JCMTInstrument.get_info(instrument).available
+                    and JCMTInstrument.has_available_ancillary(instrument,
+                                                               ancillary)):
+                instrument = (instrument, ancillary)
+            else:
                 instrument = 0
-            elif ancillary_mode == self.ANCILLARY_SEPARATE:
-                ancillary = request.ancillary
-                if not ((ancillary == JCMTAncillary.NONE)
-                        or JCMTAncillary.is_available(ancillary)):
-                    instrument = 0
-                else:
-                    instrument = (instrument, ancillary)
 
             total += time
             weathers[weather] = weathers.get(weather, 0.0) + time
-
-            if ancillary_mode == self.ANCILLARY_GROUP:
-                instrument_record = instruments.get(instrument, None)
-                ancillary = request.ancillary
-                if not JCMTInstrument.has_available_ancillary(
-                        instrument, ancillary):
-                    ancillary = None
-                if instrument_record is None:
-                    instruments[instrument] = {ancillary: time}
-                else:
-                    instrument_record[ancillary] = \
-                        instrument_record.get(ancillary, 0.0) + time
-
-            else:
-                instruments[instrument] = \
-                    instruments.get(instrument, 0.0) + time
+            instruments[instrument] = instruments.get(instrument, 0.0) + time
 
             if not weather_info.free:
                 total_non_free += time

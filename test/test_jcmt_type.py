@@ -154,6 +154,7 @@ class JCMTTypeTestCase(TestCase):
         self.assertIsInstance(total, JCMTRequestTotal)
         self.assertEqual(total.total, 0.0)
         self.assertEqual(total.instrument, {})
+        self.assertEqual(total.instrument_grouped, {})
         self.assertEqual(total.weather, {})
         self.assertEqual(total.total_non_free, 0.0)
 
@@ -211,7 +212,13 @@ class JCMTTypeTestCase(TestCase):
         total = c.get_total()
         self.assertIsInstance(total, JCMTRequestTotal)
         self.assertEqual(total.total, 1330.0)
-        self.assertEqual(total.instrument, {1: 130.0, 2: 200.0, 4: 1000.0})
+        self.assertEqual(
+            total.instrument, {(1, 0): 130.0, (2, 0): 200.0, (4, 0): 1000.0})
+        self.assertEqual(
+            total.instrument_total, {1: 130.0, 2: 200.0, 4: 1000.0})
+        self.assertEqual(
+            total.instrument_grouped,
+            {1: {0: 130.0}, 2: {0: 200.0}, 4: {0: 1000.0}})
         self.assertEqual(total.weather, {1: 30.0, 2: 300.0, 5: 1000.0})
         self.assertEqual(total.total_non_free, 330.0)
 

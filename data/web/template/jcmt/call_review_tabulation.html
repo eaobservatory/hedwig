@@ -56,7 +56,7 @@
     'jcmt_allocation': (None if (proposal.jcmt_allocation is none) else proposal.jcmt_allocation.total),
 } | json(extend=super(), dynamic=[
     ('jcmt_weather', jcmt_weathers.keys() + [0], false, (proposal.jcmt_request.weather if proposal.jcmt_allocation is none else proposal.jcmt_allocation.weather), 0),
-    ('jcmt_instrument', jcmt_instruments.keys() + [0], false, (proposal.jcmt_request.instrument if proposal.jcmt_allocation is none else proposal.jcmt_allocation.instrument), 0),
+    ('jcmt_instrument', jcmt_instruments.keys() + [0], false, (proposal.jcmt_request.instrument_total if proposal.jcmt_allocation is none else proposal.jcmt_allocation.instrument_total), 0),
 ]) }}{% endblock %}
 
 {% macro render_cell_class(is_total, is_first) %}number_right{{ ' total' if is_total }}{{ ' spacer_left' if is_first }}{% endmacro %}
@@ -71,16 +71,18 @@
             {% endif %}
         </td>
     {% endfor %}
+    {% set req_or_alloc_inst_group = req_or_alloc.instrument_grouped %}
+    {% set req_or_alloc_inst_total = req_or_alloc.instrument_total %}
     {% for instrument in (jcmt_instruments.keys() + [0]) %}
         <td class="{{ render_cell_class(is_total, loop.first) }}">
-            {% if instrument in req_or_alloc.instrument %}
-                {% with instrument_value = req_or_alloc.instrument[instrument] %}
+            {% if instrument in req_or_alloc_inst_total %}
+                {% with instrument_value = (req_or_alloc_inst_total if is_total else req_or_alloc_inst_group)[instrument] %}
                     {% if is_total %}
                         {{ instrument_value | fmt('{:.1f}')}}
                     {% else %}
-                        {% if (instrument_value | length > 1) or (0 not in instrument_value) %}
+                        {% if (instrument_value | length > 1) or (jcmt_ancillary_none not in instrument_value) %}
                             <div class="hovertable">
-                                <b>{{ instrument_value.values() | sum | fmt('{:.1f}')}}</b>
+                                <b>{{ req_or_alloc_inst_total[instrument] | fmt('{:.1f}')}}</b>
                                 <table style="width: 35ex;">
                                     {% if jcmt_ancillary_none in instrument_value %}
                                         <tr>
@@ -96,16 +98,10 @@
                                             </tr>
                                         {% endif %}
                                     {% endfor %}
-                                    {% if none in instrument_value %}
-                                        <tr>
-                                            <th>Unknown ancillary</th>
-                                            <td class="number_right">{{ instrument_value[none] | fmt('{:.1f}') }}</td>
-                                        </tr>
-                                    {% endif %}
                                 </table>
                             </div>
                         {% else %}
-                            {{ instrument_value.values() | sum | fmt('{:.1f}')}}
+                            {{ req_or_alloc_inst_total[instrument] | fmt('{:.1f}')}}
                         {% endif %}
                     {% endif %}
                 {% endwith %}
