@@ -396,7 +396,8 @@ def can_be_admin(db, auth_cache=None):
     return person.admin
 
 
-def can_add_review_roles(role_class, db, proposal, auth_cache=None):
+def can_add_review_roles(role_class, db, proposal, include_indirect=True,
+                         auth_cache=None):
     """
     Determine for which reviewer roles a person can add a review to
     a proposal.
@@ -431,14 +432,16 @@ def can_add_review_roles(role_class, db, proposal, auth_cache=None):
     if proposal.state in role_class.get_editable_states(
             role_class.FEEDBACK):
         if not proposal.reviewers.has_role(role_class.FEEDBACK):
-            if ((session.get('is_admin', False)
-                    and can_be_admin(db, auth_cache=auth_cache))
-                    or group_members.has_entry(
-                        queue_id=proposal.queue_id,
-                        group_type=GroupType.review_coord_groups())
-                    or proposal.reviewers.has_person(
-                        person_id=person_id,
-                        roles=role_class.get_feedback_roles())):
+            if (proposal.reviewers.has_person(
+                    person_id=person_id,
+                    roles=role_class.get_feedback_roles(
+                        include_indirect=include_indirect))
+                    or (include_indirect and (
+                        (session.get('is_admin', False)
+                            and can_be_admin(db, auth_cache=auth_cache))
+                        or group_members.has_entry(
+                            queue_id=proposal.queue_id,
+                            group_type=GroupType.review_coord_groups())))):
                 roles.append(role_class.FEEDBACK)
 
     return roles
@@ -447,6 +450,10 @@ def can_add_review_roles(role_class, db, proposal, auth_cache=None):
 def find_addable_reviews(db, facilities, auth_cache=None):
     """
     Find proposals for which the user can add reviews.
+
+    This function only considers reviews which the user can "directly"
+    add --- i.e. for suitable proposals it calls
+    :func:`can_add_review_roles` with `include_indirect=False`.
 
     :param db: database control object/
     :param facilities: dictionary of FacilityInfo objects.
@@ -482,6 +489,7 @@ def find_addable_reviews(db, facilities, auth_cache=None):
 
         for proposal in proposals.values_by_facility(facility.id):
             roles = can_add_review_roles(role_class, db, proposal,
+                                         include_indirect=False,
                                          auth_cache=auth_cache)
             if not roles:
                 continue

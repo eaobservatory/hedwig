@@ -737,46 +737,49 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
     # * edit_rev and edit_fr indicate which states the review can be edited in.
     # * rating_hide indicates whether the rating should be hidden until
     #   the proposal is in the final review state.
+    # * feedback_direct and feedback_indirect correspond to authorization to
+    #   "directly" and "indirectly" add/edit feedback.
     RoleInfo = namedtuple(
         'RoleInfo',
         ('name', 'unique', 'text', 'assessment', 'rating', 'weight',
-         'cttee', 'name_review', 'feedback', 'note', 'invite',
+         'cttee', 'name_review', 'feedback_direct', 'feedback_indirect',
+         'note', 'invite',
          'edit_rev', 'edit_fr', 'rating_hide',
          'display_class', 'url_path'))
 
-    # Options:  Unique Text   Ass/nt Rating Weight Cttee  "Rev"  Feedbk Note
-    #           Invite E.Rev  E.FR   Ra.Hi. Disp.cl. URL
+    # Options:  Unique Text   Ass/nt Rating Weight Cttee  "Rev"  Fbk_dr Fbk_id
+    #           Note   Invite E.Rev  E.FR   Ra.Hi. Disp.cl. URL
     _info = OrderedDict((
         (TECH,
             RoleInfo(
                 'Technical',
-                True,  True,  True,  False, False, False, True,  False, True,
-                False, True,  True,  False, 'tech', 'technical')),
+                True,  True,  True,  False, False, False, True,  False, False,
+                True,  False, True,  True,  False, 'tech', 'technical')),
         (EXTERNAL,
             RoleInfo(
                 'External',
                 False, True,  False, True,  False, False, True,  False, False,
-                True,  True,  False, False, 'ext', 'external')),
+                False, True,  True,  False, False, 'ext', 'external')),
         (CTTEE_PRIMARY,
             RoleInfo(
                 'Committee Primary',
-                True,  True,  False, True,  True,  True,  True,  True,  True,
-                False, True,  True,  True,  'cttee', 'committee')),
+                True,  True,  False, True,  True,  True,  True,  True,  False,
+                True,  False, True,  True,  True,  'cttee', 'committee')),
         (CTTEE_SECONDARY,
             RoleInfo(
                 'Committee Secondary',
-                False, True,  False, True,  True,  True,  True,  True,  True,
-                False, True,  True,  True,  'cttee', None)),
+                False, True,  False, True,  True,  True,  True,  False, True,
+                True,  False, True,  True,  True,  'cttee', None)),
         (CTTEE_OTHER,
             RoleInfo(
                 'Committee Other',
-                False, True,  False, True,  True,  True,  True,  False, True,
-                False, True,  True,  True,  'cttee', 'other')),
+                False, True,  False, True,  True,  True,  True,  False, False,
+                True,  False, True,  True,  True,  'cttee', 'other')),
         (FEEDBACK,
             RoleInfo(
                 'Feedback',
                 True,  True,  False, False, False, False, False, False, False,
-                False, False, True,  False, 'feedback', 'feedback')),
+                False, False, False, True,  False, 'feedback', 'feedback')),
     ))
 
     @classmethod
@@ -827,10 +830,12 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
         return states
 
     @classmethod
-    def get_feedback_roles(cls):
+    def get_feedback_roles(cls, include_indirect=True):
         """Get list of roles who can write the feedback review."""
 
-        return [k for (k, v) in cls._info.items() if v.feedback]
+        return [k for (k, v) in cls._info.items()
+                if (v.feedback_direct or (include_indirect
+                                          and v.feedback_indirect))]
 
     @classmethod
     def get_invited_roles(cls):
