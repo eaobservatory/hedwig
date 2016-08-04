@@ -30,11 +30,11 @@
 {% endmacro %}
 
 {% macro render_institution_summary(institution) %}
-    {{ institution.name | truncate(35, killwords=True, end='\u2026') }}{% if institution.department %} ({{ institution.department | truncate(25, killwords=True, end='\u2026') }}){% endif %},
+    {{ institution.name | truncate(35, killwords=true, end='\u2026') }}{% if institution.department %} ({{ institution.department | truncate(25, killwords=true, end='\u2026') }}){% endif %},
     {% if institution.organization %}
-        {{ institution.organization | truncate(15, killwords=True, end='\u2026') }},
+        {{ institution.organization | truncate(15, killwords=true, end='\u2026') }},
     {% endif %}
-    {{ institution.country | country_name | truncate(15, killwords=True, end='\u2026') }}
+    {{ institution.country | country_name | truncate(15, killwords=true, end='\u2026') }}
 {% endmacro %}
 
 {% macro render_member_institution(member, part_truncate=100) %}

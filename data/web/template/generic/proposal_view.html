@@ -5,7 +5,7 @@
 {% from 'macro/figure.html' import render_proposal_figures %}
 {% from 'macro/calculation.html' import render_calculation_title, render_calculation %}
 
-{% set navigation=[(proposal_code, None)] %}
+{% set navigation=[(proposal_code, none)] %}
 {% set help_link=url_for('help.user_page', page_name='proposal') %}
 
 {% if show_person_proposals_callout %}
@@ -401,7 +401,7 @@
                     <th>Publications</th>
                 </tr>
                 {% for prev_proposal in prev_proposals %}
-                    {% with publications = prev_proposal.publications | default([None], true) %}
+                    {% with publications = prev_proposal.publications | default([none], true) %}
                         {% for publication in publications %}
                             <tr>
                                 {% if loop.first %}

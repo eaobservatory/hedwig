@@ -48,7 +48,7 @@
     {% for proposal in proposals %}
         {% with reviewers = proposal.reviewers %}
             {% if not reviewers %}
-                {% set reviewers = {None: None} %}
+                {% set reviewers = {none: none} %}
             {% endif %}
             {% for reviewer in reviewers.values() %}
                 <tr>

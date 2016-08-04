@@ -73,7 +73,7 @@
         {% for proposal in proposals %}
             <tr class="oneline decision_{{ 'undecided' if proposal.decision_accept is none else ('accept' if proposal.decision_accept else 'reject') }}{{ ' decision_exempt' if proposal.decision_exempt else '' }}" data-sortinfo="{% block row_sort_info scoped %}{{ {
                 'proposal_code': proposal.code,
-                'pi_name': (None if proposal.member_pi is none else proposal.member_pi.person_name),
+                'pi_name': (none if proposal.member_pi is none else proposal.member_pi.person_name),
                 'title': proposal.title,
                 'state': proposal.state,
                 'decision': (1 if proposal.decision_accept is none else (0 if not proposal.decision_accept else (3 if proposal.decision_exempt else 2))),
@@ -93,7 +93,7 @@
                         {% if proposal.member_pi is none %}
                             &mdash;
                         {% else %}
-                            {{ proposal.member_pi.person_name | truncate(15, killwords=True, end='\u2026') }}
+                            {{ proposal.member_pi.person_name | truncate(15, killwords=true, end='\u2026') }}
                         {% endif %}
                         <table style="width: 100ex;">
                             <tr>
@@ -156,7 +156,7 @@
                                         <th>Weighting</th>
                                     {% endblock %}
                                 </tr>
-                                {% for cttee_role in [True, False] %}
+                                {% for cttee_role in [true, false] %}
                                     {% for review in proposal.reviewers.values_in_role_order(facility_role_class, cttee_role=cttee_role) %}
                                         <tr {{ 'class="spacer_above"' | safe if loop.first }}>
                                             <td>

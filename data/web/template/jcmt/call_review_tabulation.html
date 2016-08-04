@@ -53,7 +53,7 @@
 
 {% block row_sort_info %}{{ {
     'jcmt_request': proposal.jcmt_request.total,
-    'jcmt_allocation': (None if (proposal.jcmt_allocation is none) else proposal.jcmt_allocation.total),
+    'jcmt_allocation': (none if (proposal.jcmt_allocation is none) else proposal.jcmt_allocation.total),
 } | json(extend=super(), dynamic=[
     ('jcmt_weather', jcmt_weathers.keys() + [none], false, (proposal.jcmt_request.weather if proposal.jcmt_allocation is none else proposal.jcmt_allocation.weather), 0),
     ('jcmt_instrument', jcmt_instruments.keys() + [none], false, (proposal.jcmt_request.instrument_total if proposal.jcmt_allocation is none else proposal.jcmt_allocation.instrument_total), 0),
