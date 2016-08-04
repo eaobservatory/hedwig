@@ -908,7 +908,7 @@ class GenericReview(object):
             'person_registered': reviewer.person_registered,
         }
 
-    @with_proposal(permission=PermissionType.NONE)
+    @with_proposal(permission=PermissionType.NONE, with_decision=True)
     def view_review_new(self, db, proposal, reviewer_role, args, form):
         role_class = self.get_reviewer_roles()
 
@@ -943,7 +943,7 @@ class GenericReview(object):
             'proposal_code': proposal_code,
         }
 
-    @with_review(permission=PermissionType.EDIT)
+    @with_review(permission=PermissionType.EDIT, with_decision=True)
     def view_review_edit(self, db, reviewer, proposal, can, args, form):
         return self._view_review_new_or_edit(
             db, reviewer, proposal, args, form)

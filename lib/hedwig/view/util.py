@@ -287,7 +287,7 @@ def with_proposal(permission, indirect_facility=False, **get_proposal_kwargs):
     return decorator
 
 
-def with_review(permission):
+def with_review(permission, **get_proposal_kwargs):
     """
     Decorator for methods which deal with reviews of proposals.
 
@@ -295,6 +295,9 @@ def with_review(permission):
     The wrapped method is called with the database, reviewer record,
     proposal record and authorization object followed by any remaining
     arguments.
+
+    Additional keyword arguments are passed to the get_proposal database
+    method.
     """
 
     def decorator(f):
@@ -318,7 +321,8 @@ def with_review(permission):
             # be found if its facility is self.id_.
             try:
                 proposal = db.get_proposal(self.id_, proposal_id,
-                                           with_members=True)
+                                           with_members=True,
+                                           **get_proposal_kwargs)
             except NoSuchRecord:
                 raise HTTPNotFound('Proposal record not found')
 
