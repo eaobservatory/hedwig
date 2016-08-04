@@ -25,6 +25,9 @@
     {% endif %}
 {% endcall %}
 
+{% block information_extra %}
+{% endblock %}
+
 {% if target_guideline is not none %}
     <p>
         <a href="{{ target_guideline }}" target="_blank">Guidelines for this review</a>

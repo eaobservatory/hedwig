@@ -1,5 +1,18 @@
 {% extends 'generic/review_edit.html' %}
 
+{% from 'jcmt/macro/request_table.html' import render_request_display %}
+
+{% block information_extra %}
+    {% if jcmt_request is not none %}
+        <h3>Original Request</h3>
+        {{ render_request_display(jcmt_request.to_table()) }}
+    {% endif %}
+    {% if jcmt_allocation is not none %}
+        <h3>Time Allocation</h3>
+        {{ render_request_display(jcmt_allocation.to_table()) }}
+    {% endif %}
+{% endblock %}
+
 {% block form_list_review %}
     {% if role_info.jcmt_external %}
         <li>

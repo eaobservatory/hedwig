@@ -791,6 +791,16 @@ class JCMT(Generic):
                 except NoSuchRecord:
                     info = null_tuple(JCMTReview)
 
+            request = None
+            allocation = None
+
+            # If this is the feedback review, fetch the request and allocation.
+            if reviewer.role == JCMTReviewerRole.FEEDBACK:
+                request = db.search_jcmt_request(proposal_id=proposal.id)
+                if proposal.decision_accept:
+                    allocation = db.search_jcmt_allocation(
+                        proposal_id=proposal.id)
+
         return {
             'jcmt_expertise_levels': JCMTReviewerExpertise.get_options(),
             'jcmt_ratings_justification':
@@ -798,6 +808,8 @@ class JCMT(Generic):
             'jcmt_ratings_technical': JCMTReviewRatingTechnical.get_options(),
             'jcmt_ratings_urgency': JCMTReviewRatingUrgency.get_options(),
             'jcmt_review': info,
+            'jcmt_request': request,
+            'jcmt_allocation': allocation,
         }
 
     def _view_proposal_decision_get(self, db, proposal, form):
