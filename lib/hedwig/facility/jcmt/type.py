@@ -269,13 +269,10 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
 
             requests.add(request_tuple)
 
-    def to_table(self, ancillary_mode=None):
+    def to_table(self):
         """
         Rearrange the records into a table by instrument and weather
         band.
-
-        :param ancillary_mode: determines how ancillary instruments should be
-            handled
 
         Returns: ResultTable(table, weather bands, instruments)
 
@@ -283,10 +280,11 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
             * table is a nested dictionary of time by instrument and band,
               with additional "total" figures having identifier zero.  Totals
               by band (i.e. instrument=0) are only added if there is more than
-              one instrument.
+              one instrument.  Otherwise instruments are identified by a
+              (instrument, ancillary) pair.
             * bands is an ordered dictionary of band names by identifier
               for bands present in the table and currently available bands.
-            * instruments is an odered dictionary of instruments by identifier
+            * instruments is an ordered dictionary of instruments by identifier
               for instruments present in the table only.
         """
 
@@ -297,12 +295,8 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
         for request in self.values():
             weathers.add(request.weather)
 
-            # Determine how to organize by instrument: include ancillary if
-            # ancillary_mode is "separate".
-            instrument_key = ((
-                request.instrument, request.ancillary)
-                if (ancillary_mode == self.ANCILLARY_SEPARATE)
-                else request.instrument)
+            # Organize by instrument including ancillary.
+            instrument_key = (request.instrument, request.ancillary)
 
             instrument = instruments.get(instrument_key)
             if instrument is None:
@@ -325,10 +319,8 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
             total[0] = sum(total.values())
             instruments[0] = total
 
-        instrument_names = (
+        instrument_names = \
             JCMTInstrument.get_options_with_ancillary(include_unavailable=True)
-            if (ancillary_mode == self.ANCILLARY_SEPARATE)
-            else JCMTInstrument.get_options(include_unavailable=True))
 
         return ResultTable(
             instruments,

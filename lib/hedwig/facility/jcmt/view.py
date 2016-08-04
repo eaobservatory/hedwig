@@ -366,8 +366,7 @@ class JCMT(Generic):
         option_values = db.get_jcmt_options(proposal_id=proposal.id)
 
         ctx.update({
-            'requests': requests.to_table(
-                ancillary_mode=JCMTRequestCollection.ANCILLARY_SEPARATE),
+            'requests': requests.to_table(),
             'jcmt_options': self._get_option_names(option_values),
             'jcmt_option_values': option_values,
         })
@@ -391,8 +390,7 @@ class JCMT(Generic):
 
         if proposal.state == ProposalState.ACCEPTED:
             allocations = db.search_jcmt_allocation(
-                proposal_id=proposal.id).to_table(
-                    ancillary_mode=JCMTRequestCollection.ANCILLARY_SEPARATE)
+                proposal_id=proposal.id).to_table()
         else:
             allocations = null_tuple(ResultTable)
 
@@ -855,8 +853,7 @@ class JCMT(Generic):
             allocations = info
 
         return {
-            'original_request': original_request.to_table(
-                ancillary_mode=JCMTRequestCollection.ANCILLARY_SEPARATE),
+            'original_request': original_request.to_table(),
             'is_prefilled': is_prefilled,
             'allocations': allocations.values(),
             'instruments': JCMTInstrument.get_options_with_ancillary(),
