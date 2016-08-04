@@ -56,7 +56,7 @@ class JCMTRequestTotal(namedtuple(
         total = {}
 
         for (instrument, time) in self.instrument.items():
-            if instrument != 0:
+            if instrument is not None:
                 (instrument, ancillary) = instrument
             total[instrument] = total.get(instrument, 0.0) + time
 
@@ -75,7 +75,7 @@ class JCMTRequestTotal(namedtuple(
         group = {}
 
         for (instrument, time) in self.instrument.items():
-            if instrument == 0:
+            if instrument is None:
                 ancillary = JCMTAncillary.NONE
             else:
                 (instrument, ancillary) = instrument
@@ -376,7 +376,7 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
 
         Only instruments and weather bands currently labeled as
         "available" are included.  Other time requested is
-        returned with identifier zero.
+        returned with identifier None.
 
         Instruments are identified by a (instrument, ancillary) pair.
         """
@@ -392,7 +392,7 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
             weather = request.weather
             weather_info = JCMTWeather.get_info(weather)
             if not weather_info.available:
-                weather = 0
+                weather = None
 
             instrument = request.instrument
             ancillary = request.ancillary
@@ -401,7 +401,7 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
                                                                ancillary)):
                 instrument = (instrument, ancillary)
             else:
-                instrument = 0
+                instrument = None
 
             total += time
             weathers[weather] = weathers.get(weather, 0.0) + time

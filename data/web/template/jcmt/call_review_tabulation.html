@@ -33,11 +33,11 @@
     {% for (weather_id, weather) in weathers.items() %}
         <th class="sideways{{ ' sortable sortreverse' if sortable }}{{ ' spacer_left' if loop.first }}" data-sortkey="jcmt_weather_{{ weather_id }}"><div><div><span>{{ weather.name }}</span></div></div></th>
     {% endfor %}
-    <th class="sideways{{' sortable sortreverse' if sortable }}" data-sortkey="jcmt_weather_0"><div><div><span>Unknown</span></div></div></th>
+    <th class="sideways{{' sortable sortreverse' if sortable }}" data-sortkey="jcmt_weather_none"><div><div><span>Unknown</span></div></div></th>
     {% for (instrument_id, instrument_name) in instruments.items() %}
         <th class="sideways{{ ' sortable sortreverse' if sortable }}{{ ' spacer_left' if loop.first }}" data-sortkey="jcmt_instrument_{{ instrument_id }}"><div><div><span>{{ instrument_name }}</span></div></div></th>
     {% endfor %}
-    <th class="sideways{{ ' sortable sortreverse' if sortable }}" data-sortkey="jcmt_instrument_0"><div><div><span>Unknown</span></div></div></th>
+    <th class="sideways{{ ' sortable sortreverse' if sortable }}" data-sortkey="jcmt_instrument_none"><div><div><span>Unknown</span></div></div></th>
 {% endmacro %}
 
 {% block heading_line_one %}
@@ -55,14 +55,14 @@
     'jcmt_request': proposal.jcmt_request.total,
     'jcmt_allocation': (None if (proposal.jcmt_allocation is none) else proposal.jcmt_allocation.total),
 } | json(extend=super(), dynamic=[
-    ('jcmt_weather', jcmt_weathers.keys() + [0], false, (proposal.jcmt_request.weather if proposal.jcmt_allocation is none else proposal.jcmt_allocation.weather), 0),
-    ('jcmt_instrument', jcmt_instruments.keys() + [0], false, (proposal.jcmt_request.instrument_total if proposal.jcmt_allocation is none else proposal.jcmt_allocation.instrument_total), 0),
+    ('jcmt_weather', jcmt_weathers.keys() + [none], false, (proposal.jcmt_request.weather if proposal.jcmt_allocation is none else proposal.jcmt_allocation.weather), 0),
+    ('jcmt_instrument', jcmt_instruments.keys() + [none], false, (proposal.jcmt_request.instrument_total if proposal.jcmt_allocation is none else proposal.jcmt_allocation.instrument_total), 0),
 ]) }}{% endblock %}
 
 {% macro render_cell_class(is_total, is_first) %}number_right{{ ' total' if is_total }}{{ ' spacer_left' if is_first }}{% endmacro %}
 
 {% macro render_jcmt_request(req_or_alloc, is_total=false) %}
-    {% for weather in (jcmt_weathers.keys() + [0]) %}
+    {% for weather in (jcmt_weathers.keys() + [none]) %}
         <td class="{{ render_cell_class(is_total, loop.first) }}">
             {% if weather in req_or_alloc.weather %}
                 {{ req_or_alloc.weather[weather] | fmt('{:.1f}')}}
@@ -73,7 +73,7 @@
     {% endfor %}
     {% set req_or_alloc_inst_group = req_or_alloc.instrument_grouped %}
     {% set req_or_alloc_inst_total = req_or_alloc.instrument_total %}
-    {% for instrument in (jcmt_instruments.keys() + [0]) %}
+    {% for instrument in (jcmt_instruments.keys() + [none]) %}
         <td class="{{ render_cell_class(is_total, loop.first) }}">
             {% if instrument in req_or_alloc_inst_total %}
                 {% with instrument_value = (req_or_alloc_inst_total if is_total else req_or_alloc_inst_group)[instrument] %}

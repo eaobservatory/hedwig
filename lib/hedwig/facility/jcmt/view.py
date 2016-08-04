@@ -604,9 +604,9 @@ class JCMT(Generic):
         )
 
     def _get_proposal_tabulation_rows(self, tabulation):
-        weathers = list(tabulation['jcmt_weathers'].keys()) + [0]
+        weathers = list(tabulation['jcmt_weathers'].keys()) + [None]
         instruments = list(
-            tabulation['jcmt_instruments_ancillary'].keys()) + [0]
+            tabulation['jcmt_instruments_ancillary'].keys()) + [None]
 
         for (row, proposal) in izip(
                 super(JCMT, self)._get_proposal_tabulation_rows(tabulation),
