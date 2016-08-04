@@ -278,9 +278,9 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
 
         Where:
             * table is a nested dictionary of time by instrument and band,
-              with additional "total" figures having identifier zero.  Totals
-              by band (i.e. instrument=0) are only added if there is more than
-              one instrument.  Otherwise instruments are identified by a
+              with additional "total" figures having identifier `None`.
+              Totals by band (i.e. `instrument=None`) are only added if there
+              is more than one instrument.  Instruments are identified by a
               (instrument, ancillary) pair.
             * bands is an ordered dictionary of band names by identifier
               for bands present in the table and currently available bands.
@@ -308,7 +308,7 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
                 request.weather, 0.0) + request.time
 
             # Add time to instrument total.
-            instrument[0] = instrument.get(0, 0.0) + request.time
+            instrument[None] = instrument.get(None, 0.0) + request.time
 
             # Add time to weather total.
             total[request.weather] = total.get(
@@ -316,8 +316,8 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
 
         # Include weather total if there are multiple instruments.
         if len(instruments) > 1:
-            total[0] = sum(total.values())
-            instruments[0] = total
+            total[None] = sum(total.values())
+            instruments[None] = total
 
         instrument_names = \
             JCMTInstrument.get_options_with_ancillary(include_unavailable=True)

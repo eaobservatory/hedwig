@@ -175,7 +175,7 @@ class JCMTTypeTestCase(TestCase):
         self.assertNotIn(0, t.table)
 
         # Check the weather band times have been added up as expected.
-        self.assertEqual(t.table[(1, 0)], {1: 30.0, 2: 100.0, 0: 130.0})
+        self.assertEqual(t.table[(1, 0)], {1: 30.0, 2: 100.0, None: 130.0})
 
         # And we should have sensible rows and columns dictionaries.
         self.assertIsInstance(t.rows, OrderedDict)
@@ -193,18 +193,20 @@ class JCMTTypeTestCase(TestCase):
         t = c.to_table()
 
         # Check the rows.
-        self.assertEqual(set(t.table.keys()), set((0, (1, 0), (2, 0), (4, 0))))
-        self.assertEqual(set(t.rows.keys()), set(((1, 0), (2, 0), (4, 0))))
+        self.assertEqual(
+            set(t.table.keys()), set((None, (1, 0), (2, 0), (4, 0))))
+        self.assertEqual(
+            set(t.rows.keys()), set(((1, 0), (2, 0), (4, 0))))
 
         # And check the combined times.
         self.assertEqual(
-            t.table[(1, 0)], {1: 30.0, 2: 100.0,            0: 130.0})
+            t.table[(1, 0)], {1: 30.0, 2: 100.0,            None: 130.0})
         self.assertEqual(
-            t.table[(2, 0)],          {2: 200.0,            0: 200.0})
+            t.table[(2, 0)],          {2: 200.0,            None: 200.0})
         self.assertEqual(
-            t.table[(4, 0)],                    {5: 1000.0, 0: 1000.0})
+            t.table[(4, 0)],                    {5: 1000.0, None: 1000.0})
         self.assertEqual(
-            t.table[0],      {1: 30.0, 2: 300.0, 5: 1000.0, 0: 1330.0})
+            t.table[None],   {1: 30.0, 2: 300.0, 5: 1000.0, None: 1330.0})
 
         total = c.get_total()
         self.assertIsInstance(total, JCMTRequestTotal)
