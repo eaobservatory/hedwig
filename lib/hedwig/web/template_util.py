@@ -147,7 +147,8 @@ def register_template_utils(app):
                 for element in elements:
                     if use_id:
                         element = element.id
-                    value['{}_{}'.format(prefix, element)] = \
+                    value['{}_{}'.format(prefix, ('none' if element is None
+                                                  else element))] = \
                         values.get(element, default)
 
         return json_module.dumps(value)
