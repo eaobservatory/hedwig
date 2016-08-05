@@ -44,6 +44,10 @@
     </table>
 {% endif %}
 
+{% if call_preamble is not none %}
+    {{ call_preamble.description | format_text(call_preamble.description_format) }}
+{% endif %}
+
 {{ semester.description | format_text(semester.description_format) }}
 
 {% if calls %}

@@ -83,6 +83,7 @@ class GenericHome(object):
 
         try:
             semester = db.get_semester(self.id_, semester_id)
+            assert semester.id == semester_id
         except NoSuchRecord:
             raise HTTPNotFound('Semester not found')
 
@@ -90,12 +91,19 @@ class GenericHome(object):
                                state=CallState.OPEN, type_=call_type,
                                with_queue_description=True)
 
+        try:
+            call_preamble = db.get_call_preamble(semester_id=semester.id,
+                                                 type_=call_type)
+        except NoSuchRecord:
+            call_preamble = None
+
         return {
             'title': '{} Call for Semester {}'.format(
                 type_class.get_name(call_type), semester.name),
             'semester': semester,
             'calls': list(calls.values()),
             'call_type': call_type,
+            'call_preamble': call_preamble,
         }
 
     def view_semester_closed(self, db):
