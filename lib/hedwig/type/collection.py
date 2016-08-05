@@ -23,7 +23,7 @@ from math import sqrt
 
 from ..astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
-from ..error import NoSuchRecord, MultipleRecords, UserError
+from ..error import NoSuchRecord, NoSuchValue, MultipleRecords, UserError
 from ..util import is_list_like, matches_constraint
 from .base import CollectionByProposal, CollectionOrdered, CollectionSortable
 from .enum import AffiliationType, PublicationType, ReviewState
@@ -111,6 +111,22 @@ class CallCollection(ResultCollection):
                     matches_constraint(call.queue_id, queue_id),
                     matches_constraint(call.type, type_))):
                 yield call
+
+
+class CallPreambleCollection(ResultCollection):
+    """
+    Class to hold the results of a search for call preambles.
+    """
+
+    def get_type(self, type_, default=()):
+        for value in self.values():
+            if value.type == type_:
+                return value
+
+        if default == ():
+            raise NoSuchValue('no call preamble of the given type present')
+
+        return default
 
 
 class EmailCollection(ResultCollection):

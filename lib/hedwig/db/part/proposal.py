@@ -29,7 +29,7 @@ from sqlalchemy.sql.functions import max as max_
 from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
 from ...type.collection import AffiliationCollection, \
-    CallCollection, MemberCollection, \
+    CallCollection, CallPreambleCollection, MemberCollection, \
     PrevProposalCollection, ProposalCollection, ProposalCategoryCollection, \
     ProposalFigureCollection, ProposalTextCollection, \
     ResultCollection, TargetCollection
@@ -878,7 +878,7 @@ class ProposalPart(object):
         Search for call preamble text records.
         """
 
-        ans = ResultCollection()
+        ans = CallPreambleCollection()
 
         stmt = call_preamble.select()
 

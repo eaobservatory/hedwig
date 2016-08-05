@@ -22,18 +22,19 @@ from collections import namedtuple
 import itertools
 from unittest import TestCase
 
-from hedwig.error import MultipleRecords, NoSuchRecord, UserError
+from hedwig.error import MultipleRecords, NoSuchRecord, NoSuchValue, UserError
 from hedwig.type.base import CollectionByProposal, CollectionOrdered, \
     CollectionSortable
 from hedwig.type.collection import \
-    CallCollection, EmailCollection, GroupMemberCollection, MemberCollection, \
+    CallCollection, CallPreambleCollection, \
+    EmailCollection, GroupMemberCollection, MemberCollection, \
     ResultCollection, \
     ProposalCollection, ProposalFigureCollection, ReviewerCollection
 from hedwig.type.enum import BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, \
     ReviewState
 from hedwig.type.simple import \
-    Call, Email, GroupMember, Member, \
+    Call, CallPreamble, Email, GroupMember, Member, \
     Proposal, ProposalFigureInfo, Reviewer
 from hedwig.type.util import null_tuple
 
@@ -182,6 +183,26 @@ class CollectionTypeTestCase(TestCase):
 
         with self.assertRaisesRegexp(UserError, 'appears more than once'):
             c.validate()
+
+    def test_call_preamble_collection(self):
+        c = CallPreambleCollection()
+
+        c[101] = null_tuple(CallPreamble)._replace(id=101, type=1)
+        c[102] = null_tuple(CallPreamble)._replace(id=102, type=2)
+
+        v = c.get_type(1)
+        self.assertIsInstance(v, CallPreamble)
+        self.assertEqual(v.id, 101)
+
+        with self.assertRaises(NoSuchValue):
+            c.get_type(999)
+
+        v = c.get_type(2, default=None)
+        self.assertIsInstance(v, CallPreamble)
+        self.assertEqual(v.id, 102)
+
+        v = c.get_type(999, default=None)
+        self.assertIsNone(v)
 
     def test_member_collection(self):
         c = MemberCollection()
