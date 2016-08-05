@@ -113,7 +113,7 @@ class JCMTCallType(BaseCallType):
         BaseCallType.STANDARD: {
             'name': 'Regular', 'code': 'M', 'url_path': 'regular'},
         BaseCallType.IMMEDIATE: {
-            'name': 'Service', 'code': 'S', 'url_path': 'service'},
+            'name': 'Urgent', 'code': 'S', 'url_path': 'urgent'},
     }
 
     _info = OrderedDict()
