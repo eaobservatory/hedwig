@@ -19,10 +19,41 @@
     </tr>
 </table>
 
+<h2>Semester Description</h2>
+
 {{ semester.description | format_text(semester.description_format) }}
 
-<p>
-    <a href="{{ url_for('.semester_edit', semester_id=semester.id) }}">Edit semester</a>
-</p>
+<nav>
+    <p>
+        <a href="{{ url_for('.semester_edit', semester_id=semester.id) }}">Edit semester</a>
+    </p>
+</nav>
+
+<h2>Call Preamble</h2>
+
+<table>
+    {% for (type_num, type_name) in facility_call_type_class.get_options().items() %}
+        <tr>
+            <th>{{ type_name }}</th>
+            <td>
+                {% with preamble = call_preambles.get_type(type_num, default=none) %}
+                    {% if preamble is not none %}
+                        {{ preamble.description | format_text(preamble.description_format) }}
+                    {% else %}
+                        <p class="not_present">
+                            The call preamble for this call type has not been entered.
+                        </p>
+                    {% endif %}
+
+                    <nav>
+                        <p>
+                            <a href="{{ url_for('.call_preamble_edit', semester_id=semester.id, call_type=type_num) }}">{{ 'Add' if preamble is none else 'Edit' }} preamble</a>
+                        </p>
+                    </nav>
+                {% endwith %}
+            </td>
+        </tr>
+    {% endfor %}
+</table>
 
 {% endblock %}

@@ -524,6 +524,16 @@ def create_facility_blueprint(db, facility):
             db, semester_id,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/admin/semester/<int:semester_id>/preamble/'
+              '<hedwig_call_type_{}:call_type>'.format(code),
+              methods=['GET', 'POST'])
+    @facility_template('call_preamble_edit.html')
+    @require_admin
+    def call_preamble_edit(semester_id, call_type):
+        return facility.view_call_preamble_edit(
+            db, semester_id, call_type,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/admin/queue/')
     @facility_template('queue_list.html')
     @require_admin

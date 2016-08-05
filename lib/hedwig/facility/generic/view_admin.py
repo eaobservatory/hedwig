@@ -27,7 +27,7 @@ from ...file.moc import read_moc
 from ...type.collection import AffiliationCollection, ResultCollection
 from ...type.enum import AffiliationType, FormatType, GroupType, \
     PersonTitle, SemesterState
-from ...type.simple import Affiliation, Category, DateAndTime, \
+from ...type.simple import Affiliation, CallPreamble, Category, DateAndTime, \
     MOCInfo, ProposalWithCode, Queue, Semester
 from ...type.util import null_tuple
 from ...view import auth
@@ -56,9 +56,12 @@ class GenericAdmin(object):
         except NoSuchRecord:
             raise HTTPNotFound('Semester not found')
 
+        call_preambles = db.search_call_preamble(semester_id=semester_id)
+
         return {
             'title': 'Semester: {}'.format(semester.name),
             'semester': semester,
+            'call_preambles': call_preambles,
         }
 
     @with_verified_admin
@@ -139,6 +142,62 @@ class GenericAdmin(object):
             'target': target,
             'message': message,
             'semester': semester,
+            'format_types': FormatType.get_options(is_system=True),
+        }
+
+    def view_call_preamble_edit(self, db, semester_id, call_type, form):
+        type_class = self.get_call_types()
+
+        if not type_class.is_valid(call_type):
+            raise HTTPError('Call type appears to be invalid.')
+
+        try:
+            semester = db.get_semester(self.id_, semester_id)
+            assert semester.id == semester_id
+        except NoSuchRecord:
+            raise HTTPNotFound('Semester not found.')
+
+        try:
+            preamble = db.get_call_preamble(
+                semester_id=semester.id, type_=call_type)
+            assert preamble.semester_id == semester.id
+            assert preamble.type == call_type
+            assert preamble.id is not None
+        except NoSuchRecord:
+            preamble = null_tuple(CallPreamble)._replace(
+                description='', description_format=FormatType.PLAIN,
+                type=call_type)
+
+        message = None
+
+        if form is not None:
+            try:
+                preamble = preamble._replace(
+                    description=form['description'],
+                    description_format=int(form['description_format']))
+
+                db.set_call_preamble(
+                    type_class, semester.id, preamble.type,
+                    description=preamble.description,
+                    description_format=preamble.description_format,
+                    is_update=(preamble.id is not None))
+
+                flash('The {} call preamble for semester {} has been saved.',
+                      type_class.get_name(preamble.type).lower(),
+                      semester.name)
+
+                raise HTTPRedirect(url_for('.semester_view',
+                                           semester_id=semester.id))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': '{}: Edit {} Call Preamble'.format(
+                semester.name, type_class.get_name(preamble.type)),
+            'semester': semester,
+            'preamble': preamble,
+            'message': message,
             'format_types': FormatType.get_options(is_system=True),
         }
 

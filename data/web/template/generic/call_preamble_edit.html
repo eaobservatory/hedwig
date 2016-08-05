@@ -1,0 +1,29 @@
+{% extends 'layout.html' %}
+{% set navigation=['facility_admin', ('Semesters', url_for('.semester_list')), (semester.name, url_for('.semester_view', semester_id=semester.id))] %}
+{% set help_link=url_for('help.admin_page', page_name='semester') %}
+
+{% from 'macro/text.html' import render_format_control %}
+
+{% block content %}
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.call_preamble_edit', semester_id=semester.id, call_type=preamble.type) }}">
+    <ol>
+        <li>
+            <label for="description">Description</label>
+            <textarea name="description" cols="80" rows="10">{{ preamble.description }}</textarea>
+        </li>
+        <li>
+            <label for="description_format">Description format</label>
+            {{ render_format_control('description_format', preamble.description_format, format_types) }}
+        </li>
+        <li>
+            <input type="submit" value="Save" name="submit" />
+        </li>
+    </ol>
+</form>
+{% endblock %}
