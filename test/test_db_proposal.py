@@ -31,7 +31,7 @@ from hedwig.type.enum import AffiliationType, AttachmentState, \
     BaseCallType, BaseTextRole, \
     CallState, FigureType, \
     FormatType, ProposalState
-from hedwig.type.simple import Affiliation, Call, Category, \
+from hedwig.type.simple import Affiliation, Call, CallPreamble, Category, \
     Facility, Member, MemberInstitution, \
     Proposal, ProposalCategory, ProposalFigureInfo, ProposalPDFInfo, \
     ProposalText, ProposalTextInfo, Target
@@ -432,6 +432,64 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(set(result.keys()), set((call_id,)))
         for value in result.values():
             self.assertEqual(value.state, CallState.UNOPENED)
+
+    def test_call_preamble(self):
+        facility_id = self.db.ensure_facility('my_tel')
+        self.assertIsInstance(facility_id, int)
+        semester_id = self.db.add_semester(
+            facility_id, 'My Semester', 'MS',
+            datetime(2000, 1, 1), datetime(2000, 6, 30))
+        self.assertIsInstance(semester_id, int)
+
+        with self.assertRaisesRegexp(NoSuchRecord, 'no results$'):
+            self.db.get_call_preamble(semester_id, BaseCallType.STANDARD)
+
+        with self.assertRaisesRegexp(UserError, 'call type is not recognised'):
+            self.db.set_call_preamble(
+                BaseCallType, semester_id, 999,
+                '', FormatType.PLAIN, is_update=False)
+
+        with self.assertRaisesRegexp(UserError, 'format not recognised'):
+            self.db.set_call_preamble(
+                BaseCallType, semester_id, BaseCallType.STANDARD,
+                '', 999, is_update=False)
+
+        with self.assertRaisesRegexp(ConsistencyError, 'semester does not'):
+            self.db.set_call_preamble(
+                BaseCallType, 1999999, BaseCallType.STANDARD,
+                '', FormatType.PLAIN, is_update=False)
+
+        with self.assertRaisesRegexp(ConsistencyError, 'preamble does not'):
+            self.db.set_call_preamble(
+                BaseCallType, semester_id, BaseCallType.STANDARD,
+                '', FormatType.PLAIN, is_update=True)
+
+        self.db.set_call_preamble(
+            BaseCallType, semester_id, BaseCallType.STANDARD,
+            'We invite proposals...', FormatType.PLAIN, is_update=False)
+
+        preamble = self.db.get_call_preamble(
+            semester_id, BaseCallType.STANDARD)
+
+        self.assertIsInstance(preamble, CallPreamble)
+        self.assertEqual(preamble.description, 'We invite proposals...')
+        self.assertEqual(preamble.description_format, FormatType.PLAIN)
+
+        with self.assertRaisesRegexp(ConsistencyError, 'preamble already'):
+            self.db.set_call_preamble(
+                BaseCallType, semester_id, BaseCallType.STANDARD,
+                '', FormatType.PLAIN, is_update=False)
+
+        self.db.set_call_preamble(
+            BaseCallType, semester_id, BaseCallType.STANDARD,
+            'Proposals are invited...', FormatType.RST, is_update=True)
+
+        preamble = self.db.get_call_preamble(
+            semester_id, BaseCallType.STANDARD)
+
+        self.assertIsInstance(preamble, CallPreamble)
+        self.assertEqual(preamble.description, 'Proposals are invited...')
+        self.assertEqual(preamble.description_format, FormatType.RST)
 
     def test_add_proposal(self):
         (call_id_1, affiliation_id_1) = self._create_test_call(

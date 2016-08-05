@@ -37,7 +37,7 @@ from ...type.enum import AffiliationType, AttachmentState, \
     CallState, FigureType, FormatType, \
     ProposalState, PublicationType, SemesterState
 from ...type.simple import Affiliation, \
-    Call, Category, Facility, \
+    Call, CallPreamble, Category, Facility, \
     Member, MemberInfo, MemberPIInfo, \
     PrevProposal, PrevProposalPub, \
     Proposal, ProposalCategory, ProposalFigure, \
@@ -45,7 +45,8 @@ from ...type.simple import Affiliation, \
     ProposalText, ProposalTextInfo, \
     Queue, QueueInfo, ReviewerInfo, Semester, SemesterInfo, Target
 from ...util import is_list_like
-from ..meta import affiliation, affiliation_weight, call, category, decision, \
+from ..meta import affiliation, affiliation_weight, \
+    call, call_preamble, category, decision, \
     facility, institution, \
     member, person, prev_proposal, prev_proposal_pub, \
     proposal, proposal_category, \
@@ -481,6 +482,15 @@ class ProposalPart(object):
 
         return Facility(**result)
 
+    def get_call_preamble(self, semester_id, type_):
+        """
+        Get the call preamble for a given semester and call type.
+        """
+
+        return self.search_call_preamble(
+            semester_id=semester_id, type_=type_
+        ).get_single()
+
     def get_facility_code(self, facility_id):
         """
         Retrieve the facility code for a given facility identifier.
@@ -860,6 +870,29 @@ class ProposalPart(object):
                 values = default.copy()
                 values.update(**row)
                 ans[row['id']] = Call(**values)
+
+        return ans
+
+    def search_call_preamble(self, semester_id=None, type_=None, _conn=None):
+        """
+        Search for call preamble text records.
+        """
+
+        ans = ResultCollection()
+
+        stmt = call_preamble.select()
+
+        if semester_id is not None:
+            stmt = stmt.where(call_preamble.c.semester_id == semester_id)
+
+        if type_ is not None:
+            stmt = stmt.where(call_preamble.c.type == type_)
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt.order_by(
+                    call_preamble.c.semester_id.asc(),
+                    call_preamble.c.type.asc())):
+                ans[row['id']] = CallPreamble(**row)
 
         return ans
 
@@ -1646,6 +1679,58 @@ class ProposalPart(object):
                 ans[row['id']] = Target(**row)
 
         return ans
+
+    def set_call_preamble(self, type_class, semester_id, type_,
+                          description, description_format, is_update,
+                          _test_skip_check=False):
+        if not type_class.is_valid(type_):
+            raise UserError('The selected call type is not recognised.')
+        if not description_format:
+            raise UserError('Description format not specified.')
+        if not FormatType.is_valid(description_format, is_system=True):
+            raise UserError('Description format not recognised.')
+
+        with self._transaction() as conn:
+            if not _test_skip_check:
+                try:
+                    self.get_semester(None, semester_id, _conn=conn)
+                except NoSuchRecord as e:
+                    raise ConsistencyError(e.message)
+
+                already_exists = self._exists_call_preamble(
+                    conn, semester_id, type_)
+                if is_update and not already_exists:
+                    raise ConsistencyError(
+                        'call preamble does not exist for semester {} type {}',
+                        semester_id, type_)
+                elif not is_update and already_exists:
+                    raise ConsistencyError(
+                        'call preamble already exists for semester {} type {}',
+                        semester_id, type_)
+
+            values = {
+                call_preamble.c.description: description,
+                call_preamble.c.description_format: description_format,
+            }
+
+            if is_update:
+                result = conn.execute(call_preamble.update().where(and_(
+                    call_preamble.c.semester_id == semester_id,
+                    call_preamble.c.type == type_
+                )).values(values))
+
+                if result.rowcount != 1:
+                    raise ConsistencyError(
+                        'no rows matched updating call preamble {} {}',
+                        semester_id, type_)
+            else:
+                values.update({
+                    call_preamble.c.semester_id: semester_id,
+                    call_preamble.c.type: type_,
+                })
+
+                result = conn.execute(
+                    call_preamble.insert().values(values))
 
     def set_proposal_figure_preview(self, fig_id, preview):
         self._set_proposal_figure_alternate(
@@ -2502,6 +2587,16 @@ class ProposalPart(object):
         return conn.execute(select([proposal_pdf.c.id]).where(and_(
             proposal_pdf.c.proposal_id == proposal_id,
             proposal_pdf.c.role == role
+        ))).scalar()
+
+    def _exists_call_preamble(self, conn, semester_id, type_):
+        """
+        Test whether a preamble for the given semester and call type exists.
+        """
+
+        return 0 < conn.execute(select([count(call_preamble.c.id)]).where(and_(
+            call_preamble.c.semester_id == semester_id,
+            call_preamble.c.type == type_
         ))).scalar()
 
     def _exists_proposal_text(self, conn, proposal_id, role):

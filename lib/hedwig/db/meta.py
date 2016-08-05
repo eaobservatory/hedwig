@@ -134,6 +134,19 @@ call = Table(
     UniqueConstraint('semester_id', 'queue_id', 'type'),
     **table_opts)
 
+call_preamble = Table(
+    'call_preamble',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('semester_id', None,
+           ForeignKey('semester.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('type', Integer, nullable=False),
+    Column('description', UnicodeText, nullable=False),
+    Column('description_format', Integer, nullable=False),
+    UniqueConstraint('semester_id', 'type'),
+    **table_opts)
+
 category = Table(
     'category',
     metadata,
