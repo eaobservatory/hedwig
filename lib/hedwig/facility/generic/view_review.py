@@ -908,7 +908,8 @@ class GenericReview(object):
             'person_registered': reviewer.person_registered,
         }
 
-    @with_proposal(permission=PermissionType.NONE, with_decision=True)
+    @with_proposal(permission=PermissionType.NONE,
+                   with_decision=True, with_decision_note=True)
     def view_review_new(self, db, proposal, reviewer_role, args, form):
         role_class = self.get_reviewer_roles()
 
@@ -943,7 +944,8 @@ class GenericReview(object):
             'proposal_code': proposal_code,
         }
 
-    @with_review(permission=PermissionType.EDIT, with_decision=True)
+    @with_review(permission=PermissionType.EDIT,
+                 with_decision=True, with_decision_note=True)
     def view_review_edit(self, db, reviewer, proposal, can, args, form):
         return self._view_review_new_or_edit(
             db, reviewer, proposal, args, form)
@@ -1104,6 +1106,10 @@ class GenericReview(object):
         if role_info.note and not is_own_review:
             role_info = role_info._replace(note=False)
             reviewer = reviewer._replace(review_note=None)
+
+        # If this is not the feedback review, hide the decision note.
+        if reviewer.role != role_class.FEEDBACK:
+            proposal = proposal._replace(decision_note=None)
 
         ctx = {
             'title': '{}: {} {}'.format(

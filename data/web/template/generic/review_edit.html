@@ -28,7 +28,15 @@
 {% block information_extra %}
 {% endblock %}
 
+{% if proposal.decision_note is not none %}
+    <h3>Decision Note</h3>
+
+    {{ proposal.decision_note | format_text(proposal.decision_note_format) }}
+{% endif %}
+
 {% if target_guideline is not none %}
+    <h3>Guidelines</h3>
+
     <p>
         <a href="{{ target_guideline }}" target="_blank">Guidelines for this review</a>
     </p>
