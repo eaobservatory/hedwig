@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% from 'macro/affiliation_tip.html' import render_affiliation_tip %}
-{% set navigation=[(call.semester_name, url_for('.semester_calls', semester_id=call.semester_id, call_type=call.type))] %}
+{% set navigation=[((call.semester_name + ' ' + (call.type | call_type_name(facility_call_type_class))), url_for('.semester_calls', semester_id=call.semester_id, call_type=call.type))] %}
 {% set help_link=url_for('help.user_page', page_name='proposal_create') %}
 {% set scripts = ['formtip'] %}
 
