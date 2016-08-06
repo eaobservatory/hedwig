@@ -119,6 +119,12 @@ def register_template_utils(app):
         return '{:d}:{:02d}:{:02d}'.format(h, m, s)
 
     @app.template_filter()
+    def full_call_type_name(value, type_class, **kwargs):
+        if value is None:
+            return ''
+        return type_class.get_full_call_name(value, **kwargs)
+
+    @app.template_filter()
     def json(value, extend=None, dynamic=None):
         """
         Convert given "value" dictionary to JSON representation.

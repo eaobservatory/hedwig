@@ -15,11 +15,13 @@
 <h2 id="call">Calls for Proposals</h2>
 
 {% if open_semesters %}
-    <p>
-        The following
-        {{ facility_call_type_class.STANDARD | call_type_name(facility_call_type_class) | lower }}
-        calls for proposals are open:
-    </p>
+    {% with plural = ((open_semesters | length) > 1) %}
+        <p>
+            The following
+            {{ facility_call_type_class.STANDARD | full_call_type_name(facility_call_type_class, plural=plural) }}
+            {{ 'are' if plural else 'is' }} open:
+        </p>
+    {% endwith %}
 
     <ul>
         {% for semester_id, semester_name in open_semesters.items() %}

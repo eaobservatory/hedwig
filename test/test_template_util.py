@@ -69,6 +69,13 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(f(None, BaseCallType), '')
         self.assertEqual(f(BaseCallType.STANDARD, BaseCallType), 'Standard')
 
+        f = self.app.jinja_env.filters['full_call_type_name']
+        self.assertEqual(f(None, BaseCallType), '')
+        self.assertEqual(f(BaseCallType.STANDARD, BaseCallType),
+                         'standard call for proposals')
+        self.assertEqual(f(BaseCallType.STANDARD, BaseCallType, plural=True),
+                         'standard calls for proposals')
+
     def test_filter_count_true(self):
         f = self.app.jinja_env.filters['count_true']
 

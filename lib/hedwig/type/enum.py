@@ -365,6 +365,11 @@ class GroupType(EnumBasic, EnumURLPath):
 class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
     """
     Class representing types of calls for proposals.
+
+    The `name_proposal` attribute relates to how a call is named.  If
+    `False` then the name relates to the call (e.g. "standard call for
+    proposals") otherwise, if `True`, the name relates to the proposals
+    (e.g. "call for urguent proposals").
     """
 
     STANDARD = 1
@@ -373,15 +378,17 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
     TypeInfo = namedtuple(
         'TypeInfo',
         ('code', 'name', 'available', 'url_path', 'immediate_review',
-         'notify_group'))
+         'name_proposal', 'notify_group'))
 
-    #                        Code  Name         Avail.  URL         Im. Rv.
-    #                        (Notify groups)
+    #       Code  Name         Avail.  URL         Im.Rv. Nm.Pr.
+    #       (Notify groups)
     _info = OrderedDict((
-        (STANDARD,  TypeInfo(None, 'Standard',  True,  'standard',  False,
-                             ())),
-        (IMMEDIATE, TypeInfo('I',  'Immediate', True,  'immediate', True,
-                             (GroupType.CTTEE,))),
+        (STANDARD,  TypeInfo(
+            None, 'Standard',  True,  'standard',  False, False,
+            ())),
+        (IMMEDIATE, TypeInfo(
+            'I',  'Immediate', True,  'immediate', True,  False,
+            (GroupType.CTTEE,))),
     ))
 
     @classmethod
@@ -396,6 +403,25 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
         """
 
         return cls._info[value].notify_group
+
+    @classmethod
+    def get_full_call_name(cls, value, plural=False):
+        """
+        Get the full name of a call for proposals.
+
+        This returns a full name such as "standard call for proposals"
+        based on the call type name and `name_proposal` attribute.
+        """
+
+        type_info = cls._info[value]
+
+        call = 'calls' if plural else 'call'
+
+        ans = ('{1} for {0} proposals'
+               if type_info.name_proposal
+               else '{0} {1} for proposals')
+
+        return ans.format(type_info.name.lower(), call)
 
 
 class MessageState(EnumBasic):
