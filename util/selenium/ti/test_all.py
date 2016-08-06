@@ -365,7 +365,7 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_name('end_time').send_keys(
             '00:00')
         self.browser.find_element_by_name('description').send_keys(
-            'This is the semester description.')
+            'The instrumentation available is as follows ...')
 
         self._save_screenshot(self.admin_image_root, 'semester_new')
 
@@ -373,6 +373,23 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.assertIn(
             'New semester "{}" has been created.'.format(semester_name),
+            self.browser.page_source)
+
+        # Enter the call preamble.
+        preamble_link = self.browser.find_element_by_id('preamble_edit_1')
+        self._save_screenshot(self.admin_image_root, 'semester_view',
+                              [preamble_link])
+        preamble_link.click()
+
+        self.browser.find_element_by_name('description').send_keys(
+            'We invite proposals ...')
+        self._save_screenshot(self.admin_image_root, 'call_preamble')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The regular call preamble for semester {} '
+            'has been saved.'.format(semester_name),
             self.browser.page_source)
 
         # Create a new queue.
