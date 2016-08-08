@@ -677,7 +677,7 @@ class PeoplePart(object):
         return ans
 
     def search_person(self, user_id=None, email_address=None,
-                      registered=None, public=None,
+                      registered=None, public=None, admin=None,
                       institution_id=None,
                       with_institution=False):
         """
@@ -727,6 +727,12 @@ class PeoplePart(object):
                 stmt = stmt.where(person.c.public)
             else:
                 stmt = stmt.where(not_(person.c.public))
+
+        if admin is not None:
+            if admin:
+                stmt = stmt.where(person.c.admin)
+            else:
+                stmt = stmt.where(not_(person.c.admin))
 
         ans = ResultCollection()
 
