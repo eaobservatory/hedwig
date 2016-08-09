@@ -47,7 +47,7 @@
         </table>
 
         {% if update_counter() > 0 %}
-            <p>
+            <p id="message_state_control">
                 <select name="state_new">
                     {% for (state_num, state_name) in states_settable.items() %}
                         <option value="{{ state_num }}" >{{ state_name }}</option>

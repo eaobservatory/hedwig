@@ -1702,6 +1702,34 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_link_text('Email messages').click()
         self._save_screenshot(self.admin_image_root, 'message_list')
 
+        self.browser.find_element_by_partial_link_text('submitted').click()
+
+        thread_link = self.browser.find_element_by_id('message_thread_link')
+
+        self._save_screenshot(self.admin_image_root, 'message_view',
+                              [thread_link])
+        thread_link.click()
+
+        self.assertIn('<h1>Message thread:', self.browser.page_source)
+
+        self._save_screenshot(self.admin_image_root, 'message_thread')
+
+        # Move a message into the "sending state so that we can test the
+        # reset control.
+        self.db.get_unsent_message(mark_sending=True)
+
+        self.browser.find_element_by_link_text('Messages').click()
+
+        self.browser.find_element_by_xpath('//input[@type="checkbox"]').click()
+
+        self._save_screenshot(self.admin_image_root, 'message_reset',
+                              ['message_state_control'])
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn('The status for 1 message has been set to unsent.',
+                      self.browser.page_source)
+
         self.browser.get(admin_menu_url)
         self.browser.find_element_by_link_text(
             'Approve institution edits').click()
