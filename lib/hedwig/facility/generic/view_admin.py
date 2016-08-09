@@ -464,11 +464,14 @@ class GenericAdmin(object):
         except NoSuchRecord:
             raise HTTPNotFound('Call not found')
 
+        type_class = self.get_call_types()
+
         proposals = db.search_proposal(call_id=call_id, with_member_pi=True)
 
         return {
-            'title': 'Proposals: {} {}'.format(call.semester_name,
-                                               call.queue_name),
+            'title': 'Proposals: {} {} {}'.format(
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type)),
             'call': call,
             'proposals': [
                 ProposalWithCode(*x, code=self.make_proposal_code(db, x))

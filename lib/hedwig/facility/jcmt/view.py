@@ -865,6 +865,7 @@ class JCMT(Generic):
 
     @with_call_review(permission=PermissionType.EDIT)
     def view_review_call_available(self, db, call, can, form):
+        type_class = self.get_call_types()
         message = None
 
         weathers = JCMTWeather.get_available()
@@ -919,8 +920,9 @@ class JCMT(Generic):
             available_weather[weather] = record.time
 
         return {
-            'title': 'Time Available: {} {}'.format(call.semester_name,
-                                                    call.queue_name),
+            'title': 'Time Available: {} {} {}'.format(
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type)),
             'call': call,
             'message': message,
             'weathers': weathers,

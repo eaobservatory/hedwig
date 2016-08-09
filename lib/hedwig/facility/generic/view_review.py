@@ -59,6 +59,7 @@ class GenericReview(object):
     @with_call_review(permission=PermissionType.VIEW)
     def view_review_call(self, db, call, can):
         role_class = self.get_reviewer_roles()
+        type_class = self.get_call_types()
 
         proposals = []
 
@@ -84,8 +85,9 @@ class GenericReview(object):
                 can_view_review=review_can.view))
 
         return {
-            'title': 'Review Process: {} {}'.format(call.semester_name,
-                                                    call.queue_name),
+            'title': 'Review Process: {} {} {}'.format(
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type)),
             'can_edit': can.edit,
             'call_id': call.id,
             'proposals': proposals,
@@ -93,9 +95,12 @@ class GenericReview(object):
 
     @with_call_review(permission=PermissionType.VIEW)
     def view_review_call_tabulation(self, db, call, can):
+        type_class = self.get_call_types()
+
         ctx = {
-            'title': 'Proposal Tabulation: {} {}'.format(call.semester_name,
-                                                         call.queue_name),
+            'title': 'Proposal Tabulation: {} {} {}'.format(
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type)),
             'call': call,
         }
 
@@ -106,6 +111,7 @@ class GenericReview(object):
     @with_call_review(permission=PermissionType.VIEW)
     def view_review_call_tabulation_download(self, db, call, can,
                                              with_cois=True):
+        type_class = self.get_call_types()
         tabulation = self._get_proposal_tabulation(
             db, call, can, with_extra=True)
 
@@ -129,9 +135,10 @@ class GenericReview(object):
         return (
             writer.get_csv(),
             null_tuple(FileTypeInfo)._replace(mime='text/csv'),
-            'proposals-{}-{}.csv'.format(
+            'proposals-{}-{}-{}.csv'.format(
                 re.sub('[^-_a-z0-9]', '_', call.semester_name.lower()),
-                re.sub('[^-_a-z0-9]', '_', call.queue_name.lower())))
+                re.sub('[^-_a-z0-9]', '_', call.queue_name.lower()),
+                re.sub('[^-_a-z0-9]', '_', type_class.url_path(call.type))))
 
     def _get_proposal_tabulation(self, db, call, can, with_extra=False):
         """Prepare information for the detailed tabulation of proposals.
@@ -273,6 +280,7 @@ class GenericReview(object):
 
     @with_call_review(permission=PermissionType.EDIT)
     def view_review_affiliation_weight(self, db, call, can, form):
+        type_class = self.get_call_types()
         message = None
 
         affiliations = db.search_affiliation(
@@ -300,8 +308,9 @@ class GenericReview(object):
                 affiliations = updated_affiliations
 
         return {
-            'title': 'Affiliation Weight: {} {}'.format(call.semester_name,
-                                                        call.queue_name),
+            'title': 'Affiliation Weight: {} {} {}'.format(
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type)),
             'call': call,
             'message': message,
             'affiliations': affiliations.values(),
@@ -314,6 +323,7 @@ class GenericReview(object):
     @with_call_review(permission=PermissionType.EDIT)
     def view_review_call_reviewers(self, db, call, can, args):
         role_class = self.get_reviewer_roles()
+        type_class = self.get_call_types()
 
         role = args.get('role', None)
         if not role:
@@ -347,8 +357,9 @@ class GenericReview(object):
                 code=self.make_proposal_code(db, proposal)))
 
         return {
-            'title': 'Reviewers: {} {}'.format(call.semester_name,
-                                               call.queue_name),
+            'title': 'Reviewers: {} {} {}'.format(
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type)),
             'call': call,
             'proposals': proposals,
             'targets': [
@@ -368,6 +379,7 @@ class GenericReview(object):
     def view_reviewer_grid(self, db, call, can,
                            primary_role, form):
         role_class = self.get_reviewer_roles()
+        type_class = self.get_call_types()
 
         try:
             call = db.get_call(facility_id=self.id_, call_id=call.id)
@@ -518,8 +530,10 @@ class GenericReview(object):
                 proposals = proposals_updated
 
         return {
-            'title': '{}: {} {}'.format(group_info.name.title(),
-                                        call.semester_name, call.queue_name),
+            'title': '{}: {} {} {}'.format(
+                group_info.name.title(),
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type)),
             'call': call,
             'proposals': proposals,
             'target': url_for('.review_call_grid', call_id=call.id,
@@ -1338,6 +1352,8 @@ class GenericReview(object):
 
     @with_call_review(permission=PermissionType.EDIT)
     def view_review_advance_final(self, db, call, can, form):
+        type_class = self.get_call_types()
+
         if form is not None:
             if 'submit_confirm' in form:
                 (n_update, n_error) = finalize_call_review(db, call_id=call.id)
@@ -1357,8 +1373,9 @@ class GenericReview(object):
             raise HTTPRedirect(url_for('.review_call', call_id=call.id))
 
         return {
-            'title': 'Final Review: {} {}'.format(call.semester_name,
-                                                  call.queue_name),
+            'title': 'Final Review: {} {} {}'.format(
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type)),
             'message':
                 'Are you sure you wish to advance to the final review phase?',
             'target': url_for('.review_call_advance_final', call_id=call.id),
@@ -1368,6 +1385,7 @@ class GenericReview(object):
     @with_call_review(permission=PermissionType.EDIT)
     def view_review_confirm_feedback(self, db, call, can, form):
         role_class = self.get_reviewer_roles()
+        type_class = self.get_call_types()
 
         # Get proposals for this call, including their feedback review
         # and decision.  Note: "with_decision" means include it in the
@@ -1421,8 +1439,9 @@ class GenericReview(object):
                 message = e.message
 
         return {
-            'title': 'Feedback: {} {}'.format(call.semester_name,
-                                              call.queue_name),
+            'title': 'Feedback: {} {} {}'.format(
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type)),
             'call': call,
             'proposals': [
                 ProposalWithCode(*x, code=self.make_proposal_code(db, x))

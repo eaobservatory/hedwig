@@ -1,6 +1,5 @@
 {% extends 'layout.html' %}
-{% set navigation=[(proposal.semester_name + ' ' + proposal.queue_name, url_for('.review_call', call_id=proposal.call_id)),
-                   (proposal_code, url_for('.proposal_view', proposal_id=proposal.id))] %}
+{% set navigation=[((proposal.semester_name, proposal.queue_name, (proposal.call_type | call_type_name(facility_call_type_class))) | fmt('{} {} {}'), url_for('.review_call', call_id=proposal.call_id))] %}
 {% set help_link=url_for('help.admin_page', page_name='tabulation_decision') %}
 
 {% if scripts is defined %}
