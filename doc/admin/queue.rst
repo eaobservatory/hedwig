@@ -22,8 +22,9 @@ is eligible to submit a proposal to it.
 .. image:: image/queue_new.png
 
 Once you have created a queue, you will see its information page.
-At first a queue has no affiliations.
-**This will prevent anyone from submitting a proposal.**
+At first a queue has no affiliations ---
+this will prevent you from creating a call for proposals
+for this queue as otherwise no-one would be able to create a proposal.
 You should proceed by clicking the
 "Edit affiliations" list in order to set up the list of affiliations.
 
