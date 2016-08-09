@@ -55,7 +55,7 @@ section of your proposal.
 You should see a list of "Matches"
 (your target objects which fell within one of the defined sky areas)
 and "Non-matches" (your target objects for which no search results were found).
-In the case of a match, your can click on the name of the area
+In the case of a match, you can click on the name of the area
 to see a description of it.
 
 A warning will be shown if the Clash Tool is in the process of being updated.

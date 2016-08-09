@@ -9,7 +9,8 @@ To start the process, select "Clash tool coverage" from the facility
 administrative menu and then click "New coverage map".
 You can then enter the name and a description as well as selecting the
 file to upload.
-The name will be displayed when someone searches for matches
+The name will be displayed
+--- when someone using the tool finds a match ---
 as a link to a detail page showing the description.
 It is therefore a good idea to make the name short but meaningful
 so that people can see what type of match they have found.

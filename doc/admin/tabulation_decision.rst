@@ -50,7 +50,7 @@ allocation.
 
 .. image:: image/decision_edit.png
 
-The tabulation page will the be updated to show the new allocation
+The tabulation page will then be updated to show the new allocation
 rather than the original request.
 
 .. image:: image/review_tabulation_updated.png

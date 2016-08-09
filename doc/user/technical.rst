@@ -23,7 +23,7 @@ respectively.
 .. image:: image/tech_case_edit.png
 
 If you choose to upload a PDF file, simply select the
-file and press the "Upload button".
+file and press the "Upload" button.
 You will be taken back to the technical justification
 page which will probably show you that your PDF file
 has not yet been processed.

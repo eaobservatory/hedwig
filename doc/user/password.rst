@@ -18,7 +18,7 @@ or no longer have access to the email address which you used to
 register, please contact us as we may be able to help you
 recover your account.
 This is preferable to making a new account as it will ensure
-you have access to all of your proposal from a single account.
+you have access to all of your proposals from a single account.
 
 .. image:: image/pass_reset_get.png
 

@@ -17,7 +17,7 @@ to list up to six publications related to each of your previous
 proposals.
 You can either enter the reference manually,
 leaving the type selection set to the default --- "Text description" ---
-or you can enter an DOI or an arXiv or ADS code by changing the
+or you can enter a DOI or an arXiv or ADS code by changing the
 type selection to the appropriate type and entering the
 publication's code in the box.
 The system will attempt to look up references entered as codes
