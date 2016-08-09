@@ -443,6 +443,10 @@ class IntegrationTest(DummyConfigTestCase):
         # Create a call.
         self.browser.get(admin_menu_url)
         self.browser.find_element_by_link_text('Calls').click()
+
+        self._save_screenshot(self.admin_image_root, 'call_list_empty',
+                              ['new_call_links'])
+
         self.browser.find_element_by_link_text('Regular').click()
 
         current_year = str(current_date.year)

@@ -3,6 +3,13 @@ Creating a Call for Proposals
 
 When you have prepared a semester and queue, you can combine them
 to open a call for proposals.
+From the facility administrative menu, select "Calls".
+At the top of the call list page, you will find a list
+showing the different types of calls for proposals which
+you can open.
+Click the link for the type you wish to use.
+
+.. image:: image/call_list_empty.png
 
 Select the semster and queue at the top of the page and enter
 the range of dates when you want the call for proposals to be

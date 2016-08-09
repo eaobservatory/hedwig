@@ -7,7 +7,7 @@
 <nav>
     <p>New call:</p>
 
-    <ul>
+    <ul id="new_call_links">
         {% for (type_num, type_name) in facility_call_type_class.get_options().items() %}
             <li><a href="{{ url_for('.call_new', call_type=type_num) }}">{{ type_name }}</a></li>
         {% endfor %}
