@@ -37,7 +37,7 @@ from ...type.enum import AffiliationType, AttachmentState, \
     CallState, FigureType, FormatType, \
     ProposalState, PublicationType, SemesterState
 from ...type.simple import Affiliation, \
-    Call, CallPreamble, Category, Facility, \
+    Call, CallPreamble, Category, \
     Member, MemberInfo, MemberPIInfo, \
     PrevProposal, PrevProposalPub, \
     Proposal, ProposalCategory, ProposalFigure, \
@@ -456,31 +456,15 @@ class ProposalPart(object):
 
         return ans
 
-    def get_call(self, facility_id, call_id):
+    def get_call(self, facility_id, call_id, with_facility_code=False):
         """
         Get a call record.
         """
 
         return self.search_call(
-            facility_id=facility_id, call_id=call_id, with_case_notes=True
+            facility_id=facility_id, call_id=call_id,
+            with_case_notes=True, with_facility_code=with_facility_code,
         ).get_single()
-
-    def get_call_facility(self, call_id):
-        """
-        Get the facility associated with the given call.
-        """
-
-        with self._transaction() as conn:
-            result = conn.execute(facility.select().select_from(
-                facility.join(semester).join(call)
-            ).where(
-                call.c.id == call_id
-            )).first()
-
-        if result is None:
-            raise NoSuchRecord('facility or call does not exist')
-
-        return Facility(**result)
 
     def get_call_preamble(self, semester_id, type_):
         """
@@ -780,6 +764,7 @@ class ProposalPart(object):
                     queue_id=None, type_=None, state=None,
                     has_proposal_state=None, date_close_before=None,
                     with_queue_description=False, with_case_notes=False,
+                    with_facility_code=False,
                     _conn=None):
         """
         Search for call records.
@@ -811,6 +796,8 @@ class ProposalPart(object):
             queue.c.name.label('queue_name')
         ])
 
+        select_from = call.join(semester).join(queue)
+
         if with_queue_description:
             fields.append(queue.c.description.label('queue_description'))
             fields.append(
@@ -819,9 +806,14 @@ class ProposalPart(object):
             default['queue_description'] = None
             default['queue_description_format'] = None
 
-        stmt = select(fields).select_from(
-            call.join(semester).join(queue)
-        )
+        if with_facility_code:
+            fields.append(facility.c.code.label('facility_code'))
+            select_from = select_from.join(
+                facility, facility.c.id == semester.c.facility_id)
+        else:
+            default['facility_code'] = None
+
+        stmt = select(fields).select_from(select_from)
 
         if call_id is not None:
             stmt = stmt.where(call.c.id == call_id)

@@ -32,7 +32,7 @@ from hedwig.type.enum import AffiliationType, AttachmentState, \
     CallState, FigureType, \
     FormatType, ProposalState
 from hedwig.type.simple import Affiliation, Call, CallPreamble, Category, \
-    Facility, Member, MemberInstitution, \
+    Member, MemberInstitution, \
     Proposal, ProposalCategory, ProposalFigureInfo, ProposalPDFInfo, \
     ProposalText, ProposalTextInfo, Target
 from .dummy_db import DBTestCase
@@ -361,7 +361,8 @@ class DBProposalTest(DBTestCase):
                         capt_word_lim=8, expl_word_lim=9,
                         tech_note='technical note', sci_note='scientific note',
                         prev_prop_note='previous proposal note',
-                        note_format=FormatType.PLAIN)
+                        note_format=FormatType.PLAIN,
+                        facility_code=None)
         self.assertEqual(result[call_id],
                          expected._replace(tech_note=None, sci_note=None,
                                            prev_prop_note=None))
@@ -383,25 +384,28 @@ class DBProposalTest(DBTestCase):
         call = self.db.get_call(facility_id, call_id)
         self.assertEqual(call.date_close.month, 10)
 
-        # Test the get_call_facility method.
+        # Test the get_call method's with_facility_code option.
         queue_id_2 = self.db.add_queue(facility_id_2, 'Another Queue', 'AQ')
         call_id_2 = self.db.add_call(
             BaseCallType, semester_id_2, queue_id_2, BaseCallType.STANDARD,
             date_open, date_close,
             1, 1, 1, 1, 1, 1, 1, 1, 1, '', '', '', FormatType.PLAIN)
 
-        result = self.db.get_call_facility(call_id)
-        self.assertIsInstance(result, Facility)
-        self.assertEqual(result.code, 'my_tel')
-        self.assertEqual(result.id, facility_id)
+        result = self.db.get_call(
+            facility_id=None, call_id=call_id, with_facility_code=True)
+        self.assertIsInstance(result, Call)
+        self.assertEqual(result.facility_code, 'my_tel')
+        self.assertEqual(result.facility_id, facility_id)
 
-        result = self.db.get_call_facility(call_id_2)
-        self.assertIsInstance(result, Facility)
-        self.assertEqual(result.code, 'my_other_tel')
-        self.assertEqual(result.id, facility_id_2)
+        result = self.db.get_call(
+            facility_id=None, call_id=call_id_2, with_facility_code=True)
+        self.assertIsInstance(result, Call)
+        self.assertEqual(result.facility_code, 'my_other_tel')
+        self.assertEqual(result.facility_id, facility_id_2)
 
         with self.assertRaises(NoSuchRecord):
-            self.db.get_call_facility(1999999)
+            self.db.get_call(
+                facility_id=None, call_id=1999999, with_facility_code=True)
 
         # Test the call state filtering.
         result = self.db.search_call()

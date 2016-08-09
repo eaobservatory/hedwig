@@ -22,7 +22,7 @@ from collections import namedtuple
 
 from ..db.meta import affiliation, \
     calculation, call, call_preamble, category, \
-    email, facility, group_member, institution, institution_log, \
+    email, group_member, institution, institution_log, \
     member, message, moc, person, \
     prev_proposal, prev_proposal_pub, \
     proposal, proposal_category, queue, review, reviewer, \
@@ -56,7 +56,7 @@ Call = namedtuple(
     'Call',
     [x.name for x in call.columns] +
     ['state', 'facility_id', 'semester_name', 'queue_name',
-     'queue_description', 'queue_description_format'])
+     'queue_description', 'queue_description_format', 'facility_code'])
 
 CallPreamble = namedtuple(
     'CallPreamble',
@@ -72,10 +72,6 @@ DateAndTime = namedtuple('DateAndTime', ('date', 'time'))
 Email = namedtuple(
     'Email',
     [x.name for x in email.columns])
-
-Facility = namedtuple(
-    'Facility',
-    [x.name for x in facility.columns])
 
 FacilityInfo = namedtuple(
     'FacilityInfo',
