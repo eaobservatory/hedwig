@@ -41,65 +41,71 @@
     </p>
 </nav>
 
-<table>
-    <tr>
-        <th>Proposal</th>
-        <th>Links</th>
-        <th>State</th>
-        <th>Decision</th>
-        <th>PI Name</th>
-        <th>Title</th>
-        <th>Primary Reviewer</th>
-        <th>Secondary Reviewer</th>
-        <th>Categories</th>
-    </tr>
-    {% for proposal in proposals %}
+{% if not proposals %}
+    <p class="not_present">
+        No proposals have been submitted for this call.
+    </p>
+{% else %}
+    <table>
         <tr>
-            <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
-            <td>
-                {% if proposal.can_view_review %}
-                    <a href="{{ url_for('.proposal_reviews', proposal_id=proposal.id) }}">Reviews</a>
-                {% else %}
-                    &nbsp;
-                {% endif %}
-            </td>
-            <td>{{ proposal.state | proposal_state_name }}</td>
-            <td>
-                {% if proposal.decision_accept is none %}
-                    &nbsp;
-                {% elif proposal.decision_accept %}
-                    Accept
-                {% else %}
-                    Reject
-                {% endif %}
-                {% if proposal.decision_ready %}
-                    <span class="label">ready</span>
-                {% endif %}
-            </td>
-            <td>
-                {% if proposal.member is not none %}
-                    {% if session.is_admin or proposal.member.person_public %}
-                        <a href="{{ url_for('people.person_view', person_id=proposal.member.person_id) }}">{{ proposal.member.person_name | abbr }}</a>
-                    {% else %}
-                        {{ proposal.member.person_name | abbr }}
-                    {% endif %}
-                {% else %}
-                    &nbsp;
-                {% endif %}
-            </td>
-            <td>{{ proposal.title | abbr }}</td>
-            {{ render_reviewer_cell(proposal.reviewers_primary) }}
-            {{ render_reviewer_cell(proposal.reviewers_secondary) }}
-            <td>
-                {% if proposal.categories %}
-                    {% for category in proposal.categories.values() %}
-                        <span class="label">{{ category.category_name }}</span>
-                    {% endfor %}
-                {% else %}
-                    &nbsp;
-                {% endif %}
-            </td>
+            <th>Proposal</th>
+            <th>Links</th>
+            <th>State</th>
+            <th>Decision</th>
+            <th>PI Name</th>
+            <th>Title</th>
+            <th>Primary Reviewer</th>
+            <th>Secondary Reviewer</th>
+            <th>Categories</th>
         </tr>
-    {% endfor %}
-</table>
+        {% for proposal in proposals %}
+            <tr>
+                <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+                <td>
+                    {% if proposal.can_view_review %}
+                        <a href="{{ url_for('.proposal_reviews', proposal_id=proposal.id) }}">Reviews</a>
+                    {% else %}
+                        &nbsp;
+                    {% endif %}
+                </td>
+                <td>{{ proposal.state | proposal_state_name }}</td>
+                <td>
+                    {% if proposal.decision_accept is none %}
+                        &nbsp;
+                    {% elif proposal.decision_accept %}
+                        Accept
+                    {% else %}
+                        Reject
+                    {% endif %}
+                    {% if proposal.decision_ready %}
+                        <span class="label">ready</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if proposal.member is not none %}
+                        {% if session.is_admin or proposal.member.person_public %}
+                            <a href="{{ url_for('people.person_view', person_id=proposal.member.person_id) }}">{{ proposal.member.person_name | abbr }}</a>
+                        {% else %}
+                            {{ proposal.member.person_name | abbr }}
+                        {% endif %}
+                    {% else %}
+                        &nbsp;
+                    {% endif %}
+                </td>
+                <td>{{ proposal.title | abbr }}</td>
+                {{ render_reviewer_cell(proposal.reviewers_primary) }}
+                {{ render_reviewer_cell(proposal.reviewers_secondary) }}
+                <td>
+                    {% if proposal.categories %}
+                        {% for category in proposal.categories.values() %}
+                            <span class="label">{{ category.category_name }}</span>
+                        {% endfor %}
+                    {% else %}
+                        &nbsp;
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endif %}
 {% endblock %}
