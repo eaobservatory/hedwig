@@ -19,6 +19,7 @@
 </form>
 
 {% if messages %}
+    {% set update_counter = create_counter(0) %}
     <form method="POST" action="{{ url_for('.message_list') }}">
         <table>
             <tr>
@@ -36,7 +37,7 @@
                 <td><a href="{{ url_for('.message_view', message_id=message.id) }}">{{ message.subject }}</a></td>
                 <td>
                     {% if message.state is message_state_active %}
-                        <input type="checkbox" name="{{ message.id | fmt('message_{}') }}" value="1" />
+                        <input type="checkbox" name="{{ message.id | fmt('message_{}') }}" value="1" id="{{ update_counter() | fmt('update_box_{}') }}" />
                     {% else %}
                         &nbsp;
                     {% endif %}
@@ -45,17 +46,19 @@
             {% endfor %}
         </table>
 
-        <p>
-            <select name="state_new">
-                {% for (state_num, state_name) in states_settable.items() %}
-                    <option value="{{ state_num }}" >{{ state_name }}</option>
+        {% if update_counter() > 0 %}
+            <p>
+                <select name="state_new">
+                    {% for (state_num, state_name) in states_settable.items() %}
+                        <option value="{{ state_num }}" >{{ state_name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="submit" name="submit" value="Set state of marked entries" />
+                {% for (param, param_val) in set_form_params.items() %}
+                    <input type="hidden" name="{{ param }}" value="{{ param_val }}" />
                 {% endfor %}
-            </select>
-            <input type="submit" name="submit" value="Set state of marked entries" />
-            {% for (param, param_val) in set_form_params.items() %}
-                <input type="hidden" name="{{ param }}" value="{{ param_val }}" />
-            {% endfor %}
-        </p>
+            </p>
+        {% endif %}
     </form>
 {% else %}
     <p class="not_present">

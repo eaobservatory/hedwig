@@ -2,6 +2,8 @@
 {% set navigation = ['site_admin'] %}
 {% set help_link=url_for('help.admin_page', page_name='processing_status') %}
 
+{% set update_counter = create_counter(0) %}
+
 {% macro processing_table(entries, checkbox_fmt) %}
     {% if entries %}
         <table>
@@ -28,7 +30,7 @@
                         {% if entry.state is attachment_new %}
                             &nbsp;
                         {% else %}
-                            <input type="checkbox" name="{{ entry.id | fmt(checkbox_fmt) }}" value="1" />
+                            <input type="checkbox" name="{{ entry.id | fmt(checkbox_fmt) }}" value="1" id="{{ update_counter() | fmt('update_box_{}') }}" />
                             <input type="hidden" name="prev_{{ entry.id | fmt(checkbox_fmt) }}" value="{{ entry.state }}" />
                         {% endif %}
                     </td>
@@ -81,7 +83,7 @@
                         {% if pub.state is attachment_new %}
                             &nbsp;
                         {% else %}
-                            <input type="checkbox" name="{{ pub.id | fmt('pub_{}') }}" value="1" />
+                            <input type="checkbox" name="{{ pub.id | fmt('pub_{}') }}" value="1" id="{{ update_counter() | fmt('update_box_{}') }}" />
                             <input type="hidden" name="{{ pub.id | fmt('prev_pub_{}') }}" value="{{ pub.state }}" />
                         {% endif %}
                     </td>
@@ -113,7 +115,7 @@
                         {% if moc.state is attachment_new %}
                             &nbsp;
                         {% else %}
-                            <input type="checkbox" name="{{ moc.id | fmt('moc_{}') }}" value="1" />
+                            <input type="checkbox" name="{{ moc.id | fmt('moc_{}') }}" value="1" id="{{ update_counter() | fmt('update_box_{}') }}" />
                             <input type="hidden" name="{{ moc.id | fmt('prev_moc_{}') }}" value="{{ moc.state }}" />
                         {% endif %}
                     </td>
@@ -126,8 +128,10 @@
         </p>
     {% endif %}
 
-    <p>
-        <input type="submit" name="submit" value="Reset marked entries" />
-    </p>
+    {% if update_counter() > 0 %}
+        <p>
+            <input type="submit" name="submit" value="Reset marked entries" />
+        </p>
+    {% endif %}
 </form>
 {% endblock %}
