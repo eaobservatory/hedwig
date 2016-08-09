@@ -38,12 +38,19 @@ expected in each part.  You may wish to include:
 
 The "Calls" page will then show a table of calls,
 indicating the status of each and giving links to
-pages about the call.
-The "View call" link takes you to the administrative
-interface for the call itself.
-From here you can edit the call or go to the list of proposals.
-The "View proposals" link takes you directly to the list
-of proposals for the call.
+pages about the call:
+
+View call
+    Takes you to the administrative interface for the call itself.
+    From here you can edit the call or go to the list of proposals.
+
+View proposals
+    Takes you to a list of all proposals for the call.
+
+Review process
+    Takes you to the review process page for the call.
+    This page is also accessible directly from the facility
+    home page.
 
 .. image:: image/call_list.png
 
