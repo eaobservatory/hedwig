@@ -72,7 +72,8 @@ def send_proposal_feedback(db):
         with_reviewers=True, with_review_info=True, with_review_text=True,
         with_review_state=ReviewState.DONE,
         with_reviewer_role=BaseReviewerRole.FEEDBACK,
-        with_decision=True, decision_ready=True, decision_accept_defined=True)
+        with_decision=True, with_decision_note=True,
+        decision_ready=True, decision_accept_defined=True)
 
     # Organise the proposals by call.
     calls = defaultdict(list)

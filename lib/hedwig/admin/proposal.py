@@ -136,7 +136,7 @@ def send_call_proposal_feedback(db, call_id, proposals):
           feedback report.
 
     The proposals argument must be a list of Proposal objects including
-    the feedback reviews and all members.
+    the feedback reviews, decision note and all members.
     """
 
     logger.debug('Preparing to send feedback for call {}', call_id)
@@ -144,37 +144,47 @@ def send_call_proposal_feedback(db, call_id, proposals):
     # Determine the facility class.
     logger.debug('Determining facility class for this call')
     try:
-        facility_info = db.get_call_facility(call_id)
+        call = db.get_call(facility_id=None, call_id=call_id,
+                           with_facility_code=True)
+        assert call.id == call_id
+
     except NoSuchRecord:
-        logger.error('Call {} facility identifier unknown', call.id)
+        logger.error('Call {} not found', call_id)
         return 0
 
     for facility_class in get_facilities():
-        if facility_class.get_code() == facility_info.code:
-            facility = facility_class(facility_info.id)
+        if facility_class.get_code() == call.facility_code:
+            facility = facility_class(call.facility_id)
             break
     else:
         logger.error('Call {} facility {} not present',
-                     call_id, facility_info.code)
+                     call_id, call.facility_code)
         return 0
 
     role_class = facility.get_reviewer_roles()
+    type_class = facility.get_call_types()
 
-    # Compute overall ratings for all submitted proposals in the call.
+    # Compute overall ratings for all submitted proposals in the call,
+    # but only if this is not an "immediate review" call.
+    immediate_review = type_class.has_immediate_review(call.type)
     proposal_rating = {}
 
-    call_proposals = db.search_proposal(
-        call_id=call_id, state=ProposalState.submitted_states(),
-        with_reviewers=True, with_review_info=True)
+    if immediate_review:
+        proposal_quartile = {}
 
-    facility.attach_review_extra(db, call_proposals)
+    else:
+        call_proposals = db.search_proposal(
+            call_id=call_id, state=ProposalState.submitted_states(),
+            with_reviewers=True, with_review_info=True)
 
-    for proposal in call_proposals.values():
-        rating = facility.calculate_overall_rating(proposal.reviewers)
-        if rating is not None:
-            proposal_rating[proposal.id] = rating
+        facility.attach_review_extra(db, call_proposals)
 
-    proposal_quartile = label_quartiles(proposal_rating)
+        for proposal in call_proposals.values():
+            rating = facility.calculate_overall_rating(proposal.reviewers)
+            if rating is not None:
+                proposal_rating[proposal.id] = rating
+
+        proposal_quartile = label_quartiles(proposal_rating)
 
     # Iterate over proposals and send feedback.
     n_processed = 0
@@ -250,6 +260,33 @@ def send_call_proposal_feedback(db, call_id, proposals):
 
             db.add_message(email_subject, email_body,
                            [x.person_id for x in proposal.members.values()])
+
+            # If a proposal for an immediate review call was accepted, send
+            # an additional notification message.  For now send this to
+            # site administrators.
+            if (proposal.decision_accept and immediate_review):
+                logger.debug('Writing approval notification for proposal {}',
+                             proposal.id)
+
+                email_ctx.update({
+                    'call_type': type_class.get_name(proposal.call_type),
+                    'immediate_review': immediate_review,
+                    'decision_note': None,
+                })
+
+                if proposal.decision_note is not None:
+                    if proposal.decision_note_format == FormatType.PLAIN:
+                        email_ctx['decision_note'] = proposal.decision_note
+                    else:
+                        logger.warning('Proposal {} note is not plain text',
+                                       proposal_code)
+
+                db.add_message(
+                    email_subject + ' in immediate review',
+                    render_email_template(
+                        'proposal_reviewed_notification.txt',
+                        email_ctx, facility=facility),
+                    [x.id for x in db.search_person(admin=True).values()])
 
         except FeedbackError:
             logger.exception(

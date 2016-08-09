@@ -1,0 +1,34 @@
+{% extends 'layout.txt' %}
+
+{% block content %}
+{% block notification_introduction %}
+This is to inform you that a proposal to use {{ facility_definite_name }}
+has been {{ 'accepted' if proposal.decision_accept else 'rejected' -}}
+{{- ' in an immediate review' if immediate_review else '' }}.
+Proposal {{ proposal_code }}, entitled "{{ proposal.title}}",
+was submitted to the {{ proposal.queue_name }} Queue
+for Semester {{ proposal.semester_name }} ({{ call_type }} Call).
+{% endblock %}
+
+{% block notification_information %}
+{% endblock %}
+
+{% block notification_decision %}
+{% if decision_note %}
+Notes regarding the decision:
+
+{{ decision_note }}
+{% endif %}
+{% endblock %}
+
+{% block notification_feedback %}
+{% if feedback %}
+Feedback comments:
+
+{% for feedback_text in feedback %}
+{{ feedback_text }}
+
+{% endfor %}
+{% endif %}
+{% endblock %}
+{% endblock %}

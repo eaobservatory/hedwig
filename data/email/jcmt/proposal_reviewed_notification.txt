@@ -1,0 +1,13 @@
+{% extends 'generic/proposal_reviewed_notification.txt' %}
+
+{% block notification_information %}
+{% if (proposal.decision_accept and jcmt_allocation) %}
+{{ 'Times' if (jcmt_allocation | length) > 1 else 'Time' }} approved:
+
+{% for allocation in jcmt_allocation %}
+{{ allocation.instrument}}, {{ allocation.weather }}: {{ allocation.time }}
+{{ 'hour' if allocation.time == 1.0 else 'hours' }}
+
+{% endfor %}
+{% endif %}
+{% endblock %}
