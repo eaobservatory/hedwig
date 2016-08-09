@@ -6,32 +6,38 @@
 
 {% block content %}
 
-<table>
-    <tr>
-        <th>Proposal</th>
-        <th>Title</th>
-        <th>State</th>
-        <th>PI Name</th>
-        <th>PI Affiliation</th>
-    </tr>
-    {% for proposal in proposals %}
+{% if not proposals %}
+    <p class="not_present">
+        No proposals have been received for this call.
+    </p>
+{% else %}
+    <table>
         <tr>
-            <td>
-                <a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a>
-            </td>
-            <td>{{ proposal.title }}</td>
-            <td>{{ proposal.state | proposal_state_name }}</td>
-            {% if proposal.member is not none %}
-                <td>
-                    <a href="{{ url_for('people.person_view', person_id=proposal.member.person_id) }}">{{ proposal.member.person_name }}</a>
-                </td>
-                <td>{{ proposal.member.affiliation_name }}</td>
-            {% else %}
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-            {% endif %}
+            <th>Proposal</th>
+            <th>Title</th>
+            <th>State</th>
+            <th>PI Name</th>
+            <th>PI Affiliation</th>
         </tr>
-    {% endfor %}
-</table>
+        {% for proposal in proposals %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a>
+                </td>
+                <td>{{ proposal.title }}</td>
+                <td>{{ proposal.state | proposal_state_name }}</td>
+                {% if proposal.member is not none %}
+                    <td>
+                        <a href="{{ url_for('people.person_view', person_id=proposal.member.person_id) }}">{{ proposal.member.person_name }}</a>
+                    </td>
+                    <td>{{ proposal.member.affiliation_name }}</td>
+                {% else %}
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+    </table>
+{% endif %}
 
 {% endblock %}

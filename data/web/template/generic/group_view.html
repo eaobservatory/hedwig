@@ -28,41 +28,51 @@
     {% endif %}
 </ul>
 
-<table>
-    <tr>
-        <th>Name</th>
-        <th>Institution</th>
-        <th>Links</th>
-    </tr>
-    {% for member in members %}
+{% if not members %}
+    <p class="not_present">
+        This group currently has no members.
+    </p>
+{% else %}
+    <table>
         <tr>
-            <td>
-                <a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name }}</a>
-                {% if not member.person_registered %}
-                    <span class="label">unregistered</span>
-                {% endif %}
-            </td>
-            <td>
-                {% if member.institution_id is none %}
-                    &nbsp;
-                {% else %}
-                    {{ render_member_institution(member) }}
-                {% endif %}
-            </td>
-            <td>
-                {% if not member.person_registered %}
-                    <a href="{{ url_for('.group_member_reinvite', queue_id=queue.id, group_type=group_type, member_id=member.id) }}">Re-send invitation</a>
-                {% else %}
-                    &nbsp;
-                {% endif %}
-            </td>
+            <th>Name</th>
+            <th>Institution</th>
+            <th>Links</th>
         </tr>
-    {% endfor %}
-</table>
+        {% for member in members %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name }}</a>
+                    {% if not member.person_registered %}
+                        <span class="label">unregistered</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if member.institution_id is none %}
+                        &nbsp;
+                    {% else %}
+                        {{ render_member_institution(member) }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not member.person_registered %}
+                        <a href="{{ url_for('.group_member_reinvite', queue_id=queue.id, group_type=group_type, member_id=member.id) }}">Re-send invitation</a>
+                    {% else %}
+                        &nbsp;
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endif %}
 
-<p>
-    <a href="{{ url_for('.group_member_add', queue_id=queue.id, group_type=group_type) }}">Add member</a>
-    <br />
-    <a href="{{ url_for('.group_member_edit', queue_id=queue.id, group_type=group_type) }}">Edit members</a>
-</p>
+<nav>
+    <p>
+        <a href="{{ url_for('.group_member_add', queue_id=queue.id, group_type=group_type) }}">Add member</a>
+        {% if members %}
+            <br />
+            <a href="{{ url_for('.group_member_edit', queue_id=queue.id, group_type=group_type) }}">Edit members</a>
+        {% endif %}
+    </p>
+<nav>
 {% endblock %}

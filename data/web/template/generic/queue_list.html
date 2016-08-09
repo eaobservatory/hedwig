@@ -4,21 +4,29 @@
 
 {% block content %}
 
-<p>
-    <a href="{{ url_for('.queue_new') }}">New queue</a>
-</p>
+<nav>
+    <p>
+        <a href="{{ url_for('.queue_new') }}">New queue</a>
+    </p>
+</nav>
 
-<table>
-    <tr>
-        <th>Queue</th>
-        <th>Code</th>
-    </tr>
-    {% for queue in queues.values() %}
+{% if not queues %}
+    <p class="not_present">
+        No queues have yet been defined.
+    </p>
+{% else %}
+    <table>
         <tr>
-            <td><a href="{{ url_for('.queue_view', queue_id=queue.id) }}">{{ queue.name }}</a></td>
-            <td>{{ queue.code }}</td>
+            <th>Queue</th>
+            <th>Code</th>
         </tr>
-    {% endfor %}
-</table>
+        {% for queue in queues.values() %}
+            <tr>
+                <td><a href="{{ url_for('.queue_view', queue_id=queue.id) }}">{{ queue.name }}</a></td>
+                <td>{{ queue.code }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endif %}
 
 {% endblock %}

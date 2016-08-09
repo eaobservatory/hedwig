@@ -4,27 +4,36 @@
 
 {% block content %}
 
-<p>
-    <a href="{{ url_for('.semester_new') }}">New semester</a>
-</p>
+<nav>
+    <p>
+        <a href="{{ url_for('.semester_new') }}">New semester</a>
+    </p>
+</nav>
 
-<table>
-    <tr>
-        <th>Semester</th>
-        <th>Code</th>
-        <th>Start date (UT)</th>
-        <th>End date (UT)</th>
-        <th>Status</th>
-    </tr>
-    {% for semester in semesters.values() %}
+
+{% if not semesters %}
+    <p class="not_present">
+        No semesters have yet been defined.
+    </p>
+{% else %}
+    <table>
         <tr>
-            <td><a href="{{ url_for('.semester_view', semester_id=semester.id) }}">{{ semester.name }}</a></td>
-            <td>{{ semester.code }}</td>
-            <td>{{ semester.date_start | format_datetime }}</td>
-            <td>{{ semester.date_end | format_datetime }}</td>
-            <td>{{ semester.state | semester_state_name }}</td>
+            <th>Semester</th>
+            <th>Code</th>
+            <th>Start date (UT)</th>
+            <th>End date (UT)</th>
+            <th>Status</th>
         </tr>
-    {% endfor %}
-</table>
+        {% for semester in semesters.values() %}
+            <tr>
+                <td><a href="{{ url_for('.semester_view', semester_id=semester.id) }}">{{ semester.name }}</a></td>
+                <td>{{ semester.code }}</td>
+                <td>{{ semester.date_start | format_datetime }}</td>
+                <td>{{ semester.date_end | format_datetime }}</td>
+                <td>{{ semester.state | semester_state_name }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endif %}
 
 {% endblock %}
