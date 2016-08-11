@@ -619,7 +619,8 @@ class ReviewerCollection(ResultCollection, CollectionByProposal):
                     yield member
 
 
-class TargetCollection(ResultCollection, CollectionOrdered):
+class TargetCollection(ResultCollection, CollectionOrdered,
+                       CollectionByProposal):
     """
     Collection for target objects listed on a proposal.
     """

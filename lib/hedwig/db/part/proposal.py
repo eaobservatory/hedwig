@@ -1662,13 +1662,25 @@ class ProposalPart(object):
         Retrieve the targets of a given proposal.
         """
 
-        stmt = target.select().where(target.c.proposal_id == proposal_id)
+        iter_field = None
+        iter_list = None
+
+        stmt = target.select()
+
+        if is_list_like(proposal_id):
+            assert iter_field is None
+            iter_field = target.c.proposal_id
+            iter_list = proposal_id
+        else:
+            stmt = stmt.where(target.c.proposal_id == proposal_id)
 
         ans = TargetCollection()
 
         with self._transaction() as conn:
-            for row in conn.execute(stmt.order_by(target.c.sort_order.asc())):
-                ans[row['id']] = Target(**row)
+            for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
+                for row in conn.execute(
+                        iter_stmt.order_by(target.c.sort_order.asc())):
+                    ans[row['id']] = Target(**row)
 
         return ans
 
