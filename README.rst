@@ -122,6 +122,12 @@ You will then need to edit the file to complete the configuration.
     If this entry is set, it configures the location to which errors and
     warnings from the web application will be written.
 
+  * *grace_period*
+
+    This specifies a time delay, in minutes, beyond the specified end of
+    each call for proposals.  Calls may be closed (by the poll process)
+    after this delay.
+
 * **upload**
 
   In this section you can configure maximum file size upload limits (in MiB).
@@ -273,11 +279,13 @@ periods, Hedwig was designed to take certain background tasks
 offline.
 These are:
 
+* Closing calls for proposals.
 * Sending email messages.
 * Processing uploaded figures.
 * Processing uploaded PDF files.
 * Looking up publication references.
 * Preparing feedback messages.
+* Processing uploaded clash tool coverage files.
 
 In a live copy of Hedwig, you will need to keep a poll process
 running to perform these tasks.
