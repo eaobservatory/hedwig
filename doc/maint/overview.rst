@@ -41,8 +41,8 @@ The :doc:`hedwig.web <api/web>` Package
 This package includes:
 
 :mod:`hedwig.web.app`
-    Defines a function `create_web_app` which constructs and
-    returns a Flask application object.
+    Defines a function :func:`~hedwig.web.app.create_web_app`
+    which constructs and returns a Flask application object.
     This is used by the WSGI script to create the `application` object,
     and by `hedwigctl` when running a test web server.
 
@@ -61,20 +61,22 @@ This package includes:
     so you can re-import those names from this module.
     It also defines exception classes, several of which
     inherit from a werkzeug exception, e.g.
-    `HTTPRedirect` which inherits from `werkzeug.routing.RequestRedirect`
+    :class:`~hedwig.web.util.HTTPRedirect` which inherits from
+    `werkzeug.routing.RequestRedirect`
     and sets a "see other" HTTP status code.
 
     There are various other useful functions in this module such as:
 
-    * `flash` which applies new-style string formatting and calls Flask's
-      `flash` function.
+    * :func:`~hedwig.web.util.flash` which applies new-style string formatting
+      and calls Flask's `flash` function.
 
-    * `require_auth` and `require_admin` for authorization.
+    * :func:`~hedwig.web.util.require_auth` and
+      :func:`~hedwig.web.util.require_admin` for authorization.
 
-    * `templated` which applies Jinja2 templates and traps the
-      `ErrorPage` exception.
+    * :func:`~hedwig.web.util.templated` which applies Jinja2 templates
+      and traps the :class:`~hedwig.web.util.ErrorPage` exception.
 
-    * `send_file` for responding with non-HTML content.
+    * :func:`~hedwig.web.util.send_file` for responding with non-HTML content.
 
 :doc:`hedwig.web.blueprint <api/web_blueprint>`
     This package contains a number of modules with functions to create
@@ -196,7 +198,8 @@ This is organized as follows:
     :meth:`~hedwig.db.control.Database._sync_records`
         A general purpose method for updating a set of database
         records to match a given set of records.  This is used by
-        several record-syncing methods, such as `sync_proposal_target`
+        several record-syncing methods, such as
+        :meth:`~hedwig.db.part.proposal.ProposalPart.sync_proposal_target`
         which updates the list of target objects associated with a proposal.
 
     :meth:`~hedwig.db.control.Database._iter_stmt`
