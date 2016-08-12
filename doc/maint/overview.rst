@@ -297,6 +297,13 @@ Other modules which are worth mentioning in this overview are:
         it can be very useful, such as when trying to "sync" sets of
         database methods.
 
+    :mod:`hedwig.type.base`
+        This module defines a number of mix-in classes which are
+        used by some of the custom classes.
+
+    :mod:`hedwig.type.misc`
+        This module contains additional miscellaneous types.
+
     :mod:`hedwig.type.util`
         This module contains utility functions for working with the
         Hedwig types.  One very useful function is
