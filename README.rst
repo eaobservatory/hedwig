@@ -42,6 +42,10 @@ For more information about using Flask-based applications
 Requirements
 ~~~~~~~~~~~~
 
+Hedwig requires Python 2, version 2.7.8 or later.  Alternatively an
+earlier version of Python 2.7 could be used with the `backports.pbkdf2`
+library.
+
 The following Python modules should be installed:
 
 * astropy
