@@ -199,6 +199,15 @@ This is organized as follows:
         several record-syncing methods, such as `sync_proposal_target`
         which updates the list of target objects associated with a proposal.
 
+    :meth:`~hedwig.db.control.Database._iter_stmt`
+        A generator which yields a sequence of query statements.
+        This is used when a query wishes to restrict a given field
+        (the `iter_field` argument) to values in a given list
+        (passed as `iter_list`) but the list might be excessively
+        large.  The operation is broken down into multiple queries
+        each restricting `iter_field` to a subset of values from
+        `iter_list`, up to the size configured by the `query_block_size`.
+
     The actual access methods are defined in "mix-in" classes which
     :class:`~hedwig.db.control.Database` inherits,
     located in the :doc:`hedwig.db.part <api/db_part>` package.
