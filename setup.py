@@ -19,7 +19,7 @@ from distutils.core import setup
 import os
 import sys
 
-sys.path.append('lib')
+sys.path.insert(0, 'lib')
 from hedwig.version import version
 
 with open('README.rst') as f:
