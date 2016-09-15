@@ -22,7 +22,7 @@ from sqlalchemy.schema import Column, ForeignKey, Index, MetaData, Table, \
     UniqueConstraint
 
 from sqlalchemy.types import Boolean, DateTime, Float, Integer, \
-    String, Unicode, UnicodeText
+    Unicode, UnicodeText
 
 from ...db.meta import metadata, table_opts
 

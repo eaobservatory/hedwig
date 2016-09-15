@@ -19,7 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from contextlib import closing
-from cStringIO import StringIO
+from io import BytesIO
 import warnings
 
 from PIL import Image
@@ -63,7 +63,7 @@ def _read_image(image):
     Construct an image object by reading the given buffer.
     """
 
-    with closing(StringIO(image)) as f:
+    with closing(BytesIO(image)) as f:
         im = Image.open(f)
         im.load()
 
@@ -75,7 +75,7 @@ def _write_image(image_obj):
     Write image to a buffer and return it.
     """
 
-    with closing(StringIO()) as f:
+    with closing(BytesIO()) as f:
         image_obj.save(f, format='PNG')
         return f.getvalue()
 

@@ -82,7 +82,7 @@ def register_template_utils(app):
 
     @app.template_filter()
     def count_true(list_):
-        return len(filter(None, list_))
+        return sum(1 for x in list_ if x)
 
     @app.template_filter()
     def country_name(value):

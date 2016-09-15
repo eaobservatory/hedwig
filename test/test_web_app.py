@@ -26,13 +26,13 @@ class BasicWebAppTestCase(WebAppTestCase):
         rv = self.client.get('/')
         self.assertEqual(rv.status_code, 200)
         self.assertEqual(rv.mimetype, 'text/html')
-        self.assertIn(
+        self.assertInEncoded(
             '<h1>' + self.config.get('application', 'name') + '</h1>',
             rv.data)
 
     def test_log_in(self):
         rv = self.log_in('user1', 'pass1')
-        self.assertIn(
+        self.assertInEncoded(
             'User name or password not recognised.',
             rv.data)
 
@@ -42,7 +42,7 @@ class BasicWebAppTestCase(WebAppTestCase):
         self.db.add_user('user1', 'pass1')
 
         rv = self.log_in('user1', 'pass1')
-        self.assertIn(
+        self.assertInEncoded(
             '<li>You have been logged in.</li>',
             rv.data)
 
@@ -50,7 +50,7 @@ class BasicWebAppTestCase(WebAppTestCase):
             self.assertIn('user_id', sess)
 
         rv = self.log_out()
-        self.assertIn(
+        self.assertInEncoded(
             '<li>You have been logged out.</li>',
             rv.data)
 

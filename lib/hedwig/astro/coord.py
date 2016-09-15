@@ -119,8 +119,8 @@ def parse_coord(system, x, y, name):
         raise UserError('Could not parse coordinates for "{}": {!s}',
                         name, e)
     except ValueError as e:
-        raise UserError('Could not parse coordinates for "{}": {}',
-                        name, e.message)
+        raise UserError('Could not parse coordinates for "{}": {!s}',
+                        name, e)
 
 
 def format_coord(system, coord):

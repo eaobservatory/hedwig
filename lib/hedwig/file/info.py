@@ -18,8 +18,8 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from cStringIO import StringIO
 from contextlib import closing
+from io import BytesIO
 
 from magic import Magic
 from PyPDF2 import PdfFileReader
@@ -50,7 +50,7 @@ def determine_pdf_page_count(buff):
     Determine the number of pages in a PDF file stored in a buffer.
     """
 
-    with closing(StringIO(buff)) as s:
+    with closing(BytesIO(buff)) as s:
         try:
             r = PdfFileReader(s)
             return r.numPages

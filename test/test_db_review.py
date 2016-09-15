@@ -45,11 +45,11 @@ class DBReviewTest(DBTestCase):
         self.assertEqual(len(result), 0)
 
         # Check member add constraints.
-        with self.assertRaisesRegexp(ConsistencyError, 'queue does not exist'):
+        with self.assertRaisesRegex(ConsistencyError, 'queue does not exist'):
             self.db.add_group_member(1999999, GroupType.CTTEE, person_id_1)
-        with self.assertRaisesRegexp(ConsistencyError, 'person does not'):
+        with self.assertRaisesRegex(ConsistencyError, 'person does not'):
             self.db.add_group_member(queue_id, GroupType.TECH, 1999999)
-        with self.assertRaisesRegexp(Error, 'invalid group type'):
+        with self.assertRaisesRegex(Error, 'invalid group type'):
             self.db.add_group_member(queue_id, 999, person_id_1)
 
         with self.assertRaises(DatabaseIntegrityError):
@@ -136,7 +136,7 @@ class DBReviewTest(DBTestCase):
             BaseReviewerRole.CTTEE_PRIMARY)
         self.assertIsInstance(reviewer_id_1, int)
 
-        with self.assertRaisesRegexp(UserError, '^There is already'):
+        with self.assertRaisesRegex(UserError, '^There is already'):
             self.db.add_reviewer(
                 BaseReviewerRole, proposal_id, person_id_2,
                 BaseReviewerRole.CTTEE_PRIMARY)
@@ -213,7 +213,7 @@ class DBReviewTest(DBTestCase):
         self.assertEqual(list(result.keys()), [reviewer_id_2])
 
         # Try specifying a review.
-        with self.assertRaisesRegexp(ConsistencyError, '^review does not'):
+        with self.assertRaisesRegex(ConsistencyError, '^review does not'):
             self.db.set_review(
                 BaseReviewerRole,
                 reviewer_id=reviewer_id_2,
@@ -231,7 +231,7 @@ class DBReviewTest(DBTestCase):
             is_update=False)
 
         # Try updating a review.
-        with self.assertRaisesRegexp(ConsistencyError, '^review already'):
+        with self.assertRaisesRegex(ConsistencyError, '^review already'):
             self.db.set_review(
                 BaseReviewerRole,
                 reviewer_id=reviewer_id_2,
@@ -273,7 +273,7 @@ class DBReviewTest(DBTestCase):
         self.db.delete_reviewer(reviewer_id=reviewer_id_2, delete_review=True)
 
         # Test review constraints.
-        with self.assertRaisesRegexp(Error, 'The rating should be specified'):
+        with self.assertRaisesRegex(Error, 'The rating should be specified'):
             self.db.set_review(
                 BaseReviewerRole,
                 reviewer_id=reviewer_id_3,
@@ -282,7 +282,7 @@ class DBReviewTest(DBTestCase):
                 note='A note', note_format=FormatType.PLAIN, note_public=False,
                 is_update=False)
 
-        with self.assertRaisesRegexp(Error, 'Text format not specified'):
+        with self.assertRaisesRegex(Error, 'Text format not specified'):
             self.db.set_review(
                 BaseReviewerRole,
                 reviewer_id=reviewer_id_3,
@@ -291,7 +291,7 @@ class DBReviewTest(DBTestCase):
                 note='A note', note_format=FormatType.PLAIN, note_public=False,
                 is_update=False)
 
-        with self.assertRaisesRegexp(Error, 'Text format not recognised'):
+        with self.assertRaisesRegex(Error, 'Text format not recognised'):
             self.db.set_review(
                 BaseReviewerRole,
                 reviewer_id=reviewer_id_3,
@@ -300,7 +300,7 @@ class DBReviewTest(DBTestCase):
                 note='A note', note_format=FormatType.PLAIN, note_public=False,
                 is_update=False)
 
-        with self.assertRaisesRegexp(Error, 'The assessment should not'):
+        with self.assertRaisesRegex(Error, 'The assessment should not'):
             self.db.set_review(
                 BaseReviewerRole,
                 reviewer_id=reviewer_id_3,
@@ -309,7 +309,7 @@ class DBReviewTest(DBTestCase):
                 note='A note', note_format=FormatType.PLAIN, note_public=False,
                 is_update=False)
 
-        with self.assertRaisesRegexp(Error, 'Note format not recognised'):
+        with self.assertRaisesRegex(Error, 'Note format not recognised'):
             self.db.set_review(
                 BaseReviewerRole,
                 reviewer_id=reviewer_id_3,
@@ -318,7 +318,7 @@ class DBReviewTest(DBTestCase):
                 note='A note', note_format=999, note_public=False,
                 is_update=False)
 
-        with self.assertRaisesRegexp(Error, 'The note should be specified'):
+        with self.assertRaisesRegex(Error, 'The note should be specified'):
             self.db.set_review(
                 BaseReviewerRole,
                 reviewer_id=reviewer_id_3,
@@ -333,7 +333,7 @@ class DBReviewTest(DBTestCase):
             BaseReviewerRole.TECH)
         self.assertIsInstance(reviewer_id_4, int)
 
-        with self.assertRaisesRegexp(Error, 'Assessment value not recognised'):
+        with self.assertRaisesRegex(Error, 'Assessment value not recognised'):
             self.db.set_review(
                 BaseReviewerRole,
                 reviewer_id=reviewer_id_4,
@@ -356,7 +356,7 @@ class DBReviewTest(DBTestCase):
         self.assertIsNone(proposal.decision_ready)
 
         # Try creating a decision record.
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 ConsistencyError, 'decision does not already exist'):
             self.db.set_decision(proposal_id, False, False, False,
                                  note='', note_format=FormatType.PLAIN,
@@ -381,7 +381,7 @@ class DBReviewTest(DBTestCase):
         self.assertEqual(proposal.decision_note_format, FormatType.PLAIN)
 
         # Try updating a decision record.
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 ConsistencyError, 'decision already exists'):
             self.db.set_decision(proposal_id, True, True, True,
                                  note='', note_format=FormatType.PLAIN,

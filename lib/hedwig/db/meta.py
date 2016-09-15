@@ -22,7 +22,7 @@ from sqlalchemy.schema import Column, ForeignKey, Index, MetaData, \
     PrimaryKeyConstraint, Table, UniqueConstraint
 
 from sqlalchemy.types import Boolean, DateTime, Float, Integer, \
-    LargeBinary, String, Unicode, UnicodeText
+    LargeBinary, Unicode, UnicodeText
 
 from .type import JSONEncoded
 
@@ -248,7 +248,7 @@ institution_log = Table(
 invitation = Table(
     'invitation',
     metadata,
-    Column('token', String(255), primary_key=True),
+    Column('token', Unicode(255), primary_key=True),
     Column('person_id', None,
            ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            unique=True, nullable=False),
@@ -450,7 +450,7 @@ proposal_fig = Table(
     Column('type', Integer, nullable=False),
     Column('state', Integer, nullable=False, index=True),
     Column('figure', LargeBinary(2**24 - 1), nullable=False),
-    Column('md5sum', String(40), nullable=False),
+    Column('md5sum', Unicode(40), nullable=False),
     Column('filename', Unicode(255), nullable=False),
     Column('uploaded', DateTime(), nullable=False),
     Column('uploader', None,
@@ -488,7 +488,7 @@ proposal_pdf = Table(
            nullable=False),
     Column('role', Integer, nullable=False),
     Column('pdf', LargeBinary(2**32 - 1), nullable=False),
-    Column('md5sum', String(40), nullable=False),
+    Column('md5sum', Unicode(40), nullable=False),
     Column('state', Integer, nullable=False, index=True),
     Column('pages', Integer, nullable=False),
     Column('filename', Unicode(255), nullable=False),
@@ -530,7 +530,7 @@ queue = Table(
 reset_token = Table(
     'reset_token',
     metadata,
-    Column('token', String(255), primary_key=True),
+    Column('token', Unicode(255), primary_key=True),
     Column('user_id', None,
            ForeignKey('user.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            unique=True, nullable=False),
@@ -606,8 +606,8 @@ user = Table(
     metadata,
     Column('id', Integer, primary_key=True),
     Column('name', Unicode(255), unique=True, nullable=False),
-    Column('password', String(255)),
-    Column('salt', String(255)),
+    Column('password', Unicode(255)),
+    Column('salt', Unicode(255)),
     **table_opts)
 
 user_log = Table(
@@ -619,13 +619,13 @@ user_log = Table(
            nullable=False),
     Column('date', DateTime(), nullable=False),
     Column('event', Integer, nullable=False),
-    Column('remote_addr', String(50), nullable=True),
+    Column('remote_addr', Unicode(50), nullable=True),
     **table_opts)
 
 verify_token = Table(
     'verify_token',
     metadata,
-    Column('token', String(255), primary_key=True),
+    Column('token', Unicode(255), primary_key=True),
     Column('person_id', None,
            ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),

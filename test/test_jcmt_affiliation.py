@@ -18,13 +18,13 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from unittest import TestCase
-
 from hedwig.facility.jcmt.view import JCMT
 from hedwig.type.collection import AffiliationCollection, MemberCollection
 from hedwig.type.enum import AffiliationType
 from hedwig.type.simple import Affiliation, Member
 from hedwig.type.util import null_tuple
+
+from .compat import TestCase
 
 
 class JCMTAffiliationTestCase(TestCase):

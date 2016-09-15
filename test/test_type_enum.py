@@ -19,14 +19,16 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict
-from unittest import TestCase
 
+from hedwig.compat import string_type
 from hedwig.error import Error, NoSuchValue
 from hedwig.type.enum import \
     Assessment, AttachmentState, \
     BaseCallType, BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, \
     MessageState, PersonTitle, ProposalState, ReviewState, SemesterState
+
+from .compat import TestCase
 
 
 class EnumTypeTestCase(TestCase):
@@ -35,14 +37,14 @@ class EnumTypeTestCase(TestCase):
         self.assertFalse(Assessment.is_valid(999))
 
         name = Assessment.get_name(Assessment.FEASIBLE)
-        self.assertIsInstance(name, unicode)
+        self.assertIsInstance(name, string_type)
 
         options = Assessment.get_options()
         self.assertIsInstance(options, OrderedDict)
 
         for (k, v) in options.items():
             self.assertIsInstance(k, int)
-            self.assertIsInstance(v, unicode)
+            self.assertIsInstance(v, string_type)
 
     def test_attachment_state(self):
         # Get list of all states for subsequent tests.
@@ -55,7 +57,7 @@ class EnumTypeTestCase(TestCase):
 
         for state in states:
             self.assertTrue(AttachmentState.is_valid(state))
-            self.assertIsInstance(AttachmentState.get_name(state), unicode)
+            self.assertIsInstance(AttachmentState.get_name(state), string_type)
 
             if state == AttachmentState.READY:
                 self.assertNotIn(state, unready)
@@ -75,7 +77,7 @@ class EnumTypeTestCase(TestCase):
         self.assertEqual(CallState.get_name(CallState.OPEN), 'Open')
 
         for state in states:
-            self.assertIsInstance(CallState.get_name(state), unicode)
+            self.assertIsInstance(CallState.get_name(state), string_type)
 
     def test_call_type(self):
         self.assertTrue(BaseCallType.is_valid(BaseCallType.STANDARD))
@@ -88,16 +90,16 @@ class EnumTypeTestCase(TestCase):
 
         for (type_, type_name) in options.items():
             self.assertIsInstance(type_, int)
-            self.assertIsInstance(type_name, unicode)
+            self.assertIsInstance(type_name, string_type)
 
         self.assertIsNone(BaseCallType.get_code(BaseCallType.STANDARD))
         self.assertIsInstance(BaseCallType.get_code(BaseCallType.IMMEDIATE),
-                              unicode)
+                              string_type)
 
         self.assertEqual(BaseCallType.by_code(None), BaseCallType.STANDARD)
         self.assertEqual(BaseCallType.by_code('I'), BaseCallType.IMMEDIATE)
 
-        with self.assertRaisesRegexp(NoSuchValue, 'Code "X" not recognised'):
+        with self.assertRaisesRegex(NoSuchValue, 'Code "X" not recognised'):
             BaseCallType.by_code('X')
 
         class NoNullCallType(BaseCallType):
@@ -106,7 +108,7 @@ class EnumTypeTestCase(TestCase):
                 BaseCallType.get_info(BaseCallType.IMMEDIATE)),))
 
         self.assertEqual(NoNullCallType.by_code('I'), NoNullCallType.IMMEDIATE)
-        with self.assertRaisesRegexp(NoSuchValue, 'Null code not recognised'):
+        with self.assertRaisesRegex(NoSuchValue, 'Null code not recognised'):
             NoNullCallType.by_code(None)
 
         self.assertFalse(
@@ -168,7 +170,7 @@ class EnumTypeTestCase(TestCase):
 
         for (key, title) in options.items():
             self.assertIsInstance(key, int)
-            self.assertIsInstance(title, unicode)
+            self.assertIsInstance(title, string_type)
 
         option_values = list(options.values())
         for title in ('Dr. Miss Mr. Mrs. Ms. Prof.'.split(' ')):
@@ -198,14 +200,14 @@ class EnumTypeTestCase(TestCase):
             self.assertTrue(ProposalState.is_valid(state))
 
             # State should have a name.
-            self.assertIsInstance(ProposalState.get_name(state), unicode)
+            self.assertIsInstance(ProposalState.get_name(state), string_type)
 
             # State should have boolean "can_edit" property.
             self.assertIn(ProposalState.can_edit(state), (True, False))
 
             # State should be in the options list.
             self.assertIn(state, options)
-            self.assertIsInstance(options[state], unicode)
+            self.assertIsInstance(options[state], string_type)
             self.assertEqual(options[state], ProposalState.get_name(state))
 
         self.assertFalse(ProposalState.is_valid(999))
@@ -240,7 +242,7 @@ class EnumTypeTestCase(TestCase):
 
         self.assertEqual(ProposalState.by_name('accepted'),
                          ProposalState.ACCEPTED)
-        with self.assertRaisesRegexp(NoSuchValue, 'not recognised'):
+        with self.assertRaisesRegex(NoSuchValue, 'not recognised'):
             ProposalState.by_name('not a real state')
 
     def test_group_type(self):
@@ -251,14 +253,14 @@ class EnumTypeTestCase(TestCase):
             self.assertIsInstance(k, int)
             self.assertTrue(GroupType.is_valid(k))
 
-            self.assertIsInstance(v, unicode)
+            self.assertIsInstance(v, string_type)
 
             i = GroupType.get_info(k)
             self.assertIsInstance(i, tuple)
-            self.assertIsInstance(i.name, unicode)
+            self.assertIsInstance(i.name, string_type)
             self.assertIsInstance(i.view_all_prop, bool)
             self.assertIsInstance(i.private_moc, bool)
-            self.assertIsInstance(i.url_path, unicode)
+            self.assertIsInstance(i.url_path, string_type)
             self.assertEqual(i.name, v)
 
             self.assertEqual(GroupType.url_path(k), i.url_path)
@@ -274,7 +276,7 @@ class EnumTypeTestCase(TestCase):
         url_paths = GroupType.get_url_paths()
         self.assertIsInstance(url_paths, list)
         for url_path in url_paths:
-            self.assertIsInstance(url_path, unicode)
+            self.assertIsInstance(url_path, string_type)
 
     def test_review_state(self):
         self.assertEqual(ReviewState.get_name(ReviewState.NOT_DONE),
@@ -296,7 +298,7 @@ class EnumTypeTestCase(TestCase):
             info = BaseReviewerRole.get_info(role)
 
             self.assertIsInstance(info, tuple)
-            self.assertIsInstance(info.name, unicode)
+            self.assertIsInstance(info.name, string_type)
             self.assertIsInstance(info.unique, bool)
             self.assertIsInstance(info.text, bool)
             self.assertIsInstance(info.assessment, bool)
@@ -373,7 +375,7 @@ class EnumTypeTestCase(TestCase):
                          'Future')
 
         for state in states:
-            self.assertIsInstance(SemesterState.get_name(state), unicode)
+            self.assertIsInstance(SemesterState.get_name(state), string_type)
 
     def test_text_role(self):
         self.assertTrue(BaseTextRole.is_valid(BaseTextRole.ABSTRACT))
@@ -381,17 +383,17 @@ class EnumTypeTestCase(TestCase):
 
         self.assertIsInstance(
             BaseTextRole.get_name(BaseTextRole.TECHNICAL_CASE),
-            unicode)
+            string_type)
 
         self.assertIsInstance(
             BaseTextRole.short_name(BaseTextRole.SCIENCE_CASE),
-            unicode)
+            string_type)
 
         self.assertIsInstance(
             BaseTextRole.url_path(BaseTextRole.TECHNICAL_CASE),
-            unicode)
+            string_type)
 
-        with self.assertRaisesRegexp(Error, 'has no URL path'):
+        with self.assertRaisesRegex(Error, 'has no URL path'):
             BaseTextRole.url_path(BaseTextRole.TOOL_NOTE)
 
         self.assertEqual(
@@ -402,7 +404,7 @@ class EnumTypeTestCase(TestCase):
         self.assertEqual(BaseTextRole.by_url_path('technical'),
                          BaseTextRole.TECHNICAL_CASE)
 
-        with self.assertRaisesRegexp(NoSuchValue, 'path .* not recognised'):
+        with self.assertRaisesRegex(NoSuchValue, 'path .* not recognised'):
             BaseTextRole.by_url_path('something_else')
 
         self.assertIsNone(BaseTextRole.by_url_path('something_else', None))

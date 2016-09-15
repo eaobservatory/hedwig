@@ -18,7 +18,10 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from urllib import quote
+try:
+    from urllib.parse import quote
+except ImportError:
+    from urllib import quote
 
 from ..type.enum import PublicationType
 

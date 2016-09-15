@@ -18,10 +18,15 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from ConfigParser import SafeConfigParser
 from importlib import import_module
 import os
 
+try:
+    from configparser import ConfigParser
+except ImportError:
+    from ConfigParser import SafeConfigParser as ConfigParser
+
+from .compat import make_type
 from .error import FormattedError
 from .db.control import Database
 from .db.engine import get_engine
@@ -37,7 +42,7 @@ def get_config():
     """
     Read the configuration file.
 
-    Returns a SafeConfigParser object.
+    Returns a ConfigParser object.
     """
 
     global config
@@ -49,7 +54,7 @@ def get_config():
         if not os.path.exists(file):
             raise FormattedError('config file {} doesn\'t exist', file)
 
-        config = SafeConfigParser()
+        config = ConfigParser()
         config.read(file)
 
     return config
@@ -133,7 +138,7 @@ def _get_db_class(facility_spec):
     # any facility-specific classes.  Put the base class last so that
     # facilities can override methods if necessary.
     db_parts.append(Database)
-    return type(b'CombinedDatabase', tuple(db_parts), {})
+    return make_type('CombinedDatabase', tuple(db_parts), {})
 
 
 def get_facilities(facility_spec=None):

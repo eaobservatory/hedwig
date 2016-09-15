@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,20 +18,24 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from hedwig import auth
+from sys import version_info
 
-from .compat import TestCase
+python_version = version_info[0]
 
 
-class AuthTest(TestCase):
-    def setUp(self):
-        auth._rounds = 10
+if python_version < 3:
+    # Python 2.
 
-    def test_auth(self):
-        (h, s) = auth.create_password_hash('monkey')
+    from unittest import TestCase as BaseTestCase
 
-        self.assertRegex(h, '^[0-9a-f]{64}$')
-        self.assertRegex(s, '^[0-9a-f]{64}$')
+    class TestCase(BaseTestCase):
+        def assertRaisesRegex(self, *args, **kwargs):
+            return self.assertRaisesRegexp(*args, **kwargs)
 
-        self.assertTrue(auth.check_password_hash('monkey', h, s))
-        self.assertFalse(auth.check_password_hash('donkey', h, s))
+        def assertRegex(self, *args, **kwargs):
+            return self.assertRegexpMatches(*args, **kwargs)
+
+else:
+    # Python 3.
+
+    from unittest import TestCase

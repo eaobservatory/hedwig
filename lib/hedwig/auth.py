@@ -19,7 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from binascii import hexlify, unhexlify
-from codecs import utf_8_encode
+from codecs import ascii_decode, utf_8_encode
 try:
     from hashlib import pbkdf2_hmac
 except ImportError:
@@ -44,7 +44,8 @@ def create_password_hash(password_raw):
     password_hash = pbkdf2_hmac(
         'sha256', utf_8_encode(password_raw)[0], password_salt, _rounds)
 
-    return (hexlify(password_hash), hexlify(password_salt))
+    return (ascii_decode(hexlify(password_hash))[0],
+            ascii_decode(hexlify(password_salt))[0])
 
 
 def check_password_hash(password_raw, password_hash, password_salt):
@@ -56,9 +57,9 @@ def check_password_hash(password_raw, password_hash, password_salt):
     using the salt.
     """
 
-    return password_hash == hexlify(pbkdf2_hmac(
+    return password_hash == ascii_decode(hexlify(pbkdf2_hmac(
         'sha256', utf_8_encode(password_raw)[0], unhexlify(password_salt),
-        _rounds))
+        _rounds)))[0]
 
 
 def generate_token():
@@ -67,4 +68,4 @@ def generate_token():
     reset codes and invitations.
     """
 
-    return hexlify(urandom(16))
+    return ascii_decode(hexlify(urandom(16)))[0]

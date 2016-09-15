@@ -19,9 +19,10 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import namedtuple
-from unittest import TestCase
 
 from hedwig.type.util import with_can_edit
+
+from .compat import TestCase
 
 
 class TypeUtilTestCase(TestCase):

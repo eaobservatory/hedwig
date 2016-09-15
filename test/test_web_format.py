@@ -18,12 +18,12 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from unittest import TestCase
-
 from hedwig.type.enum import FormatType
 from hedwig.type.simple import ProposalText
 from hedwig.web.format import format_text, format_text_plain
 from hedwig.web.util import HTTPError
+
+from .compat import TestCase
 
 
 class TextFormatTest(TestCase):

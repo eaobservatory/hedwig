@@ -19,21 +19,23 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict
-from unittest import TestCase
 
 from astropy.coordinates import SkyCoord
 
 from hedwig.astro.coord import CoordSystem, \
     parse_coord, format_coord, \
     coord_to_dec_deg, coord_from_dec_deg
+from hedwig.compat import string_type
 from hedwig.error import UserError
+
+from .compat import TestCase
 
 
 class AstroCoordTest(TestCase):
     def test_coordsystem(self):
         for val in (CoordSystem.ICRS, CoordSystem.GAL):
             self.assertIsInstance(val, int)
-            self.assertIsInstance(CoordSystem.get_name(val), unicode)
+            self.assertIsInstance(CoordSystem.get_name(val), string_type)
 
         self.assertFalse(CoordSystem.is_valid(0))
         self.assertTrue(CoordSystem.is_valid(1))

@@ -55,16 +55,16 @@ class GenericFacilityTestCase(FacilityTestCase):
         check_code(proposal_4, '20B-Y-1')
         check_code(proposal_5, '20A-X-1-I')
 
-        with self.assertRaisesRegexp(NoSuchRecord, "^Insufficient"):
+        with self.assertRaisesRegex(NoSuchRecord, "^Insufficient"):
             self.view.parse_proposal_code(self.db, '20A-1')
 
-        with self.assertRaisesRegexp(NoSuchRecord, "^Excess"):
+        with self.assertRaisesRegex(NoSuchRecord, "^Excess"):
             self.view.parse_proposal_code(self.db, '20A-X-1-W-W')
 
-        with self.assertRaisesRegexp(NoSuchRecord, "^Could not parse"):
+        with self.assertRaisesRegex(NoSuchRecord, "^Could not parse"):
             self.view.parse_proposal_code(self.db, '20A-X-Y')
 
-        with self.assertRaisesRegexp(NoSuchRecord, "^Did not recognise"):
+        with self.assertRaisesRegex(NoSuchRecord, "^Did not recognise"):
             self.view.parse_proposal_code(self.db, '20A-X-1-X')
 
     def test_overall_rating(self):

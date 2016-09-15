@@ -18,10 +18,10 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from unittest import TestCase
-
 from hedwig.db.util import memoized
 from hedwig.web.template_util import Counter
+
+from .compat import TestCase
 
 
 class DBUtilTest(TestCase):

@@ -19,11 +19,11 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from contextlib import closing, contextmanager
-from cStringIO import StringIO
 from email.generator import Generator
 from email.header import Header
 from email.mime.nonmultipart import MIMENonMultipart
 from email.utils import formataddr, formatdate, make_msgid
+from io import BytesIO
 import socket
 from smtplib import SMTP, SMTPException
 from time import mktime
@@ -107,7 +107,7 @@ def send_email_message(message):
         msg['In-Reply-To'] = Header(message.thread_identifiers[-1])
         msg['References'] = Header(' '.join(message.thread_identifiers))
 
-    with closing(StringIO()) as f:
+    with closing(BytesIO()) as f:
         Generator(f, mangle_from_=False).flatten(msg)
         msg = f.getvalue()
 

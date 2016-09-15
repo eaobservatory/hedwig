@@ -19,7 +19,11 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from datetime import datetime
-from itertools import izip_longest
+
+try:
+    from itertools import zip_longest
+except ImportError:
+    from itertools import izip_longest as zip_longest
 
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_, case, column, not_
@@ -69,8 +73,8 @@ class MessagePart(object):
 
             message_id = result.inserted_primary_key[0]
 
-            for (person_id, email_address) in izip_longest(person_ids,
-                                                           email_addresses):
+            for (person_id, email_address) in zip_longest(person_ids,
+                                                          email_addresses):
                 conn.execute(message_recipient.insert().values({
                     message_recipient.c.message_id: message_id,
                     message_recipient.c.person_id: person_id,

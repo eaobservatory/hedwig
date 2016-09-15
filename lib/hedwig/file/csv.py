@@ -19,19 +19,41 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from codecs import utf_8_encode
-from cStringIO import StringIO
 import csv
 
+from ..compat import python_version, unicode_to_str, string_type
 
-def encode_string(value):
-    """
-    UTF-8 encode a value if it is a string, otherwise return it as is.
-    """
 
-    if not isinstance(value, unicode):
+if python_version < 3:
+    # Python 2: cvs module uses bytes strings.
+    from io import BytesIO as CSVIO
+
+    def encode_string(value):
+        """
+        UTF-8 encode a value if it is a string, otherwise return it as is.
+        """
+
+        if not isinstance(value, string_type):
+            return value
+
+        return utf_8_encode(value)[0]
+
+    def encode_csv(value):
         return value
 
-    return utf_8_encode(value)[0]
+else:
+    # Python 3: cvs module works in terms of unicode strings.
+    from io import StringIO as CSVIO
+
+    def encode_string(value):
+        return value
+
+    def encode_csv(value):
+        """
+        UTF-8 encode whole CSV file.
+        """
+
+        return utf_8_encode(value)[0]
 
 
 class CSVDialect(csv.Dialect):
@@ -39,10 +61,10 @@ class CSVDialect(csv.Dialect):
     Define the CSV "dialect" in which we wish to write CSV files.
     """
 
-    delimiter = b','
+    delimiter = unicode_to_str(',')
     doublequote = True
-    lineterminator = b'\n'
-    quotechar = b'"'
+    lineterminator = unicode_to_str('\n')
+    quotechar = unicode_to_str('"')
     quoting = csv.QUOTE_NONNUMERIC
 
 
@@ -51,11 +73,12 @@ class CSVWriter(object):
     CSV writing utility class.
 
     This class sets up a CSV writer (using the standard library `csv` module)
-    which writes to a `StringIO` buffer.
+    which writes to a `StringIO` or `BytesIO` (depending on Python version)
+    buffer.
     """
 
     def __init__(self):
-        self._buffer = StringIO()
+        self._buffer = CSVIO()
         self._writer = csv.writer(self._buffer, dialect=CSVDialect)
 
     def add_row(self, row):
@@ -70,4 +93,4 @@ class CSVWriter(object):
         Return the contents of the buffer.
         """
 
-        return self._buffer.getvalue()
+        return encode_csv(self._buffer.getvalue())

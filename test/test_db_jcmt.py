@@ -276,7 +276,7 @@ class DBJCMTTest(DBTestCase):
         records = JCMTAvailableCollection()
         records[1] = JCMTAvailable(None, 1, JCMTWeather.BAND1, 100.0)
 
-        with self.assertRaisesRegexp(ConsistencyError, 'call does not exist'):
+        with self.assertRaisesRegex(ConsistencyError, 'call does not exist'):
             self.db.sync_jcmt_call_available(1999999, records)
 
         n = self.db.sync_jcmt_call_available(call_id, records)
@@ -313,7 +313,7 @@ class DBJCMTTest(DBTestCase):
         with self.assertRaises(NoSuchRecord):
             self.db.get_jcmt_review(reviewer_id)
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 ConsistencyError, 'JCMT review does not exist'):
             self.db.set_jcmt_review(
                 role_class, reviewer_id,
@@ -321,14 +321,14 @@ class DBJCMTTest(DBTestCase):
                     expertise=JCMTReviewerExpertise.INTERMEDIATE),
                 is_update=True)
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 UserError, 'expertise level not recognised'):
             self.db.set_jcmt_review(
                 role_class, reviewer_id,
                 review=null_tuple(JCMTReview)._replace(expertise=999),
                 is_update=False)
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 Error, 'expertise should be specified'):
             self.db.set_jcmt_review(
                 role_class, reviewer_id,
@@ -347,7 +347,7 @@ class DBJCMTTest(DBTestCase):
         self.assertEqual(jcmt_review.expertise,
                          JCMTReviewerExpertise.INTERMEDIATE)
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 ConsistencyError, 'JCMT review already exist'):
             self.db.set_jcmt_review(
                 role_class, reviewer_id,

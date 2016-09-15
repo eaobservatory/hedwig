@@ -60,7 +60,7 @@ class DBSyncTest(DBTestCase):
 
         # Delete an affiliation and rename another affiliation to its old name.
         records[id_[0]] = records[id_[0]]._replace(name='Aff F')
-        with self.assertRaisesRegexp(UserError, 'duplicate values'):
+        with self.assertRaisesRegex(UserError, 'duplicate values'):
             self.db.sync_queue_affiliation(queue_id, records)
         del records[id_[5]]
         n = self.db.sync_queue_affiliation(queue_id, records)
@@ -115,7 +115,7 @@ class DBSyncTest(DBTestCase):
         records[id_[2]] = records[id_[2]]._replace(name='Aff D')
         records[id_[3]] = records[id_[3]]._replace(name='Aff B')
 
-        with self.assertRaisesRegexp(UserError, 'Circular update'):
+        with self.assertRaisesRegex(UserError, 'Circular update'):
             self.db.sync_queue_affiliation(queue_id, records)
 
     def test_sync_category(self):

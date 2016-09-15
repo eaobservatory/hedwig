@@ -26,6 +26,7 @@ from time import sleep
 from xml.etree import ElementTree as etree
 import requests
 
+from ..compat import string_type
 from ..type.simple import PrevProposalPub
 from ..type.util import null_tuple
 from ..util import get_logger
@@ -94,7 +95,7 @@ def get_pub_info_arxiv(article_ids):
                     pub = null_tuple(PrevProposalPub)._replace(
                         title=re.sub('\s+', ' ', title).strip(),
                         author=re.sub('\s+', ' ', author).strip(),
-                        year=unicode(year))
+                        year=string_type(year))
 
                     # Try to determine to which article ID this entry
                     # relates and store it in the dictionary.

@@ -20,7 +20,6 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple
 import itertools
-from unittest import TestCase
 
 from hedwig.error import MultipleRecords, NoSuchRecord, NoSuchValue, UserError
 from hedwig.type.base import CollectionByProposal, CollectionOrdered, \
@@ -37,6 +36,8 @@ from hedwig.type.simple import \
     Call, CallPreamble, Email, GroupMember, Member, \
     Proposal, ProposalFigureInfo, Reviewer
 from hedwig.type.util import null_tuple
+
+from .compat import TestCase
 
 
 class CollectionTypeTestCase(TestCase):
@@ -167,7 +168,7 @@ class CollectionTypeTestCase(TestCase):
 
         c[1] = null_tuple(Email)._replace(address='a@b', primary=False)
 
-        with self.assertRaisesRegexp(UserError, 'There is no primary'):
+        with self.assertRaisesRegex(UserError, 'There is no primary'):
             c.validate()
 
         c[2] = null_tuple(Email)._replace(address='c@d', primary=True)
@@ -176,12 +177,12 @@ class CollectionTypeTestCase(TestCase):
 
         c[3] = null_tuple(Email)._replace(address='e@f', primary=True)
 
-        with self.assertRaisesRegexp(UserError, 'more than one primary'):
+        with self.assertRaisesRegex(UserError, 'more than one primary'):
             c.validate()
 
         c[3] = null_tuple(Email)._replace(address='a@b', primary=False)
 
-        with self.assertRaisesRegexp(UserError, 'appears more than once'):
+        with self.assertRaisesRegex(UserError, 'appears more than once'):
             c.validate()
 
     def test_call_preamble_collection(self):

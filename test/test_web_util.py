@@ -19,11 +19,12 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from datetime import datetime
-from unittest import TestCase
 
 from hedwig.error import UserError
 from hedwig.type.simple import DateAndTime
 from hedwig.web.util import format_datetime, parse_datetime
+
+from .compat import TestCase
 
 
 class WebUtilTestCase(TestCase):
@@ -43,7 +44,7 @@ class WebUtilTestCase(TestCase):
         self.assertEqual(d_and_t.time, '15:00')
 
     def test_parse_datetime(self):
-        with self.assertRaisesRegexp(UserError, '^Could not parse'):
+        with self.assertRaisesRegex(UserError, '^Could not parse'):
             parse_datetime(DateAndTime('2000-01-01', 'XX:YY'))
 
         dt = parse_datetime(DateAndTime('2020-05-04', '17:55'))

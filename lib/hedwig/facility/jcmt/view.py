@@ -19,9 +19,13 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import defaultdict, namedtuple, OrderedDict
-from itertools import count, izip
+from itertools import count
 import re
-from urllib import urlencode
+
+try:
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib import urlencode
 
 from ...error import NoSuchRecord, NoSuchValue, UserError
 from ...web.util import HTTPRedirect, flash, url_for
@@ -628,7 +632,7 @@ class JCMT(Generic):
         instruments = list(
             tabulation['jcmt_instruments_ancillary'].keys()) + [None]
 
-        for (row, proposal) in izip(
+        for (row, proposal) in zip(
                 super(JCMT, self)._get_proposal_tabulation_rows(tabulation),
                 tabulation['proposals']):
             request = proposal['jcmt_request']
@@ -869,7 +873,7 @@ class JCMT(Generic):
                 # Re-write IDs as None.
                 allocations = JCMTRequestCollection((
                     (n, r._replace(id=None))
-                    for (n, r) in izip(count(1), original_request.values())))
+                    for (n, r) in zip(count(1), original_request.values())))
                 is_prefilled = True
 
         else:

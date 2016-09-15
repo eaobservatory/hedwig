@@ -18,8 +18,12 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from ConfigParser import SafeConfigParser
 import os
+
+try:
+    from configparser import ConfigParser
+except ImportError:
+    from ConfigParser import SafeConfigParser as ConfigParser
 
 from hedwig import config
 from hedwig.error import Error
@@ -33,7 +37,7 @@ class ConfigTestCase(DummyConfigTestCase):
     def test_database_config(self):
         c = config.get_config()
 
-        self.assertIsInstance(c, SafeConfigParser)
+        self.assertIsInstance(c, ConfigParser)
 
         self.assertTrue(c.has_section('database'))
         self.assertTrue(c.has_option('database', 'url'))

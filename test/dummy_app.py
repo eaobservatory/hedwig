@@ -18,6 +18,8 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from codecs import utf_8_decode
+
 from hedwig import auth
 from hedwig.config import get_config
 from hedwig.web.app import create_web_app
@@ -61,6 +63,15 @@ class WebAppTestCase(DummyConfigTestCase):
 
     def log_out(self):
         return self.client.get('/user/log_out', follow_redirects=True)
+
+    def assertInEncoded(self, member, container, *args, **kwargs):
+        """
+        Decode given "container" (string) before asserting that the "member"
+        (substring) is in it.
+        """
+
+        return self.assertIn(member, utf_8_decode(container)[0],
+                             *args, **kwargs)
 
     def _get_facility_view(self, code):
         for facility in self.facilities.values():

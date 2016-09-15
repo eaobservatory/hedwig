@@ -19,7 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from contextlib import closing
-from cStringIO import StringIO
+from io import BytesIO
 from os.path import exists
 
 from PIL import Image
@@ -37,17 +37,17 @@ from hedwig.type.enum import FigureType
 
 from .dummy_config import DummyConfigTestCase
 
-with closing(StringIO()) as f:
+with closing(BytesIO()) as f:
     im = Image.new('RGB', (25, 50))
     im.save(f, format='PNG')
     example_png = f.getvalue()
 
-with closing(StringIO()) as f:
+with closing(BytesIO()) as f:
     im = Image.new('RGB', (40, 30))
     im.save(f, format='JPEG')
     example_jpeg = f.getvalue()
 
-with closing(StringIO()) as f:
+with closing(BytesIO()) as f:
     w = PdfFileWriter()
     w.addBlankPage(1, 1)
     w.write(f)
@@ -70,7 +70,7 @@ class FileTest(DummyConfigTestCase):
 
         self.assertEqual(determine_figure_type(example_eps), FigureType.PS)
 
-        with self.assertRaisesRegexp(UserError, 'text/plain'):
+        with self.assertRaisesRegex(UserError, 'text/plain'):
             determine_figure_type(b'PLAIN TEXT')
 
     def test_pdf_pages(self):
@@ -128,7 +128,7 @@ class FileTest(DummyConfigTestCase):
 
         self.assertEqual(determine_figure_type(tp.thumbnail), FigureType.PNG)
 
-        with closing(StringIO(tp.thumbnail)) as f:
+        with closing(BytesIO(tp.thumbnail)) as f:
             self.assertEqual(Image.open(f).size, (3, 6))
 
         tp = create_thumbnail_and_preview(example_png, (80, 80), (12, 12))
@@ -139,10 +139,10 @@ class FileTest(DummyConfigTestCase):
 
         self.assertEqual(determine_figure_type(tp.preview), FigureType.PNG)
 
-        with closing(StringIO(tp.thumbnail)) as f:
+        with closing(BytesIO(tp.thumbnail)) as f:
             self.assertEqual(Image.open(f).size, (40, 80))
 
-        with closing(StringIO(tp.preview)) as f:
+        with closing(BytesIO(tp.preview)) as f:
             self.assertEqual(Image.open(f).size, (6, 12))
 
     def test_create_thumb_jpeg(self):

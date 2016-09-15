@@ -23,6 +23,7 @@ from math import sqrt
 
 from ..astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
+from ..compat import first_value
 from ..error import NoSuchRecord, NoSuchValue, MultipleRecords, UserError
 from ..util import is_list_like, matches_constraint
 from .base import CollectionByProposal, CollectionOrdered, CollectionSortable
@@ -62,8 +63,7 @@ class ResultCollection(OrderedDict):
         elif n > 1:
             raise MultipleRecords('can not get single record: many results')
         else:
-            # WARNING: Python-2 only.
-            return self.values()[0]
+            return first_value(self)
 
 
 class AffiliationCollection(ResultCollection):

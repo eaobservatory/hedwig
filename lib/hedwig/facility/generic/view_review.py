@@ -20,7 +20,6 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple, OrderedDict
 from datetime import datetime
-from itertools import izip
 import re
 
 from ...admin.proposal import finalize_call_review
@@ -127,7 +126,7 @@ class GenericReview(object):
             titles.append('Co-Investigator names')
         writer.add_row(titles)
 
-        for (row, proposal) in izip(
+        for (row, proposal) in zip(
                 self._get_proposal_tabulation_rows(tabulation),
                 tabulation['proposals']):
             if with_cois:

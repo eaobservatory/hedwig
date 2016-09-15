@@ -19,7 +19,6 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from contextlib import closing
-from cStringIO import StringIO
 from datetime import datetime
 
 from pymoc import MOC
@@ -170,11 +169,11 @@ class DBCalculatorTest(DBTestCase):
             self.db.update_moc(moc_id, state=AttachmentState.ERROR,
                                state_prev=AttachmentState.PROCESSING)
 
-        with self.assertRaisesRegexp(Error, 'Invalid state'):
+        with self.assertRaisesRegex(Error, 'Invalid state'):
             self.db.update_moc(moc_id, state=999,
                                state_prev=AttachmentState.PROCESSING)
 
-        with self.assertRaisesRegexp(Error, 'Invalid previous state'):
+        with self.assertRaisesRegex(Error, 'Invalid previous state'):
             self.db.update_moc(moc_id, state=AttachmentState.ERROR,
                                state_prev=999)
 

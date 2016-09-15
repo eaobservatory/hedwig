@@ -19,10 +19,11 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict
-from unittest import TestCase
 
 from hedwig.util import get_countries, is_list_like, list_in_blocks, \
     matches_constraint
+
+from .compat import TestCase
 
 
 class UtilTest(TestCase):

@@ -19,7 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from contextlib import closing
-from cStringIO import StringIO
+from io import BytesIO
 
 from pymoc import MOC
 from pymoc.io.fits import read_moc_fits, write_moc_fits
@@ -42,7 +42,7 @@ def read_moc(file_=None, buff=None, max_order=None):
         read_moc_fits(moc_object, file_, **read_opts)
 
     elif buff is not None:
-        with closing(StringIO(buff)) as f:
+        with closing(BytesIO(buff)) as f:
             read_moc_fits(moc_object, f, **read_opts)
 
     else:
@@ -59,6 +59,6 @@ def write_moc(moc_object):
     Write MOC to a buffer and return it.
     """
 
-    with closing(StringIO()) as f:
+    with closing(BytesIO()) as f:
         write_moc_fits(moc_object, f)
         return f.getvalue()

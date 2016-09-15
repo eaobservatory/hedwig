@@ -19,7 +19,6 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from random import randint
-from unittest import TestCase
 
 from sqlalchemy.sql import insert
 from sqlalchemy.pool import StaticPool
@@ -28,6 +27,8 @@ from hedwig import auth
 from hedwig.config import _get_db_class
 from hedwig.db.meta import metadata
 from hedwig.db.engine import get_engine
+
+from .compat import TestCase
 
 
 def get_dummy_database(randomize_ids=True, allow_multi_threaded=False,

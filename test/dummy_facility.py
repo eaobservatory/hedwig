@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime
 
+from hedwig.compat import string_type
 from hedwig.config import get_facilities
 from hedwig.type.enum import FormatType
 from hedwig.type.simple import Call
@@ -69,12 +70,12 @@ class FacilityTestCase(DBTestCase):
         # Check the code and make sure it's what we expect, i.e. that we're
         # testing the correct facility.
         code = self.view.get_code()
-        self.assertIsInstance(code, unicode)
+        self.assertIsInstance(code, string_type)
         self.assertEqual(code, expect_code)
 
         # Test some basic informational methods.
-        self.assertIsInstance(self.view.get_name(), unicode)
-        self.assertIsInstance(self.view.get_definite_name(), unicode)
+        self.assertIsInstance(self.view.get_name(), string_type)
+        self.assertIsInstance(self.view.get_definite_name(), string_type)
         self.assertIsInstance(self.view.get_calculator_classes(), tuple)
         self.assertIsInstance(self.view.get_moc_order(), int)
         self.assertIsInstance(self.view.get_target_tool_classes(), tuple)

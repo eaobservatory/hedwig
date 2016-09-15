@@ -38,7 +38,7 @@ class DBMessageTest(DBTestCase):
         person_1 = self.db.add_person('Person One')
         self.db.add_email(person_1, '1@a', primary=True, public=True)
 
-        with self.assertRaisesRegexp(ConsistencyError, '^duplicate person_id'):
+        with self.assertRaisesRegex(ConsistencyError, '^duplicate person_id'):
             message_id = self.db.add_message('test', 'test message',
                                              [person_1, person_1])
 
@@ -112,10 +112,10 @@ class DBMessageTest(DBTestCase):
         self.assertIsNone(message.recipients)
         self.assertEqual(message.state, MessageState.SENT)
 
-        with self.assertRaisesRegexp(ConsistencyError, '^message does not ex'):
+        with self.assertRaisesRegex(ConsistencyError, '^message does not ex'):
             self.db.mark_message_sent(1999999, '<2@localhost>')
 
-        with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
+        with self.assertRaisesRegex(ConsistencyError, '^no rows matched'):
             self.db.mark_message_sent(1999999, '<2@localhost>',
                                       _test_skip_check=True)
 
@@ -149,19 +149,19 @@ class DBMessageTest(DBTestCase):
         self.assertIsNotNone(message)
         self.assertEqual(message.id, message_id)
 
-        with self.assertRaisesRegexp(ConsistencyError, '^message does not'):
+        with self.assertRaisesRegex(ConsistencyError, '^message does not'):
             self.db.update_message(
                 message_id=1999999, state=MessageState.DISCARD)
 
-        with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
+        with self.assertRaisesRegex(ConsistencyError, '^no rows matched'):
             self.db.update_message(
                 message_id=1999999, state=MessageState.DISCARD,
                 _test_skip_check=True)
 
-        with self.assertRaisesRegexp(Error, '^invalid state'):
+        with self.assertRaisesRegex(Error, '^invalid state'):
             self.db.update_message(message_id=message_id, state=999)
 
-        with self.assertRaisesRegexp(Error, '^no message updates specified'):
+        with self.assertRaisesRegex(Error, '^no message updates specified'):
             self.db.update_message(message_id=message_id)
 
     def test_multiple_message(self):
@@ -261,11 +261,11 @@ class DBMessageTest(DBTestCase):
 
         message_args = ['test', 'test message', [person]]
 
-        with self.assertRaisesRegexp(Error, '^invalid thread type'):
+        with self.assertRaisesRegex(Error, '^invalid thread type'):
             message = self.db.add_message(
                 *message_args, thread_type=999, thread_id=123)
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 Error, '^thread_id specified without thread_type'):
             message = self.db.add_message(
                 *message_args, thread_type=None, thread_id=123)

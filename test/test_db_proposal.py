@@ -162,11 +162,11 @@ class DBProposalTest(DBTestCase):
         date_start = datetime(2002, 2, 2)
         date_end = datetime(2002, 8, 1)
 
-        with self.assertRaisesRegexp(UserError, 'end date is before start'):
+        with self.assertRaisesRegex(UserError, 'end date is before start'):
             self.db.add_semester(facility_id, '99A', '99A',
                                  date_end, date_start)
 
-        with self.assertRaisesRegexp(ConsistencyError, 'facility does not'):
+        with self.assertRaisesRegex(ConsistencyError, 'facility does not'):
             self.db.add_semester(1999999, '99A', '99A', date_start, date_end)
 
         semester_id = self.db.add_semester(facility_id, '99A', '99A',
@@ -196,9 +196,9 @@ class DBProposalTest(DBTestCase):
         self.db.update_semester(semester_id, name='99 (a)')
         self.assertEqual(self.db.get_semester(facility_id, semester_id).name,
                          '99 (a)')
-        with self.assertRaisesRegexp(ConsistencyError, 'semester does not ex'):
+        with self.assertRaisesRegex(ConsistencyError, 'semester does not ex'):
             self.db.update_semester(1999999, name='bad semester')
-        with self.assertRaisesRegexp(UserError, 'end date is before start'):
+        with self.assertRaisesRegex(UserError, 'end date is before start'):
             self.db.update_semester(semester_id,
                                     date_start=date_end, date_end=date_start)
 
@@ -213,7 +213,7 @@ class DBProposalTest(DBTestCase):
         facility_id = self.db.ensure_facility('my_tel')
         self.assertIsInstance(facility_id, int)
 
-        with self.assertRaisesRegexp(ConsistencyError, 'facility does not'):
+        with self.assertRaisesRegex(ConsistencyError, 'facility does not'):
             self.db.add_queue(1999999, 'INT', 'I')
 
         queue_id = self.db.add_queue(facility_id, 'INT', 'I')
@@ -304,19 +304,19 @@ class DBProposalTest(DBTestCase):
         self.assertIsInstance(call_id, int)
 
         # Check tests for bad values.
-        with self.assertRaisesRegexp(ConsistencyError, 'semester does not'):
+        with self.assertRaisesRegex(ConsistencyError, 'semester does not'):
             self.db.add_call(
                 BaseCallType, 1999999, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
                 '', '', '', FormatType.PLAIN)
-        with self.assertRaisesRegexp(ConsistencyError, 'queue does not'):
+        with self.assertRaisesRegex(ConsistencyError, 'queue does not'):
             self.db.add_call(
                 BaseCallType, semester_id, 1999999, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
                 '', '', '', FormatType.PLAIN)
-        with self.assertRaisesRegexp(UserError, 'Closing date is before open'):
+        with self.assertRaisesRegex(UserError, 'Closing date is before open'):
             self.db.add_call(
                 BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
                 date_close, date_open,
@@ -336,8 +336,8 @@ class DBProposalTest(DBTestCase):
         semester_id_2 = self.db.add_semester(
             facility_id_2, 'My Semester', 'MS',
             datetime(2000, 2, 1), datetime(2000, 7, 31))
-        with self.assertRaisesRegexp(ConsistencyError,
-                                     'inconsistent facility references'):
+        with self.assertRaisesRegex(ConsistencyError,
+                                    'inconsistent facility references'):
             self.db.add_call(
                 BaseCallType, semester_id_2, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
@@ -375,9 +375,9 @@ class DBProposalTest(DBTestCase):
             self.db.get_call(1999999, call_id)
 
         # Try updating the call.
-        with self.assertRaisesRegexp(ConsistencyError, 'call does not exist'):
+        with self.assertRaisesRegex(ConsistencyError, 'call does not exist'):
             self.db.update_call(1999999, date_open=date_open)
-        with self.assertRaisesRegexp(UserError, 'Closing date is before open'):
+        with self.assertRaisesRegex(UserError, 'Closing date is before open'):
             self.db.update_call(call_id,
                                 date_close=date_open, date_open=date_close)
         self.db.update_call(call_id, date_close=datetime(1999, 10, 1))
@@ -445,25 +445,25 @@ class DBProposalTest(DBTestCase):
             datetime(2000, 1, 1), datetime(2000, 6, 30))
         self.assertIsInstance(semester_id, int)
 
-        with self.assertRaisesRegexp(NoSuchRecord, 'no results$'):
+        with self.assertRaisesRegex(NoSuchRecord, 'no results$'):
             self.db.get_call_preamble(semester_id, BaseCallType.STANDARD)
 
-        with self.assertRaisesRegexp(UserError, 'call type is not recognised'):
+        with self.assertRaisesRegex(UserError, 'call type is not recognised'):
             self.db.set_call_preamble(
                 BaseCallType, semester_id, 999,
                 '', FormatType.PLAIN, is_update=False)
 
-        with self.assertRaisesRegexp(UserError, 'format not recognised'):
+        with self.assertRaisesRegex(UserError, 'format not recognised'):
             self.db.set_call_preamble(
                 BaseCallType, semester_id, BaseCallType.STANDARD,
                 '', 999, is_update=False)
 
-        with self.assertRaisesRegexp(ConsistencyError, 'semester does not'):
+        with self.assertRaisesRegex(ConsistencyError, 'semester does not'):
             self.db.set_call_preamble(
                 BaseCallType, 1999999, BaseCallType.STANDARD,
                 '', FormatType.PLAIN, is_update=False)
 
-        with self.assertRaisesRegexp(ConsistencyError, 'preamble does not'):
+        with self.assertRaisesRegex(ConsistencyError, 'preamble does not'):
             self.db.set_call_preamble(
                 BaseCallType, semester_id, BaseCallType.STANDARD,
                 '', FormatType.PLAIN, is_update=True)
@@ -479,7 +479,7 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(preamble.description, 'We invite proposals...')
         self.assertEqual(preamble.description_format, FormatType.PLAIN)
 
-        with self.assertRaisesRegexp(ConsistencyError, 'preamble already'):
+        with self.assertRaisesRegex(ConsistencyError, 'preamble already'):
             self.db.set_call_preamble(
                 BaseCallType, semester_id, BaseCallType.STANDARD,
                 '', FormatType.PLAIN, is_update=False)
@@ -537,8 +537,8 @@ class DBProposalTest(DBTestCase):
                 self.assertFalse(member.observer)
 
                 # Try updating the proposal.
-                with self.assertRaisesRegexp(ConsistencyError,
-                                             '^no rows matched'):
+                with self.assertRaisesRegex(ConsistencyError,
+                                            '^no rows matched'):
                     self.db.update_proposal(
                         proposal_id, state=ProposalState.SUBMITTED,
                         state_prev=ProposalState.REVIEW)
@@ -571,17 +571,17 @@ class DBProposalTest(DBTestCase):
                 self.assertIsNone(proposal.members)
 
         # The proposal must have a title.
-        with self.assertRaisesRegexp(UserError, 'blank'):
+        with self.assertRaisesRegex(UserError, 'blank'):
             self.db.add_proposal(call_id_1, person_id, affiliation_id_1, '')
 
         # Check for error raised when the call or person doesn't exist.
-        with self.assertRaisesRegexp(ConsistencyError, '^call does not'):
+        with self.assertRaisesRegex(ConsistencyError, '^call does not'):
             self.db.add_proposal(1999999, person_id, affiliation_id_1, 'Title')
         with self.assertRaises(DatabaseIntegrityError):
             self.db.add_proposal(1999999, person_id, affiliation_id_1, 'Title',
                                  _test_skip_check=True)
 
-        with self.assertRaisesRegexp(ConsistencyError, '^person does not'):
+        with self.assertRaisesRegex(ConsistencyError, '^person does not'):
             self.db.add_proposal(call_id_1, 1999999, affiliation_id_1, 'Title')
         with self.assertRaises(DatabaseIntegrityError):
             self.db.add_proposal(call_id_1, 1999999, affiliation_id_1, 'Title',
@@ -594,7 +594,7 @@ class DBProposalTest(DBTestCase):
                                            'aq')
         other_affiliation_id = self.db.add_affiliation(other_queue_id,
                                                        'another aff/n')
-        with self.assertRaisesRegexp(ConsistencyError, 'affiliation does not'):
+        with self.assertRaisesRegex(ConsistencyError, 'affiliation does not'):
             self.db.add_proposal(call_id_1, person_id, other_affiliation_id,
                                  'title')
 
@@ -649,7 +649,7 @@ class DBProposalTest(DBTestCase):
         other_facility = self.db.ensure_facility('another_tel')
         other_queue = self.db.add_queue(other_facility, 'another queue', 'aq')
         other_affiliation = self.db.add_affiliation(other_queue, 'Aff/n')
-        with self.assertRaisesRegexp(ConsistencyError, 'affiliation does not'):
+        with self.assertRaisesRegex(ConsistencyError, 'affiliation does not'):
             self.db.add_member(proposal_id, person_id_4, other_affiliation)
 
         # Try searching instead by person_id.
@@ -681,22 +681,22 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(n_update, 0)
         self.assertEqual(n_delete, 0)
 
-        with self.assertRaisesRegexp(UserError, 'no specified editors'):
+        with self.assertRaisesRegex(UserError, 'no specified editors'):
             mem_c = members.copy()
             mem_c[member_id_1] = mem_c[member_id_1]._replace(editor=False)
             self.db.sync_proposal_member(proposal_id, mem_c, person_id_1)
 
-        with self.assertRaisesRegexp(UserError, 'no PI specified'):
+        with self.assertRaisesRegex(UserError, 'no PI specified'):
             mem_c = members.copy()
             mem_c[member_id_1] = mem_c[member_id_1]._replace(pi=False)
             self.db.sync_proposal_member(proposal_id, mem_c, person_id_1)
 
-        with self.assertRaisesRegexp(UserError, 'more than one PI specified'):
+        with self.assertRaisesRegex(UserError, 'more than one PI specified'):
             mem_c = members.copy()
             mem_c[member_id_2] = mem_c[member_id_2]._replace(pi=True)
             self.db.sync_proposal_member(proposal_id, mem_c, person_id_1)
 
-        with self.assertRaisesRegexp(UserError, 'yourself as an editor'):
+        with self.assertRaisesRegex(UserError, 'yourself as an editor'):
             mem_c = members.copy()
             mem_c[member_id_1] = mem_c[member_id_1]._replace(editor=False)
             mem_c[member_id_2] = mem_c[member_id_2]._replace(editor=True)
@@ -706,7 +706,7 @@ class DBProposalTest(DBTestCase):
         members[member_id_2] = members[member_id_2]._replace(
             editor=True, pi=True)
 
-        with self.assertRaisesRegexp(UserError, 'can not remove yourself'):
+        with self.assertRaisesRegex(UserError, 'can not remove yourself'):
             self.db.sync_proposal_member(proposal_id, members, person_id_1)
 
         (n_insert, n_update, n_delete) = self.db.sync_proposal_member(
@@ -799,8 +799,8 @@ class DBProposalTest(DBTestCase):
 
         self.db.add_member(proposal_id, person_id_2, affiliation_id)
 
-        with self.assertRaisesRegexp(ConsistencyError,
-                                     'would leave no editors'):
+        with self.assertRaisesRegex(ConsistencyError,
+                                    'would leave no editors'):
             self.db.delete_member_person(proposal_id, person_id_1)
 
         self.db.add_member(proposal_id, person_id_3, affiliation_id,
@@ -832,35 +832,35 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(len(self.db.search_proposal_text()), 0)
 
         # Test we can't use an invalid format code or role number.
-        with self.assertRaisesRegexp(UserError, 'format not recognised'):
+        with self.assertRaisesRegex(UserError, 'format not recognised'):
             self.db.set_proposal_text(
                 BaseTextRole, proposal_id_1, BaseTextRole.ABSTRACT,
                 'test', 999, 1, person_id, False)
-        with self.assertRaisesRegexp(Error, 'text role not recognised'):
+        with self.assertRaisesRegex(Error, 'text role not recognised'):
             self.db.set_proposal_text(
                 BaseTextRole, proposal_id_1, 999, 'test',
                 FormatType.PLAIN, 1, person_id, False)
 
         # Test we can't get, delete or update a non-existant record.
-        with self.assertRaisesRegexp(NoSuchRecord, '^text does not exist'):
+        with self.assertRaisesRegex(NoSuchRecord, '^text does not exist'):
             self.db.get_proposal_text(
                 proposal_id_1, BaseTextRole.ABSTRACT)
 
-        with self.assertRaisesRegexp(ConsistencyError, '^text does not exist'):
+        with self.assertRaisesRegex(ConsistencyError, '^text does not exist'):
             self.db.delete_proposal_text(proposal_id_1,
                                          BaseTextRole.ABSTRACT)
 
-        with self.assertRaisesRegexp(ConsistencyError, '^no row matched'):
+        with self.assertRaisesRegex(ConsistencyError, '^no row matched'):
             self.db.delete_proposal_text(proposal_id_1,
                                          BaseTextRole.ABSTRACT,
                                          _test_skip_check=True)
 
-        with self.assertRaisesRegexp(ConsistencyError, '^text does not exist'):
+        with self.assertRaisesRegex(ConsistencyError, '^text does not exist'):
             self.db.set_proposal_text(BaseTextRole, proposal_id_1,
                                       BaseTextRole.TECHNICAL_CASE, 'test',
                                       FormatType.PLAIN, 1, person_id, True)
 
-        with self.assertRaisesRegexp(ConsistencyError, '^no rows matched'):
+        with self.assertRaisesRegex(ConsistencyError, '^no rows matched'):
             self.db.set_proposal_text(BaseTextRole, proposal_id_1,
                                       BaseTextRole.TECHNICAL_CASE, 'test',
                                       FormatType.PLAIN, 1, person_id, True,
@@ -881,7 +881,7 @@ class DBProposalTest(DBTestCase):
             ProposalText('change', FormatType.PLAIN))
 
         # Check we can't re-create an existing text record.
-        with self.assertRaisesRegexp(ConsistencyError, '^text already exists'):
+        with self.assertRaisesRegex(ConsistencyError, '^text already exists'):
             self.db.set_proposal_text(
                 BaseTextRole, proposal_id_1, BaseTextRole.SCIENCE_CASE, 'new',
                 FormatType.PLAIN, 1, person_id, False)
@@ -982,7 +982,7 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(pdf_info.id, pdf_id)
         self.assertEqual(pdf_info.proposal_id, proposal_id)
         self.assertEqual(pdf_info.role, role)
-        self.assertEqual(pdf_info.md5sum, b'46ee5ebd71065c1d4caa83e4c943c70a')
+        self.assertEqual(pdf_info.md5sum, '46ee5ebd71065c1d4caa83e4c943c70a')
         self.assertEqual(pdf_info.state, AttachmentState.NEW, 4)
         self.assertEqual(pdf_info.filename, 'test.pdf')
         self.assertIsInstance(pdf_info.uploaded, datetime)
@@ -997,7 +997,7 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(result[pdf_id].state, AttachmentState.READY)
 
         # Check that the "state_prev" constraint works.
-        with self.assertRaisesRegexp(ConsistencyError, 'no rows matched'):
+        with self.assertRaisesRegex(ConsistencyError, 'no rows matched'):
             self.db.update_proposal_pdf(
                 pdf_id=pdf_id, state=AttachmentState.READY,
                 state_prev=AttachmentState.ERROR)
@@ -1060,7 +1060,7 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(fig_info.id, fig_id)
         self.assertEqual(fig_info.proposal_id, proposal_id)
         self.assertEqual(fig_info.role, role)
-        self.assertEqual(fig_info.md5sum, b'b41faa148ef23d1ddfa46debb3b66f35')
+        self.assertEqual(fig_info.md5sum, 'b41faa148ef23d1ddfa46debb3b66f35')
         self.assertEqual(fig_info.type, type_)
         self.assertEqual(fig_info.state, AttachmentState.NEW)
         self.assertEqual(fig_info.caption, None)
@@ -1129,7 +1129,7 @@ class DBProposalTest(DBTestCase):
         result = self.db.search_proposal_figure(proposal_id=proposal_id,
                                                 with_caption=True)
         fig_info = result[fig_id]
-        self.assertEqual(fig_info.md5sum, b'b9e7dfbc36883c26e5d2aff8c80f34db')
+        self.assertEqual(fig_info.md5sum, 'b9e7dfbc36883c26e5d2aff8c80f34db')
         self.assertEqual(fig_info.state, AttachmentState.NEW)
         self.assertEqual(fig_info.filename, 'test2.png')
         self.assertEqual(fig_info.caption, 'Figure caption.')
@@ -1292,4 +1292,4 @@ class DBProposalTest(DBTestCase):
 
 
 def _member_person_set(member_collection):
-    return map(lambda x: x.person_id, member_collection.values())
+    return [x.person_id for x in member_collection.values()]

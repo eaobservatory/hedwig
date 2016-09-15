@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from hedwig.compat import string_type
 from hedwig.error import NoSuchRecord
 from hedwig.facility.jcmt.type import JCMTAncillary, JCMTInstrument, \
     JCMTRequest, JCMTRequestCollection, \
@@ -61,11 +62,11 @@ class JCMTFacilityTestCase(FacilityTestCase):
         check_code(proposal_4, 'M20BL001')
         check_code(proposal_5, 'S20AP001')
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 NoSuchRecord, "^Proposal code did not match expected pattern"):
             self.view.parse_proposal_code(self.db, 'ABCDEF')
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 NoSuchRecord, "^Did not recognise call type code"):
             self.view.parse_proposal_code(self.db, 'X11AP111')
 
@@ -117,7 +118,7 @@ class JCMTFacilityTestCase(FacilityTestCase):
 
     def test_archive_url(self):
         url = self.view.make_archive_search_url(180.0, 45.0)
-        self.assertIsInstance(url, unicode)
+        self.assertIsInstance(url, string_type)
         self.assertTrue(url.startswith('http://www.cadc-ccda'))
 
     def test_proposal_urls(self):
@@ -127,7 +128,7 @@ class JCMTFacilityTestCase(FacilityTestCase):
         for (url, expect) in zip(urls, ('OMP', 'CADC')):
             self.assertIsInstance(url, Link)
             self.assertEqual(url.text, expect)
-            self.assertIsInstance(url.url, unicode)
+            self.assertIsInstance(url.url, string_type)
 
     def test_attach_review(self):
         types = self.view.get_call_types()

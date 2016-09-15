@@ -18,9 +18,10 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from unittest import TestCase
-
+from hedwig.compat import byte_type
 from hedwig.file.csv import CSVWriter
+
+from .compat import TestCase
 
 
 class FileTest(TestCase):
@@ -31,6 +32,6 @@ class FileTest(TestCase):
         writer.add_row([2, 'b'])
 
         csv = writer.get_csv()
-        self.assertIsInstance(csv, str)
+        self.assertIsInstance(csv, byte_type)
 
         self.assertEqual(csv, b'1,"a"\n2,"b"\n')

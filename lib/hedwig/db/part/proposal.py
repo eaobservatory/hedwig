@@ -26,6 +26,7 @@ from sqlalchemy.sql.expression import and_, case, column, not_
 from sqlalchemy.sql.functions import coalesce, count
 from sqlalchemy.sql.functions import max as max_
 
+from ...compat import str_to_unicode
 from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
 from ...type.collection import AffiliationCollection, \
@@ -256,7 +257,7 @@ class ProposalPart(object):
                 proposal_fig.c.type: type_,
                 proposal_fig.c.state: AttachmentState.NEW,
                 proposal_fig.c.figure: figure,
-                proposal_fig.c.md5sum: md5(figure).hexdigest(),
+                proposal_fig.c.md5sum: str_to_unicode(md5(figure).hexdigest()),
                 proposal_fig.c.caption: caption,
                 proposal_fig.c.filename: filename,
                 proposal_fig.c.uploaded: datetime.utcnow(),
@@ -1798,7 +1799,7 @@ class ProposalPart(object):
 
             values = {
                 proposal_pdf.c.pdf: pdf,
-                proposal_pdf.c.md5sum: md5(pdf).hexdigest(),
+                proposal_pdf.c.md5sum: str_to_unicode(md5(pdf).hexdigest()),
                 proposal_pdf.c.pages: pages,
                 proposal_pdf.c.state: AttachmentState.NEW,
                 proposal_pdf.c.filename: filename,
@@ -2476,7 +2477,7 @@ class ProposalPart(object):
                 proposal_fig.c.type: type_,
                 proposal_fig.c.state: AttachmentState.NEW,
                 proposal_fig.c.figure: figure,
-                proposal_fig.c.md5sum: md5(figure).hexdigest(),
+                proposal_fig.c.md5sum: str_to_unicode(md5(figure).hexdigest()),
                 proposal_fig.c.filename: filename,
                 proposal_fig.c.uploaded: datetime.utcnow(),
                 proposal_fig.c.uploader: uploader_person_id,

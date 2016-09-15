@@ -19,8 +19,8 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict
-from unittest import TestCase
 
+from hedwig.compat import string_type
 from hedwig.error import UserError
 from hedwig.facility.jcmt.type import \
     JCMTAvailable, JCMTAvailableCollection, \
@@ -29,6 +29,8 @@ from hedwig.facility.jcmt.type import \
     JCMTReviewerExpertise, \
     JCMTWeather
 from hedwig.type.collection import ResultTable
+
+from .compat import TestCase
 
 
 class JCMTTypeTestCase(TestCase):
@@ -50,11 +52,11 @@ class JCMTTypeTestCase(TestCase):
             # is_valid and get_name should work on these values.
             self.assertTrue(JCMTInstrument.is_valid(instrument))
             instrument_name = JCMTInstrument.get_name(instrument)
-            self.assertIsInstance(instrument_name, unicode)
+            self.assertIsInstance(instrument_name, string_type)
 
             # It should also be in the list of options.
             self.assertIn(instrument, options)
-            self.assertIsInstance(options[instrument], unicode)
+            self.assertIsInstance(options[instrument], string_type)
             self.assertEqual(options[instrument], instrument_name)
 
         self.assertFalse(JCMTInstrument.is_valid(0))
@@ -86,7 +88,7 @@ class JCMTTypeTestCase(TestCase):
             self.assertLessEqual(weight, 100)
 
             name = JCMTReviewerExpertise.get_name(expertise)
-            self.assertIsInstance(name, unicode)
+            self.assertIsInstance(name, string_type)
 
             self.assertIn(expertise, options)
             option_name = options.pop(expertise)
@@ -118,15 +120,15 @@ class JCMTTypeTestCase(TestCase):
             # is_valid and get_name should work on these values.
             self.assertTrue(JCMTWeather.is_valid(weather))
             weather_name = JCMTWeather.get_name(weather)
-            self.assertIsInstance(weather_name, unicode)
+            self.assertIsInstance(weather_name, string_type)
 
             # It should also be in the list of options.
             self.assertIn(weather, options)
-            self.assertIsInstance(options[weather].name, unicode)
+            self.assertIsInstance(options[weather].name, string_type)
             self.assertEqual(options[weather].name, weather_name)
 
             self.assertIn(weather, option_names)
-            self.assertIsInstance(option_names[weather], unicode)
+            self.assertIsInstance(option_names[weather], string_type)
             self.assertEqual(option_names[weather], weather_name)
 
         self.assertFalse(JCMTWeather.is_valid(0))
@@ -258,7 +260,7 @@ class JCMTTypeTestCase(TestCase):
 
         # This result collection isn't valid because instrument=1, weather=1
         # is repeated.
-        with self.assertRaisesRegexp(UserError, 'multiple entries'):
+        with self.assertRaisesRegex(UserError, 'multiple entries'):
             c.validate()
 
         # Validation should succeed if we remove the offending entry.
@@ -268,29 +270,29 @@ class JCMTTypeTestCase(TestCase):
         # Check the other validation constraints.
         c[1] = JCMTRequest(1, 0, instrument=1, ancillary=0,
                            weather=1, time='')
-        with self.assertRaisesRegexp(UserError, 'valid number'):
+        with self.assertRaisesRegex(UserError, 'valid number'):
             c.validate()
 
         c[1] = JCMTRequest(1, 0, instrument=0, ancillary=0,
                            weather=1, time=1.0)
-        with self.assertRaisesRegexp(UserError, 'Instrument not recognised'):
+        with self.assertRaisesRegex(UserError, 'Instrument not recognised'):
             c.validate()
 
         c[1] = JCMTRequest(1, 0, instrument=1, ancillary=999,
                            weather=1, time=1.0)
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 UserError, 'Ancillary instrument not recognised'):
             c.validate()
 
         c[1] = JCMTRequest(1, 0, instrument=1,
                            ancillary=1, weather=1, time=1.0)
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 UserError, 'Ancillary not permitted for this instrument'):
             c.validate()
 
         c[1] = JCMTRequest(1, 0, instrument=1, ancillary=0,
                            weather=0, time=1.0)
-        with self.assertRaisesRegexp(UserError, 'Weather band not recognised'):
+        with self.assertRaisesRegex(UserError, 'Weather band not recognised'):
             c.validate()
 
     def test_available_collection(self):
@@ -312,5 +314,5 @@ class JCMTTypeTestCase(TestCase):
 
         c[1003] = JCMTAvailable(1003, 100, 5, 20.0)
 
-        with self.assertRaisesRegexp(UserError, 'There are multiple entries'):
+        with self.assertRaisesRegex(UserError, 'There are multiple entries'):
             c.validate()

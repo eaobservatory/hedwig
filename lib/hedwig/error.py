@@ -18,8 +18,10 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from hedwig.compat import ExceptionWithMessage, string_type
 
-class Error(Exception):
+
+class Error(ExceptionWithMessage):
     """Base class for exceptions in this application."""
 
     pass
@@ -34,7 +36,7 @@ class DatabaseError(Error):
         which itself is stored as the "orig" attribute.
         """
 
-        Error.__init__(self, orig.message)
+        Error.__init__(self, string_type(orig))
         self.orig = orig
 
 
