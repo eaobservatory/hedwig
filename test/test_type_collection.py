@@ -19,7 +19,6 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import namedtuple
-import itertools
 
 from hedwig.error import MultipleRecords, NoSuchRecord, NoSuchValue, UserError
 from hedwig.type.base import CollectionByProposal, CollectionOrdered, \
@@ -427,7 +426,7 @@ class CollectionTypeTestCase(TestCase):
             dict(role=rr.CTTEE_PRIMARY, review_rating=80, review_weight=100),
         ]
 
-        for (r, n) in zip(rs, itertools.count(100)):
+        for (n, r) in enumerate(rs, 100):
             c[n] = null_tuple(Reviewer)._replace(
                 review_state=ReviewState.DONE, **r)
 
@@ -455,7 +454,7 @@ class CollectionTypeTestCase(TestCase):
             dict(role=rr.CTTEE_SECONDARY, review_rating=40, review_weight=50),
         ]
 
-        for (r, n) in zip(rs, itertools.count(200)):
+        for (n, r) in enumerate(rs, 200):
             c[n] = null_tuple(Reviewer)._replace(
                 review_state=ReviewState.DONE, **r)
 

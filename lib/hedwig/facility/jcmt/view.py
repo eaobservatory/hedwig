@@ -19,7 +19,6 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import defaultdict, namedtuple, OrderedDict
-from itertools import count
 import re
 
 try:
@@ -873,7 +872,7 @@ class JCMT(Generic):
                 # Re-write IDs as None.
                 allocations = JCMTRequestCollection((
                     (n, r._replace(id=None))
-                    for (n, r) in zip(count(1), original_request.values())))
+                    for (n, r) in enumerate(original_request.values(), 1)))
                 is_prefilled = True
 
         else:
