@@ -76,6 +76,11 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(f(BaseCallType.STANDARD, BaseCallType, plural=True),
                          'standard calls for proposals')
 
+    def test_filter_chain(self):
+        f = self.app.jinja_env.filters['chain']
+
+        self.assertEqual(list(f(([1, 2], [3, 4]))), [1, 2, 3, 4])
+
     def test_filter_count_true(self):
         f = self.app.jinja_env.filters['count_true']
 
@@ -99,6 +104,11 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(f(None, '<{}>'), '')
         self.assertEqual(f(40, '<{}>'), '<40>')
         self.assertEqual(f((30, 40), '<{}, {}>'), '<30, 40>')
+
+    def test_filter_first_value(self):
+        f = self.app.jinja_env.filters['first_value']
+
+        self.assertEqual(f({'lone_key': 'lone_value'}), 'lone_value')
 
     def test_filter_format_datetime(self):
         fdt = self.app.jinja_env.filters['format_datetime']

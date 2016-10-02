@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from codecs import utf_8_encode
+from codecs import utf_8_encode, utf_8_decode
 import csv
 
 from ..compat import python_version, unicode_to_str, string_type
@@ -41,6 +41,19 @@ if python_version < 3:
     def encode_csv(value):
         return value
 
+    def decode_csv(value):
+        return value
+
+    def decode_value(value):
+        """
+        UTF-8 decode a value extracted from a CSV file.
+        """
+
+        if value is None:
+            return None
+
+        return utf_8_decode(value, 'replace')[0]
+
 else:
     # Python 3: cvs module works in terms of unicode strings.
     from io import StringIO as CSVIO
@@ -54,6 +67,16 @@ else:
         """
 
         return utf_8_encode(value)[0]
+
+    def decode_csv(value):
+        """
+        UTF-8 decode whole CSV file.
+        """
+
+        return utf_8_decode(value, 'replace')[0]
+
+    def decode_value(value):
+        return value
 
 
 class CSVDialect(csv.Dialect):

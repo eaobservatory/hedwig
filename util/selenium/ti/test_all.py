@@ -36,6 +36,7 @@ from sqlalchemy.sql import select
 
 from hedwig import auth
 from hedwig.admin.proposal import close_call_proposals
+from hedwig.compat import string_type
 from hedwig.config import get_config
 from hedwig.db.meta import invitation, reset_token, verify_token
 from hedwig.admin.poll import send_proposal_feedback
@@ -89,6 +90,8 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.set_window_size(1200, 800)
 
         server.start()
+
+        sleep(1)
 
         try:
             # Register some people.
@@ -1843,7 +1846,7 @@ class IntegrationTest(DummyConfigTestCase):
             return
 
         for highlight_element in highlight:
-            if not isinstance(highlight_element, basestring):
+            if not isinstance(highlight_element, string_type):
                 highlight_element = highlight_element.get_attribute('id')
             self.browser.execute_script(
                 'document.getElementById("' + highlight_element +

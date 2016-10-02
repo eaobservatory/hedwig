@@ -55,14 +55,14 @@
     'jcmt_request': proposal.jcmt_request.total,
     'jcmt_allocation': (none if (proposal.jcmt_allocation is none) else proposal.jcmt_allocation.total),
 } | json(extend=super(), dynamic=[
-    ('jcmt_weather', jcmt_weathers.keys() + [none], false, (proposal.jcmt_request.weather if proposal.jcmt_allocation is none else proposal.jcmt_allocation.weather), 0),
-    ('jcmt_instrument', jcmt_instruments.keys() + [none], false, (proposal.jcmt_request.instrument_total if proposal.jcmt_allocation is none else proposal.jcmt_allocation.instrument_total), 0),
+    ('jcmt_weather', (jcmt_weathers.keys(), [none]) | chain, false, (proposal.jcmt_request.weather if proposal.jcmt_allocation is none else proposal.jcmt_allocation.weather), 0),
+    ('jcmt_instrument', (jcmt_instruments.keys(), [none]) | chain, false, (proposal.jcmt_request.instrument_total if proposal.jcmt_allocation is none else proposal.jcmt_allocation.instrument_total), 0),
 ]) }}{% endblock %}
 
 {% macro render_cell_class(is_total, is_first) %}number_right{{ ' total' if is_total }}{{ ' spacer_left' if is_first }}{% endmacro %}
 
 {% macro render_jcmt_request(req_or_alloc, is_total=false) %}
-    {% for weather in (jcmt_weathers.keys() + [none]) %}
+    {% for weather in (jcmt_weathers.keys(), [none]) | chain %}
         <td class="{{ render_cell_class(is_total, loop.first) }}">
             {% if weather in req_or_alloc.weather %}
                 {{ req_or_alloc.weather[weather] | fmt('{:.1f}')}}
@@ -73,7 +73,7 @@
     {% endfor %}
     {% set req_or_alloc_inst_group = req_or_alloc.instrument_grouped %}
     {% set req_or_alloc_inst_total = req_or_alloc.instrument_total %}
-    {% for instrument in (jcmt_instruments.keys() + [none]) %}
+    {% for instrument in (jcmt_instruments.keys(), [none]) | chain %}
         <td class="{{ render_cell_class(is_total, loop.first) }}">
             {% if instrument in req_or_alloc_inst_total %}
                 {% with instrument_value = (req_or_alloc_inst_total if is_total else req_or_alloc_inst_group)[instrument] %}

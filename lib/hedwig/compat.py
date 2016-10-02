@@ -33,10 +33,14 @@ if python_version < 3:
 
     def unicode_to_str(value):
         """Convert unicode to native string type."""
+        if value is None:
+            return None
         return ascii_encode(value)[0]
 
     def str_to_unicode(value):
         """Convert native string type to unicode."""
+        if value is None:
+            return None
         return ascii_decode(value)[0]
 
     def make_type(name, *args):

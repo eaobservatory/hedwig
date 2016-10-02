@@ -19,12 +19,14 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from itertools import groupby
+from itertools import chain as _chain
 import json as json_module
 from operator import attrgetter
 
 from flask import Markup
 from jinja2.runtime import Undefined
 
+from ..compat import first_value as _first_value
 from ..type.enum import AffiliationType, Assessment, \
     AttachmentState, CallState, MessageState, MessageThreadType, \
     PersonTitle, ProposalState, PublicationType, ReviewState, SemesterState
@@ -81,6 +83,10 @@ def register_template_utils(app):
         return type_class.get_name(value)
 
     @app.template_filter()
+    def chain(sequences):
+        return _chain(*sequences)
+
+    @app.template_filter()
     def count_true(list_):
         return sum(1 for x in list_ if x)
 
@@ -105,6 +111,17 @@ def register_template_utils(app):
             return format_.format(*value)
 
         return format_.format(value)
+
+    @app.template_filter()
+    def first_value(dictionary):
+        """
+        Extract the first value from a dictionary.
+
+        Similar to the Jinja built in filter "first" but operates on
+        the values, using the hedwig.compat.first_value function.
+        """
+
+        return _first_value(dictionary)
 
     @app.template_filter()
     def format_datetime(value):

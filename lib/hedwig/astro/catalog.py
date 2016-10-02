@@ -18,10 +18,10 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from codecs import utf_8_decode
 import csv
 
 from ..error import UserError
+from ..file.csv import decode_csv, decode_value
 from ..type.collection import TargetCollection
 from ..type.simple import Target
 from ..type.util import null_tuple
@@ -32,6 +32,9 @@ def parse_source_list(source_list, number_from=1):
     """
     Parse a plain text source list and return a TargetCollection.
     """
+
+    # Ensure the source_list CSV is in the format expected by the csv module.
+    source_list = decode_csv(source_list)
 
     # Create case-insensitive system reverse lookup dictionary.
     systems = {
@@ -63,7 +66,7 @@ def parse_source_list(source_list, number_from=1):
 
             # Drop any trailing values and decode UTF-8.
             target = {
-                k: None if v is None else utf_8_decode(v, 'replace')[0]
+                k: decode_value(v)
                 for (k, v) in target.items() if k is not None}
 
             # Extract target name and system.

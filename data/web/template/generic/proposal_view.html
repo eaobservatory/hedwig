@@ -377,7 +377,7 @@
                     {% endif %}
                     Add calculation:
                     {% for calculator in calculators %}
-                        <a href="{{ url_for((calculator.code, calculator.modes.values()[0].code) | fmt('.calc_{}_{}'), proposal_id=proposal.id) }}">{{ calculator.name }}</a>
+                        <a href="{{ url_for((calculator.code, (calculator.modes | first_value).code) | fmt('.calc_{}_{}'), proposal_id=proposal.id) }}">{{ calculator.name }}</a>
                     {% endfor %}
                 </p>
             </nav>

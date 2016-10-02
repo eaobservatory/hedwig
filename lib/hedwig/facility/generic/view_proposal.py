@@ -1191,14 +1191,16 @@ class GenericProposal(object):
 
                 max_record = (max(records.keys()) if records else 0)
 
-                new_records = parse_source_list(buff,
-                                                number_from=max_record + 1)
+                added_records = parse_source_list(buff,
+                                                  number_from=max_record + 1)
 
                 # TODO: would be more efficient to have a store-only
                 # version of the sync method.
-                if not overwrite:
-                    new_records = TargetCollection(records.items() +
-                                                   new_records.items())
+                if overwrite:
+                    new_records = added_records
+                else:
+                    new_records = records.copy()
+                    new_records.update(added_records)
 
                 db.sync_proposal_target(proposal.id, new_records)
 

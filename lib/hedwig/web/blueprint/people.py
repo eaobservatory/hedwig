@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from flask import Blueprint, request
 from ..util import require_admin, require_auth, require_not_auth, templated
+from ...compat import str_to_unicode
 from ...view.people import PeopleView
 
 
@@ -56,7 +57,7 @@ def create_people_blueprint(db, facilities):
     def register_user():
         return view.register_user(
             db, (request.form if request.method == 'POST' else None),
-            request.remote_addr)
+            str_to_unicode(request.remote_addr))
 
     @bp.route('/user/name', methods=['GET', 'POST'])
     @require_auth()
@@ -64,7 +65,7 @@ def create_people_blueprint(db, facilities):
     def change_user_name():
         return view.change_user_name(
             db, (request.form if request.method == 'POST' else None),
-            request.remote_addr)
+            str_to_unicode(request.remote_addr))
 
     @bp.route('/user/password', methods=['GET', 'POST'])
     @require_auth()
@@ -72,7 +73,7 @@ def create_people_blueprint(db, facilities):
     def change_password():
         return view.change_password(
             db, (request.form if request.method == 'POST' else None),
-            request.remote_addr)
+            str_to_unicode(request.remote_addr))
 
     @bp.route('/user/password/reset', methods=['GET', 'POST'])
     @require_not_auth
@@ -80,7 +81,7 @@ def create_people_blueprint(db, facilities):
     def password_reset_token_get():
         return view.password_reset_token_get(
             db, (request.form if request.method == 'POST' else None),
-            request.remote_addr)
+            str_to_unicode(request.remote_addr))
 
     @bp.route('/user/password/reset/token', methods=['GET', 'POST'])
     @require_not_auth
@@ -89,7 +90,7 @@ def create_people_blueprint(db, facilities):
         return view.password_reset_token_use(
             db, request.args,
             (request.form if request.method == 'POST' else None),
-            request.remote_addr)
+            str_to_unicode(request.remote_addr))
 
     @bp.route('/user/admin/take')
     @require_auth(require_person_admin=True, record_referrer=True)
@@ -112,7 +113,7 @@ def create_people_blueprint(db, facilities):
     def register_person():
         return view.register_person(
             db, (request.form if request.method == 'POST' else None),
-            request.remote_addr)
+            str_to_unicode(request.remote_addr))
 
     @bp.route('/person/')
     @require_auth()
@@ -248,6 +249,6 @@ def create_people_blueprint(db, facilities):
         return view.invitation_token_accept(
             db, request.args,
             (request.form if request.method == 'POST' else None),
-            request.remote_addr)
+            str_to_unicode(request.remote_addr))
 
     return bp
