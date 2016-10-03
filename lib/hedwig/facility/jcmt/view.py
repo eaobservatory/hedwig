@@ -688,7 +688,7 @@ class JCMT(Generic):
             'title': 'Edit Observing Request',
             'message': message,
             'proposal_id': proposal.id,
-            'requests': records.values(),
+            'requests': records,
             'instruments': JCMTInstrument.get_options_with_ancillary(),
             'weathers': JCMTWeather.get_available(),
             'options': JCMTOptionValue.get_options(),
@@ -881,7 +881,7 @@ class JCMT(Generic):
         return {
             'original_request': original_request.to_table(),
             'is_prefilled': is_prefilled,
-            'allocations': allocations.values(),
+            'allocations': allocations,
             'instruments': JCMTInstrument.get_options_with_ancillary(),
             'weathers': JCMTWeather.get_available(),
         }

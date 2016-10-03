@@ -11,7 +11,7 @@
 
 <h2>Comments</h2>
 {% if feedback_reviews %}
-    {% for feedback_review in feedback_reviews %}
+    {% for feedback_review in feedback_reviews.values() %}
         {{ feedback_review.review_text | format_text(feedback_review.review_format) }}
     {% endfor %}
 {% else %}

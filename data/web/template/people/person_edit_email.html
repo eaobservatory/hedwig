@@ -20,7 +20,7 @@
             <th>Verified</th>
             <th>Actions</th>
         </tr>
-        {% for email in emails %}
+        {% for email in emails.values() %}
             <tr id="emailrow_{{ email.id }}">
                 <td><input type="email" name="email_{{ email.id }}" value="{{ email.address }}" required="required" size="40" /></td>
                 <td><input type="radio" name="primary" value="{{ email.id }}" {{ 'checked="checked"' | safe if email.primary }} /></td>

@@ -17,7 +17,7 @@
             <th>Information</th>
             <th>Actions</th>
         </tr>
-        {% for figure in figures %}
+        {% for figure in figures.values() %}
             <tr id="figrow_{{ figure.id }}">
                 <td>
                     {% if figure.state is attachment_ready %}

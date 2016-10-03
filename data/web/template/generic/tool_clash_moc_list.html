@@ -12,7 +12,7 @@
 </p>
 
 <ul>
-    {% for moc in mocs %}
+    {% for moc in mocs.values() %}
         <li>
             <a href="{{ url_for('.tool_clash_moc_info', moc_id=moc.id) }}">{{ moc.name }}</a>
             {% if not moc.public %}

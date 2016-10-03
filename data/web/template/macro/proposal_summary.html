@@ -76,7 +76,7 @@
 
     {% if categories %}
         <p>
-            {% for category in categories %}
+            {% for category in categories.values() %}
                 <span class="label">{{ category.category_name }}</span>
             {% endfor %}
         </p>

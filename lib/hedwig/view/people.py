@@ -474,7 +474,7 @@ class PeopleView(object):
 
         return {
             'title': 'Directory of Users',
-            'persons': persons.values(),
+            'persons': persons,
         }
 
     @with_person(permission=PermissionType.VIEW)
@@ -609,7 +609,7 @@ class PeopleView(object):
             'person': person,
             'institution': institution,
             'institution_id': person.institution_id,
-            'institutions': institutions.values(),
+            'institutions': institutions,
             'countries': get_countries(),
             'is_current_user': is_current_user,
         }
@@ -680,7 +680,7 @@ class PeopleView(object):
             'title': '{}: Edit Email Addresses'.format(person.name),
             'message': message,
             'person': person,
-            'emails': records.values(),
+            'emails': records,
         }
 
     @with_person(permission=PermissionType.EDIT)
@@ -888,7 +888,7 @@ class PeopleView(object):
     def institution_list(self, db):
         return {
             'title': 'Institutions',
-            'institutions': db.list_institution().values(),
+            'institutions': db.list_institution(),
         }
 
     @with_institution(permission=PermissionType.VIEW)
@@ -908,7 +908,7 @@ class PeopleView(object):
             'title': 'Institution: {}'.format(institution.name),
             'institution': institution,
             'can_edit': can.edit,
-            'persons': persons.values(),
+            'persons': persons,
         }
 
     @with_institution(permission=PermissionType.EDIT)
@@ -1219,7 +1219,7 @@ class PeopleView(object):
         return {
             'title': 'Accept Invitation',
             'token': token,
-            'person': person._replace(email=person.email.values())
+            'person': person,
         }
 
 

@@ -9,7 +9,7 @@
 <h2 class="subtitle">Proposal Submission System</h2>
 
 <div id="facilities">
-    {% for facility in facilities %}
+    {% for facility in facilities.values() %}
         <div>
             <a href="{{ url_for(facility.code + '.facility_home') }}">
                 <img src="{{ url_for('static', filename='image/facility_' + facility.code +'.jpeg') }}" />

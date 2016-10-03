@@ -39,8 +39,8 @@
     <tr>
         <th>Name</th>
         <td>{{ person.name }}</td>
-    {% if person.email is not none %}
-        {% for email in person.email %}
+    {% if person.email %}
+        {% for email in person.email.values() %}
             <tr>
                 <th>Email</th>
                 <td>{{ email.address }}</td>

@@ -106,7 +106,7 @@ class GenericProposal(object):
             'call': call,
             'message': message,
             'proposal_title': proposal_title,
-            'affiliations': affiliations.values(),
+            'affiliations': affiliations,
             'affiliation_id': affiliation_id
         }
 
@@ -179,12 +179,12 @@ class GenericProposal(object):
             'abstract': proposal_text.get(role_class.ABSTRACT, None),
             'targets': targets,
             'target_total_time': target_total_time,
-            'calculators': self.calculators.values(),
+            'calculators': self.calculators,
             'calculations': self._prepare_calculations(calculations),
-            'target_tools': self.target_tools.values(),
+            'target_tools': self.target_tools,
             'tool_note': proposal_text.get(role_class.TOOL_NOTE, None),
             'categories': db.search_proposal_category(
-                proposal_id=proposal.id).values(),
+                proposal_id=proposal.id),
             'prev_proposals': prev_proposals,
         }
 
@@ -677,8 +677,8 @@ class GenericProposal(object):
             'proposal_id': proposal.id,
             'semester_id': proposal.semester_id,
             'call_type': proposal.call_type,
-            'members': records.values(),
-            'affiliations': affiliations.values(),
+            'members': records,
+            'affiliations': affiliations,
             'proposal_code': self.make_proposal_code(db, proposal),
         }
 
@@ -804,7 +804,7 @@ class GenericProposal(object):
             'semester_id': proposal.semester_id,
             'call_type': proposal.call_type,
             'persons': persons,
-            'affiliations': affiliations.values(),
+            'affiliations': affiliations,
             'member': member,
             'proposal_code': self.make_proposal_code(db, proposal),
             'target': url_for('.member_add', proposal_id=proposal.id),
@@ -961,7 +961,7 @@ class GenericProposal(object):
             'title': 'Edit Students',
             'message': message,
             'proposal_id': proposal.id,
-            'members': records.values(),
+            'members': records,
             'proposal_code': self.make_proposal_code(db, proposal),
         }
 
@@ -1105,7 +1105,7 @@ class GenericProposal(object):
             'message': message,
             'proposal_code': self.make_proposal_code(db, proposal),
             'accepted_proposals': accepted_proposal_codes,
-            'prev_proposals': records.values(),
+            'prev_proposals': records,
             'publication_types': PublicationType.get_options(),
             'note': call.prev_prop_note,
             'note_format': call.note_format,
@@ -1165,7 +1165,7 @@ class GenericProposal(object):
             'proposal_id': proposal.id,
             'message': message,
             'systems': CoordSystem.get_options(),
-            'targets': records.values(),
+            'targets': records,
             'proposal_code': self.make_proposal_code(db, proposal),
         }
 
@@ -1237,7 +1237,7 @@ class GenericProposal(object):
         return {
             'help_link': url_for('help.user_page', page_name='target',
                                  _anchor='clash-tool'),
-            'target_tools': self.target_tools.values(),
+            'target_tools': self.target_tools,
         }
 
     @with_proposal(permission=PermissionType.EDIT)
@@ -1258,7 +1258,7 @@ class GenericProposal(object):
 
         figures = db.search_proposal_figure(
             proposal_id=proposal.id, role=role,
-            with_caption=True, with_uploader_name=True).values()
+            with_caption=True, with_uploader_name=True)
 
         return {
             'title': 'Edit {}'.format(role_class.get_name(role).title()),
@@ -1284,7 +1284,7 @@ class GenericProposal(object):
         code = role_class.short_name(role)
 
         figures = db.search_proposal_figure(
-            proposal_id=proposal.id, role=role).values()
+            proposal_id=proposal.id, role=role)
 
         if role == role_class.TECHNICAL_CASE:
             calculations = self._prepare_calculations(
@@ -1466,7 +1466,7 @@ class GenericProposal(object):
             'message': message,
             'target': url_for('.case_manage_figure',
                               proposal_id=proposal.id, role=role),
-            'figures': figures.values(),
+            'figures': figures,
         }
 
     @with_proposal(permission=PermissionType.VIEW)
@@ -1649,7 +1649,7 @@ class GenericProposal(object):
             decision_note = None
 
         return {
-            'feedback_reviews': reviewers.values(),
+            'feedback_reviews': reviewers,
             'decision_note': decision_note,
         }
 

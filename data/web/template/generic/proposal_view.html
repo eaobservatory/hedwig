@@ -111,7 +111,7 @@
 
         {% if categories %}
             <p>
-                {% for category in categories %}
+                {% for category in categories.values() %}
                     <span class="label">{{ category.category_name }}</span>
                 {% endfor %}
             </p>
@@ -316,7 +316,7 @@
             <nav>
                 <p>
                     Check targets:
-                    {% for target_tool in target_tools %}
+                    {% for target_tool in target_tools.values() %}
                         <a href="{{ url_for(target_tool.code | fmt('.tool_{}_proposal'), proposal_id=proposal.id) }}">{{ target_tool.name }}</a>
                     {% endfor %}
                 </p>
@@ -376,7 +376,7 @@
                         <br />
                     {% endif %}
                     Add calculation:
-                    {% for calculator in calculators %}
+                    {% for calculator in calculators.values() %}
                         <a href="{{ url_for((calculator.code, (calculator.modes | first_value).code) | fmt('.calc_{}_{}'), proposal_id=proposal.id) }}">{{ calculator.name }}</a>
                     {% endfor %}
                 </p>

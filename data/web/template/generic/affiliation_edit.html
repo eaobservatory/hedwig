@@ -52,7 +52,7 @@
             <th>Assignment type</th>
             <th>Actions</th>
         </tr>
-        {% for affiliation in affiliations %}
+        {% for affiliation in affiliations.values() %}
             <tr id="affiliationrow_{{ affiliation.id }}">
                 <td><input type="text" name="name_{{ affiliation.id }}" value="{{ affiliation.name }}" required="required" /></td>
                 <td><input type="checkbox" name="hidden_{{ affiliation.id }}" value="yes" {{ 'checked="checked"' | safe if affiliation.hidden }} /></td>

@@ -132,7 +132,7 @@ class GenericReview(object):
             if with_cois:
                 row.extend([
                     '{} ({})'.format(x.person_name, x.affiliation_name)
-                    for x in proposal['members']
+                    for x in proposal['members'].values()
                     if not x.pi])
             writer.add_row(row)
 
@@ -186,7 +186,7 @@ class GenericReview(object):
                 'can_view_review': can_view_review,
                 'member_pi': member_pi,
                 'members_other': n_other,
-                'members': list(proposal.members.values()),
+                'members': proposal.members,
                 'code': self.make_proposal_code(db, proposal),
                 'affiliations': self.calculate_affiliation_assignment(
                     db, proposal.members, affiliations),
@@ -317,7 +317,7 @@ class GenericReview(object):
                 type_class.get_name(call.type)),
             'call': call,
             'message': message,
-            'affiliations': affiliations.values(),
+            'affiliations': affiliations,
         }
 
     @with_call_review(permission=PermissionType.EDIT)
@@ -542,7 +542,7 @@ class GenericReview(object):
             'proposals': proposals,
             'target': url_for('.review_call_grid', call_id=call.id,
                               reviewer_role=primary_role),
-            'group_members': list(group_members.values()),
+            'group_members': group_members,
             'primary_unique': primary_role_info.unique,
             'secondary_unique': (None if secondary_role_info is None else
                                  secondary_role_info.unique),
@@ -720,7 +720,7 @@ class GenericReview(object):
             'call': call,
             'abstract': abstract,
             'categories': db.search_proposal_category(
-                proposal_id=proposal.id).values(),
+                proposal_id=proposal.id),
             'titles': PersonTitle.get_options(),
         }
 
@@ -1239,8 +1239,8 @@ class GenericReview(object):
             'proposal_code': proposal_code,
             'abstract': abstract,
             'categories': db.search_proposal_category(
-                proposal_id=proposal.id).values(),
-            'reviews': list(reviewers.values()),
+                proposal_id=proposal.id),
+            'reviews': reviewers,
             'overall_rating': self.calculate_overall_rating(reviewers),
             'can_add_roles': auth.can_add_review_roles(
                 role_class, db, proposal, auth_cache=auth_cache),

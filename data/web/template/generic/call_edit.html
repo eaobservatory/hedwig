@@ -20,7 +20,7 @@
             <li>
                 <label for="semester_id">Semester</label>
                 <select name="semester_id" data-existing="{{ existing_calls | json }}">
-                    {% for semester in semesters %}
+                    {% for semester in semesters.values() %}
                         <option value="{{ semester.id }}" {{'selected="selected"' | safe if semester.id == call.semester_id }}>{{ semester.name }}</option>
                     {% endfor %}
                 </select>
@@ -30,7 +30,7 @@
             <li>
                 <label for="queue_id">Queue</label>
                 <select name="queue_id">
-                    {% for queue in queues %}
+                    {% for queue in queues.values() %}
                         <option value="{{ queue.id }}" {{'selected="selected"' | safe if queue.id == call.queue_id }}>{{ queue.name }}</option>
                     {% endfor %}
                 </select>

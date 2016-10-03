@@ -28,7 +28,7 @@
             <th>Affiliation</th>
             <th>Weight</th>
         </tr>
-        {% for affiliation in affiliations %}
+        {% for affiliation in affiliations.values() %}
             <tr>
                 <td>{{ affiliation.name }}</td>
                 <td><input type="number" name="weight_{{ affiliation.id }}" value="{{ affiliation.weight if affiliation.weight is not none }}" min="0" step="any" required="required"></td>

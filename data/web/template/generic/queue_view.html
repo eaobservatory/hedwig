@@ -21,7 +21,7 @@
 
 {% if affiliations %}
     <ul>
-        {% for affiliation in affiliations %}
+        {% for affiliation in affiliations.values() %}
             <li>
                 {{ affiliation.name }}
                 {% if affiliation.type is not affiliation_type_standard %}<span class="label">{{ affiliation.type | affiliation_type_name }}</span>{% endif %}

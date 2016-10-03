@@ -81,7 +81,7 @@
                     <th>Caption</th>
                     <th>Information</th>
                 </tr>
-                {% for figure in figures %}
+                {% for figure in figures.values() %}
                     <tr>
                         <th>{{ loop.index }}</th>
                         <td>

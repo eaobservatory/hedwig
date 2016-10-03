@@ -73,8 +73,8 @@ class GenericHome(object):
             'open_semesters': open_semesters,
             'open_nonstandard_semesters': open_nonstandard_semesters,
             'closed_semesters': closed_semesters,
-            'calculators': self.calculators.values(),
-            'target_tools': self.target_tools.values(),
+            'calculators': self.calculators,
+            'target_tools': self.target_tools,
             'review_calls': review_calls,
         }
 
@@ -101,7 +101,7 @@ class GenericHome(object):
             'title': '{} Call for Semester {}'.format(
                 type_class.get_name(call_type), semester.name),
             'semester': semester,
-            'calls': list(calls.values()),
+            'calls': calls,
             'call_type': call_type,
             'call_preamble': call_preamble,
         }

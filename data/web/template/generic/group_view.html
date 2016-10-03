@@ -39,7 +39,7 @@
             <th>Institution</th>
             <th>Links</th>
         </tr>
-        {% for member in members %}
+        {% for member in members.values() %}
             <tr>
                 <td>
                     <a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name }}</a>

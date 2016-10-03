@@ -51,7 +51,7 @@
             <th>Time</th>
             <th>Actions</th>
         </tr>
-        {% for request in requests %}
+        {% for request in requests.values() %}
             {% if request.id is none %}
                 {% set request_id = (new_counter() | fmt('new_{}')) %}
             {% else %}

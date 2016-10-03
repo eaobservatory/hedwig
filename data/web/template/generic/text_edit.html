@@ -45,7 +45,7 @@
             {% endfor %}
         </tr>
         <tr>
-            {% for figure in figures %}
+            {% for figure in figures.values() %}
                 <td>
                     {% if figure.state is attachment_ready %}
                         <img src="{{ url_for('.case_view_figure_thumbnail', proposal_id=proposal_id, role=role, fig_id=figure.id, md5sum=figure.md5sum) }}" />

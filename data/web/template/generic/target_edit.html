@@ -44,7 +44,7 @@
             <th>Priority<br />(1 highest)</th>
             <th>Actions</th>
         </tr>
-        {% for target in targets %}
+        {% for target in targets.values() %}
             <tr id="targetrow_{{ target.id }}">
                 <td><input type="text" name="name_{{ target.id }}" value="{{ target.name }}" size="15" /></td>
                 <td><input type="text" name="x_{{ target.id }}" value="{{ target.x }}" placeholder="00:00:00" size="10" /></td>

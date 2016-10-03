@@ -26,12 +26,12 @@
             <th>Potential observer?</th>
             <th>Actions</th>
         </tr>
-        {% for member in members %}
+        {% for member in members.values() %}
             <tr id="memberrow_{{ member.id }}">
                 <td>{{ member.person_name }}</td>
                 <td>
                     <select name="affiliation_{{ member.id }}">
-                        {% for affiliation in affiliations %}
+                        {% for affiliation in affiliations.values() %}
                             <option value="{{ affiliation.id }}" {{ 'selected="selected"' | safe if affiliation.id == member.affiliation_id }}>{{ affiliation.name }}</option>
                         {% endfor %}
                     </select>

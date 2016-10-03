@@ -28,7 +28,7 @@
                 <th>Subject</th>
                 <th>Update?</th>
             </tr>
-            {% for message in messages %}
+            {% for message in messages.values() %}
             <tr>
                 <td>
                     {{ message.state | message_state_name }}

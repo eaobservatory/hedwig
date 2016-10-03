@@ -30,13 +30,13 @@
     <table>
         <tr>
             <th>Queue</th>
-            {% for call in calls %}
+            {% for call in calls.values() %}
                 <td><a href="#queue_{{ call.queue_id }}">{{ call.queue_name }}</a></td>
             {% endfor %}
         </tr>
         <tr>
             <th>Call for proposals closing date</th>
-            {% for call in calls %}
+            {% for call in calls.values() %}
                 <td>{{ call.date_close | format_datetime }} UT</td>
             {% endfor %}
         </tr>
@@ -57,7 +57,7 @@
         Please select a queue to start a new proposal.
     </p>
 
-    {% for call in calls %}
+    {% for call in calls.values() %}
         <h3 id="queue_{{ call.queue_id }}">{{ call.queue_name }}</h3>
 
         <table>

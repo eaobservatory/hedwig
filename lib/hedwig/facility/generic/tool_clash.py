@@ -207,7 +207,7 @@ class ClashTool(BaseTargetTool):
 
         return {
             'title': 'Coverage List',
-            'mocs': mocs.values(),
+            'mocs': mocs,
         }
 
     def view_moc_info(self, db, moc_id):

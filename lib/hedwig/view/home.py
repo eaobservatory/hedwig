@@ -25,7 +25,7 @@ from ..web.util import mangle_email_address
 class HomeView(object):
     def home(self, facilities):
         return {
-            'facilities': facilities.values(),
+            'facilities': facilities,
         }
 
     def contact_page(self):

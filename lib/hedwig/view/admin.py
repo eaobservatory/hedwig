@@ -31,7 +31,7 @@ class AdminView(object):
     def home(self, facilities):
         return {
             'title': 'Site Administration',
-            'facilities': facilities.values(),
+            'facilities': facilities,
         }
 
     @with_verified_admin
@@ -131,7 +131,7 @@ class AdminView(object):
         return {
             'title': ('Message List' if person is None
                       else '{}: Messages'.format(person.name)),
-            'messages': messages.values(),
+            'messages': messages,
             'target_first': target_first,
             'target_next': target_next,
             # Parameters for the filtering form at the top of the page:
@@ -164,7 +164,7 @@ class AdminView(object):
         return {
             'title': 'Message thread: {}'.format(
                 MessageThreadType.get_name(thread_type)),
-            'messages': messages.values(),
+            'messages': messages,
         }
 
     @with_verified_admin
@@ -296,5 +296,5 @@ class AdminView(object):
     def user_unregistered(self, db):
         return {
             'title': 'Unregistered Users',
-            'users': db.search_user(registered=False).values(),
+            'users': db.search_user(registered=False),
         }

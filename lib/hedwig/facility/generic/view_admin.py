@@ -220,7 +220,7 @@ class GenericAdmin(object):
         return {
             'title': 'Queue: {}'.format(queue.name),
             'queue': queue,
-            'affiliations': affiliations.values(),
+            'affiliations': affiliations,
             'groups': GroupType.get_options(),
         }
 
@@ -293,7 +293,7 @@ class GenericAdmin(object):
 
         return {
             'title': 'Call List',
-            'calls': calls.values(),
+            'calls': calls,
         }
 
     def view_call_view(self, db, call_id):
@@ -452,8 +452,8 @@ class GenericAdmin(object):
             'message': message,
             'call': call,
             'call_type': call_type,
-            'semesters': (None if semesters is None else semesters.values()),
-            'queues': (None if queues is None else queues.values()),
+            'semesters': semesters,
+            'queues': queues,
             'format_types': FormatType.get_options(is_system=True),
             'existing_calls': existing_calls,
             'proposal_order': self.get_proposal_order(),
@@ -530,7 +530,7 @@ class GenericAdmin(object):
         return {
             'title': 'Edit Affiliations',
             'message': message,
-            'affiliations': records.values(),
+            'affiliations': records,
             'affiliation_types': AffiliationType.get_options(),
             'queue': queue,
         }
@@ -555,7 +555,7 @@ class GenericAdmin(object):
             'queue': queue,
             'group_type': group_type,
             'group_info': group_info,
-            'members': members.values(),
+            'members': members,
         }
 
     @with_verified_admin
@@ -740,7 +740,7 @@ class GenericAdmin(object):
             'queue': queue,
             'group_type': group_type,
             'group_info': group_info,
-            'members': members.values(),
+            'members': members,
             'message': message,
         }
 
@@ -830,7 +830,7 @@ class GenericAdmin(object):
         return {
             'title': 'Edit Categories',
             'message': message,
-            'categories': records.values(),
+            'categories': records,
         }
 
     def view_moc_list(self, db):
@@ -838,7 +838,7 @@ class GenericAdmin(object):
 
         return {
             'title': 'Coverage List',
-            'mocs': mocs.values(),
+            'mocs': mocs,
         }
 
     @with_verified_admin

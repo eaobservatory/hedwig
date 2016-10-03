@@ -47,7 +47,7 @@
             <th>Hidden</th>
             <th>Actions</th>
         </tr>
-        {% for category in categories %}
+        {% for category in categories.values() %}
             <tr id="categoryrow_{{ category.id }}">
                 <td><input type="text" name="name_{{ category.id }}" value="{{ category.name }}" required="required" /></td>
                 <td><input type="checkbox" name="hidden_{{ category.id }}" value="yes" {{ 'checked="checked"' | safe if category.hidden }} /></td>

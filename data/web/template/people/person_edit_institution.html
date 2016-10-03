@@ -41,7 +41,7 @@
             <li>
                 <label for="institution_id">Institution</label>
                 <select name="institution_id">
-                    {% for institution in institutions %}
+                    {% for institution in institutions.values() %}
                         <option value="{{ institution.id }}" {{'selected="selected"' | safe if institution.id == institution_id }}>
                             {{ render_institution_summary(institution) }}
                         </option>

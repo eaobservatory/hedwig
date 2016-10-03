@@ -102,7 +102,7 @@
                                 <th>Institution</th>
                                 <th>Affiliation</th>
                             </tr>
-                            {% for member in proposal.members %}
+                            {% for member in proposal.members.values() %}
                                 <tr>
                                     <td>{{ 'PI' if member.pi else ('&nbsp;' | safe) }}</td>
                                     <td>

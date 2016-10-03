@@ -28,7 +28,7 @@
                 <th>Proposal</th>
                 <th>PI Name</th>
                 <th>Title</th>
-                {% for member in group_members %}
+                {% for member in group_members.values() %}
                     <th class="sideways"><div><div>{{ member.person_name| abbr(25)  }}</div></div></th>
                 {% endfor %}
             </tr>
@@ -48,7 +48,7 @@
                     {% endif %}
                 </td>
                 <td>{{ proposal.title | abbr(25) }}</td>
-                {% for member in group_members %}
+                {% for member in group_members.values() %}
                     <td>
                         {% if proposal.members.has_person(member.person_id) %}
                             &nbsp;

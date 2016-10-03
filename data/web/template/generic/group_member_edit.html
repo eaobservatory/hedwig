@@ -16,7 +16,7 @@
             <th>Name</th>
             <th>Actions</th>
         </tr>
-        {% for member in members %}
+        {% for member in members.values() %}
             <tr id="memberrow_{{ member.id }}">
                 <td>{{ member.person_name }}</td>
                 <td>

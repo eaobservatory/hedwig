@@ -16,7 +16,7 @@
             <th>User name</th>
             <th>Links</th>
         </tr>
-        {% for user in users %}
+        {% for user in users.values() %}
             <tr>
                 <td>{{ user.name }}</td>
                 <td><a href="{{ url_for('people.user_log', user_id=user.id) }}">Account log</a></td>

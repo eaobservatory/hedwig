@@ -9,7 +9,7 @@
         <th>Date (UT)</th>
         <th>Subject</th>
     </tr>
-    {% for message in messages %}
+    {% for message in messages.values() %}
         <tr>
             <td>{{ message.state | message_state_name }}</td>
             <td>{{ message.date | format_datetime }}</td>

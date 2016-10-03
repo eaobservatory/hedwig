@@ -44,7 +44,7 @@
             {% endfor %}
             <th>Edited</th>
         </tr>
-        {% for review in reviews %}
+        {% for review in reviews.values() %}
             {% set show_review = (review.review_text is not none) %}
             {% set show_note = (review.review_note is not none) %}
             <tr class="spacer_above">

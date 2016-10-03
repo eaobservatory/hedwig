@@ -18,7 +18,7 @@
 <form method="POST" action="{{ url_for('.student_edit', proposal_id=proposal_id) }}">
 
     <p>
-        {% for member in members %}
+        {% for member in members.values() %}
             <input type="checkbox" name="student_{{ member.id }}" {{ 'checked="checked"' | safe if member.student }} />
             {{ member.person_name }}
             {% if not loop.last %}

@@ -17,7 +17,7 @@
         <th>Status</th>
         <th colspan="2">Actions</th>
     </tr>
-    {% for moc in mocs %}
+    {% for moc in mocs.values() %}
         <tr>
             <td>
                 {{ moc.name }}
