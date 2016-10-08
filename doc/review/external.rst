@@ -29,6 +29,15 @@ other browsers too.
 
 .. image:: image/review_edit.png
 
+You may use the "save" button to store your review and then return
+to edit it again as many times as you wish while the corresponding
+review process remains open.
+The review status will be shown as "done"
+on your :doc:`review list <review_list>`
+as soon as you have saved the review for the first time.
+There is currently no separate submission step to perform
+once your review is complete.
+
 .. toctree::
     :maxdepth: 2
 

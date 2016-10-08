@@ -4,6 +4,12 @@ Accepting an Invitation to Review a Proposal
 The process of accepting an invitation to review a proposal
 is very similar to that for
 :doc:`accepting a proposal membership invitation <../user/invitation>`.
+Please note that this process does not apply if you were invited to
+review a proposal using your existing account
+--- in that case you will be able to access the proposal and
+enter your review directly using the links included in
+your review invitation email,
+or from your :doc:`review list <review_list>`.
 
 * If you have already registered with the system, you can add the review
   to your existing account.
