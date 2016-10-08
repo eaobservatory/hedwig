@@ -43,7 +43,8 @@ from ...view import auth
 from ...web.util import ErrorPage, HTTPError, HTTPForbidden, \
     HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
-from ...view.util import count_words, organise_collection, with_proposal
+from ...view.util import count_words, organise_collection, \
+    with_proposal, with_verified_admin
 
 CalculationExtra = namedtuple(
     'CalculationExtra',
@@ -926,6 +927,50 @@ class GenericProposal(object):
             'proposal_id': proposal.id,
             'members': records.values(),
             'proposal_code': self.make_proposal_code(db, proposal),
+        }
+
+    @with_verified_admin
+    @with_proposal(permission=PermissionType.NONE)
+    def view_member_affiliation_edit(self, db, proposal, member_id, form):
+        message = None
+        records = proposal.members
+
+        if member_id not in records:
+            raise ErrorPage('Proposal member not found.')
+
+        affiliations = db.search_affiliation(
+            queue_id=proposal.queue_id, hidden=False)
+        if not affiliations:
+            raise HTTPError('No affiliations appear to be available.')
+
+        if form is not None:
+            try:
+                records[member_id] = records[member_id]._replace(
+                    affiliation_id=int(form['affiliation_id']))
+
+                (n_insert, n_update, n_delete) = \
+                    db.sync_proposal_member(
+                        proposal.id, records, editor_person_id=None)
+
+                if n_update:
+                    flash('The affiliation has been updated.')
+
+                raise HTTPRedirect(url_for('.proposal_view',
+                                           proposal_id=proposal.id,
+                                           _anchor='members'))
+
+            except UserError as e:
+                message = e.message
+
+        member = records[member_id]
+
+        return {
+            'title': 'Edit affiliation: {}'.format(member.person_name),
+            'proposal_id': proposal.id,
+            'proposal_code': self.make_proposal_code(db, proposal),
+            'message': message,
+            'member': member,
+            'affiliations': affiliations,
         }
 
     @with_proposal(permission=PermissionType.EDIT)

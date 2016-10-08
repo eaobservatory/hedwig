@@ -163,7 +163,12 @@
                             {{ member.person_name }}
                         {% endif %}
                     </td>
-                    <td>{{ member.affiliation_name }}</td>
+                    <td>
+                        {{ member.affiliation_name }}
+                        {% if session.is_admin %}
+                            <a href="{{ url_for('.member_affiliation_edit', proposal_id=proposal.id, member_id=member.id) }}">edit</a>
+                        {% endif %}
+                    </td>
                     <td>
                         {% if member.resolved_institution_id is not none %}
                             {% if session.is_admin %}

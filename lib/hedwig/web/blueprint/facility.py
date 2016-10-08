@@ -269,6 +269,15 @@ def create_facility_blueprint(db, facility):
             db, proposal_id,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/proposal/<int:proposal_id>/member_affiliation/<int:member_id>',
+              methods=['GET', 'POST'])
+    @require_admin
+    @facility_template('member_affiliation_edit.html')
+    def member_affiliation_edit(proposal_id, member_id):
+        return facility.view_member_affiliation_edit(
+            db, proposal_id, member_id,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/proposal/<int:proposal_id>/previous',
               methods=['GET', 'POST'])
     @require_auth(require_person=True)
