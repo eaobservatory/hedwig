@@ -22,7 +22,7 @@
         {% for proposal in proposals %}
             <tr>
                 <td>
-                    <a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a>
+                    <a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}" id="proposal_view_{{ proposal.id }}">{{ proposal.code }}</a>
                 </td>
                 <td>{{ proposal.title }}</td>
                 <td>{{ proposal.state | proposal_state_name }}</td>

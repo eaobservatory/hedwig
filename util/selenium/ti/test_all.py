@@ -1372,6 +1372,27 @@ class IntegrationTest(DummyConfigTestCase):
 
         self._save_screenshot(self.admin_image_root, 'call_proposals')
 
+        # Go to a proposal to correct the affiliation information.
+        self.browser.find_element_by_id('proposal_view_1').click()
+
+        edit_link = self.browser.find_element_by_id('member_aff_ed_2')
+        self._save_screenshot(self.admin_image_root, 'proposal_mem_aff_link',
+                              [edit_link])
+
+        edit_link.click()
+
+        Select(
+            self.browser.find_element_by_name('affiliation_id')
+        ).select_by_visible_text('Japan')
+
+        self._save_screenshot(self.admin_image_root, 'proposal_mem_aff_edit')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The affiliation has been updated.',
+            self.browser.page_source)
+
         # Try deleting the MOC.
         self.browser.get(admin_menu_url)
         self.browser.find_element_by_link_text('Clash tool coverage').click()

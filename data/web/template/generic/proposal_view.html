@@ -166,7 +166,7 @@
                     <td>
                         {{ member.affiliation_name }}
                         {% if session.is_admin %}
-                            <a href="{{ url_for('.member_affiliation_edit', proposal_id=proposal.id, member_id=member.id) }}">edit</a>
+                            <a href="{{ url_for('.member_affiliation_edit', proposal_id=proposal.id, member_id=member.id) }}" id="member_aff_ed_{{ member.id }}">edit</a>
                         {% endif %}
                     </td>
                     <td>
