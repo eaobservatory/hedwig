@@ -60,12 +60,20 @@ which has been created for this call.
 .. image:: image/call_proposals.png
 
 When viewing a proposal, you can edit the member affiliation if this
-has been entered incorrectly.
-To do this use the link next to the current affiliation.
+has been entered incorrectly
+or manually change the status of the proposal.
+To do this use the link next to the current affiliation or status.
 
 .. image:: image/proposal_mem_aff_link.png
 
-This will show a new page where you can enter the correct
+Editing an affiliation will show a new page where you can enter the correct
 affiliation for the proposal member in question.
 
 .. image:: image/proposal_mem_aff_edit.png
+
+Altering the proposal status also shows a new page where any proposal state
+can be selected.
+This should normally only be done in exceptional circumstances.
+Please read the notes on the alter status page itself before proceeding.
+
+.. image:: image/proposal_alter_state.png

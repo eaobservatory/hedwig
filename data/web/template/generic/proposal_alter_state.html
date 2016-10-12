@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+{% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
+
+{% block content %}
+<p>
+    <b>Note:</b>
+</p>
+
+<ul>
+    <li>
+        Take care when altering the proposal status because
+        <b>this controls all access to proposals</b>.
+    </li>
+    <li>
+        Manually altering the status
+        <b>will not trigger actions which would normally be performed</b>
+        when a state changes,
+        such as freezing member institutions on call closure
+        and sending feedback on acceptance or rejection.
+    </li>
+    <li>
+        If you wish repeat a step due to a message not being sent,
+        please re-send the message from the
+        <a href="{{ url_for('admin.message_list') }}">message list</a>
+        instead.
+    </li>
+    <li>
+        If a proposal for a closed call is returned to an editable state
+        and a poll process (with the &ldquo;close&rdquo; option enabled)
+        is running, <b>the poll process will act to close the
+        proposal again on its next update cycle.</b>
+    </li>
+</ul>
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.proposal_alter_state', proposal_id=proposal_id) }}">
+    <ol>
+        <li>
+            <label for="state">Status</label>
+            <select name="state">
+                {% for (state_id, state_name) in states.items() %}
+                    <option value="{{ state_id }}" {{ 'selected="selected"' | safe if state_id == state }}>{{ state_name }}</option>
+                {% endfor %}
+            </select>
+        </li>
+        <li>
+            <input type="submit" value="Save" name="submit" />
+            <input type="hidden" name="state_prev" value="{{ state }}" />
+        </li>
+    </ol>
+</form>
+
+{% endblock %}

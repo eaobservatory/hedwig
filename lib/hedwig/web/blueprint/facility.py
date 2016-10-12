@@ -187,6 +187,15 @@ def create_facility_blueprint(db, facility):
     def proposal_view(proposal_id):
         return facility.view_proposal_view(db, proposal_id, request.args)
 
+    @bp.route('/proposal/<int:proposal_id>/alter_state',
+              methods=['GET', 'POST'])
+    @require_admin
+    @facility_template('proposal_alter_state.html')
+    def proposal_alter_state(proposal_id):
+        return facility.view_proposal_alter_state(
+            db, proposal_id,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/proposal/<int:proposal_id>/submit', methods=['GET', 'POST'])
     @require_auth(require_person=True)
     @facility_template('proposal_submit.html')

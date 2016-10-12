@@ -59,7 +59,12 @@
         </tr>
         <tr>
             <th>Proposal status</th>
-            <td id="proposal_status_cell">{{ proposal.state | proposal_state_name }}</td>
+            <td id="proposal_status_cell">
+                {{ proposal.state | proposal_state_name }}
+                {% if session.is_admin %}
+                    <a href="{{ url_for('.proposal_alter_state', proposal_id=proposal.id) }}" id="alter_state_link">edit</a>
+                {% endif %}
+            </td>
             <td class="borderless">
                 {% if can_edit %}
                     <nav>

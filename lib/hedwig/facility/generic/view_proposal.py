@@ -200,6 +200,41 @@ class GenericProposal(object):
 
         return extra
 
+    @with_verified_admin
+    @with_proposal(permission=PermissionType.NONE)
+    def view_proposal_alter_state(self, db, proposal, form):
+        message = None
+
+        if form is not None:
+            try:
+                db.update_proposal(proposal_id=proposal.id,
+                                   state=int(form['state']),
+                                   state_prev=int(form['state_prev']))
+
+                flash('The proposal state has been updated.')
+
+                raise HTTPRedirect(url_for('.proposal_view',
+                                           proposal_id=proposal.id))
+
+            except UserError as e:
+                message = e.message
+
+            except ConsistencyError:
+                    raise ErrorPage(
+                        'The state could not be updated.  Perhaps it changed '
+                        'since you opened the alter state page.')
+
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        return {
+            'title': 'Alter status: {}'.format(proposal_code),
+            'proposal_id': proposal.id,
+            'proposal_code': proposal_code,
+            'message': message,
+            'state': proposal.state,
+            'states': ProposalState.get_options(),
+        }
+
     def _validate_proposal(self, db, proposal):
         messages = []
 

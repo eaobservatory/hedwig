@@ -1377,7 +1377,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         edit_link = self.browser.find_element_by_id('member_aff_ed_2')
         self._save_screenshot(self.admin_image_root, 'proposal_mem_aff_link',
-                              [edit_link])
+                              [edit_link, 'alter_state_link'])
 
         edit_link.click()
 
@@ -1391,6 +1391,16 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.assertIn(
             'The affiliation has been updated.',
+            self.browser.page_source)
+
+        edit_link = self.browser.find_element_by_id('alter_state_link').click()
+
+        self._save_screenshot(self.admin_image_root, 'proposal_alter_state')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The proposal state has been updated.',
             self.browser.page_source)
 
         # Try deleting the MOC.
