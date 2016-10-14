@@ -15,6 +15,7 @@
 
 <form method="POST" action="{{ target }}" novalidate="novalidate">
     <ol>
+        <li class="separator">Call information</li>
         {% if semesters is not none %}
             <li>
                 <label for="semester_id">Semester</label>
@@ -61,12 +62,14 @@
         </li>
         {% orderblocks proposal_order %}
             {% block proposal_abstract %}
+                <li class="separator">Abstract</li>
                 <li>
                     <label for="abst_word_lim">Abstract word limit</label>
                     <input type="number" name="abst_word_lim" value="{{ call.abst_word_lim }}" min="0" step="25" size="5" />
                 </li>
             {% endblock %}
             {% block science_case %}
+                <li class="separator">Science case</li>
                 <li>
                     <label for="sci_note">Science case note</label>
                     <textarea name="sci_note" cols="40" rows="5">{{ call.sci_note }}</textarea>
@@ -88,6 +91,7 @@
                 </li>
             {% endblock %}
             {% block technical_case %}
+                <li class="separator">Technical case</li>
                 <li>
                     <label for="tech_note">Technical case note</label>
                     <textarea name="tech_note" cols="40" rows="5">{{ call.tech_note }}</textarea>
@@ -109,12 +113,14 @@
                 </li>
             {% endblock %}
             {% block proposal_previous %}
+                <li class="separator">Previous proposals</li>
                 <li>
                     <label for="sci_note">Previous proposals note</label>
                     <textarea name="prev_prop_note" cols="40" rows="5">{{ call.prev_prop_note }}</textarea>
                 </li>
             {% endblock %}
         {% endorderblocks %}
+        <li class="separator">Additional options</li>
         <li>
             <label for="capt_word_lim">Caption word limit</label>
             <input type="number" name="capt_word_lim" value="{{ call.capt_word_lim }}" min="0" step="25" size="5" />
