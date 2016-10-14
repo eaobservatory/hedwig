@@ -79,6 +79,20 @@ class FacilityTestCase(DBTestCase):
         self.assertIsInstance(self.view.get_moc_order(), int)
         self.assertIsInstance(self.view.get_target_tool_classes(), tuple)
 
+        proposal_order = self.view.get_proposal_order()
+        self.assertIsInstance(proposal_order, list)
+        self.assertEqual(sorted(proposal_order), [
+            'proposal_abstract',
+            'proposal_calculations',
+            'proposal_members',
+            'proposal_previous',
+            'proposal_request',
+            'proposal_summary',
+            'proposal_targets',
+            'science_case',
+            'technical_case',
+        ])
+
         # Test custom type methods.
         type_class = self.view.get_call_types()
         self.assertIsInstance(type_class, type)

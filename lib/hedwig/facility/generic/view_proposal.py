@@ -133,6 +133,7 @@ class GenericProposal(object):
             'students': proposal.members.get_students(),
             'proposal_code': self.make_proposal_code(db, proposal),
             'show_person_proposals_callout': ('first_view' in args),
+            'proposal_order': self.get_proposal_order(),
         }
 
         ctx.update(self._view_proposal_extra(db, proposal))

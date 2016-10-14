@@ -19,9 +19,11 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict
-from flask import Flask
 import logging
 import os
+
+from flask import Flask
+from jinja2_orderblocks import OrderBlocks
 
 from ..config import get_config, get_database, get_facilities, get_home
 from ..type.enum import GroupType, MessageThreadType
@@ -78,6 +80,8 @@ def create_web_app(db=None, facility_spec=None, _test_return_extra=False):
         static_folder=os.path.join(home, 'data', 'web', 'static'),
         template_folder=os.path.join(home, 'data', 'web', 'template'),
     )
+
+    app.jinja_options['extensions'].append(OrderBlocks)
 
     log_file = config.get('application', 'log_file')
     if log_file:

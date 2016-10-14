@@ -104,6 +104,24 @@ class JCMT(Generic):
                 {'allow_post': True, 'init_route_params': ['proposal_id']}),
         ]
 
+    def get_proposal_order(self):
+        """
+        Get a list of proposal sections in the order in which they should
+        be shown.
+        """
+
+        return [
+            'proposal_summary',
+            'proposal_abstract',
+            'science_case',
+            'proposal_members',
+            'proposal_request',
+            'proposal_targets',
+            'proposal_calculations',
+            'technical_case',
+            'proposal_previous',
+        ]
+
     def make_proposal_code(self, db, proposal):
         type_class = self.get_call_types()
         type_code = type_class.get_code(proposal.call_type)

@@ -185,6 +185,24 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
             tech_note='', sci_note='', prev_prop_note='',
             note_format=FormatType.PLAIN)
 
+    def get_proposal_order(self):
+        """
+        Get a list of proposal sections in the order in which they should
+        be shown.
+        """
+
+        return [
+            'proposal_summary',
+            'proposal_abstract',
+            'proposal_request',
+            'proposal_members',
+            'proposal_previous',
+            'proposal_targets',
+            'proposal_calculations',
+            'technical_case',
+            'science_case',
+        ]
+
     def make_proposal_code(self, db, proposal):
         """
         Generate the proposal identifying code for a given proposal.

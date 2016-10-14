@@ -53,6 +53,7 @@ The following Python modules should be installed:
 * docutils
 * Flask
 * healpy
+* jinja2_orderblocks
 * mysql-connector-python
 * Pillow
 * pycountry

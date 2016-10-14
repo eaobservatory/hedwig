@@ -309,6 +309,7 @@ class GenericAdmin(object):
                 call.semester_name, call.queue_name,
                 type_class.get_name(call.type)),
             'call': call,
+            'proposal_order': self.get_proposal_order(),
         }
 
     @with_verified_admin
@@ -455,6 +456,7 @@ class GenericAdmin(object):
             'queues': (None if queues is None else queues.values()),
             'format_types': FormatType.get_options(is_system=True),
             'existing_calls': existing_calls,
+            'proposal_order': self.get_proposal_order(),
         }
 
     @with_verified_admin
