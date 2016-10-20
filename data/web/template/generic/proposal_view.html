@@ -64,7 +64,9 @@
             <td id="proposal_status_cell">
                 {{ proposal.state | proposal_state_name }}
                 {% if session.is_admin %}
-                    <a href="{{ url_for('.proposal_alter_state', proposal_id=proposal.id) }}" id="alter_state_link">edit</a>
+                    <nav>
+                        <a href="{{ url_for('.proposal_alter_state', proposal_id=proposal.id) }}" id="alter_state_link">edit</a>
+                    </nav>
                 {% endif %}
             </td>
             <td class="borderless">
@@ -173,7 +175,9 @@
                     <td>
                         {{ member.affiliation_name }}
                         {% if session.is_admin %}
-                            <a href="{{ url_for('.member_affiliation_edit', proposal_id=proposal.id, member_id=member.id) }}" id="member_aff_ed_{{ member.id }}">edit</a>
+                            <nav>
+                                <a href="{{ url_for('.member_affiliation_edit', proposal_id=proposal.id, member_id=member.id) }}" id="member_aff_ed_{{ member.id }}">edit</a>
+                            </nav>
                         {% endif %}
                     </td>
                     <td>
