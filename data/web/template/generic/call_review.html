@@ -76,12 +76,17 @@
                 </td>
                 <td>{{ proposal.state | proposal_state_name }}</td>
                 <td>
+                    {% if proposal.can_edit_decision %}<a href="{{ url_for('.proposal_decision', proposal_id=proposal.id, referrer='rp') }}">{% endif %}
                     {% if proposal.decision_accept is none %}
-                        &nbsp;
+                        Undecided
                     {% elif proposal.decision_accept %}
                         Accept
                     {% else %}
                         Reject
+                    {% endif %}
+                    {% if proposal.can_edit_decision %}</a>{% endif %}
+                    {% if proposal.decision_exempt %}
+                        <span class="label">exempt</span>
                     {% endif %}
                     {% if proposal.decision_ready %}
                         <span class="label">ready</span>

@@ -504,7 +504,7 @@ def create_facility_blueprint(db, facility):
     @facility_template('proposal_decision.html')
     def proposal_decision(proposal_id):
         return facility.view_proposal_decision(
-            db, proposal_id,
+            db, proposal_id, request.args,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/admin')

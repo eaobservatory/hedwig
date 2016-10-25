@@ -128,7 +128,7 @@
                 <td>{{ proposal.title | abbr }}</td>
                 <td class="spacer_left"><abbr title="{{ proposal.state | proposal_state_name }}">{{ proposal.state | proposal_state_short_name }}</abbr></td>
                 <td>
-                    {% if proposal.can_edit_decision %}<a href="{{ url_for('.proposal_decision', proposal_id=proposal.id) }}" class="undecorated" id="{{ proposal.id | fmt('decision_{}_link') }}">{% endif %}
+                    {% if proposal.can_edit_decision %}<a href="{{ url_for('.proposal_decision', proposal_id=proposal.id, referrer='tab') }}" class="undecorated" id="{{ proposal.id | fmt('decision_{}_link') }}">{% endif %}
                         {% if proposal.decision_accept is none %}
                             &mdash;
                         {% elif proposal.decision_accept %}

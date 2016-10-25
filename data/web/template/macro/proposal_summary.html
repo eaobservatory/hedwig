@@ -1,4 +1,4 @@
-{% macro render_proposal_summary(facility_name, facility_call_type_class, proposal, proposal_code, abstract=none, categories=none, include_decision=true) %}
+{% macro render_proposal_summary(facility_name, facility_call_type_class, proposal, proposal_code, abstract=none, categories=none, include_decision=true, can_edit_decision=false) %}
     <table>
         <tr>
             <th>Facility</th>
@@ -26,17 +26,25 @@
             <th>Proposal status</th>
             <td>{{ proposal.state | proposal_state_name }}</td>
         </tr>
-        {% if include_decision and (proposal.decision_accept is not none) %}
+        {% if include_decision and (can_edit_decision or (proposal.decision_accept is not none)) %}
         <tr>
             <th>Decision</th>
             <td>
-                {% if proposal.decision_accept %}
+
+                {% if can_edit_decision %}<a href="{{ url_for('.proposal_decision', proposal_id=proposal.id, referrer='pr') }}">{% endif %}
+                {% if proposal.decision_accept is none %}
+                    Undecided
+                {% elif proposal.decision_accept %}
                     Accept
                 {% else %}
                     Reject
                 {% endif %}
+                {% if can_edit_decision %}</a>{% endif %}
                 {% if proposal.decision_exempt %}
                     <span class="label">exempt</span>
+                {% endif %}
+                {% if proposal.decision_ready %}
+                    <span class="label">ready</span>
                 {% endif %}
             </td>
         </tr>

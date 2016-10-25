@@ -48,7 +48,8 @@ ProposalWithInviteRoles = namedtuple(
 ProposalWithReviewers = namedtuple(
     'ProposalWithReviewers',
     ProposalWithCode._fields + (
-        'reviewers_primary', 'reviewers_secondary', 'can_view_review'))
+        'reviewers_primary', 'reviewers_secondary',
+        'can_view_review', 'can_edit_decision'))
 
 ProposalWithReviewerPersons = namedtuple(
     'ProposalWithReviewerPersons',
@@ -75,6 +76,9 @@ class GenericReview(object):
                 role_class, db, reviewer=None, proposal=proposal,
                 auth_cache=can.cache)
 
+            decision_can = auth.for_proposal_decision(
+                db, proposal, call=call, auth_cache=can.cache)
+
             proposals.append(ProposalWithReviewers(
                 *proposal._replace(member=member_pi),
                 code=self.make_proposal_code(db, proposal),
@@ -82,7 +86,8 @@ class GenericReview(object):
                     role_class.CTTEE_PRIMARY),
                 reviewers_secondary=proposal.reviewers.values_by_role(
                     role_class.CTTEE_SECONDARY),
-                can_view_review=review_can.view))
+                can_view_review=review_can.view,
+                can_edit_decision=decision_can.edit))
 
         return {
             'title': 'Review Process: {} {} {}'.format(
@@ -186,8 +191,8 @@ class GenericReview(object):
                 'code': self.make_proposal_code(db, proposal),
                 'affiliations': self.calculate_affiliation_assignment(
                     db, proposal.members, affiliations),
-                'can_edit_decision': (
-                    can.edit and proposal.state == ProposalState.FINAL_REVIEW),
+                'can_edit_decision': auth.for_proposal_decision(
+                    db, proposal, call=call, auth_cache=can.cache).edit,
             })
 
             if can_view_review:
@@ -1181,7 +1186,7 @@ class GenericReview(object):
 
         return {}
 
-    @with_proposal(permission=PermissionType.NONE)
+    @with_proposal(permission=PermissionType.NONE, with_decision=True)
     def view_proposal_reviews(self, db, proposal):
         role_class = self.get_reviewer_roles()
         text_role_class = self.get_text_roles()
@@ -1240,14 +1245,18 @@ class GenericReview(object):
             'overall_rating': self.calculate_overall_rating(reviewers),
             'can_add_roles': auth.can_add_review_roles(
                 role_class, db, proposal, auth_cache=auth_cache),
+            'can_edit_decision': auth.for_proposal_decision(
+                db, proposal, auth_cache=auth_cache).edit,
         }
 
     @with_proposal(permission=PermissionType.NONE,
                    with_decision=True, with_decision_note=True)
-    def view_proposal_decision(self, db, proposal, form):
+    def view_proposal_decision(self, db, proposal, args, form):
         if not auth.for_proposal_decision(db, proposal).edit:
             raise HTTPForbidden(
                 'Decision edit permission denied for this proposal.')
+
+        referrer = args.get('referrer')
 
         message = None
         extra_info = None
@@ -1256,6 +1265,8 @@ class GenericReview(object):
         if form is not None:
             try:
                 # Read form inputs.
+                referrer = form.get('referrer', None)
+
                 decision = form['decision_accept']
                 proposal = proposal._replace(
                     decision_accept=(None if (decision == '')
@@ -1284,9 +1295,21 @@ class GenericReview(object):
                 flash('The decision for proposal {} has been saved.',
                       proposal_code)
 
-                # Redirect back to tabulation page.
-                raise HTTPRedirect(url_for('.review_call_tabulation',
-                                           call_id=call.id))
+                # Determine where to redirect the user.
+                if referrer == 'rp':
+                    target_redir = url_for('.review_call',
+                                           call_id=proposal.call_id)
+
+                elif referrer == 'pr':
+                    target_redir = url_for('.proposal_reviews',
+                                           proposal_id=proposal.id)
+
+                else:
+                    # By default redirect to the detailed tabulation.
+                    target_redir = url_for('.review_call_tabulation',
+                                           call_id=proposal.call_id)
+
+                raise HTTPRedirect(target_redir)
 
             except UserError as e:
                 message = e.message
@@ -1300,6 +1323,7 @@ class GenericReview(object):
             'proposal': proposal,
             'proposal_code': proposal_code,
             'message': message,
+            'referrer': referrer,
         }
 
         ctx.update(self._view_proposal_decision_extra(db, proposal,
