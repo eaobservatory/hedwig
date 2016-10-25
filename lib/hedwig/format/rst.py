@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -35,6 +35,7 @@ from ..web.util import HTTPError
 rst_publish_lock = Lock()
 
 named_link = re.compile('^(.*) +<(.*)>$')
+graph_path = re.compile('^graph\/([-_a-z0-9]+)\.dot$')
 
 
 def rst_to_html(text, extract_title, start_heading):
@@ -122,6 +123,27 @@ class HedwigTocTree(Directive):
         return []
 
 
+class HedwigGraphviz(Directive):
+    """
+    Handler for the `graphviz` directive.
+
+    This only supports references to external `.dot` files in a graph
+    directory, e.g.::
+
+        .. graphviz:: graph/a_graph.dot
+    """
+
+    required_arguments = 1
+
+    def run(self):
+        m = graph_path.match(self.arguments[0])
+
+        if not m:
+            raise self.error('Did not understand reference to Graphviz file.')
+
+        return [nodes.image(uri='graph/{}'.format(m.group(1)))]
+
+
 def doc_reference_role(role, rawtext, text, lineno, inliner,
                        options={}, context=[]):
     """
@@ -145,4 +167,5 @@ def doc_reference_role(role, rawtext, text, lineno, inliner,
 # is being imported by Sphinx to build the software documentation.
 if 'sphinx' not in sys.modules:
     directives.register_directive('toctree', HedwigTocTree)
+    directives.register_directive('graphviz', HedwigGraphviz)
     roles.register_local_role('doc', doc_reference_role)

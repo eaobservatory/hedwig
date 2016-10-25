@@ -26,7 +26,8 @@ from PIL import Image
 from PyPDF2 import PdfFileWriter
 
 from hedwig.config import get_config
-from hedwig.error import UserError
+from hedwig.error import ConversionError, UserError
+from hedwig.file.graphviz import graphviz_to_png
 from hedwig.file.image import create_thumbnail_and_preview, \
     _calculate_size
 from hedwig.file.info import determine_figure_type, \
@@ -150,3 +151,14 @@ class FileTest(DummyConfigTestCase):
         for image in (tp.thumbnail, tp.preview):
             self.assertIsNotNone(image)
             self.assertEqual(determine_figure_type(image), FigureType.PNG)
+
+    def test_graphviz_to_png(self):
+        example_dot = 'graph G {x -- y}'
+        invalid_dot = 'graph G {x -> y}'
+
+        out = graphviz_to_png(example_dot)
+
+        self.assertEqual(determine_figure_type(out), FigureType.PNG)
+
+        with self.assertRaises(ConversionError):
+            graphviz_to_png(invalid_dot)

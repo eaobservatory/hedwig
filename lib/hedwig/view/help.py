@@ -22,6 +22,8 @@ from collections import namedtuple, OrderedDict
 import os.path
 import re
 
+from ..error import ConversionError
+from ..file.graphviz import graphviz_to_png
 from ..web.format import format_text_rst
 from ..web.util import HTTPError, HTTPNotFound, url_for
 
@@ -98,6 +100,31 @@ class HelpView(object):
             'toc': toc_entries,
             'nav_link': nav_link,
         }
+
+    def help_graph(self, doc_root, graph_name):
+        """
+        Convert Graphviz image and return as a PNG image.
+        """
+
+        m = valid_page_name.match(graph_name)
+
+        if not m:
+            raise HTTPError('Invalid graph file name.')
+
+        file_name = m.group(1)
+
+        path_name = os.path.join(doc_root, 'graph', file_name + '.dot')
+
+        if not os.path.exists(path_name):
+            raise HTTPNotFound('Graph file not found.')
+
+        with open(path_name) as f:
+            buff = f.read()
+
+        try:
+            return graphviz_to_png(buff)
+        except ConversionError:
+            raise HTTPError('Failed to process graph file.')
 
 
 def _read_rst_file(doc_root, path_name):

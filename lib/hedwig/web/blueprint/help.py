@@ -23,8 +23,9 @@ import os.path
 from flask import Blueprint, send_from_directory
 
 from ...config import get_home
+from ...type.enum import FigureType
 from ...view.help import HelpView
-from ..util import templated
+from ..util import send_file, templated
 
 
 def create_help_blueprint():
@@ -102,5 +103,10 @@ def create_help_blueprint():
     @bp.route('/admin/image/<path:file_name>')
     def admin_image(file_name):
         return send_from_directory(admin_image_root, file_name)
+
+    @bp.route('/admin/graph/<path:file_name>')
+    @send_file(fixed_type=FigureType.PNG)
+    def admin_graph(file_name):
+        return view.help_graph(admin_doc_root, file_name)
 
     return bp
