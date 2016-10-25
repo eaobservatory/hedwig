@@ -1,0 +1,21 @@
+graph G {
+    rankdir=LR;
+
+    node [shape=record];
+
+    call [label="Call | {Open | Close | Settings}"];
+    semester [label="Semester | {Start | End | Text}"];
+    call_type [label="Call type"];
+    call_preamble [label="Call preamble | Text"];
+    queue [label="Queue"];
+    affiliations [label="Affiliations"];
+    groups [label="Review groups | { Committee | Technical assessors | Coordinators}"];
+
+    call -- queue;
+    semester -- call;
+    call -- call_type;
+    call_preamble -- semester;
+    call_preamble -- call_type;
+    affiliations -- queue;
+    groups -- queue;
+}
