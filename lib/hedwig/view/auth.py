@@ -26,13 +26,14 @@ from ..type.collection import ProposalCollection, ReviewerCollection
 from ..type.enum import GroupType, ProposalState, ReviewState
 from ..type.simple import Reviewer
 from ..type.util import null_tuple
-from ..web.util import session, HTTPForbidden
+from ..web.util import session, HTTPError, HTTPForbidden
 
 Authorization = namedtuple('Authorization', ('view', 'edit'))
 
 no = Authorization(False, False)
 yes = Authorization(True, True)
 view_only = Authorization(view=True, edit=False)
+edit_only = Authorization(view=False, edit=True)
 
 AuthorizationWithRating = namedtuple(
     'AuthorizationWithRating', Authorization._fields + ('view_rating',))
@@ -253,6 +254,38 @@ def for_proposal(role_class, db, proposal, auth_cache=None):
             return auth._replace(view=True)
 
     return auth
+
+
+def for_proposal_decision(db, proposal, call=None, auth_cache=None):
+    """
+    Determine the current user's authorization regarding the
+    review committee decision.
+
+    Currently only "edit" authorization is considered.
+
+    The call object can optionally be provided.  Otherwise the call is
+    looked up based on the proposal's call identifier.
+    """
+
+    # Deny access if the state is anything other than final review.
+    if proposal.state != ProposalState.FINAL_REVIEW:
+        return no
+
+    # Deny access if the decision and feedback have already been approved.
+    if proposal.decision_ready:
+        return no
+
+    if call is None:
+        call = _get_call(auth_cache, db, proposal.call_id)
+        if call is None:
+            raise HTTPError('The corresponding call was not found.')
+
+    # Assume that the user has permission to edit the decision of they
+    # can edit the call.  (I.e. they are review coordinator or admin.)
+    if for_call_review(db, call, auth_cache=auth_cache).edit:
+        return edit_only
+
+    return no
 
 
 def for_proposal_feedback(role_class, db, proposal, auth_cache=None):
@@ -501,6 +534,14 @@ def find_addable_reviews(db, facilities, auth_cache=None):
             ))
 
     return ans
+
+
+@memoized
+def _get_call(db, call_id):
+    try:
+        return db.search_call(call_id=call_id).get_single()
+    except NoSuchRecord:
+        return None
 
 
 @memoized

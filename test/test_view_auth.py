@@ -437,55 +437,55 @@ class WebAppAuthTestCase(WebAppTestCase):
         # Checks authorization in each state via codes -- see _expect_code().
         for test_case in [
                 # Member access to own proposals.
-                (1,  person_a1e,   False, proposal_a1, 'eeevvvvv', 'ooooovvo'),
-                (2,  person_a2e,   False, proposal_a2, 'eeevvvvv', 'ooooovvo'),
-                (3,  person_a2m,   False, proposal_a2, 'vvvvvvvv', 'ooooovvo'),
-                (4,  person_a2u,   False, proposal_a2, 'vvvvvvvv', 'ooooovvo'),
-                (5,  person_a2u,   False, proposal_a2, 'vvvvvvvv', 'ooooovvo'),
+                (1,  person_a1e,   False, proposal_a1, 'eeevvvvv', 'ooooovvo', 'oooooooo'),
+                (2,  person_a2e,   False, proposal_a2, 'eeevvvvv', 'ooooovvo', 'oooooooo'),
+                (3,  person_a2m,   False, proposal_a2, 'vvvvvvvv', 'ooooovvo', 'oooooooo'),
+                (4,  person_a2u,   False, proposal_a2, 'vvvvvvvv', 'ooooovvo', 'oooooooo'),
+                (5,  person_a2u,   False, proposal_a2, 'vvvvvvvv', 'ooooovvo', 'oooooooo'),
                 # No member access to other proposals.
-                (10, person_a1e,   False, proposal_a2, 'oooooooo', 'oooooooo'),
-                (11, person_a1u,   False, proposal_a2, 'oooooooo', 'oooooooo'),
-                (12, person_a2e,   False, proposal_a1, 'oooooooo', 'oooooooo'),
-                (13, person_a2m,   False, proposal_a1, 'oooooooo', 'oooooooo'),
-                (14, person_a2u,   False, proposal_a1, 'oooooooo', 'oooooooo'),
-                (15, person_a2p,   False, proposal_a1, 'oooooooo', 'oooooooo'),
+                (10, person_a1e,   False, proposal_a2, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (11, person_a1u,   False, proposal_a2, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (12, person_a2e,   False, proposal_a1, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (13, person_a2m,   False, proposal_a1, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (14, person_a2u,   False, proposal_a1, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (15, person_a2p,   False, proposal_a1, 'oooooooo', 'oooooooo', 'oooooooo'),
                 # Admin has access but only when is_admin is set.
-                (20, person_admin, False, proposal_a1, 'oooooooo', 'oooooooo'),
-                (21, person_admin, False, proposal_a2, 'oooooooo', 'oooooooo'),
-                (22, person_admin, True,  proposal_a1, 'vvvvvvvv', 'ooooovvo'),
-                (23, person_admin, True,  proposal_a2, 'vvvvvvvv', 'ooooovvo'),
+                (20, person_admin, False, proposal_a1, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (21, person_admin, False, proposal_a2, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (22, person_admin, True,  proposal_a1, 'vvvvvvvv', 'ooooovvo', 'oooowooo'),
+                (23, person_admin, True,  proposal_a2, 'vvvvvvvv', 'ooooovvo', 'oooowooo'),
                 # Review coordinators can see all proposals.
-                (30, person_a_rc,  False, proposal_a1, 'oovvvvvo', 'oooooooo'),
-                (31, person_a_rc,  False, proposal_a2, 'oovvvvvo', 'oooooooo'),
-                (32, person_a_rc,  False, proposal_b1, 'oooooooo', 'oooooooo'),
-                (33, person_a_rc,  False, proposal_b2, 'oooooooo', 'oooooooo'),
-                (34, person_b_rc,  False, proposal_a1, 'oooooooo', 'oooooooo'),
-                (35, person_b_rc,  False, proposal_a2, 'oooooooo', 'oooooooo'),
-                (36, person_b_rc,  False, proposal_b1, 'oovvvvvo', 'oooooooo'),
-                (37, person_b_rc,  False, proposal_b2, 'oovvvvvo', 'oooooooo'),
+                (30, person_a_rc,  False, proposal_a1, 'oovvvvvo', 'oooooooo', 'oooowooo'),
+                (31, person_a_rc,  False, proposal_a2, 'oovvvvvo', 'oooooooo', 'oooowooo'),
+                (32, person_a_rc,  False, proposal_b1, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (33, person_a_rc,  False, proposal_b2, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (34, person_b_rc,  False, proposal_a1, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (35, person_b_rc,  False, proposal_a2, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (36, person_b_rc,  False, proposal_b1, 'oovvvvvo', 'oooooooo', 'oooowooo'),
+                (37, person_b_rc,  False, proposal_b2, 'oovvvvvo', 'oooooooo', 'oooowooo'),
                 # Committee members can see all proposals.
-                (40, person_a1rc1, False, proposal_a1, 'oovvvvvo', 'oooooooo'),
-                (41, person_a1rc1, False, proposal_a2, 'oovvvvvo', 'oooooooo'),
-                (42, person_a1rc1, False, proposal_b1, 'oooooooo', 'oooooooo'),
-                (43, person_a1rc1, False, proposal_b2, 'oooooooo', 'oooooooo'),
-                (44, person_a1rc2, False, proposal_a1, 'oovvvvvo', 'oooooooo'),
-                (45, person_a1rc2, False, proposal_a2, 'oovvvvvo', 'oooooooo'),
-                (46, person_a1rc2, False, proposal_b1, 'oooooooo', 'oooooooo'),
-                (47, person_a1rc2, False, proposal_b2, 'oooooooo', 'oooooooo'),
+                (40, person_a1rc1, False, proposal_a1, 'oovvvvvo', 'oooooooo', 'oooooooo'),
+                (41, person_a1rc1, False, proposal_a2, 'oovvvvvo', 'oooooooo', 'oooooooo'),
+                (42, person_a1rc1, False, proposal_b1, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (43, person_a1rc1, False, proposal_b2, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (44, person_a1rc2, False, proposal_a1, 'oovvvvvo', 'oooooooo', 'oooooooo'),
+                (45, person_a1rc2, False, proposal_a2, 'oovvvvvo', 'oooooooo', 'oooooooo'),
+                (46, person_a1rc2, False, proposal_b1, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (47, person_a1rc2, False, proposal_b2, 'oooooooo', 'oooooooo', 'oooooooo'),
                 # Technical reviewers can only see their assigned proposals.
-                (50, person_a1rt,  False, proposal_a1, 'ooovvooo', 'oooooooo'),
-                (51, person_a1rt,  False, proposal_a2, 'oooooooo', 'oooooooo'),
-                (52, person_a1rt,  False, proposal_b1, 'oooooooo', 'oooooooo'),
-                (53, person_a1rt,  False, proposal_b2, 'oooooooo', 'oooooooo'),
+                (50, person_a1rt,  False, proposal_a1, 'ooovvooo', 'oooooooo', 'oooooooo'),
+                (51, person_a1rt,  False, proposal_a2, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (52, person_a1rt,  False, proposal_b1, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (53, person_a1rt,  False, proposal_b2, 'oooooooo', 'oooooooo', 'oooooooo'),
                 # External reviewers can only see their assigned proposals.
-                (60, person_a1re,  False, proposal_a1, 'ooovoooo', 'oooooooo'),
-                (61, person_a1re,  False, proposal_a2, 'oooooooo', 'oooooooo'),
-                (62, person_a1re,  False, proposal_b1, 'oooooooo', 'oooooooo'),
-                (63, person_a1re,  False, proposal_b2, 'oooooooo', 'oooooooo'),
-                (64, person_a1reu, False, proposal_a1, 'ooovoooo', 'oooooooo'),
-                (65, person_a1reu, False, proposal_a2, 'oooooooo', 'oooooooo'),
-                (66, person_b1reu, False, proposal_b1, 'ooovoooo', 'oooooooo'),
-                (67, person_b1reu, False, proposal_b2, 'oooooooo', 'oooooooo'),
+                (60, person_a1re,  False, proposal_a1, 'ooovoooo', 'oooooooo', 'oooooooo'),
+                (61, person_a1re,  False, proposal_a2, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (62, person_a1re,  False, proposal_b1, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (63, person_a1re,  False, proposal_b2, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (64, person_a1reu, False, proposal_a1, 'ooovoooo', 'oooooooo', 'oooooooo'),
+                (65, person_a1reu, False, proposal_a2, 'oooooooo', 'oooooooo', 'oooooooo'),
+                (66, person_b1reu, False, proposal_b1, 'ooovoooo', 'oooooooo', 'oooooooo'),
+                (67, person_b1reu, False, proposal_b2, 'oooooooo', 'oooooooo', 'oooooooo'),
                 ]:
             self._test_auth_proposal(role_class, auth_cache, *test_case)
 
@@ -633,23 +633,29 @@ class WebAppAuthTestCase(WebAppTestCase):
 
     def _test_auth_proposal(self, role_class, auth_cache,
                             case_number, person_id, is_admin,
-                            proposal_id, expect_codes, expect_codes_fb):
+                            proposal_id, expect_codes, expect_codes_fb,
+                            expect_codes_dec):
         proposal_states = ProposalState.get_options()
         self.assertEqual(len(expect_codes), len(proposal_states),
                          'codes for proposal case {}'.format(case_number))
         self.assertEqual(len(expect_codes_fb), len(proposal_states),
                          'fb codes for proposal case {}'.format(case_number))
+        self.assertEqual(len(expect_codes_dec), len(proposal_states),
+                         'dec codes for proposal case {}'.format(case_number))
 
         if self.quick_proposal_state:
             proposal_orig = self.db.get_proposal(
                 None, proposal_id, with_members=True, with_reviewers=True)
 
-        for (state_info, expect_code, expect_code_fb) in zip(
-                proposal_states.items(), expect_codes, expect_codes_fb):
+        for (state_info, expect_code, expect_code_fb, expect_code_dec) in zip(
+                proposal_states.items(), expect_codes,
+                expect_codes_fb, expect_codes_dec):
             (state, state_name) = state_info
             expect = self._expect_code('proposal', case_number, expect_code)
             expect_fb = self._expect_code('proposal fb', case_number,
                                           expect_code_fb)
+            expect_dec = self._expect_code('proposal dec', case_number,
+                                           expect_code_dec)
 
             if self.quick_proposal_state:
                 proposal = proposal_orig._replace(state=state)
@@ -668,6 +674,11 @@ class WebAppAuthTestCase(WebAppTestCase):
                     auth.for_proposal_feedback(role_class, self.db, proposal,
                                                auth_cache=auth_cache),
                     expect_fb, 'auth proposal fb case {} state {}'.format(
+                        case_number, state_name))
+                self.assertEqual(
+                    auth.for_proposal_decision(self.db, proposal,
+                                               auth_cache=auth_cache),
+                    expect_dec, 'auth proposal dec case {} state {}'.format(
                         case_number, state_name))
 
     def _test_auth_review(self, role_class, auth_cache,
@@ -744,6 +755,8 @@ class WebAppAuthTestCase(WebAppTestCase):
             view_rating = True
         elif code == 'o':
             expect = auth.no
+        elif code == 'w':
+            expect = auth.edit_only
 
         if expect is None:
             self.fail('invalid code for {} case {}'.format(

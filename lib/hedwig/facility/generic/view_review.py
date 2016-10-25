@@ -1242,25 +1242,12 @@ class GenericReview(object):
                 role_class, db, proposal, auth_cache=auth_cache),
         }
 
-    def view_proposal_decision(self, db, proposal_id, form):
-        try:
-            proposal = db.search_proposal(
-                facility_id=self.id_, proposal_id=proposal_id,
-                with_member_pi=True,
-                with_decision=True, with_decision_note=True).get_single()
-        except NoSuchRecord:
-            raise HTTPError('The proposal was not found.')
-
-        if proposal.state != ProposalState.FINAL_REVIEW:
-            raise ErrorPage('This proposal is not under final review.')
-
-        try:
-            call = db.get_call(facility_id=self.id_, call_id=proposal.call_id)
-        except NoSuchRecord:
-            raise HTTPError('The corresponding call was not found.')
-
-        if not auth.for_call_review(db, call).edit:
-            raise HTTPForbidden('Edit permission denied for this call.')
+    @with_proposal(permission=PermissionType.NONE,
+                   with_decision=True, with_decision_note=True)
+    def view_proposal_decision(self, db, proposal, form):
+        if not auth.for_proposal_decision(db, proposal).edit:
+            raise HTTPForbidden(
+                'Decision edit permission denied for this proposal.')
 
         message = None
         extra_info = None
@@ -1303,6 +1290,10 @@ class GenericReview(object):
 
             except UserError as e:
                 message = e.message
+
+        # Emulate search_proposal(with_member_pi=True) behavior:
+        proposal = proposal._replace(
+            member=proposal.members.get_pi(default=None))
 
         ctx = {
             'title': '{}: Decision'.format(proposal_code),
