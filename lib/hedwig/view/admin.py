@@ -68,21 +68,15 @@ class AdminView(object):
             current_input = args
 
         num_per_page = 100
-        url_params = {}
-        set_form_params = {}
+        url_params = {}       # Params for nav links.
+        set_form_params = {}  # Extras for form -- url_params will be added.
         kwargs = {'limit': num_per_page}
 
-        person = None
         person_id = current_input.get('person_id')
         if person_id is not None:
             person_id = int(person_id)
             kwargs['person_id'] = person_id
             url_params['person_id'] = person_id
-            try:
-                person = db.get_person(person_id)
-            except:
-                raise ErrorPage(
-                    'Message list requested for non-existent person.')
 
         state = current_input.get('state')
         if not state:
@@ -98,6 +92,25 @@ class AdminView(object):
             kwargs['message_id_lt'] = id_lt
             set_form_params['id_lt'] = id_lt
 
+        # Include all URL params in the setting form.
+        set_form_params.update(url_params)
+
+        # If responding to a POST request, redirect the user back to the
+        # message page (as a GET request) so that it is safe for them to
+        # refresh the page.
+        if form is not None:
+            raise HTTPRedirect(url_for('.message_list', **set_form_params))
+
+        # Retreive person profile if displaying a list for a given person.
+        person = None
+        if person_id is not None:
+            try:
+                person = db.get_person(person_id)
+            except:
+                raise ErrorPage(
+                    'Message list requested for non-existent person.')
+
+        # Retrieve messages.
         messages = db.search_message(**kwargs)
 
         # Prepare pagination URLs.  Give only "first" and "next" links as
@@ -114,9 +127,6 @@ class AdminView(object):
         if len(messages) >= num_per_page:
             target_next = url_for('.message_list', id_lt=min(messages.keys()),
                                   **url_params)
-
-        # Include all URL params in the setting form.
-        set_form_params.update(url_params)
 
         return {
             'title': ('Message List' if person is None
