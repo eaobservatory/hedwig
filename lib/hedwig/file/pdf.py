@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from codecs import latin_1_decode
 import subprocess
 
 from ..config import get_config
@@ -45,7 +46,8 @@ def pdf_to_png(pdf, page_count=None, renderer='ghostscript', **kwargs):
         try:
             page_count = determine_pdf_page_count(pdf)
         except Error as e:
-            raise ConversionError(e.message)
+            raise ConversionError(
+                'Could not determine PDF page count: ' + e.message)
 
     if renderer == 'ghostscript':
         return _pdf_ps_to_png(pdf, page_count=page_count, **kwargs)
@@ -146,6 +148,7 @@ def _pdf_ps_to_png(buff, page_count, resolution=100, downscale=4):
             (stdoutdata, stderrdata) = p.communicate(buff)
 
             if p.returncode:
+                stderrdata = latin_1_decode(stderrdata, 'replace')[0]
                 raise ConversionError('PDF/PS to PNG conversion failed: ' +
                                       stderrdata.replace('\n', ' ').strip())
 
@@ -220,6 +223,7 @@ def _pdf_to_cairo(buff, type_, pages, resolution=100, downscale=None):
             (stdoutdata, stderrdata) = p.communicate(buff)
 
             if p.returncode:
+                stderrdata = latin_1_decode(stderrdata, 'replace')[0]
                 raise ConversionError('PDF conversion (pdftocairo) failed: ' +
                                       stderrdata.replace('\n', ' ').strip())
 

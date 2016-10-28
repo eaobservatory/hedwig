@@ -59,6 +59,8 @@ example_eps = b"""%!PS-Adobe-3.0 EPSF-3.0
 40 20 moveto (test) show
 showpage"""
 
+invalid_pdf = b'NOT PDF'
+
 
 class FileTest(DummyConfigTestCase):
     def test_figure_type(self):
@@ -76,6 +78,9 @@ class FileTest(DummyConfigTestCase):
     def test_pdf_pages(self):
         self.assertEqual(determine_pdf_page_count(example_pdf), 1)
 
+        with self.assertRaisesRegex(UserError, '^Could not read the PDF file'):
+            determine_pdf_page_count(invalid_pdf)
+
     def test_pdf_to_png_ghostscript(self):
         if not exists(get_config().get('utilities', 'ghostscript')):
             self.skipTest('Ghostscript not available')
@@ -85,6 +90,16 @@ class FileTest(DummyConfigTestCase):
         self.assertEqual(len(pages), 1)
         self.assertEqual(determine_figure_type(pages[0]), FigureType.PNG)
 
+        # An invalid PDF fails when pdf_to_png tries to get the page count.
+        with self.assertRaisesRegex(
+                ConversionError, '^Could not determine PDF page count:'):
+            pdf_to_png(invalid_pdf, renderer='ghostscript')
+
+        # When specifying a page count, get an error from ghostscript instead.
+        with self.assertRaisesRegex(
+                ConversionError, '^PDF/PS to PNG conversion failed:'):
+            pdf_to_png(invalid_pdf, page_count=1, renderer='ghostscript')
+
     def test_pdf_to_png_cairo(self):
         if not exists(get_config().get('utilities', 'pdftocairo')):
             self.skipTest('pdftocairo not available')
@@ -93,6 +108,11 @@ class FileTest(DummyConfigTestCase):
         pages = pdf_to_png(example_pdf, renderer='pdftocairo')
         self.assertEqual(len(pages), 1)
         self.assertEqual(determine_figure_type(pages[0]), FigureType.PNG)
+
+        with self.assertRaisesRegex(
+                ConversionError, '^PDF conversion \(pdftocairo\) failed:'):
+            pages = pdf_to_png(
+                invalid_pdf, page_count=1, renderer='pdftocairo')
 
     def test_pdf_to_svg(self):
         if not exists(get_config().get('utilities', 'pdftocairo')):
@@ -153,12 +173,13 @@ class FileTest(DummyConfigTestCase):
             self.assertEqual(determine_figure_type(image), FigureType.PNG)
 
     def test_graphviz_to_png(self):
-        example_dot = 'graph G {x -- y}'
-        invalid_dot = 'graph G {x -> y}'
+        example_dot = b'graph G {x -- y}'
+        invalid_dot = b'graph G {x -> y}'
 
         out = graphviz_to_png(example_dot)
 
         self.assertEqual(determine_figure_type(out), FigureType.PNG)
 
-        with self.assertRaises(ConversionError):
+        with self.assertRaisesRegex(
+                ConversionError, '^Graphviz conversion failed:'):
             graphviz_to_png(invalid_dot)

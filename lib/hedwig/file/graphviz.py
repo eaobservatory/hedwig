@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from codecs import latin_1_decode
 import subprocess
 
 from ..config import get_config
@@ -44,6 +45,7 @@ def graphviz_to_png(buff):
         (stdoutdata, stderrdata) = p.communicate(buff)
 
         if p.returncode:
+            stderrdata = latin_1_decode(stderrdata, 'replace')[0]
             raise ConversionError('Graphviz conversion failed: {}',
                                   stderrdata.replace('\n', ' ').strip())
 
