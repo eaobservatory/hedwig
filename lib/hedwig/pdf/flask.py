@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from werkzeug.test import create_environ
 
+from ..compat import first_value
 from ..config import get_facilities
 from ..error import FormattedError, NoSuchValue
 from ..view.people import _update_session_user
@@ -40,16 +41,21 @@ class PDFWriterFlask(PDFWriter):
         # Determine the proposal PI.  We will access the proposal as if
         # logged in as this person.
         try:
-            pi_person_id = proposal.members.get_pi().person_id
+            person_id = proposal.members.get_pi().person_id
         except NoSuchValue:
-            raise FormattedError('No PI found for proposal {}', proposal_id)
+            # If there was no PI, try any proposal member.
+            try:
+                person_id = first_value(proposal.members).person_id
+            except IndexError:
+                raise FormattedError(
+                    'No members found for proposal {}', proposal_id)
 
         # Determine URL to use to access the proposal.
         facility_code = get_facilities(db=self.db)[proposal.facility_id].code
         url = '{}/proposal/{}'.format(facility_code, proposal_id)
 
         # Request and return the PDF.
-        return self._request_pdf(url, pi_person_id)
+        return self._request_pdf(url, person_id)
 
     def _prepare_environ(self, person_id=None, session_extra=None):
         """
