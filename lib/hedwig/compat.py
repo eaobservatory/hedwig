@@ -49,7 +49,10 @@ if python_version < 3:
 
     def first_value(dictionary):
         """Get the "first" value of a dictionary."""
-        return next(dictionary.itervalues())
+        try:
+            return next(dictionary.itervalues())
+        except StopIteration:
+            raise KeyError('dictionary has no first value')
 
     ExceptionWithMessage = Exception
 
@@ -70,7 +73,10 @@ else:
 
     def first_value(dictionary):
         """Get the "first" value of a dictionary."""
-        return next(iter(dictionary.values()))
+        try:
+            return next(iter(dictionary.values()))
+        except StopIteration:
+            raise KeyError('dictionary has no first value')
 
     class ExceptionWithMessage(Exception):
         """Exception class which restores the 'message' property."""
