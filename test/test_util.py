@@ -18,8 +18,10 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from io import BytesIO
+
 from hedwig.error import Error
-from hedwig.util import FormatMaxDP, FormatSigFig, \
+from hedwig.util import ClosingMultiple, FormatMaxDP, FormatSigFig, \
     is_list_like, list_in_blocks, list_in_ranges, \
     matches_constraint
 
@@ -27,6 +29,21 @@ from .compat import TestCase
 
 
 class UtilTest(TestCase):
+    def test_closing_multiple(self):
+        with ClosingMultiple() as closer:
+            self.assertIsInstance(closer, ClosingMultiple)
+
+            f_1 = closer(BytesIO())
+            self.assertIsInstance(f_1, BytesIO)
+            self.assertFalse(f_1.closed)
+
+            f_2 = closer(BytesIO())
+            self.assertIsInstance(f_2, BytesIO)
+            self.assertFalse(f_2.closed)
+
+        self.assertTrue(f_1.closed)
+        self.assertTrue(f_1.closed)
+
     def test_list_in_blocks(self):
         self.assertEqual(list(list_in_blocks(range(0, 3), 5)),
                          [[0, 1, 2]])

@@ -31,7 +31,7 @@ from hedwig.file.image import create_thumbnail_and_preview, \
     _calculate_size
 from hedwig.file.info import determine_figure_type, \
     determine_pdf_page_count
-from hedwig.file.pdf import pdf_to_png, pdf_to_svg, ps_to_png
+from hedwig.file.pdf import pdf_merge, pdf_to_png, pdf_to_svg, ps_to_png
 from hedwig.type.enum import FigureType
 
 from .dummy_config import DummyConfigTestCase
@@ -59,6 +59,11 @@ class FileTest(DummyConfigTestCase):
 
         with self.assertRaisesRegex(UserError, '^Could not read the PDF file'):
             determine_pdf_page_count(invalid_pdf)
+
+    def test_pdf_merge(self):
+        merged = pdf_merge([example_pdf, example_pdf])
+
+        self.assertEqual(determine_pdf_page_count(merged), 2)
 
     def test_pdf_to_png_ghostscript(self):
         if not exists(get_config().get('utilities', 'ghostscript')):
