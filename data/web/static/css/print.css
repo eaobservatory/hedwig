@@ -41,3 +41,8 @@ p.pdf_preview_page {
 figure {
     page-break-inside: avoid;
 }
+
+figure img {
+    max-width: 100%;
+    height: auto;
+}
