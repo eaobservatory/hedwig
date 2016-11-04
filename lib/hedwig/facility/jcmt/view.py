@@ -142,7 +142,7 @@ class JCMT(Generic):
         type_class = self.get_call_types()
 
         try:
-            m = re.match('([A-Z])(\d\d[AB])([A-Z])(\d\d\d)', proposal_code)
+            m = re.match('([A-Z])(\d\d[ABXYZW])([A-Z])(\d\d\d)', proposal_code)
 
             if not m:
                 raise NoSuchRecord(
