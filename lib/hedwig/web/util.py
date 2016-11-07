@@ -431,14 +431,13 @@ def require_not_auth(f):
     return decorated
 
 
-def send_file(
-        fixed_type=None,
-        allow_cache=False, cache_max_age=86400, cache_private=True):
+def send_file(fixed_type=None, **send_file_kwargs):
     """
     Decorator for route functions which send files.
 
     If there is a fixed MIME type, it can be set in the decorator
-    argument and the function just returns the data.  Otherwise
+    argument as a string, `FileTypeInfo` object or `FigureType` value
+    and the function just returns the data.  Otherwise
     the function must return a :class:`~hedwig.type.simple.ProposalFigure`
     `(data, type, filename)` tuple where the type is a value from
     :class:`~hedwig.type.enum.FigureType`.
@@ -466,38 +465,50 @@ def send_file(
             type_ = fixed_type
             data = f(*args, **kwargs)
             filename = None
-            can_view_inline = False
 
             if type_ is None:
                 # Function should have returned a tuple: unpack it.
                 (data, type_, filename) = data
 
-            if isinstance(type_, FileTypeInfo):
-                mime_type = type_.mime
-            elif isinstance(type_, string_type):
-                mime_type = type_
-            else:
-                mime_type = FigureType.get_mime_type(type_)
-                can_view_inline = FigureType.can_view_inline(type_)
-
-            response = _FlaskResponse(data, mimetype=mime_type)
-
-            if filename is not None:
-                if can_view_inline:
-                    response.headers.add('Content-Disposition', 'inline',
-                                         filename=ascii_safe(filename))
-                else:
-                    response.headers.add('Content-Disposition', 'attachment',
-                                         filename=ascii_safe(filename))
-
-            if allow_cache:
-                _set_response_caching(response, cache_max_age, cache_private)
-
-            return response
+            return _make_file_response(
+                data, type_, filename=filename, **send_file_kwargs)
 
         return decorated_function
 
     return decorator
+
+
+def _make_file_response(
+        data, type_, filename=None,
+        allow_cache=False, cache_max_age=86400, cache_private=True):
+    """
+    Prepare Flask response when sending a file.
+    """
+
+    can_view_inline = False
+
+    if isinstance(type_, FileTypeInfo):
+        mime_type = type_.mime
+    elif isinstance(type_, string_type):
+        mime_type = type_
+    else:
+        mime_type = FigureType.get_mime_type(type_)
+        can_view_inline = FigureType.can_view_inline(type_)
+
+    response = _FlaskResponse(data, mimetype=mime_type)
+
+    if filename is not None:
+        if can_view_inline:
+            response.headers.add('Content-Disposition', 'inline',
+                                 filename=ascii_safe(filename))
+        else:
+            response.headers.add('Content-Disposition', 'attachment',
+                                 filename=ascii_safe(filename))
+
+    if allow_cache:
+        _set_response_caching(response, cache_max_age, cache_private)
+
+    return response
 
 
 def send_json(
