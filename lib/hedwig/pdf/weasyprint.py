@@ -17,20 +17,65 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from flask_weasyprint import HTML
+from flask import request as _flask_request
+from flask_weasyprint import HTML as FWP_HTML, make_url_fetcher
+from weasyprint import HTML as WP_HTML, CSS
 
+from ..error import FormattedError
+from ..web.util import parse_multipart_response
 from .flask import PDFWriterFlask
 
 
 class PDFWriterWeasyPrint(PDFWriterFlask):
-    def _request_pdf(self, url, person_id=None):
+    def _request_pdf(self, url, person_id=None, section=False):
         # Set up request environment.
+        session_extra = {
+            'pdf_as_svg': True,
+        }
+
+        if section:
+            session_extra['allow_section'] = True
+
         environ = self._prepare_environ(
             person_id=person_id,
-            session_extra={
-                'pdf_as_svg': True,
-            })
+            session_extra=session_extra)
+
+        # Set up additional stylesheets.
+        stylesheets = []
+        stylesheets.append(CSS(string='@page {size: letter;}'))
 
         # Perform the request to generate the PDF using WeasyPrint.
         with self.app.request_context(environ):
-            return HTML(url).write_pdf()
+            if not section:
+                return FWP_HTML(url).write_pdf(stylesheets=stylesheets)
+
+            # When processing a page in sections, we need to not use the
+            # Flask-WeasyPrint wrapper layer so that we can check the MIME
+            # type of each section to decide whether to process it with
+            # WeasyPrint or output it directly.
+            pdfs = []
+            base_url = _flask_request.url
+            url_fetcher = make_url_fetcher()
+
+            response = url_fetcher(
+                '{}{}/section'.format(base_url, url))
+
+            for (mime_type, data) in parse_multipart_response(
+                    response['string']):
+                if mime_type == 'application/pdf':
+                    pdfs.append(data)
+
+                elif mime_type == 'text/html':
+                    pdfs.append(
+                        WP_HTML(
+                            string=data,
+                            base_url=base_url,
+                            url_fetcher=url_fetcher
+                        ).write_pdf(stylesheets=stylesheets))
+
+                else:
+                    raise FormattedError(
+                        'Section request returned unexpected MIME type {}',
+                        mime_type)
+
+            return pdfs

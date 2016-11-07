@@ -22,6 +22,7 @@ from werkzeug.test import create_environ
 from ..compat import first_value
 from ..config import get_facilities
 from ..error import FormattedError, NoSuchValue
+from ..file.pdf import pdf_merge
 from ..view.people import _update_session_user
 from .write import PDFWriter
 
@@ -55,7 +56,7 @@ class PDFWriterFlask(PDFWriter):
         url = '{}/proposal/{}'.format(facility_code, proposal_id)
 
         # Request and return the PDF.
-        return self._request_pdf(url, person_id)
+        return pdf_merge(self._request_pdf(url, person_id, section=True))
 
     def _prepare_environ(self, person_id=None, session_extra=None):
         """
