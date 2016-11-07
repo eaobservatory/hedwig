@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from datetime import datetime
 import json
 import functools
+import pickle
 import re
 
 # Import the names we wish to expose.
@@ -569,7 +570,7 @@ def _set_response_caching(response, max_age, private):
         response.cache_control.private = True
 
 
-def templated(template):
+def templated(template, section=False):
     """
     Template application decorator.
 
@@ -579,6 +580,12 @@ def templated(template):
 
     The :class:`ErrorPage` exception is caught, and rendered using
     the :func:`_error_page_response` method.
+
+    :param template: the template(s) to use.
+    :param section: enable "section" mode: the response should be a list
+        where each entry is either a template context dictionary or a
+        (MIME type, data) pair.  Some kind of multi-part response (as
+        defined by :func:`_make_multipart_response`) will be returned.
 
     :raises Exception: if applied to a function with an attribute
         `_hedwig_require_auth` because require_auth should be the outermost
@@ -592,10 +599,24 @@ def templated(template):
         @functools.wraps(f)
         def decorated_function(*args, **kwargs):
             try:
-                return _make_response(template, f(*args, **kwargs))
+                result = f(*args, **kwargs)
 
             except ErrorPage as err:
                 return _error_page_response(err)
+
+            if section:
+                sections = []
+
+                for result_section in result:
+                    if isinstance(result_section, dict):
+                        sections.append(('text/html', _flask_render_template(
+                            template, **result_section)))
+                    else:
+                        sections.append(result_section)
+
+                return _make_multipart_response(sections)
+
+            return _make_response(template, result)
 
         return decorated_function
 
@@ -736,3 +757,25 @@ def url_relative(url):
     """
 
     return url._replace(scheme='', netloc='')
+
+
+def _make_multipart_response(parts):
+    """
+    Make a multipart response.
+
+    The current implementation uses pickle for simplicity.
+    """
+
+    return _FlaskResponse(
+        pickle.dumps(parts), mimetype='application/octet-stream')
+
+
+def parse_multipart_response(data):
+    """
+    Parse a multipart response.
+
+    This should be used to parse the response constructed by
+    :func:`_make_multipart_response`.
+    """
+
+    return pickle.loads(data)

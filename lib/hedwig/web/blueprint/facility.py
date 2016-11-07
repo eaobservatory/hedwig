@@ -75,7 +75,7 @@ def create_facility_blueprint(db, facility):
 
     bp = Blueprint(code, __name__)
 
-    def facility_template(template):
+    def facility_template(template, **kwargs):
         """
         Decorator which uses the template from the facility's directory if it
         exists, otherwise the generic template.
@@ -87,7 +87,8 @@ def create_facility_blueprint(db, facility):
         """
 
         def decorator(f):
-            return templated((code + '/' + template, 'generic/' + template))(f)
+            return templated(
+                (code + '/' + template, 'generic/' + template), **kwargs)(f)
         return decorator
 
     @bp.route('/')
@@ -251,6 +252,14 @@ def create_facility_blueprint(db, facility):
     @facility_template('proposal_view.html')
     def proposal_view(current_user, proposal_id):
         return facility.view_proposal_view(
+            current_user, db, proposal_id, request.args)
+
+    @bp.route('/proposal/<int:proposal_id>/section')
+    @require_auth()
+    @require_session_option('allow_section')
+    @facility_template('proposal_view.html', section=True)
+    def proposal_view_sections(current_user, proposal_id):
+        return facility.view_proposal_sections(
             current_user, db, proposal_id, request.args)
 
     @bp.route('/proposal/<int:proposal_id>/alter_state',
