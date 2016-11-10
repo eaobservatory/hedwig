@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from codecs import utf_8_decode
+from codecs import ascii_decode
 from datetime import datetime
 import re
 from time import sleep
@@ -26,12 +26,27 @@ from time import sleep
 from xml.etree import ElementTree as etree
 import requests
 
-from ..compat import string_type
+from ..compat import python_version
 from ..type.simple import PrevProposalPub
 from ..type.util import null_tuple
 from ..util import get_logger
 
 logger = get_logger(__name__)
+
+
+if python_version < 3:
+    # Python 2: ElementTree can return text as either ASCII byte strings or
+    # as unicode.
+    def element_text(element):
+        text = element.text
+        if isinstance(text, unicode):
+            return text
+        return ascii_decode(text, 'replace')[0]
+
+else:
+    # ElementTree should always return unicode (i.e. str).
+    def element_text(element):
+        return element.text
 
 
 def get_pub_info_arxiv(article_ids):
@@ -75,17 +90,16 @@ def get_pub_info_arxiv(article_ids):
                     if id_element is None:
                         continue
 
-                    id_ = utf_8_decode(id_element.text, 'replace')[0]
-                    title = utf_8_decode(
-                        entry.find('atom:title', xmlns).text, 'replace')[0]
+                    id_ = element_text(id_element)
+                    title = element_text(entry.find('atom:title', xmlns))
 
                     authors = entry.findall('atom:author', xmlns)
-                    author = utf_8_decode(
-                        authors[0].find('atom:name', xmlns).text, 'replace')[0]
+                    author = element_text(authors[0].find('atom:name', xmlns))
                     if len(authors) > 1:
                         author += ' et al.'
 
-                    published = entry.find('atom:published', xmlns).text
+                    published = element_text(
+                        entry.find('atom:published', xmlns))
                     if published.endswith('Z'):
                         published = published[:-1]
                         year = datetime.strptime(
@@ -95,7 +109,7 @@ def get_pub_info_arxiv(article_ids):
                     pub = null_tuple(PrevProposalPub)._replace(
                         title=re.sub('\s+', ' ', title).strip(),
                         author=re.sub('\s+', ' ', author).strip(),
-                        year=string_type(year))
+                        year='{}'.format(year))
 
                     # Try to determine to which article ID this entry
                     # relates and store it in the dictionary.
