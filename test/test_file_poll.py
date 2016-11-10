@@ -18,8 +18,11 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from os.path import exists
+
 from pymoc import MOC
 
+from hedwig.config import get_config
 from hedwig.file.poll import process_moc, \
     process_proposal_figure, process_proposal_pdf
 from hedwig.type.enum import AttachmentState, BaseTextRole, \
@@ -82,6 +85,21 @@ class FilePollTestCase(DBTestCase):
     def test_poll_proposal_pdf(self):
         # Should initially find nothing to process.
         self.assertEqual(process_proposal_pdf(self.db), 0)
+
+        # Determine if we have the configured PDF processing application so
+        # that the test can be skipped if it is not present.
+        config = get_config()
+        pdf_renderer = config.get('proposal_pdf', 'renderer')
+        if not pdf_renderer:
+            self.skipTest('Proposal PDF renderer not configured')
+        if pdf_renderer == 'ghostscript':
+            if not exists(get_config().get('utilities', 'ghostscript')):
+                self.skipTest('Ghostscript not available')
+        elif pdf_renderer == 'pdftocairo':
+            if not exists(get_config().get('utilities', 'pdftocairo')):
+                self.skipTest('pdftocairo not available')
+        else:
+            self.fail('Unexpected proposal PDF renderer')
 
         # Create a proposal and add a PDF.
         proposal_id = self._create_test_proposal()
