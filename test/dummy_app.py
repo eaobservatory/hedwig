@@ -24,21 +24,16 @@ from hedwig import auth
 from hedwig.config import get_config
 from hedwig.web.app import create_web_app
 
-from .dummy_config import DummyConfigTestCase
-from .dummy_db import get_dummy_database
+from .dummy_db import DBTestCase
 
 
-class WebAppTestCase(DummyConfigTestCase):
+class WebAppTestCase(DBTestCase):
     facility_spec = 'Generic'
 
     def setUp(self):
-        DummyConfigTestCase.setUp(self)
+        super(WebAppTestCase, self).setUp()
 
         self.config = get_config()
-        self.db = get_dummy_database(facility_spec=self.facility_spec,
-                                     randomize_ids=False)
-        auth._rounds = 10
-        auth.password_hash_delay = 0
 
         app_info = create_web_app(db=self.db, facility_spec=self.facility_spec,
                                   _test_return_extra=True)
@@ -51,9 +46,7 @@ class WebAppTestCase(DummyConfigTestCase):
         self.client = self.app.test_client()
 
     def tearDown(self):
-        DummyConfigTestCase.tearDown(self)
-
-        del self.db
+        super(WebAppTestCase, self).tearDown()
 
     def log_in(self, user_name, password):
         return self.client.post(
