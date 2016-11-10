@@ -16,6 +16,11 @@ hedwig.facility.generic.view_admin
 
 .. automodule:: hedwig.facility.generic.view_admin
 
+hedwig.facility.generic.view_home
+---------------------------------
+
+.. automodule:: hedwig.facility.generic.view_home
+
 hedwig.facility.generic.view_proposal
 -------------------------------------
 

@@ -7,6 +7,7 @@ Software Documentation
     admin
     astro
     auth
+    compat
     config
     db
     db_part

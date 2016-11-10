@@ -6,6 +6,11 @@ hedwig.file.csv
 
 .. automodule:: hedwig.file.csv
 
+hedwig.file.graphviz
+--------------------
+
+.. automodule:: hedwig.file.graphviz
+
 hedwig.file.image
 -----------------
 
