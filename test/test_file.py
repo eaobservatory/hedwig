@@ -23,7 +23,6 @@ from io import BytesIO
 from os.path import exists
 
 from PIL import Image
-from PyPDF2 import PdfFileWriter
 
 from hedwig.config import get_config
 from hedwig.error import ConversionError, UserError
@@ -36,28 +35,8 @@ from hedwig.file.pdf import pdf_to_png, pdf_to_svg, ps_to_png
 from hedwig.type.enum import FigureType
 
 from .dummy_config import DummyConfigTestCase
+from .dummy_file import example_eps, example_jpeg, example_png, example_pdf
 
-with closing(BytesIO()) as f:
-    im = Image.new('RGB', (25, 50))
-    im.save(f, format='PNG')
-    example_png = f.getvalue()
-
-with closing(BytesIO()) as f:
-    im = Image.new('RGB', (40, 30))
-    im.save(f, format='JPEG')
-    example_jpeg = f.getvalue()
-
-with closing(BytesIO()) as f:
-    w = PdfFileWriter()
-    w.addBlankPage(1, 1)
-    w.write(f)
-    example_pdf = f.getvalue()
-
-example_eps = b"""%!PS-Adobe-3.0 EPSF-3.0
-%%BoundingBox: 0 0 100 50
-(Helvetica) findfont 12 scalefont setfont
-40 20 moveto (test) show
-showpage"""
 
 invalid_pdf = b'NOT PDF'
 

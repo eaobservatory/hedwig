@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from datetime import datetime
 from random import randint
 
 from sqlalchemy.sql import insert
@@ -27,6 +28,7 @@ from hedwig import auth
 from hedwig.config import _get_db_class
 from hedwig.db.meta import metadata
 from hedwig.db.engine import get_engine
+from hedwig.type.enum import BaseCallType, FormatType
 
 from .compat import TestCase
 
@@ -75,3 +77,23 @@ class DBTestCase(TestCase):
 
     def tearDown(self):
         del self.db
+
+    def _create_test_proposal(self,
+                              facility_id=None, facility_code='test facility'):
+        if facility_id is None:
+            facility_id = self.db.ensure_facility(facility_code)
+
+        semester_id = self.db.add_semester(
+            facility_id, 'test', 'test',
+            datetime(2000, 1, 1), datetime(2000, 6, 30))
+        queue_id = self.db.add_queue(facility_id, 'test', 'test')
+        call_id = self.db.add_call(
+            BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
+            datetime(1999, 9, 1), datetime(1999, 9, 30),
+            100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', '',
+            FormatType.PLAIN)
+        affiliation_id = self.db.add_affiliation(queue_id, 'test')
+        person_id = self.db.add_person('Test Person')
+
+        return self.db.add_proposal(
+            call_id, person_id, affiliation_id, 'Test Title')

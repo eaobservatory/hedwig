@@ -27,7 +27,7 @@ from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord
 from hedwig.file.moc import read_moc, write_moc
 from hedwig.type.collection import ResultCollection
-from hedwig.type.enum import AttachmentState, BaseCallType, FormatType
+from hedwig.type.enum import AttachmentState, FormatType
 from hedwig.type.simple import Calculation, MOCInfo
 
 from .dummy_db import DBTestCase
@@ -55,7 +55,8 @@ class DBCalculatorTest(DBTestCase):
         self.assertNotEqual(calc_id_diff, calc_id)
 
     def test_calculation(self):
-        (facility_id, proposal_id) = self._create_test_proposal()
+        facility_id = self.db.ensure_facility('my_tel')
+        proposal_id = self._create_test_proposal(facility_id=facility_id)
         calculator_id = self.db.ensure_calculator(facility_id, 'testcalc')
 
         calculation_id = self.db.add_calculation(
@@ -236,21 +237,3 @@ class DBCalculatorTest(DBTestCase):
 
         # Check the MOC really ended up as expected.
         self.assertEqual(list(moc), [(5, frozenset((21, 22, 23, 31, 32, 33)))])
-
-    def _create_test_proposal(self):
-        facility_id = self.db.ensure_facility('f')
-        semester_id = self.db.add_semester(
-            facility_id, 's', 's',
-            datetime(2000, 1, 1), datetime(2000, 12, 31))
-        queue_id = self.db.add_queue(facility_id, 'q', 'q')
-        call_id = self.db.add_call(
-            BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
-            datetime(1999, 4, 1), datetime(1999, 4, 2),
-            100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', '',
-            FormatType.PLAIN)
-        affiliation_id = self.db.add_affiliation(queue_id, 'a')
-        person_id = self.db.add_person('per')
-        proposal_id = self.db.add_proposal(
-            call_id, person_id, affiliation_id, 'prop')
-        self.assertIsInstance(proposal_id, int)
-        return (facility_id, proposal_id)

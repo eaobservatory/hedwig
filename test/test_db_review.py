@@ -18,12 +18,10 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from datetime import datetime
-
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, Error, \
     NoSuchRecord, UserError
 from hedwig.type.collection import GroupMemberCollection, ReviewerCollection
-from hedwig.type.enum import Assessment, BaseCallType, BaseReviewerRole, \
+from hedwig.type.enum import Assessment, BaseReviewerRole, \
     FormatType, GroupType, ReviewState
 from hedwig.type.simple import GroupMember, Reviewer
 
@@ -413,19 +411,3 @@ class DBReviewTest(DBTestCase):
 
         self.assertEqual(proposal.id, proposal_id)
         self.assertIsNone(proposal.decision_accept)
-
-    def _create_test_proposal(self):
-        facility_id = self.db.ensure_facility('test facility')
-        semester_id = self.db.add_semester(
-            facility_id, 'test', 'test',
-            datetime(2000, 1, 1), datetime(2000, 6, 30))
-        queue_id = self.db.add_queue(facility_id, 'test', 'test')
-        call_id = self.db.add_call(
-            BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
-            datetime(1999, 9, 1), datetime(1999, 9, 30),
-            100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', '',
-            FormatType.PLAIN)
-        affiliation_id = self.db.add_affiliation(queue_id, 'test')
-        person_id = self.db.add_person('Test Person')
-        return self.db.add_proposal(
-            call_id, person_id, affiliation_id, 'Test Title')
