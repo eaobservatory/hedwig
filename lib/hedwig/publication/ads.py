@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from codecs import utf_8_decode
 import json
 from time import sleep
 
@@ -89,7 +90,7 @@ def _get_pub_info_ads_generic(type_, codes):
 
             r.raise_for_status()
 
-            result = json.loads(r.content)
+            result = json.loads(utf_8_decode(r.content)[0])
 
         except requests.exceptions.RequestException:
             logger.exception('Failed to search ADS')
