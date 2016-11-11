@@ -47,5 +47,5 @@ class EmailSendTestCase(DummyConfigTestCase):
         """Test the `MIMETextFlowed` class."""
 
         msg = MIMETextFlowed('test message')
-        self.assertEqual(msg['Content-type'],
-                         'text/plain; charset="utf-8"; format="flowed"')
+        self.assertEqual(sorted(msg['Content-type'].split('; ')),
+                         ['charset="utf-8"', 'format="flowed"', 'text/plain'])
