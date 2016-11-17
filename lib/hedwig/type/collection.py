@@ -402,6 +402,18 @@ class PrevProposalCollection(ResultCollection):
             if pp.proposal_id is not None:
                 seen_ids[pp.proposal_id] = pp.proposal_code
 
+    def subset_by_this_proposal(self, this_proposal_id):
+        """
+        Create a subset of the collection (of the same type) containing
+        the entries which match the given proposal, using the
+        "this_proposal_id" attribute (proposal to which this entry
+        is attached) rather than "proposal_id" (old proposal being
+        referenced).
+        """
+
+        return type(self)((k, v) for (k, v) in self.items()
+                          if v.this_proposal_id == this_proposal_id)
+
 
 class ProposalCollection(ResultCollection, CollectionSortable):
     """

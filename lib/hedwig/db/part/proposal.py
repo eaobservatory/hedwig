@@ -1048,44 +1048,52 @@ class ProposalPart(object):
         pub_columns = (non_id_pub_columns +
                        [prev_proposal_pub.c.id.label('pp_pub_id')])
 
+        iter_field = None
+        iter_list = None
+
         stmt = select(
             [prev_proposal] + pub_columns
         ).select_from(
             prev_proposal.outerjoin(prev_proposal_pub)
-        ).where(
-            prev_proposal.c.this_proposal_id == proposal_id
-        ).order_by(
-            prev_proposal.c.id.asc(),
-            prev_proposal_pub.c.id.asc()
         )
+
+        if is_list_like(proposal_id):
+            assert iter_field is None
+            iter_field = prev_proposal.c.this_proposal_id
+            iter_list = proposal_id
+        else:
+            stmt = stmt.where(prev_proposal.c.this_proposal_id == proposal_id)
 
         ans = PrevProposalCollection()
 
         with self._transaction(_conn=_conn) as conn:
-            for row in conn.execute(stmt):
-                # Convert row to a dictionary so that we can manipulate
-                # its entries.
-                row = dict(row.items())
+            for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
+                for row in conn.execute(iter_stmt.order_by(
+                        prev_proposal.c.id.asc(),
+                        prev_proposal_pub.c.id.asc())):
+                    # Convert row to a dictionary so that we can manipulate
+                    # its entries.
+                    row = dict(row.items())
 
-                # Move the entries relating to the publication table to another
-                # dictionary.
-                pub_id = row.pop('pp_pub_id')
-                pub = {'id': pub_id, 'proposal_id': None}
-                for col in [x.name for x in non_id_pub_columns]:
-                    pub[col] = row.pop(col)
-                if pub_id is None:
-                    pub = None
-                else:
-                    pub = PrevProposalPub(**pub)
+                    # Move the entries relating to the publication table
+                    # to another dictionary.
+                    pub_id = row.pop('pp_pub_id')
+                    pub = {'id': pub_id, 'proposal_id': None}
+                    for col in [x.name for x in non_id_pub_columns]:
+                        pub[col] = row.pop(col)
+                    if pub_id is None:
+                        pub = None
+                    else:
+                        pub = PrevProposalPub(**pub)
 
-                # Either make a new entry in the result table or just add
-                # the publication to it if it already exists.
-                id_ = row['id']
-                if id_ in ans and (pub is not None):
-                    ans[id_].publications.append(pub)
-                else:
-                    ans[id_] = PrevProposal(
-                        publications=([] if pub is None else [pub]), **row)
+                    # Either make a new entry in the result table or just add
+                    # the publication to it if it already exists.
+                    id_ = row['id']
+                    if id_ in ans and (pub is not None):
+                        ans[id_].publications.append(pub)
+                    else:
+                        ans[id_] = PrevProposal(
+                            publications=([] if pub is None else [pub]), **row)
 
         return ans
 
