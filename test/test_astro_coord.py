@@ -88,7 +88,6 @@ class AstroCoordTest(TestCase):
                 ]:
             with self.assertRaises(UserError):
                 c = parse_coord(system, x, y, 'test')
-                print(repr(c))
 
     def test_dec_deg(self):
         c = parse_coord(CoordSystem.ICRS, '112.35', '8.13', 'test')
