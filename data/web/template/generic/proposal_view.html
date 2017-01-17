@@ -312,6 +312,14 @@
             </nav>
         {% endif %}
 
+        {% if targets %}
+            <nav>
+                <p>
+                    <a href="{{ url_for('.target_download', proposal_id=proposal.id) }}">Download target list</a>
+                </p>
+            </nav>
+        {% endif %}
+
         {% if targets and target_tools %}
             <nav>
                 <p>

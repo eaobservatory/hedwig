@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import namedtuple
 
 from ...astro.coord import CoordSystem
-from ...astro.catalog import parse_source_list
+from ...astro.catalog import parse_source_list, write_source_list
 from ...email.format import render_email_template
 from ...config import get_config
 from ...error import ConsistencyError, NoSuchRecord, UserError
@@ -30,7 +30,8 @@ from ...publication.url import make_publication_url
 from ...type.collection import PrevProposalCollection, ResultCollection, \
     TargetCollection
 from ...type.enum import AffiliationType, AttachmentState, \
-    CallState, FigureType, FormatType, GroupType, MessageThreadType, \
+    CallState, FigureType, FileTypeInfo, FormatType, \
+    GroupType, MessageThreadType, \
     PermissionType, PersonTitle, ProposalState, PublicationType
 from ...type.simple import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
@@ -1222,6 +1223,15 @@ class GenericProposal(object):
             'mime_types': ['text/plain', 'text/csv'],
             'has_targets': bool(records),
         }
+
+    @with_proposal(permission=PermissionType.VIEW)
+    def view_target_download(self, db, proposal, can):
+        targets = db.search_target(proposal_id=proposal.id)
+
+        return (
+            write_source_list(targets),
+            null_tuple(FileTypeInfo)._replace(mime='text/plain'),
+            '{}-targets.txt'.format(self.make_proposal_code(db, proposal)))
 
     @with_proposal(permission=PermissionType.EDIT)
     def view_tool_note_edit(self, db, proposal, can, form):

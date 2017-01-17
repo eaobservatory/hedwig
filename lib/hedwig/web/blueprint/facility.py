@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -313,6 +313,12 @@ def create_facility_blueprint(db, facility):
             db, proposal_id,
             (request.form if request.method == 'POST' else None),
             (request.files['file'] if request.method == 'POST' else None))
+
+    @bp.route('/proposal/<int:proposal_id>/target/download')
+    @require_auth(require_person=True)
+    @send_file()
+    def target_download(proposal_id):
+        return facility.view_target_download(db, proposal_id)
 
     @bp.route('/proposal/<int:proposal_id>/target/note',
               methods=['GET', 'POST'])
