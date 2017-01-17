@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,12 +20,22 @@ from __future__ import absolute_import, division, print_function, \
 
 import csv
 
+from ..compat import unicode_to_str
 from ..error import UserError
-from ..file.csv import decode_csv, decode_value
+from ..file.csv import CSVDialect, CSVWriter, decode_csv, decode_value
 from ..type.collection import TargetCollection
 from ..type.simple import Target
 from ..type.util import null_tuple
 from .coord import CoordSystem
+
+
+class CSVDialectCatalog(CSVDialect):
+    """
+    Define CSV "dialect" with space-separated columns.
+    """
+
+    delimiter = unicode_to_str(' ')
+    quoting = csv.QUOTE_MINIMAL
 
 
 def parse_source_list(source_list, number_from=1):
@@ -97,3 +107,27 @@ def parse_source_list(source_list, number_from=1):
         raise UserError('Could not interpret target list file structure.')
 
     return TargetCollection.from_formatted_collection(ans)
+
+
+def write_source_list(catalog):
+    writer = CSVWriter(dialect=CSVDialectCatalog)
+
+    for target in catalog.to_formatted_collection().values():
+        row = [target.name]
+
+        if target.x and target.y:
+            row.extend((
+                target.x, target.y, CoordSystem.get_name(target.system)))
+
+            # Note: to_formatted_collection will also have formatted
+            # the target time and priority.  So we check for non-empty
+            # strings, rather than entries which aren't None.
+            if target.time:
+                row.append(target.time)
+
+                if target.priority:
+                    row.append(target.priority)
+
+        writer.add_row(row)
+
+    return writer.get_csv()

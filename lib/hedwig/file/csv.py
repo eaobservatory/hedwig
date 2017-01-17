@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -100,9 +100,9 @@ class CSVWriter(object):
     buffer.
     """
 
-    def __init__(self):
+    def __init__(self, dialect=CSVDialect):
         self._buffer = CSVIO()
-        self._writer = csv.writer(self._buffer, dialect=CSVDialect)
+        self._writer = csv.writer(self._buffer, dialect=dialect)
 
     def add_row(self, row):
         """
