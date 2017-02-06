@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1557,6 +1557,7 @@ class GenericProposal(object):
 
     @with_proposal(permission=PermissionType.VIEW)
     def view_case_view_pdf(self, db, proposal, can, role, md5sum):
+        role_class = self.get_text_roles()
         try:
             return db.get_proposal_pdf(proposal.id, role, md5sum=md5sum)
         except NoSuchRecord:
