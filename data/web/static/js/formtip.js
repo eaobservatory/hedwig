@@ -4,7 +4,13 @@ $(document).ready(function () {
     $('div.formtip > div').prepend('<a>&times;</a>');
 
     $('div.formtip > a').click(function (evt) {
-        $(this).next().toggle();
+        var formtip = $(this).next();
+        if (formtip.is(':visible')) {
+            formtip.hide();
+        } else {
+            $('div.formtip > div').hide();
+            formtip.show();
+        }
         evt.preventDefault();
     });
 
