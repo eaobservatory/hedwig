@@ -321,14 +321,15 @@ class GenericProposal(object):
                 'Edit target list',
                 url_for('.target_edit', proposal_id=proposal.id)))
 
-        elif extra['targets'] and (extra['tool_note'] is None):
+        elif (extra['targets'] and extra['target_tools']
+                and (extra['tool_note'] is None)):
             messages.append(ValidationMessage(
                 False,
                 'A note on the target tool results has not been added.',
                 'Check targets with tools and edit note',
                 url_for('.tool_note_edit', proposal_id=proposal.id)))
 
-        if not extra['calculations']:
+        if extra['calculators'] and (not extra['calculations']):
             messages.append(ValidationMessage(
                 False,
                 'The proposal does not have any calculation results attached.',
