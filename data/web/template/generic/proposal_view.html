@@ -350,6 +350,7 @@
 {% endblock %}
 
 {% block proposal_calculations %}
+    {% if calculators %}
     <section>
         <h2 id="calculations">Calculation Results</h2>
 
@@ -391,6 +392,7 @@
             </nav>
         {% endif %}
     </section>
+    {% endif %}
 {% endblock %}
 
 {% block technical_case %}
