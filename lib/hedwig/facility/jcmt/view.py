@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -442,7 +442,18 @@ class JCMT(Generic):
 
         skip_missing_targets = False
         if extra['jcmt_option_values'] is not None:
-            skip_missing_targets = extra['jcmt_option_values'].target_of_opp
+            if extra['jcmt_option_values'].target_of_opp:
+                skip_missing_targets = True
+
+                # We generally expect not to know the sources in advance
+                # for a target of opportunity proposal.
+                if extra['targets']:
+                    messages.append(ValidationMessage(
+                        False,
+                        'Target objects have been specified '
+                        'for a target of opportunity request.',
+                        'Edit target list',
+                        url_for('.target_edit', proposal_id=proposal.id)))
 
         messages.extend(super(JCMT, self)._validate_proposal_extra(
             db, proposal, extra, skip_missing_targets=skip_missing_targets,
