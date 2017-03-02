@@ -34,7 +34,7 @@ from ...type.enum import AffiliationType, FormatType, \
     PermissionType, ProposalState
 from ...type.simple import Link, RouteInfo, ValidationMessage
 from ...type.util import null_tuple
-from ..generic.view import Generic
+from ..eao.view import EAOFacility
 from .calculator_heterodyne import HeterodyneCalculator
 from .calculator_scuba2 import SCUBA2Calculator
 from .type import \
@@ -48,11 +48,9 @@ from .type import \
     JCMTWeather
 
 
-class JCMT(Generic):
+class JCMT(EAOFacility):
     cadc_advanced_search = \
         'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/search/'
-
-    omp_cgi_bin = 'http://omp.eao.hawaii.edu/cgi-bin/'
 
     @classmethod
     def get_code(cls):
@@ -187,22 +185,21 @@ class JCMT(Generic):
 
     def make_proposal_info_urls(self, proposal_code):
         """
-        Generate links to the OMP and to CADC for a given proposal code.
+        Generate an additional links to CADC for a given proposal code.
         """
 
-        return [
-            Link(
-                'OMP', self.omp_cgi_bin + 'projecthome.pl?' +
-                urlencode({
-                    'urlprojid': proposal_code,
-                })),
+        result = super(JCMT, self).make_proposal_info_urls(
+            proposal_code)
+
+        result.append(
             Link(
                 'CADC', self.cadc_advanced_search + '?' +
                 urlencode({
                     'Observation.collection': 'JCMT',
                     'Observation.proposal.id': proposal_code,
-                }) + '#resultTableTab'),
-        ]
+                }) + '#resultTableTab'))
+
+        return result
 
     def make_review_guidelines_url(self, role):
         """
