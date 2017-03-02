@@ -93,13 +93,20 @@
     <h2 id="reviewprocess">Review Processes</h2>
 
     <ul>
-        {% for review_call in review_calls %}
+        {% for semester_review_calls in review_calls | plain_group_by('semester_id') %}
             <li>
-                <a href="{{ url_for('.review_call', call_id=review_call.id) }}">
-                    {{ review_call.semester_name }},
-                    {{ review_call.queue_name }}
-                    ({{ review_call.type | call_type_name(facility_call_type_class) }})
-                </a>
+                {{ semester_review_calls[0].semester_name }}
+                <ul>
+                    {% for queue_review_calls in semester_review_calls | plain_group_by('queue_id') %}
+                        <li>
+                            {{ queue_review_calls[0].queue_name }}:
+                            {% for review_call in queue_review_calls %}
+                                <a href="{{ url_for('.review_call', call_id=review_call.id) }}">{{ review_call.type | call_type_name(facility_call_type_class) | lower }}</a>
+                            {% endfor %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </li>
         {% endfor %}
     </ul>
 {% endif %}

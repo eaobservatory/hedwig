@@ -65,8 +65,8 @@ class GenericHome(object):
                 group_type=GroupType.review_view_groups(),
                 person_id=session['person']['id'])
             if membership:
-                review_calls = list(facility_calls.values_matching(
-                    queue_id=[x.queue_id for x in membership.values()]))
+                review_calls = facility_calls.values_matching(
+                    queue_id=[x.queue_id for x in membership.values()])
 
         return {
             'title': self.get_name(),
