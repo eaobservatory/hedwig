@@ -142,23 +142,25 @@
 {% endblock %}
 
 {% block calculator_modes %}
-    <section>
-        <h2>Calculator Mode</h2>
+    {% if 1 < (modes | length) %}
+        <section>
+            <h2>Calculator Mode</h2>
 
-        <ol>
-            <li>
-                <label for="mode">Mode</label>
-                <select name="mode">
-                    {% for (mode_id, mode) in modes.items() %}
-                        <option value="{{ mode_id }}" {{ 'selected="selected"' | safe if mode_id == current_mode }}>{{ mode.name }}</option>
-                    {% endfor %}
-                </select>
-            </li>
-            <li>
-                <input type="submit" name="submit_mode" value="Change mode" />
-            </li>
-        </ol>
-    </section>
+            <ol>
+                <li>
+                    <label for="mode">Mode</label>
+                    <select name="mode">
+                        {% for (mode_id, mode) in modes.items() %}
+                            <option value="{{ mode_id }}" {{ 'selected="selected"' | safe if mode_id == current_mode }}>{{ mode.name }}</option>
+                        {% endfor %}
+                    </select>
+                </li>
+                <li>
+                    <input type="submit" name="submit_mode" value="Change mode" />
+                </li>
+            </ol>
+        </section>
+    {% endif %}
 {% endblock %}
 
 </form>
