@@ -27,36 +27,45 @@
             <th>Status</th>
             <th colspan="3">Links</th>
         </tr>
-        {% for call in calls.values() %}
-            <tr>
-                <td>
-                    <a href="{{ url_for('.semester_view', semester_id=call.semester_id) }}">
-                        {{ call.semester_name }}
-                    </a>
-                </td>
-                <td>
-                    <a href="{{ url_for('.queue_view', queue_id=call.queue_id) }}">
-                        {{ call.queue_name }}
-                    </a>
-                </td>
-                <td>{{ call.type | call_type_name(facility_call_type_class) }}</td>
-                <td>{{ call.state | call_state_name }}</td>
-                <td>
-                    <a href="{{ url_for('.call_view', call_id=call.id) }}">
-                        View call
-                    </a>
-                </td>
-                <td>
-                    <a href="{{ url_for('.call_proposals', call_id=call.id) }}">
-                        View proposals
-                    </a>
-                </td>
-                <td>
-                    <a href="{{ url_for('.review_call', call_id=call.id) }}">
-                        Review process
-                    </a>
-                </td>
-            </tr>
+        {% for semester_calls in calls.values() | plain_group_by('semester_id') %}
+            {% for queue_calls in semester_calls | plain_group_by('queue_id') %}
+                {% set queue_loop = loop %}
+                {% for call in queue_calls %}
+                    <tr>
+                        {% if loop.first and queue_loop.first %}
+                            <td rowspan="{{ semester_calls | length }}">
+                                <a href="{{ url_for('.semester_view', semester_id=call.semester_id) }}">
+                                    {{ call.semester_name }}
+                                </a>
+                            </td>
+                        {% endif %}
+                        {% if loop.first %}
+                            <td rowspan="{{ loop.length }}">
+                                <a href="{{ url_for('.queue_view', queue_id=call.queue_id) }}">
+                                    {{ call.queue_name }}
+                                </a>
+                            </td>
+                        {% endif %}
+                        <td>{{ call.type | call_type_name(facility_call_type_class) }}</td>
+                        <td>{{ call.state | call_state_name }}</td>
+                        <td>
+                            <a href="{{ url_for('.call_view', call_id=call.id) }}">
+                                View call
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('.call_proposals', call_id=call.id) }}">
+                                View proposals
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('.review_call', call_id=call.id) }}">
+                                Review process
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
         {% endfor %}
     </table>
 {% endif %}
