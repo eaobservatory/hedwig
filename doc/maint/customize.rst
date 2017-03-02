@@ -425,7 +425,7 @@ private method, for example:
         requests = db.search_example_request(proposal.id)
 
         ctx.update({
-            'example_requests': requests.values(),
+            'example_requests': requests,
         })
 
         return ctx
