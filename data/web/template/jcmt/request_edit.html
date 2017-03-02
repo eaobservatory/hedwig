@@ -7,13 +7,44 @@
 {% block request_form %}
     {{ render_request_table(requests, instruments, weathers) }}
 
-    <p>
+    <ol>
         {% for (option, option_name) in options.items() %}
+        <li>
             <input type="checkbox" name="option_{{ option }}" {{ 'checked="checked"' | safe if option_values[option] }} />
             <span class="checkboxlabel">{{ option_name }}</span>
-            {% if not loop.last %}
-                <br />
+            {% if option == 'target_of_opp' %}
+                <div class="formtip">
+                    <div>
+                        <p>
+                            Please select this option if your proposal involves
+                            observations of a certain class of phenomena
+                            when a triggering event occurs.
+                            The targets for this kind of observation are
+                            generally not known in advance.
+                        </p>
+                        <p>
+                            <a href="http://www.eaobservatory.org/jcmt/observing/guidelines-for-flexible-observing/#target_of_opp" target="_blank">Flexible observing guidelines for targets of opportunity</a>
+                        </p>
+                    </div>
+                </div>
+            {% elif option == 'time_specific' %}
+                <div class="formtip">
+                    <div>
+                        <p>
+                            This option applies when you wish to observe
+                            an event which is expected to occur at a given
+                            time.
+                            Generally the targets and times should be
+                            known in advance and included in your proposal.
+                        </p>
+                        <p>
+                            Examples might include perihelion of comets
+                            or planetary transits.
+                        </p>
+                    </div>
+                </div>
             {% endif %}
+        </li>
         {% endfor %}
-    </p>
+    </ol>
 {% endblock %}
