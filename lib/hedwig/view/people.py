@@ -26,8 +26,7 @@ from ..error import ConsistencyError, Error, MultipleRecords, NoSuchRecord, \
     UserError
 from ..type.collection import EmailCollection, \
     ProposalCollection, ReviewerCollection
-from ..type.enum import PermissionType, PersonTitle, ProposalState, \
-    UserLogEvent
+from ..type.enum import PermissionType, PersonTitle, ProposalState
 from ..type.simple import Email, \
     Institution, InstitutionLog, Person, ProposalWithCode
 from ..type.util import null_tuple
@@ -402,9 +401,7 @@ class PeopleView(object):
         return {
             'title': '{}: Event Log'.format(name),
             'person': person,
-            'events': [x._replace(
-                       event=UserLogEvent.get_info(x.event).description)
-                       for x in events.values()],
+            'events': events,
         }
 
     def register_person(self, db, form, remote_addr):

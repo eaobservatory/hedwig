@@ -29,7 +29,8 @@ from jinja2.runtime import Undefined
 from ..compat import first_value as _first_value
 from ..type.enum import AffiliationType, Assessment, \
     AttachmentState, CallState, MessageState, MessageThreadType, \
-    PersonTitle, ProposalState, PublicationType, ReviewState, SemesterState
+    PersonTitle, ProposalState, PublicationType, \
+    ReviewState, SemesterState, UserLogEvent
 from ..util import get_countries
 
 from .format import format_text
@@ -267,6 +268,13 @@ def register_template_utils(app):
             return PersonTitle.get_name(value)
         except KeyError:
             return ''
+
+    @app.template_filter()
+    def user_log_event_description(value):
+        try:
+            return UserLogEvent.get_info(value).description
+        except KeyError:
+            return 'Unknown event'
 
     @app.template_filter()
     def abbr(value, length=20):
