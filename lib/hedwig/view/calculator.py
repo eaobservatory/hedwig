@@ -225,6 +225,14 @@ class BaseCalculator(object):
                 except NoSuchRecord:
                     raise HTTPNotFound('Calculation not found.')
 
+                if calculation.calculator_id != self.id_:
+                    raise HTTPError(
+                        'Calculation is from a different calculator.')
+
+                if calculation.mode != mode:
+                    raise HTTPError(
+                        'Calculation is from a different mode.')
+
                 # Check authorization to see this calculation.
                 proposal = db.get_proposal(
                     self.facility.id_, calculation.proposal_id,
