@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -19,7 +19,6 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from contextlib import closing, contextmanager
-from email.generator import Generator
 from email.header import Header
 from email.mime.nonmultipart import MIMENonMultipart
 from email.utils import formataddr, formatdate, make_msgid
@@ -28,6 +27,12 @@ import socket
 from smtplib import SMTP, SMTPException
 from time import mktime
 
+try:
+    from email.generator import BytesGenerator
+except ImportError:
+    from email.generator import Generator as BytesGenerator
+
+from ..compat import unicode_to_str
 from ..config import get_config
 from ..util import get_logger
 
@@ -64,6 +69,15 @@ class MIMETextFlowed(MIMENonMultipart):
                                   charset=charset, format='flowed')
         self.set_payload(text, charset)
 
+    def __setitem__(self, name, val):
+        """
+        Overridden `__setitem__` method to ensure header names are
+        native strings.  Note: we don't currently use `add_header`
+        so we don't provide an overridden version of it.
+        """
+
+        MIMENonMultipart.__setitem__(self, unicode_to_str(name), val)
+
 
 def send_email_message(message):
     """
@@ -95,10 +109,10 @@ def send_email_message(message):
     msg = MIMETextFlowed(message.body)
 
     msg['Subject'] = Header(message.subject)
-    msg['Date'] = formatdate(mktime(message.date.timetuple()))
+    msg['Date'] = Header(formatdate(mktime(message.date.timetuple())))
     msg['From'] = Header(from_)
     msg['To'] = Header(', '.join(recipients_public))
-    msg['Message-ID'] = identifier
+    msg['Message-ID'] = Header(identifier)
     if message.thread_identifiers:
         # Currently set this to the last message in the thread,
         # to create a nested thread structure.
@@ -108,7 +122,7 @@ def send_email_message(message):
         msg['References'] = Header(' '.join(message.thread_identifiers))
 
     with closing(BytesIO()) as f:
-        Generator(f, mangle_from_=False).flatten(msg)
+        BytesGenerator(f, mangle_from_=False).flatten(msg)
         msg = f.getvalue()
 
     try:
