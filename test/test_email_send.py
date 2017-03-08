@@ -89,7 +89,7 @@ class EmailSendTestCase(DummyConfigTestCase):
             b'MIME-Version: 1.0',
             b'Content-Transfer-Encoding: base64',
             b'Subject: =?utf-8?q?Message_exp=C3=A9rimental?=',
-            b'Date: Wed, 01 Apr 2015 10:00:00 -0000',
+            b'Date: Wed, 01 Apr 2015 00:00:00 +0000',
             b'From: =?utf-8?q?Hedwig_Pr=C3=BCfung_=3Chedwig=40test=3E?=',
             (b'To: =?utf-8?b?UGVyc29vbiDDqcOpbiA8b25lQHRlc3Q+?=',
              b'To: =?utf-8?b?UGVyc29vbiDDqcOpbg==?= <one@test>'),

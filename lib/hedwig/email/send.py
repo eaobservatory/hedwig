@@ -21,16 +21,36 @@ from __future__ import absolute_import, division, print_function, \
 from contextlib import closing, contextmanager
 from email.header import Header
 from email.mime.nonmultipart import MIMENonMultipart
-from email.utils import formataddr, formatdate, make_msgid
+from email.utils import formataddr, make_msgid
 from io import BytesIO
 import socket
 from smtplib import SMTP, SMTPException
-from time import mktime
 
 try:
     from email.generator import BytesGenerator
 except ImportError:
     from email.generator import Generator as BytesGenerator
+
+try:
+    from email.utils import format_datetime as _format_datetime
+    from datetime import timezone
+
+    def format_datetime(dt):
+        # Only Python 3 has datetime.timezone, so we have to do this here
+        # rather than in the main code.
+        return _format_datetime(dt.replace(tzinfo=timezone.utc))
+
+except ImportError:
+    from email.utils import formatdate
+    from calendar import timegm
+
+    def format_datetime(dt):
+        result = formatdate(timegm(dt.utctimetuple()))
+        if result.endswith('-0000'):
+            # We are using UTC, but `formatdate` returns time zone "-0000"
+            # which RFC2822 says means an unknown local time.
+            result = result[:-5] + '+0000'
+        return result
 
 from ..compat import unicode_to_str
 from ..config import get_config
@@ -145,7 +165,7 @@ def _prepare_email_message(message, from_, identifier=None):
     msg = MIMETextFlowed(message.body)
 
     msg['Subject'] = Header(message.subject)
-    msg['Date'] = Header(formatdate(mktime(message.date.timetuple())))
+    msg['Date'] = Header(format_datetime(message.date))
     msg['From'] = Header(from_)
     msg['To'] = Header(', '.join(recipients_public))
     msg['Message-ID'] = Header(identifier)
