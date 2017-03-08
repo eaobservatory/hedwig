@@ -90,13 +90,46 @@ def send_email_message(message):
     server = config.get('email', 'server')
     from_ = config.get('email', 'from')
 
+    (identifier, msg, recipients) = _prepare_email_message(message, from_)
+
+    try:
+        with quitting(SMTP(server)) as smtp:
+            refusal = smtp.sendmail(
+                from_, recipients, msg)
+
+            for (recipient, problem) in refusal.items():
+                logger.error('Email message {} refused for {}: {}: {}',
+                             message.id, recipient, problem[0], problem[1])
+
+            return identifier
+
+    except SMTPException:
+        logger.exception('Email message {} refused for all recipients',
+                         message.id)
+    except socket.error:
+        logger.exception('Email message {} not sent due to failure '
+                         'to connect to email server', message.id)
+
+    return None
+
+
+def _prepare_email_message(message, from_, identifier=None):
+    """
+    Prepare an email message.
+
+    This is a separate function to allow this routine to be tested
+    independently of actual message sending.
+    """
+
     # Sort recipients into public ("to") and private ("bcc") lists,
     # unless there is only one recipient, in which case there's no
     # need to hide the address.
+    recipients_plain = []
     recipients_public = []
     recipients_private = []
     single_recipient = len(message.recipients) == 1
     for recipient in message.recipients:
+        recipients_plain.append(recipient.address)
         if single_recipient or recipient.public:
             recipients_public.append(formataddr((recipient.name,
                                                  recipient.address)))
@@ -104,8 +137,11 @@ def send_email_message(message):
             recipients_private.append(formataddr((recipient.name,
                                                   recipient.address)))
 
-    identifier = make_msgid('{}'.format(message.id))
+    # Generate message identifier if one has not been provided.
+    if identifier is None:
+        identifier = make_msgid('{}'.format(message.id))
 
+    # Construct message.
     msg = MIMETextFlowed(message.body)
 
     msg['Subject'] = Header(message.subject)
@@ -125,22 +161,4 @@ def send_email_message(message):
         BytesGenerator(f, mangle_from_=False).flatten(msg)
         msg = f.getvalue()
 
-    try:
-        with quitting(SMTP(server)) as smtp:
-            refusal = smtp.sendmail(
-                from_, recipients_public + recipients_private, msg)
-
-            for (recipient, problem) in refusal.items():
-                logger.error('Email message {} refused for {}: {}: {}',
-                             message.id, recipient, problem[0], problem[1])
-
-            return identifier
-
-    except SMTPException:
-        logger.exception('Email message {} refused for all recipients',
-                         message.id)
-    except socket.error:
-        logger.exception('Email message {} not sent due to failure '
-                         'to connect to email server', message.id)
-
-    return None
+    return (identifier, msg, recipients_plain)
