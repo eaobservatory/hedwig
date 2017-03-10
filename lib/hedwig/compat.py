@@ -28,6 +28,7 @@ if python_version < 3:
 
     from codecs import ascii_decode, ascii_encode, utf_8_encode
     from urllib import quote as _url_quote
+    from urllib import urlencode as _urlencode
 
     string_type = unicode
     byte_type = str
@@ -59,12 +60,19 @@ if python_version < 3:
         """Unicode-safe wrapper for urllib.quote."""
         return _url_quote(utf_8_encode(string)[0])
 
+    def url_encode(query):
+        """Unicode-safe wrapper for urllib.urlencode."""
+        return _urlencode({
+            utf_8_encode(k)[0]: utf_8_encode(v)[0]
+            for (k, v) in query.items()})
+
     ExceptionWithMessage = Exception
 
 else:
     # Python 3.
 
     from urllib.parse import quote as url_quote
+    from urllib.parse import urlencode as url_encode
 
     string_type = str
     byte_type = bytes

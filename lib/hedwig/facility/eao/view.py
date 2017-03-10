@@ -18,11 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-try:
-    from urllib.parse import urlencode
-except ImportError:
-    from urllib import urlencode
-
+from ...compat import url_encode
 from ...type.simple import Link
 from ..generic.view import Generic
 
@@ -35,10 +31,17 @@ class EAOFacility(Generic):
         Generate a link to the OMP for a given proposal code.
         """
 
-        return [
-            Link(
+        urls = []
+
+        try:
+            urls.append(Link(
                 'OMP', self.OMP_CGI_BIN + 'projecthome.pl?' +
-                urlencode({
+                url_encode({
                     'urlprojid': proposal_code,
-                })),
-        ]
+                })))
+
+        except:
+            # `url_encode` could possibly raise UnicodeEncodeError.
+            pass
+
+        return urls

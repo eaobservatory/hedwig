@@ -21,11 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import defaultdict, namedtuple, OrderedDict
 import re
 
-try:
-    from urllib.parse import urlencode
-except ImportError:
-    from urllib import urlencode
-
+from ...compat import url_encode
 from ...error import NoSuchRecord, NoSuchValue, UserError
 from ...web.util import HTTPRedirect, flash, url_for
 from ...view.util import organise_collection, with_call_review, with_proposal
@@ -171,14 +167,19 @@ class JCMT(EAOFacility):
 
         position = '{:.5f} {:.5f}'.format(ra_deg, dec_deg)
 
-        url = (
-            self.cadc_advanced_search + '?' +
-            urlencode({
-                'Observation.collection': 'JCMT',
-                'Plane.position.bounds@Shape1Resolver.value': 'ALL',
-                'Plane.position.bounds': position,
-            }) +
-            '#resultTableTab')
+        try:
+            url = (
+                self.cadc_advanced_search + '?' +
+                url_encode({
+                    'Observation.collection': 'JCMT',
+                    'Plane.position.bounds@Shape1Resolver.value': 'ALL',
+                    'Plane.position.bounds': position,
+                }) +
+                '#resultTableTab')
+
+        except:
+            # `url_encode` could possibly raise UnicodeEncodeError.
+            return None
 
         # Advanced Search doesn't seem to like + as part of the coordinates.
         return url.replace('+', '%20')
@@ -191,13 +192,18 @@ class JCMT(EAOFacility):
         result = super(JCMT, self).make_proposal_info_urls(
             proposal_code)
 
-        result.append(
-            Link(
-                'CADC', self.cadc_advanced_search + '?' +
-                urlencode({
-                    'Observation.collection': 'JCMT',
-                    'Observation.proposal.id': proposal_code,
-                }) + '#resultTableTab'))
+        try:
+            result.append(
+                Link(
+                    'CADC', self.cadc_advanced_search + '?' +
+                    url_encode({
+                        'Observation.collection': 'JCMT',
+                        'Observation.proposal.id': proposal_code,
+                    }) + '#resultTableTab'))
+
+        except:
+            # `url_encode` could possibly raise UnicodeEncodeError.
+            pass
 
         return result
 

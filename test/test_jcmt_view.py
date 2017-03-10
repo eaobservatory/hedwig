@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -129,6 +129,16 @@ class JCMTFacilityTestCase(FacilityTestCase):
             self.assertIsInstance(url, Link)
             self.assertEqual(url.text, expect)
             self.assertIsInstance(url.url, string_type)
+
+        # Check URL generation with unusual characters in project code.
+        urls = self.view.make_proposal_info_urls('M99\u201cZZZ\u201d001')
+        urls = {url.text: url.url for url in urls}
+        self.assertEqual(sorted(urls.keys()), ['CADC', 'OMP'])
+        url_omp = urls['OMP']
+        self.assertIsInstance(url_omp, string_type)
+        self.assertEqual(
+            url_omp, 'http://omp.eao.hawaii.edu/cgi-bin/'
+            'projecthome.pl?urlprojid=M99%E2%80%9CZZZ%E2%80%9D001')
 
     def test_attach_review(self):
         types = self.view.get_call_types()
