@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -26,7 +26,8 @@ python_version = version_info[0]
 if python_version < 3:
     # Python 2.
 
-    from codecs import ascii_decode, ascii_encode
+    from codecs import ascii_decode, ascii_encode, utf_8_encode
+    from urllib import quote as _url_quote
 
     string_type = unicode
     byte_type = str
@@ -54,10 +55,16 @@ if python_version < 3:
         except StopIteration:
             raise KeyError('dictionary has no first value')
 
+    def url_quote(string):
+        """Unicode-safe wrapper for urllib.quote."""
+        return _url_quote(utf_8_encode(string)[0])
+
     ExceptionWithMessage = Exception
 
 else:
     # Python 3.
+
+    from urllib.parse import quote as url_quote
 
     string_type = str
     byte_type = bytes

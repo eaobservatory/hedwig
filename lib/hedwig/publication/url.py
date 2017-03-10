@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,11 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-try:
-    from urllib.parse import quote
-except ImportError:
-    from urllib import quote
-
+from ..compat import url_quote
 from ..type.enum import PublicationType
 
 
@@ -32,14 +28,19 @@ def make_publication_url(type_, reference):
     otherwise.
     """
 
-    if type_ == PublicationType.DOI:
-        return 'http://doi.org/' + quote(reference)
+    try:
+        if type_ == PublicationType.DOI:
+            return 'http://doi.org/' + url_quote(reference)
 
-    elif type_ == PublicationType.ADS:
-        return 'http://adsabs.harvard.edu/abs/' + quote(reference)
+        elif type_ == PublicationType.ADS:
+            return 'http://adsabs.harvard.edu/abs/' + url_quote(reference)
 
-    elif type_ == PublicationType.ARXIV:
-        return 'http://arxiv.org/abs/' + quote(reference)
+        elif type_ == PublicationType.ARXIV:
+            return 'http://arxiv.org/abs/' + url_quote(reference)
 
-    else:
-        return None
+    except:
+        # `url_quote` could possibly raise UnicodeEncodeError.  In this case
+        # return None as we can't generate an URL.
+        pass
+
+    return None
