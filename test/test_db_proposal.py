@@ -639,9 +639,13 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(result.get_pi().person_id, person_id_1)
 
         # Ensure we can't add a member twice.
-        with self.assertRaises(DatabaseIntegrityError):
+        with self.assertRaisesRegex(UserError, 'already a member'):
             self.db.add_member(proposal_id, person_id_2, affiliation_id,
                                False, False, False)
+
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.add_member(proposal_id, person_id_2, affiliation_id,
+                               False, False, False, _test_skip_check=True)
 
         # Ensure we can't add a member with an affiliation for the wrong
         # facility.

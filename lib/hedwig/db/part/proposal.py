@@ -155,6 +155,12 @@ class ProposalPart(object):
                         'for queue with id={}'.format(
                             affiliation_id, proposal_record.queue_id))
 
+                if 0 < conn.execute(select([count(member.c.id)]).where(and_(
+                        member.c.proposal_id == proposal_id,
+                        member.c.person_id == person_id))).scalar():
+                    raise UserError('The selected person is already a member '
+                                    'of the proposal.')
+
             member_alias = member.alias()
 
             result = conn.execute(member.insert().values({
