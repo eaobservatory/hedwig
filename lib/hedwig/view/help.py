@@ -118,7 +118,7 @@ class HelpView(object):
         if not os.path.exists(path_name):
             raise HTTPNotFound('Graph file not found.')
 
-        with open(path_name) as f:
+        with open(path_name, 'rb') as f:
             buff = f.read()
 
         try:
