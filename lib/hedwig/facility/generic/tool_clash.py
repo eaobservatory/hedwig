@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -25,12 +25,15 @@ import re
 from healpy import ang2pix
 
 from ...astro.coord import CoordSystem, format_coord
-from ...error import NoSuchRecord
+from ...error import NoSuchRecord, UserError
+from ...file.moc import read_moc
 from ...view import auth
 from ...view.tool import BaseTargetTool
-from ...web.util import ErrorPage, HTTPNotFound
-from ...type.enum import AttachmentState, FileTypeInfo
-from ...type.simple import RouteInfo
+from ...view.util import with_verified_admin
+from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
+    flash, session, url_for
+from ...type.enum import AttachmentState, FileTypeInfo, FormatType
+from ...type.simple import MOCInfo, RouteInfo
 from ...type.util import null_tuple
 
 TargetClash = namedtuple('TargetClash', ('target', 'mocs', 'target_search',
@@ -67,6 +70,7 @@ class ClashTool(BaseTargetTool):
         """
 
         return [
+            # Informational routes:
             RouteInfo(
                 'moc_view.html',
                 'moc/<int:moc_id>',
@@ -85,6 +89,35 @@ class ClashTool(BaseTargetTool):
                 'moc_list',
                 self.view_moc_list,
                 {}),
+
+            # Administrative routes:
+            RouteInfo(
+                'moc_admin.html',
+                'admin/',
+                'moc_admin',
+                self.view_moc_admin,
+                {'admin_required': True}),
+            RouteInfo(
+                'moc_edit.html',
+                'admin/new',
+                'moc_new',
+                self.view_moc_edit,
+                {'admin_required': True, 'allow_post': True,
+                 'post_files': ['file'], 'extra_params': [None]}),
+            RouteInfo(
+                'moc_edit.html',
+                'admin/<int:moc_id>',
+                'moc_edit',
+                self.view_moc_edit,
+                {'admin_required': True, 'allow_post': True,
+                 'post_files': ['file'], 'init_route_params': ['moc_id']}),
+            RouteInfo(
+                'moc_delete.html',
+                'admin/<int:moc_id>/delete',
+                'moc_delete',
+                self.view_moc_delete,
+                {'admin_required': True, 'allow_post': True,
+                 'init_route_params': ['moc_id']}),
         ]
 
     def _view_any_mode(self, db, target_objects, args, form, auth_cache):
@@ -99,7 +132,15 @@ class ClashTool(BaseTargetTool):
         non_clashes = None
 
         public = self._determine_public_constraint(db, auth_cache=auth_cache)
-        moc_ready = self._check_mocs_exist_and_ready(db, public)
+        try:
+            moc_ready = self._check_mocs_exist_and_ready(db, public)
+        except NoSuchRecord:
+            if session.get('is_admin', False):
+                # Allow site administrators to view the clash tool when
+                # "empty" so that they can set up coverage maps.
+                moc_ready = True
+            else:
+                raise ErrorPage('No coverage maps have been set up yet.')
 
         if target_objects is not None:
             (clashes, non_clashes) = self._do_moc_search(
@@ -135,12 +176,12 @@ class ClashTool(BaseTargetTool):
         Check the status of coverage maps (MOCs) for this facility.
 
         :return: True if all available MOCs are ready.
-        :raise ErrorPage: if there are no MOCs available
+        :raise NoSuchRecord: if there are no MOCs available
         """
 
         mocs = db.search_moc(facility_id=self.facility.id_, public=public)
         if not mocs:
-            raise ErrorPage('No coverage maps have been set up yet.')
+            raise NoSuchRecord('no coverage maps found')
 
         return all(AttachmentState.is_ready(x.state) for x in mocs.values())
 
@@ -253,3 +294,110 @@ class ClashTool(BaseTargetTool):
             moc_fits,
             null_tuple(FileTypeInfo)._replace(mime='application/fits'),
             '{}.fits'.format(re.sub('[^-_a-z0-9]', '_', moc.name.lower())))
+
+    def view_moc_admin(self, db):
+        mocs = db.search_moc(facility_id=self.facility.id_, public=None)
+
+        return {
+            'target_tool_name': self.get_name(),
+            'title': 'Coverage Management',
+            'mocs': mocs,
+        }
+
+    @with_verified_admin
+    def view_moc_edit(self, db, moc_id, form, file_):
+        if moc_id is None:
+            # We are uploading a new MOC -- create a blank record.
+            moc = null_tuple(MOCInfo)._replace(
+                name='', description='', description_format=FormatType.PLAIN,
+                public=True)
+            title = 'New Coverage Map'
+            target = url_for('.tool_clash_moc_new')
+
+        else:
+            # We are editing an existing MOC -- fetch its info from
+            # the database.
+            try:
+                moc = db.search_moc(
+                    facility_id=self.facility.id_, moc_id=moc_id,
+                    public=None, with_description=True).get_single()
+            except NoSuchRecord:
+                raise HTTPNotFound('Coverage map not found')
+
+            title = 'Edit {}'.format(moc.name)
+            target = url_for('.tool_clash_moc_edit', moc_id=moc_id)
+
+        message = None
+
+        if form is not None:
+            try:
+                moc = moc._replace(
+                    name=form['name'],
+                    description=form['description'],
+                    description_format=int(form['description_format']),
+                    public=('public' in form))
+
+                moc_object = None
+                if file_:
+                    try:
+                        moc_object = read_moc(
+                            file_=file_,
+                            max_order=self.facility.get_moc_order())
+                    finally:
+                        file_.close()
+
+                elif moc_id is None:
+                    raise UserError('No new MOC file was received.')
+
+                if moc_id is None:
+                    moc_id = db.add_moc(
+                        self.facility.id_, moc.name, moc.description,
+                        moc.description_format, moc.public, moc_object)
+                    flash('The new coverage map has been stored.')
+                else:
+                    db.update_moc(
+                        moc_id, name=moc.name, description=moc.description,
+                        description_format=moc.description_format,
+                        public=moc.public, moc_object=moc_object)
+
+                    if moc_object is None:
+                        flash('The coverage map details have been updated.')
+                    else:
+                        flash('The updated coverage map has been stored.')
+
+                raise HTTPRedirect(url_for('.tool_clash_moc_admin'))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'target_tool_name': self.get_name(),
+            'title': title,
+            'target': target,
+            'moc': moc,
+            'message': message,
+            'format_types': FormatType.get_options(is_system=True),
+        }
+
+    @with_verified_admin
+    def view_moc_delete(self, db, moc_id, form):
+        try:
+            moc = db.search_moc(facility_id=self.facility.id_, moc_id=moc_id,
+                                public=None).get_single()
+        except NoSuchRecord:
+            raise HTTPNotFound('Coverage map not found')
+
+        if form:
+            if 'submit_cancel' in form:
+                raise HTTPRedirect(url_for('.tool_clash_moc_admin'))
+
+            elif 'submit_confirm' in form:
+                db.delete_moc(self.facility.id_, moc_id)
+                flash('The coverage map has been deleted.')
+                raise HTTPRedirect(url_for('.tool_clash_moc_admin'))
+
+        return {
+            'target_tool_name': self.get_name(),
+            'title': 'Delete Coverage: {}'.format(moc.name),
+            'message': 'Are you sure you wish to delete this coverage map?',
+        }

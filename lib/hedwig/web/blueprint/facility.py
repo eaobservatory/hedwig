@@ -674,35 +674,6 @@ def create_facility_blueprint(db, facility):
         return facility.view_category_edit(
             db, (request.form if request.method == 'POST' else None))
 
-    @bp.route('/admin/coverage/')
-    @facility_template('moc_list.html')
-    @require_admin
-    def moc_list():
-        return facility.view_moc_list(db)
-
-    @bp.route('/admin/coverage/new', methods=['GET', 'POST'])
-    @facility_template('moc_edit.html')
-    @require_admin
-    def moc_new():
-        return facility.view_moc_edit(
-            db, None, (request.form if request.method == 'POST' else None),
-            (request.files['file'] if request.method == 'POST' else None))
-
-    @bp.route('/admin/coverage/<int:moc_id>', methods=['GET', 'POST'])
-    @facility_template('moc_edit.html')
-    @require_admin
-    def moc_edit(moc_id):
-        return facility.view_moc_edit(
-            db, moc_id, (request.form if request.method == 'POST' else None),
-            (request.files['file'] if request.method == 'POST' else None))
-
-    @bp.route('/admin/coverage/<int:moc_id>/delete', methods=['GET', 'POST'])
-    @require_admin
-    @templated('confirm.html')
-    def moc_delete(moc_id):
-        return facility.view_moc_delete(
-            db, moc_id, (request.form if request.method == 'POST' else None))
-
     @bp.route('/review/<int:reviewer_id>', methods=['GET', 'POST'])
     @require_auth(require_person=True)
     @facility_template('review_edit.html')
@@ -868,7 +839,8 @@ def make_custom_redirect(target, target_opts={}):
 def make_custom_route(db, template, func, include_args=False,
                       allow_post=False, post_files=[],
                       send_file_opts={}, extra_params=[],
-                      auth_required=False, init_route_params=[]):
+                      auth_required=False, admin_required=False,
+                      init_route_params=[]):
     """
     Create a custom view function.
 
@@ -914,5 +886,8 @@ def make_custom_route(db, template, func, include_args=False,
 
     if auth_required:
         view_func = require_auth(require_person=True)(view_func)
+
+    if admin_required:
+        view_func = require_admin(view_func)
 
     return view_func

@@ -231,6 +231,7 @@ class AdminView(object):
         # Create empty proposal cache dictionaries.
         proposals = {}
         proposal_facilities = {}
+        clash_tool_facilities = {}
 
         ctx = {k: self._add_proposal(db, v.values(), facilities,
                                      proposals, proposal_facilities)
@@ -242,7 +243,7 @@ class AdminView(object):
                 db.search_moc(
                     facility_id=None, public=None,
                     state=unready, order_by_date=True).values(),
-                facilities),
+                facilities, clash_tool_facilities),
         })
 
         return ctx
@@ -279,13 +280,22 @@ class AdminView(object):
 
         return result
 
-    def _add_moc_facility(self, entries, facilities):
+    def _add_moc_facility(self, entries, facilities, clash_tool_facilities):
         result = []
 
         for entry in entries:
             facility = facilities.get(entry.facility_id)
             if facility is None:
                 continue
+
+            has_clash_tool = clash_tool_facilities.get(facility.id)
+            if has_clash_tool is None:
+                has_clash_tool = 'clash' in (
+                    x.code for x in facility.view.target_tools.values())
+                clash_tool_facilities[facility.id] = has_clash_tool
+            if not has_clash_tool:
+                continue
+
             result.append(namedtuple(
                 'EntryWithCode', entry._fields + ('facility_code',))(
                 *entry, facility_code=facility.code))

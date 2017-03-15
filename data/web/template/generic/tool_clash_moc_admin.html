@@ -1,11 +1,11 @@
 {% extends 'layout.html' %}
-{% set navigation=['facility_admin'] %}
+{% set navigation=[(target_tool_name, url_for('.tool_clash'))] %}
 {% set help_link=url_for('help.admin_page', page_name='moc') %}
 
 {% block content %}
 
 <p>
-    <a href="{{ url_for('.moc_new') }}">New coverage map</a>
+    <a href="{{ url_for('.tool_clash_moc_new') }}">New coverage map</a>
 </p>
 
 <table>
@@ -29,8 +29,8 @@
             <td>{{ moc.num_cells }}</td>
             <td>{{ moc.area | fmt('{:0.1f}') }} sq. deg.</td>
             <td>{{ moc.state | attachment_state_name }}</td>
-            <td><a href="{{ url_for('.moc_edit', moc_id=moc.id) }}">Edit</a></td>
-            <td><a href="{{ url_for('.moc_delete', moc_id=moc.id) }}">Delete</a></td>
+            <td><a href="{{ url_for('.tool_clash_moc_edit', moc_id=moc.id) }}">Edit</a></td>
+            <td><a href="{{ url_for('.tool_clash_moc_delete', moc_id=moc.id) }}">Delete</a></td>
         </tr>
     {% endfor %}
 </table>

@@ -5,8 +5,13 @@ The "Clash Tool" is a utility which can be used to check observing
 targets for intersections with pre-defined areas of the sky.
 These areas are specified by uploading MOC files (in FITS format).
 
-To start the process, select "Clash tool coverage" from the facility
-administrative menu and then click "New coverage map".
+The sky coverage areas are managed from within the tool itself:
+to start the process, open the "Clash Tool" from the
+facility home page.
+Until some coverage areas have been defined,
+you will not be able to view the tool without administrative access.
+Follow the "Manage sky coverage" link and
+then click "New coverage map".
 You can then enter the name and a description as well as selecting the
 file to upload.
 The name will be displayed

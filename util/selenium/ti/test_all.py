@@ -323,6 +323,8 @@ class IntegrationTest(DummyConfigTestCase):
     def set_up_facility(self, facility_code):
         self.browser.get(self.base_url + facility_code)
 
+        facility_home_url = self.browser.current_url
+
         take_admin = self.browser.find_element_by_link_text('take admin')
 
         self._save_screenshot(self.admin_image_root, 'facility_home',
@@ -493,8 +495,9 @@ class IntegrationTest(DummyConfigTestCase):
             self.browser.page_source)
 
         # Upload a MOC.
-        self.browser.get(admin_menu_url)
-        self.browser.find_element_by_link_text('Clash tool coverage').click()
+        self.browser.get(facility_home_url)
+        self.browser.find_element_by_link_text('Clash Tool').click()
+        self.browser.find_element_by_link_text('Manage sky coverage').click()
 
         self.browser.find_element_by_link_text('New coverage map').click()
 
@@ -1333,6 +1336,9 @@ class IntegrationTest(DummyConfigTestCase):
         """
 
         self.browser.get(self.base_url + facility_code)
+
+        facility_home_url = self.browser.current_url
+
         self.browser.find_element_by_link_text('take admin').click()
         self.browser.find_element_by_link_text('Administrative menu').click()
 
@@ -1407,8 +1413,9 @@ class IntegrationTest(DummyConfigTestCase):
             self.browser.page_source)
 
         # Try deleting the MOC.
-        self.browser.get(admin_menu_url)
-        self.browser.find_element_by_link_text('Clash tool coverage').click()
+        self.browser.get(facility_home_url)
+        self.browser.find_element_by_link_text('Clash Tool').click()
+        self.browser.find_element_by_link_text('Manage sky coverage').click()
         self.browser.find_element_by_link_text('Delete').click()
         self.browser.find_element_by_name('submit_confirm').click()
 

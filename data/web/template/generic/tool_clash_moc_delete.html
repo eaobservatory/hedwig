@@ -1,0 +1,3 @@
+{% extends 'confirm.html' %}
+{% set navigation=[(target_tool_name, url_for('.tool_clash')), ('Coverage', url_for('.tool_clash_moc_admin'))] %}
+{% set help_link=url_for('help.admin_page', page_name='moc') %}
