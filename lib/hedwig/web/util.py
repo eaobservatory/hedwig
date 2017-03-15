@@ -34,6 +34,7 @@ from flask import Response as _FlaskResponse
 from werkzeug import exceptions as _werkzeug_exceptions
 from werkzeug import routing as _werkzeug_routing
 
+from ..compat import ExceptionWithMessage
 from ..error import UserError
 from ..type.simple import DateAndTime
 from ..type.enum import FigureType, FileTypeInfo
@@ -63,7 +64,7 @@ class HTTPRedirect(_werkzeug_routing.RequestRedirect):
     code = 303
 
 
-class ErrorPage(Exception):
+class ErrorPage(ExceptionWithMessage):
     """Exception class where an error page should be shown."""
 
     def __init__(self, fmt_string, *fmt_args, **kwargs):
