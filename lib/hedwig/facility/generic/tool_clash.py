@@ -151,7 +151,6 @@ class ClashTool(BaseTargetTool):
             'clashes': clashes,
             'non_clashes': non_clashes,
             'moc_ready': moc_ready,
-            'target_moc_info': '.tool_clash_moc_info',
         }
 
     def _determine_public_constraint(self, db, auth_cache=None):
@@ -299,7 +298,6 @@ class ClashTool(BaseTargetTool):
         mocs = db.search_moc(facility_id=self.facility.id_, public=None)
 
         return {
-            'target_tool_name': self.get_name(),
             'title': 'Coverage Management',
             'mocs': mocs,
         }
@@ -371,7 +369,6 @@ class ClashTool(BaseTargetTool):
                 message = e.message
 
         return {
-            'target_tool_name': self.get_name(),
             'title': title,
             'target': target,
             'moc': moc,
@@ -397,7 +394,6 @@ class ClashTool(BaseTargetTool):
                 raise HTTPRedirect(url_for('.tool_clash_moc_admin'))
 
         return {
-            'target_tool_name': self.get_name(),
             'title': 'Delete Coverage: {}'.format(moc.name),
             'message': 'Are you sure you wish to delete this coverage map?',
         }

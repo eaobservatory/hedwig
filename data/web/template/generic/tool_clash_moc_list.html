@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-
+{% set navigation=[(target_tool_name, url_for('.tool_' + target_tool_code))] %}
 {% set help_link=url_for('help.user_page', page_name='target', _anchor='clash-tool') %}
 
 {% block content %}
@@ -14,7 +14,7 @@
 <ul>
     {% for moc in mocs.values() %}
         <li>
-            <a href="{{ url_for('.tool_clash_moc_info', moc_id=moc.id) }}">{{ moc.name }}</a>
+            <a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_info'), moc_id=moc.id) }}">{{ moc.name }}</a>
             {% if not moc.public %}
                 <span class="label">private</span>
             {% endif %}

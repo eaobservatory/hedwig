@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% set navigation=[('Coverage List', url_for('.tool_clash_moc_list'))] %}
+{% set navigation=[(target_tool_name, url_for('.tool_' + target_tool_code)), ('Coverage list', url_for(target_tool_code | fmt('.tool_{}_moc_list')))] %}
 {% set help_link=url_for('help.user_page', page_name='target', _anchor='clash-tool') %}
 {% set scripts=['formtip'] %}
 
@@ -62,7 +62,7 @@
     </p>
 
     <p>
-        <a href="{{ url_for('.tool_clash_moc_fits', moc_id=moc.id) }}">Download coverage MOC FITS file</a>
+        <a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_fits'), moc_id=moc.id) }}">Download coverage MOC FITS file</a>
     </p>
 </nav>
 

@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% set navigation=[(target_tool_name, url_for('.tool_clash')), ('Coverage', url_for('.tool_clash_moc_admin'))] %}
+{% set navigation=[(target_tool_name, url_for('.tool_' + target_tool_code)), ('Coverage management', url_for(target_tool_code | fmt('.tool_{}_moc_admin')))] %}
 {% set help_link=url_for('help.admin_page', page_name='moc') %}
 
 {% from 'macro/text.html' import render_format_control %}

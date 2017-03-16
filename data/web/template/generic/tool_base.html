@@ -24,7 +24,7 @@
 {% endblock %}
 
 {% if show_input %}
-    <form method="POST" action="{{ target_url }}" {{ 'enctype="multipart/form-data"' | safe if show_input_upload }}>
+    <form method="POST" action="{{ url_for(target_tool_code | fmt('.tool_{}_upload' if show_input_upload else '.tool_{}'))}}" {{ 'enctype="multipart/form-data"' | safe if show_input_upload }}>
     {% block tool_input %}
         <section>
             <h2>Input</h2>
@@ -79,13 +79,15 @@
     {% endblock %}
     </form>
 
-    {% if target_upload %}
-        <nav>
-            <p>
-                <a href="{{ target_upload }}">Upload a target list</a>
-            </p>
-        </nav>
-    {% endif %}
+    <nav>
+        <p>
+            {% if show_input_upload %}
+                <a href="{{ url_for(target_tool_code | fmt('.tool_{}')) }}">Check a single target</a>
+            {% else %}
+                <a href="{{ url_for(target_tool_code | fmt('.tool_{}_upload')) }}">Upload a target list</a>
+            {% endif %}
+        </p>
+    </nav>
 {% endif %}
 
 {% block tool_footer %}

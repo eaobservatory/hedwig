@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from flask import Blueprint, request
 
+from ...error import FormattedError
 from ...type.enum import FigureType
 from ...type.simple import CalculatorInfo, TargetToolInfo
 from ..util import HTTPRedirect, \
@@ -754,9 +755,10 @@ def create_facility_blueprint(db, facility):
         tool_code = tool_class.get_code()
         tool_id = 0  # TODO: db.ensure_target_tool(facility.id, tool_code)
         tool = tool_class(facility, tool_id)
+        tool_name = tool.get_name()
 
         facility.target_tools[tool_id] = TargetToolInfo(
-            tool_id, tool_code, tool.get_name(), tool)
+            tool_id, tool_code, tool_name, tool)
 
         # Prepare information to generate list of templates to use.
         template_params = [(code, tool_code)]
@@ -768,12 +770,18 @@ def create_facility_blueprint(db, facility):
 
         template_params.append(('generic', 'base'))
 
+        extra_context = {
+            'target_tool_code': tool_code,
+            'target_tool_name': tool_name,
+        }
+
         bp.add_url_rule(
             '/tool/{}'.format(tool_code),
             'tool_{}'.format(tool_code),
             make_custom_route(
                 db, ['{}/tool_{}.html'.format(*x) for x in template_params],
-                tool.view_single, include_args=True, allow_post=True),
+                tool.view_single, include_args=True, allow_post=True,
+                extra_context=extra_context),
             methods=['GET', 'POST'])
 
         bp.add_url_rule(
@@ -782,7 +790,8 @@ def create_facility_blueprint(db, facility):
             make_custom_route(
                 db, ['{}/tool_{}.html'.format(*x) for x in template_params],
                 tool.view_upload, include_args=True,
-                allow_post=True, post_files=['file']),
+                allow_post=True, post_files=['file'],
+                extra_context=extra_context),
             methods=['GET', 'POST'])
 
         bp.add_url_rule(
@@ -791,7 +800,8 @@ def create_facility_blueprint(db, facility):
             make_custom_route(
                 db, ['{}/tool_{}.html'.format(*x) for x in template_params],
                 tool.view_proposal, include_args=True, auth_required=True,
-                init_route_params=['proposal_id']))
+                init_route_params=['proposal_id'],
+                extra_context=extra_context))
 
         for route in tool.get_custom_routes():
             options = {}
@@ -807,6 +817,8 @@ def create_facility_blueprint(db, facility):
                      else ['{}/tool_{}_{}'.format(*(x + (route.template,)))
                            for x in template_params]),
                     route.func,
+                    extra_context=(None if route.template is None
+                                   else extra_context),
                     **route.options),
                 **options)
 
@@ -840,7 +852,7 @@ def make_custom_route(db, template, func, include_args=False,
                       allow_post=False, post_files=[],
                       send_file_opts={}, extra_params=[],
                       auth_required=False, admin_required=False,
-                      init_route_params=[]):
+                      init_route_params=[], extra_context=None):
     """
     Create a custom view function.
 
@@ -862,6 +874,9 @@ def make_custom_route(db, template, func, include_args=False,
     Otherwise it is assumed that a file is being generated
     and the :func:`~hedwig.web.util.send_file` decorator is
     applied instead, with the given `send_file_opts`.
+
+    If `extra_context` is specified, the context dictionary returned by the
+    view function is updated using it (like a context processor).
     """
 
     def view_func(**kwargs):
@@ -876,9 +891,18 @@ def make_custom_route(db, template, func, include_args=False,
             for post_file in post_files:
                 args.append(request.files[post_file]
                             if request.method == 'POST' else None)
-        return func(*args, **kwargs)
+
+        ctx = func(*args, **kwargs)
+
+        if extra_context is not None:
+            ctx.update(extra_context)
+
+        return ctx
 
     if template is None:
+        if extra_context is not None:
+            raise FormattedError(
+                'custom file route for {!r} has extra context', func)
         view_func = send_file(**send_file_opts)(view_func)
 
     else:
