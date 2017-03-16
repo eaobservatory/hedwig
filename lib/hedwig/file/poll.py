@@ -62,7 +62,7 @@ def process_moc(db):
                 continue
 
         except Exception as e:
-            logger.error('Error importing MOC {}: {}', moc_info.id, e.message)
+            logger.error('Error importing MOC {}: {!s}', moc_info.id, e)
             db.update_moc(moc_id=moc_info.id, state=AttachmentState.ERROR)
 
     return n_processed
@@ -161,8 +161,7 @@ def process_proposal_figure(db):
                 continue
 
         except Exception as e:
-            logger.error('Error converting figure {}: {}',
-                         figure_info.id, e.message)
+            logger.error('Error converting figure {}: {!s}', figure_info.id, e)
             db.update_proposal_figure(
                 proposal_id=None, role=None, fig_id=figure_info.id,
                 state=AttachmentState.ERROR)
@@ -221,7 +220,7 @@ def process_proposal_pdf(db):
                 continue
 
         except Exception as e:
-            logger.error('Error converting PDF {}: {}', pdf.id, e.message)
+            logger.error('Error converting PDF {}: {!s}', pdf.id, e)
             db.update_proposal_pdf(pdf.id, state=AttachmentState.ERROR)
 
     return n_processed
