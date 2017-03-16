@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -657,17 +657,7 @@ class HeterodyneCalculator(JCMTCalculator):
                 raise CalculatorError('Unknown mode.')
 
         except HeterodyneITCError as e:
-            raise UserError(e.message)
-
-        except ZeroDivisionError:
-            raise UserError(
-                'Division by zero error occurred during calculation.')
-
-        except ValueError as e:
-            if e.message == 'math domain error':
-                raise UserError(
-                    'Negative square root error occurred during calculation.')
-            raise
+            raise UserError(e.args[0])
 
         weather_band_comparison = OrderedDict()
         kwargs['with_extra_output'] = False
@@ -702,10 +692,6 @@ class HeterodyneCalculator(JCMTCalculator):
                                 **kwargs)
 
                 except HeterodyneITCError as e:
-                    pass
-                except ZeroDivisionError:
-                    pass
-                except ValueError:
                     pass
 
                 weather_band_result[condition_name] = condition_result
