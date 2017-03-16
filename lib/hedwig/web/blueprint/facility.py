@@ -711,9 +711,10 @@ def create_facility_blueprint(db, facility):
         calculator_code = calculator_class.get_code()
         calculator_id = db.ensure_calculator(facility.id_, calculator_code)
         calculator = calculator_class(facility, calculator_id)
+        calculator_name = calculator.get_name()
 
         facility.calculators[calculator_id] = CalculatorInfo(
-            calculator_id, calculator_code, calculator.get_name(),
+            calculator_id, calculator_code, calculator_name,
             calculator, calculator.modes)
 
         # Prepare information to generate list of templates to use.
@@ -725,6 +726,11 @@ def create_facility_blueprint(db, facility):
             template_params.append((default_facility_code, calculator_code))
 
         template_params.append(('generic', 'base'))
+
+        extra_context = {
+            'calculator_code': calculator_code,
+            'calculator_name': calculator_name,
+        }
 
         # Create redirect for calculator to its default (first) mode.
         bp.add_url_rule(
@@ -747,7 +753,8 @@ def create_facility_blueprint(db, facility):
                     ['{}/calculator_{}.html'.format(*x)
                      for x in template_params],
                     calculator.view, include_args=True, allow_post=True,
-                    extra_params=[calculator_mode_id]),
+                    extra_params=[calculator_mode_id],
+                    extra_context=extra_context),
                 methods=['GET', 'POST'])
 
     # Configure the facility's target tools.

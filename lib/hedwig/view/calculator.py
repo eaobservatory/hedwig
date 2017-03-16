@@ -279,8 +279,6 @@ class BaseCalculator(object):
 
         ctx = {
             'title': self.get_name(),
-            'target': url_for('.calc_{}_{}'.format(self.get_code(),
-                                                   self.modes[mode].code)),
             'message': message,
             'modes': self.modes,
             'current_mode': mode,

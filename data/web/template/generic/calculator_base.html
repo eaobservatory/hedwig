@@ -54,7 +54,7 @@
     {% endif %}
 {% endblock %}
 
-<form method="POST" action="{{ target }}">
+<form method="POST" action="{{ url_for((calculator_code, modes[current_mode].code) | fmt('.calc_{}_{}')) }}">
 
 {% block calculator_input %}
     <section>
