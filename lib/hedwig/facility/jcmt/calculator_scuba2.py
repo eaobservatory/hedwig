@@ -396,33 +396,6 @@ class SCUBA2Calculator(JCMTCalculator):
 
                 output = {'time': time_tot / 3600.0}
 
-                # Make weather band comparison table.
-                weather_band_comparison = OrderedDict()
-                for (weather_band, weather_band_info) in \
-                        JCMTWeather.get_available().items():
-                    weather_band_result = {}
-                    for condition_name in ('rep', 'min', 'max'):
-                        condition_tau = getattr(weather_band_info,
-                                                condition_name)
-                        if condition_tau is None:
-                            weather_band_result[condition_name] = None
-                            continue
-
-                        try:
-                            weather_band_result[condition_name] = \
-                                self.itc.calculate_total_time(
-                                    map_mode, filter_, condition_tau, airmass,
-                                    factor, rms) / 3600.0
-
-                        except SCUBA2ITCError:
-                            weather_band_result[condition_name] = None
-
-                    weather_band_comparison[weather_band] = weather_band_result
-
-                extra['wb_comparison'] = weather_band_comparison
-                extra['wb_comparison_format'] = '{:.3f}'
-                extra['wb_comparison_unit'] = 'hours'
-
             elif mode == self.CALC_RMS:
                 # Convert time to seconds.
                 time_tot = input_['time'] * 3600.0
@@ -439,38 +412,49 @@ class SCUBA2Calculator(JCMTCalculator):
                 extra['time_src'] = extra_output.pop('time_src') / 3600.0
                 extra.update(extra_output)
 
-                # Make weather band comparison table.
-                weather_band_comparison = OrderedDict()
-                for (weather_band, weather_band_info) in \
-                        JCMTWeather.get_available().items():
-                    weather_band_result = {}
-                    for condition_name in ('rep', 'min', 'max'):
-                        condition_tau = getattr(weather_band_info,
-                                                condition_name)
-                        if condition_tau is None:
-                            weather_band_result[condition_name] = None
-                            continue
-
-                        try:
-                            weather_band_result[condition_name] = \
-                                self.itc.calculate_rms_for_total_time(
-                                    map_mode, 850, condition_tau, airmass,
-                                    factor, time_tot)
-
-                        except SCUBA2ITCError:
-                            weather_band_result[condition_name] = None
-
-                    weather_band_comparison[weather_band] = weather_band_result
-
-                extra['wb_comparison'] = weather_band_comparison
-                extra['wb_comparison_format'] = '{:.3f}'
-                extra['wb_comparison_unit'] = 'mJy/beam'
-
             else:
                 raise CalculatorError('Unknown mode.')
 
         except SCUBA2ITCError as e:
             raise UserError(e.args[0])
+
+        # Make weather band comparison table.
+        weather_band_comparison = OrderedDict()
+        for (weather_band, weather_band_info) in \
+                JCMTWeather.get_available().items():
+            weather_band_result = {}
+            for condition_name in ('rep', 'min', 'max'):
+                condition_result = None
+                condition_tau = getattr(weather_band_info,
+                                        condition_name)
+
+                try:
+                    if condition_tau is None:
+                        pass
+
+                    elif mode == self.CALC_TIME:
+                        condition_result = \
+                            self.itc.calculate_total_time(
+                                map_mode, filter_, condition_tau, airmass,
+                                factor, rms) / 3600.0
+
+                    elif mode == self.CALC_RMS:
+                        condition_result = \
+                            self.itc.calculate_rms_for_total_time(
+                                map_mode, 850, condition_tau, airmass,
+                                factor, time_tot)
+
+                except SCUBA2ITCError:
+                    pass
+
+                weather_band_result[condition_name] = condition_result
+
+            weather_band_comparison[weather_band] = weather_band_result
+
+        primary_output = self.get_outputs(mode)[0]
+        extra['wb_comparison'] = weather_band_comparison
+        extra['wb_comparison_format'] = primary_output.format
+        extra['wb_comparison_unit'] = primary_output.unit
 
         return CalculatorResult(output, extra)
 
