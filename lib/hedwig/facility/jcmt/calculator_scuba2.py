@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -354,6 +354,7 @@ class SCUBA2Calculator(JCMTCalculator):
         """
 
         map_mode = input_['map']
+        tau_225 = input_['tau']
         extra = {}
 
         # Determine sampling factors.
@@ -381,41 +382,17 @@ class SCUBA2Calculator(JCMTCalculator):
             extra['airmass'] = airmass
 
         try:
-            # Determine tau and transmission at each wavelength.
-            tau = {}
-            transmission = {}
-            for filter_ in (850, 450):
-                tau_wl = self.itc.calculate_tau(filter_, input_['tau'])
-                tau[filter_] = tau_wl
-                extra['tau_{}'.format(filter_)] = tau_wl
-
-                transmission_wl = self.itc.calculate_transmission(airmass,
-                                                                  tau_wl)
-                transmission[filter_] = transmission_wl
-                extra['trans_{}'.format(filter_)] = transmission_wl
-
             # Perform calculation.
             if mode == self.CALC_TIME:
                 filter_ = input_['wl']
-                filter_alt = 850 if filter_ == 450 else 450
+                rms = input_['rms']
 
-                time_src = self.itc.calculate_time(
-                    map_mode, filter_, transmission[filter_], factor[filter_],
-                    input_['rms'])
+                (time_tot, extra_output) = self.itc.calculate_total_time(
+                    map_mode, filter_, tau_225, airmass, factor, rms,
+                    with_extra_output=True)
 
-                extra['time_src'] = time_src / 3600.0
-
-                # Ignore errors calculating the alternate filter RMS.
-                try:
-                    extra['wl_alt'] = filter_alt
-                    extra['rms_alt'] = self.itc.calculate_rms(
-                        map_mode, filter_alt, transmission[filter_alt],
-                        factor[filter_alt], time_src)
-                except SCUBA2ITCError:
-                    pass
-
-                time_tot = time_src + self.itc.estimate_overhead(map_mode,
-                                                                 time_src)
+                extra['time_src'] = extra_output.pop('time_src') / 3600.0
+                extra.update(extra_output)
 
                 output = {'time': time_tot / 3600.0}
 
@@ -432,16 +409,10 @@ class SCUBA2Calculator(JCMTCalculator):
                             continue
 
                         try:
-                            transmission = self.itc.calculate_transmission(
-                                airmass,
-                                self.itc.calculate_tau(filter_, condition_tau))
-                            time_src = self.itc.calculate_time(
-                                map_mode, filter_, transmission,
-                                factor[filter_], input_['rms'])
-                            time_tot = time_src + self.itc.estimate_overhead(
-                                map_mode, time_src)
                             weather_band_result[condition_name] = \
-                                time_tot / 3600.0
+                                self.itc.calculate_total_time(
+                                    map_mode, filter_, condition_tau, airmass,
+                                    factor, rms) / 3600.0
 
                         except SCUBA2ITCError:
                             weather_band_result[condition_name] = None
@@ -456,23 +427,17 @@ class SCUBA2Calculator(JCMTCalculator):
                 # Convert time to seconds.
                 time_tot = input_['time'] * 3600.0
 
-                time_src = time_tot - self.itc.estimate_overhead(
-                    map_mode, time_tot, from_total=True)
-                extra['time_src'] = time_src / 3600.0
+                (rms, extra_output) = self.itc.calculate_rms_for_total_time(
+                    map_mode, 850, tau_225, airmass, factor, time_tot,
+                    with_extra_output=True)
 
                 output = {
-                    'rms_850': self.itc.calculate_rms(
-                        map_mode, 850, transmission[850], factor[850],
-                        time_src),
-                    'rms_450': None,
+                    'rms_850': rms,
+                    'rms_450': extra_output.pop('rms_alt', None),
                 }
 
-                try:
-                    output['rms_450'] = self.itc.calculate_rms(
-                        map_mode, 450, transmission[450], factor[450],
-                        time_src)
-                except SCUBA2ITCError:
-                    pass
+                extra['time_src'] = extra_output.pop('time_src') / 3600.0
+                extra.update(extra_output)
 
                 # Make weather band comparison table.
                 weather_band_comparison = OrderedDict()
@@ -487,13 +452,10 @@ class SCUBA2Calculator(JCMTCalculator):
                             continue
 
                         try:
-                            transmission = self.itc.calculate_transmission(
-                                airmass,
-                                self.itc.calculate_tau(850, condition_tau))
                             weather_band_result[condition_name] = \
-                                self.itc.calculate_rms(
-                                    map_mode, 850, transmission, factor[850],
-                                    time_src)
+                                self.itc.calculate_rms_for_total_time(
+                                    map_mode, 850, condition_tau, airmass,
+                                    factor, time_tot)
 
                         except SCUBA2ITCError:
                             weather_band_result[condition_name] = None
@@ -508,17 +470,7 @@ class SCUBA2Calculator(JCMTCalculator):
                 raise CalculatorError('Unknown mode.')
 
         except SCUBA2ITCError as e:
-            raise UserError(e.message)
-
-        except ZeroDivisionError:
-            raise UserError(
-                'Division by zero error occurred during calculation.')
-
-        except ValueError as e:
-            if e.message == 'math domain error':
-                raise UserError(
-                    'Negative square root error occurred during calculation.')
-            raise
+            raise UserError(e.args[0])
 
         return CalculatorResult(output, extra)
 
