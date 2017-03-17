@@ -231,10 +231,12 @@ def test_server(args):
     options = {
         'port': args['--port'],
     }
+    app_options = {}
 
     if args['--debug']:
         options['host'] = '127.0.0.1'
         options['debug'] = True
+        app_options['auto_reload_templates'] = True
 
     else:
         options['host'] = '0.0.0.0'
@@ -249,7 +251,7 @@ def test_server(args):
 
         options['ssl_context'] = context
 
-    app = create_web_app()
+    app = create_web_app(**app_options)
     app.run(**options)
 
 

@@ -39,7 +39,8 @@ from .blueprint.people import create_people_blueprint
 from .blueprint.query import create_query_blueprint
 
 
-def create_web_app(db=None, facility_spec=None, _test_return_extra=False):
+def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
+                   _test_return_extra=False):
     """
     Function to prepare the Flask web application.
 
@@ -48,6 +49,8 @@ def create_web_app(db=None, facility_spec=None, _test_return_extra=False):
     :param facility_spec: facility specification used to construct the
         facility list (via :func:`hedwig.config.get_config`) and database
         object (if not given, via :func:`hedwig.config.get_database`).
+    :param auto_reload_templates: Configure whether Jinja2 should automatically
+        reload template files.  (Only applies with Flask 0.11 or later.)
     :param _test_return_extra: if true, instead of just returning the
         application object, return a dictionary of values useful for
         debugging.  (Currently just returns the output of `locals()`.)
@@ -106,6 +109,11 @@ def create_web_app(db=None, facility_spec=None, _test_return_extra=False):
         app.logger.warning('Generating temporary secret key')
         secret_key = os.urandom(32)
     app.secret_key = secret_key
+
+    # Configure template reloading.  Note we must do this before we set up
+    # custom template filters. (Otherwise we could rely on Flask doing this
+    # automatically when we run the application with debog=True.)
+    app.config['TEMPLATES_AUTO_RELOAD'] = auto_reload_templates
 
     # Set up routing converters.
     app.url_map.converters['hedwig_group'] = make_enum_converter(GroupType)
