@@ -9,14 +9,18 @@
             <label for="a">{{ value.name }}</label>
             {% if value.code == 'map' %}
                 <select name="map">
-                    {% for mode_code, mode_name in map_modes.items() %}
-                        <option value="{{ mode_code }}" {{ 'selected="selected"' | safe if mode_code == input }}>{{ mode_name }}</option>
+                    {% for mode_code, mode_info in map_modes.items() %}
+                        <option value="{{ mode_code }}" {{ 'selected="selected"' | safe if mode_code == input }} data-pix850="{{ mode_info.pix_850 }}" data-pix450="{{ mode_info.pix_450 }}">{{ mode_info.description }}</option>
                     {% endfor %}
                 </select>
             {% elif value.code == 'pos' %}
                 <input type="number" name="{{ value.code }}" value="{{ input }}" min="-90" max="90" step="any" />
-            {% elif value.code == 'mf' %}
-                <input type="checkbox" name="mf" value="yes" {{ 'checked="checked"' | safe if input }} />
+            {% elif value.code == 'samp' %}
+                <select name="samp">
+                    <option value="map" {{ 'selected="selected"' | safe if input == 'map' }}>Map-type-specific recommendation</option>
+                    <option value="mf" {{ 'selected="selected"' | safe if input == 'mf' }}>Matched filter</option>
+                    <option value="custom" {{ 'selected="selected"' | safe if input == 'custom' }}>Custom pixel size</option>
+                </select>
             {% elif value.code == 'tau' %}
                 <select name="tau_band">
                     {% for (band_num, band_info) in weather_bands.items() %}
@@ -41,7 +45,7 @@
                     {% endfor %}
                 </select>
             {% elif value.code == 'pix850' or value.code == 'pix450' %}
-                <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="any" {{ 'disabled="disabled"' | safe if input_values.mf }} data-default="{{ default[value.code] }}" />
+                <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="any" />
             {% else %}
                 <input type="text" name="{{ value.code }}" value="{{ input }}" />
             {% endif %}
@@ -74,16 +78,27 @@
                         </p>
                     </div>
                 </div>
-            {% elif value.code == 'mf' %}
+            {% elif value.code == 'samp' %}
                 <div class="formtip">
                     <div>
                         <p>
-                            For point-source detections, the signal-to-noise ratio
-                            can be improved by applying a matched-beam filter.
+                            The ITC works in terms of the noise level of each pixel in your final
+                            map.
                         </p>
                         <p>
+                            For point-source detections, the signal-to-noise ratio
+                            can be improved by applying a matched-beam filter.
                             If you select this option, the ITC will apply
                             suitable sampling factors for the use of this filter.
+                        </p>
+                        <p>
+                            To work with a specific pixelization scheme you
+                            can enter custom pixel sizes.
+                            Note that pixels smaller than required for
+                            Nyquist sampling (6.5" at 850&nbsp;&#x00b5;m and 4" at 450&nbsp;&#x00b5;m)
+                            &mdash; as are often used for initial data reduction &mdash;
+                            give an over-sampled map and correspondingly higher noise
+                            level.
                         </p>
                         <p>
                             <a href="http://www.eaobservatory.org/jcmt/instrumentation/continuum/scuba-2/time-and-sensitivity/" target="_blank">SCUBA-2 sensitivity</a>

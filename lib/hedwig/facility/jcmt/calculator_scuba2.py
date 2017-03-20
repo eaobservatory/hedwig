@@ -24,6 +24,7 @@ import time
 
 from jcmt_itc_scuba2 import SCUBA2ITC, SCUBA2ITCError
 
+from ...compat import first_value
 from ...error import CalculatorError, UserError
 from ...type.misc import SectionedList
 from ...type.simple import CalculatorMode, CalculatorResult, CalculatorValue
@@ -41,10 +42,7 @@ class SCUBA2Calculator(JCMTCalculator):
         (CALC_RMS,  CalculatorMode('rms',  'RMS expected in given time')),
     ))
 
-    default_pix850 = 4.0
-    default_pix450 = 2.0
-
-    version = 1
+    version = 2
 
     @classmethod
     def get_code(cls):
@@ -69,6 +67,12 @@ class SCUBA2Calculator(JCMTCalculator):
 
         self.itc = SCUBA2ITC()
 
+        self.map_modes = self.itc.get_modes()
+
+        default_mode = first_value(self.map_modes)
+        self.default_pix850 = default_mode.pix_850
+        self.default_pix450 = default_mode.pix_450
+
     def get_name(self):
         return 'SCUBA-2 ITC'
 
@@ -86,38 +90,51 @@ class SCUBA2Calculator(JCMTCalculator):
 
         inputs = SectionedList()
 
-        if version == 1:
-            inputs.extend([
-                CalculatorValue(
-                    'pos',    'Source position', 'Pos.', '{:.1f}', '\u00b0'),
-                CalculatorValue(
-                    'pos_type', 'Source position type',
-                    'Pos. type', '{}', None),
-                CalculatorValue(
-                    'tau',    '225 GHz opacity',
-                    '\u03c4\u2082\u2082\u2085', '{}', None),
-            ], section='src', section_name='Source and Conditions')
+        inputs.extend([
+            CalculatorValue(
+                'pos',    'Source position', 'Pos.', '{:.1f}', '\u00b0'),
+            CalculatorValue(
+                'pos_type', 'Source position type',
+                'Pos. type', '{}', None),
+            CalculatorValue(
+                'tau',    '225 GHz opacity',
+                '\u03c4\u2082\u2082\u2085', '{}', None),
+        ], section='src', section_name='Source and Conditions')
 
+        inputs.extend([
+            CalculatorValue(
+                'map', 'Map type', 'Map', '{}', None),
+        ], section='obs', section_name='Observation')
+
+        if version == 2:
             inputs.extend([
                 CalculatorValue(
-                    'map',    'Map type', 'Map', '{}', None),
+                    'samp', 'Map sampling',
+                    'Samp.', '{}', None),
+            ], section='obs')
+
+        elif version == 1:
+            inputs.extend([
                 CalculatorValue(
-                    'mf',     'Matched filter',
+                    'mf', 'Matched filter',
                     'Match. filt.', '{}', None),
-                CalculatorValue(
-                    'pix850', '850 \u00b5m pixel size',
-                    'Pixel\u2088\u2085\u2080', '{}', '"'),
-                CalculatorValue(
-                    'pix450', '450 \u00b5m pixel size',
-                    'Pixel\u2084\u2085\u2080', '{}', '"'),
-            ], section='obs', section_name='Observation')
+            ], section='obs')
         else:
             raise CalculatorError('Unknown version.')
+
+        inputs.extend([
+            CalculatorValue(
+                'pix850', '850 \u00b5m pixel size',
+                'Pixel\u2088\u2085\u2080', '{}', '"'),
+            CalculatorValue(
+                'pix450', '450 \u00b5m pixel size',
+                'Pixel\u2084\u2085\u2080', '{}', '"'),
+        ], section='obs')
 
         inputs.add_section('req', 'Requirement')
 
         if mode == self.CALC_TIME:
-            if version == 1:
+            if version in (1, 2):
                 inputs.extend([
                     CalculatorValue(
                         'wl',  'Wavelength', '\u03bb', '{}', '\u00b5m'),
@@ -129,7 +146,7 @@ class SCUBA2Calculator(JCMTCalculator):
                 raise CalculatorError('Unknown version.')
 
         elif mode == self.CALC_RMS:
-            if version == 1:
+            if version in (1, 2):
                 inputs.extend([
                     CalculatorValue(
                         'time', 'Observing time', 'Time', '{:.3f}', 'hours'),
@@ -152,9 +169,9 @@ class SCUBA2Calculator(JCMTCalculator):
             ('pos', 40.0),
             ('pos_type', 'dec'),
             ('tau', 0.065),
+            ('samp', 'map'),
             ('pix850', self.default_pix850),
             ('pix450', self.default_pix450),
-            ('mf', False),
         ]
 
         if mode == self.CALC_TIME:
@@ -182,7 +199,7 @@ class SCUBA2Calculator(JCMTCalculator):
             x.code:
                 x.format.format(values[x.code] if values[x.code] is not None
                                 else defaults.get(x.code))
-                if x.code not in ('map', 'mf', 'wl')
+                if x.code not in ('map', 'samp', 'wl')
                 else values[x.code]
             for x in inputs
         }
@@ -199,13 +216,9 @@ class SCUBA2Calculator(JCMTCalculator):
         values = {}
 
         for input_ in inputs:
-            if input_.code == 'mf':
-                values[input_.code] = input_.code in form
-
-            elif input_.code == 'pix850' or input_.code == 'pix450':
-                # These aren't present in the form if matched filter is
-                # selected.
-                if 'mf' in form:
+            if input_.code == 'pix850' or input_.code == 'pix450':
+                # These aren't present in the form unless samp is "custom".
+                if form['samp'] != 'custom':
                     values[input_.code] = (
                         self.default_pix850 if input_.code == 'pix850' else
                         self.default_pix450)
@@ -256,6 +269,15 @@ class SCUBA2Calculator(JCMTCalculator):
         used with the current version of the calculator.
         """
 
+        if old_version == 1:
+            input_ = input_.copy()
+
+            if input_.pop('mf'):
+                input_['samp'] = 'mf'
+
+            else:
+                input_['samp'] = 'custom'
+
         return input_
 
     def get_outputs(self, mode, version=None):
@@ -268,7 +290,7 @@ class SCUBA2Calculator(JCMTCalculator):
             version = self.version
 
         if mode == self.CALC_TIME:
-            if version == 1:
+            if version in (1, 2):
                 return [
                     CalculatorValue(
                         'time', 'Observing time', 'Time', '{:.3f}', 'hours'),
@@ -277,7 +299,7 @@ class SCUBA2Calculator(JCMTCalculator):
                 raise CalculatorError('Unknown version.')
 
         elif mode == self.CALC_RMS:
-            if version == 1:
+            if version in (1, 2):
                 return [
                     CalculatorValue(
                         'rms_850', '850 \u00b5m sensitivity',
@@ -299,11 +321,7 @@ class SCUBA2Calculator(JCMTCalculator):
 
         return {
             'weather_bands': JCMTWeather.get_available(),
-            'map_modes': self.itc.get_modes(),
-            'default': {
-                'pix850': self.default_pix850,
-                'pix450': self.default_pix450,
-            },
+            'map_modes': self.map_modes,
             'position_types': self.position_type,
         }
 
@@ -335,8 +353,8 @@ class SCUBA2Calculator(JCMTCalculator):
 
         self._validate_position(parsed['pos'], parsed['pos_type'])
 
-        # Remove irrelevant pixel sizes when using matched filter.
-        if parsed['mf']:
+        # Remove irrelevant pixel sizes when not using custom pixels.
+        if parsed['samp'] != 'custom':
             parsed['pix850'] = None
             parsed['pix450'] = None
 
@@ -358,11 +376,26 @@ class SCUBA2Calculator(JCMTCalculator):
         extra = {}
 
         # Determine sampling factors.
-        if input_['mf']:
+        if input_['samp'] == 'mf':
             factor = {850: 5, 450: 8}
+
+        elif input_['samp'] in ('custom', 'map'):
+            if input_['samp'] == 'custom':
+                pix_850 = input_['pix850']
+                pix_450 = input_['pix450']
+
+            else:
+                mode_info = self.map_modes.get(map_mode)
+                if mode_info is None:
+                    raise UserError('Unknown map type.')
+                pix_850 = mode_info.pix_850
+                pix_450 = mode_info.pix_450
+
+            factor = {850: (pix_850 / 4) ** 2,
+                      450: (pix_450 / 2) ** 2}
+
         else:
-            factor = {850: (input_['pix850'] / 4) ** 2,
-                      450: (input_['pix450'] / 2) ** 2}
+            raise UserError('Unknown map sampling option.')
 
         extra['f_850'] = factor[850]
         extra['f_450'] = factor[450]
@@ -460,3 +493,22 @@ class SCUBA2Calculator(JCMTCalculator):
 
     def condense_calculation(self, mode, version, calculation):
         self._condense_merge_values(calculation, (('pos', 'pos_type'),))
+
+        if version == 2:
+            # Condense map sampling input.
+            inputs = calculation.inputs.get_section('obs')
+            samp = calculation.input['samp']
+            values = {v.code: i for (i, v) in enumerate(inputs)}
+            to_remove = []
+
+            if (samp == 'map') or (samp == 'custom'):
+                del calculation.input['samp']
+                to_remove.append(values['samp'])
+
+            elif (samp == 'mf'):
+                calculation.input['samp'] = True
+                inputs[values['samp']] = inputs[values['samp']]._replace(
+                    name='Matched filter', abbr='Match. filt.')
+
+            for i in sorted(to_remove, reverse=True):
+                del inputs[i]

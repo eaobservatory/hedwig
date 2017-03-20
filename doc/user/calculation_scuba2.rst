@@ -31,13 +31,18 @@ For the map type, select the
 `SCUBA-2 observing mode <http://www.eaobservatory.org/jcmt/instrumentation/continuum/scuba-2/observing-modes/>`_
 which you would like to use.
 
-If you plan to use the matched filter, you should tick the
-"Matched filter" box and the calculator will use
+Next select the map sampling scheme for which you
+wish to perform the calculation.
+By default, recommended pixel sizes for the selected map type are used.
+If you plan to use the matched filter, you should select
+"Matched filter" and the calculator will use
 sampling factors appropriate for this filter
 (:math:`f_{850} = 5` and :math:`f_{450}=8` --- please see the
 `SCUBA-2 sensitivity page <http://www.eaobservatory.org/jcmt/instrumentation/continuum/scuba-2/time-and-sensitivity/>`_
 for more information).
-Otherwise enter the pixel sizes you intend to use.
+Otherwise, if you have specific pixel sizes which you intend to use,
+you can select "Custom pixel size" and then enter the
+size to use at each wavelength.
 
 Requirement
 -----------
