@@ -177,6 +177,8 @@ div.formtip > a {
     color: #FFF;
     padding: 0ex 1ex 0ex 1ex;
     border-radius: 1ex;
+    user-select: none;
+    -moz-user-select: none;
 }
 
 div.formtip > div {
@@ -200,6 +202,8 @@ div.formtip > div > a {
     padding: 0ex 1ex 0ex 1ex;
     border-radius: 1ex;
     cursor: pointer;
+    user-select: none;
+    -moz-user-select: none;
 }
 
 div.hovertable {
