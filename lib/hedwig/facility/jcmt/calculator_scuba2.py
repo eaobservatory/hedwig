@@ -496,19 +496,16 @@ class SCUBA2Calculator(JCMTCalculator):
 
         if version == 2:
             # Condense map sampling input.
-            inputs = calculation.inputs.get_section('obs')
             samp = calculation.input['samp']
-            values = {v.code: i for (i, v) in enumerate(inputs)}
-            to_remove = []
 
             if (samp == 'map') or (samp == 'custom'):
                 del calculation.input['samp']
-                to_remove.append(values['samp'])
+                calculation.inputs.delete_item_where(
+                    (lambda x: x.code == 'samp'))
 
             elif (samp == 'mf'):
                 calculation.input['samp'] = True
-                inputs[values['samp']] = inputs[values['samp']]._replace(
-                    name='Matched filter', abbr='Match. filt.')
-
-            for i in sorted(to_remove, reverse=True):
-                del inputs[i]
+                calculation.inputs.replace_item_where(
+                    (lambda x: x.code == 'samp'),
+                    (lambda x: x._replace(name='Matched filter',
+                                          abbr='Match. filt.')))

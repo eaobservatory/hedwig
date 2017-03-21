@@ -78,42 +78,33 @@ class JCMTCalculator(BaseCalculator):
         values in each of those pairs.
         """
 
-        # Iterate through the calculation inputs by section because this is
-        # more efficient than using SectionedList's indexing operations.
-        for section in calculation.inputs.by_section():
-            inputs = section.items
+        # Go through the collection of pairs, and if we have both entries,
+        # merge them.
+        for (val_a, val_b) in value_tuples:
+            try:
+                value = calculation.inputs.get_item_where(
+                    (lambda x: x.code == val_a))
 
-            # Record the index of each value present.
-            values = {}
-            for (i, input_) in enumerate(inputs):
-                values[input_.code] = i
+                input_a = calculation.input[val_a]
+                input_b = calculation.input[val_b]
+            except KeyError:
+                continue
 
-            to_remove = []
+            calculation.input[val_a] = ' '.join([
+                value.format.format(input_a),
+                ('' if (value.unit is None or
+                        (val_a == 'pos' and
+                         self.position_type[input_b].no_unit)) else
+                 value.unit),
+                input_b,
+            ])
 
-            # Go through the collection of pairs, and if we have both entries,
-            # merge them.
-            for (val_a, val_b) in value_tuples:
-                if (val_a in values) and (val_b in values):
-                    value = inputs[values[val_a]]
-                    input_a = calculation.input[val_a]
-                    input_b = calculation.input[val_b]
-                    calculation.input[val_a] = ' '.join([
-                        value.format.format(input_a),
-                        ('' if (value.unit is None or
-                                (val_a == 'pos' and
-                                 self.position_type[input_b].no_unit)) else
-                         value.unit),
-                        input_b,
-                    ])
-                    inputs[values[val_a]] = \
-                        inputs[values[val_a]]._replace(format='{}', unit=None)
-                    to_remove.append(values[val_b])
+            calculation.inputs.replace_item_where(
+                (lambda x: x.code == val_a),
+                (lambda x: x._replace(format='{}', unit=None)))
 
-            # Remove the values we no longer want (in reverse order so that we
-            # don't have to worry about the indices changing as other values
-            # are removed).
-            for i in sorted(to_remove, reverse=True):
-                del inputs[i]
+            calculation.inputs.delete_item_where(
+                (lambda x: x.code == val_b))
 
     @classmethod
     def _validate_position(self, pos, pos_type):
