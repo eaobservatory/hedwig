@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -105,6 +105,26 @@ class JCMTCalculator(BaseCalculator):
 
             calculation.inputs.delete_item_where(
                 (lambda x: x.code == val_b))
+
+    def _condense_tau_band(self, calculation, code):
+        """
+        Helper routine for the "condense_calculation" method.
+
+        Replaces an opacity value with a weather band if one can be
+        identified.
+
+        :param calculation: calculation object to modify (in place)
+        :param code: input item code for tau value
+        """
+
+        band = self.get_tau_band(calculation.input[code])
+
+        if band is not None:
+            calculation.input[code] = True
+            calculation.inputs.replace_item_where(
+                (lambda x: x.code == code),
+                (lambda x: x._replace(name=JCMTWeather.get_info(band).name,
+                                      abbr=None)))
 
     @classmethod
     def _validate_position(self, pos, pos_type):

@@ -494,6 +494,8 @@ class SCUBA2Calculator(JCMTCalculator):
     def condense_calculation(self, mode, version, calculation):
         self._condense_merge_values(calculation, (('pos', 'pos_type'),))
 
+        self._condense_tau_band(calculation, 'tau')
+
         if version == 2:
             # Condense map sampling input.
             samp = calculation.input['samp']

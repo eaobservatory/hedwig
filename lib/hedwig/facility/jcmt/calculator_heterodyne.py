@@ -710,3 +710,5 @@ class HeterodyneCalculator(JCMTCalculator):
     def condense_calculation(self, mode, version, calculation):
         self._condense_merge_values(calculation, (('pos', 'pos_type'),
                                                   ('res', 'res_unit')))
+
+        self._condense_tau_band(calculation, 'tau')
