@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -150,3 +150,79 @@ class MiscTypeTestCase(TestCase):
             SectionedListSection('new_1', 'New section one', ['u', 'v']),
             SectionedListSection('new_2', 'New section two', ['t']),
         ])
+
+    def test_sectioned_list_get(self):
+        sl = SectionedList()
+
+        sl.extend([1, 7, 9])
+        sl.extend([4, 11], section='a')
+        sl.extend([13, 25], section='a')
+
+        with self.assertRaises(KeyError):
+            sl.get_item_where(lambda x: False)
+
+        self.assertIsNone(sl.get_item_where((lambda x: False), default=None))
+
+        self.assertEqual(sl.get_item_where(lambda x: (x % 2) == 0), 4)
+        self.assertEqual(sl.get_item_where(lambda x: (x % 3) == 0), 9)
+        self.assertEqual(sl.get_item_where(lambda x: (x % 4) == 0), 4)
+        self.assertEqual(sl.get_item_where(lambda x: (x % 5) == 0), 25)
+
+    def test_sectioned_list_delete(self):
+        sl = SectionedList()
+
+        sl.extend([1, 2, 3, 4])
+        sl.extend([11, 12, 13, 14], section='a')
+        sl.extend([21, 22, 23, 24], section='b')
+
+        self.assertEqual(
+            list(sl), [1, 2, 3, 4, 11, 12, 13, 14, 21, 22, 23, 24])
+
+        is_even = lambda x: ((x % 2) == 0)
+        is_div_three = lambda x: ((x % 3) == 0)
+
+        self.assertEqual(sl.delete_item_where(is_even, section='a'), 2)
+
+        self.assertEqual(list(sl), [1, 2, 3, 4, 11, 13, 21, 22, 23, 24])
+
+        self.assertEqual(sl.delete_item_where(is_even, count=1), 1)
+
+        self.assertEqual(list(sl), [1, 3, 4, 11, 13, 21, 22, 23, 24])
+
+        self.assertEqual(sl.delete_item_where(is_even, count=2), 2)
+
+        self.assertEqual(list(sl), [1, 3, 11, 13, 21, 23, 24])
+
+        self.assertEqual(sl.delete_item_where(is_div_three, section=None), 1)
+
+        self.assertEqual(list(sl), [1, 11, 13, 21, 23, 24])
+
+        self.assertEqual(sl.delete_item_where(is_div_three), 2)
+
+        self.assertEqual(list(sl), [1, 11, 13, 23])
+
+    def test_sectioned_list_replace(self):
+        sl = SectionedList()
+
+        sl.extend([1, 2, 3, 4])
+        sl.extend([11, 12, 13, 14], section='a')
+        sl.extend([21, 22, 23, 24], section='b')
+
+        self.assertEqual(
+            list(sl), [1, 2, 3, 4, 11, 12, 13, 14, 21, 22, 23, 24])
+
+        is_even = lambda x: ((x % 2) == 0)
+        halve = lambda x: (x / 2)
+
+        self.assertEqual(sl.replace_item_where(is_even, halve, section='a'), 2)
+
+        self.assertEqual(list(sl), [1, 2, 3, 4, 11, 6, 13, 7, 21, 22, 23, 24])
+
+        self.assertEqual(
+            sl.replace_item_where(is_even, halve, section=None), 2)
+
+        self.assertEqual(list(sl), [1, 1, 3, 2, 11, 6, 13, 7, 21, 22, 23, 24])
+
+        self.assertEqual(sl.replace_item_where(is_even, halve), 4)
+
+        self.assertEqual(list(sl), [1, 1, 3, 1, 11, 3, 13, 7, 21, 11, 23, 12])

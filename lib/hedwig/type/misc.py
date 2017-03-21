@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -275,6 +275,86 @@ class SectionedList(object):
 
         return [section for (section, items) in self.data.items()
                 if items or include_empty]
+
+    def get_item_where(self, predicate, default=()):
+        """
+        Find and return the first item where the given function returns True.
+        """
+
+        for (current_section, items) in self.data.items():
+            for value in items:
+                if predicate(value):
+                    return value
+
+        if default == ():
+            raise KeyError('no item matching predicate found')
+
+        return default
+
+    def delete_item_where(self, predicate, section=(), count=None):
+        """
+        Delete items for which the given function returns True.
+        """
+
+        return self.replace_item_where(
+            predicate, (lambda x: None), section, count)
+
+    def replace_item_where(self, predicate, mapping, section=(), count=None):
+        """
+        Replace items where the given predicate function is True with the
+        result of applying the function `mapping` to that value.
+
+        If the function returns None then the item is removed from the list.
+
+        :param predicate: test function to apply to each entry
+        :param mapping: mapping function to apply to each entry
+        :param section: section to manipulate,
+            or `()` for all sections
+        :param count: maximum number of entries to manipulate,
+            or `None` for no limit
+
+        :return: the number of entries affected
+        """
+
+        n = 0
+
+        for (current_section, items) in self.data.items():
+            if ((section != ())
+                    and ((current_section is not None)
+                         if (section is None)
+                         else (current_section != section))):
+                continue
+
+            to_delete = []
+            to_replace = {}
+
+            for (i, value) in enumerate(items):
+                if predicate(value):
+                    replacement = mapping(value)
+
+                    if replacement is None:
+                        to_delete.append(i)
+                    else:
+                        to_replace[i] = replacement
+
+                    n += 1
+
+                    if (count is not None) and (n >= count):
+                        break
+
+            # Apply replacements first (before indicies change).
+            for (i, value) in to_replace.items():
+                items[i] = value
+
+            # Apply deletions in reverse order (so that we needn't worry
+            # about indicies changing as earlier items are removed).
+            for i in reversed(to_delete):
+                del items[i]
+
+            if (count is not None) and (n >= count):
+                break
+
+        return n
 
     def _find_by_index(self, index):
         """
