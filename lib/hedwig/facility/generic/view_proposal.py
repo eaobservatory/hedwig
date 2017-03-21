@@ -1621,7 +1621,8 @@ class GenericProposal(object):
             'message': message,
             'proposal_id': proposal.id,
             'proposal_code': self.make_proposal_code(db, proposal),
-            'calculations': self._prepare_calculations(calculations),
+            'calculations': self._prepare_calculations(
+                calculations, condense=False),
         }
 
     @with_proposal(permission=PermissionType.FEEDBACK, with_decision_note=True)
@@ -1735,7 +1736,7 @@ class GenericProposal(object):
 
         return ctx
 
-    def _prepare_calculations(self, raw_calculations):
+    def _prepare_calculations(self, raw_calculations, condense=True):
         calculations = []
 
         for calc in raw_calculations.values():
@@ -1769,8 +1770,9 @@ class GenericProposal(object):
 
                 # Call the calculator method to compact the calculation
                 # where possible.
-                calculator.condense_calculation(calc.mode, calc.version,
-                                                calculation)
+                if condense:
+                    calculator.condense_calculation(calc.mode, calc.version,
+                                                    calculation)
 
                 calculations.append(calculation)
 
