@@ -1586,12 +1586,16 @@ class GenericProposal(object):
         except NoSuchRecord:
             raise HTTPNotFound('PDF preview page not found.')
 
-    @with_proposal(permission=PermissionType.EDIT)
+    @with_proposal(permission=PermissionType.VIEW)
     def view_calculation_manage(self, db, proposal, can, form):
         message = None
         calculations = db.search_calculation(proposal_id=proposal.id)
 
         if form is not None:
+            if not can.edit:
+                raise HTTPForbidden(
+                    'Edit permission denied for these calculations.')
+
             try:
                 calculations_present = [int(param[12:])
                                         for param in form
@@ -1617,12 +1621,13 @@ class GenericProposal(object):
                 message = e.message
 
         return {
-            'title': 'Manage Calculations',
+            'title': (('Manage' if can.edit else 'View') + ' Calculations'),
             'message': message,
             'proposal_id': proposal.id,
             'proposal_code': self.make_proposal_code(db, proposal),
             'calculations': self._prepare_calculations(
                 calculations, condense=False),
+            'can_edit': can.edit,
         }
 
     @with_proposal(permission=PermissionType.FEEDBACK, with_decision_note=True)

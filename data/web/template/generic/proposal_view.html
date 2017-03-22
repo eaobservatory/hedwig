@@ -380,14 +380,18 @@
         {% if can_edit %}
             <nav>
                 <p>
-                    {% if calculations %}
-                        <a href="{{ url_for('.calculation_manage', proposal_id=proposal.id) }}">Manage calculations</a>
-                        <br />
-                    {% endif %}
                     Add calculation:
                     {% for calculator in calculators.values() %}
                         <a href="{{ url_for((calculator.code, (calculator.modes | first_value).code) | fmt('.calc_{}_{}'), proposal_id=proposal.id) }}">{{ calculator.name }}</a>
                     {% endfor %}
+                </p>
+            </nav>
+        {% endif %}
+
+        {% if calculations %}
+            <nav>
+                <p>
+                    <a href="{{ url_for('.calculation_manage', proposal_id=proposal.id) }}">{% if can_edit %}Manage calculations{% else %}View calculation details{% endif %}</a>
                 </p>
             </nav>
         {% endif %}
