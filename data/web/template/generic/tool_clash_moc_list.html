@@ -4,22 +4,60 @@
 
 {% block content %}
 
-<p>
-    This page lists the coverage maps which are used by the Clash Tool
-    to check for matches with your target coordinates.
-    You can click on the name of a coverage map to see more information
-    about how it is defined.
-</p>
+{% if can_edit %}
+    <nav>
+        <p>
+            <a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_new')) }}">New coverage map</a>
+        </p>
+    </nav>
+{% else %}
+    <p>
+        This page lists the coverage maps which are used by the Clash Tool
+        to check for matches with your target coordinates.
+        You can click on the name of a coverage map to see more information
+        about how it is defined.
+    </p>
+{% endif %}
 
-<ul>
-    {% for moc in mocs.values() %}
-        <li>
-            <a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_info'), moc_id=moc.id) }}">{{ moc.name }}</a>
-            {% if not moc.public %}
-                <span class="label">private</span>
-            {% endif %}
-        </li>
-    {% endfor %}
-</ul>
+{% if can_edit %}
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Uploaded</th>
+            <th>Cells</th>
+            <th>Area</th>
+            <th>Status</th>
+            <th colspan="3">Actions</th>
+        </tr>
+        {% for moc in mocs.values() %}
+            <tr>
+                <td>
+                    {{ moc.name }}
+                    {% if not moc.public %}
+                        <span class="label">private</span>
+                    {% endif %}
+                </td>
+                <td>{{ moc.uploaded | format_datetime }} UT</td>
+                <td>{{ moc.num_cells }}</td>
+                <td>{{ moc.area | fmt('{:0.1f}') }} sq. deg.</td>
+                <td>{{ moc.state | attachment_state_name }}</td>
+                <td><a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_info'), moc_id=moc.id) }}">View</a></td>
+                <td><a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_edit'), moc_id=moc.id) }}">Edit</a></td>
+                <td><a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_delete'), moc_id=moc.id) }}">Delete</a></td>
+            </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <ul>
+        {% for moc in mocs.values() %}
+            <li>
+                <a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_info'), moc_id=moc.id) }}">{{ moc.name }}</a>
+                {% if not moc.public %}
+                    <span class="label">private</span>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}
 
 {% endblock %}

@@ -92,12 +92,6 @@ class ClashTool(BaseTargetTool):
 
             # Administrative routes:
             RouteInfo(
-                'moc_admin.html',
-                'admin/',
-                'moc_admin',
-                self.view_moc_admin,
-                {'admin_required': True}),
-            RouteInfo(
                 'moc_edit.html',
                 'admin/new',
                 'moc_new',
@@ -241,13 +235,19 @@ class ClashTool(BaseTargetTool):
         View handler for MOC listing custom route.
         """
 
-        public = self._determine_public_constraint(db)
+        if session.get('is_admin', False):
+            can_edit = True
+            public = None
+        else:
+            can_edit = False
+            public = self._determine_public_constraint(db)
 
         mocs = db.search_moc(facility_id=self.facility.id_, public=public)
 
         return {
             'title': 'Coverage List',
             'mocs': mocs,
+            'can_edit': can_edit,
         }
 
     def view_moc_info(self, db, moc_id):
@@ -293,14 +293,6 @@ class ClashTool(BaseTargetTool):
             moc_fits,
             null_tuple(FileTypeInfo)._replace(mime='application/fits'),
             '{}.fits'.format(re.sub('[^-_a-z0-9]', '_', moc.name.lower())))
-
-    def view_moc_admin(self, db):
-        mocs = db.search_moc(facility_id=self.facility.id_, public=None)
-
-        return {
-            'title': 'Coverage Management',
-            'mocs': mocs,
-        }
 
     @with_verified_admin
     def view_moc_edit(self, db, moc_id, form, file_):
@@ -363,7 +355,7 @@ class ClashTool(BaseTargetTool):
                     else:
                         flash('The updated coverage map has been stored.')
 
-                raise HTTPRedirect(url_for('.tool_clash_moc_admin'))
+                raise HTTPRedirect(url_for('.tool_clash_moc_list'))
 
             except UserError as e:
                 message = e.message
@@ -386,12 +378,12 @@ class ClashTool(BaseTargetTool):
 
         if form:
             if 'submit_cancel' in form:
-                raise HTTPRedirect(url_for('.tool_clash_moc_admin'))
+                raise HTTPRedirect(url_for('.tool_clash_moc_list'))
 
             elif 'submit_confirm' in form:
                 db.delete_moc(self.facility.id_, moc_id)
                 flash('The coverage map has been deleted.')
-                raise HTTPRedirect(url_for('.tool_clash_moc_admin'))
+                raise HTTPRedirect(url_for('.tool_clash_moc_list'))
 
         return {
             'title': 'Delete Coverage: {}'.format(moc.name),

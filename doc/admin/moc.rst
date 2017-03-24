@@ -10,8 +10,10 @@ to start the process, open the "Clash Tool" from the
 facility home page.
 Until some coverage areas have been defined,
 you will not be able to view the tool without administrative access.
-Follow the "Manage sky coverage" link and
+Follow the "View all defined areas of sky coverage" link and
 then click "New coverage map".
+(This link will only be available when you view the coverage
+list with administrative access.)
 You can then enter the name and a description as well as selecting the
 file to upload.
 The name will be displayed

@@ -94,12 +94,4 @@
             <a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_list')) }}">View all defined areas of sky coverage</a>
         </p>
     </nav>
-
-    {% if session.is_admin %}
-        <nav>
-            <p>
-                <a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_admin')) }}">Manage sky coverage</a>
-            </p>
-        </nav>
-    {% endif %}
 {% endblock %}

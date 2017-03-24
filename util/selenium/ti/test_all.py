@@ -497,7 +497,7 @@ class IntegrationTest(DummyConfigTestCase):
         # Upload a MOC.
         self.browser.get(facility_home_url)
         self.browser.find_element_by_link_text('Clash Tool').click()
-        self.browser.find_element_by_link_text('Manage sky coverage').click()
+        self.browser.find_element_by_link_text('View all defined areas of sky coverage').click()
 
         self.browser.find_element_by_link_text('New coverage map').click()
 
@@ -1415,7 +1415,7 @@ class IntegrationTest(DummyConfigTestCase):
         # Try deleting the MOC.
         self.browser.get(facility_home_url)
         self.browser.find_element_by_link_text('Clash Tool').click()
-        self.browser.find_element_by_link_text('Manage sky coverage').click()
+        self.browser.find_element_by_link_text('View all defined areas of sky coverage').click()
         self.browser.find_element_by_link_text('Delete').click()
         self.browser.find_element_by_name('submit_confirm').click()
 
