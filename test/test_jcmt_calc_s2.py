@@ -48,8 +48,110 @@ expect = {
 }
 
 
+conversions = [
+    ('time w/ mf', SCUBA2Calculator.CALC_TIME, {
+        1: {
+            'map': 'daisy',
+            'pos': 65.43,
+            'pos_type': 'dec',
+            'tau': 0.040,
+            'pix850': None,
+            'pix450': None,
+            'mf': True,
+            'wl': 850,
+            'rms': 1.5,
+        },
+        2: {
+            'map': 'daisy',
+            'pos': 65.43,
+            'pos_type': 'dec',
+            'tau': 0.040,
+            'samp': 'mf',
+            'pix850': None,
+            'pix450': None,
+            'wl': 850,
+            'rms': 1.5,
+        }
+    }),
+
+    ('time w/o mf', SCUBA2Calculator.CALC_TIME, {
+        1: {
+            'map': 'daisy',
+            'pos': 22.22,
+            'pos_type': 'zen',
+            'tau': 0.080,
+            'pix850': 8,
+            'pix450': 4,
+            'mf': False,
+            'wl': 850,
+            'rms': 1.5,
+        },
+        2: {
+            'map': 'daisy',
+            'pos': 22.22,
+            'pos_type': 'zen',
+            'tau': 0.080,
+            'samp': 'custom',
+            'pix850': 8,
+            'pix450': 4,
+            'wl': 850,
+            'rms': 1.5,
+        },
+    }),
+
+    ('rms w/ mf', SCUBA2Calculator.CALC_RMS, {
+        1: {
+            'map': 'pong1800',
+            'pos': 1.2345,
+            'pos_type': 'am',
+            'tau': 0.123,
+            'pix850': None,
+            'pix450': None,
+            'mf': True,
+            'time': 4.5,
+        },
+        2: {
+            'map': 'pong1800',
+            'pos': 1.2345,
+            'pos_type': 'am',
+            'tau': 0.123,
+            'samp': 'mf',
+            'pix850': None,
+            'pix450': None,
+            'time': 4.5,
+        },
+    }),
+
+    ('rms w/o mf', SCUBA2Calculator.CALC_RMS, {
+        1: {
+            'map': 'pong900',
+            'pos': 72.25,
+            'pos_type': 'el',
+            'tau': 0.0987,
+            'pix850': 13,
+            'pix450': 8,
+            'mf': False,
+            'time': 2.76,
+        },
+        2: {
+            'map': 'pong900',
+            'pos': 72.25,
+            'pos_type': 'el',
+            'tau': 0.0987,
+            'samp': 'custom',
+            'pix850': 13,
+            'pix450': 8,
+            'time': 2.76,
+        },
+    }),
+]
+
+
 class JCMTS2CalcTestCase(CalculatorTestCase):
     calculator_class = SCUBA2Calculator
 
     def test_basic(self):
         self._test_basic(expect)
+
+    def test_convert_version(self):
+        self._test_convert_version(conversions)

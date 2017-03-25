@@ -67,3 +67,65 @@ class CalculatorTestCase(TestCase):
                     self.assertIsInstance(output, CalculatorValue)
                 self.assertEqual(
                     [x.code for x in outputs], info['output'].split())
+
+    def _test_convert_version(self, conversions):
+        """
+        Test conversion of inputs from previous versions.
+
+        This is an important test because we will accumulate calculations
+        attached to proposals from previous versions of the calculator and
+        need to always be able to convert to the current version.
+
+        Takes a list of calculation types for which to test input version
+        convertions.  Each entry is a (title, mode, version_dictionary)
+        tuple where version_dictionary has equivalent inputs for
+        each version (the key).  The current version must be present
+        in the dictionary: the result of converting each other version
+        will be compared to it.
+        """
+
+        calc = self.calculator_class(None, 1)
+        calc_version = calc.version
+
+        for (title, mode, versions) in conversions:
+            current_input = versions.pop(calc_version)
+
+            for (version, old_input) in versions.items():
+                result = calc.convert_input_version(mode, version, old_input)
+
+                self.assertDictAlmostEqual(
+                    result, current_input,
+                    '"{}" version {}'.format(title, version))
+
+    def assertDictAlmostEqual(self, first, second, title):
+        """
+        Check that dictionaries are almost equal.
+
+        Compares float values with "assertAlmostEqual", None/True/False
+        with "assertIs" and other vaalues with "assertEqual".  Only does
+        this at the first level of the dictionary.
+        """
+
+        keys = sorted(first.keys())
+
+        self.assertEqual(
+            keys, sorted(second.keys()),
+            '{} keys list'.format(title))
+
+        for key in keys:
+            value_first = first[key]
+            value_second = second[key]
+            value_title = '{} value {}: {} != {}'.format(
+                title, key, value_first, value_second)
+
+            if isinstance(value_second, float):
+                self.assertAlmostEqual(
+                    value_first, value_second, msg=value_title)
+
+            elif ((value_second is None)
+                    or (value_second is True)
+                    or (value_second is False)):
+                self.assertIs(value_first, value_second, msg=value_title)
+
+            else:
+                self.assertEqual(value_first, value_second, msg=value_title)
