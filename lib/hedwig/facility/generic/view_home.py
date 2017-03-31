@@ -40,7 +40,8 @@ class GenericHome(object):
         elif ('user_id' in session) and ('person' in session):
             membership = db.search_group_member(
                 group_type=GroupType.review_view_groups(),
-                person_id=session['person']['id'])
+                person_id=session['person']['id'],
+                facility_id=self.id_)
 
         else:
             membership = None
