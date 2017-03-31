@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -772,6 +772,7 @@ class ProposalPart(object):
                     has_proposal_state=None, date_close_before=None,
                     with_queue_description=False, with_case_notes=False,
                     with_facility_code=False,
+                    with_proposal_count=False, with_proposal_count_state=None,
                     _conn=None):
         """
         Search for call records.
@@ -819,6 +820,24 @@ class ProposalPart(object):
                 facility, facility.c.id == semester.c.facility_id)
         else:
             default['facility_code'] = None
+
+        if with_proposal_count:
+            proposal_count = select([
+                count(proposal.c.id),
+            ]).where(proposal.c.call_id == call.c.id)
+
+            if with_proposal_count_state is not None:
+                if is_list_like(with_proposal_count_state):
+                    proposal_count = proposal_count.where(
+                        proposal.c.state.in_(with_proposal_count_state))
+
+                else:
+                    proposal_count = proposal_count.where(
+                        proposal.c.state == with_proposal_count_state)
+
+            fields.append(proposal_count.label('proposal_count'))
+        else:
+            default['proposal_count'] = None
 
         stmt = select(fields).select_from(select_from)
 

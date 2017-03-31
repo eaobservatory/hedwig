@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -56,7 +56,8 @@ Call = namedtuple(
     'Call',
     [x.name for x in call.columns] +
     ['state', 'facility_id', 'semester_name', 'queue_name',
-     'queue_description', 'queue_description_format', 'facility_code'])
+     'queue_description', 'queue_description_format', 'facility_code',
+     'proposal_count'])
 
 CallPreamble = namedtuple(
     'CallPreamble',

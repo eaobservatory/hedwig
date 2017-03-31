@@ -362,7 +362,7 @@ class DBProposalTest(DBTestCase):
                         tech_note='technical note', sci_note='scientific note',
                         prev_prop_note='previous proposal note',
                         note_format=FormatType.PLAIN,
-                        facility_code=None)
+                        facility_code=None, proposal_count=None)
         self.assertEqual(result[call_id],
                          expected._replace(tech_note=None, sci_note=None,
                                            prev_prop_note=None))
