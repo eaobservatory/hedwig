@@ -101,7 +101,7 @@
                         <li>
                             {{ queue_review_calls[0].queue_name }}:
                             {% for review_call in queue_review_calls %}
-                                <a href="{{ url_for('.review_call', call_id=review_call.id) }}">{{ review_call.type | call_type_name(facility_call_type_class) | lower }}</a>
+                                <a href="{{ url_for('.review_call', call_id=review_call.id) }}" class="{{ 'active_entries' if (review_call.proposal_count > 0) else 'inactive_entries'}}">{{ review_call.type | call_type_name(facility_call_type_class) | lower }}</a>{% if not loop.last %},{% endif %}
                             {% endfor %}
                         </li>
                     {% endfor %}

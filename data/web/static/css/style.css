@@ -425,3 +425,11 @@ a.create_review_link:before {
     border-radius: 1ex;
     margin-right: 0.5ex;
 }
+
+a.active_entries {
+    font-weight: bold;
+}
+
+a.inactive_entries {
+    opacity: 0.5;
+}

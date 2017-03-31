@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import namedtuple, OrderedDict
 
 from ...error import NoSuchRecord
-from ...type.enum import CallState, GroupType
+from ...type.enum import CallState, GroupType, ProposalState
 from ...web.util import ErrorPage, HTTPNotFound, session
 
 
@@ -32,8 +32,27 @@ class GenericHome(object):
     def view_facility_home(self, db):
         type_class = self.get_call_types()
 
-        # Retrieve all calls for this facility.
-        facility_calls = db.search_call(facility_id=self.id_)
+        # Determine whether the person is a committee member (or administrator)
+        # by having membership of appropriate review groups.
+        if ('user_id' in session) and session.get('is_admin', False):
+            membership = True
+
+        elif ('user_id' in session) and ('person' in session):
+            membership = db.search_group_member(
+                group_type=GroupType.review_view_groups(),
+                person_id=session['person']['id'])
+
+        else:
+            membership = None
+
+        # Retrieve all calls for this facility.  Include proposals under review
+        # counts if necessary.
+        kwargs = {
+            'with_proposal_count': True,
+            'with_proposal_count_state': ProposalState.review_states(),
+        } if membership else {}
+
+        facility_calls = db.search_call(facility_id=self.id_, **kwargs)
 
         # Determine which semesters have standard open calls for proposals.
         open_semesters = OrderedDict()
@@ -53,20 +72,17 @@ class GenericHome(object):
                 closed_semesters = True
                 break
 
-        # Determine whether the person is a committee member (or administrator)
-        # and if so, create a list of the review processes.
-        review_calls = None
-        if ('user_id' in session) and session.get('is_admin', False):
+        # If the user can see reviews,  create a list of the review processes.
+        if not membership:
+            review_calls = None
+
+        elif membership is True:
             # Administrators can see reviews for all calls.
             review_calls = facility_calls.values()
 
-        elif ('user_id' in session) and ('person' in session):
-            membership = db.search_group_member(
-                group_type=GroupType.review_view_groups(),
-                person_id=session['person']['id'])
-            if membership:
-                review_calls = facility_calls.values_matching(
-                    queue_id=[x.queue_id for x in membership.values()])
+        else:
+            review_calls = facility_calls.values_matching(
+                queue_id=[x.queue_id for x in membership.values()])
 
         return {
             'title': self.get_name(),
