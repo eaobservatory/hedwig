@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1350,7 +1350,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         self._save_screenshot(self.admin_image_root, 'call_list')
 
-        self.browser.find_element_by_link_text('View call').click()
+        self.browser.find_elements_by_link_text('Regular')[-1].click()
 
         self.assertIn('<h1>Call:',
                       self.browser.page_source)

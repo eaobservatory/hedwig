@@ -25,7 +25,7 @@ from ...email.format import render_email_template
 from ...error import NoSuchRecord, UserError
 from ...type.collection import AffiliationCollection, ResultCollection
 from ...type.enum import AffiliationType, FormatType, GroupType, \
-    PersonTitle, SemesterState
+    PersonTitle, ProposalState, SemesterState
 from ...type.simple import Affiliation, CallPreamble, Category, DateAndTime, \
     ProposalWithCode, Queue, Semester
 from ...type.util import null_tuple
@@ -286,7 +286,9 @@ class GenericAdmin(object):
         }
 
     def view_call_list(self, db):
-        calls = db.search_call(facility_id=self.id_)
+        calls = db.search_call(
+            facility_id=self.id_, with_proposal_count=True,
+            with_proposal_count_state=ProposalState.submitted_states())
 
         date_current = datetime.utcnow()
 

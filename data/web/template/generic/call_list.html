@@ -25,7 +25,8 @@
             <th>Queue</th>
             <th>Type</th>
             <th>Status</th>
-            <th colspan="3">Links</th>
+            <th>Submitted<br />proposals</th>
+            <th colspan="2">Links</th>
         </tr>
         {% for semester_calls in calls.values() | plain_group_by('semester_id') %}
             {% for queue_calls in semester_calls | plain_group_by('queue_id') %}
@@ -46,16 +47,22 @@
                                 </a>
                             </td>
                         {% endif %}
-                        <td>{{ call.type | call_type_name(facility_call_type_class) }}</td>
-                        <td>{{ call.state | call_state_name }}</td>
                         <td>
                             <a href="{{ url_for('.call_view', call_id=call.id) }}">
-                                View call
+                                {{ call.type | call_type_name(facility_call_type_class) }}
                             </a>
+                        </td>
+                        <td>{{ call.state | call_state_name }}</td>
+                        <td class="number_center">
+                            {% if call.proposal_count %}
+                                {{ call.proposal_count }}
+                            {% else %}
+                                &nbsp;
+                            {% endif %}
                         </td>
                         <td>
                             <a href="{{ url_for('.call_proposals', call_id=call.id) }}">
-                                View proposals
+                                Proposals
                             </a>
                         </td>
                         <td>
