@@ -56,6 +56,8 @@ Review process
 
 You can use the proposals page to navigate to any proposal
 which has been created for this call.
+A summary at the top of this page also indicates how many
+proposals are in each state.
 
 .. image:: image/call_proposals.png
 

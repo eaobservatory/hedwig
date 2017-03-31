@@ -13,6 +13,19 @@
 {% else %}
     <table>
         <tr>
+            {% for state in state_proposals.keys() %}
+                <th>{{ state | proposal_state_name }}</th>
+            {% endfor %}
+        </tr>
+        <tr>
+            {% for n_proposals in state_proposals.values() %}
+                <td class="number_center">{{ n_proposals }}</td>
+            {% endfor %}
+        </tr>
+    </table>
+
+    <table>
+        <tr>
             <th>Proposal</th>
             <th>Title</th>
             <th>State</th>

@@ -101,6 +101,10 @@ td.number_right {
     text-align: right;
 }
 
+td.number_center {
+    text-align: center;
+}
+
 tr.decision_accept > td {
     background: #BFB;
 }

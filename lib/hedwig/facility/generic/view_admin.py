@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import namedtuple
+from collections import OrderedDict, defaultdict, namedtuple
 from datetime import datetime
 
 from ...email.format import render_email_template
@@ -469,6 +469,11 @@ class GenericAdmin(object):
 
         proposals = db.search_proposal(call_id=call_id, with_member_pi=True)
 
+        # Count number of proposals in each state.
+        n_state = defaultdict(int)
+        for proposal in proposals.values():
+            n_state[proposal.state] += 1
+
         return {
             'title': 'Proposals: {} {} {}'.format(
                 call.semester_name, call.queue_name,
@@ -477,6 +482,9 @@ class GenericAdmin(object):
             'proposals': [
                 ProposalWithCode(*x, code=self.make_proposal_code(db, x))
                 for x in proposals.values()],
+            'state_proposals': OrderedDict(
+                (k, n_state[k]) for k in ProposalState.get_options().keys()
+                if k in n_state),
         }
 
     @with_verified_admin
