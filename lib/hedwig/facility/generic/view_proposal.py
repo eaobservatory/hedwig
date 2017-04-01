@@ -35,7 +35,7 @@ from ...type.enum import AffiliationType, AttachmentState, \
     PermissionType, PersonTitle, ProposalState, PublicationType
 from ...type.simple import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
-    PrevProposal, PrevProposalPub, \
+    MemberInstitution, PrevProposal, PrevProposalPub, \
     ProposalCategory, ProposalFigureInfo, ProposalText, \
     Queue, ProposalText, Semester, Target, \
     TargetToolInfo, ValidationMessage
@@ -403,6 +403,13 @@ class GenericProposal(object):
                 self._message_proposal_submit(db, proposal)
 
                 self._message_proposal_review_notification(db, proposal)
+
+                if immediate_review:
+                    # Freeze member institution ID values.
+                    db.sync_proposal_member_institution(proposal.id, {
+                        x.id: MemberInstitution(
+                            x.id, x.resolved_institution_id)
+                        for x in proposal.members.values()})
 
                 flash('The proposal has been submitted.')
 
