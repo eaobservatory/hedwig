@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2016 East Asian Observatory.
+# Copyright (C) 2015-2017 East Asian Observatory.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,8 +21,14 @@
 hedwigctl - Hedwig proposal system control tool
 
 Usage:
-    hedwigctl poll [-v | -q]
-        (close | email | figure | pdf | publication | feedback | moc | all)
+    hedwigctl poll [-v | -q] [--dry-run]
+        [--close | --no-close]
+        [--email | --no-email]
+        [--figure | --no-figure]
+        [--pdf | --no-pdf]
+        [--publication | --no-publication]
+        [--feedback | --no-feedback]
+        [--moc | --no-moc]
         [--pause <delay>] [--pidfile <file>] [--logfile <file>]
     hedwigctl test_server [--debug] [--https] [--port <port>]
     hedwigctl [-v | -q] initialize_database
@@ -31,12 +37,27 @@ Options:
     --help, -h                Show usage information.
     --verbose, -v             Print debugging information.
     --quiet, -q               Omit informational messages.
+    --dry-run, -n             Do not actually peform the poll action.
     --https                   Enable use of HTTPS.
     --port <port>             Specify server port number [default: 5678].
     --debug                   Run server in debug mode.
     --pause <delay>           Repeatedly poll at the given interval (seconds).
     --pidfile <file>          PID file to use to control execution.
     --logfile <file>          File in which to record logging information.
+    --close                   Enable polling for call closure.
+    --no-close                Disable polling for call closure.
+    --email                   Enable polling for email to send.
+    --no-email                Disable polling for email to send.
+    --figure                  Enable polling for figures to process.
+    --no-figure               Disable polling for figures to process.
+    --pdf                     Enable polling for PDF files to process.
+    --no-pdf                  Disable polling for PDF files to process.
+    --publication             Enable polling for publications to look up.
+    --no-publication          Disable polling for publications to look up.
+    --feedback                Enable polling for feedback to send.
+    --no-feedback             Disable polling for feedback to send.
+    --moc                     Enable polling for MOC files to import.
+    --no-moc                  Disable polling for MOC files to import.
 """
 
 
@@ -44,11 +65,14 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 import atexit
+from collections import OrderedDict
 import logging
 import os
 from time import sleep
 
 from docopt import docopt
+
+from hedwig.util import get_logger
 
 
 integer_arguments = (
@@ -56,9 +80,12 @@ integer_arguments = (
     '--pause',
 )
 
-commands = {}
+commands = OrderedDict()
+poll_options = OrderedDict()
 
 script_name = 'hedwigctl'
+
+logger = get_logger(script_name)
 
 
 def main():
@@ -86,6 +113,18 @@ def command(f):
     """
 
     commands[f.__name__] = f
+    return f
+
+
+def poll_option(f):
+    """
+    Decorator which adds a function to our poll options dictionary.
+
+    Assumes the function name starts "poll_" so the name begins at the
+    6th character.
+    """
+
+    poll_options[f.__name__[5:]] = f
     return f
 
 
@@ -141,79 +180,142 @@ def poll(args):
         pidfile_write(pidfile, os.getpid())
         atexit.register(pidfile_delete, pidfile)
 
-    from hedwig.admin.poll import close_completed_call, send_proposal_feedback
     from hedwig.config import get_database
-    from hedwig.file.poll import process_moc, \
-        process_proposal_figure, process_proposal_pdf
-    from hedwig.email.poll import send_queued_messages
-    from hedwig.publication.poll import process_publication_references
-    from hedwig.util import get_logger
 
     _configure_logging(args)
 
     db = get_database()
 
-    logger = get_logger(script_name)
+    dry_run = args['--dry-run']
 
     while True:
-        if args['close'] or args['all']:
-            logger.debug('Checking for calls to close')
-            n_closed = close_completed_call(db=db)
+        # Do explicitly-requested poll actions.
+        n_requested = 0
+        for (option, func) in poll_options.items():
+            if args['--' + option]:
+                func(db, dry_run)
+                n_requested += 1
 
-            if n_closed:
-                logger.info('Closed {} call(s)', n_closed)
-
-        if args['email'] or args['all']:
-            logger.debug('Checking for queued email messages')
-            try:
-                n_sent = send_queued_messages(db=db)
-
-                if n_sent:
-                    logger.info('Sent {} message(s)', n_sent)
-            except:
-                logger.exception('Error checking for queued email messages.')
-
-        if args['figure'] or args['all']:
-            logger.debug('Checking for figures to process')
-            n_processed = process_proposal_figure(db=db)
-
-            if n_processed:
-                logger.info('Processed {} figure(s)', n_processed)
-
-        if args['pdf'] or args['all']:
-            logger.debug('Checking for PDF files to process')
-            n_processed = process_proposal_pdf(db=db)
-
-            if n_processed:
-                logger.info('Processed {} PDF file(s)', n_processed)
-
-        if args['publication'] or args['all']:
-            logger.debug('Checking for publication references to process')
-            n_processed = process_publication_references(db)
-
-            if n_processed:
-                logger.info('Processed {} publication reference(s)',
-                            n_processed)
-
-        if args['feedback'] or args['all']:
-            logger.debug('Checking for proposals with feedback ready to send')
-            n_processed = send_proposal_feedback(db)
-
-            if n_processed:
-                logger.info('Sent feedback for {} proposal(s)', n_processed)
-
-        if args['moc'] or args['all']:
-            logger.debug('Checking for MOC files to import')
-            n_processed = process_moc(db)
-
-            if n_processed:
-                logger.info('Imported cells from {} MOC file(s)', n_processed)
+        # If nothing was requested explictly, do everything not forbidden.
+        if not n_requested:
+            for (option, func) in poll_options.items():
+                if not args['--no-' + option]:
+                    func(db, dry_run)
 
         if args['--pause']:
             sleep(args['--pause'])
 
         else:
             break
+
+
+@poll_option
+def poll_close(db, dry_run):
+    from hedwig.admin.poll import close_completed_call
+
+    logger.debug('Checking for calls to close')
+
+    if dry_run:
+        return
+
+    n_closed = close_completed_call(db=db)
+
+    if n_closed:
+        logger.info('Closed {} call(s)', n_closed)
+
+
+@poll_option
+def poll_email(db, dry_run):
+    from hedwig.email.poll import send_queued_messages
+
+    logger.debug('Checking for queued email messages')
+
+    if dry_run:
+        return
+
+    try:
+        n_sent = send_queued_messages(db=db)
+
+        if n_sent:
+            logger.info('Sent {} message(s)', n_sent)
+    except:
+        logger.exception('Error checking for queued email messages.')
+
+
+@poll_option
+def poll_figure(db, dry_run):
+    from hedwig.file.poll import process_proposal_figure
+
+    logger.debug('Checking for figures to process')
+
+    if dry_run:
+        return
+
+    n_processed = process_proposal_figure(db=db)
+
+    if n_processed:
+        logger.info('Processed {} figure(s)', n_processed)
+
+
+@poll_option
+def poll_pdf(db, dry_run):
+    from hedwig.file.poll import process_proposal_pdf
+
+    logger.debug('Checking for PDF files to process')
+
+    if dry_run:
+        return
+
+    n_processed = process_proposal_pdf(db=db)
+
+    if n_processed:
+        logger.info('Processed {} PDF file(s)', n_processed)
+
+
+@poll_option
+def poll_publication(db, dry_run):
+    from hedwig.publication.poll import process_publication_references
+
+    logger.debug('Checking for publication references to process')
+
+    if dry_run:
+        return
+
+    n_processed = process_publication_references(db)
+
+    if n_processed:
+        logger.info('Processed {} publication reference(s)',
+                    n_processed)
+
+
+@poll_option
+def poll_feedback(db, dry_run):
+    from hedwig.admin.poll import send_proposal_feedback
+
+    logger.debug('Checking for proposals with feedback ready to send')
+
+    if dry_run:
+        return
+
+    n_processed = send_proposal_feedback(db)
+
+    if n_processed:
+        logger.info('Sent feedback for {} proposal(s)', n_processed)
+
+
+@poll_option
+def poll_moc(db, dry_run):
+    from hedwig.file.poll import process_moc
+
+    logger.debug('Checking for MOC files to import')
+
+    if dry_run:
+        return
+
+    n_processed = process_moc(db)
+
+    if n_processed:
+        logger.info('Imported cells from {} MOC file(s)', n_processed)
 
 
 @command

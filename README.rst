@@ -297,7 +297,7 @@ running to perform these tasks.
 You can do this with a Cron job such as the following
 (with the path to Hedwig completed)::
 
-    */10 * * * * cd ..../hedwig; source venv/bin/activate; hedwigctl poll all --pidfile poll.pid --pause 15 --logfile poll.log
+    */10 * * * * cd ..../hedwig; source venv/bin/activate; hedwigctl poll --pidfile poll.pid --pause 15 --logfile poll.log
 
 This example checks every 10 minutes that `hedwigctl poll` is running
 and uses a 15 second pause between polls for tasks to perform.
