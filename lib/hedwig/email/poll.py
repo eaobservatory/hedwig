@@ -56,6 +56,6 @@ def send_queued_messages(db=None):
         if identifier is not None:
             db.mark_message_sent(message.id, identifier)
 
-        n_sent += 1
+            n_sent += 1
 
     return n_sent
