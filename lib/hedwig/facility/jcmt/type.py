@@ -294,7 +294,8 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
             if not isinstance(record.time, float):
                 raise UserError(
                     'Please enter time as a valid number for {}, {}'.format(
-                        JCMTInstrument.get_name(record.instrument),
+                        JCMTInstrument.get_name_with_ancillary(
+                            record.instrument, record.ancillary),
                         JCMTWeather.get_name(record.weather)))
 
             request_tuple = (
