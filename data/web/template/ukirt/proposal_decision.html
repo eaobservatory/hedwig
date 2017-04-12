@@ -1,0 +1,36 @@
+{% extends 'generic/proposal_decision.html' %}
+
+{% set scripts=['edit_ukirt_request'] %}
+
+{% from 'ukirt/macro/request_table.html' import render_request_display, render_request_table %}
+
+{% block form_list_extra %}
+    <li class="separator">UKIRT Observing Request</li>
+    <li>
+        <div class="explanation">
+            This is the proposal&rsquo;s original observing request,
+            for information only.
+        </div>
+    </li>
+    <li>
+        <div class="form_panel">
+            {{ render_request_display(original_request) }}
+        </div>
+    </li>
+    <li class="separator">UKIRT Time Allocation</li>
+    <li>
+        <div class="explanation">
+            You can use this table to adjust the proposal&rsquo;s time allocation.
+            {% if is_prefilled %}
+                <br />
+                This table has been pre-filled using the times from the
+                proposal&rsquo;s original observing request.
+            {% endif %}
+        </div>
+    </li>
+    <li>
+        <div class="form_panel">
+            {{ render_request_table(allocations, instruments, description='allocation') }}
+        </div>
+    </li>
+{% endblock %}

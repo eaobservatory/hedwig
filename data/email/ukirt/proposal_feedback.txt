@@ -1,0 +1,25 @@
+{% extends 'generic/proposal_feedback.txt' %}
+
+{% block feedback_information %}
+{% if (proposal.decision_accept and ukirt_allocations) %}
+The committee has approved the following
+observing {{ 'times' if (ukirt_allocations | length) > 1 else 'time' }}
+for your project:
+
+{% for allocation in ukirt_allocations %}
+{{ allocation.instrument}}: {{ allocation.time }}
+{{ 'hour' if allocation.time == 1.0 else 'hours' }}
+
+{% endfor %}
+{% endif %}
+{% endblock %}
+
+{% block feedback_footer %}
+{% if proposal.decision_accept %}
+Observatory personnel will contact you shortly concerning
+the observing arrangements for your project.
+{% else %}
+We thank you for your interest in using UKIRT
+and wish you the best of luck in your future observing proposals.
+{% endif %}
+{% endblock %}

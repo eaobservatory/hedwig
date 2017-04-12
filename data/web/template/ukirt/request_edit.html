@@ -1,0 +1,9 @@
+{% extends 'generic/request_edit.html' %}
+
+{% set scripts=['edit_ukirt_request'] %}
+
+{% from 'ukirt/macro/request_table.html' import render_request_table %}
+
+{% block request_form %}
+    {{ render_request_table(requests, instruments) }}
+{% endblock %}

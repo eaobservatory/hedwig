@@ -20,7 +20,22 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict, namedtuple
 
+from ...error import UserError
+from ...type.base import CollectionByProposal, EnumAvailable, EnumBasic
+from ...type.collection import ResultCollection
 from ...type.enum import BaseCallType
+from .meta import ukirt_request
+
+
+UKIRTRequest = namedtuple(
+    'UKIRTRequest',
+    [x.name for x in ukirt_request.columns])
+
+
+class UKIRTRequestTotal(namedtuple(
+        'UKIRTRequestTotal',
+        ('total', 'instrument'))):
+    pass
 
 
 class UKIRTCallType(BaseCallType):
@@ -41,3 +56,89 @@ class UKIRTCallType(BaseCallType):
         override = _ukirt_info.get(role_id, {})
         _info[role_id] = BaseCallType.TypeInfo(
             *(role_info._replace(**override)))
+
+
+class UKIRTInstrument(EnumBasic, EnumAvailable):
+    WFCAM = 1
+    UFTI = 2
+    UIST = 3
+
+    InstrumentInfo = namedtuple(
+        'InstrumentInfo', ('name', 'available'))
+
+    _info = OrderedDict((
+        (WFCAM, InstrumentInfo('WFCAM', True)),
+        (UFTI,  InstrumentInfo('UFTI', True)),
+        (UIST,  InstrumentInfo('UIST', True)),
+    ))
+
+
+class UKIRTRequestCollection(ResultCollection, CollectionByProposal):
+    """
+    Class used for collections of UKIRT observing requests.
+    """
+
+    def validate(self):
+        """
+        Attempt to validate a collection of observing requests.
+
+        :raises: UserError if a problem is found.
+        """
+
+        requests = set()
+
+        for record in self.values():
+            if not UKIRTInstrument.is_valid(record.instrument):
+                raise UserError('Instrument not recognised.')
+
+            if not isinstance(record.time, float):
+                raise UserError(
+                    'Please enter time as a valid number for {}.'.format(
+                        UKIRTInstrument.get_name(record.instrument)))
+
+            request_tuple = (
+                record.instrument,)
+
+            if request_tuple in requests:
+                raise UserError(
+                    'There are multiple entries for {}.'.format(
+                        UKIRTInstrument.get_name(record.instrument)))
+
+            requests.add(request_tuple)
+
+    def get_total(self):
+        """
+        Get request totals.
+        """
+
+        instruments = {}
+        total = 0.0
+
+        for request in self.values():
+            time = request.time
+
+            instrument = request.instrument
+            if not UKIRTInstrument.get_info(instrument).available:
+                instrument = None
+
+            total += time
+            instruments[instrument] = instruments.get(instrument, 0.0) + time
+
+        return UKIRTRequestTotal(total=total, instrument=instruments)
+
+    def to_sorted_list(self):
+        """
+        Get sorted list of requests with instrument as name.
+        """
+
+        instruments = UKIRTInstrument.get_options(include_unavailable=True)
+
+        sorted_list = []
+
+        for (instrument, instrument_name) in instruments.items():
+            for request in self.values():
+                if (request.instrument == instrument):
+                    sorted_list.append(request._replace(
+                        instrument=instrument_name))
+
+        return sorted_list

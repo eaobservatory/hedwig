@@ -21,10 +21,15 @@ from __future__ import absolute_import, division, print_function, \
 import re
 
 from ...error import NoSuchRecord, NoSuchValue, ParseError, UserError
+from ...view.util import organise_collection, with_proposal
+from ...web.util import HTTPRedirect, flash, url_for
+from ...type.enum import PermissionType, ProposalState
+from ...type.simple import ValidationMessage
 from ..eao.view import EAOFacility
 from .calculator_imag_phot import ImagPhotCalculator
 from .type import \
-    UKIRTCallType
+    UKIRTCallType, UKIRTInstrument, \
+    UKIRTRequest, UKIRTRequestCollection
 
 
 class UKIRT(EAOFacility):
@@ -81,3 +86,170 @@ class UKIRT(EAOFacility):
 
         except NoSuchValue:
             raise ParseError('Did not recognise call type code')
+
+    def _view_proposal_extra(self, db, proposal):
+        ctx = super(UKIRT, self)._view_proposal_extra(db, proposal)
+
+        requests = db.search_ukirt_request(proposal_id=proposal.id)
+
+        ctx.update({
+            'requests': requests,
+        })
+
+        return ctx
+
+    def _validate_proposal_extra(self, db, proposal, extra):
+        messages = []
+
+        if not extra['requests']:
+            messages.append(ValidationMessage(
+                True,
+                'No observing time has been requested.',
+                'Edit the observing request',
+                url_for('.request_edit', proposal_id=proposal.id)))
+
+        messages.extend(super(UKIRT, self)._validate_proposal_extra(
+            db, proposal, extra, check_excluded_pi=True))
+
+        return messages
+
+    def _view_proposal_feedback_extra(self, db, proposal, can):
+        ctx = super(UKIRT, self)._view_proposal_feedback_extra(
+            db, proposal, can)
+
+        if proposal.state == ProposalState.ACCEPTED:
+            allocations = db.search_ukirt_allocation(
+                proposal_id=proposal.id)
+        else:
+            allocations = UKIRTRequestCollection()
+
+        ctx.update({
+            'ukirt_allocations': allocations,
+        })
+
+        return ctx
+
+    @with_proposal(permission=PermissionType.EDIT)
+    def view_request_edit(self, db, proposal, can, form):
+        message = None
+
+        records = db.search_ukirt_request(proposal_id=proposal.id)
+
+        if form is not None:
+            records = self._read_request_form(proposal, form)
+
+            try:
+                db.sync_ukirt_proposal_request(proposal.id, records)
+
+                flash('The observing request has been saved.')
+
+                raise HTTPRedirect(url_for('.proposal_view',
+                                           proposal_id=proposal.id,
+                                           _anchor='request'))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Edit Observing Request',
+            'proposal_id': proposal.id,
+            'proposal_code': self.make_proposal_code(db, proposal),
+            'message': message,
+            'requests': records,
+            'instruments': UKIRTInstrument.get_options(),
+        }
+
+    def _read_request_form(self, proposal, form, skip_blank_time=False):
+        updated_records = {}
+        added_records = {}
+
+        for param in form:
+            if not param.startswith('time_'):
+                continue
+            id_ = param[5:]
+
+            if id_.startswith('new_'):
+                request_id = int(id_[4:])
+                destination = added_records
+            else:
+                request_id = int(id_)
+                destination = updated_records
+
+            request_time = form[param]
+
+            if skip_blank_time and not request_time:
+                continue
+
+            try:
+                request_time = float(request_time)
+            except ValueError:
+                # Ignore parsing error to allow user to correc the input.
+                pass
+
+            instrument = form['instrument_' + id_]
+
+            destination[request_id] = UKIRTRequest(
+                request_id, proposal.id,
+                instrument=int(instrument),
+                time=request_time)
+
+        return organise_collection(
+            UKIRTRequestCollection, updated_records, added_records)
+
+    def _view_proposal_decision_get(self, db, proposal, form):
+        """
+        Read the UKIRT allocation from the form without raising parse errors.
+        """
+
+        return self._read_request_form(proposal, form, skip_blank_time=True)
+
+    def _view_proposal_decision_save(self, db, proposal, info):
+        """
+        Store the UKIRT allocation.
+        """
+
+        if proposal.decision_accept and not info.get_total().total:
+            raise UserError('An accepted proposal should not have '
+                            'zero total time allocation.')
+
+        db.sync_ukirt_proposal_allocation(proposal_id=proposal.id,
+                                          records=info)
+
+    def _view_proposal_decision_extra(self, db, proposal, info):
+        """
+        Generate extra template context for allocation on decision page.
+        """
+
+        original_request = db.search_ukirt_request(proposal_id=proposal.id)
+        is_prefilled = False
+
+        if info is None:
+            allocations = db.search_ukirt_allocation(proposal_id=proposal.id)
+
+            if not allocations:
+                # Copy request to allocation, rewriting ID as None.
+                allocations = UKIRTRequestCollection((
+                    (n, r._replace(id=None))
+                    for (n, r) in enumerate(original_request.values(), 1)))
+                is_prefilled = True
+
+        else:
+            allocations = info
+
+        return {
+            'original_request': original_request,
+            'is_prefilled': is_prefilled,
+            'allocations': allocations,
+            'instruments': UKIRTInstrument.get_options(),
+        }
+
+    def get_feedback_extra(self, db, proposal):
+        """
+        Get additional context for the proposal feedbacke email message.
+        """
+
+        allocations = db.search_ukirt_allocation(proposal_id=proposal.id)
+
+        return {
+            'ukirt_allocations': allocations.to_sorted_list(),
+        }
