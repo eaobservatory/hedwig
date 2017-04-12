@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import defaultdict
 import re
 
 from ...error import NoSuchRecord, NoSuchValue, ParseError, UserError
@@ -25,11 +26,12 @@ from ...view.util import organise_collection, with_proposal
 from ...web.util import HTTPRedirect, flash, url_for
 from ...type.enum import PermissionType, ProposalState
 from ...type.simple import ValidationMessage
+from ...type.util import null_tuple
 from ..eao.view import EAOFacility
 from .calculator_imag_phot import ImagPhotCalculator
 from .type import \
     UKIRTCallType, UKIRTInstrument, \
-    UKIRTRequest, UKIRTRequestCollection
+    UKIRTRequest, UKIRTRequestCollection, UKIRTRequestTotal
 
 
 class UKIRT(EAOFacility):
@@ -128,6 +130,115 @@ class UKIRT(EAOFacility):
         })
 
         return ctx
+
+    def _get_proposal_tabulation(self, db, call, can, with_extra=False):
+        tabulation = super(UKIRT, self)._get_proposal_tabulation(
+            db, call, can, with_extra)
+
+        exempt = UKIRTRequestTotal(
+            total=0.0, instrument=defaultdict(float))
+        accepted = UKIRTRequestTotal(
+            total=0.0, instrument=defaultdict(float))
+        total = UKIRTRequestTotal(
+            total=0.0, instrument=defaultdict(float))
+        original = UKIRTRequestTotal(
+            total=0.0, instrument=defaultdict(float))
+
+        accepted_affiliation = defaultdict(float)
+        total_affiliation = defaultdict(float)
+        original_affiliation = defaultdict(float)
+
+        affiliation_ids = [x.id for x in tabulation['affiliations']]
+        proposal_ids = [x['id'] for x in tabulation['proposals']]
+
+        requests = db.search_ukirt_request(proposal_id=proposal_ids)
+        allocations = db.search_ukirt_allocation(proposal_id=proposal_ids)
+
+        for proposal in tabulation['proposals']:
+            proposal_id = proposal['id']
+            proposal_accepted = proposal['decision_accept']
+            proposal_exempt = proposal['decision_exempt']
+            proposal_affiliations = proposal['affiliations']
+
+            request = requests.subset_by_proposal(proposal_id).get_total()
+            proposal['ukirt_request'] = request
+
+            allocation = None
+            allocation_records = allocations.subset_by_proposal(proposal_id)
+            if allocation_records:
+                allocation = allocation_records.get_total()
+
+            proposal['ukirt_allocation'] = allocation
+            proposal['ukirt_allocation_different'] = \
+                ((allocation is not None) and (allocation != request))
+
+            if proposal_accepted and allocation is not None:
+                if proposal_exempt:
+                    exempt = exempt._replace(
+                        total=(exempt.total + allocation.total))
+
+                accepted = accepted._replace(
+                    total=(accepted.total + allocation.total))
+
+            if allocation is not None:
+                total = total._replace(total=(total.total + allocation.total))
+            else:
+                total = total._replace(total=(total.total + request.total))
+
+            original = original._replace(
+                total=(original.total + request.total))
+
+            for affiliation in affiliation_ids:
+                fraction = proposal_affiliations.get(affiliation)
+                if fraction is None:
+                    continue
+
+                original_affiliation[affiliation] += \
+                    request.total * fraction
+
+                if allocation is None:
+                    total_affiliation[affiliation] += \
+                        request.total * fraction
+
+                else:
+                    total_affiliation[affiliation] += \
+                        allocation.total * fraction
+
+                    if proposal_accepted and not proposal_exempt:
+                        accepted_affiliation[affiliation] += \
+                            allocation.total * fraction
+
+        tabulation.update({
+            'ukirt_instruments': UKIRTInstrument.get_options(),
+            'ukirt_exempt_total': exempt,
+            'ukirt_accepted_total': accepted,
+            'ukirt_request_total': total,
+            'ukirt_request_original': original,
+            'affiliation_accepted': accepted_affiliation,
+            'affiliation_total': total_affiliation,
+            'affiliation_original': original_affiliation,
+        })
+
+        return tabulation
+
+    def _get_proposal_tabulation_titles(self, tabulation):
+        return (
+            super(UKIRT, self)._get_proposal_tabulation_titles(tabulation) +
+            ['Request', 'Allocation'])
+
+    def _get_proposal_tabulation_rows(self, tabulation):
+        for (row, proposal) in zip(
+                super(UKIRT, self)._get_proposal_tabulation_rows(tabulation),
+                tabulation['proposals']):
+            request = proposal['ukirt_request']
+            allocation = proposal['ukirt_allocation']
+            if (allocation is None) or not proposal['decision_accept']:
+                allocation = null_tuple(UKIRTRequestTotal)
+
+            yield (
+                row +
+                [request.total, allocation.total]
+            )
 
     @with_proposal(permission=PermissionType.EDIT)
     def view_request_edit(self, db, proposal, can, form):
