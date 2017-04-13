@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import defaultdict
+from itertools import chain
 import re
 
 from ...error import NoSuchRecord, NoSuchValue, ParseError, UserError
@@ -222,8 +223,8 @@ class UKIRT(EAOFacility):
         return tabulation
 
     def _get_proposal_tabulation_titles(self, tabulation):
-        return (
-            super(UKIRT, self)._get_proposal_tabulation_titles(tabulation) +
+        return chain(
+            super(UKIRT, self)._get_proposal_tabulation_titles(tabulation),
             ['Request', 'Allocation'])
 
     def _get_proposal_tabulation_rows(self, tabulation):
@@ -235,10 +236,9 @@ class UKIRT(EAOFacility):
             if (allocation is None) or not proposal['decision_accept']:
                 allocation = null_tuple(UKIRTRequestTotal)
 
-            yield (
-                row +
-                [request.total, allocation.total]
-            )
+            yield chain(
+                row,
+                [request.total, allocation.total])
 
     @with_proposal(permission=PermissionType.EDIT)
     def view_request_edit(self, db, proposal, can, form):
