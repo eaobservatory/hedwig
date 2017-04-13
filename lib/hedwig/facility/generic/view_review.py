@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple, OrderedDict
 from datetime import datetime
+from itertools import chain
 import re
 
 from ...admin.proposal import finalize_call_review
@@ -123,17 +124,17 @@ class GenericReview(object):
 
         titles = self._get_proposal_tabulation_titles(tabulation)
         if with_cois:
-            titles.append('Co-Investigator names')
+            titles = chain(titles, ['Co-Investigator names'])
         writer.add_row(titles)
 
         for (row, proposal) in zip(
                 self._get_proposal_tabulation_rows(tabulation),
                 tabulation['proposals']):
             if with_cois:
-                row.extend([
+                row = chain(row, (
                     '{} ({})'.format(x.person_name, x.affiliation_name)
                     for x in proposal['members'].values()
-                    if not x.pi])
+                    if not x.pi))
             writer.add_row(row)
 
         return (
@@ -245,15 +246,14 @@ class GenericReview(object):
         }
 
     def _get_proposal_tabulation_titles(self, tabulation):
-        return (
+        return chain(
             [
                 'Proposal', 'PI name', 'PI affiliation', 'Co-Investigators',
                 'Title', 'State',
                 'Decision', 'Exempt', 'Rating', 'Rating std. dev.',
                 'Categories',
-            ] +
-            [x.name for x in tabulation['affiliations']]
-        )
+            ],
+            (x.name for x in tabulation['affiliations']))
 
     def _get_proposal_tabulation_rows(self, tabulation):
         affiliations = tabulation['affiliations']
@@ -261,7 +261,7 @@ class GenericReview(object):
         for proposal in tabulation['proposals']:
             decision_accept = proposal['decision_accept']
 
-            yield (
+            yield chain(
                 [
                     proposal['code'],
                     (None if proposal['member_pi'] is None
@@ -278,9 +278,8 @@ class GenericReview(object):
                     proposal['rating_std_dev'],
                     ', '.join(x.category_name
                               for x in proposal['categories'].values()),
-                ] +
-                [proposal['affiliations'].get(x.id) for x in affiliations]
-            )
+                ],
+                (proposal['affiliations'].get(x.id) for x in affiliations))
 
     @with_call_review(permission=PermissionType.EDIT)
     def view_review_affiliation_weight(self, db, call, can, form):

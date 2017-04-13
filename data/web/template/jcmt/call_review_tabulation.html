@@ -30,8 +30,8 @@
 {% endblock %}
 
 {% macro render_jcmt_heading(weathers, instruments, sortable=false) %}
-    {% for (weather_id, weather) in weathers.items() %}
-        <th class="sideways{{ ' sortable sortreverse' if sortable }}{{ ' spacer_left' if loop.first }}" data-sortkey="jcmt_weather_{{ weather_id }}"><div><div><span>{{ weather.name }}</span></div></div></th>
+    {% for (weather_id, weather_name) in weathers.items() %}
+        <th class="sideways{{ ' sortable sortreverse' if sortable }}{{ ' spacer_left' if loop.first }}" data-sortkey="jcmt_weather_{{ weather_id }}"><div><div><span>{{ weather_name }}</span></div></div></th>
     {% endfor %}
     <th class="sideways{{' sortable sortreverse' if sortable }}" data-sortkey="jcmt_weather_none"><div><div><span>Unknown</span></div></div></th>
     {% for (instrument_id, instrument_name) in instruments.items() %}

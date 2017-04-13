@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import defaultdict, namedtuple, OrderedDict
+from itertools import chain
 import re
 
 from ...compat import url_encode
@@ -606,7 +607,7 @@ class JCMT(EAOFacility):
             (1.0 - (total_weight / 100.0)) * available.total_non_free
 
         tabulation.update({
-            'jcmt_weathers': JCMTWeather.get_available(),
+            'jcmt_weathers': JCMTWeather.get_options(),
             'jcmt_instruments': JCMTInstrument.get_options(),
             'jcmt_instruments_ancillary':
                 JCMTInstrument.get_options_with_ancillary(),
@@ -626,24 +627,23 @@ class JCMT(EAOFacility):
         return tabulation
 
     def _get_proposal_tabulation_titles(self, tabulation):
-        return (
-            super(JCMT, self)._get_proposal_tabulation_titles(tabulation) +
-            ['Options', 'Request'] +
-            [x.name for x in tabulation['jcmt_weathers'].values()] +
-            ['Unknown weather'] +
-            [x for x in tabulation['jcmt_instruments_ancillary'].values()] +
-            ['Unknown instrument'] +
-            ['Allocation'] +
-            [x.name for x in tabulation['jcmt_weathers'].values()] +
-            ['Unknown weather'] +
-            [x for x in tabulation['jcmt_instruments_ancillary'].values()] +
-            ['Unknown instrument']
-        )
+        return chain(
+            super(JCMT, self)._get_proposal_tabulation_titles(tabulation),
+            ['Options', 'Request'],
+            tabulation['jcmt_weathers'].values(),
+            ['Unknown weather'],
+            tabulation['jcmt_instruments_ancillary'].values(),
+            ['Unknown instrument'],
+            ['Allocation'],
+            tabulation['jcmt_weathers'].values(),
+            ['Unknown weather'],
+            tabulation['jcmt_instruments_ancillary'].values(),
+            ['Unknown instrument'])
 
     def _get_proposal_tabulation_rows(self, tabulation):
-        weathers = list(tabulation['jcmt_weathers'].keys()) + [None]
-        instruments = list(
-            tabulation['jcmt_instruments_ancillary'].keys()) + [None]
+        weathers = list(chain(tabulation['jcmt_weathers'].keys(), [None]))
+        instruments = list(chain(
+            tabulation['jcmt_instruments_ancillary'].keys(), [None]))
 
         for (row, proposal) in zip(
                 super(JCMT, self)._get_proposal_tabulation_rows(tabulation),
@@ -653,18 +653,17 @@ class JCMT(EAOFacility):
             if (allocation is None) or (not proposal['decision_accept']):
                 allocation = JCMTRequestTotal(None, {}, {}, {})
 
-            yield (
-                row +
+            yield chain(
+                row,
                 [
                     ', '.join(proposal['jcmt_options']),
                     request.total,
-                ] +
-                [request.weather.get(x) for x in weathers] +
-                [request.instrument.get(x) for x in instruments] +
-                [allocation.total] +
-                [allocation.weather.get(x) for x in weathers] +
-                [allocation.instrument.get(x) for x in instruments]
-            )
+                ],
+                [request.weather.get(x) for x in weathers],
+                [request.instrument.get(x) for x in instruments],
+                [allocation.total],
+                [allocation.weather.get(x) for x in weathers],
+                [allocation.instrument.get(x) for x in instruments])
 
     @with_proposal(permission=PermissionType.EDIT)
     def view_request_edit(self, db, proposal, can, form):
