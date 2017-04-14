@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -28,7 +28,7 @@ from hedwig.db.meta import auth_failure, invitation, reset_token
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from hedwig.type.collection import EmailCollection, ResultCollection
-from hedwig.type.enum import BaseCallType, FormatType
+from hedwig.type.enum import BaseCallType, BaseTextRole, FormatType
 from hedwig.type.simple import Email, \
     Institution, InstitutionInfo, MemberInstitution, \
     Person, UserInfo
@@ -691,6 +691,77 @@ class DBPeopleTest(DBTestCase):
         self.db.update_person(person_id, admin=True)
         person = self.db.get_person(person_id)
         self.assertTrue(person.admin)
+
+    def test_person_merge(self):
+        # Create two test person records.
+        person_1 = self.db.add_person('Person One')
+        self.assertIsInstance(person_1, int)
+
+        user_1 = self.db.add_user('user1', 'pass1', person_id=person_1)
+        self.assertIsInstance(user_1, int)
+
+        person_2 = self.db.add_person('Person Two')
+        self.assertIsInstance(person_2, int)
+
+        # Associate some information with the second (the duplicate).
+        self.db.add_invitation(person_2)
+        self.db.get_email_verify_token(person_2, 'a@b')
+
+        (proposal_id, affiliation_id) = self._create_test_proposal(person_2)
+        self.db.set_proposal_text(
+            BaseTextRole, proposal_id, BaseTextRole.ABSTRACT,
+            'The abstract', FormatType.PLAIN, 2, person_2, is_update=False)
+
+        # Check the tests that the two user identifiers exist.
+        with self.assertRaisesRegex(
+                ConsistencyError, 'duplicate person .* does not exist'):
+            self.db.merge_person_records(person_1, 1999999)
+
+        with self.assertRaisesRegex(
+                ConsistencyError, 'main person .* does not exist'):
+            self.db.merge_person_records(1999999, person_2)
+
+        # Check constraint on whether the duplicate user is registered.
+        with self.assertRaisesRegex(
+                ConsistencyError, 'is not already registered'):
+            self.db.merge_person_records(person_1, person_2,
+                                         duplicate_person_registered=True)
+
+        user_2 = self.db.add_user('user2', 'pass2', person_id=person_2)
+        self.assertIsInstance(user_2, int)
+
+        self.db.get_password_reset_token(user_2, remote_addr=None)
+
+        with self.assertRaisesRegex(
+                ConsistencyError, 'is already registered'):
+            self.db.merge_person_records(person_1, person_2,
+                                         duplicate_person_registered=False)
+
+        # Perform the merge.
+        self.db.merge_person_records(person_1, person_2)
+
+        # Make sure that the main record is still there and has acquired
+        # associated records from the (removed) duplicate.
+        record = self.db.get_user_name(user_1)
+        self.assertIsNotNone(record)
+
+        record = self.db.get_person(
+            person_1, with_proposals=True, with_reviews=True)
+        self.assertEqual(record.id, person_1)
+        self.assertEqual(
+            [x.proposal_id for x in record.proposals.values()],
+            [proposal_id])
+        self.assertEqual(
+            [x.editor for x in self.db.search_proposal_text(
+                proposal_id=proposal_id, role=BaseTextRole.ABSTRACT).values()],
+            [person_1])
+
+        # Check that the duplicate record has gone.
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_person(person_2)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_user_name(user_2)
 
     def test_password_reset_token(self):
         # Create a user record.

@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -38,6 +38,7 @@ from ...util import get_countries, is_list_like
 from ..meta import auth_failure, email, group_member, \
     institution, institution_log, \
     invitation, member, message_recipient, person, \
+    proposal_fig, proposal_pdf, proposal_text, \
     reset_token, reviewer, user, user_log, verify_token
 from ..util import require_not_none
 
@@ -565,6 +566,83 @@ class PeoplePart(object):
 
             conn.execute(institution.delete().where(
                 institution.c.id == duplicate_institution_id))
+
+    def merge_person_records(self, main_person_id, duplicate_person_id,
+                             duplicate_person_registered=None,
+                             _conn=None, _test_skip_check=False):
+        """
+        Merge the two given person records.
+        """
+
+        with self._transaction(_conn=_conn) as conn:
+            if not _test_skip_check:
+                if not self._exists_id(conn, person, main_person_id):
+                    raise ConsistencyError(
+                        'main person ID {} does not exist for merge',
+                        main_person_id)
+                if not self._exists_id(conn, person, duplicate_person_id):
+                    raise ConsistencyError(
+                        'duplicate person ID {} does not exist for merge',
+                        duplicate_person_id)
+
+            # Check if the duplicate person is registered.
+            duplicate_user_id = conn.execute(select([person.c.user_id]).where(
+                person.c.id == duplicate_person_id
+            )).scalar()
+
+            # Apply constraint on duplicate person being registered.
+            if duplicate_person_registered is None:
+                pass
+
+            elif duplicate_person_registered:
+                if duplicate_user_id is None:
+                    raise ConsistencyError(
+                        'duplicate person {} is not already registered',
+                        duplicate_person_id)
+
+            else:
+                if duplicate_user_id is not None:
+                    raise ConsistencyError(
+                        'duplicate person {} is already registered as user {}',
+                        duplicate_person_id, duplicate_user_id)
+
+            # Swap out references in other tables.
+            for (table, column_name) in (
+                    (group_member, 'person_id'),
+                    (institution_log, 'person_id'),
+                    (member, 'person_id'),
+                    (message_recipient, 'person_id'),
+                    (proposal_fig, 'uploader'),
+                    (proposal_pdf, 'uploader'),
+                    (proposal_text, 'editor'),
+                    (reviewer, 'person_id')):
+                column = getattr(table.c, column_name)
+                conn.execute(table.update().where(
+                    column == duplicate_person_id
+                ).values({
+                    column: main_person_id,
+                }))
+
+            # Delete references which are no longer relevant.
+            # Note: email table entries are deleted with the person by cascade.
+            for table in (invitation, verify_token):
+                conn.execute(table.delete().where(
+                    table.c.person_id == duplicate_person_id))
+
+            # Remove duplicate person record.
+            conn.execute(person.delete().where(
+                person.c.id == duplicate_person_id))
+
+            # Remove duplicate user record, if present.
+            if duplicate_user_id is not None:
+                # Remove entries which refer to the old user_id.
+                for table in (reset_token, user_log):
+                    conn.execute(table.delete().where(
+                        table.c.user_id == duplicate_user_id))
+
+                # Remove the old user record itself.
+                conn.execute(user.delete().where(
+                    user.c.id == duplicate_user_id))
 
     def search_email(self, person_id, address=None, _conn=None):
         """
@@ -1157,14 +1235,11 @@ class PeoplePart(object):
                                                 with_reviews=True,
                                                 _conn=conn)
 
-            # Remove the token.  (Must do first otherwise it has a foreign
-            # key which references the person record and prevents its
-            # deletion, but this should be OK as any exceptions should
-            # abort the whole transaction.)
-            conn.execute(invitation.delete().where(
-                invitation.c.token == token))
-
             if user_id is not None:
+                # Remove the token.
+                conn.execute(invitation.delete().where(
+                    invitation.c.token == token))
+
                 # They have registered a new user account to link to the
                 # invited person record.  Simply set the user_id there.
                 result = conn.execute(person.update().where(and_(
@@ -1185,28 +1260,15 @@ class PeoplePart(object):
                     conn, user_id, UserLogEvent.USE_INVITE, remote_addr)
 
             elif new_person_id is not None:
-                # Ensure the "old_person_id" profile wasn't already
+                # Merge the person records, treating the "old_person_id"
+                # from the invitation as a duplicate, applying a constraint
+                # to ensure the "old_person_id" profile wasn't already
                 # registered.
-                result = conn.execute(select([person.c.user_id]).where(
-                    person.c.id == old_person_id
-                )).scalar()
-                if result is not None:
-                    raise ConsistencyError(
-                        'person {} is already registered as user {}',
-                        old_person_id, result)
-
-                # They already have a person record, so swap out the
-                # record linked to the invitation and delete it.
-                for table in (member, group_member, reviewer,
-                              message_recipient):
-                    conn.execute(table.update().where(
-                        table.c.person_id == old_person_id
-                    ).values({
-                        table.c.person_id: new_person_id,
-                    }))
-
-                conn.execute(person.delete().where(
-                    person.c.id == old_person_id))
+                self.merge_person_records(
+                    main_person_id=new_person_id,
+                    duplicate_person_id=old_person_id,
+                    duplicate_person_registered=False,
+                    _conn=conn)
 
             else:
                 # They were there at the start of the method so this
