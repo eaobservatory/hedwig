@@ -849,7 +849,7 @@ class GenericReview(object):
         return self._view_reviewer_reinvite_remind(
             db, reviewer, proposal, form, is_reminder=False)
 
-    @with_review(permission=PermissionType.NONE)
+    @with_review(permission=PermissionType.NONE, with_invitation=True)
     def view_reviewer_remind(self, db, reviewer, proposal, form):
         return self._view_reviewer_reinvite_remind(
             db, reviewer, proposal, form, is_reminder=True)

@@ -287,7 +287,7 @@ def with_proposal(permission, indirect_facility=False, **get_proposal_kwargs):
     return decorator
 
 
-def with_review(permission, **get_proposal_kwargs):
+def with_review(permission, with_invitation=False, **get_proposal_kwargs):
     """
     Decorator for methods which deal with reviews of proposals.
 
@@ -309,7 +309,8 @@ def with_review(permission, **get_proposal_kwargs):
                 reviewer = db.search_reviewer(
                     reviewer_id=reviewer_id,
                     with_review=True, with_review_text=True,
-                    with_review_note=True).get_single()
+                    with_review_note=True, with_invitation=with_invitation
+                ).get_single()
             except NoSuchRecord:
                 raise HTTPNotFound('Reviewer record not found')
 
