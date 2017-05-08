@@ -19,7 +19,6 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from ..config import get_config
-from ..web.util import mangle_email_address
 
 
 class HomeView(object):
@@ -35,5 +34,5 @@ class HomeView(object):
 
         return {
             'title': 'Contact Us',
-            'email_address': mangle_email_address(email),
+            'email_address': email,
         }

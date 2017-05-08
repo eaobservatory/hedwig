@@ -31,7 +31,7 @@ from ..type.simple import Email, \
     Institution, InstitutionLog, Person, ProposalWithCode
 from ..type.util import null_tuple
 from ..util import get_countries
-from ..web.util import flash, mangle_email_address, session, url_for, \
+from ..web.util import flash, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
 from .util import organise_collection, with_institution, with_person, \
     with_verified_admin
@@ -496,8 +496,7 @@ class PeopleView(object):
             ((person.user_id is None) and can.edit))
 
         person = person._replace(
-            email=[x._replace(address=mangle_email_address(x.address))
-                   for x in person.email.values()
+            email=[x for x in person.email.values()
                    if x.public or view_all_email])
 
         return {

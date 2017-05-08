@@ -89,7 +89,7 @@
                     <th rowspan="{{ person.email | length }}">Email</th>
                 {% endif %}
                 <td>
-                    <span class="mangled_address" data-mangled="{{ email.address }}">&nbsp;</span>
+                    <span class="mangled_address" data-mangled="{{ email.address | mangle_email_address }}">&nbsp;</span>
                     {% if email.primary %}<span class="label">primary</span>{% endif %}
                     {% if email.verified %}<span class="label">verified</span>{% endif %}
                     {% if email.public %}<span class="label">public</span>{% endif %}

@@ -132,7 +132,7 @@ def mangle_email_address(email_address):
     when they are placed in the `mangled` data attribute of a span of
     class `mangled_address`, e.g.::
 
-        <span class="mangled_address" data-mangled="{{ email_address }}">&nbsp;</span>
+        <span class="mangled_address" data-mangled="{{ email_address | mangle_email_address }}">&nbsp;</span>
     """
 
     mangled = []
