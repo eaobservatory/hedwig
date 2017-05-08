@@ -55,6 +55,13 @@
             <input type="hidden" name="duplicate_id" value="{{ duplicate_id }}" />
         </p>
     </form>
+
+    <form method="POST" action="{{ url_for('.institution_subsume', institution_id=duplicate_id) }}">
+        <p>
+            <input type="submit" name="submit_swap" value="Swap main and duplicate institutions" />
+            <input type="hidden" name="duplicate_id" value="{{ institution.id }}" />
+        </p>
+    </form>
 {% else %}
     <form method="POST" action="{{ url_for('.institution_subsume', institution_id=institution.id) }}">
         <ol>
