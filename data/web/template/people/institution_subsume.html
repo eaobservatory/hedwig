@@ -52,15 +52,15 @@
         <p>
             <input type="submit" name="submit_cancel" value="Cancel" />
             <input type="submit" name="submit_confirm" value="Confirm" />
-            <input type="hidden" name="institution_id" value="{{ institution_id }}" />
+            <input type="hidden" name="duplicate_id" value="{{ duplicate_id }}" />
         </p>
     </form>
 {% else %}
     <form method="POST" action="{{ url_for('.institution_subsume', institution_id=institution.id) }}">
         <ol>
             <li>
-                <label for="institution_id">Institution</label>
-                <select name="institution_id">
+                <label for="duplicate_id">Institution</label>
+                <select name="duplicate_id">
                     {% for institution in institutions %}
                         <option value="{{ institution.id }}">
                             {{ render_institution_summary(institution) }}

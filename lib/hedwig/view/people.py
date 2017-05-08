@@ -1084,7 +1084,7 @@ class PeopleView(object):
             })
 
         else:
-            duplicate_id = int(form['institution_id'])
+            duplicate_id = int(form['duplicate_id'])
 
             if duplicate_id == institution_id:
                 raise ErrorPage('Main and duplicate identifiers are the same.')
@@ -1111,7 +1111,7 @@ class PeopleView(object):
             else:
                 ctx.update({
                     'show_confirm_prompt': True,
-                    'institution_id': duplicate_id,
+                    'duplicate_id': duplicate_id,
                     'duplicate': duplicate,
                 })
 
