@@ -389,6 +389,11 @@ class PeopleView(object):
 
     @with_verified_admin
     def user_log(self, db, user_id):
+        try:
+            user_name = db.get_user_name(user_id=user_id)
+        except NoSuchRecord:
+            user_name = None
+
         person = None
         try:
             person = db.search_person(user_id=user_id).get_single()
@@ -399,7 +404,8 @@ class PeopleView(object):
         events = db.search_user_log(user_id=user_id)
 
         return {
-            'title': '{}: Event Log'.format(name),
+            'title': '{}: Account Log'.format(name),
+            'user_name': user_name,
             'person': person,
             'events': events,
         }

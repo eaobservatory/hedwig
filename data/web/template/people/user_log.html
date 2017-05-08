@@ -5,6 +5,17 @@
 {% set help_link=url_for('help.admin_page', page_name='user') %}
 
 {% block content %}
+<h2>Account Details</h2>
+
+<table>
+    <tr>
+        <th>User name</th>
+        <td>{% if user_name is none %}<span class="missing_data">unknown</span>{% else %}{{ user_name }}{% endif %}</td>
+    </tr>
+</table>
+
+<h2>Account Log Events</h2>
+
 {% if events %}
     <table>
         <tr>

@@ -14,6 +14,8 @@ The "View messages" link allows you to see the
 
 The "User account log" link shows you a log of
 actions effecting the person's user account.
+This page also shows the person's user account name ---
+the name with which they log in.
 
 .. image:: image/user_log.png
 
