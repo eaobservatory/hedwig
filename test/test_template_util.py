@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -141,6 +141,11 @@ class TemplateUtilTestCase(WebAppTestCase):
             json.loads(f({'e': 'f'}, dynamic=[
                 ('test', [1, 2, 3], False, {1: 'one', 2: 'two'}, 'null')])),
             {'e': 'f', 'test_1': 'one', 'test_2': 'two', 'test_3': 'null'})
+
+    def test_filter_mangle_email(self):
+        f = self.app.jinja_env.filters['mangle_email_address']
+
+        self.assertEqual(f('a@b'), '["&#97;", "&#64;", "&#98;"]')
 
     def test_filter_message_state(self):
         f = self.app.jinja_env.filters['message_state_name']

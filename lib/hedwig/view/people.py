@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -887,6 +887,78 @@ class PeopleView(object):
             'proposals': proposals,
             'person': person,
         }
+
+    @with_verified_admin
+    @with_person(permission=PermissionType.NONE)
+    def person_subsume(self, db, person, form):
+        ctx = {
+            'title': '{}: Subsume Duplicate'.format(person.name),
+            'person': person,
+        }
+
+        if form is None:
+            ctx.update({
+                'show_confirm_prompt': False,
+                'persons': [
+                    p for p in db.search_person(
+                        registered=True, with_institution=True).values()
+                    if p.id != person.id],
+            })
+
+        else:
+            duplicate_id = int(form['duplicate_id'])
+
+            if duplicate_id == person.id:
+                raise ErrorPage('Main and duplicate identifiers are the same.')
+
+            try:
+                duplicate = db.get_person(
+                    person_id=duplicate_id,
+                    with_institution=True, with_email=True)
+            except NoSuchRecord:
+                raise HTTPError('Duplicate person profile not found.')
+
+            assert duplicate.id == duplicate_id
+
+            if 'submit_cancel' in form:
+                raise HTTPRedirect(url_for('.person_view',
+                                           person_id=person.id))
+
+            elif 'submit_confirm' in form:
+                db.merge_person_records(
+                    main_person_id=person.id,
+                    duplicate_person_id=duplicate.id,
+                    duplicate_person_registered=True)
+
+                flash('The person profiles have been merged.')
+
+                raise HTTPRedirect(url_for('.person_view',
+                                           person_id=person.id))
+
+            else:
+                user_name = None
+                if person.user_id is not None:
+                    try:
+                        user_name = db.get_user_name(user_id=person.user_id)
+                    except NoSuchRecord:
+                        pass
+
+                duplicate_user_name = None
+                if duplicate.user_id is not None:
+                    try:
+                        duplicate_user_name = db.get_user_name(
+                            user_id=duplicate.user_id)
+                    except NoSuchRecord:
+                        pass
+
+                ctx.update({
+                    'show_confirm_prompt': True,
+                    'duplicate': duplicate,
+                    'duplicate_user_name': duplicate_user_name,
+                    'user_name': user_name,
+                })
+
+        return ctx
 
     def institution_list(self, db):
         return {

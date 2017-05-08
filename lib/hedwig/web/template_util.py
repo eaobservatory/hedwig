@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -34,6 +34,7 @@ from ..type.enum import AffiliationType, Assessment, \
 from ..util import get_countries
 
 from .format import format_text
+from .util import mangle_email_address as _mangle_email_address
 
 
 def register_template_utils(app):
@@ -176,6 +177,10 @@ def register_template_utils(app):
                         values.get(element, default)
 
         return json_module.dumps(value)
+
+    @app.template_filter()
+    def mangle_email_address(value):
+        return _mangle_email_address(value)
 
     @app.template_filter()
     def message_state_name(value):

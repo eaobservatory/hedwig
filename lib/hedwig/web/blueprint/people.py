@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -191,6 +191,15 @@ def create_people_blueprint(db, facilities):
     @templated('person_reviews.html')
     def person_view_reviews(person_id):
         return view.person_reviews_other(db, person_id, facilities)
+
+    @bp.route('/person/<int:person_id>/subsume',
+              methods=['GET', 'POST'])
+    @require_admin
+    @templated('people/person_subsume.html')
+    def person_subsume(person_id):
+        return view.person_subsume(
+            db, person_id,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/institution/')
     @require_auth()

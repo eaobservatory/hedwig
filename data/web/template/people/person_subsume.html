@@ -1,0 +1,128 @@
+{% extends 'layout.html' %}
+{% set navigation=['people', (person.name, url_for('.person_view', person_id=person.id))] %}
+{% set help_link=url_for('help.admin_page', page_name='user') %}
+{% set scripts = ['unmangle'] %}
+
+{% block content %}
+{% if show_confirm_prompt %}
+    <p>
+        Are you sure you wish to merge these person profiles?
+    </p>
+
+    <ul>
+        <li>The person will only be able to log in using the account which is kept.</li>
+    </ul>
+
+    <table>
+        <tr>
+            <th>&nbsp;</th>
+            <th>Main record<br /><i>(to be kept)</i></th>
+            <th>Duplicate record<br /><i>(to be replaced)</i></th>
+        </tr>
+        <tr>
+            <th>Person name</th>
+            <td>
+                <a href="{{ url_for('.person_view', person_id=person.id) }}">
+                    {% if person.title is not none %}{{ person.title | title_name }}{% endif %}
+                    {{ person.name }}
+                </a>
+            </td>
+            <td>
+                <a href="{{ url_for('.person_view', person_id=duplicate.id) }}">
+                    {% if duplicate.title is not none %}{{ duplicate.title | title_name }}{% endif %}
+                    {{ duplicate.name }}
+                </a>
+            </td>
+        </tr>
+        <tr>
+            <th>User name</th>
+            <td>{% if user_name is none %}<span class="missing_data">none</span>{% else %}<a href="{{ url_for('.user_log', user_id=person.user_id) }}">{{ user_name }}</a>{% endif %}</td>
+            <td>{% if duplicate_user_name is none %}<span class="missing_data">none</span>{% else %}<a href="{{ url_for('.user_log', user_id=duplicate.user_id) }}">{{ duplicate_user_name }}</a>{% endif %}</td>
+        </tr>
+        <tr>
+            <th>Institution</th>
+            <td>{% if person.institution is none %}<span class="missing_data">none</span>{% else %}<a href="{{ url_for('.institution_view', institution_id=person.institution.id) }}">{{ person.institution.name }}</a>{% endif %}</td>
+            <td>{% if duplicate.institution is none %}<span class="missing_data">none</span>{% else %}<a href="{{ url_for('.institution_view', institution_id=duplicate.institution.id) }}">{{ duplicate.institution.name }}</a>{% endif %}</td>
+        </tr>
+        <tr>
+            <th>Email</th>
+            <td>
+                {% if person.email is none %}
+                    <span class="missing_data">none</span>
+                {% else %}
+                    <ul>
+                        {% for email in person.email.values() %}
+                            <li><span class="mangled_address" data-mangled="{{ email.address | mangle_email_address }}">&nbsp;</span></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </td>
+            <td>
+                {% if duplicate.email is none %}
+                    <span class="missing_data">none</span>
+                {% else %}
+                    <ul>
+                        {% for email in duplicate.email.values() %}
+                            <li><span class="mangled_address" data-mangled="{{ email.address | mangle_email_address }}">&nbsp;</span></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Other links</th>
+            <td>
+                <ul>
+                    <li><a href="{{ url_for('.person_view_proposals', person_id=person.id) }}">Proposal list</a></li>
+                    <li><a href="{{ url_for('.person_view_reviews', person_id=person.id) }}">Review list</a></li>
+                    <li><a href="{{ url_for('admin.message_list', person_id=person.id) }}">Messages</a></li>
+                </ul>
+            </td>
+            <td>
+                <ul>
+                    <li><a href="{{ url_for('.person_view_proposals', person_id=duplicate.id) }}">Proposal list</a></li>
+                    <li><a href="{{ url_for('.person_view_reviews', person_id=duplicate.id) }}">Review list</a></li>
+                    <li><a href="{{ url_for('admin.message_list', person_id=duplicate.id) }}">Messages</a></li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+    <form method="POST" action="{{ url_for('.person_subsume', person_id=person.id) }}">
+        <p>
+            <input type="submit" name="submit_cancel" value="Cancel" />
+            <input type="submit" name="submit_confirm" value="Confirm" />
+            <input type="hidden" name="duplicate_id" value="{{ duplicate.id }}" />
+        </p>
+    </form>
+
+    <form method="POST" action="{{ url_for('.person_subsume', person_id=duplicate.id) }}">
+        <p>
+            <input type="submit" name="submit_swap" value="Swap main and duplicate profiles" />
+            <input type="hidden" name="duplicate_id" value="{{ person.id }}" />
+        </p>
+    </form>
+{% else %}
+    <form method="POST" action="{{ url_for('.person_subsume', person_id=person.id) }}">
+        <ol>
+            <li>
+                <label for="duplicate_id">Person</label>
+                <select name="duplicate_id">
+                    {% for person in persons %}
+                        <option value="{{ person.id }}">
+                            {{ person.name | truncate(40, killwords=true, end='\u2026') }}{% if person.institution_id is not none %},
+                                {{ person.institution_name | truncate(35, killwords=true, end='\u2026') }}{% if person.institution_country is not none %},
+                                    {{ person.institution_country | country_name | truncate(15, killwords=true, end='\u2026')}}
+                                {% endif %}
+                            {% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </li>
+            <li>
+                <input type="submit" value="Select duplicate profile" name="submit" />
+            </li>
+        </ol>
+    </form>
+{% endif %}
+{% endblock %}

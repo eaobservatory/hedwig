@@ -41,6 +41,8 @@
             {% if person.user_id is not none %}
                 <br />
                 <a href="{{ url_for('.user_log', user_id=person.user_id) }}">User account log</a>
+                <br />
+                <a href="{{ url_for('.person_subsume', person_id=person.id) }}">Subsume duplicate profile</a>
             {% endif %}
         </p>
     </nav>
