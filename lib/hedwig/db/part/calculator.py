@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -217,13 +217,22 @@ class CalculatorPart(object):
         """
         Search for a MOC containing the given cell, or a cell
         at a lower order containing this cell.
+
+        Multiple cells can be specified to allow a certain region
+        to be searched.  The number of cells given should be reasonable
+        since this function assembles a single SQL query for all cells
+        at all levels being searched.
         """
 
         options = []
-        for cell_order in range(order, -1, -1):
-            options.append(and_(moc_cell.c.order == cell_order,
-                                moc_cell.c.cell == cell))
-            cell //= 4
+        for (cell_order, cell_query, multiple_cells) in \
+                self._search_moc_cell_query(order, cell):
+            if multiple_cells:
+                condition = (moc_cell.c.cell.in_(cell_query))
+            else:
+                condition = (moc_cell.c.cell == cell_query)
+
+            options.append(and_(moc_cell.c.order == cell_order, condition))
 
         stmt = select([
             moc.c.id,
@@ -250,6 +259,30 @@ class CalculatorPart(object):
                                          **row)
 
         return ans
+
+    def _search_moc_cell_query(self, order, cell):
+        """
+        Generate list of orders and cells to use in a MOC cell search.
+        """
+
+        orders = []
+
+        multiple_cells = is_list_like(cell)
+
+        for cell_order in range(order, -1, -1):
+            # If the list-like object only has one entry, extract it.
+            if multiple_cells and len(cell) == 1:
+                cell = next(iter(cell))
+                multiple_cells = False
+
+            orders.append((cell_order, cell, multiple_cells))
+
+            if multiple_cells:
+                cell = set(x // 4 for x in cell)
+            else:
+                cell //= 4
+
+        return orders
 
     def sync_proposal_calculation(self, proposal_id, records):
         """

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -163,7 +163,66 @@ class DBCalculatorTest(DBTestCase):
         update = self.db.update_moc_cell(moc_id, moc_b, block_pause=0)
         self.assertEqual(update, {1: 'bulk'})
 
+        cell_query = self.db._search_moc_cell_query(2, 20)
+        self.assertEqual(cell_query, [
+            (2, 20, False),
+            (1, 5, False),
+            (0, 1, False),
+        ])
+
         result = self.db.search_moc_cell(facility_id, None, 2, 20)
+        self.assertEqual(len(result), 1)
+
+        # Multi-cell search with 1 match.
+        cell_set = set((80, 81, 84, 88))
+        cell_query = self.db._search_moc_cell_query(3, cell_set)
+        self.assertEqual(cell_query, [
+            (3, set((80, 81, 84, 88)), True),
+            (2, set((20, 21, 22)), True),
+            (1, 5, False),
+            (0, 1, False),
+        ])
+
+        result = self.db.search_moc_cell(facility_id, None, 3, cell_set)
+        self.assertEqual(len(result), 1)
+
+        # Multi-cell search with 2 matches.
+        cell_set = set((80, 100, 120))
+        cell_query = self.db._search_moc_cell_query(3, cell_set)
+        self.assertEqual(cell_query, [
+            (3, set((80, 100, 120)), True),
+            (2, set((20, 25, 30)), True),
+            (1, set((5, 6, 7)), True),
+            (0, 1, False),
+        ])
+
+        result = self.db.search_moc_cell(facility_id, None, 3, cell_set)
+        self.assertEqual(len(result), 1)
+
+        # Multi-cell search with no matches.
+        cell_set = set((3, 4, 5, 160, 161, 162, 163, 164))
+        cell_query = self.db._search_moc_cell_query(3, cell_set)
+        self.assertEqual(cell_query, [
+            (3, set((3, 4, 5, 160, 161, 162, 163, 164)), True),
+            (2, set((0, 1, 40, 41)), True),
+            (1, set((0, 10)), True),
+            (0, set((0, 2)), True),
+        ])
+
+        result = self.db.search_moc_cell(facility_id, None, 3, cell_set)
+        self.assertEqual(len(result), 0)
+
+        # Multi-cell style search with only one cell.
+        cell_set = set((80,))
+        cell_query = self.db._search_moc_cell_query(3, cell_set)
+        self.assertEqual(cell_query, [
+            (3, 80, False),
+            (2, 20, False),
+            (1, 5, False),
+            (0, 1, False),
+        ])
+
+        result = self.db.search_moc_cell(facility_id, None, 3, cell_set)
         self.assertEqual(len(result), 1)
 
         with self.assertRaises(ConsistencyError):
