@@ -523,7 +523,7 @@ class ReviewerCollection(ResultCollection, CollectionByProposal):
             # Get rating and weight for this review.
             (rating, weight) = rating_weight_function(review)
 
-            if (rating is None) or (weight) is None:
+            if (rating is None) or (weight is None):
                 continue
 
             # Add to running totals.
