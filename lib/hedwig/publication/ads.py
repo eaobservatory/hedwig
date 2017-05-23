@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -71,7 +71,7 @@ def _get_pub_info_ads_generic(type_, codes):
 
         if type_ == 'doi':
             query_type = 'identifier'
-            query = ['doi:{}'.format(x) for x in query]
+            query = ['doi:"{}"'.format(_escape_term(x)) for x in query]
         else:
             query_type = type_
 
@@ -129,3 +129,7 @@ def _get_pub_info_ads_generic(type_, codes):
             sleep(3)
 
     return ans
+
+
+def _escape_term(string):
+    return string.replace('"', '\\"')
