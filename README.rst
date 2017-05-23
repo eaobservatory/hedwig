@@ -276,6 +276,30 @@ which provides tracebacks and provides access to a Python shell.
 When this option is specified, `hedwigctl` configures the
 internal server to listen on localhost only.
 
+Managing Administrative Access
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Once you have created an account (with person profile) via the
+Hedwig web interface, you can grant administrative access
+using the `hedwigctl` tool::
+
+    scripts/hedwigctl admin --person 1
+
+This requires the person identifier,
+as seen at the end of the URL of your profile page.
+This will typically be 1 for the first account created.
+You can repeat this process to grant administrative access
+to additional people.
+You can also revoke administrative access by adding the `--remove`
+command line option::
+
+    scripts/hedwigctl admin --remove --person 1
+
+Finally you can list people with administrative access using the
+`--list` option::
+
+    scripts/hedwigctl admin --list
+
 Poll Process
 ~~~~~~~~~~~~
 

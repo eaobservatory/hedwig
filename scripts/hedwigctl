@@ -21,6 +21,8 @@
 hedwigctl - Hedwig proposal system control tool
 
 Usage:
+    hedwigctl admin [-v | -q] [--remove] --person <person>
+    hedwigctl admin [-v | -q] --list
     hedwigctl poll [-v | -q] [--dry-run]
         [--close | --no-close]
         [--email | --no-email]
@@ -36,6 +38,9 @@ Usage:
 Options:
     --help, -h                Show usage information.
     --verbose, -v             Print debugging information.
+    --list                    List people with administrative access.
+    --remove                  Remove administrative access.
+    --person <person>         Person identifier (number).
     --quiet, -q               Omit informational messages.
     --dry-run, -n             Do not actually peform the poll action.
     --https                   Enable use of HTTPS.
@@ -146,6 +151,45 @@ def _configure_logging(args):
         datefmt='%Y-%m-%dT%H:%M:%S',
         format='%(asctime)s %(levelname)s %(name)s %(message)s',
         filename=args['--logfile'])
+
+
+@command
+def admin(args):
+    """
+    Grant or remove administrative access for a given person.
+    """
+
+    from hedwig.config import get_database
+
+    _configure_logging(args)
+
+    db = get_database()
+
+    if args['--list']:
+        for person in db.search_person(admin=True).values():
+            print('{:<8d} {}'.format(person.id, person.name))
+
+    else:
+        person_id = int(args['--person'])
+        admin = (not args['--remove'])
+
+        person = db.get_person(person_id)
+
+        if person.user_id is None:
+            logger.error('{} (person {}) is unregistered',
+                         person.name, person_id)
+
+        elif person.admin == admin:
+            logger.error('{} (person {}) {} administrative access',
+                         person.name, person_id,
+                         ('already has' if person.admin else 'does not have'))
+
+        else:
+            logger.info('{} administrative access for {} (person {})',
+                        ('Granting' if admin else 'Removing'),
+                        person.name, person_id)
+
+            db.update_person(person_id, admin=admin)
 
 
 @command
