@@ -137,6 +137,8 @@ You will then need to edit the file to complete the configuration.
   In this section you can configure maximum file size upload limits (in MiB).
   The Flask `MAX_CONTENT_LENGTH` will be set to the maximum of the sizes
   given here.
+  Please check that your database will accept files of the selected
+  size --- see the `Database`_ section for more information.
 
 * **email**
 
