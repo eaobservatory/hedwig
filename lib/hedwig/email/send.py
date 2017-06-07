@@ -141,21 +141,18 @@ def _prepare_email_message(message, from_, identifier=None):
     independently of actual message sending.
     """
 
-    # Sort recipients into public ("to") and private ("bcc") lists,
+    # Collect recipients in the ("to") list based on their public setting
     # unless there is only one recipient, in which case there's no
-    # need to hide the address.
+    # need to hide the address.  Place all recipients' addresses in the
+    # "plain" list used to actually send the message ("to" + "bcc").
     recipients_plain = []
     recipients_public = []
-    recipients_private = []
     single_recipient = len(message.recipients) == 1
     for recipient in message.recipients:
         recipients_plain.append(recipient.address)
         if single_recipient or recipient.public:
             recipients_public.append(formataddr((recipient.name,
                                                  recipient.address)))
-        else:
-            recipients_private.append(formataddr((recipient.name,
-                                                  recipient.address)))
 
     # Generate message identifier if one has not been provided.
     if identifier is None:
