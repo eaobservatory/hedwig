@@ -129,6 +129,9 @@ def send_email_message(message):
     except socket.error:
         logger.exception('Email message {} not sent due to failure '
                          'to connect to email server', message.id)
+    except:
+        logger.exception('Email message {} not sent due to '
+                         'an unexpected error', message.id)
 
     return None
 
