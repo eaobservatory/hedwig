@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict
 from importlib import import_module
+import json
 import os
 
 try:
@@ -27,14 +28,13 @@ try:
 except ImportError:
     from ConfigParser import SafeConfigParser as ConfigParser
 
-import pycountry
-
 from .compat import make_type
 from .error import FormattedError
 from .db.engine import get_engine
 
 config_file = ('etc', 'hedwig.ini')
 config = None
+countries_file = ('data', 'misc', 'countries.json')
 countries = None
 database = None
 facilities = None
@@ -51,14 +51,13 @@ def get_config():
     global config
 
     if config is None:
-        dir = get_home()
-        file = os.path.join(dir, *config_file)
+        file_ = os.path.join(get_home(), *config_file)
 
-        if not os.path.exists(file):
-            raise FormattedError('config file {} doesn\'t exist', file)
+        if not os.path.exists(file_):
+            raise FormattedError('config file {} doesn\'t exist', file_)
 
         config = ConfigParser()
-        config.read(file)
+        config.read(file_)
 
     return config
 
@@ -75,15 +74,24 @@ def get_countries():
         # Read country name overrides from the configuration file.
         override = dict(get_config().items('countries'))
 
+        # Read countries file.
+        file_ = os.path.join(get_home(), *countries_file)
+
+        if not os.path.exists(file_):
+            raise FormattedError('countries file {} doesn\'t exist', file_)
+
+        with open(file_, 'r') as f:
+            country_info = json.load(f)
+
         items = []
 
-        for country in pycountry.countries:
-            code = country.alpha2
+        for country in country_info['3166-1']:
+            code = country['alpha_2']
             name = override.get(code.lower())
             if name is None:
                 # Try to get the "common_name" if it exists, otherwise use the
                 # normal "name" field.
-                name = getattr(country, 'common_name', country.name)
+                name = country.get('common_name', country['name'])
             items.append((code, name))
 
         items.sort(key=lambda x: x[1])

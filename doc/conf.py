@@ -115,7 +115,6 @@ autodoc_mock_imports = [
     'magic',
     'matplotlib',
     'numpy',
-    'pycountry',
     'PyPDF2', 'PyPDF2.utils',
     'pymoc', 'pymoc.io', 'pymoc.io.fits',
     'requests',

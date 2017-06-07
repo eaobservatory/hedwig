@@ -56,7 +56,6 @@ The following Python modules should be installed:
 * jinja2_orderblocks
 * mysql-connector-python
 * Pillow
-* pycountry
 * pymoc
 * PyPDF2
 * python-magic
