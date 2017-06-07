@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2016 East Asian Observatory.
+# Copyright (C) 2015-2017 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import OrderedDict
 from importlib import import_module
 import os
 
@@ -26,13 +27,15 @@ try:
 except ImportError:
     from ConfigParser import SafeConfigParser as ConfigParser
 
+import pycountry
+
 from .compat import make_type
 from .error import FormattedError
-from .db.control import Database
 from .db.engine import get_engine
 
 config_file = ('etc', 'hedwig.ini')
 config = None
+countries = None
 database = None
 facilities = None
 home_directory = None
@@ -58,6 +61,29 @@ def get_config():
         config.read(file)
 
     return config
+
+
+def get_countries():
+    """
+    Get ordered dictionary of 2-letter country codes mapping to
+    country names.  This is sorted by country name.
+    """
+
+    global countries
+
+    if countries is None:
+        items = []
+
+        for c in pycountry.countries:
+            # Try to get the "common_name" if it exists, otherwise use the
+            # normal "name" field.
+            items.append((c.alpha2, getattr(c, 'common_name', c.name)))
+
+        items.sort(key=lambda x: x[1])
+
+        countries = OrderedDict(items)
+
+    return countries
 
 
 def get_database(database_url=None, facility_spec=None):
@@ -101,6 +127,10 @@ def _get_db_class(facility_spec):
     """
     Create a combined database class for the given facilities.
     """
+
+    # Defer import of database modules to avoid circular imports
+    # when database modules import from this module.
+    from .db.control import Database
 
     db_parts = []
 

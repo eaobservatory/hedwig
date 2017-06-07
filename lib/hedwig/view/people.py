@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict, namedtuple
 from datetime import datetime
 
+from ..config import get_countries
 from ..email.format import render_email_template
 from ..error import ConsistencyError, Error, MultipleRecords, NoSuchRecord, \
     UserError
@@ -30,7 +31,6 @@ from ..type.enum import PermissionType, PersonTitle, ProposalState
 from ..type.simple import Email, \
     Institution, InstitutionLog, Person, ProposalWithCode
 from ..type.util import null_tuple
-from ..util import get_countries
 from ..web.util import flash, session, url_for, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
 from .util import organise_collection, with_institution, with_person, \

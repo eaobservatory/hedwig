@@ -18,35 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import OrderedDict
 import logging
-
-import pycountry
-
-countries = None
-
-
-def get_countries():
-    """
-    Get ordered dictionary of 2-letter country codes mapping to
-    country names.  This is sorted by country name.
-    """
-
-    global countries
-
-    if countries is None:
-        items = []
-
-        for c in pycountry.countries:
-            # Try to get the "common_name" if it exists, otherwise use the
-            # normal "name" field.
-            items.append((c.alpha2, getattr(c, 'common_name', c.name)))
-
-        items.sort(key=lambda x: x[1])
-
-        countries = OrderedDict(items)
-
-    return countries
 
 
 class FormattedLogger(object):

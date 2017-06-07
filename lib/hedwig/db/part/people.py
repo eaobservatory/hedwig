@@ -27,6 +27,7 @@ from sqlalchemy.sql.functions import count
 
 from ... import auth
 from ...auth import check_password_hash, create_password_hash, generate_token
+from ...config import get_countries
 from ...error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from ...type.collection import EmailCollection, ResultCollection
@@ -34,7 +35,7 @@ from ...type.enum import PersonTitle, UserLogEvent
 from ...type.simple import Email, \
     Institution, InstitutionInfo, InstitutionLog, \
     Person, PersonInfo, UserInfo, UserLog
-from ...util import get_countries, is_list_like
+from ...util import is_list_like
 from ..meta import auth_failure, email, group_member, \
     institution, institution_log, \
     invitation, member, message_recipient, person, \

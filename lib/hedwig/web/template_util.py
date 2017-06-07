@@ -27,11 +27,11 @@ from flask import Markup
 from jinja2.runtime import Undefined
 
 from ..compat import first_value as _first_value
+from ..config import get_countries
 from ..type.enum import AffiliationType, Assessment, \
     AttachmentState, CallState, MessageState, MessageThreadType, \
     PersonTitle, ProposalState, PublicationType, \
     ReviewState, SemesterState, UserLogEvent
-from ..util import get_countries
 
 from .format import format_text
 from .util import mangle_email_address as _mangle_email_address

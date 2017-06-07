@@ -18,34 +18,13 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import OrderedDict
-
-from hedwig.util import get_countries, is_list_like, list_in_blocks, \
+from hedwig.util import is_list_like, list_in_blocks, \
     matches_constraint
 
 from .compat import TestCase
 
 
 class UtilTest(TestCase):
-    def test_countries(self):
-        c = get_countries()
-
-        # Check we got a sensible-looking dictionary of countries.
-        self.assertIsInstance(c, OrderedDict)
-        self.assertLess(len(c), 300)
-        self.assertGreater(len(c), 200)
-        self.assertIn('AX', c)
-        self.assertNotIn('BX', c)
-        self.assertIn('CX', c)
-
-        # Try countries with and without "common_name" records.
-        self.assertEqual(c['TW'], 'Taiwan')
-        self.assertEqual(c['JP'], 'Japan')
-
-        # Check we get the same object if we call the function again.
-        cc = get_countries()
-        self.assertIs(cc, c)
-
     def test_list_in_blocks(self):
         self.assertEqual(list(list_in_blocks(range(0, 3), 5)),
                          [[0, 1, 2]])

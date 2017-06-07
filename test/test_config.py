@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import OrderedDict
 import os
 
 try:
@@ -34,6 +35,25 @@ from .dummy_config import DummyConfigTestCase
 
 
 class ConfigTestCase(DummyConfigTestCase):
+    def test_countries(self):
+        c = config.get_countries()
+
+        # Check we got a sensible-looking dictionary of countries.
+        self.assertIsInstance(c, OrderedDict)
+        self.assertLess(len(c), 300)
+        self.assertGreater(len(c), 200)
+        self.assertIn('AX', c)
+        self.assertNotIn('BX', c)
+        self.assertIn('CX', c)
+
+        # Try countries with and without "common_name" records.
+        self.assertEqual(c['TW'], 'Taiwan')
+        self.assertEqual(c['JP'], 'Japan')
+
+        # Check we get the same object if we call the function again.
+        cc = config.get_countries()
+        self.assertIs(cc, c)
+
     def test_database_config(self):
         c = config.get_config()
 
