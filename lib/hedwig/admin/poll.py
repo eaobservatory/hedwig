@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -29,10 +29,13 @@ from .proposal import close_call_proposals, send_call_proposal_feedback
 logger = get_logger(__name__)
 
 
-def close_completed_call(db):
+def close_completed_call(db, dry_run=False):
     """
     Close calls for which the submission deadline has passed.
     """
+
+    if dry_run:
+        return 0
 
     grace_period = timedelta(
         minutes=int(get_config().get('application', 'grace_period')))
@@ -53,7 +56,7 @@ def close_completed_call(db):
     return n_closed
 
 
-def send_proposal_feedback(db):
+def send_proposal_feedback(db, dry_run=False):
     """
     Send feedback for proposals when have been reviewed.
 
@@ -66,6 +69,9 @@ def send_proposal_feedback(db):
     so that the feedback email messages can include aggregate information about
     the call.
     """
+
+    if dry_run:
+        return 0
 
     proposals = db.search_proposal(
         state=ProposalState.FINAL_REVIEW, with_members=True,

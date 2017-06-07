@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -31,7 +31,7 @@ logger = get_logger(__name__)
 PubTypeInfo = namedtuple('PubTypeInfo', ('set', 'query_function'))
 
 
-def process_publication_references(db):
+def process_publication_references(db, dry_run=False):
     """
     Function to process newly added publication references.
 
@@ -42,6 +42,9 @@ def process_publication_references(db):
 
     :return: the total number of references processed
     """
+
+    if dry_run:
+        return 0
 
     n_processed = 0
 

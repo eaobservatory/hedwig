@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,12 +18,11 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from ..config import get_database
 from ..error import ConsistencyError
 from .send import send_email_message
 
 
-def send_queued_messages(db=None):
+def send_queued_messages(db, dry_run=False):
     """
     Attempts to send any unsent email messages.
 
@@ -34,8 +33,8 @@ def send_queued_messages(db=None):
     Returns the number of messages sent.
     """
 
-    if db is None:
-        db = get_database()
+    if dry_run:
+        return 0
 
     message_ids = set()
 

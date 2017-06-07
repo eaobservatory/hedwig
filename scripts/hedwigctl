@@ -259,10 +259,7 @@ def poll_close(db, dry_run):
 
     logger.debug('Checking for calls to close')
 
-    if dry_run:
-        return
-
-    n_closed = close_completed_call(db=db)
+    n_closed = close_completed_call(db=db, dry_run=dry_run)
 
     if n_closed:
         logger.info('Closed {} call(s)', n_closed)
@@ -274,11 +271,8 @@ def poll_email(db, dry_run):
 
     logger.debug('Checking for queued email messages')
 
-    if dry_run:
-        return
-
     try:
-        n_sent = send_queued_messages(db=db)
+        n_sent = send_queued_messages(db=db, dry_run=dry_run)
 
         if n_sent:
             logger.info('Sent {} message(s)', n_sent)
@@ -292,10 +286,7 @@ def poll_figure(db, dry_run):
 
     logger.debug('Checking for figures to process')
 
-    if dry_run:
-        return
-
-    n_processed = process_proposal_figure(db=db)
+    n_processed = process_proposal_figure(db=db, dry_run=dry_run)
 
     if n_processed:
         logger.info('Processed {} figure(s)', n_processed)
@@ -307,10 +298,7 @@ def poll_pdf(db, dry_run):
 
     logger.debug('Checking for PDF files to process')
 
-    if dry_run:
-        return
-
-    n_processed = process_proposal_pdf(db=db)
+    n_processed = process_proposal_pdf(db=db, dry_run=dry_run)
 
     if n_processed:
         logger.info('Processed {} PDF file(s)', n_processed)
@@ -322,10 +310,7 @@ def poll_publication(db, dry_run):
 
     logger.debug('Checking for publication references to process')
 
-    if dry_run:
-        return
-
-    n_processed = process_publication_references(db)
+    n_processed = process_publication_references(db, dry_run=dry_run)
 
     if n_processed:
         logger.info('Processed {} publication reference(s)',
@@ -338,10 +323,7 @@ def poll_feedback(db, dry_run):
 
     logger.debug('Checking for proposals with feedback ready to send')
 
-    if dry_run:
-        return
-
-    n_processed = send_proposal_feedback(db)
+    n_processed = send_proposal_feedback(db, dry_run=dry_run)
 
     if n_processed:
         logger.info('Sent feedback for {} proposal(s)', n_processed)
@@ -353,10 +335,7 @@ def poll_moc(db, dry_run):
 
     logger.debug('Checking for MOC files to import')
 
-    if dry_run:
-        return
-
-    n_processed = process_moc(db)
+    n_processed = process_moc(db, dry_run=dry_run)
 
     if n_processed:
         logger.info('Imported cells from {} MOC file(s)', n_processed)

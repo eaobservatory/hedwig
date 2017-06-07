@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -29,11 +29,14 @@ from .pdf import pdf_to_png, ps_to_png
 logger = get_logger(__name__)
 
 
-def process_moc(db):
+def process_moc(db, dry_run=False):
     """
     Function to process new clash tool MOC files by importing their cells
     into the "moc_cell" database table in order to make them searchable.
     """
+
+    if dry_run:
+        return 0
 
     n_processed = 0
 
@@ -68,10 +71,13 @@ def process_moc(db):
     return n_processed
 
 
-def process_proposal_figure(db):
+def process_proposal_figure(db, dry_run=False):
     """
     Function to process pending proposal figure uploads.
     """
+
+    if dry_run:
+        return 0
 
     config = get_config()
     thumb_preview_options = {
@@ -169,10 +175,13 @@ def process_proposal_figure(db):
     return n_processed
 
 
-def process_proposal_pdf(db):
+def process_proposal_pdf(db, dry_run=False):
     """
     Function to process pending proposal PDF uploads.
     """
+
+    if dry_run:
+        return 0
 
     config = get_config()
     pdf_options = {
