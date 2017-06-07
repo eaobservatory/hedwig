@@ -41,6 +41,11 @@ footer_title=
 footer_url=
 footer_email=
 
+# This section can include custom country names which override those
+# in the general list.  For example:
+# eg=Egypt, Arab Republic of
+[countries]
+
 [utilities]
 ghostscript=/usr/bin/gs
 firefox=/usr/bin/firefox

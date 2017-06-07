@@ -72,12 +72,19 @@ def get_countries():
     global countries
 
     if countries is None:
+        # Read country name overrides from the configuration file.
+        override = dict(get_config().items('countries'))
+
         items = []
 
-        for c in pycountry.countries:
-            # Try to get the "common_name" if it exists, otherwise use the
-            # normal "name" field.
-            items.append((c.alpha2, getattr(c, 'common_name', c.name)))
+        for country in pycountry.countries:
+            code = country.alpha2
+            name = override.get(code.lower())
+            if name is None:
+                # Try to get the "common_name" if it exists, otherwise use the
+                # normal "name" field.
+                name = getattr(country, 'common_name', country.name)
+            items.append((code, name))
 
         items.sort(key=lambda x: x[1])
 
