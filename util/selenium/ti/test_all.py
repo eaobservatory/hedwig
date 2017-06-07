@@ -1812,7 +1812,7 @@ class IntegrationTest(DummyConfigTestCase):
             'Subsume duplicate record').click()
 
         Select(
-            self.browser.find_element_by_name('institution_id')
+            self.browser.find_element_by_name('duplicate_id')
         ).select_by_visible_text('Another Institution, United States')
 
         self._save_screenshot(self.admin_image_root, 'institution_subsume')
