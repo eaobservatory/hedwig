@@ -22,7 +22,7 @@ from collections import OrderedDict, namedtuple
 import re
 
 from ..error import NoSuchValue, UserError
-from .base import EnumAvailable, EnumBasic, EnumCode, \
+from .base import EnumAllowUser, EnumAvailable, EnumBasic, EnumCode, \
     EnumDisplayClass, EnumURLPath
 
 
@@ -71,7 +71,7 @@ class CallState(EnumBasic):
     ))
 
 
-class FormatType(object):
+class FormatType(EnumAllowUser):
     """
     Class representing possible formatting methods for pieces of text.
 
@@ -92,34 +92,6 @@ class FormatType(object):
         (PLAIN, FormatTypeInfo('Plain', True)),
         (RST,   FormatTypeInfo('RST',   False)),
     ))
-
-    @classmethod
-    def is_valid(cls, format_, is_system=False):
-        """
-        Determines whether the given format is allowed.
-
-        By default only allows formats for which `allow_user` is enabled.
-        However with the `is_system` flag, allows any format.
-        """
-
-        format_info = cls._info.get(format_, None)
-
-        if format_info is None:
-            return False
-
-        return is_system or format_info.allow_user
-
-    @classmethod
-    def get_options(cls, is_system=False):
-        """
-        Get an OrderedDict of type names by type numbers.
-
-        By default only returns formats for which `allow_user` is enabled.
-        However with the `is_system` flag, all formats are returned.
-        """
-
-        return OrderedDict([(k, v.name) for (k, v) in cls._info.items()
-                            if is_system or v.allow_user])
 
 
 class Assessment(EnumBasic, EnumAvailable):
@@ -194,7 +166,7 @@ FileTypeInfo = namedtuple('FileTypeInfo',
                           ('name', 'mime', 'preview', 'allow_user'))
 
 
-class FigureType(object):
+class FigureType(EnumAllowUser):
     """
     Class representing graphics formats handled by the system.
 
@@ -216,21 +188,6 @@ class FigureType(object):
         (PS,   FileTypeInfo('EPS',  'application/postscript', True,  False)),
         (SVG,  FileTypeInfo('SVG',  'image/svg+xml',          True,  False)),
     ))
-
-    @classmethod
-    def is_valid(cls, type_, is_system=False):
-        """
-        Determine if the given figure type is valid.
-
-        By default only allows types where `allow_user` is enabled.
-        """
-
-        type_info = cls._info.get(type_, None)
-
-        if type_info is None:
-            return False
-
-        return is_system or type_info.allow_user
 
     @classmethod
     def get_name(cls, type_):
@@ -424,7 +381,7 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
         return ans.format(type_info.name.lower(), call)
 
 
-class MessageState(EnumBasic):
+class MessageState(EnumAllowUser, EnumBasic):
     """
     Class representing possible status values for email messages.
 
@@ -448,37 +405,6 @@ class MessageState(EnumBasic):
         (DISCARD, StateInfo('Discarded', False, True)),
         (ERROR,   StateInfo('Error',     True,  False)),
     ))
-
-    @classmethod
-    def is_valid(cls, value, is_system=False):
-        """
-        Determines whether the message state is allowed.
-
-        By default only user-settable states are considered valid.
-        If `is_system` is specified then all states are accepted.
-        (The "user" in this case refers to a site administrator managing
-        the message list.)
-        """
-
-        state_info = cls._info.get(value, None)
-
-        if state_info is None:
-            return False
-
-        return (is_system or state_info.allow_user)
-
-    @classmethod
-    def get_options(cls, is_system=False):
-        """
-        Get an OrderedDict of state names by state numbers.
-
-        This is by default only the user-settable states.
-        (The "user" in this case refers to a site administrator managing
-        the message list.)
-        """
-
-        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()
-                            if is_system or v.allow_user))
 
 
 class MessageThreadType(EnumBasic, EnumURLPath):

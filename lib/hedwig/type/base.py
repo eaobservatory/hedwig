@@ -109,6 +109,46 @@ class CollectionSortable(object):
         return ans
 
 
+class EnumAllowUser(object):
+    """
+    Mix-in for enum-style classes where the `_info` dictionary
+    has names and an `allow_user` boolean field.
+
+    .. note::
+        If combined with `EnumBasic`, this mix-in should be listed first
+        in the order of base classes so that its `is_valid` method
+        overrides that from `EnumBasic`.
+    """
+
+    @classmethod
+    def is_valid(cls, value, is_system=False):
+        """
+        Determines whether the given value is allowed.
+
+        By default only allows values for which `allow_user` is enabled.
+        However with the `is_system` flag, allows any value.
+        """
+
+        value_info = cls._info.get(value, None)
+
+        if value_info is None:
+            return False
+
+        return is_system or value_info.allow_user
+
+    @classmethod
+    def get_options(cls, is_system=False):
+        """
+        Get an OrderedDict of names by value.
+
+        By default only returns values for which `allow_user` is enabled.
+        However with the `is_system` flag, all values are returned.
+        """
+
+        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()
+                            if is_system or v.allow_user))
+
+
 class EnumAvailable(object):
     """
     Mix-in for enum-style classes where the `_info` dictionary
