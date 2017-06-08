@@ -456,28 +456,6 @@ class PeoplePart(object):
                 user.c.id == user_id
             )).scalar()
 
-    def list_institution(self):
-        """
-        Get a list of all institutions.
-
-        Summary information is returned.
-        """
-
-        ans = ResultCollection()
-
-        with self._transaction() as conn:
-            for row in conn.execute(select(
-                    [institution.c.id,
-                     institution.c.name,
-                     institution.c.department,
-                     institution.c.organization,
-                     institution.c.country,
-                     ]).order_by(
-                    institution.c.name, institution.c.department)):
-                ans[row['id']] = InstitutionInfo(**row)
-
-        return ans
-
     def get_email_verify_token(self, person_id, email_address):
         """
         Create a email address verification token.
@@ -666,6 +644,31 @@ class PeoplePart(object):
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(email.c.id)):
                 ans[row['id']] = Email(**row)
+
+        return ans
+
+    def search_institution(self):
+        """
+        Search institution records.
+
+        Currently has no query parameters, so always
+        gets a list of all institutions.
+
+        Summary information is returned.
+        """
+
+        ans = ResultCollection()
+
+        with self._transaction() as conn:
+            for row in conn.execute(select(
+                    [institution.c.id,
+                     institution.c.name,
+                     institution.c.department,
+                     institution.c.organization,
+                     institution.c.country,
+                     ]).order_by(
+                    institution.c.name, institution.c.department)):
+                ans[row['id']] = InstitutionInfo(**row)
 
         return ans
 

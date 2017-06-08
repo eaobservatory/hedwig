@@ -484,7 +484,7 @@ class DBPeopleTest(DBTestCase):
         # Get a list of institutions.
         institution_id2 = self.db.add_institution('Institution Two',
                                                   '', '', '', 'AX')
-        result = self.db.list_institution()
+        result = self.db.search_institution()
         self.assertIsInstance(result, ResultCollection)
         self.assertEqual(len(result), 2)
 

@@ -548,7 +548,7 @@ class PeopleView(object):
         message = None
 
         is_current_user = person.user_id == session['user_id']
-        institutions = db.list_institution()
+        institutions = db.search_institution()
 
         # Prepare blank record for an institution to potentially be
         # added to the database.
@@ -962,7 +962,7 @@ class PeopleView(object):
     def institution_list(self, db):
         return {
             'title': 'Institutions',
-            'institutions': db.list_institution(),
+            'institutions': db.search_institution(),
         }
 
     @with_institution(permission=PermissionType.VIEW)
@@ -1156,7 +1156,7 @@ class PeopleView(object):
             ctx.update({
                 'show_confirm_prompt': False,
                 'institutions': [
-                    i for i in db.list_institution().values()
+                    i for i in db.search_institution().values()
                     if i.id != institution_id]
             })
 
