@@ -256,7 +256,7 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertFalse(t(BaseCallType.IMMEDIATE, BaseCallType))
 
     def test_test_message_state(self):
-        t = self.app.jinja_env.tests['message_state_active']
+        t = self.app.jinja_env.tests['message_state_resettable']
 
         self.assertTrue(t(MessageState.SENDING))
         self.assertFalse(t(MessageState.DISCARD))

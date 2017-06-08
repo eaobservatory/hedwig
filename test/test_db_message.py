@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -68,7 +68,6 @@ class DBMessageTest(DBTestCase):
         self.assertIsNone(message.timestamp_sent)
         self.assertIsNone(message.identifier)
         self.assertIsNone(message.recipients)
-        self.assertFalse(message.discard)
         self.assertIsNone(message.thread_type)
         self.assertIsNone(message.thread_id)
         self.assertEqual(message.state, MessageState.UNSENT)
@@ -90,8 +89,11 @@ class DBMessageTest(DBTestCase):
         self.assertEqual(recipient.address, '1@a')
         self.assertTrue(recipient.public)
 
-        self.assertIsNotNone(
-            self.db.search_message()[message_id].timestamp_send)
+        messages = self.db.search_message()
+        self.assertEqual(set(messages.keys()), set((message_id,)))
+        message = messages[message_id]
+        self.assertIsInstance(message.timestamp_send, datetime)
+        self.assertEqual(message.state, MessageState.SENDING)
 
         self.assertIsNone(self.db.get_unsent_message())
 
@@ -124,9 +126,7 @@ class DBMessageTest(DBTestCase):
                                state=MessageState.UNSENT)
 
         message = self.db.get_message(message_id)
-        self.assertIsNone(message.timestamp_send)
-        self.assertIsNone(message.timestamp_sent)
-        self.assertFalse(message.discard)
+        self.assertEqual(message.state, MessageState.UNSENT)
 
         self.db.update_message(message_id=message_id,
                                state=MessageState.DISCARD)
@@ -134,9 +134,6 @@ class DBMessageTest(DBTestCase):
         messages = self.db.search_message()
         self.assertEqual(set(messages.keys()), set((message_id,)))
         message = messages[message_id]
-        self.assertIsNone(message.timestamp_send)
-        self.assertIsNone(message.timestamp_sent)
-        self.assertTrue(message.discard)
         self.assertEqual(message.state, MessageState.DISCARD)
 
         message = self.db.get_unsent_message()
@@ -302,7 +299,10 @@ class DBMessageTest(DBTestCase):
 
         # Send message 4 out of order -- we shouldn't see its identifer
         # in query results as it comes after the other messages.
-        self.db.mark_message_sent(message_4, '<4@id>')
+        self.db.update_message(
+            message_4, state=MessageState.SENT, state_is_system=True,
+            timestamp_send=datetime.utcnow(), timestamp_sent=datetime.utcnow(),
+            identifier='<4@id>')
 
         message = self.db.get_unsent_message(mark_sending=True)
         self.assertIsNotNone(message)

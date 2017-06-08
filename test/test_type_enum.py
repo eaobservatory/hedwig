@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -131,26 +131,27 @@ class EnumTypeTestCase(TestCase):
         # Test "get_info" method.
         state = MessageState.get_info(MessageState.DISCARD)
         self.assertEqual(state.name, 'Discarded')
-        self.assertFalse(state.active)
-        self.assertTrue(state.settable)
+        self.assertFalse(state.resettable)
+        self.assertTrue(state.allow_user)
 
         # Test "is_valid" method.
         self.assertFalse(MessageState.is_valid(999))
         self.assertFalse(MessageState.is_valid(MessageState.SENDING))
         self.assertTrue(MessageState.is_valid(MessageState.SENDING,
-                                              allow_unsettable=True))
+                                              is_system=True))
         self.assertTrue(MessageState.is_valid(MessageState.UNSENT,
-                                              allow_unsettable=True))
+                                              is_system=True))
         self.assertTrue(MessageState.is_valid(MessageState.UNSENT))
 
         # Test "get_options" method.
-        states = MessageState.get_options()
+        states = MessageState.get_options(is_system=True)
         self.assertIsInstance(states, dict)
         self.assertEqual(set(states.keys()),
                          set((MessageState.UNSENT, MessageState.SENDING,
-                              MessageState.SENT, MessageState.DISCARD)))
+                              MessageState.SENT, MessageState.DISCARD,
+                              MessageState.ERROR)))
 
-        states = MessageState.get_options(settable=True)
+        states = MessageState.get_options()
         self.assertIsInstance(states, dict)
         self.assertEqual(set(states.keys()),
                          set((MessageState.UNSENT, MessageState.DISCARD)))

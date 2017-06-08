@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -291,9 +291,9 @@ message = Table(
     Column('timestamp_send', DateTime(), default=None, index=True),
     Column('timestamp_sent', DateTime(), default=None),
     Column('identifier', Unicode(255), default=None),
-    Column('discard', Boolean, nullable=False, default=False),
     Column('thread_type', Integer, default=None),
     Column('thread_id', Integer, default=None),
+    Column('state', Integer, nullable=False, index=True),
     **table_opts)
 
 message_recipient = Table(

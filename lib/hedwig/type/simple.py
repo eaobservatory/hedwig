@@ -128,7 +128,7 @@ MemberPIInfo = namedtuple(
 Message = namedtuple(
     'Message',
     [x.name for x in message.columns] +
-    ['recipients', 'thread_identifiers', 'state'])
+    ['recipients', 'thread_identifiers'])
 
 MessageRecipient = namedtuple(
     'MessageRecipient',

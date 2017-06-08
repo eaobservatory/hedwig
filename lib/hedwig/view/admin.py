@@ -49,7 +49,10 @@ class AdminView(object):
                 if param.startswith('message_'):
                     id_ = int(param[8:])
 
-                    db.update_message(message_id=id_, state=state_new)
+                    state_prev = int(form['prev_state_{}'.format(id_)])
+
+                    db.update_message(
+                        message_id=id_, state=state_new, state_prev=state_prev)
 
                     n_update += 1
 
@@ -140,8 +143,8 @@ class AdminView(object):
             # Parameters for the state setting form (submit at bottom of page).
             'set_form_params': set_form_params,
             'current_state': state,
-            'states': MessageState.get_options(),
-            'states_settable': MessageState.get_options(settable=True),
+            'states': MessageState.get_options(is_system=True),
+            'states_allowed': MessageState.get_options(),
         }
 
     @with_verified_admin

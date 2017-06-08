@@ -36,8 +36,9 @@
                 <td>{{ message.date | format_datetime }}</td>
                 <td><a href="{{ url_for('.message_view', message_id=message.id) }}">{{ message.subject }}</a></td>
                 <td>
-                    {% if message.state is message_state_active %}
+                    {% if message.state is message_state_resettable %}
                         <input type="checkbox" name="{{ message.id | fmt('message_{}') }}" value="1" id="{{ update_counter() | fmt('update_box_{}') }}" />
+                        <input type="hidden" name="{{ message.id | fmt('prev_state_{}') }}" value="{{ message.state }}" />
                     {% else %}
                         &nbsp;
                     {% endif %}
@@ -49,7 +50,7 @@
         {% if update_counter() > 0 %}
             <p id="message_state_control">
                 <select name="state_new">
-                    {% for (state_num, state_name) in states_settable.items() %}
+                    {% for (state_num, state_name) in states_allowed.items() %}
                         <option value="{{ state_num }}" >{{ state_name }}</option>
                     {% endfor %}
                 </select>

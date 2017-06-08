@@ -12,6 +12,10 @@
         <th>Subject</th>
         <td>{{ message.subject }}</td>
     </tr>
+    <tr>
+        <th>State</th>
+        <td>{{ message.state | message_state_name }}</td>
+    </tr>
     {% if message.timestamp_send is not none %}
         <tr>
             <th>Date sending started</th>
@@ -28,12 +32,6 @@
         <tr>
             <th>Identifier</th>
             <td>{{ message.identifier }}</td>
-        </tr>
-    {% endif %}
-    {% if message.discard %}
-        <tr>
-            <th>Discard</th>
-            <td>Message has been discarded</td>
         </tr>
     {% endif %}
     {% if (message.thread_type is not none) and (message.thread_id is not none) %}

@@ -319,8 +319,11 @@ def register_template_utils(app):
         return (value == type_class.STANDARD)
 
     @app.template_test()
-    def message_state_active(value):
-        return MessageState.get_info(value).active
+    def message_state_resettable(value):
+        try:
+            return MessageState.get_info(value).resettable
+        except KeyError:
+            return False
 
     @app.template_test()
     def review_state_done(value):

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -69,6 +69,7 @@ class MessagePart(object):
                 message.c.body: body,
                 message.c.thread_type: thread_type,
                 message.c.thread_id: thread_id,
+                message.c.state: MessageState.UNSENT,
             }))
 
             message_id = result.inserted_primary_key[0]
@@ -106,7 +107,7 @@ class MessagePart(object):
                 raise NoSuchRecord('message not found with id {}', message_id)
 
             ans = Message(recipients=recipients, thread_identifiers=None,
-                          state=None, **row)
+                          **row)
 
         return ans
 
@@ -114,17 +115,16 @@ class MessagePart(object):
         """
         Return the first unsent message, if there is one, or None otherwise.
 
-        Optionally, mark the message as being sent by writing the current
-        timestamp into its "timestamp_send" column.  This raises
-        ConsistencyError if the column become non-null in the meantime.
+        Optionally, mark the message as being sent by changing the status
+        and writing the current timestamp into its "timestamp_send" column.
+        This raises ConsistencyError if the status column changed in the
+        meantime.
         """
 
         with self._transaction() as conn:
-            result = conn.execute(message.select().where(and_(
-                not_(message.c.discard),
-                message.c.timestamp_send.is_(None),
-                message.c.timestamp_sent.is_(None)
-            )).order_by(
+            result = conn.execute(message.select().where(
+                message.c.state == MessageState.UNSENT,
+            ).order_by(
                 message.c.id.asc()
             ).limit(1)).first()
 
@@ -145,7 +145,9 @@ class MessagePart(object):
                         ]).select_from(message).where(and_(
                             message.c.thread_type == thread_type,
                             message.c.thread_id == thread_id,
-                            message.c.id < message_id
+                            message.c.id < message_id,
+                            message.c.state == MessageState.SENT,
+                            message.c.identifier.isnot(None),
                         )).order_by(message.c.id.asc())):
                     thread_identifiers.append(row['identifier'])
 
@@ -174,63 +176,70 @@ class MessagePart(object):
                 recipients.append(MessageRecipient(**row))
 
             if mark_sending:
-                mark_result = conn.execute(message.update().where(and_(
-                    message.c.id == message_id,
-                    message.c.timestamp_send.is_(None),
-                )).values({
-                    message.c.timestamp_send: datetime.utcnow(),
-                }))
-
-                if mark_result.rowcount != 1:
-                    raise ConsistencyError(
-                        'no rows matched marking message as sending')
+                self.mark_message_sending(message_id, _conn=conn)
 
         return Message(
             recipients=recipients, thread_identifiers=thread_identifiers,
-            state=None, **result)
+            **result)
+
+    def mark_message_sending(self, message_id,
+                             _conn=None, _test_skip_check=False):
+        """
+        Marks the given message as being sent.
+        """
+
+        self.update_message(
+            message_id,
+            state=MessageState.SENDING,
+            state_prev=MessageState.UNSENT,
+            state_is_system=True,
+            timestamp_send=datetime.utcnow(),
+            _conn=_conn)
+
+    def mark_message_error(self, message_id,
+                           _conn=None, _test_skip_check=False):
+        """
+        Marks the given message as having been unsuccesfully attempted
+        to be sent.
+
+        This is simply a convenience method which in turn calls
+        `update_message`.
+        """
+
+        self.update_message(
+            message_id,
+            state=MessageState.ERROR,
+            state_prev=MessageState.SENDING,
+            state_is_system=True,
+            _conn=_conn, _test_skip_check=_test_skip_check)
 
     def mark_message_sent(self, message_id, identifier,
-                          _test_skip_check=False):
+                          _conn=None, _test_skip_check=False):
         """
         Marks the given message as sent.
 
         The "identifier" should be the email's "Message-ID" header.
         """
 
-        with self._transaction() as conn:
-            if not _test_skip_check and not self._exists_id(
-                    conn, message, message_id):
-                raise ConsistencyError(
-                    'message does not exist with id={}', message_id)
-
-            result = conn.execute(message.update().where(and_(
-                message.c.id == message_id,
-                message.c.timestamp_sent.is_(None)
-            )).values({
-                message.c.timestamp_sent: datetime.utcnow(),
-                message.c.identifier: identifier,
-            }))
-
-            if result.rowcount != 1:
-                raise ConsistencyError(
-                    'no rows matched marking message as sent')
+        self.update_message(
+            message_id,
+            state=MessageState.SENT,
+            state_prev=MessageState.SENDING,
+            state_is_system=True,
+            timestamp_sent=datetime.utcnow(),
+            identifier=identifier,
+            _conn=_conn, _test_skip_check=_test_skip_check)
 
     def search_message(self, person_id=None, state=None, message_id_lt=None,
                        thread_type=None, thread_id=None,
-                       limit=None, oldest_first=False):
+                       limit=None, oldest_first=False,
+                       _conn=None):
         """
         Searches for messages.
 
         The selection of messages to be returned can be controlled with the
         optional keyword arguments.
         """
-
-        state_expr = case([
-            (message.c.discard, MessageState.DISCARD),
-            (and_(message.c.timestamp_send.is_(None),
-                  message.c.timestamp_sent.is_(None)), MessageState.UNSENT),
-            (message.c.timestamp_sent.is_(None), MessageState.SENDING),
-        ], else_=MessageState.SENT)
 
         stmt = select([
             message.c.id,
@@ -239,10 +248,9 @@ class MessagePart(object):
             message.c.timestamp_send,
             message.c.timestamp_sent,
             message.c.identifier,
-            message.c.discard,
             message.c.thread_type,
             message.c.thread_id,
-            state_expr.label('state'),
+            message.c.state,
         ])
 
         if person_id is not None:
@@ -250,7 +258,7 @@ class MessagePart(object):
                 message_recipient.c.person_id == person_id)
 
         if state is not None:
-            stmt = stmt.where(state_expr == state)
+            stmt = stmt.where(message.c.state == state)
 
         if message_id_lt is not None:
             stmt = stmt.where(message.c.id < message_id_lt)
@@ -274,50 +282,57 @@ class MessagePart(object):
         else:
             stmt = stmt.order_by(message.c.id.desc())
 
-        with self._transaction() as conn:
+        with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt):
                 ans[row['id']] = Message(body=None, recipients=None,
                                          thread_identifiers=None, **row)
 
         return ans
 
-    def update_message(self, message_id, state=None,
-                       _test_skip_check=False):
+    def update_message(self, message_id,
+                       state=None, state_prev=None,
+                       state_is_system=False,
+                       timestamp_send=(), timestamp_sent=(),
+                       identifier=None,
+                       _conn=None, _test_skip_check=False):
         """
         Update a message record.
         """
 
         values = {}
 
+        stmt = message.update().where(message.c.id == message_id)
+
         if state is not None:
-            if state == MessageState.UNSENT:
-                values.update({
-                    'timestamp_send': None,
-                    'timestamp_sent': None,
-                    'discard': False,
-                })
-
-            elif state == MessageState.DISCARD:
-                values.update({
-                    'discard': True,
-                })
-
-            else:
+            if not MessageState.is_valid(
+                    state, is_system=state_is_system):
                 raise FormattedError('invalid state {} for message update',
                                      state)
+
+            values[message.c.state] = state
+
+        if state_prev is not None:
+            stmt = stmt.where(message.c.state == state_prev)
+
+        if timestamp_send != ():
+            values[message.c.timestamp_send] = timestamp_send
+
+        if timestamp_sent != ():
+            values[message.c.timestamp_sent] = timestamp_sent
+
+        if identifier is not None:
+            values[message.c.identifier] = identifier
 
         if not values:
             raise FormattedError('no message updates specified')
 
-        with self._transaction() as conn:
+        with self._transaction(_conn=_conn) as conn:
             if not _test_skip_check and not self._exists_id(
                     conn, message, message_id):
                 raise ConsistencyError(
                     'message does not exist with id={}', message_id)
 
-            result = conn.execute(message.update().where(
-                message.c.id == message_id
-            ).values(values))
+            result = conn.execute(stmt.values(values))
 
             if result.rowcount != 1:
                 raise ConsistencyError(

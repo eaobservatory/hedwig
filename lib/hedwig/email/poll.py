@@ -52,7 +52,10 @@ def send_queued_messages(db, dry_run=False):
 
         identifier = send_email_message(message)
 
-        if identifier is not None:
+        if identifier is None:
+            db.mark_message_error(message.id)
+
+        else:
             db.mark_message_sent(message.id, identifier)
 
             n_sent += 1

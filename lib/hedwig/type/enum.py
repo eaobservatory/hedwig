@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -436,24 +436,28 @@ class MessageState(EnumBasic):
     SENDING = 2
     SENT = 3
     DISCARD = 4
+    ERROR = 5
 
     StateInfo = namedtuple(
-        'StateInfo', ('name', 'active', 'settable'))
+        'StateInfo', ('name', 'resettable', 'allow_user'))
 
     _info = OrderedDict((
         (UNSENT,  StateInfo('Unsent',    False, True)),
         (SENDING, StateInfo('Sending',   True,  False)),
         (SENT,    StateInfo('Sent',      False, False)),
         (DISCARD, StateInfo('Discarded', False, True)),
+        (ERROR,   StateInfo('Error',     True,  False)),
     ))
 
     @classmethod
-    def is_valid(cls, value, allow_unsettable=False):
+    def is_valid(cls, value, is_system=False):
         """
         Determines whether the message state is allowed.
 
-        By default only settable states are considered valid.
-        If `allow_unsettable` is specified then all states are accepted.
+        By default only user-settable states are considered valid.
+        If `is_system` is specified then all states are accepted.
+        (The "user" in this case refers to a site administrator managing
+        the message list.)
         """
 
         state_info = cls._info.get(value, None)
@@ -461,20 +465,20 @@ class MessageState(EnumBasic):
         if state_info is None:
             return False
 
-        return (allow_unsettable or state_info.settable)
+        return (is_system or state_info.allow_user)
 
     @classmethod
-    def get_options(cls, settable=None):
+    def get_options(cls, is_system=False):
         """
         Get an OrderedDict of state names by state numbers.
 
-        This can optionally be only the settable states.
+        This is by default only the user-settable states.
+        (The "user" in this case refers to a site administrator managing
+        the message list.)
         """
 
-        return OrderedDict((
-            (k, v.name)
-            for (k, v) in cls._info.items()
-            if ((settable is None) or (settable == v.settable))))
+        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()
+                            if is_system or v.allow_user))
 
 
 class MessageThreadType(EnumBasic, EnumURLPath):
