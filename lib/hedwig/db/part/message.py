@@ -111,14 +111,9 @@ class MessagePart(object):
 
         return ans
 
-    def get_unsent_message(self, mark_sending=False):
+    def get_unsent_message(self):
         """
         Return the first unsent message, if there is one, or None otherwise.
-
-        Optionally, mark the message as being sent by changing the status
-        and writing the current timestamp into its "timestamp_send" column.
-        This raises ConsistencyError if the status column changed in the
-        meantime.
         """
 
         with self._transaction() as conn:
@@ -174,9 +169,6 @@ class MessagePart(object):
                     ).where(
                         message_recipient.c.message_id == message_id)):
                 recipients.append(MessageRecipient(**row))
-
-            if mark_sending:
-                self.mark_message_sending(message_id, _conn=conn)
 
         return Message(
             recipients=recipients, thread_identifiers=thread_identifiers,

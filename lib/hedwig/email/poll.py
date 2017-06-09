@@ -41,7 +41,7 @@ def send_queued_messages(db, dry_run=False):
     n_sent = 0
 
     while True:
-        message = db.get_unsent_message(mark_sending=True)
+        message = db.get_unsent_message()
         if message is None:
             break
 
@@ -49,6 +49,8 @@ def send_queued_messages(db, dry_run=False):
             raise ConsistencyError('message with id={} seen more than once',
                                    message.id)
         message_ids.add(message.id)
+
+        db.mark_message_sending(message.id)
 
         identifier = send_email_message(message)
 
