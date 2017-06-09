@@ -845,7 +845,7 @@ class GenericProposal(object):
         }
 
         if send_token:
-            (token, expiry) = db.add_invitation(person_id)
+            (token, expiry) = db.issue_invitation(person_id)
 
             email_ctx.update({
                 'token': token,

@@ -686,7 +686,7 @@ class GenericAdmin(object):
 
     def _message_group_invite(self, db, group_info, queue,
                               person_id, person_name):
-        (token, expiry) = db.add_invitation(person_id, days_valid=7)
+        (token, expiry) = db.issue_invitation(person_id, days_valid=7)
 
         email_ctx = {
             'inviter_name': session['person']['name'],

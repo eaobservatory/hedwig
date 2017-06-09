@@ -269,7 +269,7 @@ class DBPeopleTest(DBTestCase):
         self.assertFalse(email.get_single().verified)
 
         # Perform verification.
-        (token, expiry) = self.db.get_email_verify_token(person_id, address)
+        (token, expiry) = self.db.issue_email_verify_token(person_id, address)
 
         self.assertIsInstance(token, string_type)
         self.assertRegex(token, '^[0-9a-f]{32}$')
@@ -704,8 +704,8 @@ class DBPeopleTest(DBTestCase):
         self.assertIsInstance(person_2, int)
 
         # Associate some information with the second (the duplicate).
-        self.db.add_invitation(person_2)
-        self.db.get_email_verify_token(person_2, 'a@b')
+        self.db.issue_invitation(person_2)
+        self.db.issue_email_verify_token(person_2, 'a@b')
 
         (proposal_id, affiliation_id) = self._create_test_proposal(person_2)
         self.db.set_proposal_text(
@@ -730,7 +730,7 @@ class DBPeopleTest(DBTestCase):
         user_2 = self.db.add_user('user2', 'pass2', person_id=person_2)
         self.assertIsInstance(user_2, int)
 
-        self.db.get_password_reset_token(user_2, remote_addr=None)
+        self.db.issue_password_reset_token(user_2, remote_addr=None)
 
         with self.assertRaisesRegex(
                 ConsistencyError, 'is already registered'):
@@ -769,8 +769,8 @@ class DBPeopleTest(DBTestCase):
         self.assertIsInstance(user_id, int)
 
         # Try making a reset token.
-        (token, expiry) = self.db.get_password_reset_token(user_id,
-                                                           remote_addr=None)
+        (token, expiry) = self.db.issue_password_reset_token(user_id,
+                                                             remote_addr=None)
         self.assertIsInstance(token, string_type)
         self.assertRegex(token, '^[0-9a-f]{32}$')
 
@@ -797,10 +797,10 @@ class DBPeopleTest(DBTestCase):
             self.db.use_password_reset_token(token, 'pass4', remote_addr=None)
 
         # Issue two more tokens: the older should be removed automatically.
-        (token1, expiry) = self.db.get_password_reset_token(user_id,
-                                                            remote_addr=None)
-        (token2, expiry) = self.db.get_password_reset_token(user_id,
-                                                            remote_addr=None)
+        (token1, expiry) = self.db.issue_password_reset_token(user_id,
+                                                              remote_addr=None)
+        (token2, expiry) = self.db.issue_password_reset_token(user_id,
+                                                              remote_addr=None)
         with self.assertRaises(NoSuchRecord):
             self.db.use_password_reset_token(token1, 'pass5', remote_addr=None)
         token_user_name = self.db.use_password_reset_token(token2, 'pass6',
@@ -809,8 +809,8 @@ class DBPeopleTest(DBTestCase):
 
         # Create a token and artificially age it by putting the expiry
         # date in the past.  It should then not work.
-        (token, expiry) = self.db.get_password_reset_token(user_id,
-                                                           remote_addr=None)
+        (token, expiry) = self.db.issue_password_reset_token(user_id,
+                                                             remote_addr=None)
         with self.db._transaction() as conn:
             result = conn.execute(reset_token.update().where(
                 reset_token.c.token == token
@@ -828,7 +828,7 @@ class DBPeopleTest(DBTestCase):
         self.assertIsInstance(person_id, int)
 
         # Check we can generate a token of the expected format.
-        (token, expiry) = self.db.add_invitation(person_id)
+        (token, expiry) = self.db.issue_invitation(person_id)
         self.assertIsInstance(token, string_type)
         self.assertRegex(token, '^[0-9a-f]{32}$')
         self.assertIsInstance(expiry, datetime)
@@ -861,16 +861,16 @@ class DBPeopleTest(DBTestCase):
         # Check error trapping.
         with self.assertRaisesRegex(ConsistencyError,
                                     'person does not exist'):
-            self.db.add_invitation(1999999)
+            self.db.issue_invitation(1999999)
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_invitation(1999999, _test_skip_check=True)
+            self.db.issue_invitation(1999999, _test_skip_check=True)
         with self.assertRaisesRegex(ConsistencyError,
                                     'person is already registered'):
-            self.db.add_invitation(person_id)
+            self.db.issue_invitation(person_id)
 
         # Try artificially aging a token.
         person_id = self.db.add_person('Person Two')
-        (token, expiry) = self.db.add_invitation(person_id)
+        (token, expiry) = self.db.issue_invitation(person_id)
         with self.db._transaction() as conn:
             result = conn.execute(invitation.update().where(
                 invitation.c.token == token
@@ -882,7 +882,7 @@ class DBPeopleTest(DBTestCase):
             self.db.use_invitation(token, user_id=user_id)
 
         # Try using for a person who subsequently somehow became registered.
-        (token, expiry) = self.db.add_invitation(person_id)
+        (token, expiry) = self.db.issue_invitation(person_id)
         user_id_2 = self.db.add_user('user2', 'pass2')
         user_id_3 = self.db.add_user('user3', 'pass3', person_id=person_id)
         with self.assertRaisesRegex(ConsistencyError,
@@ -898,9 +898,9 @@ class DBPeopleTest(DBTestCase):
         # Try to create an invitation to register as that person: should
         # fail unless the check is disabled.
         with self.assertRaisesRegex(UserError, 'administrative privileges'):
-            self.db.add_invitation(person_id)
-        (token, expiry) = self.db.add_invitation(person_id,
-                                                 _test_skip_check=True)
+            self.db.issue_invitation(person_id)
+        (token, expiry) = self.db.issue_invitation(person_id,
+                                                   _test_skip_check=True)
 
         # Try to accept the invitation to register as that person.
         user_id = self.db.add_user('user1', 'pass1')
@@ -925,7 +925,7 @@ class DBPeopleTest(DBTestCase):
         self.db.add_member(proposal_id, person_id_2, affiliation_id)
 
         # Issue invitation token for one of the members.
-        (token, expiry) = self.db.add_invitation(person_id_2)
+        (token, expiry) = self.db.issue_invitation(person_id_2)
         self.assertIsInstance(token, string_type)
         self.assertRegex(token, '^[0-9a-f]{32}$')
 
@@ -963,7 +963,7 @@ class DBPeopleTest(DBTestCase):
         # a registered user in the meantime.
         person_id_3 = self.db.add_person('Person 3')
         person_id_new_3 = self.db.add_person('Person New 3')
-        (token, expiry) = self.db.add_invitation(person_id_3)
+        (token, expiry) = self.db.issue_invitation(person_id_3)
         self.db.add_user('user3', 'pass3', person_id=person_id_3)
         with self.assertRaisesRegex(ConsistencyError, 'already registered'):
             self.db.use_invitation(token, new_person_id=person_id_new_3)

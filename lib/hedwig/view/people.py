@@ -307,7 +307,7 @@ class PeopleView(object):
                     raise UserError(
                         'Please enter either a user name or email address.')
 
-                (token, expiry) = db.get_password_reset_token(
+                (token, expiry) = db.issue_password_reset_token(
                     user_id, remote_addr=remote_addr)
                 db.add_message(
                     'Password reset code',
@@ -697,7 +697,7 @@ class PeopleView(object):
                             email.address)
 
         if form:
-            (token, expiry) = db.get_email_verify_token(
+            (token, expiry) = db.issue_email_verify_token(
                 person.id, email.address)
             db.add_message(
                 'Email verification code',

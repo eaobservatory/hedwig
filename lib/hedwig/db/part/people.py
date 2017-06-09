@@ -91,46 +91,6 @@ class PeoplePart(object):
 
         return result.inserted_primary_key[0]
 
-    def add_invitation(self, person_id, days_valid=30,
-                       _test_skip_check=False):
-        """
-        Creates an invitation token to allow someone to register as the
-        given person and adds it to the database.
-
-        Deletes existing tokens to register as this person.
-
-        Returns a tuple of the new token and its expiry.
-        """
-
-        token = generate_token()
-        expiry = datetime.utcnow() + timedelta(days_valid)
-
-        with self._transaction() as conn:
-            if not _test_skip_check:
-                result = conn.execute(select([
-                    person.c.user_id, person.c.admin
-                ]).where(
-                    person.c.id == person_id
-                )).first()
-                if result is None:
-                    raise ConsistencyError('person does not exist with id={}',
-                                           person_id)
-                elif result['user_id'] is not None:
-                    raise ConsistencyError('person is already registered')
-                elif result['admin']:
-                    raise UserError('person has administrative privileges')
-
-            conn.execute(invitation.delete().where(
-                invitation.c.person_id == person_id))
-
-            conn.execute(invitation.insert().values({
-                invitation.c.token: token,
-                invitation.c.person_id: person_id,
-                invitation.c.expiry: expiry,
-            }))
-
-        return (token, expiry)
-
     def add_person(self, name, title=None, public=False,
                    user_id=None, remote_addr=None,
                    _test_skip_check=False):
@@ -456,7 +416,7 @@ class PeoplePart(object):
                 user.c.id == user_id
             )).scalar()
 
-    def get_email_verify_token(self, person_id, email_address):
+    def issue_email_verify_token(self, person_id, email_address):
         """
         Create a email address verification token.
 
@@ -482,7 +442,47 @@ class PeoplePart(object):
 
         return (token, expiry)
 
-    def get_password_reset_token(self, user_id, remote_addr):
+    def issue_invitation(self, person_id, days_valid=30,
+                         _test_skip_check=False):
+        """
+        Creates an invitation token to allow someone to register as the
+        given person and adds it to the database.
+
+        Deletes existing tokens to register as this person.
+
+        Returns a tuple of the new token and its expiry.
+        """
+
+        token = generate_token()
+        expiry = datetime.utcnow() + timedelta(days_valid)
+
+        with self._transaction() as conn:
+            if not _test_skip_check:
+                result = conn.execute(select([
+                    person.c.user_id, person.c.admin
+                ]).where(
+                    person.c.id == person_id
+                )).first()
+                if result is None:
+                    raise ConsistencyError('person does not exist with id={}',
+                                           person_id)
+                elif result['user_id'] is not None:
+                    raise ConsistencyError('person is already registered')
+                elif result['admin']:
+                    raise UserError('person has administrative privileges')
+
+            conn.execute(invitation.delete().where(
+                invitation.c.person_id == person_id))
+
+            conn.execute(invitation.insert().values({
+                invitation.c.token: token,
+                invitation.c.person_id: person_id,
+                invitation.c.expiry: expiry,
+            }))
+
+        return (token, expiry)
+
+    def issue_password_reset_token(self, user_id, remote_addr):
         """
         Create a password reset token for a given user.
 
