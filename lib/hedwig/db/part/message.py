@@ -136,10 +136,10 @@ class MessagePart(object):
 
             for row in conn.execute(select([
                     message_recipient.c.person_id,
-                    person.c.name,
+                    person.c.name.label('person_name'),
                     coalesce(message_recipient.c.email_address,
-                             email.c.address).label('address'),
-                    coalesce(email.c.public, False).label('public'),
+                             email.c.address).label('email_address'),
+                    coalesce(email.c.public, False).label('email_public'),
                     ]).select_from(
                         message_recipient.join(person).outerjoin(
                             email,
@@ -301,8 +301,8 @@ class MessagePart(object):
         stmt = select([
             message_recipient.c.message_id,
             message_recipient.c.person_id,
-            person.c.name,
-            message_recipient.c.email_address.label('address'),
+            person.c.name.label('person_name'),
+            message_recipient.c.email_address.label('email_address'),
         ]).select_from(message_recipient.join(person))
 
         iter_field = None
@@ -324,7 +324,7 @@ class MessagePart(object):
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(iter_stmt):
                     i += 1
-                    ans[i] = MessageRecipient(public=None, **row)
+                    ans[i] = MessageRecipient(email_public=None, **row)
 
         return ans
 

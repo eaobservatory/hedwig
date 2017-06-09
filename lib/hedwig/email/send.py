@@ -152,10 +152,10 @@ def _prepare_email_message(message, from_, identifier=None):
     recipients_public = []
     single_recipient = len(message.recipients) == 1
     for recipient in message.recipients:
-        recipients_plain.append(recipient.address)
-        if single_recipient or recipient.public:
-            recipients_public.append(formataddr((recipient.name,
-                                                 recipient.address)))
+        recipients_plain.append(recipient.email_address)
+        if single_recipient or recipient.email_public:
+            recipients_public.append(formataddr((recipient.person_name,
+                                                 recipient.email_address)))
 
     # Generate message identifier if one has not been provided.
     if identifier is None:

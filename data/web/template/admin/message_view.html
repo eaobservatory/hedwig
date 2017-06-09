@@ -49,8 +49,8 @@
     </tr>
     {% for recipient in message.recipients.values() %}
         <tr>
-            <td><a href="{{ url_for('people.person_view', person_id=recipient.person_id) }}">{{ recipient.name }}</a></td>
-            <td>{{ '&nbsp;' | safe if (recipient.address is none) else recipient.address }}</td>
+            <td><a href="{{ url_for('people.person_view', person_id=recipient.person_id) }}">{{ recipient.person_name }}</a></td>
+            <td>{{ '&nbsp;' | safe if (recipient.email_address is none) else recipient.email_address }}</td>
         </tr>
     {% endfor %}
 </table>

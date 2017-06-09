@@ -23,7 +23,7 @@ from collections import namedtuple
 from ..db.meta import affiliation, \
     calculation, call, call_preamble, category, \
     email, group_member, institution, institution_log, \
-    member, message, moc, person, \
+    member, message, message_recipient, moc, person, \
     prev_proposal, prev_proposal_pub, \
     proposal, proposal_category, queue, review, reviewer, \
     semester, target, user_log
@@ -132,7 +132,8 @@ Message = namedtuple(
 
 MessageRecipient = namedtuple(
     'MessageRecipient',
-    ['message_id', 'person_id', 'name', 'address', 'public'])
+    [x.name for x in message_recipient.columns] +
+    ['person_name', 'email_public'])
 
 MOCInfo = namedtuple(
     'MOCInfo',

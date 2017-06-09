@@ -85,9 +85,9 @@ class DBMessageTest(DBTestCase):
         self.assertEqual(len(message.recipients), 1)
         recipient = message.recipients[0]
         self.assertIsInstance(recipient, MessageRecipient)
-        self.assertEqual(recipient.name, 'Person One')
-        self.assertEqual(recipient.address, '1@a')
-        self.assertTrue(recipient.public)
+        self.assertEqual(recipient.person_name, 'Person One')
+        self.assertEqual(recipient.email_address, '1@a')
+        self.assertTrue(recipient.email_public)
 
         self.db.mark_message_sending(message.id)
 
@@ -199,8 +199,8 @@ class DBMessageTest(DBTestCase):
         message = self.db.get_unsent_message()
         self.assertEqual(message.id, message_12)
         self.assertEqual(set(message.recipients), set((
-            MessageRecipient(None, person_1, 'Person One', '1@b', True),
-            MessageRecipient(None, person_2, 'Person Two', '2@a', False),
+            MessageRecipient(None, person_1, '1@b', 'Person One', True),
+            MessageRecipient(None, person_2, '2@a', 'Person Two', False),
         )))
 
         self.db.mark_message_sending(message.id)
@@ -208,8 +208,8 @@ class DBMessageTest(DBTestCase):
         message = self.db.get_unsent_message()
         self.assertEqual(message.id, message_34)
         self.assertEqual(set(message.recipients), set((
-            MessageRecipient(None, person_3, 'Person Three', '3@c', True),
-            MessageRecipient(None, person_4, 'Person Four', '4@b', False),
+            MessageRecipient(None, person_3, '3@c', 'Person Three', True),
+            MessageRecipient(None, person_4, '4@b', 'Person Four', False),
         )))
 
     def test_explicit_email(self):
@@ -240,9 +240,9 @@ class DBMessageTest(DBTestCase):
         message = self.db.get_unsent_message()
         self.assertEqual(message.id, message_id)
         self.assertEqual(set(message.recipients), set((
-            MessageRecipient(None, person_1, 'Person One', '1@c', True),
-            MessageRecipient(None, person_2, 'Person Two', '2@b', True),
-            MessageRecipient(None, person_3, 'Person Three', '3@c', False),
+            MessageRecipient(None, person_1, '1@c', 'Person One', True),
+            MessageRecipient(None, person_2, '2@b', 'Person Two', True),
+            MessageRecipient(None, person_3, '3@c', 'Person Three', False),
         )))
 
         self.db.mark_message_sending(message.id)
@@ -255,7 +255,7 @@ class DBMessageTest(DBTestCase):
         message = self.db.get_unsent_message()
         self.assertEqual(message.id, message_id)
         self.assertEqual(message.recipients, [
-            MessageRecipient(None, person_1, 'Person One', '1@d', False),
+            MessageRecipient(None, person_1, '1@d', 'Person One', False),
         ])
 
     def test_message_thread(self):
