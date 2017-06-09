@@ -225,12 +225,17 @@ def poll(args):
         atexit.register(pidfile_delete, pidfile)
 
     from hedwig.config import get_database
+    from hedwig.db.util import ReadOnlyWrapper
 
     _configure_logging(args)
 
     db = get_database()
 
     dry_run = args['--dry-run']
+
+    # In dry-run mode, apply read-only wrapper to database control object.
+    if dry_run:
+        db = ReadOnlyWrapper(db)
 
     while True:
         # Do explicitly-requested poll actions.
@@ -259,7 +264,7 @@ def poll_close(db, dry_run):
 
     logger.debug('Checking for calls to close')
 
-    n_closed = close_completed_call(db=db, dry_run=dry_run)
+    n_closed = close_completed_call(db, dry_run=dry_run)
 
     if n_closed:
         logger.info('Closed {} call(s)', n_closed)
@@ -272,7 +277,7 @@ def poll_email(db, dry_run):
     logger.debug('Checking for queued email messages')
 
     try:
-        n_sent = send_queued_messages(db=db, dry_run=dry_run)
+        n_sent = send_queued_messages(db, dry_run=dry_run)
 
         if n_sent:
             logger.info('Sent {} message(s)', n_sent)
@@ -286,7 +291,7 @@ def poll_figure(db, dry_run):
 
     logger.debug('Checking for figures to process')
 
-    n_processed = process_proposal_figure(db=db, dry_run=dry_run)
+    n_processed = process_proposal_figure(db, dry_run=dry_run)
 
     if n_processed:
         logger.info('Processed {} figure(s)', n_processed)
@@ -298,7 +303,7 @@ def poll_pdf(db, dry_run):
 
     logger.debug('Checking for PDF files to process')
 
-    n_processed = process_proposal_pdf(db=db, dry_run=dry_run)
+    n_processed = process_proposal_pdf(db, dry_run=dry_run)
 
     if n_processed:
         logger.info('Processed {} PDF file(s)', n_processed)

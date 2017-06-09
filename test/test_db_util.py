@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,7 +18,8 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from hedwig.db.util import memoized
+from hedwig.db.util import memoized, ReadOnlyWrapper
+from hedwig.error import Error
 from hedwig.web.template_util import Counter
 
 from .compat import TestCase
@@ -97,3 +98,33 @@ class DBUtilTest(TestCase):
             ('memo_add', 33, 66): 99,
             ('memo_sub', 1, 2): -1,
         })
+
+    def test_ro_wrapper(self):
+        # Dummy database controller object which we can use to test the
+        # wrapper.
+        class DummyController(object):
+            def __init__(self):
+                self.data = {}
+
+            def get_x(self, id_):
+                return self.data.get(id_, 'Undefined')
+
+            def update_x(self, id_, value):
+                self.data[id_] = value
+
+        # Can read and write with original object.
+        db = DummyController()
+
+        self.assertEqual(db.get_x(99), 'Undefined')
+        db.update_x(99, 'Message 1')
+        self.assertEqual(db.get_x(99), 'Message 1')
+
+        # Can read by not write with wrapped object.
+        db_ro = ReadOnlyWrapper(db)
+
+        self.assertEqual(db_ro.get_x(99), 'Message 1')
+        with self.assertRaisesRegex(Error, 'read-only wrapper'):
+            db_ro.update_x(99, 'Message 2')
+
+        # Attempt to write should not have changed the value.
+        self.assertEqual(db.get_x(99), 'Message 1')

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from functools import wraps
 
-from ..error import NoSuchRecord
+from ..error import NoSuchRecord, FormattedError
 
 
 def memoized(f):
@@ -63,3 +63,29 @@ def require_not_none(f):
         return ans
 
     return decorated_function
+
+
+class ReadOnlyWrapper(object):
+    """
+    Wrapper to restrict access to a database controller object
+    to only read-only methods.
+
+    Read-only methods are considered to be those starting "get_" or
+    "search_".
+
+    If a technique to provide real read-only access to a database
+    via SQLAlchemy emerges then it should be used instead of this!
+    This wrapper is not foolproof and shouldn't be used for security.
+    It just aims to provide some safeguard against accidental writes
+    to the database, such as when testing operations in dry-run mode.
+    """
+
+    def __init__(self, db):
+        self._db = db
+
+    def __getattr__(self, name):
+        if name.startswith('__') or name.split('_', 1)[0] in ('get', 'search'):
+            return getattr(self._db, name)
+
+        raise FormattedError(
+            'read-only wrapper: attribute \'{}\' is not available', name)
