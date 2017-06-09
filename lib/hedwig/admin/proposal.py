@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -33,7 +33,7 @@ class FeedbackError(FormattedError):
     pass
 
 
-def close_call_proposals(db, call_id):
+def close_call_proposals(db, call_id, dry_run=False):
     """
     Function to update the status of proposals at the closure of a
     call.
@@ -75,8 +75,10 @@ def close_call_proposals(db, call_id):
         try:
             logger.info('Setting state of proposal {} to {}',
                         proposal.id, ProposalState.get_name(new_state))
-            db.update_proposal(proposal.id, state=new_state,
-                               state_prev=proposal.state)
+
+            if not dry_run:
+                db.update_proposal(proposal.id, state=new_state,
+                                   state_prev=proposal.state)
 
             # Freeze the current institution ID values in the member table.
             records = {}
@@ -86,7 +88,8 @@ def close_call_proposals(db, call_id):
 
             logger.debug('Sync institution IDs into proposal {} member table',
                          proposal.id)
-            db.sync_proposal_member_institution(proposal.id, records)
+            if not dry_run:
+                db.sync_proposal_member_institution(proposal.id, records)
 
         except ConsistencyError:
             logger.exception(
@@ -125,7 +128,7 @@ def finalize_call_review(db, call_id):
     return (n_update, n_error)
 
 
-def send_call_proposal_feedback(db, call_id, proposals):
+def send_call_proposal_feedback(db, call_id, proposals, dry_run=False):
     """
     Sends feedback for the given proposals.
 
@@ -250,16 +253,19 @@ def send_call_proposal_feedback(db, call_id, proposals):
             logger.info('Setting state of proposal {} to {}',
                         proposal.id, ProposalState.get_name(new_state))
 
-            db.update_proposal(proposal.id, state=new_state,
-                               state_prev=ProposalState.FINAL_REVIEW)
+            if not dry_run:
+                db.update_proposal(proposal.id, state=new_state,
+                                   state_prev=ProposalState.FINAL_REVIEW)
 
             # Write feedback email message into the database.  Do this after
             # setting the state (see comment above for why).
             logger.debug('Writing feedback message for proposal {}',
                          proposal.id)
 
-            db.add_message(email_subject, email_body,
-                           [x.person_id for x in proposal.members.values()])
+            if not dry_run:
+                db.add_message(
+                    email_subject, email_body,
+                    [x.person_id for x in proposal.members.values()])
 
             # If a proposal for an immediate review call was accepted, send
             # an additional notification message.  For now send this to
@@ -281,12 +287,17 @@ def send_call_proposal_feedback(db, call_id, proposals):
                         logger.warning('Proposal {} note is not plain text',
                                        proposal_code)
 
-                db.add_message(
-                    email_subject + ' in immediate review',
-                    render_email_template(
-                        'proposal_reviewed_notification.txt',
-                        email_ctx, facility=facility),
-                    [x.id for x in db.search_person(admin=True).values()])
+                site_administrators = db.search_person(admin=True)
+
+                if not dry_run:
+                    db.add_message(
+                        email_subject + ' in immediate review',
+                        render_email_template(
+                            'proposal_reviewed_notification.txt',
+                            email_ctx, facility=facility),
+                        [x.id for x in site_administrators.values()])
+
+            n_processed += 1
 
         except FeedbackError:
             logger.exception(

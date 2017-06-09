@@ -35,9 +35,6 @@ def process_moc(db, dry_run=False):
     into the "moc_cell" database table in order to make them searchable.
     """
 
-    if dry_run:
-        return 0
-
     n_processed = 0
 
     for moc_info in db.search_moc(facility_id=None, public=None,
@@ -45,19 +42,24 @@ def process_moc(db, dry_run=False):
         logger.debug('Importing MOC {}', moc_info.id)
 
         try:
-            db.update_moc(moc_id=moc_info.id, state=AttachmentState.PROCESSING,
-                          state_prev=AttachmentState.NEW)
+            if not dry_run:
+                db.update_moc(
+                    moc_id=moc_info.id, state=AttachmentState.PROCESSING,
+                    state_prev=AttachmentState.NEW)
         except ConsistencyError:
             continue
 
         try:
             moc = read_moc(buff=db.get_moc_fits(moc_info.id))
 
-            db.update_moc_cell(moc_info.id, moc)
+            if not dry_run:
+                db.update_moc_cell(moc_info.id, moc)
 
             try:
-                db.update_moc(moc_id=moc_info.id, state=AttachmentState.READY,
-                              state_prev=AttachmentState.PROCESSING)
+                if not dry_run:
+                    db.update_moc(
+                        moc_id=moc_info.id, state=AttachmentState.READY,
+                        state_prev=AttachmentState.PROCESSING)
 
                 n_processed += 1
 
@@ -66,7 +68,9 @@ def process_moc(db, dry_run=False):
 
         except Exception as e:
             logger.error('Error importing MOC {}: {!s}', moc_info.id, e)
-            db.update_moc(moc_id=moc_info.id, state=AttachmentState.ERROR)
+
+            if not dry_run:
+                db.update_moc(moc_id=moc_info.id, state=AttachmentState.ERROR)
 
     return n_processed
 
@@ -75,9 +79,6 @@ def process_proposal_figure(db, dry_run=False):
     """
     Function to process pending proposal figure uploads.
     """
-
-    if dry_run:
-        return 0
 
     config = get_config()
     thumb_preview_options = {
@@ -100,10 +101,11 @@ def process_proposal_figure(db, dry_run=False):
         logger.debug('Processing figure {}', figure_info.id)
 
         try:
-            db.update_proposal_figure(
-                proposal_id=None, role=None, fig_id=figure_info.id,
-                state=AttachmentState.PROCESSING,
-                state_prev=AttachmentState.NEW)
+            if not dry_run:
+                db.update_proposal_figure(
+                    proposal_id=None, role=None, fig_id=figure_info.id,
+                    state=AttachmentState.PROCESSING,
+                    state_prev=AttachmentState.NEW)
         except ConsistencyError:
             continue
 
@@ -150,16 +152,18 @@ def process_proposal_figure(db, dry_run=False):
                 preview = tp.preview
 
             # Store the processed data.
-            if preview is not None:
-                db.set_proposal_figure_preview(figure_info.id, preview)
+            if not dry_run:
+                if preview is not None:
+                    db.set_proposal_figure_preview(figure_info.id, preview)
 
-            db.set_proposal_figure_thumbnail(figure_info.id, tp.thumbnail)
+                db.set_proposal_figure_thumbnail(figure_info.id, tp.thumbnail)
 
             try:
-                db.update_proposal_figure(
-                    proposal_id=None, role=None, fig_id=figure_info.id,
-                    state=AttachmentState.READY,
-                    state_prev=AttachmentState.PROCESSING)
+                if not dry_run:
+                    db.update_proposal_figure(
+                        proposal_id=None, role=None, fig_id=figure_info.id,
+                        state=AttachmentState.READY,
+                        state_prev=AttachmentState.PROCESSING)
 
                 n_processed += 1
 
@@ -168,9 +172,11 @@ def process_proposal_figure(db, dry_run=False):
 
         except Exception as e:
             logger.error('Error converting figure {}: {!s}', figure_info.id, e)
-            db.update_proposal_figure(
-                proposal_id=None, role=None, fig_id=figure_info.id,
-                state=AttachmentState.ERROR)
+
+            if not dry_run:
+                db.update_proposal_figure(
+                    proposal_id=None, role=None, fig_id=figure_info.id,
+                    state=AttachmentState.ERROR)
 
     return n_processed
 
@@ -179,9 +185,6 @@ def process_proposal_pdf(db, dry_run=False):
     """
     Function to process pending proposal PDF uploads.
     """
-
-    if dry_run:
-        return 0
 
     config = get_config()
     pdf_options = {
@@ -197,10 +200,11 @@ def process_proposal_pdf(db, dry_run=False):
         logger.debug('Processing PDF {}', pdf.id)
 
         try:
-            db.update_proposal_pdf(
-                pdf.id,
-                state=AttachmentState.PROCESSING,
-                state_prev=AttachmentState.NEW)
+            if not dry_run:
+                db.update_proposal_pdf(
+                    pdf.id,
+                    state=AttachmentState.PROCESSING,
+                    state_prev=AttachmentState.NEW)
         except ConsistencyError:
             continue
 
@@ -213,13 +217,15 @@ def process_proposal_pdf(db, dry_run=False):
             if len(pngs) != pdf.pages:
                 raise ConversionError('PDF generated wrong number of pages')
 
-            db.set_proposal_pdf_preview(pdf.id, pngs)
+            if not dry_run:
+                db.set_proposal_pdf_preview(pdf.id, pngs)
 
             try:
-                db.update_proposal_pdf(
-                    pdf.id,
-                    state=AttachmentState.READY,
-                    state_prev=AttachmentState.PROCESSING)
+                if not dry_run:
+                    db.update_proposal_pdf(
+                        pdf.id,
+                        state=AttachmentState.READY,
+                        state_prev=AttachmentState.PROCESSING)
 
                 n_processed += 1
 
@@ -230,6 +236,8 @@ def process_proposal_pdf(db, dry_run=False):
 
         except Exception as e:
             logger.error('Error converting PDF {}: {!s}', pdf.id, e)
-            db.update_proposal_pdf(pdf.id, state=AttachmentState.ERROR)
+
+            if not dry_run:
+                db.update_proposal_pdf(pdf.id, state=AttachmentState.ERROR)
 
     return n_processed

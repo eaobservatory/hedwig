@@ -43,9 +43,6 @@ def process_publication_references(db, dry_run=False):
     :return: the total number of references processed
     """
 
-    if dry_run:
-        return 0
-
     n_processed = 0
 
     types = {
@@ -69,12 +66,13 @@ def process_publication_references(db, dry_run=False):
     for (type_, type_info) in types.items():
         if type_info.set:
             n_processed += _process_ref_type(
-                db, type_, type_info.query_function, type_info.set)
+                db, type_, type_info.query_function, type_info.set,
+                dry_run=dry_run)
 
     return n_processed
 
 
-def _process_ref_type(db, type_, query_function, references):
+def _process_ref_type(db, type_, query_function, references, dry_run=False):
     """
     Look up references of a given type using the specified query function
     and update their entries in the database.
@@ -91,6 +89,7 @@ def _process_ref_type(db, type_, query_function, references):
     :param `type_`: type of reference being updated
     :param query_function: function to look up lists of references
     :param references: set of references to update
+    :param dry_run: enable dry run mode if true
 
     :return: the number of references successfully processed
     """
@@ -112,11 +111,12 @@ def _process_ref_type(db, type_, query_function, references):
                 reference)
 
             try:
-                db.update_prev_proposal_pub(
-                    type_=type_, description=reference,
-                    state=AttachmentState.ERROR,
-                    title=None, author=None, year=None,
-                    state_prev=AttachmentState.NEW)
+                if not dry_run:
+                    db.update_prev_proposal_pub(
+                        type_=type_, description=reference,
+                        state=AttachmentState.ERROR,
+                        title=None, author=None, year=None,
+                        state_prev=AttachmentState.NEW)
 
             except:
                 logger.exception('Failed to set publication error state')
@@ -126,11 +126,12 @@ def _process_ref_type(db, type_, query_function, references):
                          reference)
 
             try:
-                db.update_prev_proposal_pub(
-                    type_=type_, description=reference,
-                    state=AttachmentState.READY,
-                    title=info.title, author=info.author, year=info.year,
-                    state_prev=AttachmentState.NEW)
+                if not dry_run:
+                    db.update_prev_proposal_pub(
+                        type_=type_, description=reference,
+                        state=AttachmentState.READY,
+                        title=info.title, author=info.author, year=info.year,
+                        state_prev=AttachmentState.NEW)
 
                 n_processed += 1
 

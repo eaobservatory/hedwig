@@ -34,9 +34,6 @@ def close_completed_call(db, dry_run=False):
     Close calls for which the submission deadline has passed.
     """
 
-    if dry_run:
-        return 0
-
     grace_period = timedelta(
         minutes=int(get_config().get('application', 'grace_period')))
 
@@ -46,7 +43,7 @@ def close_completed_call(db, dry_run=False):
             date_close_before=(datetime.utcnow() - grace_period),
             has_proposal_state=ProposalState.open_states()):
         try:
-            close_call_proposals(db=db, call_id=call_id)
+            close_call_proposals(db=db, call_id=call_id, dry_run=dry_run)
 
             n_closed += 1
 
@@ -70,9 +67,6 @@ def send_proposal_feedback(db, dry_run=False):
     the call.
     """
 
-    if dry_run:
-        return 0
-
     proposals = db.search_proposal(
         state=ProposalState.FINAL_REVIEW, with_members=True,
         with_reviewers=True, with_review_info=True, with_review_text=True,
@@ -90,6 +84,7 @@ def send_proposal_feedback(db, dry_run=False):
     n_processed = 0
 
     for (call_id, call_proposals) in calls.items():
-        n_processed += send_call_proposal_feedback(db, call_id, call_proposals)
+        n_processed += send_call_proposal_feedback(db, call_id, call_proposals,
+                                                   dry_run=dry_run)
 
     return n_processed
