@@ -132,7 +132,7 @@ Message = namedtuple(
 
 MessageRecipient = namedtuple(
     'MessageRecipient',
-    ['person_id', 'name', 'address', 'public'])
+    ['message_id', 'person_id', 'name', 'address', 'public'])
 
 MOCInfo = namedtuple(
     'MOCInfo',

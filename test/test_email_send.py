@@ -65,9 +65,9 @@ class EmailSendTestCase(DummyConfigTestCase):
                 body='C\'est un message exp\u00e9rimental.',
                 recipients=[
                     MessageRecipient(
-                        101, 'Persoon \u00e9\u00e9n', 'one@test', True),
+                        None, 101, 'Persoon \u00e9\u00e9n', 'one@test', True),
                     MessageRecipient(
-                        102, 'Persoon twee', 'two@test', False),
+                        None, 102, 'Persoon twee', 'two@test', False),
                 ],
                 thread_identifiers=['test-ref-1', 'test-ref-2']),
             from_='Hedwig Pr\u00fcfung <hedwig@test>',

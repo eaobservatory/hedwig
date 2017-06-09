@@ -29,11 +29,12 @@ from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_, case, column, not_
 from sqlalchemy.sql.functions import coalesce
 
-from ...error import ConsistencyError, FormattedError, \
+from ...error import ConsistencyError, Error, FormattedError, \
     NoSuchRecord, MultipleRecords
-from ...type.collection import ResultCollection
+from ...type.collection import ResultCollection, MessageRecipientCollection
 from ...type.enum import MessageState, MessageThreadType
 from ...type.simple import Message, MessageRecipient
+from ...util import is_list_like
 from ..meta import email, message, message_recipient, person
 
 
@@ -89,27 +90,9 @@ class MessagePart(object):
         Retrieve a message from the database.
         """
 
-        with self._transaction() as conn:
-            recipients = []
-
-            for row in conn.execute(select([
-                    message_recipient.c.person_id,
-                    person.c.name,
-                    message_recipient.c.email_address.label('address'),
-                    ]).select_from(message_recipient.join(person)).where(
-                        message_recipient.c.message_id == message_id)):
-                recipients.append(MessageRecipient(public=None, **row))
-
-            row = conn.execute(message.select().where(
-                message.c.id == message_id).limit(1)).first()
-
-            if row is None:
-                raise NoSuchRecord('message not found with id {}', message_id)
-
-            ans = Message(recipients=recipients, thread_identifiers=None,
-                          **row)
-
-        return ans
+        return self.search_message(
+            message_id=message_id, with_body=True, with_recipients=True
+        ).get_single()
 
     def get_unsent_message(self):
         """
@@ -168,7 +151,7 @@ class MessagePart(object):
                             ))
                     ).where(
                         message_recipient.c.message_id == message_id)):
-                recipients.append(MessageRecipient(**row))
+                recipients.append(MessageRecipient(message_id=None, **row))
 
         return Message(
             recipients=recipients, thread_identifiers=thread_identifiers,
@@ -222,9 +205,11 @@ class MessagePart(object):
             identifier=identifier,
             _conn=_conn, _test_skip_check=_test_skip_check)
 
-    def search_message(self, person_id=None, state=None, message_id_lt=None,
+    def search_message(self, person_id=None, state=None,
+                       message_id=None, message_id_lt=None,
                        thread_type=None, thread_id=None,
                        limit=None, oldest_first=False,
+                       with_body=False, with_recipients=False,
                        _conn=None):
         """
         Searches for messages.
@@ -233,26 +218,35 @@ class MessagePart(object):
         optional keyword arguments.
         """
 
-        stmt = select([
-            message.c.id,
-            message.c.date,
-            message.c.subject,
-            message.c.timestamp_send,
-            message.c.timestamp_sent,
-            message.c.identifier,
-            message.c.thread_type,
-            message.c.thread_id,
-            message.c.state,
-        ])
+        default = {
+            'recipients': None,
+            'thread_identifiers': None,
+        }
+
+        if with_body:
+            fields = [message]
+        else:
+            fields = [x for x in message.columns if x.name != 'body']
+            default['body'] = None
+
+        stmt = select(fields)
 
         if person_id is not None:
-            stmt = stmt.select_from(message.join(message_recipient)).where(
+            stmt = stmt.select_from(
+                message.join(message_recipient)
+            ).where(
                 message_recipient.c.person_id == person_id)
 
         if state is not None:
             stmt = stmt.where(message.c.state == state)
 
+        if message_id is not None:
+            stmt = stmt.where(message.c.id == message_id)
+
         if message_id_lt is not None:
+            if message_id is not None:
+                raise Error('message_id and message_id_lt both specified')
+
             stmt = stmt.where(message.c.id < message_id_lt)
 
         if thread_type is not None:
@@ -267,17 +261,70 @@ class MessagePart(object):
         if limit is not None:
             stmt = stmt.limit(limit)
 
-        ans = ResultCollection()
-
         if oldest_first:
             stmt = stmt.order_by(message.c.id.asc())
         else:
             stmt = stmt.order_by(message.c.id.desc())
 
+        ans = ResultCollection()
+        message_ids = set()
+        extra = {}
+
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt):
-                ans[row['id']] = Message(body=None, recipients=None,
-                                         thread_identifiers=None, **row)
+                row_key = row['id']
+                message_ids.add(row_key)
+
+                values = default.copy()
+                values.update(**row)
+                ans[row_key] = Message(**values)
+
+            if with_recipients:
+                extra['recipients'] = self.search_message_recipient(
+                    message_id=message_ids, _conn=conn)
+
+        # Attach extra information, outside of database transaction block.
+        if extra:
+            for key in list(ans.keys()):
+                row = ans[key]
+
+                ans[key] = row._replace(**{k: v.subset_by_message(row.id)
+                                           for (k, v) in extra.items()})
+
+        return ans
+
+    def search_message_recipient(self, message_id=None, _conn=None):
+        """
+        Search for message recipient records.
+        """
+
+        stmt = select([
+            message_recipient.c.message_id,
+            message_recipient.c.person_id,
+            person.c.name,
+            message_recipient.c.email_address.label('address'),
+        ]).select_from(message_recipient.join(person))
+
+        iter_field = None
+        iter_list = None
+
+        if message_id is not None:
+            if is_list_like(message_id):
+                assert iter_field is None
+                iter_field = message_recipient.c.message_id
+                iter_list = message_id
+            else:
+                stmt = stmt.where(message_recipient.c.message_id == message_id)
+
+        ans = MessageRecipientCollection()
+        # Arbitrary counter as this table doesn't have a simple primary key.
+        i = 0
+
+        with self._transaction(_conn=_conn) as conn:
+            for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
+                for row in conn.execute(iter_stmt):
+                    i += 1
+                    ans[i] = MessageRecipient(public=None, **row)
 
         return ans
 

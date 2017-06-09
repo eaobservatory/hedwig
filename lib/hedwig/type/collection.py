@@ -324,6 +324,17 @@ class MemberCollection(ResultCollection, CollectionByProposal,
                     'You can not remove yourself as an editor.')
 
 
+class MessageRecipientCollection(ResultCollection):
+    def subset_by_message(self, message_id):
+        """
+        Create a subset of the collection (of the same type) containing
+        the entries which match the given proposal.
+        """
+
+        return type(self)((k, v) for (k, v) in self.items()
+                          if v.message_id == message_id)
+
+
 class PrevProposalCollection(ResultCollection):
     """
     Class to represent a collection of previous proposals.

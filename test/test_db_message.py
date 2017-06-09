@@ -199,8 +199,8 @@ class DBMessageTest(DBTestCase):
         message = self.db.get_unsent_message()
         self.assertEqual(message.id, message_12)
         self.assertEqual(set(message.recipients), set((
-            MessageRecipient(person_1, 'Person One', '1@b', True),
-            MessageRecipient(person_2, 'Person Two', '2@a', False),
+            MessageRecipient(None, person_1, 'Person One', '1@b', True),
+            MessageRecipient(None, person_2, 'Person Two', '2@a', False),
         )))
 
         self.db.mark_message_sending(message.id)
@@ -208,8 +208,8 @@ class DBMessageTest(DBTestCase):
         message = self.db.get_unsent_message()
         self.assertEqual(message.id, message_34)
         self.assertEqual(set(message.recipients), set((
-            MessageRecipient(person_3, 'Person Three', '3@c', True),
-            MessageRecipient(person_4, 'Person Four', '4@b', False),
+            MessageRecipient(None, person_3, 'Person Three', '3@c', True),
+            MessageRecipient(None, person_4, 'Person Four', '4@b', False),
         )))
 
     def test_explicit_email(self):
@@ -240,9 +240,9 @@ class DBMessageTest(DBTestCase):
         message = self.db.get_unsent_message()
         self.assertEqual(message.id, message_id)
         self.assertEqual(set(message.recipients), set((
-            MessageRecipient(person_1, 'Person One', '1@c', True),
-            MessageRecipient(person_2, 'Person Two', '2@b', True),
-            MessageRecipient(person_3, 'Person Three', '3@c', False),
+            MessageRecipient(None, person_1, 'Person One', '1@c', True),
+            MessageRecipient(None, person_2, 'Person Two', '2@b', True),
+            MessageRecipient(None, person_3, 'Person Three', '3@c', False),
         )))
 
         self.db.mark_message_sending(message.id)
@@ -255,7 +255,7 @@ class DBMessageTest(DBTestCase):
         message = self.db.get_unsent_message()
         self.assertEqual(message.id, message_id)
         self.assertEqual(message.recipients, [
-            MessageRecipient(person_1, 'Person One', '1@d', False),
+            MessageRecipient(None, person_1, 'Person One', '1@d', False),
         ])
 
     def test_message_thread(self):
