@@ -38,7 +38,7 @@ class DBMessageTest(DBTestCase):
         person_1 = self.db.add_person('Person One')
         self.db.add_email(person_1, '1@a', primary=True, public=True)
 
-        with self.assertRaisesRegex(ConsistencyError, '^duplicate person_id'):
+        with self.assertRaisesRegex(Error, '^duplicate person_id'):
             message_id = self.db.add_message('test', 'test message',
                                              [person_1, person_1])
 

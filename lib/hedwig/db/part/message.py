@@ -56,12 +56,12 @@ class MessagePart(object):
                 raise FormattedError('invalid thread type {}', thread_type)
 
         elif thread_id is not None:
-            raise ConsistencyError('thread_id specified without thread_type')
+            raise Error('thread_id specified without thread_type')
 
         if not _test_skip_check:
             if ((not isinstance(person_ids, set)) and
                     (len(person_ids) != len(set(person_ids)))):
-                raise ConsistencyError('duplicate person_id for new message')
+                raise Error('duplicate person_id for new message')
 
         with self._transaction() as conn:
             result = conn.execute(message.insert().values({
@@ -256,7 +256,7 @@ class MessagePart(object):
                 stmt = stmt.where(message.c.thread_id == thread_id)
 
         elif thread_id is not None:
-            raise ConsistencyError('thread_id specified without thread_type')
+            raise Error('thread_id specified without thread_type')
 
         if limit is not None:
             stmt = stmt.limit(limit)
