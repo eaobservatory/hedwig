@@ -55,6 +55,7 @@ except ImportError:
 from ..compat import unicode_to_str
 from ..config import get_config
 from ..error import FormattedError
+from ..type.enum import MessageThreadType
 from ..util import get_logger
 
 logger = get_logger(__name__)
@@ -176,6 +177,12 @@ def _prepare_email_message(message, from_, identifier=None):
         # in the thread to make a thread with a flat structure.
         msg['In-Reply-To'] = Header(message.thread_identifiers[-1])
         msg['References'] = Header(' '.join(message.thread_identifiers))
+
+    # Add Hedwig-specific headers to aid in dealing with bounce messages.
+    msg['X-Hedwig-ID'] = '{}'.format(message.id)
+    if (message.thread_id is not None) and (message.thread_type is not None):
+        msg['X-Hedwig-Thread'] = '{} {}'.format(
+            MessageThreadType.url_path(message.thread_type), message.thread_id)
 
     with closing(BytesIO()) as f:
         BytesGenerator(f, mangle_from_=False).flatten(msg)

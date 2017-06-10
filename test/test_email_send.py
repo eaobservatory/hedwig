@@ -22,6 +22,7 @@ from datetime import datetime
 
 from hedwig.compat import byte_type
 from hedwig.email.send import MIMETextFlowed, quitting, _prepare_email_message
+from hedwig.type.enum import MessageThreadType
 from hedwig.type.collection import MessageRecipientCollection
 from hedwig.type.simple import Message, MessageRecipient
 from hedwig.type.util import null_tuple
@@ -71,7 +72,9 @@ class EmailSendTestCase(DummyConfigTestCase):
                     (2, MessageRecipient(
                         None, 102, 'two@test', 'Persoon twee', False)),
                 )),
-                thread_identifiers=['test-ref-1', 'test-ref-2'])
+                thread_identifiers=['test-ref-1', 'test-ref-2'],
+                thread_type=MessageThreadType.PROPOSAL_STATUS,
+                thread_id=5678),
             from_='Hedwig Pr\u00fcfung <hedwig@test>',
             identifier='test-msg-1')
 
@@ -98,6 +101,8 @@ class EmailSendTestCase(DummyConfigTestCase):
             b'Message-ID: test-msg-1',
             b'In-Reply-To: test-ref-2',
             b'References: test-ref-1 test-ref-2',
+            b'X-Hedwig-ID: 1234',
+            b'X-Hedwig-Thread: prop_stat 5678',
             b'',
             b'Qydlc3QgdW4gbWVzc2FnZSBleHDDqXJpbWVudGFsLg==',
             b'']
