@@ -66,8 +66,8 @@ def process_moc(db, dry_run=False):
             except ConsistencyError:
                 continue
 
-        except Exception as e:
-            logger.error('Error importing MOC {}: {!s}', moc_info.id, e)
+        except Exception:
+            logger.exception('Error importing MOC {}', moc_info.id)
 
             if not dry_run:
                 db.update_moc(moc_id=moc_info.id, state=AttachmentState.ERROR)
@@ -171,7 +171,7 @@ def process_proposal_figure(db, dry_run=False):
                 continue
 
         except Exception as e:
-            logger.error('Error converting figure {}: {!s}', figure_info.id, e)
+            logger.exception('Error converting figure {}', figure_info.id)
 
             if not dry_run:
                 db.update_proposal_figure(
@@ -234,8 +234,8 @@ def process_proposal_pdf(db, dry_run=False):
                 # stop trying to process this PDF.
                 continue
 
-        except Exception as e:
-            logger.error('Error converting PDF {}: {!s}', pdf.id, e)
+        except Exception:
+            logger.exception('Error converting PDF {}', pdf.id)
 
             if not dry_run:
                 db.update_proposal_pdf(pdf.id, state=AttachmentState.ERROR)
