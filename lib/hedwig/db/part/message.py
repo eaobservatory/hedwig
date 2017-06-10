@@ -94,123 +94,14 @@ class MessagePart(object):
             message_id=message_id, with_body=True, with_recipients=True
         ).get_single()
 
-    def get_unsent_message(self):
-        """
-        Return the first unsent message, if there is one, or None otherwise.
-        """
-
-        with self._transaction() as conn:
-            result = conn.execute(message.select().where(
-                message.c.state == MessageState.UNSENT,
-            ).order_by(
-                message.c.id.asc()
-            ).limit(1)).first()
-
-            if result is None:
-                return None
-
-            message_id = result['id']
-
-            # Find the identifiers for previous messages in the same thread,
-            # oldest first.
-            thread_type = result['thread_type']
-            thread_id = result['thread_id']
-            thread_identifiers = []
-
-            if (thread_type is not None) and (thread_id is not None):
-                for row in conn.execute(select([
-                        message.c.identifier,
-                        ]).select_from(message).where(and_(
-                            message.c.thread_type == thread_type,
-                            message.c.thread_id == thread_id,
-                            message.c.id < message_id,
-                            message.c.state == MessageState.SENT,
-                            message.c.identifier.isnot(None),
-                        )).order_by(message.c.id.asc())):
-                    thread_identifiers.append(row['identifier'])
-
-            # Find the recipients of the message: perform an outer join
-            # with the email table in case the address is not there -- in that
-            # case assume the address is not public.
-            recipients = []
-
-            for row in conn.execute(select([
-                    message_recipient.c.person_id,
-                    person.c.name.label('person_name'),
-                    coalesce(message_recipient.c.email_address,
-                             email.c.address).label('email_address'),
-                    coalesce(email.c.public, False).label('email_public'),
-                    ]).select_from(
-                        message_recipient.join(person).outerjoin(
-                            email,
-                            and_(person.c.id == email.c.person_id, case([(
-                                message_recipient.c.email_address.isnot(None),
-                                message_recipient.c.email_address ==
-                                email.c.address)],
-                                else_=email.c.primary)
-                            ))
-                    ).where(
-                        message_recipient.c.message_id == message_id)):
-                recipients.append(MessageRecipient(message_id=None, **row))
-
-        return Message(
-            recipients=recipients, thread_identifiers=thread_identifiers,
-            **result)
-
-    def mark_message_sending(self, message_id,
-                             _conn=None, _test_skip_check=False):
-        """
-        Marks the given message as being sent.
-        """
-
-        self.update_message(
-            message_id,
-            state=MessageState.SENDING,
-            state_prev=MessageState.UNSENT,
-            state_is_system=True,
-            timestamp_send=datetime.utcnow(),
-            _conn=_conn)
-
-    def mark_message_error(self, message_id,
-                           _conn=None, _test_skip_check=False):
-        """
-        Marks the given message as having been unsuccesfully attempted
-        to be sent.
-
-        This is simply a convenience method which in turn calls
-        `update_message`.
-        """
-
-        self.update_message(
-            message_id,
-            state=MessageState.ERROR,
-            state_prev=MessageState.SENDING,
-            state_is_system=True,
-            _conn=_conn, _test_skip_check=_test_skip_check)
-
-    def mark_message_sent(self, message_id, identifier,
-                          _conn=None, _test_skip_check=False):
-        """
-        Marks the given message as sent.
-
-        The "identifier" should be the email's "Message-ID" header.
-        """
-
-        self.update_message(
-            message_id,
-            state=MessageState.SENT,
-            state_prev=MessageState.SENDING,
-            state_is_system=True,
-            timestamp_sent=datetime.utcnow(),
-            identifier=identifier,
-            _conn=_conn, _test_skip_check=_test_skip_check)
-
-    def search_message(self, person_id=None, state=None,
-                       message_id=None, message_id_lt=None,
-                       thread_type=None, thread_id=None,
-                       limit=None, oldest_first=False,
-                       with_body=False, with_recipients=False,
-                       _conn=None):
+    def search_message(
+            self, person_id=None, state=None,
+            message_id=None, message_id_lt=None,
+            thread_type=None, thread_id=None,
+            limit=None, oldest_first=False,
+            with_body=False, with_thread_identifiers=False,
+            with_recipients=False, with_recipients_resolved=False,
+            _conn=None):
         """
         Searches for messages.
 
@@ -277,11 +168,28 @@ class MessagePart(object):
 
                 values = default.copy()
                 values.update(**row)
+
+                # For now, perform separate query for thread identifiers of
+                # each message.  In principle we could do this instead for all
+                # messages using a message-message join.
+                if (with_thread_identifiers and
+                        (values['thread_type'] is not None) and
+                        (values['thread_id'] is not None)):
+                    values['thread_identifiers'] = [
+                        x.identifier for x in self.search_message(
+                            thread_type=values['thread_type'],
+                            thread_id=values['thread_id'],
+                            message_id_lt=row_key,
+                            state=MessageState.SENT,
+                            oldest_first=True,
+                            _conn=conn).values()]
+
                 ans[row_key] = Message(**values)
 
             if with_recipients:
                 extra['recipients'] = self.search_message_recipient(
-                    message_id=message_ids, _conn=conn)
+                    message_id=message_ids,
+                    with_resolved_email=with_recipients_resolved, _conn=conn)
 
         # Attach extra information, outside of database transaction block.
         if extra:
@@ -293,17 +201,46 @@ class MessagePart(object):
 
         return ans
 
-    def search_message_recipient(self, message_id=None, _conn=None):
+    def search_message_recipient(
+            self, message_id=None, with_resolved_email=False,
+            _conn=None):
         """
         Search for message recipient records.
         """
 
-        stmt = select([
+        default = {}
+
+        fields = [
             message_recipient.c.message_id,
             message_recipient.c.person_id,
             person.c.name.label('person_name'),
-            message_recipient.c.email_address.label('email_address'),
-        ]).select_from(message_recipient.join(person))
+        ]
+
+        select_from = message_recipient.join(person)
+
+        if with_resolved_email:
+            fields.extend([
+                coalesce(message_recipient.c.email_address,
+                         email.c.address).label('email_address'),
+                coalesce(email.c.public, False).label('email_public'),
+            ])
+
+            select_from = select_from.outerjoin(
+                email,
+                and_(person.c.id == email.c.person_id, case([(
+                    message_recipient.c.email_address.isnot(None),
+                    message_recipient.c.email_address == email.c.address)],
+                    else_=email.c.primary)
+                ))
+
+        else:
+            fields.extend([
+                message_recipient.c.email_address.label('email_address'),
+            ])
+
+            default['email_public'] = None
+
+        stmt = select(fields).select_from(select_from)
 
         iter_field = None
         iter_list = None
@@ -324,7 +261,11 @@ class MessagePart(object):
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(iter_stmt):
                     i += 1
-                    ans[i] = MessageRecipient(email_public=None, **row)
+
+                    values = default.copy()
+                    values.update(**row)
+
+                    ans[i] = MessageRecipient(**values)
 
         return ans
 

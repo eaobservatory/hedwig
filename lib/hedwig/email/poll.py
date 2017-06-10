@@ -18,48 +18,85 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from datetime import datetime
+
 from ..error import ConsistencyError
+from ..type.enum import MessageState
+from ..util import get_logger
 from .send import send_email_message
+
+logger = get_logger(__name__)
 
 
 def send_queued_messages(db, dry_run=False):
     """
     Attempts to send any unsent email messages.
 
-    Repeatedly queries the database for an unsent message.  If a message
-    is found, it is sent and then marked as sent in the database.
-    If no message is found then the loop exits.
+    Queries the database for an unsent message.  If messages
+    is found, they are sent and then marked as sent in the database.
 
     Returns the number of messages sent.
     """
 
-    if dry_run:
-        return 0
-
+    n_sent = 0
     message_ids = set()
 
-    n_sent = 0
-
-    while True:
-        message = db.get_unsent_message()
-        if message is None:
-            break
-
+    for message in db.search_message(
+            state=MessageState.UNSENT,
+            oldest_first=True,
+            with_thread_identifiers=True,
+            with_recipients=True,
+            with_recipients_resolved=True,
+            with_body=True).values():
+        # Double-check we don't get the same message to send twice in one go.
         if message.id in message_ids:
-            raise ConsistencyError('message with id={} seen more than once',
-                                   message.id)
+            logger.warning(
+                'message with id={} seen more than once', message.id)
+            continue
         message_ids.add(message.id)
 
-        db.mark_message_sending(message.id)
+        logger.debug('Sending message {}', message.id)
 
-        identifier = send_email_message(message)
+        try:
+            if not dry_run:
+                db.update_message(
+                    message.id,
+                    state_prev=MessageState.UNSENT,
+                    state=MessageState.SENDING,
+                    state_is_system=True,
+                    timestamp_send=datetime.utcnow())
 
-        if identifier is None:
-            db.mark_message_error(message.id)
+        except ConsistencyError:
+            continue
 
-        else:
-            db.mark_message_sent(message.id, identifier)
+        try:
+            identifier = send_email_message(message, dry_run=dry_run)
 
-            n_sent += 1
+            logger.debug('Message {} sent with identifier {}',
+                         message.id, identifier)
+
+            try:
+                if not dry_run:
+                    db.update_message(
+                        message.id,
+                        state_prev=MessageState.SENDING,
+                        state=MessageState.SENT,
+                        state_is_system=True,
+                        timestamp_sent=datetime.utcnow(),
+                        identifier=identifier)
+
+                n_sent += 1
+
+            except ConsistencyError:
+                continue
+
+        except:
+            logger.exception('Error sending message {}', message.id)
+
+            if not dry_run:
+                db.update_message(
+                    message.id,
+                    state=MessageState.ERROR,
+                    state_is_system=True)
 
     return n_sent

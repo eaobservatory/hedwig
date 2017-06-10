@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime
 
+from hedwig.compat import first_value
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, Error
 from hedwig.type.enum import MessageState, MessageThreadType
 from hedwig.type.collection import ResultCollection
@@ -30,7 +31,6 @@ from .dummy_db import DBTestCase
 class DBMessageTest(DBTestCase):
     def test_basic_message(self):
         # Check null results.
-        self.assertIsNone(self.db.get_unsent_message())
         messages = self.db.search_message()
         self.assertFalse(messages)
 
@@ -72,8 +72,15 @@ class DBMessageTest(DBTestCase):
         self.assertIsNone(message.thread_id)
         self.assertEqual(message.state, MessageState.UNSENT)
 
-        # Test "get_unsent_message" method.
-        message = self.db.get_unsent_message()
+        # Test a search as if preparing to send messages.
+        messages = self.db.search_message(
+            state=MessageState.UNSENT,
+            oldest_first=True, with_thread_identifiers=True,
+            with_recipients=True, with_recipients_resolved=True,
+            with_body=True)
+        self.assertIsInstance(messages, ResultCollection)
+        self.assertEqual(set(messages.keys()), set((message_id,)))
+        message = messages[message_id]
         self.assertIsInstance(message, Message)
         self.assertEqual(message.id, message_id)
         self.assertEqual(message.subject, 'test')
@@ -83,13 +90,16 @@ class DBMessageTest(DBTestCase):
         self.assertIsNone(message.identifier)
         self.assertIsNotNone(message.recipients)
         self.assertEqual(len(message.recipients), 1)
-        recipient = message.recipients[0]
+        recipient = list(message.recipients.values())[0]
         self.assertIsInstance(recipient, MessageRecipient)
         self.assertEqual(recipient.person_name, 'Person One')
         self.assertEqual(recipient.email_address, '1@a')
         self.assertTrue(recipient.email_public)
 
-        self.db.mark_message_sending(message.id)
+        self.db.update_message(
+            message.id,
+            state_prev=MessageState.UNSENT, state=MessageState.SENDING,
+            state_is_system=True, timestamp_send=datetime.utcnow())
 
         messages = self.db.search_message()
         self.assertEqual(set(messages.keys()), set((message_id,)))
@@ -97,12 +107,17 @@ class DBMessageTest(DBTestCase):
         self.assertIsInstance(message.timestamp_send, datetime)
         self.assertEqual(message.state, MessageState.SENDING)
 
-        self.assertIsNone(self.db.get_unsent_message())
+        self.assertFalse(self.db.search_message(state=MessageState.UNSENT))
 
-        # Test "mark_message_sent" method.
-        self.db.mark_message_sent(message_id, '<1@localhost>')
+        self.db.update_message(
+            message_id,
+            state_prev=MessageState.SENDING,
+            state=MessageState.SENT,
+            state_is_system=True,
+            timestamp_sent=datetime.utcnow(),
+            identifier='<1@localhost>')
 
-        self.assertIsNone(self.db.get_unsent_message())
+        self.assertFalse(self.db.search_message(state=MessageState.UNSENT))
 
         messages = self.db.search_message()
         self.assertEqual(set(messages.keys()), set((message_id,)))
@@ -117,11 +132,12 @@ class DBMessageTest(DBTestCase):
         self.assertEqual(message.state, MessageState.SENT)
 
         with self.assertRaisesRegex(ConsistencyError, '^message does not ex'):
-            self.db.mark_message_sent(1999999, '<2@localhost>')
+            self.db.update_message(
+                1999999, identifier='<2@localhost>')
 
         with self.assertRaisesRegex(ConsistencyError, '^no rows matched'):
-            self.db.mark_message_sent(1999999, '<2@localhost>',
-                                      _test_skip_check=True)
+            self.db.update_message(
+                1999999, identifier='<2@localhost>', _test_skip_check=True)
 
         # Test "update_message" method.
         self.db.update_message(message_id=message_id,
@@ -138,15 +154,14 @@ class DBMessageTest(DBTestCase):
         message = messages[message_id]
         self.assertEqual(message.state, MessageState.DISCARD)
 
-        message = self.db.get_unsent_message()
-        self.assertIsNone(message)
+        self.assertFalse(self.db.search_message(state=MessageState.UNSENT))
 
         self.db.update_message(message_id=message_id,
                                state=MessageState.UNSENT)
 
-        message = self.db.get_unsent_message()
-        self.assertIsNotNone(message)
-        self.assertEqual(message.id, message_id)
+        messages = self.db.search_message(state=MessageState.UNSENT)
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(first_value(messages).id, message_id)
 
         with self.assertRaisesRegex(ConsistencyError, '^message does not'):
             self.db.update_message(
@@ -196,20 +211,25 @@ class DBMessageTest(DBTestCase):
         self.assertNotEqual(message_12, message_34)
 
         # Check that each message has the correct set of recipients.
-        message = self.db.get_unsent_message()
+        messages = self.db.search_message(
+            state=MessageState.UNSENT,
+            oldest_first=True, with_thread_identifiers=True,
+            with_recipients=True, with_recipients_resolved=True,
+            with_body=True)
+        self.assertEqual(list(messages.keys()), [message_12, message_34])
+
+        message = messages[message_12]
         self.assertEqual(message.id, message_12)
-        self.assertEqual(set(message.recipients), set((
-            MessageRecipient(None, person_1, '1@b', 'Person One', True),
-            MessageRecipient(None, person_2, '2@a', 'Person Two', False),
+        self.assertEqual(set(message.recipients.values()), set((
+            MessageRecipient(message_12, person_1, '1@b', 'Person One', True),
+            MessageRecipient(message_12, person_2, '2@a', 'Person Two', False),
         )))
 
-        self.db.mark_message_sending(message.id)
-
-        message = self.db.get_unsent_message()
+        message = messages[message_34]
         self.assertEqual(message.id, message_34)
-        self.assertEqual(set(message.recipients), set((
-            MessageRecipient(None, person_3, '3@c', 'Person Three', True),
-            MessageRecipient(None, person_4, '4@b', 'Person Four', False),
+        self.assertEqual(set(message.recipients.values()), set((
+            MessageRecipient(message_34, person_3, '3@c', 'Person Three', True),
+            MessageRecipient(message_34, person_4, '4@b', 'Person Four', False),
         )))
 
     def test_explicit_email(self):
@@ -237,26 +257,39 @@ class DBMessageTest(DBTestCase):
         self.assertIsInstance(message_id, int)
 
         # Check that the message has the correct set of addresses.
-        message = self.db.get_unsent_message()
+        messages = self.db.search_message(
+            state=MessageState.UNSENT,
+            oldest_first=True, with_thread_identifiers=True,
+            with_recipients=True, with_recipients_resolved=True,
+            with_body=True)
+
+        self.assertEqual(len(messages), 1)
+        message = first_value(messages)
+
         self.assertEqual(message.id, message_id)
-        self.assertEqual(set(message.recipients), set((
-            MessageRecipient(None, person_1, '1@c', 'Person One', True),
-            MessageRecipient(None, person_2, '2@b', 'Person Two', True),
-            MessageRecipient(None, person_3, '3@c', 'Person Three', False),
+        self.assertEqual(set(message.recipients.values()), set((
+            MessageRecipient(message_id, person_1, '1@c', 'Person One', True),
+            MessageRecipient(message_id, person_2, '2@b', 'Person Two', True),
+            MessageRecipient(message_id, person_3, '3@c', 'Person Three', False),
         )))
 
-        self.db.mark_message_sending(message.id)
+        self.db.update_message(
+            message.id,
+            state_prev=MessageState.UNSENT, state=MessageState.SENDING,
+            state_is_system=True, timestamp_send=datetime.utcnow())
 
         # Check handling of an email address which isn't in the email table.
         # (This can happen if an address is changed after an email is already
         # inserted into the database with an explicit address.)
         message_id = self.db.add_message('test', 'test message',
                                          [person_1], ['1@d'])
-        message = self.db.get_unsent_message()
+
+        message = self._get_unsent_message()
+
         self.assertEqual(message.id, message_id)
-        self.assertEqual(message.recipients, [
-            MessageRecipient(None, person_1, '1@d', 'Person One', False),
-        ])
+        self.assertEqual(set(message.recipients.values()), set((
+            MessageRecipient(message_id, person_1, '1@d', 'Person One', False),
+        )))
 
     def test_message_thread(self):
         person = self.db.add_person('Test Person')
@@ -290,37 +323,47 @@ class DBMessageTest(DBTestCase):
         message_4 = self.db.add_message(*message_args, **message_kwargs)
 
         # Retrieve the messages and check the thread identifiers.
-        message = self.db.get_unsent_message()
+        message = self._get_unsent_message()
         self.assertIsNotNone(message)
         self.assertEqual(message.id, message_0)
         self.assertEqual(message.thread_identifiers, [])
-        self.db.mark_message_sending(message_0)
-        self.db.mark_message_sent(message_0, '<0@id>')
 
-        message = self.db.get_unsent_message()
+        self.db.update_message(
+            message_0, identifier='<0@id>',
+            state=MessageState.SENT, state_is_system=True)
+
+        message = self._get_unsent_message()
         self.assertIsNotNone(message)
         self.assertEqual(message.id, message_1)
         self.assertEqual(message.thread_identifiers, [])
 
-        self.db.mark_message_sending(message_1)
-        self.db.mark_message_sent(message_1, '<1@id>')
+        self.db.update_message(
+            message_1, identifier='<1@id>',
+            state=MessageState.SENT, state_is_system=True)
 
         # Send message 4 out of order -- we shouldn't see its identifer
         # in query results as it comes after the other messages.
         self.db.update_message(
-            message_4, state=MessageState.SENT, state_is_system=True,
-            timestamp_send=datetime.utcnow(), timestamp_sent=datetime.utcnow(),
-            identifier='<4@id>')
+            message_4, identifier='<4@id>',
+            state=MessageState.SENT, state_is_system=True)
 
-        message = self.db.get_unsent_message()
+        message = self._get_unsent_message()
         self.assertIsNotNone(message)
         self.assertEqual(message.id, message_2)
         self.assertEqual(message.thread_identifiers, ['<1@id>'])
 
-        self.db.mark_message_sending(message_2)
-        self.db.mark_message_sent(message_2, '<2@id>')
+        self.db.update_message(
+            message_2, identifier='<2@id>',
+            state=MessageState.SENT, state_is_system=True)
 
-        message = self.db.get_unsent_message()
+        message = self._get_unsent_message()
         self.assertIsNotNone(message)
         self.assertEqual(message.id, message_3)
         self.assertEqual(message.thread_identifiers, ['<1@id>', '<2@id>'])
+
+    def _get_unsent_message(self):
+        return first_value(self.db.search_message(
+            state=MessageState.UNSENT,
+            oldest_first=True, with_thread_identifiers=True,
+            with_recipients=True, with_recipients_resolved=True,
+            with_body=True))

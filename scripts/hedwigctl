@@ -276,13 +276,10 @@ def poll_email(db, dry_run):
 
     logger.debug('Checking for queued email messages')
 
-    try:
-        n_sent = send_queued_messages(db, dry_run=dry_run)
+    n_sent = send_queued_messages(db, dry_run=dry_run)
 
-        if n_sent:
-            logger.info('Sent {} message(s)', n_sent)
-    except:
-        logger.exception('Error checking for queued email messages.')
+    if n_sent:
+        logger.info('Sent {} message(s)', n_sent)
 
 
 @poll_option

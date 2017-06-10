@@ -54,6 +54,7 @@ except ImportError:
 
 from ..compat import unicode_to_str
 from ..config import get_config
+from ..error import FormattedError
 from ..util import get_logger
 
 logger = get_logger(__name__)
@@ -99,11 +100,11 @@ class MIMETextFlowed(MIMENonMultipart):
         MIMENonMultipart.__setitem__(self, unicode_to_str(name), val)
 
 
-def send_email_message(message):
+def send_email_message(message, dry_run=False):
     """
     Send an email message.
 
-    On success, returns the message identifier.  Returns None on failure.
+    On success, returns the message identifier.
     """
 
     config = get_config()
@@ -111,6 +112,9 @@ def send_email_message(message):
     from_ = config.get('email', 'from')
 
     (identifier, msg, recipients) = _prepare_email_message(message, from_)
+
+    if dry_run:
+        return 'DRY-RUN'
 
     try:
         with quitting(SMTP(server)) as smtp:
@@ -121,19 +125,15 @@ def send_email_message(message):
                 logger.error('Email message {} refused for {}: {}: {}',
                              message.id, recipient, problem[0], problem[1])
 
-            return identifier
-
     except SMTPException:
-        logger.exception('Email message {} refused for all recipients',
-                         message.id)
-    except socket.error:
-        logger.exception('Email message {} not sent due to failure '
-                         'to connect to email server', message.id)
-    except:
-        logger.exception('Email message {} not sent due to '
-                         'an unexpected error', message.id)
+        raise FormattedError('Email message {} refused for all recipients',
+                             message.id)
 
-    return None
+    except socket.error:
+        raise FormattedError('Email message {} not sent due to failure '
+                             'to connect to email server', message.id)
+
+    return identifier
 
 
 def _prepare_email_message(message, from_, identifier=None):
@@ -151,7 +151,7 @@ def _prepare_email_message(message, from_, identifier=None):
     recipients_plain = []
     recipients_public = []
     single_recipient = len(message.recipients) == 1
-    for recipient in message.recipients:
+    for recipient in message.recipients.values():
         recipients_plain.append(recipient.email_address)
         if single_recipient or recipient.email_public:
             recipients_public.append(formataddr((recipient.person_name,

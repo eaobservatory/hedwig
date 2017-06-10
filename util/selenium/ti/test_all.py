@@ -36,12 +36,13 @@ from sqlalchemy.sql import select
 
 from hedwig import auth
 from hedwig.admin.proposal import close_call_proposals
-from hedwig.compat import string_type
+from hedwig.compat import first_value, string_type
 from hedwig.config import get_config
 from hedwig.db.meta import invitation, reset_token, verify_token
 from hedwig.admin.poll import send_proposal_feedback
 from hedwig.file.poll import process_moc, \
     process_proposal_figure, process_proposal_pdf
+from hedwig.type.enum import MessageState
 from hedwig.web.app import create_web_app
 
 from test.dummy_config import DummyConfigTestCase
@@ -1755,9 +1756,15 @@ class IntegrationTest(DummyConfigTestCase):
 
         self._save_screenshot(self.admin_image_root, 'message_thread')
 
-        # Move a message into the "sending state so that we can test the
+        # Move a message into the "error" state so that we can test the
         # reset control.
-        self.db.get_unsent_message(mark_sending=True)
+        messages = self.db.search_message(
+            state=MessageState.UNSENT, oldest_first=True)
+        self.assertTrue(messages)
+        self.db.update_message(
+            message_id=first_value(messages).id,
+            state_prev=MessageState.UNSENT, state=MessageState.ERROR,
+            state_is_system=True)
 
         self.browser.find_element_by_link_text('Messages').click()
 

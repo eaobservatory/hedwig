@@ -48,7 +48,7 @@ You can click this link to see all the messages in the thread.
 Updating Message Status
 -----------------------
 
-When a message is in an active state (e.g. sending)
+When a message is in an error or active state (e.g. sending)
 a checkbox will be displayed in the "Update?" column.
 If you think that the message has become stuck in this
 state, you can select the box and then use the form

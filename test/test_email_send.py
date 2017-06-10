@@ -22,6 +22,7 @@ from datetime import datetime
 
 from hedwig.compat import byte_type
 from hedwig.email.send import MIMETextFlowed, quitting, _prepare_email_message
+from hedwig.type.collection import MessageRecipientCollection
 from hedwig.type.simple import Message, MessageRecipient
 from hedwig.type.util import null_tuple
 
@@ -60,16 +61,17 @@ class EmailSendTestCase(DummyConfigTestCase):
 
         (id_, msg, recipients) = _prepare_email_message(
             message=null_tuple(Message)._replace(
+                id=1234,
                 date=datetime(2015, 4, 1, 0, 0, 0),
                 subject='Message exp\u00e9rimental',
                 body='C\'est un message exp\u00e9rimental.',
-                recipients=[
-                    MessageRecipient(
-                        None, 101, 'one@test', 'Persoon \u00e9\u00e9n', True),
-                    MessageRecipient(
-                        None, 102, 'two@test', 'Persoon twee', False),
-                ],
-                thread_identifiers=['test-ref-1', 'test-ref-2']),
+                recipients=MessageRecipientCollection((
+                    (1, MessageRecipient(
+                        None, 101, 'one@test', 'Persoon \u00e9\u00e9n', True)),
+                    (2, MessageRecipient(
+                        None, 102, 'two@test', 'Persoon twee', False)),
+                )),
+                thread_identifiers=['test-ref-1', 'test-ref-2'])
             from_='Hedwig Pr\u00fcfung <hedwig@test>',
             identifier='test-msg-1')
 
