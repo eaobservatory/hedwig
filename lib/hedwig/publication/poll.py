@@ -51,8 +51,6 @@ def process_publication_references(db, dry_run=False):
         PublicationType.ARXIV: PubTypeInfo(set(), get_pub_info_arxiv),
     }
 
-    logger.debug('Checking for publication references to retrieve')
-
     for publication in db.search_prev_proposal_pub(
             state=AttachmentState.NEW).values():
 
