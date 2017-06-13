@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
+
+import logging
+
+from sqlalchemy.sql.expression import and_, case
+
+from hedwig.config import get_database
+from hedwig.db.meta import message
+from hedwig.util import get_logger
+from hedwig.type.enum import MessageState, MessageThreadType
+
+logger = get_logger('update_message_state')
+
+
+# Transitional state for change from computed to stored message states.
+MessageState.UNKNOWN = 0
+
+
+def main():
+    logging.basicConfig(level=logging.DEBUG)
+
+    db = get_database()
+
+    # Previous computed state expression from Hedwig DB MessagePart.
+    state_expr = case([
+        (message.c.discard, MessageState.DISCARD),
+        (and_(message.c.timestamp_send.is_(None),
+              message.c.timestamp_sent.is_(None)), MessageState.UNSENT),
+        (message.c.timestamp_sent.is_(None), MessageState.SENDING),
+    ], else_=MessageState.SENT)
+
+    logger.debug('Performing message state update query')
+
+    with db._transaction() as conn:
+        result = conn.execute(message.update().where(
+            message.c.state == MessageState.UNKNOWN,
+        ).values({
+            message.c.state: state_expr,
+        }))
+
+    logger.info('Updated state for {} messages', result.rowcount)
+
+
+if __name__ == '__main__':
+    main()

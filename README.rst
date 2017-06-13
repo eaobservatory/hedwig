@@ -369,6 +369,9 @@ These include:
 * Update your configuration file if necessary, for example if new
   options have been added.  (Compare your hedwig.ini to hedwig.ini.template
   to check.)
+* Check for special updates requiring manual intervention.
+  Notes and scripts to help with this can be found in the
+  `util/update` directory.
 * Update your database if the schema has changed --- see the
   notes on using `Alembic` in the `Database`_ section.
 * Restart the web application.
