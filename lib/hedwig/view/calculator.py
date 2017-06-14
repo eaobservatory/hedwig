@@ -103,7 +103,7 @@ class BaseCalculator(object):
                     for_proposal_id = int(form['for_proposal_id'])
 
                 if 'calculation_title' in form:
-                    calculation_title = form['calculation_title']
+                    calculation_title = form['calculation_title'].strip()
 
                 if 'calculation_id' in form:
                     calculation_id = int(form['calculation_id'])

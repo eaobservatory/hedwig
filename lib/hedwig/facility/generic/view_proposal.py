@@ -83,7 +83,7 @@ class GenericProposal(object):
         affiliation_id = None
 
         if form is not None:
-            proposal_title = form['proposal_title']
+            proposal_title = form['proposal_title'].strip()
 
             affiliation_id = int(form['affiliation_id'])
             if affiliation_id not in affiliations:
@@ -558,7 +558,8 @@ class GenericProposal(object):
 
         if form is not None:
             try:
-                proposal = proposal._replace(title=form['proposal_title'])
+                proposal = proposal._replace(
+                    title=form['proposal_title'].strip())
                 db.update_proposal(proposal.id, title=proposal.title)
                 flash('The proposal title has been changed.')
                 raise HTTPRedirect(url_for('.proposal_view',
@@ -761,6 +762,9 @@ class GenericProposal(object):
                         raise UserError('Please enter the person\'s name.')
                     if not member['email']:
                         raise UserError('Please enter an email address.')
+
+                    member['name'] = member['name'].strip()
+                    member['email'] = member['email'].strip()
 
                     person_id = db.add_person(member['name'],
                                               title=member['title'])
@@ -1035,7 +1039,7 @@ class GenericProposal(object):
 
                 id_ = param[5:]
 
-                prev_proposal_code = form[param]
+                prev_proposal_code = form[param].strip()
                 prev_proposal_id = None
 
                 if id_.startswith('new_'):
@@ -1145,7 +1149,7 @@ class GenericProposal(object):
                     destination = updated_records
 
                 destination[target_id] = Target(
-                    target_id, proposal.id, None, form[param],
+                    target_id, proposal.id, None, form[param].strip(),
                     int(form['system_' + id_]),
                     form['x_' + id_],
                     form['y_' + id_],

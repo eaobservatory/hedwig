@@ -344,7 +344,7 @@ class PeopleView(object):
 
         if form is not None:
             try:
-                token = form['token']
+                token = form['token'].strip()
                 password = form['password']
 
                 if password != form['password_check']:
@@ -430,11 +430,11 @@ class PeopleView(object):
 
         if form is not None:
             person = person._replace(
-                name=form['person_name'],
+                name=form['person_name'].strip(),
                 title=(None if (form['person_title'] == '')
                        else int(form['person_title'])),
                 public=('person_public' in form))
-            email = form['single_email']
+            email = form['single_email'].strip()
 
             try:
                 if not person.name:
@@ -512,7 +512,7 @@ class PeopleView(object):
 
         if form is not None:
             person = person._replace(
-                name=form['person_name'],
+                name=form['person_name'].strip(),
                 title=(None if (form['person_title'] == '')
                        else int(form['person_title'])),
                 public=('person_public' in form))
@@ -567,9 +567,9 @@ class PeopleView(object):
 
                 elif 'submit_add' in form:
                     institution = institution._replace(
-                        name=form['institution_name'],
-                        department=form['department'],
-                        organization=form['organization'],
+                        name=form['institution_name'].strip(),
+                        department=form['department'].strip(),
+                        organization=form['organization'].strip(),
                         address=form['address'],
                         country=form['country_code'])
                     if not institution.name:
@@ -643,7 +643,7 @@ class PeopleView(object):
                         # Temporarily use the "new" number.
                         email_id = int(id_[4:])
                         added_records[email_id] = Email(
-                            email_id, person.id, form[param],
+                            email_id, person.id, form[param].strip(),
                             is_primary, False, is_public)
 
                     else:
@@ -656,7 +656,7 @@ class PeopleView(object):
                             verified = person.email[email_id].verified
 
                         updated_records[email_id] = Email(
-                            email_id, person.id, form[param],
+                            email_id, person.id, form[param].strip(),
                             is_primary, verified, is_public)
 
                 # Create new record collection: overwrite "records" variable
@@ -726,7 +726,7 @@ class PeopleView(object):
         person_id = session['person']['id']
 
         if form is not None:
-            token = form['token']
+            token = form['token'].strip()
 
             try:
                 try:
@@ -1001,9 +1001,9 @@ class PeopleView(object):
             elif 'submit_edit' in form:
                 try:
                     institution = institution._replace(
-                        name=form['institution_name'],
-                        department=form['department'],
-                        organization=form['organization'],
+                        name=form['institution_name'].strip(),
+                        department=form['department'].strip(),
+                        organization=form['organization'].strip(),
                         address=form['address'],
                         country=form['country_code'])
                     if not institution.name:
@@ -1209,6 +1209,8 @@ class PeopleView(object):
             flash('Your invitation code was not received.  '
                   'Please enter it again.')
             raise HTTPRedirect(url_for('.invitation_token_enter'))
+
+        token = token.strip()
 
         try:
             if form is not None:

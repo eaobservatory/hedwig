@@ -98,8 +98,8 @@ class GenericAdmin(object):
 
         if form is not None:
             semester = semester._replace(
-                name=form['semester_name'],
-                code=form['semester_code'],
+                name=form['semester_name'].strip(),
+                code=form['semester_code'].strip(),
                 date_start=DateAndTime(form['start_date'], form['start_time']),
                 date_end=DateAndTime(form['end_date'], form['end_time']),
                 description=form['description'],
@@ -249,8 +249,8 @@ class GenericAdmin(object):
 
         if form is not None:
             queue = queue._replace(
-                name=form['queue_name'],
-                code=form['queue_code'],
+                name=form['queue_name'].strip(),
+                code=form['queue_code'].strip(),
                 description=form['description'],
                 description_format=int(form['description_format']))
 
@@ -516,13 +516,13 @@ class GenericAdmin(object):
                     if id_.startswith('new_'):
                         id_ = int(id_[4:])
                         added_records[id_] = Affiliation(
-                            id_, queue_id, form[param], is_hidden,
+                            id_, queue_id, form[param].strip(), is_hidden,
                             type_, None)
 
                     else:
                         id_ = int(id_)
                         updated_records[id_] = Affiliation(
-                            id_, queue_id, form[param], is_hidden,
+                            id_, queue_id, form[param].strip(), is_hidden,
                             type_, None)
 
                 records = organise_collection(
@@ -620,6 +620,9 @@ class GenericAdmin(object):
                         raise UserError('Please enter the person\'s name.')
                     if not member['email']:
                         raise UserError('Please enter an email address.')
+
+                    member['name'] = member['name'].strip()
+                    member['email'] = member['email'].strip()
 
                     person_id = db.add_person(member['name'],
                                               title=member['title'])
@@ -818,12 +821,12 @@ class GenericAdmin(object):
 
                     if id_.startswith('new_'):
                         id_ = int(id_[4:])
-                        added_records[id_] = Category(id_, self.id_,
-                                                      form[param], is_hidden)
+                        added_records[id_] = Category(
+                            id_, self.id_, form[param].strip(), is_hidden)
                     else:
                         id_ = int(id_)
-                        updated_records[id_] = Category(id_, self.id_,
-                                                        form[param], is_hidden)
+                        updated_records[id_] = Category(
+                            id_, self.id_, form[param].strip(), is_hidden)
 
                 records = organise_collection(
                     ResultCollection, updated_records, added_records)
