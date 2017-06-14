@@ -1,7 +1,10 @@
 {% extends "layout.html" %}
 
 {% block content %}
+{% block log_in_note %}
+{% endblock %}
 
+{% block log_in_form %}
 {% if message is not none %}
     <p class="warning">
         {{ message }}
@@ -23,18 +26,18 @@
         </li>
     </ol>
 </form>
+{% endblock %}
 
-{% if not without_links %}
-    <p>
-        If you do not already have an account you may
-        <a href="{{ url_for('people.register_user') }}" id="register_user_link">register</a>.
-    </p>
+{% block log_in_links %}
+<p>
+    If you do not already have an account you may
+    <a href="{{ url_for('people.register_user') }}" id="register_user_link">register</a>.
+</p>
 
-    <p>
-        If you do not remember your user name or password, please
-        <a href="{{ url_for('people.password_reset_token_get') }}" id="reset_password_link">reset your password</a>
-        to regain access to your account.
-    </p>
-{% endif %}
-
+<p>
+    If you do not remember your user name or password, please
+    <a href="{{ url_for('people.password_reset_token_get') }}" id="reset_password_link">reset your password</a>
+    to regain access to your account.
+</p>
+{% endblock %}
 {% endblock %}

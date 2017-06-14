@@ -304,7 +304,6 @@ def require_auth(require_person=False, require_person_admin=False,
                         return _make_response('people/log_in_post.html', {
                             'title': 'Reauthentication Required',
                             'message': None,
-                            'without_links': True,
                         })
 
                     flash(

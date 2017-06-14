@@ -1,6 +1,6 @@
 {% extends 'people/log_in.html' %}
 
-{% block content %}
+{% block log_in_note %}
 <p>
     Please log in again to complete your request.
     Your session may have expired or you may have been logged
@@ -30,6 +30,7 @@
 </ul>
 
 <h2>Log in</h2>
+{% endblock %}
 
-{{ super() }}
+{% block log_in_links %}
 {% endblock %}

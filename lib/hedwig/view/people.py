@@ -124,7 +124,6 @@ class PeopleView(object):
             'title': 'Log in',
             'message':  message,
             'user_name': user_name,
-            'without_links': False,
         }
 
     def log_out(self):
