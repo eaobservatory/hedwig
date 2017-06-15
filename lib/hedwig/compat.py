@@ -50,11 +50,16 @@ if python_version < 3:
         return type(unicode_to_str(name), *args)
 
     def first_value(dictionary):
-        """Get the "first" value of a dictionary."""
+        """
+        Get the "first" value of a dictionary.
+
+        :raises IndexError: if the dictionary has no first value.
+        """
+
         try:
             return next(dictionary.itervalues())
         except StopIteration:
-            raise KeyError('dictionary has no first value')
+            raise IndexError('dictionary has no first value')
 
     def url_quote(string):
         """Unicode-safe wrapper for urllib.quote."""
@@ -87,11 +92,16 @@ else:
         return value
 
     def first_value(dictionary):
-        """Get the "first" value of a dictionary."""
+        """
+        Get the "first" value of a dictionary.
+
+        :raises IndexError: if the dictionary has no first value.
+        """
+
         try:
             return next(iter(dictionary.values()))
         except StopIteration:
-            raise KeyError('dictionary has no first value')
+            raise IndexError('dictionary has no first value')
 
     class ExceptionWithMessage(Exception):
         """Exception class which restores the 'message' property."""

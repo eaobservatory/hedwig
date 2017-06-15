@@ -32,5 +32,5 @@ class CompatTestCase(TestCase):
         self.assertEqual(first_value(OrderedDict(((1, 2), (3, 4), (5, 6)))),
                          2)
 
-        with self.assertRaises(KeyError):
+        with self.assertRaises(IndexError):
             first_value({})
