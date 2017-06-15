@@ -22,7 +22,7 @@ from datetime import datetime
 
 from hedwig.db.meta import member
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
-    Error, NoSuchRecord, UserError
+    Error, NoSuchRecord, NoSuchValue, UserError
 from hedwig.type.collection import AffiliationCollection, \
     CallCollection, MemberCollection, \
     ProposalCollection, ProposalCategoryCollection, ProposalTextCollection, \
@@ -949,7 +949,7 @@ class DBProposalTest(DBTestCase):
         info = result.get_role(41)
         self.assertIsInstance(info, ProposalTextInfo)
         self.assertEqual(info.format, 992)
-        with self.assertRaises(KeyError):
+        with self.assertRaises(NoSuchValue):
             result.get_role(43)
 
     def test_proposal_pdf(self):

@@ -61,7 +61,7 @@ class CollectionTypeTestCase(TestCase):
         r = c.get_proposal(2)
         self.assertEqual(r, BP(201, 2))
 
-        with self.assertRaises(KeyError):
+        with self.assertRaises(NoSuchValue):
             c.get_proposal(3)
 
         r = c.get_proposal(3, default=None)
@@ -210,7 +210,7 @@ class CollectionTypeTestCase(TestCase):
         c[101] = null_tuple(Member)._replace(
             id=101, person_id=9001, pi=False, person_name='Person One')
 
-        with self.assertRaises(KeyError):
+        with self.assertRaises(NoSuchValue):
             c.get_pi()
 
         self.assertIsNone(c.get_pi(default=None))
@@ -229,7 +229,7 @@ class CollectionTypeTestCase(TestCase):
 
         # hedwig.view.auth.for_proposal relies on this exception being
         # raised when the current user isn't a member of the proposal.
-        with self.assertRaises(KeyError):
+        with self.assertRaises(NoSuchValue):
             c.get_person(999999)
 
         self.assertTrue(c.has_person(9001))

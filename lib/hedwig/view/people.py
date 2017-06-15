@@ -23,7 +23,8 @@ from datetime import datetime
 
 from ..config import get_countries
 from ..email.format import render_email_template
-from ..error import ConsistencyError, Error, MultipleRecords, NoSuchRecord, \
+from ..error import ConsistencyError, Error, \
+    MultipleRecords, NoSuchRecord, NoSuchValue, \
     UserError
 from ..type.collection import EmailCollection, \
     ProposalCollection, ReviewerCollection
@@ -316,7 +317,7 @@ class PeopleView(object):
 
                     try:
                         email_address = person.email.get_primary().address
-                    except KeyError:
+                    except NoSuchValue:
                         raise HTTPError('Could not get primary email.')
 
                     show_email_address = 'your primary address'

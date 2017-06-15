@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -139,15 +139,16 @@ class EmailCollection(ResultCollection):
         Return the primary email address.
 
         This is the first email address found with a true value of the
-        `primary` attribute.  If no such address is found, a `KeyError`
-        exception is raised.
+        `primary` attribute.
+
+        :raises NoSuchValue: if no primary adddress is found.
         """
 
         for email in self.values():
             if email.primary:
                 return email
 
-        raise KeyError('no primary address')
+        raise NoSuchValue('no primary address')
 
     def validate(self):
         """
@@ -223,7 +224,7 @@ class MemberCollection(ResultCollection, CollectionByProposal,
             attribute, or if no such member is found, the given default
             value.
 
-        :raises KeyError: if no PI member is found and no default is given.
+        :raises NoSuchValue: if no PI member is found and no default is given.
         """
 
         for member in self.values():
@@ -231,23 +232,22 @@ class MemberCollection(ResultCollection, CollectionByProposal,
                 return member
 
         if default == ():
-            raise KeyError('no pi member')
-        else:
-            return default
+            raise NoSuchValue('no pi member')
+
+        return default
 
     def get_person(self, person_id):
         """
         Retrieve the record corresponding to the given person.
 
-        If no member with this `person_id` is found, a `KeyError`
-        exception is raised.
+        :raises NoSuchValue: if no member with this `person_id` is found.
         """
 
         for member in self.values():
             if member.person_id == person_id:
                 return member
 
-        raise KeyError('person not in member collection')
+        raise NoSuchValue('person not in member collection')
 
     def get_students(self):
         """
@@ -471,9 +471,9 @@ class ProposalTextCollection(ResultCollection):
         """
         Retrieve the entry corresponding to the given role.
 
-        If no entry with a `role` attribute matching the given value
-        is found, a `KeyError` exception is raised unless a `default`
-        value is given, in which case that value is returned.
+        :raises NoSuchValue: if no entry with a `role` attribute
+            matching the given value is found unless a `default`
+            value is given, in which case that value is returned.
         """
 
         for pdf in self.values():
@@ -481,9 +481,9 @@ class ProposalTextCollection(ResultCollection):
                 return pdf
 
         if default == ():
-            raise KeyError('no text/PDF for this role')
-        else:
-            return default
+            raise NoSuchValue('no text/PDF for this role')
+
+        return default
 
 
 class ProposalFigureCollection(ResultCollection):

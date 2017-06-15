@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import namedtuple
 
 from ..db.util import memoized
-from ..error import NoSuchRecord
+from ..error import NoSuchRecord, NoSuchValue
 from ..type.collection import ProposalCollection, ReviewerCollection
 from ..type.enum import GroupType, ProposalState, ReviewState
 from ..type.simple import Reviewer
@@ -233,7 +233,7 @@ def for_proposal(role_class, db, proposal, auth_cache=None):
         return Authorization(
             view=True,
             edit=(member.editor and ProposalState.can_edit(proposal.state)))
-    except KeyError:
+    except NoSuchValue:
         pass
 
     if proposal.reviewers is not None:

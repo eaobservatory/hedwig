@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -39,7 +39,7 @@ class CollectionByProposal(object):
                 return item
 
         if default == ():
-            raise KeyError('no entry for proposal {}'.format(proposal_id))
+            raise NoSuchValue('no entry for proposal {}'.format(proposal_id))
 
         return default
 

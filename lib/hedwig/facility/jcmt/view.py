@@ -304,8 +304,8 @@ class JCMT(EAOFacility):
                 # confused with "0" meaning unknown).
                 pi_affiliation = None
 
-        except KeyError:
-            # KeyError is raised if MemberCollection.get_pi fails to find a
+        except NoSuchValue:
+            # NoSuchValue is raised if MemberCollection.get_pi fails to find a
             # PI: record that there is no PI and their affiliation is therefore
             # unknown (represented by "0").
             pi = None
