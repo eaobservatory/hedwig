@@ -56,7 +56,8 @@ def create_people_blueprint(db, facilities):
     @templated('people/register_user.html')
     def register_user():
         return view.register_user(
-            db, (request.form if request.method == 'POST' else None),
+            db, request.args,
+            (request.form if request.method == 'POST' else None),
             str_to_unicode(request.remote_addr))
 
     @bp.route('/user/name', methods=['GET', 'POST'])
@@ -95,7 +96,7 @@ def create_people_blueprint(db, facilities):
     @bp.route('/user/admin/take')
     @require_auth(require_person_admin=True, record_referrer=True)
     def take_admin():
-        return view.take_admin(db, request.referrer)
+        return view.take_admin(db, request.args, request.referrer)
 
     @bp.route('/user/admin/drop')
     def drop_admin():
@@ -112,7 +113,8 @@ def create_people_blueprint(db, facilities):
     @templated('people/person_edit.html')
     def register_person():
         return view.register_person(
-            db, (request.form if request.method == 'POST' else None),
+            db, request.args,
+            (request.form if request.method == 'POST' else None),
             str_to_unicode(request.remote_addr))
 
     @bp.route('/person/')
@@ -132,7 +134,7 @@ def create_people_blueprint(db, facilities):
     @templated('people/person_edit.html')
     def person_edit(person_id):
         return view.person_edit(
-            db, person_id,
+            db, person_id, request.args,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/person/<int:person_id>/institution', methods=['GET', 'POST'])
@@ -140,7 +142,7 @@ def create_people_blueprint(db, facilities):
     @templated('people/person_edit_institution.html')
     def person_edit_institution(person_id):
         return view.person_edit_institution(
-            db, person_id,
+            db, person_id, request.args,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/person/<int:person_id>/email', methods=['GET', 'POST'])

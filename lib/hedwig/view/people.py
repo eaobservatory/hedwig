@@ -31,7 +31,7 @@ from ..type.enum import PermissionType, PersonTitle, ProposalState
 from ..type.simple import Email, \
     Institution, InstitutionLog, Person, ProposalWithCode
 from ..type.util import null_tuple
-from ..web.util import flash, session, url_for, \
+from ..web.util import flash, session, url_for, url_add_args, url_relative, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
 from .util import organise_collection, with_institution, with_person, \
     with_verified_admin
@@ -56,37 +56,53 @@ class PeopleView(object):
         message = None
 
         user_name = args.get('user_name', '')
+        log_in_for = args.get('log_in_for', None)
+        log_in_referrer = args.get('log_in_referrer', None)
+        register_only = ('register_only' in args)
 
         if form is not None:
             try:
                 user_name = form['user_name']
+                log_in_for = form.get('log_in_for', None)
+                log_in_referrer = form.get('log_in_referrer', None)
+                register_only = ('register_only' in form)
+
                 user_id = db.authenticate_user(user_name, form['password'])
 
                 if user_id is None:
                     raise UserError('User name or password not recognised.')
                 else:
-                    # Extract this session entry, if it exists, before clearing
-                    # the session on log-in.  (Not worth generally exempting
-                    # this entry from session clearning.)
-                    register_user_for = session.pop('register_user_for', None)
-
                     _update_session_user(user_id)
                     flash('You have been logged in.')
+
+                    redirect_kwargs = {}
+                    if register_only:
+                        redirect_kwargs['register_only'] = 1
+                    if log_in_for is None:
+                        target = url_for('home.home_page')
+                    else:
+                        redirect_kwargs['log_in_for'] = log_in_for
+                        target = log_in_for
+
+                        if log_in_referrer is not None:
+                            target = url_add_args(
+                                target, log_in_referrer=log_in_referrer)
 
                     try:
                         person = db.search_person(user_id=user_id).get_single()
                     except NoSuchRecord:
-                        if register_user_for is not None:
+                        if register_only:
                             # The user has no profile, but we specifically only
                             # wanted them to have a user account.  Redirect
                             # to the specified URL.
-                            raise HTTPRedirect(register_user_for)
+                            raise HTTPRedirect(target)
 
                         # If the user has no profile, take them to the profile
                         # registration page.
                         flash('It appears your registration was not complete. '
                               'If convenient, please complete your profile.')
-                        raise HTTPRedirect(url_for('.register_person'))
+                        raise HTTPRedirect(url_for(
+                            '.register_person', **redirect_kwargs))
                     except MultipleRecords:
                         # Mutliple results should not be possible.
                         raise ErrorPage(
@@ -95,35 +111,30 @@ class PeopleView(object):
 
                     _update_session_person(person)
 
-                    if register_user_for is not None:
-                        # If we have this parameter, redirect there now.
-                        # (This entry will have been cleared from the session
-                        # on log-in so do not redirect via any other pages
-                        # first!)
-                        raise HTTPRedirect(register_user_for)
-
-                    if person.institution_id is None:
+                    if (person.institution_id is None) and (not register_only):
                         # If the user has no institution, take them to the
                         # institution selection page.
                         flash('It appears your registration was not complete. '
                               'If convenient, please select your institution.')
-                        raise HTTPRedirect(url_for('.person_edit_institution',
-                                                   person_id=person.id))
-                    raise HTTPRedirect(
-                        session.pop('log_in_for', url_for('home.home_page')))
+                        raise HTTPRedirect(url_for(
+                            '.person_edit_institution',
+                            person_id=person.id, **redirect_kwargs))
+
+                    raise HTTPRedirect(target)
 
             except UserError as e:
                 message = e.message
 
-        elif ((referrer is not None) and
-                ('log_in_for' not in session) and
-                ('register_user_for' not in session)):
-            session['log_in_for'] = referrer
+        elif (referrer is not None) and (log_in_for is None):
+            log_in_for = url_relative(referrer)
 
         return {
             'title': 'Log in',
             'message':  message,
             'user_name': user_name,
+            'log_in_for': log_in_for,
+            'log_in_referrer': log_in_referrer,
+            'register_only': register_only,
         }
 
     def log_out(self):
@@ -131,13 +142,18 @@ class PeopleView(object):
         flash('You have been logged out.')
         raise HTTPRedirect(url_for('home.home_page'))
 
-    def register_user(self, db, form, remote_addr):
+    def register_user(self, db, args, form, remote_addr):
         message = None
 
         user_name = ''
+        log_in_for = args.get('log_in_for', None)
+        register_only = ('register_only' in args)
 
         if form is not None:
             try:
+                log_in_for = form.get('log_in_for', None)
+                register_only = ('register_only' in form)
+
                 user_name = form['user_name']
                 password = form['password']
                 if password != form['password_check']:
@@ -145,16 +161,17 @@ class PeopleView(object):
                 user_id = db.add_user(user_name, password,
                                       remote_addr=remote_addr)
 
-                # Extract this session entry, if it exists, before logging in.
-                register_user_for = session.pop('register_user_for', None)
                 _update_session_user(user_id)
+
                 flash('Your user account has been created.')
 
                 # If we only wanted them to make a user account, go to the
                 # next URL, otherwise go to the profile creation page.
-                if register_user_for is not None:
-                    raise HTTPRedirect(register_user_for)
-                raise HTTPRedirect(url_for('.register_person'))
+                if register_only and (log_in_for is not None):
+                    raise HTTPRedirect(log_in_for)
+
+                raise HTTPRedirect(url_for(
+                    '.register_person', log_in_for=log_in_for))
 
             except UserError as e:
                 message = e.message
@@ -163,6 +180,8 @@ class PeopleView(object):
             'title': 'Register',
             'message':  message,
             'user_name': user_name,
+            'log_in_for': log_in_for,
+            'register_only': register_only,
         }
 
     def change_user_name(self, db, form, remote_addr):
@@ -372,11 +391,11 @@ class PeopleView(object):
         }
 
     @with_verified_admin
-    def take_admin(self, db, referrer):
+    def take_admin(self, db, args, referrer):
         session['is_admin'] = True
         flash('You have taken administrative privileges.')
 
-        target = session.pop('log_in_referrer', None)
+        target = args.get('log_in_referrer', None)
         if target is None:
             target = referrer if referrer else url_for('home.home_page')
         raise HTTPRedirect(target)
@@ -409,7 +428,7 @@ class PeopleView(object):
             'events': events,
         }
 
-    def register_person(self, db, form, remote_addr):
+    def register_person(self, db, args, form, remote_addr):
         if 'person' in session:
             raise ErrorPage('You have already created a profile.')
 
@@ -427,7 +446,11 @@ class PeopleView(object):
 
         person = null_tuple(Person)._replace(name='', public=False)
 
+        log_in_for = args.get('log_in_for', None)
+
         if form is not None:
+            log_in_for = form.get('log_in_for', None)
+
             person = person._replace(
                 name=form['person_name'].strip(),
                 title=(None if (form['person_title'] == '')
@@ -447,8 +470,10 @@ class PeopleView(object):
                 db.add_email(person_id, email, primary=True)
                 flash('Your user profile has been saved.')
                 _update_session_person(db.get_person(person_id))
-                raise HTTPRedirect(url_for('.person_edit_institution',
-                                           person_id=person_id))
+
+                raise HTTPRedirect(url_for(
+                    '.person_edit_institution',
+                    person_id=person_id, log_in_for=log_in_for))
 
             except UserError as e:
                 message = e.message
@@ -463,6 +488,7 @@ class PeopleView(object):
             'person': person,
             'single_email': email,
             'titles': PersonTitle.get_options(),
+            'log_in_for': log_in_for,
         }
 
     def person_list(self, db):
@@ -506,7 +532,7 @@ class PeopleView(object):
         }
 
     @with_person(permission=PermissionType.EDIT)
-    def person_edit(self, db, person, can, form):
+    def person_edit(self, db, person, can, args, form):
         message = None
 
         if form is not None:
@@ -540,11 +566,16 @@ class PeopleView(object):
             'message': message,
             'person': person,
             'titles': PersonTitle.get_options(),
+            'log_in_for': None,
         }
 
     @with_person(permission=PermissionType.EDIT)
-    def person_edit_institution(self, db, person, can, form):
+    def person_edit_institution(self, db, person, can, args, form):
         message = None
+
+        # Accept either query argument "log_in_for" or "next_page"
+        # to be used for subsequent navigation.
+        next_page = args.get('next_page', args.get('log_in_for', None))
 
         is_current_user = person.user_id == session['user_id']
         institutions = db.search_institution()
@@ -557,6 +588,8 @@ class PeopleView(object):
 
         if form is not None:
             try:
+                next_page = form.get('next_page', None)
+
                 if 'submit_select' in form:
                     institution_id = int(form['institution_id'])
                     if institution_id not in institutions:
@@ -594,12 +627,11 @@ class PeopleView(object):
                     flash('The institution has been {}.', action)
 
                 # If an explicit "next page" has been set, go there now.
-                if 'next_page' in session:
-                    raise HTTPRedirect(session.pop('next_page'))
+                if next_page is not None:
+                    raise HTTPRedirect(next_page)
 
-                raise HTTPRedirect(session.pop(
-                    'log_in_for',
-                    url_for('.person_view', person_id=person.id)))
+                raise HTTPRedirect(url_for(
+                    '.person_view', person_id=person.id))
 
             except UserError as e:
                 message = e.message
@@ -613,6 +645,7 @@ class PeopleView(object):
             'institutions': institutions,
             'countries': get_countries(),
             'is_current_user': is_current_user,
+            'next_page': next_page,
         }
 
     @with_person(permission=PermissionType.EDIT)
@@ -1261,12 +1294,10 @@ class PeopleView(object):
                 if person.institution_id is None:
                     # If the user has no institution, take them to the
                     # institution selection page.
-                    if target is not None:
-                        session['next_page'] = target
-
                     flash('Please select your institution.')
-                    raise HTTPRedirect(url_for('.person_edit_institution',
-                                               person_id=person.id))
+                    raise HTTPRedirect(url_for(
+                        '.person_edit_institution',
+                        person_id=person.id, log_in_for=target))
 
                 # Redirect to the proposal/review, if we determined it,
                 # otherwise the user profile page, which has links to
@@ -1304,20 +1335,9 @@ def _update_session_user(user_id):
 
     This should be done on log in to ensure that nothing from a
     previous session remains.
-
-    Certain (white-listed) session entries are preserved, e.g.
-    "log_in_for", which needs to persist through the log in process.
     """
 
-    # Save the white-listed session entries.
-    saved = {}
-    for key in ('log_in_for', 'log_in_referrer'):
-        if key in session:
-            saved[key] = session[key]
-
-    # Clear the session, restore saved entries, and log in.
     session.clear()
-    session.update(saved)
     session['user_id'] = user_id
     session['date_set'] = datetime.utcnow()
 

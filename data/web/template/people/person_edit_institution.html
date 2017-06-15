@@ -50,6 +50,9 @@
             </li>
             <li>
                 <input type="submit" value="Select institution" name="submit_select" />
+                {% if next_page is not none %}
+                    <input type="hidden" name="next_page" value="{{ next_page }}" />
+                {% endif %}
             </li>
         </ol>
     </form>
@@ -79,6 +82,9 @@
             {{ render_institution_form(institution, countries) }}
             <li>
                 <input type="submit" value="Add new institution" name="submit_add" />
+                {% if next_page is not none %}
+                    <input type="hidden" name="next_page" value="{{ next_page }}" />
+                {% endif %}
             </li>
         </ol>
     </form>

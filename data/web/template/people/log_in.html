@@ -23,6 +23,15 @@
         </li>
         <li>
             <input type="submit" value="Log in" name="submit" />
+            {% if log_in_for is not none %}
+                <input type="hidden" name="log_in_for" value="{{ log_in_for }}" />
+            {% endif %}
+            {% if log_in_referrer is not none %}
+                <input type="hidden" name="log_in_referrer" value="{{ log_in_referrer }}" />
+            {% endif %}
+            {% if register_only %}
+                <input type="hidden" name="register_only" value="1" />
+            {% endif %}
         </li>
     </ol>
 </form>
@@ -31,7 +40,7 @@
 {% block log_in_links %}
 <p>
     If you do not already have an account you may
-    <a href="{{ url_for('people.register_user') }}" id="register_user_link">register</a>.
+    <a href="{{ url_for('people.register_user', log_in_for=log_in_for, register_only=(1 if register_only else none)) }}" id="register_user_link">register</a>.
 </p>
 
 <p>

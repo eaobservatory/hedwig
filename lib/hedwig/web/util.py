@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2016 East Asian Observatory.
+# Copyright (C) 2015-2017 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -33,6 +33,7 @@ from flask import request as _flask_request
 from flask import Response as _FlaskResponse
 from werkzeug import exceptions as _werkzeug_exceptions
 from werkzeug import routing as _werkzeug_routing
+from werkzeug import urls as _werkzeug_urls
 
 from ..compat import ExceptionWithMessage
 from ..error import UserError
@@ -266,8 +267,8 @@ def require_auth(require_person=False, require_person_admin=False,
         create a user account but not to complete a profile before
         proceeding.  This is to support accepting invitation tokens.
 
-    :param record_referrer: if specified then the referrer is added to the
-        session as `log_in_referrer` if log in is required.
+    :param record_referrer: if specified then the referrer is passed
+        to the log in page as an argument if log in is required.
 
     .. note::
         This needs to be the outermost route decorator, because under
@@ -285,56 +286,52 @@ def require_auth(require_person=False, require_person_admin=False,
         def decorated_function(*args, **kwargs):
             _check_session_expiry()
 
-            if not record_referrer:
-                session.pop('log_in_referrer', None)
+            redirect_kwargs = {}
+            request_url = _flask_request.url
+            if request_url is not None:
+                redirect_kwargs['log_in_for'] = url_relative(request_url)
+            if register_user_only:
+                redirect_kwargs['register_only'] = 1
+            if record_referrer:
+                request_referrer = _flask_request.referrer
+                if request_referrer is not None:
+                    redirect_kwargs['log_in_referrer'] = url_relative(
+                        request_referrer)
 
-            try:
-                if 'user_id' not in session:
-                    if _flask_request.method == 'POST':
-                        # If someone logged out (in another tab) or their
-                        # session expired while they were filling in a form,
-                        # we should # show a help page.
-                        # (Otherwise after logging in they are redirected
-                        # back to a blank copy of the form they were
-                        # working on.)
+            if 'user_id' not in session:
+                if _flask_request.method == 'POST':
+                    # If someone logged out (in another tab) or their
+                    # session expired while they were filling in a form,
+                    # we should show a help page.
+                    # (Otherwise after logging in they are redirected
+                    # back to a blank copy of the form they were
+                    # working on.)
 
-                        session['log_in_for'] = url_for(
-                            'people.log_in_post_done')
+                    return _make_response('people/log_in_post.html', {
+                        'title': 'Reauthentication Required',
+                        'message': None,
+                        'log_in_for': url_for('people.log_in_post_done'),
+                        'log_in_referrer': None,
+                        'register_only': False,
+                    })
 
-                        return _make_response('people/log_in_post.html', {
-                            'title': 'Reauthentication Required',
-                            'message': None,
-                        })
+                flash('Please log in or register for an account to proceed.')
 
-                    flash(
-                        'Please log in or register for an account to proceed.')
+                raise HTTPRedirect(url_for(
+                    'people.log_in', **redirect_kwargs))
 
-                    if register_user_only:
-                        session['register_user_for'] = _flask_request.url
-                    else:
-                        session['log_in_for'] = _flask_request.url
+            elif ((require_person or require_person_admin or
+                    require_institution) and 'person' not in session):
+                flash('Please complete your profile before proceeding.')
+                raise HTTPRedirect(url_for(
+                    'people.register_person', **redirect_kwargs))
 
-                    raise HTTPRedirect(url_for('people.log_in'))
-
-                elif ((require_person or require_person_admin or
-                        require_institution) and 'person' not in session):
-                    flash('Please complete your profile before proceeding.')
-                    session['log_in_for'] = _flask_request.url
-                    raise HTTPRedirect(url_for('people.register_person'))
-
-                elif (require_institution and
-                        session['person']['institution_id'] is None):
-                    flash('Please select your institution before proceeding.')
-                    session['log_in_for'] = _flask_request.url
-                    raise HTTPRedirect(
-                        url_for('people.person_edit_institution',
-                                person_id=session['person']['id']))
-
-            except HTTPRedirect as redirect:
-                if record_referrer:
-                    session['log_in_referrer'] = _flask_request.referrer
-
-                raise redirect
+            elif (require_institution and
+                    session['person']['institution_id'] is None):
+                flash('Please select your institution before proceeding.')
+                raise HTTPRedirect(url_for(
+                    'people.person_edit_institution',
+                    person_id=session['person']['id'], **redirect_kwargs))
 
             if require_person_admin and not session['person']['admin']:
                 raise HTTPForbidden('Permission denied.')
@@ -538,3 +535,42 @@ def _check_session_expiry():
         session.clear()
     elif delta > 600:
         session['date_set'] = date_current
+
+
+def _url_manipulation(f):
+    """
+    Decorator to assist in URL manipulation.
+
+    The URL is "parsed" by `_werkzeug_urls.parse_url` before being
+    passed to the decorated function and the return value is then
+    reconstructed by `_werkzeug_urls.unparse_url` afterwards.
+    """
+
+    @functools.wraps(f)
+    def decorated(url, *args, **kwargs):
+        return _werkzeug_urls.url_unparse(
+            f(_werkzeug_urls.url_parse(url), *args, **kwargs))
+
+    return decorated
+
+
+@_url_manipulation
+def url_add_args(url, **kwargs):
+    """
+    Add keyword arguments to the given URL as query parameters.
+    """
+
+    query = url.decode_query()
+
+    query.update(kwargs)
+
+    return url.replace(query=_werkzeug_urls.url_encode(query, sort=True))
+
+
+@_url_manipulation
+def url_relative(url):
+    """
+    Convert an URL to relative form, by removing the scheme and location.
+    """
+
+    return url.replace(scheme='', netloc='')

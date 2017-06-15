@@ -787,12 +787,11 @@ class GenericProposal(object):
 
                     # Return to the proposal page after editing the new
                     # member's institution.
-                    session['next_page'] = url_for('.proposal_view',
-                                                   proposal_id=proposal.id,
-                                                   _anchor='members')
-
                     raise HTTPRedirect(url_for(
-                        'people.person_edit_institution', person_id=person_id))
+                        'people.person_edit_institution',
+                        person_id=person_id, next_page=url_for(
+                            '.proposal_view',
+                            proposal_id=proposal.id, _anchor='members')))
 
                 except UserError as e:
                     message_invite = e.message

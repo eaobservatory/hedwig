@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -671,11 +671,11 @@ class GenericReview(object):
 
                     # Return to the call reviewers page after editing the new
                     # reviewer's institution.
-                    session['next_page'] = url_for(
-                        '.review_call_reviewers', call_id=proposal.call_id)
-
                     raise HTTPRedirect(url_for(
-                        'people.person_edit_institution', person_id=person_id))
+                        'people.person_edit_institution',
+                        person_id=person_id, next_page=url_for(
+                            '.review_call_reviewers',
+                            call_id=proposal.call_id)))
 
                 except UserError as e:
                     message_invite = e.message

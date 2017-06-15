@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,7 +22,9 @@ from datetime import datetime
 
 from hedwig.error import UserError
 from hedwig.type.simple import DateAndTime
-from hedwig.web.util import format_datetime, parse_datetime
+from hedwig.web.util import \
+    format_datetime, parse_datetime, \
+    url_add_args, url_relative
 
 from .compat import TestCase
 
@@ -54,3 +56,12 @@ class WebUtilTestCase(TestCase):
         self.assertEqual(dt.day, 4)
         self.assertEqual(dt.hour, 17)
         self.assertEqual(dt.minute, 55)
+
+    def test_url_manipulation(self):
+        base_url = 'https://proposals.obs/facil/page?aaa=xxx'
+
+        self.assertEqual(url_relative(base_url),
+                         '/facil/page?aaa=xxx')
+
+        self.assertEqual(url_add_args(base_url, bbb='yyy'),
+                         'https://proposals.obs/facil/page?aaa=xxx&bbb=yyy')

@@ -54,6 +54,9 @@
         {% endif %}
         <li>
             <input type="submit" value="Save" name="submit" />
+            {% if log_in_for is not none %}
+                <input type="hidden" name="log_in_for" value="{{ log_in_for }}" />
+            {% endif %}
         </li>
     </ol>
 </form>

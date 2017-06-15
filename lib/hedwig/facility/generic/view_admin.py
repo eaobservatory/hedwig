@@ -640,12 +640,11 @@ class GenericAdmin(object):
 
                     # Return to the group page after editing the new
                     # member's institution.
-                    session['next_page'] = url_for(
-                        '.group_view',
-                        queue_id=queue_id, group_type=group_type)
-
                     raise HTTPRedirect(url_for(
-                        'people.person_edit_institution', person_id=person_id))
+                        'people.person_edit_institution',
+                        person_id=person_id, next_page=url_for(
+                            '.group_view',
+                            queue_id=queue_id, group_type=group_type)))
 
                 except UserError as e:
                     message_invite = e.message
