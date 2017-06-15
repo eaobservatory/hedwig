@@ -126,15 +126,20 @@ class ClashTool(BaseTargetTool):
         non_clashes = None
 
         public = self._determine_public_constraint(db, auth_cache=auth_cache)
-        try:
-            moc_ready = self._check_mocs_exist_and_ready(db, public)
-        except NoSuchRecord:
-            if session.get('is_admin', False):
-                # Allow site administrators to view the clash tool when
-                # "empty" so that they can set up coverage maps.
-                moc_ready = True
-            else:
-                raise ErrorPage('No coverage maps have been set up yet.')
+
+        mocs = db.search_moc(facility_id=self.facility.id_, public=public)
+
+        if mocs:
+            moc_ready = all(
+                AttachmentState.is_ready(x.state) for x in mocs.values())
+
+        elif session.get('is_admin', False):
+            # Allow site administrators to view the clash tool when
+            # "empty" so that they can set up coverage maps.
+            moc_ready = True
+
+        else:
+            raise ErrorPage('No coverage maps have been set up yet.')
 
         if target_objects is not None:
             (clashes, non_clashes) = self._do_moc_search(
@@ -163,20 +168,6 @@ class ClashTool(BaseTargetTool):
             public = None
 
         return public
-
-    def _check_mocs_exist_and_ready(self, db, public):
-        """
-        Check the status of coverage maps (MOCs) for this facility.
-
-        :return: True if all available MOCs are ready.
-        :raise NoSuchRecord: if there are no MOCs available
-        """
-
-        mocs = db.search_moc(facility_id=self.facility.id_, public=public)
-        if not mocs:
-            raise NoSuchRecord('no coverage maps found')
-
-        return all(AttachmentState.is_ready(x.state) for x in mocs.values())
 
     def _do_moc_search(self, db, targets, public):
         """
