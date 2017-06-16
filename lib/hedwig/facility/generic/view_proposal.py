@@ -24,7 +24,7 @@ from ...astro.coord import CoordSystem
 from ...astro.catalog import parse_source_list, write_source_list
 from ...email.format import render_email_template
 from ...config import get_config
-from ...error import ConsistencyError, NoSuchRecord, UserError
+from ...error import ConsistencyError, NoSuchRecord, ParseError, UserError
 from ...file.info import determine_figure_type, determine_pdf_page_count
 from ...publication.url import make_publication_url
 from ...type.collection import PrevProposalCollection, ResultCollection, \
@@ -1057,7 +1057,12 @@ class GenericProposal(object):
                     try:
                         prev_proposal_id = self.parse_proposal_code(
                             db, prev_proposal_code)
+                    except ParseError:
+                        # The given proposal code was not understood.
+                        pass
                     except NoSuchRecord:
+                        # The given proposal code was understood,
+                        # but no matching record was found.
                         pass
 
                 publications = []

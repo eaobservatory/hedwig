@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import defaultdict, OrderedDict
 
-from ...error import NoSuchRecord, NoSuchValue
+from ...error import NoSuchRecord, NoSuchValue, ParseError
 from ...type.enum import AffiliationType, \
     BaseCallType, BaseReviewerRole, BaseTextRole, \
     FormatType
@@ -229,6 +229,10 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
 
         This is done by parsing the code and then attempting to look
         it up in the database to get the identifier number.
+
+        :raise ParseError: if the proposal code is not understood.
+        :raise NoSuchRecord: if the proposal code is understood,
+            but no matching record is found in the database.
         """
 
         (semester_code, queue_code, call_type, proposal_number) = \
@@ -254,7 +258,7 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
         try:
             components = proposal_code.split('-')
             if len(components) < 3:
-                raise NoSuchRecord('Insufficient proposal code components')
+                raise ParseError('Insufficient proposal code components')
 
             (semester_code, queue_code, proposal_number) = components[0:3]
 
@@ -265,16 +269,16 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
                 call_type = components[3]
 
             else:
-                raise NoSuchRecord('Excess proposal code components')
+                raise ParseError('Excess proposal code components')
 
             return (semester_code, queue_code, type_class.by_code(call_type),
                     int(proposal_number))
 
         except ValueError:
-            raise NoSuchRecord('Could not parse proposal number')
+            raise ParseError('Could not parse proposal number')
 
         except NoSuchValue:
-            raise NoSuchRecord('Did not recognise call type component')
+            raise ParseError('Did not recognise call type component')
 
     def make_archive_search_url(self, ra_deg, dec_deg):
         """

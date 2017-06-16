@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from hedwig.error import NoSuchRecord
+from hedwig.error import NoSuchRecord, ParseError
 from hedwig.type.collection import ReviewerCollection
 from hedwig.type.enum import ReviewState
 from hedwig.type.simple import Reviewer
@@ -55,17 +55,20 @@ class GenericFacilityTestCase(FacilityTestCase):
         check_code(proposal_4, '20B-Y-1')
         check_code(proposal_5, '20A-X-1-I')
 
-        with self.assertRaisesRegex(NoSuchRecord, "^Insufficient"):
+        with self.assertRaisesRegex(ParseError, "^Insufficient"):
             self.view.parse_proposal_code(self.db, '20A-1')
 
-        with self.assertRaisesRegex(NoSuchRecord, "^Excess"):
+        with self.assertRaisesRegex(ParseError, "^Excess"):
             self.view.parse_proposal_code(self.db, '20A-X-1-W-W')
 
-        with self.assertRaisesRegex(NoSuchRecord, "^Could not parse"):
+        with self.assertRaisesRegex(ParseError, "^Could not parse"):
             self.view.parse_proposal_code(self.db, '20A-X-Y')
 
-        with self.assertRaisesRegex(NoSuchRecord, "^Did not recognise"):
+        with self.assertRaisesRegex(ParseError, "^Did not recognise"):
             self.view.parse_proposal_code(self.db, '20A-X-1-X')
+
+        with self.assertRaises(NoSuchRecord):
+            self.view.parse_proposal_code(self.db, '20A-X-9')
 
     def test_overall_rating(self):
         role_class = self.view.get_reviewer_roles()

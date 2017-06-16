@@ -23,7 +23,7 @@ from itertools import chain
 import re
 
 from ...compat import url_encode
-from ...error import NoSuchRecord, NoSuchValue, UserError
+from ...error import NoSuchRecord, NoSuchValue, ParseError, UserError
 from ...web.util import HTTPRedirect, flash, url_for
 from ...view.util import organise_collection, with_call_review, with_proposal
 from ...type.collection import ResultTable
@@ -143,7 +143,7 @@ class JCMT(EAOFacility):
             m = re.match('([A-Z])(\d\d[ABXYZW])([A-Z])(\d\d\d)', proposal_code)
 
             if not m:
-                raise NoSuchRecord(
+                raise ParseError(
                     'Proposal code did not match expected pattern')
 
             (call_type, semester_code, queue_code,
@@ -153,10 +153,10 @@ class JCMT(EAOFacility):
                     int(proposal_number))
 
         except ValueError:
-            raise NoSuchRecord('Could not parse proposal number ')
+            raise ParseError('Could not parse proposal number ')
 
         except NoSuchValue:
-            raise NoSuchRecord('Did not recognise call type code')
+            raise ParseError('Did not recognise call type code')
 
     def get_calculator_classes(self):
         return (SCUBA2Calculator, HeterodyneCalculator)

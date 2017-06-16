@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -100,6 +100,14 @@ class MultipleRecords(FormattedError):
     """
     Error for when the database unexpectedly returns multiple
     records when only one was expected.
+    """
+
+    pass
+
+
+class ParseError(FormattedError):
+    """
+    Exception class for errors encountered when attempting to parse values.
     """
 
     pass

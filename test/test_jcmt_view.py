@@ -19,7 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from hedwig.compat import string_type
-from hedwig.error import NoSuchRecord
+from hedwig.error import NoSuchRecord, ParseError
 from hedwig.facility.jcmt.type import JCMTAncillary, JCMTInstrument, \
     JCMTRequest, JCMTRequestCollection, \
     JCMTReview, JCMTReviewerExpertise, \
@@ -63,12 +63,15 @@ class JCMTFacilityTestCase(FacilityTestCase):
         check_code(proposal_5, 'S20AP001')
 
         with self.assertRaisesRegex(
-                NoSuchRecord, "^Proposal code did not match expected pattern"):
+                ParseError, "^Proposal code did not match expected pattern"):
             self.view.parse_proposal_code(self.db, 'ABCDEF')
 
         with self.assertRaisesRegex(
-                NoSuchRecord, "^Did not recognise call type code"):
+                ParseError, "^Did not recognise call type code"):
             self.view.parse_proposal_code(self.db, 'X11AP111')
+
+        with self.assertRaises(NoSuchRecord):
+            self.view.parse_proposal_code(self.db, 'M20AP999')
 
     def test_overall_rating(self):
         role_class = self.view.get_reviewer_roles()
