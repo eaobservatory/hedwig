@@ -758,7 +758,7 @@ class PeoplePart(object):
 
         return ans
 
-    def search_person(self, user_id=None, email_address=None,
+    def search_person(self, person_id=None, user_id=None, email_address=None,
                       registered=None, public=None, admin=None,
                       institution_id=None,
                       with_institution=False):
@@ -785,6 +785,9 @@ class PeoplePart(object):
                 institution.c.organization.label('institution_organization'),
                 institution.c.country.label('institution_country'),
             ]).select_from(person.outerjoin(institution))
+
+        if person_id is not None:
+            stmt = stmt.where(person.c.id == person_id)
 
         if user_id is not None:
             stmt = stmt.where(person.c.user_id == user_id)

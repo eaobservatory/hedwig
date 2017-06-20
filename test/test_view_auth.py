@@ -780,7 +780,7 @@ class WebAppAuthTestCase(WebAppTestCase):
         """
 
         if person_id is not None:
-            person = self.db.get_person(person_id)
+            person = self.db.search_person(person_id=person_id).get_single()
 
         with self.app.test_request_context():
             if person_id is None:

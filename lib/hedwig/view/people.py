@@ -470,7 +470,7 @@ class PeopleView(object):
                     user_id=user_id, remote_addr=remote_addr)
                 db.add_email(person_id, email, primary=True)
                 flash('Your user profile has been saved.')
-                _update_session_person(db.get_person(person_id))
+                _update_session_person_from_db(db, person_id)
 
                 raise HTTPRedirect(url_for(
                     '.person_edit_institution',
@@ -552,7 +552,7 @@ class PeopleView(object):
 
                 if session['user_id'] == person.user_id:
                     flash('Your user profile has been saved.')
-                    _update_session_person(db.get_person(person.id))
+                    _update_session_person_from_db(db, person.id)
                 else:
                     flash('The user profile has been saved.')
                 raise HTTPRedirect(url_for(
@@ -622,7 +622,7 @@ class PeopleView(object):
                     raise ErrorPage('Unknown action')
 
                 if is_current_user:
-                    _update_session_person(db.get_person(person.id))
+                    _update_session_person_from_db(db, person.id)
                     flash('Your institution has been {}.', action)
                 else:
                     flash('The institution has been {}.', action)
@@ -702,7 +702,6 @@ class PeopleView(object):
 
                 if is_current_user:
                     flash('Your email addresses have been updated.')
-                    _update_session_person(db.get_person(person.id))
                 else:
                     flash('The email addresses have been updated.')
                 raise HTTPRedirect(url_for(
@@ -1260,7 +1259,7 @@ class PeopleView(object):
                 old_person_record = db.use_invitation(
                     token, remote_addr=remote_addr, **kwargs)
                 flash('The invitation has been accepted successfully.')
-                person = db.get_person(person_id=None, user_id=user_id)
+                person = db.search_person(user_id=user_id).get_single()
                 _update_session_person(person)
 
                 # Attempt to determine where to redirect: ideally there will
@@ -1344,4 +1343,20 @@ def _update_session_user(user_id):
 
 
 def _update_session_person(person):
+    """
+    Adds the given person information to the session.
+
+    :param PersonInfo person: record from `db.search_person(...).get_single()`
+    """
+
     session['person'] = person._asdict()
+
+
+def _update_session_person_from_db(db, person_id):
+    """
+    Fetch the given person record by ID and add to the session.
+
+    :raises NoSuchRecord: if the given person ID is not found.
+    """
+
+    _update_session_person(db.search_person(person_id=person_id).get_single())
