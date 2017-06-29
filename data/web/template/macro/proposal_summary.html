@@ -57,7 +57,7 @@
             <tr>
                 <th>Proposal PI</th>
                 <td>
-                    {% if session.is_admin or proposal.member.person_public %}
+                    {% if proposal.member.can_view %}
                         <a href="{{ url_for('people.person_view', person_id=proposal.member.person_id) }}">{{ proposal.member.person_name }}</a>
                     {% else %}
                         {{ proposal.member.person_name }}

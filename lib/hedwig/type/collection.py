@@ -65,6 +65,14 @@ class ResultCollection(OrderedDict):
         else:
             return first_value(self)
 
+    def map_values(self, function):
+        """
+        Create a new collection by applying the given function to
+        each value.
+        """
+
+        return type(self)((k, function(v)) for (k, v) in self.items())
+
 
 class AffiliationCollection(ResultCollection):
     """

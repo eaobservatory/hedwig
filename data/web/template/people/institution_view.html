@@ -40,7 +40,7 @@
     </nav>
 {% endif %}
 
-{% if session.is_admin %}
+{% if show_admin_links %}
     <nav>
         <p id="institution_admin_links">
             <a href="{{ url_for('.institution_log', institution_id=institution.id) }}">View edit log</a>

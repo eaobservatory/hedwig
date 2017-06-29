@@ -58,7 +58,7 @@
                 <tr>
                     <th>Last edited by</th>
                     <td>
-                        {% if session['is_admin'] %}
+                        {% if can_view_text_editor %}
                             <a href="{{ url_for('people.person_view', person_id=text.editor) }}">{{ text.editor_name }}</a>
                         {% else %}
                             {{ text.editor_name }}
@@ -201,7 +201,7 @@
                 <tr>
                     <th>Uploaded by</th>
                     <td>
-                        {% if session['is_admin'] %}
+                        {% if can_view_pdf_uploader %}
                             <a href="{{ url_for('people.person_view', person_id=pdf.uploader) }}">{{ pdf.uploader_name }}</a>
                         {% else %}
                             {{ pdf.uploader_name }}

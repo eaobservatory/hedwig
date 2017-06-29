@@ -40,7 +40,7 @@
                 <th>Feedback</th>
                 <th>Ready?</th>
             </tr>
-            {% for proposal in proposals %}
+            {% for proposal in proposals.values() %}
                 {% for review in proposal.reviewers.values() %}
                     <tr>
                         {% if loop.first %}
@@ -58,7 +58,7 @@
                             </td>
                         {% endif %}
                         <td>
-                            {% if session.is_admin or review.person_public %}
+                            {% if review.can_view %}
                                 <a href="{{ url_for('people.person_view', person_id=review.person_id) }}">{{ review.person_name | abbr(25) }}</a>
                             {% else %}
                                 {{ review.person_name | abbr(25) }}

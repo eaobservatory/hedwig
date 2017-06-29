@@ -38,7 +38,7 @@
                 <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
                 <td>
                     {% if proposal.member is not none %}
-                        {% if session.is_admin or proposal.member.person_public %}
+                        {% if proposal.member.can_view %}
                             <a href="{{ url_for('people.person_view', person_id=proposal.member.person_id) }}">{{ proposal.member.person_name | abbr(25) }}</a>
                         {% else %}
                             {{ proposal.member.person_name }}

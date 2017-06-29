@@ -5,7 +5,7 @@
     <td>
         {% if reviewers %}
             {% for reviewer in reviewers %}
-                {% if session.is_admin or reviewer.person_public %}
+                {% if reviewer.can_view %}
                     <a href="{{ url_for('people.person_view', person_id=reviewer.person_id) }}">{{ reviewer.person_name | abbr }}</a>
                 {% else %}
                     {{ reviewer.person_name | abbr }}
@@ -94,7 +94,7 @@
                 </td>
                 <td>
                     {% if proposal.member is not none %}
-                        {% if session.is_admin or proposal.member.person_public %}
+                        {% if proposal.member.can_view %}
                             <a href="{{ url_for('people.person_view', person_id=proposal.member.person_id) }}">{{ proposal.member.person_name | abbr }}</a>
                         {% else %}
                             {{ proposal.member.person_name | abbr }}

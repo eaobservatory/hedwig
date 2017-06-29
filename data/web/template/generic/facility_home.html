@@ -4,7 +4,7 @@
 
 {% block content %}
 
-{% if session.is_admin %}
+{% if show_admin_links %}
     <nav>
         <p>
             <a id="admin_menu_link" href="{{ url_for('.facility_admin') }}">Administrative menu</a>

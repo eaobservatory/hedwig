@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -25,7 +25,7 @@ import re
 from ..error import ConversionError
 from ..file.graphviz import graphviz_to_png
 from ..web.format import format_text_rst
-from ..web.util import HTTPError, HTTPNotFound, url_for
+from ..web.util import HTTPError, HTTPNotFound, session, url_for
 
 
 valid_page_name = re.compile('^([-_a-z0-9]+)$')
@@ -39,6 +39,12 @@ TreeEntry = namedtuple('TreeEntry', ('mtime', 'toc'))
 
 
 class HelpView(object):
+    def help_home(self):
+        return {
+            'title': 'Help',
+            'show_admin_links': session.get('is_admin', False),
+        }
+
     def help_page(self, doc_root, page_name, toc_cache):
         """
         Prepare template context information for viewing a help page.

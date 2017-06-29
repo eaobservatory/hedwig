@@ -38,7 +38,8 @@ from ...type.enum import AffiliationType, Assessment, \
     MessageThreadType, PermissionType, PersonTitle, ProposalState, ReviewState
 from ...type.simple import Affiliation, Link, MemberPIInfo, \
     ProposalWithCode, Reviewer
-from ...type.util import null_tuple, with_can_edit
+from ...type.util import null_tuple, \
+    with_can_edit, with_can_view, with_can_view_edit
 
 
 ProposalWithInviteRoles = namedtuple(
@@ -62,6 +63,8 @@ class GenericReview(object):
         role_class = self.get_reviewer_roles()
         type_class = self.get_call_types()
 
+        is_admin = session.get('is_admin', False)
+
         proposals = []
 
         for proposal in db.search_proposal(
@@ -71,6 +74,9 @@ class GenericReview(object):
                                     role_class.CTTEE_SECONDARY),
                 with_decision=True, with_categories=True).values():
             member_pi = proposal.members.get_pi(default=None)
+            if member_pi is not None:
+                member_pi = with_can_view(
+                    member_pi, (is_admin or member_pi.person_public))
 
             review_can = auth.for_review(
                 role_class, db, reviewer=None, proposal=proposal,
@@ -82,10 +88,14 @@ class GenericReview(object):
             proposals.append(ProposalWithReviewers(
                 *proposal._replace(member=member_pi),
                 code=self.make_proposal_code(db, proposal),
-                reviewers_primary=proposal.reviewers.values_by_role(
-                    role_class.CTTEE_PRIMARY),
-                reviewers_secondary=proposal.reviewers.values_by_role(
-                    role_class.CTTEE_SECONDARY),
+                reviewers_primary=[
+                    with_can_view(x, (is_admin or x.person_public))
+                    for x in proposal.reviewers.values_by_role(
+                        role_class.CTTEE_PRIMARY)],
+                reviewers_secondary=[
+                    with_can_view(x, (is_admin or x.person_public))
+                    for x in proposal.reviewers.values_by_role(
+                        role_class.CTTEE_SECONDARY)],
                 can_view_review=review_can.view,
                 can_edit_decision=decision_can.edit))
 
@@ -155,6 +165,8 @@ class GenericReview(object):
         is retrieved.
         """
 
+        is_admin = session.get('is_admin', False)
+
         role_class = self.get_reviewer_roles()
 
         proposals = db.search_proposal(
@@ -187,7 +199,8 @@ class GenericReview(object):
                 'can_view_review': can_view_review,
                 'member_pi': member_pi,
                 'members_other': n_other,
-                'members': proposal.members,
+                'members': proposal.members.map_values(
+                    lambda x: with_can_view(x, (is_admin or x.person_public))),
                 'code': self.make_proposal_code(db, proposal),
                 'affiliations': self.calculate_affiliation_assignment(
                     db, proposal.members, affiliations),
@@ -209,8 +222,10 @@ class GenericReview(object):
                         reviewer = reviewer._replace(
                             review_rating=None, review_weight=None)
 
-                    reviewers[reviewer_id] = with_can_edit(
-                        reviewer, reviewer_can.edit)
+                    reviewers[reviewer_id] = with_can_view_edit(
+                        reviewer,
+                        (is_admin or reviewer.person_public),
+                        reviewer_can.edit)
 
                 (overall_rating, std_dev) = self.calculate_overall_rating(
                     reviewers, with_std_dev=True)
@@ -416,11 +431,15 @@ class GenericReview(object):
         for proposal in db.search_proposal(
                 call_id=call.id,
                 state=role_class.get_editable_states(primary_role),
-                with_members=True, with_reviewers=True).values():
+                with_members=True, with_reviewers=True,
+                with_review_info=True).values():
             # Emulate search_proposal(with_member_pi=True) behaviour by setting
             # the "member" attribute to just the PI.
-            proposal = proposal._replace(
-                member=proposal.members.get_pi(default=None))
+            member_pi = proposal.members.get_pi(default=None)
+            if member_pi is not None:
+                proposal = proposal._replace(member=with_can_view(
+                    member_pi, (session.get('is_admin', False)
+                                or member_pi.person_public)))
 
             proposals.append(ProposalWithReviewerPersons(
                 *proposal, code=self.make_proposal_code(db, proposal),
@@ -697,9 +716,12 @@ class GenericReview(object):
         except NoSuchRecord:
             abstract = None
 
-        # Attach the PI to the proposal (as for a with_member_pi search).
-        proposal = proposal._replace(
-            member=proposal.members.get_pi(default=None))
+        # Get the PI of the proposal (as for a with_member_pi search).
+        member_pi = proposal.members.get_pi(default=None)
+        if member_pi is not None:
+            member_pi = with_can_view(
+                member_pi,
+                (session.get('is_admin', False) or member_pi.person_public))
 
         proposal_code = self.make_proposal_code(db, proposal)
 
@@ -717,7 +739,7 @@ class GenericReview(object):
             'submit_link': 'Select reviewer',
             'submit_invite': 'Invite to register',
             'label_link': 'Reviewer',
-            'proposal': proposal,
+            'proposal': proposal._replace(member=member_pi),
             'proposal_code': proposal_code,
             'call': call,
             'abstract': abstract,
@@ -1139,7 +1161,9 @@ class GenericReview(object):
             'target': target,
             'proposal_code': proposal_code,
             'proposal': proposal,
-            'reviewer': reviewer,
+            'reviewer': with_can_view(
+                reviewer,
+                (session.get('is_admin', False) or reviewer.person_public)),
             'role_info': role_info,
             'assessment_options': Assessment.get_options(),
             'message': message,
@@ -1192,6 +1216,8 @@ class GenericReview(object):
         role_class = self.get_reviewer_roles()
         text_role_class = self.get_text_roles()
 
+        is_admin = session.get('is_admin', False)
+
         auth_cache = {}
         if not auth.for_review(role_class, db,
                                reviewer=None, proposal=proposal,
@@ -1210,9 +1236,11 @@ class GenericReview(object):
         # Attach the PI to the proposal (as for a with_member_pi search).
         # Also attach a reviewer collection.
         reviewers = ReviewerCollection()
-        proposal = proposal._replace(
-            member=proposal.members.get_pi(default=None),
-            reviewers=reviewers)
+        member_pi = proposal.members.get_pi(default=None)
+        if member_pi is not None:
+            member_pi = with_can_view(
+                member_pi, (is_admin or member_pi.person_public))
+        proposal = proposal._replace(member=member_pi, reviewers=reviewers)
 
         # Add "can_edit" fields and hide non-public notes so that we don't
         # have to rely on the template to do this.  Also hide the rating
@@ -1231,7 +1259,10 @@ class GenericReview(object):
                 reviewer = reviewer._replace(
                     review_rating=None, review_weight=None)
 
-            reviewers[reviewer_id] = with_can_edit(reviewer, reviewer_can.edit)
+            reviewers[reviewer_id] = with_can_view_edit(
+                reviewer,
+                (is_admin or reviewer.person_public),
+                reviewer_can.edit)
 
         self.attach_review_extra(db, {None: proposal})
 
@@ -1315,13 +1346,16 @@ class GenericReview(object):
             except UserError as e:
                 message = e.message
 
-        # Emulate search_proposal(with_member_pi=True) behavior:
-        proposal = proposal._replace(
-            member=proposal.members.get_pi(default=None))
+        # Emulate search_proposal(with_member_pi=True) behavior.
+        member_pi = proposal.members.get_pi(default=None)
+        if member_pi is not None:
+            member_pi = with_can_view(
+                member_pi,
+                session.get('is_admin', False) or member_pi.person_public)
 
         ctx = {
             'title': '{}: Decision'.format(proposal_code),
-            'proposal': proposal,
+            'proposal': proposal._replace(member=member_pi),
             'proposal_code': proposal_code,
             'message': message,
             'referrer': referrer,
@@ -1454,13 +1488,18 @@ class GenericReview(object):
             except UserError as e:
                 message = e.message
 
+        is_admin = session.get('is_admin', False)
+
         return {
             'title': 'Feedback: {} {} {}'.format(
                 call.semester_name, call.queue_name,
                 type_class.get_name(call.type)),
             'call': call,
-            'proposals': [
-                ProposalWithCode(*x, code=self.make_proposal_code(db, x))
-                for x in proposals.values()],
+            'proposals': proposals.map_values(
+                lambda x: ProposalWithCode(
+                    *x, code=self.make_proposal_code(db, x)
+                )._replace(reviewers=x.reviewers.map_values(
+                    lambda y: with_can_view(
+                        y, (is_admin or y.person_public))))),
             'message': message,
         }

@@ -63,7 +63,7 @@
             <th>Proposal status</th>
             <td id="proposal_status_cell">
                 {{ proposal.state | proposal_state_name }}
-                {% if session.is_admin %}
+                {% if show_admin_links %}
                     <nav>
                         <a href="{{ url_for('.proposal_alter_state', proposal_id=proposal.id) }}" id="alter_state_link">edit</a>
                     </nav>
@@ -175,7 +175,7 @@
             {% for member in proposal.members.values() %}
                 <tr>
                     <td>
-                        {% if session.is_admin or member.person_public or (can_edit and not member.person_registered) %}
+                        {% if member.can_view %}
                             <a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name }}</a>
                         {% else %}
                             {{ member.person_name }}
@@ -183,7 +183,7 @@
                     </td>
                     <td>
                         {{ member.affiliation_name }}
-                        {% if session.is_admin %}
+                        {% if show_admin_links %}
                             <nav>
                                 <a href="{{ url_for('.member_affiliation_edit', proposal_id=proposal.id, member_id=member.id) }}" id="member_aff_ed_{{ member.id }}">edit</a>
                             </nav>
@@ -191,7 +191,7 @@
                     </td>
                     <td>
                         {% if member.resolved_institution_id is not none %}
-                            {% if session.is_admin %}
+                            {% if show_admin_links %}
                                 <a href="{{ url_for('people.institution_view', institution_id=member.resolved_institution_id) }}">{{ render_member_institution(member) }}</a>
                             {% else %}
                                 {{ render_member_institution(member) }}

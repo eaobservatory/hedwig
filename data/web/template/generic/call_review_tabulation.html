@@ -106,7 +106,7 @@
                                 <tr>
                                     <td>{{ 'PI' if member.pi else ('&nbsp;' | safe) }}</td>
                                     <td>
-                                        {% if session.is_admin or member.person_public %}
+                                        {% if member.can_view %}
                                             <a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name | abbr(25) }}</a>
                                         {% else %}
                                             {{ member.person_name | abbr(25) }}
@@ -167,7 +167,7 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                {% if session.is_admin or review.person_public %}
+                                                {% if review.can_view %}
                                                     <a href="{{ url_for('people.person_view', person_id=review.person_id) }}">{{ review.person_name | abbr(25) }}</a>
                                                 {% else %}
                                                     {{ review.person_name | abbr(25) }}

@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple
 
-from hedwig.type.util import with_can_edit
+from hedwig.type.util import with_can_edit, with_can_view, with_can_view_edit
 
 from .compat import TestCase
 
@@ -40,5 +40,42 @@ class TypeUtilTestCase(TestCase):
         for t_x in (t_t, t_f):
             self.assertEqual(type(t_x).__name__, 'TestTupleWithCE')
             self.assertEqual(t_x._fields, ('x', 'y', 'can_edit'))
+            self.assertEqual(t_x.x, 1)
+            self.assertEqual(t_x.y, 2)
+
+    def test_with_can_view(self):
+        TestTuple = namedtuple('TestTuple', ('x', 'y'))
+
+        t = TestTuple(1, 2)
+
+        t_t = with_can_view(t, True)
+        t_f = with_can_view(t, False)
+
+        self.assertEqual(t_t.can_view, True)
+        self.assertEqual(t_f.can_view, False)
+
+        for t_x in (t_t, t_f):
+            self.assertEqual(type(t_x).__name__, 'TestTupleWithCV')
+            self.assertEqual(t_x._fields, ('x', 'y', 'can_view'))
+            self.assertEqual(t_x.x, 1)
+            self.assertEqual(t_x.y, 2)
+
+    def test_with_can_view_edit(self):
+        TestTuple = namedtuple('TestTuple', ('x', 'y'))
+
+        t = TestTuple(1, 2)
+
+        t_t = with_can_view_edit(t, True, False)
+        t_f = with_can_view_edit(t, False, True)
+
+        self.assertEqual(t_t.can_view, True)
+        self.assertEqual(t_f.can_view, False)
+
+        self.assertEqual(t_t.can_edit, False)
+        self.assertEqual(t_f.can_edit, True)
+
+        for t_x in (t_t, t_f):
+            self.assertEqual(type(t_x).__name__, 'TestTupleWithCVE')
+            self.assertEqual(t_x._fields, ('x', 'y', 'can_view', 'can_edit'))
             self.assertEqual(t_x.x, 1)
             self.assertEqual(t_x.y, 2)

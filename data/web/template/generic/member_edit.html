@@ -40,7 +40,7 @@
                     <input type="radio" name="pi" value="{{ member.id }}" {{ 'checked="checked"' | safe if member.pi }} />
                 </td>
                 <td>
-                    {% if session.person.id != member.person_id %}
+                    {% if member.can_edit %}
                         <input type="checkbox" name="editor_{{ member.id }}" value="yes" {{ 'checked="checked"' | safe if member.editor }} />
                     {% elif member.editor %}
                         yes <input type="hidden" name="editor_{{ member.id }}" value="yes" />
@@ -52,7 +52,7 @@
                     <input type="checkbox" name="observer_{{ member.id }}" value="yes" {{ 'checked="checked"' | safe if member.observer }} />
                 </td>
                 <td>
-                    {% if session.person.id != member.person_id %}
+                    {% if member.can_edit %}
                         <input type="button" id="delete_{{ member.id }}" value="Delete" />
                     {% endif %}
                 </td>

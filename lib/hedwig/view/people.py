@@ -508,6 +508,7 @@ class PeopleView(object):
 
     @with_person(permission=PermissionType.VIEW)
     def person_view(self, db, person, can):
+        is_admin = session.get('is_admin', False)
         is_current_user = person.user_id == session['user_id']
 
         # Show all email addresses if:
@@ -517,9 +518,9 @@ class PeopleView(object):
         # * The user is unregistered but you can edit. (You're a co-member
         #   editor.)
         view_all_email = (
-            is_current_user or
-            session.get('is_admin', False) or
-            ((person.user_id is None) and can.edit))
+            is_current_user
+            or is_admin
+            or ((person.user_id is None) and can.edit))
 
         person = person._replace(
             email=[x for x in person.email.values()
@@ -530,6 +531,7 @@ class PeopleView(object):
             'is_current_user': is_current_user,
             'can_edit': can.edit,
             'person': person,
+            'show_admin_links': is_admin,
         }
 
     @with_person(permission=PermissionType.EDIT)
@@ -1003,7 +1005,8 @@ class PeopleView(object):
         # administrative privileges.
         public = True
         registered = True
-        if session.get('is_admin', False) and auth.can_be_admin(db):
+        is_admin = session.get('is_admin', False)
+        if is_admin and auth.can_be_admin(db):
             public = None
             registered = None
 
@@ -1015,6 +1018,7 @@ class PeopleView(object):
             'institution': institution,
             'can_edit': can.edit,
             'persons': persons,
+            'show_admin_links': is_admin,
         }
 
     @with_institution(permission=PermissionType.EDIT)

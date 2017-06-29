@@ -28,7 +28,7 @@
         </p>
     </nav>
 {% endif %}
-{% if session.is_admin %}
+{% if show_admin_links %}
     <nav>
         <p id="account_admin_links">
             {% if not is_current_user %}
@@ -56,7 +56,7 @@
             {{ person.name }}
         </td>
     </tr>
-    {% if is_current_user or session.is_admin %}
+    {% if is_current_user or show_admin_links %}
         <tr>
             <th>User directory</th>
             <td>{{ 'Shown' if person.public else 'Not shown' }} in directory</td>

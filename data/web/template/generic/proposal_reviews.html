@@ -56,7 +56,7 @@
                     {% endif %}
                 </td>
                 <td>
-                    {% if session.is_admin or review.person_public %}
+                    {% if review.can_view %}
                         <a href="{{ url_for('people.person_view', person_id=review.person_id) }}">{{ review.person_name | abbr(35) }}</a>
                     {% else %}
                         {{ review.person_name | abbr(35) }}

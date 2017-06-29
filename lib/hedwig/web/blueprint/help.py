@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -55,7 +55,7 @@ def create_help_blueprint():
     @bp.route('/')
     @templated('help/index.html')
     def help_index():
-        return {'title': 'Help'}
+        return view.help_home()
 
     @bp.route('/about')
     @templated('help/help_page.html')

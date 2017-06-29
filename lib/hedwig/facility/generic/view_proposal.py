@@ -39,7 +39,7 @@ from ...type.simple import Affiliation, \
     ProposalCategory, ProposalFigureInfo, ProposalText, \
     Queue, ProposalText, Semester, Target, \
     TargetToolInfo, ValidationMessage
-from ...type.util import null_tuple
+from ...type.util import null_tuple, with_can_edit, with_can_view
 from ...view import auth
 from ...web.util import ErrorPage, HTTPError, HTTPForbidden, \
     HTTPNotFound, HTTPRedirect, \
@@ -120,6 +120,8 @@ class GenericProposal(object):
         feedback_can = auth.for_proposal_feedback(
             role_class, db, proposal=proposal, auth_cache=can.cache)
 
+        is_admin = session.get('is_admin', False)
+
         ctx = {
             'title': proposal.title,
             'can_edit': can.edit,
@@ -130,10 +132,14 @@ class GenericProposal(object):
             'can_edit_review': review_can.edit,
             'can_view_feedback': feedback_can.view,
             'is_submitted': ProposalState.is_submitted(proposal.state),
-            'proposal': proposal,
+            'proposal': proposal._replace(members=proposal.members.map_values(
+                lambda x: with_can_view(
+                    x, (is_admin or x.person_public
+                        or (can.edit and not x.person_registered))))),
             'students': proposal.members.get_students(),
             'proposal_code': self.make_proposal_code(db, proposal),
             'show_person_proposals_callout': ('first_view' in args),
+            'show_admin_links': is_admin,
             'proposal_order': self.get_proposal_order(),
         }
 
@@ -639,6 +645,7 @@ class GenericProposal(object):
     def view_member_edit(self, db, proposal, can, form):
         message = None
         records = proposal.members
+        person_id = session['person']['id']
 
         affiliations = db.search_affiliation(
             queue_id=proposal.queue_id, hidden=False)
@@ -670,8 +677,7 @@ class GenericProposal(object):
                         affiliation_id=int(affiliation_str))
 
                 db.sync_proposal_member(
-                    proposal.id, records,
-                    editor_person_id=session['person']['id'])
+                    proposal.id, records, editor_person_id=person_id)
 
                 flash('The proposal member list has been updated.')
                 raise HTTPRedirect(url_for('.proposal_view',
@@ -687,7 +693,8 @@ class GenericProposal(object):
             'proposal_id': proposal.id,
             'semester_id': proposal.semester_id,
             'call_type': proposal.call_type,
-            'members': records,
+            'members': records.map_values(
+                lambda x: with_can_edit(x, x.person_id != person_id)),
             'affiliations': affiliations,
             'proposal_code': self.make_proposal_code(db, proposal),
         }
@@ -1276,7 +1283,8 @@ class GenericProposal(object):
         code = role_class.short_name(role)
         call = db.get_call(facility_id=None, call_id=proposal.call_id)
 
-        text_info = db.search_proposal_text(proposal_id=proposal.id, role=role)
+        text_info = db.search_proposal_text(
+            proposal_id=proposal.id, role=role).get_single(None)
 
         pdf_info = db.search_proposal_pdf(
             proposal_id=proposal.id, role=role,
@@ -1285,6 +1293,8 @@ class GenericProposal(object):
         figures = db.search_proposal_figure(
             proposal_id=proposal.id, role=role,
             with_caption=True, with_uploader_name=True)
+
+        is_admin = session.get('is_admin', False)
 
         return {
             'title': 'Edit {}'.format(role_class.get_name(role).title()),
@@ -1297,11 +1307,13 @@ class GenericProposal(object):
             'word_limit': getattr(proposal, code + '_word_lim'),
             'fig_limit': getattr(proposal, code + '_fig_lim'),
             'page_limit': getattr(proposal, code + '_page_lim'),
-            'text': text_info.get_single(None),
+            'text': text_info,
             'figures': figures,
             'pdf': pdf_info,
             'help_link': url_for('help.user_page',
                                  page_name=role_class.url_path(role)),
+            'can_view_text_editor': is_admin,
+            'can_view_pdf_uploader': is_admin,
         }
 
     @with_proposal(permission=PermissionType.EDIT)

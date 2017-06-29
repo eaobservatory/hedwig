@@ -15,7 +15,7 @@
         <tr>
             <th>Reviewer</th>
             <td>
-                {% if session.is_admin or reviewer.person_public %}
+                {% if reviewer.can_view %}
                     <a href="{{ url_for('people.person_view', person_id=reviewer.person_id) }}">{{ reviewer.person_name }}</a>
                 {% else %}
                     {{ reviewer.person_name }}

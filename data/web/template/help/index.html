@@ -8,7 +8,7 @@
 <ul>
     <li><a href="{{ url_for('.user_index') }}">Proposal Author&rsquo;s Guide</a></li>
     <li><a href="{{ url_for('.review_index') }}">Reviewer&rsquo;s Guide</a></li>
-    {% if session.is_admin %}
+    {% if show_admin_links %}
         <li><a href="{{ url_for('.admin_index') }}">Administrator&rsquo;s Guide</a></li>
     {% endif %}
     <li><a href="{{ url_for('.help_about') }}">About this System</a></li>

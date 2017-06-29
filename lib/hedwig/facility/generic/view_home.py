@@ -93,6 +93,7 @@ class GenericHome(object):
             'calculators': self.calculators,
             'target_tools': self.target_tools,
             'review_calls': review_calls,
+            'show_admin_links': session.get('is_admin', False),
         }
 
     def view_semester_calls(self, db, semester_id, call_type):

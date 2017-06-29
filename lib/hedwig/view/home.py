@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -19,12 +19,14 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from ..config import get_config
+from ..web.util import session
 
 
 class HomeView(object):
     def home(self, facilities):
         return {
             'facilities': facilities,
+            'show_admin_links': session.get('is_admin', False),
         }
 
     def contact_page(self):
