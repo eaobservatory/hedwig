@@ -27,6 +27,7 @@ from flask import session, url_for
 
 # Import the names which we use but do not wish to expose.
 from flask import flash as _flask_flash
+from flask import get_flashed_messages as _flask_flashed_messages
 from flask import make_response as _flask_make_response
 from flask import render_template as _flask_render_template
 from flask import request as _flask_request
@@ -236,8 +237,6 @@ def require_admin(f):
     """
     @functools.wraps(f)
     def decorated(*args, **kwargs):
-        _check_session_expiry()
-
         if 'user_id' in session and session.get('is_admin', False):
             return f(*args, **kwargs)
 
@@ -284,8 +283,6 @@ def require_auth(require_person=False, require_person_admin=False,
     def decorator(f):
         @functools.wraps(f)
         def decorated_function(*args, **kwargs):
-            _check_session_expiry()
-
             redirect_kwargs = {}
             request_url = _flask_request.url
             if request_url is not None:
@@ -505,7 +502,7 @@ def _make_response(template, result, status=None):
     return resp
 
 
-def _check_session_expiry():
+def check_session_expiry():
     """
     Clear the user's session if it has expired.
 
@@ -515,26 +512,37 @@ def _check_session_expiry():
     * If over 2 hours ago, the session is cleared.
     * If over 10 minutes ago, `date_set` is set to the current time.
 
-    This is invoked by the :func:`require_admin` and :func:`require_auth`
-    functions before they examine the session.  `date_set` is originally
+    This is invoked at the start of each request, as it is registered
+    with Flask as a `before_request` function by the
+    :func:`~hedwig.web.app.create_web_app` function.
+    It should run before the :func:`require_admin` and :func:`require_auth`
+    functions examine the session.  `date_set` is originally
     written when the user logs in by the
     :func:`~hedwig.view.people._update_session_user` function.
     """
 
     date_set = session.get('date_set', None)
 
-    if date_set is None:
-        session.clear()
-        return
+    if date_set is not None:
+        date_current = datetime.utcnow()
 
-    date_current = datetime.utcnow()
+        delta = (date_current - date_set).total_seconds()
 
-    delta = (date_current - date_set).total_seconds()
+        if delta < 7200:
+            if delta > 600:
+                session['date_set'] = date_current
 
-    if delta > 7200:
-        session.clear()
-    elif delta > 600:
-        session['date_set'] = date_current
+            return
+
+    # Save flashed messages so that we can restore them after clearing the
+    # session.  (Otherwise the logged out message never displays because
+    # logging out clears the whole session, including date_set.)
+    messages = _flask_flashed_messages()
+
+    session.clear()
+
+    for message in messages:
+        _flask_flash(message)
 
 
 def _url_manipulation(f):

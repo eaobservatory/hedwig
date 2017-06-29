@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -17,6 +17,8 @@
 
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
+
+from datetime import datetime, timedelta
 
 from .dummy_app import WebAppTestCase
 
@@ -55,4 +57,63 @@ class BasicWebAppTestCase(WebAppTestCase):
             rv.data)
 
         with self.client.session_transaction() as sess:
+            self.assertNotIn('user_id', sess)
+
+    def test_session_expiry(self):
+        dt_curr = datetime.utcnow()
+
+        # At first, should be no 'date_set' in the session.
+        with self.client.session_transaction() as sess:
+            self.assertNotIn('date_set', sess)
+            self.assertNotIn('user_id', sess)
+
+        self.db.add_user('user1', 'pass1')
+        self.log_in('user1', 'pass1')
+
+        with self.client.session_transaction() as sess:
+            # Should now have a 'date_set' value.
+            self.assertIn('date_set', sess)
+            self.assertIn('user_id', sess)
+
+            # Should get a time close to the current time.
+            self.assertIsInstance(sess['date_set'], datetime)
+            self.assertLess(
+                abs((sess['date_set'] - dt_curr).total_seconds()), 5)
+
+            # Set date back 5 minutes - should be kept.
+            sess['date_set'] = dt_curr - timedelta(seconds=300)
+
+        self.client.get('/')
+
+        with self.client.session_transaction() as sess:
+            self.assertIn('date_set', sess)
+            self.assertIn('user_id', sess)
+
+            # Should get a time close to the 5 minutes before the current time.
+            self.assertLess(
+                abs(abs((sess['date_set'] - dt_curr).total_seconds()) - 300),
+                5)
+
+            # Set date back 20 minutes - should reset.
+            sess['date_set'] = dt_curr - timedelta(seconds=1200)
+
+        self.client.get('/')
+
+        with self.client.session_transaction() as sess:
+            self.assertIn('date_set', sess)
+            self.assertIn('user_id', sess)
+
+            # The session should have been updated to now have a time
+            # close to the current time.
+            self.assertLess(
+                abs((sess['date_set'] - dt_curr).total_seconds()), 5)
+
+            # Set date back 10 hours - should cause session expiry.
+            sess['date_set'] = dt_curr - timedelta(seconds=36000)
+
+        self.client.get('/')
+
+        with self.client.session_transaction() as sess:
+            # Session should have expired.
+            self.assertNotIn('date_set', sess)
             self.assertNotIn('user_id', sess)

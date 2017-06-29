@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2016 East Asian Observatory.
+# Copyright (C) 2015-2017 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -29,7 +29,8 @@ from ..config import get_config, get_database, get_facilities, get_home
 from ..type.enum import GroupType, MessageThreadType
 from ..type.simple import FacilityInfo
 from .template_util import register_template_utils
-from .util import make_enum_converter, register_error_handlers
+from .util import check_session_expiry, \
+    make_enum_converter, register_error_handlers
 
 from .blueprint.admin import create_admin_blueprint
 from .blueprint.facility import create_facility_blueprint
@@ -145,6 +146,9 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
     for facility in facilities.values():
         app.register_blueprint(create_facility_blueprint(db, facility.view),
                                url_prefix='/' + facility.code)
+
+    # Add beginning of request function to check session expiry.
+    app.before_request(check_session_expiry)
 
     @app.context_processor
     def add_to_context():
