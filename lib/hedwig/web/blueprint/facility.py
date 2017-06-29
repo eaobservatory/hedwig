@@ -758,9 +758,10 @@ def create_facility_blueprint(db, facility):
                 methods=['GET', 'POST'])
 
     # Configure the facility's target tools.
+    tool_id = 0
     for tool_class in facility.get_target_tool_classes():
         tool_code = tool_class.get_code()
-        tool_id = 0  # TODO: db.ensure_target_tool(facility.id, tool_code)
+        tool_id += 1  # TODO: db.ensure_target_tool(facility.id, tool_code)
         tool = tool_class(facility, tool_id)
         tool_name = tool.get_name()
 
