@@ -167,7 +167,8 @@ PrevProposalPub = namedtuple(
 Proposal = namedtuple(
     'Proposal',
     [x.name for x in proposal.columns] + [
-        'semester_id', 'semester_name', 'semester_code', 'semester_start',
+        'semester_id', 'semester_name', 'semester_code',
+        'semester_start', 'semester_end',
         'queue_id', 'queue_name', 'queue_code', 'call_type',
         'facility_id',
         'abst_word_lim',
