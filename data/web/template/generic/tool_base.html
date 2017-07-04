@@ -40,40 +40,44 @@
             {% endif %}
 
             <ol>
-                {% if show_input_upload %}
-                    <li>
-                        <label for="file">Target list</label>
-                        <input type="file" name="file" accept="{{ mime_types | join (',') }}" />
-                    </li>
-                {% else %}
-                    <li>
-                        <label for="x">RA / Longitude</label>
-                        <input type="text" name="x" value="{{ target.x }}" placeholder="00:00:00" />
-                    </li>
-                    <li>
-                        <label for="y">Dec / Latitude</label>
-                        <input type="text" name ="y" value="{{ target.y }}" placeholder="00:00:00" />
-                    </li>
-                    <li>
-                        <label for="system">System</label>
-                        <select name="system">
-                            {% for (system_id, system_name) in systems.items() %}
-                                <option value="{{ system_id }}" {{ 'selected="selected"' | safe if system_id == target.system }}>{{ system_name }}</option>
-                            {% endfor %}
-                        </select>
-                        <div class="formtip">
-                            <div>
-                                If you have <b>FK5 J2000</b> coordinates,
-                                you may enter them as <b>ICRS</b>.
-                                (The difference is not likely to be
-                                significant for this purpose.)
+                {% block tool_input_list %}
+                    {% if show_input_upload %}
+                        <li>
+                            <label for="file">Target list</label>
+                            <input type="file" name="file" accept="{{ mime_types | join (',') }}" />
+                        </li>
+                    {% else %}
+                        <li>
+                            <label for="x">RA / Longitude</label>
+                            <input type="text" name="x" value="{{ target.x }}" placeholder="00:00:00" />
+                        </li>
+                        <li>
+                            <label for="y">Dec / Latitude</label>
+                            <input type="text" name ="y" value="{{ target.y }}" placeholder="00:00:00" />
+                        </li>
+                        <li>
+                            <label for="system">System</label>
+                            <select name="system">
+                                {% for (system_id, system_name) in systems.items() %}
+                                    <option value="{{ system_id }}" {{ 'selected="selected"' | safe if system_id == target.system }}>{{ system_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="formtip">
+                                <div>
+                                    If you have <b>FK5 J2000</b> coordinates,
+                                    you may enter them as <b>ICRS</b>.
+                                    (The difference is not likely to be
+                                    significant for this purpose.)
+                                </div>
                             </div>
-                        </div>
+                        </li>
+                    {% endif %}
+                    {% block tool_input_list_extra %}
+                    {% endblock %}
+                    <li>
+                        <input type="submit" name="submit_calc" value="{{ run_button }}" />
                     </li>
-                {% endif %}
-                <li>
-                    <input type="submit" name="submit_calc" value="{{ run_button }}" />
-                </li>
+                {% endblock %}
             </ol>
         </section>
     {% endblock %}
