@@ -325,7 +325,7 @@
                 <p>
                     Check targets:
                     {% for target_tool in target_tools.values() %}
-                        <a href="{{ url_for(target_tool.code | fmt('.tool_{}_proposal'), proposal_id=proposal.id) }}">{{ target_tool.name }}</a>
+                        <a href="{{ url_for(target_tool.code | fmt('.tool_{}_proposal'), proposal_id=proposal.id) }}">{{ target_tool.name }}</a>{{ ',' if not loop.last }}
                     {% endfor %}
                 </p>
             </nav>
@@ -382,7 +382,7 @@
                 <p>
                     Add calculation:
                     {% for calculator in calculators.values() %}
-                        <a href="{{ url_for((calculator.code, (calculator.modes | first_value).code) | fmt('.calc_{}_{}'), proposal_id=proposal.id) }}">{{ calculator.name }}</a>
+                        <a href="{{ url_for((calculator.code, (calculator.modes | first_value).code) | fmt('.calc_{}_{}'), proposal_id=proposal.id) }}">{{ calculator.name }}</a>{{ ',' if not loop.last }}
                     {% endfor %}
                 </p>
             </nav>
