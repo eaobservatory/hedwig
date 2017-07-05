@@ -78,6 +78,10 @@ FacilityInfo = namedtuple(
     'FacilityInfo',
     ['id', 'code', 'name', 'view'])
 
+FacilityObsInfo = namedtuple(
+    'FacilityObsInfo',
+    ['geo_x', 'geo_y', 'geo_z', 'time_start', 'time_duration', 'el_min'])
+
 GroupMember = namedtuple(
     'GroupMember',
     [x.name for x in group_member.columns] +

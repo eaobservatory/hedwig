@@ -24,9 +24,10 @@ from ...error import NoSuchRecord, NoSuchValue, ParseError
 from ...type.enum import AffiliationType, \
     BaseCallType, BaseReviewerRole, BaseTextRole, \
     FormatType
-from ...type.simple import Call
+from ...type.simple import Call, FacilityObsInfo
 from ...type.util import null_tuple
 from .tool_clash import ClashTool
+from .tool_avail import AvailabilityTool
 from .view_admin import GenericAdmin
 from .view_home import GenericHome
 from .view_proposal import GenericProposal
@@ -119,7 +120,7 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
         with this facility.
         """
 
-        return (ClashTool,)
+        return (ClashTool, AvailabilityTool)
 
     def get_call_types(self):
         """
@@ -202,6 +203,13 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
             'technical_case',
             'science_case',
         ]
+
+    def get_observing_info(self):
+        """
+        Get observing information.
+        """
+
+        return null_tuple(FacilityObsInfo)
 
     def make_proposal_code(self, db, proposal):
         """

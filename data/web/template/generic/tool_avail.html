@@ -1,0 +1,74 @@
+{% extends 'generic/tool_base.html' %}
+
+{% block tool_input_list %}
+    <li class="separator">Target Information</li>
+
+    {{ super() }}
+{% endblock %}
+
+{% block tool_input_list_extra %}
+    <li class="separator">Observing Information</li>
+    <li>
+        <label for="date_start">Start date</label>
+        <input type="date" name="date_start" value="{{ date_start }}" placeholder="YYYY-MM-DD" required="required" size="10" />
+    </li>
+    <li>
+        <label for="date_end">End date</label>
+        <input type="date" name="date_end" value="{{ date_end }}" placeholder="YYYY-MM-DD" required="requried" size="10" />
+    </li>
+{% endblock %}
+
+{% block tool_output %}
+    {% if avail_date is not none %}
+        <section>
+            <h2>Output</h2>
+
+            <h3>Availability by Date</h3>
+
+            <p>
+                The following table shows how many targets are available
+                as a function of date and time.
+            </p>
+
+            <table>
+                <tr>
+                    <th>Date</th>
+                    {% for time in avail_time %}
+                        <th>{{ time }}</th>
+                    {% endfor %}
+                </tr>
+                {% for (date, times) in avail_date.items() %}
+                    <tr>
+                        <th>{{ date }}</th>
+                        {% for time in times %}
+                            <td style="background-color: rgba(0%,50%,0%,{{ (100.0 * time / avail_date_max) | fmt('{:.0f}') }}%)">{{ time }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </table>
+
+            {% if avail_target is not none %}
+                <h3>Availability by Target</h3>
+
+                <p>
+                    The following table gives the approximate percentage
+                    of the specified observing time for which each of
+                    the targets is available.
+                </p>
+
+                <table>
+                    <tr>
+                        <th>Target</th>
+                        <th>Percentage of time</th>
+                    </tr>
+                    {% for (target, available) in avail_target.items() %}
+                        <tr>
+                            <td>{{ target }}</td>
+                            <td style="background-color: rgba(0%,50%,0%,{{ (100.0 * available / avail_target_max) | fmt('{:.0f}') }}%)">{{ available | fmt('{:.3f}') }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% endif %}
+        </section>
+    {% endif %}
+{% endblock %}

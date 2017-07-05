@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import defaultdict, namedtuple, OrderedDict
+from datetime import time, timedelta
 from itertools import chain
 import re
 
@@ -29,7 +30,7 @@ from ...view.util import organise_collection, with_call_review, with_proposal
 from ...type.collection import ResultTable
 from ...type.enum import AffiliationType, FormatType, \
     PermissionType, ProposalState
-from ...type.simple import Link, RouteInfo, ValidationMessage
+from ...type.simple import FacilityObsInfo, Link, RouteInfo, ValidationMessage
 from ...type.util import null_tuple
 from ..eao.view import EAOFacility
 from .calculator_heterodyne import HeterodyneCalculator
@@ -119,6 +120,19 @@ class JCMT(EAOFacility):
             'technical_case',
             'proposal_previous',
         ]
+
+    def get_observing_info(self):
+        """
+        Get observing information.
+        """
+
+        return null_tuple(FacilityObsInfo)._replace(
+            geo_x=-5464588.652191697,
+            geo_y=-2493003.0215722183,
+            geo_z=2150655.6609171447,
+            time_start=time(4, 0),
+            time_duration=timedelta(hours=12),
+            el_min=30)
 
     def make_proposal_code(self, db, proposal):
         type_class = self.get_call_types()
