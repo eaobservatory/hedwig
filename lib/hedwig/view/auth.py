@@ -92,41 +92,42 @@ def for_person(db, person, auth_cache=None):
     if person.user_id is not None:
         # This is a registered user: allow access based on the "public"
         # flag and only allow them to edit their profile.
-
-        is_user = person.user_id == session['user_id']
+        is_user = (person.user_id == session['user_id'])
 
         return Authorization(view=is_user or person.public, edit=is_user)
 
-    else:
-        # Look for proposals of which this person is a member and allow
-        # access based on the proposal settings.
-        auth = no
+    if 'person' not in session:
+        return no
 
-        for member in _get_proposal_co_membership(
-                auth_cache, db, session['person']['id']).values():
-            if member.co_member_person_id == person.id:
-                if member.editor:
-                    return yes
-                else:
-                    auth = auth._replace(view=True)
+    auth = no
 
-        # Look for reviews for which this person is the reviewer and allow
-        # access to review coordinators.
-        group_members = _get_group_membership(
-            auth_cache, db, session['person']['id'])
-
-        queue_ids = set((
-            x.queue_id
-            for x in group_members.values_by_group_type(
-                GroupType.review_coord_groups())))
-
-        if queue_ids:
-            if db.search_reviewer(
-                    person_id=person.id, queue_id=queue_ids,
-                    proposal_state=ProposalState.review_states()):
+    # Look for proposals of which this person is a member and allow
+    # access based on the proposal settings.
+    for member in _get_proposal_co_membership(
+            auth_cache, db, session['person']['id']).values():
+        if member.co_member_person_id == person.id:
+            if member.editor:
                 return yes
+            else:
+                auth = auth._replace(view=True)
 
-        return auth
+    # Look for reviews for which this person is the reviewer and allow
+    # access to review coordinators.
+    group_members = _get_group_membership(
+        auth_cache, db, session['person']['id'])
+
+    queue_ids = set((
+        x.queue_id
+        for x in group_members.values_by_group_type(
+            GroupType.review_coord_groups())))
+
+    if queue_ids:
+        if db.search_reviewer(
+                person_id=person.id, queue_id=queue_ids,
+                proposal_state=ProposalState.review_states()):
+            return yes
+
+    return auth
 
 
 def for_institution(db, institution, auth_cache=None):
