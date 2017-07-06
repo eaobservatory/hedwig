@@ -67,6 +67,10 @@ Category = namedtuple(
     'Category',
     [x.name for x in category.columns])
 
+CoMemberInfo = namedtuple(
+    'CoMemberInfo',
+    ['id', 'editor', 'co_member_person_id', 'co_member_institution_id'])
+
 # Pair type for conveniently passing date and time strings around.
 DateAndTime = namedtuple('DateAndTime', ('date', 'time'))
 

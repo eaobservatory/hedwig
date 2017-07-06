@@ -38,7 +38,7 @@ from ...type.enum import AffiliationType, AttachmentState, \
     CallState, FigureType, FormatType, \
     ProposalState, PublicationType, SemesterState
 from ...type.simple import Affiliation, \
-    Call, CallPreamble, Category, \
+    Call, CallPreamble, Category, CoMemberInfo, \
     Member, MemberInfo, MemberPIInfo, \
     PrevProposal, PrevProposalPub, \
     Proposal, ProposalCategory, ProposalFigure, \
@@ -944,18 +944,80 @@ class ProposalPart(object):
 
         return ans
 
+    def search_co_member(
+            self, person_id,
+            editor=None, proposal_state=None,
+            with_institution_id=False,
+            _conn=None):
+        """
+        Search for proposal co-membership.
+
+        For a given person, search for other people who have proposal
+        membership in common.  This returns:
+
+        * Whether the given person is an editor of the common proposal.
+
+        * The person identifier for the co-member and optionally their
+          institution.
+        """
+
+        co_member = member.alias()
+
+        fields = [
+            co_member.c.id,
+            member.c.editor,
+            co_member.c.person_id.label('co_member_person_id'),
+        ]
+
+        default = {}
+
+        select_from = member.join(
+            co_member, member.c.proposal_id == co_member.c.proposal_id)
+
+        if proposal_state is not None:
+            select_from = select_from.join(
+                proposal, member.c.proposal_id == proposal.c.id)
+
+        if with_institution_id:
+            fields.append(coalesce(
+                co_member.c.institution_id, person.c.institution_id).label(
+                    'co_member_institution_id'))
+            select_from = select_from.outerjoin(
+                person, person.c.id == co_member.c.person_id)
+
+        else:
+            default['co_member_institution_id'] = None
+
+        stmt = select(fields).select_from(select_from).where(and_(
+            member.c.person_id == person_id,
+            co_member.c.person_id != person_id))
+
+        if editor is not None:
+            if editor:
+                stmt = stmt.where(member.c.editor)
+            else:
+                stmt = stmt.where(not_(member.c.editor))
+
+        if proposal_state is not None:
+            if is_list_like(proposal_state):
+                stmt = stmt.where(proposal.c.state.in_(proposal_state))
+            else:
+                stmt = stmt.where(proposal.c.state == proposal_state)
+
+        ans = ResultCollection()
+
+        with self._transaction(_conn=_conn) as conn:
+            for row in conn.execute(stmt):
+                values = default.copy()
+                values.update(**row)
+                ans[values['id']] = CoMemberInfo(**values)
+
+        return ans
+
     def search_member(self, proposal_id=None, person_id=None,
-                      co_member_person_id=None,
-                      co_member_institution_id=None,
-                      co_member_proposal_state=None,
                       editor=None, _conn=None):
         """
         Search for proposal members.
-
-        :param co_member_proposal_state: limits allowed proposal states
-            when applying the `co_member_person_id` and
-            `co_member_institution_id` constraints.  This should be
-            an iterable type.
         """
 
         stmt = select([
@@ -987,32 +1049,10 @@ class ProposalPart(object):
                 iter_list = proposal_id
             else:
                 stmt = stmt.where(member.c.proposal_id == proposal_id)
+
         if person_id is not None:
             stmt = stmt.where(member.c.person_id == person_id)
-        if co_member_person_id is not None:
-            sub_stmt = select([member.c.proposal_id])
-            if co_member_proposal_state:
-                sub_stmt = sub_stmt.select_from(member.join(proposal)).where(
-                    proposal.c.state.in_(co_member_proposal_state))
-            sub_stmt = sub_stmt.where(
-                member.c.person_id == co_member_person_id)
-            stmt = stmt.where(and_(
-                member.c.person_id != co_member_person_id,
-                member.c.proposal_id.in_(sub_stmt)))
-        if co_member_institution_id is not None:
-            sub_stmt = select([member.c.proposal_id])
-            select_from = member.join(person)
-            if co_member_proposal_state:
-                select_from = select_from.join(proposal)
-            sub_stmt = sub_stmt.select_from(select_from).where(
-                coalesce(member.c.institution_id,
-                         person.c.institution_id) ==
-                co_member_institution_id
-            )
-            if co_member_proposal_state:
-                sub_stmt = sub_stmt.where(
-                    proposal.c.state.in_(co_member_proposal_state))
-            stmt = stmt.where(member.c.proposal_id.in_(sub_stmt))
+
         if editor is not None:
             if editor:
                 stmt = stmt.where(member.c.editor)

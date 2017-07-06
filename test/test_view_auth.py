@@ -284,7 +284,7 @@ class WebAppAuthTestCase(WebAppTestCase):
 
         # Create auth cache dictionary.  The database should not be updated
         # in ways which would affect the information which the auth module
-        # might memoize beyond this point.
+        # might memoize beyond this point without clearing this.
         auth_cache = {}
 
         # Test authorization for call reviews.
@@ -358,6 +358,8 @@ class WebAppAuthTestCase(WebAppTestCase):
             self._test_auth_person(auth_cache, *test_case)
 
         self._set_state(all_proposals, ProposalState.REVIEW)
+        if auth_cache is not None:
+            auth_cache.clear()
 
         for test_case in [
                 # Unregistered co-member: no special access when not editable.
@@ -372,6 +374,8 @@ class WebAppAuthTestCase(WebAppTestCase):
             self._test_auth_person(auth_cache, *test_case)
 
         self._set_state(all_proposals, ProposalState.PREPARATION)
+        if auth_cache is not None:
+            auth_cache.clear()
 
         # Test authorization for institution profiles.
         for test_case in [
@@ -402,6 +406,8 @@ class WebAppAuthTestCase(WebAppTestCase):
             self._test_auth_institution(auth_cache, *test_case)
 
         self._set_state(all_proposals, ProposalState.REVIEW)
+        if auth_cache is not None:
+            auth_cache.clear()
 
         for test_case in [
                 # Proposal editor co-member has no special access when

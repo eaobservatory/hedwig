@@ -102,15 +102,13 @@ def for_person(db, person, auth_cache=None):
         # access based on the proposal settings.
         auth = no
 
-        for member in db.search_member(
-                person_id=session['person']['id'],
-                co_member_person_id=person.id,
-                co_member_proposal_state=ProposalState.editable_states()
-                ).values():
-            if member.editor:
-                return yes
-            else:
-                auth = auth._replace(view=True)
+        for member in _get_proposal_co_membership(
+                auth_cache, db, session['person']['id']).values():
+            if member.co_member_person_id == person.id:
+                if member.editor:
+                    return yes
+                else:
+                    auth = auth._replace(view=True)
 
         # Look for reviews for which this person is the reviewer and allow
         # access to review coordinators.
@@ -158,13 +156,11 @@ def for_institution(db, institution, auth_cache=None):
                                 institution_id=institution.id):
             # Is the person an editor for a proposal with a representative of
             # this institution?
-            if db.search_member(
-                    person_id=session['person']['id'],
-                    editor=True,
-                    co_member_institution_id=institution.id,
-                    co_member_proposal_state=ProposalState.editable_states()):
-
-                return yes
+            for member in _get_proposal_co_membership(
+                    auth_cache, db, session['person']['id']).values():
+                if ((member.co_member_institution_id == institution.id)
+                        and member.editor):
+                    return yes
 
             # Look for reviews for which a representative of the institution
             # is the reviewer and allow access to review coordinators.
@@ -547,6 +543,13 @@ def _get_call(db, call_id):
 @memoized
 def _get_group_membership(db, person_id):
     return db.search_group_member(person_id=person_id)
+
+
+@memoized
+def _get_proposal_co_membership(db, person_id):
+    return db.search_co_member(
+        person_id, with_institution_id=True,
+        proposal_state=ProposalState.editable_states())
 
 
 @memoized

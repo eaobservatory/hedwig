@@ -662,6 +662,91 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(member.proposal_id, proposal_id)
         self.assertEqual(member.person_id, person_id_2)
 
+    def test_search_co_member(self):
+        (call_id, aff_id) = self._create_test_call('s1', 'q1')
+
+        # Set of test person records.  The numbers indicate the proposals
+        # that each person is a member of.  Each person is the PI (and
+        # editor) of on proposal, in order.
+        person_1234__ = self.db.add_person('Test Person')
+        person_12____ = self.db.add_person('Test Person')
+        person__234__ = self.db.add_person('Test Person')
+        person____45_ = self.db.add_person('Test Person')
+        person_____5_ = self.db.add_person('Test Person')
+        person____456 = self.db.add_person('Test Person')
+
+        proposal_1 = self.db.add_proposal(call_id, person_1234__, aff_id, 'X')
+        proposal_2 = self.db.add_proposal(call_id, person_12____, aff_id, 'X')
+        proposal_3 = self.db.add_proposal(call_id, person__234__, aff_id, 'X')
+        proposal_4 = self.db.add_proposal(call_id, person____45_, aff_id, 'X')
+        proposal_5 = self.db.add_proposal(call_id, person_____5_, aff_id, 'X')
+        proposal_6 = self.db.add_proposal(call_id, person____456, aff_id, 'X')
+
+        # Set up the additional proposal membership records.
+        args = (aff_id, False, False, False)
+        self.db.add_member(proposal_2, person_1234__, *args)
+        self.db.add_member(proposal_3, person_1234__, *args)
+        self.db.add_member(proposal_4, person_1234__, *args)
+        self.db.add_member(proposal_1, person_12____, *args)
+        self.db.add_member(proposal_2, person__234__, *args)
+        self.db.add_member(proposal_4, person__234__, *args)
+        self.db.add_member(proposal_5, person____45_, *args)
+        self.db.add_member(proposal_4, person____456, *args)
+        self.db.add_member(proposal_5, person____456, *args)
+
+        # Check co-membership results are as expected.
+        self.assertEqual(
+            _co_member_person_ed(self.db.search_co_member(person_1234__)), [
+                (person_12____, False),
+                (person_12____, True),
+                (person__234__, False),
+                (person__234__, False),
+                (person__234__, False),
+                (person____45_, False),
+                (person____456, False),
+            ])
+
+        self.assertEqual(
+            _co_member_person_ed(self.db.search_co_member(person_12____)), [
+                (person_1234__, False),
+                (person_1234__, True),
+                (person__234__, True),
+            ])
+
+        self.assertEqual(
+            _co_member_person_ed(self.db.search_co_member(person__234__)), [
+                (person_1234__, False),
+                (person_1234__, False),
+                (person_1234__, True),
+                (person_12____, False),
+                (person____45_, False),
+                (person____456, False),
+            ])
+
+        self.assertEqual(
+            _co_member_person_ed(self.db.search_co_member(person____45_)), [
+                (person_1234__, True),
+                (person__234__, True),
+                (person_____5_, False),
+                (person____456, False),
+                (person____456, True),
+            ])
+
+        self.assertEqual(
+            _co_member_person_ed(self.db.search_co_member(person_____5_)), [
+                (person____45_, True),
+                (person____456, True),
+            ])
+
+        self.assertEqual(
+            _co_member_person_ed(self.db.search_co_member(person____456)), [
+                (person_1234__, False),
+                (person__234__, False),
+                (person____45_, False),
+                (person____45_, False),
+                (person_____5_, False),
+            ])
+
     def test_sync_proposal_member(self):
         (call_id, affiliation_id) = self._create_test_call('s1', 'q1')
         person_id_1 = self.db.add_person('Person 1')
@@ -1297,3 +1382,8 @@ class DBProposalTest(DBTestCase):
 
 def _member_person_set(member_collection):
     return [x.person_id for x in member_collection.values()]
+
+
+def _co_member_person_ed(co_member_collection):
+    return sorted(((x.co_member_person_id, x.editor)
+                   for x in co_member_collection.values()))
