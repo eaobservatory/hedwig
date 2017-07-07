@@ -69,7 +69,8 @@ def is_list_like(value):
 
     return (isinstance(value, list)
             or isinstance(value, tuple)
-            or isinstance(value, set))
+            or isinstance(value, set)
+            or isinstance(value, frozenset))
 
 
 def list_in_blocks(iterable, block_size):
