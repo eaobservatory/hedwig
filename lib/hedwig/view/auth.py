@@ -152,9 +152,7 @@ def for_institution(db, institution, auth_cache=None):
     else:
         # Allow for special access to edit the institution unless it has
         # registered representatives.
-
-        if not db.search_person(registered=True,
-                                institution_id=institution.id):
+        if institution.id in _get_institutions(auth_cache, db, False):
             # Is the person an editor for a proposal with a representative of
             # this institution?
             for member in _get_proposal_co_membership(
@@ -544,6 +542,11 @@ def _get_call(db, call_id):
 @memoized
 def _get_group_membership(db, person_id):
     return db.search_group_member(person_id=person_id)
+
+
+@memoized
+def _get_institutions(db, has_registered_person):
+    return db.search_institution(has_registered_person=has_registered_person)
 
 
 @memoized

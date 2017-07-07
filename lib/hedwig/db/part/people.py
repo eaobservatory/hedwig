@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 from time import sleep
 
 from sqlalchemy.sql import select
-from sqlalchemy.sql.expression import and_, not_
+from sqlalchemy.sql.expression import and_, exists, not_
 from sqlalchemy.sql.functions import count
 
 from ... import auth
@@ -647,26 +647,37 @@ class PeoplePart(object):
 
         return ans
 
-    def search_institution(self):
+    def search_institution(self, has_registered_person=None):
         """
         Search institution records.
-
-        Currently has no query parameters, so always
-        gets a list of all institutions.
 
         Summary information is returned.
         """
 
+        stmt = select([
+            institution.c.id,
+            institution.c.name,
+            institution.c.department,
+            institution.c.organization,
+            institution.c.country,
+        ])
+
+        if has_registered_person is not None:
+            condition = exists().select_from(person).where(and_(
+                person.c.user_id.isnot(None),
+                person.c.institution_id == institution.c.id
+            ))
+
+            if has_registered_person:
+                stmt = stmt.where(condition)
+
+            else:
+                stmt = stmt.where(not_(condition))
+
         ans = ResultCollection()
 
         with self._transaction() as conn:
-            for row in conn.execute(select(
-                    [institution.c.id,
-                     institution.c.name,
-                     institution.c.department,
-                     institution.c.organization,
-                     institution.c.country,
-                     ]).order_by(
+            for row in conn.execute(stmt.order_by(
                     institution.c.name, institution.c.department)):
                 ans[row['id']] = InstitutionInfo(**row)
 
