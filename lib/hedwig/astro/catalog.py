@@ -38,7 +38,7 @@ class CSVDialectCatalog(CSVDialect):
     quoting = csv.QUOTE_MINIMAL
 
 
-def parse_source_list(source_list, number_from=1):
+def parse_source_list(source_list, number_from=1, as_object_list=False):
     """
     Parse a plain text source list and return a TargetCollection.
     """
@@ -106,7 +106,8 @@ def parse_source_list(source_list, number_from=1):
     except csv.Error:
         raise UserError('Could not interpret target list file structure.')
 
-    return TargetCollection.from_formatted_collection(ans)
+    return TargetCollection.from_formatted_collection(
+        ans, as_object_list=as_object_list)
 
 
 def write_source_list(catalog):

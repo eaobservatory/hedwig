@@ -173,10 +173,7 @@ class BaseTargetTool(object):
                 else:
                     raise UserError('No target list file was received.')
 
-                # TODO: would be more efficient to update parse_source_list
-                # to be able to return a list directly: this converts to
-                # and from Astropy objects twice.
-                target_objects = parse_source_list(buff).to_object_list()
+                target_objects = parse_source_list(buff, as_object_list=True)
 
             except UserError as e:
                 message = e.message

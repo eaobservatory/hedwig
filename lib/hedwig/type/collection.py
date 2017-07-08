@@ -686,15 +686,19 @@ class TargetCollection(ResultCollection, CollectionOrdered,
         return ans
 
     @classmethod
-    def from_formatted_collection(cls, records):
+    def from_formatted_collection(cls, records, as_object_list=False):
         """
         Construct an instance of this class where, for every entry in the
         input collection, the `x`, `y`, `time` and `priority` values are
         parsed.  (As decimal degrees (`float`), `float` and `int`
         respectively.)
+
+        :param records: input collection of formatted targets
+        :param as_object_list: if specified, return a list of
+            `TargetObject` instances instead of a `TargetCollection`
         """
 
-        ans = cls()
+        ans = ([] if as_object_list else cls())
 
         for (k, v) in records.items():
             system = v.system
@@ -703,12 +707,19 @@ class TargetCollection(ResultCollection, CollectionOrdered,
                 raise UserError('Each target object should have a name.')
 
             if v.x and v.y:
-                (x, y) = coord_to_dec_deg(parse_coord(system,
-                                                      v.x, v.y, v.name))
+                coord = parse_coord(system, v.x, v.y, v.name)
+                if as_object_list:
+                    ans.append(TargetObject(v.name, system, coord))
+                    continue
+
+                (x, y) = coord_to_dec_deg(coord)
 
             elif v.x or v.y:
                 raise UserError('Target "{}" has only one coordinate.',
                                 v.name)
+
+            elif as_object_list:
+                continue
 
             else:
                 system = x = y = None
