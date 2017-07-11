@@ -20,38 +20,23 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import defaultdict, OrderedDict
 from datetime import datetime, timedelta
-
-try:
-    from datetime import timezone as _timezone
-
-    utc = _timezone.utc
-
-except ImportError:
-    # From example in Python 2 datetime documentation:
-    from datetime import tzinfo
-
-    _zero_offset = timedelta(seconds=0)
-
-    class _UTC(tzinfo):
-        def utcoffset(self, dt):
-            return _zero_offset
-
-        def tzname(self, dt):
-            return 'UTC'
-
-        def dst(self, dt):
-            return _zero_offset
-
-    utc = _UTC()
+import warnings
 
 from astropy import units
-from astropy.coordinates import AltAz, EarthLocation, concatenate
-from numpy import nonzero
+from astropy.coordinates import AltAz, EarthLocation, ICRS, SkyCoord
+from astropy.time import Time
+from astropy.utils.exceptions import AstropyWarning
+from astropy.utils.iers import conf as astropy_iers_conf
+from numpy import arange, newaxis, nonzero
 
 from ...compat import first_value
 from ...error import UserError
 from ...view.tool import BaseTargetTool
 from ...web.util import ErrorPage
+
+
+# Prevent Astropy from automatically downloading IERS data.
+astropy_iers_conf.auto_download = False
 
 
 class AvailabilityTool(BaseTargetTool):
@@ -68,7 +53,7 @@ class AvailabilityTool(BaseTargetTool):
         else:
             self.location = EarthLocation.from_geocentric(
                 obs_info.geo_x, obs_info.geo_y, obs_info.geo_z, units.m)
-            self.time_start = obs_info.time_start.replace(tzinfo=utc)
+            self.time_start = obs_info.time_start
             self.time_duration = obs_info.time_duration.total_seconds()
             self.el_min = obs_info.el_min * units.deg
 
@@ -176,23 +161,24 @@ class AvailabilityTool(BaseTargetTool):
 
         if target_objects is not None:
             try:
-                date = date_start.replace(tzinfo=utc)
-                date_end = date_end.replace(tzinfo=utc)
-                date_range = ((date_end - date).total_seconds()) / 86400
+                date_range = (Time(date_end) - Time(date_start)).sec / 86400
 
                 # Choose a suitable date step.
-                if date_range > 370:
+                if date_range < 0:
+                    raise UserError(
+                        'End date is before start date.')
+                elif date_range > 370:
                     raise UserError(
                         'Excessive date range.  Please select a range of '
                         'one year or less.')
                 elif date_range > 190:
-                    date_step = timedelta(days=28)
+                    date_step = 28
                 elif date_range > 92:
-                    date_step = timedelta(days=14)
+                    date_step = 14
                 elif date_range > 7:
-                    date_step = timedelta(days=7)
+                    date_step = 7
                 else:
-                    date_step = timedelta(days=1)
+                    date_step = 1
 
                 # Choose a suitable time step.
                 time_duration = self.time_duration
@@ -212,25 +198,48 @@ class AvailabilityTool(BaseTargetTool):
 
             n = 0
             avail_date = OrderedDict()
+            avail_time = []
             if len(target_objects) > 1:
                 target_hits = defaultdict(int)
 
-            targets = concatenate([x.coord.cirs for x in target_objects])
+            # Concatenate manually rather than astropy.coordinates.concatenate
+            # for improved performance.
+            target_ra = []
+            target_dec = []
+            for target_object in target_objects:
+                target_object = target_object.coord.icrs
+                target_ra.append(target_object.ra.degree)
+                target_dec.append(target_object.dec.degree)
+            targets = SkyCoord(
+                target_ra, target_dec, unit=units.degree, frame=ICRS)
 
-            while date <= date_end:
-                dt_start = datetime.combine(date, self.time_start)
-                time_obs = 0
+            dates = (
+                Time(datetime.combine(date_start, self.time_start))
+                + arange(0, date_range + 1,
+                         date_step)[:, newaxis] * units.day
+                + arange(0, self.time_duration + 1,
+                         time_step)[newaxis, :] * units.second)
 
-                times = []
-                result = avail_date[dt_start.strftime('%Y-%m-%d')] = []
+            frame = AltAz(location=self.location, obstime=dates[:, :, newaxis])
 
-                while time_obs <= time_duration:
+            with warnings.catch_warnings():
+                # Ignore warning about not having the latest IERS data.
+                warnings.simplefilter('ignore', AstropyWarning)
+
+                targets = targets[newaxis, newaxis, :].transform_to(frame)
+
+            all_available = (targets.alt > self.el_min)
+
+            (n_date, n_time, n_target_shape) = all_available.shape
+
+            for i_date in range(0, n_date):
+                date_str = dates[i_date, 0].datetime.strftime('%Y-%m-%d')
+                result = avail_date[date_str] = []
+
+                for i_time in range(0, n_time):
                     n_target = 0
-                    dt = dt_start + timedelta(seconds=time_obs)
-                    frame = AltAz(location=self.location, obstime=dt)
 
-                    (available,) = nonzero(
-                        targets.transform_to(frame).alt > self.el_min)
+                    (available,) = nonzero(all_available[i_date, i_time, :])
 
                     for i in available:
                         n_target += 1
@@ -238,21 +247,16 @@ class AvailabilityTool(BaseTargetTool):
                         if target_hits is not None:
                             target_hits[i] += 1
 
-                    times.append(dt.strftime('%H:%M'))
+                    if i_date == 0:
+                        avail_time.append(
+                            dates[i_date, i_time].datetime.strftime('%H:%M'))
+
                     result.append(n_target)
 
                     if n_target > n_max:
                         n_max = n_target
 
                     n += 1
-                    time_obs += time_step
-
-                if avail_time is None:
-                    avail_time = times
-                else:
-                    assert times == avail_time
-
-                date = date + date_step
 
             if (target_hits is not None) and (n > 0):
                 avail_target = OrderedDict(
