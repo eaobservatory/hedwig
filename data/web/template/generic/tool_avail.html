@@ -41,7 +41,7 @@
                     <tr>
                         <th>{{ date }}</th>
                         {% for time in times %}
-                            <td style="background-color: rgba(0%,50%,0%,{{ (100.0 * time / avail_date_max) | fmt('{:.0f}') }}%)">{{ time }}</td>
+                            <td class="number_center" style="background-color: rgba(0%,50%,0%,{{ (100.0 * time / avail_date_max) | fmt('{:.0f}') }}%)">{{ time }}</td>
                         {% endfor %}
                     </tr>
                 {% endfor %}
@@ -64,7 +64,7 @@
                     {% for (target, available) in avail_target.items() %}
                         <tr>
                             <td>{{ target }}</td>
-                            <td style="background-color: rgba(0%,50%,0%,{{ (100.0 * available / avail_target_max) | fmt('{:.0f}') }}%)">{{ available | fmt('{:.3f}') }}</td>
+                            <td class="number_center" style="background-color: rgba(0%,50%,0%,{{ (100.0 * available / avail_target_max) | fmt('{:.0f}') }}%)">{{ available | fmt('{:.0f}') }} %</td>
                         </tr>
                     {% endfor %}
                 </table>
