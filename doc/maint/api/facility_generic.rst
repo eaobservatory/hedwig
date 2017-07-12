@@ -1,6 +1,11 @@
 Facility Modules (Generic)
 ==========================
 
+hedwig.facility.generic.tool_avail
+----------------------------------
+
+.. automodule:: hedwig.facility.generic.tool_avail
+
 hedwig.facility.generic.tool_clash
 ----------------------------------
 

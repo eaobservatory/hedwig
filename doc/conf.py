@@ -107,7 +107,8 @@ autodoc_member_order = 'bysource'
 autodoc_default_flags = ['members', 'undoc-members', 'private-members']
 
 autodoc_mock_imports = [
-    'astropy', 'astropy.coordinates', 'astropy.units',
+    'astropy', 'astropy.coordinates', 'astropy.time', 'astropy.units',
+    'astropy.utils.exceptions', 'astropy.utils.iers',
     'backports.pbkdf2',
     'flask',
     'healpy',
