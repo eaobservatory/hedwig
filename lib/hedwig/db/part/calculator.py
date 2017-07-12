@@ -23,7 +23,7 @@ from time import sleep
 
 from pymoc import MOC
 from sqlalchemy.sql import select
-from sqlalchemy.sql.expression import and_, not_, or_
+from sqlalchemy.sql.expression import and_, exists, not_, or_
 from sqlalchemy.sql.functions import coalesce
 from sqlalchemy.sql.functions import max as max_
 
@@ -32,7 +32,7 @@ from ...file.moc import write_moc
 from ...type.collection import CalculationCollection, ResultCollection
 from ...type.enum import AttachmentState, FormatType
 from ...type.simple import Calculation, MOCInfo
-from ...util import is_list_like, list_in_blocks
+from ...util import is_list_like, list_in_blocks, list_in_ranges
 from ..meta import calculator, calculation, facility, moc, moc_cell, moc_fits
 from ..util import require_not_none
 
@@ -228,7 +228,17 @@ class CalculatorPart(object):
         for (cell_order, cell_query, multiple_cells) in \
                 self._search_moc_cell_query(order, cell):
             if multiple_cells:
-                condition = (moc_cell.c.cell.in_(cell_query))
+                conditions = []
+                (cell_ranges, cell_individual) = list_in_ranges(cell_query)
+
+                for (cell_min, cell_max) in cell_ranges:
+                    conditions.append(moc_cell.c.cell.between(cell_min,
+                                                              cell_max))
+                if cell_individual:
+                    conditions.append(moc_cell.c.cell.in_(cell_individual))
+
+                condition = or_(*conditions)
+
             else:
                 condition = (moc_cell.c.cell == cell_query)
 
@@ -239,8 +249,13 @@ class CalculatorPart(object):
             moc.c.facility_id,
             moc.c.name,
             moc.c.public,
-        ]).select_from(moc.join(moc_cell)).where(
-            moc.c.facility_id == facility_id).where(or_(*options))
+        ]).select_from(moc).where(
+            exists().select_from(moc_cell).where(and_(
+                moc_cell.c.moc_id == moc.c.id,
+                or_(*options))))
+
+        if facility_id is not None:
+            stmt = stmt.where(moc.c.facility_id == facility_id)
 
         if public is not None:
             if public:
