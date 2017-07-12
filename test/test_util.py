@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from hedwig.util import is_list_like, list_in_blocks, \
+from hedwig.util import is_list_like, list_in_blocks, list_in_ranges, \
     matches_constraint
 
 from .compat import TestCase
@@ -37,6 +37,39 @@ class UtilTest(TestCase):
 
         self.assertEqual(list(list_in_blocks([], 5)),
                          [])
+
+    def test_list_in_ranges(self):
+        self.assertEqual(list_in_ranges(
+            []),
+            ([], []))
+
+        self.assertEqual(list_in_ranges(
+            [101]),
+            ([], [101]))
+
+        self.assertEqual(list_in_ranges(
+            [101, 102]),
+            ([], [101, 102]))
+
+        self.assertEqual(list_in_ranges(
+            [103, 101, 102]),
+            ([(101, 103)], []))
+
+        self.assertEqual(list_in_ranges(
+            [103, 101, 104, 102, 100]),
+            ([(100, 104)], []))
+
+        self.assertEqual(list_in_ranges(
+            [103, 101, 104, 102, 100, 90, 120]),
+            ([(100, 104)], [90, 120]))
+
+        self.assertEqual(list_in_ranges(
+            [103, 101, 104, 102, 100, 90, 120, 91, 122]),
+            ([(100, 104)], [90, 91, 120, 122]))
+
+        self.assertEqual(list_in_ranges(
+            [103, 101, 104, 102, 100, 90, 120, 91, 122, 93, 121]),
+            ([(100, 104), (120, 122)], [90, 91, 93]))
 
     def test_is_list_like(self):
         self.assertTrue(is_list_like([1, 2]))

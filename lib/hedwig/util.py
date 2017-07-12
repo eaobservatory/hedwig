@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -93,6 +93,46 @@ def list_in_blocks(iterable, block_size):
 
     if block:
         yield block
+
+
+def list_in_ranges(iterable, min_range_size=3):
+    """
+    Given an iterable object (e.g. a list) of integers, return a pair
+    containing ranges and individual items.
+
+    Items in ranges less than `min_range_size` are returned as individual
+    items.
+
+    :return: `([(range_min, range_max), ...], [individual_item, ...])`
+    """
+
+    individual = []
+    ranges = []
+    rmin = rmax = None
+    min_range_width = min_range_size - 1
+
+    for value in sorted(iterable):
+        if rmin is None:
+            rmin = rmax = value
+
+        elif value == (rmax + 1):
+            rmax = value
+
+        else:
+            if (rmax - rmin) < min_range_width:
+                individual.extend(range(rmin, rmax + 1))
+            else:
+                ranges.append((rmin, rmax))
+
+            rmin = rmax = value
+
+    if rmin is not None:
+        if (rmax - rmin) < min_range_width:
+            individual.extend(range(rmin, rmax + 1))
+        else:
+            ranges.append((rmin, rmax))
+
+    return (ranges, individual)
 
 
 def matches_constraint(value, constraint):
