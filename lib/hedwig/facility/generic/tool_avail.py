@@ -88,8 +88,16 @@ class AvailabilityTool(BaseTargetTool):
         return self._view_form_mode(db, target_objects, form)
 
     def _view_proposal(self, db, proposal, target_objects, args, auth_cache):
-        return self._view_any_mode(
+        ctx = self._view_any_mode(
             db, target_objects, proposal.semester_start, proposal.semester_end)
+
+        # As this tool can set a message in `_view_any_mode` but does not
+        # display an input form (with message box) we must escalate it here.
+        # This happens in the event of a problem with the semester dates.
+        if 'message' in ctx:
+            raise ErrorPage(ctx['message'])
+
+        return ctx
 
     def _view_form_mode(self, db, target_objects, form):
         message = None
