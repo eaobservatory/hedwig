@@ -19,10 +19,11 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import namedtuple
-from math import pi
+from itertools import chain
+from math import sqrt, pi
 import re
 
-from healpy import ang2pix
+from pymoc.util.catalog import catalog_to_cells
 
 from ...astro.coord import CoordSystem, format_coord
 from ...error import NoSuchRecord, UserError
@@ -41,6 +42,48 @@ TargetClash = namedtuple('TargetClash', ('target', 'mocs', 'target_search',
 
 
 class ClashTool(BaseTargetTool):
+    def __init__(self, *args, **kwargs):
+        """
+        Construct ClashTool instance.
+
+        This routine gets the facility's configured MOC order and uses it
+        to determine a suitable range of search radii.  For example
+        with MOC order 12 (51" cells) the following table shows typical
+        numbers of cells searched for different radii:
+
+        ===== ========== ===============
+        Radius           Search
+        ---------------- ---------------
+        Cells Arcseconds Number of cells
+        ===== ========== ===============
+        0.5   30         ~ 4
+        3.5   180        ~ 50
+        35    1800       ~ 4000
+        70    3600       ~ 16000
+        ===== ========== ===============
+        """
+
+        super(ClashTool, self).__init__(*args, **kwargs)
+
+        # Prepare MOC order information.
+        self.order = self.facility.get_moc_order()
+
+        cell_size = 3600 * sqrt(10800.0 / pi) / (2 ** self.order)
+
+        radius_min = cell_size * 0.5
+        radius_max = cell_size * 35.0
+
+        cell_scales = (1, 3, 15, 30)
+        self.radius_options = [
+            r for r in chain(
+                cell_scales,
+                (x * 60 for x in cell_scales),
+                (x * 3600 for x in cell_scales))
+            if radius_min <= r <= radius_max]
+
+        if not self.radius_options:
+            raise Exception('could not find any valid clash tool search radii')
+
     @classmethod
     def get_code(cls):
         """
@@ -114,6 +157,14 @@ class ClashTool(BaseTargetTool):
                  'init_route_params': ['moc_id']}),
         ]
 
+    def _view_proposal(self, db, proposal, target_objects, args, auth_cache):
+        ctx = {'message': None}
+
+        ctx.update(self._view_any_mode(
+            db, target_objects, args, None, auth_cache))
+
+        return ctx
+
     def _view_any_mode(self, db, target_objects, args, form, auth_cache):
         """
         Prepare clash tool template context for all tool modes.
@@ -124,6 +175,8 @@ class ClashTool(BaseTargetTool):
 
         clashes = None
         non_clashes = None
+        message = None
+        radius = self.radius_options[0]
 
         public = self._determine_public_constraint(db, auth_cache=auth_cache)
 
@@ -141,16 +194,40 @@ class ClashTool(BaseTargetTool):
         else:
             raise ErrorPage('No coverage maps have been set up yet.')
 
-        if target_objects is not None:
-            (clashes, non_clashes) = self._do_moc_search(
-                db, target_objects, public=public)
+        try:
+            # Read the radius from the form if provided (single target and
+            # upload modes) or check the arguments otherwise (proposal mode).
+            if form is not None:
+                radius = int(form['radius'])
 
-        return {
+            elif 'radius' in args:
+                radius = int(args['radius'])
+
+            if radius < self.radius_options[0]:
+                radius = 0
+            elif radius > self.radius_options[-1]:
+                raise UserError("Search radius is too large.")
+
+            if target_objects is not None:
+                (clashes, non_clashes) = self._do_moc_search(
+                    db, target_objects, public=public, radius=float(radius))
+
+        except UserError as e:
+            message = e.message
+
+        ctx = {
             'run_button': 'Search',
             'clashes': clashes,
             'non_clashes': non_clashes,
             'moc_ready': moc_ready,
+            'radius': radius,
+            'radius_options': self.radius_options,
         }
+
+        if message is not None:
+            ctx['message'] = message
+
+        return ctx
 
     def _determine_public_constraint(self, db, auth_cache=None):
         """
@@ -169,12 +246,12 @@ class ClashTool(BaseTargetTool):
 
         return public
 
-    def _do_moc_search(self, db, targets, public):
+    def _do_moc_search(self, db, targets, public, radius):
         """
         Search the coverage maps (MOCs) for the given list of targets.
 
         Iterates over the list of targets and converts each to a
-        HEALPix cell at the facility's specified (maximum) MOC order.
+        set of HEALPix cells at the facility's specified MOC order.
         Then searches the MOC cell database table to determine whether
         the target clashes or not.
 
@@ -182,12 +259,12 @@ class ClashTool(BaseTargetTool):
         :param targets: list of targets
         :param public: database MOC search "public" constraint as determined by
                        :meth:`_determine_public_constraint`
+        :param radius: search radius (arcseconds)
 
         :return: tuple of lists `(clashes, non_clashes)` where each
                  entry is a `TargetClash` tuple
         """
 
-        order = self.facility.get_moc_order()
         clashes = []
         non_clashes = []
 
@@ -199,13 +276,20 @@ class ClashTool(BaseTargetTool):
             else:
                 coord = target.coord.icrs
 
-            ra_rad = coord.spherical.lon.rad
-            dec_rad = coord.spherical.lat.rad
-            cell = ang2pix(2 ** order, pi / 2 - dec_rad, ra_rad, nest=True)
+            cells = catalog_to_cells(
+                coord, radius=radius, order=self.order, inclusive=True)
+
+            # Double check we didn't get a huge number of cells (would
+            # generate a very large SQL query but this shouldn't happen
+            # because of the constraint on radius).
+            if len(cells) > 20000:
+                raise ErrorPage(
+                    'The search radius contains an excessive number '
+                    'of HEALPix cells.')
 
             target_clashes = db.search_moc_cell(
                 facility_id=self.facility.id_, public=public,
-                order=order, cell=int(cell))
+                order=self.order, cell=cells)
 
             archive_url = self.facility.make_archive_search_url(
                 coord.spherical.lon.deg, coord.spherical.lat.deg)
@@ -322,8 +406,7 @@ class ClashTool(BaseTargetTool):
                 if file_:
                     try:
                         moc_object = read_moc(
-                            file_=file_,
-                            max_order=self.facility.get_moc_order())
+                            file_=file_, max_order=self.order)
                     finally:
                         file_.close()
 

@@ -1,12 +1,49 @@
 {% extends 'generic/tool_base.html' %}
 {% set help_link=url_for('help.user_page', page_name='target', _anchor='clash-tool') %}
 
+{% macro search_radius_input() %}
+    <li>
+        <label for="radius">Search radius</label>
+        <select name="radius">
+            {% for radius_option in radius_options %}
+                <option value="{{ radius_option }}" {{ 'selected="selected"' | safe if (radius_option == radius) }}>{{ radius_option }}</option>
+            {% endfor %}
+        </select>
+        "
+    </li>
+{% endmacro %}
+
+{% block tool_input_list_extra %}
+    {{ search_radius_input() }}
+{% endblock %}
+
 {% block tool_output %}
 {% if not moc_ready %}
     <p class="warning">
         The clash tool&rsquo;s sky coverage maps are currently being updated.
         Search results may be incomplete at this time.
     </p>
+{% endif %}
+
+{% if not show_input %}
+    <section>
+        <h2>Search Options</h2>
+
+        {% if message is not none %}
+            <p class="warning">
+                {{ message }}
+            </p>
+        {% endif %}
+
+        <form method="GET" action="{{ url_for(target_tool_code | fmt('.tool_{}_proposal'), proposal_id=proposal_id)}}">
+            <ol>
+                {{ search_radius_input() }}
+                <li>
+                    <input type="submit" value="{{ run_button }}" />
+                </li>
+            </ol>
+        </form>
+    </section>
 {% endif %}
 
 {% if clashes is not none %}
