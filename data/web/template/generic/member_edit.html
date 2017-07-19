@@ -43,9 +43,9 @@
                     {% if member.can_edit %}
                         <input type="checkbox" name="editor_{{ member.id }}" value="yes" {{ 'checked="checked"' | safe if member.editor }} />
                     {% elif member.editor %}
-                        yes <input type="hidden" name="editor_{{ member.id }}" value="yes" />
+                        &check; <input type="hidden" name="editor_{{ member.id }}" value="yes" />
                     {% else %}
-                        no
+                        &cross;
                     {% endif %}
                 </td>
                 <td>
@@ -54,6 +54,8 @@
                 <td>
                     {% if member.can_edit %}
                         <input type="button" id="delete_{{ member.id }}" value="Delete" />
+                    {% else %}
+                        &nbsp;
                     {% endif %}
                 </td>
             </tr>
