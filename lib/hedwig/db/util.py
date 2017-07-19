@@ -70,8 +70,8 @@ class ReadOnlyWrapper(object):
     Wrapper to restrict access to a database controller object
     to only read-only methods.
 
-    Read-only methods are considered to be those starting "get_" or
-    "search_".
+    Read-only methods are considered to be those starting `get_` or
+    `search_`.
 
     If a technique to provide real read-only access to a database
     via SQLAlchemy emerges then it should be used instead of this!
