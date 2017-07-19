@@ -839,14 +839,20 @@ class ReviewState(EnumBasic, EnumAvailable, EnumDisplayClass):
     ADDABLE = 3
 
     StateInfo = namedtuple(
-        'StateInfo', ('name', 'display_class', 'available'))
+        'StateInfo', ('name', 'display_class', 'available', 'present'))
 
-    #                        name        class       avail.
+    #                        name        class       avail. pres.
     _info = OrderedDict((
-        (NOT_DONE, StateInfo('Not done', 'not_done', True)),
-        (DONE,     StateInfo('Done',     'done',     True)),
-        (ADDABLE,  StateInfo('Addable',  'addable',  False)),
+        (NOT_DONE, StateInfo('Not done', 'not_done', True,  False)),
+        (DONE,     StateInfo('Done',     'done',     True,  True)),
+        (ADDABLE,  StateInfo('Addable',  'addable',  False, False)),
     ))
+
+    @classmethod
+    def is_present(cls, state):
+        """Determine if a state corresponds to a review in the database."""
+
+        return cls._info[state].present
 
 
 class SemesterState(EnumBasic):

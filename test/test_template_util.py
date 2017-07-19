@@ -267,10 +267,10 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertTrue(t(ReviewState.DONE))
         self.assertFalse(t(ReviewState.NOT_DONE))
 
-        t = self.app.jinja_env.tests['review_state_not_done']
+        t = self.app.jinja_env.tests['review_state_present']
 
-        self.assertFalse(t(ReviewState.DONE))
-        self.assertTrue(t(ReviewState.NOT_DONE))
+        self.assertTrue(t(ReviewState.DONE))
+        self.assertFalse(t(ReviewState.NOT_DONE))
 
     def test_test_reviewer_role(self):
         t = self.app.jinja_env.tests['reviewer_role_invited']

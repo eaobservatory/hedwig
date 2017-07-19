@@ -835,7 +835,7 @@ class GenericReview(object):
         if not auth.for_call_review(db, call).edit:
             raise HTTPForbidden('Edit permission denied for this call.')
 
-        if reviewer.review_state != ReviewState.NOT_DONE:
+        if ReviewState.is_present(reviewer.review_state):
             raise ErrorPage('This reviewer already started a review.')
 
         try:
@@ -1107,9 +1107,9 @@ class GenericReview(object):
                     note=reviewer.review_note,
                     note_format=reviewer.review_note_format,
                     note_public=reviewer.review_note_public,
-                    is_update=(not (
-                        is_new_reviewer
-                        or (reviewer.review_state == ReviewState.NOT_DONE))))
+                    is_update=(
+                        (not is_new_reviewer)
+                        and ReviewState.is_present(reviewer.review_state)))
 
                 flash('The review has been saved.')
 

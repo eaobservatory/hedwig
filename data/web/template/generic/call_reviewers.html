@@ -79,7 +79,7 @@
                         <td class="{{ reviewer.review_state | review_state_class }}">
                             {{ reviewer.review_state | review_state_name }}
                             {% if reviewer.role in proposal.invite_roles %}
-                                {% if reviewer.review_state is review_state_not_done %}
+                                {% if reviewer.review_state is not review_state_present %}
                                     <a href="{{ url_for('.proposal_reviewer_remove', reviewer_id=reviewer.id) }}">Remove</a>
                                 {% endif %}
                                 {% if reviewer.review_state is not review_state_done %}

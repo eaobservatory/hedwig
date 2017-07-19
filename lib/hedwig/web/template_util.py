@@ -330,8 +330,8 @@ def register_template_utils(app):
         return (value == ReviewState.DONE)
 
     @app.template_test()
-    def review_state_not_done(value):
-        return (value == ReviewState.NOT_DONE)
+    def review_state_present(value):
+        return ReviewState.is_present(value)
 
     @app.template_test()
     def reviewer_role_invited(value, role_class):
