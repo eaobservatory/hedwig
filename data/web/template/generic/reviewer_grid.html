@@ -4,6 +4,28 @@
 {% set help_link=url_for('help.admin_page', page_name='review_process') %}
 {% set scripts = ['jquery_stickytableheaders', 'reviewer_grid'] %}
 
+{% macro render_reviewer_select(prefix, is_unique, person_ids, person_ids_present, proposal_id, person_id) %}
+    {% if is_unique %}
+        {% if person_ids_present %}
+            {% if person_id in person_ids %}
+                &check;
+                <input type="hidden" name="{{ prefix }}_{{ proposal_id }}" value="{{ person_id }}" />
+            {% else %}
+                &nbsp;
+            {% endif %}
+        {% else %}
+            <input type="radio" name="{{ prefix }}_{{ proposal_id }}" value="{{ person_id }}" {{ 'checked="checked"' | safe if person_id in person_ids }} />
+        {% endif %}
+    {% else %}
+        {% if person_id in person_ids_present %}
+            &check;
+            <input type="hidden" name="{{ prefix }}_{{ proposal_id }}_{{ person_id }}" value="1" />
+        {% else %}
+            <input type="checkbox" name="{{ prefix }}_{{ proposal_id }}_{{ person_id }}" value="1" {{ 'checked="checked"' | safe if person_id in person_ids }} />
+        {% endif %}
+    {% endif %}
+{% endmacro %}
+
 {% block content %}
 {% if secondary_unique is not none %}
     <ul>
@@ -49,22 +71,14 @@
                 </td>
                 <td>{{ proposal.title | abbr(25) }}</td>
                 {% for member in group_members.values() %}
-                    <td>
+                    <td class="control_center">
                         {% if proposal.members.has_person(member.person_id) %}
                             &nbsp;
                         {% else %}
-                            {% if primary_unique %}
-                                <input type="radio" name="primary_{{ proposal.id }}" value="{{ member.person_id }}" {{ 'checked="checked"' | safe if member.person_id in proposal.person_ids_primary }} />
-                            {% else %}
-                                <input type="checkbox" name="primary_{{ proposal.id }}_{{ member.person_id }}" value="1" {{ 'checked="checked"' | safe if member.person_id in proposal.person_ids_primary }} />
-                            {% endif %}
+                            {{ render_reviewer_select('primary', primary_unique, proposal.person_ids_primary, proposal.person_ids_primary_present, proposal.id, member.person_id) }}
                             {% if secondary_unique is not none %}
                                 <br />
-                                {% if secondary_unique %}
-                                    <input type="radio" name="secondary_{{ proposal.id }}" value="{{ member.person_id }}" {{ 'checked="checked"' | safe if member.person_id in proposal.person_ids_secondary }} />
-                                {% else %}
-                                    <input type="checkbox" name="secondary_{{ proposal.id }}_{{ member.person_id }}" value="1" {{ 'checked="checked"' | safe if member.person_id in proposal.person_ids_secondary }} />
-                                {% endif %}
+                                {{ render_reviewer_select('secondary', secondary_unique, proposal.person_ids_secondary, proposal.person_ids_secondary_present, proposal.id, member.person_id) }}
                             {% endif %}
                         {% endif %}
                     </td>

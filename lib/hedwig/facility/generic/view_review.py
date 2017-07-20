@@ -54,7 +54,9 @@ ProposalWithReviewers = namedtuple(
 
 ProposalWithReviewerPersons = namedtuple(
     'ProposalWithReviewerPersons',
-    ProposalWithCode._fields + ('person_ids_primary', 'person_ids_secondary'))
+    ProposalWithCode._fields + (
+        'person_ids_primary', 'person_ids_secondary',
+        'person_ids_primary_present', 'person_ids_secondary_present'))
 
 
 class GenericReview(object):
@@ -399,11 +401,6 @@ class GenericReview(object):
         role_class = self.get_reviewer_roles()
         type_class = self.get_call_types()
 
-        try:
-            call = db.get_call(facility_id=self.id_, call_id=call.id)
-        except NoSuchRecord:
-            raise HTTPNotFound('Call or semester not found')
-
         if primary_role == role_class.TECH:
             group_type = GroupType.TECH
             secondary_role = None
@@ -432,7 +429,9 @@ class GenericReview(object):
                 call_id=call.id,
                 state=role_class.get_editable_states(primary_role),
                 with_members=True, with_reviewers=True,
-                with_review_info=True).values():
+                with_review_info=True, with_reviewer_role=(
+                    primary_role if secondary_role is None else
+                    (primary_role, secondary_role))).values():
             # Emulate search_proposal(with_member_pi=True) behaviour by setting
             # the "member" attribute to just the PI.
             member_pi = proposal.members.get_pi(default=None)
@@ -441,13 +440,21 @@ class GenericReview(object):
                     member_pi, (session.get('is_admin', False)
                                 or member_pi.person_public)))
 
+            reviewers_pri = proposal.reviewers.values_by_role(primary_role)
+            reviewers_sec = (
+                [] if secondary_role is None
+                else proposal.reviewers.values_by_role(secondary_role))
+
             proposals.append(ProposalWithReviewerPersons(
                 *proposal, code=self.make_proposal_code(db, proposal),
-                person_ids_primary=(
-                    proposal.reviewers.person_id_by_role(primary_role)),
-                person_ids_secondary=(
-                    None if secondary_role is None else
-                    proposal.reviewers.person_id_by_role(secondary_role))))
+                person_ids_primary=[x.person_id for x in reviewers_pri],
+                person_ids_primary_present=[
+                    x.person_id for x in reviewers_pri
+                    if ReviewState.is_present(x.review_state)],
+                person_ids_secondary=[x.person_id for x in reviewers_sec],
+                person_ids_secondary_present=[
+                    x.person_id for x in reviewers_sec
+                    if ReviewState.is_present(x.review_state)]))
 
         role_list = zip([primary_role, secondary_role],
                         [primary_role_info, secondary_role_info],
@@ -501,6 +508,7 @@ class GenericReview(object):
                         id_ = 'person_ids_{}'.format(prefix)
                         orig = getattr(proposal, id_)
                         updated = getattr(proposal_updated, id_)
+                        present = getattr(proposal, '{}_present'.format(id_))
 
                         # Apply uniqueness constraint.
                         if role_info.unique and (len(updated) > 1):
@@ -526,6 +534,12 @@ class GenericReview(object):
                                 })
 
                         for person_id in orig:
+                            if person_id in present:
+                                raise UserError(
+                                    'This page can not be used to remove '
+                                    'a reviewer who already started '
+                                    'their review.')
+
                             reviewer_remove.append({
                                 'proposal_id': proposal.id,
                                 'person_id': person_id,
@@ -538,9 +552,7 @@ class GenericReview(object):
                         remove=reviewer_remove, add=reviewer_add)
                 except DatabaseIntegrityError:
                     raise UserError(
-                        'Could not update reviewer assignments. '
-                        'Perhaps you are trying to remove a reviewer '
-                        'who already provided a review?')
+                        'Could not update reviewer assignments.')
 
                 flash('The {} assignments have been updated.',
                       group_info.name.lower())

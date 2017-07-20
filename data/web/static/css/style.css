@@ -105,6 +105,10 @@ td.number_center {
     text-align: center;
 }
 
+td.control_center {
+    text-align: center;
+}
+
 tr.decision_accept > td {
     background: #BFB;
 }
