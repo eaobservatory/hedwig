@@ -601,14 +601,6 @@ class ReviewerCollection(ResultCollection, CollectionByProposal):
 
         return False
 
-    def person_id_by_role(self, role):
-        """
-        Get a list of the person identifiers for members of this
-        reveiwer collection with the given role.
-        """
-
-        return [x.person_id for x in self.values() if x.role == role]
-
     def role_by_person_id(self, person_id):
         """
         Get a list of the reviewer roles for the given person.

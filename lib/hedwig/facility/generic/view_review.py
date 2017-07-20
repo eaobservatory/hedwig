@@ -972,8 +972,7 @@ class GenericReview(object):
         except KeyError:
             raise HTTPError('Unknown reviewer role')
 
-        if (role_info.unique and
-                proposal.reviewers.person_id_by_role(reviewer_role)):
+        if (role_info.unique and proposal.reviewers.has_role(reviewer_role)):
             raise ErrorPage(
                 'There is already a "{}" reviewer for this proposal.',
                 role_info.name)
