@@ -403,9 +403,9 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_link_text('Queues').click()
         self.browser.find_element_by_link_text('New queue').click()
 
-        queue_name = 'International'
+        queue_name = 'PI Science'
         self.browser.find_element_by_name('queue_name').send_keys(queue_name)
-        self.browser.find_element_by_name('queue_code').send_keys('I')
+        self.browser.find_element_by_name('queue_code').send_keys('P')
         self.browser.find_element_by_name('description').send_keys(
             'This is the queue description.')
 
@@ -531,7 +531,7 @@ class IntegrationTest(DummyConfigTestCase):
         semester_link.click()
 
         queue_link = self.browser.find_element_by_link_text(
-            'Create a proposal for the International Queue')
+            'Create a proposal for the PI Science Queue')
 
         self._save_screenshot(self.user_image_root, 'call_view', [queue_link])
 
@@ -1435,11 +1435,11 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element_by_link_text('Administrative menu').click()
         self.browser.find_element_by_link_text('Queues').click()
-        self.browser.find_element_by_link_text('International').click()
+        self.browser.find_element_by_link_text('PI Science').click()
         self.browser.find_element_by_link_text('Edit queue').click()
         self.browser.find_element_by_name('submit').click()
 
-        self.assertIn('Queue "International" has been updated.',
+        self.assertIn('Queue "PI Science" has been updated.',
                       self.browser.page_source)
 
         # Set up the review groups.
