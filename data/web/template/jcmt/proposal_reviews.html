@@ -2,6 +2,8 @@
 
 {% set review_info_columns=['Assessment', 'Rating', 'Expertise'] %}
 
+{% from 'jcmt/macro/review_questions.html' import render_ext_review_question %}
+
 {% block review_info %}
     <td>
         {% if review.review_assessment is not none %}
@@ -29,19 +31,19 @@
 {% block review_text %}
     {% if facility_role_class.get_info(review.role).jcmt_external %}
         {% if review.review_extra.review_aims is not none %}
-            <p><b>How do you rate the scientific aims of the proposal?</b></p>
+            <p><b>{{ render_ext_review_question('jcmt_review_aims') }}</b></p>
 
             {{ review.review_extra.review_aims | format_text(review.review_extra.review_format) }}
         {% endif %}
 
         {% if review.review_extra.review_goals is not none %}
-            <p><i>Are there conflicting / confusing goals?</i></p>
+            <p><i>{{ render_ext_review_question('jcmt_review_goals') }}</i></p>
 
             {{ review.review_extra.review_goals | format_text(review.review_extra.review_format) }}
         {% endif %}
 
         {% if review.review_extra.review_difficulties is not none %}
-            <p><i>Have the potential difficulties been raised and discussed?</i></p>
+            <p><i>{{ render_ext_review_question('jcmt_review_difficulties') }}</i></p>
 
             {{ review.review_extra.review_difficulties | format_text(review.review_extra.review_format) }}
         {% endif %}
@@ -54,19 +56,19 @@
         {% endif %}
 
         {% if review.review_extra.review_details is not none %}
-            <p><b>Are the details of the program dealt with / understood?</b></p>
+            <p><b>{{ render_ext_review_question('jcmt_review_details') }}</b></p>
 
             {{ review.review_extra.review_details | format_text(review.review_extra.review_format) }}
         {% endif %}
 
         {% if review.review_extra.review_obj_inst is not none %}
-            <p><i>Are the target objects, coordinates and instrumentation correct?</i></p>
+            <p><i>{{ render_ext_review_question('jcmt_review_obj_inst') }}</i></p>
 
             {{ review.review_extra.review_obj_inst | format_text(review.review_extra.review_format) }}
         {% endif %}
 
         {% if review.review_extra.review_telescope is not none %}
-            <p><i>Does the selected telescope / wavelength / instrument best address the science goals of the proposal?</i></p>
+            <p><i>{{ render_ext_review_question('jcmt_review_telescope') }}</i></p>
 
             {{ review.review_extra.review_telescope | format_text(review.review_extra.review_format) }}
         {% endif %}

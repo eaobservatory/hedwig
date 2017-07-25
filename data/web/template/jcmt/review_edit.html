@@ -1,6 +1,7 @@
 {% extends 'generic/review_edit.html' %}
 
 {% from 'jcmt/macro/request_table.html' import render_request_display %}
+{% from 'jcmt/macro/review_questions.html' import render_ext_review_question %}
 
 {% block information_extra %}
     {% if jcmt_request is not none %}
@@ -17,21 +18,21 @@
     {% if role_info.jcmt_external %}
         <li>
             <div class="explanation">
-                How do you rate the scientific aims of the proposal?
+                {{ render_ext_review_question('jcmt_review_aims') }}
             </div>
             <label for="jcmt_review_aims">Aims</label>
             <textarea name="jcmt_review_aims" cols="80" rows="10" autofocus="autofocus">{{ jcmt_review.review_aims if jcmt_review.review_aims is not none }}</textarea>
         </li>
         <li>
             <div class="explanation">
-                Are there conflicting / confusing goals?
+                {{ render_ext_review_question('jcmt_review_goals') }}
             </div>
             <label for="jcmt_review_goals">Goals</label>
             <textarea name="jcmt_review_goals" cols="80" rows="10">{{ jcmt_review.review_goals if jcmt_review.review_goals is not none }}</textarea>
         </li>
         <li>
             <div class="explanation">
-                Have the potential difficulties been raised and discussed?
+                {{ render_ext_review_question('jcmt_review_difficulties') }}
             </div>
             <label for="jcmt_review_difficulties">Difficulties</label>
             <textarea name="jcmt_review_difficulties" cols="80" rows="10">{{ jcmt_review.review_difficulties if jcmt_review.review_difficulties is not none }}</textarea>
@@ -49,21 +50,21 @@
         </li>
         <li>
             <div class="explanation">
-                Are the details of the program dealt with / understood?
+                {{ render_ext_review_question('jcmt_review_details') }}
             </div>
             <label for="jcmt_review_details">Details</label>
             <textarea name="jcmt_review_details" cols="80" rows="10">{{ jcmt_review.review_details if jcmt_review.review_details is not none }}</textarea>
         </li>
         <li>
             <div class="explanation">
-                Are the target objects, coordinates and instrumentation correct?
+                {{ render_ext_review_question('jcmt_review_obj_inst') }}
             </div>
             <label for="jcmt_review_obj_inst">Targets / instruments</label>
             <textarea name="jcmt_review_obj_inst" cols="80" rows="10">{{ jcmt_review.review_obj_inst if jcmt_review.review_obj_inst is not none }}</textarea>
         </li>
         <li>
             <div class="explanation">
-                Does the selected telescope / wavelength / instrument best address the science goals of the proposal?
+                {{ render_ext_review_question('jcmt_review_telescope') }}
             </div>
             <label for="jcmt_review_telescope">Telescope</label>
             <textarea name="jcmt_review_telescope" cols="80" rows="10">{{ jcmt_review.review_telescope if jcmt_review.review_telescope is not none }}</textarea>
