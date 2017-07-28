@@ -476,11 +476,17 @@ class GenericProposal(object):
         if not notify_group:
             return
 
-        recipients = db.search_group_member(queue_id=proposal.queue_id,
-                                            group_type=notify_group)
+        group_recipients = db.search_group_member(queue_id=proposal.queue_id,
+                                                  group_type=notify_group)
 
-        if not recipients:
+        if not group_recipients:
             return
+
+        recipient_ids = set((x.person_id for x in group_recipients.values()))
+
+        # Also send the notification to site administrators.
+        site_administrators = db.search_person(admin=True)
+        recipient_ids.update((x.id for x in site_administrators.values()))
 
         db.add_message(
             'Proposal {} received{}'.format(
@@ -500,7 +506,7 @@ class GenericProposal(object):
                         proposal_id=proposal.id, _external=True),
                 },
                 facility=self),
-            set((x.person_id for x in recipients.values())),
+            recipient_ids,
             thread_type=MessageThreadType.PROPOSAL_REVIEW,
             thread_id=proposal.id)
 
