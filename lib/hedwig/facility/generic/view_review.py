@@ -1415,9 +1415,33 @@ class GenericReview(object):
     def view_review_advance_final(self, db, call, can, form):
         type_class = self.get_call_types()
 
+        # For "immediate review" calls, allow the user to select
+        # which proposals to advance.
+        call_proposals = None
+        if type_class.has_immediate_review(call.type):
+            call_proposals = db.search_proposal(
+                call_id=call.id, state=ProposalState.REVIEW,
+                with_member_pi=True)
+
+            if not call_proposals:
+                raise ErrorPage(
+                    'There are no proposals still in '
+                    'the initial review state.')
+
         if form is not None:
             if 'submit_confirm' in form:
-                (n_update, n_error) = finalize_call_review(db, call_id=call.id)
+                selected_proposals = None
+                if call_proposals is not None:
+                    selected_proposals = []
+                    for proposal in call_proposals.values():
+                        if 'proposal_{}'.format(proposal.id) in form:
+                            selected_proposals.append(proposal)
+
+                    if not selected_proposals:
+                        raise ErrorPage('No proposals selected to advance.')
+
+                (n_update, n_error) = finalize_call_review(
+                    db, call_id=call.id, proposals=selected_proposals)
 
                 if n_update:
                     flash('{} {} advanced to the final review state.',
@@ -1433,6 +1457,15 @@ class GenericReview(object):
 
             raise HTTPRedirect(url_for('.review_call', call_id=call.id))
 
+        if call_proposals is not None:
+            is_admin = session.get('is_admin', False)
+
+            call_proposals = call_proposals.map_values(
+                lambda x: ProposalWithCode(
+                    *x, code=self.make_proposal_code(db, x)
+                )._replace(member=with_can_view(
+                    x.member, (is_admin or x.member.person_public))))
+
         return {
             'title': 'Final Review: {} {} {}'.format(
                 call.semester_name, call.queue_name,
@@ -1441,6 +1474,7 @@ class GenericReview(object):
                 'Are you sure you wish to advance to the final review phase?',
             'target': url_for('.review_call_advance_final', call_id=call.id),
             'call': call,
+            'proposals': call_proposals,
         }
 
     @with_call_review(permission=PermissionType.EDIT)

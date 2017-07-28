@@ -16,3 +16,28 @@
     </li>
 </ul>
 {% endblock %}
+
+{% block confirm_form_extra %}
+    {% if proposals is not none %}
+        <table>
+            <tr>
+                <th>Proposal</th>
+                <th>PI Name</th>
+                <th>Advance?</th>
+            </tr>
+            {% for proposal in proposals.values() %}
+                <tr>
+                    <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+                    <td>
+                        {% if proposal.member.can_view %}
+                            <a href="{{ url_for('people.person_view', person_id=proposal.member.person_id) }}">{{ proposal.member.person_name | abbr(25) }}</a>
+                        {% else %}
+                            {{ proposal.member.person_name | abbr(25) }}
+                        {% endif %}
+                    </td>
+                    <td><input type="checkbox" name="{{ proposal.id | fmt('proposal_{}') }}" /></td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+{% endblock %}

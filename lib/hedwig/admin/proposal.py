@@ -97,7 +97,7 @@ def close_call_proposals(db, call_id, dry_run=False):
                 proposal.id)
 
 
-def finalize_call_review(db, call_id):
+def finalize_call_review(db, call_id, proposals=None):
     """
     Function to update the status of proposals at the closure of a
     review process, prior to the final decision making process
@@ -105,18 +105,28 @@ def finalize_call_review(db, call_id):
 
     * Sets the status to FINAL_REVIEW.
 
+    :param db: database access object
+    :param call_id: identifer of call to update
+    :param proposals: list of Proposal objects when individual proposals
+        are to be selected.  If this is not specified, then all proposals
+        for the given call are updated.
+
     .. note::
         This function simply sets the state of the corresponding proposals,
         so it can be used from the web interface.  If it ever needs to do
         more work than this, it should be run offline in the poll process
-        and gain logger output.
+        and gain logger output.  An alternative way to specify individual
+        proposals may also be required.
     """
 
     n_update = 0
     n_error = 0
 
-    for proposal in db.search_proposal(
-            call_id=call_id, state=ProposalState.REVIEW).values():
+    if proposals is None:
+        proposals = db.search_proposal(
+            call_id=call_id, state=ProposalState.REVIEW).values()
+
+    for proposal in proposals:
         try:
             db.update_proposal(proposal.id, state=ProposalState.FINAL_REVIEW,
                                state_prev=ProposalState.REVIEW)

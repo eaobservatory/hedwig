@@ -13,6 +13,8 @@
 {% endblock %}
 
 <form method="POST" action="{{ target }}">
+    {% block confirm_form_extra %}
+    {% endblock %}
     <p>
         <input type="submit" name="submit_cancel" value="Cancel" />
         <input type="submit" name="submit_confirm" value="Confirm" />
