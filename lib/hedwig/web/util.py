@@ -27,7 +27,6 @@ from flask import session, url_for
 
 # Import the names which we use but do not wish to expose.
 from flask import flash as _flask_flash
-from flask import get_flashed_messages as _flask_flashed_messages
 from flask import make_response as _flask_make_response
 from flask import render_template as _flask_render_template
 from flask import request as _flask_request
@@ -536,13 +535,15 @@ def check_session_expiry():
 
     # Save flashed messages so that we can restore them after clearing the
     # session.  (Otherwise the logged out message never displays because
-    # logging out clears the whole session, including date_set.)
-    messages = _flask_flashed_messages()
+    # logging out clears the whole session, including date_set.  We can't
+    # use `get_flashed_messages` as Flask will then store them in the
+    # request context not not clear them when they are displayed.)
+    messages = session.get('_flashes', None)
 
     session.clear()
 
-    for message in messages:
-        _flask_flash(message)
+    if messages is not None:
+        session['_flashes'] = messages
 
 
 def _url_manipulation(f):
