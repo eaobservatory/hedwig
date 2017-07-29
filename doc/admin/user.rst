@@ -19,6 +19,18 @@ the name with which they log in.
 
 .. image:: image/user_log.png
 
+The "Subsume duplicate profile" link can be used
+to merge user accounts.
+
+The first page allows you to select the duplicate profile.
+
+.. image:: image/person_subsume.png
+
+Then a confirmation page will give details
+of the profiles you are about to merge.
+
+.. image:: image/person_subsume_confirm.png
+
 Users without Profiles
 ----------------------
 

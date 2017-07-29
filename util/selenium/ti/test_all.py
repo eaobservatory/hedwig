@@ -1810,6 +1810,22 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.back()
 
+        self.browser.find_element_by_link_text(
+            'Subsume duplicate profile').click()
+
+        Select(
+            self.browser.find_element_by_name('duplicate_id')
+        ).select_by_visible_text(
+            'Another Person, Test Institution, United States')
+
+        self._save_screenshot(self.admin_image_root, 'person_subsume')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self._save_screenshot(self.admin_image_root, 'person_subsume_confirm')
+
+        self.browser.find_element_by_name('submit_cancel').click()
+
         self.browser.find_element_by_partial_link_text(
             'View this institution').click()
 
