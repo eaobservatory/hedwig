@@ -89,6 +89,22 @@ def register_template_utils(app):
         return _chain(*sequences)
 
     @app.template_filter()
+    def color_scale(value,
+                    color_start=(1.0, 1.0, 1.0), color_end=(0.0, 0.5, 0.0)):
+        """
+        Convert a fractional value (0.0 - 1.0) to an HTML-style color
+        by interpolating between `color_start` and `color_end`.
+        """
+
+        value = min(max(value, 0.0), 1.0)
+
+        color = [
+            int(255 * (start + value * (end - start)))
+            for (start, end) in zip(color_start, color_end)]
+
+        return '#{:02X}{:02X}{:02X}'.format(*color)
+
+    @app.template_filter()
     def count_true(list_):
         return sum(1 for x in list_ if x)
 

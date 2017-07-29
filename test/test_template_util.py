@@ -81,6 +81,23 @@ class TemplateUtilTestCase(WebAppTestCase):
 
         self.assertEqual(list(f(([1, 2], [3, 4]))), [1, 2, 3, 4])
 
+    def test_filter_color_scale(self):
+        f = self.app.jinja_env.filters['color_scale']
+
+        # Test normal values.
+        self.assertEqual(f(0.0), '#FFFFFF')
+        self.assertEqual(f(1.0), '#007F00')
+
+        self.assertEqual(f(0.5), '#7FBF7F')
+
+        # Test values beyond the 0.0 - 1.0 range.
+        self.assertEqual(f(-1.0), '#FFFFFF')
+        self.assertEqual(f(2.0), '#007F00')
+
+        # Test custom scale.
+        self.assertEqual(f(0.0, (0.0, 0.75, 0.0), (0.25, 0.0, 0.5)), '#00BF00')
+        self.assertEqual(f(1.0, (0.0, 0.75, 0.0), (0.25, 0.0, 0.5)), '#3F007F')
+
     def test_filter_count_true(self):
         f = self.app.jinja_env.filters['count_true']
 
