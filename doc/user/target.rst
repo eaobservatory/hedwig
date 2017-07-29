@@ -85,3 +85,32 @@ you can use this space to explain why you still need to observe
 the corresponding targets.
 
 .. image:: image/target_note.png
+
+Target Availability
+-------------------
+
+Another tool which you can use to check your target objects
+is the "Target Availability" tool,
+which determines when during the semester they will be observable.
+To use this tool, select
+"Check targets: Target Availability" in the "Target Objects"
+section of your proposal.
+
+This tool shows two tables:
+
+Availability by Date
+    This table shows a series of times through a typical observing night
+    and a series of dates through the semester.
+
+    Each cell in the table indicates how many of your targets
+    are observable at that date and time.
+
+Availability by Target
+    This table only appears if you have multiple targets.
+
+    For each target, it shows approximately for
+    how much of the time during the semester that target is available.
+    This can allow you to identify targets for which
+    a different semester might be a better choice.
+
+.. image:: image/target_avail.png

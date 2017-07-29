@@ -814,6 +814,12 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element_by_link_text('Back to proposal').click()
 
+        self.browser.find_element_by_link_text('Target Availability').click()
+
+        self._save_screenshot(self.user_image_root, 'target_avail')
+
+        self.browser.find_element_by_link_text('Back to proposal').click()
+
         self.browser.find_element_by_link_text('Edit note').click()
 
         self.browser.find_element_by_name('text').send_keys(
