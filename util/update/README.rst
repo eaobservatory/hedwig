@@ -22,7 +22,7 @@ to the Hedwig database which cannot be handled automatically by `Alembic`.
         op.add_column(
             u'message',
             sa.Column('state', sa.Integer(), nullable=False,
-                      server_default=0))
+                      server_default='0'))
 
   * Run the `util/update/001_message_state` script to fill the new `state`
     column values.
