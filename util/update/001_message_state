@@ -5,7 +5,9 @@ from __future__ import absolute_import, division, print_function, \
 
 import logging
 
+from sqlalchemy.schema import Column
 from sqlalchemy.sql.expression import and_, case
+from sqlalchemy.types import Boolean
 
 from hedwig.config import get_database
 from hedwig.db.meta import message
@@ -17,6 +19,10 @@ logger = get_logger('update_message_state')
 
 # Transitional state for change from computed to stored message states.
 MessageState.UNKNOWN = 0
+
+# Temporarily restore definition of the discard column.
+message.append_column(
+    Column('discard', Boolean, nullable=False, default=False))
 
 
 def main():
