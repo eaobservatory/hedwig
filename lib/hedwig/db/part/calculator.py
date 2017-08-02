@@ -201,7 +201,7 @@ class CalculatorPart(object):
         if order_by_date:
             stmt = stmt.order_by(moc.c.uploaded.desc())
         else:
-            stmt = stmt.order_by(moc.c.id.asc())
+            stmt = stmt.order_by(moc.c.name.asc())
 
         ans = ResultCollection()
 
