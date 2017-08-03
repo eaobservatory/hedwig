@@ -23,14 +23,28 @@ from importlib import import_module
 import json
 import os
 
-try:
-    from configparser import ConfigParser
-except ImportError:
-    from ConfigParser import SafeConfigParser as ConfigParser
-
-from .compat import make_type
+from .compat import make_type, python_version
 from .error import FormattedError
 from .db.engine import get_engine
+
+if python_version < 3:
+    from io import open as io_open
+    from ConfigParser import SafeConfigParser as _ConfigParser
+
+    def read_config(file_):
+        config = _ConfigParser()
+        with io_open(file_, mode='rt', encoding='utf_8') as f:
+            config.readfp(f, file_)
+        return config
+
+else:
+    from configparser import ConfigParser as _ConfigParser
+
+    def read_config(file_):
+        config = _ConfigParser()
+        config.read(file_, encoding='utf_8')
+        return config
+
 
 config_file = ('etc', 'hedwig.ini')
 config = None
@@ -56,8 +70,7 @@ def get_config():
         if not os.path.exists(file_):
             raise FormattedError('config file {} doesn\'t exist', file_)
 
-        config = ConfigParser()
-        config.read(file_)
+        config = read_config(file_)
 
     return config
 
