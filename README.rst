@@ -44,7 +44,7 @@ Requirements
 
 Hedwig requires Python 2, version 2.7.8 or later.  Alternatively an
 earlier version of Python 2.7 could be used with the `backports.pbkdf2`
-library.
+library.  It should also run on Python 3, version 3.4 or later.
 
 The following Python modules should be installed:
 
