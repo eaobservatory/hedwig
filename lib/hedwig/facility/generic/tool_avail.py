@@ -279,4 +279,5 @@ class AvailabilityTool(BaseTargetTool):
             'avail_time': avail_time,
             'avail_target': avail_target,
             'avail_target_max': (target_max if target_max > 0 else 1),
+            'avail_el_min': self.el_min.value,
         }
