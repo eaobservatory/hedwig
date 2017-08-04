@@ -196,8 +196,9 @@ class JCMT(EAOFacility):
             # `url_encode` could possibly raise UnicodeEncodeError.
             return None
 
-        # Advanced Search doesn't seem to like + as part of the coordinates.
-        return url.replace('+', '%20')
+        # Advanced Search doesn't seem to like + as part of the coordinates,
+        # or "@" encoded as "%40".
+        return url.replace('+', '%20').replace('%40', '@')
 
     def make_proposal_info_urls(self, proposal_code):
         """
