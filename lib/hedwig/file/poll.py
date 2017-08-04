@@ -174,9 +174,15 @@ def process_proposal_figure(db, dry_run=False):
             logger.exception('Error converting figure {}', figure_info.id)
 
             if not dry_run:
-                db.update_proposal_figure(
-                    proposal_id=None, role=None, fig_id=figure_info.id,
-                    state=AttachmentState.ERROR)
+                try:
+                    db.update_proposal_figure(
+                        proposal_id=None, role=None, fig_id=figure_info.id,
+                        state=AttachmentState.ERROR)
+                except:
+                    # It's possible that whatever prevented us processing the
+                    # figure also prevents us updating the state, e.g.
+                    # the figure having been deleted.
+                    pass
 
     return n_processed
 
@@ -235,9 +241,15 @@ def process_proposal_pdf(db, dry_run=False):
                 continue
 
         except Exception:
-            logger.exception('Error converting PDF {}', pdf.id)
+            logger.exception('Error processing PDF {}', pdf.id)
 
             if not dry_run:
-                db.update_proposal_pdf(pdf.id, state=AttachmentState.ERROR)
+                try:
+                    db.update_proposal_pdf(pdf.id, state=AttachmentState.ERROR)
+                except:
+                    # It's possible that whatever prevented us setting the
+                    # previews also prevents us updating the state, e.g.
+                    # the PDF having been deleted.
+                    pass
 
     return n_processed
