@@ -296,7 +296,7 @@ class GenericReview(object):
                     ', '.join(x.category_name
                               for x in proposal['categories'].values()),
                 ],
-                (proposal['affiliations'].get(x.id) for x in affiliations))
+                [proposal['affiliations'].get(x.id) for x in affiliations])
 
     @with_call_review(permission=PermissionType.EDIT)
     def view_review_affiliation_weight(self, db, call, can, form):
