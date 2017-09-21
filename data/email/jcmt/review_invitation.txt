@@ -20,7 +20,7 @@ the details are repeated below.
 Please contact us at the address below if you are
 unable to provide a review.
 {% else %}
-We hope you can oblige and provide a review within 10 days.
+We hope you can oblige and provide a review within 2 weeks.
 {% endif %}
 {% endblock %}
 
