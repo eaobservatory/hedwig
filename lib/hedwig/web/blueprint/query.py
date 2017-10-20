@@ -42,7 +42,7 @@ def create_query_blueprint(db):
         """
 
         cadc_name_resolver = \
-            'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/NameResolver/find'
+            'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/cadc-target-resolver/find'
 
         try:
             r = requests.get(cadc_name_resolver, params=request.args,

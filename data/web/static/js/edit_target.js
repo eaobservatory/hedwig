@@ -26,7 +26,7 @@ function deleteTargetRow(targetid) {
 }
 
 function decimalToDMS(decimal, divisor, dp) {
-    var deg = parseFloat(decimal) / divisor;
+    var deg = decimal / divisor;
     var sign = '';
 
     if (deg < 0) {
@@ -76,11 +76,11 @@ function resolveTargetName(targetid) {
 
     var nameResolver = $('table#targets').data('resolver');
 
-    $.ajax(nameResolver + '?' + $.param({'target': targetName, 'format': 'xml'}),
-           dataType='xml'
-    ).done(function (xml) {
-        targetXBox.val(decimalToDMS($(xml).find('ra').text(), 15.0, 2));
-        targetYBox.val(decimalToDMS($(xml).find('dec').text(), 1.0, 1));
+    $.ajax(nameResolver + '?' + $.param({'target': targetName, 'format': 'json'}),
+           dataType='json'
+    ).done(function (result) {
+        targetXBox.val(decimalToDMS(result['ra'], 15.0, 2));
+        targetYBox.val(decimalToDMS(result['dec'], 1.0, 1));
         targetSystem.val('1');
     }).fail(function (jqXHR, textStatus) {
         alert('Target "' + targetName + '" was not found.');
