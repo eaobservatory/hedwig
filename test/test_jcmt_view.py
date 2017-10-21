@@ -159,7 +159,7 @@ class JCMTFacilityTestCase(FacilityTestCase):
             roles, review_1a, text='test', format_=FormatType.PLAIN,
             assessment=None, rating=30, weight=None,
             note='', note_format=FormatType.PLAIN, note_public=False,
-            is_update=False)
+            state=ReviewState.DONE, is_update=False)
         self.db.set_jcmt_review(
             roles, review_1a, review=null_tuple(JCMTReview)._replace(
                 expertise=JCMTReviewerExpertise.EXPERT), is_update=False)
@@ -170,7 +170,7 @@ class JCMTFacilityTestCase(FacilityTestCase):
             roles, review_1b, text='test', format_=FormatType.PLAIN,
             assessment=None, rating=40, weight=None,
             note='', note_format=FormatType.PLAIN, note_public=False,
-            is_update=False)
+            state=ReviewState.DONE, is_update=False)
         self.db.set_jcmt_review(
             roles, review_1b, review=null_tuple(JCMTReview)._replace(
                 expertise=JCMTReviewerExpertise.INTERMEDIATE), is_update=False)
@@ -181,7 +181,7 @@ class JCMTFacilityTestCase(FacilityTestCase):
             roles, review_2a, text='test', format_=FormatType.PLAIN,
             assessment=None, rating=50, weight=None,
             note='', note_format=FormatType.PLAIN, note_public=False,
-            is_update=False)
+            state=ReviewState.DONE, is_update=False)
         self.db.set_jcmt_review(
             roles, review_2a, review=null_tuple(JCMTReview)._replace(
                 expertise=JCMTReviewerExpertise.NON_EXPERT), is_update=False)
@@ -192,7 +192,7 @@ class JCMTFacilityTestCase(FacilityTestCase):
             roles, review_2b, text='test', format_=FormatType.PLAIN,
             assessment=None, rating=60, weight=None,
             note='', note_format=FormatType.PLAIN, note_public=False,
-            is_update=False)
+            state=ReviewState.DONE, is_update=False)
         self.db.set_jcmt_review(
             roles, review_2b, review=null_tuple(JCMTReview)._replace(
                 expertise=JCMTReviewerExpertise.NON_EXPERT), is_update=False)

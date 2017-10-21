@@ -552,6 +552,7 @@ review = Table(
     Column('note', UnicodeText, nullable=True),
     Column('note_format', Integer, nullable=True),
     Column('note_public', Boolean, nullable=False),
+    Column('state', Integer, nullable=False, index=True),
     **table_opts)
 
 reviewer = Table(

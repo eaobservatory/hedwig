@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -218,7 +218,16 @@ class DBReviewTest(DBTestCase):
                 text='A review', format_=FormatType.PLAIN,
                 assessment=None, rating=50, weight=50,
                 note='A note', note_format=FormatType.PLAIN, note_public=False,
-                is_update=True)
+                state=ReviewState.DONE, is_update=True)
+
+        with self.assertRaisesRegex(Error, 'invalid review state'):
+            self.db.set_review(
+                BaseReviewerRole,
+                reviewer_id=reviewer_id_2,
+                text='A review', format_=FormatType.PLAIN,
+                assessment=None, rating=50, weight=50,
+                note='A note', note_format=FormatType.PLAIN, note_public=False,
+                state=ReviewState.ADDABLE, is_update=False)
 
         self.db.set_review(
             BaseReviewerRole,
@@ -226,7 +235,7 @@ class DBReviewTest(DBTestCase):
             text='A review', format_=FormatType.PLAIN,
             assessment=None, rating=50, weight=50,
             note='A note', note_format=FormatType.PLAIN, note_public=False,
-            is_update=False)
+            state=ReviewState.DONE, is_update=False)
 
         # Try updating a review.
         with self.assertRaisesRegex(ConsistencyError, '^review already'):
@@ -236,7 +245,7 @@ class DBReviewTest(DBTestCase):
                 text='An updated review', format_=FormatType.PLAIN,
                 assessment=None, rating=51, weight=51,
                 note='A note', note_format=FormatType.PLAIN, note_public=False,
-                is_update=False)
+                state=ReviewState.DONE, is_update=False)
 
         self.db.set_review(
             BaseReviewerRole,
@@ -244,7 +253,7 @@ class DBReviewTest(DBTestCase):
             text='An updated review', format_=FormatType.PLAIN,
             assessment=None, rating=52, weight=52,
             note='A note', note_format=FormatType.PLAIN, note_public=False,
-            is_update=True)
+            state=ReviewState.DONE, is_update=True)
 
         # Retrieve the review.
         result = self.db.search_reviewer(
@@ -278,7 +287,7 @@ class DBReviewTest(DBTestCase):
                 text='Another review', format_=FormatType.PLAIN,
                 assessment=None, rating=None, weight=None,
                 note='A note', note_format=FormatType.PLAIN, note_public=False,
-                is_update=False)
+                state=ReviewState.DONE, is_update=False)
 
         with self.assertRaisesRegex(Error, 'Text format not specified'):
             self.db.set_review(
@@ -287,7 +296,7 @@ class DBReviewTest(DBTestCase):
                 text='Another review', format_=None,
                 assessment=None, rating=25, weight=75,
                 note='A note', note_format=FormatType.PLAIN, note_public=False,
-                is_update=False)
+                state=ReviewState.DONE, is_update=False)
 
         with self.assertRaisesRegex(Error, 'Text format not recognised'):
             self.db.set_review(
@@ -296,7 +305,7 @@ class DBReviewTest(DBTestCase):
                 text='Another review', format_=999,
                 assessment=None, rating=25, weight=75,
                 note='A note', note_format=FormatType.PLAIN, note_public=False,
-                is_update=False)
+                state=ReviewState.DONE, is_update=False)
 
         with self.assertRaisesRegex(Error, 'The assessment should not'):
             self.db.set_review(
@@ -305,7 +314,7 @@ class DBReviewTest(DBTestCase):
                 text='Another review', format_=FormatType.PLAIN,
                 assessment=Assessment.PROBLEM, rating=25, weight=75,
                 note='A note', note_format=FormatType.PLAIN, note_public=False,
-                is_update=False)
+                state=ReviewState.DONE, is_update=False)
 
         with self.assertRaisesRegex(Error, 'Note format not recognised'):
             self.db.set_review(
@@ -314,7 +323,7 @@ class DBReviewTest(DBTestCase):
                 text='Another review', format_=FormatType.PLAIN,
                 assessment=None, rating=25, weight=75,
                 note='A note', note_format=999, note_public=False,
-                is_update=False)
+                state=ReviewState.DONE, is_update=False)
 
         with self.assertRaisesRegex(Error, 'The note should be specified'):
             self.db.set_review(
@@ -323,7 +332,16 @@ class DBReviewTest(DBTestCase):
                 text='Another review', format_=FormatType.PLAIN,
                 assessment=None, rating=25, weight=75,
                 note=None, note_format=None, note_public=None,
-                is_update=False)
+                state=ReviewState.DONE, is_update=False)
+
+        # Same update as above allowed when state is not DONE.
+        self.db.set_review(
+            BaseReviewerRole,
+            reviewer_id=reviewer_id_3,
+            text='Another review', format_=FormatType.PLAIN,
+            assessment=None, rating=25, weight=75,
+            note=None, note_format=None, note_public=None,
+            state=ReviewState.PREPARATION, is_update=False)
 
         person_id_4 = self.db.add_person('Reviewer Four')
         reviewer_id_4 = self.db.add_reviewer(
@@ -338,7 +356,7 @@ class DBReviewTest(DBTestCase):
                 text='Technical review', format_=FormatType.PLAIN,
                 assessment=999, rating=None, weight=None,
                 note='A note', note_format=FormatType.PLAIN, note_public=False,
-                is_update=False)
+                state=ReviewState.DONE, is_update=False)
 
     def test_decision(self):
         proposal_id = self._create_test_proposal()

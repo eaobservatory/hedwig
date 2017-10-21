@@ -826,9 +826,6 @@ class ReviewState(EnumBasic, EnumAvailable, EnumDisplayClass):
     """
     Class representing states of a review.
 
-    Not that this is not currently stored in the database, but is determined
-    from whether a review has been entered for a given reviewer record.
-
     The "available" flag indicates which states are offered as search
     criteria in the web interface.  This excludes ADDABLE as review
     searches will not find reviews in this state.
@@ -837,6 +834,7 @@ class ReviewState(EnumBasic, EnumAvailable, EnumDisplayClass):
     NOT_DONE = 1
     DONE = 2
     ADDABLE = 3
+    PREPARATION = 4
 
     StateInfo = namedtuple(
         'StateInfo', ('name', 'display_class', 'available', 'present'))
@@ -844,6 +842,7 @@ class ReviewState(EnumBasic, EnumAvailable, EnumDisplayClass):
     #                        name        class       avail. pres.
     _info = OrderedDict((
         (NOT_DONE, StateInfo('Not done', 'not_done', True,  False)),
+        (PREPARATION, StateInfo('In preparation', 'not_done', True, True)),
         (DONE,     StateInfo('Done',     'done',     True,  True)),
         (ADDABLE,  StateInfo('Addable',  'addable',  False, False)),
     ))

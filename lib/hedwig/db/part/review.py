@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -294,7 +294,8 @@ class ReviewPart(object):
                                    for x in review.columns
                                    if x not in (review.c.reviewer_id,
                                                 review.c.text,
-                                                review.c.note)))
+                                                review.c.note,
+                                                review.c.state)))
 
             if with_review_text:
                 select_columns.append(review.c.text.label('review_text'))
@@ -384,7 +385,7 @@ class ReviewPart(object):
 
     def _expr_review_state(self):
         return case([
-            (review.c.reviewer_id.isnot(None), ReviewState.DONE),
+            (review.c.reviewer_id.isnot(None), review.c.state),
         ], else_=ReviewState.NOT_DONE)
 
     def set_decision(self, proposal_id, accept=(), exempt=None, ready=None,
@@ -440,7 +441,7 @@ class ReviewPart(object):
     def set_review(self, role_class, reviewer_id, text, format_,
                    assessment, rating, weight,
                    note, note_format, note_public,
-                   is_update):
+                   state, is_update):
         if text is not None:
             if not format_:
                 raise UserError('Text format not specified.')
@@ -457,6 +458,10 @@ class ReviewPart(object):
             if not Assessment.is_valid(assessment):
                 raise UserError('Assessment value not recognised.')
 
+        if not (ReviewState.is_valid(state) and ReviewState.is_present(state)):
+            raise Error('invalid review state')
+        state_done = (state == ReviewState.DONE)
+
         values = {
             review.c.text: text,
             review.c.format: (None if text is None else format_),
@@ -467,6 +472,7 @@ class ReviewPart(object):
             review.c.note: note,
             review.c.note_format: (None if note is None else note_format),
             review.c.note_public: ((note is not None) and note_public),
+            review.c.state: state,
         }
 
         with self._transaction() as conn:
@@ -480,7 +486,8 @@ class ReviewPart(object):
 
             for attr in ('text', 'assessment', 'rating', 'weight', 'note'):
                 if getattr(role_info, attr):
-                    if attr_values[attr] is None:
+                    # Check for missing attributes only if review is done.
+                    if state_done and (attr_values[attr] is None):
                         raise FormattedError(
                             'The {} should be specified.', attr)
                 else:

@@ -1132,6 +1132,7 @@ class GenericReview(object):
                     note=reviewer.review_note,
                     note_format=reviewer.review_note_format,
                     note_public=reviewer.review_note_public,
+                    state=ReviewState.DONE,
                     is_update=(
                         (not is_new_reviewer)
                         and ReviewState.is_present(reviewer.review_state)))
