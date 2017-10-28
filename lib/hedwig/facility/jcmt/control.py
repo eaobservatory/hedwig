@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2017 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,7 +24,7 @@ from sqlalchemy.sql.functions import count
 from ...db.meta import call, proposal, reviewer
 from ...error import ConsistencyError, FormattedError, UserError
 from ...type.collection import ResultCollection
-from ...type.enum import FormatType
+from ...type.enum import FormatType, ReviewState
 from ...util import is_list_like
 from .meta import jcmt_available, jcmt_allocation, jcmt_options, \
     jcmt_request, jcmt_review
@@ -229,7 +229,10 @@ class JCMTPart(object):
 
                 conn.execute(jcmt_options.insert().values(values))
 
-    def set_jcmt_review(self, role_class, reviewer_id, review, is_update):
+    def set_jcmt_review(
+            self, role_class, reviewer_id, review_state, review, is_update):
+        state_done = (review_state == ReviewState.DONE)
+
         if review.expertise is not None:
             if not JCMTReviewerExpertise.is_valid(review.expertise):
                 raise UserError('Reviewer expertise level not recognised.')
@@ -277,7 +280,8 @@ class JCMTPart(object):
 
             for (attr, attr_allowed) in attr_req.items():
                 if attr_allowed:
-                    if values[attr] is None:
+                    # Check for missing attributes only if review is done.
+                    if state_done and (values[attr] is None):
                         raise FormattedError(
                             '{} should be specified', attr.name)
                 else:

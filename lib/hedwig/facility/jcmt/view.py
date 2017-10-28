@@ -829,6 +829,7 @@ class JCMT(EAOFacility):
         db.set_jcmt_review(
             role_class=role_class,
             reviewer_id=reviewer.id,
+            review_state=reviewer.review_state,
             review=info,
             is_update=(info.reviewer_id is not None))
 

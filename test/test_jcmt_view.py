@@ -161,7 +161,8 @@ class JCMTFacilityTestCase(FacilityTestCase):
             note='', note_format=FormatType.PLAIN, note_public=False,
             state=ReviewState.DONE, is_update=False)
         self.db.set_jcmt_review(
-            roles, review_1a, review=null_tuple(JCMTReview)._replace(
+            roles, review_1a, review_state=ReviewState.DONE,
+            review=null_tuple(JCMTReview)._replace(
                 expertise=JCMTReviewerExpertise.EXPERT), is_update=False)
 
         review_1b = self.db.add_reviewer(
@@ -172,7 +173,8 @@ class JCMTFacilityTestCase(FacilityTestCase):
             note='', note_format=FormatType.PLAIN, note_public=False,
             state=ReviewState.DONE, is_update=False)
         self.db.set_jcmt_review(
-            roles, review_1b, review=null_tuple(JCMTReview)._replace(
+            roles, review_1b, review_state=ReviewState.DONE,
+            review=null_tuple(JCMTReview)._replace(
                 expertise=JCMTReviewerExpertise.INTERMEDIATE), is_update=False)
 
         review_2a = self.db.add_reviewer(
@@ -183,7 +185,8 @@ class JCMTFacilityTestCase(FacilityTestCase):
             note='', note_format=FormatType.PLAIN, note_public=False,
             state=ReviewState.DONE, is_update=False)
         self.db.set_jcmt_review(
-            roles, review_2a, review=null_tuple(JCMTReview)._replace(
+            roles, review_2a, review_state=ReviewState.DONE,
+            review=null_tuple(JCMTReview)._replace(
                 expertise=JCMTReviewerExpertise.NON_EXPERT), is_update=False)
 
         review_2b = self.db.add_reviewer(
@@ -194,7 +197,8 @@ class JCMTFacilityTestCase(FacilityTestCase):
             note='', note_format=FormatType.PLAIN, note_public=False,
             state=ReviewState.DONE, is_update=False)
         self.db.set_jcmt_review(
-            roles, review_2b, review=null_tuple(JCMTReview)._replace(
+            roles, review_2b, review_state=ReviewState.DONE,
+            review=null_tuple(JCMTReview)._replace(
                 expertise=JCMTReviewerExpertise.NON_EXPERT), is_update=False)
 
         # Expected data for tests.
