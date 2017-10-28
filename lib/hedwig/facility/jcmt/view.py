@@ -834,6 +834,9 @@ class JCMT(EAOFacility):
             is_update=(info.reviewer_id is not None))
 
     def _view_review_edit_extra(self, db, reviewer, proposal, info):
+        request = None
+        allocation = None
+
         if info is None:
             if reviewer.id is None:
                 info = null_tuple(JCMTReview)
@@ -842,9 +845,6 @@ class JCMT(EAOFacility):
                     info = db.get_jcmt_review(reviewer.id)
                 except NoSuchRecord:
                     info = null_tuple(JCMTReview)
-
-            request = None
-            allocation = None
 
             # If this is the feedback review, fetch the request and allocation.
             if reviewer.role == JCMTReviewerRole.FEEDBACK:
