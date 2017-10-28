@@ -28,7 +28,8 @@ from ...email.format import render_email_template
 from ...error import DatabaseIntegrityError, NoSuchRecord, UserError
 from ...file.csv import CSVWriter
 from ...view import auth
-from ...view.util import with_proposal, with_call_review, with_review
+from ...view.util import int_or_none, \
+    with_proposal, with_call_review, with_review
 from ...web.util import ErrorPage, \
     HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
@@ -638,8 +639,7 @@ class GenericReview(object):
                 member['person_id'] = int(form['person_id'])
             member['name'] = form.get('name', '')
             if 'person_title' in form:
-                member['title'] = (None if (form['person_title'] == '')
-                                   else int(form['person_title']))
+                member['title'] = int_or_none(form['person_title'])
             member['email'] = form.get('email', '')
 
             if 'submit_link' in form:

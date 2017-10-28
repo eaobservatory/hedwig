@@ -32,7 +32,7 @@ from ...type.util import null_tuple
 from ...view import auth
 from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
     flash, format_datetime, parse_datetime, session, url_for
-from ...view.util import organise_collection, with_verified_admin
+from ...view.util import int_or_none, organise_collection, with_verified_admin
 
 
 class GenericAdmin(object):
@@ -589,8 +589,7 @@ class GenericAdmin(object):
                 member['person_id'] = int(form['person_id'])
             member['name'] = form.get('name', '')
             if 'person_title' in form:
-                member['title'] = (None if (form['person_title'] == '')
-                                   else int(form['person_title']))
+                member['title'] = int_or_none(form['person_title'])
             member['email'] = form.get('email', '')
 
             if 'submit_link' in form:

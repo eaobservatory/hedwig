@@ -44,7 +44,7 @@ from ...view import auth
 from ...web.util import ErrorPage, HTTPError, HTTPForbidden, \
     HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
-from ...view.util import count_words, organise_collection, \
+from ...view.util import count_words, int_or_none, organise_collection, \
     with_proposal, with_verified_admin
 
 CalculationExtra = namedtuple(
@@ -723,8 +723,7 @@ class GenericProposal(object):
                 member['person_id'] = int(form['person_id'])
             member['name'] = form.get('name', '')
             if 'person_title' in form:
-                member['title'] = (None if (form['person_title'] == '')
-                                   else int(form['person_title']))
+                member['title'] = int_or_none(form['person_title'])
             member['email'] = form.get('email', '')
             member['affiliation_id'] = int(form['affiliation_id'])
 

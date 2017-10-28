@@ -32,6 +32,7 @@ from ..type.enum import PermissionType, PersonTitle, ProposalState
 from ..type.simple import Email, \
     Institution, InstitutionLog, Person, ProposalWithCode
 from ..type.util import null_tuple
+from ..view.util import int_or_none
 from ..web.util import flash, session, url_for, url_add_args, url_relative, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
 from .util import organise_collection, with_institution, with_person, \
@@ -454,8 +455,7 @@ class PeopleView(object):
 
             person = person._replace(
                 name=form['person_name'].strip(),
-                title=(None if (form['person_title'] == '')
-                       else int(form['person_title'])),
+                title=int_or_none(form['person_title']),
                 public=('person_public' in form))
             email = form['single_email'].strip()
 
@@ -541,8 +541,7 @@ class PeopleView(object):
         if form is not None:
             person = person._replace(
                 name=form['person_name'].strip(),
-                title=(None if (form['person_title'] == '')
-                       else int(form['person_title'])),
+                title=int_or_none(form['person_title']),
                 public=('person_public' in form))
 
             try:
