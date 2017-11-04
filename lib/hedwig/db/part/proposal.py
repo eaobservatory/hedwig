@@ -767,8 +767,10 @@ class ProposalPart(object):
 
         return ans
 
-    def search_call(self, call_id=None, facility_id=None, semester_id=None,
-                    queue_id=None, type_=None, state=None,
+    def search_call(self, call_id=None, facility_id=None,
+                    semester_id=None, semester_code=None,
+                    queue_id=None, queue_code=None,
+                    type_=None, state=None,
                     has_proposal_state=None, date_close_before=None,
                     with_queue_description=False, with_case_notes=False,
                     with_facility_code=False,
@@ -850,11 +852,17 @@ class ProposalPart(object):
         if semester_id is not None:
             stmt = stmt.where(call.c.semester_id == semester_id)
 
+        if semester_code is not None:
+            stmt = stmt.where(semester.c.code == semester_code)
+
         if queue_id is not None:
             if is_list_like(queue_id):
                 stmt = stmt.where(call.c.queue_id.in_(queue_id))
             else:
                 stmt = stmt.where(call.c.queue_id == queue_id)
+
+        if queue_code is not None:
+            stmt = stmt.where(queue.c.code == queue_code)
 
         if type_ is not None:
             if is_list_like(type_):
