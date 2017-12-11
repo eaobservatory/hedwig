@@ -16,6 +16,7 @@
 
 {% block form_list_review %}
     {% if role_info.jcmt_external %}
+        <li class="separator">Scientific justification</li>
         <li>
             <div class="explanation">
                 {{ render_ext_review_question('jcmt_review_aims') }}
@@ -43,11 +44,13 @@
             </div>
             <label for="jcmt_rating_justification">Justification</label>
             <select name="jcmt_rating_justification">
+                <option value="" {{ 'selected="selected"' | safe if jcmt_review.rating_justification is none }}>Undecided</option>
                 {% for (rating_id, rating_name) in jcmt_ratings_justification.items() %}
                     <option value="{{ rating_id }}" {{ 'selected="selected"' | safe if rating_id == jcmt_review.rating_justification }}>{{ rating_name }}</option>
                 {% endfor %}
             </select>
         </li>
+        <li class="separator">Plan for observing and data reduction</li>
         <li>
             <div class="explanation">
                 {{ render_ext_review_question('jcmt_review_details') }}
@@ -75,6 +78,7 @@
             </div>
             <label for="jcmt_rating_technical">Technical case</label>
             <select name="jcmt_rating_technical">
+                <option value="" {{ 'selected="selected"' | safe if jcmt_review.rating_technical is none }}>Undecided</option>
                 {% for (rating_id, rating_name) in jcmt_ratings_technical.items() %}
                     <option value="{{ rating_id }}" {{ 'selected="selected"' | safe if rating_id == jcmt_review.rating_technical }}>{{ rating_name }}</option>
                 {% endfor %}
@@ -86,6 +90,7 @@
             </div>
             <label for="jcmt_rating_urgency">Urgency</label>
             <select name="jcmt_rating_urgency">
+                <option value="" {{ 'selected="selected"' | safe if jcmt_review.rating_urgency is none }}>Undecided</option>
                 {% for (rating_id, rating_name) in jcmt_ratings_urgency.items() %}
                     <option value="{{ rating_id }}" {{ 'selected="selected"' | safe if rating_id == jcmt_review.rating_urgency }}>{{ rating_name }}</option>
                 {% endfor %}
@@ -100,6 +105,7 @@
                 </div>
                 <label for="text">Additional comments</label>
             {% else %}
+                <li class="separator">{{ 'Review' if role_info.name_review else role_info.name }}</li>
                 <label for="text">Review</label>
             {% endif %}
             <textarea name="text" cols="80" rows="16" {{ 'autofocus="autofocus"' | safe if not role_info.jcmt_external }}>{{ reviewer.review_text if reviewer.review_text is not none }}</textarea>
@@ -124,6 +130,7 @@
         <li>
             <label for="jcmt_expertise">Expertise</label>
             <select name="jcmt_expertise">
+                <option value="" {{ 'selected="selected"' | safe if jcmt_review.expertise is none }}>Undecided</option>
                 {% for (expertise_num, expertise_name) in jcmt_expertise_levels.items() %}
                     <option value="{{ expertise_num }}" {{ 'selected="selected"' | safe if expertise_num == jcmt_review.expertise }}>{{ expertise_name }}</option>
                 {% endfor %}

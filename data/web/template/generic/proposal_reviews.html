@@ -38,6 +38,7 @@
     <table>
         <tr>
             <th>Role</th>
+            <th>State</th>
             <th>Reviewer</th>
             {% for info_column in review_info_columns %}
                 <th>{{ info_column }}</th>
@@ -45,8 +46,8 @@
             <th>Edited</th>
         </tr>
         {% for review in reviews.values() %}
-            {% set show_review = (review.review_text is not none) %}
-            {% set show_note = (review.review_note is not none) %}
+            {% set show_review = (review.review_text is not none_or_whitespace) %}
+            {% set show_note = (review.review_note is not none_or_whitespace) %}
             <tr class="spacer_above">
                 <td {{ ((show_review, show_note) | count_true + 1) | fmt('rowspan="{}"') | safe }}>
                     {% if review.can_edit %}
@@ -54,6 +55,9 @@
                     {% else %}
                         {{ review.role | reviewer_role_name(facility_role_class) }}
                     {% endif %}
+                </td>
+                <td class="{{ review.review_state | review_state_class }}">
+                    {{ review.review_state | review_state_name }}
                 </td>
                 <td>
                     {% if review.can_view %}
@@ -104,7 +108,7 @@
             </tr>
             {% if show_review %}
                 <tr>
-                    <td colspan="{{ review_info_columns | length + 2 }}">
+                    <td colspan="{{ review_info_columns | length + 3 }}">
                         {% block review_text scoped %}
                             {{ review.review_text | format_text(review.review_format) }}
                         {% endblock %}
@@ -113,7 +117,9 @@
             {% endif %}
             {% if show_note %}
                 <tr>
-                    <td colspan="{{ review_info_columns | length + 2 }}">{{ review.review_note | format_text(review.review_note_format) }}</td>
+                    <td colspan="{{ review_info_columns | length + 3 }}">
+                        {{ review.review_note | format_text(review.review_note_format) }}
+                    </td>
                 </tr>
             {% endif %}
         {% endfor %}

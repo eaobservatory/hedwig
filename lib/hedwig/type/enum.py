@@ -839,12 +839,16 @@ class ReviewState(EnumBasic, EnumAvailable, EnumDisplayClass):
     StateInfo = namedtuple(
         'StateInfo', ('name', 'display_class', 'available', 'present'))
 
-    #                        name        class       avail. pres.
+    #       name              class       avail. pres.
     _info = OrderedDict((
-        (NOT_DONE, StateInfo('Not done', 'not_done', True,  False)),
-        (PREPARATION, StateInfo('In preparation', 'not_done', True, True)),
-        (DONE,     StateInfo('Done',     'done',     True,  True)),
-        (ADDABLE,  StateInfo('Addable',  'addable',  False, False)),
+        (NOT_DONE, StateInfo(
+            'Not done',       'not_done', True,  False)),
+        (PREPARATION, StateInfo(
+            'In preparation', 'not_done', True,  True)),
+        (DONE,     StateInfo(
+            'Done',           'done',     True,  True)),
+        (ADDABLE,  StateInfo(
+            'Addable',        'addable',  False, False)),
     ))
 
     @classmethod

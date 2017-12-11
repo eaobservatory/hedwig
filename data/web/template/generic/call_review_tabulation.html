@@ -7,13 +7,13 @@
 
 {% macro render_affiliation_heading(affiliations, sortable=false) %}
     {% for affiliation in affiliations %}
-        <th class="sideways{{ ' sortable sortreverse' if sortable }}{{ ' spacer_left' if loop.first }}" data-sortkey="affiliation_{{ affiliation.id }}"><div><div><span>{{ affiliation.name | abbr(15) }}</span></div></div></th>
+        <th {{ combined_class([('sideways', true), ('sortable sortreverse', sortable), ('spacer_left', loop.first)]) | safe }} data-sortkey="affiliation_{{ affiliation.id }}"><div><div><span>{{ affiliation.name | abbr(15) }}</span></div></div></th>
     {% endfor %}
 {% endmacro %}
 
 {% macro render_affiliation_totals(affiliations, affiliation_totals) %}
     {% for affiliation in affiliations %}
-        <td class="number_right total{{ ' spacer_left' if loop.first }}">
+        <td {{ combined_class([('number_right total', true), ('spacer_left', loop.first)]) | safe }}>
             {% if affiliation.id in affiliation_totals %}
                 {{ affiliation_totals[affiliation.id] | fmt('{:.1f}') }}
             {% else %}
@@ -158,7 +158,7 @@
                                 </tr>
                                 {% for cttee_role in [true, false] %}
                                     {% for review in proposal.reviewers.values_in_role_order(facility_role_class, cttee_role=cttee_role) %}
-                                        <tr {{ 'class="spacer_above"' | safe if loop.first }}>
+                                        <tr {{ combined_class([('spacer_above', loop.first), ('data_provisional', review.review_state is not review_state_done)]) | safe }}>
                                             <td>
                                                 {% if review.can_edit %}
                                                     <a href="{{ url_for('.review_edit', reviewer_id=review.id, referrer='tab') }}">{{ review.role | reviewer_role_name(facility_role_class) }}</a>
@@ -219,7 +219,7 @@
                 {% block row_extra scoped %}
                 {% endblock %}
                 {% for affiliation in affiliations %}
-                    <td class="number_right cell_affiliation{{ ' spacer_left' if loop.first }}">
+                    <td {{ combined_class([('number_right cell_affiliation', true), ('spacer_left', loop.first)]) | safe }}>
                         {% if affiliation.id in proposal.affiliations %}
                             {{ (100.0 * proposal.affiliations[affiliation.id]) | fmt('{:.1f}') }}
                         {% else %}
@@ -237,7 +237,7 @@
             {% block footer_exempt_extra %}
             {% endblock %}
             {% for affiliation in affiliations %}
-                <td class="total{{ ' spacer_left' if loop.first }}">&nbsp;</td>
+                <td {{ combined_class([('total', true), ('spacer_left', loop.first)]) | safe }}>&nbsp;</td>
             {% endfor %}
         </tr>
         <tr>

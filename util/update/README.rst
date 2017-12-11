@@ -4,6 +4,16 @@ Updates Requiring Intervention
 The `util/update` directory contains scripts to assist with updates
 to the Hedwig database which cannot be handled automatically by `Alembic`.
 
+* 2018-05-22: Addition of state column to review table
+
+  A `state` column has been added to the `review` database table.  `Alembic`
+  should create the new column correctly, but you should ensure that the
+  default value (used for the existing records) is 2 (corresponding to
+  `ReviewState.DONE`::
+
+      op.add_column('review', sa.Column(
+          'state', sa.Integer(), nullable=False, server_default='2'))
+
 * 2017-06-08: Addition of state column to message table
 
   A `state` column has been added to the `message` database table.  This new
@@ -19,10 +29,8 @@ to the Hedwig database which cannot be handled automatically by `Alembic`.
     Set the `server_default` argument to 0
     (corresponding to an unknown status)::
 
-        op.add_column(
-            u'message',
-            sa.Column('state', sa.Integer(), nullable=False,
-                      server_default='0'))
+        op.add_column('message', sa.Column(
+            'state', sa.Integer(), nullable=False, server_default='0'))
 
   * Run the `util/update/001_message_state` script to fill the new `state`
     column values.

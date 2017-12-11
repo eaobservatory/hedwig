@@ -22,7 +22,7 @@ from ..config import get_facilities
 from ..email.format import render_email_template
 from ..error import ConsistencyError, FormattedError, NoSuchRecord, UserError
 from ..stats.quartile import label_quartiles
-from ..type.enum import CallState, FormatType, ProposalState
+from ..type.enum import CallState, FormatType, ProposalState, ReviewState
 from ..type.simple import MemberInstitution
 from ..util import get_logger
 
@@ -188,7 +188,8 @@ def send_call_proposal_feedback(db, call_id, proposals, dry_run=False):
     else:
         call_proposals = db.search_proposal(
             call_id=call_id, state=ProposalState.submitted_states(),
-            with_reviewers=True, with_review_info=True)
+            with_reviewers=True, with_review_info=True,
+            with_review_state=ReviewState.DONE)
 
         facility.attach_review_extra(db, call_proposals)
 

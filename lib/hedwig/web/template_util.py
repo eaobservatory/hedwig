@@ -22,6 +22,7 @@ from itertools import groupby
 from itertools import chain as _chain
 import json as json_module
 from operator import attrgetter
+import re
 
 from flask import Markup
 from jinja2.runtime import Undefined
@@ -53,6 +54,21 @@ def register_template_utils(app):
     @app.template_global()
     def create_counter(start_value=1):
         return Counter(start_value)
+
+    @app.template_global()
+    def combined_class(classes):
+        """
+        Takes a sequence of (class, condition) pairs.  Returns a class
+        attribute containing a space-separated class list, if any of the
+        conditions are true, or an empty string otherwise.
+        """
+
+        true_classes = [class_ for (class_, condition) in classes if condition]
+
+        if true_classes:
+            return 'class="{}"'.format(' '.join(true_classes))
+
+        return ''
 
     @app.template_filter()
     def affiliation_type_name(value):
@@ -340,6 +356,13 @@ def register_template_utils(app):
             return MessageState.get_info(value).resettable
         except KeyError:
             return False
+
+    @app.template_test()
+    def none_or_whitespace(value):
+        if value is None:
+            return True
+
+        return re.match('^\s*$', value) is not None
 
     @app.template_test()
     def review_state_done(value):

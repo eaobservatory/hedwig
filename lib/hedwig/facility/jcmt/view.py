@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -25,11 +25,12 @@ import re
 
 from ...compat import url_encode
 from ...error import NoSuchRecord, NoSuchValue, ParseError, UserError
-from ...web.util import HTTPRedirect, flash, url_for
-from ...view.util import organise_collection, with_call_review, with_proposal
+from ...web.util import HTTPError, HTTPRedirect, flash, url_for
+from ...view.util import int_or_none, organise_collection, \
+    with_call_review, with_proposal
 from ...type.collection import ResultTable
 from ...type.enum import AffiliationType, FormatType, \
-    PermissionType, ProposalState
+    PermissionType, ProposalState, ReviewState
 from ...type.simple import FacilityObsInfo, Link, RouteInfo, ValidationMessage
 from ...type.util import null_tuple
 from ..eao.view import EAOFacility
@@ -776,6 +777,10 @@ class JCMT(EAOFacility):
     def _view_review_edit_get(self, db, reviewer, proposal, form):
         """
         Read JCMT-specific review form values.
+
+        :return: a JCMTReview object.
+
+        :raises HTTPError: if a serious parsing error occurs.
         """
 
         role_class = self.get_reviewer_roles()
@@ -792,9 +797,9 @@ class JCMT(EAOFacility):
         if role_info.jcmt_expertise:
             try:
                 jcmt_review = jcmt_review._replace(
-                    expertise=int(form['jcmt_expertise']))
+                    expertise=int_or_none(form['jcmt_expertise']))
             except:
-                raise UserError('Please select an expertise level.')
+                raise HTTPError('Expertise level not understood.')
 
         if role_info.jcmt_external:
             # Read text fields.
@@ -810,21 +815,47 @@ class JCMT(EAOFacility):
             # Read integer fields with try-except to catch parse errors.
             try:
                 jcmt_review = jcmt_review._replace(
-                    rating_justification=int(
+                    rating_justification=int_or_none(
                         form['jcmt_rating_justification']),
-                    rating_technical=int(form['jcmt_rating_technical']),
-                    rating_urgency=int(form['jcmt_rating_urgency']))
+                    rating_technical=int_or_none(
+                        form['jcmt_rating_technical']),
+                    rating_urgency=int_or_none(
+                        form['jcmt_rating_urgency']))
             except:
-                raise UserError('Please select a rating from each scale.')
+                raise HTTPError('Rating scale not understood.')
 
         return jcmt_review
 
     def _view_review_edit_save(self, db, reviewer, proposal, info):
         """
         Save JCMT-specific review parts.
+
+        :raises UserError: in the event of a problem with the input.
         """
 
         role_class = self.get_reviewer_roles()
+        role_info = role_class.get_info(reviewer.role)
+
+        # Check required fields are present.  Leave validating enum values
+        # to the db.set_jcmt_review method.
+        is_done = (reviewer.review_state == ReviewState.DONE)
+
+        if role_info.jcmt_expertise:
+            if (is_done and (info.expertise is None)):
+                raise UserError('Please select an expertise level.')
+
+        if role_info.jcmt_external:
+            if (is_done and (info.rating_justification is None)):
+                raise UserError(
+                    'Please select a rating for the justification.')
+
+            if (is_done and (info.rating_technical is None)):
+                raise UserError(
+                    'Please select a rating for the technical case.')
+
+            if (is_done and (info.rating_urgency is None)):
+                raise UserError(
+                    'Please select an option from the urgency scale.')
 
         db.set_jcmt_review(
             role_class=role_class,

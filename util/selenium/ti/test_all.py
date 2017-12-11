@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1612,12 +1612,14 @@ class IntegrationTest(DummyConfigTestCase):
             'My opinion of this proposal is...')
         self.browser.find_element_by_name('rating').send_keys('50')
 
+        self.browser.find_element_by_name('done').click()
+
         self._save_screenshot(self.review_image_root, 'review_edit')
 
         self.browser.find_element_by_name('submit').click()
 
         self.assertIn(
-            'The review has been saved.',
+            'The review has been saved and marked as done.',
             self.browser.page_source)
 
     def view_person_reviews(self):
@@ -1724,9 +1726,13 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_name('text').send_keys(
             'This is an example feedback comment.')
 
+        self.browser.find_element_by_name('done').click()
+
         self.browser.find_element_by_name('submit').click()
 
-        self.assertIn('The review has been saved.', self.browser.page_source)
+        self.assertIn(
+            'The review has been saved and marked as done.',
+            self.browser.page_source)
 
         # Check that the feedback approval page works.
         self.browser.get(review_process_url)

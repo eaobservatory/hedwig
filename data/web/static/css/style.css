@@ -149,6 +149,10 @@ td.review_addable {
     background: #4F4;
 }
 
+tr.data_provisional > td {
+    color: #888;
+}
+
 td.no_change {
     color: #888;
 }

@@ -1,6 +1,11 @@
 {% extends 'layout.html' %}
 {% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal.id))] %}
 {% set help_link=url_for('help.review_page', page_name='external') %}
+{% if scripts is defined %}
+    {% set scripts=['edit_review'] + scripts %}
+{% else %}
+    {% set scripts=['edit_review'] %}
+{% endif %}
 {% from 'macro/proposal_summary.html' import render_proposal_summary %}
 
 {% block content %}
@@ -53,6 +58,7 @@
 <form method="POST" action="{{ target }}">
     <ol>
         {% block form_list_review %}
+            <li class="separator">{{ 'Review' if role_info.name_review else role_info.name }}</li>
             {% if role_info.text %}
                 <li>
                     <label for="text">Review</label>
@@ -81,6 +87,7 @@
                 <li>
                     <label for="assessment">Assessment</label>
                     <select name="assessment">
+                        <option value="" {{ 'selected="selected"' | safe if reviewer.review_assessment is none }}>Undecided</option>
                         {% for (assessment_id, assessment_name) in assessment_options.items() %}
                             <option value="{{ assessment_id }}" {{ 'selected="selected"' | safe if assessment_id == reviewer.review_assessment }}>{{ assessment_name }}</option>
                         {% endfor %}
@@ -106,7 +113,7 @@
                         {% endblock %}
                     </div>
                     <label for="rating">Rating</label>
-                    <input type="number" name="rating" value="{{ reviewer.review_rating if reviewer.review_rating is not none }}" min="0" max="100" step="1" required="required" {{ 'autofocus="autofocus"' | safe if not role_info.text }} />
+                    <input type="number" name="rating" value="{{ reviewer.review_rating if reviewer.review_rating is not none }}" min="0" max="100" step="1" class="req_if_done" {{ 'autofocus="autofocus"' | safe if not role_info.text }} />
                 </li>
             {% endif %}
             {% if role_info.weight %}
@@ -128,12 +135,23 @@
                         {% endblock %}
                     </div>
                     <label for="weight">Weighting</label>
-                    <input type="number" name="weight" value="{{ reviewer.review_weight if reviewer.review_weight is not none }}" min="0" max="100" step="1" required="required" />
+                    <input type="number" name="weight" value="{{ reviewer.review_weight if reviewer.review_weight is not none }}" min="0" max="100" step="1" class="req_if_done" />
                 </li>
             {% endif %}
         {% endblock %}
         {% block form_list_extra %}
         {% endblock %}
+        <li class="separator">Status and submission</li>
+        <li>
+            <div class="explanation">
+                Please indicate whether the review is complete.
+                If you leave the box unchecked, you will be able to save
+                the review in a draft form without completing all
+                parts of it.
+            </div>
+            <label for="done">Review complete</label>
+            <input type="checkbox" name="done" value="1" {{ 'checked="checked"' | safe if reviewer.review_state is review_state_done }} />
+        </li>
         <li>
             <input type="submit" value="Save" name="submit" />
             {% if referrer is not none %}

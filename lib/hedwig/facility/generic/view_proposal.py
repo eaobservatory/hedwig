@@ -32,7 +32,7 @@ from ...type.collection import PrevProposalCollection, ResultCollection, \
 from ...type.enum import AffiliationType, AttachmentState, \
     CallState, FigureType, FormatType, \
     GroupType, MessageThreadType, \
-    PermissionType, PersonTitle, ProposalState, PublicationType
+    PermissionType, PersonTitle, ProposalState, PublicationType, ReviewState
 from ...type.simple import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
     MemberInstitution, PrevProposal, PrevProposalPub, \
@@ -1685,6 +1685,7 @@ class GenericProposal(object):
 
         reviewers = db.search_reviewer(
             proposal_id=proposal.id, role=role_class.FEEDBACK,
+            review_state=ReviewState.DONE,
             with_review=True, with_review_text=True)
 
         # Show the decision note if viewing as an administrator.

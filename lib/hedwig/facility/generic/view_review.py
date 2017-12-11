@@ -1024,12 +1024,15 @@ class GenericReview(object):
         if reviewer is None:
             is_new_reviewer = True
             is_own_review = True
+            is_update = False
             target = url_for('.proposal_review_new', proposal_id=proposal.id,
                              reviewer_role=reviewer_role)
             reviewer = null_tuple(Reviewer)._replace(role=reviewer_role)
+
         else:
             is_new_reviewer = False
             is_own_review = (reviewer.person_id == session['person']['id'])
+            is_update = ReviewState.is_present(reviewer.review_state)
             target = url_for('.review_edit', reviewer_id=reviewer.id)
 
         referrer = args.get('referrer')
@@ -1043,68 +1046,66 @@ class GenericReview(object):
         extra_info = None
 
         if form is not None:
+            # Read form inputs first.
+            is_done = 'done' in form
+            referrer = form.get('referrer', None)
+
             try:
-                # Read form inputs first.
-                referrer = form.get('referrer', None)
-
-                if role_info.text:
-                    reviewer = reviewer._replace(
-                        review_text=form['text'],
-                        review_format=FormatType.PLAIN)
-
                 if role_info.assessment:
-                    try:
-                        reviewer = reviewer._replace(
-                            review_assessment=int(form['assessment']))
-                    except:
-                        raise UserError('Please select an assessment.')
+                    reviewer = reviewer._replace(
+                        review_assessment=int_or_none(form['assessment']))
 
                 if role_info.rating:
-                    try:
-                        reviewer = reviewer._replace(
-                            review_rating=int(form['rating']))
-                    except:
-                        raise UserError('Please provide an integer rating.')
+                    reviewer = reviewer._replace(
+                        review_rating=int_or_none(form['rating']))
 
                 if role_info.weight:
-                    try:
-                        reviewer = reviewer._replace(
-                            review_weight=int(form['weight']))
-                    except:
-                        raise UserError('Please provide an integer '
-                                        'self-assessment weighting.')
+                    reviewer = reviewer._replace(
+                        review_weight=int_or_none(form['weight']))
 
-                if role_info.note:
-                    # If this is our own review, the browser should have
-                    # sent the note text field.  Otherwise we preserve the
-                    # note field, only setting it if it is currently undefined,
-                    # as not to do so would trigger an error.
-                    if is_own_review:
-                        reviewer = reviewer._replace(
-                            review_note=form['note'],
-                            review_note_format=FormatType.PLAIN,
-                            review_note_public=('note_public' in form))
-                    elif reviewer.review_note is None:
-                        reviewer = reviewer._replace(
-                            review_note='',
-                            review_note_format=FormatType.PLAIN,
-                            review_note_public=False)
+            except:
+                raise HTTPError('Form value not understood.')
 
+            if role_info.text:
+                reviewer = reviewer._replace(
+                    review_text=form['text'],
+                    review_format=FormatType.PLAIN)
+
+            if role_info.note:
+                # If this is our own review, the browser should have
+                # sent the note text field.  Otherwise we preserve the
+                # note field, only setting it if it is currently undefined,
+                # as not to do so would trigger an error.
+                if is_own_review:
+                    reviewer = reviewer._replace(
+                        review_note=form['note'],
+                        review_note_format=FormatType.PLAIN,
+                        review_note_public=('note_public' in form))
+                elif reviewer.review_note is None:
+                    reviewer = reviewer._replace(
+                        review_note='',
+                        review_note_format=FormatType.PLAIN,
+                        review_note_public=False)
+
+            try:
                 extra_info = self._view_review_edit_get(
                     db, reviewer, proposal, form)
 
-                # Validate the form inputs.
+                # Validate the form inputs, but leave checking of enum values
+                # to the db.set_review method.
                 if role_info.assessment:
-                    if not Assessment.is_valid(reviewer.review_assessment):
-                        raise UserError('Selected assessment not recognized.')
+                    if (is_done and (reviewer.review_assessment is None)):
+                        raise UserError('Please select an assessment value.')
 
                 if role_info.rating:
-                    if not (0 <= reviewer.review_rating <= 100):
+                    if (is_done if (reviewer.review_rating is None)
+                            else not (0 <= reviewer.review_rating <= 100)):
                         raise UserError('Please give a rating between '
                                         '0 and 100.')
 
                 if role_info.weight:
-                    if not (0 <= reviewer.review_weight <= 100):
+                    if (is_done if (reviewer.review_weight is None)
+                            else not (0 <= reviewer.review_weight <= 100)):
                         raise UserError('Please give a self-assessment '
                                         'weighting between 0 and 100.')
 
@@ -1119,6 +1120,9 @@ class GenericReview(object):
                     # setting the review.
                     target = url_for('.review_edit', reviewer_id=reviewer.id)
 
+                reviewer = reviewer._replace(review_state=(
+                    ReviewState.DONE if is_done else ReviewState.PREPARATION))
+
                 self._view_review_edit_save(db, reviewer, proposal, extra_info)
 
                 db.set_review(
@@ -1132,12 +1136,11 @@ class GenericReview(object):
                     note=reviewer.review_note,
                     note_format=reviewer.review_note_format,
                     note_public=reviewer.review_note_public,
-                    state=ReviewState.DONE,
-                    is_update=(
-                        (not is_new_reviewer)
-                        and ReviewState.is_present(reviewer.review_state)))
+                    state=reviewer.review_state,
+                    is_update=is_update)
 
-                flash('The review has been saved.')
+                flash('The review has been saved and marked as {}.',
+                      ReviewState.get_name(reviewer.review_state).lower())
 
                 # Determine where to redirect the user.  Look for a
                 # "referrer" value identifying a suitable page.
@@ -1212,6 +1215,9 @@ class GenericReview(object):
 
         :return: an object containing any additional information which
             the facility class requires.
+
+        :raises HTTPError: if a serious parsing error occurs.
+            (Current input can not be shown again in the form at this point.)
         """
 
         return None
@@ -1221,7 +1227,8 @@ class GenericReview(object):
         Placeholder for facility-specific method to parse previously-read
         form inputs and store them in the database.
 
-        :raises UserError: in  the event of a problem with the input
+        :raises UserError: in the event of a problem with the input.
+            (Current input will be shown again in the form for correction.)
         """
 
         pass

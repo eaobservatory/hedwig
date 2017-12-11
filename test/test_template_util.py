@@ -34,9 +34,9 @@ from .dummy_app import WebAppTestCase
 
 class TemplateUtilTestCase(WebAppTestCase):
     def test_global_counter(self):
-        cc = self.app.jinja_env.globals['create_counter']
+        g = self.app.jinja_env.globals['create_counter']
 
-        c = cc(10)
+        c = g(10)
         self.assertIsInstance(c, Counter)
         self.assertEqual(c.value, 10)
 
@@ -45,6 +45,14 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(c(), 12)
 
         self.assertEqual(c.value, 13)
+
+    def test_global_combined_class(self):
+        g = self.app.jinja_env.globals['combined_class']
+
+        self.assertEqual(g([('a', True), ('b', True)]), 'class="a b"')
+        self.assertEqual(g([('a', False), ('b', True)]), 'class="b"')
+        self.assertEqual(g([('a', True), ('b', False)]), 'class="a"')
+        self.assertEqual(g([('a', False), ('b', False)]), '')
 
     def test_filter_assessment(self):
         f = self.app.jinja_env.filters['assessment_name']
@@ -271,6 +279,16 @@ class TemplateUtilTestCase(WebAppTestCase):
 
         self.assertTrue(t(BaseCallType.STANDARD, BaseCallType))
         self.assertFalse(t(BaseCallType.IMMEDIATE, BaseCallType))
+
+    def test_test_none_or_whitespace(self):
+        t = self.app.jinja_env.tests['none_or_whitespace']
+
+        self.assertTrue(t(None))
+        self.assertTrue(t(''))
+        self.assertTrue(t(' \t '))
+        self.assertFalse(t('x'))
+        self.assertFalse(t(' x'))
+        self.assertFalse(t('x '))
 
     def test_test_message_state(self):
         t = self.app.jinja_env.tests['message_state_resettable']

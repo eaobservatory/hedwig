@@ -312,8 +312,6 @@ class ReviewPart(object):
                 'review_{}'.format(x.name): None
                 for x in review.columns if x != review.c.reviewer_id})
 
-            default['review_state'] = None
-
         if (with_review or (review_state is not None)):
             select_from = select_from.outerjoin(review)
 
@@ -348,7 +346,10 @@ class ReviewPart(object):
             stmt = stmt.where(reviewer.c.person_id == person_id)
 
         if review_state is not None:
-            stmt = stmt.where(self._expr_review_state() == review_state)
+            if is_list_like(review_state):
+                stmt = stmt.where(self._expr_review_state().in_(review_state))
+            else:
+                stmt = stmt.where(self._expr_review_state() == review_state)
 
         if call_id is not None:
             if is_list_like(call_id):
