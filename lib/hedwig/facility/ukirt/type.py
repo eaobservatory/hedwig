@@ -76,16 +76,20 @@ class UKIRTCallType(BaseCallType):
 
 class UKIRTInstrument(EnumBasic, EnumAvailable):
     WFCAM = 1
-    UFTI = 2
-    UIST = 3
+    CGS4 = 2
+    MICHELLE = 3
+    UFTI = 4
+    UIST = 5
 
     InstrumentInfo = namedtuple(
         'InstrumentInfo', ('name', 'available'))
 
     _info = OrderedDict((
-        (WFCAM, InstrumentInfo('WFCAM', True)),
-        (UFTI,  InstrumentInfo('UFTI', True)),
-        (UIST,  InstrumentInfo('UIST', True)),
+        (WFCAM,    InstrumentInfo('WFCAM', True)),
+        (CGS4,     InstrumentInfo('CGS4', True)),
+        (MICHELLE, InstrumentInfo('Michelle', True)),
+        (UFTI,     InstrumentInfo('UFTI', True)),
+        (UIST,     InstrumentInfo('UIST', True)),
     ))
 
 
