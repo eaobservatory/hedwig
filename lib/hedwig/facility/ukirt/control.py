@@ -108,7 +108,8 @@ class UKIRTPart(object):
             return self._sync_records(
                 conn, ukirt_allocation, ukirt_allocation.c.proposal_id,
                 proposal_id, records, unique_columns=(
-                    ukirt_allocation.c.instrument,))
+                    ukirt_allocation.c.instrument,
+                    ukirt_allocation.c.brightness))
 
     def sync_ukirt_proposal_request(self, proposal_id, records,
                                     _test_skip_check=False):
@@ -127,4 +128,5 @@ class UKIRTPart(object):
             return self._sync_records(
                 conn, ukirt_request, ukirt_request.c.proposal_id,
                 proposal_id, records, unique_columns=(
-                    ukirt_request.c.instrument,))
+                    ukirt_request.c.instrument,
+                    ukirt_request.c.brightness))

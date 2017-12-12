@@ -6,7 +6,7 @@
 {% if ukirt_allocations %}
     <h2>Approved Observing</h2>
 
-    {{ render_request_display(ukirt_allocations) }}
+    {{ render_request_display(ukirt_allocations.to_table()) }}
 
     <p>
         Times are shown in hours.

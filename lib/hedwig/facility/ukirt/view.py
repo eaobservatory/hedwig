@@ -31,7 +31,7 @@ from ...type.util import null_tuple
 from ..eao.view import EAOFacility
 from .calculator_imag_phot import ImagPhotCalculator
 from .type import \
-    UKIRTCallType, UKIRTInstrument, \
+    UKIRTBrightness, UKIRTCallType, UKIRTInstrument, \
     UKIRTRequest, UKIRTRequestCollection, UKIRTRequestTotal
 
 
@@ -137,13 +137,13 @@ class UKIRT(EAOFacility):
             db, call, can, with_extra)
 
         exempt = UKIRTRequestTotal(
-            total=0.0, instrument=defaultdict(float))
+            total=0.0, instrument=defaultdict(float), brightness=defaultdict(float))
         accepted = UKIRTRequestTotal(
-            total=0.0, instrument=defaultdict(float))
+            total=0.0, instrument=defaultdict(float), brightness=defaultdict(float))
         total = UKIRTRequestTotal(
-            total=0.0, instrument=defaultdict(float))
+            total=0.0, instrument=defaultdict(float), brightness=defaultdict(float))
         original = UKIRTRequestTotal(
-            total=0.0, instrument=defaultdict(float))
+            total=0.0, instrument=defaultdict(float), brightness=defaultdict(float))
 
         accepted_affiliation = defaultdict(float)
         total_affiliation = defaultdict(float)
@@ -211,6 +211,7 @@ class UKIRT(EAOFacility):
 
         tabulation.update({
             'ukirt_instruments': UKIRTInstrument.get_options(),
+            'ukirt_brightnesses': UKIRTBrightness.get_options(),
             'ukirt_exempt_total': exempt,
             'ukirt_accepted_total': accepted,
             'ukirt_request_total': total,
@@ -268,6 +269,7 @@ class UKIRT(EAOFacility):
             'message': message,
             'requests': records,
             'instruments': UKIRTInstrument.get_options(),
+            'brightnesses': UKIRTBrightness.get_options(),
         }
 
     def _read_request_form(self, proposal, form, skip_blank_time=False):
@@ -298,10 +300,12 @@ class UKIRT(EAOFacility):
                 pass
 
             instrument = form['instrument_' + id_]
+            brightness = form['brightness_' + id_]
 
             destination[request_id] = UKIRTRequest(
                 request_id, proposal.id,
                 instrument=int(instrument),
+                brightness=int(brightness),
                 time=request_time)
 
         return organise_collection(
@@ -352,6 +356,7 @@ class UKIRT(EAOFacility):
             'is_prefilled': is_prefilled,
             'allocations': allocations,
             'instruments': UKIRTInstrument.get_options(),
+            'brightnesses': UKIRTBrightness.get_options(),
         }
 
     def get_feedback_extra(self, db, proposal):

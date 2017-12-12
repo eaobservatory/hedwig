@@ -10,6 +10,7 @@ $(document).ready(function () {
         var newrow = $('#requestrow_template').clone();
         newrow.attr('id', 'requestrow_' + nid);
         newrow.find('[name=instrument]').attr('name', 'instrument_' + nid);
+        newrow.find('[name=brightness]').attr('name', 'brightness_' + nid);
         newrow.find('[name=time]').attr('name', 'time_' + nid);
         var deletelink = newrow.find('#delete_template');
         deletelink.attr('id', 'delete_' + nid);

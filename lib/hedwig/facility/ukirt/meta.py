@@ -35,8 +35,9 @@ ukirt_allocation = Table(
            ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
     Column('instrument', Integer, nullable=False),
+    Column('brightness', Integer, nullable=False),
     Column('time', Float, nullable=False),
-    UniqueConstraint('proposal_id', 'instrument'),
+    UniqueConstraint('proposal_id', 'instrument', 'brightness'),
     **table_opts)
 
 ukirt_request = Table(
@@ -47,6 +48,7 @@ ukirt_request = Table(
            ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
     Column('instrument', Integer, nullable=False),
+    Column('brightness', Integer, nullable=False),
     Column('time', Float, nullable=False),
-    UniqueConstraint('proposal_id', 'instrument'),
+    UniqueConstraint('proposal_id', 'instrument', 'brightness'),
     **table_opts)

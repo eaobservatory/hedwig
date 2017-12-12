@@ -14,7 +14,7 @@
     </li>
     <li>
         <div class="form_panel">
-            {{ render_request_display(original_request) }}
+            {{ render_request_display(original_request.to_table()) }}
         </div>
     </li>
     <li class="separator">UKIRT Time Allocation</li>
@@ -30,7 +30,7 @@
     </li>
     <li>
         <div class="form_panel">
-            {{ render_request_table(allocations, instruments, description='allocation') }}
+            {{ render_request_table(allocations, instruments, brightnesses, description='allocation') }}
         </div>
     </li>
 {% endblock %}

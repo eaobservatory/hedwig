@@ -5,5 +5,5 @@
 {% from 'ukirt/macro/request_table.html' import render_request_table %}
 
 {% block request_form %}
-    {{ render_request_table(requests, instruments) }}
+    {{ render_request_table(requests, instruments, brightnesses) }}
 {% endblock %}

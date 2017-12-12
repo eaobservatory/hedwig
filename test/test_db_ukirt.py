@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from hedwig.error import ConsistencyError
 from hedwig.facility.ukirt.type import \
-    UKIRTInstrument, \
+    UKIRTBrightness, UKIRTInstrument, \
     UKIRTRequest, UKIRTRequestCollection
 
 from .dummy_db import DBTestCase
@@ -38,9 +38,13 @@ class DBUKIRTTest(DBTestCase):
 
         records = UKIRTRequestCollection()
         records[1] = UKIRTRequest(
-            None, None, instrument=UKIRTInstrument.WFCAM, time=10.0)
+            None, None,
+            instrument=UKIRTInstrument.WFCAM,
+            brightness=UKIRTBrightness.DARK, time=10.0)
         records[2] = UKIRTRequest(
-            None, None, instrument=UKIRTInstrument.UFTI, time=20.0)
+            None, None,
+            instrument=UKIRTInstrument.UFTI,
+            brightness=UKIRTBrightness.BRIGHT, time=20.0)
 
         self.db.sync_ukirt_proposal_request(proposal_id, records)
 
@@ -57,6 +61,7 @@ class DBUKIRTTest(DBTestCase):
         self.assertEqual(request[0].id, request_id[0])
         self.assertEqual(request[0].proposal_id, proposal_id)
         self.assertEqual(request[0].instrument, UKIRTInstrument.WFCAM)
+        self.assertEqual(request[0].brightness, UKIRTBrightness.DARK)
         self.assertEqual(request[0].time, 10.0)
 
         self.assertIsInstance(request_id[1], int)
@@ -65,6 +70,7 @@ class DBUKIRTTest(DBTestCase):
         self.assertEqual(request[1].id, request_id[1])
         self.assertEqual(request[1].proposal_id, proposal_id)
         self.assertEqual(request[1].instrument, UKIRTInstrument.UFTI)
+        self.assertEqual(request[1].brightness, UKIRTBrightness.BRIGHT)
         self.assertEqual(request[1].time, 20.0)
 
     def test_ukirt_allocation(self):
@@ -76,9 +82,13 @@ class DBUKIRTTest(DBTestCase):
 
         records = UKIRTRequestCollection()
         records[1] = UKIRTRequest(
-            None, None, instrument=UKIRTInstrument.WFCAM, time=10.0)
+            None, None,
+            instrument=UKIRTInstrument.WFCAM,
+            brightness=UKIRTBrightness.DARK, time=10.0)
         records[2] = UKIRTRequest(
-            None, None, instrument=UKIRTInstrument.UFTI, time=20.0)
+            None, None,
+            instrument=UKIRTInstrument.UFTI,
+            brightness=UKIRTBrightness.GREY, time=20.0)
 
         self.db.sync_ukirt_proposal_allocation(proposal_id, records)
 
@@ -95,6 +105,7 @@ class DBUKIRTTest(DBTestCase):
         self.assertEqual(allocation[0].id, allocation_id[0])
         self.assertEqual(allocation[0].proposal_id, proposal_id)
         self.assertEqual(allocation[0].instrument, UKIRTInstrument.WFCAM)
+        self.assertEqual(allocation[0].brightness, UKIRTBrightness.DARK)
         self.assertEqual(allocation[0].time, 10.0)
 
         self.assertIsInstance(allocation_id[1], int)
@@ -103,4 +114,5 @@ class DBUKIRTTest(DBTestCase):
         self.assertEqual(allocation[1].id, allocation_id[1])
         self.assertEqual(allocation[1].proposal_id, proposal_id)
         self.assertEqual(allocation[1].instrument, UKIRTInstrument.UFTI)
+        self.assertEqual(allocation[1].brightness, UKIRTBrightness.GREY)
         self.assertEqual(allocation[1].time, 20.0)

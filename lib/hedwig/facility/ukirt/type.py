@@ -22,7 +22,7 @@ from collections import OrderedDict, namedtuple
 
 from ...error import UserError
 from ...type.base import CollectionByProposal, EnumAvailable, EnumBasic
-from ...type.collection import ResultCollection
+from ...type.collection import ResultCollection, ResultTable
 from ...type.enum import BaseCallType
 from .meta import ukirt_request
 
@@ -32,9 +32,25 @@ UKIRTRequest = namedtuple(
     [x.name for x in ukirt_request.columns])
 
 
+class UKIRTBrightness(EnumBasic, EnumAvailable):
+    DARK = 1
+    GREY = 2
+    BRIGHT = 3
+
+    BrightnessInfo = namedtuple(
+        'BrightnessInfo',
+        ('name', 'available'))
+
+    _info = OrderedDict((
+        (DARK,   BrightnessInfo('Dark',   True)),
+        (GREY,   BrightnessInfo('Grey',   True)),
+        (BRIGHT, BrightnessInfo('Bright', True)),
+    ))
+
+
 class UKIRTRequestTotal(namedtuple(
         'UKIRTRequestTotal',
-        ('total', 'instrument'))):
+        ('total', 'brightness', 'instrument'))):
     pass
 
 
@@ -91,54 +107,113 @@ class UKIRTRequestCollection(ResultCollection, CollectionByProposal):
             if not UKIRTInstrument.is_valid(record.instrument):
                 raise UserError('Instrument not recognised.')
 
+            if not UKIRTBrightness.is_valid(record.brightness):
+                raise UserError('Brightness not recognized.')
+
             if not isinstance(record.time, float):
                 raise UserError(
                     'Please enter time as a valid number for {}.'.format(
                         UKIRTInstrument.get_name(record.instrument)))
 
             request_tuple = (
-                record.instrument,)
+                record.instrument, record.brightness)
 
             if request_tuple in requests:
                 raise UserError(
-                    'There are multiple entries for {}.'.format(
-                        UKIRTInstrument.get_name(record.instrument)))
+                    'There are multiple entries for {}, {}.'.format(
+                        UKIRTInstrument.get_name(record.instrument),
+                        UKIRTBrightness.get_name(record.brightness)))
 
             requests.add(request_tuple)
+
+    def to_table(self):
+        """
+        Rearrange the records into a table by instrument and brightness.
+
+        Returns: ResultTable(table, brightness values, instruments)
+        """
+
+        brightnesses = set()
+        instruments = {}
+        total = {}
+
+        for request in self.values():
+            brightnesses.add(request.brightness)
+
+            instrument = instruments.get(request.instrument)
+            if instrument is None:
+                instrument = instruments[request.instrument] = {}
+
+            instrument[request.brightness] = instrument.get(
+                request.brightness, 0.0) + request.time
+
+            instrument[None] = instrument.get(
+                None, 0.0) + request.time
+
+            total[request.brightness] = total.get(
+                request.brightness, 0.0) + request.time
+
+        # Include weather total if there are multiple instruments.
+        if len(instruments) > 1:
+            total[None] = sum(total.values())
+            instruments[None] = total
+
+        return ResultTable(
+            instruments,
+            OrderedDict([(k, v.name)
+                         for (k, v) in UKIRTBrightness._info.items()
+                         if v.available or k in brightnesses]),
+            OrderedDict([(k, v.name)
+                         for (k, v) in UKIRTInstrument._info.items()
+                         if k in instruments]))
 
     def get_total(self):
         """
         Get request totals.
         """
 
+        brightnesses = {}
         instruments = {}
         total = 0.0
 
         for request in self.values():
             time = request.time
 
+            brightness = request.brightness
+            brightness_info = UKIRTBrightness.get_info(brightness)
+            if not brightness_info.available:
+                brightness = None
+
             instrument = request.instrument
             if not UKIRTInstrument.get_info(instrument).available:
                 instrument = None
 
             total += time
+            brightnesses[brightness] = brightnesses.get(brightness, 0.0) + time
             instruments[instrument] = instruments.get(instrument, 0.0) + time
 
-        return UKIRTRequestTotal(total=total, instrument=instruments)
+        return UKIRTRequestTotal(
+            total=total, brightness=brightnesses, instrument=instruments)
 
     def to_sorted_list(self):
         """
-        Get sorted list of requests with instrument as name.
+        Get sorted list of requests with brightness/instrument as name.
         """
 
         instruments = UKIRTInstrument.get_options(include_unavailable=True)
+        brightnesses = UKIRTBrightness.get_options(include_unavailable=True)
+
+        # TODO iterate over brightness!
 
         sorted_list = []
 
         for (instrument, instrument_name) in instruments.items():
-            for request in self.values():
-                if (request.instrument == instrument):
-                    sorted_list.append(request._replace(
-                        instrument=instrument_name))
+            for (brightness, brightness_name) in brightnesses.items():
+                for request in self.values():
+                    if ((request.instrument == instrument)
+                            and (request.brightness == brightness)):
+                        sorted_list.append(request._replace(
+                            instrument=instrument_name,
+                            brightness=brightness_name))
 
         return sorted_list

@@ -11,7 +11,7 @@
                 This proposal does not yet have an observing request.
             </p>
         {% else %}
-            {{ render_request_display(requests) }}
+            {{ render_request_display(requests.to_table()) }}
         {% endif %}
 
         {% if can_edit %}

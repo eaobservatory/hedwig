@@ -23,13 +23,27 @@ from collections import OrderedDict
 from hedwig.compat import string_type
 from hedwig.error import UserError
 from hedwig.facility.ukirt.type import \
-    UKIRTInstrument, \
+    UKIRTBrightness, UKIRTInstrument, \
     UKIRTRequest, UKIRTRequestCollection, UKIRTRequestTotal
 
 from .compat import TestCase
 
 
 class UKIRTTypeTestCase(TestCase):
+    def test_brightness(self):
+        options = UKIRTBrightness.get_options()
+        self.assertIsInstance(options, OrderedDict)
+
+        self.assertGreater(len(options), 2)
+
+        for (brightness, brightness_name) in options.items():
+            self.assertIsInstance(brightness, int)
+            self.assertIsInstance(brightness_name, string_type)
+            self.assertTrue(UKIRTBrightness.is_valid(brightness))
+
+        self.assertFalse(UKIRTBrightness.is_valid(0))
+        self.assertFalse(UKIRTBrightness.is_valid(999))
+
     def test_instrument(self):
         options = UKIRTInstrument.get_options()
         self.assertIsInstance(options, OrderedDict)
@@ -49,20 +63,36 @@ class UKIRTTypeTestCase(TestCase):
         self.assertIsInstance(c, OrderedDict)
 
         # Add some rows to the collection.
-        c[1] = UKIRTRequest(1, 0, instrument=UKIRTInstrument.WFCAM, time=2.0)
-        c[2] = UKIRTRequest(2, 0, instrument=UKIRTInstrument.UFTI, time=5.0)
+        c[1] = UKIRTRequest(
+            1, 0, instrument=UKIRTInstrument.WFCAM,
+            brightness=UKIRTBrightness.DARK, time=2.0)
+        c[2] = UKIRTRequest(
+            2, 0, instrument=UKIRTInstrument.UFTI,
+            brightness=UKIRTBrightness.BRIGHT, time=5.0)
 
         c.validate()
 
-        c[3] = UKIRTRequest(3, 0, instrument=999, time=6.0)
+        c[3] = UKIRTRequest(
+            3, 0, instrument=999,
+            brightness=UKIRTBrightness.DARK, time=6.0)
         with self.assertRaisesRegex(UserError, 'Instrument not recognised'):
             c.validate()
 
-        c[3] = UKIRTRequest(3, 0, instrument=UKIRTInstrument.WFCAM, time=6.0)
+        c[3] = UKIRTRequest(
+            3, 0, instrument=UKIRTInstrument.UIST,
+            brightness=999, time=7.0)
+        with self.assertRaisesRegex(UserError, 'Brightness not recognized'):
+            c.validate()
+
+        c[3] = UKIRTRequest(
+            3, 0, instrument=UKIRTInstrument.WFCAM,
+            brightness=UKIRTBrightness.DARK, time=6.0)
         with self.assertRaisesRegex(UserError, 'multiple entries'):
             c.validate()
 
-        c[3] = UKIRTRequest(3, 0, instrument=UKIRTInstrument.UIST, time='one')
+        c[3] = UKIRTRequest(
+            3, 0, instrument=UKIRTInstrument.UIST,
+            brightness=UKIRTBrightness.DARK, time='one')
         with self.assertRaisesRegex(UserError, 'time as a valid number'):
             c.validate()
 
@@ -75,9 +105,12 @@ class UKIRTTypeTestCase(TestCase):
 
         self.assertEqual(l[0].id, 1)
         self.assertEqual(l[0].instrument, 'WFCAM')
+        self.assertEqual(l[0].brightness, 'Dark')
         self.assertEqual(l[0].time, 2.0)
 
         self.assertEqual(l[1].id, 2)
+        self.assertEqual(l[1].instrument, 'UFTI')
+        self.assertEqual(l[1].brightness, 'Bright')
         self.assertEqual(l[1].time, 5.0)
 
         # Test the `get_total` method.
@@ -87,4 +120,9 @@ class UKIRTTypeTestCase(TestCase):
         self.assertEqual(t.total, 7.0)
         self.assertEqual(t.instrument, {
             UKIRTInstrument.WFCAM: 2.0,
-            UKIRTInstrument.UFTI: 5.0})
+            UKIRTInstrument.UFTI: 5.0,
+        })
+        self.assertEqual(t.brightness, {
+            UKIRTBrightness.DARK: 2.0,
+            UKIRTBrightness.BRIGHT: 5.0,
+        })
