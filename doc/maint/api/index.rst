@@ -15,6 +15,7 @@ Software Documentation
     error
     facility_generic
     facility_jcmt
+    facility_ukirt
     facility_example
     file
     format

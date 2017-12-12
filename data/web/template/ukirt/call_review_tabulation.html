@@ -1,0 +1,51 @@
+{% extends 'generic/call_review_tabulation.html' %}
+
+{% block heading_line_one %}
+    <th rowspan="2" class="sideways sortable sortreverse" data-sortkey="ukirt_request"><div><div><span>Request (hours)</span></div></div></th>
+    <th rowspan="2" class="sideways sortable sortreverse" data-sortkey="ukirt_allocation"><div><div><span>Allocation (hours)</span></div></div></th>
+{% endblock %}
+
+{% block heading_line_two %}
+{% endblock %}
+
+{% block row_sort_info %}{{ {
+    'ukirt_request': proposal.ukirt_request.total,
+    'ukirt_allocation': (none if (proposal.ukirt_allocation is none) else proposal.ukirt_allocation.total),
+} | json(extend=super()) }} {% endblock %}
+
+{% block row_extra %}
+    <td class="number_right">
+        {{ proposal.ukirt_request.total | fmt('{:.1f}') }}
+    </td>
+    <td class="number_right">
+        {% if proposal.ukirt_allocation is none %}
+            &nbsp;
+        {% else %}
+            {{ proposal.ukirt_allocation.total | fmt('{:.1f}') }}
+        {% endif %}
+    </td>
+{% endblock %}
+
+{% block footer_exempt_extra %}
+    <td colspan="2" class="number_right total">{{ ukirt_exempt_total | fmt('{:.1f}') }}</td>
+{% endblock %}
+
+{% block footer_accepted_extra %}
+    <td colspan="2" class="number_right total">{{ ukirt_accepted_total | fmt('{:.1f}') }}</td>
+{% endblock %}
+
+{% block footer_available_extra %}
+    <td colspan="2" class="number_right total">&nbsp;</td>
+{% endblock %}
+
+{% block footer_total_extra %}
+    <td colspan="2" class="number_right total">{{ ukirt_request_total | fmt('{:.1f}') }}</td>
+{% endblock %}
+
+{% block footer_original_extra %}
+    <td colspan="2" class="number_right total">{{ ukirt_request_original | fmt('{:.1f}') }}</td>
+{% endblock %}
+
+{% block footer_head_extra %}
+    <th colspan="2" class="sideways"><div><div>Time (hours)</div></div></th>
+{% endblock %}

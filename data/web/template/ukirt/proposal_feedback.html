@@ -1,0 +1,15 @@
+{% extends 'generic/proposal_feedback.html' %}
+
+{% from 'ukirt/macro/request_table.html' import render_request_display %}
+
+{% block feedback_extra %}
+{% if ukirt_allocations %}
+    <h2>Approved Observing</h2>
+
+    {{ render_request_display(ukirt_allocations.to_table()) }}
+
+    <p>
+        Times are shown in hours.
+    </p>
+{% endif %}
+{% endblock %}

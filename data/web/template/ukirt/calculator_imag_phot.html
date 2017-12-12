@@ -1,0 +1,113 @@
+{% extends 'generic/calculator_base.html' %}
+{% set scripts=['edit_calc_ukirt_imag_phot', 'formtip'] %}
+
+{% block calculator_input_item %}
+    <li>
+        <label for="a">{{ value.name }}</label>
+        {% if value.code == 'inst' %}
+            <select name="{{ value.code }}">
+                {% for instrument in instruments %}
+                    <option value="{{ instrument }}" {{ 'selected="selected"' | safe if instrument == input }}>{{ instrument }}</option>
+                {% endfor %}
+            </select>
+        {% elif value.code == 'filt' %}
+            <select name="{{ value.code }}">
+                {% for (filter_name, filter_instruments) in filters.items() %}
+                    <option value="{{ filter_name }}" {{ 'selected="selected"' | safe if filter_name == input }} data-instruments="{{ filter_instruments | json }}">{{ filter_name }}</option>
+                {% endfor %}
+            </select>
+        {% elif value.code == 'type' %}
+            <select name="{{ value.code }}">
+                {% for (type_code, type_info) in source_types.items() %}
+                    <option value="{{ type_code }}" {{ 'selected="selected"' | safe if type_code == input }}>{{ type_info.name }}</option>
+                {% endfor %}
+            </select>
+        {% elif value.code == 'sky' %}
+            <select name="{{ value.code }}">
+                {% for (sky_code, sky_condition) in sky_conditions.items() %}
+                    <option value="{{ sky_code }}" {{ 'selected="selected"' | safe if sky_code == input }}>{{ sky_condition.name }}</option>
+                {% endfor %}
+            </select>
+        {% else %}
+            <input type="text" name="{{ value.code }}" value="{{ input }}" />
+        {% endif %}
+        {% if value.unit is not none %}
+            {{ value.unit }}
+        {% endif %}
+        {% if value.code == 'type' %}
+            <div class="formtip">
+                <div>
+                    <p>
+                        For an extended source, the sensitivity is computed per pixel,
+                        and the aperture and seeing are ignored.
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+    </li>
+{% endblock %}
+
+{% block calculator_output_table %}
+    {% for value in outputs %}
+        {% with output = output_values[value.code] %}
+            <tr>
+                <th>
+                    {{ value.name }}
+                </th>
+                <td>
+                    {{ output | fmt(value.format) }}
+                    {% if value.unit is not none %}
+                        {{ value.unit }}
+                    {% endif %}
+                </td>
+                <td class="borderless">
+                    {% if loop.first and (output_extra['limit'] is not none) %}
+                        <span class="label">{{ output_extra['limit'] }} limited</span>
+                    {% else %}
+                        &nbsp;
+                    {% endif %}
+                </td>
+            </tr>
+        {% endwith %}
+    {% endfor %}
+{% endblock %}
+
+{% block calculator_output_extra %}
+    <table>
+        <tr>
+            <th>Pixel size</th>
+            <td>{{ output_extra['pixsize'] }} "</td>
+        </tr>
+        <tr>
+            <th>Pixels / source</th>
+            <td>{{ output_extra['n_pix'] }}</td>
+        </tr>
+        <tr>
+            <th>Flux inside aperture</th>
+            <td>{{ (100.0 * output_extra['frac_aperture']) | fmt('{:.1f}') }} %</td>
+        </tr>
+
+    </table>
+
+    <table>
+        <tr>
+            <th>&nbsp;</th>
+            <th>Source</th>
+            <th>Sky</th>
+            <th>CCD</th>
+        </tr>
+        <tr>
+            <th>Electrons</th>
+            <td>{{ output_extra['e_obj'] | fmt('{:.0f}') }}</td>
+            <td>{{ output_extra['e_sky'] | fmt('{:.0f}') }} / pixel</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <th>Noise contribution</th>
+            <td>{{ output_extra['noi_obj'] | fmt('{:.1f}') }}</td>
+            <td>{{ output_extra['noi_sky'] | fmt('{:.1f}') }}</td>
+            <td>{{ output_extra['noi_ccd'] | fmt('{:.1f}') }}</td>
+            </td>
+        </tr>
+    </table>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% macro render_request_display(requests) %}
+    <table>
+        <tr>
+            <th>Instrument</th>
+            {% for column in requests.columns.values() %}
+                <th>{{ column }}</th>
+            {% endfor %}
+            <th>Total</th>
+        </tr>
+        {% for (row_id, row_name) in requests.rows.items() %}
+            <tr>
+                <td>{{ row_name }}</td>
+                {% for column_id in requests.columns.keys() %}
+                <td>{{ requests.table[row_id][column_id] | fmt('{:g}') }}</td>
+                {% endfor %}
+                <td class="total">{{ requests.table[row_id][none] | fmt('{:g}') }}</td>
+            </tr>
+        {% endfor %}
+        {% if none in requests.table %}
+            <tr>
+                <th>Total</th>
+                {% for column_id in requests.columns.keys() %}
+                    <td class="total">{{ requests.table[none][column_id] | fmt('{:g}') }}</td>
+                {% endfor %}
+                <td class="grandtotal">{{ requests.table[none][none] | fmt('{:g}') }}</td>
+        {% endif %}
+    </table>
+{% endmacro %}
+
+{% macro render_request_table(requests, instruments, brightnesses, description='request') %}
+    {% set new_counter = create_counter(1) %}
+    <table id="requests">
+        <tr>
+            <th>Instrument</th>
+            <th>Brightness</th>
+            <th>Time</th>
+            <th>Actions</th>
+        </tr>
+        {% for request in requests.values() %}
+            {% if request.id is none %}
+                {% set request_id = (new_counter() | fmt('new_{}')) %}
+            {% else %}
+                {% set request_id = request.id %}
+            {% endif %}
+            <tr id="requestrow_{{ request_id }}">
+                <td>
+                    <select name="instrument_{{ request_id }}">
+                        {% for instrument_id, instrument_name in instruments.items() %}
+                            <option value="{{ instrument_id | fmt('{}') }}" {{ 'selected="selected"' | safe if instrument_id == request.instrument }}>{{ instrument_name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <select name="brightness_{{ request_id }}">
+                        {% for brightness_id, brightness_name in brightnesses.items() %}
+                            <option value="{{ brightness_id | fmt('{}') }}" {{ 'selected="selected"' | safe if brightness_id == request.brightness }}>{{ brightness_name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td><input type="number" min="0" step="any" name="time_{{ request_id }}" value="{{ request.time }}" /> hours</td>
+                <td><input type="button" id="delete_{{ request_id }}" value="Delete" />
+            </tr>
+        {% endfor %}
+    </table>
+    <table id="requesttable_template" class="template" data-newcounter="{{ new_counter() }}">
+        <tr id="requestrow_template">
+            <td>
+                <select name="instrument">
+                    {% for instrument_id, instrument_name in instruments.items() %}
+                        <option value="{{ instrument_id | fmt('{}') }}">{{ instrument_name }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td>
+                <select name="brightness">
+                    {% for brightness_id, brightness_name in brightnesses.items() %}
+                        <option value="{{ brightness_id | fmt('{}') }}">{{ brightness_name }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td><input type="number" min="0" step="any" name="time" /> hours</td>
+            <td><input type="button" id="delete_template" value="Delete" />
+        </tr>
+    </table>
+
+    <p>
+        <input type="button" id="add_request" value="Add {{ description }}" />
+    </p>
+{% endmacro %}
