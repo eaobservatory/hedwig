@@ -26,12 +26,12 @@
     <section>
         <h2 id="request">Observing Request</h2>
 
-        {% if not requests.table %}
+        {% if not requests %}
             <p class="missing">
                 This proposal does not yet have an observing request.
             </p>
         {% else %}
-            {{ render_request_display(requests) }}
+            {{ render_request_display(requests.to_table()) }}
         {% endif %}
 
         {% if jcmt_options %}

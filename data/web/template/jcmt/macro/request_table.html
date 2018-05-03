@@ -22,7 +22,7 @@
                 {% for column_id in requests.columns.keys() %}
                     <td class="total">{{ requests.table[none][column_id] | fmt('{:g}') }}</td>
                 {% endfor %}
-                <td class="grandtotal">{{ requests.table[none][none] | fmt('{:g}') }}</th>
+                <td class="grandtotal">{{ requests.table[none][none] | fmt('{:g}') }}</td>
             </tr>
         {% endif %}
     </table>

@@ -408,7 +408,7 @@ class JCMT(EAOFacility):
         option_values = db.get_jcmt_options(proposal_id=proposal.id)
 
         ctx.update({
-            'requests': requests.to_table(),
+            'requests': requests,
             'jcmt_options': self._get_option_names(option_values),
             'jcmt_option_values': option_values,
         })
@@ -452,7 +452,7 @@ class JCMT(EAOFacility):
                 'Edit the public summary',
                 url_for('.pr_summary_edit', proposal_id=proposal.id)))
 
-        if not extra['requests'].table:
+        if not extra['requests']:
             messages.append(ValidationMessage(
                 True,
                 'No observing time has been requested.',
