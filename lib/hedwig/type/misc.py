@@ -152,14 +152,31 @@ class SectionedList(object):
         :param section_name: if not `None`, a display name to be added to the
                              names dictionary for the given section
         """
+        self._append_or_prepend(item, section, section_name, False)
 
+    def prepend(self, item, section=None, section_name=None):
+        """
+        Add an item to the start of a section.
+
+        :param item: the item to be added
+        :param section: the section in which to place the item, or
+                        `None` to place it in the default section
+        :param section_name: if not `None`, a display name to be added to the
+                             names dictionary for the given section
+        """
+        self._append_or_prepend(item, section, section_name, True)
+
+    def _append_or_prepend(self, item, section, section_name, prepend):
         section_list = self.data.get(section)
 
         if section_list is None:
             self.data[section] = [item]
 
         else:
-            section_list.append(item)
+            if prepend:
+                section_list.insert(0, item)
+            else:
+                section_list.append(item)
 
         if section_name is not None:
             self.sections[section] = section_name
@@ -208,7 +225,7 @@ class SectionedList(object):
         else:
             del self.data[section]
 
-    def extend(self, iterable, section=None, section_name=None):
+    def extend(self, iterable, section=None, section_name=None, prepend=False):
         """
         Add an iterable of items to the list.
 
@@ -217,6 +234,7 @@ class SectionedList(object):
                         `None` to place them in the default section
         :param section_name: if not `None`, a display name to be added to the
                              names dictionary for the given section
+        :param prepend: if true, insert new items at the start of the section
         """
 
         section_list = self.data.get(section)
@@ -225,8 +243,12 @@ class SectionedList(object):
             self.data[section] = list(iterable)
 
         else:
-            for item in iterable:
-                section_list.append(item)
+            if prepend:
+                for (position, item) in enumerate(iterable):
+                    section_list.insert(position, item)
+            else:
+                for item in iterable:
+                    section_list.append(item)
 
         if section_name is not None:
             self.sections[section] = section_name

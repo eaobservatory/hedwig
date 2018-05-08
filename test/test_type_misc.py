@@ -80,6 +80,21 @@ class MiscTypeTestCase(TestCase):
             SectionedListSection('num', 'Numbers', ['1', '2', '3']),
         ])
 
+        # Try prepend operations.
+        self.assertEqual(sl.list_sections(), [None, 'alpha', 'num'])
+
+        sl.extend(['rambutan', 'strawberry'], section='fruit')
+        sl.prepend('quince', section='fruit')
+        sl.extend(['orange', 'pineapple'], section='fruit', prepend=True)
+
+        self.assertEqual(
+            sl.get_section('fruit'),
+            ['orange', 'pineapple', 'quince', 'rambutan', 'strawberry'])
+
+        sl.delete_section('fruit')
+
+        self.assertEqual(sl.list_sections(), [None, 'alpha', 'num'])
+
         # Try indexing operations.
         self.assertEqual(sl[0], 'x')
         self.assertEqual(sl[1], 'y')
