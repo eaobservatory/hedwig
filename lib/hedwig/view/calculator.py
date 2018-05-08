@@ -66,6 +66,22 @@ class BaseCalculator(object):
 
         return None
 
+    def get_custom_routes(self):
+        """
+        Method used to find any custom routes required by this calculator.
+
+        Note that the route information will automatically be prefixed
+        as follows:
+
+        * `template`: `<facility code>/calculator_<calculator code>_`
+        * `rule`: `/calculator/<calculator code>/`
+        * `endpoint`: `calc_<calculator code>_`
+
+        :return: a list of RouteInfo tuples
+        """
+
+        return []
+
     def view(self, db, mode, args, form):
         """
         Web view handler for a generic calculator.

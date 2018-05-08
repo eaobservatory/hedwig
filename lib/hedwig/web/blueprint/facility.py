@@ -757,6 +757,25 @@ def create_facility_blueprint(db, facility):
                     extra_context=extra_context),
                 methods=['GET', 'POST'])
 
+        for route in calculator.get_custom_routes():
+            options = {}
+            if route.options.get('allow_post', False):
+                options['methods'] = ['GET', 'POST']
+
+            bp.add_url_rule(
+                '/calculator/{}/{}'.format(calculator_code, route.rule),
+                'calc_{}_{}'.format(calculator_code, route.endpoint),
+                make_custom_route(
+                    db,
+                    (None if route.template is None
+                     else ['{}/calculator_{}_{}'.format(*(x + (route.template,)))
+                           for x in template_params]),
+                    route.func,
+                    extra_context=(None if route.template is None
+                                   else extra_context),
+                    **route.options),
+                **options)
+
     # Configure the facility's target tools.
     tool_id = 0
     for tool_class in facility.get_target_tool_classes():
