@@ -134,7 +134,7 @@
                     {% endfor %}
                     <option value="other" {{ 'selected="selected"' | safe if input_values.tau_band is none }}>Other</option>
                 </select>
-                <input type="text" name="tau_value" value="{{ input }}" {{ 'disabled="disabled"' | safe if input_values.tau_band is not none }} />
+                <input type="number" name="tau_value" value="{{ input }}" {{ 'disabled="disabled"' | safe if input_values.tau_band is not none }} step="any" min="0" />
                 <div class="formtip">
                     <div>
                         <p>
