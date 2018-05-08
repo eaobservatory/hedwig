@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -36,6 +36,7 @@ ReceiverInfoID = namedtuple('ReceiverInfoID', ReceiverInfo._fields + ('id', ))
 MappingMode = namedtuple('MappingMode', ('id', 'name', 'sw_modes'))
 SwitchingMode = namedtuple('SwitchingMode', ('id', 'name'))
 ACSISMode = namedtuple('ACSISMode', ('name', 'freq_res', 'array_only'))
+RVSystem = namedtuple('RVSystem', ('id', 'name', 'no_unit'))
 
 
 class HeterodyneCalculator(JCMTCalculator):
@@ -75,7 +76,13 @@ class HeterodyneCalculator(JCMTCalculator):
         (4, ACSISMode('1600 MHz', 0.977,  True)),
     ))
 
-    version = 1
+    rv_systems = OrderedDict((
+        ('z',   RVSystem(None,                     'redshift', True)),
+        ('rad', RVSystem(HeterodyneITC.RV_DEF_RAD, 'radio',    False)),
+        ('opt', RVSystem(HeterodyneITC.RV_DEF_OPT, 'optical',  False)),
+    ))
+
+    version = 2
 
     @classmethod
     def get_code(cls):
@@ -128,51 +135,67 @@ class HeterodyneCalculator(JCMTCalculator):
 
         inputs = SectionedList()
 
-        if version == 1:
-            inputs.extend([
-                CalculatorValue('rx', 'Receiver', 'Receiver', '{}', None),
-                CalculatorValue('freq', 'Frequency',
-                                '\u03bd', '{:.3f}', 'GHz'),
-                CalculatorValue('res', 'Spectral resolution',
-                                '\u0394\u03bd', '{:.4f}', None),
-                CalculatorValue('res_unit', 'Resolution unit',
-                                '\u0394\u03bd unit', '{}', None),
-                CalculatorValue('sb', 'Sideband mode',
-                                'SB', '{}', None),
-                CalculatorValue('dual_pol', 'Dual polarization',
-                                'DP', '{}', None),
-                CalculatorValue('cont', 'Continuum mode',
-                                'CM', '{}', None),
-            ], section='rx', section_name='Receiver')
+        inputs.extend([
+            CalculatorValue(
+                'rx', 'Receiver', 'Receiver', '{}', None),
+            CalculatorValue(
+                'res', 'Spectral resolution',
+                '\u0394\u03bd', '{:.4f}', None),
+            CalculatorValue(
+                'res_unit', 'Resolution unit',
+                '\u0394\u03bd unit', '{}', None),
+            CalculatorValue(
+                'sb', 'Sideband mode', 'SB', '{}', None),
+            CalculatorValue(
+                'dual_pol', 'Dual polarization', 'DP', '{}', None),
+            CalculatorValue(
+                'cont', 'Continuum mode', 'CM', '{}', None),
+        ], section='rx', section_name='Receiver')
 
-            inputs.extend([
-                CalculatorValue('pos', 'Source position',
-                                'Pos.', '{:.1f}', '\u00b0'),
-                CalculatorValue('pos_type', 'Source position type',
-                                'Pos. type', '{}', None),
-                CalculatorValue('tau', '225 GHz opacity',
-                                '\u03c4\u2082\u2082\u2085', '{:.3f}', None),
-            ], section='src', section_name='Source and Conditions')
+        inputs.extend([
+            CalculatorValue(
+                'freq', 'Rest frequency', '\u03bd\u2080', '{:.3f}', 'GHz'),
+            CalculatorValue(
+                'rv', 'Radial velocity', 'Rad. vel.', '{}', 'km/s'),
+            CalculatorValue(
+                'rv_sys', 'Radial velocity system',
+                'Rad. vel. sys.', '{}', None),
+            CalculatorValue(
+                'pos', 'Source position', 'Pos.', '{:.1f}', '\u00b0'),
+            CalculatorValue(
+                'pos_type', 'Source position type', 'Pos. type', '{}', None),
+            CalculatorValue(
+                'tau', '225 GHz opacity',
+                '\u03c4\u2082\u2082\u2085', '{:.3f}', None),
+        ], section='src', section_name='Source and Conditions')
 
-            inputs.extend([
-                CalculatorValue('mm', 'Mapping mode', 'Mode', '{}', None),
-                CalculatorValue('sw', 'Switching mode', 'Switch', '{}', None),
-                CalculatorValue('n_pt', 'Number of points',
-                                'Points', '{:d}', None),
-                CalculatorValue('sep_off', 'Separate offs',
-                                'SO', '{}', None),
+        inputs.extend([
+            CalculatorValue(
+                'mm', 'Mapping mode', 'Mode', '{}', None),
+            CalculatorValue(
+                'sw', 'Switching mode', 'Switch', '{}', None),
+            CalculatorValue(
+                'n_pt', 'Number of points', 'Points', '{:d}', None),
+            CalculatorValue(
+                'sep_off', 'Separate offs', 'SO', '{}', None),
 
-                CalculatorValue('dim_x', 'Raster width',
-                                'x', '{}', '"'),
-                CalculatorValue('dim_y', 'Raster height',
-                                'y', '{}', '"'),
-                CalculatorValue('dx', 'Pixel width',
-                                'dx', '{}', '"'),
-                CalculatorValue('dy', 'Pixel/scan height',
-                                'dy', '{}', '"'),
-                CalculatorValue('basket', 'Basket weave',
-                                'BW', '{}', None),
-            ], section='obs', section_name='Observation')
+            CalculatorValue(
+                'dim_x', 'Raster width', 'x', '{}', '"'),
+            CalculatorValue(
+                'dim_y', 'Raster height', 'y', '{}', '"'),
+            CalculatorValue(
+                'dx', 'Pixel width', 'dx', '{}', '"'),
+            CalculatorValue(
+                'dy', 'Pixel/scan height', 'dy', '{}', '"'),
+            CalculatorValue(
+                'basket', 'Basket weave', 'BW', '{}', None),
+        ], section='obs', section_name='Observation')
+
+        if version == 2:
+            pass
+
+        elif version == 1:
+            inputs.delete_item_where(lambda x: x.code in ('rv', 'rv_sys'))
 
         else:
             raise CalculatorError('Unknown version.')
@@ -180,28 +203,31 @@ class HeterodyneCalculator(JCMTCalculator):
         inputs.add_section('req', 'Requirement')
 
         if mode == self.CALC_TIME:
-            if version == 1:
+            if version in (1, 2):
                 inputs.extend([
-                    CalculatorValue('rms', 'Target sensitivity',
-                                    '\u03c3', '{:.3f}', 'K TA*'),
+                    CalculatorValue(
+                        'rms', 'Target sensitivity',
+                        '\u03c3', '{:.3f}', 'K TA*'),
                 ], section='req')
             else:
                 raise CalculatorError('Unknown version.')
 
         elif mode == self.CALC_RMS_FROM_ELAPSED_TIME:
-            if version == 1:
+            if version in (1, 2):
                 inputs.extend([
-                    CalculatorValue('elapsed', 'Elapsed time',
-                                    'Elapsed', '{:.3f}', 'hours'),
+                    CalculatorValue(
+                        'elapsed', 'Elapsed time',
+                        'Elapsed', '{:.3f}', 'hours'),
                 ], section='req')
             else:
                 raise CalculatorError('Unknown version.')
 
         elif mode == self.CALC_RMS_FROM_INT_TIME:
-            if version == 1:
+            if version in (1, 2):
                 inputs.extend([
-                    CalculatorValue('int_time', 'Integration time',
-                                    'Int. time', '{:.3f}', 'seconds'),
+                    CalculatorValue(
+                        'int_time', 'Integration time',
+                        'Int. time', '{:.3f}', 'seconds'),
                 ], section='req')
             else:
                 raise CalculatorError('Unknown version.')
@@ -221,6 +247,8 @@ class HeterodyneCalculator(JCMTCalculator):
             ('mm', 'raster'),
             ('sw', 'pssw'),
             ('freq', 345.796),
+            ('rv', 0.0),
+            ('rv_sys', 'z'),
             ('res', 0.488),
             ('res_unit', 'MHz'),
             ('tau', 0.1),
@@ -270,8 +298,9 @@ class HeterodyneCalculator(JCMTCalculator):
             x.code:
                 x.format.format(values[x.code] if values[x.code] is not None
                                 else defaults.get(x.code))
-                if x.code not in ('rx', 'mm', 'sw', 'sb', 'dual_pol', 'n_pt',
-                                  'basket', 'sep_off', 'cont', 'res_unit')
+                if x.code not in (
+                    'rx', 'mm', 'sw', 'sb', 'dual_pol', 'n_pt',
+                    'basket', 'sep_off', 'cont', 'res_unit', 'rv_sys')
                 else (values[x.code] if values[x.code] is not None
                       else defaults.get(x.code))
             for x in inputs
@@ -419,6 +448,12 @@ class HeterodyneCalculator(JCMTCalculator):
         used with the current version of the calculator.
         """
 
+        if old_version == 1:
+            input_ = input_.copy()
+
+            input_['rv'] = 0.0
+            input_['rv_sys'] = 'z'
+
         return input_
 
     def get_outputs(self, mode, version=None):
@@ -430,39 +465,43 @@ class HeterodyneCalculator(JCMTCalculator):
         if version is None:
             version = self.version
 
+        outputs = []
+
         if mode == self.CALC_TIME:
-            if version == 1:
-                return [
+            if version in (1, 2):
+                outputs.extend([
                     CalculatorValue(
                         'elapsed', 'Elapsed time', 'Elapsed',
                         '{:.3f}', 'hours'),
-                ]
+                ])
             else:
                 raise CalculatorError('Unknown version.')
 
         elif mode == self.CALC_RMS_FROM_ELAPSED_TIME:
-            if version == 1:
-                return [
+            if version in (1, 2):
+                outputs.extend([
                     CalculatorValue(
                         'rms', 'Sensitivity', '\u03c3', '{:.3f}', 'K TA*'),
-                ]
+                ])
             else:
                 raise CalculatorError('Unknown version.')
 
         elif mode == self.CALC_RMS_FROM_INT_TIME:
-            if version == 1:
-                return [
+            if version in (1, 2):
+                outputs.extend([
                     CalculatorValue(
                         'rms', 'Sensitivity', '\u03c3', '{:.3f}', 'K TA*'),
                     CalculatorValue(
                         'elapsed', 'Elapsed time', 'Elapsed',
                         '{:.3f}', 'hours'),
-                ]
+                ])
             else:
                 raise CalculatorError('Unknown version.')
 
         else:
             raise CalculatorError('Unknown mode.')
+
+        return outputs
 
     def get_extra_context(self):
         """
@@ -478,6 +517,7 @@ class HeterodyneCalculator(JCMTCalculator):
             'acsis_modes': self.acsis_modes,
             'int_time_minimum': self.itc.int_time_minimum,
             'position_types': self.position_type,
+            'rv_systems': self.rv_systems,
         }
 
     def parse_input(self, mode, input_, defaults=None):
@@ -492,7 +532,7 @@ class HeterodyneCalculator(JCMTCalculator):
 
         for field in self.get_inputs(mode):
             try:
-                if field.code in ('freq', 'res', 'pos', 'rms', 'tau'):
+                if field.code in ('freq', 'res', 'pos', 'rms', 'tau', 'rv'):
                     parsed[field.code] = float(input_[field.code])
 
                 elif field.code == 'dx':
@@ -583,35 +623,81 @@ class HeterodyneCalculator(JCMTCalculator):
         if input_['pos_type'] != 'zen':
             extra_output['zenith_angle'] = zenith_angle_deg
 
-        receiver = self.get_receiver_by_name(input_['rx'], as_object=True)
+        # Determine redshift.
+        try:
+            rv_def = self.rv_systems[input_['rv_sys']].id
+        except KeyError:
+            raise UserError('Unknown radial velocity type.')
 
-        freq = input_['freq']
-        freq_res = input_['res']
+        if rv_def is None:
+            redshift = input_['rv']
+
+        else:
+            try:
+                redshift = self.itc.velocity_to_redshift(input_['rv'], rv_def)
+            except HeterodyneITCError as e:
+                raise UserError(e.args[0])
+
+            if redshift != 0.0:
+                extra_output['redshift'] = redshift
+
+        # Determine sky frequency and resolution.
+        rest_freq = input_['freq']
+
+        if redshift == 0.0:
+            sky_freq = rest_freq
+        else:
+            sky_freq = rest_freq / (1.0 + redshift)
+            extra_output['sky_freq'] = sky_freq
+
+        freq_resolution = input_['res']
         freq_res_unit = input_['res_unit']
         if freq_res_unit == 'MHz':
-            extra_output['res_velocity'] = \
-                self.itc.freq_res_to_velocity(freq, freq_res)
+            sky_freq_res = freq_resolution
+
+            if redshift == 0.0:
+                rest_freq_res = sky_freq_res
+            else:
+                rest_freq_res = sky_freq_res * (1.0 + redshift)
+                extra_output['rest_freq_res'] = rest_freq_res
+
+            extra_output['velocity_res'] = \
+                self.itc.freq_res_to_velocity(rest_freq, rest_freq_res)
+
         elif freq_res_unit == 'km/s':
-            freq_res = self.itc.velocity_to_freq_res(freq, freq_res)
-            extra_output['res_freq'] = freq_res
+            rest_freq_res = self.itc.velocity_to_freq_res(
+                rest_freq, freq_resolution)
+            extra_output['rest_freq_res'] = rest_freq_res
+
+            if redshift == 0.0:
+                sky_freq_res = rest_freq_res
+            else:
+                sky_freq_res = rest_freq_res / (1.0 + redshift)
+                extra_output['sky_freq_res'] = sky_freq_res
+
         else:
             raise CalculatorError('Frequency units not recognised.')
 
-        if freq < receiver.f_min:
-            raise UserError('The frequency {} GHz is below the minimum '
-                            'frequency ({} GHz) of this receiver.',
-                            freq, receiver.f_min)
-        elif freq > receiver.f_max:
-            raise UserError('The frequency {} GHz is above the maximum '
-                            'frequency ({} GHz) of this receiver.',
-                            freq, receiver.f_max)
+        receiver = self.get_receiver_by_name(input_['rx'], as_object=True)
+
+        if sky_freq < receiver.f_min:
+            raise UserError(
+                'The sky frequency ({:.3f} GHz) is below the minimum '
+                'frequency ({} GHz) of this receiver.',
+                sky_freq, receiver.f_min)
+
+        elif sky_freq > receiver.f_max:
+            raise UserError(
+                'The sky frequency ({:.3f} GHz) is above the maximum '
+                'frequency ({} GHz) of this receiver.',
+                sky_freq, receiver.f_max)
 
         kwargs = {
             'receiver': receiver.id,
             'map_mode': self.map_modes[input_['mm']].id,
             'sw_mode': self.switch_modes[input_['sw']].id,
-            'freq': freq,
-            'freq_res': freq_res,
+            'freq': sky_freq,
+            'freq_res': sky_freq_res,
             'zenith_angle_deg': zenith_angle_deg,
             'is_dsb': (input_['sb'] == 'dsb'),
             'dual_polarization': input_['dual_pol'],
@@ -712,3 +798,29 @@ class HeterodyneCalculator(JCMTCalculator):
                                                   ('res', 'res_unit')))
 
         self._condense_tau_band(calculation, 'tau')
+
+        self._condense_rv_sys(calculation, 'rv', 'rv_sys')
+
+    def _condense_rv_sys(self, calculation, code, code_sys):
+        try:
+            input_sys = calculation.input[code_sys]
+
+        except KeyError:
+            return
+
+        if input_sys == 'z':
+            calculation.inputs.replace_item_where(
+                (lambda x: x.code == code),
+                (lambda x: x._replace(
+                    name='Redshift', abbr=None, unit=None)))
+
+        else:
+            system_name = self.rv_systems[input_sys].name
+
+            calculation.inputs.replace_item_where(
+                (lambda x: x.code == code),
+                (lambda x: x._replace(
+                    unit='{} {}'.format(x.unit, system_name))))
+
+        calculation.inputs.delete_item_where(
+            lambda x: x.code == code_sys)

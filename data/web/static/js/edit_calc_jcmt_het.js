@@ -6,6 +6,11 @@ $(document).ready(function () {
     var freq_res_box = $('input[name=res]');
     var freq_res_unit = $('select[name=res_unit]');
 
+    var freq_box = $('input[name=freq]');
+    var rv_box = $('input[name=rv]');
+    var rv_sys_box = $('select[name=rv_sys]');
+    var rv_unit_span = $('#calc_unit_rv');
+
     var check_rx_opt = (function () {
         var rx = rx_select.find(':selected');
         var is_array = rx.data('is_array');
@@ -28,14 +33,6 @@ $(document).ready(function () {
             $('input[name=sb][value=dsb]').prop('checked', true);
         }
 
-        var freq_box = $('input[name=freq]');
-        var freq_min = rx.data('f_min');
-        var freq_max = rx.data('f_max')
-        freq_box.attr('min', freq_min);
-        freq_box.attr('max', freq_max);
-        $('span#freq_min').text(freq_min);
-        $('span#freq_max').text(freq_max);
-
         freq_res_select.children().each(function () {
             var acsis_mode = $(this);
             var is_disabled = (acsis_mode.data('array_only') && ! is_array);
@@ -49,6 +46,8 @@ $(document).ready(function () {
         });
 
         check_mode_opt();
+
+        check_radial_vel();
     });
 
     var check_sep_off = (function () {
@@ -139,6 +138,40 @@ $(document).ready(function () {
     });
 
     freq_res_select.change(check_freq_res);
+
+    var check_radial_vel = (function() {
+        var rv_sys = rv_sys_box.find(':selected');
+        if (rv_sys.data('no_unit')) {
+            rv_unit_span.hide();
+        } else {
+            rv_unit_span.show();
+        }
+
+        var rv_sys_name = rv_sys.val();
+        var rv = parseFloat(rv_box.val());
+
+        var c = 299792.458;
+        var redshift = 0.0;
+        if (rv_sys_name === 'z') {
+            redshift = rv;
+        } else if (rv_sys_name === 'opt') {
+            redshift = rv / c;
+        } else if (rv_sys_name === 'rad') {
+            redshift = rv / (c - rv);
+        }
+
+        var rx = rx_select.find(':selected');
+        var freq_min = Math.round(1000.0 * rx.data('f_min') * (1.0 + redshift)) / 1000.0;
+        var freq_max = Math.round(1000.0 * rx.data('f_max') * (1.0 + redshift)) / 1000.0;
+        freq_box.attr('min', freq_min);
+        freq_box.attr('max', freq_max);
+        $('span#freq_min').text(freq_min);
+        $('span#freq_max').text(freq_max);
+    });
+
+    rv_sys_box.change(check_radial_vel);
+
+    rv_box.change(check_radial_vel);
 
     check_rx_opt();
 });

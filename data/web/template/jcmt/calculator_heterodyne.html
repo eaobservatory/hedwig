@@ -4,7 +4,7 @@
 {% set help_link_text = 'Help on this calculator' %}
 
 {% block calculator_input_item %}
-    {% if value.code not in ('dim_y', 'dy', 'res_unit', 'pos_type') %}
+    {% if value.code not in ('dim_y', 'dy', 'res_unit', 'pos_type', 'rv_sys') %}
         {% if value.code == 'dim_x' %}
             <li>&nbsp;</li>
         {% endif %}
@@ -113,6 +113,8 @@
                         <p>
                             Please select &ldquo;Other&rdquo; to enter
                             a specific resolution in MHz or km/s.
+                            If a resolution is entered in terms of frequency,
+                            it corresponds to the sky frequency.
                         </p>
                     </div>
                 </div>
@@ -148,6 +150,8 @@
                 </div>
             {% elif value.code == 'pos' %}
                 <input type="number" name="{{ value.code }}" value="{{ input }}" min="-90" max="90" step="any" />
+            {% elif value.code == 'rv' %}
+                <input type="number" name="{{ value.code }}" value="{{ input }}" step="any" />
             {% elif value.code == 'sb' %}
                 <input type="radio" name="{{ value.code }}" value="ssb" {{ 'checked="checked"' | safe if input == 'ssb' }} /><span class="checkboxlabel">Single sideband</span>
                 <input type="radio" name="{{ value.code }}" value="dsb" {{ 'checked="checked"' | safe if input == 'dsb' }} /><span class="checkboxlabel">Dual sideband</span>
@@ -227,6 +231,12 @@
                         <option value="{{ pos_type }}" {{ 'selected="selected"' | safe if pos_type == input_values.pos_type }} data-no_unit="{{ 'true' if pos_type_info.no_unit else 'false' }}">{{ pos_type_info.name }}</option>
                     {% endfor %}
                 </select>
+            {% elif value.code == 'rv' %}
+                <select name="rv_sys">
+                    {% for (rv_sys, rv_sys_info) in rv_systems.items() %}
+                        <option value="{{ rv_sys }}" {{ 'selected="selected"' | safe if rv_sys == input_values.rv_sys }} data-no_unit="{{ 'true' if rv_sys_info.no_unit else 'false' }}">{{ rv_sys_info.name }}</option>
+                    {% endfor %}
+                </select>
             {% endif %}
         </li>
         {% if value.code == 'dx' %}
@@ -293,16 +303,34 @@
         <td>{{ output_extra.zenith_angle | fmt('{:.3f}') }} degrees</td>
     </tr>
     {% endif %}
-    {% if 'res_velocity' in output_extra %}
+    {% if 'redshift' in output_extra %}
     <tr>
-        <th>Velocity resolution</th>
-        <td>{{ output_extra.res_velocity | fmt('{:.3f}') }} km/s</td>
+        <th>Redshift</th>
+        <td>{{ output_extra.redshift | fmt('{:.6f}') }}</td>
     </tr>
     {% endif %}
-    {% if 'res_freq' in output_extra %}
+    {% if 'sky_freq' in output_extra %}
     <tr>
-        <th>Frequency resolution</th>
-        <td>{{ output_extra.res_freq | fmt('{:.3f}') }} MHz</td>
+        <th>Sky frequency</th>
+        <td>{{ output_extra.sky_freq | fmt('{:.3f}') }} GHz</td>
+    </tr>
+    {% endif %}
+    {% if 'sky_freq_res' in output_extra %}
+    <tr>
+        <th>Sky frequency resolution</th>
+        <td>{{ output_extra.sky_freq_res | fmt('{:.3f}') }} MHz</td>
+    </tr>
+    {% endif %}
+    {% if 'rest_freq_res' in output_extra %}
+    <tr>
+        <th>Rest frequency resolution</th>
+        <td>{{ output_extra.rest_freq_res | fmt('{:.3f}') }} MHz</td>
+    </tr>
+    {% endif %}
+    {% if 'velocity_res' in output_extra %}
+    <tr>
+        <th>Velocity resolution</th>
+        <td>{{ output_extra.velocity_res | fmt('{:.3f}') }} km/s</td>
     </tr>
     {% endif %}
 {% endblock %}
