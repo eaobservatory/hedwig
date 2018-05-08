@@ -30,7 +30,7 @@ from ...publication.url import make_publication_url
 from ...type.collection import PrevProposalCollection, ResultCollection, \
     TargetCollection
 from ...type.enum import AffiliationType, AttachmentState, \
-    CallState, FigureType, FileTypeInfo, FormatType, \
+    CallState, FigureType, FormatType, \
     GroupType, MessageThreadType, \
     PermissionType, PersonTitle, ProposalState, PublicationType
 from ...type.simple import Affiliation, \
@@ -1259,7 +1259,7 @@ class GenericProposal(object):
 
         return (
             write_source_list(targets),
-            null_tuple(FileTypeInfo)._replace(mime='text/plain'),
+            'text/plain',
             '{}-targets.txt'.format(self.make_proposal_code(db, proposal)))
 
     @with_proposal(permission=PermissionType.EDIT)

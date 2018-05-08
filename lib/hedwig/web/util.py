@@ -35,7 +35,7 @@ from werkzeug import exceptions as _werkzeug_exceptions
 from werkzeug import routing as _werkzeug_routing
 from werkzeug import urls as _werkzeug_urls
 
-from ..compat import ExceptionWithMessage
+from ..compat import ExceptionWithMessage, string_type
 from ..error import UserError
 from ..type.simple import DateAndTime
 from ..type.enum import FigureType, FileTypeInfo
@@ -392,6 +392,7 @@ def send_file(fixed_type=None, allow_cache=False):
             type_ = fixed_type
             data = f(*args, **kwargs)
             filename = None
+            can_view_inline = False
 
             if type_ is None:
                 # Function should have returned a tuple: unpack it.
@@ -399,7 +400,8 @@ def send_file(fixed_type=None, allow_cache=False):
 
             if isinstance(type_, FileTypeInfo):
                 mime_type = type_.mime
-                can_view_inline = False
+            elif isinstance(type_, string_type):
+                mime_type = type_
             else:
                 mime_type = FigureType.get_mime_type(type_)
                 can_view_inline = FigureType.can_view_inline(type_)

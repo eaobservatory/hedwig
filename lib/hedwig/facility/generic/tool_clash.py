@@ -33,7 +33,7 @@ from ...view.tool import BaseTargetTool
 from ...view.util import with_verified_admin
 from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
-from ...type.enum import AttachmentState, FileTypeInfo, FormatType
+from ...type.enum import AttachmentState, FormatType
 from ...type.simple import MOCInfo, RouteInfo
 from ...type.util import null_tuple
 
@@ -366,7 +366,7 @@ class ClashTool(BaseTargetTool):
 
         return (
             moc_fits,
-            null_tuple(FileTypeInfo)._replace(mime='application/fits'),
+            'application/fits',
             '{}.fits'.format(re.sub('[^-_a-z0-9]', '_', moc.name.lower())))
 
     @with_verified_admin

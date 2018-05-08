@@ -34,7 +34,7 @@ from ...web.util import ErrorPage, \
     flash, session, url_for
 from ...type.collection import ReviewerCollection
 from ...type.enum import AffiliationType, Assessment, \
-    FileTypeInfo, FormatType, GroupType, \
+    FormatType, GroupType, \
     MessageThreadType, PermissionType, PersonTitle, ProposalState, ReviewState
 from ...type.simple import Affiliation, Link, MemberPIInfo, \
     ProposalWithCode, Reviewer
@@ -151,7 +151,7 @@ class GenericReview(object):
 
         return (
             writer.get_csv(),
-            null_tuple(FileTypeInfo)._replace(mime='text/csv'),
+            'text/csv',
             'proposals-{}-{}-{}.csv'.format(
                 re.sub('[^-_a-z0-9]', '_', call.semester_name.lower()),
                 re.sub('[^-_a-z0-9]', '_', call.queue_name.lower()),
