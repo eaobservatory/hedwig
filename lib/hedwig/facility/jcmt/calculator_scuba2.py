@@ -372,11 +372,19 @@ class SCUBA2Calculator(JCMTCalculator):
         """
 
         map_mode = input_['map']
+        mode_info = self.map_modes.get(map_mode)
+        if mode_info is None:
+            raise UserError('Unknown map type.')
+
         tau_225 = input_['tau']
         extra = {}
 
         # Determine sampling factors.
         if input_['samp'] == 'mf':
+            if not mode_info.match_filt:
+                raise UserError(
+                    'The matched filter can not be used with this map type.')
+
             factor = {850: 5, 450: 8}
 
         elif input_['samp'] in ('custom', 'map'):
@@ -385,9 +393,6 @@ class SCUBA2Calculator(JCMTCalculator):
                 pix_450 = input_['pix450']
 
             else:
-                mode_info = self.map_modes.get(map_mode)
-                if mode_info is None:
-                    raise UserError('Unknown map type.')
                 pix_850 = mode_info.pix_850
                 pix_450 = mode_info.pix_450
 

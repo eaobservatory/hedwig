@@ -10,7 +10,7 @@
             {% if value.code == 'map' %}
                 <select name="map">
                     {% for mode_code, mode_info in map_modes.items() %}
-                        <option value="{{ mode_code }}" {{ 'selected="selected"' | safe if mode_code == input }} data-pix850="{{ mode_info.pix_850 }}" data-pix450="{{ mode_info.pix_450 }}">{{ mode_info.description }}</option>
+                        <option value="{{ mode_code }}" {{ 'selected="selected"' | safe if mode_code == input }} data-pix850="{{ mode_info.pix_850 }}" data-pix450="{{ mode_info.pix_450 }}" data-match_filt="{{ 'true' if mode_info.match_filt else 'false' }}">{{ mode_info.description }}</option>
                     {% endfor %}
                 </select>
             {% elif value.code == 'pos' %}

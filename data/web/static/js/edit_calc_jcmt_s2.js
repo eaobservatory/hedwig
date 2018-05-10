@@ -4,6 +4,13 @@ $(document).ready(function () {
 
     var check_samp_opt = (function () {
         var map = map_select.find(':selected');
+
+        samp_select.children('[value=mf]').prop('disabled', ! map.data('match_filt'));
+
+        if (samp_select.find(':selected').prop('disabled')) {
+            samp_select.val(samp_select.find(':enabled').val());
+        }
+
         var samp = samp_select.val();
 
         var pix850 = $('[name=pix850]');
