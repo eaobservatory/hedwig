@@ -19,14 +19,18 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import namedtuple, OrderedDict
+import json
 from math import acos, degrees
 
 from jcmt_itc_heterodyne import HeterodyneITC, HeterodyneITCError
 from jcmt_itc_heterodyne.receiver import HeterodyneReceiver, ReceiverInfo
+from jcmt_itc_heterodyne.line_catalog import get_line_catalog
 
 from ...error import CalculatorError, UserError
 from ...type.misc import SectionedList
-from ...type.simple import CalculatorMode, CalculatorResult, CalculatorValue
+from ...type.simple import \
+    CalculatorMode, CalculatorResult, CalculatorValue, \
+    RouteInfo
 from ...view.util import parse_time
 from .calculator_jcmt import JCMTCalculator
 from .type import JCMTWeather
@@ -118,11 +122,35 @@ class HeterodyneCalculator(JCMTCalculator):
             for (map_code, map_mode) in self._map_modes.items()
         ))
 
+        # Prepare JSON version of the line catalog: convert to lists so
+        # that the ordering is preserved in the JSON.
+        self.line_catalog = get_line_catalog()
+        self.line_catalog_json = json.dumps([
+            [s, [t for t in ts.items()]]
+            for (s, ts) in self.line_catalog.items()
+        ])
+
     def get_name(self):
         return 'Heterodyne ITC'
 
     def get_calc_version(self):
         return self.itc.get_version()
+
+    def get_custom_routes(self):
+        """
+        Get list of custom routes used by this calculator.
+        """
+
+        return [
+            RouteInfo(
+                None,
+                'line_catalog',
+                'line_cat',
+                self.view_line_catalog,
+                {'send_file_opts': {
+                    'allow_cache': True,
+                    'fixed_type': 'application/json'}}),
+        ]
 
     def get_inputs(self, mode, version=None):
         """
@@ -153,6 +181,10 @@ class HeterodyneCalculator(JCMTCalculator):
         ], section='rx', section_name='Receiver')
 
         inputs.extend([
+            CalculatorValue(
+                'species', 'Species', 'Spec.', '{}', None),
+            CalculatorValue(
+                'trans', 'Transition', 'Trans.', '{}', None),
             CalculatorValue(
                 'freq', 'Rest frequency', '\u03bd\u2080', '{:.3f}', 'GHz'),
             CalculatorValue(
@@ -195,7 +227,8 @@ class HeterodyneCalculator(JCMTCalculator):
             pass
 
         elif version == 1:
-            inputs.delete_item_where(lambda x: x.code in ('rv', 'rv_sys'))
+            inputs.delete_item_where(lambda x: x.code in (
+                'rv', 'rv_sys', 'species', 'trans'))
 
         else:
             raise CalculatorError('Unknown version.')
@@ -246,7 +279,9 @@ class HeterodyneCalculator(JCMTCalculator):
             ('rx', 'HARP'),
             ('mm', 'raster'),
             ('sw', 'pssw'),
-            ('freq', 345.796),
+            ('species', 'CO'),
+            ('trans', '3 - 2'),
+            ('freq', None),
             ('rv', 0.0),
             ('rv_sys', 'z'),
             ('res', 0.488),
@@ -294,17 +329,41 @@ class HeterodyneCalculator(JCMTCalculator):
         is_array_receiver = self.get_receiver_by_name(
             values['rx'], as_object=True).array is not None
 
-        formatted_inputs = {
-            x.code:
-                x.format.format(values[x.code] if values[x.code] is not None
-                                else defaults.get(x.code))
-                if x.code not in (
+        formatted_inputs = {}
+
+        for x in inputs:
+            code = x.code
+            value = values[code]
+
+            formatted = None
+
+            if code in ('species', 'trans'):
+                # Only fill in the defaults if we do not have an
+                # explicitly defined frequency.
+                if (value is None) and (values['freq'] is None):
+                    value = defaults.get(code)
+
+                formatted = '' if (value is None) else value
+
+            if value is None:
+                value = defaults.get(code)
+
+            if formatted is not None:
+                pass
+
+            elif code == 'freq':
+                formatted = '' if (value is None) else x.format.format(value)
+
+            elif code in (
                     'rx', 'mm', 'sw', 'sb', 'dual_pol', 'n_pt',
-                    'basket', 'sep_off', 'cont', 'res_unit', 'rv_sys')
-                else (values[x.code] if values[x.code] is not None
-                      else defaults.get(x.code))
-            for x in inputs
-        }
+                    'basket', 'sep_off', 'cont', 'res_unit', 'rv_sys',
+                    ):
+                formatted = value
+
+            else:
+                formatted = x.format.format(value)
+
+            formatted_inputs[code] = formatted
 
         acsis_mode = None
         if values['res_unit'] == 'MHz':
@@ -341,6 +400,9 @@ class HeterodyneCalculator(JCMTCalculator):
             if input_.code in ('dual_pol', 'basket', 'sep_off', 'cont'):
                 # Checkboxes: true if they appear in the form parameters.
                 values[input_.code] = input_.code in form
+
+            elif input_.code in ('freq', 'species', 'trans'):
+                values[input_.code] = form.get(input_.code, '')
 
             elif input_.code == 'tau':
                 (tau, tau_band) = self.get_form_tau(form)
@@ -451,6 +513,8 @@ class HeterodyneCalculator(JCMTCalculator):
         if old_version == 1:
             input_ = input_.copy()
 
+            input_['species'] = None
+            input_['trans'] = None
             input_['rv'] = 0.0
             input_['rv_sys'] = 'z'
 
@@ -532,7 +596,12 @@ class HeterodyneCalculator(JCMTCalculator):
 
         for field in self.get_inputs(mode):
             try:
-                if field.code in ('freq', 'res', 'pos', 'rms', 'tau', 'rv'):
+                if field.code == 'freq':
+                    parsed[field.code] = (
+                        None if (input_[field.code] == '')
+                        else float(input_[field.code]))
+
+                elif field.code in ('res', 'pos', 'rms', 'tau', 'rv'):
                     parsed[field.code] = float(input_[field.code])
 
                 elif field.code == 'dx':
@@ -566,7 +635,8 @@ class HeterodyneCalculator(JCMTCalculator):
                     parsed[field.code] = defaults[field.code]
 
                 else:
-                    raise UserError('Invalid value for {}.', field.name)
+                    raise UserError(
+                        'Invalid value for {}.', field.name.lower())
 
         self._validate_position(parsed['pos'], parsed['pos_type'])
 
@@ -580,6 +650,14 @@ class HeterodyneCalculator(JCMTCalculator):
             parsed['dim_y'] = None
             parsed['dx'] = None
             parsed['dy'] = None
+
+        if parsed['freq'] is not None:
+            parsed['species'] = None
+            parsed['trans'] = None
+        elif '' in (parsed['species'], parsed['trans']):
+            # If all lines are out of range, all entries in the transition
+            # select control will be disabled, so there will be no input.
+            raise UserError('Transition line not selected (or out of range).')
 
         return parsed
 
@@ -643,6 +721,14 @@ class HeterodyneCalculator(JCMTCalculator):
 
         # Determine sky frequency and resolution.
         rest_freq = input_['freq']
+        if rest_freq is None:
+            try:
+                transitions = self.line_catalog[input_['species']]
+                rest_freq = transitions[input_['trans']]
+            except KeyError:
+                raise UserError('Transition line not recognized.')
+
+            extra_output['rest_freq'] = rest_freq
 
         if redshift == 0.0:
             sky_freq = rest_freq
@@ -824,3 +910,14 @@ class HeterodyneCalculator(JCMTCalculator):
 
         calculation.inputs.delete_item_where(
             lambda x: x.code == code_sys)
+
+    def view_line_catalog(self, db):
+        """
+        View handler for line catalog query function.
+
+        This returns the line catalog (from the Heterodyne ITC module)
+        in JSON format to make it available to the JavaScript managing
+        the web interface.
+        """
+
+        return self.line_catalog_json

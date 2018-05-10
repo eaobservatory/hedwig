@@ -4,12 +4,12 @@
 {% set help_link_text = 'Help on this calculator' %}
 
 {% block calculator_input_item %}
-    {% if value.code not in ('dim_y', 'dy', 'res_unit', 'pos_type', 'rv_sys') %}
+    {% if value.code not in ('dim_y', 'dy', 'res_unit', 'pos_type', 'rv_sys', 'trans') %}
         {% if value.code == 'dim_x' %}
             <li>&nbsp;</li>
         {% endif %}
         <li>
-            {% if value.code not in ('dim_x', 'dx') %}
+            {% if value.code not in ('dim_x', 'dx', 'species') %}
                 <label for="a">{{ value.name }}</label>
             {% endif %}
             {% if value.code == 'rx' %}
@@ -76,6 +76,14 @@
                         </p>
                     </div>
                 </div>
+            {% elif value.code == 'species' %}
+                <label>Transition line</label>
+                <select name="species" data-line-catalog="{{ url_for('.calc_heterodyne_line_cat') }}" data-selected="{{ input }}">
+                    <option value="">Loading&hellip;</option>
+                </select>
+                <select name="trans" data-selected="{{ input_values.trans }}">
+                    <option value="">Loading&hellip;</option>
+                </select>
             {% elif value.code == 'freq' %}
                 <input type="number" name="{{ value.code }}" value="{{ input }}" step="any" />
             {% elif value.code == 'res' %}
@@ -301,6 +309,12 @@
     <tr>
         <th>Zenith angle</th>
         <td>{{ output_extra.zenith_angle | fmt('{:.3f}') }} degrees</td>
+    </tr>
+    {% endif %}
+    {% if 'rest_freq' in output_extra %}
+    <tr>
+        <th>Rest frequency</th>
+        <td>{{ output_extra.rest_freq | fmt('{:.3f}') }} GHz</td>
     </tr>
     {% endif %}
     {% if 'redshift' in output_extra %}

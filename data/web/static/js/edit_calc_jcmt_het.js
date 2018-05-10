@@ -6,6 +6,10 @@ $(document).ready(function () {
     var freq_res_box = $('input[name=res]');
     var freq_res_unit = $('select[name=res_unit]');
 
+    var line_catalog = null;
+    var species_select = $('select[name=species]');
+    var transition_select = $('select[name=trans]');
+
     var freq_box = $('input[name=freq]');
     var rv_box = $('input[name=rv]');
     var rv_sys_box = $('select[name=rv_sys]');
@@ -139,6 +143,17 @@ $(document).ready(function () {
 
     freq_res_select.change(check_freq_res);
 
+    var check_transition_availability = (function () {
+        var freq_min = freq_box.attr('min');
+        var freq_max = freq_box.attr('max');
+
+        transition_select.children().each(function () {
+            var transition = $(this);
+            var freq = transition.data('freq');
+            transition.prop('disabled', (freq < freq_min) || (freq > freq_max));
+        });
+    });
+
     var check_radial_vel = (function() {
         var rv_sys = rv_sys_box.find(':selected');
         if (rv_sys.data('no_unit')) {
@@ -167,6 +182,8 @@ $(document).ready(function () {
         freq_box.attr('max', freq_max);
         $('span#freq_min').text(freq_min);
         $('span#freq_max').text(freq_max);
+
+        check_transition_availability();
     });
 
     rv_sys_box.change(check_radial_vel);
@@ -174,4 +191,112 @@ $(document).ready(function () {
     rv_box.change(check_radial_vel);
 
     check_rx_opt();
+
+    var update_transition_list = (function () {
+        if (line_catalog === null) {
+            return;
+        }
+
+        transition_select.children().detach();
+
+        var species = species_select.val();
+
+        if (species === '') {
+            transition_select.append($('<option/>', {'text': 'Other', 'value': ''}));
+            freq_box.prop('disabled', false);
+            return;
+        }
+
+        var transitions = line_catalog[species];
+
+        if (transitions === undefined) {
+            transition_select.append($('<option/>', {'text': 'Species not recognized', 'value': ''}));
+            freq_box.prop('disabled', false);
+            return;
+        }
+
+        freq_box.prop('disabled', true);
+
+        var options = [];
+
+        for (var i = 0; i < transitions.length; i ++) {
+            var entry = transitions[i];
+            var transition = entry[0];
+            var freq = entry[1];
+
+            options.push($('<option/>', {
+                'text': transition,
+                'value': transition
+            }).data('freq', freq));
+        }
+
+        transition_select.append(options);
+
+        check_transition_availability();
+
+        var transition_avail = transition_select.find(':enabled');
+        if (transition_avail.length) {
+            transition_select.val(transition_avail.val());
+        }
+    });
+
+    var apply_transition_selection = (function () {
+        var transition = transition_select.find(':selected');
+
+        if (transition.val() === '') {
+            return;
+        }
+
+        freq_box.val(transition.data('freq'));
+    });
+
+    var check_species_selection = (function () {
+        update_transition_list();
+        apply_transition_selection();
+    });
+
+    species_select.change(check_species_selection);
+    transition_select.change(apply_transition_selection);
+
+    $.ajax(species_select.data('line-catalog'), dataType='json'
+    ).done(function (result) {
+        species_select.children().detach();
+        line_catalog = {};
+
+        var options = [$('<option/>', {'text': 'Other', 'value': ''})];
+
+        for (var i = 0; i < result.length; i ++) {
+            var entry = result[i];
+            var species = entry[0];
+            var transitions = entry[1];
+
+            line_catalog[species] = transitions;
+
+            options.push($('<option/>', {'text': species, 'value': species}));
+        }
+
+        species_select.append(options);
+
+        var species_selected = species_select.data('selected');
+        if (species_selected !== '') {
+            species_select.val(species_selected);
+        }
+
+        update_transition_list();
+
+        var transition_selected = transition_select.data('selected');
+        if (transition_selected !== '') {
+            transition_select.val(transition_selected);
+        }
+
+        if (freq_box.val() === '') {
+            apply_transition_selection();
+        }
+
+    }).fail(function (jqXHR, textStatus) {
+        species_select.children().detach();
+        transition_select.children().detach();
+        species_select.append($('<option/>', {'text': 'Failed to load', 'value': ''}));
+        transition_select.append($('<option/>', {'text': 'Failed to load', 'value': ''}));
+    });
 });

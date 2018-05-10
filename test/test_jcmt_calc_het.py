@@ -25,27 +25,48 @@ from .base_calculator import CalculatorTestCase
 
 expect = {
     HeterodyneCalculator.CALC_TIME: {
+        2: {
+            'input':
+                'rx res res_unit sb dual_pol cont '
+                'species trans freq rv rv_sys pos pos_type tau '
+                'mm sw n_pt sep_off dim_x dim_y dx dy basket rms',
+            'output': 'elapsed',
+        },
         1: {
             'input':
-                'rx freq res res_unit sb dual_pol cont pos pos_type tau '
+                'rx res res_unit sb dual_pol cont freq pos pos_type tau '
                 'mm sw n_pt sep_off dim_x dim_y dx dy basket rms',
             'output': 'elapsed',
         },
     },
 
     HeterodyneCalculator.CALC_RMS_FROM_ELAPSED_TIME: {
+        2: {
+            'input':
+                'rx res res_unit sb dual_pol cont '
+                'species trans freq rv rv_sys pos pos_type tau '
+                'mm sw n_pt sep_off dim_x dim_y dx dy basket elapsed',
+            'output': 'rms',
+        },
         1: {
             'input':
-                'rx freq res res_unit sb dual_pol cont pos pos_type tau '
+                'rx res res_unit sb dual_pol cont freq pos pos_type tau '
                 'mm sw n_pt sep_off dim_x dim_y dx dy basket elapsed',
             'output': 'rms',
         },
     },
 
     HeterodyneCalculator.CALC_RMS_FROM_INT_TIME: {
+        2: {
+            'input':
+                'rx res res_unit sb dual_pol cont '
+                'species trans freq rv rv_sys pos pos_type tau '
+                'mm sw n_pt sep_off dim_x dim_y dx dy basket int_time',
+            'output': 'rms elapsed',
+        },
         1: {
             'input':
-                'rx freq res res_unit sb dual_pol cont pos pos_type tau '
+                'rx res res_unit sb dual_pol cont freq pos pos_type tau '
                 'mm sw n_pt sep_off dim_x dim_y dx dy basket int_time',
             'output': 'rms elapsed',
         },
