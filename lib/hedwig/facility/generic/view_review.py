@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import namedtuple, OrderedDict
+from collections import defaultdict, namedtuple, OrderedDict
 from datetime import datetime
 from itertools import chain
 import re
@@ -42,6 +42,9 @@ from ...type.util import null_tuple, \
     with_can_edit, with_can_view, with_can_view_edit
 
 
+ReviewerRoleSelection = namedtuple(
+    'ReviewerRoleSelection', ('id', 'info'))
+
 ProposalWithInviteRoles = namedtuple(
     'ProposalWithInviteRoles',
     ProposalWithCode._fields + ('invite_roles',))
@@ -55,8 +58,7 @@ ProposalWithReviewers = namedtuple(
 ProposalWithReviewerPersons = namedtuple(
     'ProposalWithReviewerPersons',
     ProposalWithCode._fields + (
-        'person_ids_primary', 'person_ids_secondary',
-        'person_ids_primary_present', 'person_ids_secondary_present'))
+        'reviewer_person_ids',))
 
 
 class GenericReview(object):
@@ -401,20 +403,20 @@ class GenericReview(object):
         role_class = self.get_reviewer_roles()
         type_class = self.get_call_types()
 
+        roles = [ReviewerRoleSelection(
+            primary_role, role_class.get_info(primary_role))]
+
         if primary_role == role_class.TECH:
             group_type = GroupType.TECH
-            secondary_role = None
 
         elif primary_role == role_class.CTTEE_PRIMARY:
             group_type = GroupType.CTTEE
             secondary_role = role_class.CTTEE_SECONDARY
+            roles.append(ReviewerRoleSelection(
+                secondary_role, role_class.get_info(secondary_role)))
 
         else:
             raise ErrorPage('Unexpected reviewer role')
-
-        primary_role_info = role_class.get_info(primary_role)
-        secondary_role_info = (None if secondary_role is None else
-                               role_class.get_info(secondary_role))
 
         group_info = GroupType.get_info(group_type)
 
@@ -429,53 +431,37 @@ class GenericReview(object):
                 call_id=call.id,
                 state=role_class.get_editable_states(primary_role),
                 with_members=True, with_reviewers=True,
-                with_review_info=True, with_reviewer_role=(
-                    primary_role if secondary_role is None else
-                    (primary_role, secondary_role))).values():
+                with_review_info=True, with_reviewer_role=[
+                    x.id for x in roles]).values():
             # Emulate search_proposal(with_member_pi=True) behaviour by setting
             # the "member" attribute to just the PI.
             member_pi = proposal.members.get_pi(default=None)
             if member_pi is not None:
+                # TODO: use auth module rather than guessing?
                 proposal = proposal._replace(member=with_can_view(
                     member_pi, (session.get('is_admin', False)
                                 or member_pi.person_public)))
 
-            reviewers_pri = proposal.reviewers.values_by_role(primary_role)
-            reviewers_sec = (
-                [] if secondary_role is None
-                else proposal.reviewers.values_by_role(secondary_role))
-
             proposals.append(ProposalWithReviewerPersons(
                 *proposal, code=self.make_proposal_code(db, proposal),
-                person_ids_primary=[x.person_id for x in reviewers_pri],
-                person_ids_primary_present=[
-                    x.person_id for x in reviewers_pri
-                    if ReviewState.is_present(x.review_state)],
-                person_ids_secondary=[x.person_id for x in reviewers_sec],
-                person_ids_secondary_present=[
-                    x.person_id for x in reviewers_sec
-                    if ReviewState.is_present(x.review_state)]))
-
-        role_list = zip([primary_role, secondary_role],
-                        [primary_role_info, secondary_role_info],
-                        ['primary', 'secondary'])
+                reviewer_person_ids=[{
+                    x.person_id: ReviewState.is_present(x.review_state)
+                    for x in proposal.reviewers.values_by_role(role.id)}
+                    for role in roles]))
 
         message = None
 
         if form is not None:
-            # Read the form inputs into an updated proposal list.  Do this
+            # Read the form inputs into an updated reviewer list.  Do this
             # first so that we can return the whole updated grid to the user
             # in case of an error performing the update.
-            proposals_updated = []
+            reviewers_updated = defaultdict(list)
             for proposal in proposals:
-                for (role, role_info, prefix) in role_list:
-                    if role is None:
-                        continue
-
-                    if role_info.unique:
+                for (role_num, role) in enumerate(roles, start=1):
+                    if role.info.unique:
                         # Read the radio button setting.
                         person_ids = []
-                        id_ = '{}_{}'.format(prefix, proposal.id)
+                        id_ = 'rev_{}_{}'.format(role_num, proposal.id)
                         if id_ in form:
                             person_id = int(form[id_])
                             if person_id in group_person_ids:
@@ -485,41 +471,33 @@ class GenericReview(object):
                         # See which checkbox inputs are present.
                         person_ids = [
                             x for x in group_person_ids
-                            if '{}_{}_{}'.format(prefix, proposal.id, x)
+                            if 'rev_{}_{}_{}'.format(role_num, proposal.id, x)
                             in form]
 
-                    proposal = proposal._replace(
-                        **{'person_ids_{}'.format(prefix): person_ids})
-
-                proposals_updated.append(proposal)
+                    reviewers_updated[proposal.id].append(person_ids)
 
             try:
                 reviewer_remove = []
                 reviewer_add = []
 
-                for (proposal, proposal_updated) in zip(
-                        proposals, proposals_updated):
-                    for (role, role_info, prefix) in role_list:
-                        if role is None:
-                            continue
-                        if proposal.id != proposal_updated.id:
-                            raise HTTPError('Proposals got out of sync.')
-
-                        id_ = 'person_ids_{}'.format(prefix)
-                        orig = getattr(proposal, id_)
-                        updated = getattr(proposal_updated, id_)
-                        present = getattr(proposal, '{}_present'.format(id_))
-
+                for proposal in proposals:
+                    for (role, orig, updated) in zip(
+                            roles, proposal.reviewer_person_ids,
+                            reviewers_updated[proposal.id]):
                         # Apply uniqueness constraint.
-                        if role_info.unique and (len(updated) > 1):
+                        if role.info.unique and (len(updated) > 1):
                             raise UserError(
-                                'Multiple {} reviewers selected for '
+                                'Multiple {} assignments selected for '
                                 'proposal {}.',
-                                prefix, proposal.code)
+                                role.info.name, proposal.code)
+
+                        # Copy the original reviewer list before removing
+                        # entries from it.
+                        orig = orig.copy()
 
                         for person_id in updated:
                             if person_id in orig:
-                                orig.remove(person_id)
+                                del orig[person_id]
                             else:
                                 if proposal.members.has_person(person_id):
                                     raise UserError(
@@ -530,11 +508,11 @@ class GenericReview(object):
                                 reviewer_add.append({
                                     'proposal_id': proposal.id,
                                     'person_id': person_id,
-                                    'role': role,
+                                    'role': role.id,
                                 })
 
-                        for person_id in orig:
-                            if person_id in present:
+                        for (person_id, present) in orig.items():
+                            if present:
                                 raise UserError(
                                     'This page can not be used to remove '
                                     'a reviewer who already started '
@@ -543,7 +521,7 @@ class GenericReview(object):
                             reviewer_remove.append({
                                 'proposal_id': proposal.id,
                                 'person_id': person_id,
-                                'role': role,
+                                'role': role.id,
                             })
 
                 try:
@@ -561,7 +539,15 @@ class GenericReview(object):
 
             except UserError as e:
                 message = e.message
-                proposals = proposals_updated
+
+                proposals = [
+                    proposal._replace(reviewer_person_ids=[
+                        {person_id: existing_reviewers.get(person_id, False)
+                            for person_id in role_reviewers}
+                        for (existing_reviewers, role_reviewers)
+                        in zip(proposal.reviewer_person_ids,
+                               reviewers_updated[proposal.id])])
+                    for proposal in proposals]
 
         return {
             'title': '{}: {} {} {}'.format(
@@ -573,9 +559,7 @@ class GenericReview(object):
             'target': url_for('.review_call_grid', call_id=call.id,
                               reviewer_role=primary_role),
             'group_members': group_members,
-            'primary_unique': primary_role_info.unique,
-            'secondary_unique': (None if secondary_role_info is None else
-                                 secondary_role_info.unique),
+            'roles': roles,
             'message': message,
         }
 

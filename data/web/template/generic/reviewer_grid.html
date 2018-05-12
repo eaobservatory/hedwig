@@ -4,9 +4,9 @@
 {% set help_link=url_for('help.admin_page', page_name='review_process') %}
 {% set scripts = ['jquery_stickytableheaders', 'reviewer_grid'] %}
 
-{% macro render_reviewer_select(prefix, is_unique, person_ids, person_ids_present, proposal_id, person_id) %}
+{% macro render_reviewer_select(prefix, is_unique, person_ids, proposal_id, person_id) %}
     {% if is_unique %}
-        {% if person_ids_present %}
+        {% if person_ids.values() | count_true %}
             {% if person_id in person_ids %}
                 &check;
                 <input type="hidden" name="{{ prefix }}_{{ proposal_id }}" value="{{ person_id }}" />
@@ -17,7 +17,7 @@
             <input type="radio" name="{{ prefix }}_{{ proposal_id }}" value="{{ person_id }}" {{ 'checked="checked"' | safe if person_id in person_ids }} />
         {% endif %}
     {% else %}
-        {% if person_id in person_ids_present %}
+        {% if person_ids.get(person_id, False) %}
             &check;
             <input type="hidden" name="{{ prefix }}_{{ proposal_id }}_{{ person_id }}" value="1" />
         {% else %}
@@ -27,13 +27,16 @@
 {% endmacro %}
 
 {% block content %}
-{% if secondary_unique is not none %}
+{% if (roles | length) > 1 %}
+    <p>
+        In each proposal/person cell, the lines correspond to the following
+        assignments:
+    </p>
+
     <ul>
-        <li>
-            In each proposal/person cell, the first line is the
-            primary assignment and the second line is the secondary
-            assignment.
-        </li>
+        {% for role in roles %}
+            <li>{{ role.info.name }}</li>
+        {% endfor %}
     </ul>
 {% endif %}
 
@@ -75,11 +78,12 @@
                         {% if proposal.members.has_person(member.person_id) %}
                             &nbsp;
                         {% else %}
-                            {{ render_reviewer_select('primary', primary_unique, proposal.person_ids_primary, proposal.person_ids_primary_present, proposal.id, member.person_id) }}
-                            {% if secondary_unique is not none %}
-                                <br />
-                                {{ render_reviewer_select('secondary', secondary_unique, proposal.person_ids_secondary, proposal.person_ids_secondary_present, proposal.id, member.person_id) }}
-                            {% endif %}
+                            {% for role in roles %}
+                                {{ render_reviewer_select(loop.index | fmt('rev_{}'), role.info.unique, proposal.reviewer_person_ids[loop.index0], proposal.id, member.person_id) }}
+                                {% if not loop.last %}
+                                    <br />
+                                {% endif %}
+                            {% endfor %}
                         {% endif %}
                     </td>
                 {% endfor %}
