@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -28,7 +28,7 @@ from ...view.help import HelpView
 from ..util import send_file, templated
 
 
-def create_help_blueprint():
+def create_help_blueprint(db):
     """
     Create Flask Blueprint for the online help system.
     """
@@ -55,7 +55,7 @@ def create_help_blueprint():
     @bp.route('/')
     @templated('help/index.html')
     def help_index():
-        return view.help_home()
+        return view.help_home(db)
 
     @bp.route('/about')
     @templated('help/help_page.html')

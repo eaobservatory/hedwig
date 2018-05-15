@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -39,10 +39,21 @@ TreeEntry = namedtuple('TreeEntry', ('mtime', 'toc'))
 
 
 class HelpView(object):
-    def help_home(self):
+    def help_home(self, db):
+        show_admin_links = False
+        if ('user_id' in session) and ('person' in session):
+            if session['person'].get('admin', False):
+                show_admin_links = True
+
+            else:
+                # Also show administrator's guide if they're a member of
+                # any review group.
+                if db.search_group_member(person_id=session['person']['id']):
+                    show_admin_links = True
+
         return {
             'title': 'Help',
-            'show_admin_links': session.get('is_admin', False),
+            'show_admin_links': show_admin_links,
         }
 
     def help_page(self, doc_root, page_name, toc_cache):

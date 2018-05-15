@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2017 East Asian Observatory.
+# Copyright (C) 2015-2018 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -139,7 +139,7 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
     app.register_blueprint(create_admin_blueprint(db, facilities),
                            url_prefix='/admin')
     app.register_blueprint(create_people_blueprint(db, facilities))
-    app.register_blueprint(create_help_blueprint(), url_prefix='/help')
+    app.register_blueprint(create_help_blueprint(db), url_prefix='/help')
     app.register_blueprint(create_query_blueprint(db), url_prefix='/query')
 
     # Register blueprints for each facility.
