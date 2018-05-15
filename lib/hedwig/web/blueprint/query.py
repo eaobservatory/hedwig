@@ -50,7 +50,11 @@ def create_query_blueprint(db):
 
             r.raise_for_status()
 
-            return Response(r.content, mimetype=r.headers['Content-Type'])
+            response = Response(r.content, mimetype=r.headers['Content-Type'])
+
+            response.cache_control.max_age = 3600
+
+            return response
 
         except requests.exceptions.RequestException:
             raise HTTPError('Failed to resolve name via CADC.')
