@@ -5,9 +5,9 @@
 {% from 'macro/target.html' import render_target_list_info %}
 
 {% if scripts is defined %}
-    {% set scripts = ['formtip'] + scripts %}
+    {% set scripts = ['resolve_name', 'tool_base', 'formtip'] + scripts %}
 {% else %}
-    {% set scripts = ['formtip'] %}
+    {% set scripts = ['resolve_name', 'tool_base', 'formtip'] %}
 {% endif %}
 
 {% block content %}
@@ -48,12 +48,16 @@
                         </li>
                     {% else %}
                         <li>
+                            <label for="name">Target name</label>
+                            <input type="text"  name="name" value="{{ target.name }}" placeholder="Optional" autofocus="autofocus" />
+                            <input type="button" id="resolve" value="Resolve name" data-resolver="{{ url_for('query.name_resolver') }}" />
+                        <li>
                             <label for="x">RA / Longitude</label>
-                            <input type="text" name="x" value="{{ target.x }}" placeholder="00:00:00" />
+                            <input type="text" name="x" value="{{ target.x }}" placeholder="00:00:00" required="required" />
                         </li>
                         <li>
                             <label for="y">Dec / Latitude</label>
-                            <input type="text" name ="y" value="{{ target.y }}" placeholder="00:00:00" />
+                            <input type="text" name ="y" value="{{ target.y }}" placeholder="00:00:00" required="required" />
                         </li>
                         <li>
                             <label for="system">System</label>

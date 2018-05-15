@@ -29,7 +29,7 @@ from ..web.util import ErrorPage, HTTPForbidden, HTTPNotFound, url_for
 from .util import with_proposal
 from . import auth
 
-TargetCoord = namedtuple('TargetCoord', ('x', 'y', 'system'))
+TargetCoord = namedtuple('TargetCoord', ('name', 'x', 'y', 'system'))
 
 
 class BaseTargetTool(object):
@@ -98,16 +98,19 @@ class BaseTargetTool(object):
         is first displayed for input or in the case of a parsing error.
         """
 
-        target = TargetCoord('', '', CoordSystem.ICRS)
+        target = TargetCoord('', '', '', CoordSystem.ICRS)
         message = None
         target_object = None
 
         if form is not None:
-            target = target._replace(x=form['x'], y=form['y'],
-                                     system=int(form['system']))
+            target = target._replace(
+                name=form['name'], x=form['x'], y=form['y'],
+                system=int(form['system']))
 
             try:
-                target_name = 'Input coordinates'
+                target_name = (
+                    'Input coordinates' if target.name == ''
+                    else target.name)
                 target_object = TargetObject(
                     target_name, target.system,
                     parse_coord(target.system, target.x, target.y,
