@@ -35,6 +35,25 @@ technical assessor for each proposal.
 
 .. image:: image/reviewer_tech.png
 
+The grid may contain elements other than selection controls:
+
+Blank cell
+    The person is a member of the proposal,
+    so they can not be selected as a reviewer.
+
+Check mark
+    The person was selected as a reviewer and has
+    already started their review, so the review
+    can not be reassigned using this page.
+
+Cross mark
+    The person already has a review of a conflicting type.
+
+Horizontal dash
+    The reviewer role can only be assigned
+    to one person and a review has already been
+    submitted for it.
+
 Committee Members
 ~~~~~~~~~~~~~~~~~
 
@@ -43,7 +62,7 @@ To assign committee members, use the
 This shows a similar grid to that for the technical assessors,
 except that there are two rows of controls for each proposal.
 The top row selects the primary committee reviewer
-and the second rows select secondary committee reviewers.
+and the second row selects secondary committee reviewers.
 
 .. image:: image/reviewer_cttee.png
 

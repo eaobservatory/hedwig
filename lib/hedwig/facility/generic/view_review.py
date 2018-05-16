@@ -42,9 +42,6 @@ from ...type.util import null_tuple, \
     with_can_edit, with_can_view, with_can_view_edit
 
 
-ReviewerRoleSelection = namedtuple(
-    'ReviewerRoleSelection', ('id', 'info'))
-
 ProposalWithInviteRoles = namedtuple(
     'ProposalWithInviteRoles',
     ProposalWithCode._fields + ('invite_roles',))
@@ -403,20 +400,29 @@ class GenericReview(object):
         role_class = self.get_reviewer_roles()
         type_class = self.get_call_types()
 
-        roles = [ReviewerRoleSelection(
-            primary_role, role_class.get_info(primary_role))]
+        # Dictionaries of roles which we are processing and roles which
+        # conflict with them.
+        roles = OrderedDict((
+            (primary_role, role_class.get_info(primary_role)),))
+        roles_conflict = {}
 
         if primary_role == role_class.TECH:
             group_type = GroupType.TECH
 
         elif primary_role == role_class.CTTEE_PRIMARY:
             group_type = GroupType.CTTEE
-            secondary_role = role_class.CTTEE_SECONDARY
-            roles.append(ReviewerRoleSelection(
-                secondary_role, role_class.get_info(secondary_role)))
+            roles[role_class.CTTEE_SECONDARY] = role_class.get_info(
+                role_class.CTTEE_SECONDARY)
+            roles_conflict[role_class.CTTEE_OTHER] = role_class.get_info(
+                role_class.CTTEE_OTHER)
 
         else:
             raise ErrorPage('Unexpected reviewer role')
+
+        # All roles to consider: those we are processing plus those
+        # which may conflict with them.
+        all_roles = set(roles.keys())
+        all_roles.update(roles_conflict.keys())
 
         group_info = GroupType.get_info(group_type)
 
@@ -431,37 +437,38 @@ class GenericReview(object):
                 call_id=call.id,
                 state=role_class.get_editable_states(primary_role),
                 with_members=True, with_reviewers=True,
-                with_review_info=True, with_reviewer_role=[
-                    x.id for x in roles]).values():
+                with_review_info=True, with_reviewer_role=all_roles).values():
             # Emulate search_proposal(with_member_pi=True) behaviour by setting
             # the "member" attribute to just the PI.
             member_pi = proposal.members.get_pi(default=None)
             if member_pi is not None:
-                # TODO: use auth module rather than guessing?
                 proposal = proposal._replace(member=with_can_view(
                     member_pi, (session.get('is_admin', False)
                                 or member_pi.person_public)))
 
             proposals.append(ProposalWithReviewerPersons(
                 *proposal, code=self.make_proposal_code(db, proposal),
-                reviewer_person_ids=[{
+                reviewer_person_ids={role_id: {
                     x.person_id: ReviewState.is_present(x.review_state)
-                    for x in proposal.reviewers.values_by_role(role.id)}
-                    for role in roles]))
+                    for x in proposal.reviewers.values_by_role(role_id)}
+                    for role_id in all_roles}))
 
         message = None
 
         if form is not None:
-            # Read the form inputs into an updated reviewer list.  Do this
-            # first so that we can return the whole updated grid to the user
+            # Read the form inputs into the review list.  Do this first
+            # so that we can return the whole updated grid to the user
             # in case of an error performing the update.
-            reviewers_updated = defaultdict(list)
+            reviewers_orig = {}
             for proposal in proposals:
-                for (role_num, role) in enumerate(roles, start=1):
-                    if role.info.unique:
+                orig = reviewers_orig[proposal.id] = \
+                    proposal.reviewer_person_ids.copy()
+
+                for (role_id, role) in roles.items():
+                    if role.unique:
                         # Read the radio button setting.
                         person_ids = []
-                        id_ = 'rev_{}_{}'.format(role_num, proposal.id)
+                        id_ = 'rev_{}_{}'.format(role_id, proposal.id)
                         if id_ in form:
                             person_id = int(form[id_])
                             if person_id in group_person_ids:
@@ -471,25 +478,52 @@ class GenericReview(object):
                         # See which checkbox inputs are present.
                         person_ids = [
                             x for x in group_person_ids
-                            if 'rev_{}_{}_{}'.format(role_num, proposal.id, x)
+                            if 'rev_{}_{}_{}'.format(role_id, proposal.id, x)
                             in form]
 
-                    reviewers_updated[proposal.id].append(person_ids)
+                    proposal.reviewer_person_ids[role_id] = {
+                        x: orig[role_id].get(x, False) for x in person_ids}
 
             try:
                 reviewer_remove = []
                 reviewer_add = []
 
                 for proposal in proposals:
-                    for (role, orig, updated) in zip(
-                            roles, proposal.reviewer_person_ids,
-                            reviewers_updated[proposal.id]):
+                    proposal_reviewers_orig = reviewers_orig[proposal.id]
+                    proposal_reviewers_updated = proposal.reviewer_person_ids
+
+                    for (role_id, role) in roles.items():
+                        orig = proposal_reviewers_orig[role_id]
+                        updated = proposal_reviewers_updated[role_id]
+
                         # Apply uniqueness constraint.
-                        if role.info.unique and (len(updated) > 1):
+                        if role.unique and (len(updated) > 1):
                             raise UserError(
                                 'Multiple {} assignments selected for '
                                 'proposal {}.',
-                                role.info.name, proposal.code)
+                                role.name.lower(), proposal.code)
+
+                        # Check for multiple or conflicting assignments.
+                        for person_id in updated:
+                            for (role_other_id, role_other) in roles.items():
+                                if role_other_id == role_id:
+                                    continue
+                                if person_id in proposal_reviewers_updated[
+                                        role_other_id]:
+                                    raise UserError(
+                                        'A reviewer has been selected for '
+                                        'multiple roles for proposal {}.',
+                                        proposal.code)
+                            for (role_other_id, role_other) in \
+                                    roles_conflict.items():
+                                if person_id in proposal_reviewers_updated[
+                                        role_other_id]:
+                                    raise UserError(
+                                        'A reviewer selected for proposal {} '
+                                        'already has a {}{}.',
+                                        proposal.code, role_other.name.lower(),
+                                        (' review' if role_other.name_review
+                                         else ''))
 
                         # Copy the original reviewer list before removing
                         # entries from it.
@@ -508,7 +542,7 @@ class GenericReview(object):
                                 reviewer_add.append({
                                     'proposal_id': proposal.id,
                                     'person_id': person_id,
-                                    'role': role.id,
+                                    'role': role_id,
                                 })
 
                         for (person_id, present) in orig.items():
@@ -521,7 +555,7 @@ class GenericReview(object):
                             reviewer_remove.append({
                                 'proposal_id': proposal.id,
                                 'person_id': person_id,
-                                'role': role.id,
+                                'role': role_id,
                             })
 
                 try:
@@ -540,15 +574,6 @@ class GenericReview(object):
             except UserError as e:
                 message = e.message
 
-                proposals = [
-                    proposal._replace(reviewer_person_ids=[
-                        {person_id: existing_reviewers.get(person_id, False)
-                            for person_id in role_reviewers}
-                        for (existing_reviewers, role_reviewers)
-                        in zip(proposal.reviewer_person_ids,
-                               reviewers_updated[proposal.id])])
-                    for proposal in proposals]
-
         return {
             'title': '{}: {} {} {}'.format(
                 group_info.name.title(),
@@ -560,6 +585,11 @@ class GenericReview(object):
                               reviewer_role=primary_role),
             'group_members': group_members,
             'roles': roles,
+            'conflict_person_ids': {
+                proposal.id: set(chain.from_iterable(
+                    proposal.reviewer_person_ids[role].keys()
+                    for role in roles_conflict))
+                for proposal in proposals},
             'message': message,
         }
 
