@@ -28,8 +28,16 @@ class QueryView(object):
     cadc_name_resolver = \
         'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/cadc-target-resolver/find'
 
+    fixed_name_responses = {}
+
     def __init__(self):
         pass
+
+    @classmethod
+    def add_fixed_name_response(
+            cls, target, response, format_='json',
+            type_='application/json;charset=ISO-8859-1'):
+        cls.fixed_name_responses[(target, format_)] = (response, type_, None)
 
     def resolve_name(self, args):
         """
@@ -38,6 +46,12 @@ class QueryView(object):
         Ideally CADC's service would support HTTPS and CORS so that our
         JavaScript code could access it directly.
         """
+
+        fixed_response = self.fixed_name_responses.get(
+            (args.get('target'), args.get('format')))
+
+        if fixed_response is not None:
+            return fixed_response
 
         try:
             r = requests.get(self.cadc_name_resolver, params=args, timeout=15)

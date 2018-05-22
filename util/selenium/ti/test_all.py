@@ -43,6 +43,7 @@ from hedwig.admin.poll import send_proposal_feedback
 from hedwig.file.poll import process_moc, \
     process_proposal_figure, process_proposal_pdf
 from hedwig.type.enum import MessageState
+from hedwig.view.query import QueryView
 from hedwig.web.app import create_web_app
 
 from test.dummy_config import DummyConfigTestCase
@@ -764,6 +765,15 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_link_text('Edit targets').click()
 
         self.browser.find_element_by_id('add_target').click()
+
+        # Place these targets in the name resolver proxy's fixed target list
+        # so that we don't have to connect to CADC to resolve them.
+        QueryView.add_fixed_name_response(
+            'LDN 123', '{"target":"LDN 123","service":"Hedwig(fixed)",'
+            '"coordsys":"ICRS","ra":271.9,"dec":-27.4167,"time":1}')
+        QueryView.add_fixed_name_response(
+            'LDN 456', '{"target":"LDN 456","service":"Hedwig(fixed)",'
+            '"coordsys":"ICRS","ra":283.2,"dec":-10.9333,"time":0}')
 
         self.browser.find_element_by_name('name_new_1').send_keys('LDN 123')
         self.browser.find_element_by_name('name_new_2').send_keys('LDN 456')
