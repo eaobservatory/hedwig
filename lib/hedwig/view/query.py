@@ -18,24 +18,33 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from flask import Blueprint, request
+import requests
 
-from ...view.query import QueryView
-from ..util import send_file
+from ..compat import str_to_unicode
+from ..web.util import HTTPError
 
 
-def create_query_blueprint(db):
-    """
-    Create Flask Blueprint for services to be queried by our JavaScript
-    code.
-    """
+class QueryView(object):
+    cadc_name_resolver = \
+        'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/cadc-target-resolver/find'
 
-    bp = Blueprint('query', __name__)
-    view = QueryView()
+    def __init__(self):
+        pass
 
-    @bp.route('/nameresolver')
-    @send_file(allow_cache=True, cache_max_age=3600, cache_private=False)
-    def name_resolver():
-        return view.resolve_name(request.args)
+    def resolve_name(self, args):
+        """
+        Simple proxy for the CADC name resolver service.
 
-    return bp
+        Ideally CADC's service would support HTTPS and CORS so that our
+        JavaScript code could access it directly.
+        """
+
+        try:
+            r = requests.get(self.cadc_name_resolver, params=args, timeout=15)
+
+            r.raise_for_status()
+
+            return (r.content, str_to_unicode(r.headers['Content-Type']), None)
+
+        except requests.exceptions.RequestException:
+            raise HTTPError('Failed to resolve name via CADC.')

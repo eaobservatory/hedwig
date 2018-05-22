@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2017 East Asian Observatory.
+# Copyright (C) 2015-2018 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -363,7 +363,9 @@ def require_not_auth(f):
     return decorated
 
 
-def send_file(fixed_type=None, allow_cache=False):
+def send_file(
+        fixed_type=None, allow_cache=False,
+        cache_max_age=86400, cache_private=True):
     """
     Decorator for route functions which send files.
 
@@ -420,8 +422,9 @@ def send_file(fixed_type=None, allow_cache=False):
                 # Set maximum age to one day to allow the user's browser
                 # to cache the file.  However this is assumed to be a part
                 # of their proposal, so request no public caching.
-                response.cache_control.max_age = 86400
-                response.cache_control.private = True
+                response.cache_control.max_age = cache_max_age
+                if cache_private:
+                    response.cache_control.private = True
 
             return response
 
