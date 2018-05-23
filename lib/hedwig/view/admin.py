@@ -134,6 +134,7 @@ class AdminView(object):
         return {
             'title': ('Message List' if person is None
                       else '{}: Messages'.format(person.name)),
+            'person': person,
             'messages': messages,
             'target_first': target_first,
             'target_next': target_next,
