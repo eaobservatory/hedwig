@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -57,29 +57,7 @@ class JCMTPart(object):
         Retrieve the observing allocations for the given proposal.
         """
 
-        iter_field = None
-        iter_list = None
-
-        stmt = jcmt_allocation.select()
-
-        if proposal_id is not None:
-            if is_list_like(proposal_id):
-                assert iter_field is None
-                iter_field = jcmt_allocation.c.proposal_id
-                iter_list = proposal_id
-            else:
-                stmt = stmt.where(
-                    jcmt_allocation.c.proposal_id == proposal_id)
-
-        ans = JCMTRequestCollection()
-
-        with self._transaction() as conn:
-            for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
-                for row in conn.execute(
-                        iter_stmt.order_by(jcmt_allocation.c.id.asc())):
-                    ans[row['id']] = JCMTRequest(**row)
-
-        return ans
+        return self._search_jcmt_req_alloc(jcmt_allocation, proposal_id)
 
     def search_jcmt_available(self, call_id):
         """
@@ -132,25 +110,32 @@ class JCMTPart(object):
         Retrieve the observing requests for the given proposal.
         """
 
+        return self._search_jcmt_req_alloc(jcmt_request, proposal_id)
+
+    def _search_jcmt_req_alloc(self, table, proposal_id):
+        """
+        Common method to search for either requests or allocations.
+        """
+
         iter_field = None
         iter_list = None
 
-        stmt = jcmt_request.select()
+        stmt = table.select()
 
         if proposal_id is not None:
             if is_list_like(proposal_id):
                 assert iter_field is None
-                iter_field = jcmt_request.c.proposal_id
+                iter_field = table.c.proposal_id
                 iter_list = proposal_id
             else:
-                stmt = stmt.where(jcmt_request.c.proposal_id == proposal_id)
+                stmt = stmt.where(table.c.proposal_id == proposal_id)
 
         ans = JCMTRequestCollection()
 
         with self._transaction() as conn:
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(
-                        iter_stmt.order_by(jcmt_request.c.id.asc())):
+                        iter_stmt.order_by(table.c.id.asc())):
                     ans[row['id']] = JCMTRequest(**row)
 
         return ans
@@ -334,34 +319,32 @@ class JCMTPart(object):
                 conn, jcmt_available, jcmt_available.c.call_id, call_id,
                 records, unique_columns=(jcmt_available.c.weather,))
 
-    def sync_jcmt_proposal_allocation(self, proposal_id, records,
-                                      _test_skip_check=False):
+    def sync_jcmt_proposal_allocation(
+            self, proposal_id, records, _test_skip_check=False):
         """
         Update the observing allocations for the given proposal to match
         the specified records.
         """
 
-        records.validate()
+        return self._sync_jcmt_proposal_alloc_req(
+            jcmt_allocation, proposal_id, records, _test_skip_check)
 
-        with self._transaction() as conn:
-            if not _test_skip_check and \
-                    not self._exists_id(conn, proposal, proposal_id):
-                raise ConsistencyError(
-                    'proposal does not exist with id={}', proposal_id)
-
-            return self._sync_records(
-                conn, jcmt_allocation, jcmt_allocation.c.proposal_id,
-                proposal_id, records, unique_columns=(
-                    jcmt_allocation.c.instrument, jcmt_allocation.c.ancillary,
-                    jcmt_allocation.c.weather))
-
-    def sync_jcmt_proposal_request(self, proposal_id, records,
-                                   _test_skip_check=False):
+    def sync_jcmt_proposal_request(
+            self, proposal_id, records, _test_skip_check=False):
         """
         Update the observing requests for the given proposal to match
         the specified records.
         """
 
+        return self._sync_jcmt_proposal_alloc_req(
+            jcmt_request, proposal_id, records, _test_skip_check)
+
+    def _sync_jcmt_proposal_alloc_req(
+            self, table, proposal_id, records, _test_skip_check):
+        """
+        Common method to sync either requests or allocations.
+        """
+
         records.validate()
 
         with self._transaction() as conn:
@@ -371,10 +354,9 @@ class JCMTPart(object):
                     'proposal does not exist with id={}', proposal_id)
 
             return self._sync_records(
-                conn, jcmt_request, jcmt_request.c.proposal_id, proposal_id,
+                conn, table, table.c.proposal_id, proposal_id,
                 records, unique_columns=(
-                    jcmt_request.c.instrument, jcmt_request.c.ancillary,
-                    jcmt_request.c.weather))
+                    table.c.instrument, table.c.ancillary, table.c.weather))
 
     def _exists_jcmt_review(self, conn, reviewer_id):
         """

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -27,18 +27,25 @@ from sqlalchemy.types import Boolean, DateTime, Float, Integer, \
 from ...db.meta import metadata, table_opts
 
 
+def _request_cols():
+    return [
+        Column('proposal_id', None,
+               ForeignKey('proposal.id', onupdate='RESTRICT',
+                          ondelete='RESTRICT'),
+               nullable=False),
+        Column('instrument', Integer, nullable=False),
+        Column('ancillary', Integer, nullable=False),
+        Column('weather', Integer, nullable=False),
+        Column('time', Float, nullable=False),
+        UniqueConstraint('proposal_id', 'instrument', 'ancillary', 'weather'),
+    ]
+
+
 jcmt_allocation = Table(
     'jcmt_allocation',
     metadata,
     Column('id', Integer, primary_key=True),
-    Column('proposal_id', None,
-           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
-           nullable=False),
-    Column('instrument', Integer, nullable=False),
-    Column('ancillary', Integer, nullable=False),
-    Column('weather', Integer, nullable=False),
-    Column('time', Float, nullable=False),
-    UniqueConstraint('proposal_id', 'instrument', 'ancillary', 'weather'),
+    *_request_cols(),
     **table_opts)
 
 jcmt_available = Table(
@@ -69,14 +76,7 @@ jcmt_request = Table(
     'jcmt_request',
     metadata,
     Column('id', Integer, primary_key=True),
-    Column('proposal_id', None,
-           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
-           nullable=False),
-    Column('instrument', Integer, nullable=False),
-    Column('ancillary', Integer, nullable=False),
-    Column('weather', Integer, nullable=False),
-    Column('time', Float, nullable=False),
-    UniqueConstraint('proposal_id', 'instrument', 'ancillary', 'weather'),
+    *_request_cols(),
     **table_opts)
 
 jcmt_review = Table(
