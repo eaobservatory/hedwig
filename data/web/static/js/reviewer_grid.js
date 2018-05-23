@@ -17,8 +17,8 @@ $(document).ready(function () {
     });
 
     var disable_duplicates = (function () {
-        assign_radio.each(disable_duplicate_control);
-        assign_check.each(disable_duplicate_control);
+        assign_radio.not('.unassigned').each(disable_duplicate_control);
+        assign_check.not('.unassigned').each(disable_duplicate_control);
     });
 
     assign_radio.change(disable_duplicates);

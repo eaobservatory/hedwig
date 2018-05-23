@@ -471,8 +471,9 @@ class GenericReview(object):
                         person_ids = []
                         id_ = 'rev_{}_{}'.format(role_id, proposal.id)
                         if id_ in form:
-                            person_id = int(form[id_])
-                            if person_id in group_person_ids:
+                            person_id = int_or_none(form[id_])
+                            if ((person_id is not None) and
+                                    (person_id in group_person_ids)):
                                 person_ids = [person_id]
 
                     else:

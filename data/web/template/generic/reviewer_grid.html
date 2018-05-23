@@ -13,6 +13,8 @@
             {% else %}
                 &mdash;
             {% endif %}
+        {% elif person_id is none %}
+            <input type="radio" name="{{ prefix }}_{{ proposal_id }}" value="" {{ 'checked="checked"' | safe if not person_ids }} class="unassigned" />
         {% else %}
             <input type="radio" name="{{ prefix }}_{{ proposal_id }}" value="{{ person_id }}" {{ 'checked="checked"' | safe if person_id in person_ids }} />
         {% endif %}
@@ -26,8 +28,11 @@
     {% endif %}
 {% endmacro %}
 
+{% set n_role = roles | length %}
+{% set n_unique = roles.values() | map(attribute='unique') | count_true %}
+
 {% block content %}
-{% if (roles | length) > 1 %}
+{% if n_role > 1 %}
     <p>
         In each proposal/person cell, the lines correspond to the following
         assignments:
@@ -47,7 +52,7 @@
 {% endif %}
 
 <form method="POST" action="{{ target }}">
-    <table id="reviewer_grid" data-nroles="{{ roles | length }}">
+    <table id="reviewer_grid" data-nroles="{{ n_role }}">
         <thead>
             <tr>
                 <th>Proposal</th>
@@ -56,6 +61,9 @@
                 {% for member in group_members.values() %}
                     <th class="sideways"><div><div>{{ member.person_name| abbr(25)  }}</div></div></th>
                 {% endfor %}
+                {% if n_unique %}
+                    <th class="sideways spacer_left"><div><div>Unassigned</div></div></th>
+                {% endif %}
             </tr>
         </thead>
         {% for proposal in proposals %}
@@ -89,6 +97,20 @@
                         {% endfor %}
                     </td>
                 {% endfor %}
+                {% if n_unique %}
+                    <td class="spacer_left control_center">
+                        {% for (role_id, role_info) in roles.items() %}
+                            {% if role_info.unique %}
+                                {{ render_reviewer_select(role_id | fmt('rev_{}'), true, proposal.reviewer_person_ids[role_id], proposal.id, none) }}
+                            {% else %}
+                                &nbsp;
+                            {% endif %}
+                            {% if not loop.last %}
+                                <br />
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                {% endif %}
             </tr>
         {% endfor %}
     </table>
