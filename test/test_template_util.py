@@ -29,7 +29,7 @@ from hedwig.type.enum import Assessment, AttachmentState, \
     PublicationType, ReviewState, SemesterState, UserLogEvent
 from hedwig.web.template_util import Counter
 
-from .dummy_app import WebAppTestCase
+from .base_app import WebAppTestCase
 
 
 class TemplateUtilTestCase(WebAppTestCase):

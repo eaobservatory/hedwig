@@ -29,7 +29,7 @@ from hedwig.type.enum import FormatType, ReviewState
 from hedwig.type.simple import Link, Proposal, Reviewer
 from hedwig.type.util import null_tuple
 
-from .dummy_facility import FacilityTestCase
+from .base_facility import FacilityTestCase
 
 
 class JCMTFacilityTestCase(FacilityTestCase):

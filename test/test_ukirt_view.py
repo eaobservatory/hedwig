@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from hedwig.error import NoSuchRecord, ParseError
 
-from .dummy_facility import FacilityTestCase
+from .base_facility import FacilityTestCase
 
 
 class UKIRTFacilityTestCase(FacilityTestCase):

@@ -24,7 +24,7 @@ from hedwig.type.enum import ReviewState
 from hedwig.type.simple import Reviewer
 from hedwig.type.util import null_tuple
 
-from .dummy_facility import FacilityTestCase
+from .base_facility import FacilityTestCase
 
 
 class GenericFacilityTestCase(FacilityTestCase):

@@ -29,7 +29,7 @@ from hedwig.view import auth
 from hedwig.view.people import _update_session_user, _update_session_person
 from hedwig.web.util import session, HTTPForbidden
 
-from .dummy_app import WebAppTestCase
+from .base_app import WebAppTestCase
 
 
 class WebAppAuthTestCase(WebAppTestCase):

@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from .dummy_app import WebAppTestCase
+from .base_app import WebAppTestCase
 
 
 class JCMTWebAppTestCase(WebAppTestCase):
