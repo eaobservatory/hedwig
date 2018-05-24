@@ -280,6 +280,12 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertTrue(t(BaseCallType.STANDARD, BaseCallType))
         self.assertFalse(t(BaseCallType.IMMEDIATE, BaseCallType))
 
+        t = self.app.jinja_env.tests['call_type_immediate']
+
+        self.assertFalse(t(BaseCallType.STANDARD, BaseCallType))
+        self.assertTrue(t(BaseCallType.IMMEDIATE, BaseCallType))
+        self.assertFalse(t(999, BaseCallType))
+
     def test_test_none_or_whitespace(self):
         t = self.app.jinja_env.tests['none_or_whitespace']
 

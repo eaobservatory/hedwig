@@ -351,6 +351,13 @@ def register_template_utils(app):
         return (value == type_class.STANDARD)
 
     @app.template_test()
+    def call_type_immediate(value, type_class):
+        try:
+            return type_class.has_immediate_review(value)
+        except KeyError:
+            return False
+
+    @app.template_test()
     def message_state_resettable(value):
         try:
             return MessageState.get_info(value).resettable

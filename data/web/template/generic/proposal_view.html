@@ -27,9 +27,15 @@
 
     {% if can_edit and not is_submitted %}
         <p class="warning">
-            This proposal has not been submitted. If you wish it to be
-            considered, please be sure to submit it before the proposal
-            deadline, {{ proposal.date_close | format_datetime }} UT.
+            This proposal has not been submitted.
+
+            {% if proposal.call_type is call_type_immediate(facility_call_type_class) %}
+                Proposals for this call are sent for immediate review on submission.
+            {% else %}
+                If you wish it to be
+                considered, please be sure to submit it before the proposal
+                deadline, {{ proposal.date_close | format_datetime }} UT.
+            {% endif %}
         </p>
     {% endif %}
 
