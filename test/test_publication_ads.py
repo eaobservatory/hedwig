@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -19,21 +19,29 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from hedwig.config import get_config
-from hedwig.publication.ads import get_pub_info_ads
+from hedwig.publication.ads import get_pub_info_ads, fixed_responses
 from hedwig.type.simple import PrevProposalPub
 
 from .dummy_config import DummyConfigTestCase
+from .dummy_publication import ads_responses
+from .util import temporary_dict
 
 
 class ADSPublicationTestCase(DummyConfigTestCase):
     def test_ads_bibcode(self):
         # Test for the API token now (rather than with a decorator) so that
         # we're looking in the "dummy" configuration.
-        if not get_config().get('ads', 'api_token'):
-            self.skipTest('ADS API token not configured')
+        config = get_config()
+        if config.getboolean('test', 'query_ads'):
+            if not config.get('ads', 'api_token'):
+                self.skipTest('ADS API token not configured')
+            responses = {}
+        else:
+            responses = ads_responses
 
         bibcode = '1965ApJ...142..419P'
-        result = get_pub_info_ads([bibcode])
+        with temporary_dict(fixed_responses, responses):
+            result = get_pub_info_ads([bibcode])
         self.assertIsInstance(result, dict)
         self.assertEqual(sorted(result.keys()), [bibcode])
 

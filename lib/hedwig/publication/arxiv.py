@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -49,6 +49,9 @@ else:
         return element.text
 
 
+fixed_responses = {}
+
+
 def get_pub_info_arxiv(article_ids):
     """
     Get information on a list of article IDs.
@@ -63,18 +66,24 @@ def get_pub_info_arxiv(article_ids):
 
     while article_ids:
         query = article_ids[:10]
+        query_str = ','.join(query)
 
         feed = None
 
         try:
-            r = requests.get(url, params={
-                'max_results': 10,
-                'id_list': ','.join(query),
-            }, timeout=30)
+            response = fixed_responses.get(query_str)
 
-            r.raise_for_status()
+            if response is None:
+                r = requests.get(url, params={
+                    'max_results': 10,
+                    'id_list': query_str,
+                }, timeout=30)
 
-            feed = etree.fromstring(r.content)
+                r.raise_for_status()
+
+                response = r.content
+
+            feed = etree.fromstring(response)
 
         except requests.exceptions.RequestException:
             logger.exception('Failed to retrive feed from arXiv')

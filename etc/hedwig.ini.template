@@ -54,3 +54,7 @@ graphviz=/usr/bin/dot
 
 [ads]
 api_token=
+
+[test]
+query_ads=no
+query_arxiv=no

@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -19,6 +19,8 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from hedwig.compat import first_value
+from hedwig.config import get_config
+from hedwig.publication.arxiv import fixed_responses as arxiv_fixed_responses
 from hedwig.publication.poll import process_publication_references
 from hedwig.type.enum import AttachmentState, PublicationType
 from hedwig.type.collection import PrevProposalCollection
@@ -26,6 +28,8 @@ from hedwig.type.simple import PrevProposal, PrevProposalPub
 from hedwig.type.util import null_tuple
 
 from .dummy_db import DBTestCase
+from .dummy_publication import arxiv_responses
+from .util import temporary_dict
 
 
 class PublicationPollTestCase(DBTestCase):
@@ -60,7 +64,11 @@ class PublicationPollTestCase(DBTestCase):
         self.assertEqual(info.state, AttachmentState.NEW)
 
         # Should now find 1 record to process.
-        self.assertEqual(process_publication_references(self.db), 1)
+        with temporary_dict(
+                arxiv_fixed_responses,
+                {} if get_config().getboolean('test', 'query_arxiv')
+                else arxiv_responses):
+            self.assertEqual(process_publication_references(self.db), 1)
 
         # Record should have been filled in and marked READY.
         result = self.db.search_prev_proposal_pub()

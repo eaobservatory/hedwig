@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -30,6 +30,9 @@ from ..type.util import null_tuple
 from ..util import get_logger
 
 logger = get_logger(__name__)
+
+
+fixed_responses = {}
 
 
 def get_pub_info_ads(bibcodes):
@@ -76,21 +79,28 @@ def _get_pub_info_ads_generic(type_, codes):
             query_type = type_
 
         try:
-            r = requests.get(
-                url,
-                params={
-                    'q': '{}:({})'.format(query_type, ' OR '.join(query)),
-                    'fl': ','.join((type_, 'title', 'author', 'pubdate')),
-                    'rows': 10,
-                },
-                headers={
-                    'Authorization': 'Bearer {}'.format(api_token),
-                },
-                timeout=30)
+            query_str = '{}:({})'.format(query_type, ' OR '.join(query))
 
-            r.raise_for_status()
+            response = fixed_responses.get(query_str)
 
-            result = json.loads(utf_8_decode(r.content)[0])
+            if response is None:
+                r = requests.get(
+                    url,
+                    params={
+                        'q': query_str,
+                        'fl': ','.join((type_, 'title', 'author', 'pubdate')),
+                        'rows': 10,
+                    },
+                    headers={
+                        'Authorization': 'Bearer {}'.format(api_token),
+                    },
+                    timeout=30)
+
+                r.raise_for_status()
+
+                response = utf_8_decode(r.content)[0]
+
+            result = json.loads(response)
 
         except requests.exceptions.RequestException:
             logger.exception('Failed to search ADS')

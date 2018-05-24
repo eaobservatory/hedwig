@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,16 +20,22 @@ from __future__ import absolute_import, division, print_function, \
 
 from hedwig.compat import string_type
 from hedwig.config import get_config
-from hedwig.publication.arxiv import get_pub_info_arxiv
+from hedwig.publication.arxiv import get_pub_info_arxiv, fixed_responses
 from hedwig.type.simple import PrevProposalPub
 
 from .dummy_config import DummyConfigTestCase
+from .dummy_publication import arxiv_responses
+from .util import temporary_dict
 
 
 class ADSPublicationTestCase(DummyConfigTestCase):
     def test_arxiv(self):
         id_ = '1001.0001'
-        result = get_pub_info_arxiv([id_])
+        with temporary_dict(
+                fixed_responses,
+                {} if get_config().getboolean('test', 'query_arxiv')
+                else arxiv_responses):
+            result = get_pub_info_arxiv([id_])
         self.assertIsInstance(result, dict)
         self.assertEqual(sorted(result.keys()), [id_])
 
