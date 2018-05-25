@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,9 +20,10 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple
 
-from ..error import NoSuchRecord, UserError
+from ..error import NoSuchRecord, ParseError, UserError
 from ..type.enum import ProposalState
 from ..type.simple import CalculatorResult, ProposalWithCode
+from ..web.query_encode import encode_query, decode_query
 from ..web.util import HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
 from . import auth
@@ -97,6 +98,7 @@ class BaseCalculator(object):
         calculation_proposal = None
         calculation_title = ''
         overwrite = False
+        query_encoded = None
 
         # If the user is logged in, determine whether there are any proposals
         # to which they can add calculator results.
@@ -161,6 +163,8 @@ class BaseCalculator(object):
 
                     output = self(mode, parsed_input)
 
+                    query_encoded = self._encode_query(inputs, parsed_input)
+
                 elif ('submit_save' in form) or ('submit_save_redir' in form):
                     parsed_input = self.parse_input(mode, input_values)
 
@@ -220,6 +224,9 @@ class BaseCalculator(object):
                             self.facility.make_proposal_code(db, proposal),
                             proposal.title)
 
+                        query_encoded = self._encode_query(
+                            inputs, parsed_input)
+
                 else:
                     raise HTTPError('Unknown action.')
 
@@ -277,6 +284,21 @@ class BaseCalculator(object):
                 except UserError as e:
                     message = e.message
 
+                query_encoded = self._encode_query(inputs, default_input)
+
+            elif 'query' in args:
+                try:
+                    default_input = self._decode_query(mode, args['query'])
+                except ParseError as e:
+                    raise HTTPError(e.message)
+
+                try:
+                    output = self(mode, default_input)
+                except UserError as e:
+                    message = e.message
+
+                query_encoded = self._encode_query(inputs, default_input)
+
             else:
                 # When we didn't receive a form submission, get the default
                 # values -- need to convert these to strings to match the
@@ -317,6 +339,7 @@ class BaseCalculator(object):
                     if (calculation_id is not None)
                     else ((for_proposal_id is not None) and
                           (proposal_id == for_proposal_id)))),
+            'query_encoded': query_encoded,
         }
 
         ctx.update(self.get_extra_context())
@@ -379,3 +402,35 @@ class BaseCalculator(object):
         """
 
         pass
+
+    def _encode_query(self, inputs, values):
+        # Convert the inputs from a dictionary to a list for compactness, by
+        # placing the values in the order of the sorted keys.
+        keys = sorted((x.code for x in inputs))
+        query = [self.version]
+        query.extend(values.get(x) for x in keys)
+
+        try:
+            return encode_query(query)
+        except:
+            # Suppress the error so that the calculation result is still
+            # shown.  Ideally the error would be logged at this point.
+            return None
+
+    def _decode_query(self, mode, query):
+        unpacked = decode_query(query)
+        version = unpacked[0]
+
+        inputs = self.get_inputs(mode, version)
+        keys = sorted((x.code for x in inputs))
+
+        if len(keys) != (len(unpacked) - 1):
+            raise ParseError('Query encodes an unexpected number of values.')
+
+        # Reassemble the values dictionary.
+        values = dict(zip(keys, unpacked[1:]))
+
+        if version != self.version:
+            values = self.convert_input_version(mode, version, values)
+
+        return values

@@ -50,6 +50,12 @@
 
             {% block calculator_output_extra %}
             {% endblock %}
+
+            {% if query_encoded is not none %}
+                <p>
+                    <a href="{{ url_for((calculator_code, modes[current_mode].code) | fmt('.calc_{}_{}'), query=query_encoded, _external=true) }}">Link to this calculation</a>
+                </p>
+            {% endif %}
         </section>
     {% endif %}
 {% endblock %}
