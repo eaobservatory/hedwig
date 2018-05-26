@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -26,9 +26,9 @@ from pymoc import MOC
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord
 from hedwig.file.moc import read_moc, write_moc
-from hedwig.type.collection import ResultCollection
+from hedwig.type.collection import CalculationCollection, ResultCollection
 from hedwig.type.enum import AttachmentState, FormatType
-from hedwig.type.simple import Calculation, MOCInfo
+from hedwig.type.simple import Calculation, MOCInfo, ReviewCalculation
 
 from .dummy_db import DBTestCase
 
@@ -84,7 +84,7 @@ class DBCalculatorTest(DBTestCase):
             calc_version='0.0.1', title='altered calculation')
 
         result = self.db.search_calculation()
-        self.assertIsInstance(result, ResultCollection)
+        self.assertIsInstance(result, CalculationCollection)
         self.assertEqual(len(result), 1)
         self.assertIn(calculation_id, result)
         calc = result[calculation_id]
@@ -95,6 +95,62 @@ class DBCalculatorTest(DBTestCase):
         self.assertEqual(calc.output, {'c': 33})
         self.assertEqual(calc.calc_version, '0.0.1')
         self.assertEqual(calc.title, 'altered calculation')
+
+    def test_review_calculation(self):
+        facility_id = self.db.ensure_facility('my_tel')
+        proposal_id = self._create_test_proposal(facility_id=facility_id)
+        calculator_id = self.db.ensure_calculator(facility_id, 'testcalc')
+        reviewer_id = self._create_test_reviewer(proposal_id)
+
+        result = self.db.search_review_calculation(reviewer_id=reviewer_id)
+        self.assertFalse(result)
+
+        review_calculation_id = self.db.add_review_calculation(
+            reviewer_id, calculator_id, 2, 4, {'x': 3, 'y': 4}, {'z': 5},
+            '0.0.0', 'test review calculation')
+
+        result = self.db.search_review_calculation(reviewer_id=reviewer_id)
+        self.assertIsInstance(result, CalculationCollection)
+        self.assertEqual(list(result.keys()), [review_calculation_id])
+
+        calc = result[review_calculation_id]
+        self.assertIsInstance(calc, ReviewCalculation)
+        self.assertEqual(calc.id, review_calculation_id)
+        self.assertEqual(calc.reviewer_id, reviewer_id)
+        self.assertEqual(calc.calculator_id, calculator_id)
+        self.assertEqual(calc.mode, 2)
+        self.assertEqual(calc.version, 4)
+        self.assertEqual(calc.input, {'x': 3, 'y': 4})
+        self.assertEqual(calc.output, {'z': 5})
+        self.assertEqual(calc.calc_version, '0.0.0')
+        self.assertEqual(calc.title, 'test review calculation')
+        self.assertIsInstance(calc.date_run, datetime)
+
+        self.db.update_review_calculation(
+            review_calculation_id=review_calculation_id,
+            mode=3, version=5, input_={'x': 30, 'y': 40}, output={'z': 50},
+            calc_version='0.0.1', title='altered review calculation')
+
+        calc = self.db.get_review_calculation(review_calculation_id)
+        self.assertIsInstance(calc, ReviewCalculation)
+        self.assertEqual(calc.id, review_calculation_id)
+        self.assertEqual(calc.reviewer_id, reviewer_id)
+        self.assertEqual(calc.calculator_id, calculator_id)
+        self.assertEqual(calc.mode, 3)
+        self.assertEqual(calc.version, 5)
+        self.assertEqual(calc.input, {'x': 30, 'y': 40})
+        self.assertEqual(calc.output, {'z': 50})
+        self.assertEqual(calc.calc_version, '0.0.1')
+        self.assertEqual(calc.title, 'altered review calculation')
+        self.assertIsInstance(calc.date_run, datetime)
+
+        self.assertEqual(
+            self.db.sync_review_calculation(
+                reviewer_id, CalculationCollection()),
+            (0, 0, 1))
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_review_calculation(review_calculation_id)
 
     def test_moc(self):
         facility_id = self.db.ensure_facility('moc testing facility')

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -84,6 +84,24 @@ calculator = Table(
     UniqueConstraint('code', 'facility_id'),
     **table_opts)
 
+
+def _calculation_cols():
+    return [
+        Column('sort_order', Integer, nullable=False),
+        Column('calculator_id', None,
+               ForeignKey('calculator.id', onupdate='RESTRICT',
+                          ondelete='RESTRICT'),
+               nullable=False),
+        Column('mode', Integer, nullable=False),
+        Column('version', Integer, nullable=False),
+        Column('input', JSONEncoded, nullable=False),
+        Column('output', JSONEncoded, nullable=False),
+        Column('date_run', DateTime(), nullable=False),
+        Column('calc_version', Unicode(31), nullable=False),
+        Column('title', Unicode(255), nullable=False),
+    ]
+
+
 calculation = Table(
     'calculation',
     metadata,
@@ -91,18 +109,7 @@ calculation = Table(
     Column('proposal_id', None,
            ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
-    Column('sort_order', Integer, nullable=False),
-    Column('calculator_id', None,
-           ForeignKey('calculator.id', onupdate='RESTRICT',
-                      ondelete='RESTRICT'),
-           nullable=False),
-    Column('mode', Integer, nullable=False),
-    Column('version', Integer, nullable=False),
-    Column('input', JSONEncoded, nullable=False),
-    Column('output', JSONEncoded, nullable=False),
-    Column('date_run', DateTime(), nullable=False),
-    Column('calc_version', Unicode(31), nullable=False),
-    Column('title', Unicode(255), nullable=False),
+    *_calculation_cols(),
     **table_opts)
 
 call = Table(
@@ -567,6 +574,16 @@ reviewer = Table(
            nullable=False),
     Column('role', Integer, nullable=False),
     UniqueConstraint('proposal_id', 'person_id', 'role'),
+    **table_opts)
+
+review_calculation = Table(
+    'review_calculation',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('reviewer_id', None,
+           ForeignKey('reviewer.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    *_calculation_cols(),
     **table_opts)
 
 semester = Table(

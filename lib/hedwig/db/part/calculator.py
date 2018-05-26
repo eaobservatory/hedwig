@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -31,31 +31,41 @@ from ...error import ConsistencyError, Error, UserError
 from ...file.moc import write_moc
 from ...type.collection import CalculationCollection, ResultCollection
 from ...type.enum import AttachmentState, FormatType
-from ...type.simple import Calculation, MOCInfo
+from ...type.simple import Calculation, MOCInfo, ReviewCalculation
 from ...util import is_list_like, list_in_blocks, list_in_ranges
-from ..meta import calculator, calculation, facility, moc, moc_cell, moc_fits
+from ..meta import calculator, calculation, facility, \
+    moc, moc_cell, moc_fits, review_calculation
 from ..util import require_not_none
 
 
 class CalculatorPart(object):
-    def add_calculation(self, proposal_id, calculator_id,
-                        mode, version, input_, output, calc_version, title):
-        with self._transaction() as conn:
-            calculation_alias = calculation.alias()
+    def add_calculation(
+            self, proposal_id,
+            calculator_id, mode, version, input_, output, calc_version, title):
+        return self._add_calculation(
+            calculation, calculation.c.proposal_id, proposal_id,
+            calculator_id, mode, version, input_, output, calc_version, title)
 
-            result = conn.execute(calculation.insert().values({
-                calculation.c.proposal_id: proposal_id,
-                calculation.c.sort_order: select(
-                    [coalesce(max_(calculation_alias.c.sort_order), 0) + 1]
-                    ).where(calculation_alias.c.proposal_id == proposal_id),
-                calculation.c.calculator_id: calculator_id,
-                calculation.c.mode: mode,
-                calculation.c.version: version,
-                calculation.c.input: input_,
-                calculation.c.output: output,
-                calculation.c.date_run: datetime.utcnow(),
-                calculation.c.calc_version: calc_version,
-                calculation.c.title: title,
+    def _add_calculation(
+            self, table, key_column, key_value,
+            calculator_id, mode, version, input_, output, calc_version, title):
+        with self._transaction() as conn:
+            table_alias = table.alias()
+            key_column_alias = table_alias.columns[key_column.name]
+
+            result = conn.execute(table.insert().values({
+                key_column: key_value,
+                table.c.sort_order: select(
+                    [coalesce(max_(table_alias.c.sort_order), 0) + 1]
+                    ).where(key_column_alias == key_value),
+                table.c.calculator_id: calculator_id,
+                table.c.mode: mode,
+                table.c.version: version,
+                table.c.input: input_,
+                table.c.output: output,
+                table.c.date_run: datetime.utcnow(),
+                table.c.calc_version: calc_version,
+                table.c.title: title,
             }))
 
             return result.inserted_primary_key[0]
@@ -86,6 +96,13 @@ class CalculatorPart(object):
             }))
 
         return moc_id
+
+    def add_review_calculation(
+            self, reviewer_id,
+            calculator_id, mode, version, input_, output, calc_version, title):
+        return self._add_calculation(
+            review_calculation, review_calculation.c.reviewer_id, reviewer_id,
+            calculator_id, mode, version, input_, output, calc_version, title)
 
     def delete_moc(self, facility_id, moc_id):
         """
@@ -136,21 +153,32 @@ class CalculatorPart(object):
             return conn.execute(select([moc_fits.c.fits]).where(
                 moc_fits.c.moc_id == moc_id)).scalar()
 
+    def get_review_calculation(self, id_):
+        return self.search_review_calculation(
+            review_calculation_id=id_).get_single()
+
     def search_calculation(self, calculation_id=None, proposal_id=None):
-        stmt = calculation.select()
+        return self._search_calculation(
+            calculation, calculation.c.proposal_id, proposal_id,
+            id_=calculation_id, result_class=Calculation)
 
-        if calculation_id is not None:
-            stmt = stmt.where(calculation.c.id == calculation_id)
+    def _search_calculation(
+            self, table, key_column, key_value, id_,
+            result_class):
+        stmt = table.select()
 
-        if proposal_id is not None:
-            stmt = stmt.where(calculation.c.proposal_id == proposal_id)
+        if id_ is not None:
+            stmt = stmt.where(table.c.id == id_)
+
+        if key_value is not None:
+            stmt = stmt.where(key_column == key_value)
 
         ans = CalculationCollection()
 
         with self._transaction() as conn:
             for row in conn.execute(
-                    stmt.order_by(calculation.c.sort_order.asc())):
-                ans[row['id']] = Calculation(**row)
+                    stmt.order_by(table.c.sort_order.asc())):
+                ans[row['id']] = result_class(**row)
 
         return ans
 
@@ -299,11 +327,17 @@ class CalculatorPart(object):
 
         return orders
 
+    def search_review_calculation(
+            self, review_calculation_id=None, reviewer_id=None):
+        return self._search_calculation(
+            review_calculation, review_calculation.c.reviewer_id, reviewer_id,
+            id_=review_calculation_id, result_class=ReviewCalculation)
+
     def sync_proposal_calculation(self, proposal_id, records):
         """
         Update the calculations for a proposal.
 
-        Currently only deleting figures is supported.
+        Currently only deleting calculations is supported.
         """
 
         with self._transaction() as conn:
@@ -311,27 +345,48 @@ class CalculatorPart(object):
                 conn, calculation, calculation.c.proposal_id, proposal_id,
                 records, update_columns=(), forbid_add=True)
 
-    def update_calculation(self, calculation_id,
-                           mode, version, input_, output, calc_version, title):
+    def sync_review_calculation(self, reviewer_id, records):
+        """
+        Update the calculations for a reviewer.
+
+        Currently only deleting calculations is supported.
+        """
+
+        with self._transaction() as conn:
+            return self._sync_records(
+                conn, review_calculation,
+                review_calculation.c.reviewer_id, reviewer_id,
+                records, update_columns=(), forbid_add=True)
+
+    def update_calculation(
+            self, calculation_id,
+            mode, version, input_, output, calc_version, title):
+        return self._update_calculation(
+            calculation, calculation_id,
+            mode, version, input_, output, calc_version, title)
+
+    def _update_calculation(
+            self, table, id_,
+            mode, version, input_, output, calc_version, title):
         values = {
-            calculation.c.mode: mode,
-            calculation.c.version: version,
-            calculation.c.input: input_,
-            calculation.c.output: output,
-            calculation.c.date_run: datetime.utcnow(),
-            calculation.c.calc_version: calc_version,
-            calculation.c.title: title,
+            table.c.mode: mode,
+            table.c.version: version,
+            table.c.input: input_,
+            table.c.output: output,
+            table.c.date_run: datetime.utcnow(),
+            table.c.calc_version: calc_version,
+            table.c.title: title,
         }
 
         with self._transaction() as conn:
-            result = conn.execute(calculation.update().where(
-                calculation.c.id == calculation_id
+            result = conn.execute(table.update().where(
+                table.c.id == id_
             ).values(values))
 
             if result.rowcount != 1:
                 raise ConsistencyError(
-                    'no rows matched updating calculation with id={}',
-                    calculation_id)
+                    'no rows matched updating table {} entry with id={}',
+                    table.name, id_)
 
     def update_moc(self, moc_id, name=None,
                    description=None, description_format=None, public=None,
@@ -510,3 +565,10 @@ class CalculatorPart(object):
                 moc_object.add(order, (cell,))
 
         return moc_object
+
+    def update_review_calculation(
+            self, review_calculation_id,
+            mode, version, input_, output, calc_version, title):
+        return self._update_calculation(
+            review_calculation, review_calculation_id,
+            mode, version, input_, output, calc_version, title)

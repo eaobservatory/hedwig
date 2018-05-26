@@ -25,7 +25,8 @@ from ..db.meta import affiliation, \
     email, group_member, institution, institution_log, \
     member, message, message_recipient, moc, person, \
     prev_proposal, prev_proposal_pub, \
-    proposal, proposal_category, queue, review, reviewer, \
+    proposal, proposal_category, queue, \
+    review, reviewer, review_calculation, \
     semester, target, user_log
 
 Affiliation = namedtuple(
@@ -236,6 +237,10 @@ Reviewer = namedtuple(
 ReviewerInfo = namedtuple(
     'ReviewerInfo',
     ['id', 'role', 'review_state', 'person_id', 'proposal_id'])
+
+ReviewCalculation = namedtuple(
+    'ReviewCalculation',
+    [x.name for x in review_calculation.columns])
 
 RouteInfo = namedtuple(
     'RouteInfo',

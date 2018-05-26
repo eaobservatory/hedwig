@@ -28,7 +28,7 @@ from hedwig import auth
 from hedwig.config import _get_db_class
 from hedwig.db.meta import metadata
 from hedwig.db.engine import get_engine
-from hedwig.type.enum import BaseCallType, FormatType
+from hedwig.type.enum import BaseCallType, BaseReviewerRole, FormatType
 
 from .dummy_config import DummyConfigTestCase
 
@@ -109,3 +109,10 @@ class DBTestCase(DummyConfigTestCase):
 
         return self.db.add_proposal(
             call_id, person_id, affiliation_id, 'Test Title')
+
+    def _create_test_reviewer(
+            self, proposal_id, role_class=BaseReviewerRole,
+            role=BaseReviewerRole.TECH):
+        person_id = self.db.add_person('Test Reviewer')
+
+        return self.db.add_reviewer(role_class, proposal_id, person_id, role)
