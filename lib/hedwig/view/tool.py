@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,12 +20,16 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple
 
-from ..astro.coord import CoordSystem, parse_coord
+from ..astro.coord import CoordSystem, \
+    coord_to_dec_deg, coord_from_dec_deg, format_coord, parse_coord
 from ..astro.catalog import parse_source_list
-from ..error import NoSuchRecord, UserError
+from ..error import NoSuchRecord, ParseError, UserError
 from ..type.simple import Link, TargetObject
 from ..type.enum import PermissionType
-from ..web.util import ErrorPage, HTTPForbidden, HTTPNotFound, url_for
+from ..util import is_list_like
+from ..web.query_encode import encode_query, decode_query
+from ..web.util import ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, \
+    url_for
 from .util import with_proposal
 from . import auth
 
@@ -101,6 +105,9 @@ class BaseTargetTool(object):
         target = TargetCoord('', '', '', CoordSystem.ICRS)
         message = None
         target_object = None
+        query_encoded = None
+
+        extra_info = self._view_extra_info(args, form)
 
         if form is not None:
             target = target._replace(
@@ -119,7 +126,22 @@ class BaseTargetTool(object):
             except UserError as e:
                 message = e.message
 
-        tool_code = self.get_code()
+            if target_object is not None:
+                query_encoded = self._encode_query(target_object, extra_info)
+
+        elif 'query' in args:
+            try:
+                (target_object, extra_info) = \
+                    self._decode_query(args['query'])
+
+            except ParseError as e:
+                raise HTTPError(e.message)
+
+            (x, y) = format_coord(target_object.system, target_object.coord)
+            target = target._replace(
+                name=target_object.name, system=target_object.system, x=x, y=y)
+
+            query_encoded = self._encode_query(target_object, extra_info)
 
         ctx = {
             'title': self.get_name(),
@@ -129,13 +151,15 @@ class BaseTargetTool(object):
             'systems': CoordSystem.get_options(),
             'target': target,
             'message': message,
+            'query_encoded': query_encoded,
         }
 
-        ctx.update(self._view_single(db, target_object, args, form))
+        ctx.update(self._view_single(
+            db, target_object, extra_info, args, form))
 
         return ctx
 
-    def _view_single(self, db, target_object, args, form):
+    def _view_single(self, db, target_object, extra_info, args, form):
         """
         Prepare extra template context for target tool in "single" mode.
 
@@ -148,7 +172,7 @@ class BaseTargetTool(object):
 
         return self._view_any_mode(
             db, (None if target_object is None else [target_object]),
-            args, form, None)
+            extra_info, args, form, None)
 
     def view_upload(self, db, args, form, file_):
         """
@@ -163,6 +187,8 @@ class BaseTargetTool(object):
 
         message = None
         target_objects = None
+
+        extra_info = self._view_extra_info(args, form)
 
         if form is not None:
             try:
@@ -181,8 +207,6 @@ class BaseTargetTool(object):
             except UserError as e:
                 message = e.message
 
-        tool_code = self.get_code()
-
         ctx = {
             'title': self.get_name(),
             'show_input': True,
@@ -190,13 +214,15 @@ class BaseTargetTool(object):
             'run_button': 'Check',
             'mime_types': ['text/plain', 'text/csv'],
             'message': message,
+            'query_encoded': None,
         }
 
-        ctx.update(self._view_upload(db, target_objects, args, form))
+        ctx.update(self._view_upload(
+            db, target_objects, extra_info, args, form))
 
         return ctx
 
-    def _view_upload(self, db, target_objects, args, form):
+    def _view_upload(self, db, target_objects, extra_info, args, form):
         """
         Prepare extra template context for target tool in "upload" mode.
 
@@ -207,7 +233,8 @@ class BaseTargetTool(object):
         :return: template context dictionary
         """
 
-        return self._view_any_mode(db, target_objects, args, form, None)
+        return self._view_any_mode(
+            db, target_objects, extra_info, args, form, None)
 
     @with_proposal(permission=PermissionType.VIEW, indirect_facility=True)
     def view_proposal(self, db, proposal, can, args):
@@ -243,14 +270,18 @@ class BaseTargetTool(object):
             'show_input': False,
             'proposal_id': proposal.id,
             'proposal_code': self.facility.make_proposal_code(db, proposal),
+            'query_encoded': None,
         }
 
+        extra_info = self._view_extra_info(args, None)
+
         ctx.update(self._view_proposal(
-            db, proposal, target_objects, args, can.cache))
+            db, proposal, target_objects, extra_info, args, can.cache))
 
         return ctx
 
-    def _view_proposal(self, db, proposal, target_objects, args, auth_cache):
+    def _view_proposal(
+            self, db, proposal, target_objects, extra_info, args, auth_cache):
         """
         Prepare extra template context for target tool in "proposal" mode.
 
@@ -261,9 +292,11 @@ class BaseTargetTool(object):
         :return: template context dictionary
         """
 
-        return self._view_any_mode(db, target_objects, args, None, auth_cache)
+        return self._view_any_mode(
+            db, target_objects, extra_info, args, None, auth_cache)
 
-    def _view_any_mode(self, db, target_objects, args, form, auth_cache):
+    def _view_any_mode(
+            self, db, target_objects, extra_info, args, form, auth_cache):
         """
         Prepare extra template context for target tool in any mode.
 
@@ -283,3 +316,38 @@ class BaseTargetTool(object):
         """
 
         return NotImplementedError()
+
+    def _view_extra_info(self, args, form):
+        """
+        Read extra information from the query arguments or form.
+
+        This should be in a form safe to write to an encoded query string.
+
+        Errors parsing the input should be left until later.
+        """
+
+        return []
+
+    def _encode_query(self, target, extra_info):
+        query = [target.name, target.system]
+        query.extend(coord_to_dec_deg(target.coord))
+        query.append(extra_info)
+
+        try:
+            return encode_query(query)
+        except:
+            return None
+
+    def _decode_query(self, query):
+        query = decode_query(query)
+        if len(query) != 5:
+            raise ParseError('Encoded query has unexpected number of values.')
+
+        (name, system, x, y, extra_info) = query
+
+        try:
+            return (
+                TargetObject(name, system, coord_from_dec_deg(system, x, y)),
+                extra_info)
+        except:
+            raise ParseError('Did not understand encoded query.')

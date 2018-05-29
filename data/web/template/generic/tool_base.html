@@ -23,6 +23,14 @@
 {% block tool_output %}
 {% endblock %}
 
+{% block tool_query_link %}
+    {% if query_encoded is not none %}
+        <p>
+            <a href="{{ url_for(target_tool_code | fmt('.tool_{}'), query=query_encoded, _external=true) }}">Link to this query</a>
+        </p>
+    {% endif %}
+{% endblock %}
+
 {% if show_input %}
     <form method="POST" action="{{ url_for(target_tool_code | fmt('.tool_{}_upload' if show_input_upload else '.tool_{}'))}}" {{ 'enctype="multipart/form-data"' | safe if show_input_upload }}>
     {% block tool_input %}

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -157,15 +157,17 @@ class ClashTool(BaseTargetTool):
                  'init_route_params': ['moc_id']}),
         ]
 
-    def _view_proposal(self, db, proposal, target_objects, args, auth_cache):
+    def _view_proposal(
+            self, db, proposal, target_objects, extra_info, args, auth_cache):
         ctx = {'message': None}
 
         ctx.update(self._view_any_mode(
-            db, target_objects, args, None, auth_cache))
+            db, target_objects, extra_info, args, None, auth_cache))
 
         return ctx
 
-    def _view_any_mode(self, db, target_objects, args, form, auth_cache):
+    def _view_any_mode(
+            self, db, target_objects, extra_info, args, form, auth_cache):
         """
         Prepare clash tool template context for all tool modes.
 
@@ -176,7 +178,6 @@ class ClashTool(BaseTargetTool):
         clashes = None
         non_clashes = None
         message = None
-        radius = self.radius_options[0]
 
         public = self._determine_public_constraint(db, auth_cache=auth_cache)
 
@@ -195,13 +196,7 @@ class ClashTool(BaseTargetTool):
             raise ErrorPage('No coverage maps have been set up yet.')
 
         try:
-            # Read the radius from the form if provided (single target and
-            # upload modes) or check the arguments otherwise (proposal mode).
-            if form is not None:
-                radius = int(form['radius'])
-
-            elif 'radius' in args:
-                radius = int(args['radius'])
+            (radius,) = extra_info
 
             if radius < self.radius_options[0]:
                 radius = 0
@@ -228,6 +223,23 @@ class ClashTool(BaseTargetTool):
             ctx['message'] = message
 
         return ctx
+
+    def _view_extra_info(self, args, form):
+        """
+        Read clash tool-specific information from the query arguments or form.
+        """
+
+        radius = self.radius_options[0]
+
+        # Read the radius from the form if provided (single target and
+        # upload modes) or check the arguments otherwise (proposal mode).
+        if form is not None:
+            radius = int(form['radius'])
+
+        elif 'radius' in args:
+            radius = int(args['radius'])
+
+        return [radius]
 
     def _determine_public_constraint(self, db, auth_cache=None):
         """
