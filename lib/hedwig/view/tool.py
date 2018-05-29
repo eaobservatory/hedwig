@@ -37,6 +37,11 @@ TargetCoord = namedtuple('TargetCoord', ('name', 'x', 'y', 'system'))
 
 
 class BaseTargetTool(object):
+    # Should we raise messages in "proposal mode" using ErrorPage?
+    # (Tools which show a form with message display even in proposal
+    # mode can set this to False.)
+    proposal_message_error = True
+
     def __init__(self, facility, id_):
         self.facility = facility
         self.id_ = id_
@@ -150,12 +155,15 @@ class BaseTargetTool(object):
             'run_button': 'Check',
             'systems': CoordSystem.get_options(),
             'target': target,
-            'message': message,
+            'message': None,
             'query_encoded': query_encoded,
         }
 
         ctx.update(self._view_single(
             db, target_object, extra_info, args, form))
+
+        if message is not None:
+            ctx['message'] = message
 
         return ctx
 
@@ -213,12 +221,15 @@ class BaseTargetTool(object):
             'show_input_upload': True,
             'run_button': 'Check',
             'mime_types': ['text/plain', 'text/csv'],
-            'message': message,
+            'message': None,
             'query_encoded': None,
         }
 
         ctx.update(self._view_upload(
             db, target_objects, extra_info, args, form))
+
+        if message is not None:
+            ctx['message'] = message
 
         return ctx
 
@@ -270,6 +281,7 @@ class BaseTargetTool(object):
             'show_input': False,
             'proposal_id': proposal.id,
             'proposal_code': self.facility.make_proposal_code(db, proposal),
+            'message': None,
             'query_encoded': None,
         }
 
@@ -277,6 +289,9 @@ class BaseTargetTool(object):
 
         ctx.update(self._view_proposal(
             db, proposal, target_objects, extra_info, args, can.cache))
+
+        if self.proposal_message_error and (ctx['message'] is not None):
+            raise ErrorPage(ctx['message'])
 
         return ctx
 

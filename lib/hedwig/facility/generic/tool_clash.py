@@ -42,6 +42,10 @@ TargetClash = namedtuple('TargetClash', ('target', 'mocs', 'target_search',
 
 
 class ClashTool(BaseTargetTool):
+    # This tool always shows a search radius form with message display,
+    # so we need not raise proposal messages as errors.
+    proposal_message_error = False
+
     def __init__(self, *args, **kwargs):
         """
         Construct ClashTool instance.
@@ -157,15 +161,6 @@ class ClashTool(BaseTargetTool):
                  'init_route_params': ['moc_id']}),
         ]
 
-    def _view_proposal(
-            self, db, proposal, target_objects, extra_info, args, auth_cache):
-        ctx = {'message': None}
-
-        ctx.update(self._view_any_mode(
-            db, target_objects, extra_info, args, None, auth_cache))
-
-        return ctx
-
     def _view_any_mode(
             self, db, target_objects, extra_info, args, form, auth_cache):
         """
@@ -210,19 +205,15 @@ class ClashTool(BaseTargetTool):
         except UserError as e:
             message = e.message
 
-        ctx = {
+        return {
             'run_button': 'Search',
             'clashes': clashes,
             'non_clashes': non_clashes,
             'moc_ready': moc_ready,
             'radius': radius,
             'radius_options': self.radius_options,
+            'message': message,
         }
-
-        if message is not None:
-            ctx['message'] = message
-
-        return ctx
 
     def _view_extra_info(self, args, form):
         """

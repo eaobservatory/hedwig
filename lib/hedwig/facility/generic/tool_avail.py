@@ -83,18 +83,10 @@ class AvailabilityTool(BaseTargetTool):
     def _view_proposal(
             self, db, proposal, target_objects, extra_info, args, auth_cache):
         # Overwrite the "extra_info" with the semester start and end dates.
-        ctx = self._view_any_mode(
+        return self._view_any_mode(
             db, target_objects,
             [proposal.semester_start, proposal.semester_end],
             args, None, auth_cache)
-
-        # As this tool can set a message in `_view_any_mode` but does not
-        # display an input form (with message box) we must escalate it here.
-        # This happens in the event of a problem with the semester dates.
-        if 'message' in ctx:
-            raise ErrorPage(ctx['message'])
-
-        return ctx
 
     def _view_any_mode(
             self, db, target_objects, extra_info, args, form, auth_cache):
@@ -162,9 +154,7 @@ class AvailabilityTool(BaseTargetTool):
         except UserError as e:
             message = e.message
 
-        # Only over-write superclass message if defined.
-        if message is not None:
-            ctx['message'] = message
+        ctx['message'] = message
 
         return ctx
 
