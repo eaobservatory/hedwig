@@ -9,18 +9,15 @@ Receiver
 --------
 
 First select the receiver you wish to use.
-The receiver's tuning range will be shown next to the frequency
-input box.
-You should enter a frequency in this range.
-Note that this is the observed frequency (red-shifted if applicable),
-not the molecular transition's rest frequency.
 On the next line you should select the frequency resolution
 --- please refer to the
 `ACSIS <http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/acsis/>`_
 page for information about available resolutions.
 You can also enter a lower frequency resolution if you
 are planning to bin your data.
-Again this is the frequency resolution as observed.
+If this is given as a frequency (in MHz),
+then it is the frequency resolution as observed,
+i.e. the sky frequency resolution.
 
 The current receivers each have only one sideband mode:
 single or dual,
@@ -34,6 +31,38 @@ You may select "Continuum mode" if it is required for your observations.
 
 Source and Conditions
 ---------------------
+
+In the source and conditions section, you should select
+the transition line which you wish to observe.
+This is done using two controls to select the
+species first and then the transition.
+Transitions which fall outside the receiver's tuning
+range will be disabled.
+Therefore if your source has a significant radial velocity,
+you should enter that first.
+The redshift you select, or the velocity converted to a redshift,
+will be applied to the receiver's tuning range,
+which is shown next to the rest frequency input box.
+The set of enabled transition lines will also be updated
+for the given redshift.
+
+If you wish to observe a transition line which is not listed,
+you may enter the frequency manually.
+To do this, select "Other" from the top of the list of species
+(the first box for the input labeled "transition line").
+You will then be able to enter the frequency manually
+in the "rest frequency" box.
+The frequency should be within the receiver's tuning range,
+which is shown beside the input box.
+Note that this is the rest frequency taking into account
+the radial velocity.
+(If the radial velocity is not zero, the observed frequency
+will be computed as part of the calculation.)
+If you are saving the calculation to your proposal
+and using a manually-entered frequency,
+it is helpful to include in your technical justification
+an explanation of which transition lines you propose
+to observe.
 
 You can either enter the declination of the source or give
 an elevation or zenith angle.
