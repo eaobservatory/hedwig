@@ -29,6 +29,12 @@ In the example below this includes the estimated transmission
 and airmass and a table comparing the results in different weather
 bands.
 
+Following the calculation results, you will see a link to
+the current calculation.
+This link encodes the parameters which have been entered
+into the calculator.
+You can use it to bookmark or share the calculation.
+
 When you are ready to save the calculation, scroll down to the
 "Save to Proposal" section towards the end of the page.
 Here you should ensure the correct proposal is selected,

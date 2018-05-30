@@ -143,6 +143,10 @@ class IntegrationTest(DummyConfigTestCase):
 
             process_moc(self.db)
 
+            # While we have the MOC set up (we delete it later), test the
+            # target tools in stand-alone mode.
+            self.try_jcmt_tools()
+
             # Log back in a normal use and create a proposal.
             self.log_in_user(user_name='username')
 
@@ -866,8 +870,9 @@ class IntegrationTest(DummyConfigTestCase):
         submit_save_redir = self.browser.find_element_by_name(
             'submit_save_redir')
 
-        self._save_screenshot(self.user_image_root, 'calc_scuba2',
-                              [submit_save_redir, 'main_result_table'])
+        self._save_screenshot(
+            self.user_image_root, 'calc_scuba2',
+            [submit_save_redir, 'main_result_table', 'perm_query_link'])
 
         submit_save_redir.click()
 
@@ -1892,6 +1897,35 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.get(self.base_url + 'jcmt/calculator/heterodyne/time')
 
         self._save_screenshot(self.user_image_root, 'calc_jcmt_het_input')
+
+    def try_jcmt_tools(self):
+        self.browser.get(self.base_url + 'jcmt/tool/clash')
+
+        self.browser.find_element_by_name('x').send_keys('12:34:56')
+        self.browser.find_element_by_name('y').send_keys('7:08:09')
+        self.browser.find_element_by_name('submit_calc').click()
+
+        self.assertIn(
+            'No match was found for the following targets:',
+            self.browser.page_source)
+
+        self._save_screenshot(
+            self.user_image_root, 'target_clash_single',
+            ['perm_query_link', 'tool_upload_link'])
+
+        self.browser.get(self.base_url + 'jcmt/tool/avail')
+
+        self.browser.find_element_by_name('x').send_keys('12:34:56')
+        self.browser.find_element_by_name('y').send_keys('7:08:09')
+        self.browser.find_element_by_name('submit_calc').click()
+
+        self.assertIn(
+            '<h3>Availability by Date</h3>',
+            self.browser.page_source)
+
+        self._save_screenshot(
+            self.user_image_root, 'target_avail_single',
+            ['perm_query_link', 'tool_upload_link'])
 
     def _save_screenshot(self, path, name, highlight=[]):
         if path is None:
