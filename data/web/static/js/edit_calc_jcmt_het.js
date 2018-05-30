@@ -204,6 +204,7 @@ $(document).ready(function () {
         if (species === '') {
             transition_select.append($('<option/>', {'text': 'Other', 'value': ''}));
             freq_box.prop('disabled', false);
+            disable_futile_labels();
             return;
         }
 
@@ -212,10 +213,12 @@ $(document).ready(function () {
         if (transitions === undefined) {
             transition_select.append($('<option/>', {'text': 'Species not recognized', 'value': ''}));
             freq_box.prop('disabled', false);
+            disable_futile_labels();
             return;
         }
 
         freq_box.prop('disabled', true);
+        disable_futile_labels();
 
         var options = [];
 
