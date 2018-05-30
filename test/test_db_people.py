@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -204,6 +204,10 @@ class DBPeopleTest(DBTestCase):
         email_id = self.db.add_email(person_id, 'one@users.net')
 
         self.assertIsInstance(email_id, int)
+
+        # Test address validation.
+        with self.assertRaisesRegex(UserError, 'does not appear to be valid'):
+            self.db.add_email(person_id, 'A B <a.b@c.d>')
 
         # Test person_id existance checking.
         with self.assertRaisesRegex(ConsistencyError,

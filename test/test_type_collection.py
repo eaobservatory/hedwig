@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -182,6 +182,11 @@ class CollectionTypeTestCase(TestCase):
         c[3] = null_tuple(Email)._replace(address='a@b', primary=False)
 
         with self.assertRaisesRegex(UserError, 'appears more than once'):
+            c.validate()
+
+        c[3] = null_tuple(Email)._replace(
+            address='A B <a.b@c.d>', primary=False)
+        with self.assertRaisesRegex(UserError, 'does not appear to be valid'):
             c.validate()
 
     def test_call_preamble_collection(self):

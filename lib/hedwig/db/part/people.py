@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -28,6 +28,7 @@ from sqlalchemy.sql.functions import count
 from ... import auth
 from ...auth import check_password_hash, create_password_hash, generate_token
 from ...config import get_countries
+from ...email.util import is_valid_email
 from ...error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from ...type.collection import EmailCollection, ResultCollection
@@ -52,6 +53,10 @@ class PeoplePart(object):
 
         Returns the email_id number.
         """
+
+        if not is_valid_email(address):
+            raise UserError(
+                'The email address "{}" does not appear to be valid.', address)
 
         with self._transaction() as conn:
             if (not _test_skip_check and

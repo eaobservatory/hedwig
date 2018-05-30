@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,6 +24,7 @@ from math import sqrt
 from ..astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, parse_coord
 from ..compat import first_value
+from ..email.util import is_valid_email
 from ..error import NoSuchRecord, NoSuchValue, MultipleRecords, UserError
 from ..util import is_list_like, matches_constraint
 from .base import CollectionByProposal, CollectionOrdered, CollectionSortable
@@ -181,6 +182,11 @@ class EmailCollection(ResultCollection):
                 raise UserError('The address "{}" appears more than once.',
                                 email.address)
             seen_address.add(email.address)
+
+            if not is_valid_email(email.address):
+                raise UserError(
+                    'The email address "{}" does not appear to be valid.',
+                    email.address)
 
         if n_primary == 0:
             raise UserError('There is no primary address.')
