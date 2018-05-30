@@ -1102,8 +1102,8 @@ class GenericProposal(object):
                     publications=publications
                 )
 
-                records = organise_collection(
-                    PrevProposalCollection, updated_records, added_records)
+            records = organise_collection(
+                PrevProposalCollection, updated_records, added_records)
 
             try:
                 updates = db.sync_proposal_prev_proposal(proposal.id, records)
