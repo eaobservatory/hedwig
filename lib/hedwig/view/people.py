@@ -467,8 +467,8 @@ class PeopleView(object):
 
                 person_id = db.add_person(
                     person.name, title=person.title, public=person.public,
-                    user_id=user_id, remote_addr=remote_addr)
-                db.add_email(person_id, email, primary=True)
+                    user_id=user_id, remote_addr=remote_addr,
+                    primary_email=email)
                 flash('Your user profile has been saved.')
                 _update_session_person_from_db(db, person_id)
 

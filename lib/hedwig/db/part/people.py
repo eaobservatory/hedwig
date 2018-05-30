@@ -47,7 +47,7 @@ from ..util import require_not_none
 
 class PeoplePart(object):
     def add_email(self, person_id, address, primary=False, verified=False,
-                  public=False, _test_skip_check=False):
+                  public=False, _conn=None, _test_skip_check=False):
         """
         Add an email address record to the databae.
 
@@ -58,7 +58,7 @@ class PeoplePart(object):
             raise UserError(
                 'The email address "{}" does not appear to be valid.', address)
 
-        with self._transaction() as conn:
+        with self._transaction(_conn=_conn) as conn:
             if (not _test_skip_check and
                     not self._exists_id(conn, person, person_id)):
                 raise ConsistencyError(
@@ -98,12 +98,16 @@ class PeoplePart(object):
 
     def add_person(self, name, title=None, public=False,
                    user_id=None, remote_addr=None,
+                   primary_email=None,
                    _test_skip_check=False):
         """
         Add a person to the database.
 
         If the user_id for an existing user is provided, then the person
         includes a reference to that user.
+
+        If a `primary_email` address is given, it is added as the
+        person's primary email address.
         """
 
         with self._transaction() as conn:
@@ -131,6 +135,10 @@ class PeoplePart(object):
             if user_id is not None:
                 self._add_user_log_entry(
                     conn, user_id, UserLogEvent.LINK_PROFILE, remote_addr)
+
+            if primary_email is not None:
+                self.add_email(
+                    person_id, primary_email, primary=True, _conn=conn)
 
         return person_id
 

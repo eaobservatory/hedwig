@@ -694,9 +694,9 @@ class GenericReview(object):
                     member['name'] = member['name'].strip()
                     member['email'] = member['email'].strip()
 
-                    person_id = db.add_person(member['name'],
-                                              title=member['title'])
-                    db.add_email(person_id, member['email'], primary=True)
+                    person_id = db.add_person(
+                        member['name'], title=member['title'],
+                        primary_email=member['email'])
                     reviewer_id = db.add_reviewer(
                         role_class=role_class,
                         proposal_id=proposal.id,

@@ -623,9 +623,9 @@ class GenericAdmin(object):
                     member['name'] = member['name'].strip()
                     member['email'] = member['email'].strip()
 
-                    person_id = db.add_person(member['name'],
-                                              title=member['title'])
-                    db.add_email(person_id, member['email'], primary=True)
+                    person_id = db.add_person(
+                        member['name'], title=member['title'],
+                        primary_email=member['email'])
                     db.add_group_member(queue_id, group_type, person_id)
 
                     self._message_group_invite(
