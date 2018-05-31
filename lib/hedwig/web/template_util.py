@@ -258,9 +258,17 @@ def register_template_utils(app):
 
     @app.template_filter()
     def publication_type_name(value):
-        if value is None:
+        try:
+            return PublicationType.get_name(value)
+        except KeyError:
             return ''
-        return PublicationType.get_info(value).name
+
+    @app.template_filter()
+    def publication_type_placeholder(value):
+        try:
+            return PublicationType.get_info(value).placeholder
+        except KeyError:
+            return ''
 
     @app.template_filter()
     def review_state_name(value):

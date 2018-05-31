@@ -55,10 +55,10 @@
                             {% set this_pub = prev_proposal.publications[i] %}
                         {% endif %}
                         <select name="pub_type_{{ i }}_{{ prev_proposal.id }}">
-                            {% for (pub_type_num, pub_type) in publication_types.items() %}
-                                <option value="{{ pub_type_num }}"
-                                    {% if pub_present %}{% if pub_type_num == this_pub.type %}selected="selected"{% endif %}{% endif %}
-                                    data-placeholder="{{ pub_type.placeholder }}">{{ pub_type.name }}</option>
+                            {% for (pub_type, pub_type_name) in publication_types.items() %}
+                                <option value="{{ pub_type }}"
+                                    {% if pub_present %}{% if pub_type == this_pub.type %}selected="selected"{% endif %}{% endif %}
+                                    data-placeholder="{{ pub_type | publication_type_placeholder }}">{{ pub_type_name }}</option>
                             {% endfor %}
                         </select>
                         <input type="text" name="publication_{{ i }}_{{ prev_proposal.id }}" value="{{ this_pub.description if pub_present }}" size="30" />
@@ -80,8 +80,8 @@
             <td>
                 {% for i in range(6) %}
                     <select name="pub_type_{{ i }}">
-                        {% for (pub_type_num, pub_type) in publication_types.items() %}
-                            <option value="{{ pub_type_num }}" data-placeholder="{{ pub_type.placeholder }}">{{ pub_type.name }}</option>
+                        {% for (pub_type, pub_type_name) in publication_types.items() %}
+                            <option value="{{ pub_type }}" data-placeholder="{{ pub_type | publication_type_placeholder }}">{{ pub_type_name }}</option>
                         {% endfor %}
                     </select>
                     <input type="text" name="publication_{{ i }}" size="30" />

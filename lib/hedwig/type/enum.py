@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -629,10 +629,25 @@ class ProposalState(EnumBasic):
         return OrderedDict((k, v.name) for (k, v) in cls._info.items())
 
 
-class PublicationType(EnumBasic):
+class PublicationType(EnumBasic, EnumAvailable):
     """
     Class representing different ways in which a publication can be
     identified.
+
+    Contains the following extra entries for each type:
+
+    placeholder
+        Text to show to the user as a pattern, in error messages and
+        as a placeholder in form text boxes.
+
+    regex
+        A list of regular expressions -- identifiers should match one
+        of them.
+
+    prefix
+        A list of prefixes, in lower case, which might be used with
+        the identifier.  These, if present, should be stripped off
+        automatically.
     """
 
     PLAIN = 1
@@ -640,33 +655,36 @@ class PublicationType(EnumBasic):
     ADS = 3
     ARXIV = 4
 
-    PubTypeInfo = namedtuple('PubTypeInfo', ('name', 'placeholder', 'regex'))
+    PubTypeInfo = namedtuple(
+        'PubTypeInfo', ('name', 'available', 'placeholder', 'regex', 'prefix'))
 
     _info = OrderedDict((
-        (PLAIN, PubTypeInfo('Text description',
-                            '',
-                            None)),
-        (DOI,   PubTypeInfo('DOI',
-                            '00.0000/XXXXXX',
-                            [re.compile('^\d+\.\d+\/.*$')])),
-        (ADS,   PubTypeInfo('ADS bibcode',
-                            '0000..............X',
-                            [re.compile('^\d\d\d\d..............[A-Za-z]$')])),
-        (ARXIV, PubTypeInfo('arXiv article ID',
-                            '0000.00000',
-                            [re.compile('^\d+\.\d+$'),
-                             re.compile('^.+\/\d+$')])),
+        (PLAIN, PubTypeInfo(
+            'Text description',
+            True,
+            '',
+            None,
+            None)),
+        (DOI, PubTypeInfo(
+            'DOI',
+            True,
+            '00.0000/XXXXXX',
+            [re.compile(r'^\d+(?:\.\d+)+\/\S*$')],
+            ['doi:'])),
+        (ADS, PubTypeInfo(
+            'ADS bibcode',
+            True,
+            '0000..............X',
+            [re.compile(r'^\d{4}\S{14}[A-Za-z]$')],
+            None)),
+        (ARXIV, PubTypeInfo(
+            'arXiv article ID',
+            True,
+            '0000.00000',
+            [re.compile(r'^\d+\.\d+(?:v\d+)?$'),
+             re.compile(r'^\S+\/\d+(?:v\d+)?$')],
+            ['arxiv:'])),
     ))
-
-    @classmethod
-    def get_options(cls):
-        """
-        Get information about all options.
-
-        This currently returns a copy of the private info ordered dictionary.
-        """
-
-        return cls._info.copy()
 
 
 class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):

@@ -202,6 +202,10 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(f(None), '')
         self.assertEqual(f(PublicationType.ARXIV), 'arXiv article ID')
 
+        f = self.app.jinja_env.filters['publication_type_placeholder']
+        self.assertEqual(f(None), '')
+        self.assertEqual(f(PublicationType.ARXIV), '0000.00000')
+
     def test_filter_review_state(self):
         f = self.app.jinja_env.filters['review_state_name']
 

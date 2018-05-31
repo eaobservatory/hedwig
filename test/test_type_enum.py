@@ -26,7 +26,8 @@ from hedwig.type.enum import \
     Assessment, AttachmentState, \
     BaseCallType, BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, \
-    MessageState, PersonTitle, ProposalState, ReviewState, SemesterState
+    MessageState, PersonTitle, ProposalState, PublicationType, \
+    ReviewState, SemesterState
 
 from .compat import TestCase
 
@@ -245,6 +246,32 @@ class EnumTypeTestCase(TestCase):
                          ProposalState.ACCEPTED)
         with self.assertRaisesRegex(NoSuchValue, 'not recognised'):
             ProposalState.by_name('not a real state')
+
+    def test_publication_type(self):
+        options = PublicationType.get_options()
+        self.assertIsInstance(options, OrderedDict)
+
+        for (k, v) in options.items():
+            self.assertIsInstance(k, int)
+            self.assertTrue(PublicationType.is_valid(k))
+
+            self.assertIsInstance(v, string_type)
+
+            i = PublicationType.get_info(k)
+
+            self.assertIsInstance(i.placeholder, string_type)
+
+            if i.regex is not None:
+                self.assertIsInstance(i.regex, list)
+                for x in i.regex:
+                    self.assertTrue(hasattr(x, 'search'))
+
+            if i.prefix is not None:
+                self.assertIsInstance(i.prefix, list)
+                for x in i.prefix:
+                    self.assertIsInstance(x, string_type)
+
+        self.assertFalse(PublicationType.is_valid(999999))
 
     def test_group_type(self):
         options = GroupType.get_options()

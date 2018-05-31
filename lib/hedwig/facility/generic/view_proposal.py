@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1085,10 +1085,14 @@ class GenericProposal(object):
                         continue
                     pub_type = int(form['pub_type_{}_{}'.format(i, id_)])
 
-                    # Remove leading "doi:" from DOI references.
-                    if (pub_type == PublicationType.DOI and
-                            pub_desc.startswith('doi:')):
-                        pub_desc = pub_desc[4:]
+                    pub_type_info = PublicationType.get_info(pub_type)
+
+                    # Remove prefix (e.g. "doi:") from reference.
+                    if pub_type_info.prefix is not None:
+                        pub_desc_lower = pub_desc.lower()
+                        for prefix in pub_type_info.prefix:
+                            if pub_desc_lower.startswith(prefix):
+                                pub_desc = pub_desc[len(prefix):]
 
                     publications.append(
                         null_tuple(PrevProposalPub)._replace(
