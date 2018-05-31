@@ -31,6 +31,11 @@ hedwig.view.people
 
 .. automodule:: hedwig.view.people
 
+hedwig.view.query
+-----------------
+
+.. automodule:: hedwig.view.query
+
 hedwig.view.tool
 ----------------
 

@@ -15,3 +15,8 @@ hedwig.email.send
 -----------------
 
 .. automodule:: hedwig.email.send
+
+hedwig.email.util
+-----------------
+
+.. automodule:: hedwig.email.util

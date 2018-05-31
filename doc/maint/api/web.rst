@@ -11,6 +11,11 @@ hedwig.web.format
 
 .. automodule:: hedwig.web.format
 
+hedwig.web.query_encode
+-----------------------
+
+.. automodule:: hedwig.web.query_encode
+
 hedwig.web.template_util
 ------------------------
 
