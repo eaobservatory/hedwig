@@ -27,12 +27,14 @@ import requests
 from ..config import get_config
 from ..type.simple import PrevProposalPub
 from ..type.util import null_tuple
-from ..util import get_logger
+from ..util import get_logger, list_in_blocks
 
 logger = get_logger(__name__)
 
 
 fixed_responses = {}
+query_block_size = 10
+query_delay = 3
 
 
 def get_pub_info_ads(bibcodes):
@@ -68,8 +70,12 @@ def _get_pub_info_ads_generic(type_, codes):
 
     ans = {}
 
-    while codes:
-        query = codes[:10]
+    n_query = 0
+    for query in list_in_blocks(codes, query_block_size):
+        if n_query > 0:
+            sleep(query_delay)
+        n_query += 1
+
         result = None
 
         if type_ == 'doi':
@@ -133,10 +139,6 @@ def _get_pub_info_ads_generic(type_, codes):
 
             except:
                 logger.exception('Failed to process ADS search response')
-
-        codes = codes[10:]
-        if codes:
-            sleep(3)
 
     return ans
 

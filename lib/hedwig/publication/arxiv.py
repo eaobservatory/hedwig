@@ -29,7 +29,7 @@ import requests
 from ..compat import python_version
 from ..type.simple import PrevProposalPub
 from ..type.util import null_tuple
-from ..util import get_logger
+from ..util import get_logger, list_in_blocks
 
 logger = get_logger(__name__)
 
@@ -50,6 +50,8 @@ else:
 
 
 fixed_responses = {}
+query_block_size = 10
+query_delay = 3
 
 
 def get_pub_info_arxiv(article_ids):
@@ -64,8 +66,12 @@ def get_pub_info_arxiv(article_ids):
 
     ans = {}
 
-    while article_ids:
-        query = article_ids[:10]
+    n_query = 0
+    for query in list_in_blocks(article_ids, query_block_size):
+        if n_query > 0:
+            sleep(query_delay)
+        n_query += 1
+
         query_str = ','.join(query)
 
         feed = None
@@ -131,9 +137,5 @@ def get_pub_info_arxiv(article_ids):
 
                 except:
                     logger.exception('Failed to parse arXiv feed entry')
-
-        article_ids = article_ids[10:]
-        if article_ids:
-            sleep(3)
 
     return ans
