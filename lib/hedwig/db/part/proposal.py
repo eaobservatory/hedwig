@@ -1400,6 +1400,18 @@ class ProposalPart(object):
         if reviewer_person_id is not None:
             stmt = stmt.where(reviewer.c.person_id == reviewer_person_id)
 
+            if with_reviewer_role is not None:
+                if is_list_like(with_reviewer_role):
+                    stmt = stmt.where(reviewer.c.role.in_(with_reviewer_role))
+                else:
+                    stmt = stmt.where(reviewer.c.role == with_reviewer_role)
+
+            if with_review_state is not None:
+                if is_list_like(with_review_state):
+                    stmt = stmt.where(self._expr_review_state().in_(with_review_state))
+                else:
+                    stmt = stmt.where(self._expr_review_state() == with_review_state)
+
         if state is not None:
             if is_list_like(state):
                 stmt = stmt.where(proposal.c.state.in_(state))
