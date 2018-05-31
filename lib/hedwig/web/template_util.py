@@ -286,9 +286,12 @@ def register_template_utils(app):
             return ''
 
     @app.template_filter()
-    def reviewer_role_name(value, role_class):
+    def reviewer_role_name(value, role_class, with_review=False):
         try:
-            return role_class.get_name(value)
+            if with_review:
+                return role_class.get_name_with_review(value)
+            else:
+                return role_class.get_name(value)
         except KeyError:
             return 'Unknown role'
 

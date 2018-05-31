@@ -227,6 +227,18 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(f(BaseReviewerRole.EXTERNAL, BaseReviewerRole),
                          'External')
 
+        self.assertEqual(
+            f(None, BaseReviewerRole, with_review=True),
+            'Unknown role')
+
+        self.assertEqual(
+            f(BaseReviewerRole.TECH, BaseReviewerRole, with_review=True),
+            'Technical Review')
+
+        self.assertEqual(
+            f(BaseReviewerRole.FEEDBACK, BaseReviewerRole, with_review=True),
+            'Feedback')
+
         f = self.app.jinja_env.filters['reviewer_role_class']
 
         self.assertEqual(f(999, BaseReviewerRole),

@@ -335,6 +335,14 @@ class EnumTypeTestCase(TestCase):
 
         self.assertFalse(BaseReviewerRole.is_valid(999999))
 
+        self.assertEqual(
+            BaseReviewerRole.get_name_with_review(BaseReviewerRole.EXTERNAL),
+            'External Review')
+
+        self.assertEqual(
+            BaseReviewerRole.get_name_with_review(BaseReviewerRole.FEEDBACK),
+            'Feedback')
+
         self.assertEqual(BaseReviewerRole.get_cttee_roles(), [
             BaseReviewerRole.CTTEE_PRIMARY,
             BaseReviewerRole.CTTEE_SECONDARY,

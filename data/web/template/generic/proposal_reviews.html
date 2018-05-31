@@ -16,7 +16,7 @@
     <nav>
         <p id="extra_review_links">
             {% for role in can_add_roles %}
-                <a class="create_review_link" href="{{ url_for('.proposal_review_new', proposal_id=proposal.id, reviewer_role=role, referrer='pr') }}">Add {{ role | reviewer_role_name(facility_role_class) | lower }}{{ ' review' if role is reviewer_role_review(facility_role_class) }}</a>
+                <a class="create_review_link" href="{{ url_for('.proposal_review_new', proposal_id=proposal.id, reviewer_role=role, referrer='pr') }}">Add {{ role | reviewer_role_name(facility_role_class, with_review=true) | lower }}</a>
                 {% if not loop.last %}
                     <br />
                 {% endif %}

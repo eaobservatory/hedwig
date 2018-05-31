@@ -793,6 +793,17 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
         return states
 
     @classmethod
+    def get_name_with_review(cls, role):
+        """Get the name of the role, possibly with the word "Review" added."""
+
+        role_info = cls._info[role]
+
+        if role_info.name_review:
+            return '{} Review'.format(role_info.name)
+
+        return role_info.name
+
+    @classmethod
     def get_rating_viewable_states(cls, role):
         """Get a list of states in which the rating is viewable."""
 
