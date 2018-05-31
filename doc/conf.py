@@ -107,21 +107,26 @@ autodoc_member_order = 'bysource'
 autodoc_default_flags = ['members', 'undoc-members', 'private-members']
 
 autodoc_mock_imports = [
-    'astropy', 'astropy.coordinates', 'astropy.time', 'astropy.units',
-    'astropy.utils.exceptions', 'astropy.utils.iers',
     'backports.pbkdf2',
     'flask',
     'jcmt_itc_scuba2',
+    'jinja2',
+    'jinja2_orderblocks',
     'magic',
     'matplotlib',
+    'msgpack',
     'numpy',
-    'PyPDF2', 'PyPDF2.utils',
-    'pymoc', 'pymoc.io', 'pymoc.io.fits', 'pymoc.util.catalog',
+    'PIL',
+    'PyPDF2',
+    'pymoc',
     'requests',
+    'sqlalchemy',
+    'ukirt_itc',
     'werkzeug',
 ]
 
-execfile('mock_extra.py')
+with open('mock_extra.py') as f:
+    exec(f.read())
 
 # -- Options for HTML output ----------------------------------------------
 
