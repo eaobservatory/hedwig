@@ -95,7 +95,6 @@ class BaseCalculator(object):
         proposal_id = None
         for_proposal_id = None
         calculation_id = None
-        calculation_proposal = None
         calculation_title = ''
         overwrite = False
         query_encoded = None
@@ -125,9 +124,6 @@ class BaseCalculator(object):
 
                 if 'calculation_id' in form:
                     calculation_id = int(form['calculation_id'])
-
-                if 'calculation_proposal' in form:
-                    calculation_proposal = int(form['calculation_proposal'])
 
                 if 'overwrite' in form:
                     overwrite = True
@@ -204,7 +200,7 @@ class BaseCalculator(object):
                             title=calculation_title)
 
                     else:
-                        db.add_calculation(
+                        calculation_id = db.add_calculation(
                             proposal_id, self.id_, mode, self.version,
                             parsed_input, output.output,
                             self.get_calc_version(), calculation_title)
@@ -267,6 +263,7 @@ class BaseCalculator(object):
                     raise HTTPForbidden('Access denied for that proposal.')
 
                 proposal_id = proposal.id
+                for_proposal_id = proposal_id
 
                 if calculation.version == self.version:
                     default_input = calculation.input
@@ -275,7 +272,6 @@ class BaseCalculator(object):
                         mode, calculation.version, calculation.input)
 
                 calculation_id = calculation.id
-                calculation_proposal = proposal_id
                 calculation_title = calculation.title
                 overwrite = can.edit
 
@@ -330,15 +326,8 @@ class BaseCalculator(object):
             'proposal_code': proposal_code,
             'for_proposal_id': for_proposal_id,
             'calculation_id': calculation_id,
-            'calculation_proposal': calculation_proposal,
             'calculation_title': calculation_title,
             'overwrite': overwrite,
-            'show_proposal_link': (
-                (proposal_id is not None) and (
-                    (proposal_id == calculation_proposal)
-                    if (calculation_id is not None)
-                    else ((for_proposal_id is not None) and
-                          (proposal_id == for_proposal_id)))),
             'query_encoded': query_encoded,
         }
 

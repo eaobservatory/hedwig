@@ -13,9 +13,9 @@
 {% block content %}
 
 {% block calculator_proposal_link %}
-    {% if show_proposal_link %}
+    {% if for_proposal_id is not none %}
         <p>
-            <a href="{{ url_for('.proposal_view', proposal_id=proposal_id, _anchor="calculations") }}">Back to proposal</a>
+            <a href="{{ url_for('.proposal_view', proposal_id=for_proposal_id, _anchor="calculations") }}">Back to proposal</a>
         </p>
     {% endif %}
 {% endblock %}
@@ -122,7 +122,7 @@
                 {% if calculation_id is not none %}
                     <li>
                         <label for="overwrite">Overwrite</label>
-                        <input type="checkbox" name="overwrite" value="yes" {{ 'disabled="disabled"' | safe if proposal_id != calculation_proposal }} {{ 'checked="checked"' | safe if overwrite }}/>
+                        <input type="checkbox" name="overwrite" value="yes" {{ 'checked="checked"' | safe if overwrite }}/>
                         <span class="checkboxlabel">Update existing calculation in the proposal</span>
                     </li>
                 {% endif %}
@@ -140,7 +140,6 @@
     {% endif %}
     {% if calculation_id is not none %}
         <input type="hidden" name="calculation_id" value="{{ calculation_id }}" />
-        <input type="hidden" name="calculation_proposal" value="{{ calculation_proposal }}" />
     {% endif %}
     {% if for_proposal_id is not none %}
         <input type="hidden" name="for_proposal_id" value="{{ for_proposal_id }}" />
