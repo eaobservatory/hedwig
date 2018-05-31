@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 
-{% if show_proposal_link and (proposal_code is not none) %}
-    {% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
+{% if for_proposal_code is not none %}
+    {% set navigation=[(for_proposal_code, url_for('.proposal_view', proposal_id=for_proposal_id))] %}
 {% endif %}
 
 {% if scripts is defined %}
