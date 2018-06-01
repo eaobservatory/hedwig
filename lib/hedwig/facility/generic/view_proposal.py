@@ -1278,7 +1278,7 @@ class GenericProposal(object):
     def _view_tool_note_edit_init(self, db, proposal, role):
         return {
             'help_link': url_for('help.user_page', page_name='target',
-                                 _anchor='clash-tool'),
+                                 _anchor='checking-your-targets'),
             'target_tools': self.target_tools,
         }
 
