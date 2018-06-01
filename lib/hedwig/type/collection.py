@@ -66,13 +66,18 @@ class ResultCollection(OrderedDict):
         else:
             return first_value(self)
 
-    def map_values(self, function):
+    def map_values(
+            self, function,
+            filter_key=(lambda x: True),
+            filter_value=(lambda x: True)):
         """
         Create a new collection by applying the given function to
         each value.
         """
 
-        return type(self)((k, function(v)) for (k, v) in self.items())
+        return type(self)(
+            (k, function(v)) for (k, v) in self.items()
+            if (filter_key(k) and filter_value(v)))
 
 
 class AffiliationCollection(ResultCollection):

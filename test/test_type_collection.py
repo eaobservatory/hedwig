@@ -276,6 +276,33 @@ class CollectionTypeTestCase(TestCase):
         with self.assertRaises(MultipleRecords):
             rc.get_single()
 
+        mapped = rc.map_values(lambda x: x.upper())
+
+        self.assertIsInstance(mapped, ResultCollection)
+        self.assertEqual(list(mapped.keys()), [0, 1])
+        self.assertEqual(mapped[0], 'TEST RESULT')
+        self.assertEqual(mapped[1], 'ANOTHER RESULT')
+
+        rc[2] = 'yet another result'
+
+        mapped = rc.map_values(
+            (lambda x: x.title()),
+            filter_value=(lambda x: not x.startswith('another')))
+
+        self.assertIsInstance(mapped, ResultCollection)
+        self.assertEqual(list(mapped.keys()), [0, 2])
+        self.assertEqual(mapped[0], 'Test Result')
+        self.assertEqual(mapped[2], 'Yet Another Result')
+
+        mapped = rc.map_values(
+            (lambda x: x.rjust(20)),
+            filter_key=(lambda x: x > 0))
+
+        self.assertIsInstance(mapped, ResultCollection)
+        self.assertEqual(list(mapped.keys()), [1, 2])
+        self.assertEqual(mapped[1], '      another result')
+        self.assertEqual(mapped[2], '  yet another result')
+
     def test_ordered_result_collection(self):
         class OrderedResultCollection(ResultCollection, CollectionOrdered):
             pass
