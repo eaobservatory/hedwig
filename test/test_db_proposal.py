@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime
 
+from hedwig.compat import first_value
 from hedwig.db.meta import member
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, NoSuchValue, UserError
@@ -32,7 +33,7 @@ from hedwig.type.enum import AffiliationType, AttachmentState, \
     CallState, FigureType, \
     FormatType, ProposalState
 from hedwig.type.simple import Affiliation, Call, CallPreamble, Category, \
-    Member, MemberInstitution, \
+    Member, MemberInfo, MemberInstitution, \
     Proposal, ProposalCategory, ProposalFigureInfo, ProposalPDFInfo, \
     ProposalText, ProposalTextInfo, Target
 from .dummy_db import DBTestCase
@@ -623,15 +624,16 @@ class DBProposalTest(DBTestCase):
         # Check the member list as we add members one at a time.
         result = self.db.search_member(proposal_id=proposal_id)
         self.assertEqual(_member_person_set(result), [person_id_1])
+        member_id_1 = first_value(result).id
 
-        self.db.add_member(proposal_id, person_id_2, affiliation_id,
-                           False, False, True)
+        member_id_2 = self.db.add_member(
+            proposal_id, person_id_2, affiliation_id, False, False, True)
         result = self.db.search_member(proposal_id=proposal_id)
         self.assertEqual(_member_person_set(result),
                          [person_id_1, person_id_2])
 
-        self.db.add_member(proposal_id, person_id_3, affiliation_id,
-                           False, True, True)
+        member_id_3 = self.db.add_member(
+            proposal_id, person_id_3, affiliation_id, False, True, True)
         result = self.db.search_member(proposal_id=proposal_id)
         self.assertEqual(_member_person_set(result),
                          [person_id_1, person_id_2, person_id_3])
@@ -661,6 +663,28 @@ class DBProposalTest(DBTestCase):
         member = result.get_single()
         self.assertEqual(member.proposal_id, proposal_id)
         self.assertEqual(member.person_id, person_id_2)
+
+        # Check results of proposal by person_id search.
+        result = self.db.search_proposal(person_id=person_id_1)
+        self.assertIsInstance(result, ProposalCollection)
+        self.assertEqual(list(result.keys()), [proposal_id])
+        self.assertEqual(result[proposal_id].member, MemberInfo(
+            id=member_id_1, pi=True, editor=True, observer=False,
+            person_id=person_id_1))
+
+        result = self.db.search_proposal(person_id=person_id_2)
+        self.assertIsInstance(result, ProposalCollection)
+        self.assertEqual(list(result.keys()), [proposal_id])
+        self.assertEqual(result[proposal_id].member, MemberInfo(
+            id=member_id_2, pi=False, editor=False, observer=True,
+            person_id=person_id_2))
+
+        result = self.db.search_proposal(person_id=person_id_3)
+        self.assertIsInstance(result, ProposalCollection)
+        self.assertEqual(list(result.keys()), [proposal_id])
+        self.assertEqual(result[proposal_id].member, MemberInfo(
+            id=member_id_3, pi=False, editor=True, observer=True,
+            person_id=person_id_3))
 
     def test_search_co_member(self):
         (call_id, aff_id) = self._create_test_call('s1', 'q1')

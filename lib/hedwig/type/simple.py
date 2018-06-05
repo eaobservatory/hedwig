@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -124,7 +124,7 @@ Member = namedtuple(
 
 MemberInfo = namedtuple(
     'MemberInfo',
-    ['pi', 'editor', 'observer'])
+    ['id', 'pi', 'editor', 'observer', 'person_id'])
 
 MemberInstitution = namedtuple(
     'MemberInstitution',

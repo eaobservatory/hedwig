@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1293,9 +1293,11 @@ class ProposalPart(object):
         # Determine query: add member results if person_id specified.
         if person_id is not None:
             select_columns.extend([
+                member.c.id.label('member_id'),
                 member.c.pi,
                 member.c.editor,
                 member.c.observer,
+                member.c.person_id,
             ])
             select_from = select_from.join(member)
 
@@ -1479,9 +1481,11 @@ class ProposalPart(object):
 
                 if person_id is not None:
                     member_info = MemberInfo(
+                        values.pop('member_id'),
                         values.pop('pi'),
                         values.pop('editor'),
-                        values.pop('observer'))
+                        values.pop('observer'),
+                        values.pop('person_id'))
 
                 elif with_member_pi:
                     member_info = MemberPIInfo(
