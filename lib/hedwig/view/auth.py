@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -314,7 +314,9 @@ def for_proposal_feedback(role_class, db, proposal, auth_cache=None):
     return no
 
 
-def for_review(role_class, db, reviewer, proposal, auth_cache=None):
+def for_review(
+        role_class, db, reviewer, proposal, auth_cache=None,
+        skip_membership_test=False):
     """
     Determine the current user's authorization regarding this review.
 
@@ -333,6 +335,12 @@ def for_review(role_class, db, reviewer, proposal, auth_cache=None):
     reviewers in "feedback roles" to edit the "feedback" review.)
     **This means that if some reviewers are attached, they all must be.**
 
+    The `skip_membership_test` argument can be set to skip the check
+    that the person is not a member of the proposal.  This should
+    only be used when considering access for non-sensitive information
+    which it is acceptable for the proposal members to see, such as
+    calculation results.
+
     :return AuthorizationWithRating: including field indicating whether
         the ratings can be viewed.
     """
@@ -343,8 +351,9 @@ def for_review(role_class, db, reviewer, proposal, auth_cache=None):
     person_id = session['person']['id']
 
     # Forbid access if the person is a member of the proposal.
-    if proposal.members.has_person(person_id):
-        return AuthorizationWithRating(*no, view_rating=False)
+    if not skip_membership_test:
+        if proposal.members.has_person(person_id):
+            return AuthorizationWithRating(*no, view_rating=False)
 
     # Determine whether the proposal is in a state where this review is
     # editable.  If we have a specific reviewer, check that role's states.
