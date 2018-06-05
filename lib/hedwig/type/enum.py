@@ -718,43 +718,49 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
         ('name', 'unique', 'text', 'assessment', 'rating', 'weight',
          'cttee', 'name_review', 'feedback_direct', 'feedback_indirect',
          'note', 'invite',
-         'edit_rev', 'edit_fr', 'rating_hide',
+         'edit_rev', 'edit_fr', 'rating_hide', 'calc',
          'display_class', 'url_path'))
 
     # Options:  Unique Text   Ass/nt Rating Weight Cttee  "Rev"  Fbk_dr Fbk_id
-    #           Note   Invite E.Rev  E.FR   Ra.Hi. Disp.cl. URL
+    #           Note   Invite E.Rev  E.FR   Ra.Hi. Calc   Disp.cl. URL
     _info = OrderedDict((
         (TECH,
             RoleInfo(
                 'Technical',
                 True,  True,  True,  False, False, False, True,  False, False,
-                True,  False, True,  True,  False, 'tech', 'technical')),
+                True,  False, True,  True,  False, True,  'tech', 'technical')),
         (EXTERNAL,
             RoleInfo(
                 'External',
                 False, True,  False, True,  False, False, True,  False, False,
-                False, True,  True,  False, False, 'ext', 'external')),
+                False, True,  True,  False, False, False, 'ext', 'external')),
         (CTTEE_PRIMARY,
             RoleInfo(
                 'Committee Primary',
                 True,  True,  False, True,  True,  True,  True,  True,  False,
-                True,  False, True,  True,  True,  'cttee', 'committee')),
+                True,  False, True,  True,  True,  False, 'cttee', 'committee')),
         (CTTEE_SECONDARY,
             RoleInfo(
                 'Committee Secondary',
                 False, True,  False, True,  True,  True,  True,  False, True,
-                True,  False, True,  True,  True,  'cttee', None)),
+                True,  False, True,  True,  True,  False, 'cttee', None)),
         (CTTEE_OTHER,
             RoleInfo(
                 'Committee Other',
                 False, True,  False, True,  True,  True,  True,  False, False,
-                True,  False, True,  True,  True,  'cttee', 'other')),
+                True,  False, True,  True,  True,  False, 'cttee', 'other')),
         (FEEDBACK,
             RoleInfo(
                 'Feedback',
                 True,  True,  False, False, False, False, False, False, False,
-                False, False, False, True,  False, 'feedback', 'feedback')),
+                False, False, False, True,  False, False, 'feedback', 'feedback')),
     ))
+
+    @classmethod
+    def get_calc_roles(cls):
+        """Get list of roles who can save calculations."""
+
+        return [k for (k, v) in cls._info.items() if v.calc]
 
     @classmethod
     def get_cttee_roles(cls):

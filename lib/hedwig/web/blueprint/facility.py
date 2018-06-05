@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -688,6 +688,15 @@ def create_facility_blueprint(db, facility):
     @facility_template('review_info.html')
     def review_info(reviewer_id):
         return facility.view_review_info(db, reviewer_id)
+
+    @bp.route('/review/<int:reviewer_id>/calculation',
+              methods=['GET', 'POST'])
+    @require_auth(require_person=True)
+    @facility_template('calculation_manage.html')
+    def review_calculation_manage(reviewer_id):
+        return facility.view_review_calculation_manage(
+            db, reviewer_id,
+            (request.form if request.method == 'POST' else None))
 
     # Register custom routes.
     for route in facility.get_custom_routes():

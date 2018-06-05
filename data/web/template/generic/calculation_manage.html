@@ -1,5 +1,9 @@
 {% extends "layout.html" %}
-{% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
+
+{% set navigation = concatenate_lists(
+    (none if proposal_id is none else [(proposal_code | default('Unknown Proposal', true), url_for('.proposal_view', proposal_id=proposal_id))]),
+    (none if reviewer_id is none else [(reviewer_role | reviewer_role_name(facility_role_class, with_review=true), url_for('.review_edit', reviewer_id=reviewer_id))])) %}
+
 {% set scripts=['manage_calculation'] %}
 {% set help_link=url_for('help.user_page', page_name='calculation') %}
 
@@ -11,14 +15,26 @@
     </p>
 {% endif %}
 
-{% if can_edit %}
-    <form method="POST" action="{{ url_for('.calculation_manage', proposal_id=proposal_id) }}">
+{% if reviewer_id is none %}
+    {% if can_edit %}
+        <form method="POST" action="{{ url_for('.calculation_manage', proposal_id=proposal_id) }}">
+    {% else %}
+        <nav>
+            <p>
+                <a href="{{ url_for('.proposal_view', proposal_id=proposal_id, _anchor='calculations') }}">Back to proposal</a>
+            </p>
+        </nav>
+    {% endif %}
 {% else %}
-    <nav>
-        <p>
-            <a href="{{ url_for('.proposal_view', proposal_id=proposal_id, _anchor='calculations') }}">Back to proposal</a>
-        </p>
-    </nav>
+    {% if can_edit %}
+        <form method="POST" action="{{ url_for('.review_calculation_manage', reviewer_id=reviewer_id) }}">
+    {% else %}
+        <nav>
+            <p>
+                <a href="{{ url_for('.proposal_reviews', proposal_id=proposal_id) }}">Back to reviews</a>
+            </p>
+        </nav>
+    {% endif %}
 {% endif %}
 
 <table>

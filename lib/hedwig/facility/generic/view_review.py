@@ -58,6 +58,10 @@ ProposalWithReviewerPersons = namedtuple(
     ProposalWithCode._fields + (
         'reviewer_person_ids',))
 
+ReviewerWithCalculations = namedtuple(
+    'ReviewerWithCalculations', Reviewer._fields + (
+        'calculations', 'can_view', 'can_edit'))
+
 
 class GenericReview(object):
     @with_call_review(permission=PermissionType.VIEW)
@@ -1183,6 +1187,13 @@ class GenericReview(object):
         if reviewer.role != role_class.FEEDBACK:
             proposal = proposal._replace(decision_note=None)
 
+        # If this role allows calculations, retrieve any which are present.
+        if role_info.calc and (reviewer.id is not None):
+            calculations = self._prepare_calculations(
+                db.search_review_calculation(reviewer_id=reviewer.id))
+        else:
+            calculations = None
+
         ctx = {
             'title': '{}: {} {}'.format(
                 proposal_code,
@@ -1200,6 +1211,8 @@ class GenericReview(object):
             'referrer': referrer,
             'target_guideline': self.make_review_guidelines_url(
                 role=reviewer.role),
+            'calculators': (self.calculators if role_info.calc else None),
+            'calculations': calculations,
         }
 
         ctx.update(self._view_review_edit_extra(
@@ -1245,6 +1258,10 @@ class GenericReview(object):
 
         return {}
 
+    @with_review(permission=PermissionType.EDIT)
+    def view_review_calculation_manage(self, db, reviewer, proposal, can, form):
+        return self._view_calculation_manage(db, proposal, reviewer, can, form)
+
     @with_proposal(permission=PermissionType.NONE, with_decision=True)
     def view_proposal_reviews(self, db, proposal):
         role_class = self.get_reviewer_roles()
@@ -1282,6 +1299,7 @@ class GenericReview(object):
         for (reviewer_id, reviewer) in db.search_reviewer(
                 proposal_id=proposal.id, with_review=True,
                 with_review_text=True, with_review_note=True).items():
+            role_info = role_class.get_info(reviewer.role)
             reviewer_can = auth.for_review(
                 role_class, db, reviewer=reviewer, proposal=proposal,
                 auth_cache=auth_cache)
@@ -1293,10 +1311,17 @@ class GenericReview(object):
                 reviewer = reviewer._replace(
                     review_rating=None, review_weight=None)
 
-            reviewers[reviewer_id] = with_can_view_edit(
-                reviewer,
-                (is_admin or reviewer.person_public),
-                reviewer_can.edit)
+            if role_info.calc:
+                calculations = self._prepare_calculations(
+                db.search_review_calculation(reviewer_id=reviewer.id))
+            else:
+                calculations = None
+
+            reviewers[reviewer_id] = ReviewerWithCalculations(
+                *reviewer,
+                calculations=calculations,
+                can_view=(is_admin or reviewer.person_public),
+                can_edit=reviewer_can.edit)
 
         self.attach_review_extra(db, {None: proposal})
 

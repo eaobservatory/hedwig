@@ -373,10 +373,10 @@
 
                 {{ render_calculation(calculation) }}
 
-                {% if calculation.target_view is not none %}
+                {% if calculation.mode_info.code is not none %}
                     <nav>
                         <p>
-                            <a href="{{ calculation.target_view }}">View calculation</a>
+                            <a href="{{ url_for((calculation.calculator_code, calculation.mode_info.code) | fmt('.calc_{}_{}'), calculation_id=calculation.id) }}">View calculation</a>
                         </p>
                     </nav>
                 {% endif %}

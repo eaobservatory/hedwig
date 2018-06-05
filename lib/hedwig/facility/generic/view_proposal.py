@@ -49,8 +49,8 @@ from ...view.util import count_words, int_or_none, organise_collection, \
 
 CalculationExtra = namedtuple(
     'CalculationExtra',
-    Calculation._fields + ('calculator_name',
-                           'inputs', 'outputs', 'mode_info', 'target_view'))
+    Calculation._fields + ('calculator_name', 'calculator_code',
+                           'inputs', 'outputs', 'mode_info'))
 
 PrevProposalExtra = namedtuple(
     'PrevProposalExtra',
@@ -1624,8 +1624,28 @@ class GenericProposal(object):
 
     @with_proposal(permission=PermissionType.VIEW)
     def view_calculation_manage(self, db, proposal, can, form):
+        return self._view_calculation_manage(db, proposal, None, can, form)
+
+    def _view_calculation_manage(self, db, proposal, reviewer, can, form):
+        """
+        Internal method to handle the calculation management page for either
+        proposals or reviews.
+        """
+
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        if reviewer is None:
+            title = '{} Calculations'.format('Manage' if can.edit else 'View')
+            calculations = db.search_calculation(proposal_id=proposal.id)
+
+        else:
+            role_class = self.get_reviewer_roles()
+            title = '{}: {}:  Calculations'.format(
+                proposal_code, role_class.get_name_with_review(reviewer.role))
+            calculations = db.search_review_calculation(
+                reviewer_id=reviewer.id)
+
         message = None
-        calculations = db.search_calculation(proposal_id=proposal.id)
 
         if form is not None:
             if not can.edit:
@@ -1641,26 +1661,37 @@ class GenericProposal(object):
                     if calculation_id not in calculations_present:
                         del calculations[calculation_id]
 
-                (n_insert, n_update, n_delete) = \
-                    db.sync_proposal_calculation(proposal.id, calculations)
+                if reviewer is None:
+                    (n_insert, n_update, n_delete) = \
+                        db.sync_proposal_calculation(proposal.id, calculations)
+
+                    target = url_for(
+                        '.proposal_view', proposal_id=proposal.id,
+                        _anchor='calculations')
+                else:
+                    (n_insert, n_update, n_delete) = \
+                        db.sync_review_calculation(reviewer.id, calculations)
+
+                    target = url_for(
+                        '.review_edit', reviewer_id=reviewer.id)
 
                 if n_delete:
                     flash('{} {} been removed.', n_delete,
                           ('calculation has' if n_delete == 1 else
                            'calculations have'))
 
-                raise HTTPRedirect(url_for(
-                    '.proposal_view', proposal_id=proposal.id,
-                    _anchor='calculations'))
+                raise HTTPRedirect(target)
 
             except UserError as e:
                 message = e.message
 
         return {
-            'title': (('Manage' if can.edit else 'View') + ' Calculations'),
+            'title': title,
             'message': message,
             'proposal_id': proposal.id,
-            'proposal_code': self.make_proposal_code(db, proposal),
+            'proposal_code': proposal_code,
+            'reviewer_id': (None if reviewer is None else reviewer.id),
+            'reviewer_role': (None if reviewer is None else reviewer.role),
             'calculations': self._prepare_calculations(
                 calculations, condense=False),
             'can_edit': can.edit,
@@ -1788,13 +1819,13 @@ class GenericProposal(object):
                 calculations.append(CalculationExtra(
                     *calc,
                     calculator_name='Calculator {}'.format(calc.calculator_id),
+                    calculator_code=None,
                     inputs=[CalculatorValue(x, x, None, '{}', None)
                             for x in calc.input],
                     outputs=[CalculatorValue(x, x, None, '{}', None)
                              for x in calc.output],
                     mode_info=CalculatorMode(None,
-                                             'Mode {}'.format(calc.mode)),
-                    target_view=None))
+                                             'Mode {}'.format(calc.mode))))
             else:
                 calculator = calc_info.calculator
                 mode_info = calculator.get_mode_info(calc.mode)
@@ -1802,13 +1833,10 @@ class GenericProposal(object):
                 calculation = CalculationExtra(
                     *calc,
                     calculator_name=calc_info.name,
+                    calculator_code=calc_info.code,
                     inputs=calculator.get_inputs(calc.mode, calc.version),
                     outputs=calculator.get_outputs(calc.mode, calc.version),
-                    mode_info=mode_info,
-                    target_view=url_for(
-                        '.calc_{}_{}'.format(calculator.get_code(),
-                                             mode_info.code),
-                        calculation_id=calc.id))
+                    mode_info=mode_info)
 
                 # Call the calculator method to compact the calculation
                 # where possible.

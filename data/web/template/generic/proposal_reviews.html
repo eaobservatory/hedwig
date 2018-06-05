@@ -3,6 +3,7 @@
                    (proposal_code, url_for('.proposal_view', proposal_id=proposal.id))] %}
 {% set help_link=url_for('help.admin_page', page_name='review_proposal') %}
 {% from 'macro/proposal_summary.html' import render_proposal_summary %}
+{% from 'macro/calculation.html' import render_calculation_title, render_calculation %}
 
 {% block content %}
 <h2>Proposal Information</h2>
@@ -111,6 +112,31 @@
                     <td colspan="{{ review_info_columns | length + 3 }}">
                         {% block review_text scoped %}
                             {{ review.review_text | format_text(review.review_format) }}
+                        {% endblock %}
+                        {% block review_calculations scoped %}
+                            {% if review.calculations %}
+                                {% for calculation in review.calculations %}
+                                    <p><b>
+                                        {{ loop.index }}.
+                                        {{ render_calculation_title(calculation) }}
+                                    </b></p>
+
+                                    {{ render_calculation(calculation) }}
+
+                                    {% if calculation.mode_info.code is not none %}
+                                        <nav>
+                                            <p>
+                                                <a href="{{ url_for((calculation.calculator_code, calculation.mode_info.code) | fmt('.calc_{}_{}'), review_calculation_id=calculation.id) }}">View calculation</a>
+                                            </p>
+                                        </nav>
+                                    {% endif %}
+                                {% endfor %}
+                                <nav>
+                                    <p>
+                                        <a href="{{ url_for('.review_calculation_manage', reviewer_id=review.id) }}">View calculation details</a>
+                                    </p>
+                                </nav>
+                            {% endif %}
                         {% endblock %}
                     </td>
                 </tr>

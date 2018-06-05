@@ -3,6 +3,7 @@
 {% set help_link=url_for('help.review_page', page_name='external') %}
 {% set scripts=concatenate_lists(['edit_review'], scripts) %}
 {% from 'macro/proposal_summary.html' import render_proposal_summary %}
+{% from 'macro/calculation.html' import render_calculation_title, render_calculation %}
 
 {% block content %}
 <h2>Proposal and Review Information</h2>
@@ -25,6 +26,48 @@
         </tr>
     {% endif %}
 {% endcall %}
+
+{% block calculations %}
+    {% if role_info.calc %}
+        <h3 id="calculations">Calculations</h3>
+
+        {% if calculations %}
+            {% for calculation in calculations %}
+                <h4>
+                    {{ loop.index }}.
+                    {{ render_calculation_title(calculation) }}
+                </h4>
+
+                {{ render_calculation(calculation) }}
+
+                {% if calculation.mode_info.code is not none %}
+                    <nav>
+                        <p>
+                            <a href="{{ url_for((calculation.calculator_code, calculation.mode_info.code) | fmt('.calc_{}_{}'), review_calculation_id=calculation.id) }}">View calculation</a>
+                        </p>
+                    </nav>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        <nav>
+            <p id="add_calc_links">
+                Add calculation:
+                {% for calculator in calculators.values() %}
+                    <a href="{{ url_for((calculator.code, (calculator.modes | first_value).code) | fmt('.calc_{}_{}'), reviewer_id=reviewer.id) }}">{{ calculator.name }}</a>{{ ',' if not loop.last }}
+                {% endfor %}
+            </p>
+        </nav>
+
+        {% if calculations %}
+            <nav>
+                <p>
+                    <a href="{{ url_for('.review_calculation_manage', reviewer_id=reviewer.id) }}">Manage calculations</a>
+                </p>
+            </nav>
+        {% endif %}
+    {% endif %}
+{% endblock %}
 
 {% block information_extra %}
 {% endblock %}

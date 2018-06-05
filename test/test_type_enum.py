@@ -343,6 +343,10 @@ class EnumTypeTestCase(TestCase):
             BaseReviewerRole.get_name_with_review(BaseReviewerRole.FEEDBACK),
             'Feedback')
 
+        self.assertEqual(BaseReviewerRole.get_calc_roles(), [
+            BaseReviewerRole.TECH,
+        ])
+
         self.assertEqual(BaseReviewerRole.get_cttee_roles(), [
             BaseReviewerRole.CTTEE_PRIMARY,
             BaseReviewerRole.CTTEE_SECONDARY,

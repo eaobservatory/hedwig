@@ -21,12 +21,19 @@ from __future__ import absolute_import, division, print_function, \
 from collections import namedtuple
 
 from ..error import NoSuchRecord, ParseError, UserError
+from ..type.collection import MemberCollection
 from ..type.enum import ProposalState
 from ..type.simple import CalculatorResult, ProposalWithCode
+from ..type.util import null_tuple
 from ..web.query_encode import encode_query, decode_query
 from ..web.util import HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
+from .util import int_or_none
 from . import auth
+
+
+CalculationInfo = namedtuple(
+    'CalculationInfo', ('id', 'parent_id', 'title', 'overwrite'))
 
 
 class BaseCalculator(object):
@@ -88,45 +95,71 @@ class BaseCalculator(object):
         Web view handler for a generic calculator.
         """
 
+        role_class = self.facility.get_reviewer_roles()
+        auth_cache = {}
+
         message = None
 
         inputs = self.get_inputs(mode)
         output = CalculatorResult(None, None)
-        proposal_id = None
-        for_proposal_id = None
-        calculation_id = None
-        calculation_title = ''
-        overwrite = False
         query_encoded = None
 
+        for_proposal_id = None
+        for_reviewer_id = None
+        calculation_info = review_calculation_info = \
+            null_tuple(CalculationInfo)._replace(title='')
+
         # If the user is logged in, determine whether there are any proposals
-        # to which they can add calculator results.
-        proposals = None
+        # or reviews to which they can add calculator results.
+        proposals = {}
+        review_proposals = {}
         if 'user_id' in session and 'person' in session:
-            proposals = [
-                ProposalWithCode(
-                    *x, code=self.facility.make_proposal_code(db, x))
-                for x in db.search_proposal(
-                    facility_id=self.facility.id_,
-                    person_id=session['person']['id'], person_is_editor=True,
-                    state=ProposalState.editable_states()).values()]
+            proposals = db.search_proposal(
+                facility_id=self.facility.id_,
+                person_id=session['person']['id'], person_is_editor=True,
+                state=ProposalState.editable_states()).map_values(
+                    (lambda proposal: ProposalWithCode(
+                        *proposal,
+                        code=self.facility.make_proposal_code(db, proposal))),
+                    filter_value=(lambda proposal: auth.for_proposal(
+                        # Emulate search_proposal(with_members=True) behavior.
+                        role_class, db, proposal._replace(
+                            members=MemberCollection((
+                                (proposal.member.id, proposal.member),))),
+                        auth_cache=auth_cache).edit))
+
+            review_proposals = db.search_proposal(
+                facility_id=self.facility.id_,
+                reviewer_person_id=session['person']['id'],
+                with_reviewer_role=role_class.get_calc_roles(),
+                state=ProposalState.review_states()).map_values(
+                    (lambda proposal: ProposalWithCode(
+                        *proposal,
+                        code=self.facility.make_proposal_code(db, proposal))),
+                    filter_value=(lambda proposal: auth.for_review(
+                        role_class, db, proposal.reviewer, proposal,
+                        auth_cache=auth_cache,
+                        skip_membership_test=True).edit))
 
         if form is not None:
             try:
-                if 'proposal_id' in form:
-                    proposal_id = int(form['proposal_id'])
-
                 if 'for_proposal_id' in form:
                     for_proposal_id = int(form['for_proposal_id'])
 
-                if 'calculation_title' in form:
-                    calculation_title = form['calculation_title'].strip()
+                if 'for_reviewer_id' in form:
+                    for_reviewer_id = int(form['for_reviewer_id'])
 
-                if 'calculation_id' in form:
-                    calculation_id = int(form['calculation_id'])
+                calculation_info = calculation_info._replace(
+                    id=int_or_none(form.get('calculation_id', '')),
+                    parent_id=int_or_none(form.get('proposal_id', '')),
+                    title=form.get('calculation_title', '').strip(),
+                    overwrite=('calculation_overwrite' in form))
 
-                if 'overwrite' in form:
-                    overwrite = True
+                review_calculation_info = review_calculation_info._replace(
+                    id=int_or_none(form.get('review_calculation_id', '')),
+                    parent_id=int_or_none(form.get('reviewer_id', '')),
+                    title=form.get('review_calculation_title', '').strip(),
+                    overwrite=('review_calculation_overwrite' in form))
 
                 # Work primarily with the un-parsed "input_values" so that,
                 # in the event of a parsing error, we can still put the user
@@ -161,64 +194,112 @@ class BaseCalculator(object):
 
                     query_encoded = self._encode_query(inputs, parsed_input)
 
-                elif ('submit_save' in form) or ('submit_save_redir' in form):
+                elif any(x in form for x in (
+                        'submit_save', 'submit_save_redir',
+                        'review_submit_save', 'review_submit_save_redir')):
+                    # Run calculation to get the outputs to save.
                     parsed_input = self.parse_input(mode, input_values)
-
-                    proposal_id = int(form['proposal_id'])
-
-                    # Check access via the normal auth module.
-                    proposal = db.get_proposal(self.facility.id_, proposal_id,
-                                               with_members=True)
-
-                    if not auth.for_proposal(
-                            self.facility.get_reviewer_roles(),
-                            db, proposal).edit:
-                        raise HTTPForbidden(
-                            'Edit permission denied for this proposal.')
 
                     output = self(mode, parsed_input)
 
-                    if overwrite:
+                    # Determine which kind of request this is.
+                    if any(x in form for x in (
+                            'submit_save', 'submit_save_redir')):
+                        is_proposal = True
+                        info = calculation_info
+                        parents = proposals
+                    else:
+                        is_proposal = False
+                        info = review_calculation_info
+                        parents = review_proposals
+
+                    is_redir = any(x in form for x in (
+                        'submit_save_redir', 'review_submit_save_redir'))
+
+                    if info.parent_id is None:
+                        raise HTTPError('Parent identifier not specified.')
+
+                    # We already checked access for the listed parents, so
+                    # check that this is one of them.
+                    proposal = parents.get(info.parent_id)
+                    if proposal is None:
+                        raise HTTPForbidden('Edit permission denied.')
+
+                    # Prepare calculation values to be saved.
+                    calc_kwargs = {
+                        'mode': mode,
+                        'version': self.version,
+                        'input_': parsed_input,
+                        'output': output.output,
+                        'calc_version': self.get_calc_version(),
+                        'title': info.title,
+                    }
+
+                    if info.overwrite:
                         # Check that the calculation is really for the right
-                        # proposal.
+                        # proposal or review.
                         try:
-                            calculation = db.get_calculation(calculation_id)
+                            if is_proposal:
+                                db.search_calculation(
+                                    calculation_id=info.id,
+                                    proposal_id=info.parent_id).get_single()
+                            else:
+                                db.search_review_calculation(
+                                    review_calculation_id=info.id,
+                                    reviewer_id=info.parent_id).get_single()
                         except NoSuchRecord:
                             raise UserError(
                                 'Can not overwrite calculation: '
                                 'calculation not found.')
-                        if calculation.proposal_id != proposal_id:
-                            raise UserError(
-                                'Can not overwrite calculation: '
-                                'it appears to be for a different proposal.')
 
-                        db.update_calculation(
-                            calculation_id,
-                            mode=mode, version=self.version,
-                            input_=parsed_input, output=output.output,
-                            calc_version=self.get_calc_version(),
-                            title=calculation_title)
+                        if is_proposal:
+                            db.update_calculation(
+                                info.id, **calc_kwargs)
+                        else:
+                            db.update_review_calculation(
+                                info.id, **calc_kwargs)
 
                     else:
-                        calculation_id = db.add_calculation(
-                            proposal_id, self.id_, mode, self.version,
-                            parsed_input, output.output,
-                            self.get_calc_version(), calculation_title)
+                        if is_proposal:
+                            new_id = db.add_calculation(
+                                info.parent_id, self.id_, **calc_kwargs)
 
-                    if 'submit_save_redir' in form:
+                            calculation_info = \
+                                calculation_info._replace(id=new_id)
+                        else:
+                            new_id = db.add_review_calculation(
+                                info.parent_id, self.id_, **calc_kwargs)
+
+                            review_calculation_info = \
+                                review_calculation_info._replace(id=new_id)
+
+                    if is_redir:
                         flash('The calculation has been saved.')
-                        raise HTTPRedirect(url_for('.proposal_view',
-                                                   proposal_id=proposal_id,
-                                                   _anchor='calculations'))
+                        if is_proposal:
+                            raise HTTPRedirect(url_for(
+                                '.proposal_view', proposal_id=info.parent_id,
+                                _anchor='calculations'))
+                        else:
+                            raise HTTPRedirect(url_for(
+                                '.review_edit', reviewer_id=info.parent_id,
+                                _anchor='calculations'))
 
                     else:
-                        for_proposal_id = proposal_id
+                        if is_proposal:
+                            for_proposal_id = info.parent_id
+                            for_reviewer_id = None
+                            extra_desc = ''
+                        else:
+                            for_proposal_id = None
+                            for_reviewer_id = info.parent_id
+                            extra_desc = 'the {} for'.format(
+                                role_class.get_name_with_review(
+                                    proposal.reviewer.role).lower())
 
                         flash(
-                            'The calculation has been saved to proposal '
+                            'The calculation has been saved to {} proposal '
                             '{}: "{}".',
-                            self.facility.make_proposal_code(db, proposal),
-                            proposal.title)
+                            extra_desc, proposal.code, proposal.title)
 
                         query_encoded = self._encode_query(
                             inputs, parsed_input)
@@ -230,63 +311,117 @@ class BaseCalculator(object):
                 message = e.message
 
         else:
+            # Following a link from a proposal or review -- store the
+            # identifier in the "for_<parent>_id" variable.
             if 'proposal_id' in args:
                 try:
-                    proposal_id = int(args['proposal_id'])
+                    for_proposal_id = int(args['proposal_id'])
                 except ValueError:
                     raise HTTPError('Non-integer proposal_id query argument')
-                for_proposal_id = proposal_id
+                calculation_info = calculation_info._replace(
+                    parent_id=for_proposal_id)
 
-            if 'calculation_id' in args:
+            if 'reviewer_id' in args:
                 try:
-                    calculation = db.get_calculation(
-                        int(args['calculation_id']))
-                except NoSuchRecord:
-                    raise HTTPNotFound('Calculation not found.')
+                    for_reviewer_id = int(args['reviewer_id'])
+                except ValueError:
+                    raise HTTPError('Non-integer reviewer_id query argument')
+                review_calculation_info = review_calculation_info._replace(
+                    parent_id=for_reviewer_id)
 
-                if calculation.calculator_id != self.id_:
-                    raise HTTPError(
-                        'Calculation is from a different calculator.')
+            # Following a link which describes a specific calculation -- get
+            # the input, run the calculation and provide an encoded query.
+            if any(x in args for x in (
+                    'calculation_id', 'review_calculation_id', 'query')):
+                if 'calculation_id' in args:
+                    try:
+                        calculation = db.get_calculation(
+                            int(args['calculation_id']))
+                    except NoSuchRecord:
+                        raise HTTPNotFound('Calculation not found.')
 
-                if calculation.mode != mode:
-                    raise HTTPError(
-                        'Calculation is from a different mode.')
+                    if calculation.calculator_id != self.id_:
+                        raise HTTPError(
+                            'Calculation is from a different calculator.')
 
-                # Check authorization to see this calculation.
-                proposal = db.get_proposal(
-                    self.facility.id_, calculation.proposal_id,
-                    with_members=True, with_reviewers=True)
+                    if calculation.mode != mode:
+                        raise HTTPError(
+                            'Calculation is from a different mode.')
 
-                can = auth.for_proposal(self.facility.get_reviewer_roles(),
-                                        db, proposal)
-                if not can.view:
-                    raise HTTPForbidden('Access denied for that proposal.')
+                    # Check authorization to see this calculation.
+                    proposal = db.get_proposal(
+                        self.facility.id_, calculation.proposal_id,
+                        with_members=True, with_reviewers=True)
 
-                proposal_id = proposal.id
-                for_proposal_id = proposal_id
+                    can = auth.for_proposal(
+                        role_class, db, proposal, auth_cache=auth_cache)
+                    if not can.view:
+                        raise HTTPForbidden('Access denied for that proposal.')
 
-                if calculation.version == self.version:
+                    for_proposal_id = proposal.id
+
+                    default_version = calculation.version
                     default_input = calculation.input
+
+                    calculation_info = null_tuple(CalculationInfo)._replace(
+                        id=calculation.id,
+                        parent_id=proposal.id,
+                        title=calculation.title,
+                        overwrite=can.edit)
+
+                elif 'review_calculation_id' in args:
+                    try:
+                        calculation = db.get_review_calculation(
+                            int(args['review_calculation_id']))
+                    except NoSuchRecord:
+                        raise HTTPNotFound('Review calculation not found.')
+
+                    if calculation.calculator_id != self.id_:
+                        raise HTTPError(
+                            'Calculation is from a different calculator.')
+
+                    if calculation.mode != mode:
+                        raise HTTPError(
+                            'Calculation is from a different mode.')
+
+                    reviewer = db.search_reviewer(
+                        reviewer_id=calculation.reviewer_id).get_single()
+
+                    proposal = db.get_proposal(
+                        self.facility.id_, reviewer.proposal_id,
+                        with_reviewers=True)
+
+                    can = auth.for_review(
+                        role_class, db, reviewer, proposal,
+                        auth_cache=auth_cache, skip_membership_test=True)
+                    if not can.view:
+                        raise HTTPForbidden('Access denied for that review.')
+
+                    for_reviewer_id = reviewer.id
+
+                    default_version = calculation.version
+                    default_input = calculation.input
+
+                    review_calculation_info = null_tuple(
+                        CalculationInfo)._replace(
+                            id=calculation.id,
+                            parent_id=reviewer.id,
+                            title=calculation.title,
+                            overwrite=can.edit)
+
+                elif 'query' in args:
+                    try:
+                        (default_version, default_input) = self._decode_query(
+                            mode, args['query'])
+                    except ParseError as e:
+                        raise HTTPError(e.message)
+
                 else:
+                    raise HTTPError('Unknown query type.')
+
+                if default_version != self.version:
                     default_input = self.convert_input_version(
-                        mode, calculation.version, calculation.input)
-
-                calculation_id = calculation.id
-                calculation_title = calculation.title
-                overwrite = can.edit
-
-                try:
-                    output = self(mode, default_input)
-                except UserError as e:
-                    message = e.message
-
-                query_encoded = self._encode_query(inputs, default_input)
-
-            elif 'query' in args:
-                try:
-                    default_input = self._decode_query(mode, args['query'])
-                except ParseError as e:
-                    raise HTTPError(e.message)
+                        mode, default_version, default_input)
 
                 try:
                     output = self(mode, default_input)
@@ -303,13 +438,21 @@ class BaseCalculator(object):
 
             input_values = self.format_input(inputs, default_input)
 
-        # If we have a specific proposal ID, see if we know its code.
+        # If we have a reviewer ID, look for information about the proposal.
         for_proposal_code = None
-        if (for_proposal_id is not None) and (proposals is not None):
-            for proposal in proposals:
-                if proposal.id == for_proposal_id:
-                    for_proposal_code = proposal.code
-                    break
+        for_reviewer_role = None
+        if for_reviewer_id is not None:
+            proposal = review_proposals.get(for_reviewer_id)
+            if proposal is not None:
+                for_proposal_id = proposal.id
+                for_proposal_code = proposal.code
+                for_reviewer_role = proposal.reviewer.role
+
+        # Or, if we have a specific proposal ID, see if we know its code.
+        elif for_proposal_id is not None:
+            proposal = proposals.get(for_proposal_id)
+            if proposal is not None:
+                for_proposal_code = proposal.code
 
         ctx = {
             'title': self.get_name(),
@@ -322,12 +465,13 @@ class BaseCalculator(object):
             'output_values': output.output,
             'output_extra': output.extra,
             'proposals': proposals,
-            'proposal_id': proposal_id,
-            'for_proposal_code': for_proposal_code,
+            'review_proposals': review_proposals,
+            'for_proposal_code':  for_proposal_code,
             'for_proposal_id': for_proposal_id,
-            'calculation_id': calculation_id,
-            'calculation_title': calculation_title,
-            'overwrite': overwrite,
+            'for_reviewer_id': for_reviewer_id,
+            'for_reviewer_role': for_reviewer_role,
+            'calculation': calculation_info,
+            'review_calculation': review_calculation_info,
             'query_encoded': query_encoded,
         }
 
@@ -419,7 +563,4 @@ class BaseCalculator(object):
         # Reassemble the values dictionary.
         values = dict(zip(keys, unpacked[1:]))
 
-        if version != self.version:
-            values = self.convert_input_version(mode, version, values)
-
-        return values
+        return (version, values)
