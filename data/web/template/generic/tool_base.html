@@ -4,11 +4,7 @@
 {% endif %}
 {% from 'macro/target.html' import render_target_list_info %}
 
-{% if scripts is defined %}
-    {% set scripts = ['resolve_name', 'tool_base', 'formtip'] + scripts %}
-{% else %}
-    {% set scripts = ['resolve_name', 'tool_base', 'formtip'] %}
-{% endif %}
+{% set scripts = concatenate_lists(['resolve_name', 'tool_base', 'formtip'], scripts) %}
 
 {% block content %}
 

@@ -70,6 +70,21 @@ def register_template_utils(app):
 
         return ''
 
+    @app.template_global()
+    def concatenate_lists(*lists):
+        """
+        Takes a sequence of lists.  Returns a concatenated list,
+        skipping any entries which are undefined or none.
+        """
+
+        result = []
+
+        for value in lists:
+            if not (value is None or isinstance(value, Undefined)):
+                result.extend(value)
+
+        return result
+
     @app.template_filter()
     def affiliation_type_name(value):
         if value is None:

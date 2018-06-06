@@ -22,6 +22,7 @@ from datetime import datetime
 import json
 
 from flask import Markup
+from jinja2.runtime import Undefined
 
 from hedwig.type.enum import Assessment, AttachmentState, \
     BaseCallType, BaseReviewerRole, CallState, \
@@ -53,6 +54,15 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(g(('a', False), ('b', True)), 'class="b"')
         self.assertEqual(g(('a', True), ('b', False)), 'class="a"')
         self.assertEqual(g(('a', False), ('b', False)), '')
+
+    def test_global_concatenate_lists(self):
+        g = self.app.jinja_env.globals['concatenate_lists']
+
+        self.assertEqual(g(), [])
+        self.assertEqual(g(None, Undefined(), None), [])
+        self.assertEqual(g([1, 2], [3, 4]), [1, 2, 3, 4])
+        self.assertEqual(g([1, 2], Undefined()), [1, 2])
+        self.assertEqual(g(Undefined(), [3, 4]), [3, 4])
 
     def test_filter_assessment(self):
         f = self.app.jinja_env.filters['assessment_name']

@@ -4,11 +4,7 @@
     {% set navigation=[(for_proposal_code, url_for('.proposal_view', proposal_id=for_proposal_id))] %}
 {% endif %}
 
-{% if scripts is defined %}
-    {% set scripts = ['hedwig_util', 'edit_calculation'] + scripts %}
-{% else %}
-    {% set scripts = ['hedwig_util', 'edit_calculation'] %}
-{% endif %}
+{% set scripts = concatenate_lists(['hedwig_util', 'edit_calculation'], scripts) %}
 
 {% block content %}
 

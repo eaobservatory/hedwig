@@ -1,12 +1,7 @@
 {% extends 'layout.html' %}
 {% set navigation=[((proposal.semester_name, proposal.queue_name, (proposal.call_type | call_type_name(facility_call_type_class))) | fmt('{} {} {}'), url_for('.review_call', call_id=proposal.call_id))] %}
 {% set help_link=url_for('help.admin_page', page_name='tabulation_decision') %}
-
-{% if scripts is defined %}
-    {% set scripts = ['hedwig_util', 'edit_decision'] + scripts %}
-{% else %}
-    {% set scripts = ['hedwig_util', 'edit_decision'] %}
-{% endif %}
+{% set scripts = concatenate_lists(['hedwig_util', 'edit_decision'], scripts) %}
 
 {% from 'macro/proposal_summary.html' import render_proposal_summary %}
 
