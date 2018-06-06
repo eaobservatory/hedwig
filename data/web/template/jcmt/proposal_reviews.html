@@ -87,7 +87,11 @@
             </p>
         {% endif %}
 
-        <p><b>Additional Comments</b></p>
+        {% if review.review_text is not none %}
+            <p><b>Additional Comments</b></p>
+        {% endif %}
     {% endif %}
-    {{ review.review_text | format_text(review.review_format) }}
+    {% if review.review_text is not none %}
+        {{ review.review_text | format_text(review.review_format) }}
+    {% endif %}
 {% endblock %}

@@ -47,10 +47,19 @@
             <th>Edited</th>
         </tr>
         {% for review in reviews.values() %}
-            {% set show_review = (review.review_text is not none_or_whitespace) %}
+            {# Pre-prepare review text row in case child templates add something even when text is empty. #}
+            {% set row_review_text %}
+                {% block review_text scoped %}
+                    {% if review.review_text is not none %}
+                        {{ review.review_text | format_text(review.review_format) }}
+                    {% endif %}
+                {% endblock %}
+            {% endset %}
+            {% set show_review = (row_review_text is not none_or_whitespace) %}
+            {% set show_calc = (true if review.calculations else false) %}
             {% set show_note = (review.review_note is not none_or_whitespace) %}
             <tr class="spacer_above">
-                <td {{ ((show_review, show_note) | count_true + 1) | fmt('rowspan="{}"') | safe }}>
+                <td rowspan="{{ (show_review, show_calc, show_note) | count_true + 1 }}">
                     {% if review.can_edit %}
                         <a href="{{ url_for('.review_edit', reviewer_id=review.id, referrer='pr') }}">{{ review.role | reviewer_role_name(facility_role_class) }}</a>
                     {% else %}
@@ -110,34 +119,34 @@
             {% if show_review %}
                 <tr>
                     <td colspan="{{ review_info_columns | length + 3 }}">
-                        {% block review_text scoped %}
-                            {{ review.review_text | format_text(review.review_format) }}
-                        {% endblock %}
-                        {% block review_calculations scoped %}
-                            {% if review.calculations %}
-                                {% for calculation in review.calculations %}
-                                    <p><b>
-                                        {{ loop.index }}.
-                                        {{ render_calculation_title(calculation) }}
-                                    </b></p>
+                        {{ row_review_text | safe }}
+                    </td>
+                </tr>
+            {% endif %}
+            {% if show_calc %}
+                <tr>
+                    <td colspan="{{ review_info_columns | length + 3 }}">
+                        {% for calculation in review.calculations %}
+                            <p><b>
+                                {{ loop.index }}.
+                                {{ render_calculation_title(calculation) }}
+                            </b></p>
 
-                                    {{ render_calculation(calculation) }}
+                            {{ render_calculation(calculation) }}
 
-                                    {% if calculation.mode_info.code is not none %}
-                                        <nav>
-                                            <p>
-                                                <a href="{{ url_for((calculation.calculator_code, calculation.mode_info.code) | fmt('.calc_{}_{}'), review_calculation_id=calculation.id) }}">View calculation</a>
-                                            </p>
-                                        </nav>
-                                    {% endif %}
-                                {% endfor %}
+                            {% if calculation.mode_info.code is not none %}
                                 <nav>
                                     <p>
-                                        <a href="{{ url_for('.review_calculation_manage', reviewer_id=review.id) }}">View calculation details</a>
+                                        <a href="{{ url_for((calculation.calculator_code, calculation.mode_info.code) | fmt('.calc_{}_{}'), review_calculation_id=calculation.id) }}">View calculation</a>
                                     </p>
                                 </nav>
                             {% endif %}
-                        {% endblock %}
+                        {% endfor %}
+                        <nav>
+                            <p>
+                                <a href="{{ url_for('.review_calculation_manage', reviewer_id=review.id) }}">View calculation details</a>
+                            </p>
+                        </nav>
                     </td>
                 </tr>
             {% endif %}
