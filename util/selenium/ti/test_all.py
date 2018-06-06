@@ -42,7 +42,7 @@ from hedwig.db.meta import invitation, reset_token, verify_token
 from hedwig.admin.poll import send_proposal_feedback
 from hedwig.file.poll import process_moc, \
     process_proposal_figure, process_proposal_pdf
-from hedwig.type.enum import MessageState
+from hedwig.type.enum import BaseReviewerRole, MessageState
 from hedwig.view.query import QueryView
 from hedwig.web.app import create_web_app
 
@@ -119,6 +119,11 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.log_out_user()
 
+            self.register_user(user_name='tech1',
+                               person_name='Example Technical Assessor')
+
+            self.log_out_user()
+
             self.register_user(user_name='group1',
                                person_name='Example Group Member')
 
@@ -183,14 +188,36 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.log_out_user()
 
-            # Enter an external review.
+            # Enter a technical assessment.
+            self.log_in_user(user_name='tech1')
 
+            self.enter_technical_assessment()
+
+            self.log_out_user()
+
+            # Enter an external review.
             self.accept_invitation(user_name='invitee2',
                                    screenshot_path=self.review_image_root)
 
             self.enter_review()
 
             self.view_person_reviews()
+
+            self.log_out_user()
+
+            # Enter committee reviews.
+            self.log_in_user(user_name='group1')
+
+            self.enter_cttee_review(
+                'TAC Primary', '60', 'Expert',
+                screenshot_path=self.review_image_root)
+
+            self.log_out_user()
+
+            self.log_in_user(user_name='group2')
+
+            self.enter_cttee_review(
+                'TAC Secondary', '40', 'Intermediate')
 
             self.log_out_user()
 
@@ -848,47 +875,9 @@ class IntegrationTest(DummyConfigTestCase):
             self.browser.page_source)
 
         # Add an integration time calculation.
-        self.browser.find_element_by_link_text('SCUBA-2 ITC').click()
-
-        position = self.browser.find_element_by_name('pos')
-        position.clear()
-        position.send_keys('-10')
-
-        rms = self.browser.find_element_by_name('rms')
-        rms.clear()
-        rms.send_keys('1.343')
-
-        self.browser.find_element_by_name('submit_calc').click()
-
-        self.assertIn(
-            'Results',
-            self.browser.page_source)
-
-        self.browser.find_element_by_name('calculation_title').send_keys(
-            'SCUBA-2 observation of LDN 456')
-
-        submit_save_redir = self.browser.find_element_by_name(
-            'submit_save_redir')
-
-        self._save_screenshot(
-            self.user_image_root, 'calc_scuba2',
-            [submit_save_redir, 'main_result_table', 'perm_query_link'])
-
-        submit_save_redir.click()
-
-        self.assertIn(
-            'The calculation has been saved',
-            self.browser.page_source)
-
-        self.browser.find_element_by_link_text('Manage calculations').click()
-
-        self.assertIn(
-            'Calculator: SCUBA-2 ITC',
-            self.browser.page_source)
-
-        self._save_screenshot(self.user_image_root, 'calc_manage')
-
-        self.browser.find_element_by_name('submit').click()
+        self._add_itc_calculation(
+            screenshot_path=self.user_image_root,
+            highlight_extra=['main_result_table', 'perm_query_link'])
 
         # Edit technical justification.
         self.browser.find_element_by_link_text(
@@ -1059,6 +1048,52 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn('LDN 123', self.browser.page_source)
         self.assertIn('LDN 456', self.browser.page_source)
         self.assertIn('NGC 1234', self.browser.page_source)
+
+    def _add_itc_calculation(
+            self, screenshot_path=None,
+            sensitivity='1.343', title='SCUBA-2 observation of LDN 456',
+            save_prefix='', highlight_extra=[]):
+        self.browser.find_element_by_link_text('SCUBA-2 ITC').click()
+
+        position = self.browser.find_element_by_name('pos')
+        position.clear()
+        position.send_keys('-10')
+
+        rms = self.browser.find_element_by_name('rms')
+        rms.clear()
+        rms.send_keys(sensitivity)
+
+        self.browser.find_element_by_name('submit_calc').click()
+
+        self.assertIn(
+            'Results',
+            self.browser.page_source)
+
+        self.browser.find_element_by_name(
+            '{}calculation_title'.format(save_prefix)).send_keys(title)
+
+        submit_save_redir = self.browser.find_element_by_name(
+            '{}submit_save_redir'.format(save_prefix))
+
+        self._save_screenshot(
+            screenshot_path, 'calc_scuba2',
+            [submit_save_redir] + highlight_extra)
+
+        submit_save_redir.click()
+
+        self.assertIn(
+            'The calculation has been saved',
+            self.browser.page_source)
+
+        self.browser.find_element_by_link_text('Manage calculations').click()
+
+        self.assertIn(
+            'Calculator: SCUBA-2 ITC',
+            self.browser.page_source)
+
+        self._save_screenshot(screenshot_path, 'calc_manage')
+
+        self.browser.find_element_by_name('submit').click()
 
     def view_person_proposals(self):
         # Test the personal proposal list.
@@ -1466,14 +1501,16 @@ class IntegrationTest(DummyConfigTestCase):
         # Set up the review groups.
         admin_queue_url = self.browser.current_url
 
-        for (group_name, group_abbr) in (('Committee', 'cttee'),
-                                         ('Technical assessors', 'tech')):
+        for (group_name, group_abbr, group_members) in (
+                ('Committee', 'cttee', (
+                    'Example Group Member', 'Another Group Member')),
+                ('Technical assessors', 'tech', (
+                    'Example Technical Assessor',))):
             self.browser.get(admin_queue_url)
             self.browser.find_element_by_link_text(group_name).click()
 
             first_person = True
-            for person_name in ('Example Group Member',
-                                'Another Group Member'):
+            for person_name in group_members:
                 self.browser.find_element_by_link_text('Add member').click()
                 Select(
                     self.browser.find_element_by_name('person_id')
@@ -1561,6 +1598,9 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_link_text(
             'Assign technical assessors').click()
 
+        self.browser.find_elements_by_name('rev_{}_1'.format(
+            BaseReviewerRole.TECH))[0].click()
+
         self._save_screenshot(self.admin_image_root, 'reviewer_tech')
 
         self.browser.find_element_by_name('submit').click()
@@ -1572,12 +1612,52 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_link_text(
             'Assign committee members').click()
 
+        self.browser.find_elements_by_name('rev_{}_1'.format(
+            BaseReviewerRole.CTTEE_PRIMARY))[1].click()
+        self.browser.find_elements_by_name('rev_{}_1'.format(
+            BaseReviewerRole.CTTEE_SECONDARY))[0].click()
+
         self._save_screenshot(self.admin_image_root, 'reviewer_cttee')
 
         self.browser.find_element_by_name('submit').click()
 
         self.assertIn('assignments have been updated.',
                       self.browser.page_source)
+
+    def enter_technical_assessment(self):
+        """
+        Tests entering a technical assessment.
+        """
+
+        # Navigate to the technical assessment.
+        self.browser.find_element_by_link_text('Your reviews').click()
+
+        self.browser.find_element_by_link_text('Technical').click()
+
+        # Add a calculation.
+        self._add_itc_calculation(
+            screenshot_path=self.review_image_root,
+            sensitivity='1.434', title='Adjusted sensitivity',
+            save_prefix='review_')
+
+        # Fill in the review.
+        self.browser.find_element_by_name('text').send_keys(
+            'My assessment of the feasibility of this proposal is...')
+
+        Select(
+            self.browser.find_element_by_name('assessment')
+        ).select_by_visible_text('Feasible')
+
+        self.browser.find_element_by_name('done').click()
+
+        self._save_screenshot(self.review_image_root, 'tech_assess_edit',
+                              ['add_calc_links'])
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The review has been saved and marked as done.',
+            self.browser.page_source)
 
     def enter_review(self):
         """
@@ -1630,6 +1710,37 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_name('done').click()
 
         self._save_screenshot(self.review_image_root, 'review_edit')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The review has been saved and marked as done.',
+            self.browser.page_source)
+
+    def enter_cttee_review(
+            self, role_name, rating, expertise, screenshot_path=None):
+        """
+        Tests entering a committee member's.
+        """
+
+        # Navigate to the review.
+        self.browser.find_element_by_link_text('Your reviews').click()
+
+        self.browser.find_element_by_link_text(role_name).click()
+
+        # Fill in the review.
+        self.browser.find_element_by_name('text').send_keys(
+            'My {} review is as follows...'.format(role_name))
+
+        self.browser.find_element_by_name('rating').send_keys(rating)
+
+        Select(
+            self.browser.find_element_by_name('jcmt_expertise')
+        ).select_by_visible_text(expertise)
+
+        self.browser.find_element_by_name('done').click()
+
+        self._save_screenshot(screenshot_path, 'cttee_review_edit')
 
         self.browser.find_element_by_name('submit').click()
 
