@@ -56,7 +56,7 @@ def register_template_utils(app):
         return Counter(start_value)
 
     @app.template_global()
-    def combined_class(classes):
+    def combined_class(*classes):
         """
         Takes a sequence of (class, condition) pairs.  Returns a class
         attribute containing a space-separated class list, if any of the

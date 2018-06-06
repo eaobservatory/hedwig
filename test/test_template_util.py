@@ -49,10 +49,10 @@ class TemplateUtilTestCase(WebAppTestCase):
     def test_global_combined_class(self):
         g = self.app.jinja_env.globals['combined_class']
 
-        self.assertEqual(g([('a', True), ('b', True)]), 'class="a b"')
-        self.assertEqual(g([('a', False), ('b', True)]), 'class="b"')
-        self.assertEqual(g([('a', True), ('b', False)]), 'class="a"')
-        self.assertEqual(g([('a', False), ('b', False)]), '')
+        self.assertEqual(g(('a', True), ('b', True)), 'class="a b"')
+        self.assertEqual(g(('a', False), ('b', True)), 'class="b"')
+        self.assertEqual(g(('a', True), ('b', False)), 'class="a"')
+        self.assertEqual(g(('a', False), ('b', False)), '')
 
     def test_filter_assessment(self):
         f = self.app.jinja_env.filters['assessment_name']
