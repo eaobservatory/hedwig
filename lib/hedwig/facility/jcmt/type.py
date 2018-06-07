@@ -138,7 +138,7 @@ class JCMTInstrument(EnumBasic, EnumAvailable):
                                                    JCMTAncillary.FTS2))),
         (HARP,   InstrumentInfo('HARP',    True,  (JCMTAncillary.ROVER,))),
         (RXA3,   InstrumentInfo('RxA3',    False, (JCMTAncillary.ROVER,))),
-        (RXA3M,  InstrumentInfo('RxA3m',   True,  (JCMTAncillary.ROVER,))),
+        (RXA3M,  InstrumentInfo('RxA3m',   False, (JCMTAncillary.ROVER,))),
     ))
 
     @classmethod
@@ -372,7 +372,9 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
                          for (k, v) in instrument_names.items()
                          if k in instruments]))
 
-    def get_total(self):
+    def get_total(
+            self, include_unavailable_instrument=False,
+            include_unavailable_weather=False):
         """
         Get total by instrument and weather band.
 
@@ -393,14 +395,15 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
 
             weather = request.weather
             weather_info = JCMTWeather.get_info(weather)
-            if not weather_info.available:
+            if not (include_unavailable_weather or weather_info.available):
                 weather = None
 
             instrument = request.instrument
             ancillary = request.ancillary
-            if (JCMTInstrument.get_info(instrument).available
-                    and JCMTInstrument.has_available_ancillary(instrument,
-                                                               ancillary)):
+            if include_unavailable_instrument or (
+                    JCMTInstrument.get_info(instrument).available
+                    and JCMTInstrument.has_available_ancillary(
+                        instrument, ancillary)):
                 instrument = (instrument, ancillary)
             else:
                 instrument = None

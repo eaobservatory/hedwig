@@ -42,15 +42,15 @@ class JCMTTypeTestCase(TestCase):
         for instrument in (
                 JCMTInstrument.SCUBA2,
                 JCMTInstrument.HARP,
-                JCMTInstrument.RXA3M,
                 ):
             # Identifiers should be unique integers.
             self.assertIsInstance(instrument, int)
             self.assertNotIn(instrument, instruments)
             instruments.add(instrument)
 
-            # is_valid and get_name should work on these values.
+            # is_valid, is_available and get_name should work on these values.
             self.assertTrue(JCMTInstrument.is_valid(instrument))
+            self.assertTrue(JCMTInstrument.is_available(instrument))
             instrument_name = JCMTInstrument.get_name(instrument)
             self.assertIsInstance(instrument_name, string_type)
 
@@ -65,7 +65,24 @@ class JCMTTypeTestCase(TestCase):
         # Check set of instruments considered to be available.
         self.assertEqual(set(options.keys()), instruments)
 
-        instruments.add(JCMTInstrument.RXA3)
+        for instrument in (
+                JCMTInstrument.RXA3,
+                JCMTInstrument.RXA3M,
+                ):
+            # Identifiers should be unique integers.
+            self.assertIsInstance(instrument, int)
+            self.assertNotIn(instrument, instruments)
+            instruments.add(instrument)
+
+            # is_valid and get_name should work on these values.
+            self.assertTrue(JCMTInstrument.is_valid(instrument))
+            self.assertFalse(JCMTInstrument.is_available(instrument))
+            instrument_name = JCMTInstrument.get_name(instrument)
+            self.assertIsInstance(instrument_name, string_type)
+
+            # It should also not be in the list of options.
+            self.assertNotIn(instrument, options)
+
         self.assertEqual(
             set(JCMTInstrument.get_options(include_unavailable=True).keys()),
             instruments)
@@ -211,7 +228,7 @@ class JCMTTypeTestCase(TestCase):
         self.assertEqual(
             t.table[None],   {1: 30.0, 2: 300.0, 5: 1000.0, None: 1330.0})
 
-        total = c.get_total()
+        total = c.get_total(include_unavailable_instrument=True)
         self.assertIsInstance(total, JCMTRequestTotal)
         self.assertEqual(total.total, 1330.0)
         self.assertEqual(
