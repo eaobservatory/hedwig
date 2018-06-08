@@ -90,13 +90,18 @@ class BaseCalculator(object):
 
         return []
 
-    def view(self, db, mode, args, form):
+    def view(
+            self, db, mode, args, form,
+            calculation=None, review_calculation=None, can=None):
         """
         Web view handler for a generic calculator.
+
+        Accepts additional keyword arguments for use via the proposal and
+        review calculation route view functions.
         """
 
         role_class = self.facility.get_reviewer_roles()
-        auth_cache = {}
+        auth_cache = {} if (can is None) else can.cache
 
         message = None
 
@@ -108,6 +113,34 @@ class BaseCalculator(object):
         for_reviewer_id = None
         calculation_info = review_calculation_info = \
             null_tuple(CalculationInfo)._replace(title='')
+
+        if calculation is not None:
+            for_proposal_id = calculation.proposal_id
+
+            fetched_version = calculation.version
+            fetched_input = calculation.input
+
+            calculation_info = null_tuple(CalculationInfo)._replace(
+                id=calculation.id,
+                parent_id=for_proposal_id,
+                title=calculation.title,
+                overwrite=can.edit)
+
+        elif review_calculation is not None:
+            for_reviewer_id = review_calculation.reviewer_id
+
+            fetched_version = review_calculation.version
+            fetched_input = review_calculation.input
+
+            review_calculation_info = null_tuple(CalculationInfo)._replace(
+                id=review_calculation.id,
+                parent_id=for_reviewer_id,
+                title=review_calculation.title,
+                overwrite=can.edit)
+
+        else:
+            fetched_version = None
+            fetched_input = None
 
         # If the user is logged in, determine whether there are any proposals
         # or reviews to which they can add calculator results.
@@ -331,112 +364,33 @@ class BaseCalculator(object):
 
             # Following a link which describes a specific calculation -- get
             # the input, run the calculation and provide an encoded query.
-            if any(x in args for x in (
-                    'calculation_id', 'review_calculation_id', 'query')):
-                if 'calculation_id' in args:
-                    try:
-                        calculation = db.get_calculation(
-                            int(args['calculation_id']))
-                    except NoSuchRecord:
-                        raise HTTPNotFound('Calculation not found.')
+            if 'query' in args:
+                try:
+                    (fetched_version, fetched_input) = self._decode_query(
+                        mode, args['query'])
+                except ParseError as e:
+                    raise HTTPError(e.message)
 
-                    if calculation.calculator_id != self.id_:
-                        raise HTTPError(
-                            'Calculation is from a different calculator.')
-
-                    if calculation.mode != mode:
-                        raise HTTPError(
-                            'Calculation is from a different mode.')
-
-                    # Check authorization to see this calculation.
-                    proposal = db.get_proposal(
-                        self.facility.id_, calculation.proposal_id,
-                        with_members=True, with_reviewers=True)
-
-                    can = auth.for_proposal(
-                        role_class, db, proposal, auth_cache=auth_cache)
-                    if not can.view:
-                        raise HTTPForbidden('Access denied for that proposal.')
-
-                    for_proposal_id = proposal.id
-
-                    default_version = calculation.version
-                    default_input = calculation.input
-
-                    calculation_info = null_tuple(CalculationInfo)._replace(
-                        id=calculation.id,
-                        parent_id=proposal.id,
-                        title=calculation.title,
-                        overwrite=can.edit)
-
-                elif 'review_calculation_id' in args:
-                    try:
-                        calculation = db.get_review_calculation(
-                            int(args['review_calculation_id']))
-                    except NoSuchRecord:
-                        raise HTTPNotFound('Review calculation not found.')
-
-                    if calculation.calculator_id != self.id_:
-                        raise HTTPError(
-                            'Calculation is from a different calculator.')
-
-                    if calculation.mode != mode:
-                        raise HTTPError(
-                            'Calculation is from a different mode.')
-
-                    reviewer = db.search_reviewer(
-                        reviewer_id=calculation.reviewer_id).get_single()
-
-                    proposal = db.get_proposal(
-                        self.facility.id_, reviewer.proposal_id,
-                        with_reviewers=True)
-
-                    can = auth.for_review(
-                        role_class, db, reviewer, proposal,
-                        auth_cache=auth_cache, skip_membership_test=True)
-                    if not can.view:
-                        raise HTTPForbidden('Access denied for that review.')
-
-                    for_reviewer_id = reviewer.id
-
-                    default_version = calculation.version
-                    default_input = calculation.input
-
-                    review_calculation_info = null_tuple(
-                        CalculationInfo)._replace(
-                            id=calculation.id,
-                            parent_id=reviewer.id,
-                            title=calculation.title,
-                            overwrite=can.edit)
-
-                elif 'query' in args:
-                    try:
-                        (default_version, default_input) = self._decode_query(
-                            mode, args['query'])
-                    except ParseError as e:
-                        raise HTTPError(e.message)
-
-                else:
-                    raise HTTPError('Unknown query type.')
-
-                if default_version != self.version:
-                    default_input = self.convert_input_version(
-                        mode, default_version, default_input)
+            if fetched_input is not None:
+                if fetched_version != self.version:
+                    fetched_input = self.convert_input_version(
+                        mode, fetched_version, fetched_input)
 
                 try:
-                    output = self(mode, default_input)
+                    output = self(mode, fetched_input)
+
+                    query_encoded = self._encode_query(inputs, fetched_input)
+
                 except UserError as e:
                     message = e.message
-
-                query_encoded = self._encode_query(inputs, default_input)
 
             else:
                 # When we didn't receive a form submission, get the default
                 # values -- need to convert these to strings to match the
                 # form input strings as explained above.
-                default_input = self.get_default_input(mode)
+                fetched_input = self.get_default_input(mode)
 
-            input_values = self.format_input(inputs, default_input)
+            input_values = self.format_input(inputs, fetched_input)
 
         # If we have a reviewer ID, look for information about the proposal.
         for_proposal_code = None

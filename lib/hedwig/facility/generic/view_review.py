@@ -1258,9 +1258,31 @@ class GenericReview(object):
 
         return {}
 
-    @with_review(permission=PermissionType.EDIT)
+    @with_review(permission=PermissionType.VIEW)
     def view_review_calculation_manage(self, db, reviewer, proposal, can, form):
         return self._view_calculation_manage(db, proposal, reviewer, can, form)
+
+    @with_review(permission=PermissionType.VIEW)
+    def view_review_calculation_view(
+            self, db, reviewer, proposal, can, review_calculation_id):
+        # Retrieve the calculation to identify the calculator and mode.
+        try:
+            calculation = db.search_review_calculation(
+                review_calculation_id=review_calculation_id,
+                reviewer_id=reviewer.id).get_single()
+        except NoSuchRecord:
+            raise HTTPNotFound('Review calculation not found.')
+
+        calculator_info = self.calculators.get(calculation.calculator_id)
+        if calculator_info is None:
+            raise HTTPNotFound('Calculator not found.')
+
+        # Find the view function associated with this mode and call it.
+        view_func = calculator_info.view_functions.get(calculation.mode)
+        if view_func is None:
+            raise HTTPNotFound('Calculator mode not found.')
+
+        return view_func(review_calculation=calculation, can=can)
 
     @with_proposal(permission=PermissionType.NONE, with_decision=True)
     def view_proposal_reviews(self, db, proposal):

@@ -48,9 +48,8 @@ from ...view.util import count_words, int_or_none, organise_collection, \
     with_proposal, with_verified_admin
 
 CalculationExtra = namedtuple(
-    'CalculationExtra',
-    Calculation._fields + ('calculator_name', 'calculator_code',
-                           'inputs', 'outputs', 'mode_info'))
+    'CalculationExtra', Calculation._fields + (
+        'calculator_name', 'inputs', 'outputs', 'mode_info'))
 
 PrevProposalExtra = namedtuple(
     'PrevProposalExtra',
@@ -1697,6 +1696,26 @@ class GenericProposal(object):
             'can_edit': can.edit,
         }
 
+    @with_proposal(permission=PermissionType.VIEW)
+    def view_calculation_view(self, db, proposal, can, calculation_id):
+        # Retrieve the calculation to identify the calculator and mode.
+        try:
+            calculation = db.search_calculation(
+                calculation_id=calculation_id, proposal_id=proposal.id).get_single()
+        except NoSuchRecord:
+            raise HTTPNotFound('Calculation not found.')
+
+        calculator_info = self.calculators.get(calculation.calculator_id)
+        if calculator_info is None:
+            raise HTTPNotFound('Calculator not found.')
+
+        # Find the view function associated with this mode and call it.
+        view_func = calculator_info.view_functions.get(calculation.mode)
+        if view_func is None:
+            raise HTTPNotFound('Calculator mode not found.')
+
+        return view_func(calculation=calculation, can=can)
+
     @with_proposal(permission=PermissionType.FEEDBACK, with_decision_note=True)
     def view_proposal_feedback(self, db, proposal, can):
         proposal_code = self.make_proposal_code(db, proposal)
@@ -1819,7 +1838,6 @@ class GenericProposal(object):
                 calculations.append(CalculationExtra(
                     *calc,
                     calculator_name='Calculator {}'.format(calc.calculator_id),
-                    calculator_code=None,
                     inputs=[CalculatorValue(x, x, None, '{}', None)
                             for x in calc.input],
                     outputs=[CalculatorValue(x, x, None, '{}', None)
@@ -1833,7 +1851,6 @@ class GenericProposal(object):
                 calculation = CalculationExtra(
                     *calc,
                     calculator_name=calc_info.name,
-                    calculator_code=calc_info.code,
                     inputs=calculator.get_inputs(calc.mode, calc.version),
                     outputs=calculator.get_outputs(calc.mode, calc.version),
                     mode_info=mode_info)

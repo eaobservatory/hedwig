@@ -447,6 +447,12 @@ def create_facility_blueprint(db, facility):
             db, proposal_id,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/proposal/<int:proposal_id>/calculation/<int:calculation_id>')
+    @require_auth(require_person=True)
+    def calculation_view(proposal_id, calculation_id):
+        return facility.view_calculation_view(
+            db, proposal_id, calculation_id)
+
     @bp.route('/proposal/<int:proposal_id>/feedback')
     @require_auth(require_person=True)
     @facility_template('proposal_feedback.html')
@@ -698,6 +704,12 @@ def create_facility_blueprint(db, facility):
             db, reviewer_id,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/review/<int:reviewer_id>/calculation/<int:review_calculation_id>')
+    @require_auth(require_person=True)
+    def review_calculation_view(reviewer_id, review_calculation_id):
+        return facility.view_review_calculation_view(
+            db, reviewer_id, review_calculation_id)
+
     # Register custom routes.
     for route in facility.get_custom_routes():
         options = {}
@@ -721,10 +733,11 @@ def create_facility_blueprint(db, facility):
         calculator_id = db.ensure_calculator(facility.id_, calculator_code)
         calculator = calculator_class(facility, calculator_id)
         calculator_name = calculator.get_name()
+        view_funcs = {}
 
         facility.calculators[calculator_id] = CalculatorInfo(
             calculator_id, calculator_code, calculator_name,
-            calculator, calculator.modes)
+            calculator, calculator.modes, view_funcs)
 
         # Prepare information to generate list of templates to use.
         template_params = [(code, calculator_code)]
@@ -754,16 +767,17 @@ def create_facility_blueprint(db, facility):
         for (calculator_mode_id, calculator_mode) in calculator.modes.items():
             route_opts = (calculator_code, calculator_mode.code)
 
+            view_funcs[calculator_mode_id] = view_func = make_custom_route(
+                db,
+                ['{}/calculator_{}.html'.format(*x) for x in template_params],
+                calculator.view, include_args=True, allow_post=True,
+                extra_params=[calculator_mode_id],
+                extra_context=extra_context)
+
             bp.add_url_rule(
                 '/calculator/{}/{}'.format(*route_opts),
                 'calc_{}_{}'.format(*route_opts),
-                make_custom_route(
-                    db,
-                    ['{}/calculator_{}.html'.format(*x)
-                     for x in template_params],
-                    calculator.view, include_args=True, allow_post=True,
-                    extra_params=[calculator_mode_id],
-                    extra_context=extra_context),
+                view_func,
                 methods=['GET', 'POST'])
 
         for route in calculator.get_custom_routes():

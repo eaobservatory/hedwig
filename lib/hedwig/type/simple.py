@@ -35,7 +35,7 @@ Affiliation = namedtuple(
 
 CalculatorInfo = namedtuple(
     'CalculatorInfo',
-    ['id', 'code', 'name', 'calculator', 'modes'])
+    ['id', 'code', 'name', 'calculator', 'modes', 'view_functions'])
 
 CalculatorMode = namedtuple(
     'CalculatorMode',
