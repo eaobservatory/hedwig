@@ -12,4 +12,6 @@ $(document).ready(function () {
         var memberId = event.target.id.replace('delete_', '');
         deleteMemberRow(memberId);
     });
+
+    enable_table_drag($('table#members'));
 });

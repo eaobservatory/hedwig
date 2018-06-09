@@ -676,6 +676,7 @@ class GenericProposal(object):
                         continue
 
                     records[id_] = record._replace(
+                        sort_order=int(form['sort_order_{}'.format(id_)]),
                         pi=(id_ == pi),
                         editor=('editor_{}'.format(id_) in form),
                         observer=('observer_{}'.format(id_) in form),

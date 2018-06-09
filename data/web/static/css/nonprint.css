@@ -150,3 +150,17 @@ th.sorted_desc.sideways span:after {
 input:disabled, select:disabled {
     cursor: not-allowed;
 }
+
+tr.dragged td {
+    background: #EEE;
+    color: #444;
+}
+
+td.draggrip {
+    cursor: move;
+    color: #888;
+}
+
+tr.dragbelow {
+    border-bottom: 5px dotted #888;
+}

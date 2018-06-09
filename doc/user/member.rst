@@ -56,15 +56,22 @@ existing members of a proposal (including yourself).
 You will need to use this page to designate someone else as the PI,
 or to mark yourself as a potential observer for the project.
 
-This page does not (yet) allow you to remove your own editing permission
+This page does not allow you to remove your own editing permission
 or to delete yourself.  The reason for this is to avoid the proposal
 accidentally being left in a state where no-one can edit it.
-
 If you would like to remove yourself from a proposal, you can do so
 using the "Remove yourself from this proposal" on the proposal's main page.
 Please see
 `the section on invitations <invitation#removing-yourself-from-a-proposal>`_
 for more information.
+
+You can change the order in which the list of members is shown by dragging
+the rows of the table to rearrange them.
+To move a member in the ordering,
+drag the "grip" in the leftmost column of the corresponding table row
+and drop it on the row after which that member should appear.
+You can drop a row onto the table heading to move a member
+to the start of the member list.
 
 .. image:: image/member_edit.png
 
