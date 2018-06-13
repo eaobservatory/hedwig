@@ -288,12 +288,12 @@
                     <th>Time</th>
                     <th>Priority<br />(1 highest)</th>
                 </tr>
-                {% for target in targets %}
+                {% for target in targets.values() %}
                     <tr>
                         <td>{{ target.name }}</td>
                         <td>{{ target.x }}</td>
                         <td>{{ target.y }}</td>
-                        <td>{{ target.system }}</td>
+                        <td>{{ target.system | coord_system_name }}</td>
                         <td>{{ target.time }} {{ 'hours' if target.time }}</td>
                         <td>{{ target.priority }}</td>
                     </tr>

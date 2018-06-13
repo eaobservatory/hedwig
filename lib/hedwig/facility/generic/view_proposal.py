@@ -166,10 +166,6 @@ class GenericProposal(object):
         targets = db.search_target(proposal_id=proposal.id)
         target_total_time = targets.total_time()
 
-        targets = [
-            x._replace(system=CoordSystem.get_name(x.system)) for x in
-            targets.to_formatted_collection().values()]
-
         calculations = db.search_calculation(proposal_id=proposal.id)
 
         prev_proposals = [
@@ -183,7 +179,7 @@ class GenericProposal(object):
 
         extra = {
             'abstract': proposal_text.get(role_class.ABSTRACT, None),
-            'targets': targets,
+            'targets': targets.to_formatted_collection(),
             'target_total_time': target_total_time,
             'calculators': self.calculators,
             'calculations': self._prepare_calculations(calculations),

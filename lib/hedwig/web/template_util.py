@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -27,6 +27,7 @@ import re
 from flask import Markup
 from jinja2.runtime import Undefined
 
+from ..astro.coord import CoordSystem
 from ..compat import first_value as _first_value
 from ..config import get_countries
 from ..type.enum import AffiliationType, Assessment, \
@@ -134,6 +135,12 @@ def register_template_utils(app):
             for (start, end) in zip(color_start, color_end)]
 
         return '#{:02X}{:02X}{:02X}'.format(*color)
+
+    @app.template_filter()
+    def coord_system_name(value):
+        if value is None:
+            return ''
+        return CoordSystem.get_name(value)
 
     @app.template_filter()
     def count_true(list_):

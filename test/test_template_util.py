@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017 East Asian Observatory
+# Copyright (C) 2016-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,6 +24,7 @@ import json
 from flask import Markup
 from jinja2.runtime import Undefined
 
+from hedwig.astro.coord import CoordSystem
 from hedwig.type.enum import Assessment, AttachmentState, \
     BaseCallType, BaseReviewerRole, CallState, \
     MessageState, MessageThreadType, ProposalState, \
@@ -115,6 +116,12 @@ class TemplateUtilTestCase(WebAppTestCase):
         # Test custom scale.
         self.assertEqual(f(0.0, (0.0, 0.75, 0.0), (0.25, 0.0, 0.5)), '#00BF00')
         self.assertEqual(f(1.0, (0.0, 0.75, 0.0), (0.25, 0.0, 0.5)), '#3F007F')
+
+    def test_filter_coord_system(self):
+        f = self.app.jinja_env.filters['coord_system_name']
+
+        self.assertEqual(f(None), '')
+        self.assertEqual(f(CoordSystem.ICRS), 'ICRS')
 
     def test_filter_count_true(self):
         f = self.app.jinja_env.filters['count_true']
