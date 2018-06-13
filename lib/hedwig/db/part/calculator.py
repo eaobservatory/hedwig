@@ -337,26 +337,32 @@ class CalculatorPart(object):
         """
         Update the calculations for a proposal.
 
-        Currently only deleting calculations is supported.
+        Currently only deleting calculations and updating the sort order
+        is supported.
         """
 
         with self._transaction() as conn:
             return self._sync_records(
                 conn, calculation, calculation.c.proposal_id, proposal_id,
-                records, update_columns=(), forbid_add=True)
+                records, update_columns=(
+                    calculation.c.sort_order,
+                ), forbid_add=True)
 
     def sync_review_calculation(self, reviewer_id, records):
         """
         Update the calculations for a reviewer.
 
-        Currently only deleting calculations is supported.
+        Currently only deleting calculations and updating the sort order
+        is supported.
         """
 
         with self._transaction() as conn:
             return self._sync_records(
                 conn, review_calculation,
                 review_calculation.c.reviewer_id, reviewer_id,
-                records, update_columns=(), forbid_add=True)
+                records, update_columns=(
+                    review_calculation.c.sort_order,
+                ), forbid_add=True)
 
     def update_calculation(
             self, calculation_id,

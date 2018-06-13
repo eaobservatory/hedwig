@@ -7,4 +7,6 @@ $(document).ready(function () {
         var calcid = event.target.id.replace('delete_', '');
         deleteCalculationRow(calcid);
     });
+
+    enable_table_drag($('table#calculations'));
 });

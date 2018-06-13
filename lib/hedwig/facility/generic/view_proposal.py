@@ -27,7 +27,8 @@ from ...config import get_config
 from ...error import ConsistencyError, NoSuchRecord, ParseError, UserError
 from ...file.info import determine_figure_type, determine_pdf_page_count
 from ...publication.url import make_publication_url
-from ...type.collection import PrevProposalCollection, ResultCollection, \
+from ...type.collection import CalculationCollection, \
+    PrevProposalCollection, ResultCollection, \
     TargetCollection
 from ...type.enum import AffiliationType, AttachmentState, \
     CallState, FigureType, FormatType, \
@@ -1656,13 +1657,18 @@ class GenericProposal(object):
                     'Edit permission denied for these calculations.')
 
             try:
-                calculations_present = [int(param[12:])
-                                        for param in form
-                                        if param.startswith('calculation_')]
+                # Create a new list from the items so that it is safe
+                # to update and/or delete from records (for Python-3).
+                for (id_, calculation) in list(calculations.items()):
+                    # If the sort order parameter is missing, the figure
+                    # must have been deleted from the form.
+                    sort_order_str = form.get('sort_order_{}'.format(id_))
+                    if sort_order_str is None:
+                        del calculations[id_]
+                        continue
 
-                for calculation_id in list(calculations.keys()):
-                    if calculation_id not in calculations_present:
-                        del calculations[calculation_id]
+                    calculations[id_] = calculation._replace(
+                        sort_order=int(sort_order_str))
 
                 if reviewer is None:
                     (n_insert, n_update, n_delete) = \
@@ -1687,6 +1693,13 @@ class GenericProposal(object):
 
             except UserError as e:
                 message = e.message
+
+                # Sort the calculation collection in case the user re-ordered
+                # it.  Note we don't generally want to do this (e.g. in the
+                # template) because this view function is also used for the
+                # read-only case of seeing full calculation information.
+                calculations = CalculationCollection((
+                    (x.id, x) for x in calculations.values_in_sorted_order()))
 
         return {
             'title': title,

@@ -59,7 +59,10 @@ This takes you to a page which shows detailed information
 about each calculation.
 From here you can delete calculations which you no longer
 want to appear on your proposal.
-Any deletions which you make will not take effect until
+You can also change the order of the calculations
+by dragging the "grip" in the leftmost column of the table
+and dropping it onto the row after which it should appear.
+Any changes which you make will not take effect until
 you use the "Save" button below the table.
 
 .. image:: image/calc_manage.png
