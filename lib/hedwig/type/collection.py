@@ -661,11 +661,11 @@ class TargetCollection(ResultCollection, CollectionOrdered,
 
     def to_formatted_collection(self):
         """
-        Construct an `OrderedDict` in which the target values
+        Construct an instance of this class in which the target values
         (`x`, `y`, `time`, `priority`) are replaced with formatted strings.
         """
 
-        ans = OrderedDict()
+        ans = type(self)()
 
         for (k, v) in self.items():
             if v.x is None or v.y is None:

@@ -11,6 +11,11 @@ The "Delete" button removes rows from the table,
 but as always, your changes on this page are not
 saved until you press the "Save" button at the bottom of the page.
 
+You can change the order of your list of targets by
+rearranging the rows of the table.
+To do this, drag the target's "grip" in the leftmost column
+and drop it onto the row below which it should appear.
+
 The "Resolve name" button can be used to attempt to determine the
 coordinates of an object from its name using CADC's Name Resolver.
 If successful the RA and Dec columns will then be filled in for you,

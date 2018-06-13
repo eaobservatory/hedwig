@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
-{% set scripts=['resolve_name', 'edit_target'] %}
+{% set scripts=['resolve_name', 'table_row_drag', 'edit_target'] %}
 {% set help_link=url_for('help.user_page', page_name='target') %}
 
 {% block content %}
@@ -36,7 +36,7 @@
 <form method="POST" action="{{ url_for('.target_edit', proposal_id=proposal_id) }}">
     <table id="targets" data-resolver="{{ url_for('query.name_resolver') }}">
         <tr>
-            <th>Name</th>
+            <th colspan="2">Name</th>
             <th>RA / Longitude</th>
             <th>Dec / Latitude</th>
             <th>System</th>
@@ -44,8 +44,9 @@
             <th>Priority<br />(1 highest)</th>
             <th>Actions</th>
         </tr>
-        {% for target in targets.values() %}
+        {% for target in targets.values_in_sorted_order() %}
             <tr id="targetrow_{{ target.id }}">
+                <td class="draggrip">&vellip;&vellip;</td>
                 <td><input type="text" name="name_{{ target.id }}" value="{{ target.name }}" size="15" /></td>
                 <td><input type="text" name="x_{{ target.id }}" value="{{ target.x }}" placeholder="00:00:00" size="10" /></td>
                 <td><input type="text" name="y_{{ target.id }}" value="{{ target.y }}" placeholder="00:00:00" size="10" /></td>
@@ -61,12 +62,14 @@
                 <td>
                     <input type="button" id="delete_{{ target.id }}" value="Delete" />
                     <input type="button" id="resolve_{{ target.id }}" value="Resolve name" />
+                    <input name="sort_order_{{ target.id }}" type="hidden" value="{{ target.sort_order if target.sort_order is not none }}" />
                 </td>
             </tr>
         {% endfor %}
     </table>
     <table class="template">
         <tr id="targetrow_template">
+            <td class="draggrip">&vellip;&vellip;</td>
             <td><input type="text" name="name" value="" size="15" /></td>
             <td><input type="text" name="x" value="" placeholder="00:00:00" size="10" /></td>
             <td><input type="text" name="y" value="" placeholder="00:00:00" size="10" /></td>
@@ -82,6 +85,7 @@
             <td>
                 <input type="button" id="delete_template" value="Delete" />
                 <input type="button" id="resolve_template" value="Resolve name" />
+                <input name="sort_order" type="hidden" value="" />
             </td>
         </tr>
     </table>

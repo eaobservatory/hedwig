@@ -8,6 +8,7 @@ function addTargetRow(newRowNumber) {
     newrow.find('[name=system]').attr('name', 'system_' + nid);
     newrow.find('[name=time]').attr('name', 'time_' + nid);
     newrow.find('[name=priority]').attr('name', 'priority_' + nid);
+    newrow.find('[name=sort_order]').attr('name', 'sort_order_' + nid);
     var deletelink = newrow.find('#delete_template');
     deletelink.attr('id', 'delete_' + nid);
     deletelink.click(function (event) {
@@ -18,7 +19,11 @@ function addTargetRow(newRowNumber) {
     resolvebutton.click(function (event) {
         resolveTargetName(nid);
     });
-    newrow.appendTo($('table#targets'));
+
+    var target_table = $('table#targets')
+    newrow.appendTo(target_table);
+    reassign_sort_order(target_table);
+    enable_table_drag_row(target_table, newrow);
 }
 
 function deleteTargetRow(targetid) {
@@ -56,4 +61,6 @@ $(document).ready(function () {
     if ($('table#targets tr').length === 1) {
         addTargetRow(newRowCounter ++);
     }
+
+    enable_table_drag($('table#targets'));
 });
