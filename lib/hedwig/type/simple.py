@@ -202,8 +202,8 @@ ProposalFigure = namedtuple(
     ['data', 'type', 'filename'])
 
 ProposalFigureInfo = namedtuple(
-    'ProposalFigInfo',
-    ['id', 'proposal_id', 'role', 'type', 'state', 'caption',
+    'ProposalFigureInfo',
+    ['id', 'proposal_id', 'sort_order', 'role', 'type', 'state', 'caption',
      'md5sum', 'filename', 'uploaded', 'uploader', 'uploader_name',
      'has_preview'])
 

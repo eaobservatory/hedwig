@@ -7,4 +7,6 @@ $(document).ready(function () {
         var figureid = event.target.id.replace('delete_', '');
         deleteFigureRow(figureid);
     });
+
+    enable_table_drag($('table#figures'));
 });

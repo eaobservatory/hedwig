@@ -1587,6 +1587,7 @@ class ProposalPart(object):
         select_columns = [
             proposal_fig.c.id,
             proposal_fig.c.proposal_id,
+            proposal_fig.c.sort_order,
             proposal_fig.c.role,
             proposal_fig.c.type,
             proposal_fig.c.state,
@@ -2081,8 +2082,11 @@ class ProposalPart(object):
         """
         Update the figures for a proposal.
 
-        Currently only deleting figures is supported -- no columns are updated.
+        Currently only deleting figures and changing the sort order
+        is supported.
         """
+
+        records.ensure_sort_order()
 
         with self._transaction() as conn:
             if not self._exists_id(conn, proposal, proposal_id):
@@ -2094,7 +2098,9 @@ class ProposalPart(object):
                 (proposal_fig.c.proposal_id, proposal_fig.c.role),
                 (proposal_id, role),
                 records,
-                update_columns=(), forbid_add=True)
+                update_columns=(
+                    proposal_fig.c.sort_order,
+                ), forbid_add=True)
 
     def sync_proposal_member(self, proposal_id, records, editor_person_id):
         """

@@ -1172,6 +1172,7 @@ class DBProposalTest(DBTestCase):
         self.assertIsInstance(fig_info, ProposalFigureInfo)
         self.assertEqual(fig_info.id, fig_id)
         self.assertEqual(fig_info.proposal_id, proposal_id)
+        self.assertEqual(fig_info.sort_order, 1)
         self.assertEqual(fig_info.role, role)
         self.assertEqual(fig_info.md5sum, 'b41faa148ef23d1ddfa46debb3b66f35')
         self.assertEqual(fig_info.type, type_)

@@ -1482,13 +1482,18 @@ class GenericProposal(object):
 
         if form is not None:
             try:
-                figures_present = [int(param[7:])
-                                   for param in form
-                                   if param.startswith('figure_')]
+                # Create a new list from the items so that it is safe
+                # to update and/or delete from records (for Python-3).
+                for (id_, figure) in list(figures.items()):
+                    # If the sort order parameter is missing, the figure
+                    # must have been deleted from the form.
+                    sort_order_str = form.get('sort_order_{}'.format(id_))
+                    if sort_order_str is None:
+                        del figures[id_]
+                        continue
 
-                for fig_id in list(figures.keys()):
-                    if fig_id not in figures_present:
-                        del figures[fig_id]
+                    figures[id_] = figure._replace(
+                        sort_order=int(sort_order_str))
 
                 (n_insert, n_update, n_delete) = \
                     db.sync_proposal_figure(proposal.id, role, figures)

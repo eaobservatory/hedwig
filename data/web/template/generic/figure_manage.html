@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
-{% set scripts=['manage_figure'] %}
+{% set scripts=['table_row_drag', 'manage_figure'] %}
 
 {% block content %}
 
@@ -11,14 +11,15 @@
 {% endif %}
 
 <form method="POST" action="{{ target }}">
-    <table>
+    <table id="figures">
         <tr>
-            <th>Figure</th>
+            <th colspan="2">Figure</th>
             <th>Information</th>
             <th>Actions</th>
         </tr>
-        {% for figure in figures.values() %}
+        {% for figure in figures.values_in_sorted_order() %}
             <tr id="figrow_{{ figure.id }}">
+                <td class="draggrip">&vellip;&vellip;</td>
                 <td>
                     {% if figure.state is attachment_ready %}
                         <img src="{{ url_for('.case_view_figure_thumbnail', proposal_id=proposal_id, role=role, fig_id=figure.id, md5sum=figure.md5sum) }}" />
@@ -45,7 +46,7 @@
                 </td>
                 <td>
                     <input type="button" id="delete_{{ figure.id }}" value="Delete" />
-                    <input type="hidden" name="figure_{{ figure.id }}" />
+                    <input name="sort_order_{{ figure.id }}" type="hidden" value="{{ figure.sort_order }}" />
                 </td>
             </tr>
         {% endfor %}

@@ -51,6 +51,11 @@ about each figure which you have uploaded.
 To remove a figure, click the "Delete" button next to it,
 and then press the "Save" button below the table.
 
+You can also change the order in which your figures appear by
+rearranging the rows of the table.
+To do this, drag the table row's "grip" in the leftmost column
+and drop it onto the row after which it should appear.
+
 .. image:: image/sci_case_fig_manage.png
 
 When you edit the text of your scientific justification,
