@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017 East Asian Observatory
+# Copyright (C) 2016-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -80,6 +80,25 @@ class CollectionOrdered(object):
         for key in unordered:
             i += 1
             self[key] = self[key]._replace(sort_order=i)
+
+    def values_in_sorted_order(self):
+        """
+        Return values ordered by the `sort_order` attribute.
+
+        Normally we would already have sorted the collection in this order
+        when constructing it.  So this method is intended to be used
+        while editing a collection which may have some incomplete information
+        in it.
+
+        Entries with a `sort_order` attribute of `None` should be
+        returned last.
+        """
+
+        ans = list(self.values())
+
+        ans.sort(key=lambda x: (x.sort_order is None, x.sort_order))
+
+        return ans
 
 
 class CollectionSortable(object):

@@ -314,6 +314,15 @@ class CollectionTypeTestCase(TestCase):
         rc[2] = SortOrdered(2, None)
         rc[3] = SortOrdered(3, 2)
         rc[4] = SortOrdered(4, None)
+        rc[5] = SortOrdered(5, 0)
+
+        self.assertEqual(rc.values_in_sorted_order(), [
+            SortOrdered(5, 0),
+            SortOrdered(1, 1),
+            SortOrdered(3, 2),
+            SortOrdered(2, None),
+            SortOrdered(4, None),
+        ])
 
         rc.ensure_sort_order()
 
@@ -321,6 +330,15 @@ class CollectionTypeTestCase(TestCase):
             SortOrdered(1, 1),
             SortOrdered(2, 3),
             SortOrdered(3, 2),
+            SortOrdered(4, 4),
+            SortOrdered(5, 0),
+        ])
+
+        self.assertEqual(rc.values_in_sorted_order(), [
+            SortOrdered(5, 0),
+            SortOrdered(1, 1),
+            SortOrdered(3, 2),
+            SortOrdered(2, 3),
             SortOrdered(4, 4),
         ])
 
