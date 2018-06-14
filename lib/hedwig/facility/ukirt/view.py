@@ -1,4 +1,4 @@
-# Copyright (C) 2017 East Asian Observatory
+# Copyright (C) 2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -23,7 +23,7 @@ from itertools import chain
 import re
 
 from ...error import NoSuchRecord, NoSuchValue, ParseError, UserError
-from ...view.util import organise_collection, with_proposal
+from ...view.util import with_proposal
 from ...web.util import HTTPRedirect, flash, url_for
 from ...type.enum import PermissionType, ProposalState
 from ...type.simple import ValidationMessage
@@ -308,8 +308,8 @@ class UKIRT(EAOFacility):
                 brightness=int(brightness),
                 time=request_time)
 
-        return organise_collection(
-            UKIRTRequestCollection, updated_records, added_records)
+        return UKIRTRequestCollection.organize_collection(
+            updated_records, added_records)
 
     def _view_proposal_decision_get(self, db, proposal, form):
         """

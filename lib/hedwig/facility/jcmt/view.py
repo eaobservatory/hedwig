@@ -26,7 +26,7 @@ import re
 from ...compat import url_encode
 from ...error import NoSuchRecord, NoSuchValue, ParseError, UserError
 from ...web.util import HTTPError, HTTPRedirect, flash, url_for
-from ...view.util import int_or_none, organise_collection, \
+from ...view.util import int_or_none, \
     with_call_review, with_proposal
 from ...type.collection import ResultTable
 from ...type.enum import AffiliationType, FormatType, \
@@ -771,8 +771,8 @@ class JCMT(EAOFacility):
                 int(form['weather_' + id_]),
                 request_time)
 
-        return organise_collection(JCMTRequestCollection,
-                                   updated_records, added_records)
+        return JCMTRequestCollection.organize_collection(
+            updated_records, added_records)
 
     def _view_review_edit_get(self, db, reviewer, proposal, form):
         """
@@ -979,8 +979,8 @@ class JCMT(EAOFacility):
                             id=None, call_id=None,
                             weather=weather_id, time=time)
 
-                available = organise_collection(JCMTAvailableCollection,
-                                                updated_records, added_records)
+                available = JCMTAvailableCollection.organize_collection(
+                    updated_records, added_records)
 
                 updates = db.sync_jcmt_call_available(call.id, available)
 

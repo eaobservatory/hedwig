@@ -79,6 +79,32 @@ class ResultCollection(OrderedDict):
             (k, function(v)) for (k, v) in self.items()
             if (filter_key(k) and filter_value(v)))
 
+    @classmethod
+    def organize_collection(cls, updated_records, added_records):
+        """
+        Constuct new record collection, of this class, from the
+        list of `updated_records` (whose ids we should preserve) and
+        the list of `added_records` (which should be assigned temporary
+        ids beyond those of the `updated_records`).
+
+        `added_records` are assumed to have ids of at least 1, such
+        that they can be added to the maximum record id found amongst
+        the `updated_records`.
+        """
+
+        records = cls(map(
+            (lambda x: (x, updated_records[x])),
+            sorted(updated_records.keys())))
+
+        # Number the newly-added records upwards from the existing max.
+        max_record = max(records.keys()) if records else 0
+
+        for id_ in sorted(added_records.keys()):
+            new_id = max_record + id_
+            records[new_id] = added_records[id_]._replace(id=new_id)
+
+        return records
+
 
 class AffiliationCollection(ResultCollection):
     """

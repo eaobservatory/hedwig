@@ -45,7 +45,7 @@ from ...view import auth
 from ...web.util import ErrorPage, HTTPError, HTTPForbidden, \
     HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
-from ...view.util import count_words, int_or_none, organise_collection, \
+from ...view.util import count_words, int_or_none, \
     with_proposal, with_verified_admin
 
 CalculationExtra = namedtuple(
@@ -1103,8 +1103,8 @@ class GenericProposal(object):
                     publications=publications
                 )
 
-            records = organise_collection(
-                PrevProposalCollection, updated_records, added_records)
+            records = PrevProposalCollection.organize_collection(
+                updated_records, added_records)
 
             try:
                 updates = db.sync_proposal_prev_proposal(proposal.id, records)
@@ -1175,8 +1175,8 @@ class GenericProposal(object):
                     form['time_' + id_],
                     form['priority_' + id_])
 
-            records = organise_collection(TargetCollection, updated_records,
-                                          added_records)
+            records = TargetCollection.organize_collection(
+                updated_records, added_records)
 
             try:
                 db.sync_proposal_target(

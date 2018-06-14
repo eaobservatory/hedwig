@@ -54,31 +54,6 @@ def int_or_none(value):
     return None if (value == '') else int(value)
 
 
-def organise_collection(class_, updated_records, added_records):
-    """
-    Constuct new record collection, of the given class, from the
-    list of "updated_records" (whose ids we should preserve) and
-    the list of "added_records" (which should be assigned temporary
-    ids beyond those of the "updated_records").
-
-    "added_records" are assumed to have ids of at least 1, such
-    that they can be added to the maximum record id found amongst
-    the "updated_records".
-    """
-
-    records = class_(map((lambda x: (x, updated_records[x])),
-                         sorted(updated_records.keys())))
-
-    # Number the newly-added records upwards from the existing max.
-    max_record = max(records.keys()) if records else 0
-
-    for id_ in sorted(added_records.keys()):
-        new_id = max_record + id_
-        records[new_id] = added_records[id_]._replace(id=new_id)
-
-    return records
-
-
 def with_call_review(permission):
     """
     Decorator for methods which deal with reviews of all the proposals

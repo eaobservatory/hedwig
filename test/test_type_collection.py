@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 
 from hedwig.error import MultipleRecords, NoSuchRecord, NoSuchValue, UserError
 from hedwig.type.base import CollectionByProposal, CollectionOrdered, \
@@ -40,6 +40,22 @@ from .compat import TestCase
 
 
 class CollectionTypeTestCase(TestCase):
+    def test_organize_collection(self):
+        TT = namedtuple('TT', ('id', 'x'))
+
+        c = ResultCollection.organize_collection({}, {})
+        self.assertIsInstance(c, ResultCollection)
+        self.assertEqual(list(c.keys()), [])
+
+        c = ResultCollection.organize_collection(
+            OrderedDict(((20, TT(20, 'b')), (10, TT(10, 'a')))),
+            OrderedDict(((2, TT(2, 'd')), (1, TT(1, 'c')))))
+
+        self.assertIsInstance(c, ResultCollection)
+        self.assertEqual(list(c.keys()), [10, 20, 21, 22])
+        self.assertEqual(list(c.values()), [
+            TT(10, 'a'), TT(20, 'b'), TT(21, 'c'), TT(22, 'd')])
+
     def test_by_proposal_collection(self):
         class BPCollection(ResultCollection, CollectionByProposal):
             pass

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -35,8 +35,7 @@ from ..type.util import null_tuple
 from ..view.util import int_or_none
 from ..web.util import flash, session, url_for, url_add_args, url_relative, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
-from .util import organise_collection, with_institution, with_person, \
-    with_verified_admin
+from .util import with_institution, with_person, with_verified_admin
 from . import auth
 
 
@@ -696,8 +695,8 @@ class PeopleView(object):
                 # Create new record collection: overwrite "records" variable
                 # name so that, in case of failure, the form will display the
                 # new records again for correction.
-                records = organise_collection(EmailCollection, updated_records,
-                                              added_records)
+                records = EmailCollection.organize_collection(
+                    updated_records, added_records)
 
                 db.sync_person_email(person.id, records)
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -32,7 +32,7 @@ from ...type.util import null_tuple
 from ...view import auth
 from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
     flash, format_datetime, parse_datetime, session, url_for
-from ...view.util import int_or_none, organise_collection, with_verified_admin
+from ...view.util import int_or_none, with_verified_admin
 
 
 class GenericAdmin(object):
@@ -525,8 +525,8 @@ class GenericAdmin(object):
                             id_, queue_id, form[param].strip(), is_hidden,
                             type_, None)
 
-                records = organise_collection(
-                    AffiliationCollection, updated_records, added_records)
+                records = AffiliationCollection.organize_collection(
+                    updated_records, added_records)
 
                 db.sync_queue_affiliation(queue_id, records)
 
@@ -826,8 +826,8 @@ class GenericAdmin(object):
                         updated_records[id_] = Category(
                             id_, self.id_, form[param].strip(), is_hidden)
 
-                records = organise_collection(
-                    ResultCollection, updated_records, added_records)
+                records = ResultCollection.organize_collection(
+                    updated_records, added_records)
 
                 db.sync_facility_category(self.id_, records)
 
