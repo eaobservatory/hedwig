@@ -5,7 +5,11 @@
     (none if reviewer_id is none else [(reviewer_role | reviewer_role_name(facility_role_class, with_review=true), url_for('.review_edit', reviewer_id=reviewer_id))])) %}
 
 {% set scripts=['table_row_drag', 'manage_calculation'] %}
-{% set help_link=url_for('help.user_page', page_name='calculation') %}
+{% if reviewer_id is none %}
+    {% set help_link=url_for('help.user_page', page_name='calculation') %}
+{% else %}
+    {% set help_link=url_for('help.review_page', page_name='technical') %}
+{% endif %}
 
 {% block content %}
 
