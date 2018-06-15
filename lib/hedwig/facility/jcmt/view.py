@@ -227,13 +227,17 @@ class JCMT(EAOFacility):
     def make_review_guidelines_url(self, role):
         """
         Make an URL for the guidelines page in the included documentation,
-        if the role is external.
+        if the role is external or feedback.
         """
 
         role_class = self.get_reviewer_roles()
 
         if role == role_class.EXTERNAL:
             return url_for('help.review_page', page_name='external_jcmt',
+                           _external=True)
+
+        elif role == role_class.FEEDBACK:
+            return url_for('help.review_page', page_name='feedback_jcmt',
                            _external=True)
 
         else:
