@@ -54,6 +54,7 @@ The following Python modules should be installed:
 * Flask
 * healpy
 * jinja2_orderblocks
+* msgpack
 * mysql-connector-python
 * Pillow
 * pymoc
