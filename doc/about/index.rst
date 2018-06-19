@@ -97,7 +97,7 @@ Debian iso-codes ISO 3166-1 file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This system includes the ISO 3166-1 list of country codes and names from the
-`Debian iso-codes package <http://pkg-isocodes.alioth.debian.org/>`_
+`Debian iso-codes package <https://salsa.debian.org/iso-codes-team/iso-codes/>`_
 which is available under the LGPL, version 2.1:
 
     This library is free software; you can redistribute it and/or
