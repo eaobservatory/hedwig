@@ -37,7 +37,7 @@ You can copy this file to `hedwig.wsgi` and adjust the paths
 for the "virtualenv" and Hedwig home directory.
 For more information about using Flask-based applications
 (such as Hedwig) with `mod_wsgi`, see the
-`Flask guide for mod_wsgi <http://flask.pocoo.org/docs/0.10/deploying/mod_wsgi/>`_.
+`Flask guide for mod_wsgi <http://flask.pocoo.org/docs/latest/deploying/mod_wsgi/>`_.
 
 Requirements
 ~~~~~~~~~~~~
@@ -108,7 +108,7 @@ You will then need to edit the file to complete the configuration.
     This is the key used by Flask for its secure cookie session system.
     Since Hedwig uses this system to authenticate users, you must be
     sure to enter a good random string here.
-    The `Flask quick start guide <http://flask.pocoo.org/docs/0.10/quickstart/>`_
+    The `Flask quick start guide <http://flask.pocoo.org/docs/latest/quickstart/>`_
     recommends 24 random bytes.
 
   * *facilities*
@@ -272,7 +272,7 @@ For testing purposes, a stand-alone copy of Hedwig can be run using::
 You can also add the `--debug` command line option to enable debugging
 and automatic reloading.
 Note that this enables the
-`Werkzeug Debugger <http://werkzeug.pocoo.org/docs/0.10/debug/>`_
+`Werkzeug Debugger <http://werkzeug.pocoo.org/docs/latest/debug/>`_
 which provides tracebacks and provides access to a Python shell.
 *It should never be run in a manner accessible to untrusted users!*
 When this option is specified, `hedwigctl` configures the
