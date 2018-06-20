@@ -326,11 +326,12 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
     The `name_proposal` attribute relates to how a call is named.  If
     `False` then the name relates to the call (e.g. "standard call for
     proposals") otherwise, if `True`, the name relates to the proposals
-    (e.g. "call for urguent proposals").
+    (e.g. "call for urgent proposals").
     """
 
     STANDARD = 1
     IMMEDIATE = 2
+    TEST = 3
 
     TypeInfo = namedtuple(
         'TypeInfo',
@@ -346,6 +347,9 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
         (IMMEDIATE, TypeInfo(
             'I',  'Immediate', True,  'immediate', True,  False,
             (GroupType.CTTEE,))),
+        (TEST, TypeInfo(
+            'T',  'Test',      True,  'test',      False, True,
+            ())),
     ))
 
     @classmethod

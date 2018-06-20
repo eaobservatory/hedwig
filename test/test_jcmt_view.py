@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017 East Asian Observatory
+# Copyright (C) 2016-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -68,7 +68,7 @@ class JCMTFacilityTestCase(FacilityTestCase):
 
         with self.assertRaisesRegex(
                 ParseError, "^Did not recognise call type code"):
-            self.view.parse_proposal_code(self.db, 'X11AP111')
+            self.view.parse_proposal_code(self.db, 'Z11AP111')
 
         with self.assertRaises(NoSuchRecord):
             self.view.parse_proposal_code(self.db, 'M20AP999')
