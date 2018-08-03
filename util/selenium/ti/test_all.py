@@ -1701,7 +1701,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         Select(
             self.browser.find_element_by_name('jcmt_rating_urgency')
-        ).select_by_visible_text('Should be done now')
+        ).select_by_visible_text('Timely and competitive: must be done now')
 
         self.browser.find_element_by_name('text').send_keys(
             'My opinion of this proposal is...')

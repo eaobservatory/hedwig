@@ -546,7 +546,7 @@ class JCMTReviewRatingUrgency(EnumBasic, EnumAvailable):
 
     _info = OrderedDict((
         (1, RatingInfo('Timely and competitive: must be done now', True)),
-        (2, RatingInfo('Should be done now', True)),
+        (2, RatingInfo('Should be done now', False)),
         (3, RatingInfo('Urgency is not a major consideration', True)),
     ))
 

@@ -59,7 +59,6 @@ Urgency of the proposed observations
 Where would you place this proposal within the following scale?
 
 *  Timely and competitive: must be done now.
-*  Should be done now.
 *  Urgency is not a major consideration.
 
 There is also a free-format space on the review page for
