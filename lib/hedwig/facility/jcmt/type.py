@@ -131,6 +131,9 @@ class JCMTInstrument(EnumBasic, EnumAvailable):
     HARP = 2
     RXA3 = 3
     RXA3M = 4
+    ALAIHI = 5
+    UU = 6
+    AWEOWEO = 7
 
     InstrumentInfo = namedtuple(
         'InstrumentInfo', ('name', 'available', 'ancillary'))
@@ -141,6 +144,13 @@ class JCMTInstrument(EnumBasic, EnumAvailable):
         (HARP,   InstrumentInfo('HARP',    True,  (JCMTAncillary.ROVER,))),
         (RXA3,   InstrumentInfo('RxA3',    False, (JCMTAncillary.ROVER,))),
         (RXA3M,  InstrumentInfo('RxA3m',   False, (JCMTAncillary.ROVER,))),
+        # Namakanui:
+        (ALAIHI, InstrumentInfo('\u02bbAla\u02bbihi',
+                                           False, ())),
+        (UU,     InstrumentInfo('\u02bb\u016a\u02bb\u016b',
+                                           True,  ())),
+        (AWEOWEO,InstrumentInfo('\u02bb\u0100weoweo',
+                                           False, ())),
     ))
 
     @classmethod

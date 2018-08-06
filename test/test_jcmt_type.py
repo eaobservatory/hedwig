@@ -42,6 +42,7 @@ class JCMTTypeTestCase(TestCase):
         for instrument in (
                 JCMTInstrument.SCUBA2,
                 JCMTInstrument.HARP,
+                JCMTInstrument.UU,
                 ):
             # Identifiers should be unique integers.
             self.assertIsInstance(instrument, int)
@@ -68,6 +69,8 @@ class JCMTTypeTestCase(TestCase):
         for instrument in (
                 JCMTInstrument.RXA3,
                 JCMTInstrument.RXA3M,
+                JCMTInstrument.ALAIHI,
+                JCMTInstrument.AWEOWEO,
                 ):
             # Identifiers should be unique integers.
             self.assertIsInstance(instrument, int)
