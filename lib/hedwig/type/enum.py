@@ -974,6 +974,7 @@ class UserLogEvent(EnumBasic):
     GET_TOKEN = 5
     USE_TOKEN = 6
     USE_INVITE = 7
+    MERGED = 8
 
     EventInfo = namedtuple('EventInfo', ('description',))
 
@@ -985,4 +986,5 @@ class UserLogEvent(EnumBasic):
         GET_TOKEN:    EventInfo('Issued password reset code'),
         USE_TOKEN:    EventInfo('Used password reset code'),
         USE_INVITE:   EventInfo('Profile linked via invitation'),
+        MERGED:       EventInfo('Profile merged'),
     }

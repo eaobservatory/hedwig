@@ -577,6 +577,11 @@ class PeoplePart(object):
                         'duplicate person ID {} does not exist for merge',
                         duplicate_person_id)
 
+            # Check if the main person is registered.
+            main_user_id = conn.execute(select([person.c.user_id]).where(
+                person.c.id == main_person_id
+            )).scalar()
+
             # Check if the duplicate person is registered.
             duplicate_user_id = conn.execute(select([person.c.user_id]).where(
                 person.c.id == duplicate_person_id
@@ -635,6 +640,11 @@ class PeoplePart(object):
                 # Remove the old user record itself.
                 conn.execute(user.delete().where(
                     user.c.id == duplicate_user_id))
+
+            # Add a log entry to for the main person, if registered.
+            if main_user_id is not None:
+                self._add_user_log_entry(
+                    conn, main_user_id, UserLogEvent.MERGED)
 
     def search_email(self, person_id, address=None, _conn=None):
         """

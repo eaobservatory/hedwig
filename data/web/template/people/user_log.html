@@ -27,7 +27,7 @@
             <tr>
                 <td>{{ event.date | format_datetime }}</td>
                 <td>{{ event.event | user_log_event_description }}</td>
-                <td>{{ event.remote_addr }}</td>
+                <td>{{ '&nbsp;' | safe if (event.remote_addr is none) else event.remote_addr }}</td>
             </tr>
         {% endfor %}
     </table>

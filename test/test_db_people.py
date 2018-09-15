@@ -28,7 +28,8 @@ from hedwig.db.meta import auth_failure, invitation, reset_token
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from hedwig.type.collection import EmailCollection, ResultCollection
-from hedwig.type.enum import BaseCallType, BaseTextRole, FormatType
+from hedwig.type.enum import BaseCallType, BaseTextRole, FormatType, \
+    UserLogEvent
 from hedwig.type.simple import Email, \
     Institution, InstitutionInfo, MemberInstitution, \
     Person, UserInfo
@@ -707,6 +708,11 @@ class DBPeopleTest(DBTestCase):
         person_2 = self.db.add_person('Person Two')
         self.assertIsInstance(person_2, int)
 
+        # Check that the user log is initially as expected.
+        self.assertEqual(
+            [x.event for x in self.db.search_user_log(user_1).values()],
+            [UserLogEvent.LINK_PROFILE, UserLogEvent.CREATE])
+
         # Associate some information with the second (the duplicate).
         self.db.issue_invitation(person_2)
         self.db.issue_email_verify_token(person_2, 'a@b')
@@ -766,6 +772,12 @@ class DBPeopleTest(DBTestCase):
 
         with self.assertRaises(NoSuchRecord):
             self.db.get_user_name(user_2)
+
+        # Check that the user log was updated.
+        self.assertEqual(
+            [x.event for x in self.db.search_user_log(user_1).values()],
+            [UserLogEvent.MERGED,
+             UserLogEvent.LINK_PROFILE, UserLogEvent.CREATE])
 
     def test_password_reset_token(self):
         # Create a user record.
