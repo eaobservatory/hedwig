@@ -27,6 +27,7 @@ if python_version < 3:
     # Python 2.
 
     from codecs import ascii_decode, ascii_encode, utf_8_encode
+    from math import floor as _math_floor
     from urllib import quote as _url_quote
     from urllib import urlencode as _urlencode
 
@@ -61,6 +62,9 @@ if python_version < 3:
         except StopIteration:
             raise IndexError('dictionary has no first value')
 
+    def floor(value):
+        return int(_math_floor(value))
+
     def url_quote(string):
         """Unicode-safe wrapper for urllib.quote."""
         return _url_quote(utf_8_encode(string)[0])
@@ -76,6 +80,7 @@ if python_version < 3:
 else:
     # Python 3.
 
+    from math import floor
     from urllib.parse import quote as url_quote
     from urllib.parse import urlencode as url_encode
 

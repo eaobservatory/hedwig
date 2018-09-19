@@ -18,7 +18,8 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from hedwig.util import is_list_like, list_in_blocks, list_in_ranges, \
+from hedwig.util import FormatSigFig, \
+    is_list_like, list_in_blocks, list_in_ranges, \
     matches_constraint
 
 from .compat import TestCase
@@ -91,3 +92,34 @@ class UtilTest(TestCase):
         self.assertTrue(matches_constraint(1, (1, 2)))
         self.assertTrue(matches_constraint(2, (1, 2)))
         self.assertFalse(matches_constraint(3, (1, 2)))
+
+    def test_sig_fig(self):
+        fmt = FormatSigFig(3)
+        self.assertEqual(fmt.format(123456789.0), '123456789')
+        self.assertEqual(fmt.format(12345678.9), '12345679')
+        self.assertEqual(fmt.format(1234567.890), '1234568')
+        self.assertEqual(fmt.format(123456.7890), '123457')
+        self.assertEqual(fmt.format(12345.67890), '12346')
+        self.assertEqual(fmt.format(1234.567890), '1235')
+        self.assertEqual(fmt.format(123.4567890), '123')
+        self.assertEqual(fmt.format(12.34567890), '12.3')
+        self.assertEqual(fmt.format(1.234567890), '1.23')
+        self.assertEqual(fmt.format(0.1234567890), '0.123')
+        self.assertEqual(fmt.format(0.01234567890), '0.0123')
+        self.assertEqual(fmt.format(0.001234567890), '0.00123')
+        self.assertEqual(fmt.format(0.0001234567890), '0.000123')
+        self.assertEqual(fmt.format(0.00001234567890), '0.0000123')
+        self.assertEqual(fmt.format(0.000001234567890), '0.00000123')
+        self.assertEqual(fmt.format(0.0000001234567890), '0.000000123')
+        self.assertEqual(fmt.format(0.00000001234567890), '0.000000012')
+        self.assertEqual(fmt.format(0.000000001234567890), '0.000000001')
+        self.assertEqual(fmt.format(0.0000000001234567890), '0.000000000')
+
+        fmt = FormatSigFig(2, 1, 6)
+        self.assertEqual(fmt.format(1000000), '1000000.0')
+        self.assertEqual(fmt.format(0.11111), '0.11')
+        self.assertEqual(fmt.format(0.0000011111), '0.000001')
+
+        self.assertEqual(fmt.format(-1000000), '-1000000.0')
+        self.assertEqual(fmt.format(-0.11111), '-0.11')
+        self.assertEqual(fmt.format(-0.0000011111), '-0.000001')

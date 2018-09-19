@@ -19,6 +19,9 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 import logging
+from math import log10
+
+from .compat import floor
 
 
 class FormattedLogger(object):
@@ -152,3 +155,29 @@ def matches_constraint(value, constraint):
         return (value in constraint)
 
     return (value == constraint)
+
+
+class FormatSigFig(object):
+    """
+    Class for formatting numbers to a given number of significant figures.
+
+    Formats numbers to a certain number of significant figures, but
+    without using exponent notation.  Only the number of decimal places
+    is controlled -- any number with the requested number of figures,
+    or more, will be simply be formatted with zero decimal places.
+
+    Instances of this class are intended to work like format strings,
+    in that they have a `format` method which is called with the number
+    to be formatted.
+    """
+
+    def __init__(self, digits=3, digits_min=0, digits_max=9):
+        self.digits = digits
+        self.min = digits_min
+        self.max = digits_max
+
+    def format(self, value):
+        mag = - floor(log10(abs(value)))
+        dp = min(self.max, max(self.min, self.digits + mag - 1))
+
+        return '{{:.{:d}f}}'.format(dp).format(value)
