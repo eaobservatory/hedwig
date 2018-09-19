@@ -23,7 +23,7 @@ from datetime import datetime
 
 from ..config import get_countries
 from ..email.format import render_email_template
-from ..error import ConsistencyError, Error, \
+from ..error import ConsistencyError, DatabaseIntegrityError, Error, \
     MultipleRecords, NoSuchRecord, NoSuchValue, \
     UserError
 from ..type.collection import EmailCollection, \
@@ -956,10 +956,16 @@ class PeopleView(object):
                                            person_id=person.id))
 
             elif 'submit_confirm' in form:
-                db.merge_person_records(
-                    main_person_id=person.id,
-                    duplicate_person_id=duplicate.id,
-                    duplicate_person_registered=True)
+                try:
+                    db.merge_person_records(
+                        main_person_id=person.id,
+                        duplicate_person_id=duplicate.id,
+                        duplicate_person_registered=True)
+                except DatabaseIntegrityError:
+                    raise ErrorPage(
+                        'The profiles could not be merged. They may be '
+                        'members/reviewers of the same proposal or '
+                        'members of the same review group.')
 
                 flash('The person profiles have been merged.')
 
