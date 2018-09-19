@@ -31,6 +31,7 @@ from ...type.misc import SectionedList
 from ...type.simple import \
     CalculatorMode, CalculatorResult, CalculatorValue, \
     RouteInfo
+from ...util import FormatSigFig
 from ...view.util import parse_time
 from .calculator_jcmt import JCMTCalculator
 from .type import JCMTWeather
@@ -240,7 +241,7 @@ class HeterodyneCalculator(JCMTCalculator):
                 inputs.extend([
                     CalculatorValue(
                         'rms', 'Target sensitivity',
-                        '\u03c3', '{:.3f}', 'K TA*'),
+                        '\u03c3', FormatSigFig(3), 'K TA*'),
                 ], section='req')
             else:
                 raise CalculatorError('Unknown version.')
