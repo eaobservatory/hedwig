@@ -411,7 +411,7 @@ class PeopleView(object):
         try:
             user_name = db.get_user_name(user_id=user_id)
         except NoSuchRecord:
-            user_name = None
+            raise HTTPNotFound('User not found.')
 
         person = None
         try:
