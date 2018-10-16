@@ -445,6 +445,24 @@ proposal_text = Table(
     Index('idx_text_prop_role', 'proposal_id', 'role', unique=True),
     **table_opts)
 
+
+def _fig_cols():
+    return [
+        Column('sort_order', Integer, nullable=False),
+        Column('type', Integer, nullable=False),
+        Column('state', Integer, nullable=False, index=True),
+        Column('figure', LargeBinary(2**24 - 1), nullable=False),
+        Column('md5sum', Unicode(40), nullable=False),
+        Column('filename', Unicode(255), nullable=False),
+        Column('uploaded', DateTime(), nullable=False),
+        Column('uploader', None,
+               ForeignKey('person.id',
+                          onupdate='RESTRICT', ondelete='RESTRICT'),
+               nullable=False),
+        Column('caption', UnicodeText, nullable=False),
+    ]
+
+
 proposal_fig = Table(
     'proposal_fig',
     metadata,
@@ -452,19 +470,16 @@ proposal_fig = Table(
     Column('proposal_id', None,
            ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
-    Column('sort_order', Integer, nullable=False),
     Column('role', Integer, nullable=False),
-    Column('type', Integer, nullable=False),
-    Column('state', Integer, nullable=False, index=True),
-    Column('figure', LargeBinary(2**24 - 1), nullable=False),
-    Column('md5sum', Unicode(40), nullable=False),
-    Column('filename', Unicode(255), nullable=False),
-    Column('uploaded', DateTime(), nullable=False),
-    Column('uploader', None,
-           ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
-           nullable=False),
-    Column('caption', UnicodeText, nullable=False),
+    *_fig_cols(),
     **table_opts)
+
+
+def _fig_preview_cols():
+    return [
+        Column('preview', LargeBinary(2**24 - 1), nullable=False),
+    ]
+
 
 proposal_fig_preview = Table(
     'proposal_fig_preview',
@@ -473,8 +488,15 @@ proposal_fig_preview = Table(
            ForeignKey('proposal_fig.id',
                       onupdate='RESTRICT', ondelete='CASCADE'),
            primary_key=True, nullable=False),
-    Column('preview', LargeBinary(2**24 - 1), nullable=False),
+    *_fig_preview_cols(),
     **table_opts)
+
+
+def _fig_thumbnail_cols():
+    return [
+        Column('thumbnail', LargeBinary(2**24 - 1), nullable=False),
+    ]
+
 
 proposal_fig_thumbnail = Table(
     'proposal_fig_thumbnail',
@@ -483,7 +505,7 @@ proposal_fig_thumbnail = Table(
            ForeignKey('proposal_fig.id',
                       onupdate='RESTRICT', ondelete='CASCADE'),
            primary_key=True, nullable=False),
-    Column('thumbnail', LargeBinary(2**24 - 1), nullable=False),
+    *_fig_thumbnail_cols(),
     **table_opts)
 
 proposal_pdf = Table(
@@ -584,6 +606,36 @@ review_calculation = Table(
            ForeignKey('reviewer.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
     *_calculation_cols(),
+    **table_opts)
+
+review_fig = Table(
+    'review_fig',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('reviewer_id', None,
+           ForeignKey('reviewer.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    *_fig_cols(),
+    **table_opts)
+
+review_fig_preview = Table(
+    'review_fig_preview',
+    metadata,
+    Column('fig_id', None,
+           ForeignKey('review_fig.id',
+                      onupdate='RESTRICT', ondelete='CASCADE'),
+           primary_key=True, nullable=False),
+    *_fig_preview_cols(),
+    **table_opts)
+
+review_fig_thumbnail = Table(
+    'review_fig_thumbnail',
+    metadata,
+    Column('fig_id', None,
+           ForeignKey('review_fig.id',
+                      onupdate='RESTRICT', ondelete='CASCADE'),
+           primary_key=True, nullable=False),
+    *_fig_thumbnail_cols(),
     **table_opts)
 
 semester = Table(

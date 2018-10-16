@@ -679,6 +679,14 @@ class ReviewerCollection(ResultCollection, CollectionByProposal):
                     yield member
 
 
+class ReviewFigureCollection(ResultCollection, CollectionOrdered):
+    """
+    Class representing a collection of figures attached to a review.
+    """
+
+    pass
+
+
 class TargetCollection(ResultCollection, CollectionOrdered,
                        CollectionByProposal):
     """

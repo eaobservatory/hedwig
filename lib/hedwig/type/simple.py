@@ -242,6 +242,12 @@ ReviewCalculation = namedtuple(
     'ReviewCalculation',
     [x.name for x in review_calculation.columns])
 
+ReviewFigureInfo = namedtuple(
+    'ReviewFigureInfo',
+    ['id', 'reviewer_id', 'sort_order', 'type', 'state', 'caption',
+     'md5sum', 'filename', 'uploaded', 'uploader', 'uploader_name',
+     'has_preview'])
+
 RouteInfo = namedtuple(
     'RouteInfo',
     ['template', 'rule', 'endpoint', 'func', 'options'])
