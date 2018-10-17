@@ -333,6 +333,13 @@ def register_template_utils(app):
             return 'Unknown state'
 
     @app.template_filter()
+    def text_role_name(value, role_class):
+        try:
+            return role_class.get_name(value)
+        except KeyError:
+            return 'Unknown role'
+
+    @app.template_filter()
     def title_name(value):
         try:
             return PersonTitle.get_name(value)

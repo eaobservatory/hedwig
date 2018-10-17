@@ -26,7 +26,7 @@ from jinja2.runtime import Undefined
 
 from hedwig.astro.coord import CoordSystem
 from hedwig.type.enum import Assessment, AttachmentState, \
-    BaseCallType, BaseReviewerRole, CallState, \
+    BaseCallType, BaseReviewerRole, BaseTextRole, CallState, \
     MessageState, MessageThreadType, ProposalState, \
     PublicationType, ReviewState, SemesterState, UserLogEvent
 from hedwig.web.template_util import Counter
@@ -274,6 +274,12 @@ class TemplateUtilTestCase(WebAppTestCase):
 
         self.assertEqual(f(999), 'Unknown state')
         self.assertEqual(f(SemesterState.PAST), 'Past')
+
+    def test_filter_text_role(self):
+        f = self.app.jinja_env.filters['text_role_name']
+
+        self.assertEqual(f(999, BaseTextRole), 'Unknown role')
+        self.assertEqual(f(BaseTextRole.ABSTRACT, BaseTextRole), 'Abstract')
 
     def test_filter_user_log_event(self):
         f = self.app.jinja_env.filters['user_log_event_description']
