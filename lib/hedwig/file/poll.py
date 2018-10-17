@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -19,7 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from ..config import get_config
-from ..error import ConsistencyError, ConversionError
+from ..error import ConsistencyError, ConversionError, FormattedError
 from ..type.enum import AttachmentState, FigureType
 from ..util import get_logger
 from .image import create_thumbnail_and_preview
@@ -80,37 +80,82 @@ def process_proposal_figure(db, dry_run=False):
     Function to process pending proposal figure uploads.
     """
 
+    return _process_figure(db, 'proposal', dry_run=dry_run)
+
+
+def process_review_figure(db, dry_run=False):
+    """
+    Function to process pending review figure uploads.
+    """
+
+    return _process_figure(db, 'review', dry_run=dry_run)
+
+
+def _process_figure(db, _type, dry_run=False):
+    if _type == 'proposal':
+        config_section = 'proposal_fig'
+
+        figures = db.search_proposal_figure(state=AttachmentState.NEW)
+
+        def get_figure(fig_id):
+            return db.get_proposal_figure(
+                proposal_id=None, role=None, id_=fig_id)
+
+        def set_state(fig_id, state, state_prev=None):
+            db.update_proposal_figure(
+                proposal_id=None, role=None, fig_id=fig_id,
+                state=state, state_prev=state_prev)
+
+        set_thumbnail = db.set_proposal_figure_thumbnail
+        set_preview = db.set_proposal_figure_preview
+
+    elif _type == 'review':
+        config_section = 'review_fig'
+
+        figures = db.search_review_figure(state=AttachmentState.NEW)
+
+        def get_figure(fig_id):
+            return db.get_review_figure(
+                reviewer_id=None, id_=fig_id)
+
+        def set_state(fig_id, state, state_prev=None):
+            db.update_review_figure(
+                reviewer_id=None, fig_id=fig_id,
+                state=state, state_prev=state_prev)
+
+        set_thumbnail = db.set_review_figure_thumbnail
+        set_preview = db.set_review_figure_preview
+
+    else:
+        raise FormattedError('Unknown figure type: {}', _type)
+
     config = get_config()
     thumb_preview_options = {
         'max_thumb': (
-            int(config.get('proposal_fig', 'max_thumb_width')),
-            int(config.get('proposal_fig', 'max_thumb_height'))),
+            int(config.get(config_section, 'max_thumb_width')),
+            int(config.get(config_section, 'max_thumb_height'))),
         'max_preview': (
-            int(config.get('proposal_fig', 'max_preview_width')),
-            int(config.get('proposal_fig', 'max_preview_height'))),
+            int(config.get(config_section, 'max_preview_width')),
+            int(config.get(config_section, 'max_preview_height'))),
     }
     pdf_ps_options = {
-        'resolution': int(config.get('proposal_fig', 'resolution')),
-        'downscale': int(config.get('proposal_fig', 'downscale')),
+        'resolution': int(config.get(config_section, 'resolution')),
+        'downscale': int(config.get(config_section, 'downscale')),
     }
 
     n_processed = 0
 
-    for figure_info in db.search_proposal_figure(
-            state=AttachmentState.NEW).values():
-        logger.debug('Processing figure {}', figure_info.id)
+    for figure_info in figures.values():
+        logger.debug('Processing {} figure {}', _type, figure_info.id)
 
         try:
             if not dry_run:
-                db.update_proposal_figure(
-                    proposal_id=None, role=None, fig_id=figure_info.id,
-                    state=AttachmentState.PROCESSING,
-                    state_prev=AttachmentState.NEW)
+                set_state(figure_info.id, AttachmentState.PROCESSING,
+                          state_prev=AttachmentState.NEW)
         except ConsistencyError:
             continue
 
-        figure = db.get_proposal_figure(
-            proposal_id=None, role=None, id_=figure_info.id)
+        figure = get_figure(figure_info.id)
 
         try:
             # Create figure preview if necessary.
@@ -154,16 +199,14 @@ def process_proposal_figure(db, dry_run=False):
             # Store the processed data.
             if not dry_run:
                 if preview is not None:
-                    db.set_proposal_figure_preview(figure_info.id, preview)
+                    set_preview(figure_info.id, preview)
 
-                db.set_proposal_figure_thumbnail(figure_info.id, tp.thumbnail)
+                set_thumbnail(figure_info.id, tp.thumbnail)
 
             try:
                 if not dry_run:
-                    db.update_proposal_figure(
-                        proposal_id=None, role=None, fig_id=figure_info.id,
-                        state=AttachmentState.READY,
-                        state_prev=AttachmentState.PROCESSING)
+                    set_state(figure_info.id, AttachmentState.READY,
+                              state_prev=AttachmentState.PROCESSING)
 
                 n_processed += 1
 
@@ -171,13 +214,13 @@ def process_proposal_figure(db, dry_run=False):
                 continue
 
         except Exception as e:
-            logger.exception('Error converting figure {}', figure_info.id)
+            logger.exception(
+                'Error converting {} figure {}', _type, figure_info.id)
 
             if not dry_run:
                 try:
-                    db.update_proposal_figure(
-                        proposal_id=None, role=None, fig_id=figure_info.id,
-                        state=AttachmentState.ERROR)
+                    set_state(figure_info.id, AttachmentState.ERROR)
+
                 except:
                     # It's possible that whatever prevented us processing the
                     # figure also prevents us updating the state, e.g.

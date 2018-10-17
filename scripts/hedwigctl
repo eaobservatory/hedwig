@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2017 East Asian Observatory.
+# Copyright (C) 2015-2018 East Asian Observatory.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -284,11 +284,16 @@ def poll_email(db, dry_run):
 
 @poll_option
 def poll_figure(db, dry_run):
-    from hedwig.file.poll import process_proposal_figure
+    from hedwig.file.poll import \
+        process_proposal_figure, process_review_figure
 
-    logger.debug('Checking for figures to process')
+    logger.debug('Checking for proposal figures to process')
 
     n_processed = process_proposal_figure(db, dry_run=dry_run)
+
+    logger.debug('Checking for review figures to process')
+
+    n_processed += process_review_figure(db, dry_run=dry_run)
 
     if n_processed:
         logger.info('Processed {} figure(s)', n_processed)

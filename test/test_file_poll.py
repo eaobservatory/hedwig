@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2018 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,7 +24,7 @@ from pymoc import MOC
 
 from hedwig.config import get_config
 from hedwig.file.poll import process_moc, \
-    process_proposal_figure, process_proposal_pdf
+    process_proposal_figure, process_proposal_pdf, process_review_figure
 from hedwig.type.enum import AttachmentState, BaseTextRole, \
     FigureType, FormatType
 
@@ -79,6 +79,31 @@ class FilePollTestCase(DBTestCase):
 
         # The figure should now be marked READY.
         figures = self.db.search_proposal_figure(proposal_id=proposal_id)
+        self.assertEqual(list(figures.keys()), [figure_id])
+        self.assertEqual(figures[figure_id].state, AttachmentState.READY)
+
+    def test_poll_review_figure(self):
+        # Should initially find nothing to process.
+        self.assertEqual(process_review_figure(self.db), 0)
+
+        # Create a proposal and add a figure.
+        proposal_id = self._create_test_proposal()
+        reviewer_id = self._create_test_reviewer(proposal_id)
+        person_id = self.db.add_person('Figure Uploader')
+        figure_id = self.db.add_review_figure(
+            reviewer_id, FigureType.PNG, example_png, 'Dummy Caption',
+            'dummy.png', person_id)
+
+        # The figure should initially be marked NEW.
+        figures = self.db.search_review_figure(reviewer_id=reviewer_id)
+        self.assertEqual(list(figures.keys()), [figure_id])
+        self.assertEqual(figures[figure_id].state, AttachmentState.NEW)
+
+        # Should now find 1 figure to process.
+        self.assertEqual(process_review_figure(self.db), 1)
+
+        # The figure should now be marked READY.
+        figures = self.db.search_review_figure(reviewer_id=reviewer_id)
         self.assertEqual(list(figures.keys()), [figure_id])
         self.assertEqual(figures[figure_id].state, AttachmentState.READY)
 
