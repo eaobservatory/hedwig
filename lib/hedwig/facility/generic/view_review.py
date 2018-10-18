@@ -1268,8 +1268,17 @@ class GenericReview(object):
         return {}
 
     @with_review(permission=PermissionType.VIEW)
-    def view_review_calculation_manage(self, db, reviewer, proposal, can, form):
-        return self._view_calculation_manage(db, proposal, reviewer, can, form)
+    def view_review_calculation_manage(
+            self, db, reviewer, proposal, can, form):
+        role_class = self.get_reviewer_roles()
+
+        return self._view_calculation_manage(
+            db, proposal, reviewer, can, form,
+            title='{}:  Calculations'.format(
+                role_class.get_name_with_review(reviewer.role)),
+            target_redirect=url_for(
+                '.review_edit', reviewer_id=reviewer.id,
+                _anchor='calculations'))
 
     @with_review(permission=PermissionType.VIEW)
     def view_review_calculation_view(

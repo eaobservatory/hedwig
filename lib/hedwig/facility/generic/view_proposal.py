@@ -1679,9 +1679,16 @@ class GenericProposal(object):
 
     @with_proposal(permission=PermissionType.VIEW)
     def view_calculation_manage(self, db, proposal, can, form):
-        return self._view_calculation_manage(db, proposal, None, can, form)
+        return self._view_calculation_manage(
+            db, proposal, None, can, form,
+            title='{} Calculations'.format('Manage' if can.edit else 'View'),
+            target_redirect=url_for(
+                '.proposal_view', proposal_id=proposal.id,
+                _anchor='calculations'))
 
-    def _view_calculation_manage(self, db, proposal, reviewer, can, form):
+    def _view_calculation_manage(
+            self, db, proposal, reviewer, can, form,
+            title, target_redirect):
         """
         Internal method to handle the calculation management page for either
         proposals or reviews.
@@ -1690,13 +1697,10 @@ class GenericProposal(object):
         proposal_code = self.make_proposal_code(db, proposal)
 
         if reviewer is None:
-            title = '{} Calculations'.format('Manage' if can.edit else 'View')
             calculations = db.search_calculation(proposal_id=proposal.id)
 
         else:
-            role_class = self.get_reviewer_roles()
-            title = '{}: {}:  Calculations'.format(
-                proposal_code, role_class.get_name_with_review(reviewer.role))
+            title = '{}: {}'.format(proposal_code, title)
             calculations = db.search_review_calculation(
                 reviewer_id=reviewer.id)
 
@@ -1725,22 +1729,16 @@ class GenericProposal(object):
                     (n_insert, n_update, n_delete) = \
                         db.sync_proposal_calculation(proposal.id, calculations)
 
-                    target = url_for(
-                        '.proposal_view', proposal_id=proposal.id,
-                        _anchor='calculations')
                 else:
                     (n_insert, n_update, n_delete) = \
                         db.sync_review_calculation(reviewer.id, calculations)
-
-                    target = url_for(
-                        '.review_edit', reviewer_id=reviewer.id)
 
                 if n_delete:
                     flash('{} {} been removed.', n_delete,
                           ('calculation has' if n_delete == 1 else
                            'calculations have'))
 
-                raise HTTPRedirect(target)
+                raise HTTPRedirect(target_redirect)
 
             except UserError as e:
                 message = e.message
@@ -1769,7 +1767,8 @@ class GenericProposal(object):
         # Retrieve the calculation to identify the calculator and mode.
         try:
             calculation = db.search_calculation(
-                calculation_id=calculation_id, proposal_id=proposal.id).get_single()
+                calculation_id=calculation_id,
+                proposal_id=proposal.id).get_single()
         except NoSuchRecord:
             raise HTTPNotFound('Calculation not found.')
 
