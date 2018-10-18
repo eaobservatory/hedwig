@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict, namedtuple
 
 from astropy import coordinates
-from astropy.units import degree, hourangle
+from astropy.units import degree, hourangle, UnitsError
 
 from ..error import UserError
 
@@ -116,11 +116,21 @@ def parse_coord(system, x, y, name):
     try:
         return coordinates.SkyCoord(x, y, unit=info.unit, frame=info.frame)
     except coordinates.RangeError as e:
-        raise UserError('Could not parse coordinates for "{}": {!s}',
-                        name, e)
+        raise UserError(
+            'Could not parse coordinates for "{}": {!s} (range error)',
+            name, e)
     except ValueError as e:
-        raise UserError('Could not parse coordinates for "{}": {!s}',
-                        name, e)
+        raise UserError(
+            'Could not parse coordinates for "{}": {!s} (value error)',
+            name, e)
+    except UnitsError as e:
+        raise UserError(
+            'Could not parse coordinates for "{}": {!s} (units error)',
+            name, e)
+    except Exception as e:
+        raise UserError(
+            'Could not parse coordinates for "{}": {!s} (unexpected error)',
+            name, e)
 
 
 def format_coord(system, coord):
