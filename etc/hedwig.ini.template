@@ -34,6 +34,15 @@ pdf_renderer=ghostscript
 resolution=120
 downscale=4
 
+[review_fig]
+max_thumb_width=100
+max_thumb_height=100
+max_preview_width=600
+max_preview_height=600
+pdf_renderer=ghostscript
+resolution=120
+downscale=4
+
 [email]
 server=
 from=

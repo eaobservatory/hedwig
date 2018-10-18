@@ -332,6 +332,8 @@ class EnumTypeTestCase(TestCase):
             self.assertIsInstance(info.assessment, bool)
             self.assertIsInstance(info.rating, bool)
             self.assertIsInstance(info.weight, bool)
+            self.assertIsInstance(info.calc, bool)
+            self.assertIsInstance(info.figure, bool)
 
         self.assertFalse(BaseReviewerRole.is_valid(999999))
 
@@ -356,6 +358,10 @@ class EnumTypeTestCase(TestCase):
         self.assertEqual(BaseReviewerRole.get_feedback_roles(), [
             BaseReviewerRole.CTTEE_PRIMARY,
             BaseReviewerRole.CTTEE_SECONDARY,
+        ])
+
+        self.assertEqual(BaseReviewerRole.get_figure_roles(), [
+            BaseReviewerRole.TECH,
         ])
 
         self.assertEqual(

@@ -710,6 +710,57 @@ def create_facility_blueprint(db, facility):
         return facility.view_review_calculation_view(
             db, reviewer_id, review_calculation_id)
 
+    @bp.route('/review/<int:reviewer_id>/figure/new', methods=['GET', 'POST'])
+    @require_auth(require_person=True)
+    @facility_template('figure_edit.html')
+    def review_new_figure(reviewer_id):
+        return facility.view_review_edit_figure(
+            db, reviewer_id, None,
+            (request.form if request.method == 'POST' else None),
+            (request.files['file'] if request.method == 'POST' else None))
+
+    @bp.route(
+        '/review/<int:reviewer_id>/figure/<int:fig_id>/edit',
+        methods=['GET', 'POST'])
+    @require_auth(require_person=True)
+    @facility_template('figure_edit.html')
+    def review_edit_figure(reviewer_id, fig_id):
+        return facility.view_review_edit_figure(
+            db, reviewer_id, fig_id,
+            (request.form if request.method == 'POST' else None),
+            (request.files['file'] if request.method == 'POST' else None))
+
+    @bp.route('/review/<int:reviewer_id>/figure/<int:fig_id>/<md5sum>')
+    @require_auth(require_person=True)
+    @send_file(allow_cache=True)
+    def review_view_figure(reviewer_id, fig_id, md5sum):
+        return facility.view_review_view_figure(
+            db, reviewer_id, fig_id, md5sum)
+
+    @bp.route('/review/<int:reviewer_id>/figure/<int:fig_id>/thumbnail/'
+              '<md5sum>')
+    @require_auth(require_person=True)
+    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
+    def review_view_figure_thumbnail(reviewer_id, fig_id, md5sum):
+        return facility.view_review_view_figure(
+            db, reviewer_id, fig_id, md5sum, 'thumbnail')
+
+    @bp.route('/review/<int:reviewer_id>/figure/<int:fig_id>/preview/<md5sum>')
+    @require_auth(require_person=True)
+    @send_file(fixed_type=FigureType.PNG, allow_cache=True)
+    def review_view_figure_preview(reviewer_id, fig_id, md5sum):
+        return facility.view_review_view_figure(
+            db, reviewer_id, fig_id, md5sum, 'preview')
+
+    @bp.route('/review/<int:reviewer_id>/figure/manage',
+              methods=['GET', 'POST'])
+    @require_auth(require_person=True)
+    @facility_template('figure_manage.html')
+    def review_manage_figure(reviewer_id):
+        return facility.view_review_manage_figure(
+            db, reviewer_id,
+            (request.form if request.method == 'POST' else None))
+
     # Register custom routes.
     for route in facility.get_custom_routes():
         options = {}

@@ -4,14 +4,20 @@
 
 {% set update_counter = create_counter(0) %}
 
-{% macro processing_table(entries, checkbox_fmt) %}
+{% macro processing_table(entries, checkbox_fmt, is_review=False) %}
     {% if entries %}
         <table>
             <tr>
                 <th>State</th>
                 <th>Date (UT)</th>
                 <th>Proposal</th>
-                <th>Proposal state</th>
+                {% if is_review %}
+                    <th>Review</th>
+                    <th>Review state</th>
+                {% else %}
+                    <th>Proposal state</th>
+                    <th>Section</th>
+                {% endif %}
                 <th>Uploader</th>
                 <th>File</th>
                 <th>MD5 sum</th>
@@ -21,8 +27,14 @@
                 <tr>
                     <td>{{ entry.state | attachment_state_name }}</td>
                     <td>{{ entry.uploaded | format_datetime }}</td>
-                    <td><a href="{{ url_for(entry.facility_code | fmt('{}.proposal_view'), proposal_id=entry.proposal_id) }}">{{ entry.proposal.code }}</a></td>
-                    <td>{{ entry.proposal.state | proposal_state_name }}</td>
+                    <td><a href="{{ url_for(entry.facility_code | fmt('{}.proposal_view'), proposal_id=entry.proposal.id) }}">{{ entry.proposal.code }}</a></td>
+                    {% if is_review %}
+                        <td><a href="{{ url_for(entry.facility_code | fmt('{}.review_edit'), reviewer_id=entry.reviewer.id) }}">{{ entry.reviewer.role | reviewer_role_name(entry.reviewer_roles) }}</a></td>
+                        <td>{{ entry.reviewer.review_state | review_state_name }}</td>
+                    {% else %}
+                        <td>{{ entry.proposal.state | proposal_state_name }}</td>
+                        <td>{{ entry.role | text_role_name(entry.text_roles) }}</td>
+                    {% endif %}
                     <td><a href="{{ url_for('people.person_view', person_id=entry.uploader) }}">{{ entry.uploader_name }}</a></td>
                     <td>{{ caller(entry) }}</td>
                     <td>{{ entry.md5sum }}</td>
@@ -49,13 +61,19 @@
     <h2>PDF Files</h2>
 
     {% call(entry) processing_table(pdfs, 'pdf_{}') %}
-        <a href="{{ url_for(entry.facility_code | fmt('{}.case_view_pdf'), proposal_id=entry.proposal_id, role=entry.role, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
+        <a href="{{ url_for(entry.facility_code | fmt('{}.case_view_pdf'), proposal_id=entry.proposal.id, role=entry.role, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
     {% endcall %}
 
-    <h2>Figures</h2>
+    <h2>Proposal Figures</h2>
 
-    {% call(entry) processing_table(figures, 'fig_{}') %}
-        <a href="{{ url_for(entry.facility_code | fmt('{}.case_view_figure'), proposal_id=entry.proposal_id, role=entry.role, fig_id=entry.id, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
+    {% call(entry) processing_table(prop_figures, 'prop_fig_{}') %}
+        <a href="{{ url_for(entry.facility_code | fmt('{}.case_view_figure'), proposal_id=entry.proposal.id, role=entry.role, fig_id=entry.id, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
+    {% endcall %}
+
+    <h2>Review Figures</h2>
+
+    {% call(entry) processing_table(rev_figures, 'rev_fig_{}', is_review=True) %}
+        <a href="{{ url_for(entry.facility_code | fmt('{}.review_view_figure'), reviewer_id=entry.reviewer.id, fig_id=entry.id, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
     {% endcall %}
 
     <h2>Publications</h2>

@@ -722,48 +722,48 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
         ('name', 'unique', 'text', 'assessment', 'rating', 'weight',
          'cttee', 'name_review', 'feedback_direct', 'feedback_indirect',
          'note', 'invite',
-         'edit_rev', 'edit_fr', 'rating_hide', 'calc',
+         'edit_rev', 'edit_fr', 'rating_hide', 'calc', 'figure',
          'display_class', 'url_path', 'help_page'))
 
     # Options:  Unique Text   Ass/nt Rating Weight Cttee  "Rev"  Fbk_dr Fbk_id
-    #           Note   Invite E.Rev  E.FR   Ra.Hi. Calc   Disp.cl.
+    #           Note   Invite E.Rev  E.FR   Ra.Hi. Calc   Fig.  Disp.cl.
     #           URL           Help_page
     _info = OrderedDict((
         (TECH,
             RoleInfo(
                 'Technical',
                 True,  True,  True,  False, False, False, True,  False, False,
-                True,  False, True,  True,  False, True,  'tech',
+                True,  False, True,  True,  False, True,  True,  'tech',
                 'technical',  'technical')),
         (EXTERNAL,
             RoleInfo(
                 'External',
                 False, True,  False, True,  False, False, True,  False, False,
-                False, True,  True,  False, False, False, 'ext',
+                False, True,  True,  False, False, False, False, 'ext',
                 'external',   'external')),
         (CTTEE_PRIMARY,
             RoleInfo(
                 'Committee Primary',
                 True,  True,  False, True,  True,  True,  True,  True,  False,
-                True,  False, True,  True,  True,  False, 'cttee',
+                True,  False, True,  True,  True,  False, False, 'cttee',
                 'committee',  'committee')),
         (CTTEE_SECONDARY,
             RoleInfo(
                 'Committee Secondary',
                 False, True,  False, True,  True,  True,  True,  False, True,
-                True,  False, True,  True,  True,  False, 'cttee',
+                True,  False, True,  True,  True,  False, False, 'cttee',
                 None,         'committee')),
         (CTTEE_OTHER,
             RoleInfo(
                 'Committee Other',
                 False, True,  False, True,  True,  True,  True,  False, False,
-                True,  False, True,  True,  True,  False, 'cttee',
+                True,  False, True,  True,  True,  False, False, 'cttee',
                 'other',      'committee')),
         (FEEDBACK,
             RoleInfo(
                 'Feedback',
                 True,  True,  False, False, False, False, False, False, False,
-                False, False, False, True,  False, False, 'feedback',
+                False, False, False, True,  False, False, False, 'feedback',
                 'feedback',   None)),
     ))
 
@@ -808,6 +808,12 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
             states.append(ProposalState.FINAL_REVIEW)
 
         return states
+
+    @classmethod
+    def get_figure_roles(cls):
+        """Get list of roles who can save figures."""
+
+        return [k for (k, v) in cls._info.items() if v.figure]
 
     @classmethod
     def get_name_with_review(cls, role):

@@ -1,14 +1,14 @@
-{% macro render_proposal_figures(figures, proposal_id, role) %}
+{% macro render_figures(figures, url_prefix, url_args) %}
     {% if figures %}
         {% for fig in figures %}
             <figure>
                 {% if fig.state is attachment_ready %}
                     {% if fig.has_preview %}
-                        <a href="{{ url_for('.case_view_figure', proposal_id=proposal_id, role=role, fig_id=fig.id, md5sum=fig.md5sum) }}">
-                            <img src="{{  url_for('.case_view_figure_preview', proposal_id=proposal_id, role=role, fig_id=fig.id, md5sum=fig.md5sum)}}" alt="Figure {{ loop.index }}" />
+                        <a href="{{ url_for(url_prefix | fmt('.{}_view_figure'), fig_id=fig.id, md5sum=fig.md5sum, **url_args) }}">
+                            <img src="{{  url_for(url_prefix | fmt('.{}_view_figure_preview'), fig_id=fig.id, md5sum=fig.md5sum, **url_args)}}" alt="Figure {{ loop.index }}" />
                         </a>
                     {% else %}
-                        <img src="{{ url_for('.case_view_figure', proposal_id=proposal_id, role=role, fig_id=fig.id, md5sum=fig.md5sum) }}" alt="Figure {{ loop.index }}" />
+                        <img src="{{ url_for(url_prefix | fmt('.{}_view_figure'), fig_id=fig.id, md5sum=fig.md5sum, **url_args) }}" alt="Figure {{ loop.index }}" />
                     {% endif %}
                 {% elif fig.state is attachment_error %}
                     <p class="warning">
@@ -33,4 +33,82 @@
             </figure>
         {% endfor %}
     {% endif %}
+{% endmacro %}
+
+{% macro render_proposal_figures(figures, proposal_id, role) %}
+    {{ render_figures(figures, url_prefix='case', url_args={'proposal_id': proposal_id, 'role': role}) }}
+{% endmacro %}
+
+{% macro render_review_figures(figures, reviewer_id) %}
+    {{ render_figures(figures, url_prefix='review', url_args={'reviewer_id': reviewer_id}) }}
+{% endmacro %}
+
+{% macro render_figure_table(figures, url_prefix, url_args, description) %}
+    <table>
+        <tr>
+            <th colspan="2">Figure</th>
+            <th>Caption</th>
+            <th>Information</th>
+        </tr>
+        {% for figure in figures %}
+            <tr>
+                <th>{{ loop.index }}</th>
+                <td>
+                    {% if figure.state is attachment_ready %}
+                        <a href="{{ url_for(url_prefix | fmt('.{}_view_figure'), fig_id=figure.id, md5sum=figure.md5sum, **url_args) }}">
+                            <img src="{{ url_for(url_prefix | fmt('.{}_view_figure_thumbnail'), fig_id=figure.id, md5sum=figure.md5sum, **url_args) }}" />
+                        </a>
+                    {% elif figure.state is attachment_error %}
+                        <p class="warning">
+                            Error during processing
+                        </p>
+                        <p>
+                            <a href="{{ url_for(url_prefix | fmt('.{}_view_figure'), fig_id=figure.id, md5sum=figure.md5sum, **url_args) }}">View image</a>
+                        </p>
+                    {% else %}
+                        <p class="not_present">
+                            Not yet processed
+                        </p>
+
+                        <div class="formtip">
+                            <div>
+                                <p>
+                                    Your figure is in a queue, waiting to be processed.
+                                </p>
+                                <p>
+                                    If you reload this page later, you should see a thumbnail
+                                    version of the figure here.
+                                    Meanwhile you may continue working on your {{ description }}
+                                    as normal.
+                                </p>
+                            </div>
+                        </div>
+
+                        <p>
+                            <a href="{{ url_for(url_prefix | fmt('.{}_view_figure'), fig_id=figure.id, md5sum=figure.md5sum, **url_args) }}">View image</a>
+                        </p>
+                    {% endif %}
+                </td>
+                <td>
+                    {{ figure.caption | format_text }}
+                </td>
+                <td>
+                    {{ figure.filename }}
+                    <br />
+                    Uploaded:
+                    {{ figure.uploaded | format_datetime }}
+                    <br />
+                    <a href="{{ url_for(url_prefix | fmt('.{}_edit_figure'), fig_id=figure.id, **url_args) }}" id="edit_figure_{{ figure.id }}_link">Edit figure</a>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endmacro %}
+
+{% macro render_proposal_figure_table(figures, proposal_id, role) %}
+    {{ render_figure_table(figures, url_prefix='case', url_args={'proposal_id': proposal_id, 'role': role}, description='proposal') }}
+{% endmacro %}
+
+{% macro render_review_figure_table(figures, reviewer_id) %}
+    {{ render_figure_table(figures, url_prefix='review', url_args={'reviewer_id': reviewer_id}, description='review') }}
 {% endmacro %}

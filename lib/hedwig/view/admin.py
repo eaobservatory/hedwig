@@ -186,13 +186,23 @@ class AdminView(object):
                         pdf_id=id_, state=AttachmentState.NEW,
                         state_prev=state_prev)
 
-                elif param.startswith('fig_'):
-                    id_ = int(param[4:])
+                elif param.startswith('prop_fig_'):
+                    id_ = int(param[9:])
                     state_prev = int(form['prev_{}'.format(param)])
                     if state_prev == AttachmentState.NEW:
                         continue
                     db.update_proposal_figure(
                         proposal_id=None, role=None, fig_id=id_,
+                        state=AttachmentState.NEW, state_prev=state_prev)
+                    n_reset += 1
+
+                elif param.startswith('rev_fig_'):
+                    id_ = int(param[8:])
+                    state_prev = int(form['prev_{}'.format(param)])
+                    if state_prev == AttachmentState.NEW:
+                        continue
+                    db.update_review_figure(
+                        reviewer_id=None, fig_id=id_,
                         state=AttachmentState.NEW, state_prev=state_prev)
                     n_reset += 1
 
@@ -223,41 +233,68 @@ class AdminView(object):
 
         unready = AttachmentState.unready_states()
 
-        status = {
+        status_prop = {
             'pdfs': db.search_proposal_pdf(
                 with_uploader_name=True, state=unready, order_by_date=True),
-            'figures': db.search_proposal_figure(
+            'prop_figures': db.search_proposal_figure(
                 with_uploader_name=True, state=unready, order_by_date=True),
             'pubs': db.search_prev_proposal_pub(
                 with_proposal_id=True, state=unready, order_by_date=True),
         }
 
-        # Create empty proposal cache dictionaries.
+        status_rev = {
+            'rev_figures': db.search_review_figure(
+                with_uploader_name=True, state=unready, order_by_date=True),
+        }
+
+        # Create empty cache dictionaries.
         proposals = {}
-        proposal_facilities = {}
+        reviewers = {}
         clash_tool_facilities = {}
+        cache_ext = {
+            'proposal_facilities': {},
+            'facility_text_roles': {},
+            'facility_reviewer_roles': {},
+        }
 
-        ctx = {k: self._add_proposal(db, v.values(), facilities,
-                                     proposals, proposal_facilities)
-               for (k, v) in status.items()}
-
-        ctx.update({
+        ctx = {
             'title': 'Processing Status',
             'mocs': self._add_moc_facility(
                 db.search_moc(
                     facility_id=None, public=None,
                     state=unready, order_by_date=True).values(),
                 facilities, clash_tool_facilities),
-        })
+        }
+
+        for (k, v) in status_prop.items():
+            ctx[k] = self._add_proposal(
+                db, v.values(), facilities, proposals, None, **cache_ext)
+
+        for (k, v) in status_rev.items():
+            ctx[k] = self._add_proposal(
+                db, v.values(), facilities, proposals, reviewers, **cache_ext)
 
         return ctx
 
-    def _add_proposal(self, db, entries, facilities, proposals,
-                      proposal_facilities):
+    def _add_proposal(
+            self, db, entries, facilities, proposals, reviewers,
+            proposal_facilities,
+            facility_text_roles, facility_reviewer_roles):
         result = []
 
         for entry in entries:
-            proposal_id = entry.proposal_id
+            if reviewers is None:
+                reviewer = None
+                proposal_id = entry.proposal_id
+
+            else:
+                reviewer = reviewers.get(entry.reviewer_id)
+                if reviewer is None:
+                    reviewer = db.search_reviewer(
+                        reviewer_id=entry.reviewer_id,
+                        with_review=True).get_single()
+                proposal_id = reviewer.proposal_id
+
             proposal = proposals.get(proposal_id)
 
             if proposal is None:
@@ -274,13 +311,25 @@ class AdminView(object):
                 facility_code = facility.code
                 proposal_facilities[proposal_id] = facility_code
 
+                text_roles = facility.view.get_text_roles()
+                facility_text_roles[facility_code] = text_roles
+
+                reviewer_roles = facility.view.get_reviewer_roles()
+                facility_reviewer_roles[facility_code] = reviewer_roles
+
             else:
                 facility_code = proposal_facilities[proposal_id]
+                text_roles = facility_text_roles[facility_code]
+                reviewer_roles = facility_reviewer_roles[facility_code]
 
             result.append(
-                namedtuple('EntryWithProposal',
-                           entry._fields + ('proposal', 'facility_code'))(
-                    *entry, proposal=proposal, facility_code=facility_code))
+                namedtuple(
+                    'EntryWithPropRev', entry._fields + (
+                        'proposal', 'reviewer', 'facility_code',
+                        'text_roles', 'reviewer_roles'))(
+                    *entry, proposal=proposal, reviewer=reviewer,
+                    facility_code=facility_code,
+                    text_roles=text_roles, reviewer_roles=reviewer_roles))
 
         return result
 

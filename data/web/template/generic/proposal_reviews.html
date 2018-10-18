@@ -4,6 +4,7 @@
 {% set help_link=url_for('help.admin_page', page_name='review_proposal') %}
 {% from 'macro/proposal_summary.html' import render_proposal_summary %}
 {% from 'macro/calculation.html' import render_calculation_title, render_calculation %}
+{% from 'macro/figure.html' import render_review_figures %}
 
 {% block content %}
 <h2>Proposal Information</h2>
@@ -57,9 +58,10 @@
             {% endset %}
             {% set show_review = (row_review_text is not none_or_whitespace) %}
             {% set show_calc = (true if review.calculations else false) %}
+            {% set show_fig = (true if review.figures else false) %}
             {% set show_note = (review.review_note is not none_or_whitespace) %}
             <tr class="spacer_above">
-                <td rowspan="{{ (show_review, show_calc, show_note) | count_true + 1 }}">
+                <td rowspan="{{ (show_review, show_calc, show_fig, show_note) | count_true + 1 }}">
                     {% if review.can_edit %}
                         <a href="{{ url_for('.review_edit', reviewer_id=review.id, referrer='pr') }}">{{ review.role | reviewer_role_name(facility_role_class) }}</a>
                     {% else %}
@@ -147,6 +149,13 @@
                                 <a href="{{ url_for('.review_calculation_manage', reviewer_id=review.id) }}">View calculation details</a>
                             </p>
                         </nav>
+                    </td>
+                </tr>
+            {% endif %}
+            {% if show_fig %}
+                <tr>
+                    <td colspan="{{ review_info_columns | length + 3 }}">
+                        {{ render_review_figures(review.figures.values(), review.id) }}
                     </td>
                 </tr>
             {% endif %}

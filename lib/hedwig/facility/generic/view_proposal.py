@@ -1347,14 +1347,11 @@ class GenericProposal(object):
 
     @with_proposal(permission=PermissionType.EDIT)
     def view_case_edit_figure(self, db, proposal, can, fig_id, role,
-                              form, file):
+                              form, file_):
         role_class = self.get_text_roles()
         code = role_class.short_name(role)
         name = role_class.get_name(role)
-        max_size = int(get_config().get('upload', 'max_fig_size'))
         fig_limit = getattr(proposal, code + '_fig_lim')
-        word_limit = proposal.capt_word_lim
-        message = None
 
         if fig_id is None:
             # We are trying to add a new figure -- check whether this is
@@ -1370,19 +1367,36 @@ class GenericProposal(object):
                     'The {} already has the maximum number of figures.',
                     name.lower())
 
-            figure = null_tuple(ProposalFigureInfo)._replace(caption='')
+            figure = null_tuple(ProposalFigureInfo)._replace(
+                caption='', role=role)
 
             target = url_for('.case_new_figure',
                              proposal_id=proposal.id, role=role)
 
         else:
-            figure = db.search_proposal_figure(
-                proposal_id=proposal.id, role=role,
-                fig_id=fig_id, with_caption=True).get_single()
+            try:
+                figure = db.search_proposal_figure(
+                    proposal_id=proposal.id, role=role,
+                    fig_id=fig_id, with_caption=True).get_single()
+            except NoSuchRecord:
+                raise HTTPNotFound('Figure not found.')
 
             target = url_for('.case_edit_figure',
                              proposal_id=proposal.id, role=role,
                              fig_id=fig_id)
+
+        return self._view_edit_figure(
+            db, form, file_, figure, proposal, None, title=name.title(),
+            target_edit=target,
+            target_redirect=url_for(
+                '.case_edit', proposal_id=proposal.id, role=role),
+            word_limit=proposal.capt_word_lim)
+
+    def _view_edit_figure(
+            self, db, form, file_, figure, proposal, reviewer,
+            title, target_edit, target_redirect, word_limit=None):
+        max_size = int(get_config().get('upload', 'max_fig_size'))
+        message = None
 
         if form is not None:
             try:
@@ -1390,24 +1404,25 @@ class GenericProposal(object):
                 # of errors later.
                 figure = figure._replace(caption=form['text'])
 
-                word_count = count_words(figure.caption)
-                if word_count > word_limit:
-                    raise UserError(
-                        'Caption is too long: {} / {} words',
-                        word_count, word_limit)
+                if word_limit is not None:
+                    word_count = count_words(figure.caption)
+                    if word_count > word_limit:
+                        raise UserError(
+                            'Caption is too long: {} / {} words',
+                            word_count, word_limit)
 
-                if file:
+                if file_:
                     try:
-                        filename = file.filename
-                        buff = file.read(max_size * 1024 * 1024)
+                        filename = file_.filename
+                        buff = file_.read(max_size * 1024 * 1024)
 
                         # Did we get all of the file within the size limit?
-                        if len(file.read(1)):
+                        if len(file_.read(1)):
                             raise UserError(
                                 'The uploaded figure was too large.')
 
                     finally:
-                        file.close()
+                        file_.close()
 
                     type_ = determine_figure_type(buff)
                     if type_ == FigureType.PDF:
@@ -1426,15 +1441,26 @@ class GenericProposal(object):
 
                     if figure.id is None:
                         # Add new figure.
-                        db.add_proposal_figure(
-                            role_class, proposal.id, role, **figure_args)
+                        if reviewer is None:
+                            role_class = self.get_text_roles()
+                            db.add_proposal_figure(
+                                role_class, proposal.id, figure.role,
+                                **figure_args)
+                        else:
+                            db.add_review_figure(
+                                reviewer.id, **figure_args)
 
                         flash('The new figure has been uploaded.')
 
                     else:
                         # Update existing figure.
-                        db.update_proposal_figure(
-                            proposal.id, role, figure.id, **figure_args)
+                        if reviewer is None:
+                            db.update_proposal_figure(
+                                proposal.id, figure.role, figure.id,
+                                **figure_args)
+                        else:
+                            db.update_review_figure(
+                                reviewer.id, figure.id, **figure_args)
 
                         flash('The replacement figure has been uploaded.')
 
@@ -1446,40 +1472,61 @@ class GenericProposal(object):
                 else:
                     # No file uploaded for an existing figure: just edit the
                     # caption.
-                    db.update_proposal_figure(proposal.id, role, figure.id,
-                                              caption=figure.caption)
+                    if reviewer is None:
+                        db.update_proposal_figure(
+                            proposal.id, figure.role, figure.id,
+                            caption=figure.caption)
+                    else:
+                        db.update_review_figure(
+                            reviewer.id, figure.id, caption=figure.caption)
 
                     flash('The figure caption has been updated.')
 
-                raise HTTPRedirect(url_for(
-                    '.case_edit', proposal_id=proposal.id, role=role))
+                raise HTTPRedirect(target_redirect)
 
             except UserError as e:
                 message = e.message
 
         return {
             'title': '{} {} Figure'.format(
-                ('New' if figure.id is None else 'Edit'), name.title()),
+                ('New' if figure.id is None else 'Edit'), title),
             'proposal_id': proposal.id,
             'proposal_code': self.make_proposal_code(db, proposal),
+            'reviewer_id': (None if reviewer is None else reviewer.id),
+            'reviewer_role': (None if reviewer is None else reviewer.role),
             'figure': figure,
             'word_limit': word_limit,
             'message': message,
             'max_size': max_size,
             'mime_types': FigureType.allowed_mime_types(),
             'mime_type_names': FigureType.allowed_type_names(),
-            'target': target,
+            'target': target_edit,
         }
 
     @with_proposal(permission=PermissionType.EDIT)
     def view_case_manage_figure(self, db, proposal, can, role, form):
         role_class = self.get_text_roles()
-        code = role_class.short_name(role)
         name = role_class.get_name(role)
+
+        return self._view_manage_figure(
+            db, form, proposal=proposal, reviewer=None,
+            role=role, title=name.title(),
+            target_edit=url_for(
+                '.case_manage_figure', proposal_id=proposal.id, role=role),
+            target_redirect=url_for(
+                '.case_edit', proposal_id=proposal.id, role=role))
+
+    def _view_manage_figure(
+            self, db, form, proposal, reviewer, role,
+            title, target_edit, target_redirect):
         message = None
 
-        figures = db.search_proposal_figure(proposal_id=proposal.id, role=role,
-                                            with_uploader_name=True)
+        if reviewer is None:
+            figures = db.search_proposal_figure(
+                proposal_id=proposal.id, role=role, with_uploader_name=True)
+        else:
+            figures = db.search_review_figure(
+                reviewer_id=reviewer.id, with_uploader_name=True)
 
         if form is not None:
             try:
@@ -1496,27 +1543,31 @@ class GenericProposal(object):
                     figures[id_] = figure._replace(
                         sort_order=int(sort_order_str))
 
-                (n_insert, n_update, n_delete) = \
-                    db.sync_proposal_figure(proposal.id, role, figures)
+                if reviewer is None:
+                    (n_insert, n_update, n_delete) = \
+                        db.sync_proposal_figure(proposal.id, role, figures)
+                else:
+                    (n_insert, n_update, n_delete) = \
+                        db.sync_review_figure(reviewer.id, figures)
 
                 if n_delete:
                     flash('{} {} been removed.', n_delete,
                           ('figure has' if n_delete == 1 else 'figures have'))
 
-                raise HTTPRedirect(url_for(
-                    '.case_edit', proposal_id=proposal.id, role=role))
+                raise HTTPRedirect(target_redirect)
 
             except UserError as e:
                 message = e.message
 
         return {
-            'title': 'Manage {} Figures'.format(name.title()),
+            'title': 'Manage {} Figures'.format(title),
             'proposal_id': proposal.id,
             'proposal_code': self.make_proposal_code(db, proposal),
+            'reviewer_id': (None if reviewer is None else reviewer.id),
+            'reviewer_role': (None if reviewer is None else reviewer.role),
             'role': role,
             'message': message,
-            'target': url_for('.case_manage_figure',
-                              proposal_id=proposal.id, role=role),
+            'target': target_edit,
             'figures': figures,
         }
 

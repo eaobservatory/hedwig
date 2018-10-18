@@ -38,7 +38,7 @@ from ...type.enum import AffiliationType, Assessment, \
     FormatType, GroupType, \
     MessageThreadType, PermissionType, PersonTitle, ProposalState, ReviewState
 from ...type.simple import Affiliation, Link, MemberPIInfo, \
-    ProposalWithCode, Reviewer
+    ProposalWithCode, Reviewer, ReviewFigureInfo
 from ...type.util import null_tuple, \
     with_can_edit, with_can_view, with_can_view_edit
 
@@ -58,9 +58,9 @@ ProposalWithReviewerPersons = namedtuple(
     ProposalWithCode._fields + (
         'reviewer_person_ids',))
 
-ReviewerWithCalculations = namedtuple(
-    'ReviewerWithCalculations', Reviewer._fields + (
-        'calculations', 'can_view', 'can_edit'))
+ReviewerWithCalcFig = namedtuple(
+    'ReviewerWithCalcFig', Reviewer._fields + (
+        'calculations', 'figures', 'can_view', 'can_edit'))
 
 
 class GenericReview(object):
@@ -1194,6 +1194,14 @@ class GenericReview(object):
         else:
             calculations = None
 
+        # If this role allows figures, retrieve any which are present.
+        if role_info.figure and (reviewer.id is not None):
+            figures = db.search_review_figure(
+                reviewer_id=reviewer.id,
+                with_caption=True, with_has_preview=True)
+        else:
+            figures = None
+
         ctx = {
             'title': '{}: {} {}'.format(
                 proposal_code,
@@ -1213,6 +1221,7 @@ class GenericReview(object):
                 role=reviewer.role),
             'calculators': (self.calculators if role_info.calc else None),
             'calculations': calculations,
+            'figures': figures,
         }
 
         ctx.update(self._view_review_edit_extra(
@@ -1284,6 +1293,82 @@ class GenericReview(object):
 
         return view_func(review_calculation=calculation, can=can)
 
+    @with_review(permission=PermissionType.EDIT)
+    def view_review_edit_figure(
+            self, db, reviewer, proposal, can, fig_id, form, file_):
+        role_class = self.get_reviewer_roles()
+        role_info = role_class.get_info(reviewer.role)
+        name = role_class.get_name_with_review(reviewer.role)
+
+        if fig_id is None:
+            # We are trying to add a new figure -- check whether this is
+            # permitted.
+            if not role_info.figure:
+                raise ErrorPage(
+                    'The {} can not have figures attached.', name.lower())
+
+            figure = null_tuple(ReviewFigureInfo)._replace(caption='')
+
+            target = url_for('.review_new_figure', reviewer_id=reviewer.id)
+
+        else:
+            try:
+                figure = db.search_review_figure(
+                    reviewer_id=reviewer.id, fig_id=fig_id,
+                    with_caption=True).get_single()
+            except NoSuchRecord:
+                raise HTTPNotFound('Figure not found.')
+
+            target = url_for(
+                '.review_edit_figure', reviewer_id=reviewer.id, fig_id=fig_id)
+
+        return self._view_edit_figure(
+            db, form, file_, figure, proposal, reviewer, title=name,
+            target_edit=target,
+            target_redirect=url_for(
+                '.review_edit', reviewer_id=reviewer.id))
+
+    @with_review(permission=PermissionType.VIEW)
+    def view_review_view_figure(
+            self, db, reviewer, proposal, can, fig_id, md5sum, type_=None):
+        if type_ is None:
+            try:
+                return db.get_review_figure(
+                    reviewer.id, fig_id, md5sum=md5sum)
+            except NoSuchRecord:
+                raise HTTPNotFound('Figure not found.')
+
+        elif type_ == 'thumbnail':
+            try:
+                return db.get_review_figure_thumbnail(
+                    reviewer.id, fig_id, md5sum=md5sum)
+            except NoSuchRecord:
+                raise HTTPNotFound('Figure thumbnail not found.')
+
+        elif type_ == 'preview':
+            try:
+                return db.get_review_figure_preview(
+                    reviewer.id, fig_id, md5sum=md5sum)
+            except NoSuchRecord:
+                raise HTTPNotFound('Figure preview not found.')
+
+        else:
+            raise HTTPError('Unknown figure view type.')
+
+    @with_review(permission=PermissionType.EDIT)
+    def view_review_manage_figure(self, db, reviewer, proposal, can, form):
+        role_class = self.get_reviewer_roles()
+        role_info = role_class.get_info(reviewer.role)
+        name = role_class.get_name_with_review(reviewer.role)
+
+        return self._view_manage_figure(
+            db, form, proposal=proposal, reviewer=reviewer, role=None,
+            title=name,
+            target_edit=url_for(
+                '.review_manage_figure', reviewer_id=reviewer.id),
+            target_redirect=url_for(
+                '.review_edit', reviewer_id=reviewer.id, _anchor='figures'))
+
     @with_proposal(permission=PermissionType.NONE, with_decision=True)
     def view_proposal_reviews(self, db, proposal):
         role_class = self.get_reviewer_roles()
@@ -1335,13 +1420,20 @@ class GenericReview(object):
 
             if role_info.calc:
                 calculations = self._prepare_calculations(
-                db.search_review_calculation(reviewer_id=reviewer.id))
+                    db.search_review_calculation(reviewer_id=reviewer.id))
             else:
                 calculations = None
 
-            reviewers[reviewer_id] = ReviewerWithCalculations(
+            if role_info.figure:
+                figures = db.search_review_figure(
+                    reviewer_id=reviewer.id,
+                    with_caption=True, with_has_preview=True)
+            else:
+                figures = None
+
+            reviewers[reviewer_id] = ReviewerWithCalcFig(
                 *reviewer,
-                calculations=calculations,
+                calculations=calculations, figures=figures,
                 can_view=(is_admin or reviewer.person_public),
                 can_edit=reviewer_can.edit)
 

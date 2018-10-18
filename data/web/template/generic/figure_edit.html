@@ -1,6 +1,12 @@
 {% extends "layout.html" %}
-{% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
-{% set scripts=['edit_text'] %}
+
+{% set navigation = concatenate_lists(
+    (none if proposal_id is none else [(proposal_code | default('Unknown Proposal', true), url_for('.proposal_view', proposal_id=proposal_id))]),
+    (none if reviewer_id is none else [(reviewer_role | reviewer_role_name(facility_role_class, with_review=true), url_for('.review_edit', reviewer_id=reviewer_id))])) %}
+
+{% if word_limit is not none %}
+    {% set scripts=['edit_text'] %}
+{% endif %}
 
 {% block content %}
 
@@ -35,11 +41,13 @@
         </li>
         <li>
             <label for="text">Caption</label>
-            <textarea name="text" autofocus="autofocus" cols="40" rows="10" data-wordlimit="{{ word_limit }}">{{ figure.caption }}</textarea>
+            <textarea name="text" autofocus="autofocus" cols="40" rows="10" {{ word_limit | fmt('data-wordlimit="{}"') | safe }}>{{ figure.caption }}</textarea>
         </li>
         <li>
             <input type="submit" value="Save" name="submit" />
-            <span id="text_words"></span>
+            {% if word_limit is not none %}
+                <span id="text_words"></span>
+            {% endif %}
         </li>
     </ol>
 </form>

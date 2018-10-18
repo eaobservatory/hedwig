@@ -5,8 +5,9 @@
 {% else %}
     {% set help_link=url_for('help.review_page', page_name=role_info.help_page) %}
 {% endif %}
-{% set scripts=concatenate_lists(['edit_review'], scripts) %}
+{% set scripts=concatenate_lists(['edit_review', 'formtip'], scripts) %}
 {% from 'macro/proposal_summary.html' import render_proposal_summary %}
+{% from 'macro/figure.html' import render_review_figure_table %}
 {% from 'macro/calculation.html' import render_calculation_title, render_calculation %}
 
 {% block content %}
@@ -70,6 +71,28 @@
                 </p>
             </nav>
         {% endif %}
+    {% endif %}
+{% endblock %}
+
+{% block figures %}
+    {% if role_info.figure %}
+        <h3 id="figures">Figures</h3>
+
+        {% if figures %}
+            {{ render_review_figure_table(figures.values(), reviewer.id) }}
+
+            <nav>
+                <p>
+                    <a href="{{ url_for('.review_manage_figure', reviewer_id=reviewer.id) }}">Manage figures</a>
+                </p>
+            </nav>
+        {% endif %}
+
+        <nav>
+            <p>
+                <a href="{{ url_for('.review_new_figure', reviewer_id=reviewer.id) }}">Upload new figure</a>
+            </p>
+        </nav>
     {% endif %}
 {% endblock %}
 
