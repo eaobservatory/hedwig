@@ -41,7 +41,8 @@ from hedwig.config import get_config
 from hedwig.db.meta import invitation, reset_token, verify_token
 from hedwig.admin.poll import send_proposal_feedback
 from hedwig.file.poll import process_moc, \
-    process_proposal_figure, process_proposal_pdf
+    process_proposal_figure, process_proposal_pdf, \
+    process_review_figure
 from hedwig.type.enum import BaseReviewerRole, MessageState
 from hedwig.view.query import QueryView
 from hedwig.web.app import create_web_app
@@ -943,38 +944,15 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_link_text(
             'Edit scientific justification').click()
 
-        sci_case_url = self.browser.current_url
-
-        self.browser.find_element_by_link_text('Upload new figure').click()
-
-        self.browser.find_element_by_name('text').send_keys(
-            'An example figure showing ...')
-
-        self._save_screenshot(self.user_image_root, 'sci_case_fig')
-
-        self.browser.find_element_by_name('file').send_keys(
-            self._get_example_path('example_figure.png'))
-
-        self.browser.find_element_by_name('submit').click()
-
-        # Process the uploaded figure and reload.
-        n_processed = process_proposal_figure(db=self.db)
-
-        self.assertEqual(n_processed, 1)
-
-        self.browser.get(sci_case_url)
+        self._add_figure(
+            screenshot_path=self.user_image_root,
+            screenshot_prefix='sci_case')
 
         manage_figures = self.browser.find_element_by_link_text(
             'Manage figures')
 
         self._save_screenshot(self.user_image_root, 'sci_case_edit',
                               [manage_figures, 'edit_figure_1_link'])
-
-        manage_figures.click()
-
-        self._save_screenshot(self.user_image_root, 'sci_case_fig_manage')
-
-        self.browser.find_element_by_name('submit').click()
 
         self.browser.find_element_by_link_text('Edit text').click()
 
@@ -1048,6 +1026,47 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn('LDN 123', self.browser.page_source)
         self.assertIn('LDN 456', self.browser.page_source)
         self.assertIn('NGC 1234', self.browser.page_source)
+
+    def _add_figure(
+            self,
+            screenshot_path=None,
+            screenshot_prefix='component',
+            is_review=False):
+        current_url = self.browser.current_url
+
+        self.browser.find_element_by_link_text('Upload new figure').click()
+
+        self.browser.find_element_by_name('text').send_keys(
+            'An example figure showing ...')
+
+        self._save_screenshot(
+            screenshot_path, '{}_{}'.format(screenshot_prefix, 'fig'))
+
+        self.browser.find_element_by_name('file').send_keys(
+            self._get_example_path('example_figure.png'))
+
+        self.browser.find_element_by_name('submit').click()
+
+        # Process the uploaded figure and reload.
+        if is_review:
+            n_processed = process_review_figure(db=self.db)
+
+        else:
+            n_processed = process_proposal_figure(db=self.db)
+
+        self.assertEqual(n_processed, 1)
+
+        self.browser.get(current_url)
+
+        manage_figures = self.browser.find_element_by_link_text(
+            'Manage figures')
+
+        manage_figures.click()
+
+        self._save_screenshot(
+            screenshot_path, '{}_{}'.format(screenshot_prefix, 'fig_manage'))
+
+        self.browser.find_element_by_name('submit').click()
 
     def _add_itc_calculation(
             self, screenshot_path=None,
@@ -1640,6 +1659,12 @@ class IntegrationTest(DummyConfigTestCase):
             sensitivity='1.434', title='Adjusted sensitivity',
             save_prefix='review_')
 
+        # Add a figure.
+        self._add_figure(
+            screenshot_path=self.review_image_root,
+            screenshot_prefix='tech_assess',
+            is_review=True)
+
         # Fill in the review.
         self.browser.find_element_by_name('text').send_keys(
             'My assessment of the feasibility of this proposal is...')
@@ -1651,7 +1676,7 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_name('done').click()
 
         self._save_screenshot(self.review_image_root, 'tech_assess_edit',
-                              ['add_calc_links'])
+                              ['add_calc_links', 'upload_fig_link'])
 
         self.browser.find_element_by_name('submit').click()
 
