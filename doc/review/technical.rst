@@ -8,9 +8,10 @@ Instead please check your :doc:`review list <review_list>`
 for links to the reviews which have been assigned to you.
 
 The technical review editing page allows you to add
-calculations to your review.
+calculations and figures to your review.
 Please be sure to save any work in progress on the review
-before following the links to the calculators.
+before following the links to the calculators
+or figure upload page.
 
 .. image:: image/tech_assess_edit.png
 
@@ -34,3 +35,21 @@ Any changes you make here will not be saved until you
 click the "Save" button.
 
 .. image:: image/calc_manage.png
+
+To add a figure to your review,
+you can use the "upload new figure" link
+on the review editing page.
+
+.. image:: image/tech_assess_fig.png
+
+Note that the review editing page shows your figures in an information table,
+with a small thumbnail image of each.
+The figures will be shown in full
+(in the same style as uploaded figures are shown in proposals)
+when your review is read by the review committee.
+
+If you would like to remove any figures, or change their order,
+that can be done via the "manage figures" link
+on the review editing page.
+
+.. image:: image/tech_assess_fig_manage.png
