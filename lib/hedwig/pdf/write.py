@@ -42,3 +42,12 @@ class PDFWriter(object):
         """
 
         raise FormattedError('Not implemented')
+
+    def reviews(self, proposal_id):
+        """
+        Request PDF representation of reviews of a proposal.
+
+        Should be overridden by subclasses.
+        """
+
+        raise FormattedError('Not implemented')

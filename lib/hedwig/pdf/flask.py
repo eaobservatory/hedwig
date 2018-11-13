@@ -23,6 +23,7 @@ from ..compat import first_value
 from ..config import get_facilities
 from ..error import FormattedError, NoSuchValue
 from ..file.pdf import pdf_merge
+from ..type.enum import GroupType
 from ..view.people import _update_session_user
 from .write import PDFWriter
 
@@ -57,6 +58,31 @@ class PDFWriterFlask(PDFWriter):
 
         # Request and return the PDF.
         return pdf_merge(self._request_pdf(url, person_id, section=True))
+
+    def reviews(self, proposal_id):
+        """
+        Request PDF representation of reviews of a proposal.
+        """
+
+        # Find a reviewer who is not a member of the proposal.
+        proposal = self.db.get_proposal(
+            facility_id=None, proposal_id=proposal_id, with_members=True)
+        for group_member in self.db.search_group_member(
+                facility_id=proposal.facility_id,
+                group_type=GroupType.review_view_groups()).values():
+            if not proposal.members.has_person(group_member.person_id):
+                person_id = group_member.person_id
+                break
+        else:
+            raise FormattedError(
+                'No non-member reviewers found for proposal {}', proposal_id)
+
+        # Determine URL to use to access the reviews.
+        facility_code = get_facilities(db=self.db)[proposal.facility_id].code
+        url = '{}/proposal/{}/review/'.format(facility_code, proposal_id)
+
+        # Request and return the PDF.
+        return self._request_pdf(url, person_id)
 
     def _prepare_environ(self, person_id=None, session_extra=None):
         """
