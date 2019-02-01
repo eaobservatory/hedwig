@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -376,19 +376,40 @@ class ProposalPart(object):
                 raise ConsistencyError(
                     'deleting this member would leave no editors')
 
-    def delete_proposal_figure(self, proposal_id, role, id_):
+    def delete_proposal_figure(
+            self, proposal_id, role, id_,
+            _allow_any=False, _conn=None):
+        """
+        Delete one (or more) figure(s) associated with a proposal.
+
+        :param proposal_id: the proposal identifier
+        :param role: the role number
+        :param id_: the figure identifier
+        :param _allow_any: if true, allows the `id_` parameter to be omitted,
+            and skips the check that one figure was successfully deleted
+        :param _conn: database connection object, if a transaction has already
+            been started
+        """
+
         where_extra = []
 
         if proposal_id is not None:
             where_extra.append(proposal_fig.c.proposal_id == proposal_id)
+        elif _allow_any:
+            raise Error('figure proposal_id not specified with _allow_any')
 
         if role is not None:
             where_extra.append(proposal_fig.c.role == role)
+        elif _allow_any:
+            raise Error('figure role not specified with _allow_any')
 
         return self._delete_figure(
-            proposal_fig, id_, where_extra=where_extra)
+            proposal_fig, id_, where_extra=where_extra,
+            _allow_any=_allow_any, _conn=_conn)
 
-    def _delete_figure(self, table, id_, where_extra=[]):
+    def _delete_figure(
+            self, table, id_, where_extra=[],
+            _allow_any=False, _conn=None):
         stmt = table.delete()
 
         for where_clause in where_extra:
@@ -396,21 +417,32 @@ class ProposalPart(object):
 
         if id_ is not None:
             stmt = stmt.where(table.c.id == id_)
-        else:
+        elif not _allow_any:
             raise Error('figure identifier not specified')
 
-        with self._transaction() as conn:
+        with self._transaction(_conn=_conn) as conn:
             result = conn.execute(stmt)
 
-            if result.rowcount != 1:
+            if result.rowcount != 1 and not _allow_any:
                 raise ConsistencyError(
                     'no row matched deleting figure identifier {}',
                     id_)
 
     def delete_proposal_pdf(self, proposal_id, role,
-                            _test_skip_check=False):
-        with self._transaction() as conn:
-            if not _test_skip_check and (self._get_proposal_pdf_id(
+                            _skip_check=False, _allow_count=(1,), _conn=None):
+        """
+        Delete a PDF file associated with a proposal.
+
+        :param proposal_id: the proposal identifier
+        :param role: the role number
+        :param _skip_check: if true, do not first check that the PDF exists
+        :param tuple _allow_count: allowed numbers of PDF files to be deleted
+        :param _conn: database connection object, if a transaction has already
+            been started
+        """
+
+        with self._transaction(_conn=_conn) as conn:
+            if not _skip_check and (self._get_proposal_pdf_id(
                     conn, proposal_id, role) is None):
                 raise ConsistencyError('PDF does not exist for {} role {}',
                                        proposal_id, role)
@@ -420,15 +452,26 @@ class ProposalPart(object):
                 proposal_pdf.c.role == role
             )))
 
-            if result.rowcount != 1:
+            if result.rowcount not in _allow_count:
                 raise ConsistencyError(
-                    'no row matched deleting PDF for {} role {}',
+                    'mismatch deleting PDF for {} role {}',
                     proposal_id, role)
 
     def delete_proposal_text(self, proposal_id, role,
-                             _test_skip_check=False):
-        with self._transaction() as conn:
-            if not _test_skip_check and not self._exists_proposal_text(
+                             _skip_check=False, _allow_count=(1,), _conn=None):
+        """
+        Delete a piece of text associated with a proposal.
+
+        :param proposal_id: the proposal identifier
+        :param role: the role number
+        :param _skip_check: if true, do not first check that the text exists
+        :param tuple _allow_count: allowed numbers of text blocks to be deleted
+        :param _conn: database connection object, if a transaction has already
+            been started
+        """
+
+        with self._transaction(_conn=_conn) as conn:
+            if not _skip_check and not self._exists_proposal_text(
                     conn, proposal_id, role):
                 raise ConsistencyError('text does not exist for {} role {}',
                                        proposal_id, role)
@@ -438,9 +481,9 @@ class ProposalPart(object):
                 proposal_text.c.role == role
             )))
 
-            if result.rowcount != 1:
+            if result.rowcount not in _allow_count:
                 raise ConsistencyError(
-                    'no row matched deleting text for {} role {}',
+                    'mismatch deleting text for {} role {}',
                     proposal_id, role)
 
     def ensure_facility(self, code):
@@ -1995,20 +2038,15 @@ class ProposalPart(object):
 
             # Delete any previous proposal text for the same role which
             # this PDF is replacing.
-            result = conn.execute(proposal_text.delete().where(and_(
-                proposal_text.c.proposal_id == proposal_id,
-                proposal_text.c.role == role)))
-
-            if result.rowcount not in (0, 1):
-                raise ConsistencyError(
-                    'multiple rows deleted removing replaced text '
-                    'for proposal {} role {}', proposal_id, role)
+            self.delete_proposal_text(
+                proposal_id, role,
+                _skip_check=True, _allow_count=(0, 1), _conn=conn)
 
             # Also delete any previous figures attached for the old text
             # version.
-            conn.execute(proposal_fig.delete().where(and_(
-                proposal_fig.c.proposal_id == proposal_id,
-                proposal_fig.c.role == role)))
+            self.delete_proposal_figure(
+                proposal_id, role, id_=None,
+                _allow_any=True, _conn=conn)
 
             return pdf_id
 
@@ -2094,14 +2132,9 @@ class ProposalPart(object):
 
             # Delete any previous proposal PDF for the same role which
             # this text is replacing.
-            result = conn.execute(proposal_pdf.delete().where(and_(
-                proposal_pdf.c.proposal_id == proposal_id,
-                proposal_pdf.c.role == role)))
-
-            if result.rowcount not in (0, 1):
-                raise ConsistencyError(
-                    'multiple rows deleted removing replaced PDF '
-                    'for proposal {} role {}', proposal_id, role)
+            self.delete_proposal_pdf(
+                proposal_id, role,
+                _skip_check=True, _allow_count=(0, 1), _conn=conn)
 
     def sync_affiliation_weight(self, call_id, records):
         """

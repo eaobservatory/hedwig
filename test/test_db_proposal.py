@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -963,10 +963,10 @@ class DBProposalTest(DBTestCase):
             self.db.delete_proposal_text(proposal_id_1,
                                          BaseTextRole.ABSTRACT)
 
-        with self.assertRaisesRegex(ConsistencyError, '^no row matched'):
+        with self.assertRaisesRegex(ConsistencyError, '^mismatch deleting'):
             self.db.delete_proposal_text(proposal_id_1,
                                          BaseTextRole.ABSTRACT,
-                                         _test_skip_check=True)
+                                         _skip_check=True)
 
         with self.assertRaisesRegex(ConsistencyError, '^text does not exist'):
             self.db.set_proposal_text(BaseTextRole, proposal_id_1,
@@ -978,6 +978,20 @@ class DBProposalTest(DBTestCase):
                                       BaseTextRole.TECHNICAL_CASE, 'test',
                                       FormatType.PLAIN, 1, person_id, True,
                                       _test_skip_check=True)
+
+        # Add a PDF file -- this should be deleted when we add the text.
+        pdf_id = self.db.set_proposal_pdf(
+            BaseTextRole, proposal_id_1, BaseTextRole.SCIENCE_CASE,
+            b'dummy PDF file', 2, 'test.pdf', person_id)
+        self.assertIsInstance(pdf_id, int)
+        self.db.set_proposal_pdf_preview(
+            pdf_id, [b'dummy PNG 1', b'dummy PNG 2'])
+        self.db.get_proposal_pdf(
+            proposal_id_1, BaseTextRole.SCIENCE_CASE)
+        self.db.get_proposal_pdf_preview(
+            proposal_id_1, BaseTextRole.SCIENCE_CASE, 1)
+        self.db.get_proposal_pdf_preview(
+            proposal_id_1, BaseTextRole.SCIENCE_CASE, 2)
 
         # Try creating and updating some text.
         self.db.set_proposal_text(
@@ -992,6 +1006,17 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(self.db.get_proposal_text(
             proposal_id_1, BaseTextRole.SCIENCE_CASE),
             ProposalText('change', FormatType.PLAIN))
+
+        # Check that the PDF was deleted, along with its preview pages.
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_pdf(
+                proposal_id_1, BaseTextRole.SCIENCE_CASE)
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_pdf_preview(
+                proposal_id_1, BaseTextRole.SCIENCE_CASE, 1)
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_pdf_preview(
+                proposal_id_1, BaseTextRole.SCIENCE_CASE, 2)
 
         # Check we can't re-create an existing text record.
         with self.assertRaisesRegex(ConsistencyError, '^text already exists'):
@@ -1071,6 +1096,23 @@ class DBProposalTest(DBTestCase):
                                            affiliation_id, 'Proposal 1')
         self.assertIsInstance(proposal_id, int)
 
+        # Add text and figures -- these should be removed automatically.
+        self.db.set_proposal_text(
+            BaseTextRole, proposal_id, role, 'test', FormatType.PLAIN,
+            1, person_id, False)
+        fig_id = self.db.add_proposal_figure(
+            BaseTextRole, proposal_id, role, FigureType.PNG,
+            b'dummy figure', 'Caption', 'test.png', person_id)
+        self.assertIsInstance(fig_id, int)
+        self.db.set_proposal_figure_preview(fig_id, b'dummy preview')
+        self.db.set_proposal_figure_thumbnail(fig_id, b'dummy thumbnail')
+
+        self.db.get_proposal_text(proposal_id, role)
+        self.db.get_proposal_figure(None, None, fig_id)
+        self.db.get_proposal_figure_preview(None, None, fig_id)
+        self.db.get_proposal_figure_thumbnail(None, None, fig_id)
+
+        # Try adding a PDF to the proposal.
         result = self.db.search_proposal_pdf(proposal_id=proposal_id)
         self.assertEqual(len(result), 0)
 
@@ -1101,6 +1143,16 @@ class DBProposalTest(DBTestCase):
         self.assertIsInstance(pdf_info.uploaded, datetime)
         self.assertEqual(pdf_info.uploader, person_id)
         self.assertEqual(pdf_info.uploader_name, None)
+
+        # Check that the text and figures were removed.
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_text(proposal_id, role)
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_figure(None, None, fig_id)
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_figure_preview(None, None, fig_id)
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_figure_thumbnail(None, None, fig_id)
 
         # Try changing proposal state.
         self.db.update_proposal_pdf(
