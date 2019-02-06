@@ -35,7 +35,7 @@ from hedwig.type.enum import AffiliationType, AttachmentState, \
 from hedwig.type.simple import Affiliation, Call, CallPreamble, Category, \
     Member, MemberInfo, MemberInstitution, \
     Proposal, ProposalCategory, ProposalFigureInfo, ProposalPDFInfo, \
-    ProposalText, ProposalTextInfo, Target
+    ProposalText, Target
 from .dummy_db import DBTestCase
 
 
@@ -955,7 +955,7 @@ class DBProposalTest(DBTestCase):
                 FormatType.PLAIN, 1, person_id, False)
 
         # Test we can't get, delete or update a non-existant record.
-        with self.assertRaisesRegex(NoSuchRecord, '^text does not exist'):
+        with self.assertRaisesRegex(NoSuchRecord, 'no results$'):
             self.db.get_proposal_text(
                 proposal_id_1, BaseTextRole.ABSTRACT)
 
@@ -997,15 +997,20 @@ class DBProposalTest(DBTestCase):
         self.db.set_proposal_text(
             BaseTextRole, proposal_id_1, BaseTextRole.SCIENCE_CASE, 'test',
             FormatType.PLAIN, 1, person_id, False)
-        self.assertEqual(self.db.get_proposal_text(
-            proposal_id_1, BaseTextRole.SCIENCE_CASE),
-            ProposalText('test', FormatType.PLAIN))
+        result = self.db.get_proposal_text(
+            proposal_id_1, BaseTextRole.SCIENCE_CASE)
+        self.assertIsInstance(result, ProposalText)
+        self.assertEqual(result.text, 'test')
+        self.assertEqual(result.format, FormatType.PLAIN)
+
         self.db.set_proposal_text(
             BaseTextRole, proposal_id_1, BaseTextRole.SCIENCE_CASE, 'change',
             FormatType.PLAIN, 1, person_id, True)
-        self.assertEqual(self.db.get_proposal_text(
-            proposal_id_1, BaseTextRole.SCIENCE_CASE),
-            ProposalText('change', FormatType.PLAIN))
+        result = self.db.get_proposal_text(
+            proposal_id_1, BaseTextRole.SCIENCE_CASE)
+        self.assertIsInstance(result, ProposalText)
+        self.assertEqual(result.text, 'change')
+        self.assertEqual(result.format, FormatType.PLAIN)
 
         # Check that the PDF was deleted, along with its preview pages.
         with self.assertRaises(NoSuchRecord):
@@ -1057,31 +1062,35 @@ class DBProposalTest(DBTestCase):
                                   1, person_id, True)
         self.db.delete_proposal_text(proposal_id_1, 41)
 
-        self.assertEqual(
-            self.db.get_proposal_text(proposal_id_1, 40),
-            ProposalText('a', FormatType.PLAIN))
+        result = self.db.get_proposal_text(proposal_id_1, 40)
+        self.assertIsInstance(result, ProposalText)
+        self.assertEqual(result.text, 'a')
+        self.assertEqual(result.format, FormatType.PLAIN)
+
         with self.assertRaises(NoSuchRecord):
             self.db.get_proposal_text(proposal_id_1, 41)
-        self.assertEqual(
-            self.db.get_proposal_text(proposal_id_2, 40),
-            ProposalText('cc', 993))
-        self.assertEqual(
-            self.db.get_proposal_text(proposal_id_2, 41),
-            ProposalText('d', 992))
+
+        result = self.db.get_proposal_text(proposal_id_2, 40)
+        self.assertEqual(result.text, 'cc')
+        self.assertEqual(result.format, 993)
+
+        result = self.db.get_proposal_text(proposal_id_2, 41)
+        self.assertEqual(result.text, 'd')
+        self.assertEqual(result.format, 992)
 
         # Try searching for text.
         result = self.db.search_proposal_text(proposal_id=proposal_id_2)
         self.assertIsInstance(result, ProposalTextCollection)
         self.assertEqual(len(result), 2)
         info = result.get_role(40)
-        self.assertIsInstance(info, ProposalTextInfo)
+        self.assertIsInstance(info, ProposalText)
         self.assertEqual(info.format, 993)
         self.assertEqual(info.words, 1)
         self.assertIsInstance(info.edited, datetime)
         self.assertEqual(info.editor, person_id)
         self.assertEqual(info.editor_name, 'Person 1')
         info = result.get_role(41)
-        self.assertIsInstance(info, ProposalTextInfo)
+        self.assertIsInstance(info, ProposalText)
         self.assertEqual(info.format, 992)
         with self.assertRaises(NoSuchValue):
             result.get_role(43)

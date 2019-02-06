@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,6 +22,7 @@ from hedwig.type.enum import FormatType
 from hedwig.type.simple import ProposalText
 from hedwig.web.format import format_text, format_text_plain
 from hedwig.web.util import HTTPError
+from hedwig.type.util import null_tuple
 
 from .compat import TestCase
 
@@ -35,10 +36,13 @@ class TextFormatTest(TestCase):
             format_text('text', 999)
 
         with self.assertRaises(HTTPError):
-            format_text(ProposalText('text', 999))
+            format_text(null_tuple(ProposalText)._replace(
+                text='text', format=999))
 
-        self.assertEqual(format_text(ProposalText('hello', FormatType.PLAIN)),
-                         '<p>hello</p>')
+        self.assertEqual(
+            format_text(null_tuple(ProposalText)._replace(
+                text='hello', format=FormatType.PLAIN)),
+            '<p>hello</p>')
 
     def test_format_plain(self):
         # Empty input should give no output.

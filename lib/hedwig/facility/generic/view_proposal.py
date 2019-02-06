@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -38,7 +38,7 @@ from ...type.simple import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
     MemberInstitution, PrevProposal, PrevProposalPub, \
     ProposalCategory, ProposalFigureInfo, ProposalText, \
-    Queue, ProposalText, Semester, Target, \
+    Queue, Semester, Target, \
     TargetToolInfo, ValidationMessage
 from ...type.util import null_tuple, with_can_edit, with_can_view
 from ...view import auth
@@ -157,7 +157,7 @@ class GenericProposal(object):
 
         role_class = self.get_text_roles()
 
-        proposal_text = db.get_all_proposal_text(proposal.id)
+        proposal_text = db.search_proposal_text(proposal.id, with_text=True)
         proposal_pdf = db.search_proposal_pdf(proposal.id)
 
         proposal_fig = db.search_proposal_figure(proposal.id,
@@ -179,13 +179,13 @@ class GenericProposal(object):
             for x in db.search_prev_proposal(proposal_id=proposal.id).values()]
 
         extra = {
-            'abstract': proposal_text.get(role_class.ABSTRACT, None),
+            'abstract': proposal_text.get_role(role_class.ABSTRACT, None),
             'targets': targets.to_formatted_collection(),
             'target_total_time': target_total_time,
             'calculators': self.calculators,
             'calculations': self._prepare_calculations(calculations),
             'target_tools': self.target_tools,
-            'tool_note': proposal_text.get(role_class.TOOL_NOTE, None),
+            'tool_note': proposal_text.get_role(role_class.TOOL_NOTE, None),
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id),
             'prev_proposals': prev_proposals,
@@ -194,13 +194,13 @@ class GenericProposal(object):
         for role in (role_class.TECHNICAL_CASE, role_class.SCIENCE_CASE):
             extra['{}_case'.format(role_class.short_name(role))] = {
                 'role': role,
-                'text': proposal_text.get(role, None),
+                'text': proposal_text.get_role(role, None),
                 'pdf': proposal_pdf.get_role(role, None),
                 'fig': proposal_fig.values_by_role(role),
             }
 
         for (role_attr, role) in extra_text_roles.items():
-            extra[role_attr] = proposal_text.get(role, None)
+            extra[role_attr] = proposal_text.get_role(role, None)
 
         return extra
 
@@ -1813,7 +1813,7 @@ class GenericProposal(object):
         if (session.get('is_admin', False)
                 and auth.can_be_admin(db, auth_cache=can.cache)
                 and proposal.decision_note):
-            decision_note = ProposalText(
+            decision_note = null_tuple(ProposalText)._replace(
                 text=proposal.decision_note,
                 format=proposal.decision_note_format)
         else:
@@ -1836,7 +1836,8 @@ class GenericProposal(object):
             text = db.get_proposal_text(proposal.id, role)
             is_update = True
         except NoSuchRecord:
-            text = ProposalText('', FormatType.PLAIN)
+            text = null_tuple(ProposalText)._replace(
+                text='', format=FormatType.PLAIN)
             is_update = False
 
         if extra_initialization is None:

@@ -43,7 +43,7 @@ from ...type.simple import Affiliation, \
     PrevProposal, PrevProposalPub, \
     Proposal, ProposalCategory, ProposalFigure, \
     ProposalFigureInfo, ProposalPDFInfo, \
-    ProposalText, ProposalTextInfo, \
+    ProposalText, \
     Queue, QueueInfo, ReviewerInfo, Semester, SemesterInfo, Target
 from ...util import is_list_like
 from ..meta import affiliation, affiliation_weight, \
@@ -512,24 +512,6 @@ class ProposalPart(object):
 
             return result.inserted_primary_key[0]
 
-    def get_all_proposal_text(self, proposal_id, _conn=None):
-        """
-        Get all pieces of text associated with a proposal.
-
-        The results are returned as a dictionary of ProposalText objects
-        organized by role identifier.
-        """
-
-        ans = {}
-
-        with self._transaction(_conn=_conn) as conn:
-            for row in conn.execute(proposal_text.select().where(
-                    proposal_text.c.proposal_id == proposal_id)):
-                ans[row['role']] = ProposalText(text=row['text'],
-                                                format=row['format'])
-
-        return ans
-
     def get_call(self, facility_id, call_id, with_facility_code=False):
         """
         Get a call record.
@@ -759,22 +741,15 @@ class ProposalPart(object):
 
         return preview
 
-    def get_proposal_text(self, proposal_id, role):
+    def get_proposal_text(self, proposal_id, role, _conn=None):
         """
         Get the given text associated with a proposal.
         """
 
-        with self._transaction() as conn:
-            row = conn.execute(proposal_text.select().where(and_(
-                proposal_text.c.proposal_id == proposal_id,
-                proposal_text.c.role == role
-            ))).first()
-
-        if row is None:
-            raise NoSuchRecord('text does not exist for {} role {}',
-                               proposal_id, role)
-
-        return ProposalText(text=row['text'], format=row['format'])
+        return self.search_proposal_text(
+            proposal_id=proposal_id, role=role, with_text=True,
+            _conn=_conn
+        ).get_single()
 
     def get_semester(self, facility_id, semester_id, _conn=None):
         """
@@ -1819,8 +1794,13 @@ class ProposalPart(object):
 
         return ans
 
-    def search_proposal_text(self, proposal_id=None, role=None):
-        stmt = select([
+    def search_proposal_text(
+            self, proposal_id=None, role=None,
+            with_text=False,
+            _conn=None):
+        default = {}
+
+        select_columns = [
             proposal_text.c.id,
             proposal_text.c.proposal_id,
             proposal_text.c.role,
@@ -1829,7 +1809,16 @@ class ProposalPart(object):
             proposal_text.c.edited,
             proposal_text.c.editor,
             person.c.name.label('editor_name'),
-        ]).select_from(proposal_text.join(person))
+        ]
+
+        if with_text:
+            select_columns.append(proposal_text.c.text)
+        else:
+            default['text'] = None
+
+        select_from = proposal_text.join(person)
+
+        stmt = select(select_columns).select_from(select_from)
 
         if proposal_id is not None:
             stmt = stmt.where(proposal_text.c.proposal_id == proposal_id)
@@ -1839,9 +1828,11 @@ class ProposalPart(object):
 
         ans = ProposalTextCollection()
 
-        with self._transaction() as conn:
+        with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt):
-                ans[row['id']] = ProposalTextInfo(**row)
+                values = default.copy()
+                values.update(**row)
+                ans[values['id']] = ProposalText(**values)
 
         return ans
 

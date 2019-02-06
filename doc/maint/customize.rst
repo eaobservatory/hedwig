@@ -405,10 +405,10 @@ Here is an abbreviated version of these methods:
 
     def _view_proposal_extra(self, db, proposal):
         role_class = self.get_text_roles()
-        proposal_text = db.get_all_proposal_text(proposal.id)
+        proposal_text = db.search_proposal_text(proposal.id, with_text=True)
 
         extra = {
-            'abstract': proposal_text.get(role_class.ABSTRACT, None),
+            'abstract': proposal_text.get_role(role_class.ABSTRACT, None),
         }
 
         return extra

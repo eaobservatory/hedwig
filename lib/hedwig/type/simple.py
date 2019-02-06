@@ -25,7 +25,7 @@ from ..db.meta import affiliation, \
     email, group_member, institution, institution_log, \
     member, message, message_recipient, moc, person, \
     prev_proposal, prev_proposal_pub, \
-    proposal, proposal_category, queue, \
+    proposal, proposal_category, proposal_text, queue, \
     review, reviewer, review_calculation, \
     semester, target, user_log
 
@@ -217,12 +217,7 @@ ProposalPDFInfo = namedtuple(
 
 ProposalText = namedtuple(
     'ProposalText',
-    ['text', 'format'])
-
-ProposalTextInfo = namedtuple(
-    'ProposalTextInfo',
-    ['id', 'proposal_id', 'role', 'format', 'words',
-     'edited', 'editor', 'editor_name'])
+    [x.name for x in proposal_text.columns] + ['editor_name'])
 
 Reviewer = namedtuple(
     'Reviewer',
