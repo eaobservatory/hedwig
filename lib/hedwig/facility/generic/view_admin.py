@@ -156,30 +156,19 @@ class GenericAdmin(object):
         except NoSuchRecord:
             raise HTTPNotFound('Semester not found.')
 
-        try:
-            preamble = db.get_call_preamble(
-                semester_id=semester.id, type_=call_type)
-            assert preamble.semester_id == semester.id
-            assert preamble.type == call_type
-            assert preamble.id is not None
-        except NoSuchRecord:
-            preamble = null_tuple(CallPreamble)._replace(
-                description='', description_format=FormatType.PLAIN,
-                type=call_type)
-
         message = None
 
         if form is not None:
             try:
-                preamble = preamble._replace(
+                preamble = null_tuple(CallPreamble)._replace(
                     description=form['description'],
-                    description_format=int(form['description_format']))
+                    description_format=int(form['description_format']),
+                    type=call_type)
 
                 db.set_call_preamble(
                     type_class, semester.id, preamble.type,
                     description=preamble.description,
-                    description_format=preamble.description_format,
-                    is_update=(preamble.id is not None))
+                    description_format=preamble.description_format)
 
                 flash('The {} call preamble for semester {} has been saved.',
                       type_class.get_name(preamble.type).lower(),
@@ -190,6 +179,18 @@ class GenericAdmin(object):
 
             except UserError as e:
                 message = e.message
+
+        else:
+            try:
+                preamble = db.get_call_preamble(
+                    semester_id=semester.id, type_=call_type)
+                assert preamble.semester_id == semester.id
+                assert preamble.type == call_type
+                assert preamble.id is not None
+            except NoSuchRecord:
+                preamble = null_tuple(CallPreamble)._replace(
+                    description='', description_format=FormatType.PLAIN,
+                    type=call_type)
 
         return {
             'title': '{}: Edit {} Call Preamble'.format(

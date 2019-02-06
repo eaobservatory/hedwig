@@ -1832,22 +1832,14 @@ class GenericProposal(object):
         name = role_class.get_name(role)
         message = None
 
-        try:
-            text = db.get_proposal_text(proposal.id, role)
-            is_update = True
-        except NoSuchRecord:
-            text = null_tuple(ProposalText)._replace(
-                text='', format=FormatType.PLAIN)
-            is_update = False
-
         if extra_initialization is None:
             ctx = {}
         else:
             ctx = extra_initialization(db, proposal, role)
 
         if form is not None:
-            text = text._replace(text=form['text'],
-                                 format=int(form['format']))
+            text = null_tuple(ProposalText)._replace(
+                text=form['text'], format=int(form['format']))
 
             if extra_form_read is not None:
                 ctx = extra_form_read(db, proposal, role, form, ctx)
@@ -1861,7 +1853,7 @@ class GenericProposal(object):
 
                 db.set_proposal_text(role_class, proposal.id, role,
                                      text.text, text.format, word_count,
-                                     session['person']['id'], is_update)
+                                     session['person']['id'])
 
                 if extra_form_proc is not None:
                     ctx = extra_form_proc(db, proposal, role, ctx)
@@ -1873,6 +1865,13 @@ class GenericProposal(object):
 
             except UserError as e:
                 message = e.message
+
+        else:
+            try:
+                text = db.get_proposal_text(proposal.id, role)
+            except NoSuchRecord:
+                text = null_tuple(ProposalText)._replace(
+                    text='', format=FormatType.PLAIN)
 
         is_case_text = (role in
                         (role_class.TECHNICAL_CASE, role_class.SCIENCE_CASE))

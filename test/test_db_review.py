@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -214,15 +214,6 @@ class DBReviewTest(DBTestCase):
         self.assertEqual(list(result.keys()), [reviewer_id_2])
 
         # Try specifying a review.
-        with self.assertRaisesRegex(ConsistencyError, '^review does not'):
-            self.db.set_review(
-                BaseReviewerRole,
-                reviewer_id=reviewer_id_2,
-                text='A review', format_=FormatType.PLAIN,
-                assessment=None, rating=50, weight=50,
-                note='A note', note_format=FormatType.PLAIN, note_public=False,
-                state=ReviewState.DONE, is_update=True)
-
         with self.assertRaisesRegex(Error, 'invalid review state'):
             self.db.set_review(
                 BaseReviewerRole,
@@ -230,7 +221,7 @@ class DBReviewTest(DBTestCase):
                 text='A review', format_=FormatType.PLAIN,
                 assessment=None, rating=50, weight=50,
                 note='A note', note_format=FormatType.PLAIN, note_public=False,
-                state=ReviewState.ADDABLE, is_update=False)
+                state=ReviewState.ADDABLE)
 
         self.db.set_review(
             BaseReviewerRole,
@@ -238,25 +229,29 @@ class DBReviewTest(DBTestCase):
             text='A review', format_=FormatType.PLAIN,
             assessment=None, rating=50, weight=50,
             note='A note', note_format=FormatType.PLAIN, note_public=False,
-            state=ReviewState.DONE, is_update=False)
+            state=ReviewState.DONE)
+
+        result = self.db.search_reviewer(
+            reviewer_id=reviewer_id_2, with_review=True,
+            with_review_text=True, with_review_note=True).get_single()
+        self.assertEqual(result.review_state, ReviewState.DONE)
+        self.assertEqual(result.review_text, 'A review')
+        self.assertEqual(result.review_format, FormatType.PLAIN)
+        self.assertIsNone(result.review_assessment)
+        self.assertEqual(result.review_rating, 50)
+        self.assertEqual(result.review_weight, 50)
+        self.assertEqual(result.review_note, 'A note')
+        self.assertEqual(result.review_note_format, FormatType.PLAIN)
+        self.assertEqual(result.review_note_public, False)
 
         # Try updating a review.
-        with self.assertRaisesRegex(ConsistencyError, '^review already'):
-            self.db.set_review(
-                BaseReviewerRole,
-                reviewer_id=reviewer_id_2,
-                text='An updated review', format_=FormatType.PLAIN,
-                assessment=None, rating=51, weight=51,
-                note='A note', note_format=FormatType.PLAIN, note_public=False,
-                state=ReviewState.DONE, is_update=False)
-
         self.db.set_review(
             BaseReviewerRole,
             reviewer_id=reviewer_id_2,
             text='An updated review', format_=FormatType.PLAIN,
             assessment=None, rating=52, weight=52,
             note='A note', note_format=FormatType.PLAIN, note_public=False,
-            state=ReviewState.DONE, is_update=True)
+            state=ReviewState.DONE)
 
         # Retrieve the review.
         result = self.db.search_reviewer(
@@ -290,7 +285,7 @@ class DBReviewTest(DBTestCase):
                 text='Another review', format_=FormatType.PLAIN,
                 assessment=None, rating=None, weight=None,
                 note='A note', note_format=FormatType.PLAIN, note_public=False,
-                state=ReviewState.DONE, is_update=False)
+                state=ReviewState.DONE)
 
         with self.assertRaisesRegex(Error, 'Text format not specified'):
             self.db.set_review(
@@ -299,7 +294,7 @@ class DBReviewTest(DBTestCase):
                 text='Another review', format_=None,
                 assessment=None, rating=25, weight=75,
                 note='A note', note_format=FormatType.PLAIN, note_public=False,
-                state=ReviewState.DONE, is_update=False)
+                state=ReviewState.DONE)
 
         with self.assertRaisesRegex(Error, 'Text format not recognised'):
             self.db.set_review(
@@ -308,7 +303,7 @@ class DBReviewTest(DBTestCase):
                 text='Another review', format_=999,
                 assessment=None, rating=25, weight=75,
                 note='A note', note_format=FormatType.PLAIN, note_public=False,
-                state=ReviewState.DONE, is_update=False)
+                state=ReviewState.DONE)
 
         with self.assertRaisesRegex(Error, 'The assessment should not'):
             self.db.set_review(
@@ -317,7 +312,7 @@ class DBReviewTest(DBTestCase):
                 text='Another review', format_=FormatType.PLAIN,
                 assessment=Assessment.PROBLEM, rating=25, weight=75,
                 note='A note', note_format=FormatType.PLAIN, note_public=False,
-                state=ReviewState.DONE, is_update=False)
+                state=ReviewState.DONE)
 
         with self.assertRaisesRegex(Error, 'Note format not recognised'):
             self.db.set_review(
@@ -326,7 +321,7 @@ class DBReviewTest(DBTestCase):
                 text='Another review', format_=FormatType.PLAIN,
                 assessment=None, rating=25, weight=75,
                 note='A note', note_format=999, note_public=False,
-                state=ReviewState.DONE, is_update=False)
+                state=ReviewState.DONE)
 
         with self.assertRaisesRegex(Error, 'The note should be specified'):
             self.db.set_review(
@@ -335,7 +330,7 @@ class DBReviewTest(DBTestCase):
                 text='Another review', format_=FormatType.PLAIN,
                 assessment=None, rating=25, weight=75,
                 note=None, note_format=None, note_public=None,
-                state=ReviewState.DONE, is_update=False)
+                state=ReviewState.DONE)
 
         # Same update as above allowed when state is not DONE.
         self.db.set_review(
@@ -344,7 +339,7 @@ class DBReviewTest(DBTestCase):
             text='Another review', format_=FormatType.PLAIN,
             assessment=None, rating=25, weight=75,
             note=None, note_format=None, note_public=None,
-            state=ReviewState.PREPARATION, is_update=False)
+            state=ReviewState.PREPARATION)
 
         person_id_4 = self.db.add_person('Reviewer Four')
         reviewer_id_4 = self.db.add_reviewer(
@@ -359,7 +354,7 @@ class DBReviewTest(DBTestCase):
                 text='Technical review', format_=FormatType.PLAIN,
                 assessment=999, rating=None, weight=None,
                 note='A note', note_format=FormatType.PLAIN, note_public=False,
-                state=ReviewState.DONE, is_update=False)
+                state=ReviewState.DONE)
 
     def test_decision(self):
         proposal_id = self._create_test_proposal()
@@ -375,14 +370,10 @@ class DBReviewTest(DBTestCase):
         self.assertIsNone(proposal.decision_ready)
 
         # Try creating a decision record.
-        with self.assertRaisesRegex(
-                ConsistencyError, 'decision does not already exist'):
-            self.db.set_decision(proposal_id, False, False, False,
-                                 note='', note_format=FormatType.PLAIN,
-                                 is_update=True)
-
-        self.db.set_decision(proposal_id, False, False, False, note='A note.',
-                             note_format=FormatType.PLAIN, is_update=False)
+        decision_id = self.db.set_decision(
+            proposal_id, False, False, False, note='A note.',
+            note_format=FormatType.PLAIN)
+        self.assertIsInstance(decision_id, int)
 
         proposal = self.db.get_proposal(
             facility_id=None, proposal_id=proposal_id,
@@ -400,15 +391,10 @@ class DBReviewTest(DBTestCase):
         self.assertEqual(proposal.decision_note_format, FormatType.PLAIN)
 
         # Try updating a decision record.
-        with self.assertRaisesRegex(
-                ConsistencyError, 'decision already exists'):
-            self.db.set_decision(proposal_id, True, True, True,
-                                 note='', note_format=FormatType.PLAIN,
-                                 is_update=False)
-
-        self.db.set_decision(proposal_id, True, True, True,
-                             note='Edited note.', note_format=FormatType.PLAIN,
-                             is_update=True)
+        decision_id = self.db.set_decision(
+            proposal_id, True, True, True,
+            note='Edited note.', note_format=FormatType.PLAIN)
+        self.assertIsNone(decision_id)
 
         proposal = self.db.get_proposal(
             facility_id=None, proposal_id=proposal_id,
@@ -425,7 +411,8 @@ class DBReviewTest(DBTestCase):
         self.assertEqual(proposal.decision_note_format, FormatType.PLAIN)
 
         # Try deleting a decision record
-        self.db.set_decision(proposal_id, accept=None, is_update=True)
+        decision_id = self.db.set_decision(proposal_id, accept=None)
+        self.assertIsNone(decision_id)
 
         proposal = self.db.get_proposal(
             facility_id=None, proposal_id=proposal_id, with_decision=True)

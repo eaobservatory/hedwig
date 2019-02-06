@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -720,7 +720,7 @@ class DBPeopleTest(DBTestCase):
         (proposal_id, affiliation_id) = self._create_test_proposal(person_2)
         self.db.set_proposal_text(
             BaseTextRole, proposal_id, BaseTextRole.ABSTRACT,
-            'The abstract', FormatType.PLAIN, 2, person_2, is_update=False)
+            'The abstract', FormatType.PLAIN, 2, person_2)
 
         # Check the tests that the two user identifiers exist.
         with self.assertRaisesRegex(

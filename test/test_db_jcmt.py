@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -314,32 +314,21 @@ class DBJCMTTest(DBTestCase):
             self.db.get_jcmt_review(reviewer_id)
 
         with self.assertRaisesRegex(
-                ConsistencyError, 'JCMT review does not exist'):
-            self.db.set_jcmt_review(
-                role_class, reviewer_id, review_state=ReviewState.DONE,
-                review=null_tuple(JCMTReview)._replace(
-                    expertise=JCMTReviewerExpertise.INTERMEDIATE),
-                is_update=True)
-
-        with self.assertRaisesRegex(
                 UserError, 'expertise level not recognised'):
             self.db.set_jcmt_review(
                 role_class, reviewer_id, review_state=ReviewState.DONE,
-                review=null_tuple(JCMTReview)._replace(expertise=999),
-                is_update=False)
+                review=null_tuple(JCMTReview)._replace(expertise=999))
 
         with self.assertRaisesRegex(
                 Error, 'expertise should be specified'):
             self.db.set_jcmt_review(
                 role_class, reviewer_id, review_state=ReviewState.DONE,
-                review=null_tuple(JCMTReview)._replace(expertise=None),
-                is_update=False)
+                review=null_tuple(JCMTReview)._replace(expertise=None))
 
         self.db.set_jcmt_review(
             role_class, reviewer_id, review_state=ReviewState.DONE,
             review=null_tuple(JCMTReview)._replace(
-                expertise=JCMTReviewerExpertise.INTERMEDIATE),
-            is_update=False)
+                expertise=JCMTReviewerExpertise.INTERMEDIATE))
 
         jcmt_review = self.db.get_jcmt_review(reviewer_id)
 
@@ -350,22 +339,17 @@ class DBJCMTTest(DBTestCase):
         # Repeat test with missing expertise, but not in the done state.
         self.db.set_jcmt_review(
             role_class, reviewer_id, review_state=ReviewState.PREPARATION,
-            review=null_tuple(JCMTReview)._replace(expertise=None),
-            is_update=True)
+            review=null_tuple(JCMTReview)._replace(expertise=None))
 
-        with self.assertRaisesRegex(
-                ConsistencyError, 'JCMT review already exist'):
-            self.db.set_jcmt_review(
-                role_class, reviewer_id, review_state=ReviewState.DONE,
-                review=null_tuple(JCMTReview)._replace(
-                    expertise=JCMTReviewerExpertise.INTERMEDIATE),
-                is_update=False)
+        jcmt_review = self.db.get_jcmt_review(reviewer_id)
+
+        self.assertIsInstance(jcmt_review, JCMTReview)
+        self.assertIsNone(jcmt_review.expertise)
 
         self.db.set_jcmt_review(
             role_class, reviewer_id, review_state=ReviewState.DONE,
             review=null_tuple(JCMTReview)._replace(
-                expertise=JCMTReviewerExpertise.EXPERT),
-            is_update=True)
+                expertise=JCMTReviewerExpertise.EXPERT))
 
         jcmt_review = self.db.get_jcmt_review(reviewer_id)
 
@@ -383,8 +367,7 @@ class DBJCMTTest(DBTestCase):
         self.db.set_jcmt_review(
             role_class, reviewer_id_2, review_state=ReviewState.DONE,
             review=null_tuple(JCMTReview)._replace(
-                expertise=JCMTReviewerExpertise.INTERMEDIATE),
-            is_update=False)
+                expertise=JCMTReviewerExpertise.INTERMEDIATE))
 
         result = self.db.search_jcmt_review(
             reviewer_id=[reviewer_id, reviewer_id_2])

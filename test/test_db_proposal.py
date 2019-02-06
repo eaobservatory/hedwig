@@ -452,47 +452,41 @@ class DBProposalTest(DBTestCase):
         with self.assertRaisesRegex(UserError, 'call type is not recognised'):
             self.db.set_call_preamble(
                 BaseCallType, semester_id, 999,
-                '', FormatType.PLAIN, is_update=False)
+                '', FormatType.PLAIN)
 
         with self.assertRaisesRegex(UserError, 'format not recognised'):
             self.db.set_call_preamble(
                 BaseCallType, semester_id, BaseCallType.STANDARD,
-                '', 999, is_update=False)
+                '', 999)
 
         with self.assertRaisesRegex(ConsistencyError, 'semester does not'):
             self.db.set_call_preamble(
                 BaseCallType, 1999999, BaseCallType.STANDARD,
-                '', FormatType.PLAIN, is_update=False)
+                '', FormatType.PLAIN)
 
-        with self.assertRaisesRegex(ConsistencyError, 'preamble does not'):
-            self.db.set_call_preamble(
-                BaseCallType, semester_id, BaseCallType.STANDARD,
-                '', FormatType.PLAIN, is_update=True)
-
-        self.db.set_call_preamble(
+        preamble_id_orig = self.db.set_call_preamble(
             BaseCallType, semester_id, BaseCallType.STANDARD,
-            'We invite proposals...', FormatType.PLAIN, is_update=False)
+            'We invite proposals...', FormatType.PLAIN)
+        self.assertIsInstance(preamble_id_orig, int)
 
         preamble = self.db.get_call_preamble(
             semester_id, BaseCallType.STANDARD)
 
         self.assertIsInstance(preamble, CallPreamble)
+        self.assertEqual(preamble.id, preamble_id_orig)
         self.assertEqual(preamble.description, 'We invite proposals...')
         self.assertEqual(preamble.description_format, FormatType.PLAIN)
 
-        with self.assertRaisesRegex(ConsistencyError, 'preamble already'):
-            self.db.set_call_preamble(
-                BaseCallType, semester_id, BaseCallType.STANDARD,
-                '', FormatType.PLAIN, is_update=False)
-
-        self.db.set_call_preamble(
+        preamble_id = self.db.set_call_preamble(
             BaseCallType, semester_id, BaseCallType.STANDARD,
-            'Proposals are invited...', FormatType.RST, is_update=True)
+            'Proposals are invited...', FormatType.RST)
+        self.assertEqual(preamble_id, preamble_id_orig)
 
         preamble = self.db.get_call_preamble(
             semester_id, BaseCallType.STANDARD)
 
         self.assertIsInstance(preamble, CallPreamble)
+        self.assertEqual(preamble.id, preamble_id_orig)
         self.assertEqual(preamble.description, 'Proposals are invited...')
         self.assertEqual(preamble.description_format, FormatType.RST)
 
@@ -948,13 +942,13 @@ class DBProposalTest(DBTestCase):
         with self.assertRaisesRegex(UserError, 'format not recognised'):
             self.db.set_proposal_text(
                 BaseTextRole, proposal_id_1, BaseTextRole.ABSTRACT,
-                'test', 999, 1, person_id, False)
+                'test', 999, 1, person_id)
         with self.assertRaisesRegex(Error, 'text role not recognised'):
             self.db.set_proposal_text(
                 BaseTextRole, proposal_id_1, 999, 'test',
-                FormatType.PLAIN, 1, person_id, False)
+                FormatType.PLAIN, 1, person_id)
 
-        # Test we can't get, delete or update a non-existant record.
+        # Test we can't get or delete a non-existant record.
         with self.assertRaisesRegex(NoSuchRecord, 'no results$'):
             self.db.get_proposal_text(
                 proposal_id_1, BaseTextRole.ABSTRACT)
@@ -968,16 +962,16 @@ class DBProposalTest(DBTestCase):
                                          BaseTextRole.ABSTRACT,
                                          _skip_check=True)
 
-        with self.assertRaisesRegex(ConsistencyError, '^text does not exist'):
-            self.db.set_proposal_text(BaseTextRole, proposal_id_1,
-                                      BaseTextRole.TECHNICAL_CASE, 'test',
-                                      FormatType.PLAIN, 1, person_id, True)
+        # Test that we can't reference a non-existant person as editor.
+        with self.assertRaisesRegex(ConsistencyError, '^person does not'):
+            self.db.set_proposal_text(
+                BaseTextRole, proposal_id_1, BaseTextRole.SCIENCE_CASE, 'test',
+                FormatType.PLAIN, 1, 1999999)
 
-        with self.assertRaisesRegex(ConsistencyError, '^no rows matched'):
-            self.db.set_proposal_text(BaseTextRole, proposal_id_1,
-                                      BaseTextRole.TECHNICAL_CASE, 'test',
-                                      FormatType.PLAIN, 1, person_id, True,
-                                      _test_skip_check=True)
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.set_proposal_text(
+                BaseTextRole, proposal_id_1, BaseTextRole.SCIENCE_CASE, 'test',
+                FormatType.PLAIN, 1, 1999999, _test_skip_check=True)
 
         # Add a PDF file -- this should be deleted when we add the text.
         pdf_id = self.db.set_proposal_pdf(
@@ -994,18 +988,20 @@ class DBProposalTest(DBTestCase):
             proposal_id_1, BaseTextRole.SCIENCE_CASE, 2)
 
         # Try creating and updating some text.
-        self.db.set_proposal_text(
+        text_id_orig = self.db.set_proposal_text(
             BaseTextRole, proposal_id_1, BaseTextRole.SCIENCE_CASE, 'test',
-            FormatType.PLAIN, 1, person_id, False)
+            FormatType.PLAIN, 1, person_id)
+        self.assertIsInstance(text_id_orig, int)
         result = self.db.get_proposal_text(
             proposal_id_1, BaseTextRole.SCIENCE_CASE)
         self.assertIsInstance(result, ProposalText)
         self.assertEqual(result.text, 'test')
         self.assertEqual(result.format, FormatType.PLAIN)
 
-        self.db.set_proposal_text(
+        text_id = self.db.set_proposal_text(
             BaseTextRole, proposal_id_1, BaseTextRole.SCIENCE_CASE, 'change',
-            FormatType.PLAIN, 1, person_id, True)
+            FormatType.PLAIN, 1, person_id)
+        self.assertEqual(text_id, text_id_orig)
         result = self.db.get_proposal_text(
             proposal_id_1, BaseTextRole.SCIENCE_CASE)
         self.assertIsInstance(result, ProposalText)
@@ -1023,18 +1019,6 @@ class DBProposalTest(DBTestCase):
             self.db.get_proposal_pdf_preview(
                 proposal_id_1, BaseTextRole.SCIENCE_CASE, 2)
 
-        # Check we can't re-create an existing text record.
-        with self.assertRaisesRegex(ConsistencyError, '^text already exists'):
-            self.db.set_proposal_text(
-                BaseTextRole, proposal_id_1, BaseTextRole.SCIENCE_CASE, 'new',
-                FormatType.PLAIN, 1, person_id, False)
-
-        with self.assertRaises(DatabaseIntegrityError):
-            self.db.set_proposal_text(
-                BaseTextRole, proposal_id_1, BaseTextRole.SCIENCE_CASE, 'new',
-                FormatType.PLAIN, 1, person_id, False,
-                _test_skip_check=True)
-
         # Now delete the record.
         self.db.delete_proposal_text(
             proposal_id_1, BaseTextRole.SCIENCE_CASE)
@@ -1049,18 +1033,27 @@ class DBProposalTest(DBTestCase):
         FormatType._info[993] = FormatType.FormatTypeInfo('RST', True)
 
         # Add and change multiple records.
-        self.db.set_proposal_text(BaseTextRole, proposal_id_1, 40, 'a',
-                                  FormatType.PLAIN, 1, person_id, False)
-        self.db.set_proposal_text(BaseTextRole, proposal_id_1, 41, 'b',
-                                  FormatType.PLAIN, 1, person_id, False)
-        self.db.set_proposal_text(BaseTextRole, proposal_id_2, 40, 'c',
-                                  991, 1, person_id, False)
-        self.db.set_proposal_text(BaseTextRole, proposal_id_2, 41, 'd',
-                                  992, 1, person_id, False)
+        self.db.set_proposal_text(
+            BaseTextRole, proposal_id_1, 40, 'a',
+            FormatType.PLAIN, 1, person_id)
+        self.db.set_proposal_text(
+            BaseTextRole, proposal_id_1, 41, 'b',
+            FormatType.PLAIN, 1, person_id)
+        text_id_orig = self.db.set_proposal_text(
+            BaseTextRole, proposal_id_2, 40, 'c',
+            991, 1, person_id)
+        self.db.set_proposal_text(
+            BaseTextRole, proposal_id_2, 41, 'd',
+            992, 1, person_id)
 
-        self.db.set_proposal_text(BaseTextRole, proposal_id_2, 40, 'cc', 993,
-                                  1, person_id, True)
+        text_id = self.db.set_proposal_text(
+            BaseTextRole, proposal_id_2, 40, 'cc', 993,
+            1, person_id)
+
         self.db.delete_proposal_text(proposal_id_1, 41)
+
+        self.assertIsInstance(text_id_orig, int)
+        self.assertEqual(text_id, text_id_orig)
 
         result = self.db.get_proposal_text(proposal_id_1, 40)
         self.assertIsInstance(result, ProposalText)
@@ -1108,7 +1101,7 @@ class DBProposalTest(DBTestCase):
         # Add text and figures -- these should be removed automatically.
         self.db.set_proposal_text(
             BaseTextRole, proposal_id, role, 'test', FormatType.PLAIN,
-            1, person_id, False)
+            1, person_id)
         fig_id = self.db.add_proposal_figure(
             BaseTextRole, proposal_id, role, FigureType.PNG,
             b'dummy figure', 'Caption', 'test.png', person_id)

@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2018 East Asian Observatory
+# Copyright (C) 2016-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -159,11 +159,11 @@ class JCMTFacilityTestCase(FacilityTestCase):
             roles, review_1a, text='test', format_=FormatType.PLAIN,
             assessment=None, rating=30, weight=None,
             note='', note_format=FormatType.PLAIN, note_public=False,
-            state=ReviewState.DONE, is_update=False)
+            state=ReviewState.DONE)
         self.db.set_jcmt_review(
             roles, review_1a, review_state=ReviewState.DONE,
             review=null_tuple(JCMTReview)._replace(
-                expertise=JCMTReviewerExpertise.EXPERT), is_update=False)
+                expertise=JCMTReviewerExpertise.EXPERT))
 
         review_1b = self.db.add_reviewer(
             roles, proposal_1, person_id, roles.CTTEE_SECONDARY)
@@ -171,11 +171,11 @@ class JCMTFacilityTestCase(FacilityTestCase):
             roles, review_1b, text='test', format_=FormatType.PLAIN,
             assessment=None, rating=40, weight=None,
             note='', note_format=FormatType.PLAIN, note_public=False,
-            state=ReviewState.DONE, is_update=False)
+            state=ReviewState.DONE)
         self.db.set_jcmt_review(
             roles, review_1b, review_state=ReviewState.DONE,
             review=null_tuple(JCMTReview)._replace(
-                expertise=JCMTReviewerExpertise.INTERMEDIATE), is_update=False)
+                expertise=JCMTReviewerExpertise.INTERMEDIATE))
 
         review_2a = self.db.add_reviewer(
             roles, proposal_2, person_id, roles.CTTEE_PRIMARY)
@@ -183,11 +183,11 @@ class JCMTFacilityTestCase(FacilityTestCase):
             roles, review_2a, text='test', format_=FormatType.PLAIN,
             assessment=None, rating=50, weight=None,
             note='', note_format=FormatType.PLAIN, note_public=False,
-            state=ReviewState.DONE, is_update=False)
+            state=ReviewState.DONE)
         self.db.set_jcmt_review(
             roles, review_2a, review_state=ReviewState.DONE,
             review=null_tuple(JCMTReview)._replace(
-                expertise=JCMTReviewerExpertise.NON_EXPERT), is_update=False)
+                expertise=JCMTReviewerExpertise.NON_EXPERT))
 
         review_2b = self.db.add_reviewer(
             roles, proposal_2, person_id, roles.CTTEE_SECONDARY)
@@ -195,11 +195,11 @@ class JCMTFacilityTestCase(FacilityTestCase):
             roles, review_2b, text='test', format_=FormatType.PLAIN,
             assessment=None, rating=60, weight=None,
             note='', note_format=FormatType.PLAIN, note_public=False,
-            state=ReviewState.DONE, is_update=False)
+            state=ReviewState.DONE)
         self.db.set_jcmt_review(
             roles, review_2b, review_state=ReviewState.DONE,
             review=null_tuple(JCMTReview)._replace(
-                expertise=JCMTReviewerExpertise.NON_EXPERT), is_update=False)
+                expertise=JCMTReviewerExpertise.NON_EXPERT))
 
         # Expected data for tests.
         expect = {

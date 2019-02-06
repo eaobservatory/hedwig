@@ -442,8 +442,9 @@ class ProposalPart(object):
         """
 
         with self._transaction(_conn=_conn) as conn:
-            if not _skip_check and (self._get_proposal_pdf_id(
-                    conn, proposal_id, role) is None):
+            if (not _skip_check
+                    and (self._get_proposal_text_id(
+                        conn, proposal_pdf, proposal_id, role) is None)):
                 raise ConsistencyError('PDF does not exist for {} role {}',
                                        proposal_id, role)
 
@@ -471,8 +472,8 @@ class ProposalPart(object):
         """
 
         with self._transaction(_conn=_conn) as conn:
-            if not _skip_check and not self._exists_proposal_text(
-                    conn, proposal_id, role):
+            if not _skip_check and not self._get_proposal_text_id(
+                    conn, proposal_text, proposal_id, role):
                 raise ConsistencyError('text does not exist for {} role {}',
                                        proposal_id, role)
 
@@ -1891,7 +1892,7 @@ class ProposalPart(object):
         return ans
 
     def set_call_preamble(self, type_class, semester_id, type_,
-                          description, description_format, is_update,
+                          description, description_format,
                           _test_skip_check=False):
         if not type_class.is_valid(type_):
             raise UserError('The selected call type is not recognised.')
@@ -1907,23 +1908,15 @@ class ProposalPart(object):
                 except NoSuchRecord as e:
                     raise ConsistencyError(e.message)
 
-                already_exists = self._exists_call_preamble(
-                    conn, semester_id, type_)
-                if is_update and not already_exists:
-                    raise ConsistencyError(
-                        'call preamble does not exist for semester {} type {}',
-                        semester_id, type_)
-                elif not is_update and already_exists:
-                    raise ConsistencyError(
-                        'call preamble already exists for semester {} type {}',
-                        semester_id, type_)
+            preamble_id = self._get_call_preamble_id(
+                conn, semester_id, type_)
 
             values = {
                 call_preamble.c.description: description,
                 call_preamble.c.description_format: description_format,
             }
 
-            if is_update:
+            if preamble_id is not None:
                 result = conn.execute(call_preamble.update().where(and_(
                     call_preamble.c.semester_id == semester_id,
                     call_preamble.c.type == type_
@@ -1941,6 +1934,10 @@ class ProposalPart(object):
 
                 result = conn.execute(
                     call_preamble.insert().values(values))
+
+                preamble_id = result.inserted_primary_key[0]
+
+        return preamble_id
 
     def set_proposal_figure_preview(self, fig_id, preview):
         self._set_figure_alternate(
@@ -1992,7 +1989,8 @@ class ProposalPart(object):
                 raise ConsistencyError('person does not exist with id={}',
                                        uploader_person_id)
 
-            pdf_id = self._get_proposal_pdf_id(conn, proposal_id, role)
+            pdf_id = self._get_proposal_text_id(
+                conn, proposal_pdf, proposal_id, role)
 
             values = {
                 proposal_pdf.c.pdf: pdf,
@@ -2039,7 +2037,7 @@ class ProposalPart(object):
                 proposal_id, role, id_=None,
                 _allow_any=True, _conn=conn)
 
-            return pdf_id
+        return pdf_id
 
     def set_proposal_pdf_preview(self, pdf_id, pngs):
         """
@@ -2063,14 +2061,10 @@ class ProposalPart(object):
                 }))
 
     def set_proposal_text(self, role_class, proposal_id, role, text, format,
-                          words, editor_person_id, is_update,
+                          words, editor_person_id,
                           _test_skip_check=False):
         """
         Insert or update a given piece of proposal text.
-
-        The "is_update" boolean argument must be used to indicated whether
-        this is a new piece of text to insert or an update to an existing
-        piece.
         """
 
         if not format:
@@ -2082,17 +2076,13 @@ class ProposalPart(object):
                                  role)
 
         with self._transaction() as conn:
-            if not _test_skip_check:
-                already_exists = self._exists_proposal_text(
-                    conn, proposal_id, role)
-                if is_update and not already_exists:
-                    raise ConsistencyError(
-                        'text does not exist for proposal {} role {}',
-                        proposal_id, role)
-                elif not is_update and already_exists:
-                    raise ConsistencyError(
-                        'text already exists for proposal {} role {}',
-                        proposal_id, role)
+            if (not _test_skip_check and
+                    not self._exists_id(conn, person, editor_person_id)):
+                raise ConsistencyError('person does not exist with id={}',
+                                       editor_person_id)
+
+            text_id = self._get_proposal_text_id(
+                conn, proposal_text, proposal_id, role)
 
             values = {
                 proposal_text.c.text: text,
@@ -2102,7 +2092,7 @@ class ProposalPart(object):
                 proposal_text.c.editor: editor_person_id,
             }
 
-            if is_update:
+            if text_id is not None:
                 result = conn.execute(proposal_text.update().where(and_(
                     proposal_text.c.proposal_id == proposal_id,
                     proposal_text.c.role == role
@@ -2121,11 +2111,15 @@ class ProposalPart(object):
 
                 result = conn.execute(proposal_text.insert().values(values))
 
+                text_id = result.inserted_primary_key[0]
+
             # Delete any previous proposal PDF for the same role which
             # this text is replacing.
             self.delete_proposal_pdf(
                 proposal_id, role,
                 _skip_check=True, _allow_count=(0, 1), _conn=conn)
+
+        return text_id
 
     def sync_affiliation_weight(self, call_id, records):
         """
@@ -2800,35 +2794,26 @@ class ProposalPart(object):
                     'no rows matched updating queue with id={}',
                     queue_id)
 
-    def _get_proposal_pdf_id(self, conn, proposal_id, role):
+    def _get_proposal_text_id(self, conn, table, proposal_id, role):
         """
         Test whether text of the given role already exists for a proposal,
         and if it does, returns its identifier.
         """
 
-        return conn.execute(select([proposal_pdf.c.id]).where(and_(
-            proposal_pdf.c.proposal_id == proposal_id,
-            proposal_pdf.c.role == role
+        return conn.execute(select([table.c.id]).where(and_(
+            table.c.proposal_id == proposal_id,
+            table.c.role == role
         ))).scalar()
 
-    def _exists_call_preamble(self, conn, semester_id, type_):
+    def _get_call_preamble_id(self, conn, semester_id, type_):
         """
-        Test whether a preamble for the given semester and call type exists.
+        Test whether a preamble for the given semester and call type exists,
+        and if it does, returns its identifier.
         """
 
-        return 0 < conn.execute(select([count(call_preamble.c.id)]).where(and_(
+        return conn.execute(select([call_preamble.c.id]).where(and_(
             call_preamble.c.semester_id == semester_id,
             call_preamble.c.type == type_
-        ))).scalar()
-
-    def _exists_proposal_text(self, conn, proposal_id, role):
-        """
-        Test whether text of the given role already exists for a proposal.
-        """
-
-        return 0 < conn.execute(select([count(proposal_text.c.id)]).where(and_(
-            proposal_text.c.proposal_id == proposal_id,
-            proposal_text.c.role == role
         ))).scalar()
 
     def _exists_queue_affiliation(self, conn, queue_id, affiliation_id):

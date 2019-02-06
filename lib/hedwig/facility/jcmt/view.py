@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -865,8 +865,7 @@ class JCMT(EAOFacility):
             role_class=role_class,
             reviewer_id=reviewer.id,
             review_state=reviewer.review_state,
-            review=info,
-            is_update=(info.reviewer_id is not None))
+            review=info)
 
     def _view_review_edit_extra(self, db, reviewer, proposal, info):
         request = None

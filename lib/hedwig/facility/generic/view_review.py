@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1029,7 +1029,6 @@ class GenericReview(object):
         if reviewer is None:
             is_new_reviewer = True
             is_own_review = True
-            is_update = False
             target = url_for('.proposal_review_new', proposal_id=proposal.id,
                              reviewer_role=reviewer_role)
             reviewer = null_tuple(Reviewer)._replace(role=reviewer_role)
@@ -1037,7 +1036,6 @@ class GenericReview(object):
         else:
             is_new_reviewer = False
             is_own_review = (reviewer.person_id == session['person']['id'])
-            is_update = ReviewState.is_present(reviewer.review_state)
             target = url_for('.review_edit', reviewer_id=reviewer.id)
 
         referrer = args.get('referrer')
@@ -1141,8 +1139,7 @@ class GenericReview(object):
                     note=reviewer.review_note,
                     note_format=reviewer.review_note_format,
                     note_public=reviewer.review_note_public,
-                    state=reviewer.review_state,
-                    is_update=is_update)
+                    state=reviewer.review_state)
 
                 flash('The review has been saved and marked as {}.',
                       ReviewState.get_name(reviewer.review_state).lower())
@@ -1503,8 +1500,7 @@ class GenericReview(object):
                     accept=proposal.decision_accept,
                     exempt=proposal.decision_exempt,
                     note=proposal.decision_note,
-                    note_format=proposal.decision_note_format,
-                    is_update=proposal.has_decision)
+                    note_format=proposal.decision_note_format)
 
                 flash('The decision for proposal {} has been saved.',
                       proposal_code)
@@ -1694,8 +1690,7 @@ class GenericReview(object):
 
                 if ready_updates:
                     for (id_, ready) in ready_updates.items():
-                        db.set_decision(
-                            proposal_id=id_, ready=ready, is_update=True)
+                        db.set_decision(proposal_id=id_, ready=ready)
 
                     flash('The feedback approval status has been updated.')
 

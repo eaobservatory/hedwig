@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -461,7 +461,7 @@ class ReviewPart(object):
             where_extra=where_extra)
 
     def set_decision(self, proposal_id, accept=(), exempt=None, ready=None,
-                     note=None, note_format=None, is_update=False):
+                     note=None, note_format=None):
         values = {}
 
         if accept != ():
@@ -481,19 +481,14 @@ class ReviewPart(object):
         if not values:
             raise Error('no decision update specified')
 
+        decision_id = None
+
         with self._transaction() as conn:
             proposal = self.get_proposal(
                 facility_id=None, proposal_id=proposal_id,
                 with_decision=True, _conn=conn)
 
-            if is_update and not proposal.has_decision:
-                raise ConsistencyError(
-                    'decision does not already exist for {}', proposal_id)
-            elif proposal.has_decision and not is_update:
-                raise ConsistencyError(
-                    'decision already exists for {}', proposal_id)
-
-            if is_update:
+            if proposal.has_decision:
                 result = conn.execute(decision.update().where(
                     decision.c.proposal_id == proposal_id
                 ).values(values))
@@ -510,10 +505,14 @@ class ReviewPart(object):
 
                 result = conn.execute(decision.insert().values(values))
 
+                decision_id = result.inserted_primary_key[0]
+
+        return decision_id
+
     def set_review(self, role_class, reviewer_id, text, format_,
                    assessment, rating, weight,
                    note, note_format, note_public,
-                   state, is_update):
+                   state):
         if text is not None:
             if not format_:
                 raise UserError('Text format not specified.')
@@ -569,15 +568,9 @@ class ReviewPart(object):
 
             # Check if the review already exists.
             already_exists = self._exists_review(conn, reviewer_id=reviewer_id)
-            if is_update and not already_exists:
-                raise ConsistencyError(
-                    'review does not exist for reviewer {}', reviewer_id)
-            elif already_exists and not is_update:
-                raise ConsistencyError(
-                    'review already exists for reviewer {}', reviewer_id)
 
             # Perform the insert/update.
-            if is_update:
+            if already_exists:
                 result = conn.execute(review.update().where(
                     review.c.reviewer_id == reviewer_id
                 ).values(values))

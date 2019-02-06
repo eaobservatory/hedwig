@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -215,7 +215,7 @@ class JCMTPart(object):
                 conn.execute(jcmt_options.insert().values(values))
 
     def set_jcmt_review(
-            self, role_class, reviewer_id, review_state, review, is_update):
+            self, role_class, reviewer_id, review_state, review):
         state_done = (review_state == ReviewState.DONE)
 
         if review.expertise is not None:
@@ -277,15 +277,9 @@ class JCMTPart(object):
             # Check if the review already exists.
             already_exists = self._exists_jcmt_review(
                 conn, reviewer_id=reviewer_id)
-            if is_update and not already_exists:
-                raise ConsistencyError(
-                    'JCMT review does not exist for reviewer {}', reviewer_id)
-            elif already_exists and not is_update:
-                raise ConsistencyError(
-                    'JCMT review already exists for reviewer {}', reviewer_id)
 
             # Perform the insert/update.
-            if is_update:
+            if already_exists:
                 result = conn.execute(jcmt_review.update().where(
                     jcmt_review.c.reviewer_id == reviewer_id
                 ).values(values))
