@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,15 +24,15 @@ from hedwig.error import MultipleRecords, NoSuchRecord, NoSuchValue, UserError
 from hedwig.type.base import CollectionByProposal, CollectionOrdered, \
     CollectionSortable
 from hedwig.type.collection import \
-    CallCollection, CallPreambleCollection, \
+    AffiliationCollection, CallCollection, CallPreambleCollection, \
     EmailCollection, GroupMemberCollection, MemberCollection, \
     ResultCollection, \
     ProposalCollection, ProposalFigureCollection, ReviewerCollection
-from hedwig.type.enum import BaseReviewerRole, BaseTextRole, \
+from hedwig.type.enum import AffiliationType, BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, \
     ReviewState
 from hedwig.type.simple import \
-    Call, CallPreamble, Email, GroupMember, Member, \
+    Affiliation, Call, CallPreamble, Email, GroupMember, Member, \
     Proposal, ProposalFigureInfo, Reviewer
 from hedwig.type.util import null_tuple
 
@@ -137,6 +137,33 @@ class CollectionTypeTestCase(TestCase):
             [106, 209, 108, 208, 101, 203,
              103, 201, 109, 206, 105, 205,
              104, 202, 102, 204, 107, 207])
+
+    def test_affiliation_collection(self):
+        affiliations = AffiliationCollection()
+
+        id_ = 1
+
+        for name in ['Aff. 1', 'Aff. 2', 'Aff. 3']:
+            for (type_name, type_) in [
+                    ('ex', AffiliationType.EXCLUDED),
+                    ('st', AffiliationType.STANDARD),
+                    ('sh', AffiliationType.SHARED)]:
+                affiliations[id_] = Affiliation(
+                    id_, None, '{} ({})'.format(name, type_name),
+                    hidden=False, type=type_, weight=None)
+                id_ += 1
+
+        self.assertEqual(
+            list(x.name for x in affiliations.values()), [
+                'Aff. 1 (ex)', 'Aff. 1 (st)', 'Aff. 1 (sh)',
+                'Aff. 2 (ex)', 'Aff. 2 (st)', 'Aff. 2 (sh)',
+                'Aff. 3 (ex)', 'Aff. 3 (st)', 'Aff. 3 (sh)'])
+
+        self.assertEqual(
+            list(x.name for x in affiliations.values_in_type_order()), [
+                'Aff. 1 (st)', 'Aff. 2 (st)', 'Aff. 3 (st)',
+                'Aff. 1 (sh)', 'Aff. 2 (sh)', 'Aff. 3 (sh)',
+                'Aff. 1 (ex)', 'Aff. 2 (ex)', 'Aff. 3 (ex)'])
 
     def test_call_collection(self):
         c = CallCollection()

@@ -20,7 +20,7 @@
     <li>
         <label for="affiliation_id">Affiliation</label>
         <select name="affiliation_id">
-            {% for affiliation in affiliations.values() %}
+            {% for affiliation in affiliations.values_in_type_order() %}
                 <option value="{{ affiliation.id }}" {{ 'selected="selected"' | safe if affiliation.id == member.affiliation_id }}>{{ affiliation.name }}</option>
             {% endfor %}
         </select>

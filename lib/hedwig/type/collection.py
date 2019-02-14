@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -126,6 +126,17 @@ class AffiliationCollection(ResultCollection):
             if not AffiliationType.is_valid(affiliation.type):
                 raise UserError(
                     'Affiliation "{}" has invalid type', affiliation.name)
+
+    def values_in_type_order(self):
+        """
+        Iterate over the values in the collection in order
+        of the affiliation type.
+        """
+
+        for type_ in AffiliationType.get_options().keys():
+            for affiliation in self.values():
+                if affiliation.type == type_:
+                    yield affiliation
 
 
 class CalculationCollection(ResultCollection, CollectionOrdered):

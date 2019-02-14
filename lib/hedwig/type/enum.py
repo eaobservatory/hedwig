@@ -40,8 +40,8 @@ class AffiliationType(EnumBasic):
 
     _info = OrderedDict((
         (STANDARD, TypeInfo('Standard')),
-        (EXCLUDED, TypeInfo('Excluded')),
         (SHARED,   TypeInfo('Shared')),
+        (EXCLUDED, TypeInfo('Excluded')),
     ))
 
     @classmethod

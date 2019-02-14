@@ -823,8 +823,7 @@ class ProposalPart(object):
         if order_by_id:
             stmt = stmt.order_by(affiliation.c.id.asc())
         else:
-            stmt = stmt.order_by(affiliation.c.type.asc(),
-                                 affiliation.c.name.asc())
+            stmt = stmt.order_by(affiliation.c.name.asc())
 
         ans = AffiliationCollection()
 
