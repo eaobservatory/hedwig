@@ -2236,9 +2236,14 @@ class ProposalPart(object):
                 update_columns=(member.c.student,),
                 forbid_add=True, forbid_delete=True)
 
-    def sync_proposal_prev_proposal(self, proposal_id, records):
+    def sync_proposal_prev_proposal(
+            self, proposal_id, records, retain_resolved=False):
         """
         Update the prev_proposal records related to a proposal.
+
+        :param retain_resolved: if true, for newly added records, retain
+            the resolved information (title, author and year).  (For existing
+            records being updated, these values are cleared for now.)
         """
 
         records.validate()
@@ -2272,7 +2277,8 @@ class ProposalPart(object):
 
                     # For now, count all changes to publications as "updates".
                     n_update += self._sync_proposal_prev_proposal_pub(
-                        conn, prev_proposal_id, [], value.publications)
+                        conn, prev_proposal_id, [], value.publications,
+                        retain_resolved=retain_resolved)
 
                 else:
                     # Check if needs update
@@ -2303,8 +2309,9 @@ class ProposalPart(object):
 
         return (n_insert, n_update, n_delete)
 
-    def _sync_proposal_prev_proposal_pub(self, conn, prev_proposal_id,
-                                         existing, publications):
+    def _sync_proposal_prev_proposal_pub(
+            self, conn, prev_proposal_id, existing, publications,
+            retain_resolved=False):
         n_change = 0
 
         for value in publications:
@@ -2321,17 +2328,28 @@ class ProposalPart(object):
             else:
                 new_state = AttachmentState.NEW
 
+            values = {
+                prev_proposal_pub.c.description: value.description,
+                prev_proposal_pub.c.type: value.type,
+                prev_proposal_pub.c.state: new_state,
+                prev_proposal_pub.c.title: None,
+                prev_proposal_pub.c.author: None,
+                prev_proposal_pub.c.year: None,
+                prev_proposal_pub.c.edited: datetime.utcnow(),
+            }
+
             if previous is None:
-                conn.execute(prev_proposal_pub.insert().values({
-                    prev_proposal_pub.c.prev_proposal_id: prev_proposal_id,
-                    prev_proposal_pub.c.description: value.description,
-                    prev_proposal_pub.c.type: value.type,
-                    prev_proposal_pub.c.state: new_state,
-                    prev_proposal_pub.c.title: None,
-                    prev_proposal_pub.c.author: None,
-                    prev_proposal_pub.c.year: None,
-                    prev_proposal_pub.c.edited: datetime.utcnow(),
-                }))
+                if retain_resolved and AttachmentState.is_ready(value.state):
+                    values.update({
+                        prev_proposal_pub.c.state: value.state,
+                        prev_proposal_pub.c.title: value.title,
+                        prev_proposal_pub.c.author: value.author,
+                        prev_proposal_pub.c.year: value.year,
+                    })
+
+                values[prev_proposal_pub.c.prev_proposal_id] = prev_proposal_id
+
+                conn.execute(prev_proposal_pub.insert().values(values))
 
                 n_change += 1
 
@@ -2339,15 +2357,7 @@ class ProposalPart(object):
                     (previous.type != value.type)):
                 conn.execute(prev_proposal_pub.update().where(
                     prev_proposal_pub.c.id == previous.id
-                ).values({
-                    prev_proposal_pub.c.description: value.description,
-                    prev_proposal_pub.c.type: value.type,
-                    prev_proposal_pub.c.state: new_state,
-                    prev_proposal_pub.c.title: None,
-                    prev_proposal_pub.c.author: None,
-                    prev_proposal_pub.c.year: None,
-                    prev_proposal_pub.c.edited: datetime.utcnow(),
-                }))
+                ).values(values))
 
                 n_change += 1
 
