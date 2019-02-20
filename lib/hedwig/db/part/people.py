@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -98,7 +98,7 @@ class PeoplePart(object):
 
     def add_person(self, name, title=None, public=False,
                    user_id=None, remote_addr=None,
-                   primary_email=None,
+                   primary_email=None, institution_id=None,
                    _test_skip_check=False):
         """
         Add a person to the database.
@@ -110,6 +110,20 @@ class PeoplePart(object):
         person's primary email address.
         """
 
+        if not ((title is None) or PersonTitle.is_valid(title)):
+            raise UserError('Invalid title selection.')
+
+        values = {
+            person.c.name: name,
+            person.c.title: title,
+            person.c.public: public,
+            person.c.user_id: user_id,
+            person.c.admin: False,
+        }
+
+        if institution_id is not None:
+            values[person.c.institution_id] = institution_id
+
         with self._transaction() as conn:
             if user_id is not None and not _test_skip_check:
                 if not self._exists_id(conn, user, user_id):
@@ -119,16 +133,7 @@ class PeoplePart(object):
                     raise ConsistencyError(
                         'person already exists with user_id={}', user_id)
 
-            if not ((title is None) or PersonTitle.is_valid(title)):
-                raise UserError('Invalid title selection.')
-
-            result = conn.execute(person.insert().values({
-                person.c.name: name,
-                person.c.title: title,
-                person.c.public: public,
-                person.c.user_id: user_id,
-                person.c.admin: False,
-            }))
+            result = conn.execute(person.insert().values(values))
 
             person_id = result.inserted_primary_key[0]
 
