@@ -28,11 +28,13 @@ from hedwig.type.collection import AffiliationCollection, \
     CallCollection, MemberCollection, \
     ProposalCollection, ProposalCategoryCollection, ProposalTextCollection, \
     ResultCollection, TargetCollection
-from hedwig.type.enum import AffiliationType, AttachmentState, \
+from hedwig.type.enum import AffiliationType, AnnotationType, \
+    AttachmentState, \
     BaseCallType, BaseTextRole, \
     CallState, FigureType, \
     FormatType, ProposalState
-from hedwig.type.simple import Affiliation, Call, CallPreamble, Category, \
+from hedwig.type.simple import Affiliation, Annotation, \
+    Call, CallPreamble, Category, \
     Member, MemberInfo, MemberInstitution, \
     Proposal, ProposalCategory, ProposalFigureInfo, ProposalPDFInfo, \
     ProposalText, Target
@@ -919,6 +921,35 @@ class DBProposalTest(DBTestCase):
             [x.person_id for x in
              self.db.search_member(proposal_id=proposal_id).values()],
             [person_id_2, person_id_3])
+
+    def test_proposal_annotation(self):
+        proposal_id = self._create_test_proposal()
+
+        result = self.db.search_proposal_annotation(proposal_id=proposal_id)
+        self.assertEqual(len(result), 0)
+
+        annotation_id = self.db.add_proposal_annotation(
+            proposal_id, AnnotationType.PROPOSAL_COPY, {'test': 1234})
+        self.assertIsInstance(annotation_id, int)
+
+        result = self.db.search_proposal_annotation(proposal_id=proposal_id)
+        self.assertEqual(list(result.keys()), [annotation_id])
+
+        value = result.get_single()
+        self.assertIsInstance(value, Annotation)
+        self.assertEqual(value.id, annotation_id)
+        self.assertEqual(value.proposal_id, proposal_id)
+        self.assertEqual(value.type, AnnotationType.PROPOSAL_COPY)
+        self.assertIsInstance(value.date, datetime)
+        self.assertEqual(value.annotation, {'test': 1234})
+
+        result = self.db.search_proposal_annotation(
+            proposal_id=proposal_id, type_=999999)
+        self.assertEqual(len(result), 0)
+
+        result = self.db.search_proposal_annotation(
+            proposal_id=proposal_id, type_=AnnotationType.PROPOSAL_COPY)
+        self.assertEqual(len(result), 1)
 
     def test_proposal_text(self):
         # "Define" extra text roles for the purpose of testing this

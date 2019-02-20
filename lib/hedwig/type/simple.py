@@ -25,13 +25,17 @@ from ..db.meta import affiliation, \
     email, group_member, institution, institution_log, \
     member, message, message_recipient, moc, person, \
     prev_proposal, prev_proposal_pub, \
-    proposal, proposal_category, proposal_text, queue, \
+    proposal, proposal_annotation, proposal_category, proposal_text, queue, \
     review, reviewer, review_calculation, \
     semester, target, user_log
 
 Affiliation = namedtuple(
     'Affiliation',
     [x.name for x in affiliation.columns] + ['weight'])
+
+Annotation = namedtuple(
+    'Annotation',
+    [x.name for x in proposal_annotation.columns])
 
 CalculatorInfo = namedtuple(
     'CalculatorInfo',

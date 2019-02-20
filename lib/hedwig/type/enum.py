@@ -49,6 +49,21 @@ class AffiliationType(EnumBasic):
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
 
+class AnnotationType(EnumBasic):
+    """
+    Class representing types of annotations.
+    """
+
+    PROPOSAL_COPY = 1
+
+    TypeInfo = namedtuple(
+        'TypeInfo', ('name',))
+
+    _info = OrderedDict((
+        (PROPOSAL_COPY, TypeInfo('Proposal copy')),
+    ))
+
+
 class CallState(EnumBasic):
     """
     Class representing states of a call for proposals.

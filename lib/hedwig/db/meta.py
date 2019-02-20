@@ -415,6 +415,18 @@ proposal = Table(
     UniqueConstraint('call_id', 'number'),
     **table_opts)
 
+proposal_annotation = Table(
+    'proposal_annotation',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('type', Integer, nullable=False),
+    Column('date', DateTime(), nullable=False),
+    Column('annotation', JSONEncoded, nullable=False),
+    **table_opts)
+
 proposal_category = Table(
     'proposal_category',
     metadata,

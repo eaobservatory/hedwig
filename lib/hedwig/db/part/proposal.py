@@ -34,10 +34,10 @@ from ...type.collection import AffiliationCollection, \
     PrevProposalCollection, ProposalCollection, ProposalCategoryCollection, \
     ProposalFigureCollection, ProposalTextCollection, \
     ResultCollection, TargetCollection
-from ...type.enum import AffiliationType, AttachmentState, \
+from ...type.enum import AffiliationType, AnnotationType, AttachmentState, \
     CallState, FigureType, FormatType, \
     ProposalState, PublicationType, SemesterState
-from ...type.simple import Affiliation, \
+from ...type.simple import Affiliation, Annotation, \
     Call, CallPreamble, Category, CoMemberInfo, \
     Member, MemberInfo, MemberPIInfo, \
     PrevProposal, PrevProposalPub, \
@@ -50,7 +50,7 @@ from ..meta import affiliation, affiliation_weight, \
     call, call_preamble, category, decision, \
     facility, institution, \
     member, person, prev_proposal, prev_proposal_pub, \
-    proposal, proposal_category, \
+    proposal, proposal_annotation, proposal_category, \
     proposal_fig, proposal_fig_preview, proposal_fig_thumbnail, \
     proposal_pdf, proposal_pdf_preview, proposal_text, \
     queue, review, reviewer, semester, target
@@ -229,6 +229,27 @@ class ProposalPart(object):
                             _conn=conn, _test_skip_check=_test_skip_check)
 
         return proposal_id
+
+    def add_proposal_annotation(
+            self, proposal_id, type_, annotation,
+            _test_skip_check=False, _conn=None):
+        if not AnnotationType.is_valid(type_):
+            raise Error('Invalid annotation type.')
+
+        with self._transaction(_conn=_conn) as conn:
+            if not _test_skip_check and not self._exists_id(
+                    conn, proposal, proposal_id):
+                raise ConsistencyError(
+                    'proposal does not exist with id={}', proposal_id)
+
+            result = conn.execute(proposal_annotation.insert().values({
+                proposal_annotation.c.proposal_id: proposal_id,
+                proposal_annotation.c.type: type_,
+                proposal_annotation.c.date: datetime.utcnow(),
+                proposal_annotation.c.annotation: annotation,
+            }))
+
+            return result.inserted_primary_key[0]
 
     def add_proposal_figure(
             self, role_class, proposal_id, role,
@@ -1613,6 +1634,28 @@ class ProposalPart(object):
 
                 ans[key] = row._replace(**{k: v.subset_by_proposal(row.id)
                                            for (k, v) in extra.items()})
+
+        return ans
+
+    def search_proposal_annotation(self, proposal_id, type_=None, _conn=None):
+        """
+        Search for annotations associated with a proposal.
+        """
+
+        stmt = proposal_annotation.select()
+
+        if proposal_id is not None:
+            stmt = stmt.where(proposal_annotation.c.proposal_id == proposal_id)
+
+        if type_ is not None:
+            stmt = stmt.where(proposal_annotation.c.type == type_)
+
+        ans = ResultCollection()
+
+        with self._transaction(_conn=_conn) as conn:
+            for row in conn.execute(stmt.order_by(
+                    proposal_annotation.c.date.asc())):
+                ans[row['id']] = Annotation(**row)
 
         return ans
 
