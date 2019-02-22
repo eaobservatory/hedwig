@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017 East Asian Observatory
+# Copyright (C) 2016-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -121,6 +121,18 @@ class SectionedList(object):
         (section, index) = self._find_by_index(index)
 
         section[index] = item
+
+    def as_dict(self, **kwargs):
+        """
+        Create a dictionary representation of this sectioned list.
+
+        This simply uses the section identifiers and lists returned
+        by :meth:`by_section` to construct a dictionary.  Please see
+        the notes for that method.  Additional keyword arguments are
+        passed to that method.
+        """
+
+        return dict((x.section, x.items) for x in self.by_section(**kwargs))
 
     def add_section(self, section, name=None):
         """

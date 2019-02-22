@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -23,8 +23,24 @@ import json
 from sqlalchemy.types import TypeDecorator, UnicodeText
 
 
+class AutoEncoder(json.JSONEncoder):
+    """
+    JSON encoder class which will use object helper methods
+    to convert them to a serializable form.
+    """
+
+    def default(self, obj):
+        if hasattr(obj, 'as_dict'):
+            return obj.as_dict()
+
+        return super(AutoEncoder, self).default(obj)
+
+
 # Based on the "Marshal JSON Strings" example in the SQLAlchemy manual,
 # Custom Types / TypeDecorator Recipes section.
+encoder = AutoEncoder(ensure_ascii=False)
+
+
 class JSONEncoded(TypeDecorator):
     """
     Represents a data structure as JSON in a unicode text column.
@@ -36,7 +52,7 @@ class JSONEncoded(TypeDecorator):
         if value is None:
             return None
 
-        return json.dumps(value, ensure_ascii=False)
+        return encoder.encode(value)
 
     def process_result_value(self, value, dialect):
         if value is None:
