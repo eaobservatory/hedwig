@@ -19,6 +19,9 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict, namedtuple
+from contextlib import contextmanager
+
+from ..error import UserError
 
 
 SectionedListSection = namedtuple(
@@ -55,7 +58,7 @@ class SectionedList(object):
         which would allow more efficient operations within each section.
     """
 
-    def __init__(self, iterable=None):
+    def __init__(self, iterable=None, note_format=None):
         """
         Construct new SectionedList object.
 
@@ -71,6 +74,8 @@ class SectionedList(object):
 
         self.data = OrderedDict(((None, default_section),))
         self.sections = {}
+        self.note_format = (
+            lambda x: x) if note_format is None else note_format
 
     def __delitem__(self, index):
         """
@@ -121,6 +126,39 @@ class SectionedList(object):
         (section, index) = self._find_by_index(index)
 
         section[index] = item
+
+    @contextmanager
+    def accumulate_notes(
+            self, section, section_name=None, include_empty=False,
+            default_error_message='An unexpected error occurred.'):
+        """
+        Context manager to accumulate notes into a section of the list,
+        with error handling.
+
+        Yields an empty list, into which the block can write notes.
+        Afterwards, if the list is no longer empty (or `include_empty`
+        is specified), it is added to the given section of the list.
+
+        If an exception is trapped, a note is added to the list.  This will
+        be the message from the exception if it is an instance of `UserError`,
+        or the `default_error_message` otherwise.  The `note_format`
+        method supplied to this class's constructor will be used to convert
+        the message to an object to store in the list if it was specified.
+        """
+
+        notes = []
+
+        try:
+            yield notes
+
+        except UserError as e:
+            notes.append(self.note_format(e.message))
+
+        except:
+            notes.append(self.note_format(default_error_message))
+
+        if notes or include_empty:
+            self.extend(notes, section, section_name)
 
     def as_dict(self, **kwargs):
         """

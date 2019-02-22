@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from hedwig.error import UserError
 from hedwig.type.misc import SectionedList, SectionedListSection
 
 from .compat import TestCase
@@ -241,3 +242,34 @@ class MiscTypeTestCase(TestCase):
         self.assertEqual(sl.replace_item_where(is_even, halve), 4)
 
         self.assertEqual(list(sl), [1, 1, 3, 1, 11, 3, 13, 7, 21, 11, 23, 12])
+
+    def test_sectioned_list_accumulate(self):
+        sl = SectionedList()
+
+        with sl.accumulate_notes('animals') as notes:
+            notes.extend(['moose', 'okapi'])
+
+        with sl.accumulate_notes('vegetables') as notes:
+            notes.extend(['carrot'])
+            raise Exception('A tomato isn\'t a vegetable.')
+
+        with sl.accumulate_notes('minerals') as notes:
+            raise UserError('Quartz is a mineral.')
+
+        with sl.accumulate_notes('other') as notes:
+            pass
+
+        with sl.accumulate_notes(
+                'other_including_empty', include_empty=True) as notes:
+            pass
+
+        with sl.accumulate_notes('animals') as notes:
+            notes.extend(['gibbon', 'leopard'])
+
+        self.assertEqual(sl.as_dict(include_empty=True), {
+            None: [],
+            'animals': ['moose', 'okapi', 'gibbon', 'leopard'],
+            'vegetables': ['carrot', 'An unexpected error occurred.'],
+            'minerals': ['Quartz is a mineral.'],
+            'other_including_empty': [],
+        })
