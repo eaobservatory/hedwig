@@ -1,0 +1,23 @@
+{% macro render_copy_annotation(annotation, proposal_order) %}
+    {% set notes = annotation.annotation.notes %}
+    <div class="annotation closeable">
+        <p>
+            <h3>Proposal Copy Report</h3>
+        </p>
+
+        {% for (section, section_name) in proposal_order.items() %}
+            {% if section in notes %}
+                <p class="section_label">{{ section_name }}</p>
+
+                <ul>
+                    {% for item in notes[section] %}
+                        <li>
+                            <b>{{ item.item }}</b>:
+                            {{ item.comment }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endfor %}
+    </div>
+{% endmacro %}

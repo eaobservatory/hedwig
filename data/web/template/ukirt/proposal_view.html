@@ -4,7 +4,7 @@
 
 {% block proposal_request %}
     <section>
-        <h2 id="request">Observing Request</h2>
+        <h2 id="request">{{ proposal_order.proposal_request }}</h2>
 
         {% if not requests %}
             <p class="missing">

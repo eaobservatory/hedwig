@@ -31,7 +31,8 @@ from ...view.util import int_or_none, \
 from ...type.collection import ResultTable
 from ...type.enum import AffiliationType, FormatType, \
     PermissionType, ProposalState, ReviewState
-from ...type.simple import FacilityObsInfo, Link, RouteInfo, ValidationMessage
+from ...type.simple import FacilityObsInfo, Link, RouteInfo, TextCopyInfo, \
+    ValidationMessage
 from ...type.util import null_tuple
 from ..eao.view import EAOFacility
 from .calculator_heterodyne import HeterodyneCalculator
@@ -401,6 +402,67 @@ class JCMT(EAOFacility):
 
         return {k: (v / affiliation_total)
                 for (k, v) in affiliation_count.items()}
+
+    def _copy_proposal(self, db, old_proposal, proposal, *args, **kwargs):
+        role_class = self.get_text_roles()
+        text_roles = [
+            TextCopyInfo(
+                role_class.PR_SUMMARY, 'science_case', 300, 0, 0, 0),
+        ]
+
+        atn = super(JCMT, self)._copy_proposal(
+            db, old_proposal, proposal, *args,
+            extra_text_roles=text_roles, **kwargs)
+
+        # Copy observing request.
+        with atn['notes'].accumulate_notes('proposal_request') as notes:
+            records = db.search_jcmt_request(proposal_id=old_proposal.id)
+            if records:
+                records_invalid = []
+                for id_, record in records.items():
+                    name = '{}, {}'.format(
+                        JCMTInstrument.get_name_with_ancillary(
+                            record.instrument, record.ancillary),
+                        JCMTWeather.get_name(record.weather))
+                    if not JCMTInstrument.is_available(record.instrument):
+                        records_invalid.append(id_)
+                        notes.append({
+                            'item': name,
+                            'comment': 'instrument is no longer available.'})
+                    elif not JCMTInstrument.has_available_ancillary(
+                            record.instrument, record.ancillary):
+                        records_invalid.append(id_)
+                        notes.append({
+                            'item': name,
+                            'comment': 'ancillary is no longer available.'})
+                    elif not JCMTWeather.is_available(record.weather):
+                        records_invalid.append(id_)
+                        notes.append({
+                            'item': name,
+                            'comment': 'weather band is no longer available.'})
+
+                for id_ in records_invalid:
+                    del records[id_]
+
+                (n_insert, n_update, n_delete) = \
+                    db.sync_jcmt_proposal_request(proposal.id, records)
+
+                notes.append({
+                    'item': '{} {}'.format(
+                        n_insert, 'requests' if n_insert > 1 else 'request'),
+                    'comment': 'copied to the proposal.'})
+
+            # Copy JCMT options.
+            option_values = db.get_jcmt_options(proposal_id=old_proposal.id)
+            if option_values is not None:
+                db.set_jcmt_options(**option_values._replace(
+                    proposal_id=proposal.id)._asdict())
+
+                notes.append({
+                    'item': 'Additional options',
+                    'comment': 'copied to the proposal.'})
+
+        return atn
 
     def _view_proposal_extra(self, db, proposal):
         role_class = self.get_text_roles()

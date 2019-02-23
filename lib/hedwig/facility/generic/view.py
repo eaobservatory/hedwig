@@ -204,6 +204,26 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
             'science_case',
         ]
 
+    def get_proposal_order_names(self):
+        """
+        Get an ordered dictionary which maps proposal section codes
+        to their names, in the order in which they should be shown.
+        """
+
+        names = {
+            'proposal_summary': 'Summary',
+            'proposal_abstract': 'Abstract',
+            'proposal_request': 'Observing Request',
+            'proposal_members': 'Members',
+            'proposal_previous': 'Previous Proposals and Publications',
+            'proposal_targets': 'Target Objects',
+            'proposal_calculations': 'Calculation Results',
+            'technical_case': 'Technical Justification',
+            'science_case': 'Scientific Justification',
+        }
+
+        return OrderedDict(((x, names[x]) for x in self.get_proposal_order()))
+
     def get_observing_info(self):
         """
         Get observing information.

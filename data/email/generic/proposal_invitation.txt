@@ -5,6 +5,9 @@ You have been invited by {{ inviter_name }} to participate in a proposal
 to use {{ facility_definite_name }} entitled "{{ proposal.title }}".
 This is a proposal in the {{ proposal.queue_name }} Queue
 for Semester {{ proposal.semester_name }} ({{ call_type }} Call).
+{% if copy_proposal_code is not none %}
+It is a copy of the previous proposal {{ copy_proposal_code }}.
+{% endif %}
 {% if is_editor %}
 You have also been given permission to edit the proposal.
 {% endif %}

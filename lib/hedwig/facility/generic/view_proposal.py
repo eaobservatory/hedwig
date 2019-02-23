@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import namedtuple
+from itertools import chain, count
 
 from ...astro.coord import CoordSystem
 from ...astro.catalog import parse_source_list, write_source_list
@@ -30,21 +31,22 @@ from ...publication.url import make_publication_url
 from ...type.collection import CalculationCollection, \
     PrevProposalCollection, ResultCollection, \
     TargetCollection
-from ...type.enum import AffiliationType, AttachmentState, \
+from ...type.enum import AffiliationType, AnnotationType, AttachmentState, \
     CallState, FigureType, FormatType, \
     GroupType, MessageThreadType, \
     PermissionType, PersonTitle, ProposalState, PublicationType, ReviewState
+from ...type.misc import SectionedList
 from ...type.simple import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
-    MemberInstitution, PrevProposal, PrevProposalPub, \
-    ProposalCategory, ProposalFigureInfo, ProposalText, \
-    Queue, Semester, Target, \
-    TargetToolInfo, ValidationMessage
+    Member, MemberInstitution, PrevProposal, PrevProposalPub, \
+    ProposalCategory, ProposalFigureInfo, ProposalText, ProposalWithCode, \
+    Queue, Semester, Target, TargetToolInfo, \
+    TextCopyInfo, ValidationMessage
 from ...type.util import null_tuple, with_can_edit, with_can_view
 from ...view import auth
 from ...web.util import ErrorPage, HTTPError, HTTPForbidden, \
     HTTPNotFound, HTTPRedirect, \
-    flash, session, url_for
+    flash, get_logger, session, url_for
 from ...view.util import count_words, int_or_none, \
     with_proposal, with_verified_admin
 
@@ -81,20 +83,94 @@ class GenericProposal(object):
 
         proposal_title = ''
         affiliation_id = None
+        old_proposal_id = None
+        member_copy = False
 
         if form is not None:
-            proposal_title = form['proposal_title'].strip()
-
-            affiliation_id = int(form['affiliation_id'])
-            if affiliation_id not in affiliations:
-                raise ErrorPage('Invalid affiliation selected.')
-
             try:
+                old_proposal = None
+
+                affiliation_id = int(form['affiliation_id'])
+                if affiliation_id not in affiliations:
+                    raise ErrorPage('Invalid affiliation selected.')
+
+                proposal_title = form['proposal_title'].strip()
+
+                if 'proposal_id' in form:
+                    old_proposal_id = int(form['proposal_id'])
+
+                member_copy = 'member_copy' in form
+
+                if 'submit_new' in form:
+                    pass
+
+                elif 'submit_copy' in form:
+                    if old_proposal_id is None:
+                        raise UserError('No proposal was selected to copy.')
+
+                    try:
+                        old_proposal = db.get_proposal(
+                            self.id_, old_proposal_id, with_members=True)
+                    except NoSuchRecord:
+                        raise ErrorPage('Proposal to copy not found.')
+
+                    assert old_proposal.id == old_proposal_id
+
+                    role_class = self.get_reviewer_roles()
+                    can = auth.for_proposal(role_class, db, old_proposal)
+
+                    if not can.view:
+                        raise HTTPForbidden(
+                            'Permission denied for the proposal '
+                            'selected for copying.')
+
+                    if not old_proposal.members.has_person(
+                            session['person']['id']):
+                        raise HTTPForbidden(
+                            'You can only copy proposals '
+                            'of which you are a member.')
+
+                    if ProposalState.is_open(old_proposal.state):
+                        raise ErrorPage('Proposal to copy is still open.')
+
+                else:
+                    raise ErrorPage('Unknown action selected.')
+
                 proposal_id = db.add_proposal(
                     call_id=call_id, person_id=session['person']['id'],
                     affiliation_id=affiliation_id,
-                    title=proposal_title)
-                flash('Your new proposal has been created.')
+                    title=(proposal_title if old_proposal is None
+                           else old_proposal.title))
+
+                if old_proposal is None:
+                    flash('Your new proposal has been created.')
+
+                else:
+                    try:
+                        proposal = db.get_proposal(
+                            self.id_, proposal_id, with_members=True)
+
+                        assert proposal.id == proposal_id
+
+                        atn = self._copy_proposal(
+                            db, old_proposal, proposal,
+                            copy_members=member_copy)
+
+                        db.add_proposal_annotation(
+                            proposal.id, AnnotationType.PROPOSAL_COPY, atn)
+
+                    except:
+                        get_logger().exception(
+                            'Failed to copy from proposal {} to {}',
+                            old_proposal.id, proposal_id)
+
+                        flash('An unexpected error occurred while your '
+                              'proposal was being copied. '
+                              'It may not be complete.')
+
+                    else:
+                        flash('Your proposal has been copied.')
+
                 raise HTTPRedirect(url_for('.proposal_view',
                                            proposal_id=proposal_id,
                                            first_view='true'))
@@ -102,14 +178,386 @@ class GenericProposal(object):
             except UserError as e:
                 message = e.message
 
+        proposals = db.search_proposal(
+            facility_id=self.id_,
+            person_id=session['person']['id'],
+            state=ProposalState.closed_states())
+
         return {
             'title': 'New Proposal',
             'call': call,
             'message': message,
             'proposal_title': proposal_title,
             'affiliations': affiliations,
-            'affiliation_id': affiliation_id
+            'affiliation_id': affiliation_id,
+            'proposals': proposals.map_values(
+                lambda x: ProposalWithCode(
+                    *x, code=self.make_proposal_code(db, x))),
+            'proposal_id': old_proposal_id,
+            'member_copy': member_copy,
         }
+
+    def _copy_proposal(
+            self, db, old_proposal, proposal, copy_members,
+            extra_text_roles=[]):
+        role_class = self.get_text_roles()
+        copier_person_id = session['person']['id']
+        old_proposal_code = self.make_proposal_code(db, old_proposal)
+
+        atn = {
+            'old_proposal_id': old_proposal.id,
+            'old_proposal_code': old_proposal_code,
+            'copier_person_id': copier_person_id,
+            'notes': SectionedList(
+                note_format=lambda x: {'item': 'Error', 'comment': x}),
+        }
+
+        # Copy members (if requested) and student flag (including copier).
+        with atn['notes'].accumulate_notes('proposal_members') as notes:
+            affiliations = None
+
+            if not copy_members:
+                notes.append({
+                    'item': 'Previous members',
+                    'comment': 'not invited to the new proposal.',
+                })
+
+            elif proposal.queue_id != old_proposal.queue_id:
+                # Affiliation IDs are different in different queues.
+                notes.append({
+                    'item': 'Previous members',
+                    'comment': 'can not be copied from a proposal '
+                    'in a different queue.'})
+
+            else:
+                # Get a list of the affiliations which are available now.
+                affiliations = db.search_affiliation(
+                    queue_id=proposal.queue_id, hidden=False)
+
+            copier_old_member = old_proposal.members.get_person(
+                copier_person_id)
+            copier_member = proposal.members.get_single()
+
+            for member in old_proposal.members.values():
+                if member.person_id == copier_person_id:
+                    # The copier should already have been added (as the 1st
+                    # member).  We just need to copy the "student" flag.
+                    proposal.members[copier_member.id] = \
+                        copier_member._replace(student=member.student)
+
+                    continue
+
+                elif affiliations is None:
+                    # Skip other members unless asked to copy.
+
+                    continue
+
+                elif member.affiliation_id not in affiliations:
+                    notes.append({
+                        'item': member.person_name,
+                        'comment': 'not added to the proposal because '
+                        'the affiliation "{}" is no longer available.'.format(
+                            member.affiliation_name)})
+
+                    continue
+
+                send_token = False
+
+                if member.person_registered:
+                    # The person was registered, so we can link their profile.
+                    member_person_id = member.person_id
+
+                elif copier_old_member.editor:
+                    # The person was not registered, so make a new profile.
+                    old_person = db.get_person(
+                        member.person_id, with_email=True)
+
+                    member_person_id = db.add_person(
+                        old_person.name, title=old_person.title,
+                        primary_email=old_person.email.get_primary().address,
+                        institution_id=member.resolved_institution_id)
+
+                    send_token = True
+
+                else:
+                    notes.append({
+                        'item': member.person_name,
+                        'comment': 'not added to the proposal because '
+                        'they did not register for an account and you were '
+                        'not an editor of the original proposal.'})
+
+                    continue
+
+                member_id = db.add_member(
+                    proposal.id, member_person_id,
+                    member.affiliation_id, member.editor, member.observer)
+
+                self._message_proposal_invite(
+                    db, proposal=proposal,
+                    person_id=member_person_id,
+                    person_name=member.person_name,
+                    is_editor=member.editor,
+                    affiliation_name=member.affiliation_name,
+                    send_token=send_token,
+                    copy_proposal_code=old_proposal_code)
+
+                proposal.members[member_id] = null_tuple(Member)._replace(
+                    id=member_id, student=member.student)
+
+                notes.append({
+                    'item': member.person_name,
+                    'comment': (
+                        'invited to register.'
+                        if send_token else 'added to the proposal.'),
+                })
+
+            db.sync_proposal_member_student(proposal.id, proposal.members)
+
+        # Copy target objects.
+        with atn['notes'].accumulate_notes('proposal_targets') as notes:
+            records = db.search_target(proposal_id=old_proposal.id)
+
+            if records:
+                sort_counter = count(1)
+                (n_insert, n_update, n_delete) = db.sync_proposal_target(
+                    proposal_id=proposal.id, records=records.map_values(
+                        lambda x: x._replace(
+                            id=None, sort_order=next(sort_counter))))
+
+                notes.append({
+                    'item': '{} {}'.format(
+                        n_insert, 'targets' if n_insert > 1 else 'target'),
+                    'comment': 'copied to the proposal.'})
+
+        # Copy calculations.
+        with atn['notes'].accumulate_notes('proposal_calculations') as notes:
+            records = db.search_calculation(proposal_id=old_proposal.id)
+
+            if records:
+                for (calc_number, calculation) in enumerate(
+                        records.values(), 1):
+                    calc_name = 'Calculation {}'.format(calc_number)
+                    if calculation.title:
+                        calc_name = '{}. {}'.format(
+                            calc_name, calculation.title)
+
+                    calc_info = self.calculators.get(calculation.calculator_id)
+                    if (calc_info is None or not
+                            calc_info.calculator.is_valid_mode(
+                                calculation.mode)):
+                        notes.append({
+                            'item': calc_name,
+                            'comment': 'not copied because this calculator or '
+                            'calculation mode has been removed.'})
+                        continue
+
+                    calculator = calc_info.calculator
+                    mode = calculation.mode
+                    input_ = calculation.input
+                    calc_version = calculator.get_calc_version()
+
+                    if not calculation.title:
+                        mode_info = calculator.get_mode_info(mode)
+                        calc_name = '{}. {} {}'.format(
+                            calc_name, calc_info.name, mode_info.name)
+
+                    # Convert to current interface version.
+                    if calculation.version != calculator.version:
+                        input_ = calculator.convert_input_version(
+                            mode, calculation.version, input_)
+
+                        notes.append({
+                            'item': calc_name,
+                            'comment': 'adjusted because the calculator '
+                            'interface has changed.'})
+
+                    elif calc_version != calculation.calc_version:
+                        notes.append({
+                            'item': calc_name,
+                            'comment': 'recalculated because the calculator '
+                            'has been updated.'})
+
+                    else:
+                        # "calc_version" is only supposed to be informational,
+                        # so we should probably not use it to assume we need
+                        # not recalculate.
+                        notes.append({
+                            'item': calc_name,
+                            'comment': 'results might have changed slightly.'})
+
+                    # Repeat the calculation in case anything changed.
+                    result = calculator(mode, input_)
+
+                    db.add_calculation(
+                        proposal.id, calculation.calculator_id,
+                        mode=mode,
+                        version=calculator.version,
+                        input_=input_,
+                        output=result.output,
+                        calc_version=calc_version,
+                        title=calculation.title)
+
+        # Copy previous proposals.
+        with atn['notes'].accumulate_notes('proposal_previous') as notes:
+            records = db.search_prev_proposal(proposal_id=old_proposal.id)
+            n_prev = len(records)
+
+            if ProposalState.is_submitted(old_proposal.state):
+                records['copied'] = null_tuple(PrevProposal)._replace(
+                    proposal_id=old_proposal.id,
+                    proposal_code=old_proposal_code,
+                    continuation=False, publications=[])
+
+                notes.append({
+                    'item': old_proposal_code,
+                    'comment': 'added to the list of previous proposals.'})
+
+            else:
+                notes.append({
+                    'item': old_proposal_code,
+                    'comment': 'not added to the list of previous proposals '
+                    'because it was not submitted.'})
+
+            if records:
+                db.sync_proposal_prev_proposal(
+                    proposal_id=proposal.id, records=records.map_values(
+                        lambda x: x._replace(id=None)),
+                    retain_resolved=True)
+
+                if n_prev:
+                    notes.append({
+                        'item': '{} previous {}'.format(
+                            n_prev, 'proposals' if n_prev > 1 else 'proposal'),
+                        'comment': 'copied to the proposal.'})
+
+        # Copy PDF files, text and figures.
+        pdfs = db.search_proposal_pdf(old_proposal.id)
+
+        texts = db.search_proposal_text(old_proposal.id)
+
+        figures = db.search_proposal_figure(
+            proposal_id=old_proposal.id, with_caption=True)
+
+        text_roles = [
+            TextCopyInfo(
+                role_class.ABSTRACT, 'proposal_abstract',
+                proposal.abst_word_lim, 0, 0, 0),
+            TextCopyInfo(
+                role_class.TOOL_NOTE, 'proposal_targets',
+                proposal.expl_word_lim, 0, 0, 0),
+            TextCopyInfo(
+                role_class.TECHNICAL_CASE, 'technical_case',
+                proposal.tech_word_lim, proposal.tech_fig_lim,
+                proposal.capt_word_lim, proposal.tech_page_lim),
+            TextCopyInfo(
+                role_class.SCIENCE_CASE, 'science_case',
+                proposal.sci_word_lim, proposal.sci_fig_lim,
+                proposal.capt_word_lim, proposal.sci_page_lim),
+        ]
+
+        for attachment in chain(text_roles, extra_text_roles):
+            role = attachment.role
+            role_name = role_class.get_name(role)
+
+            with atn['notes'].accumulate_notes(attachment.section) as notes:
+                pdf = pdfs.get_role(role, None)
+                if pdf is not None:
+                    if not attachment.page_lim:
+                        notes.append({
+                            'item': role_name,
+                            'comment': 'PDF file not copied because uploading '
+                            'of PDF files is no longer available here.'})
+
+                    elif pdf.pages > attachment.page_lim:
+                        notes.append({
+                            'item': role_name,
+                            'comment': 'PDF file not copied because it is '
+                            'too long ({} / {} {}).'.format(
+                                pdf.pages, attachment.page_lim,
+                                ('page' if attachment.page_lim == 1
+                                 else 'pages'))})
+
+                    else:
+                        db.link_proposal_pdf(
+                            role_class, proposal.id, role, pdf.pdf_id)
+
+                        notes.append({
+                            'item': role_name,
+                            'comment': 'PDF file was copied to the proposal.'})
+
+                    # If there was a PDF, there should be no text or figures,
+                    # so stop processing the attachment type.
+                    continue
+
+                text = texts.get_role(role, None)
+                if text is not None:
+                    if not attachment.word_lim:
+                        notes.append({
+                            'item': role_name,
+                            'comment': 'text not copied because online '
+                            'entry of text is no longer available here.'})
+
+                    elif text.words > attachment.word_lim:
+                        notes.append({
+                            'item': role_name,
+                            'comment': 'text not copied because it is '
+                            'too long ({} / {} words).'.format(
+                                text.words, attachment.word_lim)})
+
+                    else:
+                        db.link_proposal_text(
+                            role_class, proposal.id, role, text.text_id)
+
+                        notes.append({
+                            'item': role_name,
+                            'comment': 'the text was copied to the proposal.'})
+
+                for (figure_number, figure) in enumerate(
+                        figures.values_by_role(role), 1):
+                    figure_name = 'Figure {}'.format(figure_number)
+
+                    if not attachment.fig_lim:
+                        notes.append({
+                            'item': figure_name,
+                            'comment': 'not copied because figures can '
+                            'no longer be uploaded here.'})
+
+                    elif figure_number > attachment.fig_lim:
+                        notes.append({
+                            'item': figure_name,
+                            'comment': 'not copied because only {} {} '
+                            'can be uploaded here.'.format(
+                                attachment.fig_lim,
+                                ('figure' if attachment.fig_lim == 1
+                                 else 'figures'))})
+
+                    elif not FigureType.is_valid(figure.type):
+                        notes.append({
+                            'item': figure_name,
+                            'comment': 'not copied because this figure '
+                            'type is no longer supported.'})
+
+                    else:
+                        caption = figure.caption
+                        word_count = count_words(caption)
+                        if word_count > attachment.capt_word_lim:
+                            caption = ''
+
+                            notes.append({
+                                'item': figure_name,
+                                'comment': 'caption removed because it is too '
+                                'long ({} / {} words).'.format(
+                                    word_count, attachment.capt_word_lim)})
+
+                        db.link_proposal_figure(
+                            role_class, proposal.id, role, figure.fig_id,
+                            figure_number, caption)
+
+                        notes.append({
+                            'item': figure_name,
+                            'comment': 'the figure was copied to the proposal.'})
+
+        return atn
 
     @with_proposal(permission=PermissionType.VIEW)
     def view_proposal_view(self, db, proposal, can, args):
@@ -121,6 +569,7 @@ class GenericProposal(object):
             role_class, db, proposal=proposal, auth_cache=can.cache)
 
         is_admin = session.get('is_admin', False)
+        is_first_view = ('first_view' in args)
 
         ctx = {
             'title': proposal.title,
@@ -138,12 +587,16 @@ class GenericProposal(object):
                         or (can.edit and not x.person_registered))))),
             'students': proposal.members.get_students(),
             'proposal_code': self.make_proposal_code(db, proposal),
-            'show_person_proposals_callout': ('first_view' in args),
+            'show_person_proposals_callout': is_first_view,
             'show_admin_links': is_admin,
-            'proposal_order': self.get_proposal_order(),
+            'proposal_order': self.get_proposal_order_names(),
         }
 
         ctx.update(self._view_proposal_extra(db, proposal))
+
+        if is_first_view:
+            ctx['copy_annotations'] = db.search_proposal_annotation(
+                proposal_id=proposal.id)
 
         return ctx
 
@@ -839,7 +1292,8 @@ class GenericProposal(object):
 
     def _message_proposal_invite(
             self, db, proposal, person_id, person_name,
-            is_editor, affiliation_name, send_token):
+            is_editor, affiliation_name, send_token,
+            copy_proposal_code=None):
         type_class = self.get_call_types()
         proposal_code = self.make_proposal_code(db, proposal)
 
@@ -854,6 +1308,7 @@ class GenericProposal(object):
             'target_semester': url_for(
                 '.semester_calls', semester_id=proposal.semester_id,
                 call_type=proposal.call_type, _external=True),
+            'copy_proposal_code': copy_proposal_code,
         }
 
         if send_token:

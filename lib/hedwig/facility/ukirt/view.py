@@ -1,4 +1,4 @@
-# Copyright (C) 2018 East Asian Observatory
+# Copyright (C) 2018-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -89,6 +89,43 @@ class UKIRT(EAOFacility):
 
         except NoSuchValue:
             raise ParseError('Did not recognise call type code')
+
+    def _copy_proposal(self, db, old_proposal, proposal, *args, **kwargs):
+        atn = super(UKIRT, self)._copy_proposal(
+            db, old_proposal, proposal, *args, **kwargs)
+
+        # Copy observing request.
+        with atn['notes'].accumulate_notes('proposal_request') as notes:
+            records = db.search_ukirt_request(proposal_id=old_proposal.id)
+            if records:
+                records_invalid = []
+                for id_, record in records.items():
+                    name = '{}, {}'.format(
+                        UKIRTInstrument.get_name(record.instrument),
+                        UKIRTBrightness.get_name(record.brightness))
+                    if not UKIRTInstrument.is_available(record.instrument):
+                        records_invalid.append(id_)
+                        notes.append({
+                            'item': name,
+                            'comment': 'instrument is no longer available.'})
+                    elif not UKIRTBrightness.is_available(record.brightness):
+                        records_invalid.append(id_)
+                        notes.append({
+                            'item': name,
+                            'comment': 'brightness is no longer available.'})
+
+                for id_ in records_invalid:
+                    del records[id_]
+
+                (n_insert, n_update, n_delete) = \
+                    db.sync_ukirt_proposal_request(proposal.id, records)
+
+                notes.append({
+                    'item': '{} {}'.format(
+                        n_insert, 'requests' if n_insert > 1 else 'request'),
+                    'comment': 'copied to the proposal.'})
+
+        return atn
 
     def _view_proposal_extra(self, db, proposal):
         ctx = super(UKIRT, self)._view_proposal_extra(db, proposal)

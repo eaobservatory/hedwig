@@ -165,6 +165,16 @@ table + table {
     margin-left: 16ex;
 }
 
+div.annotation {
+    margin-bottom: 2ex;
+    border: 1px solid #888;
+    background: #EEE;
+    color: black;
+    padding: 1ex;
+    border-radius: 1ex;
+    box-shadow: 0.5ex 0.5ex 1ex grey;
+}
+
 div.formtip {
     display: inline-block;
     position: relative;
@@ -198,6 +208,17 @@ div.formtip > div {
 div.formtip > div > a {
     float: right;
     background: #88F;
+    color: #FFF;
+    padding: 0ex 1ex 0ex 1ex;
+    border-radius: 1ex;
+    cursor: pointer;
+    user-select: none;
+    -moz-user-select: none;
+}
+
+div.closeable > p.closer {
+    float: right;
+    background: #888;
     color: #FFF;
     padding: 0ex 1ex 0ex 1ex;
     border-radius: 1ex;

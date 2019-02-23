@@ -2,7 +2,7 @@
 {% from 'macro/affiliation_tip.html' import render_affiliation_tip %}
 {% set navigation=[((call.semester_name + ' ' + (call.type | call_type_name(facility_call_type_class))), url_for('.semester_calls', semester_id=call.semester_id, call_type=call.type))] %}
 {% set help_link=url_for('help.user_page', page_name='proposal_create') %}
-{% set scripts = ['formtip'] %}
+{% set scripts = ['formtip', 'new_proposal'] %}
 
 {% block content %}
 
@@ -23,6 +23,7 @@
 
 <form method="POST" action="{{ url_for('.proposal_new', call_id=call.id) }}">
     <ol>
+        <li class="separator">Identifying information</li>
         <li>
             <label>Facility</label>
             {{ facility_name }}
@@ -51,6 +52,8 @@
             </select>
             {{ render_affiliation_tip(call.semester_id, call.type) }}
         </li>
+
+        <li class="separator">New proposal</li>
         <li>
             <label for="proposal_title">Proposal title</label>
             <input type="text" name="proposal_title" value="{{ proposal_title }}" required="required" autofocus="autofocus" size="40" />
@@ -58,6 +61,35 @@
         <li>
             <input type="submit" name="submit_new" value="Create new proposal" />
         </li>
+
+        {% if proposals %}
+            <li class="separator">Copy an existing proposal</li>
+            <li>
+                <label for="proposal_id">Proposal</label>
+                <select name="proposal_id" />
+                    {% for proposal in proposals.values() %}
+                        <option value="{{ proposal.id }}" {{ 'selected="selected"' | safe if proposal.id == proposal_id }} data-queue_id="{{ proposal.queue_id }}">
+                            {{ proposal.code }}:
+                            {{ proposal.title | truncate(40, killwords=true, end='\u2026') }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </li>
+            <li>
+                <div class="explanation">
+                    Proposals are usually copied with you as the only member.
+                    However if you tick the &ldquo;previous members&rdquo; box,
+                    the system will send invitations to the members of the original proposal.
+                    This is not available when copying a proposal from a different queue.
+                </div>
+                <label for="member_copy">Previous members</label>
+                <input type="checkbox" name="member_copy" {{ 'checked="checked"' | safe if member_copy }} data-queue_id="{{ call.queue_id }}" />
+                <span class="checkboxlabel">Invite all members to the new proposal</span>
+            </li>
+            <li>
+                <input type="submit" name="submit_copy" value="Copy existing proposal" formnovalidate="formnovalidate" />
+            </li>
+        {% endif %}
     </ol>
 </form>
 

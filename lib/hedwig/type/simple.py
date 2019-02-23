@@ -278,6 +278,10 @@ TargetToolInfo = namedtuple(
     'TargetToolInfo',
     ['id', 'code', 'name', 'tool'])
 
+TextCopyInfo = namedtuple(
+    'TextCopyInfo',
+    ['role', 'section', 'word_lim', 'fig_lim', 'capt_word_lim', 'page_lim'])
+
 UserInfo = namedtuple(
     'UserInfo',
     ['id', 'name'])

@@ -13,6 +13,10 @@ a:link, a:visited {
     text-decoration: none;
 }
 
+div.annotation {
+    display: none;
+}
+
 p.warning {
     display: none;
 }

@@ -26,6 +26,7 @@ import functools
 from flask import session, url_for
 
 # Import the names which we use but do not wish to expose.
+from flask import current_app as _flask_current_app
 from flask import flash as _flask_flash
 from flask import make_response as _flask_make_response
 from flask import render_template as _flask_render_template
@@ -39,6 +40,7 @@ from ..compat import ExceptionWithMessage, string_type
 from ..error import UserError
 from ..type.simple import DateAndTime
 from ..type.enum import FigureType, FileTypeInfo
+from ..util import FormattedLogger
 
 
 class HTTPError(_werkzeug_exceptions.InternalServerError):
@@ -92,6 +94,17 @@ def flash(message, *args):
         _flask_flash(message.format(*args))
     else:
         _flask_flash(message)
+
+
+def get_logger():
+    """
+    Get the logger of the current Flask application.
+
+    (Returned as a `FormattedLogger` instance supporting string
+    formatting.)
+    """
+
+    return FormattedLogger(_flask_current_app.logger)
 
 
 def make_enum_converter(enum_class):

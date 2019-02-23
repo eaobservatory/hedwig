@@ -4,6 +4,7 @@
 {% from 'macro/pdf.html' import render_proposal_pdf %}
 {% from 'macro/figure.html' import render_proposal_figures %}
 {% from 'macro/calculation.html' import render_calculation_title, render_calculation %}
+{% from 'macro/annotation.html' import render_copy_annotation %}
 
 {% set navigation=[(proposal_code, none)] %}
 {% set help_link=url_for('help.user_page', page_name='proposal') %}
@@ -11,18 +12,25 @@
 {% if show_person_proposals_callout %}
     {% set scripts = ['dismiss_callout'] %}
 {% endif %}
+{% if copy_annotations %}
+    {% set scripts = concatenate_lists(['closeable'], scripts) %}
+{% endif %}
 
 {% block content %}
 
-{% orderblocks proposal_order %}
-
-{% block proposal_summary %}
+{% block proposal_preamble %}
     {% if can_edit %}
         <nav>
             <p>
                 <a href="{{ url_for('.title_edit', proposal_id=proposal.id) }}">Edit title</a>
             </p>
         </nav>
+    {% endif %}
+
+    {% if copy_annotations %}
+        {% for annotation in copy_annotations.values() %}
+            {{ render_copy_annotation(annotation, proposal_order) }}
+        {% endfor %}
     {% endif %}
 
     {% if can_edit and not is_submitted %}
@@ -38,7 +46,11 @@
             {% endif %}
         </p>
     {% endif %}
+{% endblock %}
 
+{% orderblocks proposal_order %}
+
+{% block proposal_summary %}
     <table>
         <tr>
             <th>Facility</th>
@@ -105,7 +117,7 @@
 
 {% block proposal_abstract %}
     <section>
-        <h2 id="abstract">Abstract</h2>
+        <h2 id="abstract">{{ proposal_order.proposal_abstract }}</h2>
 
         {% if abstract is none %}
             <p class="missing">
@@ -137,7 +149,7 @@
     <section>
         {% orderblocks science_case_order %}
             {% block science_case_intro %}
-                <h2 id="sci_case">Scientific Justification</h2>
+                <h2 id="sci_case">{{ proposal_order.science_case }}</h2>
             {% endblock %}
 
             {% block science_case_content %}
@@ -169,7 +181,7 @@
 
 {% block proposal_members %}
     <section>
-        <h2 id="members">Members</h2>
+        <h2 id="members">{{ proposal_order.proposal_members }}</h2>
 
         <table>
             <tr>
@@ -272,7 +284,7 @@
 
 {% block proposal_targets %}
     <section>
-        <h2 id="targets">Target Objects</h2>
+        <h2 id="targets">{{ proposal_order.proposal_targets}}</h2>
 
         {% if not targets %}
             <p class="missing">
@@ -358,7 +370,7 @@
 {% block proposal_calculations %}
     {% if calculators %}
     <section>
-        <h2 id="calculations">Calculation Results</h2>
+        <h2 id="calculations">{{ proposal_order.proposal_calculations }}</h2>
 
         {% if not calculations %}
             <p class="missing">
@@ -409,7 +421,7 @@
     <section>
         {% orderblocks technical_case_order %}
             {% block technical_case_intro %}
-                <h2 id="tech_case">Technical Justification</h2>
+                <h2 id="tech_case">{{ proposal_order.technical_case }}</h2>
             {% endblock %}
 
             {% block technical_case_content %}
@@ -441,7 +453,7 @@
 
 {% block proposal_previous %}
     <section>
-        <h2 id="prev_proposals">Previous Proposals and Publications</h2>
+        <h2 id="prev_proposals">{{ proposal_order.proposal_previous }}</h2>
 
         {% if not prev_proposals %}
             <p class="missing">
