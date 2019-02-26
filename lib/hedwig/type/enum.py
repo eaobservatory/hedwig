@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -575,6 +575,16 @@ class ProposalState(EnumBasic):
         return cls._info[state].reviewed
 
     @classmethod
+    def is_open(cls, state):
+        """
+        Determine whether a proposal is in an open state.
+
+        (See note for `open_states`.)
+        """
+
+        return state in cls.open_states()
+
+    @classmethod
     def get_short_name(cls, state):
         """Get the abbreviated name for a proposal state."""
 
@@ -621,6 +631,16 @@ class ProposalState(EnumBasic):
         """
 
         return [k for (k, v) in cls._info.items() if v.edit]
+
+    @classmethod
+    def closed_states(cls):
+        """
+        Return a list of states corresponding to proposal in closed calls.
+
+        (See note for `open_states`.)
+        """
+
+        return [k for (k, v) in cls._info.items() if not v.edit]
 
     @classmethod
     def by_name(cls, name):

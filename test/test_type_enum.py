@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -241,6 +241,17 @@ class EnumTypeTestCase(TestCase):
         self.assertTrue(ProposalState.is_reviewed(ProposalState.REJECTED))
         self.assertFalse(ProposalState.is_reviewed(ProposalState.REVIEW))
         self.assertFalse(ProposalState.is_reviewed(ProposalState.ABANDONED))
+
+        states = ProposalState.open_states()
+        self.assertIsInstance(states, list)
+        self.assertIn(ProposalState.PREPARATION, states)
+        self.assertNotIn(ProposalState.ACCEPTED, states)
+        states = ProposalState.closed_states()
+        self.assertIsInstance(states, list)
+        self.assertNotIn(ProposalState.PREPARATION, states)
+        self.assertIn(ProposalState.ACCEPTED, states)
+        self.assertTrue(ProposalState.is_open(ProposalState.PREPARATION))
+        self.assertFalse(ProposalState.is_open(ProposalState.ACCEPTED))
 
         self.assertEqual(ProposalState.by_name('accepted'),
                          ProposalState.ACCEPTED)
