@@ -1,0 +1,91 @@
+#!/usr/bin/env python
+
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
+
+import logging
+
+from sqlalchemy.sql import select
+from sqlalchemy.schema import Column, ForeignKey
+from sqlalchemy.types import Integer, UnicodeText
+
+from hedwig.config import get_database
+from hedwig.db.meta import \
+    proposal_fig, proposal_fig_link, \
+    proposal_pdf, proposal_pdf_link, \
+    proposal_text, proposal_text_link, \
+    review_fig, review_fig_link
+from hedwig.util import get_logger
+
+logger = get_logger('link_attachments')
+
+# Import schema-derived types before we start altering it.
+import hedwig.type.simple
+
+# Temporarily restore definition of the old columns.
+for table in (proposal_fig, proposal_pdf, proposal_text):
+    table.append_column(Column(
+        'proposal_id', None,
+        ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        nullable=False))
+    table.append_column(Column(
+        'role', Integer, nullable=False))
+
+for table in (review_fig,):
+    table.append_column(Column(
+        'reviewer_id', None,
+        ForeignKey('reviewer.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+        nullable=False))
+
+for table in (proposal_fig, review_fig):
+    table.append_column(Column(
+        'sort_order', Integer, nullable=False))
+    table.append_column(Column(
+        'caption', UnicodeText, nullable=False))
+
+
+def main():
+    logging.basicConfig(level=logging.DEBUG)
+
+    db = get_database()
+
+    logger.info('Acquired database connection object')
+
+    with db._transaction() as conn:
+        create_links(
+            conn, proposal_fig, proposal_fig_link, proposal_fig_link.c.fig_id,
+            ['proposal_id', 'role', 'sort_order', 'caption'])
+
+        create_links(
+            conn, proposal_pdf, proposal_pdf_link, proposal_pdf_link.c.pdf_id,
+            ['proposal_id', 'role'])
+
+        create_links(
+            conn, proposal_text, proposal_text_link, proposal_text_link.c.text_id,
+            ['proposal_id', 'role'])
+
+        create_links(
+            conn, review_fig, review_fig_link, review_fig_link.c.fig_id,
+            ['reviewer_id', 'sort_order', 'caption'])
+
+    logger.info('Update complete')
+
+
+def create_links(conn, table_orig, table_link, column_link, columns_extra):
+    logger.info(
+        'Creating links to {} in {}', table_orig.name, table_link.name)
+
+    select_columns = [table_orig.c.id]
+    select_columns.extend(table_orig.columns[x] for x in columns_extra)
+
+    insert_columns = [column_link]
+    insert_columns.extend(table_link.columns[x] for x in columns_extra)
+
+    result = conn.execute(table_link.insert().from_select(
+        insert_columns, select(select_columns)))
+
+    logger.info('... created {} link(s)', result.rowcount)
+
+
+if __name__ == '__main__':
+    main()
