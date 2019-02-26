@@ -15,3 +15,4 @@ Writing a Proposal
     prev_proposal
     submit
     proposal_complete
+    proposal_copy

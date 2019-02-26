@@ -38,7 +38,9 @@ proposal for that queue.
 .. image:: image/call_view.png
 
 Once you have selected a queue, you will see the "New Proposal" page.
-Please check that the fixed information presented on the page is correct
+This page is divided into a number of sections.
+Please check that the fixed information presented
+in the "identifying information" section is correct
 before proceeding.
 This information comprises the facility, semester and queue for which
 you are creating a proposal, the type of call and your name.
@@ -48,12 +50,20 @@ You should select the affiliation which applies to you personally.
 If you are unsure which to choose, please check for more information
 on the call for proposals page.
 
-Finally enter the title of your proposal.  You will be able to
+Finally enter the title of your proposal in the "new proposal" section.
+You will be able to
 edit the title again before submitting the proposal, but you will
 need to choose a title now to allow you to find the proposal
 in the system if you wish to return to it later.
 
 When you're ready, press the "Create new proposal" button.
+
+If you already have some proposals stored in the system,
+it may be possible to copy one of them instead of creating a new proposal.
+In this case a third section labeled "copy an existing proposal"
+will be shown on this page.
+Please see the `notes on copying a proposal <proposal_copy>`_
+for more information about this procedure.
 
 .. image:: image/proposal_new.png
 

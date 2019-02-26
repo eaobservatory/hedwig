@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -229,6 +229,8 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.administer_site()
 
+            semester_name = self.open_new_call('jcmt')
+
             self.log_out_user()
 
             # Log back in as the proposal author to view the feedback page.
@@ -239,6 +241,9 @@ class IntegrationTest(DummyConfigTestCase):
             self.log_in_user(user_name='newusername')
 
             self.view_proposal_feedback('jcmt', 1)
+
+            # Also try copying the proposal.
+            self.copy_proposal('jcmt', semester_name)
 
             self.log_out_user()
 
@@ -383,53 +388,8 @@ class IntegrationTest(DummyConfigTestCase):
         admin_menu_url = self.browser.current_url
 
         # Create a new semester.
-        self.browser.find_element_by_link_text('Semesters').click()
-        self.browser.find_element_by_link_text('New semester').click()
-
-        # Make sure we are going to generate a semester which is open for
-        # submissions: base it on the current date and use JCMT naming.
-        current_date = datetime.utcnow()
-        semester_year = str(current_date.year + 1)
-        semester_name = semester_year[2:] + 'A'
-        self.browser.find_element_by_name('semester_name').send_keys(
-            semester_name)
-        self.browser.find_element_by_name('semester_code').send_keys(
-            semester_name)
-        self.browser.find_element_by_name('start_date').send_keys(
-            semester_year + '-01-01')
-        self.browser.find_element_by_name('start_time').send_keys(
-            '00:00')
-        self.browser.find_element_by_name('end_date').send_keys(
-            semester_year + '-07-01')
-        self.browser.find_element_by_name('end_time').send_keys(
-            '00:00')
-        self.browser.find_element_by_name('description').send_keys(
-            'The instrumentation available is as follows ...')
-
-        self._save_screenshot(self.admin_image_root, 'semester_new')
-
-        self.browser.find_element_by_name('submit').click()
-
-        self.assertIn(
-            'New semester "{}" has been created.'.format(semester_name),
-            self.browser.page_source)
-
-        # Enter the call preamble.
-        preamble_link = self.browser.find_element_by_id('preamble_edit_1')
-        self._save_screenshot(self.admin_image_root, 'semester_view',
-                              [preamble_link])
-        preamble_link.click()
-
-        self.browser.find_element_by_name('description').send_keys(
-            'We invite proposals ...')
-        self._save_screenshot(self.admin_image_root, 'call_preamble')
-
-        self.browser.find_element_by_name('submit').click()
-
-        self.assertIn(
-            'The regular call preamble for semester {} '
-            'has been saved.'.format(semester_name),
-            self.browser.page_source)
+        semester_name = self._create_semester(
+            'A', screenshot_path=self.admin_image_root)
 
         # Create a new queue.
         self.browser.get(admin_menu_url)
@@ -481,30 +441,8 @@ class IntegrationTest(DummyConfigTestCase):
 
         # Create a call.
         self.browser.get(admin_menu_url)
-        self.browser.find_element_by_link_text('Calls').click()
-
-        self._save_screenshot(self.admin_image_root, 'call_list_empty',
-                              ['new_call_links'])
-
-        self.browser.find_element_by_link_text('Regular').click()
-
-        current_year = str(current_date.year)
-        self.browser.find_element_by_name('open_date').send_keys(
-            current_year + '-01-01')
-        self.browser.find_element_by_name('open_time').send_keys(
-            '00:00')
-        self.browser.find_element_by_name('close_date').send_keys(
-            current_year + '-12-31')
-        self.browser.find_element_by_name('close_time').send_keys(
-            '23:59')
-
-        self._save_screenshot(self.admin_image_root, 'call_new')
-
-        self.browser.find_element_by_name('submit').click()
-
-        self.assertIn(
-            'The new call has been added.',
-            self.browser.page_source)
+        self._create_call(
+            'Regular', semester_name, screenshot_path=self.admin_image_root)
 
         # Add categories.
         self.browser.get(admin_menu_url)
@@ -552,6 +490,88 @@ class IntegrationTest(DummyConfigTestCase):
             self.browser.page_source)
 
         return semester_name
+
+    def _create_semester(self, suffix, screenshot_path=None):
+        self.browser.find_element_by_link_text('Semesters').click()
+        self.browser.find_element_by_link_text('New semester').click()
+
+        # Make sure we are going to generate a semester which is open for
+        # submissions: base it on the current date and use JCMT naming.
+        current_date = datetime.utcnow()
+        semester_year = str(current_date.year + 1)
+        semester_name = semester_year[2:] + suffix
+        self.browser.find_element_by_name('semester_name').send_keys(
+            semester_name)
+        self.browser.find_element_by_name('semester_code').send_keys(
+            semester_name)
+        self.browser.find_element_by_name('start_date').send_keys(
+            semester_year + '-01-01')
+        self.browser.find_element_by_name('start_time').send_keys(
+            '00:00')
+        self.browser.find_element_by_name('end_date').send_keys(
+            semester_year + '-07-01')
+        self.browser.find_element_by_name('end_time').send_keys(
+            '00:00')
+        self.browser.find_element_by_name('description').send_keys(
+            'The instrumentation available is as follows ...')
+
+        self._save_screenshot(screenshot_path, 'semester_new')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'New semester "{}" has been created.'.format(semester_name),
+            self.browser.page_source)
+
+        # Enter the call preamble.
+        preamble_link = self.browser.find_element_by_id('preamble_edit_1')
+        self._save_screenshot(
+            screenshot_path, 'semester_view', [preamble_link])
+        preamble_link.click()
+
+        self.browser.find_element_by_name('description').send_keys(
+            'We invite proposals ...')
+        self._save_screenshot(screenshot_path, 'call_preamble')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The regular call preamble for semester {} '
+            'has been saved.'.format(semester_name),
+            self.browser.page_source)
+
+        return semester_name
+
+    def _create_call(self, type_name, semester_name, screenshot_path=None):
+        self.browser.find_element_by_link_text('Calls').click()
+
+        self._save_screenshot(screenshot_path, 'call_list_empty',
+                              ['new_call_links'])
+
+        self.browser.find_element_by_link_text(type_name).click()
+
+        Select(
+            self.browser.find_element_by_name('semester_id')
+        ).select_by_visible_text(semester_name)
+
+        current_date = datetime.utcnow()
+        current_year = str(current_date.year)
+        self.browser.find_element_by_name('open_date').send_keys(
+            current_year + '-01-01')
+        self.browser.find_element_by_name('open_time').send_keys(
+            '00:00')
+        self.browser.find_element_by_name('close_date').send_keys(
+            current_year + '-12-31')
+        self.browser.find_element_by_name('close_time').send_keys(
+            '23:59')
+
+        self._save_screenshot(screenshot_path, 'call_new')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The new call has been added.',
+            self.browser.page_source)
 
     def create_proposal(self, facility_code, semester_name):
         self.browser.get(self.base_url + facility_code)
@@ -2010,6 +2030,22 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element_by_name('submit_cancel').click()
 
+    def open_new_call(self, facility_code):
+        self.browser.get(self.base_url + facility_code)
+
+        self.browser.find_element_by_link_text('Administrative menu').click()
+
+        admin_menu_url = self.browser.current_url
+
+        # Create a new semester.
+        semester_name = self._create_semester('B')
+
+        # Create a call.
+        self.browser.get(admin_menu_url)
+        self._create_call('Regular', semester_name)
+
+        return semester_name
+
     def view_proposal_feedback(self, facility_code, proposal_id):
         self.browser.get(self.base_url +
                          '{}/proposal/{}'.format(facility_code, proposal_id))
@@ -2024,6 +2060,39 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn('<h2>Comments</h2>', self.browser.page_source)
 
         self._save_screenshot(self.user_image_root, 'proposal_feedback')
+
+    def copy_proposal(self, facility_code, semester_name):
+        self.browser.get(self.base_url + facility_code)
+
+        semester_link = self.browser.find_element_by_link_text(semester_name)
+
+        semester_link.click()
+
+        queue_link = self.browser.find_element_by_link_text(
+            'Create a proposal for the PI Science Queue')
+
+        queue_link.click()
+
+        Select(
+            self.browser.find_element_by_name('affiliation_id')
+        ).select_by_visible_text('China')
+
+        self._save_screenshot(self.user_image_root, 'proposal_copy')
+
+        self.browser.find_element_by_name('submit_copy').click()
+
+        self.assertIn(
+            'Your proposal has been copied.',
+            self.browser.page_source)
+
+        self.assertNotIn(
+            'Error',
+            self.browser.page_source)
+
+        self.browser.find_element_by_id('callout_dismiss').click()
+
+        self._save_screenshot(
+            self.user_image_root, 'proposal_copied')
 
     def try_jcmt_itcs(self):
         self.browser.get(self.base_url + 'jcmt/calculator/scuba2/time')
