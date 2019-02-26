@@ -326,3 +326,16 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
             conn.execute(table.insert().values(values))
 
         return (n_insert, n_update, n_delete)
+
+    def _remove_orphan_records(self, conn, table, column_link):
+        """
+        Remove entries from `table` which do not have a reference in
+        `column_link` to their `id` field.
+
+        :return: the number of rows deleted
+        """
+
+        result = conn.execute(table.delete().where(
+            table.c.id.notin_(select([column_link]))))
+
+        return result.rowcount

@@ -542,7 +542,8 @@ class ProposalTextCollection(ResultCollection):
         return default
 
 
-class ProposalFigureCollection(ResultCollection, CollectionOrdered):
+class ProposalFigureCollection(
+        ResultCollection, CollectionOrdered, CollectionByProposal):
     """
     Class representing a collection of figures attached to a proposal.
     """

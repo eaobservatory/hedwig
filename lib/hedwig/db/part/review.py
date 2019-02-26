@@ -35,7 +35,7 @@ from ..meta import call, decision, group_member, \
     institution, invitation, person, \
     proposal, queue, \
     review, reviewer, \
-    review_fig, review_fig_preview, review_fig_thumbnail
+    review_fig, review_fig_link, review_fig_preview, review_fig_thumbnail
 
 
 class ReviewPart(object):
@@ -99,7 +99,8 @@ class ReviewPart(object):
             type_, figure, caption, filename, uploader_person_id,
             _test_skip_check=False):
         return self._add_figure(
-            review_fig, review_fig.c.reviewer_id, reviewer_id, reviewer,
+            review_fig, review_fig_link, review_fig_link.c.reviewer_id,
+            reviewer_id, reviewer,
             type_, figure, caption, filename, uploader_person_id,
             _test_skip_check=_test_skip_check)
 
@@ -154,42 +155,42 @@ class ReviewPart(object):
         where_extra = []
 
         if reviewer_id is not None:
-            where_extra.append(review_fig.c.reviewer_id == reviewer_id)
+            where_extra.append(review_fig_link.c.reviewer_id == reviewer_id)
 
         return self._delete_figure(
-            review_fig, id_, where_extra=where_extra)
+            review_fig, review_fig_link, id_, where_extra=where_extra)
 
-    def get_review_figure(self, reviewer_id, id_, md5sum=None):
+    def get_review_figure(self, reviewer_id, link_id, fig_id=None, md5sum=None):
         where_extra = []
 
         if reviewer_id is not None:
-            where_extra.append(review_fig.c.reviewer_id == reviewer_id)
+            where_extra.append(review_fig_link.c.reviewer_id == reviewer_id)
 
         return self._get_figure(
-            review_fig, id_, md5sum,
+            review_fig, review_fig_link, link_id, fig_id, md5sum,
             where_extra=where_extra)
 
     def get_review_figure_preview(
-            self, reviewer_id, id_, md5sum=None):
+            self, reviewer_id, link_id, fig_id=None, md5sum=None):
         where_extra = []
 
         if reviewer_id is not None:
-            where_extra.append(review_fig.c.reviewer_id == reviewer_id)
+            where_extra.append(review_fig_link.c.reviewer_id == reviewer_id)
 
         return self._get_figure_alternate(
-            review_fig, review_fig_preview.c.preview,
-            id_, md5sum, where_extra=where_extra)
+            review_fig, review_fig_link, review_fig_preview.c.preview,
+            link_id, fig_id, md5sum, where_extra=where_extra)
 
     def get_review_figure_thumbnail(
-            self, reviewer_id, id_, md5sum=None):
+            self, reviewer_id, link_id, fig_id=None, md5sum=None):
         where_extra = []
 
         if reviewer_id is not None:
-            where_extra.append(review_fig.c.reviewer_id == reviewer_id)
+            where_extra.append(review_fig_link.c.reviewer_id == reviewer_id)
 
         return self._get_figure_alternate(
-            review_fig, review_fig_thumbnail.c.thumbnail,
-            id_, md5sum, where_extra=where_extra)
+            review_fig, review_fig_link, review_fig_thumbnail.c.thumbnail,
+            link_id, fig_id, md5sum, where_extra=where_extra)
 
     def multiple_reviewer_update(self, role_class, remove=None, add=None):
         """
@@ -444,20 +445,34 @@ class ReviewPart(object):
     def search_review_figure(
             self, reviewer_id=None, state=None, fig_id=None,
             with_caption=False, with_uploader_name=False,
-            with_has_preview=False, order_by_date=False):
+            with_has_preview=False, order_by_date=False,
+            no_link=False):
         where_extra = []
+        select_extra = []
+        default_extra = {}
 
         if reviewer_id is not None:
-            where_extra.append(review_fig.c.reviewer_id == reviewer_id)
+            if no_link:
+                raise Error('reviewer_id specified with no_link')
+            where_extra.append(review_fig_link.c.reviewer_id == reviewer_id)
+
+        if no_link:
+            default_extra.update({
+                'reviewer_id': None,
+            })
+
+        else:
+            select_extra.extend([
+                review_fig_link.c.reviewer_id,
+            ])
 
         return self._search_figure(
-            review_fig, ReviewFigureInfo, ReviewFigureCollection,
+            review_fig, (None if no_link else review_fig_link),
+            ReviewFigureInfo, ReviewFigureCollection,
             state, fig_id, with_caption, with_uploader_name, order_by_date,
             with_has_preview_table=(
                 review_fig_preview if with_has_preview else None),
-            select_extra=[
-                review_fig.c.reviewer_id,
-            ],
+            select_extra=select_extra, default_extra=default_extra,
             where_extra=where_extra)
 
     def set_decision(self, proposal_id, accept=(), exempt=None, ready=None,
@@ -635,14 +650,20 @@ class ReviewPart(object):
                 raise ConsistencyError(
                     'reviewer does not exist with id={}', reviewer_id)
 
-            return self._sync_records(
-                conn, review_fig, review_fig.c.reviewer_id, reviewer_id,
+            (n_insert, n_update, n_delete) = self._sync_records(
+                conn, review_fig_link, review_fig_link.c.reviewer_id, reviewer_id,
                 records, update_columns=(
-                    review_fig.c.sort_order,
+                    review_fig_link.c.sort_order,
                 ), forbid_add=True)
 
+            if n_delete:
+                self._remove_orphan_records(
+                    conn, review_fig, review_fig_link.c.fig_id)
+
+        return (n_insert, n_update, n_delete)
+
     def update_review_figure(
-            self, reviewer_id, fig_id,
+            self, reviewer_id, link_id, fig_id=None,
             figure=None, type_=None, filename=None, uploader_person_id=None,
             state=None, state_prev=None, caption=None):
         """
@@ -652,17 +673,21 @@ class ReviewPart(object):
 
         If the figure is updated, then the type, filename and uploader
         must be specified and the state will be set to NEW -- the state
-        must bot be speicifed explicitly.
+        must not be specifed explicitly.
+
+        :return: the internal figure ID (not link ID) if it changed,
+            for test purposes only
         """
 
         where_extra = []
 
         if reviewer_id is not None:
-            where_extra.append(review_fig.c.reviewer_id == reviewer_id)
+            where_extra.append(review_fig_link.c.reviewer_id == reviewer_id)
 
-        self._update_figure(
-            review_fig, review_fig_preview, review_fig_thumbnail,
-            fig_id, figure, type_, filename, uploader_person_id,
+        return self._update_figure(
+            review_fig, review_fig_link,
+            review_fig_preview, review_fig_thumbnail,
+            link_id, fig_id, figure, type_, filename, uploader_person_id,
             state, state_prev, caption,
             where_extra=where_extra,
         )

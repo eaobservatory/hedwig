@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple
 
+from ..compat import first_value
 from ..error import NoSuchRecord
 from ..type.simple import ProposalWithCode
 from ..type.enum import AttachmentState, MessageState, MessageThreadType
@@ -192,7 +193,7 @@ class AdminView(object):
                     if state_prev == AttachmentState.NEW:
                         continue
                     db.update_proposal_figure(
-                        proposal_id=None, role=None, fig_id=id_,
+                        proposal_id=None, role=None, link_id=None, fig_id=id_,
                         state=AttachmentState.NEW, state_prev=state_prev)
                     n_reset += 1
 
@@ -202,7 +203,7 @@ class AdminView(object):
                     if state_prev == AttachmentState.NEW:
                         continue
                     db.update_review_figure(
-                        reviewer_id=None, fig_id=id_,
+                        reviewer_id=None, link_id=None, fig_id=id_,
                         state=AttachmentState.NEW, state_prev=state_prev)
                     n_reset += 1
 
@@ -231,20 +232,29 @@ class AdminView(object):
                       n_reset, ('entry' if n_reset == 1 else 'entries'))
             raise HTTPRedirect(url_for('.processing_status'))
 
-        unready = AttachmentState.unready_states()
+        # We would like to search with the "no_link" option to only
+        # receive one result per real PDF / figure.  However we need
+        # the proposal / reviewer information for display purposes,
+        # so fetch with links and then filter in the `_add_proposal`
+        # method based on the real ID field.
+
+        search_kwargs = {
+            'state': AttachmentState.unready_states(),
+            'order_by_date': True,
+        }
 
         status_prop = {
-            'pdfs': db.search_proposal_pdf(
-                with_uploader_name=True, state=unready, order_by_date=True),
-            'prop_figures': db.search_proposal_figure(
-                with_uploader_name=True, state=unready, order_by_date=True),
-            'pubs': db.search_prev_proposal_pub(
-                with_proposal_id=True, state=unready, order_by_date=True),
+            'pdfs': ('pdf_id', db.search_proposal_pdf(
+                with_uploader_name=True, **search_kwargs)),
+            'prop_figures': ('fig_id', db.search_proposal_figure(
+                with_uploader_name=True, **search_kwargs)),
+            'pubs': (None, db.search_prev_proposal_pub(
+                with_proposal_id=True, **search_kwargs)),
         }
 
         status_rev = {
-            'rev_figures': db.search_review_figure(
-                with_uploader_name=True, state=unready, order_by_date=True),
+            'rev_figures': ('fig_id', db.search_review_figure(
+                with_uploader_name=True, **search_kwargs)),
         }
 
         # Create empty cache dictionaries.
@@ -261,28 +271,41 @@ class AdminView(object):
             'title': 'Processing Status',
             'mocs': self._add_moc_facility(
                 db.search_moc(
-                    facility_id=None, public=None,
-                    state=unready, order_by_date=True).values(),
+                    facility_id=None, public=None, **search_kwargs).values(),
                 facilities, clash_tool_facilities),
         }
 
         for (k, v) in status_prop.items():
             ctx[k] = self._add_proposal(
-                db, v.values(), facilities, proposals, None, **cache_ext)
+                db, facilities, proposals, None, *v, **cache_ext)
 
         for (k, v) in status_rev.items():
             ctx[k] = self._add_proposal(
-                db, v.values(), facilities, proposals, reviewers, **cache_ext)
+                db, facilities, proposals, reviewers, *v, **cache_ext)
 
         return ctx
 
     def _add_proposal(
-            self, db, entries, facilities, proposals, reviewers,
-            proposal_facilities,
-            facility_text_roles, facility_reviewer_roles):
-        result = []
+            self, db, facilities, proposals, reviewers, id_field, entries,
+            proposal_facilities, facility_text_roles, facility_reviewer_roles):
+        if not entries:
+            return None
 
-        for entry in entries:
+        result = []
+        seen_ids = set()
+
+        EntryWithPropRev = namedtuple(
+            'EntryWithPropRev', first_value(entries)._fields + (
+                'proposal', 'reviewer', 'facility_code',
+                'text_roles', 'reviewer_roles'))
+
+        for entry in entries.values():
+            if id_field is not None:
+                id_ = getattr(entry, id_field)
+                if id_ in seen_ids:
+                    continue
+                seen_ids.add(id_)
+
             if reviewers is None:
                 reviewer = None
                 proposal_id = entry.proposal_id
@@ -323,10 +346,7 @@ class AdminView(object):
                 reviewer_roles = facility_reviewer_roles[facility_code]
 
             result.append(
-                namedtuple(
-                    'EntryWithPropRev', entry._fields + (
-                        'proposal', 'reviewer', 'facility_code',
-                        'text_roles', 'reviewer_roles'))(
+                EntryWithPropRev(
                     *entry, proposal=proposal, reviewer=reviewer,
                     facility_code=facility_code,
                     text_roles=text_roles, reviewer_roles=reviewer_roles))

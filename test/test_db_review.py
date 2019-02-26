@@ -433,17 +433,19 @@ class DBReviewTest(DBTestCase):
         self.assertIsInstance(result, ReviewFigureCollection)
         self.assertEqual(len(result), 0)
 
-        fig_id = self.db.add_review_figure(
+        (link_id, fig_id) = self.db.add_review_figure(
             reviewer_id, type_, fig, 'Figure caption.', 'test.png', person_id)
+        self.assertIsInstance(link_id, int)
         self.assertIsInstance(fig_id, int)
 
         result = self.db.search_review_figure(reviewer_id=reviewer_id)
         self.assertIsInstance(result, ReviewFigureCollection)
         self.assertEqual(len(result), 1)
-        self.assertIn(fig_id, result)
-        fig_info = result[fig_id]
+        self.assertIn(link_id, result)
+        fig_info = result[link_id]
         self.assertIsInstance(fig_info, ReviewFigureInfo)
-        self.assertEqual(fig_info.id, fig_id)
+        self.assertEqual(fig_info.id, link_id)
+        self.assertEqual(fig_info.fig_id, fig_id)
         self.assertEqual(fig_info.reviewer_id, reviewer_id)
         self.assertEqual(fig_info.sort_order, 1)
         self.assertEqual(fig_info.md5sum, 'b41faa148ef23d1ddfa46debb3b66f35')
@@ -461,7 +463,7 @@ class DBReviewTest(DBTestCase):
         self.assertEqual(result.has_preview, False)
 
         self.assertEqual(
-            self.db.get_review_figure(reviewer_id, fig_id).data,
+            self.db.get_review_figure(reviewer_id, link_id).data,
             fig)
 
         # Try previews and thumbnails.
@@ -472,11 +474,11 @@ class DBReviewTest(DBTestCase):
         self.db.set_review_figure_thumbnail(fig_id, thumbnail)
 
         self.assertEqual(
-            self.db.get_review_figure_preview(reviewer_id, fig_id),
+            self.db.get_review_figure_preview(reviewer_id, link_id),
             preview)
 
         self.assertEqual(
-            self.db.get_review_figure_thumbnail(reviewer_id, fig_id),
+            self.db.get_review_figure_thumbnail(reviewer_id, link_id),
             thumbnail)
 
         preview = b'dummy preview updated'
@@ -486,72 +488,84 @@ class DBReviewTest(DBTestCase):
         self.db.set_review_figure_thumbnail(fig_id, thumbnail)
 
         self.assertEqual(
-            self.db.get_review_figure_preview(reviewer_id, fig_id),
+            self.db.get_review_figure_preview(reviewer_id, link_id),
             preview)
 
         self.assertEqual(
-            self.db.get_review_figure_thumbnail(reviewer_id, fig_id),
+            self.db.get_review_figure_thumbnail(reviewer_id, link_id),
             thumbnail)
 
         # Try updating the figure...
         # ... change figure state.
-        self.db.update_review_figure(
-            None, fig_id, state=AttachmentState.ERROR,
+        result = self.db.update_review_figure(
+            None, None, fig_id, state=AttachmentState.ERROR,
             state_prev=AttachmentState.NEW)
+        self.assertIsNone(result)
 
         result = self.db.search_review_figure(
             reviewer_id=reviewer_id, with_has_preview=True)
-        fig_info = result[fig_id]
+        fig_info = result[link_id]
         self.assertEqual(fig_info.state, AttachmentState.ERROR)
         self.assertEqual(fig_info.has_preview, True)
+        self.assertEqual(fig_info.fig_id, fig_id)
 
         # ... change figure image.
         fig = b'dummy figure updated'
-        self.db.update_review_figure(
-            reviewer_id, fig_id,
+        new_fig_id = self.db.update_review_figure(
+            reviewer_id, link_id,
             figure=fig, type_=type_, filename='test2.png',
             uploader_person_id=person_id)
+        self.assertIsInstance(new_fig_id, int)
+        self.assertNotEqual(new_fig_id, fig_id)
 
         result = self.db.search_review_figure(
             reviewer_id=reviewer_id, with_caption=True)
-        fig_info = result[fig_id]
+        fig_info = result[link_id]
         self.assertEqual(fig_info.md5sum, 'b9e7dfbc36883c26e5d2aff8c80f34db')
         self.assertEqual(fig_info.state, AttachmentState.NEW)
         self.assertEqual(fig_info.filename, 'test2.png')
         self.assertEqual(fig_info.caption, 'Figure caption.')
+        self.assertEqual(fig_info.fig_id, new_fig_id)
+        fig_id = new_fig_id
 
         self.assertEqual(
-            self.db.get_review_figure(reviewer_id, fig_id).data,
+            self.db.get_review_figure(reviewer_id, link_id).data,
             fig)
 
         # ... changing the image should have removed the preview/thumbnail.
         with self.assertRaises(NoSuchRecord):
-            self.db.get_review_figure_preview(reviewer_id, fig_id)
+            self.db.get_review_figure_preview(reviewer_id, link_id)
 
         with self.assertRaises(NoSuchRecord):
-            self.db.get_review_figure_thumbnail(reviewer_id, fig_id)
+            self.db.get_review_figure_thumbnail(reviewer_id, link_id)
 
         # ... change the figure caption.
-        self.db.update_review_figure(reviewer_id, fig_id, caption='!')
+        result = self.db.update_review_figure(
+            reviewer_id, link_id, caption='!')
+        self.assertIsNone(result)
+
         result = self.db.search_review_figure(
             reviewer_id=reviewer_id, with_caption=True)
-        fig_info = result[fig_id]
+        fig_info = result[link_id]
         self.assertEqual(fig_info.caption, '!')
 
         # Add another figure to test syncing operations.
-        fig_id2 = self.db.add_review_figure(
+        (link_id2, fig_id2) = self.db.add_review_figure(
             reviewer_id, type_, fig, 'Figure caption.', 'test2.png', person_id)
         self.assertIsInstance(fig_id2, int)
 
         result = self.db.search_review_figure(reviewer_id=reviewer_id)
-        self.assertEqual(list(result), [fig_id, fig_id2])
+        self.assertEqual(list(result), [link_id, link_id2])
         self.assertEqual(
             [x.id for x in result.values()],
+            [link_id, link_id2])
+        self.assertEqual(
+            [x.fig_id for x in result.values()],
             [fig_id, fig_id2])
 
         records = ReviewFigureCollection()
-        records[fig_id] = result[fig_id]._replace(sort_order=2)
-        records[fig_id2] = result[fig_id2]._replace(sort_order=1)
+        records[link_id] = result[link_id]._replace(sort_order=2)
+        records[link_id2] = result[link_id2]._replace(sort_order=1)
 
         # ... change the sort order.
         (n_insert, n_update, n_delete) = self.db.sync_review_figure(
@@ -561,13 +575,13 @@ class DBReviewTest(DBTestCase):
         self.assertEqual(n_delete, 0)
 
         result = self.db.search_review_figure(reviewer_id=reviewer_id)
-        self.assertEqual(list(result), [fig_id2, fig_id])
+        self.assertEqual(list(result), [link_id2, link_id])
         self.assertEqual(
             [x.id for x in result.values()],
-            [fig_id2, fig_id])
+            [link_id2, link_id])
 
         # ... delete the second figure.
-        del records[fig_id2]
+        del records[link_id2]
 
         (n_insert, n_update, n_delete) = self.db.sync_review_figure(
             reviewer_id, records)
@@ -576,10 +590,10 @@ class DBReviewTest(DBTestCase):
         self.assertEqual(n_delete, 1)
 
         result = self.db.search_review_figure(reviewer_id=reviewer_id)
-        self.assertEqual(list(result), [fig_id])
+        self.assertEqual(list(result), [link_id])
         self.assertEqual(
             [x.id for x in result.values()],
-            [fig_id])
+            [link_id])
 
         # Try deleting the first figure.
         self.db.delete_review_figure(reviewer_id, fig_id)

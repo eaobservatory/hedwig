@@ -26,7 +26,8 @@ from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, NoSuchValue, UserError
 from hedwig.type.collection import AffiliationCollection, \
     CallCollection, MemberCollection, \
-    ProposalCollection, ProposalCategoryCollection, ProposalTextCollection, \
+    ProposalCollection, ProposalCategoryCollection, \
+    ProposalFigureCollection, ProposalTextCollection, \
     ResultCollection, TargetCollection
 from hedwig.type.enum import AffiliationType, AnnotationType, \
     AttachmentState, \
@@ -1005,9 +1006,10 @@ class DBProposalTest(DBTestCase):
                 FormatType.PLAIN, 1, 1999999, _test_skip_check=True)
 
         # Add a PDF file -- this should be deleted when we add the text.
-        pdf_id = self.db.set_proposal_pdf(
+        (link_id, pdf_id) = self.db.set_proposal_pdf(
             BaseTextRole, proposal_id_1, BaseTextRole.SCIENCE_CASE,
             b'dummy PDF file', 2, 'test.pdf', person_id)
+        self.assertIsInstance(link_id, int)
         self.assertIsInstance(pdf_id, int)
         self.db.set_proposal_pdf_preview(
             pdf_id, [b'dummy PNG 1', b'dummy PNG 2'])
@@ -1019,9 +1021,10 @@ class DBProposalTest(DBTestCase):
             proposal_id_1, BaseTextRole.SCIENCE_CASE, 2)
 
         # Try creating and updating some text.
-        text_id_orig = self.db.set_proposal_text(
+        (link_id_orig, text_id_orig) = self.db.set_proposal_text(
             BaseTextRole, proposal_id_1, BaseTextRole.SCIENCE_CASE, 'test',
             FormatType.PLAIN, 1, person_id)
+        self.assertIsInstance(link_id_orig, int)
         self.assertIsInstance(text_id_orig, int)
         result = self.db.get_proposal_text(
             proposal_id_1, BaseTextRole.SCIENCE_CASE)
@@ -1029,10 +1032,11 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(result.text, 'test')
         self.assertEqual(result.format, FormatType.PLAIN)
 
-        text_id = self.db.set_proposal_text(
+        (link_id, text_id) = self.db.set_proposal_text(
             BaseTextRole, proposal_id_1, BaseTextRole.SCIENCE_CASE, 'change',
             FormatType.PLAIN, 1, person_id)
-        self.assertEqual(text_id, text_id_orig)
+        self.assertEqual(link_id, link_id_orig)
+        self.assertNotEqual(text_id, text_id_orig)
         result = self.db.get_proposal_text(
             proposal_id_1, BaseTextRole.SCIENCE_CASE)
         self.assertIsInstance(result, ProposalText)
@@ -1070,21 +1074,23 @@ class DBProposalTest(DBTestCase):
         self.db.set_proposal_text(
             BaseTextRole, proposal_id_1, 41, 'b',
             FormatType.PLAIN, 1, person_id)
-        text_id_orig = self.db.set_proposal_text(
+        (link_id_orig, text_id_orig) = self.db.set_proposal_text(
             BaseTextRole, proposal_id_2, 40, 'c',
             991, 1, person_id)
         self.db.set_proposal_text(
             BaseTextRole, proposal_id_2, 41, 'd',
             992, 1, person_id)
 
-        text_id = self.db.set_proposal_text(
+        (link_id, text_id) = self.db.set_proposal_text(
             BaseTextRole, proposal_id_2, 40, 'cc', 993,
             1, person_id)
 
         self.db.delete_proposal_text(proposal_id_1, 41)
 
+        self.assertIsInstance(link_id_orig, int)
         self.assertIsInstance(text_id_orig, int)
-        self.assertEqual(text_id, text_id_orig)
+        self.assertEqual(link_id, link_id_orig)
+        self.assertNotEqual(text_id, text_id_orig)
 
         result = self.db.get_proposal_text(proposal_id_1, 40)
         self.assertIsInstance(result, ProposalText)
@@ -1133,41 +1139,44 @@ class DBProposalTest(DBTestCase):
         self.db.set_proposal_text(
             BaseTextRole, proposal_id, role, 'test', FormatType.PLAIN,
             1, person_id)
-        fig_id = self.db.add_proposal_figure(
+        (link_id, fig_id) = self.db.add_proposal_figure(
             BaseTextRole, proposal_id, role, FigureType.PNG,
             b'dummy figure', 'Caption', 'test.png', person_id)
+        self.assertIsInstance(link_id, int)
         self.assertIsInstance(fig_id, int)
         self.db.set_proposal_figure_preview(fig_id, b'dummy preview')
         self.db.set_proposal_figure_thumbnail(fig_id, b'dummy thumbnail')
 
         self.db.get_proposal_text(proposal_id, role)
-        self.db.get_proposal_figure(None, None, fig_id)
-        self.db.get_proposal_figure_preview(None, None, fig_id)
-        self.db.get_proposal_figure_thumbnail(None, None, fig_id)
+        self.db.get_proposal_figure(None, None, link_id)
+        self.db.get_proposal_figure_preview(None, None, link_id)
+        self.db.get_proposal_figure_thumbnail(None, None, link_id)
 
         # Try adding a PDF to the proposal.
         result = self.db.search_proposal_pdf(proposal_id=proposal_id)
         self.assertEqual(len(result), 0)
 
-        pdf_id = self.db.set_proposal_pdf(
+        (link_id, pdf_id) = self.db.set_proposal_pdf(
             BaseTextRole, proposal_id, role, pdf, 4,
             'test.pdf', person_id)
+        self.assertIsInstance(link_id, int)
         self.assertIsInstance(pdf_id, int)
 
         self.assertEqual(
             self.db.get_proposal_pdf(proposal_id, role).data,
             pdf)
         self.assertEqual(
-            self.db.get_proposal_pdf(None, None,
-                                     id_=pdf_id).data,
+            self.db.get_proposal_pdf(
+                None, None, pdf_id=pdf_id).data,
             pdf)
 
         result = self.db.search_proposal_pdf(proposal_id=proposal_id)
         self.assertEqual(len(result), 1)
-        self.assertIn(pdf_id, result)
-        pdf_info = result[pdf_id]
+        self.assertIn(link_id, result)
+        pdf_info = result[link_id]
         self.assertIsInstance(pdf_info, ProposalPDFInfo)
-        self.assertEqual(pdf_info.id, pdf_id)
+        self.assertEqual(pdf_info.id, link_id)
+        self.assertEqual(pdf_info.pdf_id, pdf_id)
         self.assertEqual(pdf_info.proposal_id, proposal_id)
         self.assertEqual(pdf_info.role, role)
         self.assertEqual(pdf_info.md5sum, '46ee5ebd71065c1d4caa83e4c943c70a')
@@ -1181,18 +1190,18 @@ class DBProposalTest(DBTestCase):
         with self.assertRaises(NoSuchRecord):
             self.db.get_proposal_text(proposal_id, role)
         with self.assertRaises(NoSuchRecord):
-            self.db.get_proposal_figure(None, None, fig_id)
+            self.db.get_proposal_figure(None, None, link_id)
         with self.assertRaises(NoSuchRecord):
-            self.db.get_proposal_figure_preview(None, None, fig_id)
+            self.db.get_proposal_figure_preview(None, None, link_id)
         with self.assertRaises(NoSuchRecord):
-            self.db.get_proposal_figure_thumbnail(None, None, fig_id)
+            self.db.get_proposal_figure_thumbnail(None, None, link_id)
 
         # Try changing proposal state.
         self.db.update_proposal_pdf(
             pdf_id=pdf_id, state=AttachmentState.READY)
 
         result = self.db.search_proposal_pdf(proposal_id=proposal_id)
-        self.assertEqual(result[pdf_id].state, AttachmentState.READY)
+        self.assertEqual(result[link_id].state, AttachmentState.READY)
 
         # Check that the "state_prev" constraint works.
         with self.assertRaisesRegex(ConsistencyError, 'no rows matched'):
@@ -1244,18 +1253,19 @@ class DBProposalTest(DBTestCase):
         result = self.db.search_proposal_figure(proposal_id=proposal_id)
         self.assertEqual(len(result), 0)
 
-        fig_id = self.db.add_proposal_figure(BaseTextRole,
-                                             proposal_id, role, type_, fig,
-                                             'Figure caption.', 'test.png',
-                                             person_id)
+        (link_id, fig_id) = self.db.add_proposal_figure(
+            BaseTextRole, proposal_id, role, type_, fig,
+            'Figure caption.', 'test.png', person_id)
+        self.assertIsInstance(link_id, int)
         self.assertIsInstance(fig_id, int)
 
         result = self.db.search_proposal_figure(proposal_id=proposal_id)
         self.assertEqual(len(result), 1)
-        self.assertIn(fig_id, result)
-        fig_info = result[fig_id]
+        self.assertIn(link_id, result)
+        fig_info = result[link_id]
         self.assertIsInstance(fig_info, ProposalFigureInfo)
-        self.assertEqual(fig_info.id, fig_id)
+        self.assertEqual(fig_info.id, link_id)
+        self.assertEqual(fig_info.fig_id, fig_id)
         self.assertEqual(fig_info.proposal_id, proposal_id)
         self.assertEqual(fig_info.sort_order, 1)
         self.assertEqual(fig_info.role, role)
@@ -1274,7 +1284,7 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(result.has_preview, False)
 
         self.assertEqual(
-            self.db.get_proposal_figure(proposal_id, role, fig_id).data,
+            self.db.get_proposal_figure(proposal_id, role, link_id).data,
             fig)
 
         # Try previews and thumbnails.
@@ -1285,11 +1295,11 @@ class DBProposalTest(DBTestCase):
         self.db.set_proposal_figure_thumbnail(fig_id, thumbnail)
 
         self.assertEqual(
-            self.db.get_proposal_figure_preview(proposal_id, role, fig_id),
+            self.db.get_proposal_figure_preview(proposal_id, role, link_id),
             preview)
 
         self.assertEqual(
-            self.db.get_proposal_figure_thumbnail(proposal_id, role, fig_id),
+            self.db.get_proposal_figure_thumbnail(proposal_id, role, link_id),
             thumbnail)
 
         preview = b'dummy preview updated'
@@ -1299,63 +1309,666 @@ class DBProposalTest(DBTestCase):
         self.db.set_proposal_figure_thumbnail(fig_id, thumbnail)
 
         self.assertEqual(
-            self.db.get_proposal_figure_preview(proposal_id, role, fig_id),
+            self.db.get_proposal_figure_preview(proposal_id, role, link_id),
             preview)
 
         self.assertEqual(
-            self.db.get_proposal_figure_thumbnail(proposal_id, role, fig_id),
+            self.db.get_proposal_figure_thumbnail(proposal_id, role, link_id),
             thumbnail)
 
         # Try updating the figure...
         # ... change figure state.
-        self.db.update_proposal_figure(
-            None, None, fig_id, state=AttachmentState.ERROR,
+        result = self.db.update_proposal_figure(
+            None, None, None, fig_id, state=AttachmentState.ERROR,
             state_prev=AttachmentState.NEW)
+        self.assertIsNone(result)
 
         result = self.db.search_proposal_figure(proposal_id=proposal_id,
                                                 with_has_preview=True)
-        fig_info = result[fig_id]
+        fig_info = result[link_id]
         self.assertEqual(fig_info.state, AttachmentState.ERROR)
         self.assertEqual(fig_info.has_preview, True)
+        self.assertEqual(fig_info.fig_id, fig_id)
+
+        # (Should still be able to retrieve preview/thumbnails via link or ID)
+        self.assertEqual(
+            self.db.get_proposal_figure_preview(proposal_id, role, link_id),
+            preview)
+
+        self.assertEqual(
+            self.db.get_proposal_figure_thumbnail(proposal_id, role, link_id),
+            thumbnail)
+
+        self.assertEqual(
+            self.db.get_proposal_figure_preview(
+                proposal_id, role, None, fig_id=fig_id),
+            preview)
+
+        self.assertEqual(
+            self.db.get_proposal_figure_thumbnail(
+                proposal_id, role, None, fig_id=fig_id),
+            thumbnail)
 
         # ... change figure image.
         fig = b'dummy figure updated'
-        self.db.update_proposal_figure(
-            proposal_id, role, fig_id,
+        new_fig_id = self.db.update_proposal_figure(
+            proposal_id, role, link_id,
             figure=fig, type_=type_, filename='test2.png',
             uploader_person_id=person_id)
+        self.assertIsInstance(new_fig_id, int)
+        self.assertNotEqual(new_fig_id, fig_id)
 
         result = self.db.search_proposal_figure(proposal_id=proposal_id,
                                                 with_caption=True)
-        fig_info = result[fig_id]
+        fig_info = result[link_id]
         self.assertEqual(fig_info.md5sum, 'b9e7dfbc36883c26e5d2aff8c80f34db')
         self.assertEqual(fig_info.state, AttachmentState.NEW)
         self.assertEqual(fig_info.filename, 'test2.png')
         self.assertEqual(fig_info.caption, 'Figure caption.')
+        self.assertEqual(fig_info.fig_id, new_fig_id)
+
+        # (Should be able to retrieve the figure by link or ID but not old ID)
+        self.assertEqual(
+            self.db.get_proposal_figure(proposal_id, role, link_id).data,
+            fig)
 
         self.assertEqual(
-            self.db.get_proposal_figure(proposal_id, role, fig_id).data,
+            self.db.get_proposal_figure(
+                proposal_id, role, None, fig_id=new_fig_id).data,
             fig)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_figure(proposal_id, role, None, fig_id=fig_id)
 
         # ... changing the image should have removed the preview/thumbnail.
         with self.assertRaises(NoSuchRecord):
-            self.db.get_proposal_figure_preview(proposal_id, role, fig_id)
+            self.db.get_proposal_figure_preview(
+                proposal_id, role, None, new_fig_id)
 
         with self.assertRaises(NoSuchRecord):
-            self.db.get_proposal_figure_thumbnail(proposal_id, role, fig_id)
+            self.db.get_proposal_figure_thumbnail(
+                proposal_id, role, None, new_fig_id)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_figure_preview(
+                proposal_id, role, None, fig_id)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_figure_thumbnail(
+                proposal_id, role, None, fig_id)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_figure_preview(proposal_id, role, link_id)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_figure_thumbnail(proposal_id, role, link_id)
+
+        fig_id = new_fig_id
 
         # ... change the figure caption.
-        self.db.update_proposal_figure(proposal_id, role, fig_id, caption='!')
+        result = self.db.update_proposal_figure(
+            proposal_id, role, link_id, caption='!')
+        self.assertIsNone(result)
+
         result = self.db.search_proposal_figure(proposal_id=proposal_id,
                                                 with_caption=True)
-        fig_info = result[fig_id]
+        fig_info = result[link_id]
         self.assertEqual(fig_info.caption, '!')
+        self.assertEqual(fig_info.fig_id, fig_id)
 
         # Try deleting the figure.
         self.db.delete_proposal_figure(proposal_id, role, fig_id)
 
         result = self.db.search_proposal_figure(proposal_id=proposal_id)
         self.assertEqual(len(result), 0)
+
+    def test_proposal_pdf_link(self):
+        (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
+        pdf = b'dummy PDF file'
+        preview = b'dummy PNG preview'
+        role = BaseTextRole.TECHNICAL_CASE
+
+        person_id = self.db.add_person('Test Person')
+        proposal_id_1 = self.db.add_proposal(
+            call_id, person_id, affiliation_id, 'Proposal 1')
+        proposal_id_2 = self.db.add_proposal(
+            call_id, person_id, affiliation_id, 'Proposal 2')
+        proposal_id_3 = self.db.add_proposal(
+            call_id, person_id, affiliation_id, 'Proposal 3')
+
+        (link_id, pdf_id) = self.db.set_proposal_pdf(
+            BaseTextRole, proposal_id_1, role, pdf, 1, 'test.pdf', person_id)
+        self.assertIsInstance(link_id, int)
+        self.assertIsInstance(pdf_id, int)
+
+        self.db.set_proposal_pdf_preview(pdf_id, [preview])
+
+        result = self.db.search_proposal_pdf(proposal_id=proposal_id_1)
+        self.assertEqual(list(result.keys()), [link_id])
+        pdf_info = result[link_id]
+        self.assertEqual(pdf_info.id, link_id)
+        self.assertEqual(pdf_info.pdf_id, pdf_id)
+
+        result = self.db.search_proposal_pdf(proposal_id=proposal_id_2)
+        self.assertEqual(list(result.keys()), [])
+
+        result = self.db.get_proposal_pdf(proposal_id_1, role)
+        self.assertEqual(result.data, pdf)
+
+        result = self.db.get_proposal_pdf_preview(proposal_id_1, role, 1)
+        self.assertEqual(result, preview)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_pdf(proposal_id_2, role)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_pdf_preview(proposal_id_2, role, 1)
+
+        # Check we can't link to a non-existent PDF.
+        with self.assertRaisesRegex(
+                ConsistencyError, 'does not exist'):
+            self.db.link_proposal_pdf(
+                BaseTextRole, proposal_id_2, role, 1999999)
+
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.link_proposal_pdf(
+                BaseTextRole, proposal_id_2, role, 1999999,
+                _test_skip_check=True)
+
+        # Check we can't link a PDF when we already have one.
+        with self.assertRaisesRegex(
+                ConsistencyError, 'already has a proposal_pdf link'):
+            self.db.link_proposal_pdf(
+                BaseTextRole, proposal_id_1, role, pdf_id)
+
+        # Create a link.
+        link_id2 = self.db.link_proposal_pdf(
+            BaseTextRole, proposal_id_2, role, pdf_id)
+        self.assertIsInstance(link_id, int)
+        self.assertNotEqual(link_id2, link_id)
+
+        result = self.db.get_proposal_pdf(proposal_id_2, role)
+        self.assertEqual(result.data, pdf)
+        self.assertEqual(result.type, FigureType.PDF)
+        self.assertEqual(result.filename, 'test.pdf')
+
+        result = self.db.get_proposal_pdf_preview(proposal_id_2, role, 1)
+        self.assertEqual(result, preview)
+
+        result = self.db.search_proposal_pdf(
+            proposal_id=proposal_id_2)
+        self.assertEqual(list(result.keys()), [link_id2])
+        pdf_info = result[link_id2]
+        self.assertIsInstance(pdf_info, ProposalPDFInfo)
+        self.assertEqual(pdf_info.id, link_id2)
+        self.assertEqual(pdf_info.pdf_id, pdf_id)
+
+        # Delete the link.
+        self.db.delete_proposal_pdf(proposal_id_2, role)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_pdf(proposal_id_2, role)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_pdf_preview(proposal_id_2, role, 1)
+
+        result = self.db.search_proposal_pdf(
+            proposal_id=proposal_id_2)
+        self.assertEqual(list(result.keys()), [])
+
+        # Create a link to a third proposal.
+        link_id_3 = self.db.link_proposal_pdf(
+            BaseTextRole, proposal_id_3, role, pdf_id)
+        self.assertIsInstance(link_id, int)
+        self.assertNotEqual(link_id_3, link_id)
+
+        result = self.db.get_proposal_pdf(proposal_id_3, role)
+        self.assertEqual(result.data, pdf)
+
+        result = self.db.get_proposal_pdf_preview(proposal_id_3, role, 1)
+        self.assertEqual(result, preview)
+
+        # Update the PDF in the third proposal.
+        (new_link_id, pdf_id_3) = self.db.set_proposal_pdf(
+            BaseTextRole, proposal_id_3, role,
+            b'edited PDF', 1, 'edited.pdf', person_id)
+        self.assertEqual(new_link_id, link_id_3)
+        self.assertIsInstance(pdf_id_3, int)
+        self.assertNotEqual(pdf_id_3, pdf_id)
+
+        self.db.set_proposal_pdf_preview(pdf_id, [preview])
+
+        result = self.db.get_proposal_pdf(proposal_id_3, role)
+        self.assertEqual(result.data, b'edited PDF')
+
+        with self.assertRaises(NoSuchRecord):
+            result = self.db.get_proposal_pdf_preview(proposal_id_3, role, 1)
+
+        self.db.set_proposal_pdf_preview(pdf_id_3, [b'edited PNG'])
+
+        result = self.db.get_proposal_pdf_preview(proposal_id_3, role, 1)
+        self.assertEqual(result, b'edited PNG')
+
+        # The original proposal should still link to the original PDF.
+        result = self.db.search_proposal_pdf(proposal_id=proposal_id_1)
+        self.assertEqual(list(result.keys()), [link_id])
+        result = result.get_single()
+        self.assertEqual(result.id, link_id)
+        self.assertEqual(result.pdf_id, pdf_id)
+
+        result = self.db.get_proposal_pdf(proposal_id_1, role)
+        self.assertEqual(result.data, pdf)
+
+        result = self.db.get_proposal_pdf_preview(proposal_id_1, role, 1)
+        self.assertEqual(result, preview)
+
+    def test_proposal_text_link(self):
+        (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
+        role = BaseTextRole.TECHNICAL_CASE
+        text = 'dummy text'
+        format = FormatType.PLAIN
+
+        person_id = self.db.add_person('Test Person')
+        proposal_id_1 = self.db.add_proposal(
+            call_id, person_id, affiliation_id, 'Proposal 1')
+        proposal_id_2 = self.db.add_proposal(
+            call_id, person_id, affiliation_id, 'Proposal 2')
+        proposal_id_3 = self.db.add_proposal(
+            call_id, person_id, affiliation_id, 'Proposal 3')
+
+        (link_id, text_id) = self.db.set_proposal_text(
+            BaseTextRole, proposal_id_1, role, text, format, 2, person_id)
+        self.assertIsInstance(link_id, int)
+        self.assertIsInstance(text_id, int)
+
+        result = self.db.search_proposal_text(proposal_id=proposal_id_1)
+        self.assertEqual(list(result.keys()), [link_id])
+        text_info = result[link_id]
+        self.assertEqual(text_info.id, link_id)
+        self.assertEqual(text_info.text_id, text_id)
+
+        result = self.db.search_proposal_text(proposal_id=proposal_id_2)
+        self.assertEqual(list(result.keys()), [])
+
+        # Check we can't link to a non-existent text attachment.
+        with self.assertRaisesRegex(
+                ConsistencyError, 'does not exist'):
+            self.db.link_proposal_text(
+                BaseTextRole, proposal_id_2, role, 1999999)
+
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.link_proposal_text(
+                BaseTextRole, proposal_id_2, role, 1999999,
+                _test_skip_check=True)
+
+        # Check we can't link to a text attachment if we already have one.
+        with self.assertRaisesRegex(
+                ConsistencyError, 'already has a proposal_text link'):
+            self.db.link_proposal_text(
+                BaseTextRole, proposal_id_1, role, text_id)
+
+        # Create a link.
+        link_id_2 = self.db.link_proposal_text(
+            BaseTextRole, proposal_id_2, role, text_id)
+        self.assertIsInstance(link_id_2, int)
+        self.assertNotEqual(link_id_2, link_id)
+
+        result = self.db.search_proposal_text(
+            proposal_id_2, role, with_text=True)
+        self.assertIsInstance(result, ProposalTextCollection)
+        self.assertEqual(list(result.keys()), [link_id_2])
+        result = result.get_single()
+        self.assertIsInstance(result, ProposalText)
+        self.assertEqual(result.id, link_id_2)
+        self.assertEqual(result.text_id, text_id)
+        self.assertEqual(result.text, text)
+        self.assertEqual(result.format, format)
+
+        # Delete the link.
+        self.db.delete_proposal_text(proposal_id_2, role)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_text(proposal_id_2, role)
+
+        # Create a link to a third proposal.
+        link_id_3 = self.db.link_proposal_text(
+            BaseTextRole, proposal_id_3, role, text_id)
+        self.assertIsInstance(link_id_3, int)
+        self.assertNotEqual(link_id_3, link_id)
+
+        result = self.db.search_proposal_text(
+            proposal_id_3, role, with_text=True)
+        self.assertIsInstance(result, ProposalTextCollection)
+        self.assertEqual(list(result.keys()), [link_id_3])
+        result = result.get_single()
+        self.assertIsInstance(result, ProposalText)
+        self.assertEqual(result.id, link_id_3)
+        self.assertEqual(result.text_id, text_id)
+        self.assertEqual(result.text, text)
+        self.assertEqual(result.format, format)
+
+        # Edit the text in the third proposal.
+        (new_link_id, text_id_3) = self.db.set_proposal_text(
+            BaseTextRole, proposal_id_3, role, 'edited', format, 1, person_id)
+        self.assertEqual(new_link_id, link_id_3)
+        self.assertIsInstance(text_id_3, int)
+        self.assertNotEqual(text_id_3, text_id)
+
+        result = self.db.search_proposal_text(
+            proposal_id_3, role, with_text=True)
+        self.assertIsInstance(result, ProposalTextCollection)
+        self.assertEqual(list(result.keys()), [new_link_id])
+        result = result.get_single()
+        self.assertIsInstance(result, ProposalText)
+        self.assertEqual(result.id, new_link_id)
+        self.assertEqual(result.text_id, text_id_3)
+        self.assertEqual(result.text, 'edited')
+        self.assertEqual(result.format, format)
+        self.assertEqual(result.words, 1)
+
+        # The original proposal should still have the original text.
+        result = self.db.search_proposal_text(
+            proposal_id=proposal_id_1, with_text=True)
+        self.assertEqual(list(result.keys()), [link_id])
+        result = result.get_single()
+        self.assertEqual(result.id, link_id)
+        self.assertEqual(result.text_id, text_id)
+        self.assertEqual(result.text, text)
+        self.assertEqual(result.format, format)
+        self.assertEqual(result.words, 2)
+
+    def test_proposal_figure_link(self):
+        (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
+        role = BaseTextRole.SCIENCE_CASE
+
+        person_id = self.db.add_person('Test Person')
+        proposal_id_1 = self.db.add_proposal(
+            call_id, person_id, affiliation_id, 'Proposal 1')
+        proposal_id_2 = self.db.add_proposal(
+            call_id, person_id, affiliation_id, 'Proposal 2')
+
+        # Add a figure to proposal 1.
+        (link_id_1, fig_id_1) = self.db.add_proposal_figure(
+            BaseTextRole, proposal_id_1, role,
+            FigureType.PNG, b'PNG1', 'Figure 1 in Proposal 1',
+            'fig1.png', person_id)
+        self.assertIsInstance(link_id_1, int)
+        self.assertIsInstance(fig_id_1, int)
+
+        result = self.db.get_proposal_figure(proposal_id_1, role, link_id_1)
+        self.assertEqual(result.data, b'PNG1')
+        self.assertEqual(result.type, FigureType.PNG)
+        self.assertEqual(result.filename, 'fig1.png')
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_figure_preview(
+                proposal_id_1, role, link_id_1)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_figure_thumbnail(
+                proposal_id_1, role, link_id_1)
+
+        self.db.set_proposal_figure_preview(fig_id_1, b'PREV1')
+        self.db.set_proposal_figure_thumbnail(fig_id_1, b'THUMB1')
+
+        self.assertEqual(
+            self.db.get_proposal_figure_preview(
+                proposal_id_1, role, link_id_1),
+            b'PREV1')
+
+        self.assertEqual(
+            self.db.get_proposal_figure_thumbnail(
+                proposal_id_1, role, link_id_1),
+            b'THUMB1')
+
+        # Link the figure to proposal 2.
+        link_id_2 = self.db.link_proposal_figure(
+            BaseTextRole, proposal_id_2, role, fig_id_1,
+            55, 'Figure 1 in Proposal 2')
+
+        self.assertIsInstance(link_id_2, int)
+        self.assertNotEqual(link_id_2, link_id_1)
+
+        result = self.db.get_proposal_figure(proposal_id_2, role, link_id_2)
+        self.assertEqual(result.data, b'PNG1')
+        self.assertEqual(result.type, FigureType.PNG)
+        self.assertEqual(result.filename, 'fig1.png')
+
+        self.assertEqual(
+            self.db.get_proposal_figure_preview(
+                proposal_id_2, role, link_id_2),
+            b'PREV1')
+
+        self.assertEqual(
+            self.db.get_proposal_figure_thumbnail(
+                proposal_id_2, role, link_id_2),
+            b'THUMB1')
+
+        # Check result of a figure search.
+        result = self.db.search_proposal_figure(with_caption=True)
+        self.assertEqual(
+            sorted(result.keys()),
+            sorted([link_id_1, link_id_2]))
+
+        fig = result[link_id_1]
+        self.assertEqual(fig.id, link_id_1)
+        self.assertEqual(fig.fig_id, fig_id_1)
+        self.assertEqual(fig.filename, 'fig1.png')
+        self.assertEqual(fig.state, AttachmentState.NEW)
+        self.assertEqual(fig.sort_order, 1)
+        self.assertEqual(fig.caption, 'Figure 1 in Proposal 1')
+
+        fig = result[link_id_2]
+        self.assertEqual(fig.id, link_id_2)
+        self.assertEqual(fig.fig_id, fig_id_1)
+        self.assertEqual(fig.filename, 'fig1.png')
+        self.assertEqual(fig.state, AttachmentState.NEW)
+        self.assertEqual(fig.sort_order, 55)
+        self.assertEqual(fig.caption, 'Figure 1 in Proposal 2')
+
+        # Try updating the figure.
+        with self.assertRaisesRegex(Error, 'main-table constraints'):
+            # Can't apply constraints from edited main table
+            # after explicit update.
+            self.db.update_proposal_figure(
+                None, None, link_id_1, fig_id=fig_id_1,
+                state=AttachmentState.ERROR, state_prev=AttachmentState.NEW,
+                caption='Modified caption')
+
+        with self.assertRaisesRegex(Error, 'main-table constraints'):
+            # Can't apply constraints from edited main table
+            # after implicit link update.
+            self.db.update_proposal_figure(
+                None, None, link_id_1, state_prev=AttachmentState.NEW,
+                figure=b'PNG1E', type_=FigureType.PNG, filename='fig1e.png',
+                uploader_person_id=person_id)
+
+        with self.assertRaisesRegex(Error, 'link_id not specified'):
+            # Can't update a figure without saying which link to update.
+            self.db.update_proposal_figure(
+                None, None, None, fig_id=fig_id_1,
+                figure=b'PNG1E', type_=FigureType.PNG, filename='fig1e.png',
+                uploader_person_id=person_id)
+
+        with self.assertRaisesRegex(Error, 'No link_id specified'):
+            # Can't update a caption without saying which link to update.
+            self.db.update_proposal_figure(
+                None, None, None, fig_id=fig_id_1,
+                caption='Modified caption')
+
+        result = self.db.update_proposal_figure(
+            None, None, link_id_1, caption='Modified caption in Proposal 1')
+        self.assertEqual(result, None)
+
+        result = self.db.update_proposal_figure(
+            None, None, link_id_2, caption='Modified caption in Proposal 2')
+        self.assertEqual(result, None)
+
+        result = self.db.search_proposal_figure(with_caption=True)
+
+        fig = result[link_id_1]
+        self.assertEqual(fig.id, link_id_1)
+        self.assertEqual(fig.fig_id, fig_id_1)
+        self.assertEqual(fig.sort_order, 1)
+        self.assertEqual(fig.caption, 'Modified caption in Proposal 1')
+
+        fig = result[link_id_2]
+        self.assertEqual(fig.id, link_id_2)
+        self.assertEqual(fig.fig_id, fig_id_1)
+        self.assertEqual(fig.sort_order, 55)
+        self.assertEqual(fig.caption, 'Modified caption in Proposal 2')
+
+        result_1 = result.subset_by_proposal(proposal_id_1)
+        result_1[link_id_1] = result_1[link_id_1]._replace(sort_order=2)
+
+        (n_insert, n_update, n_delete) = self.db.sync_proposal_figure(
+            proposal_id_1, role, result_1)
+
+        self.assertEqual(n_insert, 0)
+        self.assertEqual(n_update, 1)
+        self.assertEqual(n_delete, 0)
+
+        result_2 = result.subset_by_proposal(proposal_id_2)
+        result_2[link_id_2] = result_2[link_id_2]._replace(sort_order=5555)
+
+        (n_insert, n_update, n_delete) = self.db.sync_proposal_figure(
+            proposal_id_2, role, result_2)
+
+        self.assertEqual(n_insert, 0)
+        self.assertEqual(n_update, 1)
+        self.assertEqual(n_delete, 0)
+
+        result = self.db.search_proposal_figure(with_caption=True)
+
+        fig = result[link_id_1]
+        self.assertEqual(fig.id, link_id_1)
+        self.assertEqual(fig.fig_id, fig_id_1)
+        self.assertEqual(fig.sort_order, 2)
+        self.assertEqual(fig.caption, 'Modified caption in Proposal 1')
+
+        fig = result[link_id_2]
+        self.assertEqual(fig.id, link_id_2)
+        self.assertEqual(fig.fig_id, fig_id_1)
+        self.assertEqual(fig.sort_order, 5555)
+        self.assertEqual(fig.caption, 'Modified caption in Proposal 2')
+
+        result = self.db.update_proposal_figure(
+            None, None, None, fig_id=fig_id_1,
+            state=AttachmentState.ERROR, state_prev=AttachmentState.NEW)
+        self.assertEqual(result, None)
+
+        result = self.db.search_proposal_figure(with_caption=True)
+
+        fig = result[link_id_1]
+        self.assertEqual(fig.id, link_id_1)
+        self.assertEqual(fig.fig_id, fig_id_1)
+        self.assertEqual(fig.state, AttachmentState.ERROR)
+
+        fig = result[link_id_2]
+        self.assertEqual(fig.id, link_id_2)
+        self.assertEqual(fig.fig_id, fig_id_1)
+        self.assertEqual(fig.state, AttachmentState.ERROR)
+
+        fig_id_2 = self.db.update_proposal_figure(
+            None, None, link_id_2,
+            figure=b'PNG1E', type_=FigureType.PNG, filename='fig1e.png',
+            uploader_person_id=person_id)
+        self.assertIsInstance(fig_id_2, int)
+        self.assertNotEqual(fig_id_2, fig_id_1)
+
+        result = self.db.search_proposal_figure(with_caption=True)
+
+        self.assertEqual(
+            sorted(result.keys()),
+            sorted([link_id_1, link_id_2]))
+
+        fig = result[link_id_1]
+        self.assertEqual(fig.id, link_id_1)
+        self.assertEqual(fig.fig_id, fig_id_1)
+        self.assertEqual(fig.state, AttachmentState.ERROR)
+        self.assertEqual(fig.filename, 'fig1.png')
+        self.assertEqual(fig.sort_order, 2)
+        self.assertEqual(fig.caption, 'Modified caption in Proposal 1')
+
+        fig = result[link_id_2]
+        self.assertEqual(fig.id, link_id_2)
+        self.assertEqual(fig.fig_id, fig_id_2)
+        self.assertEqual(fig.state, AttachmentState.NEW)
+        self.assertEqual(fig.filename, 'fig1e.png')
+        self.assertEqual(fig.sort_order, 5555)
+        self.assertEqual(fig.caption, 'Modified caption in Proposal 2')
+
+        result = self.db.get_proposal_figure(proposal_id_1, role, link_id_1)
+        self.assertEqual(result.data, b'PNG1')
+        self.assertEqual(result.type, FigureType.PNG)
+        self.assertEqual(result.filename, 'fig1.png')
+
+        self.assertEqual(
+            self.db.get_proposal_figure_preview(
+                proposal_id_1, role, link_id_1),
+            b'PREV1')
+
+        self.assertEqual(
+            self.db.get_proposal_figure_thumbnail(
+                proposal_id_1, role, link_id_1),
+            b'THUMB1')
+
+        result = self.db.get_proposal_figure(proposal_id_2, role, link_id_2)
+        self.assertEqual(result.data, b'PNG1E')
+        self.assertEqual(result.type, FigureType.PNG)
+        self.assertEqual(result.filename, 'fig1e.png')
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_figure_preview(
+                proposal_id_2, role, link_id_2)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_figure_thumbnail(
+                proposal_id_2, role, link_id_2)
+
+        result = self.db.search_proposal_figure(no_link=True)
+        self.assertEqual(
+            set(result.keys()),
+            set((fig_id_1, fig_id_2)))
+
+        # Remove first figure by sync.
+        (n_insert, n_update, n_delete) = self.db.sync_proposal_figure(
+            proposal_id_1, role, ProposalFigureCollection())
+
+        self.assertEqual(n_insert, 0)
+        self.assertEqual(n_update, 0)
+        self.assertEqual(n_delete, 1)
+
+        result = self.db.search_proposal_figure(no_link=True)
+        self.assertEqual(
+            set(result.keys()),
+            set((fig_id_2,)))
+
+        with self.assertRaises(NoSuchRecord):
+            result = self.db.get_proposal_figure(
+                proposal_id_1, role, link_id_1)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_figure_preview(
+                proposal_id_1, role, link_id_1)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_figure_thumbnail(
+                proposal_id_1, role, link_id_1)
+
+        result = self.db.get_proposal_figure(proposal_id_2, role, link_id_2)
+        self.assertEqual(result.data, b'PNG1E')
+        self.assertEqual(result.type, FigureType.PNG)
+        self.assertEqual(result.filename, 'fig1e.png')
+
+        # Remove second figure via delete method.
+        self.db.delete_proposal_figure(proposal_id_2, role, fig_id_2)
+
+        result = self.db.search_proposal_figure(no_link=True)
+        self.assertEqual(len(result), 0)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_proposal_figure(proposal_id_2, role, link_id_2)
 
     def test_proposal_target(self):
         (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')

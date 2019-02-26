@@ -4,7 +4,7 @@
 
 {% set update_counter = create_counter(0) %}
 
-{% macro processing_table(entries, checkbox_fmt, is_review=False) %}
+{% macro processing_table(entries, checkbox_fmt, id_field, is_review=False) %}
     {% if entries %}
         <table>
             <tr>
@@ -42,8 +42,8 @@
                         {% if entry.state is attachment_new %}
                             &nbsp;
                         {% else %}
-                            <input type="checkbox" name="{{ entry.id | fmt(checkbox_fmt) }}" value="1" id="{{ update_counter() | fmt('update_box_{}') }}" />
-                            <input type="hidden" name="prev_{{ entry.id | fmt(checkbox_fmt) }}" value="{{ entry.state }}" />
+                            <input type="checkbox" name="{{ entry[id_field] | fmt(checkbox_fmt) }}" value="1" id="{{ update_counter() | fmt('update_box_{}') }}" />
+                            <input type="hidden" name="prev_{{ entry[id_field] | fmt(checkbox_fmt) }}" value="{{ entry.state }}" />
                         {% endif %}
                     </td>
                 </tr>
@@ -60,19 +60,19 @@
 <form method="POST" action="{{ url_for('.processing_status') }}">
     <h2>PDF Files</h2>
 
-    {% call(entry) processing_table(pdfs, 'pdf_{}') %}
+    {% call(entry) processing_table(pdfs, 'pdf_{}', 'pdf_id') %}
         <a href="{{ url_for(entry.facility_code | fmt('{}.case_view_pdf'), proposal_id=entry.proposal.id, role=entry.role, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
     {% endcall %}
 
     <h2>Proposal Figures</h2>
 
-    {% call(entry) processing_table(prop_figures, 'prop_fig_{}') %}
+    {% call(entry) processing_table(prop_figures, 'prop_fig_{}', 'fig_id') %}
         <a href="{{ url_for(entry.facility_code | fmt('{}.case_view_figure'), proposal_id=entry.proposal.id, role=entry.role, fig_id=entry.id, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
     {% endcall %}
 
     <h2>Review Figures</h2>
 
-    {% call(entry) processing_table(rev_figures, 'rev_fig_{}', is_review=True) %}
+    {% call(entry) processing_table(rev_figures, 'rev_fig_{}', 'fig_id', is_review=True) %}
         <a href="{{ url_for(entry.facility_code | fmt('{}.review_view_figure'), reviewer_id=entry.reviewer.id, fig_id=entry.id, md5sum=entry.md5sum) }}">{{ entry.filename }}</a>
     {% endcall %}
 

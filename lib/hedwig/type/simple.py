@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -25,8 +25,10 @@ from ..db.meta import affiliation, \
     email, group_member, institution, institution_log, \
     member, message, message_recipient, moc, person, \
     prev_proposal, prev_proposal_pub, \
-    proposal, proposal_annotation, proposal_category, proposal_text, queue, \
-    review, reviewer, review_calculation, \
+    proposal, proposal_annotation, proposal_category, \
+    proposal_fig, proposal_fig_link, proposal_pdf, proposal_pdf_link, \
+    proposal_text, proposal_text_link, queue, \
+    review, reviewer, review_calculation, review_fig, review_fig_link, \
     semester, target, user_log
 
 Affiliation = namedtuple(
@@ -207,21 +209,27 @@ ProposalFigure = namedtuple(
 
 ProposalFigureInfo = namedtuple(
     'ProposalFigureInfo',
-    ['id', 'proposal_id', 'sort_order', 'role', 'type', 'state', 'caption',
-     'md5sum', 'filename', 'uploaded', 'uploader', 'uploader_name',
-     'has_preview'])
+    [x.name for x in proposal_fig_link.columns] +
+    [x.name for x in proposal_fig.columns
+     if x.name not in ('figure', 'id')] +
+    ['uploader_name', 'has_preview'])
 
 ProposalFigureThumbPreview = namedtuple(
     'ProposalFigureThumbPreview', ['thumbnail', 'preview'])
 
 ProposalPDFInfo = namedtuple(
     'ProposalPDFInfo',
-    ['id', 'proposal_id', 'role', 'md5sum', 'state', 'pages',
-     'filename', 'uploaded', 'uploader', 'uploader_name'])
+    [x.name for x in proposal_pdf_link.columns] +
+    [x.name for x in proposal_pdf.columns
+     if x.name not in ('pdf', 'id')] +
+    ['uploader_name'])
 
 ProposalText = namedtuple(
     'ProposalText',
-    [x.name for x in proposal_text.columns] + ['editor_name'])
+    [x.name for x in proposal_text_link.columns] +
+    [x.name for x in proposal_text.columns
+     if x.name not in ('id',)] +
+    ['editor_name'])
 
 Reviewer = namedtuple(
     'Reviewer',
@@ -243,9 +251,10 @@ ReviewCalculation = namedtuple(
 
 ReviewFigureInfo = namedtuple(
     'ReviewFigureInfo',
-    ['id', 'reviewer_id', 'sort_order', 'type', 'state', 'caption',
-     'md5sum', 'filename', 'uploaded', 'uploader', 'uploader_name',
-     'has_preview'])
+    [x.name for x in review_fig_link.columns] +
+    [x.name for x in review_fig.columns
+     if x.name not in ('figure', 'id')] +
+    ['uploader_name', 'has_preview'])
 
 RouteInfo = namedtuple(
     'RouteInfo',

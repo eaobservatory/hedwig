@@ -64,23 +64,23 @@ class FilePollTestCase(DBTestCase):
         # Create a proposal and add a figure.
         proposal_id = self._create_test_proposal()
         person_id = self.db.add_person('Figure Uploader')
-        figure_id = self.db.add_proposal_figure(
+        (link_id, figure_id) = self.db.add_proposal_figure(
             BaseTextRole, proposal_id, BaseTextRole.TECHNICAL_CASE,
             FigureType.PNG, example_png, 'Dummy Caption',
             'dummy.png', person_id)
 
         # The figure should initially be marked NEW.
         figures = self.db.search_proposal_figure(proposal_id=proposal_id)
-        self.assertEqual(list(figures.keys()), [figure_id])
-        self.assertEqual(figures[figure_id].state, AttachmentState.NEW)
+        self.assertEqual(list(figures.keys()), [link_id])
+        self.assertEqual(figures[link_id].state, AttachmentState.NEW)
 
         # Should now find 1 figure to process.
         self.assertEqual(process_proposal_figure(self.db), 1)
 
         # The figure should now be marked READY.
         figures = self.db.search_proposal_figure(proposal_id=proposal_id)
-        self.assertEqual(list(figures.keys()), [figure_id])
-        self.assertEqual(figures[figure_id].state, AttachmentState.READY)
+        self.assertEqual(list(figures.keys()), [link_id])
+        self.assertEqual(figures[link_id].state, AttachmentState.READY)
 
     def test_poll_review_figure(self):
         # Should initially find nothing to process.
@@ -90,22 +90,22 @@ class FilePollTestCase(DBTestCase):
         proposal_id = self._create_test_proposal()
         reviewer_id = self._create_test_reviewer(proposal_id)
         person_id = self.db.add_person('Figure Uploader')
-        figure_id = self.db.add_review_figure(
+        (link_id, figure_id) = self.db.add_review_figure(
             reviewer_id, FigureType.PNG, example_png, 'Dummy Caption',
             'dummy.png', person_id)
 
         # The figure should initially be marked NEW.
         figures = self.db.search_review_figure(reviewer_id=reviewer_id)
-        self.assertEqual(list(figures.keys()), [figure_id])
-        self.assertEqual(figures[figure_id].state, AttachmentState.NEW)
+        self.assertEqual(list(figures.keys()), [link_id])
+        self.assertEqual(figures[link_id].state, AttachmentState.NEW)
 
         # Should now find 1 figure to process.
         self.assertEqual(process_review_figure(self.db), 1)
 
         # The figure should now be marked READY.
         figures = self.db.search_review_figure(reviewer_id=reviewer_id)
-        self.assertEqual(list(figures.keys()), [figure_id])
-        self.assertEqual(figures[figure_id].state, AttachmentState.READY)
+        self.assertEqual(list(figures.keys()), [link_id])
+        self.assertEqual(figures[link_id].state, AttachmentState.READY)
 
     def test_poll_proposal_pdf(self):
         # Should initially find nothing to process.
@@ -129,19 +129,19 @@ class FilePollTestCase(DBTestCase):
         # Create a proposal and add a PDF.
         proposal_id = self._create_test_proposal()
         person_id = self.db.add_person('PDF Uploader')
-        pdf_id = self.db.set_proposal_pdf(
+        (link_id, pdf_id) = self.db.set_proposal_pdf(
             BaseTextRole, proposal_id, BaseTextRole.TECHNICAL_CASE,
             example_pdf, 1, 'dummy.pdf', person_id)
 
         # The PDF should initially be marked NEW.
         pdfs = self.db.search_proposal_pdf(proposal_id=proposal_id)
-        self.assertEqual(list(pdfs.keys()), [pdf_id])
-        self.assertEqual(pdfs[pdf_id].state, AttachmentState.NEW)
+        self.assertEqual(list(pdfs.keys()), [link_id])
+        self.assertEqual(pdfs[link_id].state, AttachmentState.NEW)
 
         # Should now find 1 PDF to process.
         self.assertEqual(process_proposal_pdf(self.db), 1)
 
         # The PDF should now be marked READY.
         pdfs = self.db.search_proposal_pdf(proposal_id=proposal_id)
-        self.assertEqual(list(pdfs.keys()), [pdf_id])
-        self.assertEqual(pdfs[pdf_id].state, AttachmentState.READY)
+        self.assertEqual(list(pdfs.keys()), [link_id])
+        self.assertEqual(pdfs[link_id].state, AttachmentState.READY)

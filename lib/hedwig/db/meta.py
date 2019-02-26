@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -443,10 +443,6 @@ proposal_text = Table(
     'proposal_text',
     metadata,
     Column('id', Integer, primary_key=True),
-    Column('proposal_id', None,
-           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
-           nullable=False),
-    Column('role', Integer, nullable=False),
     Column('text', UnicodeText, nullable=False),
     Column('format', Integer, nullable=False),
     Column('words', Integer, nullable=False),
@@ -454,13 +450,26 @@ proposal_text = Table(
     Column('editor', None,
            ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
+    **table_opts)
+
+proposal_text_link = Table(
+    'proposal_text_link',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('role', Integer, nullable=False),
+    Column('text_id', None,
+           ForeignKey('proposal_text.id',
+                      onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
     Index('idx_text_prop_role', 'proposal_id', 'role', unique=True),
     **table_opts)
 
 
 def _fig_cols():
     return [
-        Column('sort_order', Integer, nullable=False),
         Column('type', Integer, nullable=False),
         Column('state', Integer, nullable=False, index=True),
         Column('figure', LargeBinary(2**24 - 1), nullable=False),
@@ -471,7 +480,6 @@ def _fig_cols():
                ForeignKey('person.id',
                           onupdate='RESTRICT', ondelete='RESTRICT'),
                nullable=False),
-        Column('caption', UnicodeText, nullable=False),
     ]
 
 
@@ -479,11 +487,23 @@ proposal_fig = Table(
     'proposal_fig',
     metadata,
     Column('id', Integer, primary_key=True),
+    *_fig_cols(),
+    **table_opts)
+
+proposal_fig_link = Table(
+    'proposal_fig_link',
+    metadata,
+    Column('id', Integer, primary_key=True),
     Column('proposal_id', None,
            ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
     Column('role', Integer, nullable=False),
-    *_fig_cols(),
+    Column('fig_id', None,
+           ForeignKey('proposal_fig.id',
+                      onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('sort_order', Integer, nullable=False),
+    Column('caption', UnicodeText, nullable=False),
     **table_opts)
 
 
@@ -524,10 +544,6 @@ proposal_pdf = Table(
     'proposal_pdf',
     metadata,
     Column('id', Integer, primary_key=True),
-    Column('proposal_id', None,
-           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
-           nullable=False),
-    Column('role', Integer, nullable=False),
     Column('pdf', LargeBinary(2**32 - 1), nullable=False),
     Column('md5sum', Unicode(40), nullable=False),
     Column('state', Integer, nullable=False, index=True),
@@ -536,6 +552,20 @@ proposal_pdf = Table(
     Column('uploaded', DateTime(), nullable=False),
     Column('uploader', None,
            ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    **table_opts)
+
+proposal_pdf_link = Table(
+    'proposal_pdf_link',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('role', Integer, nullable=False),
+    Column('pdf_id', None,
+           ForeignKey('proposal_pdf.id',
+                      onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
     Index('idx_pdf_prop_role', 'proposal_id', 'role', unique=True),
     **table_opts)
@@ -624,10 +654,22 @@ review_fig = Table(
     'review_fig',
     metadata,
     Column('id', Integer, primary_key=True),
+    *_fig_cols(),
+    **table_opts)
+
+review_fig_link = Table(
+    'review_fig_link',
+    metadata,
+    Column('id', Integer, primary_key=True),
     Column('reviewer_id', None,
            ForeignKey('reviewer.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
-    *_fig_cols(),
+    Column('fig_id', None,
+           ForeignKey('review_fig.id',
+                      onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('sort_order', Integer, nullable=False),
+    Column('caption', UnicodeText, nullable=False),
     **table_opts)
 
 review_fig_preview = Table(

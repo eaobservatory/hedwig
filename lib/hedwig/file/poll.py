@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -95,15 +95,16 @@ def _process_figure(db, _type, dry_run=False):
     if _type == 'proposal':
         config_section = 'proposal_fig'
 
-        figures = db.search_proposal_figure(state=AttachmentState.NEW)
+        figures = db.search_proposal_figure(
+            state=AttachmentState.NEW, no_link=True)
 
         def get_figure(fig_id):
             return db.get_proposal_figure(
-                proposal_id=None, role=None, id_=fig_id)
+                proposal_id=None, role=None, link_id=None, fig_id=fig_id)
 
         def set_state(fig_id, state, state_prev=None):
             db.update_proposal_figure(
-                proposal_id=None, role=None, fig_id=fig_id,
+                proposal_id=None, role=None, link_id=None, fig_id=fig_id,
                 state=state, state_prev=state_prev)
 
         set_thumbnail = db.set_proposal_figure_thumbnail
@@ -112,15 +113,16 @@ def _process_figure(db, _type, dry_run=False):
     elif _type == 'review':
         config_section = 'review_fig'
 
-        figures = db.search_review_figure(state=AttachmentState.NEW)
+        figures = db.search_review_figure(
+            state=AttachmentState.NEW, no_link=True)
 
         def get_figure(fig_id):
             return db.get_review_figure(
-                reviewer_id=None, id_=fig_id)
+                reviewer_id=None, link_id=None, fig_id=fig_id)
 
         def set_state(fig_id, state, state_prev=None):
             db.update_review_figure(
-                reviewer_id=None, fig_id=fig_id,
+                reviewer_id=None, link_id=None, fig_id=fig_id,
                 state=state, state_prev=state_prev)
 
         set_thumbnail = db.set_review_figure_thumbnail
@@ -146,16 +148,16 @@ def _process_figure(db, _type, dry_run=False):
     n_processed = 0
 
     for figure_info in figures.values():
-        logger.debug('Processing {} figure {}', _type, figure_info.id)
+        logger.debug('Processing {} figure {}', _type, figure_info.fig_id)
 
         try:
             if not dry_run:
-                set_state(figure_info.id, AttachmentState.PROCESSING,
+                set_state(figure_info.fig_id, AttachmentState.PROCESSING,
                           state_prev=AttachmentState.NEW)
         except ConsistencyError:
             continue
 
-        figure = get_figure(figure_info.id)
+        figure = get_figure(figure_info.fig_id)
 
         try:
             # Create figure preview if necessary.
@@ -199,13 +201,13 @@ def _process_figure(db, _type, dry_run=False):
             # Store the processed data.
             if not dry_run:
                 if preview is not None:
-                    set_preview(figure_info.id, preview)
+                    set_preview(figure_info.fig_id, preview)
 
-                set_thumbnail(figure_info.id, tp.thumbnail)
+                set_thumbnail(figure_info.fig_id, tp.thumbnail)
 
             try:
                 if not dry_run:
-                    set_state(figure_info.id, AttachmentState.READY,
+                    set_state(figure_info.fig_id, AttachmentState.READY,
                               state_prev=AttachmentState.PROCESSING)
 
                 n_processed += 1
@@ -215,11 +217,11 @@ def _process_figure(db, _type, dry_run=False):
 
         except Exception as e:
             logger.exception(
-                'Error converting {} figure {}', _type, figure_info.id)
+                'Error converting {} figure {}', _type, figure_info.fig_id)
 
             if not dry_run:
                 try:
-                    set_state(figure_info.id, AttachmentState.ERROR)
+                    set_state(figure_info.fig_id, AttachmentState.ERROR)
 
                 except:
                     # It's possible that whatever prevented us processing the
@@ -245,20 +247,20 @@ def process_proposal_pdf(db, dry_run=False):
     n_processed = 0
 
     for pdf in db.search_proposal_pdf(
-            state=AttachmentState.NEW).values():
-        logger.debug('Processing PDF {}', pdf.id)
+            state=AttachmentState.NEW, no_link=True).values():
+        logger.debug('Processing PDF {}', pdf.pdf_id)
 
         try:
             if not dry_run:
                 db.update_proposal_pdf(
-                    pdf.id,
+                    pdf_id=pdf.pdf_id,
                     state=AttachmentState.PROCESSING,
                     state_prev=AttachmentState.NEW)
         except ConsistencyError:
             continue
 
-        buff = db.get_proposal_pdf(proposal_id=None, role=None,
-                                   id_=pdf.id).data
+        buff = db.get_proposal_pdf(
+            proposal_id=None, role=None, pdf_id=pdf.pdf_id).data
 
         try:
             pngs = pdf_to_png(buff, **pdf_options)
@@ -267,12 +269,12 @@ def process_proposal_pdf(db, dry_run=False):
                 raise ConversionError('PDF generated wrong number of pages')
 
             if not dry_run:
-                db.set_proposal_pdf_preview(pdf.id, pngs)
+                db.set_proposal_pdf_preview(pdf.pdf_id, pngs)
 
             try:
                 if not dry_run:
                     db.update_proposal_pdf(
-                        pdf.id,
+                        pdf_id=pdf.pdf_id,
                         state=AttachmentState.READY,
                         state_prev=AttachmentState.PROCESSING)
 
@@ -284,11 +286,12 @@ def process_proposal_pdf(db, dry_run=False):
                 continue
 
         except Exception:
-            logger.exception('Error processing PDF {}', pdf.id)
+            logger.exception('Error processing PDF {}', pdf.pdf_id)
 
             if not dry_run:
                 try:
-                    db.update_proposal_pdf(pdf.id, state=AttachmentState.ERROR)
+                    db.update_proposal_pdf(
+                        pdf_id=pdf.pdf_id, state=AttachmentState.ERROR)
                 except:
                     # It's possible that whatever prevented us setting the
                     # previews also prevents us updating the state, e.g.

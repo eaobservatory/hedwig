@@ -51,8 +51,10 @@ from ..meta import affiliation, affiliation_weight, \
     facility, institution, \
     member, person, prev_proposal, prev_proposal_pub, \
     proposal, proposal_annotation, proposal_category, \
-    proposal_fig, proposal_fig_preview, proposal_fig_thumbnail, \
-    proposal_pdf, proposal_pdf_preview, proposal_text, \
+    proposal_fig, proposal_fig_link, \
+    proposal_fig_preview, proposal_fig_thumbnail, \
+    proposal_pdf, proposal_pdf_link, proposal_pdf_preview, \
+    proposal_text, proposal_text_link, \
     queue, review, reviewer, semester, target
 from ..util import require_not_none
 
@@ -259,13 +261,14 @@ class ProposalPart(object):
             raise Error('Invalid text role.')
 
         return self._add_figure(
-            proposal_fig, proposal_fig.c.proposal_id, proposal_id, proposal,
+            proposal_fig, proposal_fig_link, proposal_fig_link.c.proposal_id,
+            proposal_id, proposal,
             type_, figure, caption, filename, uploader_person_id,
-            extra={proposal_fig.c.role: role},
+            extra={proposal_fig_link.c.role: role},
             _test_skip_check=_test_skip_check)
 
     def _add_figure(
-            self, table, key_column, key_value, foreign_table,
+            self, table, table_link, key_column, key_value, foreign_table,
             type_, figure, caption, filename, uploader_person_id,
             extra={}, _test_skip_check=False):
         if not FigureType.is_valid(type_):
@@ -285,29 +288,43 @@ class ProposalPart(object):
                 raise ConsistencyError('person does not exist with id={}',
                                        uploader_person_id)
 
-            table_alias = table.alias()
-            key_column_alias = table_alias.columns[key_column.name]
-
+            # Create entry in main figure table.
             values = {
-                key_column: key_value,
-                table.c.sort_order: select(
-                    [coalesce(max_(table_alias.c.sort_order), 0) + 1]
-                    ).where(key_column_alias == key_value),
                 table.c.type: type_,
                 table.c.state: AttachmentState.NEW,
                 table.c.figure: figure,
                 table.c.md5sum: str_to_unicode(md5(figure).hexdigest()),
-                table.c.caption: caption,
                 table.c.filename: filename,
                 table.c.uploaded: datetime.utcnow(),
                 table.c.uploader: uploader_person_id,
             }
 
-            values.update(extra)
-
             result = conn.execute(table.insert().values(values))
 
-        return result.inserted_primary_key[0]
+            fig_id = result.inserted_primary_key[0]
+
+            # Create entry in link table.  Do this here rather than calling
+            # link_proposal_figure so that we can also handle review figures
+            # (while we don't have a method to link them).
+            table_alias = table_link.alias()
+            key_column_alias = table_alias.columns[key_column.name]
+
+            values = {
+                key_column: key_value,
+                table_link.c.sort_order: select(
+                    [coalesce(max_(table_alias.c.sort_order), 0) + 1]
+                    ).where(key_column_alias == key_value),
+                table_link.c.caption: caption,
+                table_link.c.fig_id: fig_id,
+            }
+
+            values.update(extra)
+
+            result = conn.execute(table_link.insert().values(values))
+
+            link_id = result.inserted_primary_key[0]
+
+        return (link_id, fig_id)
 
     def add_queue(self, facility_id, name, code, description='',
                   description_format=FormatType.PLAIN,
@@ -415,29 +432,29 @@ class ProposalPart(object):
         where_extra = []
 
         if proposal_id is not None:
-            where_extra.append(proposal_fig.c.proposal_id == proposal_id)
+            where_extra.append(proposal_fig_link.c.proposal_id == proposal_id)
         elif _allow_any:
             raise Error('figure proposal_id not specified with _allow_any')
 
         if role is not None:
-            where_extra.append(proposal_fig.c.role == role)
+            where_extra.append(proposal_fig_link.c.role == role)
         elif _allow_any:
             raise Error('figure role not specified with _allow_any')
 
         return self._delete_figure(
-            proposal_fig, id_, where_extra=where_extra,
+            proposal_fig, proposal_fig_link, id_, where_extra=where_extra,
             _allow_any=_allow_any, _conn=_conn)
 
     def _delete_figure(
-            self, table, id_, where_extra=[],
+            self, table, table_link, id_, where_extra=[],
             _allow_any=False, _conn=None):
-        stmt = table.delete()
+        stmt = table_link.delete()
 
         for where_clause in where_extra:
             stmt = stmt.where(where_clause)
 
         if id_ is not None:
-            stmt = stmt.where(table.c.id == id_)
+            stmt = stmt.where(table_link.c.fig_id == id_)
         elif not _allow_any:
             raise Error('figure identifier not specified')
 
@@ -448,6 +465,8 @@ class ProposalPart(object):
                 raise ConsistencyError(
                     'no row matched deleting figure identifier {}',
                     id_)
+
+            self._remove_orphan_records(conn, table, table_link.c.fig_id)
 
     def delete_proposal_pdf(self, proposal_id, role,
                             _skip_check=False, _allow_count=(1,), _conn=None):
@@ -465,19 +484,22 @@ class ProposalPart(object):
         with self._transaction(_conn=_conn) as conn:
             if (not _skip_check
                     and (self._get_proposal_text_id(
-                        conn, proposal_pdf, proposal_id, role) is None)):
+                        conn, proposal_pdf_link, proposal_id, role) is None)):
                 raise ConsistencyError('PDF does not exist for {} role {}',
                                        proposal_id, role)
 
-            result = conn.execute(proposal_pdf.delete().where(and_(
-                proposal_pdf.c.proposal_id == proposal_id,
-                proposal_pdf.c.role == role
+            result = conn.execute(proposal_pdf_link.delete().where(and_(
+                proposal_pdf_link.c.proposal_id == proposal_id,
+                proposal_pdf_link.c.role == role
             )))
 
             if result.rowcount not in _allow_count:
                 raise ConsistencyError(
                     'mismatch deleting PDF for {} role {}',
                     proposal_id, role)
+
+            self._remove_orphan_records(
+                conn, proposal_pdf, proposal_pdf_link.c.pdf_id)
 
     def delete_proposal_text(self, proposal_id, role,
                              _skip_check=False, _allow_count=(1,), _conn=None):
@@ -494,19 +516,22 @@ class ProposalPart(object):
 
         with self._transaction(_conn=_conn) as conn:
             if not _skip_check and not self._get_proposal_text_id(
-                    conn, proposal_text, proposal_id, role):
+                    conn, proposal_text_link, proposal_id, role):
                 raise ConsistencyError('text does not exist for {} role {}',
                                        proposal_id, role)
 
-            result = conn.execute(proposal_text.delete().where(and_(
-                proposal_text.c.proposal_id == proposal_id,
-                proposal_text.c.role == role
+            result = conn.execute(proposal_text_link.delete().where(and_(
+                proposal_text_link.c.proposal_id == proposal_id,
+                proposal_text_link.c.role == role
             )))
 
             if result.rowcount not in _allow_count:
                 raise ConsistencyError(
                     'mismatch deleting text for {} role {}',
                     proposal_id, role)
+
+            self._remove_orphan_records(
+                conn, proposal_text, proposal_text_link.c.text_id)
 
     def ensure_facility(self, code):
         """
@@ -605,7 +630,8 @@ class ProposalPart(object):
 
         return result['code']
 
-    def get_proposal_figure(self, proposal_id, role, id_, md5sum=None):
+    def get_proposal_figure(
+            self, proposal_id, role, link_id, fig_id=None, md5sum=None):
         """
         Get a figure associated with a proposal.
 
@@ -615,29 +641,36 @@ class ProposalPart(object):
         where_extra = []
 
         if proposal_id is not None:
-            where_extra.append(proposal_fig.c.proposal_id == proposal_id)
+            where_extra.append(proposal_fig_link.c.proposal_id == proposal_id)
 
         if role is not None:
-            where_extra.append(proposal_fig.c.role == role)
+            where_extra.append(proposal_fig_link.c.role == role)
 
         return self._get_figure(
-            proposal_fig, id_, md5sum,
+            proposal_fig, proposal_fig_link, link_id, fig_id, md5sum,
             where_extra=where_extra)
 
     def _get_figure(
-            self, table, id_, md5sum, where_extra=[]):
+            self, table, table_link, link_id, fig_id, md5sum, where_extra=[]):
         stmt = select([
             table.c.figure,
             table.c.type,
             table.c.filename,
         ])
 
+        stmt = stmt.select_from(table.join(table_link))
+
         for where_clause in where_extra:
             stmt = stmt.where(where_clause)
 
-        if id_ is not None:
-            stmt = stmt.where(table.c.id == id_)
-        else:
+        have_id = False
+        if link_id is not None:
+            stmt = stmt.where(table_link.c.id == link_id)
+            have_id = True
+        if fig_id is not None:
+            stmt = stmt.where(table.c.id == fig_id)
+            have_id = True
+        if not have_id:
             raise Error('figure identifier not specified')
 
         if md5sum is not None:
@@ -652,39 +685,40 @@ class ProposalPart(object):
         return ProposalFigure(row['figure'], row['type'], row['filename'])
 
     def get_proposal_figure_preview(
-            self, proposal_id, role, id_, md5sum=None):
+            self, proposal_id, role, link_id, fig_id=None, md5sum=None):
         where_extra = []
 
         if proposal_id is not None:
-            where_extra.append(proposal_fig.c.proposal_id == proposal_id)
+            where_extra.append(proposal_fig_link.c.proposal_id == proposal_id)
 
         if role is not None:
-            where_extra.append(proposal_fig.c.role == role)
+            where_extra.append(proposal_fig_link.c.role == role)
 
         return self._get_figure_alternate(
-            proposal_fig, proposal_fig_preview.c.preview,
-            id_, md5sum, where_extra=where_extra)
+            proposal_fig, proposal_fig_link, proposal_fig_preview.c.preview,
+            link_id, fig_id, md5sum, where_extra=where_extra)
 
     def get_proposal_figure_thumbnail(
-            self, proposal_id, role, id_, md5sum=None):
+            self, proposal_id, role, link_id, fig_id=None, md5sum=None):
         where_extra = []
 
         if proposal_id is not None:
-            where_extra.append(proposal_fig.c.proposal_id == proposal_id)
+            where_extra.append(proposal_fig_link.c.proposal_id == proposal_id)
 
         if role is not None:
-            where_extra.append(proposal_fig.c.role == role)
+            where_extra.append(proposal_fig_link.c.role == role)
 
         return self._get_figure_alternate(
-            proposal_fig, proposal_fig_thumbnail.c.thumbnail,
-            id_, md5sum, where_extra=where_extra)
+            proposal_fig, proposal_fig_link, proposal_fig_thumbnail.c.thumbnail,
+            link_id, fig_id, md5sum, where_extra=where_extra)
 
     def _get_figure_alternate(
-            self, table, column, id_, md5sum, where_extra=[]):
+            self, table, table_link, column, link_id, fig_id, md5sum,
+            where_extra=[]):
         stmt = select([column])
 
-        if (where_extra or (md5sum is not None)):
-            stmt = stmt.select_from(column.table.join(table))
+        if (where_extra or (md5sum is not None) or (link_id is not None)):
+            stmt = stmt.select_from(column.table.join(table).join(table_link))
 
             for where_clause in where_extra:
                 stmt = stmt.where(where_clause)
@@ -692,9 +726,14 @@ class ProposalPart(object):
             if md5sum is not None:
                 stmt = stmt.where(table.c.md5sum == md5sum)
 
-        if id_ is not None:
-            stmt = stmt.where(column.table.c.fig_id == id_)
-        else:
+        have_id = False
+        if link_id is not None:
+            stmt = stmt.where(table_link.c.id == link_id)
+            have_id = True
+        if fig_id is not None:
+            stmt = stmt.where(column.table.c.fig_id == fig_id)
+            have_id = True
+        if not have_id:
             raise Error('figure identifier not specified')
 
         with self._transaction() as conn:
@@ -705,7 +744,7 @@ class ProposalPart(object):
 
         return row[0]
 
-    def get_proposal_pdf(self, proposal_id, role, id_=None, md5sum=None,
+    def get_proposal_pdf(self, proposal_id, role, pdf_id=None, md5sum=None,
                          _conn=None):
         """
         Get the given PDF associated with a proposal.
@@ -713,14 +752,16 @@ class ProposalPart(object):
 
         stmt = select([proposal_pdf.c.pdf, proposal_pdf.c.filename])
 
+        stmt = stmt.select_from(proposal_pdf.join(proposal_pdf_link))
+
         if (proposal_id is not None) and (role is not None):
             stmt = stmt.where(and_(
-                proposal_pdf.c.proposal_id == proposal_id,
-                proposal_pdf.c.role == role
+                proposal_pdf_link.c.proposal_id == proposal_id,
+                proposal_pdf_link.c.role == role
             ))
 
-        elif id_ is not None:
-            stmt = stmt.where(proposal_pdf.c.id == id_)
+        elif pdf_id is not None:
+            stmt = stmt.where(proposal_pdf.c.id == pdf_id)
 
         else:
             raise Error('neither PDF nor proposal and role specified.')
@@ -743,10 +784,10 @@ class ProposalPart(object):
         """
 
         stmt = select([proposal_pdf_preview.c.preview]).select_from(
-            proposal_pdf.join(proposal_pdf_preview)
+            proposal_pdf.join(proposal_pdf_link).join(proposal_pdf_preview)
         ).where(and_(
-            proposal_pdf.c.proposal_id == proposal_id,
-            proposal_pdf.c.role == role,
+            proposal_pdf_link.c.proposal_id == proposal_id,
+            proposal_pdf_link.c.role == role,
             proposal_pdf_preview.c.page == page
         ))
 
@@ -808,6 +849,115 @@ class ProposalPart(object):
             raise NoSuchRecord('queue does not exist')
 
         return Queue(**result)
+
+    def link_proposal_pdf(
+            self, role_class, proposal_id, role, pdf_id,
+            _conn=None, _test_skip_check=False):
+        """
+        Link the given proposal PDF to a proposal.
+
+        :return: the link identifier
+        """
+
+        with self._transaction(_conn=_conn) as conn:
+            link_id = self._link_proposal_attachment(
+                conn, role_class, proposal_pdf, proposal_pdf_link,
+                proposal_pdf_link.c.pdf_id,
+                proposal_id, role, pdf_id,
+                _test_skip_check=_test_skip_check)
+
+            # Delete any previous proposal text and figures for the same role.
+            self.delete_proposal_text(
+                proposal_id, role,
+                _skip_check=True, _allow_count=(0, 1), _conn=conn)
+
+            self.delete_proposal_figure(
+                proposal_id, role, id_=None,
+                _allow_any=True, _conn=conn)
+
+        return link_id
+
+    def link_proposal_text(
+            self, role_class, proposal_id, role, text_id,
+            _conn=None, _test_skip_check=False):
+        """
+        Link the given proposal text to a proposal.
+
+        :return: the link identifier
+        """
+
+        with self._transaction(_conn=_conn) as conn:
+            link_id = self._link_proposal_attachment(
+                conn, role_class, proposal_text, proposal_text_link,
+                proposal_text_link.c.text_id,
+                proposal_id, role, text_id,
+                _test_skip_check=_test_skip_check)
+
+            # Delete any previous proposal PDF for the same role.
+            self.delete_proposal_pdf(
+                proposal_id, role,
+                _skip_check=True, _allow_count=(0, 1), _conn=conn)
+
+        return link_id
+
+    def link_proposal_figure(
+            self, role_class, proposal_id, role, fig_id, sort_order, caption,
+            _conn=None, _test_skip_check=False):
+        """
+        Link the given figure to a proposal.
+
+        :return: the link identifier
+        """
+
+        values = {
+            proposal_fig_link.c.sort_order: sort_order,
+            proposal_fig_link.c.caption: caption,
+        }
+
+        with self._transaction(_conn=_conn) as conn:
+            link_id = self._link_proposal_attachment(
+                conn, role_class,
+                proposal_fig, proposal_fig_link,
+                proposal_fig_link.c.fig_id,
+                proposal_id, role, fig_id,
+                extra_values=values, allow_multiple=True,
+                _test_skip_check=_test_skip_check)
+
+        return link_id
+
+    def _link_proposal_attachment(
+            self, conn, role_class, table, table_link, key_field,
+            proposal_id, role, key_value, extra_values=None,
+            allow_multiple=False, _test_skip_check=False):
+        if not role_class.is_valid(role):
+            raise FormattedError(
+                'proposal text role not recognised: {}', role)
+
+        if not _test_skip_check:
+            if not self._exists_id(conn, table, key_value):
+                raise ConsistencyError(
+                    'link target {} {} does not exist',
+                    table.name, key_value)
+
+            if not allow_multiple:
+                if self._get_proposal_text_id(
+                        conn, table_link, proposal_id, role) is not None:
+                    raise ConsistencyError(
+                        'proposal {} already has a {} link role {}',
+                        proposal_id, table.name, role)
+
+        values = {
+            table_link.c.proposal_id: proposal_id,
+            table_link.c.role: role,
+            key_field: key_value,
+        }
+
+        if extra_values is not None:
+            values.update(extra_values)
+
+        result = conn.execute(table_link.insert().values(values))
+
+        return result.inserted_primary_key[0]
 
     def search_affiliation(self, queue_id=None, hidden=None, type_=None,
                            with_weight_call_id=None, order_by_id=False):
@@ -1694,34 +1844,52 @@ class ProposalPart(object):
     def search_proposal_figure(
             self, proposal_id=None, role=None, state=None, fig_id=None,
             with_caption=False, with_uploader_name=False,
-            with_has_preview=False, order_by_date=False):
+            with_has_preview=False, order_by_date=False,
+            no_link=False):
         where_extra = []
+        select_extra = []
+        default_extra = {}
 
         if proposal_id is not None:
-            where_extra.append(proposal_fig.c.proposal_id == proposal_id)
+            if no_link:
+                raise Error('proposal_id specified with no_link')
+            where_extra.append(proposal_fig_link.c.proposal_id == proposal_id)
 
         if role is not None:
-            where_extra.append(proposal_fig.c.role == role)
+            if no_link:
+                raise Error('role specified with no_link')
+            where_extra.append(proposal_fig_link.c.role == role)
+
+        if no_link:
+            default_extra.update({
+                'proposal_id': None,
+                'role': None,
+            })
+
+        else:
+            select_extra.extend([
+                proposal_fig_link.c.proposal_id,
+                proposal_fig_link.c.role,
+            ])
 
         return self._search_figure(
-            proposal_fig, ProposalFigureInfo, ProposalFigureCollection,
+            proposal_fig, (None if no_link else proposal_fig_link),
+            ProposalFigureInfo, ProposalFigureCollection,
             state, fig_id, with_caption, with_uploader_name, order_by_date,
             with_has_preview_table=(
                 proposal_fig_preview if with_has_preview else None),
-            select_extra=[
-                proposal_fig.c.proposal_id,
-                proposal_fig.c.role,
-            ],
+            select_extra=select_extra, default_extra=default_extra,
             where_extra=where_extra)
 
     def _search_figure(
-            self, table, result_class, result_collection_class,
+            self, table, table_link, result_class, result_collection_class,
             state, fig_id, with_caption, with_uploader_name, order_by_date,
             with_has_preview_table=None,
-            select_extra=[], where_extra=[]):
+            select_extra=[], default_extra={}, where_extra=[]):
+        select_from = table
+
         select_columns = [
-            table.c.id,
-            table.c.sort_order,
+            table.c.id.label('fig_id'),
             table.c.type,
             table.c.state,
             table.c.md5sum,
@@ -1732,16 +1900,36 @@ class ProposalPart(object):
 
         select_columns.extend(select_extra)
 
-        select_from = table
-
         default = {
             'caption': None,
             'has_preview': None,
             'uploader_name': None,
         }
 
+        default.update(default_extra)
+
+        if table_link is None:
+            default.update({
+                'sort_order': None,
+                'id': None,
+            })
+
+            key_col = 'fig_id'
+
+        else:
+            select_from = select_from.join(table_link)
+
+            select_columns.extend([
+                table_link.c.sort_order,
+                table_link.c.id,
+            ])
+
+            key_col = 'id'
+
         if with_caption:
-            select_columns.append(table.c.caption)
+            if table_link is None:
+                raise Error('with_caption specified with no link table')
+            select_columns.append(table_link.c.caption)
             del default['caption']
 
         if with_uploader_name:
@@ -1772,8 +1960,8 @@ class ProposalPart(object):
 
         if order_by_date:
             stmt = stmt.order_by(table.c.uploaded.desc())
-        else:
-            stmt = stmt.order_by(table.c.sort_order.asc())
+        elif table_link is not None:
+            stmt = stmt.order_by(table_link.c.sort_order.asc())
 
         ans = result_collection_class()
 
@@ -1781,16 +1969,18 @@ class ProposalPart(object):
             for row in conn.execute(stmt):
                 values = default.copy()
                 values.update(**row)
-                ans[row['id']] = result_class(**values)
+                ans[row[key_col]] = result_class(**values)
 
         return ans
 
-    def search_proposal_pdf(self, proposal_id=None, role=None, state=None,
-                            with_uploader_name=False, order_by_date=False):
+    def search_proposal_pdf(
+            self, proposal_id=None, role=None, state=None,
+            with_uploader_name=False, order_by_date=False,
+            no_link=False):
+        select_from = proposal_pdf
+
         select_columns = [
-            proposal_pdf.c.id,
-            proposal_pdf.c.proposal_id,
-            proposal_pdf.c.role,
+            proposal_pdf.c.id.label('pdf_id'),
             proposal_pdf.c.md5sum,
             proposal_pdf.c.state,
             proposal_pdf.c.pages,
@@ -1799,11 +1989,29 @@ class ProposalPart(object):
             proposal_pdf.c.uploader,
         ]
 
-        select_from = proposal_pdf
-
         default = {
             'uploader_name': None,
         }
+
+        if no_link:
+            default.update({
+                'proposal_id': None,
+                'role': None,
+                'id': None,
+            })
+
+            key_col = 'pdf_id'
+
+        else:
+            select_from = select_from.join(proposal_pdf_link)
+
+            select_columns.extend([
+                proposal_pdf_link.c.proposal_id,
+                proposal_pdf_link.c.role,
+                proposal_pdf_link.c.id,
+            ])
+
+            key_col = 'id'
 
         if with_uploader_name:
             select_columns.append(person.c.name.label('uploader_name'))
@@ -1813,10 +2021,14 @@ class ProposalPart(object):
         stmt = select(select_columns).select_from(select_from)
 
         if proposal_id is not None:
-            stmt = stmt.where(proposal_pdf.c.proposal_id == proposal_id)
+            if no_link:
+                raise Error('proposal_id specified with no_link')
+            stmt = stmt.where(proposal_pdf_link.c.proposal_id == proposal_id)
 
         if role is not None:
-            stmt = stmt.where(proposal_pdf.c.role == role)
+            if no_link:
+                raise Error('role specified with no_link')
+            stmt = stmt.where(proposal_pdf_link.c.role == role)
 
         if state is not None:
             if is_list_like(state):
@@ -1833,7 +2045,7 @@ class ProposalPart(object):
             for row in conn.execute(stmt):
                 values = default.copy()
                 values.update(**row)
-                ans[row['id']] = ProposalPDFInfo(**values)
+                ans[row[key_col]] = ProposalPDFInfo(**values)
 
         return ans
 
@@ -1844,14 +2056,15 @@ class ProposalPart(object):
         default = {}
 
         select_columns = [
-            proposal_text.c.id,
-            proposal_text.c.proposal_id,
-            proposal_text.c.role,
+            proposal_text.c.id.label('text_id'),
+            proposal_text_link.c.proposal_id,
+            proposal_text_link.c.role,
             proposal_text.c.format,
             proposal_text.c.words,
             proposal_text.c.edited,
             proposal_text.c.editor,
             person.c.name.label('editor_name'),
+            proposal_text_link.c.id,
         ]
 
         if with_text:
@@ -1859,15 +2072,15 @@ class ProposalPart(object):
         else:
             default['text'] = None
 
-        select_from = proposal_text.join(person)
+        select_from = proposal_text.join(proposal_text_link).join(person)
 
         stmt = select(select_columns).select_from(select_from)
 
         if proposal_id is not None:
-            stmt = stmt.where(proposal_text.c.proposal_id == proposal_id)
+            stmt = stmt.where(proposal_text_link.c.proposal_id == proposal_id)
 
         if role is not None:
-            stmt = stmt.where(proposal_text.c.role == role)
+            stmt = stmt.where(proposal_text_link.c.role == role)
 
         ans = ProposalTextCollection()
 
@@ -2018,7 +2231,7 @@ class ProposalPart(object):
         """
         Insert or update a given proposal PDF.
 
-        Returns the PDF identifier.
+        :return: a (`link_id`, `pdf_id`) tuple
         """
 
         if not role_class.is_valid(role):
@@ -2031,41 +2244,44 @@ class ProposalPart(object):
                 raise ConsistencyError('person does not exist with id={}',
                                        uploader_person_id)
 
-            pdf_id = self._get_proposal_text_id(
-                conn, proposal_pdf, proposal_id, role)
+            link_id = self._get_proposal_text_id(
+                conn, proposal_pdf_link, proposal_id, role)
 
-            values = {
+            result = conn.execute(proposal_pdf.insert().values({
                 proposal_pdf.c.pdf: pdf,
                 proposal_pdf.c.md5sum: str_to_unicode(md5(pdf).hexdigest()),
-                proposal_pdf.c.pages: pages,
                 proposal_pdf.c.state: AttachmentState.NEW,
+                proposal_pdf.c.pages: pages,
                 proposal_pdf.c.filename: filename,
                 proposal_pdf.c.uploaded: datetime.utcnow(),
                 proposal_pdf.c.uploader: uploader_person_id,
-            }
+            }))
 
-            if pdf_id is not None:
-                result = conn.execute(proposal_pdf.update().where(
-                    proposal_pdf.c.id == pdf_id
-                ).values(values))
+            pdf_id = result.inserted_primary_key[0]
+
+            if link_id is None:
+                result = conn.execute(proposal_pdf_link.insert().values({
+                    proposal_pdf_link.c.proposal_id: proposal_id,
+                    proposal_pdf_link.c.role: role,
+                    proposal_pdf_link.c.pdf_id: pdf_id,
+                }))
+
+                link_id = result.inserted_primary_key[0]
+
+            else:
+                result = conn.execute(proposal_pdf_link.update().where(
+                    proposal_pdf_link.c.id == link_id
+                ).values({
+                    proposal_pdf_link.c.pdf_id: pdf_id,
+                }))
 
                 if result.rowcount != 1:
                     raise ConsistencyError(
                         'no rows matched updating proposal PDF {} role {}',
                         proposal_id, role)
 
-                result = conn.execute(proposal_pdf_preview.delete().where(
-                    proposal_pdf_preview.c.pdf_id == pdf_id))
-
-            else:
-                values.update({
-                    proposal_pdf.c.proposal_id: proposal_id,
-                    proposal_pdf.c.role: role,
-                })
-
-                result = conn.execute(proposal_pdf.insert().values(values))
-
-                pdf_id = result.inserted_primary_key[0]
+                self._remove_orphan_records(
+                    conn, proposal_pdf, proposal_pdf_link.c.pdf_id)
 
             # Delete any previous proposal text for the same role which
             # this PDF is replacing.
@@ -2079,7 +2295,7 @@ class ProposalPart(object):
                 proposal_id, role, id_=None,
                 _allow_any=True, _conn=conn)
 
-        return pdf_id
+        return (link_id, pdf_id)
 
     def set_proposal_pdf_preview(self, pdf_id, pngs):
         """
@@ -2107,6 +2323,8 @@ class ProposalPart(object):
                           _test_skip_check=False):
         """
         Insert or update a given piece of proposal text.
+
+        :return: a (`link_id`, `text_id`) tuple
         """
 
         if not format:
@@ -2123,37 +2341,42 @@ class ProposalPart(object):
                 raise ConsistencyError('person does not exist with id={}',
                                        editor_person_id)
 
-            text_id = self._get_proposal_text_id(
-                conn, proposal_text, proposal_id, role)
+            link_id = self._get_proposal_text_id(
+                conn, proposal_text_link, proposal_id, role)
 
-            values = {
+            result = conn.execute(proposal_text.insert().values({
                 proposal_text.c.text: text,
                 proposal_text.c.format: format,
                 proposal_text.c.words: words,
                 proposal_text.c.edited: datetime.utcnow(),
                 proposal_text.c.editor: editor_person_id,
-            }
+            }))
 
-            if text_id is not None:
-                result = conn.execute(proposal_text.update().where(and_(
-                    proposal_text.c.proposal_id == proposal_id,
-                    proposal_text.c.role == role
-                )).values(values))
+            text_id = result.inserted_primary_key[0]
+
+            if link_id is None:
+                result = conn.execute(proposal_text_link.insert().values({
+                    proposal_text_link.c.proposal_id: proposal_id,
+                    proposal_text_link.c.role: role,
+                    proposal_text_link.c.text_id: text_id,
+                }))
+
+                link_id = result.inserted_primary_key[0]
+
+            else:
+                result = conn.execute(proposal_text_link.update().where(
+                    proposal_text_link.c.id == link_id
+                ).values({
+                    proposal_text_link.c.text_id: text_id,
+                }))
 
                 if result.rowcount != 1:
                     raise ConsistencyError(
                         'no rows matched updating proposal text {} role {}',
                         proposal_id, role)
 
-            else:
-                values.update({
-                    proposal_text.c.proposal_id: proposal_id,
-                    proposal_text.c.role: role,
-                })
-
-                result = conn.execute(proposal_text.insert().values(values))
-
-                text_id = result.inserted_primary_key[0]
+                self._remove_orphan_records(
+                    conn, proposal_text, proposal_text_link.c.text_id)
 
             # Delete any previous proposal PDF for the same role which
             # this text is replacing.
@@ -2161,7 +2384,7 @@ class ProposalPart(object):
                 proposal_id, role,
                 _skip_check=True, _allow_count=(0, 1), _conn=conn)
 
-        return text_id
+        return (link_id, text_id)
 
     def sync_affiliation_weight(self, call_id, records):
         """
@@ -2224,14 +2447,20 @@ class ProposalPart(object):
                 raise ConsistencyError(
                     'proposal does not exist with id={}', proposal_id)
 
-            return self._sync_records(
-                conn, proposal_fig,
-                (proposal_fig.c.proposal_id, proposal_fig.c.role),
+            (n_insert, n_update, n_delete) = self._sync_records(
+                conn, proposal_fig_link,
+                (proposal_fig_link.c.proposal_id, proposal_fig_link.c.role),
                 (proposal_id, role),
                 records,
                 update_columns=(
-                    proposal_fig.c.sort_order,
+                    proposal_fig_link.c.sort_order,
                 ), forbid_add=True)
+
+            if n_delete:
+                self._remove_orphan_records(
+                    conn, proposal_fig, proposal_fig_link.c.fig_id)
+
+        return (n_insert, n_update, n_delete)
 
     def sync_proposal_member(self, proposal_id, records, editor_person_id):
         """
@@ -2660,7 +2889,7 @@ class ProposalPart(object):
                     'no rows matched updating proposal with id={}',
                     proposal_id)
 
-    def update_proposal_figure(self, proposal_id, role, fig_id,
+    def update_proposal_figure(self, proposal_id, role, link_id, fig_id=None,
                                figure=None, type_=None,
                                filename=None, uploader_person_id=None,
                                state=None, state_prev=None,
@@ -2672,49 +2901,65 @@ class ProposalPart(object):
 
         If the figure is updated, then the type, filename and uploader
         must be specified and the state will be set to NEW -- the state
-        must bot be speicifed explicitly.
+        must not be specifed explicitly.
+
+        :return: the internal figure ID (not link ID) if it changed,
+            for test purposes only
         """
 
         where_extra = []
 
         if proposal_id is not None:
-            where_extra.append(proposal_fig.c.proposal_id == proposal_id)
+            where_extra.append(proposal_fig_link.c.proposal_id == proposal_id)
 
         if role is not None:
-            where_extra.append(proposal_fig.c.role == role)
+            where_extra.append(proposal_fig_link.c.role == role)
 
-        self._update_figure(
-            proposal_fig, proposal_fig_preview, proposal_fig_thumbnail,
-            fig_id, figure, type_, filename, uploader_person_id,
+        return self._update_figure(
+            proposal_fig, proposal_fig_link,
+            proposal_fig_preview, proposal_fig_thumbnail,
+            link_id, fig_id, figure, type_, filename, uploader_person_id,
             state, state_prev, caption,
             where_extra=where_extra,
         )
 
     def _update_figure(
-            self, table, table_preview, table_thumbnail,
-            fig_id, figure, type_, filename, uploader_person_id,
+            self, table, table_link, table_preview, table_thumbnail,
+            link_id, fig_id, figure, type_, filename, uploader_person_id,
             state, state_prev, caption,
             where_extra=[]):
+        where = []
+        where_link = []
         values = {}
+        values_link = {}
         figure_updated = False
 
-        stmt = table.update()
+        # Determine the update constraints.
 
-        for where_clause in where_extra:
-            stmt = stmt.where(where_clause)
+        if link_id is not None:
+            where_link.append(table_link.c.id == link_id)
+        elif fig_id is None:
+            # If present, the fig_id constraint will be applied differently
+            # for each table at a later stage.
 
-        if fig_id is not None:
-            stmt = stmt.where(table.c.id == fig_id)
-        else:
+            # We need at least one of link_id and fig_id.
             raise Error('figure identifier not specified')
 
         if state_prev is not None:
             if not AttachmentState.is_valid(state_prev):
                 raise Error('Invalid previous state.')
-            stmt = stmt.where(table.c.state == state_prev)
+            where.append(table.c.state == state_prev)
+
+        where_link.extend(where_extra)
+
+        # Determine which update to perform.
 
         if figure is not None:
             figure_updated = True
+
+            # We need a link_id to know where to record the new fig_id.
+            if link_id is None:
+                raise Error('link_id not specified with new figure')
 
             # New figures should be set to "NEW" state, so prevent figure
             # and state both being specified.
@@ -2744,35 +2989,88 @@ class ProposalPart(object):
             values['state'] = state
 
         if caption is not None:
-            values['caption'] = caption
+            values_link['caption'] = caption
 
-        if not values:
+        # Check if the update is permissible.
+
+        if not (values or values_link):
             raise Error('No figure updates specified.')
 
+        if values_link and (link_id is None):
+            # If updating a link-specific value, we need to know
+            # which link to update.
+            raise Error('No link_id specified with link update')
+
+        if where and values and (values_link or figure_updated):
+            # If updating the link table (explicitly or via figure update)
+            # and the main table, then there could be a problem if there
+            # are constraints on the main table.  (It is updated first
+            # and the constrained values may have changed.)
+            raise Error(
+                'Link update may not have main-table constraints '
+                'when that table is also being updated.')
+
+        # Finally perform the update.
+
+        new_fig_id = None
+
         with self._transaction() as conn:
-            result = conn.execute(stmt.values(values))
-
-            if result.rowcount != 1:
-                raise ConsistencyError(
-                    'no rows matched updating figure with id={}',
-                    fig_id)
-
-            # If the figure was updated then also remove the old preview
-            # and thumbnail.
             if figure_updated:
-                result = conn.execute(table_preview.delete().where(
-                    table_preview.c.fig_id == fig_id))
+                result = conn.execute(table.insert().values(values))
 
-                if result.rowcount not in (0, 1):
+                new_fig_id = result.inserted_primary_key[0]
+
+                # We already checked we have a link_id, so update that
+                # link to refer to the new figure.
+                values_link['fig_id'] = new_fig_id
+
+            elif values:
+                stmt = table.update()
+
+                if fig_id is not None:
+                    stmt = stmt.where(table.c.id == fig_id)
+
+                if where:
+                    stmt = stmt.where(and_(*where))
+
+                if where_link:
+                    stmt = stmt.where(table.c.id.in_(
+                        select([table_link.c.fig_id]).where(
+                            and_(*where_link))))
+
+                result = conn.execute(stmt.values(values))
+
+                if result.rowcount != 1:
                     raise ConsistencyError(
-                        'multiple rows deleted removing old figure preview')
+                        'no rows matched updating figure with id={}',
+                        fig_id)
 
-                result = conn.execute(table_thumbnail.delete().where(
-                    table_thumbnail.c.fig_id == fig_id))
+            if values_link:
+                stmt = table_link.update()
 
-                if result.rowcount not in (0, 1):
+                if fig_id is not None:
+                    stmt = stmt.where(table_link.c.fig_id == fig_id)
+
+                if where_link:
+                    stmt = stmt.where(and_(*where_link))
+
+                if where:
+                    stmt = stmt.where(table_link.c.fig_id.in_(
+                        select([table.c.id]).where(and_(*where))))
+
+                result = conn.execute(stmt.values(values_link))
+
+                if result.rowcount != 1:
                     raise ConsistencyError(
-                        'multiple rows deleted removing old figure thumbnail')
+                        'no rows matched updating figure link with id={}',
+                        fig_id)
+
+            if figure_updated:
+                # If the figure was updated then also remove the old version.
+                # The preview and thumbnail should be removed by cascade.
+                self._remove_orphan_records(conn, table, table_link.c.fig_id)
+
+        return new_fig_id
 
     def update_proposal_pdf(self, pdf_id, state=None, state_prev=None,
                             _test_skip_check=False):
