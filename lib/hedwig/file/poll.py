@@ -107,8 +107,11 @@ def _process_figure(db, _type, dry_run=False):
                 proposal_id=None, role=None, link_id=None, fig_id=fig_id,
                 state=state, state_prev=state_prev)
 
-        set_thumbnail = db.set_proposal_figure_thumbnail
-        set_preview = db.set_proposal_figure_preview
+        def set_thumbnail(*args):
+            db.set_proposal_figure_thumbnail(*args)
+
+        def set_preview(*args):
+            db.set_proposal_figure_preview(*args)
 
     elif _type == 'review':
         config_section = 'review_fig'
@@ -125,8 +128,11 @@ def _process_figure(db, _type, dry_run=False):
                 reviewer_id=None, link_id=None, fig_id=fig_id,
                 state=state, state_prev=state_prev)
 
-        set_thumbnail = db.set_review_figure_thumbnail
-        set_preview = db.set_review_figure_preview
+        def set_thumbnail(*args):
+            db.set_review_figure_thumbnail(*args)
+
+        def set_preview(*args):
+            db.set_review_figure_preview(*args)
 
     else:
         raise FormattedError('Unknown figure type: {}', _type)
