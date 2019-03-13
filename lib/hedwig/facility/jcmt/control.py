@@ -26,10 +26,11 @@ from ...error import ConsistencyError, FormattedError, UserError
 from ...type.collection import ResultCollection
 from ...type.enum import FormatType, ReviewState
 from ...util import is_list_like
-from .meta import jcmt_available, jcmt_allocation, jcmt_options, \
+from .meta import jcmt_available, jcmt_allocation, \
+    jcmt_call_options, jcmt_options, \
     jcmt_request, jcmt_review
 from .type import \
-    JCMTAvailable, JCMTAvailableCollection, \
+    JCMTAvailable, JCMTAvailableCollection, JCMTCallOptions, \
     JCMTOptions, JCMTOptionsCollection, JCMTRequest, JCMTRequestCollection, \
     JCMTReview, JCMTReviewerExpertise, \
     JCMTReviewRatingJustification, JCMTReviewRatingTechnical, \
@@ -37,13 +38,21 @@ from .type import \
 
 
 class JCMTPart(object):
+    def get_jcmt_call_options(self, call_id):
+        """
+        Retrieve the JCMT call options for a given call.
+        """
+
+        return self.search_jcmt_call_options(
+            call_id=call_id).get_single()
+
     def get_jcmt_options(self, proposal_id):
         """
         Retrieve the JCMT proposal options for a given proposal.
         """
 
         return self.search_jcmt_options(
-            proposal_id=proposal_id).get_single(default=None)
+            proposal_id=proposal_id).get_single()
 
     def get_jcmt_review(self, reviewer_id):
         """
@@ -75,6 +84,33 @@ class JCMTPart(object):
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(jcmt_available.c.id.asc())):
                 ans[row['id']] = JCMTAvailable(**row)
+
+        return ans
+
+    def search_jcmt_call_options(self, call_id=None):
+        """
+        Retrieve JCMT options for one or more calls.
+        """
+
+        iter_field = None
+        iter_list = None
+
+        stmt = jcmt_call_options.select()
+
+        if call_id is not None:
+            if is_list_like(call_id):
+                assert iter_field is None
+                iter_field = jcmt_call_options.c.call_id
+                iter_list = call_id
+            else:
+                stmt = stmt.where(jcmt_call_options.c.call_id == call_id)
+
+        ans = ResultCollection()
+
+        with self._transaction() as conn:
+            for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
+                for row in conn.execute(iter_stmt):
+                    ans[row['call_id']] = JCMTCallOptions(**row)
 
         return ans
 
@@ -179,6 +215,44 @@ class JCMTPart(object):
                     ans[row['reviewer_id']] = JCMTReview(*row)
 
         return ans
+
+    def set_jcmt_call_options(
+            self, call_id, time_min, time_max, time_excl_free):
+        """
+        Set the JCMT options for a given call.
+        """
+
+        if (time_min is not None) and (time_max is not None):
+            if time_min > time_max:
+                raise UserError(
+                    'Minimum observing request time is greater than maximum.')
+
+        values = {
+            jcmt_call_options.c.time_min: time_min,
+            jcmt_call_options.c.time_max: time_max,
+            jcmt_call_options.c.time_excl_free: time_excl_free,
+        }
+
+        with self._transaction() as conn:
+            if 0 < conn.execute(select(
+                    [count(jcmt_call_options.c.call_id)]).where(
+                        jcmt_call_options.c.call_id == call_id)).scalar():
+                # Update existing call options.
+                result = conn.execute(jcmt_call_options.update().where(
+                    jcmt_call_options.c.call_id == call_id
+                ).values(values))
+
+                if result.rowcount != 1:
+                    raise ConsistencyError(
+                        'no rows matched updating JCMT options')
+
+            else:
+                # Add new call options record.
+                values.update({
+                    jcmt_call_options.c.call_id: call_id,
+                })
+
+                conn.execute(jcmt_call_options.insert().values(values))
 
     def set_jcmt_options(self, proposal_id, target_of_opp, daytime,
                          time_specific, polarimetry):

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -58,6 +58,17 @@ jcmt_available = Table(
     Column('weather', Integer, nullable=False),
     Column('time', Float, nullable=False),
     UniqueConstraint('call_id', 'weather'),
+    **table_opts)
+
+jcmt_call_options = Table(
+    'jcmt_call_options',
+    metadata,
+    Column('call_id', None,
+           ForeignKey('call.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           primary_key=True, nullable=False),
+    Column('time_min', Float, nullable=True),
+    Column('time_max', Float, nullable=True),
+    Column('time_excl_free', Boolean, nullable=False),
     **table_opts)
 
 jcmt_options = Table(

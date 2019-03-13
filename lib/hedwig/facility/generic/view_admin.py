@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -306,13 +306,20 @@ class GenericAdmin(object):
 
         type_class = self.get_call_types()
 
-        return {
+        ctx = {
             'title': 'Call: {} {} {}'.format(
                 call.semester_name, call.queue_name,
                 type_class.get_name(call.type)),
             'call': call,
             'proposal_order': self.get_proposal_order(),
         }
+
+        ctx.update(self._view_call_extra(db, call))
+
+        return ctx
+
+    def _view_call_extra(self, db, call):
+        return {}
 
     @with_verified_admin
     def view_call_edit(self, db, call_id, call_type, form):
@@ -324,11 +331,13 @@ class GenericAdmin(object):
 
         existing_calls = None
         message = None
+        extra_info = None
 
         if call_id is None:
             # We are creating a new call, so need to be able to offer
             # menus of semesters and queues.
-            call = self.get_new_call_default(call_type)
+            call = self.get_new_call_default(call_type)._replace(
+                type=call_type)
             semesters = db.search_semester(
                 facility_id=self.id_,
                 state=(SemesterState.FUTURE, SemesterState.CURRENT))
@@ -340,8 +349,6 @@ class GenericAdmin(object):
                 raise ErrorPage(
                     'No queues (with affiliations) are available '
                     'for this call.')
-            title = 'Add New Call'
-            target = url_for('.call_new', call_type=call_type)
 
             # Get list of existing calls for this type.
             existing_calls = [
@@ -358,10 +365,6 @@ class GenericAdmin(object):
 
             semesters = None
             queues = None
-            title = 'Edit Call: {} {} {}'.format(
-                call.semester_name, call.queue_name,
-                type_class.get_name(call.type))
-            target = url_for('.call_edit', call_id=call_id)
 
         call = call._replace(
             date_open=format_datetime(call.date_open),
@@ -385,6 +388,8 @@ class GenericAdmin(object):
                 prev_prop_note=form['prev_prop_note'],
                 note_format=int(form['note_format']))
 
+            extra_info = self._view_call_edit_get(db, call, form)
+
             try:
                 parsed_date_open = parse_datetime(call.date_open)
                 parsed_date_close = parse_datetime(call.date_close)
@@ -400,11 +405,15 @@ class GenericAdmin(object):
                             'A call of this type for the selected semester '
                             'and queue already exists.')
 
-                    new_call_id = db.add_call(
+                    if ((call.semester_id not in semesters)
+                            or (call.queue_id not in queues)):
+                        raise UserError('Unexpected semester or queue.')
+
+                    call_id = db.add_call(
                         type_class=type_class,
                         semester_id=call.semester_id,
                         queue_id=call.queue_id,
-                        type_=call_type,
+                        type_=call.type,
                         date_open=parsed_date_open,
                         date_close=parsed_date_close,
                         abst_word_lim=call.abst_word_lim,
@@ -420,9 +429,15 @@ class GenericAdmin(object):
                         sci_note=call.sci_note,
                         prev_prop_note=call.prev_prop_note,
                         note_format=call.note_format)
-                    flash('The new call has been added.')
-                    raise HTTPRedirect(url_for('.call_view',
-                                               call_id=new_call_id))
+
+                    # Update information in the call named tuple in case of a
+                    # later error so that we have to show the edit page again.
+                    call = call._replace(
+                        id=call_id,
+                        semester_name=semesters[call.semester_id].name,
+                        queue_name=queues[call.queue_id].name)
+
+                    flash_message = 'The new call has been added.'
 
                 else:
                     # Update existing call.
@@ -442,13 +457,32 @@ class GenericAdmin(object):
                         sci_note=call.sci_note,
                         prev_prop_note=call.prev_prop_note,
                         note_format=call.note_format)
-                    flash('The call has been updated.')
-                    raise HTTPRedirect(url_for('.call_view', call_id=call_id))
+
+                    flash_message = 'The call has been updated.'
+
+                # Save facility-specific information.
+                self._view_call_edit_save(db, call, extra_info)
+
+                flash(flash_message)
+
+                raise HTTPRedirect(url_for('.call_view', call_id=call.id))
 
             except UserError as e:
                 message = e.message
 
-        return {
+        if call.id is None:
+            target = url_for('.call_new', call_type=call.type)
+
+            title = 'Add New Call'
+
+        else:
+            target = url_for('.call_edit', call_id=call.id)
+
+            title = 'Edit Call: {} {} {}'.format(
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type))
+
+        ctx = {
             'title': title,
             'target': target,
             'message': message,
@@ -460,6 +494,19 @@ class GenericAdmin(object):
             'existing_calls': existing_calls,
             'proposal_order': self.get_proposal_order(),
         }
+
+        ctx.update(self._view_call_edit_extra(db, call, extra_info))
+
+        return ctx
+
+    def _view_call_edit_get(self, db, call, form):
+        return None
+
+    def _view_call_edit_save(self, db, call, info):
+        pass
+
+    def _view_call_edit_extra(self, db, call, info):
+        return {}
 
     @with_verified_admin
     def view_call_proposals(self, db, call_id):

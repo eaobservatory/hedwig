@@ -16,7 +16,7 @@
 <form method="POST" action="{{ target }}" novalidate="novalidate">
     <ol>
         <li class="separator">Call information</li>
-        {% if semesters is not none %}
+        {% if call.id is none %}
             <li>
                 <label for="semester_id">Semester</label>
                 <select name="semester_id" data-existing="{{ existing_calls | json }}">
@@ -25,8 +25,6 @@
                     {% endfor %}
                 </select>
             </li>
-        {% endif %}
-        {% if queues is not none %}
             <li>
                 <label for="queue_id">Queue</label>
                 <select name="queue_id">
@@ -36,8 +34,6 @@
                 </select>
                 <span id="queue_warning" class="forminfo_bad">call already exists for this semester and queue</span>
             </li>
-        {% endif %}
-        {% if call_type is not none %}
             <li>
                 <label>Type</label>
                 {{ call_type | call_type_name(facility_call_type_class) }}
@@ -111,6 +107,8 @@
                     <input type="number" name="tech_page_lim" value="{{ call.tech_page_lim }}" min="0" step="1" size="5" />
                     <span class="explanation">for PDF uploads</span>
                 </li>
+            {% endblock %}
+            {% block proposal_request %}
             {% endblock %}
             {% block proposal_previous %}
                 <li class="separator">Previous proposals</li>

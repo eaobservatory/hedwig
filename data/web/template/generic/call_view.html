@@ -62,6 +62,8 @@
                 <td>{{ call.tech_page_lim }} page{% if call.tech_page_lim != 1 %}s{% endif %}</td>
             </tr>
         {% endblock %}
+        {% block proposal_request %}
+        {% endblock %}
         {% block proposal_previous %}
             <tr>
                 <th>Previous proposals</th>

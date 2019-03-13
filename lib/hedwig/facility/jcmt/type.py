@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,11 +24,16 @@ from ...type.base import CollectionByProposal, EnumAvailable, EnumBasic
 from ...type.enum import BaseCallType, BaseReviewerRole, BaseTextRole
 from ...type.collection import ResultCollection, ResultTable
 from ...error import UserError
-from .meta import jcmt_available, jcmt_options, jcmt_request, jcmt_review
+from .meta import jcmt_available, jcmt_call_options, jcmt_options, \
+    jcmt_request, jcmt_review
 
 JCMTAvailable = namedtuple(
     'JCMTAvailable',
     [x.name for x in jcmt_available.columns])
+
+JCMTCallOptions = namedtuple(
+    'JCMTCallOptions',
+    [x.name for x in jcmt_call_options.columns])
 
 JCMTOptions = namedtuple(
     'JCMTOptions',

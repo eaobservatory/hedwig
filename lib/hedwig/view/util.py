@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -40,6 +40,18 @@ def count_words(text):
         text = text.text
 
     return len(re.split('\s+', text))
+
+
+def float_or_none(value):
+    """
+    Converts the given string to a float, or returns None if
+    it is empty.
+
+    Intended for parsing form selection values where there is
+    an undefined value.
+    """
+
+    return None if (value == '') else float(value)
 
 
 def int_or_none(value):

@@ -26,7 +26,7 @@ import re
 from ...compat import url_encode
 from ...error import NoSuchRecord, NoSuchValue, ParseError, UserError
 from ...web.util import HTTPError, HTTPRedirect, flash, url_for
-from ...view.util import int_or_none, \
+from ...view.util import float_or_none, int_or_none, \
     with_call_review, with_proposal
 from ...type.collection import ResultTable
 from ...type.enum import AffiliationType, FormatType, \
@@ -39,7 +39,8 @@ from .calculator_heterodyne import HeterodyneCalculator
 from .calculator_scuba2 import SCUBA2Calculator
 from .type import \
     JCMTAvailable, JCMTAvailableCollection, JCMTAncillary, \
-    JCMTCallType, JCMTInstrument, JCMTOptionValue, JCMTOptions, \
+    JCMTCallOptions, JCMTCallType, JCMTInstrument, \
+    JCMTOptionValue, JCMTOptions, \
     JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, \
     JCMTReview, JCMTReviewerExpertise, JCMTReviewerRole, \
     JCMTReviewRatingJustification, JCMTReviewRatingTechnical, \
@@ -453,8 +454,10 @@ class JCMT(EAOFacility):
                     'comment': 'copied to the proposal.'})
 
             # Copy JCMT options.
-            option_values = db.get_jcmt_options(proposal_id=old_proposal.id)
-            if option_values is not None:
+            try:
+                option_values = db.get_jcmt_options(
+                    proposal_id=old_proposal.id)
+
                 db.set_jcmt_options(**option_values._replace(
                     proposal_id=proposal.id)._asdict())
 
@@ -462,7 +465,62 @@ class JCMT(EAOFacility):
                     'item': 'Additional options',
                     'comment': 'copied to the proposal.'})
 
+            except NoSuchRecord:
+                pass
+
         return atn
+
+    def _view_call_extra(self, db, call):
+        ctx = super(JCMT, self)._view_call_extra(db, call)
+
+        try:
+            options = db.get_jcmt_call_options(call_id=call.id)
+        except NoSuchRecord:
+            options = null_tuple(JCMTCallOptions)
+
+        ctx.update({
+            'jcmt_options': options,
+        })
+
+        return ctx
+
+    def _view_call_edit_get(self, db, call, form):
+        info = None
+        if call.id is not None:
+            try:
+                info = db.get_jcmt_call_options(call_id=call.id)
+            except NoSuchRecord:
+                pass
+
+        if info is None:
+            info = null_tuple(JCMTCallOptions)
+
+        info = info._replace(
+            time_min=float_or_none(form['jcmt_time_min']),
+            time_max=float_or_none(form['jcmt_time_max']),
+            time_excl_free=('jcmt_time_excl_free' in form),
+        )
+
+        return info
+
+    def _view_call_edit_save(self, db, call, info):
+        # Save the options from the "info" object, but make sure
+        # that the call_id value is correct.
+        db.set_jcmt_call_options(**info._replace(call_id=call.id)._asdict())
+
+    def _view_call_edit_extra(self, db, call, info):
+        if info is None:
+            if call.id is None:
+                info = null_tuple(JCMTCallOptions)
+            else:
+                try:
+                    info = db.get_jcmt_call_options(call_id=call.id)
+                except NoSuchRecord:
+                    info = null_tuple(JCMTCallOptions)
+
+        return {
+            'jcmt_options': info,
+        }
 
     def _view_proposal_extra(self, db, proposal):
         role_class = self.get_text_roles()
@@ -472,7 +530,10 @@ class JCMT(EAOFacility):
 
         requests = db.search_jcmt_request(proposal_id=proposal.id)
 
-        option_values = db.get_jcmt_options(proposal_id=proposal.id)
+        try:
+            option_values = db.get_jcmt_options(proposal_id=proposal.id)
+        except NoSuchRecord:
+            option_values = None
 
         ctx.update({
             'requests': requests,
@@ -752,8 +813,9 @@ class JCMT(EAOFacility):
         message = None
 
         records = db.search_jcmt_request(proposal_id=proposal.id)
-        option_values = db.get_jcmt_options(proposal_id=proposal.id)
-        if option_values is None:
+        try:
+            option_values = db.get_jcmt_options(proposal_id=proposal.id)
+        except NoSuchRecord:
             option_values = JCMTOptions(
                 proposal.id, *((False,) * (len(JCMTOptions._fields) - 1)))
 

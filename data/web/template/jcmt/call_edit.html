@@ -1,0 +1,19 @@
+{% extends 'generic/call_edit.html' %}
+
+{% block proposal_request %}
+    <li class="separator">Observing request</li>
+    <li>
+        <label for="jcmt_time_min">Minimum time</label>
+        <input type="number" name="jcmt_time_min" min="0" step="any" value="{{ jcmt_options.time_min }}" />
+        hours
+    </li>
+    <li>
+        <label for="jcmt_time_max">Maximum time</label>
+        <input type="number" name="jcmt_time_max" min="0" step="any" value="{{ jcmt_options.time_max }}" />
+        hours
+    </li>
+    <li>
+        <label for="jcmt_time_excl_free">Free time</label>
+        <input type="checkbox" name="jcmt_time_excl_free" {{ 'checked="checked"' | safe if jcmt_options.time_excl_free }} />
+        excluded from limits
+{% endblock %}

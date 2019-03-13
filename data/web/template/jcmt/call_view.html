@@ -1,0 +1,36 @@
+{% extends 'generic/call_view.html' %}
+
+{% block proposal_request %}
+    <tr>
+        <th rowspan="3">Observing Request</th>
+        <td>
+            Minimum time:
+            {% if jcmt_options.time_min is not none %}
+                {{ jcmt_options.time_min }} hours
+            {% else %}
+                not constrained
+            {% endif %}
+        </td>
+    </tr>
+    <tr>
+        <td>
+            Maximum time:
+            {% if jcmt_options.time_max is not none %}
+                {{ jcmt_options.time_max }} hours
+            {% else %}
+                not constrained
+            {% endif %}
+        </td>
+    </tr>
+    <tr>
+        <td>
+            Free time:
+            {% if jcmt_options.time_excl_free %}
+                excluded
+            {% else %}
+                not excluded
+            {% endif %}
+            from limits
+        </td>
+    </tr>
+{% endblock %}

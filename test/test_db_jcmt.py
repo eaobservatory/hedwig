@@ -25,7 +25,7 @@ from hedwig.type.enum import BaseCallType, FormatType, ReviewState
 from hedwig.type.util import null_tuple
 from hedwig.facility.jcmt.type import \
     JCMTAncillary, JCMTAvailable, JCMTAvailableCollection, \
-    JCMTInstrument, JCMTOptions, \
+    JCMTCallOptions, JCMTInstrument, JCMTOptions, \
     JCMTRequest, JCMTRequestCollection, \
     JCMTReview, JCMTReviewerExpertise, JCMTReviewerRole, \
     JCMTWeather
@@ -36,11 +36,51 @@ from .dummy_db import DBTestCase
 class DBJCMTTest(DBTestCase):
     facility_spec = 'JCMT'
 
+    def test_jcmt_call_options(self):
+        (queue_id, call_id) = self._create_test_call()
+
+        result = self.db.search_jcmt_call_options(call_id=call_id)
+        self.assertIsInstance(result, ResultCollection)
+        self.assertEqual(len(result), 0)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_jcmt_call_options(call_id)
+
+        self.db.set_jcmt_call_options(
+            call_id, time_min=None, time_max=200.0, time_excl_free=False)
+
+        result = self.db.get_jcmt_call_options(call_id)
+        self.assertIsInstance(result, JCMTCallOptions)
+        self.assertEqual(result.call_id, call_id)
+        self.assertIsNone(result.time_min)
+        self.assertAlmostEqual(result.time_max, 200.0)
+        self.assertFalse(result.time_excl_free)
+
+        self.db.set_jcmt_call_options(
+            call_id, time_min=5.0, time_max=None, time_excl_free=True)
+
+        result = self.db.search_jcmt_call_options(call_id=call_id)
+        self.assertEqual(list(result.keys()), [call_id])
+        result = result[call_id]
+        self.assertAlmostEqual(result.time_min, 5.0)
+        self.assertIsNone(result.time_max)
+        self.assertTrue(result.time_excl_free)
+
+        with self.assertRaisesRegex(UserError, 'greater than max'):
+            self.db.set_jcmt_call_options(
+                call_id, time_min=20.0, time_max=10.0, time_excl_free=False)
+
+        self.db.set_jcmt_call_options(
+            call_id, time_min=10.0, time_max=20.0, time_excl_free=False)
+        result = self.db.get_jcmt_call_options(call_id)
+        self.assertAlmostEqual(result.time_min, 10.0)
+        self.assertAlmostEqual(result.time_max, 20.0)
+
     def test_jcmt_options(self):
         proposal_id = self._create_test_proposal()
 
-        options = self.db.get_jcmt_options(proposal_id)
-        self.assertIsNone(options)
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_jcmt_options(proposal_id)
 
         self.db.set_jcmt_options(proposal_id, target_of_opp=False,
                                  daytime=False, time_specific=False,

@@ -1,4 +1,4 @@
-# Copyright (C) 2017 East Asian Observatory
+# Copyright (C) 2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,12 +18,16 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from hedwig.view.util import int_or_none
+from hedwig.view.util import float_or_none, int_or_none
 
 from .compat import TestCase
 
 
 class ViewUtilTestCase(TestCase):
+    def test_float_or_none(self):
+        self.assertIsNone(float_or_none(''))
+        self.assertAlmostEqual(float_or_none('12.34'), 12.34)
+
     def test_int_or_none(self):
         self.assertIsNone(int_or_none(''))
         self.assertEqual(int_or_none('4'), 4)
