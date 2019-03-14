@@ -5,6 +5,38 @@
 {% from 'jcmt/macro/request_table.html' import render_request_table %}
 
 {% block request_form %}
+    {% if call_options is not none %}
+        {% if (call_options.time_min is not none) or (call_options.time_max is not none) %}
+            <p>
+                The size of observing request recommended for this call is as follows:
+            </p>
+            <ul>
+                <li>
+                    The total time should be
+                    {% if (call_options.time_min is not none) and (call_options.time_max is not none) %}
+                        between {{ call_options.time_min }} and {{ call_options.time_max }}
+                    {% elif call_options.time_min is not none %}
+                        at least {{ call_options.time_min }}
+                    {% else %}
+                        at most {{ call_options.time_max }}
+                    {% endif %}
+                    hours.
+                </li>
+                {% if time_free_desc %}
+                    <li>
+                        This restriction
+                        {% if call_options.time_excl_free %}
+                            does not apply to
+                        {% else %}
+                            includes time in
+                        {% endif %}
+                        {{ time_free_desc }}.
+                    </li>
+                {% endif %}
+            </ul>
+        {% endif %}
+    {% endif %}
+
     {{ render_request_table(requests, instruments, weathers) }}
 
     <ol>

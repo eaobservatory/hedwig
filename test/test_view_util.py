@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from hedwig.view.util import float_or_none, int_or_none
+from hedwig.view.util import join_list, float_or_none, int_or_none
 
 from .compat import TestCase
 
@@ -31,3 +31,13 @@ class ViewUtilTestCase(TestCase):
     def test_int_or_none(self):
         self.assertIsNone(int_or_none(''))
         self.assertEqual(int_or_none('4'), 4)
+
+    def test_join_list(self):
+        self.assertEqual(join_list([]), '')
+
+        self.assertEqual(join_list(['a']), 'a')
+        self.assertEqual(join_list(['a', 'b']), 'a and b')
+        self.assertEqual(join_list(['a', 'b', 'c']), 'a, b and c')
+        self.assertEqual(join_list(['a', 'b', 'c', 'd']), 'a, b, c and d')
+
+        self.assertEqual(join_list(['x', 'y'], 'or'), 'x or y')

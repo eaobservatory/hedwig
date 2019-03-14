@@ -26,7 +26,7 @@ import re
 from ...compat import url_encode
 from ...error import NoSuchRecord, NoSuchValue, ParseError, UserError
 from ...web.util import HTTPError, HTTPRedirect, flash, url_for
-from ...view.util import float_or_none, int_or_none, \
+from ...view.util import float_or_none, int_or_none, join_list, \
     with_call_review, with_proposal
 from ...type.collection import ResultTable
 from ...type.enum import AffiliationType, FormatType, \
@@ -580,7 +580,54 @@ class JCMT(EAOFacility):
                 'Edit the public summary',
                 url_for('.pr_summary_edit', proposal_id=proposal.id)))
 
-        if not extra['requests']:
+        if extra['requests']:
+            try:
+                call_options = db.get_jcmt_call_options(proposal.call_id)
+                request_total = extra['requests'].get_total()
+
+                if call_options.time_excl_free:
+                    time_req = request_total.total_non_free
+                    time_desc_fmt = 'excluding {} time'
+                else:
+                    time_req = request_total.total
+                    time_desc_fmt = 'including {} time'
+
+                time_free_desc = join_list(
+                    [x.name for x in JCMTWeather.get_available().values()
+                     if x.free])
+
+                # Only describe "free" time if there are any such weather bands,
+                # and the proposal has used them.
+                if ((request_total.total != request_total.total_non_free)
+                        and time_free_desc):
+                    time_desc = time_desc_fmt.format(time_free_desc)
+                else:
+                    time_desc = 'total'
+
+                if ((call_options.time_min is not None)
+                        and (time_req < call_options.time_min)):
+                    messages.append(ValidationMessage(
+                        False,
+                        'The time request ({} hours {}) is less than the '
+                        'minimum recommended value ({} hours).'.format(
+                            time_req, time_desc, call_options.time_min),
+                        'Edit the observing request',
+                        url_for('.request_edit', proposal_id=proposal.id)))
+
+                if ((call_options.time_max is not None)
+                        and (time_req > call_options.time_max)):
+                    messages.append(ValidationMessage(
+                        False,
+                        'The time request ({} hours {}) is greater than the '
+                        'maximum recommended value ({} hours).'.format(
+                            time_req, time_desc, call_options.time_max),
+                        'Edit the observing request',
+                        url_for('.request_edit', proposal_id=proposal.id)))
+
+            except NoSuchRecord:
+                pass
+
+        else:
             messages.append(ValidationMessage(
                 True,
                 'No observing time has been requested.',
@@ -841,16 +888,26 @@ class JCMT(EAOFacility):
             except UserError as e:
                 message = e.message
 
+        try:
+            call_options = db.get_jcmt_call_options(proposal.call_id)
+        except NoSuchRecord:
+            call_options = None
+
+        weathers = JCMTWeather.get_available()
+
         return {
             'title': 'Edit Observing Request',
             'message': message,
             'proposal_id': proposal.id,
             'requests': records,
             'instruments': JCMTInstrument.get_options_with_ancillary(),
-            'weathers': JCMTWeather.get_available(),
+            'weathers': weathers,
             'options': JCMTOptionValue.get_options(),
             'option_values': option_values,
             'proposal_code': self.make_proposal_code(db, proposal),
+            'call_options': call_options,
+            'time_free_desc': join_list(
+                [x.name for x in weathers.values() if x.free]),
         }
 
     def _read_request_form(self, proposal, form, skip_blank_time=False):

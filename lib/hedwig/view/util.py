@@ -66,6 +66,24 @@ def int_or_none(value):
     return None if (value == '') else int(value)
 
 
+def join_list(words, conjunction='and'):
+    """
+    Join the words in the given list with commas, ending the list
+    with the given conjunction and final word.
+    """
+
+    if not words:
+        return ''
+
+    if len(words) == 1:
+        return words[0]
+
+    return '{} {} {}'.format(
+        ', '.join(words[:-1]),
+        conjunction,
+        words[-1])
+
+
 def with_call_review(permission):
     """
     Decorator for methods which deal with reviews of all the proposals
