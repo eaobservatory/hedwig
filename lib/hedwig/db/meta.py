@@ -141,6 +141,18 @@ call = Table(
     UniqueConstraint('semester_id', 'queue_id', 'type'),
     **table_opts)
 
+call_mid_close = Table(
+    'call_mid_close',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('call_id', None,
+           ForeignKey('call.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('date', DateTime(), nullable=False),
+    Column('closed', Boolean, default=False, nullable=False),
+    UniqueConstraint('call_id', 'date'),
+    **table_opts)
+
 call_preamble = Table(
     'call_preamble',
     metadata,

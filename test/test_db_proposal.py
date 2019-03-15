@@ -35,10 +35,11 @@ from hedwig.type.enum import AffiliationType, AnnotationType, \
     CallState, FigureType, \
     FormatType, ProposalState
 from hedwig.type.simple import Affiliation, Annotation, \
-    Call, CallPreamble, Category, \
+    Call, CallMidClose, CallPreamble, Category, \
     Member, MemberInfo, MemberInstitution, \
     Proposal, ProposalCategory, ProposalFigureInfo, ProposalPDFInfo, \
     ProposalText, Target
+from hedwig.type.util import null_tuple
 from .dummy_db import DBTestCase
 
 
@@ -440,6 +441,75 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(set(result.keys()), set((call_id,)))
         for value in result.values():
             self.assertEqual(value.state, CallState.UNOPENED)
+
+    def test_call_mid_close(self):
+        (call_id_1, affiliation_id) = self._create_test_call('s1', 'q1')
+        (call_id_2, affiliation_id) = self._create_test_call('s2', 'q2')
+
+        result = self.db.search_call_mid_close(call_id_1)
+        self.assertFalse(result)
+
+        record = null_tuple(CallMidClose)
+
+        (n_insert, n_update, n_delete) = self.db.sync_call_call_mid_close(
+            call_id_1, ResultCollection((
+                ('new1', record._replace(date=datetime(2020, 1, 1))),
+                ('new2', record._replace(date=datetime(2020, 2, 1))),
+            )))
+
+        self.assertEqual(n_insert, 2)
+        self.assertEqual(n_update, 0)
+        self.assertEqual(n_delete, 0)
+
+        (n_insert, n_update, n_delete) = self.db.sync_call_call_mid_close(
+            call_id_2, ResultCollection((
+                ('new1', record._replace(date=datetime(2021, 1, 1))),
+                ('new2', record._replace(date=datetime(2021, 2, 1))),
+            )))
+
+        self.assertEqual(n_insert, 2)
+        self.assertEqual(n_update, 0)
+        self.assertEqual(n_delete, 0)
+
+        result = self.db.search_call_mid_close(call_id=[
+            call_id_1, call_id_2])
+        self.assertEqual(len(result), 4)
+
+        for (item, call_id, date) in zip(
+                result.items(),
+                [call_id_1, call_id_1, call_id_2, call_id_2],
+                [datetime(2020, 1, 1), datetime(2020, 2, 1),
+                 datetime(2021, 1, 1), datetime(2021, 2, 1)]):
+            (id_, entry) = item
+
+            self.assertIsInstance(id_, int)
+            self.assertEqual(entry.id, id_)
+            self.assertEqual(entry.call_id, call_id)
+            self.assertEqual(entry.date, date)
+            self.assertEqual(entry.closed, False)
+
+        self.assertEqual(len(self.db.search_call_mid_close(closed=True)), 0)
+        self.assertEqual(len(self.db.search_call_mid_close(closed=False)), 4)
+
+        id_ = list(result.keys())[0]
+
+        with self.assertRaisesRegex(ConsistencyError, 'does not exist'):
+            self.db.update_call_mid_close(1999999, closed=True)
+
+        with self.assertRaisesRegex(ConsistencyError, 'no rows matched'):
+            self.db.update_call_mid_close(
+                1999999, closed=True, _test_skip_check=True)
+
+        self.db.update_call_mid_close(id_, closed=True)
+
+        self.assertEqual(len(self.db.search_call_mid_close(
+            closed=False, date_before=datetime(2020, 1, 15))), 0)
+
+        self.assertEqual(len(self.db.search_call_mid_close(closed=True)), 1)
+        self.assertEqual(len(self.db.search_call_mid_close(closed=False)), 3)
+
+        self.assertEqual(len(self.db.search_call_mid_close(
+            closed=False, date_before=datetime(2021, 1, 15))), 2)
 
     def test_call_preamble(self):
         facility_id = self.db.ensure_facility('my_tel')
@@ -2073,34 +2143,6 @@ class DBProposalTest(DBTestCase):
         proposal_cat = list(result.values())[0]
         self.assertIsInstance(proposal_cat, ProposalCategory)
         self.assertEqual(proposal_cat.category_name, 'Category B')
-
-    def _create_test_call(self, semester_name, queue_name, facility_id=None):
-        if facility_id is None:
-            facility_id = self.db.ensure_facility('my_tel')
-            self.assertIsInstance(facility_id, int)
-
-        semester_id = self.db.add_semester(
-            facility_id, semester_name, semester_name,
-            datetime(2000, 1, 1), datetime(2000, 6, 30))
-        self.assertIsInstance(semester_id, int)
-        queue_id = self.db.add_queue(facility_id, queue_name, queue_name)
-        self.assertIsInstance(queue_id, int)
-
-        call_id = self.db.add_call(
-            BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
-            datetime(1999, 9, 1), datetime(1999, 9, 30),
-            100, 1000, 0, 1, 2000, 4, 3, 100, 100,
-            '', '', '', FormatType.PLAIN)
-        self.assertIsInstance(call_id, int)
-
-        affiliations = self.db.search_affiliation(queue_id=queue_id)
-        if affiliations:
-            affiliation_id = affiliations.values()[0].id
-        else:
-            affiliation_id = self.db.add_affiliation(queue_id, 'test aff/n')
-        self.assertIsInstance(affiliation_id, int)
-
-        return (call_id, affiliation_id)
 
 
 def _member_person_set(member_collection):

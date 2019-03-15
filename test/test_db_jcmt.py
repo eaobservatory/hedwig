@@ -37,7 +37,7 @@ class DBJCMTTest(DBTestCase):
     facility_spec = 'JCMT'
 
     def test_jcmt_call_options(self):
-        (queue_id, call_id) = self._create_test_call()
+        (call_id, affiliation_id) = self._create_test_call()
 
         result = self.db.search_jcmt_call_options(call_id=call_id)
         self.assertIsInstance(result, ResultCollection)
@@ -306,7 +306,7 @@ class DBJCMTTest(DBTestCase):
         Test methods associated with the "jcmt_available" table.
         """
 
-        (queue_id, call_id) = self._create_test_call()
+        (call_id, affiliation_id) = self._create_test_call()
 
         records = self.db.search_jcmt_available(call_id)
 
@@ -416,24 +416,9 @@ class DBJCMTTest(DBTestCase):
 
         self.assertEqual(set(result.keys()), set((reviewer_id, reviewer_id_2)))
 
-    def _create_test_call(self):
-        facility_id = self.db.ensure_facility('jcmt')
-        semester_id = self.db.add_semester(
-            facility_id, 'test', 'test',
-            datetime(2000, 1, 1), datetime(2000, 6, 30))
-        queue_id = self.db.add_queue(facility_id, 'test', 'test')
-        call_id = self.db.add_call(
-            BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
-            datetime(1999, 9, 1), datetime(1999, 9, 30),
-            100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', '',
-            FormatType.PLAIN)
-
-        return (queue_id, call_id)
-
     def _create_test_proposal(self):
-        (queue_id, call_id) = self._create_test_call()
+        (call_id, affiliation_id) = self._create_test_call()
 
-        affiliation_id = self.db.add_affiliation(queue_id, 'test')
         person_id = self.db.add_person('Test Person')
 
         return self.db.add_proposal(

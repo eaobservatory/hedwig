@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -89,6 +89,36 @@ class DBTestCase(DummyConfigTestCase):
 
         auth._rounds = self.orig_auth_rounds
         auth.password_hash_delay = self.orig_hash_delay
+
+    def _create_test_call(
+            self, semester_name='test', queue_name='test', facility_id=None,
+            facility_name='my_tel'):
+        if facility_id is None:
+            facility_id = self.db.ensure_facility(facility_name)
+            self.assertIsInstance(facility_id, int)
+
+        semester_id = self.db.add_semester(
+            facility_id, semester_name, semester_name,
+            datetime(2000, 1, 1), datetime(2000, 6, 30))
+        self.assertIsInstance(semester_id, int)
+
+        queue_id = self.db.add_queue(facility_id, queue_name, queue_name)
+        self.assertIsInstance(queue_id, int)
+
+        call_id = self.db.add_call(
+            BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
+            datetime(1999, 9, 1), datetime(1999, 9, 30),
+            100, 1000, 0, 1, 2000, 4, 3, 100, 100,
+            '', '', '', FormatType.PLAIN)
+        self.assertIsInstance(call_id, int)
+
+        affiliations = self.db.search_affiliation(queue_id=queue_id)
+        self.assertFalse(affiliations)
+
+        affiliation_id = self.db.add_affiliation(queue_id, 'test aff/n')
+        self.assertIsInstance(affiliation_id, int)
+
+        return (call_id, affiliation_id)
 
     def _create_test_proposal(self,
                               facility_id=None, facility_code='test facility'):

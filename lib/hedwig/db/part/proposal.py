@@ -38,7 +38,7 @@ from ...type.enum import AffiliationType, AnnotationType, AttachmentState, \
     CallState, FigureType, FormatType, \
     ProposalState, PublicationType, SemesterState
 from ...type.simple import Affiliation, Annotation, \
-    Call, CallPreamble, Category, CoMemberInfo, \
+    Call, CallMidClose, CallPreamble, Category, CoMemberInfo, \
     Member, MemberInfo, MemberPIInfo, \
     PrevProposal, PrevProposalPub, \
     Proposal, ProposalCategory, ProposalFigure, \
@@ -47,7 +47,7 @@ from ...type.simple import Affiliation, Annotation, \
     Queue, QueueInfo, ReviewerInfo, Semester, SemesterInfo, Target
 from ...util import is_list_like
 from ..meta import affiliation, affiliation_weight, \
-    call, call_preamble, category, decision, \
+    call, call_mid_close, call_preamble, category, decision, \
     facility, institution, \
     member, person, prev_proposal, prev_proposal_pub, \
     proposal, proposal_annotation, proposal_category, \
@@ -1136,6 +1136,45 @@ class ProposalPart(object):
                 values = default.copy()
                 values.update(**row)
                 ans[row['id']] = Call(**values)
+
+        return ans
+
+    def search_call_mid_close(
+            self, call_id=None, closed=None, date_before=None,
+            _conn=None):
+        """
+        Search for intermediate call close dates.
+        """
+
+        stmt = call_mid_close.select()
+
+        iter_field = None
+        iter_list = None
+
+        if call_id is not None:
+            if is_list_like(call_id):
+                assert iter_field is None
+                iter_field = call_mid_close.c.call_id
+                iter_list = call_id
+            else:
+                stmt = stmt.where(call_mid_close.c.call_id == call_id)
+
+        if closed is not None:
+            if closed:
+                stmt = stmt.where(call_mid_close.c.closed)
+            else:
+                stmt = stmt.where(not_(call_mid_close.c.closed))
+
+        if date_before is not None:
+            stmt = stmt.where(call_mid_close.c.date < date_before)
+
+        ans = ResultCollection()
+
+        with self._transaction(_conn=_conn) as conn:
+            for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
+                for row in conn.execute(
+                        iter_stmt.order_by(call_mid_close.c.date.asc())):
+                    ans[row['id']] = CallMidClose(**row)
 
         return ans
 
@@ -2407,6 +2446,26 @@ class ProposalPart(object):
                 update_columns=(affiliation_weight.c.weight,),
                 record_match_column=affiliation_weight.c.affiliation_id)
 
+    def sync_call_call_mid_close(self, call_id, records):
+        """
+        Update intermediate close records associated with a call.
+
+        Note: the sync operation is currently performed without handling
+        of the unique constraint (on date) so circular updates will
+        not succeed.
+        """
+
+        with self._transaction() as conn:
+            if not self._exists_id(conn, call, call_id):
+                raise ConsistencyError(
+                    'call does not exist with id={}', call_id)
+
+            return self._sync_records(
+                conn, call_mid_close,
+                key_column=call_mid_close.c.call_id, key_value=call_id,
+                records=records,
+                update_columns=(call_mid_close.c.date,))
+
     def sync_facility_category(self, facility_id, records):
         """
         Update the categories available for proposal for a facility.
@@ -2738,6 +2797,34 @@ class ProposalPart(object):
             if result.rowcount != 1:
                 raise ConsistencyError(
                     'no rows matched updating call with id={}', call_id)
+
+    def update_call_mid_close(self, id_, closed=None, _test_skip_check=False):
+        """
+        Update a call intermediate close record.
+        """
+
+        values = {}
+
+        if closed is not None:
+            values[call_mid_close.c.closed] = closed
+
+        if not values:
+            raise Error('no intermediate close updates specified')
+
+        with self._transaction() as conn:
+            if not _test_skip_check and not self._exists_id(
+                    conn, call_mid_close, id_):
+                raise ConsistencyError(
+                    'call intermediate close does not exist with id={}', id_)
+
+            result = conn.execute(call_mid_close.update().where(
+                call_mid_close.c.id == id_
+            ).values(values))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched updating call inter. close with id={}',
+                    id_)
 
     def update_prev_proposal_pub(self, type_=None, description=None,
                                  pp_pub_id=None,

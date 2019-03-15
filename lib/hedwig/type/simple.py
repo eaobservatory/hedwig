@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import namedtuple
 
 from ..db.meta import affiliation, \
-    calculation, call, call_preamble, category, \
+    calculation, call, call_mid_close, call_preamble, category, \
     email, group_member, institution, institution_log, \
     member, message, message_recipient, moc, person, \
     prev_proposal, prev_proposal_pub, \
@@ -65,6 +65,10 @@ Call = namedtuple(
     ['state', 'facility_id', 'semester_name', 'queue_name',
      'queue_description', 'queue_description_format', 'facility_code',
      'proposal_count'])
+
+CallMidClose = namedtuple(
+    'CallMidClose',
+    [x.name for x in call_mid_close.columns])
 
 CallPreamble = namedtuple(
     'CallPreamble',
