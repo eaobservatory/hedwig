@@ -1,0 +1,57 @@
+{% extends 'layout.html' %}
+{% set scripts=['edit_close_mid'] %}
+{% set navigation=[
+    'facility_admin',
+    ('Calls', url_for('.call_list')),
+    ((call.semester_name, call.queue_name, (call.type | call_type_name(facility_call_type_class))) | fmt('{} {} {}'), url_for('.call_view', call_id=call.id))] %}
+{% set help_link=url_for('help.admin_page', page_name='call') %}
+
+{% block content %}
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ target }}" novalidate="novalidate">
+    <table id="mid_close">
+        <tr>
+            <th>Date</th>
+            <th>Actions</th>
+        </tr>
+        {% for mid_close in mid_closes.values() %}
+            <tr id="mid_close_row_{{ mid_close.id }}">
+                <td>
+                    <input type="date" name="date_date_{{ mid_close.id }}" value="{{ mid_close.date.date }}" placeholder="YYYY-MM-DD" required="required" size="10" />
+                    <input type="time" name="date_time_{{ mid_close.id }}" value="{{ mid_close.date.time }}" placeholder="HH:MM" required="required" size="5" />
+                    <span class="explanation">UT</span>
+                </td>
+                <td><input type="button" id="delete_{{ mid_close.id }}" value="Delete" />
+            </tr>
+        {% endfor %}
+    </table>
+    <table class="template">
+        <tr id="mid_close_row_template">
+            <td>
+                <input type="date" name="date_date" value="" placeholder="YYYY-MM-DD" size="10" />
+                <input type="time" name="date_time" value="" placeholder="HH:MM" size="5" />
+                <span class="explanation">UT</span>
+            </td>
+            <td><input type="button" id="delete_template" value="Delete" /></td>
+        </tr>
+        <tr id="mid_close_row_template">
+            <td>
+            </td>
+            <td><input type="button" id="delete_template" value="Delete" /></td>
+        </tr>
+    </table>
+    <p>
+        <input type="button" id="add_mid_close" value="Add intermediate close date" />
+    </p>
+    <p>
+        <input type="submit" value="Save" name="submit" />
+    </p>
+</form>
+
+{% endblock %}

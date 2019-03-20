@@ -351,19 +351,19 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
     TypeInfo = namedtuple(
         'TypeInfo',
         ('code', 'name', 'available', 'url_path', 'immediate_review',
-         'name_proposal', 'notify_group'))
+         'name_proposal', 'mid_close', 'notify_group'))
 
-    #       Code  Name         Avail.  URL         Im.Rv. Nm.Pr.
+    #       Code  Name         Avail.  URL         Im.Rv. Nm.Pr. Md.Cl.
     #       (Notify groups)
     _info = OrderedDict((
         (STANDARD,  TypeInfo(
-            None, 'Standard',  True,  'standard',  False, False,
+            None, 'Standard',  True,  'standard',  False, False, False,
             ())),
         (IMMEDIATE, TypeInfo(
-            'I',  'Immediate', True,  'immediate', True,  False,
+            'I',  'Immediate', True,  'immediate', True,  False, False,
             (GroupType.CTTEE,))),
         (TEST, TypeInfo(
-            'T',  'Test',      True,  'test',      False, True,
+            'T',  'Test',      True,  'test',      False, True,  False,
             ())),
     ))
 

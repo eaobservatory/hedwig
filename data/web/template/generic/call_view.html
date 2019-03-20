@@ -21,6 +21,30 @@
         <th>Open</th>
         <td>{{ call.date_open | format_datetime }}</td>
     </tr>
+    {% if mid_closes is not none %}
+        <th>Intermediate close dates</th>
+        <td>
+            {% if mid_closes %}
+                <ul>
+                    {% for mid_close in mid_closes.values() %}
+                        <li>
+                            {{mid_close.date | format_datetime }}
+                            {% if mid_close.closed %}
+                                <span class="label">closed</span>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="missing">No intermediate dates have been specified.</p>
+            {% endif %}
+            <nav>
+                <p>
+                    <a href="{{ url_for('.call_mid_close', call_id=call.id) }}">Edit intermediate close dates</a>
+                </p>
+            </nav>
+        </td>
+    {% endif %}
     <tr>
         <th>Close</th>
         <td>{{ call.date_close | format_datetime }}</td>

@@ -26,7 +26,8 @@ from ...error import NoSuchRecord, UserError
 from ...type.collection import AffiliationCollection, ResultCollection
 from ...type.enum import AffiliationType, FormatType, GroupType, \
     PersonTitle, ProposalState, SemesterState
-from ...type.simple import Affiliation, CallPreamble, Category, DateAndTime, \
+from ...type.simple import Affiliation, \
+    CallMidClose, CallPreamble, Category, DateAndTime, \
     ProposalWithCode, Queue, Semester
 from ...type.util import null_tuple
 from ...view import auth
@@ -306,11 +307,16 @@ class GenericAdmin(object):
 
         type_class = self.get_call_types()
 
+        mid_closes = None
+        if type_class.get_info(call.type).mid_close:
+            mid_closes = db.search_call_mid_close(call_id=call.id)
+
         ctx = {
             'title': 'Call: {} {} {}'.format(
                 call.semester_name, call.queue_name,
                 type_class.get_name(call.type)),
             'call': call,
+            'mid_closes': mid_closes,
             'proposal_order': self.get_proposal_order(),
         }
 
@@ -507,6 +513,85 @@ class GenericAdmin(object):
 
     def _view_call_edit_extra(self, db, call, info):
         return {}
+
+    @with_verified_admin
+    def view_call_mid_close(self, db, call_id, form):
+        """
+        Edit a call's intermediate close dates.
+        """
+
+        type_class = self.get_call_types()
+        message = None
+
+        try:
+            call = db.get_call(self.id_, call_id)
+        except NoSuchRecord:
+            raise HTTPNotFound('Call not found')
+
+        if not type_class.get_info(call.type).mid_close:
+            raise ErrorPage(
+                'Calls of this type do not have intermediate close dates.')
+
+        records = db.search_call_mid_close(call_id=call.id).map_values(
+            lambda x: x._replace(date=format_datetime(x.date)))
+
+        if form is not None:
+            try:
+                updated_records = {}
+                added_records = {}
+
+                for param in form:
+                    if not param.startswith('date_date_'):
+                        continue
+
+                    id_ = param[10:]
+                    date = DateAndTime(form[param], form['date_time_' + id_])
+
+                    if id_.startswith('new_'):
+                        id_ = int(id_[4:])
+                        added_records[id_] = null_tuple(
+                            CallMidClose)._replace(id=id_, date=date)
+
+                    else:
+                        id_ = int(id_)
+                        updated_records[id_] = null_tuple(
+                            CallMidClose)._replace(id=id_, date=date)
+
+                records = ResultCollection.organize_collection(
+                    updated_records, added_records)
+
+                parsed_records = records.map_values(
+                    lambda x: x._replace(date=parse_datetime(x.date)))
+
+                for mid_close in parsed_records.values():
+                    if mid_close.date <= call.date_open:
+                        raise UserError(
+                            'The date {} {} is before the call opening date.',
+                            *format_datetime(mid_close.date))
+
+                    if mid_close.date >= call.date_close:
+                        raise UserError(
+                            'The date {} {} is after the call closing date.',
+                            *format_datetime(mid_close.date))
+
+                db.sync_call_call_mid_close(call.id, parsed_records)
+
+                flash('The intermediate close dates have been updated.')
+                raise HTTPRedirect(url_for('.call_view', call_id=call.id))
+
+            except UserError as e:
+                message = e.message
+
+        title = 'Intermediate close dates: {} {} {}'.format(
+            call.semester_name, call.queue_name,
+            type_class.get_name(call.type))
+
+        return {
+            'title': title,
+            'message': message,
+            'call': call,
+            'mid_closes': records,
+        }
 
     @with_verified_admin
     def view_call_proposals(self, db, call_id):

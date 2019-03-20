@@ -668,6 +668,15 @@ def create_facility_blueprint(db, facility):
             db, call_id, None,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route(
+        '/admin/call/<int:call_id>/intermediate_close',
+        methods=['GET', 'POST'])
+    @facility_template('call_mid_close.html')
+    @require_admin
+    def call_mid_close(call_id):
+        return facility.view_call_mid_close(
+            db, call_id, (request.form if request.method == 'POST' else None))
+
     @bp.route('/admin/call/<int:call_id>/proposals')
     @facility_template('call_proposals.html')
     @require_admin
