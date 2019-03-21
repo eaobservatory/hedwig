@@ -115,6 +115,11 @@ class GenericHome(object):
         except NoSuchRecord:
             call_preamble = None
 
+        call_mid_closes = None
+        if type_class.get_info(call_type).mid_close:
+            call_mid_closes = db.search_call_mid_close(
+                call_id=list(calls.keys()), closed=False)
+
         return {
             'title': '{} Call for Semester {}'.format(
                 type_class.get_name(call_type), semester.name),
@@ -122,6 +127,7 @@ class GenericHome(object):
             'calls': calls,
             'call_type': call_type,
             'call_preamble': call_preamble,
+            'call_mid_closes': call_mid_closes,
         }
 
     def view_semester_closed(self, db):

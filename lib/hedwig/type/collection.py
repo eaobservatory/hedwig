@@ -27,7 +27,8 @@ from ..compat import first_value
 from ..email.util import is_valid_email
 from ..error import NoSuchRecord, NoSuchValue, MultipleRecords, UserError
 from ..util import is_list_like, matches_constraint
-from .base import CollectionByProposal, CollectionOrdered, CollectionSortable
+from .base import CollectionByCall, CollectionByProposal, \
+    CollectionOrdered, CollectionSortable
 from .enum import AffiliationType, PublicationType, ReviewState
 from .simple import TargetObject
 
@@ -162,6 +163,14 @@ class CallCollection(ResultCollection):
                     matches_constraint(call.queue_id, queue_id),
                     matches_constraint(call.type, type_))):
                 yield call
+
+
+class CallMidCloseCollection(ResultCollection, CollectionByCall):
+    """
+    Class to hold the results of a search for call intermediate close dates.
+    """
+
+    pass
 
 
 class CallPreambleCollection(ResultCollection):

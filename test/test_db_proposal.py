@@ -25,7 +25,7 @@ from hedwig.db.meta import member
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, NoSuchValue, UserError
 from hedwig.type.collection import AffiliationCollection, \
-    CallCollection, MemberCollection, \
+    CallCollection, CallMidCloseCollection, MemberCollection, \
     ProposalCollection, ProposalCategoryCollection, \
     ProposalFigureCollection, ProposalTextCollection, \
     ResultCollection, TargetCollection
@@ -447,12 +447,13 @@ class DBProposalTest(DBTestCase):
         (call_id_2, affiliation_id) = self._create_test_call('s2', 'q2')
 
         result = self.db.search_call_mid_close(call_id_1)
+        self.assertIsInstance(result, CallMidCloseCollection)
         self.assertFalse(result)
 
         record = null_tuple(CallMidClose)
 
         (n_insert, n_update, n_delete) = self.db.sync_call_call_mid_close(
-            call_id_1, ResultCollection((
+            call_id_1, CallMidCloseCollection((
                 ('new1', record._replace(date=datetime(2020, 1, 1))),
                 ('new2', record._replace(date=datetime(2020, 2, 1))),
             )))
@@ -462,7 +463,7 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(n_delete, 0)
 
         (n_insert, n_update, n_delete) = self.db.sync_call_call_mid_close(
-            call_id_2, ResultCollection((
+            call_id_2, CallMidCloseCollection((
                 ('new1', record._replace(date=datetime(2021, 1, 1))),
                 ('new2', record._replace(date=datetime(2021, 2, 1))),
             )))
@@ -473,6 +474,7 @@ class DBProposalTest(DBTestCase):
 
         result = self.db.search_call_mid_close(call_id=[
             call_id_1, call_id_2])
+        self.assertIsInstance(result, CallMidCloseCollection)
         self.assertEqual(len(result), 4)
 
         for (item, call_id, date) in zip(

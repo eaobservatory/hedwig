@@ -23,7 +23,8 @@ from datetime import datetime
 
 from ...email.format import render_email_template
 from ...error import NoSuchRecord, UserError
-from ...type.collection import AffiliationCollection, ResultCollection
+from ...type.collection import AffiliationCollection, \
+    CallMidCloseCollection, ResultCollection
 from ...type.enum import AffiliationType, FormatType, GroupType, \
     PersonTitle, ProposalState, SemesterState
 from ...type.simple import Affiliation, \
@@ -557,7 +558,7 @@ class GenericAdmin(object):
                         updated_records[id_] = null_tuple(
                             CallMidClose)._replace(id=id_, date=date)
 
-                records = ResultCollection.organize_collection(
+                records = CallMidCloseCollection.organize_collection(
                     updated_records, added_records)
 
                 parsed_records = records.map_values(

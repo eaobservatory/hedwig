@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2018 East Asian Observatory
+# Copyright (C) 2016-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,6 +22,20 @@ from collections import OrderedDict, defaultdict
 from operator import attrgetter
 
 from ..error import FormattedError, NoSuchValue
+
+
+class CollectionByCall(object):
+    """
+    Mix-in for collections of items with a `call_id` attribute.
+    """
+
+    def subset_by_call(self, call_id):
+        """
+        Create a subset containing entries for the given call.
+        """
+
+        return type(self)((k, v) for (k, v) in self.items()
+                          if v.call_id == call_id)
 
 
 class CollectionByProposal(object):

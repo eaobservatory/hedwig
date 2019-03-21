@@ -30,7 +30,8 @@ from ...compat import str_to_unicode
 from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
 from ...type.collection import AffiliationCollection, \
-    CallCollection, CallPreambleCollection, MemberCollection, \
+    CallCollection, CallMidCloseCollection, CallPreambleCollection, \
+    MemberCollection, \
     PrevProposalCollection, ProposalCollection, ProposalCategoryCollection, \
     ProposalFigureCollection, ProposalTextCollection, \
     ResultCollection, TargetCollection
@@ -1168,7 +1169,7 @@ class ProposalPart(object):
         if date_before is not None:
             stmt = stmt.where(call_mid_close.c.date < date_before)
 
-        ans = ResultCollection()
+        ans = CallMidCloseCollection()
 
         with self._transaction(_conn=_conn) as conn:
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):

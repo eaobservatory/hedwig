@@ -65,6 +65,19 @@
                 <th>Call for proposals opens</th>
                 <td>{{ call.date_open | format_datetime }} UT</td>
             </tr>
+            {% if call_mid_closes %}
+                {% set mid_closes = call_mid_closes.subset_by_call(call.id) %}
+                {% if mid_closes %}
+                    {% for mid_close in mid_closes.values() %}
+                        <tr>
+                            {% if loop.first %}
+                                <th rowspan="{{ mid_closes | length }}">Intermediate closing {{ 'dates' if (mid_closes | length) > 1 else 'date' }}</th>
+                            {% endif %}
+                            <td>{{ mid_close.date | format_datetime }} UT</td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            {% endif %}
             <tr>
                 <th>Call for proposals closes</th>
                 <td>{{ call.date_close | format_datetime }} UT</td>

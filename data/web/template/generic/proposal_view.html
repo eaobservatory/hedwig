@@ -45,6 +45,13 @@
                 deadline, {{ proposal.date_close | format_datetime }} UT.
             {% endif %}
         </p>
+
+        {% if call_mid_closes %}
+            <p class="warning">
+                The next intermediate deadline is
+                {{ call_mid_closes | first_value | attr('date') | format_datetime }} UT.
+            </p>
+        {% endif %}
     {% endif %}
 {% endblock %}
 

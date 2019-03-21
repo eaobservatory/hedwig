@@ -568,6 +568,12 @@ class GenericProposal(object):
         feedback_can = auth.for_proposal_feedback(
             role_class, db, proposal=proposal, auth_cache=can.cache)
 
+        type_class = self.get_call_types()
+        call_mid_closes = None
+        if type_class.get_info(proposal.call_type).mid_close:
+            call_mid_closes = db.search_call_mid_close(
+                call_id=proposal.call_id, closed=False)
+
         is_admin = session.get('is_admin', False)
         is_first_view = ('first_view' in args)
 
@@ -590,6 +596,7 @@ class GenericProposal(object):
             'show_person_proposals_callout': is_first_view,
             'show_admin_links': is_admin,
             'proposal_order': self.get_proposal_order_names(),
+            'call_mid_closes': call_mid_closes,
         }
 
         ctx.update(self._view_proposal_extra(db, proposal))
