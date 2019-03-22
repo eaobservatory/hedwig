@@ -65,6 +65,11 @@ class UKIRTCallType(BaseCallType):
         BaseCallType.IMMEDIATE: {
             'name': 'Urgent', 'code': 'SERV', 'url_path': 'urgent',
             'name_proposal': True},
+        BaseCallType.TEST: {
+            'code': 'TEST'},
+        BaseCallType.MULTICLOSE: {
+            'name': 'Rapid Turnaround', 'code': 'RT', 'url_path': 'rapid',
+            'name_proposal': True},
     }
 
     _info = OrderedDict()

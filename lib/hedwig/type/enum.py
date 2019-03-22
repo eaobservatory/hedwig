@@ -347,6 +347,7 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
     STANDARD = 1
     IMMEDIATE = 2
     TEST = 3
+    MULTICLOSE = 4
 
     TypeInfo = namedtuple(
         'TypeInfo',
@@ -364,6 +365,9 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
             (GroupType.CTTEE,))),
         (TEST, TypeInfo(
             'T',  'Test',      True,  'test',      False, True,  False,
+            ())),
+        (MULTICLOSE,  TypeInfo(
+            'M', 'Multiple-close', True, 'multi',  False, False, True,
             ())),
     ))
 

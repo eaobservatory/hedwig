@@ -122,6 +122,9 @@ class JCMTCallType(BaseCallType):
             'name_proposal': True},
         BaseCallType.TEST: {
             'code': 'X'},
+        BaseCallType.MULTICLOSE: {
+            'name': 'Rapid Turnaround', 'code': 'R', 'url_path': 'rapid',
+            'name_proposal': True},
     }
 
     _info = OrderedDict()
