@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -39,6 +39,7 @@ def close_call_proposals(db, call_id, dry_run=False):
     call.
 
     * Sets the status to REVIEW (or ABANDONED if not submitted).
+    * Freezes proposal member institutions.
     * Writes the member institutions into the member table.
     """
 
@@ -72,29 +73,57 @@ def close_call_proposals(db, call_id, dry_run=False):
                            proposal.id, ProposalState.get_name(proposal.state))
             continue
 
-        try:
-            logger.info('Setting state of proposal {} to {}',
-                        proposal.id, ProposalState.get_name(new_state))
+        _close_proposal(db, proposal, new_state, dry_run=dry_run)
 
-            if not dry_run:
-                db.update_proposal(proposal.id, state=new_state,
-                                   state_prev=proposal.state)
 
-            # Freeze the current institution ID values in the member table.
-            records = {}
-            for member in proposal.members.values():
-                records[member.id] = MemberInstitution(
-                    member.id, member.resolved_institution_id)
+def close_mid_call(db, call_id, mid_close_id, dry_run=False):
+    """
+    Function to process an intermediate closure for a call.
 
-            logger.debug('Sync institution IDs into proposal {} member table',
-                         proposal.id)
-            if not dry_run:
-                db.sync_proposal_member_institution(proposal.id, records)
+    * Sets the status of SUBMITTED proposals to REVIEW.
+    * Freezes proposal member institutions.
+    * Marks the intermediate closure as closed.
+    """
 
-        except ConsistencyError:
-            logger.exception(
-                'Consistency error closing call for proposal {}',
-                proposal.id)
+    logger.debug(
+        'Preparing to perform intermediate closure {} for call {}',
+        mid_close_id, call_id)
+
+    for proposal in db.search_proposal(
+            call_id=call_id, state=ProposalState.SUBMITTED,
+            with_members=True).values():
+        logger.debug('Closing call {} proposal {}', call_id, proposal.id)
+
+        _close_proposal(db, proposal, ProposalState.REVIEW, dry_run=dry_run)
+
+    if not dry_run:
+        db.update_call_mid_close(mid_close_id, closed=True)
+
+
+def _close_proposal(db, proposal, new_state, dry_run=False):
+    try:
+        logger.info('Setting state of proposal {} to {}',
+                    proposal.id, ProposalState.get_name(new_state))
+
+        if not dry_run:
+            db.update_proposal(proposal.id, state=new_state,
+                               state_prev=proposal.state)
+
+        # Freeze the current institution ID values in the member table.
+        records = {}
+        for member in proposal.members.values():
+            records[member.id] = MemberInstitution(
+                member.id, member.resolved_institution_id)
+
+        logger.debug('Sync institution IDs into proposal {} member table',
+                     proposal.id)
+        if not dry_run:
+            db.sync_proposal_member_institution(proposal.id, records)
+
+    except ConsistencyError:
+        logger.exception(
+            'Consistency error closing call for proposal {}',
+            proposal.id)
 
 
 def finalize_call_review(db, call_id, proposals=None):

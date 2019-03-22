@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,7 +18,8 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from hedwig.admin.poll import close_completed_call, send_proposal_feedback
+from hedwig.admin.poll import close_completed_call, close_completed_mid_call, \
+    send_proposal_feedback
 
 from .dummy_db import DBTestCase
 
@@ -27,6 +28,10 @@ class AdminPollTestCase(DBTestCase):
     def test_close_call(self):
         # Initially there should be no calls to close.
         self.assertEqual(close_completed_call(self.db), 0)
+
+    def test_close_mid_call(self):
+        # Initially there should be no intermediate calls to close.
+        self.assertEqual(close_completed_mid_call(self.db), 0)
 
     def test_proposal_feedback(self):
         # Initially there should be no feedback to send.

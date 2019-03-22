@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,23 +24,23 @@ from datetime import datetime, timedelta
 from ..config import get_config
 from ..type.enum import BaseReviewerRole, ProposalState, ReviewState
 from ..util import get_logger
-from .proposal import close_call_proposals, send_call_proposal_feedback
+from .proposal import close_call_proposals, close_mid_call, \
+    send_call_proposal_feedback
 
 logger = get_logger(__name__)
 
 
-def close_completed_call(db, dry_run=False):
+def close_completed_call(db, dry_run=False, _test_date=None):
     """
     Close calls for which the submission deadline has passed.
     """
 
-    grace_period = timedelta(
-        minutes=int(get_config().get('application', 'grace_period')))
+    deadline = _closure_deadline() if _test_date is None else _test_date
 
     n_closed = 0
 
     for call_id in db.search_call(
-            date_close_before=(datetime.utcnow() - grace_period),
+            date_close_before=_closure_deadline(),
             has_proposal_state=ProposalState.open_states()):
         try:
             close_call_proposals(db=db, call_id=call_id, dry_run=dry_run)
@@ -51,6 +51,44 @@ def close_completed_call(db, dry_run=False):
             logger.exception('Error closing call {}', call_id)
 
     return n_closed
+
+
+def close_completed_mid_call(db, dry_run=False, _test_date=None):
+    """
+    Process intermediate call closures.
+    """
+
+    deadline = _closure_deadline() if _test_date is None else _test_date
+
+    n_closed = 0
+
+    for mid_close in db.search_call_mid_close(
+            closed=False, date_before=deadline).values():
+        try:
+            close_mid_call(
+                db=db, call_id=mid_close.call_id, mid_close_id=mid_close.id,
+                dry_run=dry_run)
+
+            n_closed += 1
+
+        except:
+            logger.exception(
+                'Error closing intermediate call {}', mid_close.id)
+
+    return n_closed
+
+
+def _closure_deadline():
+    """
+    Get the closure deadline for use in finding calls to close.
+
+    This returns the current UT time less the configured grade period.
+    """
+
+    grace_period = timedelta(
+        minutes=int(get_config().get('application', 'grace_period')))
+
+    return (datetime.utcnow() - grace_period)
 
 
 def send_proposal_feedback(db, dry_run=False):
