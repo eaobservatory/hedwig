@@ -92,7 +92,7 @@ class DBTestCase(DummyConfigTestCase):
 
     def _create_test_call(
             self, semester_name='test', queue_name='test', facility_id=None,
-            facility_name='my_tel'):
+            facility_name='my_tel', call_type=BaseCallType.STANDARD):
         if facility_id is None:
             facility_id = self.db.ensure_facility(facility_name)
             self.assertIsInstance(facility_id, int)
@@ -106,7 +106,7 @@ class DBTestCase(DummyConfigTestCase):
         self.assertIsInstance(queue_id, int)
 
         call_id = self.db.add_call(
-            BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
+            BaseCallType, semester_id, queue_id, call_type,
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             100, 1000, 0, 1, 2000, 4, 3, 100, 100,
             '', '', '', FormatType.PLAIN)

@@ -51,6 +51,15 @@ def close_call_proposals(db, call_id, dry_run=False):
     except NoSuchRecord:
         raise UserError('Call with id={} not found or not closed.', call_id)
 
+    # Determine if the call has intermediate closing.  It would be simplest
+    # to check the call type info mid_close attribute, but we may not have
+    # loaded the facility view class.  We just use this to know whether to
+    # expect proposals already to be in various submitted states.
+    has_mid_close = True if db.search_call_mid_close(
+        call_id=call_id) else False
+
+    n_closed = 0
+
     for proposal in db.search_proposal(call_id=call_id,
                                        with_members=True).values():
         logger.debug('Closing call {} proposal {}', call_id, proposal.id)
@@ -65,6 +74,12 @@ def close_call_proposals(db, call_id, dry_run=False):
                                 ProposalState.WITHDRAWN):
             new_state = ProposalState.ABANDONED
 
+        elif has_mid_close and (
+                proposal.state in ProposalState.submitted_states()):
+            # The proposal is in another submitted state, but this is a call
+            # with intermediate close dates, so that can happen.
+            continue
+
         if new_state is None:
             # If the proposal is in an unexpected state, issue a warning
             # and skip to the next proposal.  (We don't want a poll process
@@ -74,6 +89,10 @@ def close_call_proposals(db, call_id, dry_run=False):
             continue
 
         _close_proposal(db, proposal, new_state, dry_run=dry_run)
+
+        n_closed += 1
+
+    return n_closed
 
 
 def close_mid_call(db, call_id, mid_close_id, dry_run=False):
@@ -89,6 +108,8 @@ def close_mid_call(db, call_id, mid_close_id, dry_run=False):
         'Preparing to perform intermediate closure {} for call {}',
         mid_close_id, call_id)
 
+    n_closed = 0
+
     for proposal in db.search_proposal(
             call_id=call_id, state=ProposalState.SUBMITTED,
             with_members=True).values():
@@ -96,8 +117,12 @@ def close_mid_call(db, call_id, mid_close_id, dry_run=False):
 
         _close_proposal(db, proposal, ProposalState.REVIEW, dry_run=dry_run)
 
+        n_closed += 1
+
     if not dry_run:
         db.update_call_mid_close(mid_close_id, closed=True)
+
+    return n_closed
 
 
 def _close_proposal(db, proposal, new_state, dry_run=False):

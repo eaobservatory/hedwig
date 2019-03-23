@@ -1,4 +1,4 @@
-# Copyright (C) 2018 East Asian Observatory
+# Copyright (C) 2018-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from contextlib import contextmanager
+import logging
 
 
 @contextmanager
@@ -28,3 +29,20 @@ def temporary_dict(dictionary, values):
     yield
     dictionary.clear()
     dictionary.update(saved)
+
+
+@contextmanager
+def null_log(logger_name):
+    """
+    Context manager which temporarily attaches a null handler to
+    the specified logger.
+    """
+
+    logger = logging.getLogger(logger_name)
+    handler = logging.NullHandler()
+    logger.addHandler(handler)
+
+    try:
+        yield
+    finally:
+        logger.removeHandler(handler)
