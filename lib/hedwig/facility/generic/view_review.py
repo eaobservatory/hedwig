@@ -32,13 +32,13 @@ from ...view.util import int_or_none, \
     with_proposal, with_call_review, with_review
 from ...web.util import ErrorPage, \
     HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
-    flash, session, url_for
-from ...type.collection import ReviewerCollection
+    flash, format_datetime, parse_datetime, session, url_for
+from ...type.collection import ReviewerCollection, ReviewDeadlineCollection
 from ...type.enum import AffiliationType, Assessment, \
     FormatType, GroupType, \
     MessageThreadType, PermissionType, PersonTitle, ProposalState, ReviewState
-from ...type.simple import Affiliation, Link, MemberPIInfo, \
-    ProposalWithCode, Reviewer, ReviewFigureInfo
+from ...type.simple import Affiliation, DateAndTime, Link, MemberPIInfo, \
+    ProposalWithCode, Reviewer, ReviewFigureInfo, ReviewDeadline
 from ...type.util import null_tuple, \
     with_can_edit, with_can_view, with_can_view_edit
 
@@ -343,6 +343,59 @@ class GenericReview(object):
     @with_call_review(permission=PermissionType.EDIT)
     def view_review_call_available(self, db, call, can, form):
         raise ErrorPage('Time available not implemented for this facility.')
+
+    @with_call_review(permission=PermissionType.EDIT)
+    def view_review_call_deadline(self, db, call, can,form):
+        type_class = self.get_call_types()
+        role_class = self.get_reviewer_roles()
+        message = None
+
+        deadlines = db.search_review_deadline(call_id=call.id).map_values(
+            lambda x: x._replace(date=format_datetime(x.date)))
+
+        if form is not None:
+            try:
+                updated_records = {}
+                added_records = {}
+
+                for role_id in role_class.get_options():
+                    date = DateAndTime(
+                        form['date_date_{}'.format(role_id)],
+                        form['date_time_{}'.format(role_id)])
+
+                    if date.date == '' and date.time == '':
+                        continue
+
+                    record = deadlines.get_role(role_id, None)
+
+                    if record is None:
+                        added_records[role_id] = null_tuple(
+                            ReviewDeadline)._replace(role=role_id, date=date)
+                    else:
+                        updated_records[record.id] = record._replace(date=date)
+
+                deadlines = ReviewDeadlineCollection.organize_collection(
+                    updated_records, added_records)
+
+                parsed = deadlines.map_values(
+                    lambda x: x._replace(date=parse_datetime(x.date)))
+
+                db.sync_call_review_deadline(role_class, call.id, parsed)
+
+                flash('The review deadlines have been saved.')
+                raise HTTPRedirect(url_for('.review_call', call_id=call.id))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Review Deadlines: {} {} {}'.format(
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type)),
+            'call': call,
+            'message': message,
+            'deadlines': deadlines,
+        }
 
     @with_call_review(permission=PermissionType.EDIT)
     def view_review_call_reviewers(self, db, call, can, args):

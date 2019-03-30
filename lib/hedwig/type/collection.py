@@ -664,6 +664,16 @@ class ReviewDeadlineCollection(
     Class to hold the results of a search for review deadlines.
     """
 
+    def get_role(self, role, default=()):
+        for value in self.values():
+            if value.role == role:
+                return value
+
+        if default == ():
+            raise NoSuchValue('no deadline for the given role present')
+
+        return default
+
     def validate(self, role_class):
         """
         Attempts to validate the deadline collection.

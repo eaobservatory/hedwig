@@ -1,0 +1,46 @@
+{% extends 'layout.html' %}
+{% set navigation=[((call.semester_name, call.queue_name, (call.type | call_type_name(facility_call_type_class))) | fmt('{} {} {}'), url_for('.review_call', call_id=call.id))] %}
+{% set help_link=url_for('help.admin_page', page_name='review_deadline') %}
+
+{% block content %}
+<ul>
+    <li>
+        The table below shows all reviewer roles known to the system.
+    </li>
+    <li>
+        You can leave blank the date and time for any roles for which
+        you do not wish to specify a deadline.
+    </li>
+</ul>
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.review_call_deadline', call_id=call.id) }}">
+    <table>
+        <tr>
+            <th>Reviewer role</th>
+            <th>Deadline</th>
+        </tr>
+        {% for (role_id, role_name) in facility_role_class.get_options().items() %}
+            {% set deadline = deadlines.get_role(role_id, None) %}
+            <tr>
+                <td>{{ role_name }}</td>
+                <td>
+                    <input type="date" name="date_date_{{ role_id }}" value="{{ '' if deadline is none else deadline.date.date }}" placeholder="YYYY-MM-DD" size="10" />
+                    <input type="time" name="date_time_{{ role_id }}" value="{{ '' if deadline is none else deadline.date.time }}" placeholder="HH:MM" size="5" />
+                    <span class="explanation">UT</span>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <p>
+        <input type="submit" value="Save" name="submit" />
+    </p>
+</form>
+
+{% endblock %}

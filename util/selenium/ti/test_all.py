@@ -1604,6 +1604,19 @@ class IntegrationTest(DummyConfigTestCase):
 
         self._save_screenshot(self.admin_image_root, 'review_process')
 
+        # Set review deadlines.
+        self.browser.find_element_by_link_text(
+            'Edit review deadlines').click()
+
+        self.browser.find_element_by_name('date_date_2').send_keys('2020-01-01')
+        self.browser.find_element_by_name('date_time_2').send_keys('00:00')
+
+        self._save_screenshot(self.admin_image_root, 'review_deadline')
+
+        self.browser.find_element_by_name('submit').click()
+        self.assertIn('The review deadlines have been saved.',
+                      self.browser.page_source)
+
         # Add an external reviewer.
         self.browser.find_element_by_link_text('Assign reviewers').click()
         self._save_screenshot(self.admin_image_root, 'reviewer_assign')

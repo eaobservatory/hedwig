@@ -152,6 +152,13 @@ def create_facility_blueprint(db, facility):
         return facility.view_review_call_available(
             db, call_id, (request.form if request.method == 'POST' else None))
 
+    @bp.route('/call/<int:call_id>/deadline', methods=['GET', 'POST'])
+    @require_auth(require_person=True)
+    @facility_template('call_review_deadline.html')
+    def review_call_deadline(call_id):
+        return facility.view_review_call_deadline(
+            db, call_id, (request.form if request.method == 'POST' else None))
+
     @bp.route('/call/<int:call_id>/advance_final', methods=['GET', 'POST'])
     @require_auth(require_person=True)
     @facility_template('call_advance_final_confirm.html')
