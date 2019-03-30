@@ -26,14 +26,14 @@ from hedwig.type.base import CollectionByProposal, CollectionOrdered, \
 from hedwig.type.collection import \
     AffiliationCollection, CallCollection, CallPreambleCollection, \
     EmailCollection, GroupMemberCollection, MemberCollection, \
-    ResultCollection, \
+    ResultCollection, ReviewDeadlineCollection, \
     ProposalCollection, ProposalFigureCollection, ReviewerCollection
 from hedwig.type.enum import AffiliationType, BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, \
     ReviewState
 from hedwig.type.simple import \
     Affiliation, Call, CallPreamble, Email, GroupMember, Member, \
-    Proposal, ProposalFigureInfo, Reviewer
+    Proposal, ProposalFigureInfo, Reviewer, ReviewDeadline
 from hedwig.type.util import null_tuple
 
 from .compat import TestCase
@@ -559,3 +559,26 @@ class CollectionTypeTestCase(TestCase):
                                                  with_std_dev=True)
         self.assertEqual(rating, 55.0)
         self.assertAlmostEqual(std_dev, 25.981, places=3)
+
+    def test_review_deadline_collection(self):
+        c = ReviewDeadlineCollection()
+
+        c.validate(BaseReviewerRole)
+
+        c[1] = null_tuple(ReviewDeadline)._replace(role=999999)
+
+        with self.assertRaisesRegex(UserError, 'invalid role'):
+            c.validate(BaseReviewerRole)
+
+        c[1] = null_tuple(ReviewDeadline)._replace(
+            role=BaseReviewerRole.CTTEE_PRIMARY)
+        c[2] = null_tuple(ReviewDeadline)._replace(
+            role=BaseReviewerRole.CTTEE_PRIMARY)
+
+        with self.assertRaisesRegex(UserError, 'Multiple entries for role'):
+            c.validate(BaseReviewerRole)
+
+        c[2] = null_tuple(ReviewDeadline)._replace(
+            role=BaseReviewerRole.CTTEE_SECONDARY)
+
+        c.validate(BaseReviewerRole)

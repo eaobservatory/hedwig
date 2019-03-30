@@ -23,10 +23,12 @@ from datetime import datetime
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, Error, \
     NoSuchRecord, UserError
 from hedwig.type.collection import GroupMemberCollection, \
-    ReviewerCollection, ReviewFigureCollection
+    ReviewerCollection, ReviewDeadlineCollection, ReviewFigureCollection
 from hedwig.type.enum import Assessment, AttachmentState, BaseReviewerRole, \
     FigureType, FormatType, GroupType, ReviewState
-from hedwig.type.simple import GroupMember, Reviewer, ReviewFigureInfo
+from hedwig.type.simple import GroupMember, Reviewer, ReviewDeadline, \
+    ReviewFigureInfo
+from hedwig.type.util import null_tuple
 
 from .dummy_db import DBTestCase
 
@@ -599,4 +601,47 @@ class DBReviewTest(DBTestCase):
         self.db.delete_review_figure(reviewer_id, fig_id)
 
         result = self.db.search_review_figure(reviewer_id=reviewer_id)
+        self.assertEqual(len(result), 0)
+
+    def test_review_deadline(self):
+        (call_id, affiliation_id) = self._create_test_call()
+        self.assertIsInstance(call_id, int)
+
+        result = self.db.search_review_deadline(call_id=call_id)
+        self.assertIsInstance(result, ReviewDeadlineCollection)
+        self.assertEqual(len(result), 0)
+
+        records = ReviewDeadlineCollection((
+            ('new_1', null_tuple(ReviewDeadline)._replace(
+                role=BaseReviewerRole.TECH, date=datetime(2020, 2, 20))),
+            ('new_2', null_tuple(ReviewDeadline)._replace(
+                role=BaseReviewerRole.EXTERNAL, date=datetime(2020, 2, 10))),
+        ))
+
+        (n_insert, n_update, n_delete) = self.db.sync_call_review_deadline(
+            BaseReviewerRole, call_id, records)
+
+        self.assertEqual(n_insert, 2)
+        self.assertEqual(n_update, 0)
+        self.assertEqual(n_delete, 0)
+
+        result = self.db.search_review_deadline(call_id=call_id)
+        self.assertIsInstance(result, ReviewDeadlineCollection)
+        self.assertEqual(len(result), 2)
+
+        for (entry, date) in zip(
+                result.values_in_role_order(BaseReviewerRole),
+                ['2020-02-20T00:00:00', '2020-02-10T00:00:00']):
+            self.assertIsInstance(entry, ReviewDeadline)
+            self.assertEqual(entry.date.isoformat(), date)
+
+        (n_insert, n_update, n_delete) = self.db.sync_call_review_deadline(
+            BaseReviewerRole, call_id, ReviewDeadlineCollection())
+
+        self.assertEqual(n_insert, 0)
+        self.assertEqual(n_update, 0)
+        self.assertEqual(n_delete, 2)
+
+        result = self.db.search_review_deadline(call_id=call_id)
+        self.assertIsInstance(result, ReviewDeadlineCollection)
         self.assertEqual(len(result), 0)

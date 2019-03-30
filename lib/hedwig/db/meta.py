@@ -662,6 +662,18 @@ review_calculation = Table(
     *_calculation_cols(),
     **table_opts)
 
+review_deadline = Table(
+    'review_deadline',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('call_id', None,
+           ForeignKey('call.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('role', Integer, nullable=False),
+    Column('date', DateTime(), nullable=False),
+    UniqueConstraint('call_id', 'role'),
+    **table_opts)
+
 review_fig = Table(
     'review_fig',
     metadata,

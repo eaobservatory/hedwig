@@ -67,6 +67,56 @@ class CollectionByProposal(object):
                           if v.proposal_id == proposal_id)
 
 
+class CollectionByReviewerRole(object):
+    """
+    Mix-in for collections of items with a reviewer `role` attribute.
+    """
+
+    def has_role(self, role):
+        """
+        Check if the collection has an entry in the given role.
+        """
+
+        for entry in self.values():
+            if entry.role == role:
+                return True
+
+        return False
+
+    def values_by_role(self, role):
+        """
+        Get a list of the reviewers with the given role.
+        """
+
+        return [x for x in self.values() if x.role == role]
+
+    def values_in_role_order(self, role_class, cttee_role=None):
+        """
+        Iterate over the values of the collection in the order of
+        the reviewer roles.
+
+        Optionally return only committee roles (`cttee_role` = `True`) or
+        non-committee roles (`cttee_role` = `False`).
+
+        Note: operates by looping over known roles.  Any reviewers with
+        invalid (or no longer recognized) roles will not be yielded.
+        """
+
+        cttee_roles = None
+        if cttee_role is not None:
+            cttee_roles = role_class.get_cttee_roles()
+
+        for role in role_class.get_options().keys():
+            if cttee_role is not None:
+                if ((cttee_role and (role not in cttee_roles)) or
+                        ((not cttee_role) and (role in cttee_roles))):
+                    continue
+
+            for entry in self.values():
+                if entry.role == role:
+                    yield entry
+
+
 class CollectionOrdered(object):
     """
     Mix-in for collections with a `sort_order` attribute.

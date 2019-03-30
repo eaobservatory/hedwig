@@ -28,6 +28,7 @@ from ..email.util import is_valid_email
 from ..error import NoSuchRecord, NoSuchValue, MultipleRecords, UserError
 from ..util import is_list_like, matches_constraint
 from .base import CollectionByCall, CollectionByProposal, \
+    CollectionByReviewerRole, \
     CollectionOrdered, CollectionSortable
 from .enum import AffiliationType, PublicationType, ReviewState
 from .simple import TargetObject
@@ -565,7 +566,8 @@ class ProposalFigureCollection(
         return [x for x in self.values() if x.role == role]
 
 
-class ReviewerCollection(ResultCollection, CollectionByProposal):
+class ReviewerCollection(
+        ResultCollection, CollectionByProposal, CollectionByReviewerRole):
     """
     Collection class for reviewers of a proposal, possibly also
     including their reviews.
@@ -648,17 +650,6 @@ class ReviewerCollection(ResultCollection, CollectionByProposal):
 
         return False
 
-    def has_role(self, role):
-        """
-        Check if the collection has an entry in the given role.
-        """
-
-        for member in self.values():
-            if member.role == role:
-                return True
-
-        return False
-
     def role_by_person_id(self, person_id):
         """
         Get a list of the reviewer roles for the given person.
@@ -666,38 +657,30 @@ class ReviewerCollection(ResultCollection, CollectionByProposal):
 
         return [x.role for x in self.values() if x.person_id == person_id]
 
-    def values_by_role(self, role):
+
+class ReviewDeadlineCollection(
+        ResultCollection, CollectionByCall, CollectionByReviewerRole):
+    """
+    Class to hold the results of a search for review deadlines.
+    """
+
+    def validate(self, role_class):
         """
-        Get a list of the reviewers with the given role.
-        """
-
-        return [x for x in self.values() if x.role == role]
-
-    def values_in_role_order(self, role_class, cttee_role=None):
-        """
-        Iterate over the values of the collection in the order of
-        the reviewer roles.
-
-        Optionally return only committee roles (`cttee_role` = `True`) or
-        non-committee roles (`cttee_role` = `False`).
-
-        Note: operates by looping over known roles.  Any reviewers with
-        invalid (or no longer recognized) roles will not be yielded.
+        Attempts to validate the deadline collection.
         """
 
-        cttee_roles = None
-        if cttee_role is not None:
-            cttee_roles = role_class.get_cttee_roles()
+        roles = set()
 
-        for role in role_class.get_options().keys():
-            if cttee_role is not None:
-                if ((cttee_role and (role not in cttee_roles)) or
-                        ((not cttee_role) and (role in cttee_roles))):
-                    continue
+        for entry in self.values():
+            if not role_class.is_valid(entry.role):
+                raise UserError('Deadline has invalid role "{}".', entry.role)
 
-            for member in self.values():
-                if member.role == role:
-                    yield member
+            if entry.role in roles:
+                raise UserError(
+                    'Multiple entries for role "{}."',
+                    role_class.get_name(entry.role))
+
+            roles.add(entry.role)
 
 
 class ReviewFigureCollection(ResultCollection, CollectionOrdered):

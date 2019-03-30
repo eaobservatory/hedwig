@@ -28,7 +28,8 @@ from ..db.meta import affiliation, \
     proposal, proposal_annotation, proposal_category, \
     proposal_fig, proposal_fig_link, proposal_pdf, proposal_pdf_link, \
     proposal_text, proposal_text_link, queue, \
-    review, reviewer, review_calculation, review_fig, review_fig_link, \
+    review, reviewer, review_calculation, review_deadline, \
+    review_fig, review_fig_link, \
     semester, target, user_log
 
 Affiliation = namedtuple(
@@ -252,6 +253,10 @@ ReviewerInfo = namedtuple(
 ReviewCalculation = namedtuple(
     'ReviewCalculation',
     [x.name for x in review_calculation.columns])
+
+ReviewDeadline = namedtuple(
+    'ReviewDeadline',
+    [x.name for x in review_deadline.columns])
 
 ReviewFigureInfo = namedtuple(
     'ReviewFigureInfo',

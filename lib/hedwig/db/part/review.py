@@ -27,14 +27,15 @@ from sqlalchemy.sql.functions import count
 from ...error import ConsistencyError, Error, FormattedError, \
     NoSuchRecord, UserError
 from ...type.collection import GroupMemberCollection, \
-    ReviewerCollection, ReviewFigureCollection
+    ReviewerCollection, ReviewDeadlineCollection, ReviewFigureCollection
 from ...type.enum import Assessment, FormatType, GroupType, ReviewState
-from ...type.simple import GroupMember, Reviewer, ReviewFigureInfo
+from ...type.simple import GroupMember, Reviewer, ReviewDeadline, \
+    ReviewFigureInfo
 from ...util import is_list_like
 from ..meta import call, decision, group_member, \
     institution, invitation, person, \
     proposal, queue, \
-    review, reviewer, \
+    review, reviewer, review_deadline, \
     review_fig, review_fig_link, review_fig_preview, review_fig_thumbnail
 
 
@@ -442,6 +443,34 @@ class ReviewPart(object):
             (review.c.reviewer_id.isnot(None), review.c.state),
         ], else_=ReviewState.NOT_DONE)
 
+    def search_review_deadline(
+            self, call_id=None, _conn=None):
+        """
+        Search for review deadlines.
+        """
+
+        stmt = review_deadline.select()
+
+        iter_field = None
+        iter_list = None
+
+        if call_id is not None:
+            if is_list_like(call_id):
+                assert iter_field is None
+                iter_field = review_deadline.c.call_id
+                iter_list = call_id
+            else:
+                stmt = stmt.where(review_deadline.c.call_id == call_id)
+
+        ans = ReviewDeadlineCollection()
+
+        with self._transaction(_conn=_conn) as conn:
+            for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
+                for row in conn.execute(iter_stmt):
+                    ans[row['id']] = ReviewDeadline(**row)
+
+        return ans
+
     def search_review_figure(
             self, reviewer_id=None, state=None, fig_id=None,
             with_caption=False, with_uploader_name=False,
@@ -608,6 +637,24 @@ class ReviewPart(object):
     def set_review_figure_thumbnail(self, fig_id, thumbnail):
         self._set_figure_alternate(
             review_fig_thumbnail.c.thumbnail, fig_id, thumbnail)
+
+    def sync_call_review_deadline(
+            self, role_class, call_id, records, _conn=None):
+        """
+        Update the review deadlines for a call.
+        """
+
+        records.validate(role_class)
+
+        with self._transaction(_conn=_conn) as conn:
+            if not self._exists_id(conn, call, call_id):
+                raise ConsistencyError(
+                    'call does not exist with id={}', call_id)
+
+            return self._sync_records(
+                conn, review_deadline,
+                key_column=review_deadline.c.call_id, key_value=call_id,
+                records=records, unique_columns=(review_deadline.c.role,))
 
     def sync_group_member(self, queue_id, group_type, records):
         """
