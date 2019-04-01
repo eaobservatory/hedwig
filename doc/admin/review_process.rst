@@ -89,4 +89,14 @@ If you did not select them from the user directory then
 this message will include an invitation code which they
 can use to register or add to an existing account.
 
+The email message will also show the review deadline,
+if one has been set for external reviews on the
+:doc:`review deadlines <review_deadline>` page for this
+review process.
+It is therefore recommended that the deadlines be
+configured before external reviewers are invited.
+Please check that the review deadline is shown correctly
+on the reviewer add page before selecting or inviting
+a reviewer.
+
 .. image:: image/reviewer_external.png

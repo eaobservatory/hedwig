@@ -19,8 +19,10 @@ the review of this proposal, but in case you did not receive it,
 the details are repeated below.
 Please contact us at the address below if you are
 unable to provide a review.
-{% else %}
-We hope you can oblige and provide a review within 2 weeks.
+{% endif %}
+{% if review_deadline is not none %}
+We would be grateful if you could aim to complete your review
+by {{ review_deadline.date | format_datetime }} UT.
 {% endif %}
 {% endblock %}
 

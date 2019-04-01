@@ -23,6 +23,10 @@ the details are repeated below.
 Please contact us at the address below if you are
 unable to provide a review.
 {% endif %}
+{% if review_deadline is not none %}
+We would be grateful if you could aim to complete your review
+by {{ review_deadline.date | format_datetime }} UT.
+{% endif %}
 {% endblock %}
 
 {% block invitation_links %}

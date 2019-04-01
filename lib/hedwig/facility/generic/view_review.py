@@ -852,6 +852,10 @@ class GenericReview(object):
         role_info = role_class.get_info(role)
         proposal_code = self.make_proposal_code(db, proposal)
 
+        deadline = db.search_review_deadline(
+            call_id=proposal.call_id,
+            role=role).get_single(default=None)
+
         email_ctx = {
             'recipient_name': person_name,
             'proposal': proposal,
@@ -866,6 +870,7 @@ class GenericReview(object):
                 reviewer_id=reviewer_id, _external=True),
             'target_guideline': self.make_review_guidelines_url(role=role),
             'is_reminder': is_reminder,
+            'review_deadline': deadline,
         }
 
         # If the person is not registered, generate a new token if this is
