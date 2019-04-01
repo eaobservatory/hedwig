@@ -66,3 +66,12 @@ def with_cache(obj, cache):
 
     return namedtuple(type(obj).__name__ + 'WithCache',
                       obj._fields + ('cache',))(*obj, cache=cache)
+
+
+def with_deadline(obj, deadline):
+    """
+    Add a `deadline` field to a tuple.
+    """
+
+    return namedtuple(type(obj).__name__ + 'WithDeadline',
+                      obj._fields + ('deadline',))(*obj, deadline=deadline)

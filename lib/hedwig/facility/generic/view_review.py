@@ -366,7 +366,7 @@ class GenericReview(object):
                     if date.date == '' and date.time == '':
                         continue
 
-                    record = deadlines.get_role(role_id, None)
+                    record = deadlines.get_role(role_id, default=None)
 
                     if record is None:
                         added_records[role_id] = null_tuple(
@@ -809,6 +809,11 @@ class GenericReview(object):
 
         proposal_code = self.make_proposal_code(db, proposal)
 
+        # Get the review deadline, if specified.
+        deadline = db.search_review_deadline(
+            call_id=proposal.call_id,
+            role=role).get_single(default=None)
+
         return {
             'title': '{}: Add {} Reviewer'.format(
                 proposal_code, role_info.name.title()),
@@ -830,6 +835,7 @@ class GenericReview(object):
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id),
             'titles': PersonTitle.get_options(),
+            'review_deadline': deadline,
         }
 
     def _message_review_invite(self, db, proposal, role,
@@ -1252,6 +1258,11 @@ class GenericReview(object):
         else:
             figures = None
 
+        # Get the review deadline, if specified.
+        deadline = db.search_review_deadline(
+            call_id=proposal.call_id,
+            role=reviewer.role).get_single(default=None)
+
         ctx = {
             'title': '{}: {} {}'.format(
                 proposal_code,
@@ -1272,6 +1283,7 @@ class GenericReview(object):
             'calculators': (self.calculators if role_info.calc else None),
             'calculations': calculations,
             'figures': figures,
+            'review_deadline': deadline,
         }
 
         ctx.update(self._view_review_edit_extra(

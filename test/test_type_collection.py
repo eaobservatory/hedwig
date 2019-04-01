@@ -561,6 +561,7 @@ class CollectionTypeTestCase(TestCase):
         self.assertAlmostEqual(std_dev, 25.981, places=3)
 
     def test_review_deadline_collection(self):
+        # Test validation.
         c = ReviewDeadlineCollection()
 
         c.validate(BaseReviewerRole)
@@ -582,3 +583,22 @@ class CollectionTypeTestCase(TestCase):
             role=BaseReviewerRole.CTTEE_SECONDARY)
 
         c.validate(BaseReviewerRole)
+
+        # Test get_role method.
+        c = ReviewDeadlineCollection((
+            (1, null_tuple(ReviewDeadline)._replace(id=1, role=1, call_id=1)),
+            (2, null_tuple(ReviewDeadline)._replace(id=2, role=2, call_id=1)),
+            (3, null_tuple(ReviewDeadline)._replace(id=3, role=1, call_id=2)),
+            (4, null_tuple(ReviewDeadline)._replace(id=4, role=2, call_id=2)),
+        ))
+
+        self.assertEqual(c.get_role(1).id, 1)
+        self.assertEqual(c.get_role(2).id, 2)
+        self.assertEqual(c.get_role(1, call_id=1).id, 1)
+        self.assertEqual(c.get_role(2, call_id=1).id, 2)
+        self.assertEqual(c.get_role(1, call_id=2).id, 3)
+        self.assertEqual(c.get_role(2, call_id=2).id, 4)
+
+        self.assertEqual(c.get_role(3, default="my default"), "my default")
+        with self.assertRaises(NoSuchValue):
+            c.get_role(3)

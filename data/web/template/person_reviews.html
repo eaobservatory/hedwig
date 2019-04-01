@@ -36,6 +36,7 @@
                     <th>Title</th>
                     <th>Review state</th>
                     <th>Review role</th>
+                    <th>Due by</th>
                 </tr>
                 {% for proposal in facility.proposals.values_in_sorted_order() %}
                     {% for reviewer in proposal.reviewers.values_in_role_order(facility.role_class) %}
@@ -53,6 +54,13 @@
                             {% endif %}
                             <td class="{{ reviewer.review_state | review_state_class }}">{{ reviewer.review_state | review_state_name }}</td>
                             <td><a href="{{ url_for(facility.code + '.proposal_review_new', proposal_id=proposal.id, reviewer_role=reviewer.role) if reviewer.id is none else url_for(facility.code + '.review_edit', reviewer_id=reviewer.id) }}">{{ reviewer.role | reviewer_role_name(facility.role_class) }}</a></td>
+                            <td>
+                                {% if reviewer.deadline is none %}
+                                    <span class="missing_data">Not specified</span>
+                                {% else %}
+                                    {{ reviewer.deadline.date | format_datetime }} UT
+                                {% endif %}
+                            </td>
                         </tr>
                     {% endfor %}
                 {% endfor %}

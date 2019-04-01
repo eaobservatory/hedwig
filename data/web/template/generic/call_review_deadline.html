@@ -26,7 +26,7 @@
             <th>Deadline</th>
         </tr>
         {% for (role_id, role_name) in facility_role_class.get_options().items() %}
-            {% set deadline = deadlines.get_role(role_id, None) %}
+            {% set deadline = deadlines.get_role(role_id, default=None) %}
             <tr>
                 <td>{{ role_name }}</td>
                 <td>

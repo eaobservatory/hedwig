@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime
 
+from hedwig.compat import first_value
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, Error, \
     NoSuchRecord, UserError
 from hedwig.type.collection import GroupMemberCollection, \
@@ -634,6 +635,12 @@ class DBReviewTest(DBTestCase):
                 ['2020-02-20T00:00:00', '2020-02-10T00:00:00']):
             self.assertIsInstance(entry, ReviewDeadline)
             self.assertEqual(entry.date.isoformat(), date)
+
+        result = self.db.search_review_deadline(
+            call_id=call_id, role=BaseReviewerRole.TECH)
+        self.assertIsInstance(result, ReviewDeadlineCollection)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(first_value(result).date, datetime(2020, 2, 20))
 
         (n_insert, n_update, n_delete) = self.db.sync_call_review_deadline(
             BaseReviewerRole, call_id, ReviewDeadlineCollection())

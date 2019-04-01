@@ -664,9 +664,10 @@ class ReviewDeadlineCollection(
     Class to hold the results of a search for review deadlines.
     """
 
-    def get_role(self, role, default=()):
+    def get_role(self, role, call_id=None, default=()):
         for value in self.values():
-            if value.role == role:
+            if (value.role == role and
+                    ((call_id is None) or (value.call_id == call_id))):
                 return value
 
         if default == ():

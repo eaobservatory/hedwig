@@ -444,7 +444,7 @@ class ReviewPart(object):
         ], else_=ReviewState.NOT_DONE)
 
     def search_review_deadline(
-            self, call_id=None, _conn=None):
+            self, call_id=None, role=None, _conn=None):
         """
         Search for review deadlines.
         """
@@ -461,6 +461,12 @@ class ReviewPart(object):
                 iter_list = call_id
             else:
                 stmt = stmt.where(review_deadline.c.call_id == call_id)
+
+        if role is not None:
+            if is_list_like(role):
+                stmt = stmt.where(review_deadline.c.role.in_(role))
+            else:
+                stmt = stmt.where(review_deadline.c.role == role)
 
         ans = ReviewDeadlineCollection()
 

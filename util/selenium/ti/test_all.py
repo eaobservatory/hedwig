@@ -1627,7 +1627,8 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_name('email').send_keys(
             'reviewer@somewhere.edu')
 
-        self._save_screenshot(self.admin_image_root, 'reviewer_external')
+        self._save_screenshot(self.admin_image_root, 'reviewer_external', [
+            'review_deadline_cell'])
 
         self.browser.find_element_by_name('submit_invite').click()
 

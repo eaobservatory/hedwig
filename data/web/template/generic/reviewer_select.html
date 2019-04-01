@@ -6,7 +6,18 @@
 {% from 'macro/proposal_summary.html' import render_proposal_summary %}
 
 {% block content %}
-    {{ render_proposal_summary(facility_name, facility_call_type_class, proposal, proposal_code, abstract=abstract, categories=categories) }}
+    {% call render_proposal_summary(facility_name, facility_call_type_class, proposal, proposal_code, abstract=abstract, categories=categories) %}
+        <tr>
+            <th>Review due by</th>
+            <td id="review_deadline_cell">
+                {% if review_deadline is not none %}
+                    {{ review_deadline.date | format_datetime }} UT
+                {% else %}
+                    <p class="missing">Not specified</p>
+                {% endif %}
+            </td>
+        </tr>
+    {% endcall %}
 
     {{ super() }}
 {% endblock %}

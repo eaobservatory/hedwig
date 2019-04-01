@@ -30,6 +30,12 @@
             </td>
         </tr>
     {% endif %}
+    {% if review_deadline is not none %}
+        <tr>
+            <th>Review due by</th>
+            <td>{{ review_deadline.date | format_datetime }} UT</td>
+        </tr>
+    {% endif %}
 {% endcall %}
 
 {% block calculations %}

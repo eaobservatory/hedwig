@@ -31,7 +31,7 @@ from ..type.collection import EmailCollection, \
 from ..type.enum import PermissionType, PersonTitle, ProposalState
 from ..type.simple import Email, \
     Institution, InstitutionLog, Person, ProposalWithCode
-from ..type.util import null_tuple
+from ..type.util import null_tuple, with_deadline
 from ..view.util import int_or_none
 from ..web.util import flash, session, url_for, url_add_args, url_relative, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
@@ -847,12 +847,17 @@ class PeopleView(object):
         all_proposals = db.search_proposal(
             reviewer_person_id=person_id,
             with_members=True, state=ProposalState.review_states())
+        calls = set((x.call_id for x in all_proposals.values()))
 
         if include_addable:
             all_addable = auth.find_addable_reviews(
                 db, facilities, auth_cache=auth_cache)
+            calls.update((x.call_id for x in all_addable.values()))
         else:
             all_addable = None
+
+        # Get the review deadlines for the calls of interest.
+        deadlines = db.search_review_deadline(call_id=calls)
 
         # Organize proposals by facility and attach extra information
         # as necessary.  Note that we re-assemble the reviewers for each
@@ -885,7 +890,9 @@ class PeopleView(object):
                             members=None, reviewer=None)
 
                     proposal_reviewers[proposal.reviewer.id] = \
-                        proposal.reviewer
+                        with_deadline(proposal.reviewer, deadlines.get_role(
+                            proposal.reviewer.role, call_id=proposal.call_id,
+                            default=None))
 
             if all_addable is not None:
                 for proposal in all_addable.values_by_facility(facility.id):
@@ -904,7 +911,10 @@ class PeopleView(object):
 
                     for (i, reviewer) in enumerate(
                             proposal.reviewers.values()):
-                        proposal_reviewers['addable_{}'.format(i)] = reviewer
+                        proposal_reviewers['addable_{}'.format(i)] = \
+                            with_deadline(reviewer, deadlines.get_role(
+                                reviewer.role, call_id=proposal.call_id,
+                                default=None))
 
             # If, after filtering, no proposals are left, skip this facility.
             if not facility_proposals:
