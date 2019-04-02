@@ -1859,7 +1859,8 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_link_text(
             'Advance to final review phase').click()
 
-        self._save_screenshot(self.admin_image_root, 'review_final')
+        self._save_screenshot(
+            self.admin_image_root, 'review_final', ['roles_closing_list'])
 
         self.browser.find_element_by_name('submit_confirm').click()
 

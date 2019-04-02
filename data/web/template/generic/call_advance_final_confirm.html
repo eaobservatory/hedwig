@@ -5,14 +5,30 @@
 {% block confirm_extra %}
 <ul>
     <li>
-        This will update the state of the proposals to the final review state.
+        <p>
+            This will update the state of the proposals to the final review state.
+        </p>
     </li>
     <li>
-        External reviewers will no longer be able to access proposals
-        and edit their reviews.
+        <p>
+            Committee ratings will be made visible.
+        </p>
     </li>
     <li>
-        Committee ratings will be made visible.
+        <p>
+            Reviewers with the following roles will no longer be able to access proposals
+            and edit their reviews:
+        </p>
+        <ul id="roles_closing_list">
+            {% for role_closing in roles_closing %}
+                <li>
+                    {{ role_closing.role_name }}
+                    {% if role_closing.deadline is not none %}
+                        (deadline {{ role_closing.deadline.date | format_datetime }}{{ ' &mdash; <b>not yet passed</b>' | safe if role_closing.future }})
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
     </li>
 </ul>
 {% endblock %}

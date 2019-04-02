@@ -62,6 +62,9 @@ ReviewerWithCalcFig = namedtuple(
     'ReviewerWithCalcFig', Reviewer._fields + (
         'calculations', 'figures', 'can_view', 'can_edit'))
 
+RoleClosingInfo = namedtuple(
+    'RoleClosingInfo', ('role_name', 'deadline', 'future'))
+
 
 class GenericReview(object):
     @with_call_review(permission=PermissionType.VIEW)
@@ -1703,6 +1706,26 @@ class GenericReview(object):
                 )._replace(member=with_can_view(
                     x.member, (is_admin or x.member.person_public))))
 
+        # For information, determine which review roles are closing and what
+        # their deadlines are.
+        role_class = self.get_reviewer_roles()
+        deadlines = db.search_review_deadline(call_id=call.id)
+        now = datetime.utcnow()
+        roles_closing = []
+        for role_id in role_class.get_options():
+            role_info = role_class.get_info(role_id)
+            if role_info.edit_fr or not role_info.edit_rev:
+                continue
+
+            deadline_future = False
+            role_deadline = deadlines.get_role(role_id, default=None)
+            if role_deadline is not None:
+                if role_deadline.date > now:
+                    deadline_future = True
+
+            roles_closing.append(RoleClosingInfo(
+                role_info.name, role_deadline, deadline_future))
+
         return {
             'title': 'Final Review: {} {} {}'.format(
                 call.semester_name, call.queue_name,
@@ -1712,6 +1735,7 @@ class GenericReview(object):
             'target': url_for('.review_call_advance_final', call_id=call.id),
             'call': call,
             'proposals': call_proposals,
+            'roles_closing': roles_closing,
         }
 
     @with_call_review(permission=PermissionType.EDIT)
