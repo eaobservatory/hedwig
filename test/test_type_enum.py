@@ -397,6 +397,7 @@ class EnumTypeTestCase(TestCase):
             BaseReviewerRole.get_editable_roles(ProposalState.REVIEW), [
                 BaseReviewerRole.TECH,
                 BaseReviewerRole.EXTERNAL,
+                BaseReviewerRole.PEER,
                 BaseReviewerRole.CTTEE_PRIMARY,
                 BaseReviewerRole.CTTEE_SECONDARY,
                 BaseReviewerRole.CTTEE_OTHER])

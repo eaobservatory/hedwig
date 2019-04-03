@@ -5,4 +5,5 @@ Other Types of Review
     :maxdepth: 2
 
     technical
+    peer
     committee

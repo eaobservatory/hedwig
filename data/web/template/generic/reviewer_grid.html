@@ -55,18 +55,25 @@
     <table id="reviewer_grid" data-nroles="{{ n_role }}">
         <thead>
             <tr>
-                <th>Proposal</th>
-                <th>PI Name</th>
-                <th>Title</th>
+                <th rowspan="{{ 2 if is_peer_review else 1 }}">Proposal</th>
+                <th rowspan="{{ 2 if is_peer_review else 1 }}">PI Name</th>
+                <th rowspan="{{ 2 if is_peer_review else 1 }}">Title</th>
                 {% for member in group_members.values() %}
                     <th class="sideways"><div><div>{{ member.person_name| abbr(25)  }}</div></div></th>
                 {% endfor %}
                 {% if n_unique %}
-                    <th class="sideways spacer_left"><div><div>Unassigned</div></div></th>
+                    <th class="sideways spacer_left" rowspan="{{ 2 if is_peer_review else 1 }}"><div><div>Unassigned</div></div></th>
                 {% endif %}
             </tr>
+            {% if is_peer_review %}
+                <tr>
+                    {% for member in group_members.values() %}
+                        <th class="sideways"><div><div>{{ proposals.get(member.proposal_id).code | default('Unknown') }}</div></div></th>
+                    {% endfor %}
+                </tr>
+            {% endif %}
         </thead>
-        {% for proposal in proposals %}
+        {% for proposal in proposals.values() %}
             <tr>
                 <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
                 <td>

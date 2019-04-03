@@ -1,25 +1,6 @@
 {% extends 'layout_wide.html' %}
 {% set help_link=url_for('help.admin_page', page_name='review_process') %}
 
-{% macro render_reviewer_cell(reviewers) %}
-    <td>
-        {% if reviewers %}
-            {% for reviewer in reviewers %}
-                {% if reviewer.can_view %}
-                    <a href="{{ url_for('people.person_view', person_id=reviewer.person_id) }}">{{ reviewer.person_name | abbr }}</a>
-                {% else %}
-                    {{ reviewer.person_name | abbr }}
-                {% endif %}
-                {% if not loop.last %}
-                    <br />
-                {% endif %}
-            {% endfor %}
-        {% else %}
-            &nbsp;
-        {% endif %}
-    </td>
-{% endmacro %}
-
 {% block content %}
 <nav>
     <p>
@@ -62,8 +43,9 @@
             <th>Decision</th>
             <th>PI Name</th>
             <th>Title</th>
-            <th>Primary Reviewer</th>
-            <th>Secondary Reviewer</th>
+            {% for reviewer_role in reviewer_roles %}
+                <th>{{ facility_role_class.get_name(reviewer_role) }}</th>
+            {% endfor %}
             <th>Categories</th>
         </tr>
         {% for proposal in proposals %}
@@ -106,8 +88,25 @@
                     {% endif %}
                 </td>
                 <td>{{ proposal.title | abbr }}</td>
-                {{ render_reviewer_cell(proposal.reviewers_primary) }}
-                {{ render_reviewer_cell(proposal.reviewers_secondary) }}
+                {% for reviewer_role in reviewer_roles %}
+                    {% set reviewers = proposal.reviewers.values_by_role(reviewer_role) %}
+                    <td>
+                        {% if reviewers %}
+                            {% for reviewer in reviewers %}
+                                {% if reviewer.can_view %}
+                                    <a href="{{ url_for('people.person_view', person_id=reviewer.person_id) }}">{{ reviewer.person_name | abbr }}</a>
+                                {% else %}
+                                    {{ reviewer.person_name | abbr }}
+                                {% endif %}
+                                {% if not loop.last %}
+                                    <br />
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            &nbsp;
+                        {% endif %}
+                    </td>
+                {% endfor %}
                 <td>
                     {% if proposal.categories %}
                         {% for category in proposal.categories.values() %}

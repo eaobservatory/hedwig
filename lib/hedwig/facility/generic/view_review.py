@@ -25,7 +25,8 @@ import re
 
 from ...admin.proposal import finalize_call_review
 from ...email.format import render_email_template
-from ...error import DatabaseIntegrityError, NoSuchRecord, UserError
+from ...error import DatabaseIntegrityError, NoSuchRecord, NoSuchValue, \
+    UserError
 from ...file.csv import CSVWriter
 from ...view import auth
 from ...view.util import int_or_none, \
@@ -33,7 +34,8 @@ from ...view.util import int_or_none, \
 from ...web.util import ErrorPage, \
     HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, format_datetime, parse_datetime, session, url_for
-from ...type.collection import ReviewerCollection, ReviewDeadlineCollection
+from ...type.collection import MemberCollection, \
+    ReviewerCollection, ReviewDeadlineCollection
 from ...type.enum import AffiliationType, Assessment, \
     FormatType, GroupType, \
     MessageThreadType, PermissionType, PersonTitle, ProposalState, ReviewState
@@ -47,10 +49,9 @@ ProposalWithInviteRoles = namedtuple(
     'ProposalWithInviteRoles',
     ProposalWithCode._fields + ('invite_roles',))
 
-ProposalWithReviewers = namedtuple(
-    'ProposalWithReviewers',
+ProposalWithExtraPermissions = namedtuple(
+    'ProposalWithExtraPermissions',
     ProposalWithCode._fields + (
-        'reviewers_primary', 'reviewers_secondary',
         'can_view_review', 'can_edit_decision'))
 
 ProposalWithReviewerPersons = namedtuple(
@@ -74,13 +75,17 @@ class GenericReview(object):
 
         is_admin = session.get('is_admin', False)
 
+        # Which reviewer roles do we wish to show in the list of proposals?
+        reviewer_roles = [
+            x for x in [role_class.CTTEE_PRIMARY, role_class.CTTEE_SECONDARY]
+            if type_class.has_reviewer_role(call.type, x)]
+
         proposals = []
 
         for proposal in db.search_proposal(
                 call_id=call.id, state=ProposalState.submitted_states(),
-                with_members=True, with_reviewers=True,
-                with_reviewer_role=(role_class.CTTEE_PRIMARY,
-                                    role_class.CTTEE_SECONDARY),
+                with_members=True, with_reviewers=bool(reviewer_roles),
+                with_reviewer_role=reviewer_roles,
                 with_decision=True, with_categories=True).values():
             member_pi = proposal.members.get_pi(default=None)
             if member_pi is not None:
@@ -94,17 +99,14 @@ class GenericReview(object):
             decision_can = auth.for_proposal_decision(
                 db, proposal, call=call, auth_cache=can.cache)
 
-            proposals.append(ProposalWithReviewers(
-                *proposal._replace(member=member_pi),
+            reviewers = None
+            if proposal.reviewers is not None:
+                reviewers = proposal.reviewers.map_values(lambda x:
+                    with_can_view(x, (is_admin or x.person_public)))
+
+            proposals.append(ProposalWithExtraPermissions(
+                *proposal._replace(member=member_pi, reviewers=reviewers),
                 code=self.make_proposal_code(db, proposal),
-                reviewers_primary=[
-                    with_can_view(x, (is_admin or x.person_public))
-                    for x in proposal.reviewers.values_by_role(
-                        role_class.CTTEE_PRIMARY)],
-                reviewers_secondary=[
-                    with_can_view(x, (is_admin or x.person_public))
-                    for x in proposal.reviewers.values_by_role(
-                        role_class.CTTEE_SECONDARY)],
                 can_view_review=review_can.view,
                 can_edit_decision=decision_can.edit))
 
@@ -115,6 +117,7 @@ class GenericReview(object):
             'can_edit': can.edit,
             'call_id': call.id,
             'proposals': proposals,
+            'reviewer_roles': reviewer_roles,
         }
 
     @with_call_review(permission=PermissionType.VIEW)
@@ -348,7 +351,7 @@ class GenericReview(object):
         raise ErrorPage('Time available not implemented for this facility.')
 
     @with_call_review(permission=PermissionType.EDIT)
-    def view_review_call_deadline(self, db, call, can,form):
+    def view_review_call_deadline(self, db, call, can, form):
         type_class = self.get_call_types()
         role_class = self.get_reviewer_roles()
         message = None
@@ -363,8 +366,8 @@ class GenericReview(object):
 
                 for role_id in role_class.get_options():
                     date = DateAndTime(
-                        form['date_date_{}'.format(role_id)],
-                        form['date_time_{}'.format(role_id)])
+                        form.get('date_date_{}'.format(role_id), ''),
+                        form.get('date_time_{}'.format(role_id), ''))
 
                     if date.date == '' and date.time == '':
                         continue
@@ -418,7 +421,8 @@ class GenericReview(object):
             state = int(state)
 
         proposals = []
-        invite_roles = role_class.get_invited_roles()
+        invite_roles = [x for x in role_class.get_invited_roles()
+                        if type_class.has_reviewer_role(call.type, x)]
         state_editable_roles = {}
 
         for proposal in db.search_proposal(
@@ -436,19 +440,21 @@ class GenericReview(object):
                 invite_roles=[x for x in invite_roles if x in roles],
                 code=self.make_proposal_code(db, proposal)))
 
+        targets = [
+            Link(
+                'Assign {}'.format(GroupType.get_name(group).lower()),
+                url_for('.review_call_grid', call_id=call.id,
+                        reviewer_role=role_num))
+            for (role_num, group) in role_class.get_assigned_roles().items()
+            if type_class.has_reviewer_role(call.type, role_num)]
+
         return {
             'title': 'Reviewers: {} {} {}'.format(
                 call.semester_name, call.queue_name,
                 type_class.get_name(call.type)),
             'call': call,
             'proposals': proposals,
-            'targets': [
-                Link('Assign technical assessors',
-                     url_for('.review_call_grid', call_id=call.id,
-                             reviewer_role=role_class.TECH)),
-                Link('Assign committee members',
-                     url_for('.review_call_grid', call_id=call.id,
-                             reviewer_role=role_class.CTTEE_PRIMARY))],
+            'targets': targets,
             'roles': role_class.get_options(),
             'states': ReviewState.get_options(),
             'current_role': role,
@@ -467,38 +473,28 @@ class GenericReview(object):
             (primary_role, role_class.get_info(primary_role)),))
         roles_conflict = {}
 
-        if primary_role == role_class.TECH:
-            group_type = GroupType.TECH
+        if not type_class.has_reviewer_role(call.type, primary_role):
+            raise ErrorPage('Reviewer role is not expected for this call.')
 
-        elif primary_role == role_class.CTTEE_PRIMARY:
-            group_type = GroupType.CTTEE
+        group_type = role_class.get_review_group(primary_role)
+
+        if group_type is None:
+            raise ErrorPage('Reviewer role is not assigned.')
+
+        # Special case for the committee primary role: also assign secondary.
+        if primary_role == role_class.CTTEE_PRIMARY:
             roles[role_class.CTTEE_SECONDARY] = role_class.get_info(
                 role_class.CTTEE_SECONDARY)
             roles_conflict[role_class.CTTEE_OTHER] = role_class.get_info(
                 role_class.CTTEE_OTHER)
-
-        else:
-            raise ErrorPage('Unexpected reviewer role')
 
         # All roles to consider: those we are processing plus those
         # which may conflict with them.
         all_roles = set(roles.keys())
         all_roles.update(roles_conflict.keys())
 
-        group_info = GroupType.get_info(group_type)
-
-        group_members = db.search_group_member(queue_id=call.queue_id,
-                                               group_type=group_type,
-                                               with_person=True)
-
-        group_person_ids = [x.person_id for x in group_members.values()]
-
-        proposals = []
-        for proposal in db.search_proposal(
-                call_id=call.id,
-                state=role_class.get_editable_states(primary_role),
-                with_members=True, with_reviewers=True,
-                with_review_info=True, with_reviewer_role=all_roles).values():
+        # Retrieve proposals.
+        def augment_proposal(proposal):
             # Emulate search_proposal(with_member_pi=True) behaviour by setting
             # the "member" attribute to just the PI.
             member_pi = proposal.members.get_pi(default=None)
@@ -507,12 +503,35 @@ class GenericReview(object):
                     member_pi, (session.get('is_admin', False)
                                 or member_pi.person_public)))
 
-            proposals.append(ProposalWithReviewerPersons(
+            return ProposalWithReviewerPersons(
                 *proposal, code=self.make_proposal_code(db, proposal),
                 reviewer_person_ids={role_id: {
                     x.person_id: ReviewState.is_present(x.review_state)
                     for x in proposal.reviewers.values_by_role(role_id)}
-                    for role_id in all_roles}))
+                    for role_id in all_roles})
+
+        proposals = db.search_proposal(
+            call_id=call.id,
+            state=role_class.get_editable_states(primary_role),
+            with_members=True, with_reviewers=True,
+            with_review_info=True, with_reviewer_role=all_roles
+        ).map_values(augment_proposal)
+
+        # Determine group membership.
+        if group_type == GroupType.PEER:
+            group_members = MemberCollection()
+            for proposal in proposals.values():
+                member_reviewer = proposal.members.get_pi(default=None)
+                if member_reviewer is not None:
+                    group_members[member_reviewer.id] = member_reviewer
+
+        else:
+            group_members = db.search_group_member(
+                queue_id=call.queue_id, group_type=group_type,
+                with_person=True)
+
+        group_name = GroupType.get_name(group_type)
+        group_person_ids = [x.person_id for x in group_members.values()]
 
         message = None
 
@@ -521,7 +540,7 @@ class GenericReview(object):
             # so that we can return the whole updated grid to the user
             # in case of an error performing the update.
             reviewers_orig = {}
-            for proposal in proposals:
+            for proposal in proposals.values():
                 orig = reviewers_orig[proposal.id] = \
                     proposal.reviewer_person_ids.copy()
 
@@ -550,7 +569,7 @@ class GenericReview(object):
                 reviewer_remove = []
                 reviewer_add = []
 
-                for proposal in proposals:
+                for proposal in proposals.values():
                     proposal_reviewers_orig = reviewers_orig[proposal.id]
                     proposal_reviewers_updated = proposal.reviewer_person_ids
 
@@ -629,7 +648,7 @@ class GenericReview(object):
                         'Could not update reviewer assignments.')
 
                 flash('The {} assignments have been updated.',
-                      group_info.name.lower())
+                      group_name.lower())
                 raise HTTPRedirect(url_for('.review_call_reviewers',
                                            call_id=call.id))
 
@@ -638,7 +657,7 @@ class GenericReview(object):
 
         return {
             'title': '{}: {} {} {}'.format(
-                group_info.name.title(),
+                group_name.title(),
                 call.semester_name, call.queue_name,
                 type_class.get_name(call.type)),
             'call': call,
@@ -651,13 +670,15 @@ class GenericReview(object):
                 proposal.id: set(chain.from_iterable(
                     proposal.reviewer_person_ids[role].keys()
                     for role in roles_conflict))
-                for proposal in proposals},
+                for proposal in proposals.values()},
             'message': message,
+            'is_peer_review': (group_type == GroupType.PEER),
         }
 
     @with_proposal(permission=PermissionType.NONE)
     def view_reviewer_add(self, db, proposal, role, form):
         role_class = self.get_reviewer_roles()
+        type_class = self.get_call_types()
         text_role_class = self.get_text_roles()
 
         try:
@@ -665,8 +686,11 @@ class GenericReview(object):
         except KeyError:
             raise HTTPError('Unknown reviewer role')
 
+        if not type_class.has_reviewer_role(proposal.call_type, role):
+            raise ErrorPage('Reviewer role is not expected for this call.')
+
         if not role_info.invite:
-            raise HTTPError('Unexpected reviewer role.')
+            raise ErrorPage('Reviewer role is not invited.')
 
         if proposal.state not in role_class.get_editable_states(role):
             raise ErrorPage(
@@ -1052,6 +1076,7 @@ class GenericReview(object):
                    with_decision=True, with_decision_note=True)
     def view_review_new(self, db, proposal, reviewer_role, args, form):
         role_class = self.get_reviewer_roles()
+        type_class = self.get_call_types()
 
         try:
             role_info = role_class.get_info(reviewer_role)
@@ -1063,7 +1088,8 @@ class GenericReview(object):
                 'There is already a "{}" reviewer for this proposal.',
                 role_info.name)
 
-        can_add_roles = auth.can_add_review_roles(role_class, db, proposal)
+        can_add_roles = auth.can_add_review_roles(
+            type_class, role_class, db, proposal)
 
         if reviewer_role not in can_add_roles:
             raise HTTPForbidden(
@@ -1450,6 +1476,7 @@ class GenericReview(object):
 
     @with_proposal(permission=PermissionType.NONE, with_decision=True)
     def view_proposal_reviews(self, db, proposal):
+        type_class = self.get_call_types()
         role_class = self.get_reviewer_roles()
         text_role_class = self.get_text_roles()
 
@@ -1528,7 +1555,7 @@ class GenericReview(object):
             'reviews': reviewers,
             'overall_rating': self.calculate_overall_rating(reviewers),
             'can_add_roles': auth.can_add_review_roles(
-                role_class, db, proposal, auth_cache=auth_cache),
+                type_class, role_class, db, proposal, auth_cache=auth_cache),
             'can_edit_decision': auth.for_proposal_decision(
                 db, proposal, auth_cache=auth_cache).edit,
         }

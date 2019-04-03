@@ -88,7 +88,8 @@ class WebAppAuthTestCase(WebAppTestCase):
         # identifiers.
         self.longMessage = True
 
-        # Use basic reviewer role class.
+        # Use basic call type and reviewer role classes.
+        type_class = BaseCallType
         role_class = BaseReviewerRole
 
         # Select whether to simulate proposal state updates.
@@ -108,15 +109,15 @@ class WebAppAuthTestCase(WebAppTestCase):
         affiliation_a = self.db.add_affiliation(queue_a, 'Test')
         affiliation_b = self.db.add_affiliation(queue_b, 'Test')
 
-        call_options = (BaseCallType.STANDARD,
+        call_options = (type_class.STANDARD,
                         datetime(1999, 9, 1), datetime(1999, 9, 30),
                         100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', '',
                         FormatType.PLAIN)
 
         call_a = self.db.add_call(
-            BaseCallType, semester_id, queue_a, *call_options)
+            type_class, semester_id, queue_a, *call_options)
         call_b = self.db.add_call(
-            BaseCallType, semester_id, queue_b, *call_options)
+            type_class, semester_id, queue_b, *call_options)
 
         institution_1 = self.db.add_institution('Inst 1', '', '', '', 'AX')
         institution_2 = self.db.add_institution('Inst 2', '', '', '', 'AX')
@@ -599,7 +600,8 @@ class WebAppAuthTestCase(WebAppTestCase):
                     ProposalState.FINAL_REVIEW: [role_class.FEEDBACK],
                 }),
                 ]:
-            self._test_auth_add_review(role_class, auth_cache, *test_case)
+            self._test_auth_add_review(
+                type_class, role_class, auth_cache, *test_case)
 
     def _test_auth_call_review(self, auth_cache,
                                case_number, person_id, is_admin,
@@ -721,7 +723,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                     expect, 'auth review case {} state {}'.format(
                         case_number, state_name))
 
-    def _test_auth_add_review(self, role_class, auth_cache,
+    def _test_auth_add_review(self, type_class, role_class, auth_cache,
                               case_number, person_id, is_admin,
                               proposal_id, expect_by_state):
         if self.quick_proposal_state:
@@ -741,7 +743,8 @@ class WebAppAuthTestCase(WebAppTestCase):
             with self._as_person(person_id, is_admin):
                 self.assertEqual(
                     set(auth.can_add_review_roles(
-                        role_class, self.db, proposal, auth_cache=auth_cache)),
+                        type_class, role_class, self.db, proposal,
+                        auth_cache=auth_cache)),
                     expect, 'add review case {} state {}'.format(
                         case_number, state_name))
 

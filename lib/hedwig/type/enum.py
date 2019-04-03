@@ -274,7 +274,7 @@ class FigureType(EnumAllowUser):
         return [x.mime for x in cls._info.values() if x.allow_user]
 
 
-class GroupType(EnumBasic, EnumURLPath):
+class GroupType(EnumAllowUser, EnumBasic, EnumURLPath):
     """
     Class representing groups of people related to the proposal review
     process.
@@ -284,28 +284,29 @@ class GroupType(EnumBasic, EnumURLPath):
     TECH = 2
     COORD = 3
 
+    PEER = -1
+
     GroupInfo = namedtuple(
         'GroupInfo',
         ('name', 'view_all_prop', 'private_moc',
-         'review_coord', 'review_view', 'url_path'))
+         'review_coord', 'review_view', 'allow_user', 'url_path'))
 
     _info = OrderedDict((
-        #           Authorization: Prop   MOC    Rv Ed  Rv Vw
+        #           Authorization: Prop   MOC    Rv.Ed  Rv.Vw  User
         (CTTEE, GroupInfo(
-            'Committee',           True,  False, False, True,  'committee')),
+            'Committee members',   True,  False, False, True,  True,
+            'committee')),
         (TECH,  GroupInfo(
-            'Technical assessors', False, True,  False, False, 'technical')),
+            'Technical assessors', False, True,  False, False, True,
+            'technical')),
         (COORD, GroupInfo(
-            'Review coordinators', True,  False, True,  True,  'coordinator')),
+            'Review coordinators', True,  False, True,  True,  True,
+            'coordinator')),
+
+        (PEER, GroupInfo(
+            'Peer reviewers',      False, False, False, False, False,
+            None)),
     ))
-
-    @classmethod
-    def get_options(cls):
-        """
-        Get an OrderedDict of type names by type numbers.
-        """
-
-        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
     @classmethod
     def view_all_groups(cls):
@@ -330,78 +331,6 @@ class GroupType(EnumBasic, EnumURLPath):
         """Get a list of groups with the `review_view` privilege."""
 
         return [k for (k, v) in cls._info.items() if v.review_view]
-
-
-# NOTE: this is defined after GroupType since it refers to values from that
-# class.
-class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
-    """
-    Class representing types of calls for proposals.
-
-    The `name_proposal` attribute relates to how a call is named.  If
-    `False` then the name relates to the call (e.g. "standard call for
-    proposals") otherwise, if `True`, the name relates to the proposals
-    (e.g. "call for urgent proposals").
-    """
-
-    STANDARD = 1
-    IMMEDIATE = 2
-    TEST = 3
-    MULTICLOSE = 4
-
-    TypeInfo = namedtuple(
-        'TypeInfo',
-        ('code', 'name', 'available', 'url_path', 'immediate_review',
-         'name_proposal', 'mid_close', 'notify_group'))
-
-    #       Code  Name         Avail.  URL         Im.Rv. Nm.Pr. Md.Cl.
-    #       (Notify groups)
-    _info = OrderedDict((
-        (STANDARD,  TypeInfo(
-            None, 'Standard',  True,  'standard',  False, False, False,
-            ())),
-        (IMMEDIATE, TypeInfo(
-            'I',  'Immediate', True,  'immediate', True,  False, False,
-            (GroupType.CTTEE,))),
-        (TEST, TypeInfo(
-            'T',  'Test',      True,  'test',      False, True,  False,
-            ())),
-        (MULTICLOSE,  TypeInfo(
-            'M', 'Multiple-close', True, 'multi',  False, False, True,
-            ())),
-    ))
-
-    @classmethod
-    def has_immediate_review(cls, value):
-        return cls._info[value].immediate_review
-
-    @classmethod
-    def get_notify_group(cls, value):
-        """
-        Get tuple of groups which should be notified about submissions
-        to calls of this type.
-        """
-
-        return cls._info[value].notify_group
-
-    @classmethod
-    def get_full_call_name(cls, value, plural=False):
-        """
-        Get the full name of a call for proposals.
-
-        This returns a full name such as "standard call for proposals"
-        based on the call type name and `name_proposal` attribute.
-        """
-
-        type_info = cls._info[value]
-
-        call = 'calls' if plural else 'call'
-
-        ans = ('{1} for {0} proposals'
-               if type_info.name_proposal
-               else '{0} {1} for proposals')
-
-        return ans.format(type_info.name.lower(), call)
 
 
 class MessageState(EnumAllowUser, EnumBasic):
@@ -748,6 +677,7 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
     CTTEE_SECONDARY = 4
     CTTEE_OTHER = 5
     FEEDBACK = 6
+    PEER = 7
 
     # Type which describes how the reviewer roles are defined, where:
     # * name_review indicates whether the name can be suffixed with "review".
@@ -762,49 +692,70 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
          'cttee', 'name_review', 'feedback_direct', 'feedback_indirect',
          'note', 'invite',
          'edit_rev', 'edit_fr', 'rating_hide', 'calc', 'figure',
-         'display_class', 'url_path', 'help_page'))
+         'display_class', 'url_path', 'help_page', 'review_group'))
 
     # Options:  Unique Text   Ass/nt Rating Weight Cttee  "Rev"  Fbk_dr Fbk_id
-    #           Note   Invite E.Rev  E.FR   Ra.Hi. Calc   Fig.  Disp.cl.
-    #           URL           Help_page
+    #           Note   Invite E.Rev  E.FR   Ra.Hi. Calc   Fig.
+    #           Disp.cl.      URL           Help_page
+    #           Review group
     _info = OrderedDict((
         (TECH,
             RoleInfo(
                 'Technical',
                 True,  True,  True,  False, False, False, True,  False, False,
-                True,  False, True,  True,  False, True,  True,  'tech',
-                'technical',  'technical')),
+                True,  False, True,  True,  False, True,  True,
+                'tech',       'technical',  'technical',
+                GroupType.TECH)),
         (EXTERNAL,
             RoleInfo(
                 'External',
                 False, True,  False, True,  False, False, True,  False, False,
-                False, True,  True,  False, False, False, False, 'ext',
-                'external',   'external')),
+                False, True,  True,  False, False, False, False,
+                'ext',        'external',   'external',
+                None)),
+        (PEER,
+            RoleInfo(
+                'Peer',
+                False, True,  False, True,  True,  False, True,  False, False,
+                False, False, True,  False, False, False, False,
+                'ext',        'peer',       'peer',
+                GroupType.PEER)),
         (CTTEE_PRIMARY,
             RoleInfo(
                 'Committee Primary',
                 True,  True,  False, True,  True,  True,  True,  True,  False,
-                True,  False, True,  True,  True,  False, False, 'cttee',
-                'committee',  'committee')),
+                True,  False, True,  True,  True,  False, False,
+                'cttee',      'committee',  'committee',
+                GroupType.CTTEE)),
         (CTTEE_SECONDARY,
             RoleInfo(
                 'Committee Secondary',
                 False, True,  False, True,  True,  True,  True,  False, True,
-                True,  False, True,  True,  True,  False, False, 'cttee',
-                None,         'committee')),
+                True,  False, True,  True,  True,  False, False,
+                'cttee',      None,         'committee',
+                None)),
         (CTTEE_OTHER,
             RoleInfo(
                 'Committee Other',
                 False, True,  False, True,  True,  True,  True,  False, False,
-                True,  False, True,  True,  True,  False, False, 'cttee',
-                'other',      'committee')),
+                True,  False, True,  True,  True,  False, False,
+                'cttee',      'other',      'committee',
+                None)),
         (FEEDBACK,
             RoleInfo(
                 'Feedback',
                 True,  True,  False, False, False, False, False, False, False,
-                False, False, False, True,  False, False, False, 'feedback',
-                'feedback',   None)),
+                False, False, False, True,  False, False, False,
+                'feedback',   'feedback',   None,
+                None)),
     ))
+
+    @classmethod
+    def get_assigned_roles(cls):
+        """Get an OrderedDict of reviewer group types by role numbers."""
+
+        return OrderedDict(((k, v.review_group) for (k, v) in cls._info.items()
+                            if v.review_group is not None))
 
     @classmethod
     def get_calc_roles(cls):
@@ -875,6 +826,12 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
             states.append(ProposalState.REVIEW)
 
         return states
+
+    @classmethod
+    def get_review_group(cls, role):
+        """Get the review group for a reviewer role."""
+
+        return cls._info[role].review_group
 
     @classmethod
     def get_feedback_roles(cls, include_indirect=True):
@@ -1033,3 +990,90 @@ class UserLogEvent(EnumBasic):
         USE_INVITE:   EventInfo('Profile linked via invitation'),
         MERGED:       EventInfo('Profile merged'),
     }
+
+
+# NOTE: this is defined at the end since it refers to values from
+# GroupType and BaseReviewerRole.
+class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
+    """
+    Class representing types of calls for proposals.
+
+    The `name_proposal` attribute relates to how a call is named.  If
+    `False` then the name relates to the call (e.g. "standard call for
+    proposals") otherwise, if `True`, the name relates to the proposals
+    (e.g. "call for urgent proposals").
+    """
+
+    STANDARD = 1
+    IMMEDIATE = 2
+    TEST = 3
+    MULTICLOSE = 4
+
+    TypeInfo = namedtuple(
+        'TypeInfo',
+        ('code', 'name', 'available', 'url_path', 'immediate_review',
+         'name_proposal', 'mid_close', 'reviewer_roles', 'notify_group'))
+
+    _cttee = tuple(BaseReviewerRole.get_cttee_roles())
+
+    #       Code   Name         Avail.  URL         Im.Rv. Nm.Pr. Md.Cl.
+    #       (Reviewer roles)
+    #       (Notify groups)
+    _info = OrderedDict((
+        (STANDARD,  TypeInfo(
+            None,  'Standard',  True,  'standard',  False, False, False,
+            (BaseReviewerRole.TECH, BaseReviewerRole.EXTERNAL,
+             BaseReviewerRole.FEEDBACK) + _cttee,
+            ())),
+        (IMMEDIATE, TypeInfo(
+            'I',   'Immediate', True,  'immediate', True,  False, False,
+            (BaseReviewerRole.TECH, BaseReviewerRole.CTTEE_OTHER,
+             BaseReviewerRole.FEEDBACK),
+            (GroupType.CTTEE,))),
+        (MULTICLOSE,  TypeInfo(
+            'M',  'Multiple-close', True, 'multi',  False, False, True,
+            (BaseReviewerRole.TECH, BaseReviewerRole.PEER,
+            BaseReviewerRole.FEEDBACK),
+            ())),
+        (TEST, TypeInfo(
+            'T',   'Test',      True,  'test',      False, True,  False,
+            (BaseReviewerRole.TECH, BaseReviewerRole.EXTERNAL,
+             BaseReviewerRole.PEER, BaseReviewerRole.FEEDBACK) + _cttee,
+            ())),
+    ))
+
+    @classmethod
+    def has_immediate_review(cls, value):
+        return cls._info[value].immediate_review
+
+    @classmethod
+    def has_reviewer_role(cls, value, role):
+        return role in cls._info[value].reviewer_roles
+
+    @classmethod
+    def get_notify_group(cls, value):
+        """
+        Get tuple of groups which should be notified about submissions
+        to calls of this type.
+        """
+
+        return cls._info[value].notify_group
+
+    @classmethod
+    def get_full_call_name(cls, value, plural=False):
+        """
+        Get the full name of a call for proposals.
+
+        This returns a full name such as "standard call for proposals"
+        based on the call type name and `name_proposal` attribute.
+        """
+
+        type_info = cls._info[value]
+
+        call = 'calls' if plural else 'call'
+
+        ans = ('{1} for {0} proposals'
+               if type_info.name_proposal
+               else '{0} {1} for proposals')
+
+        return ans.format(type_info.name.lower(), call)

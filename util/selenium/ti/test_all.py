@@ -1541,7 +1541,7 @@ class IntegrationTest(DummyConfigTestCase):
         admin_queue_url = self.browser.current_url
 
         for (group_name, group_abbr, group_members) in (
-                ('Committee', 'cttee', (
+                ('Committee members', 'cttee', (
                     'Example Group Member', 'Another Group Member')),
                 ('Technical assessors', 'tech', (
                     'Example Technical Assessor',))):

@@ -238,6 +238,10 @@ class JCMT(EAOFacility):
             return url_for('help.review_page', page_name='external_jcmt',
                            _external=True)
 
+        elif role == role_class.PEER:
+            return url_for('help.review_page', page_name='peer_jcmt',
+                           _external=True)
+
         elif role == role_class.FEEDBACK:
             return url_for('help.review_page', page_name='feedback_jcmt',
                            _external=True)

@@ -433,8 +433,9 @@ def can_be_admin(db, auth_cache=None):
     return person.admin
 
 
-def can_add_review_roles(role_class, db, proposal, include_indirect=True,
-                         auth_cache=None):
+def can_add_review_roles(
+        type_class, role_class, db, proposal, include_indirect=True,
+        auth_cache=None):
     """
     Determine for which reviewer roles a person can add a review to
     a proposal.
@@ -455,8 +456,9 @@ def can_add_review_roles(role_class, db, proposal, include_indirect=True,
     # Determine whether the user can add a committee "other" review -- they
     # should be a committee member who doesn't already have a committee
     # review.
-    if proposal.state in role_class.get_editable_states(
-            role_class.CTTEE_OTHER):
+    if (type_class.has_reviewer_role(proposal.call_type, role_class.CTTEE_OTHER)
+            and (proposal.state in role_class.get_editable_states(
+                role_class.CTTEE_OTHER))):
         if not proposal.reviewers.has_person(
                 person_id=person_id, roles=role_class.get_cttee_roles()):
             if group_members.has_entry(
@@ -466,8 +468,9 @@ def can_add_review_roles(role_class, db, proposal, include_indirect=True,
     # Determine whether the user can add a "feedback" review -- they should be
     # a reviewer in a suitable role (or have administrative privileges) but
     # there should not already be a review of this role.
-    if proposal.state in role_class.get_editable_states(
-            role_class.FEEDBACK):
+    if (type_class.has_reviewer_role(proposal.call_type, role_class.FEEDBACK)
+            and (proposal.state in role_class.get_editable_states(
+                role_class.FEEDBACK))):
         if not proposal.reviewers.has_role(role_class.FEEDBACK):
             if (proposal.reviewers.has_person(
                     person_id=person_id,
@@ -523,9 +526,10 @@ def find_addable_reviews(db, facilities, auth_cache=None):
 
     for facility in facilities.values():
         role_class = facility.view.get_reviewer_roles()
+        type_class = facility.view.get_call_types()
 
         for proposal in proposals.values_by_facility(facility.id):
-            roles = can_add_review_roles(role_class, db, proposal,
+            roles = can_add_review_roles(type_class, role_class, db, proposal,
                                          include_indirect=False,
                                          auth_cache=auth_cache)
             if not roles:

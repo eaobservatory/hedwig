@@ -27,14 +27,16 @@
         </tr>
         {% for (role_id, role_name) in facility_role_class.get_options().items() %}
             {% set deadline = deadlines.get_role(role_id, default=None) %}
-            <tr>
-                <td>{{ role_name }}</td>
-                <td>
-                    <input type="date" name="date_date_{{ role_id }}" value="{{ '' if deadline is none else deadline.date.date }}" placeholder="YYYY-MM-DD" size="10" />
-                    <input type="time" name="date_time_{{ role_id }}" value="{{ '' if deadline is none else deadline.date.time }}" placeholder="HH:MM" size="5" />
-                    <span class="explanation">UT</span>
-                </td>
-            </tr>
+            {% if (deadline is not none) or facility_call_type_class.has_reviewer_role(call.type, role_id) %}
+                <tr>
+                    <td>{{ role_name }}</td>
+                    <td>
+                        <input type="date" name="date_date_{{ role_id }}" value="{{ '' if deadline is none else deadline.date.date }}" placeholder="YYYY-MM-DD" size="10" />
+                        <input type="time" name="date_time_{{ role_id }}" value="{{ '' if deadline is none else deadline.date.time }}" placeholder="HH:MM" size="5" />
+                        <span class="explanation">UT</span>
+                    </td>
+                </tr>
+            {% endif %}
         {% endfor %}
     </table>
 
