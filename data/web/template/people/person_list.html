@@ -3,6 +3,18 @@
 {% from 'macro/institution.html' import render_member_institution %}
 
 {% block content %}
+{% if can_view_unregistered %}
+    <form method="GET" action="{{ url_for('.person_list') }}">
+        <p>
+            <select name="registered">
+                <option value="1" {{ 'selected="selected"' | safe if registered }}>Registered</option>
+                <option value="0" {{ 'selected="selected"' | safe if (registered is not none) and (not registered) }}>Unregistered</option>
+                <option value="" {{ 'selected="selected"' | safe if registered is none }}>Any status</option>
+            </select>
+            <input type="submit" value="Filter" name="submit" />
+        </p>
+    </form>
+{% endif %}
 
 <table>
     <tr>
@@ -13,7 +25,9 @@
         <tr>
             <td>
                 <a href="{{ url_for('.person_view', person_id=person.id) }}">{{ person.name }}</a>
-                {% if not person.public %}
+                {% if person.user_id is none %}
+                    <span class="label">unregistered</span>
+                {% elif not person.public %}
                     <span class="label">private</span>
                 {% endif %}
             </td>

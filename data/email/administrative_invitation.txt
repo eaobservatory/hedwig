@@ -1,0 +1,23 @@
+{% extends 'layout.txt' %}
+
+{% block content %}
+You have been invited by {{ inviter_name }} to register for an account
+with our proposal handling system.
+This is an administrative invitation intended to give you access
+to an existing personal profile which may have proposals
+or other documents associated with it.
+
+You can begin the registration process by entering the following
+invitation code on the invitation page:
+
+Invitation code: {{ token }}
+
+Invitation page: {{ target_plain }}
+
+Alternatively you may click the following link:
+
+{{ target_url }}
+
+Your invitation code will expire at {{ expiry | format_datetime }} UT.
+
+{% endblock %}

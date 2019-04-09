@@ -38,7 +38,10 @@
                 <br />
             {% endif %}
             <a href="{{ url_for('admin.message_list', person_id=person.id) }}">View messages</a>
-            {% if person.user_id is not none %}
+            {% if person.user_id is none %}
+                <br />
+                <a href="{{ url_for('.person_invite', person_id=person.id) }}">Invite to register</a>
+            {% else %}
                 <br />
                 <a href="{{ url_for('.user_log', user_id=person.user_id) }}">User account log</a>
                 <br />

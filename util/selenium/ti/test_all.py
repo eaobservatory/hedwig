@@ -162,6 +162,13 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.log_out_user()
 
+            # View user directory while there is an unregistered invitee.
+            self.log_in_user(user_name='test')
+
+            self.view_user_directory()
+
+            self.log_out_user()
+
             # Try accepting an invitation.
             self.accept_invitation(screenshot_path=self.user_image_root)
 
@@ -2042,6 +2049,33 @@ class IntegrationTest(DummyConfigTestCase):
 
         self._save_screenshot(self.admin_image_root,
                               'institution_subsume_confirm')
+
+        self.browser.find_element_by_name('submit_cancel').click()
+
+    def view_user_directory(self):
+        self.browser.get(self.base_url + 'person')
+
+        self.browser.find_element_by_link_text('take admin').click()
+
+        Select(
+            self.browser.find_element_by_name('registered')
+        ).select_by_visible_text('Any status')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self._save_screenshot(self.admin_image_root, 'person_list')
+
+        self.browser.find_element_by_link_text(
+            'Invited Member').click()
+
+        self._save_screenshot(
+            self.admin_image_root, 'person_unregistered',
+            ['account_admin_links'])
+
+        self.browser.find_element_by_link_text(
+            'Invite to register').click()
+
+        self._save_screenshot(self.admin_image_root, 'person_invite')
 
         self.browser.find_element_by_name('submit_cancel').click()
 

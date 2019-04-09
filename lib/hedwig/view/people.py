@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict, namedtuple
 from datetime import datetime
 
-from ..config import get_countries
+from ..config import get_config, get_countries
 from ..email.format import render_email_template
 from ..error import ConsistencyError, DatabaseIntegrityError, Error, \
     MultipleRecords, NoSuchRecord, NoSuchValue, \
@@ -491,18 +491,25 @@ class PeopleView(object):
             'log_in_for': log_in_for,
         }
 
-    def person_list(self, db):
-        # Only show public members unless the user is has administrative
-        # privileges.
+    def person_list(self, db, args):
+        # Only show public, registered members unless the user has
+        # administrative privileges.
         public = True
+        can_view_unregistered = False
+        registered = True
         if session.get('is_admin', False) and auth.can_be_admin(db):
             public = None
-        persons = db.search_person(registered=True, public=public,
+            can_view_unregistered = True
+            registered = int_or_none(args.get('registered', '1'))
+
+        persons = db.search_person(registered=registered, public=public,
                                    with_institution=True)
 
         return {
             'title': 'Directory of Users',
             'persons': persons,
+            'can_view_unregistered': can_view_unregistered,
+            'registered': registered,
         }
 
     @with_person(permission=PermissionType.VIEW)
@@ -531,6 +538,44 @@ class PeopleView(object):
             'can_edit': can.edit,
             'person': person,
             'show_admin_links': is_admin,
+        }
+
+    @with_verified_admin
+    @with_person(permission=PermissionType.NONE)
+    def person_invite(self, db, person, args, form):
+        if person.user_id is not None:
+            raise ErrorPage('This user is already registered.')
+
+        if form:
+            if 'submit_confirm' in form:
+                application_name = get_config().get('application', 'name')
+
+                (token, expiry) = db.issue_invitation(person.id)
+
+                db.add_message(
+                    'Invitation to register with {}'.format(application_name),
+                    render_email_template('administrative_invitation.txt', {
+                        'recipient_name': person.name,
+                        'inviter_name': session['person']['name'],
+                        'token': token,
+                        'expiry': expiry,
+                        'target_url': url_for(
+                            'people.invitation_token_enter', token=token,
+                            _external=True),
+                        'target_plain': url_for(
+                            'people.invitation_token_enter',
+                            _external=True),
+                    }),
+                    [person.id])
+
+                flash('{} has been invited to register.', person.name)
+
+            raise HTTPRedirect(url_for('.person_view', person_id=person.id))
+
+        return {
+            'title': '{}: Invite to Register'.format(person.name),
+            'message': 'Would you like to send an administrative invitation '
+            'to register to {}?'.format(person.name),
         }
 
     @with_person(permission=PermissionType.EDIT)

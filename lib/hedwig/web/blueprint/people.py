@@ -121,13 +121,21 @@ def create_people_blueprint(db, facilities):
     @require_auth()
     @templated('people/person_list.html')
     def person_list():
-        return view.person_list(db)
+        return view.person_list(db, request.args)
 
     @bp.route('/person/<int:person_id>')
     @require_auth()
     @templated('people/person_view.html')
     def person_view(person_id):
         return view.person_view(db, person_id)
+
+    @bp.route('/person/<int:person_id>/invite', methods=['GET', 'POST'])
+    @require_admin
+    @templated('confirm.html')
+    def person_invite(person_id):
+        return view.person_invite(
+            db, person_id, request.args,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/person/<int:person_id>/edit', methods=['GET', 'POST'])
     @require_auth()
