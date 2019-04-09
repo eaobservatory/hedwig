@@ -23,6 +23,28 @@
             <th>Affiliation {{ render_affiliation_tip(semester_id, call_type) }}</th>
             <th>Is PI?</th>
             <th>Can edit proposal?</th>
+            {% if has_peer_review %}
+                <th>
+                    Peer reviewer?
+                    <div class="formtip">
+                        <div>
+                            <p>
+                                This proposal is part of a
+                                {{ call_type | full_call_type_name(facility_call_type_class) }},
+                                which uses the peer review system.
+                                You need to designate a proposal member
+                                who will be available to review other
+                                proposals received in the same cycle.
+                            </p>
+                            <p>
+                                Please see the
+                                <a href="{{ url_for('help.review_page', page_name='peer') }}" target="_blank">peer review guide</a>
+                                for more information.
+                            </p>
+                        </div>
+                    </div>
+                </th>
+            {% endif %}
             <th>Potential observer?</th>
             <th>Actions</th>
         </tr>
@@ -52,6 +74,11 @@
                         &cross;
                     {% endif %}
                 </td>
+                {% if has_peer_review %}
+                    <td>
+                        <input type="radio" name="reviewer" value="{{ member.id }}" {{ 'checked="checked"' | safe if member.reviewer }} />
+                    </td>
+                {% endif %}
                 <td>
                     <input type="checkbox" name="observer_{{ member.id }}" value="yes" {{ 'checked="checked"' | safe if member.observer }} />
                 </td>

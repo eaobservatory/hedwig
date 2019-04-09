@@ -262,15 +262,20 @@ class CollectionTypeTestCase(TestCase):
             c.get_pi()
 
         self.assertIsNone(c.get_pi(default=None))
+        self.assertIsNone(c.get_reviewer(default=None))
 
         c[102] = null_tuple(Member)._replace(
             id=102, person_id=9002, pi=True, person_name='Person Two')
 
         c[103] = null_tuple(Member)._replace(
-            id=103, person_id=9003, pi=False, person_name='Person Three')
+            id=103, person_id=9003, pi=False, person_name='Person Three',
+            reviewer=True)
 
         result = c.get_pi()
         self.assertEqual(result.person_id, 9002)
+
+        result = c.get_reviewer()
+        self.assertEqual(result.person_id, 9003)
 
         result = c.get_person(9003)
         self.assertEqual(result.id, 103)
@@ -282,6 +287,26 @@ class CollectionTypeTestCase(TestCase):
 
         self.assertTrue(c.has_person(9001))
         self.assertFalse(c.has_person(999999))
+
+        # Test validation.
+        with self.assertRaisesRegex(UserError, 'no specified editors'):
+            c.validate(9001)
+
+        c[101] = c[101]._replace(editor=True)
+
+        c[104] = null_tuple(Member)._replace(
+            id=104, person_id=9004, pi=True, person_name='Person Four')
+
+        with self.assertRaisesRegex(UserError, 'more than one PI'):
+            c.validate(9001)
+
+        c[104] = c[104]._replace(pi=False, reviewer=True)
+
+        with self.assertRaisesRegex(UserError, 'more than one reviewer'):
+            c.validate(9001)
+
+        del c[104]
+        c.validate(9001)
 
     def test_proposal_figure_collection(self):
         fc = ProposalFigureCollection()

@@ -65,6 +65,9 @@ PrevProposalPubExtra = namedtuple(
 
 class GenericProposal(object):
     def view_proposal_new(self, db, call_id, form):
+        type_class = self.get_call_types()
+        role_class = self.get_reviewer_roles()
+
         try:
             call = db.search_call(
                 facility_id=self.id_, call_id=call_id, state=CallState.OPEN
@@ -140,7 +143,9 @@ class GenericProposal(object):
                     call_id=call_id, person_id=session['person']['id'],
                     affiliation_id=affiliation_id,
                     title=(proposal_title if old_proposal is None
-                           else old_proposal.title))
+                           else old_proposal.title),
+                    person_is_reviewer=type_class.has_reviewer_role(
+                        call.type, role_class.PEER))
 
                 if old_proposal is None:
                     flash('Your new proposal has been created.')
@@ -700,6 +705,9 @@ class GenericProposal(object):
         }
 
     def _validate_proposal(self, db, proposal):
+        type_class = self.get_call_types()
+        role_class = self.get_reviewer_roles()
+
         messages = []
 
         # Check the title.
@@ -718,6 +726,23 @@ class GenericProposal(object):
                 True, e.message,
                 'Edit the proposal members',
                 url_for('.member_edit', proposal_id=proposal.id)))
+
+        if type_class.has_reviewer_role(proposal.call_type, role_class.PEER):
+            reviewer = proposal.members.get_reviewer(default=None)
+            if reviewer is None:
+                messages.append(ValidationMessage(
+                    True,
+                    'A member has not been designated to act as the '
+                    'peer reviewer.',
+                    'Select a peer reviewer',
+                    url_for('.member_edit', proposal_id=proposal.id)))
+            elif not reviewer.person_registered:
+                messages.append(ValidationMessage(
+                    False,
+                    'The designated peer reviewer has not yet registed '
+                    'with this system.',
+                    'Select a different peer reviewer',
+                    url_for('.member_edit', proposal_id=proposal.id)))
 
         # Now validate the "extra" parts of the proposal.
         extra = self._view_proposal_extra(db, proposal)
@@ -1105,6 +1130,11 @@ class GenericProposal(object):
 
     @with_proposal(permission=PermissionType.EDIT)
     def view_member_edit(self, db, proposal, can, form):
+        type_class = self.get_call_types()
+        role_class = self.get_reviewer_roles()
+        has_peer_review = type_class.has_reviewer_role(
+            proposal.call_type, role_class.PEER)
+
         message = None
         records = proposal.members
         person_id = session['person']['id']
@@ -1119,6 +1149,11 @@ class GenericProposal(object):
                 pi = int(form['pi'])
             else:
                 pi = None
+
+            if has_peer_review and ('reviewer' in form):
+                reviewer = int(form['reviewer'])
+            else:
+                reviewer = None
 
             try:
                 # Create a new list from the items so that it is safe
@@ -1137,6 +1172,7 @@ class GenericProposal(object):
                         pi=(id_ == pi),
                         editor=('editor_{}'.format(id_) in form),
                         observer=('observer_{}'.format(id_) in form),
+                        reviewer=(id_ == reviewer),
                         affiliation_id=int(affiliation_str))
 
                 db.sync_proposal_member(
@@ -1160,6 +1196,7 @@ class GenericProposal(object):
                 lambda x: with_can_edit(x, x.person_id != person_id)),
             'affiliations': affiliations,
             'proposal_code': self.make_proposal_code(db, proposal),
+            'has_peer_review': has_peer_review,
         }
 
     @with_proposal(permission=PermissionType.EDIT)

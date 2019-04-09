@@ -288,6 +288,7 @@ member = Table(
     Column('pi', Boolean, nullable=False),
     Column('editor', Boolean, nullable=False),
     Column('observer', Boolean, nullable=False),
+    Column('reviewer', Boolean, nullable=False),
     Column('student', Boolean, nullable=False, default=False),
     Column('affiliation_id', None,
            ForeignKey('affiliation.id', onupdate='RESTRICT',

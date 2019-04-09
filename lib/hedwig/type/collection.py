@@ -315,6 +315,20 @@ class MemberCollection(ResultCollection, CollectionByProposal,
 
         raise NoSuchValue('person not in member collection')
 
+    def get_reviewer(self, default=()):
+        """
+        Retrieve the record corresponding to the designated peer reviewer.
+        """
+
+        for member in self.values():
+            if member.reviewer:
+                return member
+
+        if default == ():
+            raise NoSuchValue('no reviewer member')
+
+        return default
+
     def get_students(self):
         """
         Get a list of student members.
@@ -360,6 +374,7 @@ class MemberCollection(ResultCollection, CollectionByProposal,
 
         n_pi = 0
         n_editor = 0
+        n_reviewer = 0
         person_is_editor = None
 
         for member in self.values():
@@ -368,6 +383,9 @@ class MemberCollection(ResultCollection, CollectionByProposal,
 
             if member.editor:
                 n_editor += 1
+
+            if member.reviewer:
+                n_reviewer += 1
 
             if ((editor_person_id is not None) and
                     (member.person_id == editor_person_id)):
@@ -380,6 +398,9 @@ class MemberCollection(ResultCollection, CollectionByProposal,
 
         if n_editor == 0:
             raise UserError('There are no specified editors.')
+
+        if n_reviewer > 1:
+            raise UserError('There is more than one reviewer designated.')
 
         if editor_person_id is not None:
             if person_is_editor is None:

@@ -142,8 +142,8 @@ class ProposalPart(object):
         return result.inserted_primary_key[0]
 
     def add_member(self, proposal_id, person_id, affiliation_id,
-                   pi=False, editor=False,
-                   observer=False, _conn=None, _test_skip_check=False):
+                   pi=False, editor=False, observer=False, reviewer=False,
+                   _conn=None, _test_skip_check=False):
         with self._transaction(_conn=_conn) as conn:
             if not _test_skip_check:
                 if not self._exists_id(conn, person, person_id):
@@ -175,13 +175,15 @@ class ProposalPart(object):
                 member.c.pi: pi,
                 member.c.editor: editor,
                 member.c.observer: observer,
+                member.c.reviewer: reviewer,
                 member.c.affiliation_id: affiliation_id,
             }))
 
         return result.inserted_primary_key[0]
 
     def add_proposal(self, call_id, person_id, affiliation_id, title,
-                     state=ProposalState.PREPARATION, _test_skip_check=False):
+                     state=ProposalState.PREPARATION, person_is_reviewer=False,
+                     _test_skip_check=False):
         """
         Add a new proposal to the database.
 
@@ -228,7 +230,7 @@ class ProposalPart(object):
             proposal_id = result.inserted_primary_key[0]
 
             self.add_member(proposal_id, person_id, affiliation_id,
-                            True, True, False,
+                            True, True, False, reviewer=person_is_reviewer,
                             _conn=conn, _test_skip_check=_test_skip_check)
 
         return proposal_id
@@ -2543,6 +2545,7 @@ class ProposalPart(object):
                 update_columns=(
                     member.c.sort_order,
                     member.c.pi, member.c.editor, member.c.observer,
+                    member.c.reviewer,
                     member.c.affiliation_id
                 ), forbid_add=True)
 

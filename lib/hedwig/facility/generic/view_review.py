@@ -521,7 +521,7 @@ class GenericReview(object):
         if group_type == GroupType.PEER:
             group_members = MemberCollection()
             for proposal in proposals.values():
-                member_reviewer = proposal.members.get_pi(default=None)
+                member_reviewer = proposal.members.get_reviewer(default=None)
                 if member_reviewer is not None:
                     group_members[member_reviewer.id] = member_reviewer
 
