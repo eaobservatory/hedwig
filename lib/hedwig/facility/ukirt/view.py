@@ -139,19 +139,18 @@ class UKIRT(EAOFacility):
         return ctx
 
     def _validate_proposal_extra(self, db, proposal, extra):
-        messages = []
+        report = super(UKIRT, self)._validate_proposal_extra(
+            db, proposal, extra, check_excluded_pi=True)
 
-        if not extra['requests']:
-            messages.append(ValidationMessage(
-                True,
-                'No observing time has been requested.',
-                'Edit the observing request',
-                url_for('.request_edit', proposal_id=proposal.id)))
+        with report.accumulate_notes('proposal_request') as messages:
+            if not extra['requests']:
+                messages.append(ValidationMessage(
+                    True,
+                    'No observing time has been requested.',
+                    'Edit the observing request',
+                    url_for('.request_edit', proposal_id=proposal.id)))
 
-        messages.extend(super(UKIRT, self)._validate_proposal_extra(
-            db, proposal, extra, check_excluded_pi=True))
-
-        return messages
+        return report
 
     def _view_proposal_feedback_extra(self, db, proposal, can):
         ctx = super(UKIRT, self)._view_proposal_feedback_extra(

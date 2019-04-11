@@ -705,165 +705,177 @@ class GenericProposal(object):
         }
 
     def _validate_proposal(self, db, proposal):
-        type_class = self.get_call_types()
-        role_class = self.get_reviewer_roles()
-
-        messages = []
-
-        # Check the title.
-        if not proposal.title:
-            messages.append(ValidationMessage(
-                True,
-                'The proposal does not have a title.',
-                'Edit the proposal title',
-                url_for('.title_edit', proposal_id=proposal.id)))
-
-        # Check the members list.
-        try:
-            proposal.members.validate(editor_person_id=None)
-        except UserError as e:
-            messages.append(ValidationMessage(
-                True, e.message,
-                'Edit the proposal members',
-                url_for('.member_edit', proposal_id=proposal.id)))
-
-        if type_class.has_reviewer_role(proposal.call_type, role_class.PEER):
-            reviewer = proposal.members.get_reviewer(default=None)
-            if reviewer is None:
-                messages.append(ValidationMessage(
-                    True,
-                    'A member has not been designated to act as the '
-                    'peer reviewer.',
-                    'Select a peer reviewer',
-                    url_for('.member_edit', proposal_id=proposal.id)))
-            elif not reviewer.person_registered:
-                messages.append(ValidationMessage(
-                    False,
-                    'The designated peer reviewer has not yet registed '
-                    'with this system.',
-                    'Select a different peer reviewer',
-                    url_for('.member_edit', proposal_id=proposal.id)))
-
-        # Now validate the "extra" parts of the proposal.
+        # Validate the "extra" parts of the proposal.
         extra = self._view_proposal_extra(db, proposal)
 
-        messages.extend(self._validate_proposal_extra(db, proposal, extra))
+        report = self._validate_proposal_extra(db, proposal, extra)
+
+        # Validate common parts of the proposal.
+        with report.accumulate_notes('proposal_summary') as messages:
+            # Check the title.
+            if not proposal.title:
+                messages.append(ValidationMessage(
+                    True,
+                    'The proposal does not have a title.',
+                    'Edit the proposal title',
+                    url_for('.title_edit', proposal_id=proposal.id)))
 
         # Return the list of messages.
-        return messages
+        return report
 
     def _validate_proposal_extra(self, db, proposal, extra,
                                  skip_missing_targets=False,
                                  check_excluded_pi=False):
+        type_class = self.get_call_types()
+        reviewer_role_class = self.get_reviewer_roles()
         role_class = self.get_text_roles()
-        messages = []
 
-        if check_excluded_pi:
-            member_pi = proposal.members.get_pi(default=None)
+        report = SectionedList(
+            note_format=lambda x: ValidationMessage(True, x, None, None))
 
-            # Ignore if there's no PI: the previous members.validate test
-            # should have generated an error for that.
-            if member_pi is not None:
-                exclude = db.search_affiliation(queue_id=proposal.queue_id,
-                                                type_=AffiliationType.EXCLUDED)
+        with report.accumulate_notes('proposal_members') as messages:
+            try:
+                proposal.members.validate(editor_person_id=None)
+            except UserError as e:
+                messages.append(ValidationMessage(
+                    True, e.message,
+                    'Edit the proposal members',
+                    url_for('.member_edit', proposal_id=proposal.id)))
 
-                if member_pi.affiliation_id in exclude:
-                    exclude_names = [
-                        x.name for x in exclude.values()
-                        if ((not x.hidden) or
-                            (x.id == member_pi.affiliation_id))]
-
+            if type_class.has_reviewer_role(
+                    proposal.call_type, reviewer_role_class.PEER):
+                reviewer = proposal.members.get_reviewer(default=None)
+                if reviewer is None:
+                    messages.append(ValidationMessage(
+                        True,
+                        'A member has not been designated to act as the '
+                        'peer reviewer.',
+                        'Select a peer reviewer',
+                        url_for('.member_edit', proposal_id=proposal.id)))
+                elif not reviewer.person_registered:
                     messages.append(ValidationMessage(
                         False,
-                        'The principal investigator (PI) has an ineligible '
-                        'affiliation.  The PI should not be someone with ' +
-                        ('one of the following affiliations: '
-                         if len(exclude_names) > 1 else
-                         'the following affiliation: ') +
-                        ', '.join(exclude_names) +
-                        '.',
-                        'Select a different proposal member as the PI',
+                        'The designated peer reviewer has not yet registed '
+                        'with this system.',
+                        'Select a different peer reviewer',
                         url_for('.member_edit', proposal_id=proposal.id)))
 
-        if extra['abstract'] is None:
-            messages.append(ValidationMessage(
-                True,
-                'The proposal does not have an abstract.',
-                'Edit the proposal abstract',
-                url_for('.abstract_edit', proposal_id=proposal.id)))
+            if check_excluded_pi:
+                member_pi = proposal.members.get_pi(default=None)
 
-        if not extra['prev_proposals']:
-            messages.append(ValidationMessage(
-                False,
-                'No previous proposals have been listed.  If you do not have '
-                'any previously accepted proposals you should ignore this '
-                'warning.',
-                'Edit previous proposals and publications',
-                url_for('.previous_edit', proposal_id=proposal.id)))
+                # Ignore if there's no PI: the previous members.validate test
+                # should have generated an error for that.
+                if member_pi is not None:
+                    exclude = db.search_affiliation(
+                        queue_id=proposal.queue_id,
+                        type_=AffiliationType.EXCLUDED)
 
-        if (not skip_missing_targets) and (not extra['targets']):
-            messages.append(ValidationMessage(
-                False,
-                'No target objects have been specified.',
-                'Edit target list',
-                url_for('.target_edit', proposal_id=proposal.id)))
+                    if member_pi.affiliation_id in exclude:
+                        exclude_names = [
+                            x.name for x in exclude.values()
+                            if ((not x.hidden) or
+                                (x.id == member_pi.affiliation_id))]
 
-        elif (extra['targets'] and extra['target_tools']
-                and (extra['tool_note'] is None)):
-            messages.append(ValidationMessage(
-                False,
-                'A note on the target tool results has not been added.',
-                'Check targets with tools and edit note',
-                url_for('.tool_note_edit', proposal_id=proposal.id)))
-
-        if extra['calculators'] and (not extra['calculations']):
-            messages.append(ValidationMessage(
-                False,
-                'The proposal does not have any calculation results attached.',
-                'See available calculators',
-                url_for('.facility_home', _anchor='calc')))
-
-        for role in (role_class.TECHNICAL_CASE, role_class.SCIENCE_CASE):
-            role_name = role_class.get_name(role)
-            case = extra['{}_case'.format(role_class.short_name(role))]
-
-            if case['text'] is not None:
-                for fig in case['fig']:
-                    if fig.state == AttachmentState.ERROR:
                         messages.append(ValidationMessage(
                             False,
-                            'A figure in the {} could not be processed. '
+                            'The principal investigator (PI) has an '
+                            'ineligible affiliation.  The PI should '
+                            'not be someone with ' +
+                            ('one of the following affiliations: '
+                             if len(exclude_names) > 1 else
+                             'the following affiliation: ') +
+                            ', '.join(exclude_names) +
+                            '.',
+                            'Select a different proposal member as the PI',
+                            url_for('.member_edit', proposal_id=proposal.id)))
+
+        with report.accumulate_notes('proposal_abstract') as messages:
+            if extra['abstract'] is None:
+                messages.append(ValidationMessage(
+                    True,
+                    'The proposal does not have an abstract.',
+                    'Edit the proposal abstract',
+                    url_for('.abstract_edit', proposal_id=proposal.id)))
+
+        with report.accumulate_notes('proposal_previous') as messages:
+            if not extra['prev_proposals']:
+                messages.append(ValidationMessage(
+                    False,
+                    'No previous proposals have been listed.  If you do not '
+                    'have any previously accepted proposals you should '
+                    'ignore this warning.',
+                    'Edit previous proposals and publications',
+                    url_for('.previous_edit', proposal_id=proposal.id)))
+
+        with report.accumulate_notes('proposal_targets') as messages:
+            if (not skip_missing_targets) and (not extra['targets']):
+                messages.append(ValidationMessage(
+                    False,
+                    'No target objects have been specified.',
+                    'Edit target list',
+                    url_for('.target_edit', proposal_id=proposal.id)))
+
+            elif (extra['targets'] and extra['target_tools']
+                    and (extra['tool_note'] is None)):
+                messages.append(ValidationMessage(
+                    False,
+                    'A note on the target tool results has not been added.',
+                    'Check targets with tools and edit note',
+                    url_for('.tool_note_edit', proposal_id=proposal.id)))
+
+        with report.accumulate_notes('proposal_calculations') as messages:
+            if extra['calculators'] and (not extra['calculations']):
+                messages.append(ValidationMessage(
+                    False,
+                    'The proposal does not have any calculation results '
+                    'attached.',
+                    'See available calculators',
+                    url_for('.facility_home', _anchor='calc')))
+
+        for (role, role_section) in (
+                (role_class.TECHNICAL_CASE, 'technical_case'),
+                (role_class.SCIENCE_CASE, 'science_case')):
+            with report.accumulate_notes(role_section) as messages:
+                role_name = role_class.get_name(role)
+                case = extra['{}_case'.format(role_class.short_name(role))]
+
+                if case['text'] is not None:
+                    for fig in case['fig']:
+                        if fig.state == AttachmentState.ERROR:
+                            messages.append(ValidationMessage(
+                                False,
+                                'A figure in the {} could not be processed. '
+                                'Please check the file is valid and contact '
+                                'us for help in the event that this error '
+                                'persists.'.format(role_name.lower()),
+                                'Edit {}'.format(role_name.lower()),
+                                url_for('.case_edit',
+                                        proposal_id=proposal.id, role=role)))
+                            break
+
+                elif case['pdf'] is not None:
+                    if (case['pdf'].state ==
+                            AttachmentState.ERROR):
+                        messages.append(ValidationMessage(
+                            False,
+                            'The {} PDF file could not be processed. '
                             'Please check the file is valid and contact us '
                             'for help in the event that this error '
                             'persists.'.format(role_name.lower()),
                             'Edit {}'.format(role_name.lower()),
                             url_for('.case_edit',
                                     proposal_id=proposal.id, role=role)))
-                        break
 
-            elif case['pdf'] is not None:
-                if (case['pdf'].state ==
-                        AttachmentState.ERROR):
+                else:
                     messages.append(ValidationMessage(
-                        False,
-                        'The {} PDF file could not be processed. '
-                        'Please check the file is valid and contact us '
-                        'for help in the event that this error '
-                        'persists.'.format(role_name.lower()),
+                        True,
+                        'The proposal does not have a {}.'.format(
+                            role_name.lower()),
                         'Edit {}'.format(role_name.lower()),
                         url_for('.case_edit',
                                 proposal_id=proposal.id, role=role)))
 
-            else:
-                messages.append(ValidationMessage(
-                    True,
-                    'The proposal does not have a {}.'.format(
-                        role_name.lower()),
-                    'Edit {}'.format(role_name.lower()),
-                    url_for('.case_edit',
-                            proposal_id=proposal.id, role=role)))
-
-        return messages
+        return report
 
     @with_proposal(permission=PermissionType.EDIT)
     def view_proposal_submit(self, db, proposal, can, form):
@@ -915,6 +927,7 @@ class GenericProposal(object):
             'can_edit': True,
             'is_submit_page': True,
             'immediate_review': immediate_review,
+            'proposal_order': self.get_proposal_order_names(),
         }
 
     def _message_proposal_submit(self, db, proposal):
@@ -1002,6 +1015,7 @@ class GenericProposal(object):
             'validation_messages': messages,
             'can_edit': can.edit,
             'is_submit_page': False,
+            'proposal_order': self.get_proposal_order_names(),
         }
 
     @with_proposal(permission=PermissionType.EDIT)

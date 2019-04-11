@@ -575,74 +575,78 @@ class JCMT(EAOFacility):
         return ctx
 
     def _validate_proposal_extra(self, db, proposal, extra):
-        messages = []
+        is_target_of_opp = (extra['jcmt_option_values'].target_of_opp
+            if (extra['jcmt_option_values'] is not None) else False)
 
-        if extra['jcmt_pr_summary'] is None:
-            messages.append(ValidationMessage(
-                False,
-                'The proposal does not have a public summary.',
-                'Edit the public summary',
-                url_for('.pr_summary_edit', proposal_id=proposal.id)))
+        report = super(JCMT, self)._validate_proposal_extra(
+            db, proposal, extra, skip_missing_targets=is_target_of_opp,
+            check_excluded_pi=True)
 
-        if extra['requests']:
-            try:
-                call_options = db.get_jcmt_call_options(proposal.call_id)
-                request_total = extra['requests'].get_total()
+        with report.accumulate_notes('science_case') as messages:
+            if extra['jcmt_pr_summary'] is None:
+                messages.append(ValidationMessage(
+                    False,
+                    'The proposal does not have a public summary.',
+                    'Edit the public summary',
+                    url_for('.pr_summary_edit', proposal_id=proposal.id)))
 
-                if call_options.time_excl_free:
-                    time_req = request_total.total_non_free
-                    time_desc_fmt = 'excluding {} time'
-                else:
-                    time_req = request_total.total
-                    time_desc_fmt = 'including {} time'
+        with report.accumulate_notes('proposal_request') as messages:
+            if extra['requests']:
+                try:
+                    call_options = db.get_jcmt_call_options(proposal.call_id)
+                    request_total = extra['requests'].get_total()
 
-                time_free_desc = join_list(
-                    [x.name for x in JCMTWeather.get_available().values()
-                     if x.free])
+                    if call_options.time_excl_free:
+                        time_req = request_total.total_non_free
+                        time_desc_fmt = 'excluding {} time'
+                    else:
+                        time_req = request_total.total
+                        time_desc_fmt = 'including {} time'
 
-                # Only describe "free" time if there are any such weather bands,
-                # and the proposal has used them.
-                if ((request_total.total != request_total.total_non_free)
-                        and time_free_desc):
-                    time_desc = time_desc_fmt.format(time_free_desc)
-                else:
-                    time_desc = 'total'
+                    time_free_desc = join_list(
+                        [x.name for x in JCMTWeather.get_available().values()
+                         if x.free])
 
-                if ((call_options.time_min is not None)
-                        and (time_req < call_options.time_min)):
-                    messages.append(ValidationMessage(
-                        False,
-                        'The time request ({} hours {}) is less than the '
-                        'minimum recommended value ({} hours).'.format(
-                            time_req, time_desc, call_options.time_min),
-                        'Edit the observing request',
-                        url_for('.request_edit', proposal_id=proposal.id)))
+                    # Only describe "free" time if there are any such weather bands,
+                    # and the proposal has used them.
+                    if ((request_total.total != request_total.total_non_free)
+                            and time_free_desc):
+                        time_desc = time_desc_fmt.format(time_free_desc)
+                    else:
+                        time_desc = 'total'
 
-                if ((call_options.time_max is not None)
-                        and (time_req > call_options.time_max)):
-                    messages.append(ValidationMessage(
-                        False,
-                        'The time request ({} hours {}) is greater than the '
-                        'maximum recommended value ({} hours).'.format(
-                            time_req, time_desc, call_options.time_max),
-                        'Edit the observing request',
-                        url_for('.request_edit', proposal_id=proposal.id)))
+                    if ((call_options.time_min is not None)
+                            and (time_req < call_options.time_min)):
+                        messages.append(ValidationMessage(
+                            False,
+                            'The time request ({} hours {}) is less than the '
+                            'minimum recommended value ({} hours).'.format(
+                                time_req, time_desc, call_options.time_min),
+                            'Edit the observing request',
+                            url_for('.request_edit', proposal_id=proposal.id)))
 
-            except NoSuchRecord:
-                pass
+                    if ((call_options.time_max is not None)
+                            and (time_req > call_options.time_max)):
+                        messages.append(ValidationMessage(
+                            False,
+                            'The time request ({} hours {}) is greater than the '
+                            'maximum recommended value ({} hours).'.format(
+                                time_req, time_desc, call_options.time_max),
+                            'Edit the observing request',
+                            url_for('.request_edit', proposal_id=proposal.id)))
 
-        else:
-            messages.append(ValidationMessage(
-                True,
-                'No observing time has been requested.',
-                'Edit the observing request',
-                url_for('.request_edit', proposal_id=proposal.id)))
+                except NoSuchRecord:
+                    pass
 
-        skip_missing_targets = False
-        if extra['jcmt_option_values'] is not None:
-            if extra['jcmt_option_values'].target_of_opp:
-                skip_missing_targets = True
+            else:
+                messages.append(ValidationMessage(
+                    True,
+                    'No observing time has been requested.',
+                    'Edit the observing request',
+                    url_for('.request_edit', proposal_id=proposal.id)))
 
+        with report.accumulate_notes('proposal_targets') as messages:
+            if is_target_of_opp:
                 # We generally expect not to know the sources in advance
                 # for a target of opportunity proposal.
                 if extra['targets']:
@@ -653,11 +657,7 @@ class JCMT(EAOFacility):
                         'Edit target list',
                         url_for('.target_edit', proposal_id=proposal.id)))
 
-        messages.extend(super(JCMT, self)._validate_proposal_extra(
-            db, proposal, extra, skip_missing_targets=skip_missing_targets,
-            check_excluded_pi=True))
-
-        return messages
+        return report
 
     def _get_proposal_tabulation(self, db, call, can, with_extra=False):
         tabulation = super(JCMT, self)._get_proposal_tabulation(

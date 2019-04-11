@@ -14,28 +14,33 @@
     </nav>
 {% endif %}
 
-{% if validation_messages %}
-    <ul class="valid_message">
-        {% for message in validation_messages %}
-            <li>
-                <p class="valid_{{ 'error' if message.is_error else 'warning' }}">
-                    {{ 'Error' if message.is_error else 'Warning' }}
-                </p>
-                <div>
-                    <p>
-                        {{ message.description }}
-                    </p>
-                    {% if can_edit %}
-                        <p>
-                            {% if message.link_url is not none %}
-                                <a href="{{ message.link_url }}">{{ message.link_text }}</a>
-                            {% endif %}
+{% set validation_message_sections = validation_messages.list_sections() %}
+{% if validation_message_sections %}
+    {% for (section, section_name) in proposal_order.items() %}
+        {% if section in validation_message_sections %}
+            <p class="section_label">{{ section_name }}</p>
+
+            <ul class="valid_message">
+                {% for message in validation_messages.get_section(section) %}
+                    <li>
+                        <p class="valid_{{ 'error' if message.is_error else 'warning' }}">
+                            {{ 'Error' if message.is_error else 'Warning' }}
                         </p>
-                    {% endif %}
-                </div>
-            </li>
-        {% endfor %}
-    </ul>
+                        <div>
+                            <p>
+                                {{ message.description }}
+                            </p>
+                            {% if can_edit and (message.link_url is not none) %}
+                                <p>
+                                    <a href="{{ message.link_url }}">{{ message.link_text }}</a>
+                                </p>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endfor %}
 {% else %}
     <p>
         No problems with this proposal have been detected.

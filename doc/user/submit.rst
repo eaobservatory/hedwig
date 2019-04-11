@@ -18,8 +18,7 @@ Warnings
 After any error or warning message there will normally be a link
 to help you address the problem.
 In some cases you may not be able to resolve all of the warnings,
-for example if the targets are unknown for a target of opportunity
-project.
+for example if you have no previous proposals to list.
 
 .. image:: image/submit_error.png
 
