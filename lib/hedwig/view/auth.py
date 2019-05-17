@@ -26,7 +26,8 @@ from ..type.collection import ProposalCollection, ReviewerCollection
 from ..type.enum import GroupType, ProposalState, ReviewState
 from ..type.simple import Reviewer
 from ..type.util import null_tuple
-from ..web.util import session, HTTPError, HTTPForbidden
+from ..web.util import session, HTTPError, HTTPForbidden, \
+    HTTPRedirectWithReferrer, url_for
 
 Authorization = namedtuple('Authorization', ('view', 'edit'))
 
@@ -210,7 +211,9 @@ def for_private_moc(db, facility_id, auth_cache=None):
     return no
 
 
-def for_proposal(role_class, db, proposal, auth_cache=None):
+def for_proposal(
+        role_class, db, proposal, auth_cache=None,
+        allow_unaccepted_review=None):
     """
     Determine the current user's authorization regarding this proposal.
     """
@@ -218,6 +221,7 @@ def for_proposal(role_class, db, proposal, auth_cache=None):
     if 'user_id' not in session or 'person' not in session:
         return no
 
+    redirect = None
     auth = no
     person_id = session['person']['id']
 
@@ -235,9 +239,23 @@ def for_proposal(role_class, db, proposal, auth_cache=None):
 
     if proposal.reviewers is not None:
         # Give access to people assigned as reviewers of the proposal.
-        for reviewer_role in proposal.reviewers.role_by_person_id(person_id):
-            if proposal.state in role_class.get_editable_states(reviewer_role):
-                return auth._replace(view=True)
+        for reviewer in proposal.reviewers.values_by_person_id(person_id):
+            if proposal.state in role_class.get_editable_states(reviewer.role):
+                if (role_class.is_accepted_review(reviewer.role)
+                        and not reviewer.accepted
+                        and not allow_unaccepted_review):
+                    if reviewer.accepted is not None:
+                        # The reviewer has rejected this review:
+                        # do not proceed with authorization.
+                        pass
+
+                    elif allow_unaccepted_review is None:
+                        # Prepare the redirect but do not raise yet in case
+                        # the person has other authorization for the proposal.
+                        redirect = _redirect_review_accept(reviewer)
+
+                else:
+                    return auth._replace(view=True)
 
     if ProposalState.is_submitted(proposal.state):
         # Give access to review groups with access to view all proposals.
@@ -247,6 +265,9 @@ def for_proposal(role_class, db, proposal, auth_cache=None):
                 queue_id=proposal.queue_id,
                 group_type=GroupType.view_all_groups()):
             return auth._replace(view=True)
+
+    if redirect is not None:
+        raise redirect
 
     return auth
 
@@ -316,7 +337,8 @@ def for_proposal_feedback(role_class, db, proposal, auth_cache=None):
 
 def for_review(
         role_class, db, reviewer, proposal, auth_cache=None,
-        skip_membership_test=False):
+        skip_membership_test=False,
+        allow_unaccepted=None):
     """
     Determine the current user's authorization regarding this review.
 
@@ -341,6 +363,14 @@ def for_review(
     which it is acceptable for the proposal members to see, such as
     calculation results.
 
+    The `allow_unaccepted` argument controls handling of reviews roles
+    with acceptance (`role_class.is_accepted_review` returns `True`).
+    If this is `None` (the default) then an attempt to authenticate
+    for an unaccepted review results in a redirect to the acceptance
+    page.  This mode can only be used from routes within the facility
+    blueprint.  If it is `True` then acceptance is ignored.  If it is `False`
+    then authentication is denied for unaccepted reviews.
+
     :return AuthorizationWithRating: including field indicating whether
         the ratings can be viewed.
     """
@@ -361,7 +391,19 @@ def for_review(
         if proposal.state in role_class.get_editable_states(reviewer.role):
             # Allow full access to the reviewer while the review is editable.
             if person_id == reviewer.person_id:
-                return AuthorizationWithRating(*yes, view_rating=True)
+                if (role_class.is_accepted_review(reviewer.role)
+                        and not reviewer.accepted
+                        and not allow_unaccepted):
+                    if reviewer.accepted is not None:
+                        # The reviewer has rejected this review:
+                        # do not proceed with authorization.
+                        pass
+
+                    elif allow_unaccepted is None:
+                        raise _redirect_review_accept(reviewer)
+
+                else:
+                    return AuthorizationWithRating(*yes, view_rating=True)
 
             # Special case: if this is the feedback review, allow all reviewers
             # with suitable roles to edit it.
@@ -542,6 +584,19 @@ def find_addable_reviews(db, facilities, auth_cache=None):
             ))
 
     return ans
+
+
+def _redirect_review_accept(reviewer):
+    """
+    Generate (but do not raise) a redirect exception to the acceptance page
+    for the given review.
+
+    This generates a URL in the current blueprint, so it can only be used
+    from the blueprint of the facility corresponding to the given review.
+    """
+
+    return HTTPRedirectWithReferrer(
+        url_for('.review_accept', reviewer_id=reviewer.id))
 
 
 @memoized

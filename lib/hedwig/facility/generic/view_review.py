@@ -40,7 +40,8 @@ from ...type.enum import AffiliationType, Assessment, \
     FormatType, GroupType, \
     MessageThreadType, PermissionType, PersonTitle, ProposalState, ReviewState
 from ...type.simple import Affiliation, DateAndTime, Link, MemberPIInfo, \
-    ProposalWithCode, Reviewer, ReviewFigureInfo, ReviewDeadline
+    ProposalWithCode, Reviewer, ReviewerAcceptance, \
+    ReviewFigureInfo, ReviewDeadline
 from ...type.util import null_tuple, \
     with_can_edit, with_can_view, with_can_view_edit
 
@@ -228,7 +229,7 @@ class GenericReview(object):
                 for reviewer_id, reviewer in proposal.reviewers.items():
                     reviewer_can = auth.for_review(
                         role_class, db, reviewer=reviewer, proposal=proposal,
-                        auth_cache=can.cache)
+                        auth_cache=can.cache, allow_unaccepted=False)
 
                     if not reviewer_can.view_rating:
                         reviewer = reviewer._replace(
@@ -1099,6 +1100,108 @@ class GenericReview(object):
         return self._view_review_new_or_edit(
             db, None, proposal, args, form, reviewer_role=reviewer_role)
 
+    @with_review(permission=PermissionType.EDIT, allow_unaccepted=True)
+    def view_review_accept(self, db, reviewer, proposal, can, args, form):
+        role_class = self.get_reviewer_roles()
+        if not role_class.is_accepted_review(reviewer.role):
+            raise ErrorPage('This review does not require acceptance.')
+
+        if reviewer.person_id != session['person']['id']:
+            raise HTTPForbidden(
+                'Accept permission denied for this review.')
+
+        if reviewer.accepted is not None:
+            raise ErrorPage(
+                'This review has already been {}.'.format(
+                    'accepted' if reviewer.accepted else 'rejected'))
+
+        try:
+            acceptance = db.search_reviewer_acceptance(
+                proposal_id=reviewer.proposal_id,
+                person_id=reviewer.person_id,
+                role=reviewer.role).get_single()
+
+        except NoSuchRecord:
+            acceptance = null_tuple(ReviewerAcceptance)
+
+        referrer = args.get('referrer')
+        message = None
+
+        if form is not None:
+            try:
+                reviewer = reviewer._replace(
+                    accepted=int_or_none(form.get('accepted', '')))
+                acceptance = acceptance._replace(
+                    text=form['explanation'])
+                referrer = form.get('referrer')
+
+                if reviewer.accepted is None:
+                    raise UserError(
+                        'Please select a conflict of interest declaration.')
+
+                elif (not reviewer.accepted) and (not acceptance.text):
+                    raise UserError(
+                        'Please enter an explanation '
+                        'of your conflict of interest.')
+
+                if acceptance.id is not None:
+                    db.update_reviewer_acceptance(
+                        reviewer_acceptance_id=acceptance.id,
+                        accepted=reviewer.accepted,
+                        text=acceptance.text, format_=FormatType.PLAIN)
+
+                else:
+                    db.add_reviewer_acceptance(
+                        role_class, proposal_id=reviewer.proposal_id,
+                        person_id=reviewer.person_id, role=reviewer.role,
+                        accepted=reviewer.accepted,
+                        text=acceptance.text, format_=FormatType.PLAIN)
+
+                db.update_reviewer(
+                    role_class, reviewer.id, accepted=reviewer.accepted)
+
+                if reviewer.accepted:
+                    flash('The review has been accepted.')
+                    target = (
+                        referrer if referrer else
+                        url_for('.review_info', reviewer_id=reviewer.id))
+                else:
+                    flash('The review has been rejected.')
+                    target = url_for('people.person_reviews')
+
+                raise HTTPRedirect(target)
+
+            except UserError as e:
+                message = e.message
+
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        try:
+            text_role_class = self.get_text_roles()
+            abstract = db.get_proposal_text(
+                proposal.id, text_role_class.ABSTRACT)
+        except NoSuchRecord:
+            abstract = None
+
+        is_admin = session.get('is_admin', False)
+
+        return {
+            'title': '{}: Accept {}'.format(
+                proposal_code,
+                role_class.get_name_with_review(reviewer.role)),
+            'reviewer': reviewer,
+            'proposal': proposal._replace(members=proposal.members.map_values(
+                lambda x: with_can_view(
+                    x, (is_admin or x.person_public)))),
+            'proposal_code': proposal_code,
+            'abstract': abstract,
+            'categories': db.search_proposal_category(
+                proposal_id=proposal.id),
+            'explanation': acceptance.text,
+            'message': message,
+            'referrer': referrer,
+        }
+
     @with_review(permission=PermissionType.EDIT)
     def view_review_info(self, db, reviewer, proposal, can):
         proposal_code = self.make_proposal_code(db, proposal)
@@ -1515,7 +1618,7 @@ class GenericReview(object):
             role_info = role_class.get_info(reviewer.role)
             reviewer_can = auth.for_review(
                 role_class, db, reviewer=reviewer, proposal=proposal,
-                auth_cache=auth_cache)
+                auth_cache=auth_cache, allow_unaccepted=False)
 
             if not reviewer.review_note_public:
                 reviewer = reviewer._replace(review_note=None)

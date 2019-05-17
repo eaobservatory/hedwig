@@ -159,7 +159,8 @@ class BaseCalculator(object):
                         role_class, db, proposal._replace(
                             members=MemberCollection((
                                 (proposal.member.id, proposal.member),))),
-                        auth_cache=auth_cache).edit))
+                        auth_cache=auth_cache,
+                        allow_unaccepted_review=False).edit))
 
             review_proposals = db.search_proposal(
                 facility_id=self.facility.id_,
@@ -172,7 +173,8 @@ class BaseCalculator(object):
                     filter_value=(lambda proposal: auth.for_review(
                         role_class, db, proposal.reviewer, proposal,
                         auth_cache=auth_cache,
-                        skip_membership_test=True).edit))
+                        skip_membership_test=True,
+                        allow_unaccepted=False).edit))
 
         if form is not None:
             try:

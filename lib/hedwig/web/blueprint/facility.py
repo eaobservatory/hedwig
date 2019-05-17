@@ -705,6 +705,14 @@ def create_facility_blueprint(db, facility):
             db, reviewer_id, request.args,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/review/<int:reviewer_id>/accept', methods=['GET', 'POST'])
+    @require_auth(require_person=True)
+    @facility_template('review_accept.html')
+    def review_accept(reviewer_id):
+        return facility.view_review_accept(
+            db, reviewer_id, request.args,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/review/<int:reviewer_id>/information')
     @require_auth(require_person=True)
     @facility_template('review_info.html')

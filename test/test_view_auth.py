@@ -27,7 +27,7 @@ from hedwig.type.enum import BaseCallType, BaseReviewerRole, \
 from hedwig.type.simple import Person
 from hedwig.view import auth
 from hedwig.view.people import _update_session_user, _update_session_person
-from hedwig.web.util import session, HTTPForbidden
+from hedwig.web.util import session, HTTPForbidden, HTTPRedirectWithReferrer
 
 from .base_app import WebAppTestCase
 
@@ -214,6 +214,24 @@ class WebAppAuthTestCase(WebAppTestCase):
         person_b1reu = self.db.add_person('Person B 1 REU', user_id=None)
         reviewer_b1reu = self.db.add_reviewer(
             role_class, proposal_b1, person_b1reu, role_class.EXTERNAL)
+
+        # -- peer reviewers:
+        user_a1rpn = self.db.add_user('a1rpn', 'pass')
+        person_a1rpn = self.db.add_person('Person A 1 RPN', user_id=user_a1rpn)
+        reviewer_a1rpn = self.db.add_reviewer(
+            role_class, proposal_a1, person_a1rpn, role_class.PEER)
+
+        user_a1rpa = self.db.add_user('a1rpa', 'pass')
+        person_a1rpa = self.db.add_person('Person A 1 RPA', user_id=user_a1rpa)
+        reviewer_a1rpa = self.db.add_reviewer(
+            role_class, proposal_a1, person_a1rpa, role_class.PEER)
+        self.db.update_reviewer(role_class, reviewer_a1rpa, accepted=True)
+
+        user_a1rpr = self.db.add_user('a1rpr', 'pass')
+        person_a1rpr = self.db.add_person('Person A 1 RPR', user_id=user_a1rpr)
+        reviewer_a1rpr = self.db.add_reviewer(
+            role_class, proposal_a1, person_a1rpr, role_class.PEER)
+        self.db.update_reviewer(role_class, reviewer_a1rpr, accepted=False)
 
         # -- committee reviewers:
         user_a1rc1 = self.db.add_user('a1rc1', 'pass')
@@ -493,6 +511,10 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (65, person_a1reu, False, proposal_a2, 'oooooooo', 'oooooooo', 'oooooooo'),
                 (66, person_b1reu, False, proposal_b1, 'ooovoooo', 'oooooooo', 'oooooooo'),
                 (67, person_b1reu, False, proposal_b2, 'oooooooo', 'oooooooo', 'oooooooo'),
+                # Peer reviewers.
+                (68, person_a1rpn, False, proposal_a1, 'oooroooo', 'oooooooo', 'oooooooo'),
+                (69, person_a1rpa, False, proposal_a1, 'ooovoooo', 'oooooooo', 'oooooooo'),
+                (70, person_a1rpr, False, proposal_a1, 'oooooooo', 'oooooooo', 'oooooooo'),
                 ]:
             self._test_auth_proposal(role_class, auth_cache, *test_case)
 
@@ -557,6 +579,10 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (61, person_a1rc2, False, reviewer_a1rf,  'vvvVEVVv'),
                 (62, person_a1rc1, False, reviewer_b1rf,  'oooooooo'),
                 (63, person_a1rc2, False, reviewer_b1rf,  'oooooooo'),
+                # Peer reviewers.
+                (64, person_a1rpn, False, reviewer_a1rpn, 'oooroooo'),
+                (65, person_a1rpa, False, reviewer_a1rpa, 'oooEoooo'),
+                (66, person_a1rpr, False, reviewer_a1rpr, 'oooooooo'),
                 ]:
             self._test_auth_review(role_class, auth_cache, *test_case)
 
@@ -659,7 +685,15 @@ class WebAppAuthTestCase(WebAppTestCase):
                 proposal_states.items(), expect_codes,
                 expect_codes_fb, expect_codes_dec):
             (state, state_name) = state_info
-            expect = self._expect_code('proposal', case_number, expect_code)
+
+            ctx_kwargs = {}
+            if expect_code == 'r':
+                expect = HTTPRedirectWithReferrer
+                ctx_kwargs['path'] = '/generic/'
+
+            else:
+                expect = self._expect_code('proposal', case_number, expect_code)
+
             expect_fb = self._expect_code('proposal fb', case_number,
                                           expect_code_fb)
             expect_dec = self._expect_code('proposal dec', case_number,
@@ -672,12 +706,33 @@ class WebAppAuthTestCase(WebAppTestCase):
                 proposal = self.db.get_proposal(
                     None, proposal_id, with_members=True, with_reviewers=True)
 
-            with self._as_person(person_id, is_admin):
-                self.assertEqual(
-                    auth.for_proposal(role_class, self.db, proposal,
-                                      auth_cache=auth_cache),
-                    expect, 'auth proposal case {} state {}'.format(
-                        case_number, state_name))
+            with self._as_person(person_id, is_admin, ctx_kwargs=ctx_kwargs):
+                if isinstance(expect, type):
+                    with self.assertRaises(expect):
+                        auth.for_proposal(role_class, self.db, proposal,
+                                          auth_cache=auth_cache)
+                    self.assertEqual(
+                        auth.for_proposal(role_class, self.db, proposal,
+                                          auth_cache=auth_cache,
+                                          allow_unaccepted_review=False),
+                        auth.no,
+                        'auth proposal case {} state {} no unaccepted'.format(
+                            case_number, state_name))
+
+                    self.assertEqual(
+                        auth.for_proposal(role_class, self.db, proposal,
+                                          auth_cache=auth_cache,
+                                          allow_unaccepted_review=True),
+                        auth.view_only,
+                        'auth proposal case {} state {} w/ unaccepted'.format(
+                            case_number, state_name))
+
+                else:
+                    self.assertEqual(
+                        auth.for_proposal(role_class, self.db, proposal,
+                                          auth_cache=auth_cache),
+                        expect, 'auth proposal case {} state {}'.format(
+                            case_number, state_name))
                 self.assertEqual(
                     auth.for_proposal_feedback(role_class, self.db, proposal,
                                                auth_cache=auth_cache),
@@ -706,8 +761,15 @@ class WebAppAuthTestCase(WebAppTestCase):
         for (state_info, expect_code) in zip(
                 proposal_states.items(), expect_codes):
             (state, state_name) = state_info
-            expect = self._expect_code('review', case_number, expect_code,
-                                       rating=True)
+
+            ctx_kwargs = {}
+            if expect_code == 'r':
+                expect = HTTPRedirectWithReferrer
+                ctx_kwargs['path'] = '/generic/'
+
+            else:
+                expect = self._expect_code('review', case_number, expect_code,
+                                           rating=True)
 
             if self.quick_proposal_state:
                 proposal = proposal_orig._replace(state=state)
@@ -716,12 +778,34 @@ class WebAppAuthTestCase(WebAppTestCase):
                 proposal = self.db.get_proposal(
                     None, reviewer.proposal_id, with_members=True)
 
-            with self._as_person(person_id, is_admin):
-                self.assertEqual(
-                    auth.for_review(role_class, self.db, reviewer, proposal,
-                                    auth_cache=auth_cache),
-                    expect, 'auth review case {} state {}'.format(
-                        case_number, state_name))
+            with self._as_person(person_id, is_admin, ctx_kwargs=ctx_kwargs):
+                if isinstance(expect, type):
+                    with self.assertRaises(expect):
+                        auth.for_review(role_class, self.db, reviewer, proposal,
+                                        auth_cache=auth_cache)
+
+                    self.assertEqual(
+                        auth.for_review(role_class, self.db, reviewer, proposal,
+                                        auth_cache=auth_cache,
+                                        allow_unaccepted=False),
+                        auth.AuthorizationWithRating(False, False, False),
+                        'auth review case {} state {} no unaccepted'.format(
+                            case_number, state_name))
+
+                    self.assertEqual(
+                        auth.for_review(role_class, self.db, reviewer, proposal,
+                                        auth_cache=auth_cache,
+                                        allow_unaccepted=True),
+                        auth.AuthorizationWithRating(True, True, True),
+                        'auth review case {} state {} with unaccepted'.format(
+                            case_number, state_name))
+
+                else:
+                    self.assertEqual(
+                        auth.for_review(role_class, self.db, reviewer, proposal,
+                                        auth_cache=auth_cache),
+                        expect, 'auth review case {} state {}'.format(
+                            case_number, state_name))
 
     def _test_auth_add_review(self, type_class, role_class, auth_cache,
                               case_number, person_id, is_admin,
@@ -778,20 +862,26 @@ class WebAppAuthTestCase(WebAppTestCase):
         return expect
 
     @contextmanager
-    def _as_person(self, person_id, is_admin=False, user_id=None):
+    def _as_person(
+            self, person_id, is_admin=False, user_id=None, ctx_kwargs={}):
         """
         Simulate logging in as the given person.
 
         Sets session user and person values based on the given `person_id`.
 
-        If `person_id` is `None` then sets jus tthe user value based on the
+        If `person_id` is `None` then sets just the user value based on the
         `user_id` argument.
+
+        A Flask request context is established using its `test_request_context`
+        method.  Arguments for this method can be supplied, for example to set
+        the path for this request to "/generic/", to allow routines which
+        can only be run in the context of a facility blueprint to be tested.
         """
 
         if person_id is not None:
             person = self.db.search_person(person_id=person_id).get_single()
 
-        with self.app.test_request_context():
+        with self.app.test_request_context(**ctx_kwargs):
             if person_id is None:
                 _update_session_user(user_id)
             else:

@@ -1,0 +1,52 @@
+{% extends 'layout.html' %}
+{% set help_link=url_for('help.review_page', page_name='invitation') %}
+{% from 'macro/proposal_summary.html' import render_proposal_summary %}
+{% from 'macro/member.html' import render_proposal_members %}
+
+{% block content %}
+<h2>Proposal Information</h2>
+
+{{ render_proposal_summary(facility_name, facility_call_type_class, proposal, proposal_code, abstract=abstract, categories=categories) }}
+
+<h3>Members</h3>
+
+{{ render_proposal_members(proposal.id, proposal.members) }}
+
+<h2>Declaration</h2>
+
+<p>
+    Please take a look at the proposal information and member list above.
+    Based on these details, we ask that you declare whether
+    you would have a conflict of interest in reviewing this proposal.
+</p>
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.review_accept', reviewer_id=reviewer.id) }}">
+    <ol>
+        <li>
+            <label for="accepted">Conflict</label>
+            <select name="accepted">
+                <option value="" {{ 'selected="selected"' | safe if reviewer.accepted is none }} disabled="disabled">Please select an option &hellip;</option>
+                <option value="1" {{ 'selected="selected"' | safe if (reviewer.accepted is not none) and reviewer.accepted }}>No conflict of interest &mdash; I can review this proposal</option>
+                <option value="0" {{ 'selected="selected"' | safe if (reviewer.accepted is not none) and (not reviewer.accepted) }}>I have a conflict of interest which may prevent me giving a fair review</option>
+            </select>
+        </li>
+        <li>
+            <label for="explanation">Explanation</label>
+            <textarea name="explanation" cols="80" rows="5">{{ '' if explanation is none else explanation }}</textarea>
+        </li>
+        <li>
+            <input type="submit" name="submit" value="Save declaration" />
+            {% if referrer is not none %}
+                <input type="hidden" name="referrer" value="{{ referrer }}" />
+            {% endif %}
+        </li>
+    </ol>
+</form>
+
+{% endblock %}

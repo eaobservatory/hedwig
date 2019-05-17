@@ -28,7 +28,8 @@ from ..error import ConsistencyError, DatabaseIntegrityError, Error, \
     UserError
 from ..type.collection import EmailCollection, \
     ProposalCollection, ReviewerCollection
-from ..type.enum import PermissionType, PersonTitle, ProposalState
+from ..type.enum import PermissionType, PersonTitle, ProposalState, \
+    ReviewState
 from ..type.simple import Email, \
     Institution, InstitutionLog, Person, ProposalWithCode
 from ..type.util import null_tuple, with_deadline
@@ -872,18 +873,16 @@ class PeopleView(object):
 
     def person_reviews_own(self, db, facilities):
         return self._person_reviews(
-            db, session['person']['id'], facilities, None, 'Your Reviews',
-            include_addable=True)
+            db, session['person']['id'], facilities, None)
 
     @with_verified_admin
     @with_person(permission=PermissionType.NONE)
     def person_reviews_other(self, db, person, facilities):
         return self._person_reviews(
-            db, person.id, facilities, person,
-            '{}: Reviews'.format(person.name))
+            db, person.id, facilities, person, as_admin=True)
 
-    def _person_reviews(self, db, person_id, facilities, person, title,
-                        include_addable=False):
+    def _person_reviews(self, db, person_id, facilities, person,
+                        as_admin=False):
         auth_cache = {}
 
         # Get a list of proposals, in all review states, for which this
@@ -894,12 +893,12 @@ class PeopleView(object):
             with_members=True, state=ProposalState.review_states())
         calls = set((x.call_id for x in all_proposals.values()))
 
-        if include_addable:
+        if as_admin:
+            all_addable = None
+        else:
             all_addable = auth.find_addable_reviews(
                 db, facilities, auth_cache=auth_cache)
             calls.update((x.call_id for x in all_addable.values()))
-        else:
-            all_addable = None
 
         # Get the review deadlines for the calls of interest.
         deadlines = db.search_review_deadline(call_id=calls)
@@ -918,9 +917,15 @@ class PeopleView(object):
             facility_proposals = ProposalCollection()
 
             for proposal in all_proposals.values_by_facility(facility.id):
-                if auth.for_review(
+                # Filter reviews by edit permission.  But show all reviews
+                # when viewing the administrative version of this page,
+                # and exclude rejected reviews otherwise.
+                if as_admin or (auth.for_review(
                         role_class, db, proposal.reviewer, proposal,
-                        auth_cache=auth_cache).edit:
+                        auth_cache=auth_cache,
+                        allow_unaccepted=True).edit
+                        and (proposal.reviewer.review_state
+                             != ReviewState.REJECTED)):
                     if proposal.id in facility_proposals:
                         proposal_reviewers = \
                             facility_proposals[proposal.id].reviewers
@@ -969,7 +974,8 @@ class PeopleView(object):
                 facility.name, facility.code, role_class, facility_proposals))
 
         return {
-            'title': title,
+            'title': ('Your Reviews' if (person is None)
+                      else '{}: Reviews'.format(person.name)),
             'proposals': proposals,
             'person': person,
         }

@@ -247,7 +247,9 @@ class BaseTargetTool(object):
         return self._view_any_mode(
             db, target_objects, extra_info, args, form, None)
 
-    @with_proposal(permission=PermissionType.VIEW, indirect_facility=True)
+    @with_proposal(
+            permission=PermissionType.VIEW, indirect_facility=True,
+            allow_unaccepted_review=False)
     def view_proposal(self, db, proposal, can, args):
         """
         View handler function for proposal-based usage of a target tool.

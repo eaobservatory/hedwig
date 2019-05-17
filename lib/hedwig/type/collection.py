@@ -671,12 +671,12 @@ class ReviewerCollection(
 
         return False
 
-    def role_by_person_id(self, person_id):
+    def values_by_person_id(self, person_id):
         """
-        Get a list of the reviewer roles for the given person.
+        Get a list of the reviewers for the given person.
         """
 
-        return [x.role for x in self.values() if x.person_id == person_id]
+        return [x for x in self.values() if x.person_id == person_id]
 
 
 class ReviewDeadlineCollection(

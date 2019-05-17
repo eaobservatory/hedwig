@@ -149,6 +149,11 @@ td.review_addable {
     background: #4F4;
 }
 
+td.review_rejected {
+    background: #F00;
+    color: #FFF;
+}
+
 tr.data_provisional > td {
     color: #888;
 }

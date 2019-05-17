@@ -223,7 +223,10 @@ def with_person(permission):
     return decorator
 
 
-def with_proposal(permission, indirect_facility=False, **get_proposal_kwargs):
+def with_proposal(
+        permission, indirect_facility=False,
+        allow_unaccepted_review=None,
+        **get_proposal_kwargs):
     """
     Decorator for methods which deal with proposals.
 
@@ -238,6 +241,8 @@ def with_proposal(permission, indirect_facility=False, **get_proposal_kwargs):
       feedback is required.
 
     * When "NONE" is selected, no authorization object is passed on.
+
+    The `allow_unaccepted_review` argument is passed on to `auth.for_proposal`.
 
     Additional keyword arguments are passed to the get_proposal database
     method.
@@ -278,8 +283,10 @@ def with_proposal(permission, indirect_facility=False, **get_proposal_kwargs):
                          *args, **kwargs)
 
             else:
-                can = auth.for_proposal(role_class, db, proposal,
-                                        auth_cache=auth_cache)
+                can = auth.for_proposal(
+                    role_class, db, proposal,
+                    auth_cache=auth_cache,
+                    allow_unaccepted_review=allow_unaccepted_review)
 
                 if permission == PermissionType.VIEW:
                     if not can.view:
@@ -304,7 +311,9 @@ def with_proposal(permission, indirect_facility=False, **get_proposal_kwargs):
     return decorator
 
 
-def with_review(permission, with_invitation=False, **get_proposal_kwargs):
+def with_review(
+        permission, with_invitation=False, allow_unaccepted=None,
+        **get_proposal_kwargs):
     """
     Decorator for methods which deal with reviews of proposals.
 
@@ -312,6 +321,8 @@ def with_review(permission, with_invitation=False, **get_proposal_kwargs):
     The wrapped method is called with the database, reviewer record,
     proposal record and authorization object followed by any remaining
     arguments.
+
+    The `allow_unaccepted` argument is passed on to `auth.for_review`.
 
     Additional keyword arguments are passed to the get_proposal database
     method.
@@ -351,8 +362,9 @@ def with_review(permission, with_invitation=False, **get_proposal_kwargs):
 
             else:
                 auth_cache = {}
-                can = auth.for_review(role_class, db, reviewer, proposal,
-                                      auth_cache=auth_cache)
+                can = auth.for_review(
+                    role_class, db, reviewer, proposal,
+                    auth_cache=auth_cache, allow_unaccepted=allow_unaccepted)
 
                 if permission == PermissionType.VIEW:
                     if not can.view:

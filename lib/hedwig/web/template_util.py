@@ -420,6 +420,10 @@ def register_template_utils(app):
         return ReviewState.is_present(value)
 
     @app.template_test()
+    def reviewer_role_accepted(value, role_class):
+        return role_class.is_accepted_review(value)
+
+    @app.template_test()
     def reviewer_role_invited(value, role_class):
         return role_class.is_invited_review(value)
 

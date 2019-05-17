@@ -505,6 +505,7 @@ class ReviewPart(object):
 
     def _expr_review_state(self):
         return case([
+            (not_(reviewer.c.accepted), ReviewState.REJECTED),
             (review.c.reviewer_id.isnot(None), review.c.state),
         ], else_=ReviewState.NOT_DONE)
 

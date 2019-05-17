@@ -3,8 +3,10 @@
 
 {% block content %}
 <p>
-    Thank you for accepting your invitation
-    regarding the review of this proposal.
+    {% if reviewer.role is reviewer_role_invited(facility_role_class) %}
+        Thank you for accepting your invitation
+        regarding the review of this proposal.
+    {% endif %}
     Please use the links below to view the proposal and,
     when you are ready, to write your review.
     You will be able to see the proposal and edit
@@ -19,14 +21,16 @@
 </ul>
 
 <p>
-    This review can now be found in the
+    This review can be found in the
     <a href="{{ url_for('people.person_reviews') }}">list of all of your active reviews</a>.
     You may view this list at any time by clicking the
     &ldquo;Your reviews&rdquo; entry in the menu at the top of the page.
 </p>
 
-<p>
-    Please <a href="{{ url_for('home.contact_page') }}">contact us</a>
-    if you feel unable to review this proposal.
-</p>
+{% if reviewer.role is not reviewer_role_accepted(facility_role_class) %}
+    <p>
+        Please <a href="{{ url_for('home.contact_page') }}">contact us</a>
+        if you feel unable to review this proposal.
+    </p>
+{% endif %}
 {% endblock %}

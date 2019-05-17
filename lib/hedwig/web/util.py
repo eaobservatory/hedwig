@@ -67,6 +67,24 @@ class HTTPRedirect(_werkzeug_routing.RequestRedirect):
     code = 303
 
 
+class HTTPRedirectWithReferrer(HTTPRedirect):
+    """
+    Exception class for HTTP redirect with added "referrer" URL argument.
+
+    This class extends `HTTPRedirect`, overriding the constructor to add
+    a "referrer" URL argument giving the relative URL of the current
+    request.
+    """
+
+    def __init__(self, new_url):
+        request_url = _flask_request.url
+        if request_url is not None:
+            new_url = url_add_args(
+                new_url, referrer=url_relative(request_url))
+
+        super(HTTPRedirectWithReferrer, self).__init__(new_url)
+
+
 class ErrorPage(ExceptionWithMessage):
     """Exception class where an error page should be shown."""
 

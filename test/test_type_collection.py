@@ -496,10 +496,10 @@ class CollectionTypeTestCase(TestCase):
 
         self.assertTrue(c.has_role(BaseReviewerRole.EXTERNAL))
 
-        self.assertEqual(c.role_by_person_id(2001),
+        self.assertEqual([x.role for x in c.values_by_person_id(2001)],
                          [BaseReviewerRole.TECH])
 
-        self.assertEqual(c.role_by_person_id(2002),
+        self.assertEqual([x.role for x in c.values_by_person_id(2002)],
                          [BaseReviewerRole.EXTERNAL])
 
         reviewers = c.values_by_role(BaseReviewerRole.EXTERNAL)

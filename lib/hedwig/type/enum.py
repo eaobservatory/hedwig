@@ -899,6 +899,7 @@ class ReviewState(EnumBasic, EnumAvailable, EnumDisplayClass):
     DONE = 2
     ADDABLE = 3
     PREPARATION = 4
+    REJECTED = 5
 
     StateInfo = namedtuple(
         'StateInfo', ('name', 'display_class', 'available', 'present'))
@@ -913,6 +914,8 @@ class ReviewState(EnumBasic, EnumAvailable, EnumDisplayClass):
             'Done',           'done',     True,  True)),
         (ADDABLE,  StateInfo(
             'Addable',        'addable',  False, False)),
+        (REJECTED, StateInfo(
+            'Rejected',       'rejected', True,  False)),
     ))
 
     @classmethod
