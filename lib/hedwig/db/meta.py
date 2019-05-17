@@ -651,6 +651,8 @@ reviewer = Table(
            ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
     Column('role', Integer, nullable=False),
+    Column('notified', Boolean, default=False, nullable=False),
+    Column('accepted', Boolean, nullable=True),
     UniqueConstraint('proposal_id', 'person_id', 'role'),
     **table_opts)
 

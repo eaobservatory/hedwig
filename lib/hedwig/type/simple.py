@@ -248,7 +248,7 @@ Reviewer = namedtuple(
 
 ReviewerInfo = namedtuple(
     'ReviewerInfo',
-    ['id', 'role', 'review_state', 'person_id', 'proposal_id'])
+    ['id', 'role', 'review_state', 'person_id', 'proposal_id', 'accepted'])
 
 ReviewCalculation = namedtuple(
     'ReviewCalculation',

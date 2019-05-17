@@ -1610,6 +1610,7 @@ class ProposalPart(object):
                 reviewer.c.role.label('reviewer_role'),
                 self._expr_review_state().label('review_state'),
                 reviewer.c.person_id.label('reviewer_person_id'),
+                reviewer.c.accepted.label('reviewer_accepted'),
             ])
             select_from = select_from.join(
                 reviewer,
@@ -1794,7 +1795,8 @@ class ProposalPart(object):
                         role=values.pop('reviewer_role'),
                         review_state=values.pop('review_state'),
                         person_id=values.pop('reviewer_person_id'),
-                        proposal_id=values['id'])
+                        proposal_id=values['id'],
+                        accepted=values.pop('reviewer_accepted'))
 
                 ans[row_key] = Proposal(
                     member=member_info, members=None,

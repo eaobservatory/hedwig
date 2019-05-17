@@ -691,11 +691,11 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
         ('name', 'unique', 'text', 'assessment', 'rating', 'weight',
          'cttee', 'name_review', 'feedback_direct', 'feedback_indirect',
          'note', 'invite',
-         'edit_rev', 'edit_fr', 'rating_hide', 'calc', 'figure',
+         'edit_rev', 'edit_fr', 'rating_hide', 'calc', 'figure', 'accept',
          'display_class', 'url_path', 'help_page', 'review_group'))
 
     # Options:  Unique Text   Ass/nt Rating Weight Cttee  "Rev"  Fbk_dr Fbk_id
-    #           Note   Invite E.Rev  E.FR   Ra.Hi. Calc   Fig.
+    #           Note   Invite E.Rev  E.FR   Ra.Hi. Calc   Fig.   Accept
     #           Disp.cl.      URL           Help_page
     #           Review group
     _info = OrderedDict((
@@ -703,49 +703,49 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
             RoleInfo(
                 'Technical',
                 True,  True,  True,  False, False, False, True,  False, False,
-                True,  False, True,  True,  False, True,  True,
+                True,  False, True,  True,  False, True,  True,  False,
                 'tech',       'technical',  'technical',
                 GroupType.TECH)),
         (EXTERNAL,
             RoleInfo(
                 'External',
                 False, True,  False, True,  False, False, True,  False, False,
-                False, True,  True,  False, False, False, False,
+                False, True,  True,  False, False, False, False, False,
                 'ext',        'external',   'external',
                 None)),
         (PEER,
             RoleInfo(
                 'Peer',
                 False, True,  False, True,  True,  False, True,  False, False,
-                False, False, True,  False, False, False, False,
+                False, False, True,  False, False, False, False, True,
                 'ext',        'peer',       'peer',
                 GroupType.PEER)),
         (CTTEE_PRIMARY,
             RoleInfo(
                 'Committee Primary',
                 True,  True,  False, True,  True,  True,  True,  True,  False,
-                True,  False, True,  True,  True,  False, False,
+                True,  False, True,  True,  True,  False, False, False,
                 'cttee',      'committee',  'committee',
                 GroupType.CTTEE)),
         (CTTEE_SECONDARY,
             RoleInfo(
                 'Committee Secondary',
                 False, True,  False, True,  True,  True,  True,  False, True,
-                True,  False, True,  True,  True,  False, False,
+                True,  False, True,  True,  True,  False, False, False,
                 'cttee',      None,         'committee',
                 None)),
         (CTTEE_OTHER,
             RoleInfo(
                 'Committee Other',
                 False, True,  False, True,  True,  True,  True,  False, False,
-                True,  False, True,  True,  True,  False, False,
+                True,  False, True,  True,  True,  False, False, False,
                 'cttee',      'other',      'committee',
                 None)),
         (FEEDBACK,
             RoleInfo(
                 'Feedback',
                 True,  True,  False, False, False, False, False, False, False,
-                False, False, False, True,  False, False, False,
+                False, False, False, True,  False, False, False, False,
                 'feedback',   'feedback',   None,
                 None)),
     ))
@@ -868,6 +868,22 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
         """
 
         return cls._info[role].name_review
+
+    @classmethod
+    def is_accepted_review(cls, role):
+        """
+        Determine whether a reviews of a role must first be accepted.
+        """
+
+        return cls._info[role].accept
+
+    @classmethod
+    def is_assigned_review(cls, role):
+        """
+        Indicated whether a reviewer role is assigned.
+        """
+
+        return (cls._info[role].review_group is not None)
 
 
 class ReviewState(EnumBasic, EnumAvailable, EnumDisplayClass):

@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from datetime import datetime
 
 from sqlalchemy.sql import select
-from sqlalchemy.sql.expression import and_, case
+from sqlalchemy.sql.expression import and_, case, not_
 from sqlalchemy.sql.functions import count
 
 from ...error import ConsistencyError, Error, FormattedError, \
@@ -303,6 +303,7 @@ class ReviewPart(object):
                         person_id=None, review_state=None,
                         call_id=None, queue_id=None,
                         proposal_state=None, institution_id=None,
+                        notified=None, accepted=(),
                         with_review=False, with_review_text=False,
                         with_review_note=False,
                         with_invitation=False,
@@ -425,6 +426,20 @@ class ReviewPart(object):
 
         if institution_id is not None:
             stmt = stmt.where(person.c.institution_id == institution_id)
+
+        if accepted != ():
+            if accepted is None:
+                stmt = stmt.where(reviewer.c.accepted.is_(None))
+            elif accepted:
+                stmt = stmt.where(reviewer.c.accepted)
+            else:
+                stmt = stmt.where(not_(reviewer.c.accepted))
+
+        if notified is not None:
+            if notified:
+                stmt = stmt.where(reviewer.c.notified)
+            else:
+                stmt = stmt.where(not_(reviewer.c.notified))
 
         ans = ReviewerCollection()
 
@@ -714,6 +729,52 @@ class ReviewPart(object):
                     conn, review_fig, review_fig_link.c.fig_id)
 
         return (n_insert, n_update, n_delete)
+
+    def update_reviewer(
+            self, role_class, reviewer_id,
+            notified=None, accepted=()):
+        """
+        Update the status information of a reviewer record.
+        """
+
+        with self._transaction() as conn:
+            try:
+                reviewer_record = self.search_reviewer(
+                    reviewer_id=reviewer_id, _conn=conn).get_single()
+            except NoSuchRecord:
+                raise ConsistencyError(
+                    'reviewer does not exist with id={}', reviewer_id)
+
+            try:
+                role_info = role_class.get_info(reviewer_record.role)
+            except KeyError:
+                raise Error('reviewer has invalid role')
+
+            values = {}
+
+            if notified is not None:
+                if role_info.review_group is None:
+                    raise Error('reviewer role is not assigned')
+
+                values['notified'] = notified
+
+            if accepted != ():
+                if not role_info.accept:
+                    raise Error('reviewer role is not accepted')
+
+                values['accepted'] = accepted
+
+            if not values:
+                raise Error('no reviewer updates specified')
+
+            result = conn.execute(reviewer.update().where(
+                reviewer.c.id == reviewer_id
+            ).values(values))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched updating reviewer with id={}',
+                    reveiwer_id)
 
     def update_review_figure(
             self, reviewer_id, link_id, fig_id=None,
