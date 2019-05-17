@@ -1569,6 +1569,7 @@ class ProposalPart(object):
             call.c.capt_word_lim,
             call.c.expl_word_lim,
             call.c.date_close,
+            call.c.multi_semester,
         ]
 
         select_from = proposal.join(call).join(semester).join(queue)

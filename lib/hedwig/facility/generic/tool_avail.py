@@ -83,9 +83,13 @@ class AvailabilityTool(BaseTargetTool):
     def _view_proposal(
             self, db, proposal, target_objects, extra_info, args, auth_cache):
         # Overwrite the "extra_info" with the semester start and end dates.
+        # If the proposal is for a multi-semester call, use one year from the
+        # semester start instead.
         return self._view_any_mode(
             db, target_objects,
-            [proposal.semester_start, proposal.semester_end],
+            [proposal.semester_start,
+             ((proposal.semester_start + timedelta(days=365))
+              if proposal.multi_semester else proposal.semester_end)],
             args, None, auth_cache)
 
     def _view_any_mode(
