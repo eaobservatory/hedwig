@@ -104,7 +104,7 @@ class DBProposalTest(DBTestCase):
             BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             1, 1, 1, 1, 1, 1, 1, 1, 1, '', '', '',
-            FormatType.PLAIN)
+            FormatType.PLAIN, False)
         person_id = self.db.add_person('Person1')
         (affiliation_id, affiliation_record) = result.popitem()
         self.db.add_proposal(call_id, person_id, affiliation_id, 'Title')
@@ -119,7 +119,7 @@ class DBProposalTest(DBTestCase):
             BaseCallType, semester_id_2, queue_id, BaseCallType.STANDARD,
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             1, 1, 1, 1, 1, 1, 1, 1, 1, '', '', '',
-            FormatType.PLAIN)
+            FormatType.PLAIN, False)
 
         # Store different sets of weights for the two calls.
         result = self.db.search_affiliation(queue_id=queue_id,
@@ -305,7 +305,7 @@ class DBProposalTest(DBTestCase):
             capt_word_lim=8, expl_word_lim=9,
             tech_note='technical note', sci_note='scientific note',
             prev_prop_note='previous proposal note',
-            note_format=FormatType.PLAIN)
+            note_format=FormatType.PLAIN, multi_semester=False)
         self.assertIsInstance(call_id, int)
 
         # Check tests for bad values.
@@ -314,19 +314,19 @@ class DBProposalTest(DBTestCase):
                 BaseCallType, 1999999, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN)
+                '', '', '', FormatType.PLAIN, False)
         with self.assertRaisesRegex(ConsistencyError, 'queue does not'):
             self.db.add_call(
                 BaseCallType, semester_id, 1999999, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN)
+                '', '', '', FormatType.PLAIN, False)
         with self.assertRaisesRegex(UserError, 'Closing date is before open'):
             self.db.add_call(
                 BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
                 date_close, date_open,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN)
+                '', '', '', FormatType.PLAIN, False)
 
         # Check uniqueness constraint.
         with self.assertRaises(DatabaseIntegrityError):
@@ -334,7 +334,7 @@ class DBProposalTest(DBTestCase):
                 BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN)
+                '', '', '', FormatType.PLAIN, False)
 
         # Check facility consistency check.
         facility_id_2 = self.db.ensure_facility('my_other_tel')
@@ -347,7 +347,7 @@ class DBProposalTest(DBTestCase):
                 BaseCallType, semester_id_2, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN)
+                '', '', '', FormatType.PLAIN, False)
 
         # Try the search_call method.
         result = self.db.search_call(call_id=call_id)
@@ -367,7 +367,8 @@ class DBProposalTest(DBTestCase):
                         tech_note='technical note', sci_note='scientific note',
                         prev_prop_note='previous proposal note',
                         note_format=FormatType.PLAIN,
-                        facility_code=None, proposal_count=None)
+                        facility_code=None, proposal_count=None,
+                        multi_semester=False)
         self.assertEqual(result[call_id],
                          expected._replace(tech_note=None, sci_note=None,
                                            prev_prop_note=None))
@@ -394,7 +395,7 @@ class DBProposalTest(DBTestCase):
         call_id_2 = self.db.add_call(
             BaseCallType, semester_id_2, queue_id_2, BaseCallType.STANDARD,
             date_open, date_close,
-            1, 1, 1, 1, 1, 1, 1, 1, 1, '', '', '', FormatType.PLAIN)
+            1, 1, 1, 1, 1, 1, 1, 1, 1, '', '', '', FormatType.PLAIN, False)
 
         result = self.db.get_call(
             facility_id=None, call_id=call_id, with_facility_code=True)

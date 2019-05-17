@@ -87,6 +87,7 @@ class ProposalPart(object):
                  sci_word_lim, sci_fig_lim, sci_page_lim,
                  capt_word_lim, expl_word_lim,
                  tech_note, sci_note, prev_prop_note, note_format,
+                 multi_semester,
                  _test_skip_check=False):
         """
         Add a call for proposals to the database.
@@ -137,6 +138,7 @@ class ProposalPart(object):
                 call.c.sci_note: sci_note,
                 call.c.prev_prop_note: prev_prop_note,
                 call.c.note_format: note_format,
+                call.c.multi_semester: multi_semester,
             }))
 
         return result.inserted_primary_key[0]
@@ -2740,7 +2742,7 @@ class ProposalPart(object):
                     sci_word_lim=None, sci_fig_lim=None, sci_page_lim=None,
                     capt_word_lim=None, expl_word_lim=None,
                     tech_note=None, sci_note=None, prev_prop_note=None,
-                    note_format=None,
+                    note_format=None, multi_semester=None,
                     _test_skip_check=False):
         """
         Update a call for proposals record.
@@ -2784,6 +2786,8 @@ class ProposalPart(object):
             if not FormatType.is_valid(note_format, is_system=True):
                 raise UserError('Text format not recognised.')
             values['note_format'] = note_format
+        if multi_semester is not None:
+            values['multi_semester'] = multi_semester
 
         if not values:
             raise Error('no call updates specified')

@@ -195,7 +195,7 @@ Proposal = namedtuple(
         'tech_word_lim', 'tech_fig_lim', 'tech_page_lim',
         'sci_word_lim', 'sci_fig_lim', 'sci_page_lim',
         'capt_word_lim', 'expl_word_lim',
-        'date_close',
+        'date_close', 'multi_semester',
         'has_decision',
         'decision_accept', 'decision_exempt', 'decision_ready',
         'decision_note', 'decision_note_format',

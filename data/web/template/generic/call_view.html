@@ -7,7 +7,12 @@
 <table>
     <tr>
         <th>Semester</th>
-        <td><a href="{{ url_for('.semester_view', semester_id=call.semester_id) }}">{{ call.semester_name }}</a></td>
+        <td>
+            <a href="{{ url_for('.semester_view', semester_id=call.semester_id) }}">{{ call.semester_name }}</a>
+            {% if call.multi_semester %}
+                <span class="label">multiple</span>
+            {% endif %}
+        </td>
     </tr>
     <tr>
         <th>Queue</th>

@@ -112,7 +112,7 @@ class WebAppAuthTestCase(WebAppTestCase):
         call_options = (type_class.STANDARD,
                         datetime(1999, 9, 1), datetime(1999, 9, 30),
                         100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', '',
-                        FormatType.PLAIN)
+                        FormatType.PLAIN, False)
 
         call_a = self.db.add_call(
             type_class, semester_id, queue_a, *call_options)

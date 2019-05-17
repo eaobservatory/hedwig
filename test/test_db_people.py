@@ -998,7 +998,7 @@ class DBPeopleTest(DBTestCase):
             BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             100, 1000, 0, 1, 2000, 4, 3, 100, 100,
-            '', '', '', FormatType.PLAIN)
+            '', '', '', FormatType.PLAIN, False)
         affiliation_id = self.db.add_affiliation(queue_id, 'Aff/n 1')
         proposal_id = self.db.add_proposal(call_id, person_id,
                                            affiliation_id, 'Proposal 1')

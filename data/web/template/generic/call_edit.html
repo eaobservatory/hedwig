@@ -40,6 +40,11 @@
             </li>
         {% endif %}
         <li>
+            <label for="multi_semester">Semester range</label>
+            <input type="checkbox" name="multi_semester" {{ 'checked="checked"' | safe if call.multi_semester }} />
+            observations may span multiple semesters
+        </li>
+        <li>
             <label for="date_open">Opening date</label>
             <input type="date" name="open_date" value="{{ call.date_open.date }}" placeholder="YYYY-MM-DD" required="required" size="10" />
             <input type="time" name="open_time" value="{{ call.date_open.time }}" placeholder="HH:MM" required="required" size="5" />
