@@ -1,10 +1,10 @@
 {% extends "layout.html" %}
 
-{% from 'macro/institution.html' import render_member_institution %}
 {% from 'macro/pdf.html' import render_proposal_pdf %}
 {% from 'macro/figure.html' import render_proposal_figures %}
 {% from 'macro/calculation.html' import render_calculation_title, render_calculation %}
 {% from 'macro/annotation.html' import render_copy_annotation %}
+{% from 'macro/member.html' import render_proposal_members %}
 
 {% set navigation=[(proposal_code, none)] %}
 {% set help_link=url_for('help.user_page', page_name='proposal') %}
@@ -190,55 +190,7 @@
     <section>
         <h2 id="members">{{ proposal_order.proposal_members }}</h2>
 
-        <table>
-            <tr>
-                <th>Name</th>
-                <th>Affiliation</th>
-                <th>Institution</th>
-                <th>Role</th>
-            </tr>
-            {% for member in proposal.members.values() %}
-                <tr>
-                    <td>
-                        {% if member.can_view %}
-                            <a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name }}</a>
-                        {% else %}
-                            {{ member.person_name }}
-                        {% endif %}
-                    </td>
-                    <td>
-                        {{ member.affiliation_name }}
-                        {% if show_admin_links %}
-                            <nav>
-                                <a href="{{ url_for('.member_affiliation_edit', proposal_id=proposal.id, member_id=member.id) }}" id="member_aff_ed_{{ member.id }}">edit</a>
-                            </nav>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if member.resolved_institution_id is not none %}
-                            {% if show_admin_links %}
-                                <a href="{{ url_for('people.institution_view', institution_id=member.resolved_institution_id) }}">{{ render_member_institution(member) }}</a>
-                            {% else %}
-                                {{ render_member_institution(member) }}
-                            {% endif %}
-                        {% elif can_edit and not member.person_registered %}
-                            <a href="{{ url_for('people.person_edit_institution', person_id=member.person_id) }}">Select institution</a>
-                        {% else %}
-                            <i>Unknown institution</i>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if member.pi %}<span class="label">PI</span>{% endif %}
-                        {% if member.editor %}<span class="label">editor</span>{% endif %}
-                        {% if member.reviewer %}<span class="label">reviewer</span>{% endif %}
-                        {% if member.observer%}<span class="label">observer</span>{% endif %}
-                        {% if can_edit and not member.person_registered %}
-                            <a href="{{ url_for('.member_reinvite', proposal_id=proposal.id, member_id=member.id) }}">Re-send invitation</a>
-                        {% endif %}
-                    </td>
-               </tr>
-            {% endfor %}
-        </table>
+        {{ render_proposal_members(proposal.id, proposal.members, can_edit=can_edit, with_extra_labels=true, show_admin_links=show_admin_links) }}
 
         {% if can_edit %}
         <nav>
