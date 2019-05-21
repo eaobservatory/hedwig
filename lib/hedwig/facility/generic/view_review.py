@@ -60,6 +60,11 @@ ProposalWithReviewerPersons = namedtuple(
     ProposalWithCode._fields + (
         'reviewer_person_ids',))
 
+ProposalWithViewReviewLinks = namedtuple(
+    'ProposalWithViewReviewLinks',
+    ProposalWithCode._fields + (
+        'target_proposal', 'target_review'))
+
 ReviewerWithCalcFig = namedtuple(
     'ReviewerWithCalcFig', Reviewer._fields + (
         'calculations', 'figures', 'can_view', 'can_edit'))
@@ -424,6 +429,11 @@ class GenericReview(object):
         proposals = []
         invite_roles = [x for x in role_class.get_invited_roles()
                         if type_class.has_reviewer_role(call.type, x)]
+        assigned_roles = OrderedDict((
+            (role_num, group)
+            for (role_num, group) in role_class.get_assigned_roles().items()
+            if type_class.has_reviewer_role(call.type, role_num)))
+        unnotified_roles = defaultdict(int)
         state_editable_roles = {}
 
         for proposal in db.search_proposal(
@@ -441,13 +451,10 @@ class GenericReview(object):
                 invite_roles=[x for x in invite_roles if x in roles],
                 code=self.make_proposal_code(db, proposal)))
 
-        targets = [
-            Link(
-                'Assign {}'.format(GroupType.get_name(group).lower()),
-                url_for('.review_call_grid', call_id=call.id,
-                        reviewer_role=role_num))
-            for (role_num, group) in role_class.get_assigned_roles().items()
-            if type_class.has_reviewer_role(call.type, role_num)]
+            for reviewer in proposal.reviewers.values():
+                if ((reviewer.role in assigned_roles)
+                        and (not reviewer.notified)):
+                    unnotified_roles[reviewer.role] += 1
 
         return {
             'title': 'Reviewers: {} {} {}'.format(
@@ -455,11 +462,12 @@ class GenericReview(object):
                 type_class.get_name(call.type)),
             'call': call,
             'proposals': proposals,
-            'targets': targets,
             'roles': role_class.get_options(),
             'states': ReviewState.get_options(),
             'current_role': role,
             'current_state': state,
+            'assigned_roles': assigned_roles,
+            'unnotified_roles': unnotified_roles,
         }
 
     @with_call_review(permission=PermissionType.EDIT)
@@ -675,6 +683,148 @@ class GenericReview(object):
             'message': message,
             'is_peer_review': (group_type == GroupType.PEER),
         }
+
+    @with_call_review(permission=PermissionType.EDIT)
+    def view_reviewer_notify(self, db, call, can, role, form):
+        role_class = self.get_reviewer_roles()
+        type_class = self.get_call_types()
+
+        if not type_class.has_reviewer_role(call.type, role):
+            raise ErrorPage('Reviewer role is not expected for this call.')
+
+        group_type = role_class.get_review_group(role)
+
+        if group_type is None:
+            raise ErrorPage('Reviewer role is not assigned.')
+
+        group_name = GroupType.get_name(group_type)
+
+        # Prepare the list of reviewers and proposal reviews.  (This is needed
+        # both to display the confirmation page and to send the notifications.)
+        is_admin = session.get('is_admin', False)
+        reviewers = OrderedDict()
+
+        for proposal in db.search_proposal(
+                call_id=call.id, state=role_class.get_editable_states(role),
+                with_reviewers=True, with_reviewer_role=role,
+                with_reviewer_notified=False).values():
+            proposal = ProposalWithCode(
+                *proposal, code=self.make_proposal_code(db, proposal))
+
+            for reviewer in proposal.reviewers.values():
+                person_id = reviewer.person_id
+                if person_id not in reviewers:
+                    reviewers[person_id] = []
+
+                reviewers[person_id].append(proposal._replace(
+                    reviewers=None, reviewer=with_can_view(
+                        reviewer, (is_admin or reviewer.person_public))))
+
+        # Get the deadline for this review role.
+        deadline = db.search_review_deadline(
+            call_id=call.id, role=role).get_single(None)
+
+        if form is not None:
+            if 'submit_confirm' in form:
+                try:
+                    n_notifications = 0
+
+                    for (person_id, proposals_all) in reviewers.items():
+                        # Include only reviews present in the form parameters.
+                        proposals = [
+                            x for x in proposals_all
+                            if 'reviewer_{}'.format(x.reviewer.id) in form]
+                        if not proposals:
+                            continue
+
+                        self._message_review_notification(
+                            db, role, person_id, proposals, deadline)
+
+                        n_notifications += 1
+
+                    if n_notifications:
+                        flash(
+                            'Notifications have been sent to {} reviewer(s).',
+                            n_notifications)
+
+                except UserError as e:
+                    raise ErrorPage(e.message)
+
+            raise HTTPRedirect(url_for(
+                '.review_call_reviewers', call_id=call.id))
+
+        return {
+            'title': '{}: {} {} {}: Notify'.format(
+                group_name.title(),
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type)),
+            'call': call,
+            'role': role,
+            'reviewers': reviewers,
+            'deadline': deadline,
+        }
+
+    def _message_review_notification(
+            self, db, role, person_id, proposals, deadline):
+        """
+        Send a message to a an assigned reviewer informing them of their
+        review assignments and update the notified flag for the
+        corresponding entries in the reviewers table.
+
+        This method takes a list of proposals, each of which should have a
+        `reviewer` attribute corresponding to the review for which the
+        notification is being sent.
+        """
+
+        assert proposals
+        for proposal in proposals:
+            assert proposal.reviewer.role == role
+            assert proposal.reviewer.person_id == person_id
+            assert not proposal.reviewer.notified
+
+        type_class = self.get_call_types()
+        role_class = self.get_reviewer_roles()
+
+        role_name = role_class.get_name(role)
+
+        # Use the reviewer information from the first proposal to get
+        # the (presumably) common information for the notification email.
+        reviewer = proposals[0].reviewer
+
+        email_ctx = {
+            'recipient_name': reviewer.person_name,
+            'inviter_name': session['person']['name'],
+            'queue_name': proposals[0].queue_name,
+            'semester_name': proposals[0].semester_name,
+            'call_type': type_class.get_name(proposals[0].call_type),
+            'role_name': role_name,
+            'role_is_peer': (role == role_class.PEER),
+            'target_guideline': self.make_review_guidelines_url(role=role),
+            'review_deadline': deadline,
+            'proposals': [
+                ProposalWithViewReviewLinks(
+                    *x, target_proposal=url_for(
+                        '.proposal_view',
+                        proposal_id=x.id, _external=True),
+                    target_review=url_for(
+                        '.review_edit',
+                        reviewer_id=x.reviewer.id, _external=True))
+                for x in proposals],
+        }
+
+        email_subject = 'Assignment of {} {}'.format(
+            role_name.lower(),
+            ('reviews' if (len(proposals) > 1) else 'review'))
+
+        db.add_message(
+            email_subject,
+            render_email_template(
+                'review_notification.txt',
+                email_ctx, facility=self),
+            [person_id])
+
+        for proposal in proposals:
+            db.update_reviewer(role_class, proposal.reviewer.id, notified=True)
 
     @with_proposal(permission=PermissionType.NONE)
     def view_reviewer_add(self, db, proposal, role, form):

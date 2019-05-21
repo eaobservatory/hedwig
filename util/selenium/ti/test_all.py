@@ -1626,7 +1626,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         # Add an external reviewer.
         self.browser.find_element_by_link_text('Assign reviewers').click()
-        self._save_screenshot(self.admin_image_root, 'reviewer_assign')
+        self._save_screenshot(
+            self.admin_image_root, 'reviewer_assign',
+            ['assign_reviewer_links'])
 
         self.browser.find_element_by_link_text('Add external reviewer').click()
 
@@ -1682,6 +1684,22 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_name('submit').click()
 
         self.assertIn('assignments have been updated.',
+                      self.browser.page_source)
+
+        # Sending notifications.
+        self.browser.refresh()
+        self._save_screenshot(
+            self.admin_image_root, 'reviewer_assign_filled',
+            ['notify_reviewer_links'])
+
+        self.browser.find_element_by_link_text(
+            'Notify technical assessors').click()
+
+        self._save_screenshot(self.admin_image_root, 'reviewer_tech_notify')
+
+        self.browser.find_element_by_name('submit_confirm').click()
+
+        self.assertIn('Notifications have been sent',
                       self.browser.page_source)
 
     def enter_technical_assessment(self):

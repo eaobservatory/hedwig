@@ -31,7 +31,7 @@ from ..astro.coord import CoordSystem
 from ..compat import first_value as _first_value
 from ..config import get_countries
 from ..type.enum import AffiliationType, Assessment, \
-    AttachmentState, CallState, MessageState, MessageThreadType, \
+    AttachmentState, CallState, GroupType, MessageState, MessageThreadType, \
     PersonTitle, ProposalState, PublicationType, \
     ReviewState, SemesterState, UserLogEvent
 
@@ -196,6 +196,12 @@ def register_template_utils(app):
         if value is None:
             return ''
         return type_class.get_full_call_name(value, **kwargs)
+
+    @app.template_filter()
+    def group_type_name(value):
+        if value is None:
+            return ''
+        return GroupType.get_name(value)
 
     @app.template_filter()
     def json(value, extend=None, dynamic=None):
@@ -422,6 +428,10 @@ def register_template_utils(app):
     @app.template_test()
     def reviewer_role_accepted(value, role_class):
         return role_class.is_accepted_review(value)
+
+    @app.template_test()
+    def reviewer_role_assigned(value, role_class):
+        return role_class.is_assigned_review(value)
 
     @app.template_test()
     def reviewer_role_invited(value, role_class):

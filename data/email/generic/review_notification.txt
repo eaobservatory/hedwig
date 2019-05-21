@@ -1,0 +1,46 @@
+{% extends 'layout.txt' %}
+
+{% block content %}
+{% block notification_introduction %}
+This is a notification sent on behalf of {{ inviter_name }}
+with regard to the assignment of {{ role_name | lower }} reviews of
+{{ queue_name }} Queue proposals to use {{ facility_definite_name }}
+in Semester {{ semester_name }} ({{ call_type }} Call).
+{% if review_deadline is not none %}
+We would be grateful if you could aim to complete your
+{{ 'reviews' if (proposals | length) > 1 else 'review' }}
+by {{ review_deadline.date | format_datetime }} UT.
+{% endif %}
+{% endblock %}
+
+{% block notification_list %}
+The {{ 'proposals' if (proposals | length) > 1 else 'proposal' }}
+assigned to you, along with direct links to
+{{ 'each' if (proposals | length) > 1 else 'the' }} proposal and review,
+{{ 'are listed' if (proposals | length) > 1 else 'is shown' }} below:
+
+{% for proposal in proposals %}
+{{ proposal.code }}: "{{ proposal.title }}"
+
+    Proposal: {{ proposal.target_proposal }}
+
+    Review: {{ proposal.target_review }}
+
+{% endfor %}
+
+You may also find
+{{ 'these proposals' if (proposals | length) > 1 else 'this proposal' }}
+on your review list page.
+{% endblock %}
+
+{% block notification_links %}
+{% if target_guideline is not none %}
+Guidelines for the review process are available on the following page:
+
+{{ target_guideline }}
+{% endif %}
+{% endblock %}
+
+{% block notification_footer %}
+{% endblock %}
+{% endblock %}

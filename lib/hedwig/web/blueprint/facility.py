@@ -189,6 +189,17 @@ def create_facility_blueprint(db, facility):
             db, call_id, reviewer_role,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route(
+        '/call/<int:call_id>/reviewers/<hedwig_review_{}:reviewer_role>'
+        '/notify'.format(code),
+        methods=['GET', 'POST'])
+    @require_auth(require_person=True)
+    @facility_template('reviewer_notify.html')
+    def review_call_notify(call_id, reviewer_role):
+        return facility.view_reviewer_notify(
+            db, call_id, reviewer_role,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/proposal/<int:proposal_id>')
     @require_auth(require_person=True)
     @facility_template('proposal_view.html')

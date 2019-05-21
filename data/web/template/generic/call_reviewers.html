@@ -3,11 +3,23 @@
 {% set help_link=url_for('help.admin_page', page_name='review_process') %}
 
 {% block content %}
-{% if targets %}
+{% if assigned_roles %}
 <nav>
-    <ol>
-        {% for target in targets %}
-            <li><a href="{{ target.url }}">{{ target.text }}</a></li>
+    <ol id="assign_reviewer_links">
+        {% for (role, group) in assigned_roles.items() %}
+            <li><a href="{{ url_for('.review_call_grid', call_id=call.id, reviewer_role=role) }}">Assign {{ group | group_type_name | lower }}</a></li>
+        {% endfor %}
+    </ol>
+</nav>
+{% endif %}
+
+{% if unnotified_roles %}
+<nav>
+    <ol id="notify_reviewer_links">
+        {% for (role, group) in assigned_roles.items() %}
+            {% if unnotified_roles.get(role, 0) %}
+                <li><a href="{{ url_for('.review_call_notify', call_id=call.id, reviewer_role=role) }}">Notify {{ group | group_type_name | lower }}</a></li>
+            {% endif %}
         {% endfor %}
     </ol>
 </nav>
@@ -73,6 +85,11 @@
                             <a href="{{ url_for('people.person_view', person_id=reviewer.person_id) }}">{{ reviewer.person_name | abbr(25) }}</a>
                             {% if not reviewer.person_registered %}
                                 <span class="label">unregistered</span>
+                            {% endif %}
+                            {% if reviewer.role is reviewer_role_assigned(facility_role_class) %}
+                                {% if not reviewer.notified %}
+                                    <span class="label">not notified</span>
+                                {% endif %}
                             {% endif %}
                         </td>
                         <td class="{{ reviewer.review_state | review_state_class }}">

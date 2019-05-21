@@ -1511,6 +1511,7 @@ class ProposalPart(object):
                         with_reviewers=False,
                         with_review_info=False, with_review_text=False,
                         with_reviewer_role=None, with_review_state=None,
+                        with_reviewer_notified=None, with_reviewer_accepted=(),
                         reviewer_person_id=None,
                         with_categories=False,
                         with_decision=False, with_decision_note=False,
@@ -1816,6 +1817,8 @@ class ProposalPart(object):
                     with_review_text=with_review_text,
                     role=with_reviewer_role,
                     review_state=with_review_state,
+                    notified=with_reviewer_notified,
+                    accepted=with_reviewer_accepted,
                     _conn=conn)
 
             if with_categories:

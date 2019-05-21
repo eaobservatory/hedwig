@@ -100,3 +100,28 @@ on the reviewer add page before selecting or inviting
 a reviewer.
 
 .. image:: image/reviewer_external.png
+
+Notifying Reviewers
+-------------------
+
+People assigned reviews via reviewer grids are not notified automatically.
+This allows you to work on the assignments incrementally without generating
+excess email messages.
+Instead the system tracks which assigned reviewers have not
+yet been sent a notification.
+This status is shown in the reviewer listing.
+If there are reviewers who have not yet been notified,
+you will find links such as "Notify technical assessors"
+at the top of the page.
+
+.. image:: image/reviewer_assign_filled.png
+
+Following this link takes you to a confirmation page which lists the
+people to whom notifications will be sent and the corresponding proposals.
+Clicking the "Confirm" button will allow the notifications to be sent out.
+
+.. image:: image/reviewer_tech_notify.png
+
+If you subsequently assign more reviews for the same role,
+you can return to this page to send notifications for
+the newly-assigned reviews.

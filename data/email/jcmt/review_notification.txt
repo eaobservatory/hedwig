@@ -1,0 +1,25 @@
+{% extends 'generic/review_notification.txt' %}
+
+{% block notification_introduction %}
+{% if role_is_peer %}
+This is a notification regarding the peer review process for
+{% else %}
+This is a notification sent on behalf of {{ inviter_name }}
+with regard to the assignment of {{ role_name | lower }} reviews of
+{% endif %}
+{{ queue_name }} Queue proposals to use {{ facility_definite_name }}
+in Semester {{ semester_name }} ({{ call_type }} Call).
+{% if review_deadline is not none %}
+{% if role_is_peer %}
+For your own proposal to advance to the next stage of the review process,
+you must complete your
+{% else %}
+Please aim to complete your
+{% endif %}
+{{ 'reviews' if (proposals | length) > 1 else 'review' }}
+by {{ review_deadline.date | format_datetime }} UT.
+{% endif %}
+{% endblock %}
+
+{% block notification_footer %}
+{% endblock %}
