@@ -28,7 +28,8 @@ from ..db.meta import affiliation, \
     proposal, proposal_annotation, proposal_category, \
     proposal_fig, proposal_fig_link, proposal_pdf, proposal_pdf_link, \
     proposal_text, proposal_text_link, queue, \
-    review, reviewer, review_calculation, review_deadline, \
+    review, reviewer, reviewer_acceptance, \
+    review_calculation, review_deadline, \
     review_fig, review_fig_link, \
     semester, target, user_log
 
@@ -245,6 +246,10 @@ Reviewer = namedtuple(
      'invitation_token', 'invitation_expiry', 'review_extra'] +
     ['review_{}'.format(x.name) for x in review.columns
      if x != review.c.reviewer_id])
+
+ReviewerAcceptance = namedtuple(
+    'ReviewerAcceptance',
+    [x.name for x in reviewer_acceptance.columns])
 
 ReviewerInfo = namedtuple(
     'ReviewerInfo',

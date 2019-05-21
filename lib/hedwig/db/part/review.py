@@ -26,16 +26,16 @@ from sqlalchemy.sql.functions import count
 
 from ...error import ConsistencyError, Error, FormattedError, \
     NoSuchRecord, UserError
-from ...type.collection import GroupMemberCollection, \
+from ...type.collection import GroupMemberCollection, ResultCollection, \
     ReviewerCollection, ReviewDeadlineCollection, ReviewFigureCollection
 from ...type.enum import Assessment, FormatType, GroupType, ReviewState
-from ...type.simple import GroupMember, Reviewer, ReviewDeadline, \
-    ReviewFigureInfo
+from ...type.simple import GroupMember, Reviewer, ReviewerAcceptance, \
+    ReviewDeadline, ReviewFigureInfo
 from ...util import is_list_like
 from ..meta import call, decision, group_member, \
     institution, invitation, person, \
     proposal, queue, \
-    review, reviewer, review_deadline, \
+    review, reviewer, reviewer_acceptance, review_deadline, \
     review_fig, review_fig_link, review_fig_preview, review_fig_thumbnail
 
 
@@ -95,6 +95,40 @@ class ReviewPart(object):
 
         return result.inserted_primary_key[0]
 
+    def add_reviewer_acceptance(
+            self, role_class, proposal_id, person_id, role,
+            accepted, text, format_, _conn=None):
+        if not role_class.is_accepted_review(role):
+            raise Error('This reviewer role does not require acceptance.')
+
+        if text is None:
+            raise Error('Acceptance explanation text not specified.')
+
+        if not format_:
+            raise UserError('Text format not specified.')
+        if not FormatType.is_valid(format_):
+            raise UserError('Text format not recognised.')
+
+        values = {
+            reviewer_acceptance.c.proposal_id: proposal_id,
+            reviewer_acceptance.c.person_id: person_id,
+            reviewer_acceptance.c.role: role,
+            reviewer_acceptance.c.accepted: accepted,
+            reviewer_acceptance.c.text: text,
+            reviewer_acceptance.c.format: format_,
+            reviewer_acceptance.c.date: datetime.utcnow(),
+        }
+
+        with self._transaction(_conn=_conn) as conn:
+            if not self._exists_reviewer(conn, proposal_id, role, person_id):
+                raise ConsistencyError(
+                    'reviewer does not exist for prop {} person {} role {}',
+                    proposal_id, person_id, role)
+
+            result = conn.execute(reviewer_acceptance.insert().values(values))
+
+        return result.inserted_primary_key[0]
+
     def add_review_figure(
             self, reviewer_id,
             type_, figure, caption, filename, uploader_person_id,
@@ -151,6 +185,22 @@ class ReviewPart(object):
             if result.rowcount != 1:
                 raise ConsistencyError(
                     'no row matched deleting reviewer {}', reviewer_id)
+
+    def delete_reviewer_acceptance(self, reviewer_acceptance_id, _conn=None):
+        """
+        Delete a reviewer acceptance explanation record.
+        """
+
+        stmt = reviewer_acceptance.delete().where(
+            reviewer_acceptance.c.id == reviewer_acceptance_id)
+
+        with self._transaction(_conn=_conn) as conn:
+            result = conn.execute(stmt)
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no row matched deleting reviewer acceptance {}',
+                    reviewer_acceptance_id)
 
     def delete_review_figure(self, reviewer_id, id_):
         where_extra = []
@@ -457,6 +507,52 @@ class ReviewPart(object):
         return case([
             (review.c.reviewer_id.isnot(None), review.c.state),
         ], else_=ReviewState.NOT_DONE)
+
+    def search_reviewer_acceptance(
+            self, reviewer_acceptance_id=None,
+            proposal_id=None, person_id=None, role=None,
+            _conn=None):
+
+        stmt = reviewer_acceptance.select()
+
+        iter_field = None
+        iter_list = None
+
+        if reviewer_acceptance_id is not None:
+            stmt = stmt.where(reviewer_acceptance.c.id == reviewer_acceptance_id)
+
+        if proposal_id is not None:
+            if is_list_like(proposal_id):
+                assert iter_field is None
+                iter_field = reviewer_acceptance.c.proposal_id
+                iter_list = proposal_id
+            else:
+                stmt = stmt.where(
+                    reviewer_acceptance.c.proposal_id == proposal_id)
+
+        if person_id is not None:
+            if is_list_like(person_id):
+                assert iter_field is None
+                iter_field = reviewer_acceptance.c.person_id
+                iter_list = person_id
+            else:
+                stmt = stmt.where(reviewer_acceptance.c.person_id == person_id)
+
+        if role is not None:
+            if is_list_like(role):
+                stmt = stmt.where(reviewer_acceptance.c.role.in_(role))
+            else:
+                stmt = stmt.where(reviewer_acceptance.c.role == role)
+
+        ans = ResultCollection()
+
+        with self._transaction(_conn=_conn) as conn:
+            for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
+                for row in conn.execute(iter_stmt.order_by(
+                        reviewer_acceptance.c.id)):
+                    ans[row['id']] = ReviewerAcceptance(**row)
+
+        return ans
 
     def search_review_deadline(
             self, call_id=None, role=None, _conn=None):
@@ -776,6 +872,37 @@ class ReviewPart(object):
                     'no rows matched updating reviewer with id={}',
                     reveiwer_id)
 
+    def update_reviewer_acceptance(
+            self, reviewer_acceptance_id, accepted=None, text=None, format_=None,
+            _conn=None):
+        if accepted is None:
+            raise Error('Accepted flag not specified.')
+
+        if text is None:
+            raise Error('Acceptance explanation text not specified.')
+
+        if not format_:
+            raise UserError('Text format not specified.')
+        if not FormatType.is_valid(format_):
+            raise UserError('Text format not recognised.')
+
+        values = {
+            reviewer_acceptance.c.accepted: accepted,
+            reviewer_acceptance.c.text: text,
+            reviewer_acceptance.c.format: format_,
+            reviewer_acceptance.c.date: datetime.utcnow(),
+        }
+
+        with self._transaction(_conn=_conn) as conn:
+            result = conn.execute(reviewer_acceptance.update().where(
+                reviewer_acceptance.c.id == reviewer_acceptance_id
+            ).values(values))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched updating reviewer acceptance {}',
+                    reviewer_acceptance_id)
+
     def update_review_figure(
             self, reviewer_id, link_id, fig_id=None,
             figure=None, type_=None, filename=None, uploader_person_id=None,
@@ -806,16 +933,21 @@ class ReviewPart(object):
             where_extra=where_extra,
         )
 
-    def _exists_reviewer(self, conn, proposal_id, role):
+    def _exists_reviewer(self, conn, proposal_id, role, person_id=None):
         """
         Test whether a reviewer record of the given role already exists
         for a proposal.
         """
 
-        return 0 < conn.execute(select([count(reviewer.c.id)]).where(and_(
+        stmt = select([count(reviewer.c.id)]).where(and_(
             reviewer.c.proposal_id == proposal_id,
             reviewer.c.role == role
-        ))).scalar()
+        ))
+
+        if person_id is not None:
+            stmt = stmt.where(reviewer.c.person_id == person_id)
+
+        return 0 < conn.execute(stmt).scalar()
 
     def _exists_review(self, conn, reviewer_id):
         """

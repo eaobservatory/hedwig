@@ -27,8 +27,8 @@ from hedwig.type.collection import GroupMemberCollection, \
     ReviewerCollection, ReviewDeadlineCollection, ReviewFigureCollection
 from hedwig.type.enum import Assessment, AttachmentState, BaseReviewerRole, \
     FigureType, FormatType, GroupType, ReviewState
-from hedwig.type.simple import GroupMember, Reviewer, ReviewDeadline, \
-    ReviewFigureInfo
+from hedwig.type.simple import GroupMember, Reviewer, ReviewerAcceptance, \
+    ReviewDeadline, ReviewFigureInfo
 from hedwig.type.util import null_tuple
 
 from .dummy_db import DBTestCase
@@ -395,6 +395,73 @@ class DBReviewTest(DBTestCase):
                 assessment=999, rating=None, weight=None,
                 note='A note', note_format=FormatType.PLAIN, note_public=False,
                 state=ReviewState.DONE)
+
+    def test_reviewer_acceptance(self):
+        role = BaseReviewerRole.PEER
+        proposal_id = self._create_test_proposal()
+        person_id = self.db.add_person('Reviewer')
+        reviewer_id = self.db.add_reviewer(
+            BaseReviewerRole, proposal_id, person_id, role)
+        self.assertIsInstance(reviewer_id, int)
+
+        result = self.db.search_reviewer_acceptance(person_id=person_id)
+        self.assertFalse(result)
+
+        acceptance_id = self.db.add_reviewer_acceptance(
+            BaseReviewerRole, proposal_id=proposal_id,
+            person_id=person_id, role=role,
+            accepted=False, text='I know the PI', format_=FormatType.PLAIN)
+        self.assertIsInstance(acceptance_id, int)
+
+        result = self.db.search_reviewer_acceptance(
+            person_id=person_id).get_single()
+
+        self.assertIsInstance(result, ReviewerAcceptance)
+        self.assertEqual(result.id, acceptance_id)
+        self.assertEqual(result.proposal_id, proposal_id)
+        self.assertEqual(result.person_id, person_id)
+        self.assertEqual(result.role, role)
+        self.assertFalse(result.accepted)
+        self.assertEqual(result.text, 'I know the PI')
+        self.assertEqual(result.format, FormatType.PLAIN)
+
+        self.db.update_reviewer_acceptance(
+            reviewer_acceptance_id=acceptance_id, accepted=True,
+            text='I knew the PI', format_=FormatType.PLAIN)
+
+        result = self.db.search_reviewer_acceptance(
+            person_id=person_id).get_single()
+
+        self.assertIsInstance(result, ReviewerAcceptance)
+        self.assertEqual(result.id, acceptance_id)
+        self.assertTrue(result.accepted)
+        self.assertEqual(result.text, 'I knew the PI')
+        self.assertEqual(result.format, FormatType.PLAIN)
+
+        # Try a different review type -- without acceptance.
+        reviewer_id = self.db.add_reviewer(
+            BaseReviewerRole, proposal_id, person_id,
+            BaseReviewerRole.TECH)
+        self.assertIsInstance(reviewer_id, int)
+        with self.assertRaisesRegex(Error, 'not require acceptance'):
+            self.db.add_reviewer_acceptance(
+                BaseReviewerRole, proposal_id=proposal_id,
+                person_id=proposal_id, role=BaseReviewerRole.TECH,
+                accepted=False, text='I know the PI', format_=FormatType.PLAIN)
+
+        # Check we get no results for a non-existent record.
+        result = self.db.search_reviewer_acceptance(person_id=1999999)
+        self.assertFalse(result)
+
+        # Try deleting a record.
+        with self.assertRaises(ConsistencyError):
+            self.db.delete_reviewer_acceptance(reviewer_acceptance_id=1999999)
+
+        self.db.delete_reviewer_acceptance(reviewer_acceptance_id=acceptance_id)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.search_reviewer_acceptance(
+                person_id=person_id).get_single()
 
     def test_decision(self):
         proposal_id = self._create_test_proposal()

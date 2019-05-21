@@ -656,6 +656,24 @@ reviewer = Table(
     UniqueConstraint('proposal_id', 'person_id', 'role'),
     **table_opts)
 
+reviewer_acceptance = Table(
+    'reviewer_acceptance',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('person_id', None,
+           ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('role', Integer, nullable=False),
+    Column('accepted', Boolean, nullable=False),
+    Column('text', UnicodeText, nullable=True),
+    Column('format', Integer, nullable=True),
+    Column('date', DateTime(), nullable=False),
+    UniqueConstraint('proposal_id', 'person_id', 'role'),
+    **table_opts)
+
 review_calculation = Table(
     'review_calculation',
     metadata,
