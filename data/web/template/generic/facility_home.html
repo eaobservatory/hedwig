@@ -6,9 +6,9 @@
 
 {% if show_admin_links %}
     <nav>
-        <p>
-            <a id="admin_menu_link" href="{{ url_for('.facility_admin') }}">Administrative menu</a>
-        </p>
+        <ol>
+            <li><a id="admin_menu_link" href="{{ url_for('.facility_admin') }}">Administrative menu</a></li>
+        </ol>
     </nav>
 {% endif %}
 
@@ -38,17 +38,17 @@
 
 {% if open_nonstandard_semesters %}
     <nav>
-        <p>
-            <a href="{{ url_for('.semester_non_standard') }}">Other calls for proposals</a>
-        </p>
+        <ol>
+            <li><a href="{{ url_for('.semester_non_standard') }}">Other calls for proposals</a></li>
+        </ol>
     </nav>
 {% endif %}
 
 {% if closed_semesters %}
     <nav>
-        <p>
-            <a href="{{ url_for('.semester_closed') }}">Previous calls for proposals</a>
-        </p>
+        <ol>
+            <li><a href="{{ url_for('.semester_closed') }}">Previous calls for proposals</a></li>
+        </ol>
     </nav>
 {% endif %}
 

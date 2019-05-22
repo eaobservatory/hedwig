@@ -24,9 +24,9 @@
         <form method="POST" action="{{ url_for('.calculation_manage', proposal_id=proposal_id) }}">
     {% else %}
         <nav>
-            <p>
-                <a href="{{ url_for('.proposal_view', proposal_id=proposal_id, _anchor='calculations') }}">Back to proposal</a>
-            </p>
+            <ol>
+                <li><a href="{{ url_for('.proposal_view', proposal_id=proposal_id, _anchor='calculations') }}">Back to proposal</a></li>
+            </ol>
         </nav>
     {% endif %}
 {% else %}
@@ -34,9 +34,9 @@
         <form method="POST" action="{{ url_for('.review_calculation_manage', reviewer_id=reviewer_id) }}">
     {% else %}
         <nav>
-            <p>
-                <a href="{{ url_for('.proposal_reviews', proposal_id=proposal_id) }}">Back to reviews</a>
-            </p>
+            <ol>
+                <li><a href="{{ url_for('.proposal_reviews', proposal_id=proposal_id) }}">Back to reviews</a></li>
+            </ol>
         </nav>
     {% endif %}
 {% endif %}

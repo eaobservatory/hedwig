@@ -3,31 +3,25 @@
 
 {% block content %}
 <nav>
-    <p>
+    <ol>
         {% if proposals  %}
-            <a href="{{ url_for('.review_call_tabulation', call_id=call_id) }}">View detailed tabulation</a>
-            or
-            <a href="{{ url_for('.review_call_tabulation_download', call_id=call_id) }}">download as a CSV file</a>
+            <li>
+                <a href="{{ url_for('.review_call_tabulation', call_id=call_id) }}">View detailed tabulation</a>
+                or
+                <a href="{{ url_for('.review_call_tabulation_download', call_id=call_id) }}">download as a CSV file</a>
+            </li>
         {% endif %}
         {% if can_edit %}
+            <li><a href="{{ url_for('.review_affiliation_weight', call_id=call_id) }}">Edit affiliation weights</a></li>
+            <li><a href="{{ url_for('.review_call_available', call_id=call_id) }}">Edit time available</a></li>
+            <li><a href="{{ url_for('.review_call_deadline', call_id=call_id) }}">Edit review deadlines</a></li>
             {% if proposals %}
-                <br />
-            {% endif %}
-            <a href="{{ url_for('.review_affiliation_weight', call_id=call_id) }}">Edit affiliation weights</a>
-            <br />
-            <a href="{{ url_for('.review_call_available', call_id=call_id) }}">Edit time available</a>
-            <br />
-            <a href="{{ url_for('.review_call_deadline', call_id=call_id) }}">Edit review deadlines</a>
-            {% if proposals %}
-                <br />
-                <a href="{{ url_for('.review_call_reviewers', call_id=call_id) }}">Assign reviewers</a>
-                <br />
-                <a href="{{ url_for('.review_call_advance_final', call_id=call_id) }}">Advance to final review phase</a>
-                <br />
-                <a href="{{ url_for('.review_confirm_feedback', call_id=call_id) }}">Approve feedback reports</a>
+                <li><a href="{{ url_for('.review_call_reviewers', call_id=call_id) }}">Assign reviewers</a></li>
+                <li><a href="{{ url_for('.review_call_advance_final', call_id=call_id) }}">Advance to final review phase</a></li>
+                <li><a href="{{ url_for('.review_confirm_feedback', call_id=call_id) }}">Approve feedback reports</a></li>
             {% endif %}
         {% endif %}
-    </p>
+    </ol>
 </nav>
 
 {% if not proposals %}

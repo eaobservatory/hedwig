@@ -16,14 +16,11 @@
 {% block extra_review_links %}
     {% if can_add_roles %}
     <nav>
-        <p id="extra_review_links">
+        <ol id="extra_review_links">
             {% for role in can_add_roles %}
-                <a class="create_review_link" href="{{ url_for('.proposal_review_new', proposal_id=proposal.id, reviewer_role=role, referrer='pr') }}">Add {{ role | reviewer_role_name(facility_role_class, with_review=true) | lower }}</a>
-                {% if not loop.last %}
-                    <br />
-                {% endif %}
+                <li><a class="create_review_link" href="{{ url_for('.proposal_review_new', proposal_id=proposal.id, reviewer_role=role, referrer='pr') }}">Add {{ role | reviewer_role_name(facility_role_class, with_review=true) | lower }}</a></li>
             {% endfor %}
-        </p>
+        </ol>
     </nav>
     {% endif %}
 {% endblock %}
@@ -138,16 +135,16 @@
 
                             {% if calculation.mode_info.code is not none %}
                                 <nav>
-                                    <p>
-                                        <a href="{{ url_for('.review_calculation_view', reviewer_id=review.id, review_calculation_id=calculation.id) }}">View calculation</a>
-                                    </p>
+                                    <ol>
+                                        <li><a href="{{ url_for('.review_calculation_view', reviewer_id=review.id, review_calculation_id=calculation.id) }}">View calculation</a></li>
+                                    </ol>
                                 </nav>
                             {% endif %}
                         {% endfor %}
                         <nav>
-                            <p>
-                                <a href="{{ url_for('.review_calculation_manage', reviewer_id=review.id) }}">View calculation details</a>
-                            </p>
+                            <ol>
+                                <li><a href="{{ url_for('.review_calculation_manage', reviewer_id=review.id) }}">View calculation details</a></li>
+                            </ol>
                         </nav>
                     </td>
                 </tr>

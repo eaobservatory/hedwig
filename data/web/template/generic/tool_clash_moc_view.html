@@ -51,19 +51,19 @@
     {% endif %}
 </table>
 
-<nav>
-    <p>
-        If you would like to inspect the coverage map in detail,
-        you can download it as a
-        <a href="http://wiki.ivoa.net/twiki/bin/view/IVOA/MocInfo" target="_blank">MOC</a>
-        (Multi-Order Coverage) file in FITS format.
-        This can be viewed with tools such as
-        <a href="http://aladin.u-strasbg.fr/" target="_blank">Aladin</a>.
-    </p>
+<p>
+    If you would like to inspect the coverage map in detail,
+    you can download it as a
+    <a href="http://wiki.ivoa.net/twiki/bin/view/IVOA/MocInfo" target="_blank">MOC</a>
+    (Multi-Order Coverage) file in FITS format.
+    This can be viewed with tools such as
+    <a href="http://aladin.u-strasbg.fr/" target="_blank">Aladin</a>.
+</p>
 
-    <p>
-        <a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_fits'), moc_id=moc.id) }}">Download coverage MOC FITS file</a>
-    </p>
+<nav>
+    <ol>
+        <li><a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_fits'), moc_id=moc.id) }}">Download coverage MOC FITS file</a></li>
+    </ol>
 </nav>
 
 {% endblock %}

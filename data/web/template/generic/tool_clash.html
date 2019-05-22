@@ -127,8 +127,8 @@
 
 {% block tool_footer %}
     <nav>
-        <p>
-            <a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_list')) }}">View all defined areas of sky coverage</a>
-        </p>
+        <ol>
+            <li><a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_list')) }}">View all defined areas of sky coverage</a></li>
+        </ol>
     </nav>
 {% endblock %}

@@ -8,14 +8,11 @@
 
 {% if links %}
     <nav>
-        <p>
+        <ol>
             {% for link in links %}
-                <a href="{{ link.url }}">{{ link.text }}</a>
-                {% if not loop.last %}
-                    <br />
-                {% endif %}
+                <li><a href="{{ link.url }}">{{ link.text }}</a></li>
             {% endfor %}
-        </p>
+        </ol>
     </nav>
 {% endif %}
 

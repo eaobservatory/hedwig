@@ -5,9 +5,9 @@
 {% block content %}
 
 <nav>
-    <p>
-        <a href="{{ url_for('.queue_new') }}">New queue</a>
-    </p>
+    <ol>
+        <li><a href="{{ url_for('.queue_new') }}">New queue</a></li>
+    </ol>
 </nav>
 
 {% if not queues %}

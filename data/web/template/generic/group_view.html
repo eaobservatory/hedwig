@@ -67,12 +67,11 @@
 {% endif %}
 
 <nav>
-    <p>
-        <a href="{{ url_for('.group_member_add', queue_id=queue.id, group_type=group_type) }}">Add member</a>
+    <ol>
+        <li><a href="{{ url_for('.group_member_add', queue_id=queue.id, group_type=group_type) }}">Add member</a></li>
         {% if members %}
-            <br />
-            <a href="{{ url_for('.group_member_edit', queue_id=queue.id, group_type=group_type) }}">Edit members</a>
+            <li><a href="{{ url_for('.group_member_edit', queue_id=queue.id, group_type=group_type) }}">Edit members</a></li>
         {% endif %}
-    </p>
+    </ol>
 <nav>
 {% endblock %}

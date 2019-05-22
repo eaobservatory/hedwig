@@ -24,9 +24,9 @@
 {{ semester.description | format_text(semester.description_format) }}
 
 <nav>
-    <p>
-        <a href="{{ url_for('.semester_edit', semester_id=semester.id) }}">Edit semester</a>
-    </p>
+    <ol>
+        <li><a href="{{ url_for('.semester_edit', semester_id=semester.id) }}">Edit semester</a></li>
+    </ol>
 </nav>
 
 <h2>Call Preamble</h2>
@@ -46,9 +46,9 @@
                     {% endif %}
 
                     <nav>
-                        <p>
-                            <a id="preamble_edit_{{ type_num }}" href="{{ url_for('.call_preamble_edit', semester_id=semester.id, call_type=type_num) }}">{{ 'Add' if preamble is none else 'Edit' }} preamble</a>
-                        </p>
+                        <ol>
+                            <li><a id="preamble_edit_{{ type_num }}" href="{{ url_for('.call_preamble_edit', semester_id=semester.id, call_type=type_num) }}">{{ 'Add' if preamble is none else 'Edit' }} preamble</a></li>
+                        </ol>
                     </nav>
                 {% endwith %}
             </td>

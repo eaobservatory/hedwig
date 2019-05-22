@@ -44,9 +44,9 @@
                 <p class="missing">No intermediate dates have been specified.</p>
             {% endif %}
             <nav>
-                <p>
-                    <a href="{{ url_for('.call_mid_close', call_id=call.id) }}">Edit intermediate close dates</a>
-                </p>
+                <ol>
+                    <li><a href="{{ url_for('.call_mid_close', call_id=call.id) }}">Edit intermediate close dates</a></li>
+                </ol>
             </nav>
         </td>
     {% endif %}
@@ -111,13 +111,11 @@
 </table>
 
 <nav>
-    <p>
-        <a href="{{ url_for('.call_edit', call_id=call.id) }}">Edit call</a>
-        <br />
-        <a href="{{ url_for('.call_proposals', call_id=call.id) }}">View proposals</a>
-        <br />
-        <a href="{{ url_for('.review_call', call_id=call.id) }}">Review process</a>
-    </p>
+    <ol>
+        <li><a href="{{ url_for('.call_edit', call_id=call.id) }}">Edit call</a></li>
+        <li><a href="{{ url_for('.call_proposals', call_id=call.id) }}">View proposals</a></li>
+        <li><a href="{{ url_for('.review_call', call_id=call.id) }}">Review process</a></li>
+    </ol>
 </nav>
 
 {% endblock %}

@@ -8,9 +8,9 @@
     <h2>Proposal Validation</h2>
 {% else %}
     <nav>
-        <p>
-            <a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">Back to proposal</a>
-        </p>
+        <ol>
+            <li><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">Back to proposal</a></li>
+        </ol>
     </nav>
 {% endif %}
 

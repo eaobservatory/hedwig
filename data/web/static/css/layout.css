@@ -112,6 +112,14 @@ div#facilities a {
     text-decoration: none;
 }
 
+nav ol {
+    padding: 0px;
+}
+
+nav ol li {
+    list-style: none;
+}
+
 form ol li:not(:first-child) {
     padding-top: 0.5ex;
 }

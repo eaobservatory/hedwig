@@ -5,14 +5,11 @@
 {% block content %}
 {% if targets %}
 <nav>
-    <p>
+    <ol>
         {% for target in targets %}
-            <a href="{{ target.url }}">{{ target.text }}</a>
-            {% if not loop.last %}
-                <br />
-            {% endif %}
+            <li><a href="{{ target.url }}">{{ target.text }}</a></li>
         {% endfor %}
-    </p>
+    </ol>
 </nav>
 {% endif %}
 

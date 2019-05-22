@@ -70,28 +70,28 @@
         {% endif %}
 
         <nav>
-            <p>
-                <a href="{{ url_for('.case_edit_text', proposal_id=proposal_id, role=role) }}" id="edit_text_link">Edit text</a>
-            </p>
+            <ol>
+                <li><a href="{{ url_for('.case_edit_text', proposal_id=proposal_id, role=role) }}" id="edit_text_link">Edit text</a></li>
+            </ol>
         </nav>
 
         {% if figures %}
             {{ render_proposal_figure_table(figures.values(), proposal_id, role) }}
 
             <nav>
-                <p>
-                    <a href="{{ url_for('.case_manage_figure', proposal_id=proposal_id, role=role) }}" id="manage_figures_link">Manage figures</a>
-                </p>
+                <ol>
+                    <li><a href="{{ url_for('.case_manage_figure', proposal_id=proposal_id, role=role) }}" id="manage_figures_link">Manage figures</a></li>
+                </ol>
             </nav>
         {% endif %}
 
         {% if fig_limit > (figures | length) and pdf is none %}
             <nav>
-                <p>
+                <ol>
                     {% if true %}
-                        <a href="{{ url_for('.case_new_figure', proposal_id=proposal_id, role=role) }}">Upload new figure</a>
+                        <li><a href="{{ url_for('.case_new_figure', proposal_id=proposal_id, role=role) }}">Upload new figure</a></li>
                     {% endif %}
-                </p>
+                </ol>
             </nav>
         {% endif %}
     </section>
@@ -185,13 +185,12 @@
         {% endif %}
 
         <nav>
-            <p>
+            <ol>
                 {% if pdf is not none %}
-                    <a href="{{ url_for('.case_view_pdf', proposal_id=proposal_id, role=role, md5sum=pdf.md5sum) }}">View current PDF file</a>
-                    <br />
+                    <li><a href="{{ url_for('.case_view_pdf', proposal_id=proposal_id, role=role, md5sum=pdf.md5sum) }}">View current PDF file</a></li>
                 {% endif %}
-                <a href="{{ url_for( '.case_edit_pdf', proposal_id=proposal_id, role=role) }}" id="upload_pdf_link">Upload {{ 'new' if pdf is none else 'replacement' }} PDF file</a>
-            </p>
+                <li><a href="{{ url_for( '.case_edit_pdf', proposal_id=proposal_id, role=role) }}" id="upload_pdf_link">Upload {{ 'new' if pdf is none else 'replacement' }} PDF file</a></li>
+            </ol>
         </nav>
     </section>
 {% endif %}
