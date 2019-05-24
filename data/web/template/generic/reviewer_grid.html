@@ -4,7 +4,7 @@
 {% set help_link=url_for('help.admin_page', page_name='review_process') %}
 {% set scripts = ['jquery_stickytableheaders', 'reviewer_grid'] %}
 
-{% macro render_reviewer_select(prefix, is_unique, person_ids, proposal_id, person_id) %}
+{% macro render_reviewer_select(prefix, is_unique, person_ids, proposal_id, person_id, is_accepted) %}
     {% if is_unique %}
         {% if person_ids.values() | count_true %}
             {% if person_id in person_ids %}
@@ -16,14 +16,14 @@
         {% elif person_id is none %}
             <input type="radio" name="{{ prefix }}_{{ proposal_id }}" value="" {{ 'checked="checked"' | safe if not person_ids }} class="unassigned" />
         {% else %}
-            <input type="radio" name="{{ prefix }}_{{ proposal_id }}" value="{{ person_id }}" {{ 'checked="checked"' | safe if person_id in person_ids }} />
+            <input type="radio" name="{{ prefix }}_{{ proposal_id }}" value="{{ person_id }}" {{ 'checked="checked"' | safe if person_id in person_ids }} {{ combined_class(('accepted', is_accepted), ('rejected', (is_accepted is not none) and not is_accepted)) | safe }} />
         {% endif %}
     {% else %}
         {% if person_ids.get(person_id, False) %}
             &check;
             <input type="hidden" name="{{ prefix }}_{{ proposal_id }}_{{ person_id }}" value="1" />
         {% else %}
-            <input type="checkbox" name="{{ prefix }}_{{ proposal_id }}_{{ person_id }}" value="1" {{ 'checked="checked"' | safe if person_id in person_ids }} />
+            <input type="checkbox" name="{{ prefix }}_{{ proposal_id }}_{{ person_id }}" value="1" {{ 'checked="checked"' | safe if person_id in person_ids }} {{ combined_class(('accepted', is_accepted), ('rejected', (is_accepted is not none) and not is_accepted)) | safe }} />
         {% endif %}
     {% endif %}
 {% endmacro %}
@@ -96,7 +96,7 @@
                             {% elif member.person_id in conflict_person_ids[proposal.id] %}
                                 &cross;
                             {% else %}
-                                {{ render_reviewer_select(role_id | fmt('rev_{}'), role_info.unique, proposal.reviewer_person_ids[role_id], proposal.id, member.person_id) }}
+                                {{ render_reviewer_select(role_id | fmt('rev_{}'), role_info.unique, proposal.reviewer_person_ids[role_id], proposal.id, member.person_id, acceptance.is_accepted(proposal.id, member.person_id, role_id)) }}
                             {% endif %}
                             {% if not loop.last %}
                                 <br />
@@ -108,7 +108,7 @@
                     <td class="spacer_left control_center">
                         {% for (role_id, role_info) in roles.items() %}
                             {% if role_info.unique %}
-                                {{ render_reviewer_select(role_id | fmt('rev_{}'), true, proposal.reviewer_person_ids[role_id], proposal.id, none) }}
+                                {{ render_reviewer_select(role_id | fmt('rev_{}'), true, proposal.reviewer_person_ids[role_id], proposal.id, none, none) }}
                             {% else %}
                                 &nbsp;
                             {% endif %}

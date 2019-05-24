@@ -204,6 +204,16 @@ input[type="number"].narrow_number {
     width: 10ex;
 }
 
+input.rejected {
+    outline: 2px solid #F44;
+    outline-offset: 2px;
+}
+
+input.accepted {
+    outline: 2px dashed #44F;
+    outline-offset: 2px;
+}
+
 section.deselected {
     border-left: 1ex solid #BBB;
     padding-left: 1ex;

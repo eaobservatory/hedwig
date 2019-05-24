@@ -54,6 +54,19 @@ Horizontal dash
     to one person and a review has already been
     submitted for it.
 
+In addition, a colored outline might be present if people
+are asked to accept reviews for this role:
+
+Solid red
+    The person rejected this reviewer role assignment.
+
+Dashed blue
+    The person accepted this assignment.
+
+Note that these outlines are based on the log of review acceptance,
+so they may contain information not present in the current status
+of each review.
+
 Committee Members
 ~~~~~~~~~~~~~~~~~
 

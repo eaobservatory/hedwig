@@ -542,6 +542,11 @@ class GenericReview(object):
         group_name = GroupType.get_name(group_type)
         group_person_ids = [x.person_id for x in group_members.values()]
 
+        # Get any relevant acceptance records.
+        acceptance = db.search_reviewer_acceptance(
+            proposal_id=list(proposals.keys()),
+            role=list(roles.keys()))
+
         message = None
 
         if form is not None:
@@ -682,6 +687,7 @@ class GenericReview(object):
                 for proposal in proposals.values()},
             'message': message,
             'is_peer_review': (group_type == GroupType.PEER),
+            'acceptance': acceptance,
         }
 
     @with_call_review(permission=PermissionType.EDIT)

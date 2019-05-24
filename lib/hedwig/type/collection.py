@@ -679,6 +679,22 @@ class ReviewerCollection(
         return [x for x in self.values() if x.person_id == person_id]
 
 
+class ReviewerAcceptanceCollection(
+        ResultCollection, CollectionByProposal, CollectionByReviewerRole):
+    """
+    Collection class for reviewer acceptance records.
+    """
+
+    def is_accepted(self, proposal_id, person_id, role):
+        for record in self.values():
+            if ((record.proposal_id == proposal_id)
+                    and (record.person_id == person_id)
+                    and (record.role == role)):
+                return record.accepted
+
+        return None
+
+
 class ReviewDeadlineCollection(
         ResultCollection, CollectionByCall, CollectionByReviewerRole):
     """

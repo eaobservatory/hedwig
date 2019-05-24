@@ -24,7 +24,8 @@ from hedwig.compat import first_value
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, Error, \
     NoSuchRecord, UserError
 from hedwig.type.collection import GroupMemberCollection, \
-    ReviewerCollection, ReviewDeadlineCollection, ReviewFigureCollection
+    ReviewerCollection, ReviewerAcceptanceCollection, \
+    ReviewDeadlineCollection, ReviewFigureCollection
 from hedwig.type.enum import Assessment, AttachmentState, BaseReviewerRole, \
     FigureType, FormatType, GroupType, ReviewState
 from hedwig.type.simple import GroupMember, Reviewer, ReviewerAcceptance, \
@@ -405,6 +406,7 @@ class DBReviewTest(DBTestCase):
         self.assertIsInstance(reviewer_id, int)
 
         result = self.db.search_reviewer_acceptance(person_id=person_id)
+        self.assertIsInstance(result, ReviewerAcceptanceCollection)
         self.assertFalse(result)
 
         acceptance_id = self.db.add_reviewer_acceptance(

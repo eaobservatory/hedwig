@@ -27,7 +27,8 @@ from sqlalchemy.sql.functions import count
 from ...error import ConsistencyError, Error, FormattedError, \
     NoSuchRecord, UserError
 from ...type.collection import GroupMemberCollection, ResultCollection, \
-    ReviewerCollection, ReviewDeadlineCollection, ReviewFigureCollection
+    ReviewerCollection, ReviewerAcceptanceCollection, ReviewDeadlineCollection, \
+    ReviewFigureCollection
 from ...type.enum import Assessment, FormatType, GroupType, ReviewState
 from ...type.simple import GroupMember, Reviewer, ReviewerAcceptance, \
     ReviewDeadline, ReviewFigureInfo
@@ -545,7 +546,7 @@ class ReviewPart(object):
             else:
                 stmt = stmt.where(reviewer_acceptance.c.role == role)
 
-        ans = ResultCollection()
+        ans = ReviewerAcceptanceCollection()
 
         with self._transaction(_conn=_conn) as conn:
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
