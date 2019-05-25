@@ -358,6 +358,7 @@ class ReviewPart(object):
                         with_review=False, with_review_text=False,
                         with_review_note=False,
                         with_invitation=False,
+                        with_acceptance=False,
                         _conn=None):
         select_columns = [
             reviewer,
@@ -428,6 +429,28 @@ class ReviewPart(object):
 
             if queue_id is not None:
                 select_from = select_from.join(call)
+
+        if with_acceptance:
+            select_columns.extend((
+                reviewer_acceptance.c.accepted.label('acceptance_accepted'),
+                reviewer_acceptance.c.text.label('acceptance_text'),
+                reviewer_acceptance.c.format.label('acceptance_format'),
+                reviewer_acceptance.c.date.label('acceptance_date'),
+            ))
+
+            select_from = select_from.outerjoin(reviewer_acceptance, and_(
+                reviewer.c.proposal_id == reviewer_acceptance.c.proposal_id,
+                reviewer.c.person_id == reviewer_acceptance.c.person_id,
+                reviewer.c.role == reviewer_acceptance.c.role,
+            ))
+
+        else:
+            default.update({
+                'acceptance_accepted': None,
+                'acceptance_text': None,
+                'acceptance_format': None,
+                'acceptance_date': None,
+            })
 
         stmt = select(select_columns).select_from(select_from)
 
