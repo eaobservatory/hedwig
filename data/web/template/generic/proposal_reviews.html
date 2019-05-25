@@ -57,8 +57,9 @@
             {% set show_calc = (true if review.calculations else false) %}
             {% set show_fig = (true if review.figures else false) %}
             {% set show_note = (review.review_note is not none_or_whitespace) %}
+            {% set show_acceptance = (review.acceptance_text is not none_or_whitespace) %}
             <tr class="spacer_above">
-                <td rowspan="{{ (show_review, show_calc, show_fig, show_note) | count_true + 1 }}">
+                <td rowspan="{{ (show_review, show_calc, show_fig, show_note, show_acceptance) | count_true + 1 }}">
                     {% if review.can_edit %}
                         <a href="{{ url_for('.review_edit', reviewer_id=review.id, referrer='pr') }}">{{ review.role | reviewer_role_name(facility_role_class) }}</a>
                     {% else %}
@@ -160,6 +161,18 @@
                 <tr>
                     <td colspan="{{ review_info_columns | length + 3 }}">
                         {{ review.review_note | format_text(review.review_note_format) }}
+                    </td>
+                </tr>
+            {% endif %}
+            {% if show_acceptance %}
+                <tr>
+                    <td colspan="{{ review_info_columns | length + 3 }}">
+                        <p>
+                            <b>Review {{ 'acceptance' if review.acceptance_accepted else 'rejection' }}:</b>
+                            {{ review.acceptance_date  | format_datetime }}
+                        </p>
+
+                            {{ review.acceptance_text | format_text(review.acceptance_format) }}
                     </td>
                 </tr>
             {% endif %}

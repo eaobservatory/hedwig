@@ -1770,7 +1770,8 @@ class GenericReview(object):
         # if not viewable.
         for (reviewer_id, reviewer) in db.search_reviewer(
                 proposal_id=proposal.id, with_review=True,
-                with_review_text=True, with_review_note=True).items():
+                with_review_text=True, with_review_note=True,
+                with_acceptance=True).items():
             role_info = role_class.get_info(reviewer.role)
             reviewer_can = auth.for_review(
                 role_class, db, reviewer=reviewer, proposal=proposal,
