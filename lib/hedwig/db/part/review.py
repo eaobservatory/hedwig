@@ -536,9 +536,32 @@ class ReviewPart(object):
     def search_reviewer_acceptance(
             self, reviewer_acceptance_id=None,
             proposal_id=None, person_id=None, role=None,
+            with_text=False,
             _conn=None):
+        select_columns = [
+            reviewer_acceptance.c.id,
+            reviewer_acceptance.c.proposal_id,
+            reviewer_acceptance.c.person_id,
+            reviewer_acceptance.c.role,
+            reviewer_acceptance.c.accepted,
+            reviewer_acceptance.c.date,
+        ]
 
-        stmt = reviewer_acceptance.select()
+        default = {}
+
+        if with_text:
+            select_columns.extend((
+                reviewer_acceptance.c.text,
+                reviewer_acceptance.c.format,
+            ))
+
+        else:
+            default.update({
+                'text': None,
+                'format': None,
+            })
+
+        stmt = select(select_columns)
 
         iter_field = None
         iter_list = None
@@ -575,7 +598,9 @@ class ReviewPart(object):
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(iter_stmt.order_by(
                         reviewer_acceptance.c.id)):
-                    ans[row['id']] = ReviewerAcceptance(**row)
+                    values = default.copy()
+                    values.update(**row)
+                    ans[row['id']] = ReviewerAcceptance(**values)
 
         return ans
 

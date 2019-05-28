@@ -424,6 +424,18 @@ class DBReviewTest(DBTestCase):
         self.assertEqual(result.person_id, person_id)
         self.assertEqual(result.role, role)
         self.assertFalse(result.accepted)
+        self.assertIsNone(result.text)
+        self.assertIsNone(result.format)
+
+        result = self.db.search_reviewer_acceptance(
+            person_id=person_id, with_text=True).get_single()
+
+        self.assertIsInstance(result, ReviewerAcceptance)
+        self.assertEqual(result.id, acceptance_id)
+        self.assertEqual(result.proposal_id, proposal_id)
+        self.assertEqual(result.person_id, person_id)
+        self.assertEqual(result.role, role)
+        self.assertFalse(result.accepted)
         self.assertEqual(result.text, 'I know the PI')
         self.assertEqual(result.format, FormatType.PLAIN)
 
@@ -432,7 +444,7 @@ class DBReviewTest(DBTestCase):
             text='I knew the PI', format_=FormatType.PLAIN)
 
         result = self.db.search_reviewer_acceptance(
-            person_id=person_id).get_single()
+            person_id=person_id, with_text=True).get_single()
 
         self.assertIsInstance(result, ReviewerAcceptance)
         self.assertEqual(result.id, acceptance_id)

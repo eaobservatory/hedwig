@@ -1275,7 +1275,8 @@ class GenericReview(object):
             acceptance = db.search_reviewer_acceptance(
                 proposal_id=reviewer.proposal_id,
                 person_id=reviewer.person_id,
-                role=reviewer.role).get_single()
+                role=reviewer.role,
+                with_text=True).get_single()
 
         except NoSuchRecord:
             acceptance = null_tuple(ReviewerAcceptance)
