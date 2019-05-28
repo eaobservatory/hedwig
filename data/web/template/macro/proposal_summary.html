@@ -1,5 +1,6 @@
-{% macro render_proposal_summary(facility_name, facility_call_type_class, proposal, proposal_code, abstract=none, categories=none, include_decision=true, can_edit_decision=false) %}
+{% macro render_proposal_summary(facility_name, facility_call_type_class, proposal, proposal_code, abstract=none, categories=none, include_decision=true, can_edit_decision=false, without_basic_info=false) %}
     <table>
+        {% if not without_basic_info %}
         <tr>
             <th>Facility</th>
             <td>{{ facility_name }}</td>
@@ -16,6 +17,7 @@
             <th>Call type</th>
             <td>{{ proposal.call_type | call_type_name(facility_call_type_class) }}</td>
         </tr>
+        {% endif %}
         <tr>
             <th>Proposal identifier</th>
             <td>
