@@ -43,7 +43,7 @@ from hedwig.admin.poll import send_proposal_feedback
 from hedwig.file.poll import process_moc, \
     process_proposal_figure, process_proposal_pdf, \
     process_review_figure
-from hedwig.type.enum import BaseReviewerRole, MessageState
+from hedwig.type.enum import BaseReviewerRole, MessageState, ProposalState
 from hedwig.view.query import QueryView
 from hedwig.web.app import create_web_app
 
@@ -249,8 +249,32 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.view_proposal_feedback('jcmt', 1)
 
-            # Also try copying the proposal.
-            self.copy_proposal('jcmt', semester_name)
+            # Also try copying the proposal into the rapid turnaround call.
+            self.copy_proposal('jcmt', None, 'Rapid Turnaround',
+                               screenshot_path=self.user_image_root)
+
+            self.log_out_user()
+
+            self.log_in_user(user_name='username2')
+
+            self.copy_proposal('jcmt', None, 'Rapid Turnaround')
+
+            self.log_out_user()
+
+            # Set up peer review process.
+            for proposal_id in (2, 3):
+                self.db.update_proposal(
+                    proposal_id, state=ProposalState.REVIEW)
+
+            self.log_in_user(user_name='test')
+
+            self.set_up_peer_review('jcmt')
+
+            self.log_out_user()
+
+            self.log_in_user(user_name='newusername')
+
+            self.enter_peer_review()
 
             self.log_out_user()
 
@@ -999,15 +1023,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         # Submit the proposal (should stay at the end to minimize warnings
         # on the submission page).
-        self.browser.find_element_by_link_text('Submit proposal').click()
-
-        self._save_screenshot(self.user_image_root, 'submit_ok')
-
-        self.browser.find_element_by_name('submit_confirm').click()
-
-        self.assertIn(
-            'The proposal has been submitted.',
-            self.browser.page_source)
+        self._submit_proposal(screenshot_path=self.user_image_root)
 
         self.browser.find_element_by_link_text('Validate proposal').click()
 
@@ -1031,12 +1047,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         # Re-submit the proposal so that we can use it to test the review
         # system later.
-        self.browser.find_element_by_link_text('Submit proposal').click()
-        self.browser.find_element_by_name('submit_confirm').click()
-
-        self.assertIn(
-            'The proposal has been submitted.',
-            self.browser.page_source)
+        self._submit_proposal()
 
         # Test more source list upload.
         self.browser.find_element_by_link_text('Upload target list').click()
@@ -1053,6 +1064,17 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn('LDN 123', self.browser.page_source)
         self.assertIn('LDN 456', self.browser.page_source)
         self.assertIn('NGC 1234', self.browser.page_source)
+
+    def _submit_proposal(self, screenshot_path=None):
+        self.browser.find_element_by_link_text('Submit proposal').click()
+
+        self._save_screenshot(screenshot_path, 'submit_ok')
+
+        self.browser.find_element_by_name('submit_confirm').click()
+
+        self.assertIn(
+            'The proposal has been submitted.',
+            self.browser.page_source)
 
     def _add_figure(
             self,
@@ -1702,6 +1724,35 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn('Notifications have been sent',
                       self.browser.page_source)
 
+    def set_up_peer_review(self, facility_code):
+        self.browser.get(self.base_url + facility_code)
+        self.browser.find_element_by_link_text('take admin').click()
+        self.browser.find_element_by_link_text('rapid turnaround').click()
+
+        # Set review deadlines.
+        self.browser.find_element_by_link_text(
+            'Edit review deadlines').click()
+
+        self.browser.find_element_by_name('date_date_7').send_keys('2020-01-01')
+        self.browser.find_element_by_name('date_time_7').send_keys('00:00')
+
+        self.browser.find_element_by_name('submit').click()
+        self.assertIn('The review deadlines have been saved.',
+                      self.browser.page_source)
+
+        # Assign peer reviewers.
+        self.browser.find_element_by_link_text('Assign reviewers').click()
+        self.browser.find_element_by_link_text('Assign peer reviewers').click()
+
+        for checkbox in self.browser.find_elements_by_css_selector(
+                'input[type="checkbox"]'):
+            checkbox.click()
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn('assignments have been updated.',
+                      self.browser.page_source)
+
     def enter_technical_assessment(self):
         """
         Tests entering a technical assessment.
@@ -1831,6 +1882,28 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn(
             'The review has been saved and marked as done.',
             self.browser.page_source)
+
+    def enter_peer_review(self):
+        self.browser.find_element_by_link_text('Your reviews').click()
+
+        self.browser.find_element_by_link_text('Peer').click()
+
+        Select(
+            self.browser.find_element_by_name('accepted')
+        ).select_by_value('1')
+
+        self._save_screenshot(self.review_image_root, 'peer_review_accept')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The review has been accepted.',
+            self.browser.page_source)
+
+        # Reload page to remove the yellow flash box for the screenshot.
+        self.browser.get(self.browser.current_url)
+
+        self._save_screenshot(self.review_image_root, 'peer_review_edit')
 
     def view_person_reviews(self):
         # Now acquire a screenshot of the "Your reviews" page.
@@ -2109,7 +2182,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         # Create a call.
         self.browser.get(admin_menu_url)
-        self._create_call('Regular', semester_name)
+        self._create_call('Rapid Turnaround', semester_name)
 
         return semester_name
 
@@ -2128,14 +2201,20 @@ class IntegrationTest(DummyConfigTestCase):
 
         self._save_screenshot(self.user_image_root, 'proposal_feedback')
 
-    def copy_proposal(self, facility_code, semester_name):
+    def copy_proposal(
+            self, facility_code, semester_name, call_type_name=None,
+            screenshot_path=None):
         self.browser.get(self.base_url + facility_code)
 
-        semester_link = self.browser.find_element_by_link_text(semester_name)
+        if call_type_name is None:
+            self.browser.find_element_by_link_text(semester_name).click()
 
-        semester_link.click()
+        else:
+            self.browser.find_element_by_link_text('Other calls for proposals').click()
 
-        queue_link = self.browser.find_element_by_link_text(
+            self.browser.find_element_by_link_text(call_type_name).click()
+
+        queue_link = self.browser.find_element_by_partial_link_text(
             'Create a proposal for the PI Science Queue')
 
         queue_link.click()
@@ -2144,7 +2223,7 @@ class IntegrationTest(DummyConfigTestCase):
             self.browser.find_element_by_name('affiliation_id')
         ).select_by_visible_text('China')
 
-        self._save_screenshot(self.user_image_root, 'proposal_copy')
+        self._save_screenshot(screenshot_path, 'proposal_copy')
 
         self.browser.find_element_by_name('submit_copy').click()
 
@@ -2159,7 +2238,9 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_id('callout_dismiss').click()
 
         self._save_screenshot(
-            self.user_image_root, 'proposal_copied')
+            screenshot_path, 'proposal_copied')
+
+        self._submit_proposal()
 
     def try_jcmt_itcs(self):
         self.browser.get(self.base_url + 'jcmt/calculator/scuba2/time')
