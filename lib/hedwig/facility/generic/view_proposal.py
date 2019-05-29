@@ -657,7 +657,7 @@ class GenericProposal(object):
         }
 
         for role in (role_class.TECHNICAL_CASE, role_class.SCIENCE_CASE):
-            extra['{}_case'.format(role_class.short_name(role))] = {
+            extra['{}_case'.format(role_class.get_code(role))] = {
                 'role': role,
                 'text': proposal_text.get_role(role, None),
                 'pdf': proposal_pdf.get_role(role, None),
@@ -837,7 +837,7 @@ class GenericProposal(object):
                 (role_class.SCIENCE_CASE, 'science_case')):
             with report.accumulate_notes(role_section) as messages:
                 role_name = role_class.get_name(role)
-                case = extra['{}_case'.format(role_class.short_name(role))]
+                case = extra['{}_case'.format(role_class.get_code(role))]
 
                 if case['text'] is not None:
                     for fig in case['fig']:
@@ -1801,7 +1801,7 @@ class GenericProposal(object):
     @with_proposal(permission=PermissionType.EDIT)
     def view_case_edit(self, db, proposal, can, role):
         role_class = self.get_text_roles()
-        code = role_class.short_name(role)
+        code = role_class.get_code(role)
         call = db.get_call(facility_id=None, call_id=proposal.call_id)
 
         text_info = db.search_proposal_text(
@@ -1840,7 +1840,7 @@ class GenericProposal(object):
     @with_proposal(permission=PermissionType.EDIT)
     def view_case_edit_text(self, db, proposal, can, role, form):
         role_class = self.get_text_roles()
-        code = role_class.short_name(role)
+        code = role_class.get_code(role)
 
         figures = db.search_proposal_figure(
             proposal_id=proposal.id, role=role)
@@ -1862,7 +1862,7 @@ class GenericProposal(object):
     def view_case_edit_figure(self, db, proposal, can, fig_id, role,
                               form, file_):
         role_class = self.get_text_roles()
-        code = role_class.short_name(role)
+        code = role_class.get_code(role)
         name = role_class.get_name(role)
         fig_limit = getattr(proposal, code + '_fig_lim')
 
@@ -2114,7 +2114,7 @@ class GenericProposal(object):
     @with_proposal(permission=PermissionType.EDIT)
     def view_case_edit_pdf(self, db, proposal, can, role, file):
         role_class = self.get_text_roles()
-        code = role_class.short_name(role)
+        code = role_class.get_code(role)
         name = role_class.get_name(role)
         page_limit = getattr(proposal, code + '_page_lim')
         max_size = int(get_config().get('upload', 'max_pdf_size'))

@@ -444,7 +444,7 @@ class EnumTypeTestCase(TestCase):
             string_type)
 
         self.assertIsInstance(
-            BaseTextRole.short_name(BaseTextRole.SCIENCE_CASE),
+            BaseTextRole.get_code(BaseTextRole.SCIENCE_CASE),
             string_type)
 
         self.assertIsInstance(

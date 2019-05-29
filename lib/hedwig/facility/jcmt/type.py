@@ -640,7 +640,7 @@ class JCMTTextRole(BaseTextRole):
 
     RoleInfo = BaseTextRole.RoleInfo
 
-    #                Name                        Short   Path
+    #                Name                        Code    Path
     _info = BaseTextRole._info.copy()
     _info.update({
         PR_SUMMARY:

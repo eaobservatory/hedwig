@@ -941,7 +941,7 @@ class SemesterState(EnumBasic):
     ))
 
 
-class BaseTextRole(EnumBasic, EnumURLPath):
+class BaseTextRole(EnumBasic, EnumCode, EnumURLPath):
     """
     Base for classes representing roles which a piece of text may have
     on a proposal.
@@ -955,9 +955,9 @@ class BaseTextRole(EnumBasic, EnumURLPath):
     SCIENCE_CASE = 3
     TOOL_NOTE = 4
 
-    RoleInfo = namedtuple('RoleInfo', ('name', 'shortname', 'url_path'))
+    RoleInfo = namedtuple('RoleInfo', ('name', 'code', 'url_path'))
 
-    #                Name                        Short   Path
+    #                Name                        Code    Path
     _info = {
         ABSTRACT:
             RoleInfo('Abstract',                 'abst', None),
@@ -968,12 +968,6 @@ class BaseTextRole(EnumBasic, EnumURLPath):
         TOOL_NOTE:
             RoleInfo('Note on Tool Results',     'tool', None),
     }
-
-    @classmethod
-    def short_name(cls, role):
-        """Get the short name of a role."""
-
-        return cls._info[role].shortname
 
 
 class UserLogEvent(EnumBasic):
