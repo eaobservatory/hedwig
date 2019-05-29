@@ -20,9 +20,9 @@ to the Hedwig database which cannot be handled automatically by `Alembic`.
   update must be performed in three steps:
 
   * Use `Alembic` to add the new link tables, but do not allow it to drop
-    the `caption`, `proposal_id`, `role` and `reviewer_id` columns of the
-    `proposal_fig`, `proposal_pdf`, `proposal_text` and `review_fig` tables.
-    You may have to move the commands which drop the
+    the `sort_order`, `caption`, `proposal_id`, `role` and `reviewer_id`
+    columns of the `proposal_fig`, `proposal_pdf`, `proposal_text` and
+    `review_fig` tables.  You may have to move the commands which drop the
     `idx_pdf_prop_role` and `idx_text_prop_role` indexes to the start
     of the script so that new indexes with those names can be created.
 
