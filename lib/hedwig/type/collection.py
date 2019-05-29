@@ -632,7 +632,7 @@ class ReviewerCollection(
 
             # Record the validated ratings with their weights in case
             # we want also to calculate the standard deviation.
-            rating_and_weight.append((review.review_rating, weight))
+            rating_and_weight.append((rating, weight))
 
         if not total_weight:
             return (None, None) if with_std_dev else None
