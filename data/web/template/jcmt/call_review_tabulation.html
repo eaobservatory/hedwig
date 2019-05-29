@@ -1,5 +1,7 @@
 {% extends 'generic/call_review_tabulation.html' %}
 
+{% from 'jcmt/macro/review.html' import render_review_rating, render_review_expertise %}
+
 {% block explanation_extra %}
     <ul>
         <li>
@@ -156,18 +158,10 @@
         {% endif %}
     </td>
     <td>
-        {% if review.review_rating is not none %}
-            {{ review.review_rating }}
-        {% else %}
-            &nbsp;
-        {% endif %}
+        {{ render_review_rating(review) }}
     </td>
     <td>
-        {% if review.review_extra.expertise is not none %}
-            {{ review.review_extra.expertise | jcmt_expertise_name }}
-        {% else %}
-            &nbsp;
-        {% endif %}
+        {{ render_review_expertise(review) }}
     </td>
 {% endblock %}
 

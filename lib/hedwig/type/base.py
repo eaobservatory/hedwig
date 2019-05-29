@@ -327,6 +327,19 @@ class EnumDisplayClass(object):
         return cls._info[value].display_class
 
 
+class EnumShortName(object):
+    """
+    Mix-in for enum-style classes with an `_info` dictionary
+    including a `short_name` attribute.
+    """
+
+    @classmethod
+    def get_short_name(cls, value):
+        """Get the abbreviated name for a value."""
+
+        return cls._info[value].short_name
+
+
 class EnumURLPath(object):
     """
     Mix-in for enum-style classes which have an `_info` dictionary

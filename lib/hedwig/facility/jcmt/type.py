@@ -20,7 +20,8 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict, namedtuple
 
-from ...type.base import CollectionByProposal, EnumAvailable, EnumBasic
+from ...type.base import CollectionByProposal, \
+    EnumAvailable, EnumBasic, EnumShortName
 from ...type.enum import BaseCallType, BaseReviewerRole, BaseTextRole
 from ...type.collection import ResultCollection, ResultTable
 from ...error import UserError
@@ -277,6 +278,63 @@ class JCMTOptionValue(EnumAvailable):
     ))
 
 
+class JCMTPeerReviewerExpertise(EnumBasic, EnumAvailable, EnumShortName):
+    """
+    Class representing peer reviewer expertise levels.
+    """
+
+    LITTLE_KNOL = 1
+    SOME_KNOL = 2
+    KNOWLEDGEABLE = 3
+
+    ExpertiseInfo = namedtuple(
+        'ExpertiseInfo', ('name', 'short_name', 'weight', 'available'))
+
+    #       Short name             Wt.  Avail
+    _info = OrderedDict((
+        (LITTLE_KNOL,   ExpertiseInfo(
+            'I know little about this field',
+            'Little knowledge',     50, True)),
+        (SOME_KNOL,     ExpertiseInfo(
+            'Somewhat knowledgeable about this field',
+            'Some knowledge',       75, True)),
+        (KNOWLEDGEABLE, ExpertiseInfo(
+            'I consider myself knowledgeable about this field',
+            'Knowledgeable',       100, True)),
+    ))
+
+    @classmethod
+    def get_weight(cls, expertise):
+        return cls._info[expertise].weight
+
+
+class JCMTPeerReviewRating(EnumBasic, EnumAvailable):
+    """
+    Class representing possible outcomes of a peer review.
+    """
+
+    POOR = 1
+    FAIR = 2
+    GOOD = 3
+    VERY_GOOD = 4
+    EXCELLENT = 5
+
+    RatingInfo = namedtuple('RatingInfo', ('name', 'rating', 'available'))
+
+    #                          Name         Rt.  Avail
+    _info = OrderedDict((
+        (EXCELLENT, RatingInfo('Excellent', 100, True)),
+        (VERY_GOOD, RatingInfo('Very good',  75, True)),
+        (GOOD,      RatingInfo('Good',       50, True)),
+        (FAIR,      RatingInfo('Fair',       25, True)),
+        (POOR,      RatingInfo('Poor',        0, True)),
+    ))
+
+    @classmethod
+    def get_rating(cls, rating):
+        return cls._info[rating].rating
+
+
 class JCMTRequestCollection(ResultCollection, CollectionByProposal):
     """
     Class used for collections of JCMT requests.  Also used for JCMT
@@ -507,26 +565,30 @@ class JCMTReviewerRole(BaseReviewerRole):
 
     RoleInfo = namedtuple(
         'RoleInfo', BaseReviewerRole.RoleInfo._fields + (
-            'jcmt_expertise', 'jcmt_external'))
+            'jcmt_expertise', 'jcmt_external',
+            'jcmt_peer_expertise', 'jcmt_peer_rating'))
 
-    _jcmt_default_info = (False, False)
+    _jcmt_default_info = (False, False, False, False)
 
     # Define JCMT-specific role information.
     #        Exp.   Ext.Q.
     _jcmt_info = {
         BaseReviewerRole.EXTERNAL: (
-            (False, True),
+            (False, True, False, False),
             {}),
         BaseReviewerRole.CTTEE_PRIMARY: (
-            (True, False),
+            (True, False, False, False),
             {'name': 'TAC Primary', 'weight': False}),
         BaseReviewerRole.CTTEE_SECONDARY: (
-            (True, False),
+            (True, False, False, False),
             {'name': 'TAC Secondary', 'unique': True, 'weight': False}),
         BaseReviewerRole.CTTEE_OTHER: (
-            (True, False),
+            (True, False, False, False),
             {'name': 'Rating', 'name_review': False, 'url_path': 'rating',
              'weight': False}),
+        BaseReviewerRole.PEER: (
+            (False, False, True, True),
+            {'rating': False, 'weight': False}),
     }
 
     # Merge with base role information.

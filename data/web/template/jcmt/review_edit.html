@@ -1,7 +1,7 @@
 {% extends 'generic/review_edit.html' %}
 
 {% from 'jcmt/macro/request_table.html' import render_request_display %}
-{% from 'jcmt/macro/review_questions.html' import render_ext_review_question %}
+{% from 'jcmt/macro/review.html' import render_ext_review_question %}
 
 {% block information_extra %}
     {% if jcmt_request is not none %}
@@ -133,6 +133,35 @@
                 <option value="" {{ 'selected="selected"' | safe if jcmt_review.expertise is none }}>Undecided</option>
                 {% for (expertise_num, expertise_name) in jcmt_expertise_levels.items() %}
                     <option value="{{ expertise_num }}" {{ 'selected="selected"' | safe if expertise_num == jcmt_review.expertise }}>{{ expertise_name }}</option>
+                {% endfor %}
+            </select>
+        </li>
+    {% endif %}
+    {% if role_info.jcmt_peer_rating%}
+        <li>
+            <div class="explanation">
+                Please give an overall rating for the proposal.
+            </div>
+            <label for="jcmt_peer_rating">Rating</label>
+            <select name="jcmt_peer_rating">
+                <option value="" {{ 'selected="selected"' | safe if jcmt_review.peer_rating is none }}>Undecided</option>
+                {% for (rating_num, rating_name) in jcmt_peer_rating_levels.items() %}
+                    <option value="{{ rating_num }}" {{ 'selected="selected"' | safe if rating_num == jcmt_review.peer_rating }}>{{ rating_name }}</option>
+                {% endfor %}
+            </select>
+        </li>
+    {% endif %}
+    {% if role_info.jcmt_peer_expertise %}
+        <li>
+            <div class="explanation">
+                Please give an assessment of your expertise regarding
+                the subject matter of this proposal.
+            </div>
+            <label for="jcmt_peer_expertise">Expertise</label>
+            <select name="jcmt_peer_expertise">
+                <option value="" {{ 'selected="selected"' | safe if jcmt_review.peer_expertise is none }}>Undecided</option>
+                {% for (expertise_num, expertise_name) in jcmt_peer_expertise_levels.items() %}
+                    <option value="{{ expertise_num }}" {{ 'selected="selected"' | safe if expertise_num == jcmt_review.peer_expertise }}>{{ expertise_name }}</option>
                 {% endfor %}
             </select>
         </li>

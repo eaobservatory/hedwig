@@ -2,7 +2,7 @@
 
 {% set review_info_columns=['Assessment', 'Rating', 'Expertise'] %}
 
-{% from 'jcmt/macro/review_questions.html' import render_ext_review_question %}
+{% from 'jcmt/macro/review.html' import render_ext_review_question, render_review_rating, render_review_expertise %}
 
 {% block review_info %}
     <td>
@@ -13,18 +13,10 @@
         {% endif %}
     </td>
     <td>
-        {% if review.review_rating is not none %}
-            {{ review.review_rating }}
-        {% else %}
-            &nbsp;
-        {% endif %}
+        {{ render_review_rating(review) }}
     </td>
     <td>
-        {% if review.review_extra.expertise is not none %}
-            {{ review.review_extra.expertise | jcmt_expertise_name }}
-        {% else %}
-            &nbsp;
-        {% endif %}
+        {{ render_review_expertise(review) }}
     </td>
 {% endblock %}
 

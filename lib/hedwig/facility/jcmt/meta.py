@@ -108,4 +108,7 @@ jcmt_review = Table(
     Column('rating_technical', Integer, nullable=True),
     Column('rating_urgency', Integer, nullable=True),
     Column('review_format', Integer, nullable=True),
+    # Information for peer reviews:
+    Column('peer_expertise', Integer, nullable=True),
+    Column('peer_rating', Integer, nullable=True),
     **table_opts)

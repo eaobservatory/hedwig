@@ -23,7 +23,7 @@ import re
 
 from ..error import NoSuchValue, UserError
 from .base import EnumAllowUser, EnumAvailable, EnumBasic, EnumCode, \
-    EnumDisplayClass, EnumURLPath
+    EnumDisplayClass, EnumShortName, EnumURLPath
 
 
 class AffiliationType(EnumBasic):
@@ -416,7 +416,7 @@ class PersonTitle(EnumBasic, EnumAvailable):
     ))
 
 
-class ProposalState(EnumBasic):
+class ProposalState(EnumBasic, EnumShortName):
     """
     Class representing various states a proposal can be in.
 
@@ -516,12 +516,6 @@ class ProposalState(EnumBasic):
         """
 
         return state in cls.open_states()
-
-    @classmethod
-    def get_short_name(cls, state):
-        """Get the abbreviated name for a proposal state."""
-
-        return cls._info[state].short_name
 
     @classmethod
     def can_edit(cls, state):

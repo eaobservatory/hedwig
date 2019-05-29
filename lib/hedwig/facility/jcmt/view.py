@@ -41,6 +41,7 @@ from .type import \
     JCMTAvailable, JCMTAvailableCollection, JCMTAncillary, \
     JCMTCallOptions, JCMTCallType, JCMTInstrument, \
     JCMTOptionValue, JCMTOptions, \
+    JCMTPeerReviewerExpertise, JCMTPeerReviewRating, \
     JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, \
     JCMTReview, JCMTReviewerExpertise, JCMTReviewerRole, \
     JCMTReviewRatingJustification, JCMTReviewRatingTechnical, \
@@ -75,6 +76,18 @@ class JCMT(EAOFacility):
                 return JCMTReviewerExpertise.get_name(value)
             except KeyError:
                 return 'Unknown expertise'
+
+        def peer_expertise_short_name(value):
+            try:
+                return JCMTPeerReviewerExpertise.get_short_name(value)
+            except KeyError:
+                return 'Unknown expertise'
+
+        def peer_rating_name(value):
+            try:
+                return JCMTPeerReviewRating.get_name(value)
+            except KeyError:
+                return 'Unknown rating'
 
         def review_rating_justification(value):
             try:
@@ -259,22 +272,32 @@ class JCMT(EAOFacility):
 
         def rating_weight_function(reviewer):
             role_info = role_class.get_info(reviewer.role)
+            extra = reviewer.review_extra
 
-            if ((not role_info.rating)
-                    or (not role_info.jcmt_expertise)
-                    or (reviewer.review_rating is None)):
-                return (None, None)
+            rating = None
+            weight = None
 
-            expertise = reviewer.review_extra.expertise
+            # Determine rating.
+            if role_info.rating:
+                rating = reviewer.review_rating
 
-            if expertise is None:
-                # TODO: fall back to weight parameter when handling
-                # pre-expertise-level reviews?
-                return (None, None)
+            elif role_info.jcmt_peer_rating:
+                if extra.peer_rating is not None:
+                    rating = JCMTPeerReviewRating.get_rating(
+                        extra.peer_rating)
 
-            weight = JCMTReviewerExpertise.get_weight(expertise) / 100.0
+            # Determine weight.
+            if role_info.jcmt_expertise:
+                if extra.expertise is not None:
+                    weight = JCMTReviewerExpertise.get_weight(
+                        extra.expertise) / 100.0
 
-            return (reviewer.review_rating, weight)
+            elif role_info.jcmt_peer_expertise:
+                if extra.peer_expertise is not None:
+                    weight = JCMTPeerReviewerExpertise.get_weight(
+                        extra.peer_expertise) / 100.0
+
+            return (rating, weight)
 
         return reviews.get_overall_rating(rating_weight_function,
                                           with_std_dev=with_std_dev)
@@ -1013,6 +1036,22 @@ class JCMT(EAOFacility):
             except:
                 raise HTTPError('Rating scale not understood.')
 
+        if role_info.jcmt_peer_expertise:
+            try:
+                jcmt_review = jcmt_review._replace(
+                    peer_expertise=int_or_none(
+                        form['jcmt_peer_expertise']))
+            except:
+                raise HTTPError('Expertise level not understood.')
+
+        if role_info.jcmt_peer_rating:
+            try:
+                jcmt_review = jcmt_review._replace(
+                    peer_rating=int_or_none(
+                        form['jcmt_peer_rating']))
+            except:
+                raise HTTPError('Rating not understood.')
+
         return jcmt_review
 
     def _view_review_edit_save(self, db, reviewer, proposal, info):
@@ -1046,6 +1085,14 @@ class JCMT(EAOFacility):
                 raise UserError(
                     'Please select an option from the urgency scale.')
 
+        if role_info.jcmt_peer_expertise:
+            if (is_done and (info.peer_expertise is None)):
+                raise UserError('Please select an expertise level.')
+
+        if role_info.jcmt_peer_rating:
+            if (is_done and (info.peer_rating is None)):
+                raise UserError('Please select a rating.')
+
         db.set_jcmt_review(
             role_class=role_class,
             reviewer_id=reviewer.id,
@@ -1078,6 +1125,8 @@ class JCMT(EAOFacility):
                 JCMTReviewRatingJustification.get_options(),
             'jcmt_ratings_technical': JCMTReviewRatingTechnical.get_options(),
             'jcmt_ratings_urgency': JCMTReviewRatingUrgency.get_options(),
+            'jcmt_peer_expertise_levels': JCMTPeerReviewerExpertise.get_options(),
+            'jcmt_peer_rating_levels': JCMTPeerReviewRating.get_options(),
             'jcmt_review': info,
             'jcmt_request': request,
             'jcmt_allocation': allocation,

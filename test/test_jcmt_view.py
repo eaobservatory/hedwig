@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from hedwig.compat import string_type
 from hedwig.error import NoSuchRecord, ParseError
 from hedwig.facility.jcmt.type import JCMTAncillary, JCMTInstrument, \
+    JCMTPeerReviewRating, JCMTPeerReviewerExpertise, \
     JCMTRequest, JCMTRequestCollection, \
     JCMTReview, JCMTReviewerExpertise, \
     JCMTWeather
@@ -80,9 +81,9 @@ class JCMTFacilityTestCase(FacilityTestCase):
 
         self.assertIsNone(self.view.calculate_overall_rating(c))
 
-        def make_review(id, role, rating, expertise):
+        def make_review(id_, role, rating, expertise):
             return null_tuple(Reviewer)._replace(
-                id=101, role=role, review_rating=rating,
+                id=id_, role=role, review_rating=rating,
                 review_state=ReviewState.DONE,
                 review_extra=null_tuple(JCMTReview)._replace(
                     expertise=expertise))
@@ -118,6 +119,37 @@ class JCMTFacilityTestCase(FacilityTestCase):
         (r, s) = self.view.calculate_overall_rating(c, with_std_dev=True)
         self.assertAlmostEqual(r, 50)
         self.assertIsNotNone(s)
+
+        # Test peer review ratings -- start with new empty collection.
+        c = ReviewerCollection()
+
+        def make_peer_review(id_, peer_rating, peer_expertise):
+            return null_tuple(Reviewer)._replace(
+                id=id_, role=role_class.PEER, review_state=ReviewState.DONE,
+                review_extra=null_tuple(JCMTReview)._replace(
+                    peer_rating=peer_rating, peer_expertise=peer_expertise))
+
+        c[101] = make_peer_review(101, None, None)
+
+        c[102] = make_peer_review(102, JCMTPeerReviewRating.POOR, None)
+
+        c[103] = make_peer_review(
+            103, None, JCMTPeerReviewerExpertise.SOME_KNOL)
+
+        self.assertIsNone(self.view.calculate_overall_rating(c))
+
+        c[104] = make_peer_review(
+            104, JCMTPeerReviewRating.FAIR,
+            JCMTPeerReviewerExpertise.LITTLE_KNOL)
+
+        self.assertAlmostEqual(self.view.calculate_overall_rating(c), 25.0)
+
+        c[105] = make_peer_review(
+            105, JCMTPeerReviewRating.VERY_GOOD,
+            JCMTPeerReviewerExpertise.KNOWLEDGEABLE)
+
+        self.assertAlmostEqual(
+            self.view.calculate_overall_rating(c), 58.333, places=3)
 
     def test_archive_url(self):
         url = self.view.make_archive_search_url(180.0, 45.0)

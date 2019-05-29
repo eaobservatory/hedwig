@@ -31,7 +31,9 @@ from .meta import jcmt_available, jcmt_allocation, \
     jcmt_request, jcmt_review
 from .type import \
     JCMTAvailable, JCMTAvailableCollection, JCMTCallOptions, \
-    JCMTOptions, JCMTOptionsCollection, JCMTRequest, JCMTRequestCollection, \
+    JCMTOptions, JCMTOptionsCollection, \
+    JCMTPeerReviewerExpertise, JCMTPeerReviewRating, \
+    JCMTRequest, JCMTRequestCollection, \
     JCMTReview, JCMTReviewerExpertise, \
     JCMTReviewRatingJustification, JCMTReviewRatingTechnical, \
     JCMTReviewRatingUrgency
@@ -313,6 +315,14 @@ class JCMTPart(object):
             if not FormatType.is_valid(review.review_format):
                 raise UserError('Question response format not recognised.')
 
+        if review.peer_expertise is not None:
+            if not JCMTPeerReviewerExpertise.is_valid(review.peer_expertise):
+                raise UserError('Expertise level not recognised.')
+
+        if review.peer_rating is not None:
+            if not JCMTPeerReviewRating.is_valid(review.peer_rating):
+                raise UserError('Rating value not recognised.')
+
         values = {
             x: getattr(review, x.name)
             for x in jcmt_review.columns if x.name != 'reviewer_id'}
@@ -335,6 +345,8 @@ class JCMTPart(object):
                 jcmt_review.c.rating_technical: role_info.jcmt_external,
                 jcmt_review.c.rating_urgency: role_info.jcmt_external,
                 jcmt_review.c.review_format: role_info.jcmt_external,
+                jcmt_review.c.peer_expertise: role_info.jcmt_peer_expertise,
+                jcmt_review.c.peer_rating: role_info.jcmt_peer_rating,
             }
 
             for (attr, attr_allowed) in attr_req.items():
