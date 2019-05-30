@@ -36,7 +36,11 @@
         {% endfor %}
     </table>
 
-    {% if deadline is not none %}
+    {% if deadline is none %}
+        <p class="missing">
+            The review deadline has not been set.
+        </p>
+    {% else %}
         <p>
             Notifications will include the following deadline:
         </p>
