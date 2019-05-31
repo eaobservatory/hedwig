@@ -13,6 +13,30 @@ by {{ review_deadline.date | format_datetime }} UT.
 {% endif %}
 {% endblock %}
 
+{% block notification_invitation %}
+{% if token is defined %}
+To take part in the review process, you will need to
+register with our system.
+Once you have done so, the links given later in this message
+will be accessible to you.
+Please begin by entering the following invitation code
+on the invitation page:
+
+Invitation code: {{ token }}
+
+Invitation page: {{ target_plain }}
+
+Alternatively you may click the following link:
+
+{{ target_url }}
+
+This code will expire at {{ expiry | format_datetime }} UT.
+Please note that this new invitation code
+supersedes any invitation codes you may have received
+for the proposal of which you are a member.
+{% endif %}
+{% endblock %}
+
 {% block notification_list %}
 The {{ 'proposals' if (proposals | length) > 1 else 'proposal' }}
 assigned to you, along with direct links to

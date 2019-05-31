@@ -818,6 +818,20 @@ class GenericReview(object):
                 for x in proposals],
         }
 
+        if not reviewer.person_registered:
+            (token, expiry) = db.issue_invitation(person_id)
+
+            email_ctx.update({
+                'token': token,
+                'expiry': expiry,
+                'target_url': url_for(
+                    'people.invitation_token_enter',
+                    token=token, _external=True),
+                'target_plain': url_for(
+                    'people.invitation_token_enter',
+                    _external=True),
+            })
+
         email_subject = 'Assignment of {} {}'.format(
             role_name.lower(),
             ('reviews' if (len(proposals) > 1) else 'review'))
