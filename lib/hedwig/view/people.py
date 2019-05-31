@@ -1331,34 +1331,7 @@ class PeopleView(object):
                 person = db.search_person(user_id=user_id).get_single()
                 _update_session_person(person)
 
-                # Attempt to determine where to redirect: ideally there will
-                # only be one proposal or review associated with the old
-                # person record.
-                target = None
-                try:
-                    member = old_person_record.proposals.get_single()
-                    proposal_id = member.proposal_id
-                    code = db.get_proposal_facility_code(proposal_id)
-                    target = url_for(
-                        '{}.proposal_view'.format(code),
-                        proposal_id=proposal_id, first_view='true')
-                except NoSuchRecord:
-                    pass
-                except MultipleRecords:
-                    pass
-
-                if target is None:
-                    try:
-                        reviewer = old_person_record.reviews.get_single()
-                        code = db.get_proposal_facility_code(
-                            reviewer.proposal_id)
-                        target = url_for('{}.review_info'.format(code),
-                                         reviewer_id=reviewer.id)
-
-                    except NoSuchRecord:
-                        pass
-                    except MultipleRecords:
-                        pass
+                target = self._determine_invitee_target(db, old_person_record)
 
                 if person.institution_id is None:
                     # If the user has no institution, take them to the
@@ -1396,6 +1369,49 @@ class PeopleView(object):
             'token': token,
             'person': person,
         }
+
+    def _determine_invitee_target(self, db, person):
+        """
+        Attempt to determine where to redirect, based on the "old"
+        person record (from before invitation acceptance).
+
+        Ideally there will only be one proposal or review associated
+        with this person record.  If there are multiple proposals or
+        multiple reviews, the person proposals / reviews page is returned.
+        If there is a mixture of proposals or reviews (or none of either)
+        then None is returned.
+        """
+
+        targets = []
+
+        try:
+            member = person.proposals.get_single()
+            proposal_id = member.proposal_id
+            code = db.get_proposal_facility_code(proposal_id)
+            targets.append(url_for(
+                '{}.proposal_view'.format(code), proposal_id=proposal_id))
+
+        except NoSuchRecord:
+            pass
+        except MultipleRecords:
+            targets.append(url_for('.person_proposals'))
+
+        try:
+            reviewer = person.reviews.get_single()
+            code = db.get_proposal_facility_code(reviewer.proposal_id)
+            targets.append(url_for(
+                '{}.review_info'.format(code), reviewer_id=reviewer.id))
+
+        except NoSuchRecord:
+            pass
+        except MultipleRecords:
+            targets.append(url_for('.person_reviews'))
+
+        # If we found a unique target, return it, otherwise return None.
+        if len(targets) == 1:
+            return targets[0]
+
+        return None
 
 
 def _update_session_user(user_id):
