@@ -58,22 +58,19 @@
     </tr>
     {% for proposal in proposals %}
         {% with reviewers = proposal.reviewers %}
-            {% if not reviewers %}
-                {% set reviewers = {none: none} %}
-            {% endif %}
-            {% for reviewer in reviewers.values() %}
+            {% for reviewer in (reviewers.values_in_role_order(facility_role_class) if reviewers else [none]) %}
                 <tr>
                     {% if loop.first %}
-                        <td rowspan="{{ reviewers | length }}"><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
-                        <td rowspan="{{ reviewers | length }}">{{ proposal.state | proposal_state_name }}</td>
-                        <td rowspan="{{ reviewers | length }}">
+                        <td rowspan="{{ loop.length }}"><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+                        <td rowspan="{{ loop.length }}">{{ proposal.state | proposal_state_name }}</td>
+                        <td rowspan="{{ loop.length }}">
                             {% if proposal.member is not none %}
                                 <a href="{{ url_for('people.person_view', person_id=proposal.member.person_id) }}">{{ proposal.member.person_name | abbr(25) }}</a>
                             {% else %}
                                 &nbsp;
                             {% endif %}
                         </td>
-                        <td rowspan="{{ reviewers | length }}">{{ proposal.title | abbr(25) }}</td>
+                        <td rowspan="{{ loop.length }}">{{ proposal.title | abbr(25) }}</td>
                     {% endif %}
                     {% if reviewer is none %}
                         <td colspan="3"><span class="missing_data">none {{ 'assigned' if ((current_role is none) and (current_state is none)) else 'matching filter' }}</span></td>
@@ -111,7 +108,7 @@
                         </td>
                     {% endif %}
                     {% if loop.first %}
-                        <td rowspan="{{ reviewers | length }}">
+                        <td rowspan="{{ loop.length }}">
                             {% for reviewer_role in proposal.invite_roles %}
                                 <a href="{{ url_for('.proposal_reviewer_add', proposal_id=proposal.id, reviewer_role=reviewer_role) }}">Add {{ reviewer_role | reviewer_role_name(facility_role_class) | lower }} reviewer</a>
                                 <br />

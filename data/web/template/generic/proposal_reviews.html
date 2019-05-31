@@ -44,7 +44,7 @@
             {% endfor %}
             <th>Edited</th>
         </tr>
-        {% for review in reviews.values() %}
+        {% for review in reviews.values_in_role_order(facility_role_class) %}
             {# Pre-prepare review text row in case child templates add something even when text is empty. #}
             {% set row_review_text %}
                 {% block review_text scoped %}
