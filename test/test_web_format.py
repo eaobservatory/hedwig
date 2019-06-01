@@ -44,6 +44,19 @@ class TextFormatTest(TestCase):
                 text='hello', format=FormatType.PLAIN)),
             '<p>hello</p>')
 
+        # Test email-style formatting.
+        self.assertEqual(
+            format_text(null_tuple(ProposalText)._replace(
+                text='a\nb\n\nc\nd', format=FormatType.PLAIN),
+                as_email=True),
+            '<pre>a b\n\nc d</pre>')
+
+        self.assertTrue(
+            format_text(null_tuple(ProposalText)._replace(
+                text='rst', format=FormatType.RST),
+                as_email=True).startswith(
+                    '<p class="warning">Format is not plain text.</p>'))
+
     def test_format_plain(self):
         # Empty input should give no output.
         self.assertEqual(format_text_plain(''), '')

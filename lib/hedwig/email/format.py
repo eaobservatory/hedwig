@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -92,18 +92,7 @@ def render_email_template(name, context, facility=None):
     * `facility_definite_name`
 
     Currently line-wraps the email message, after generating the text
-    by applying the template, as follows:
-
-    * The message is broken into paragraphs, at multiple line breaks.
-    * Each paragraph itself is line-wrapped.
-    * A trailing space is added to each line of the paragraph, except the last
-      (flowed email format).
-    * The lines of the email are rejoined, with a blank line between
-      paragraphs.
-
-    Note: with the above scheme there is no way to insert a single
-    manual line break.  (A single break is considered to be within a
-    paragraph and the whole paragraph is re-flowed.)
+    by applying the template, using :func:`wrap_email_text`.
     """
 
     # Apply the template.
@@ -123,11 +112,28 @@ def render_email_template(name, context, facility=None):
             'facility_definite_name': facility.get_definite_name(),
         })
 
-    body = template.render(full_context)
+    return wrap_email_text(template.render(full_context))
+
+
+def wrap_email_text(text):
+    """
+    Line-wraps email message text.
+
+    * The message is broken into paragraphs, at multiple line breaks.
+    * Each paragraph itself is line-wrapped.
+    * A trailing space is added to each line of the paragraph, except the last
+      (flowed email format).
+    * The lines of the email are rejoined, with a blank line between
+      paragraphs.
+
+    Note: with the above scheme there is no way to insert a single
+    manual line break.  (A single break is considered to be within a
+    paragraph and the whole paragraph is re-flowed.)
+    """
 
     # Wrap each paragraph and append to the lines list.
     lines = []
-    for paragraph in paragraph_break.split(body.replace('\r', '')):
+    for paragraph in paragraph_break.split(text.replace('\r', '')):
         if lines:
             lines.append('')
         if not paragraph:
@@ -144,5 +150,5 @@ def render_email_template(name, context, facility=None):
         lines.extend([x + ' ' for x in wrapped[:-1]])
         lines.append(wrapped[-1])
 
-    # Return complete body of message.
+    # Return complete message.
     return '\n'.join(lines)

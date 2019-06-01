@@ -65,7 +65,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            {{ review.review_text | format_text(review.review_format) }}
+                            {{ review.review_text | format_text(review.review_format, as_email=true) }}
                         </td>
                         {% if loop.first %}
                             <td rowspan="{{ loop.length }}">

@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,12 +20,13 @@ from __future__ import absolute_import, division, print_function, \
 
 from flask import Markup
 
+from ..email.format import wrap_email_text
 from ..format.rst import rst_to_html
 from ..type.enum import FormatType
 from .util import HTTPError
 
 
-def format_text(text, format=None):
+def format_text(text, format=None, as_email=False):
     """
     Format text, possibly using different formatting schemes.
 
@@ -41,11 +42,18 @@ def format_text(text, format=None):
         else:
             format = FormatType.PLAIN
 
+    prefix = ''
+    if as_email:
+        if format == FormatType.PLAIN:
+            return Markup('<pre>') + wrap_email_text(text) + Markup('</pre>')
+        else:
+            prefix = Markup('<p class="warning">Format is not plain text.</p>')
+
     if format == FormatType.PLAIN:
-        return format_text_plain(text)
+        return prefix + format_text_plain(text)
 
     elif format == FormatType.RST:
-        return format_text_rst(text)
+        return prefix + format_text_rst(text)
 
     else:
         raise HTTPError('Unknown format type.')
