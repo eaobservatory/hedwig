@@ -2,9 +2,16 @@
 
 {% block feedback_information %}
 {% if (proposal.decision_accept and jcmt_allocation) %}
+{% if is_peer_review %}
+Following the peer review process, the
+observing {{ 'times' if (jcmt_allocation | length) > 1 else 'time' }}
+given below {{ 'have' if (jcmt_allocation | length) > 1 else 'has' }}
+been approved for your project:
+{% else %}
 The committee has approved the following
 observing {{ 'times' if (jcmt_allocation | length) > 1 else 'time' }}
 for your project:
+{% endif %}
 
 {% for allocation in jcmt_allocation %}
 {{ allocation.instrument}}, {{ allocation.weather }}: {{ allocation.time }}
@@ -13,10 +20,11 @@ for your project:
 {% endfor %}
 
 Please be aware that, to maximize productivity,
-the JCMT uses flexible scheduling
+{{ facility_definite_name }} uses flexible scheduling
 whereby observing programs are matched to
 available instrumentation, weather conditions and
-priority as assigned by the Time Allocation Committee.
+priority as assigned
+{{ 'in the peer review process' if is_peer_review else 'by the Time Allocation Committee' }}.
 Therefore we are not able to guarantee that all of the
 time listed above will be available for your project.
 {% endif %}
@@ -27,7 +35,7 @@ time listed above will be available for your project.
 Observatory personnel will contact you shortly concerning
 the observing arrangements for your project.
 {% else %}
-We thank you for your interest in using the JCMT
+We thank you for your interest in using {{ facility_definite_name }}
 and wish you the best of luck in your future observing proposals.
 {% endif %}
 {% endblock %}

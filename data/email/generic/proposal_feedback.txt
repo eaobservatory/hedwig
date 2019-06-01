@@ -5,11 +5,13 @@
 {% if proposal.decision_accept %}
 We are glad to be able to inform you that
 your proposal {{ proposal_code }} entitled "{{ proposal.title }}"
-was approved by the Time Allocation Committee.
+was approved
+{{- '' if is_peer_review else ' by the Time Allocation Committee' }}.
 {% else %}
 We regret to inform you that
-no observing time was approved by the Time Allocation Committee for
-your proposal {{ proposal_code }} entitled "{{ proposal.title }}".
+no observing time was approved
+{{- '' if is_peer_review else ' by the Time Allocation Committee' }}
+for your proposal {{ proposal_code }} entitled "{{ proposal.title }}".
 {% endif %}
 {% endblock %}
 {% block feedback_rating %}
@@ -33,8 +35,10 @@ of those received for this call for proposals.
 
 {% block feedback_feedback %}
 {% if feedback %}
+{% if not is_peer_review %}
 The Time Allocation Committee made the following comments regarding
 your proposal:
+{% endif %}
 
 {% for feedback_text in feedback %}
 {{ feedback_text }}

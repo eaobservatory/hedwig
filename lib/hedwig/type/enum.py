@@ -1054,6 +1054,10 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
         return cls._info[value].immediate_review
 
     @classmethod
+    def has_mid_close(cls, value):
+        return cls._info[value].mid_close
+
+    @classmethod
     def has_reviewer_role(cls, value, role):
         return role in cls._info[value].reviewer_roles
 

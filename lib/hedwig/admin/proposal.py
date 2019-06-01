@@ -232,11 +232,11 @@ def send_call_proposal_feedback(db, call_id, proposals, dry_run=False):
     type_class = facility.get_call_types()
 
     # Compute overall ratings for all submitted proposals in the call,
-    # but only if this is not an "immediate review" call.
+    # but only if this is not an "immediate review" or "multi-close" call.
     immediate_review = type_class.has_immediate_review(call.type)
     proposal_rating = {}
 
-    if immediate_review:
+    if immediate_review or type_class.has_mid_close(call.type):
         proposal_quartile = {}
 
     else:
@@ -306,6 +306,8 @@ def send_call_proposal_feedback(db, call_id, proposals, dry_run=False):
                 'proposal_rating': proposal_rating.get(proposal.id),
                 'proposal_quartile': proposal_quartile.get(proposal.id),
                 'feedback': feedback,
+                'is_peer_review': type_class.has_reviewer_role(
+                    call.type, role_class.PEER)
             }
             email_ctx.update(facility.get_feedback_extra(db, proposal))
             email_body = render_email_template(
