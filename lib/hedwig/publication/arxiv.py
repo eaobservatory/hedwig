@@ -122,8 +122,8 @@ def get_pub_info_arxiv(article_ids):
 
                     # Create publication info tuple.
                     pub = null_tuple(PrevProposalPub)._replace(
-                        title=re.sub('\s+', ' ', title).strip(),
-                        author=re.sub('\s+', ' ', author).strip(),
+                        title=re.sub(r'\s+', ' ', title).strip(),
+                        author=re.sub(r'\s+', ' ', author).strip(),
                         year='{}'.format(year))
 
                     # Try to determine to which article ID this entry

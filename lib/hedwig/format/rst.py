@@ -34,8 +34,8 @@ from ..web.util import HTTPError
 
 rst_publish_lock = Lock()
 
-named_link = re.compile('^(.*) +<(.*)>$')
-graph_path = re.compile('^graph\/([-_a-z0-9]+)\.dot$')
+named_link = re.compile(r'^(.*) +<(.*)>$')
+graph_path = re.compile(r'^graph\/([-_a-z0-9]+)\.dot$')
 
 
 def rst_to_html(text, extract_title, start_heading):

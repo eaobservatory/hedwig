@@ -126,7 +126,7 @@ class DBPeopleTest(DBTestCase):
             self.db.update_user_name(1999999, 'newname')
         with self.assertRaisesRegex(ConsistencyError, '^no rows matched'):
             self.db.update_user_name(1999999, 'newname', _test_skip_check=True)
-        with self.assertRaisesRegex(UserError, 'already exists\.$'):
+        with self.assertRaisesRegex(UserError, r'already exists\.$'):
             self.db.update_user_name(user_id, 'user1')
         with self.assertRaises(DatabaseIntegrityError):
             self.db.update_user_name(user_id, 'user1', _test_skip_check=True)

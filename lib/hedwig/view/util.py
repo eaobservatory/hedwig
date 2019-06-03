@@ -39,7 +39,7 @@ def count_words(text):
     if hasattr(text, 'text'):
         text = text.text
 
-    return len(re.split('\s+', text))
+    return len(re.split(r'\s+', text))
 
 
 def float_or_none(value):

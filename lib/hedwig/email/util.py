@@ -21,7 +21,7 @@ import re
 # Basic email address validation pattern.  This is not entirely correct
 # but is just intended to detect cases where something other than an email
 # address has been entered (such as a "Name <address>" specification).
-valid_email_address = re.compile('^\S+@\S+')
+valid_email_address = re.compile(r'^\S+@\S+')
 
 
 def is_valid_email(address):

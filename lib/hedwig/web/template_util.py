@@ -415,7 +415,7 @@ def register_template_utils(app):
         if value is None:
             return True
 
-        return re.match('^\s*$', value) is not None
+        return re.match(r'^\s*$', value) is not None
 
     @app.template_test()
     def review_state_done(value):

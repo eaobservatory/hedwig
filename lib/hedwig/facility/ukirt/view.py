@@ -71,7 +71,7 @@ class UKIRT(EAOFacility):
         type_class = self.get_call_types()
 
         try:
-            m = re.match('U/(?:([A-Z]+)/)?(\d\d[ABXYZW])/([A-Z]+)(\d+)',
+            m = re.match(r'U/(?:([A-Z]+)/)?(\d\d[ABXYZW])/([A-Z]+)(\d+)',
                          proposal_code)
 
             if not m:

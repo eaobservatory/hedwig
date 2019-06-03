@@ -89,7 +89,7 @@ class FileTest(DummyConfigTestCase):
         self.assertEqual(determine_figure_type(pages[0]), FigureType.PNG)
 
         with self.assertRaisesRegex(
-                ConversionError, '^PDF conversion \(pdftocairo\) failed:'):
+                ConversionError, r'^PDF conversion \(pdftocairo\) failed:'):
             pages = pdf_to_png(
                 invalid_pdf, page_count=1, renderer='pdftocairo')
 
