@@ -58,7 +58,7 @@
     </tr>
     {% for proposal in proposals %}
         {% with reviewers = proposal.reviewers %}
-            {% for reviewer in (reviewers.values_in_role_order(facility_role_class) if reviewers else [none]) %}
+            {% for reviewer in ((reviewers.values_in_role_order(facility_role_class) | list) if reviewers else [none]) %}
                 <tr>
                     {% if loop.first %}
                         <td rowspan="{{ loop.length }}"><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
