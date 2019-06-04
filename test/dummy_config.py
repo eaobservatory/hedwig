@@ -34,8 +34,9 @@ class DummyConfigTestCase(TestCase):
         # in a fresh copy of the application with no customized config
         # file.
         self.orig_file = config.config_file
-        config.config_file = self.orig_file[:-1] + (
-            self.orig_file[-1] + '.template',)
+        if not self.orig_file[-1].endswith('.template'):
+            config.config_file = self.orig_file[:-1] + (
+                self.orig_file[-1] + '.template',)
 
     def tearDown(self):
         # Same clean-up as setUp().
