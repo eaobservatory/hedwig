@@ -294,8 +294,8 @@ class GenericProposal(object):
                     continue
 
                 member_id = db.add_member(
-                    proposal.id, member_person_id,
-                    member.affiliation_id, member.editor, member.observer)
+                    proposal.id, member_person_id, member.affiliation_id,
+                    editor=member.editor, observer=member.observer)
 
                 self._message_proposal_invite(
                     db, proposal=proposal,
