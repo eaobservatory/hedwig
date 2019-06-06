@@ -255,12 +255,15 @@ class PeopleView(object):
             'message': message,
         }
 
-    def password_reset_token_get(self, db, form, remote_addr):
+    def password_reset_token_get(self, db, args, form, remote_addr):
         message = None
+
+        log_in_for = args.get('log_in_for', None)
 
         if form is not None:
             user_name = form['user_name']
             email_address = form['email']
+            log_in_for = form.get('log_in_for', None)
 
             try:
                 user_id = None
@@ -342,7 +345,8 @@ class PeopleView(object):
                     email_addresses=[email_address])
                 flash('Your password reset code has been sent by email '
                       ' to {}.'.format(show_email_address))
-                raise HTTPRedirect(url_for('.password_reset_token_use'))
+                raise HTTPRedirect(url_for(
+                    '.password_reset_token_use', log_in_for=log_in_for))
 
             except UserError as e:
                 message = e.message
@@ -356,16 +360,19 @@ class PeopleView(object):
             'message': message,
             'user_name': user_name,
             'email': email_address,
+            'log_in_for': log_in_for,
         }
 
     def password_reset_token_use(self, db, args, form, remote_addr):
         message = None
         token = args.get('token', '')
+        log_in_for = args.get('log_in_for', None)
 
         if form is not None:
             try:
                 token = form['token'].strip()
                 password = form['password']
+                log_in_for = form.get('log_in_for', None)
 
                 if password != form['password_check']:
                     raise UserError('The passwords did not match.')
@@ -381,7 +388,10 @@ class PeopleView(object):
                 flash('Your password has been changed.'
                       ' You may now log in using your new password.')
 
-                raise HTTPRedirect(url_for('.log_in', user_name=user_name))
+                raise HTTPRedirect(url_for(
+                    '.log_in', user_name=user_name, log_in_for=(
+                        log_in_for if log_in_for is not None else
+                        url_for('home.home_page'))))
 
             except UserError as e:
                 message = e.message
@@ -390,6 +400,7 @@ class PeopleView(object):
             'title': 'Use Password Reset Code',
             'message': message,
             'token': token,
+            'log_in_for': log_in_for,
         }
 
     @with_verified_admin

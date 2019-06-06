@@ -81,7 +81,8 @@ def create_people_blueprint(db, facilities):
     @templated('people/password_reset_token_get.html')
     def password_reset_token_get():
         return view.password_reset_token_get(
-            db, (request.form if request.method == 'POST' else None),
+            db, request.args,
+            (request.form if request.method == 'POST' else None),
             str_to_unicode(request.remote_addr))
 
     @bp.route('/user/password/reset/token', methods=['GET', 'POST'])

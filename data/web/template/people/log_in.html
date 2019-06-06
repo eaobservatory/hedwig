@@ -45,7 +45,7 @@
 
 <p>
     If you do not remember your user name or password, please
-    <a href="{{ url_for('people.password_reset_token_get') }}" id="reset_password_link">reset your password</a>
+    <a href="{{ url_for('people.password_reset_token_get', log_in_for=log_in_for) }}" id="reset_password_link">reset your password</a>
     to regain access to your account.
 </p>
 {% endblock %}
