@@ -1693,7 +1693,7 @@ class GenericReview(object):
         else:
             try:
                 figure = db.search_review_figure(
-                    reviewer_id=reviewer.id, fig_id=fig_id,
+                    reviewer_id=reviewer.id, link_id=fig_id,
                     with_caption=True).get_single()
             except NoSuchRecord:
                 raise HTTPNotFound('Figure not found.')

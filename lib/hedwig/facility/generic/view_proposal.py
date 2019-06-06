@@ -1890,7 +1890,7 @@ class GenericProposal(object):
             try:
                 figure = db.search_proposal_figure(
                     proposal_id=proposal.id, role=role,
-                    fig_id=fig_id, with_caption=True).get_single()
+                    link_id=fig_id, with_caption=True).get_single()
             except NoSuchRecord:
                 raise HTTPNotFound('Figure not found.')
 

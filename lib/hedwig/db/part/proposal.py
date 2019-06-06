@@ -1892,7 +1892,8 @@ class ProposalPart(object):
         return ans
 
     def search_proposal_figure(
-            self, proposal_id=None, role=None, state=None, fig_id=None,
+            self, proposal_id=None, role=None, state=None,
+            link_id=None, fig_id=None,
             with_caption=False, with_uploader_name=False,
             with_has_preview=False, order_by_date=False,
             no_link=False):
@@ -1925,7 +1926,8 @@ class ProposalPart(object):
         return self._search_figure(
             proposal_fig, (None if no_link else proposal_fig_link),
             ProposalFigureInfo, ProposalFigureCollection,
-            state, fig_id, with_caption, with_uploader_name, order_by_date,
+            state, link_id, fig_id,
+            with_caption, with_uploader_name, order_by_date,
             with_has_preview_table=(
                 proposal_fig_preview if with_has_preview else None),
             select_extra=select_extra, default_extra=default_extra,
@@ -1933,7 +1935,8 @@ class ProposalPart(object):
 
     def _search_figure(
             self, table, table_link, result_class, result_collection_class,
-            state, fig_id, with_caption, with_uploader_name, order_by_date,
+            state, link_id, fig_id,
+            with_caption, with_uploader_name, order_by_date,
             with_has_preview_table=None,
             select_extra=[], default_extra={}, where_extra=[]):
         select_from = table
@@ -2007,6 +2010,11 @@ class ProposalPart(object):
 
         if fig_id is not None:
             stmt = stmt.where(table.c.id == fig_id)
+
+        if link_id is not None:
+            if table_link is None:
+                raise Error('link_id specified with no link table')
+            stmt = stmt.where(table_link.c.id == link_id)
 
         if order_by_date:
             stmt = stmt.order_by(table.c.uploaded.desc())

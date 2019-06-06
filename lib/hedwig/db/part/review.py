@@ -639,7 +639,7 @@ class ReviewPart(object):
         return ans
 
     def search_review_figure(
-            self, reviewer_id=None, state=None, fig_id=None,
+            self, reviewer_id=None, state=None, link_id=None, fig_id=None,
             with_caption=False, with_uploader_name=False,
             with_has_preview=False, order_by_date=False,
             no_link=False):
@@ -665,7 +665,8 @@ class ReviewPart(object):
         return self._search_figure(
             review_fig, (None if no_link else review_fig_link),
             ReviewFigureInfo, ReviewFigureCollection,
-            state, fig_id, with_caption, with_uploader_name, order_by_date,
+            state, link_id, fig_id,
+            with_caption, with_uploader_name, order_by_date,
             with_has_preview_table=(
                 review_fig_preview if with_has_preview else None),
             select_extra=select_extra, default_extra=default_extra,

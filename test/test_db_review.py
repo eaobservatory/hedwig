@@ -583,6 +583,16 @@ class DBReviewTest(DBTestCase):
             fig_id=fig_id, with_has_preview=True).get_single()
         self.assertEqual(result.has_preview, False)
 
+        with self.assertRaises(NoSuchRecord):
+            self.db.search_review_figure(fig_id=1999999).get_single()
+
+        self.assertEqual(
+            self.db.search_review_figure(link_id=link_id).get_single().id,
+            link_id)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.search_review_figure(link_id=1999999).get_single()
+
         self.assertEqual(
             self.db.get_review_figure(reviewer_id, link_id).data,
             fig)
