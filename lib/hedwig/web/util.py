@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2018 East Asian Observatory.
+# Copyright (C) 2015-2019 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -96,6 +96,7 @@ class ErrorPage(ExceptionWithMessage):
 
         Exception.__init__(self, fmt_string.format(*fmt_args))
 
+        self.title = kwargs.get('title', 'Error')
         self.links = kwargs.get('links', None)
 
 
@@ -505,7 +506,7 @@ def _error_page_response(err):
     """
 
     return _make_response('error.html', {
-        'title': 'Error',
+        'title': err.title,
         'message': err.message,
         'links': err.links,
     })

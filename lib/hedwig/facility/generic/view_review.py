@@ -1284,10 +1284,44 @@ class GenericReview(object):
             raise HTTPForbidden(
                 'Accept permission denied for this review.')
 
+        proposal_code = self.make_proposal_code(db, proposal)
+
         if reviewer.accepted is not None:
+            if reviewer.accepted:
+                description = 'accepted'
+                message = (
+                    'You indicated that you do not have a significant '
+                    'conflict of interest, so you may now proceed to '
+                    'view the proposal and enter your review.')
+                links = [
+                    Link(
+                        'View proposal {}'.format(proposal_code),
+                        url_for('.proposal_view', proposal_id=proposal.id)),
+                    Link(
+                        '{} your review'.format(
+                            'Edit' if ReviewState.is_present(
+                                reviewer.review_state) else 'Write'),
+                        url_for('.review_edit', reviewer_id=reviewer.id)),
+                ]
+            else:
+                description = 'rejected'
+                message = (
+                    'You indicated that you have a significant conflict of '
+                    'interest, so this review should have been removed from '
+                    'your review list.')
+                links = [
+                    Link(
+                        'Back to your review list',
+                        url_for('people.person_reviews')),
+                ]
             raise ErrorPage(
-                'This review has already been {}.'.format(
-                    'accepted' if reviewer.accepted else 'rejected'))
+                'You have already entered a conflict of interest declaration '
+                'for this review. ' + message,
+                title='{}: {} already {}'.format(
+                    proposal_code,
+                    role_class.get_name_with_review(reviewer.role),
+                    description),
+                links=links)
 
         try:
             acceptance = db.search_reviewer_acceptance(
@@ -1348,8 +1382,6 @@ class GenericReview(object):
 
             except UserError as e:
                 message = e.message
-
-        proposal_code = self.make_proposal_code(db, proposal)
 
         try:
             text_role_class = self.get_text_roles()
