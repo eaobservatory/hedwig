@@ -532,7 +532,11 @@ class GenericReview(object):
             for proposal in proposals.values():
                 member_reviewer = proposal.members.get_reviewer(default=None)
                 if member_reviewer is not None:
-                    group_members[member_reviewer.id] = member_reviewer
+                    # Ensure we didn't already add this person to the review
+                    # group.  (This could happen if the same person is the
+                    # designated reviewer for multiple proposals.)
+                    if not group_members.has_person(member_reviewer.person_id):
+                        group_members[member_reviewer.id] = member_reviewer
 
         else:
             group_members = db.search_group_member(
