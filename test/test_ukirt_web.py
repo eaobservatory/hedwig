@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2019 East Asian Observatory
+# Copyright (C) 2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,9 +18,9 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from hedwig.facility.jcmt.type import \
-    JCMTAncillary, JCMTInstrument, JCMTOptions, \
-    JCMTRequest, JCMTRequestCollection, JCMTWeather
+from hedwig.facility.ukirt.type import \
+    UKIRTBrightness, UKIRTInstrument, \
+    UKIRTRequest, UKIRTRequestCollection
 from hedwig.type.misc import SectionedList
 from hedwig.view.people import _update_session_person
 from hedwig.web.util import session
@@ -28,24 +28,11 @@ from hedwig.web.util import session
 from .base_app import WebAppTestCase
 
 
-class JCMTWebAppTestCase(WebAppTestCase):
-    facility_spec = 'JCMT'
-
-    def test_review_guidelines(self):
-        view = self._get_facility_view('jcmt')
-
-        # Test make_review_guidelines_url
-        role_class = view.get_reviewer_roles()
-
-        with self.app.test_request_context():
-            url = view.make_review_guidelines_url(role_class.EXTERNAL)
-            self.assertTrue(url.endswith('help/review/external_jcmt'))
-
-            url = view.make_review_guidelines_url(role_class.TECH)
-            self.assertIsNone(url)
+class UKIRTWebAppTestCase(WebAppTestCase):
+    facility_spec = 'UKIRT'
 
     def test_copy_proposal(self):
-        view = self._get_facility_view('jcmt')
+        view = self._get_facility_view('ukirt')
 
         (call_id, affiliation_id) = self._create_test_call()
         self.assertIsInstance(call_id, int)
@@ -59,17 +46,13 @@ class JCMTWebAppTestCase(WebAppTestCase):
         self.assertIsInstance(proposal_id, int)
 
         # ... request.
-        self.db.sync_jcmt_proposal_request(proposal_id, JCMTRequestCollection([
-            (1, JCMTRequest(None, None, JCMTInstrument.SCUBA2,
-                            JCMTAncillary.NONE, JCMTWeather.BAND1, 4.0)),
-            (2, JCMTRequest(None, None, JCMTInstrument.HARP,
-                            JCMTAncillary.NONE, JCMTWeather.BAND3, 12.0)),
-        ]))
-
-        # ... JCMT options.
-        self.db.set_jcmt_options(
-            proposal_id, target_of_opp=False, daytime=True,
-            time_specific=True, polarimetry=False)
+        self.db.sync_ukirt_proposal_request(
+            proposal_id, UKIRTRequestCollection([
+                (1, UKIRTRequest(None, None, UKIRTInstrument.WFCAM,
+                                 UKIRTBrightness.BRIGHT, 8.0)),
+                (2, UKIRTRequest(None, None, UKIRTInstrument.UFTI,
+                                 UKIRTBrightness.DARK, 55.0)),
+            ]))
 
         # Copy the proposal.
         proposal = self.db.get_proposal(None, proposal_id, with_members=True)
@@ -84,7 +67,7 @@ class JCMTWebAppTestCase(WebAppTestCase):
             None, copy_id, with_members=True)
         self.assertEqual(copy.id, copy_id)
 
-        with self.app.test_request_context(path='/jcmt/'):
+        with self.app.test_request_context(path='/ukirt/'):
             _update_session_person(person)
             atn = view._copy_proposal(
                 self.db, proposal, copy, copy_members=True)
@@ -100,8 +83,8 @@ class JCMTWebAppTestCase(WebAppTestCase):
 
         # Remove some entries from the old proposal to ensure values
         # come from the copy.
-        self.db.sync_jcmt_proposal_request(
-            proposal_id, JCMTRequestCollection())
+        self.db.sync_ukirt_proposal_request(
+            proposal_id, UKIRTRequestCollection())
 
         # Compare the copy to the original ...
         copy = self.db.get_proposal(None, copy_id, with_members=True)
@@ -119,21 +102,12 @@ class JCMTWebAppTestCase(WebAppTestCase):
             self.assertEqual(member.student, student)
 
         # ... request.
-        records = self.db.search_jcmt_request(copy_id)
+        records = self.db.search_ukirt_request(copy_id)
         self.assertEqual(len(records), 2)
         for (record, expect) in zip(records.values(), [
-                (JCMTInstrument.SCUBA2, JCMTWeather.BAND1, 4.0),
-                (JCMTInstrument.HARP, JCMTWeather.BAND3, 12.0)]):
-            (instrument, weather, time) = expect
+                (UKIRTInstrument.WFCAM, UKIRTBrightness.BRIGHT, 8.0),
+                (UKIRTInstrument.UFTI, UKIRTBrightness.DARK, 55.0)]):
+            (instrument, brightness, time) = expect
             self.assertEqual(record.instrument, instrument)
-            self.assertEqual(record.weather, weather)
+            self.assertEqual(record.brightness, brightness)
             self.assertEqual(record.time, time)
-
-        # ... JCMT options.
-        record = self.db.get_jcmt_options(copy_id)
-        self.assertIsInstance(record, JCMTOptions)
-        self.assertEqual(record.proposal_id, copy_id)
-        self.assertFalse(record.target_of_opp)
-        self.assertTrue(record.daytime)
-        self.assertTrue(record.time_specific)
-        self.assertFalse(record.polarimetry)
