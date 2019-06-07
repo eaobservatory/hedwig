@@ -32,7 +32,7 @@
             <label for="accepted">Conflict</label>
             <select name="accepted">
                 <option value="" {{ 'selected="selected"' | safe if reviewer.accepted is none }} disabled="disabled">Please select an option &hellip;</option>
-                <option value="1" {{ 'selected="selected"' | safe if (reviewer.accepted is not none) and reviewer.accepted }}>No conflict of interest &mdash; I can review this proposal</option>
+                <option value="1" {{ 'selected="selected"' | safe if (reviewer.accepted is not none) and reviewer.accepted }}>No significant conflict of interest &mdash; I can review this proposal</option>
                 <option value="0" {{ 'selected="selected"' | safe if (reviewer.accepted is not none) and (not reviewer.accepted) }}>I have a conflict of interest which may prevent me giving a fair review</option>
             </select>
         </li>
