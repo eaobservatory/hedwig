@@ -186,6 +186,7 @@ class AdminView(object):
                     db.update_proposal_pdf(
                         pdf_id=id_, state=AttachmentState.NEW,
                         state_prev=state_prev)
+                    n_reset += 1
 
                 elif param.startswith('prop_fig_'):
                     id_ = int(param[9:])
