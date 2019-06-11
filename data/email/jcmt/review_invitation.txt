@@ -33,6 +33,10 @@ When you are happy with your review,
 please check the "review complete" box at the end of the review
 form and save it to mark it as finished.
 
+{% if role_info.accept %}
+Please note that you will be asked to complete a conflict of interest
+declaration before you can view the proposal and enter your review.
+{% else %}
 Please contact us at the address below if you have any serious conflict
 in reviewing the proposal.
 You have been identified as an expert in your field,
@@ -40,6 +44,7 @@ so you may have some acquaintance or previous
 involvement with the applicants.
 At a certain level this should not disqualify you
 from providing your opinion.
+{% endif %}
 
 You need not make any assessment of the technical feasibility of the
 proposal - that is being done by JCMT staff: it is the merit of

@@ -809,6 +809,7 @@ class GenericReview(object):
             'call_type': type_class.get_name(proposals[0].call_type),
             'role_name': role_name,
             'role_is_peer': (role == role_class.PEER),
+            'role_is_accepted': role_class.is_accepted_review(role),
             'target_guideline': self.make_review_guidelines_url(role=role),
             'review_deadline': deadline,
             'proposals': [

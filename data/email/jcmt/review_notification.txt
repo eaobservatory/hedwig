@@ -22,4 +22,10 @@ by {{ review_deadline.date | format_datetime }} UT.
 {% endblock %}
 
 {% block notification_footer %}
+{% if role_is_accepted %}
+Please note that you will be asked to complete a conflict of interest
+declaration for
+{{ 'each' if (proposals | length) > 1 else 'the' }} proposal
+before you can view it and enter your review.
+{% endif %}
 {% endblock %}
