@@ -27,8 +27,8 @@ by {{ review_deadline.date | format_datetime }} UT.
 {% endblock %}
 
 {% block invitation_footer %}
-Please note that our proposal handling system has recently been updated
-to allow you to save your review as a draft prior to completing it.
+Our proposal handling system
+allows you to save your review as a draft prior to completing it.
 When you are happy with your review,
 please check the "review complete" box at the end of the review
 form and save it to mark it as finished.
