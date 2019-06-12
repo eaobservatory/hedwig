@@ -12,6 +12,14 @@
 
 {{ render_proposal_members(proposal.id, proposal.members) }}
 
+{% if target_guideline is not none %}
+    <h2>Guidelines</h3>
+
+    <p>
+        <a href="{{ target_guideline }}" target="_blank">Guidelines for this review</a>
+    </p>
+{% endif %}
+
 <h2>Declaration</h2>
 
 <p>

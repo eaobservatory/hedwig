@@ -1408,6 +1408,8 @@ class GenericReview(object):
             'explanation': acceptance.text,
             'message': message,
             'referrer': referrer,
+            'target_guideline': self.make_review_guidelines_url(
+                role=reviewer.role),
         }
 
     @with_review(permission=PermissionType.EDIT)
