@@ -64,6 +64,7 @@
                 {% if n_unique %}
                     <th class="sideways spacer_left" rowspan="{{ 2 if is_peer_review else 1 }}"><div><div>Unassigned</div></div></th>
                 {% endif %}
+                <th rowspan="{{ 2 if is_peer_review else 1 }}">&nbsp;</th>
             </tr>
             {% if is_peer_review %}
                 <tr>
@@ -118,8 +119,28 @@
                         {% endfor %}
                     </td>
                 {% endif %}
+                <td class="total">
+                    {% for (role_id, role_info) in roles.items() %}
+                        <span id="total_proposal_{{ role_id }}_{{ proposal.id }}"></span>
+                        {% if not loop.last %}
+                            <br />
+                        {% endif %}
+                    {% endfor %}
+                </td>
             </tr>
         {% endfor %}
+        <tfoot>
+            <tr>
+                <th colspan="3">Total number of assignments</th>
+                {% for member in group_members.values() %}
+                    <td class="total"><span id="total_person_{{ member.person_id }}"></span></td>
+                {% endfor %}
+                {% if n_unique %}
+                    <td class="spacer_left total">&nbsp;</td>
+                {% endif %}
+                <td class="grandtotal">&nbsp;</td>
+            </tr>
+        </tfoot>
     </table>
 
     <p>
