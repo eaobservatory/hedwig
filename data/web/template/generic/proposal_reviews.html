@@ -87,21 +87,21 @@
                 #}
                 {% block review_info scoped %}
                     <td>
-                        {% if review.review_assessment is not none %}
+                        {% if review.can_view_rating and (review.review_assessment is not none) %}
                             {{ review.review_assessment | assessment_name }}
                         {% else %}
                             &nbsp;
                         {% endif %}
                     </td>
                     <td>
-                        {% if review.review_rating is not none %}
+                        {% if review.can_view_rating and (review.review_rating is not none) %}
                             {{ review.review_rating }}
                         {% else %}
                             &nbsp;
                         {% endif %}
                     </td>
                     <td>
-                        {% if review.review_weight is not none %}
+                        {% if review.can_view_rating and (review.review_weight is not none) %}
                             {{ review.review_weight }}
                         {% else %}
                             &nbsp;

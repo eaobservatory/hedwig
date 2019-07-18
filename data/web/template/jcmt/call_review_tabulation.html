@@ -151,7 +151,7 @@
 
 {% block review_info_row %}
     <td>
-        {% if review.review_assessment is not none %}
+        {% if review.can_view_rating and (review.review_assessment is not none) %}
             {{ review.review_assessment | assessment_name }}
         {% else %}
             &nbsp;

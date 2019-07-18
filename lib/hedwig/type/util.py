@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -57,6 +57,18 @@ def with_can_view_edit(obj, can_view, can_edit):
         type(obj).__name__ + 'WithCVE',
         obj._fields + ('can_view', 'can_edit'))(
             *obj, can_view=can_view, can_edit=can_edit)
+
+
+def with_can_view_edit_rating(obj, can_view, can_edit, can_view_rating):
+    """
+    Add `can_view`, `can_edit` and `can_view_rating` fields to a tuple.
+    """
+
+    return namedtuple(
+        type(obj).__name__ + 'WithCVER',
+        obj._fields + ('can_view', 'can_edit', 'can_view_rating'))(
+            *obj, can_view=can_view, can_edit=can_edit,
+            can_view_rating=can_view_rating)
 
 
 def with_cache(obj, cache):

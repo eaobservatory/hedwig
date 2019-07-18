@@ -16,7 +16,9 @@
 {% endmacro %}
 
 {% macro render_review_rating(review, default=('&nbsp;' | safe)) %}
-    {% if review.review_rating is not none %}
+    {% if not review.can_view_rating %}
+        {{ default }}
+    {% elif review.review_rating is not none %}
         {{ review.review_rating }}
     {% elif review.review_extra.peer_rating is not none %}
         {{ review.review_extra.peer_rating | jcmt_peer_rating_name }}
@@ -26,7 +28,9 @@
 {% endmacro %}
 
 {% macro render_review_expertise(review, default=('&nbsp;' | safe )) %}
-        {% if review.review_extra.expertise is not none %}
+        {% if not review.can_view_rating %}
+            {{ default }}
+        {% elif review.review_extra.expertise is not none %}
             {{ review.review_extra.expertise | jcmt_expertise_name }}
         {% elif review.review_extra.peer_expertise is not none %}
             {{ review.review_extra.peer_expertise | jcmt_peer_expertise_short_name }}

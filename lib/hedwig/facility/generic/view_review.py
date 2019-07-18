@@ -43,7 +43,7 @@ from ...type.simple import Affiliation, DateAndTime, Link, MemberPIInfo, \
     ProposalWithCode, Reviewer, ReviewerAcceptance, \
     ReviewFigureInfo, ReviewDeadline
 from ...type.util import null_tuple, \
-    with_can_edit, with_can_view, with_can_view_edit
+    with_can_edit, with_can_view, with_can_view_edit_rating
 
 
 ProposalWithInviteRoles = namedtuple(
@@ -67,7 +67,7 @@ ProposalWithViewReviewLinks = namedtuple(
 
 ReviewerWithCalcFig = namedtuple(
     'ReviewerWithCalcFig', Reviewer._fields + (
-        'calculations', 'figures', 'can_view', 'can_edit'))
+        'calculations', 'figures', 'can_view', 'can_edit', 'can_view_rating'))
 
 RoleClosingInfo = namedtuple(
     'RoleClosingInfo', ('role_name', 'deadline', 'future'))
@@ -236,17 +236,15 @@ class GenericReview(object):
                         role_class, db, reviewer=reviewer, proposal=proposal,
                         auth_cache=can.cache, allow_unaccepted=False)
 
-                    if not reviewer_can.view_rating:
-                        reviewer = reviewer._replace(
-                            review_rating=None, review_weight=None)
-
-                    reviewers[reviewer_id] = with_can_view_edit(
+                    reviewers[reviewer_id] = with_can_view_edit_rating(
                         reviewer,
                         (is_admin or reviewer.person_public),
-                        reviewer_can.edit)
+                        reviewer_can.edit, reviewer_can.view_rating)
 
                 (overall_rating, std_dev) = self.calculate_overall_rating(
-                    reviewers, with_std_dev=True)
+                    reviewers.map_values(
+                        filter_value=lambda x: x.can_view_rating),
+                    with_std_dev=True)
 
                 updated_proposal.update({
                     'reviewers': reviewers,
@@ -1819,9 +1817,8 @@ class GenericReview(object):
                 member_pi, (is_admin or member_pi.person_public))
         proposal = proposal._replace(member=member_pi, reviewers=reviewers)
 
-        # Add "can_edit" fields and hide non-public notes so that we don't
-        # have to rely on the template to do this.  Also hide the rating
-        # if not viewable.
+        # Add permission fields and hide non-public notes so that we don't
+        # have to rely on the template to do this.
         for (reviewer_id, reviewer) in db.search_reviewer(
                 proposal_id=proposal.id, with_review=True,
                 with_review_text=True, with_review_note=True,
@@ -1833,10 +1830,6 @@ class GenericReview(object):
 
             if not reviewer.review_note_public:
                 reviewer = reviewer._replace(review_note=None)
-
-            if not reviewer_can.view_rating:
-                reviewer = reviewer._replace(
-                    review_rating=None, review_weight=None)
 
             if role_info.calc:
                 calculations = self._prepare_calculations(
@@ -1855,7 +1848,8 @@ class GenericReview(object):
                 *reviewer,
                 calculations=calculations, figures=figures,
                 can_view=(is_admin or reviewer.person_public),
-                can_edit=reviewer_can.edit)
+                can_edit=reviewer_can.edit,
+                can_view_rating=reviewer_can.view_rating)
 
         self.attach_review_extra(db, {None: proposal})
 
@@ -1867,7 +1861,9 @@ class GenericReview(object):
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id),
             'reviews': reviewers,
-            'overall_rating': self.calculate_overall_rating(reviewers),
+            'overall_rating': self.calculate_overall_rating(
+                reviewers.map_values(
+                    filter_value=lambda x: x.can_view_rating)),
             'can_add_roles': auth.can_add_review_roles(
                 type_class, role_class, db, proposal, auth_cache=auth_cache),
             'can_edit_decision': auth.for_proposal_decision(

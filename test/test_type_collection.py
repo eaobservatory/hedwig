@@ -371,6 +371,12 @@ class CollectionTypeTestCase(TestCase):
         self.assertEqual(mapped[1], '      another result')
         self.assertEqual(mapped[2], '  yet another result')
 
+        mapped = rc.map_values(filter_value=(lambda x: x.startswith('test')))
+
+        self.assertIsInstance(mapped, ResultCollection)
+        self.assertEqual(list(mapped.keys()), [0])
+        self.assertEqual(mapped[0], 'test result')
+
     def test_ordered_result_collection(self):
         class OrderedResultCollection(ResultCollection, CollectionOrdered):
             pass

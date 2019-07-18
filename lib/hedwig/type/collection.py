@@ -69,7 +69,7 @@ class ResultCollection(OrderedDict):
             return first_value(self)
 
     def map_values(
-            self, function,
+            self, function=(lambda x: x),
             filter_key=(lambda x: True),
             filter_value=(lambda x: True)):
         """
