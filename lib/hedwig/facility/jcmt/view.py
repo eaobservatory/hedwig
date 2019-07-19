@@ -262,45 +262,35 @@ class JCMT(EAOFacility):
         else:
             return super(JCMT, self).make_review_guidelines_url(role)
 
-    def calculate_overall_rating(self, reviews, with_std_dev=False):
-        """
-        Calculate the overall rating from a collection of reviewer
-        records (including their reviews).
-        """
-
+    def get_review_rating_weight(self, reviewer):
         role_class = self.get_reviewer_roles()
+        role_info = role_class.get_info(reviewer.role)
+        extra = reviewer.review_extra
 
-        def rating_weight_function(reviewer):
-            role_info = role_class.get_info(reviewer.role)
-            extra = reviewer.review_extra
+        rating = None
+        weight = None
 
-            rating = None
-            weight = None
+        # Determine rating.
+        if role_info.rating:
+            rating = reviewer.review_rating
 
-            # Determine rating.
-            if role_info.rating:
-                rating = reviewer.review_rating
+        elif role_info.jcmt_peer_rating:
+            if extra.peer_rating is not None:
+                rating = JCMTPeerReviewRating.get_rating(
+                    extra.peer_rating)
 
-            elif role_info.jcmt_peer_rating:
-                if extra.peer_rating is not None:
-                    rating = JCMTPeerReviewRating.get_rating(
-                        extra.peer_rating)
+        # Determine weight.
+        if role_info.jcmt_expertise:
+            if extra.expertise is not None:
+                weight = JCMTReviewerExpertise.get_weight(
+                    extra.expertise) / 100.0
 
-            # Determine weight.
-            if role_info.jcmt_expertise:
-                if extra.expertise is not None:
-                    weight = JCMTReviewerExpertise.get_weight(
-                        extra.expertise) / 100.0
+        elif role_info.jcmt_peer_expertise:
+            if extra.peer_expertise is not None:
+                weight = JCMTPeerReviewerExpertise.get_weight(
+                    extra.peer_expertise) / 100.0
 
-            elif role_info.jcmt_peer_expertise:
-                if extra.peer_expertise is not None:
-                    weight = JCMTPeerReviewerExpertise.get_weight(
-                        extra.peer_expertise) / 100.0
-
-            return (rating, weight)
-
-        return reviews.get_overall_rating(rating_weight_function,
-                                          with_std_dev=with_std_dev)
+        return (rating, weight)
 
     def calculate_affiliation_assignment(self, db, members, affiliations):
         """

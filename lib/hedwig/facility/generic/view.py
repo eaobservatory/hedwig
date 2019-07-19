@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -345,29 +345,35 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
         records (including their reviews).
         """
 
+        return reviews.get_overall_rating(
+            self.get_review_rating_weight, with_std_dev=with_std_dev)
+
+    def get_review_rating_weight(self, reviewer):
+        """
+        Get the numerical rating and weight of a review.
+
+        :return: a (`rating`, `weight`) tuple.  If either value is `None` then
+            the review should not be included in the overall rating.
+        """
+
         role_class = self.get_reviewer_roles()
+        role_info = role_class.get_info(reviewer.role)
 
-        def rating_weight_function(reviewer):
-            role_info = role_class.get_info(reviewer.role)
+        if (not role_info.rating) or (reviewer.review_rating is None):
+            return (None, None)
 
-            if (not role_info.rating) or (reviewer.review_rating is None):
+        if role_info.weight:
+            if reviewer.review_weight is None:
                 return (None, None)
-
-            if role_info.weight:
-                if reviewer.review_weight is None:
-                    return (None, None)
-                else:
-                    weight = reviewer.review_weight / 100.0
             else:
-                # NOTE: weighting for unrated reviews could be configurable,
-                # perhaps in the facility view or perhaps in the roles class.
-                # However for now assume a weighting of 100%.
-                weight = 1.0
+                weight = reviewer.review_weight / 100.0
+        else:
+            # NOTE: weighting for unrated reviews could be configurable,
+            # perhaps in the facility view or perhaps in the roles class.
+            # However for now assume a weighting of 100%.
+            weight = 1.0
 
-            return (reviewer.review_rating, weight)
-
-        return reviews.get_overall_rating(rating_weight_function,
-                                          with_std_dev=with_std_dev)
+        return (reviewer.review_rating, weight)
 
     def calculate_affiliation_assignment(self, db, members, affiliations):
         """
