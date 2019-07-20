@@ -42,9 +42,7 @@ For more information about using Flask-based applications
 Requirements
 ~~~~~~~~~~~~
 
-Hedwig requires Python 2, version 2.7.8 or later.  Alternatively an
-earlier version of Python 2.7 could be used with the `backports.pbkdf2`
-library.  It should also run on Python 3, version 3.4 or later.
+Hedwig requires Python 2.7, or Python 3, version 3.4 or later.
 
 The following Python modules should be installed:
 
@@ -62,6 +60,12 @@ The following Python modules should be installed:
 * python-magic
 * requests
 * SQLAlchemy
+
+In addition the following back-ported modules may be required
+when using older versions of Python:
+
+* backports.pbkdf2 (Python 2.7 before 2.7.8)
+* statistics (any Python before 3.4)
 
 There are also facility-specific requirements:
 

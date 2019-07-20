@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -137,6 +137,18 @@ def create_facility_blueprint(db, facility):
     @send_file()
     def review_call_tabulation_download(call_id):
         return facility.view_review_call_tabulation_download(db, call_id)
+
+    @bp.route('/call/<int:call_id>/review/review_stats')
+    @require_auth(require_person=True)
+    @facility_template('call_review_statistics.html')
+    def review_call_stats(call_id):
+        return facility.view_review_call_stats(db, call_id)
+
+    @bp.route('/call/<int:call_id>/review/review_stats/download')
+    @require_auth(require_person=True)
+    @send_file()
+    def review_call_stats_download(call_id):
+        return facility.view_review_call_stats_download(db, call_id)
 
     @bp.route('/call/<int:call_id>/affiliation', methods=['GET', 'POST'])
     @require_auth(require_person=True)

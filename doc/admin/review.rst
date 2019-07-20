@@ -12,4 +12,5 @@ Review Processes
     review_deadline
     review_final
     tabulation_decision
+    review_statistics
     feedback

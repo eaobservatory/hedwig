@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from random import randint, random
 
 from hedwig.stats.quartile import label_quartiles
+from hedwig.stats.table import table_mean_stdev
 
 from .compat import TestCase
 
@@ -119,3 +120,29 @@ class StatsTest(TestCase):
                                 self.assertLess(v1, v2)
                             else:
                                 self.assertGreater(v1, v2)
+
+    def test_table_mean_stdev(self):
+        table = {
+            'a': {'x': 100, 'y': 300},
+            'b': {'x': 500, 'z': 500},
+        }
+
+        (row_mean, row_stdev, column_mean, column_stdev) = table_mean_stdev(
+            table, {'a': None, 'b': None}, {'x': None, 'y': None, 'z': None})
+
+        self.assertEqual(sorted(row_mean.keys()), ['a', 'b'])
+        self.assertEqual(sorted(row_stdev.keys()), ['a', 'b'])
+        self.assertEqual(sorted(column_mean.keys()), ['x', 'y', 'z'])
+        self.assertEqual(sorted(column_stdev.keys()), ['x', 'y', 'z'])
+
+        self.assertAlmostEqual(row_mean['a'], 200)
+        self.assertAlmostEqual(row_mean['b'], 500)
+        self.assertAlmostEqual(row_stdev['a'], 100)
+        self.assertAlmostEqual(row_stdev['b'], 0)
+
+        self.assertAlmostEqual(column_mean['x'], 300)
+        self.assertAlmostEqual(column_stdev['x'], 200)
+        self.assertAlmostEqual(column_mean['y'], 300)
+        self.assertAlmostEqual(column_stdev['y'], 0)
+        self.assertAlmostEqual(column_mean['z'], 500)
+        self.assertAlmostEqual(column_stdev['z'], 0)

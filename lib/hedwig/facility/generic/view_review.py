@@ -28,6 +28,7 @@ from ...email.format import render_email_template
 from ...error import DatabaseIntegrityError, NoSuchRecord, NoSuchValue, \
     UserError
 from ...file.csv import CSVWriter
+from ...stats.table import table_mean_stdev
 from ...view import auth
 from ...view.util import int_or_none, \
     with_proposal, with_call_review, with_review
@@ -311,6 +312,111 @@ class GenericReview(object):
                               for x in proposal['categories'].values()),
                 ],
                 [proposal['affiliations'].get(x.id) for x in affiliations])
+
+    @with_call_review(permission=PermissionType.VIEW)
+    def view_review_call_stats(self, db, call, can):
+        type_class = self.get_call_types()
+
+        ctx = {
+            'title': 'Review Statistics: {} {} {}'.format(
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type)),
+            'call': call,
+        }
+
+        ctx.update(self._get_review_statistics(db, call, can))
+
+        # Compute mean and standard deviation.
+        ctx.update(zip(
+            ('rating_proposal_mean', 'rating_proposal_stdev',
+             'rating_person_mean', 'rating_person_stdev'),
+            table_mean_stdev(
+                ctx['ratings'], ctx['proposals'], ctx['persons'])))
+
+        ctx.update(zip(
+            ('weight_proposal_mean', 'weight_proposal_stdev',
+             'weight_person_mean', 'weight_person_stdev'),
+            table_mean_stdev(
+                ctx['weights'], ctx['proposals'], ctx['persons'],
+                scale_factor=100.0)))
+
+        return ctx
+
+    @with_call_review(permission=PermissionType.VIEW)
+    def view_review_call_stats_download(self, db, call, can):
+        type_class = self.get_call_types()
+        stats = self._get_review_statistics(db, call, can)
+
+        writer = CSVWriter()
+
+        writer.add_row(chain(
+            ['Proposal'], *([
+                x['name'], 'Weight'
+            ] for x in stats['persons'].values())))
+
+        for proposal in stats['proposals'].values():
+            if proposal.id not in stats['ratings']:
+                continue
+            writer.add_row(chain(
+                [proposal.code], *([
+                    stats['ratings'].get(proposal.id, {}).get(x),
+                    stats['weights'].get(proposal.id, {}).get(x),
+                ] for x in stats['persons'].keys())))
+
+        return (
+            writer.get_csv(),
+            'text/csv',
+            'review-stats-{}-{}-{}.csv'.format(
+                re.sub('[^-_a-z0-9]', '_', call.semester_name.lower()),
+                re.sub('[^-_a-z0-9]', '_', call.queue_name.lower()),
+                re.sub('[^-_a-z0-9]', '_', type_class.url_path(call.type))))
+
+    def _get_review_statistics(self, db, call, can):
+        is_admin = session.get('is_admin', False)
+
+        role_class = self.get_reviewer_roles()
+
+        proposals = db.search_proposal(
+            call_id=call.id, state=ProposalState.submitted_states(),
+            with_members=True, with_reviewers=True, with_review_info=True)
+
+        self.attach_review_extra(db, proposals)
+
+        persons = {}
+        ratings = defaultdict(dict)
+        weights = defaultdict(dict)
+
+        for proposal in proposals.values():
+            if not auth.for_review(
+                    role_class, db, reviewer=None, proposal=proposal,
+                    auth_cache=can.cache).view:
+                continue
+
+            for reviewer in proposal.reviewers.values():
+                if not auth.for_review(
+                        role_class, db, reviewer=reviewer, proposal=proposal,
+                        auth_cache=can.cache,
+                        allow_unaccepted=False).view_rating:
+                    continue
+
+                (rating, weight) = self.get_review_rating_weight(reviewer)
+                if (rating is None) or (weight is None):
+                    continue
+
+                person_id = reviewer.person_id
+                persons[person_id] = {'name': reviewer.person_name}
+
+                ratings[proposal.id][person_id] = rating
+                weights[proposal.id][person_id] = weight
+
+        return {
+            'proposals': proposals.map_values(lambda x: ProposalWithCode(
+                *x, code=self.make_proposal_code(db, x))),
+            'persons': OrderedDict(sorted(
+                persons.items(), key=lambda (k, v): v['name'])),
+            'ratings': ratings,
+            'weights': weights,
+        }
 
     @with_call_review(permission=PermissionType.EDIT)
     def view_review_affiliation_weight(self, db, call, can, form):

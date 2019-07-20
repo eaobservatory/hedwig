@@ -1997,6 +1997,14 @@ class IntegrationTest(DummyConfigTestCase):
         self._save_screenshot(self.admin_image_root,
                               'review_tabulation_updated')
 
+        # Look at the reviewer statistics page
+        self.browser.get(review_process_url)
+        self.browser.find_element_by_link_text(
+            'View review statistics').click()
+
+        self._save_screenshot(self.admin_image_root,
+                              'review_statistics')
+
         # View reviews page.
         self.browser.get(review_process_url)
         self.browser.find_element_by_link_text('Reviews').click()
