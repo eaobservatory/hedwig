@@ -413,7 +413,7 @@ class GenericReview(object):
             'proposals': proposals.map_values(lambda x: ProposalWithCode(
                 *x, code=self.make_proposal_code(db, x))),
             'persons': OrderedDict(sorted(
-                persons.items(), key=lambda (k, v): v['name'])),
+                persons.items(), key=(lambda x: x[1]['name']))),
             'ratings': ratings,
             'weights': weights,
         }
