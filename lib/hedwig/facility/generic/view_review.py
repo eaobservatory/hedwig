@@ -386,6 +386,8 @@ class GenericReview(object):
         ratings = defaultdict(dict)
         weights = defaultdict(dict)
 
+        rating_weight = self.get_review_rating_weight_function()
+
         for proposal in proposals.values():
             if not auth.for_review(
                     role_class, db, reviewer=None, proposal=proposal,
@@ -399,7 +401,7 @@ class GenericReview(object):
                         allow_unaccepted=False).view_rating:
                     continue
 
-                (rating, weight) = self.get_review_rating_weight(reviewer)
+                (rating, weight) = rating_weight(reviewer)
                 if (rating is None) or (weight is None):
                     continue
 

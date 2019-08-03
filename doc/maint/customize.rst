@@ -346,8 +346,8 @@ Some examples of such methods are:
   these ratings into a single overall rating for each proposal.
 
   This method can typically be customized by providing an alternative
-  :meth:`~hedwig.facility.generic.view.Generic.get_review_rating_weight`
-  function to determine the rating and weight factor for each review.
+  :meth:`~hedwig.facility.generic.view.Generic.get_review_rating_weight_function`
+  method to determine the rating and weight factor for each review.
 
 * :meth:`~hedwig.facility.generic.view.Generic.calculate_affiliation_assignment`
 

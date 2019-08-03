@@ -346,9 +346,10 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
         """
 
         return reviews.get_overall_rating(
-            self.get_review_rating_weight, with_std_dev=with_std_dev)
+            self.get_review_rating_weight_function(),
+            with_std_dev=with_std_dev)
 
-    def get_review_rating_weight(self, reviewer):
+    def get_review_rating_weight_function(self):
         """
         Get the numerical rating and weight of a review.
 
@@ -357,23 +358,27 @@ class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
         """
 
         role_class = self.get_reviewer_roles()
-        role_info = role_class.get_info(reviewer.role)
 
-        if (not role_info.rating) or (reviewer.review_rating is None):
-            return (None, None)
+        def rating_weight_function(reviewer):
+            role_info = role_class.get_info(reviewer.role)
 
-        if role_info.weight:
-            if reviewer.review_weight is None:
+            if (not role_info.rating) or (reviewer.review_rating is None):
                 return (None, None)
-            else:
-                weight = reviewer.review_weight / 100.0
-        else:
-            # NOTE: weighting for unrated reviews could be configurable,
-            # perhaps in the facility view or perhaps in the roles class.
-            # However for now assume a weighting of 100%.
-            weight = 1.0
 
-        return (reviewer.review_rating, weight)
+            if role_info.weight:
+                if reviewer.review_weight is None:
+                    return (None, None)
+                else:
+                    weight = reviewer.review_weight / 100.0
+            else:
+                # NOTE: weighting for unrated reviews could be configurable,
+                # perhaps in the facility view or perhaps in the roles class.
+                # However for now assume a weighting of 100%.
+                weight = 1.0
+
+            return (reviewer.review_rating, weight)
+
+        return rating_weight_function
 
     def calculate_affiliation_assignment(self, db, members, affiliations):
         """
