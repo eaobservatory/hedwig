@@ -378,9 +378,21 @@ class GenericReview(object):
 
         proposals = db.search_proposal(
             call_id=call.id, state=ProposalState.submitted_states(),
-            with_members=True, with_reviewers=True, with_review_info=True)
+            with_members=True, with_reviewers=True, with_review_info=True
+        ).map_values(lambda x: ProposalWithCode(
+            *x, code=self.make_proposal_code(db, x)))
 
         self.attach_review_extra(db, proposals)
+
+        # Create dictionary of proposals by peer reviewer person IDs.
+        peer_reviewer_proposals = defaultdict(list)
+        for proposal in proposals.values():
+            member = proposal.members.get_reviewer(default=None)
+            if member is not None:
+                peer_reviewer_proposals[member.person_id].append({
+                    'id': proposal.id,
+                    'code': proposal.code,
+                })
 
         persons = {}
         ratings = defaultdict(dict)
@@ -406,16 +418,21 @@ class GenericReview(object):
                     continue
 
                 person_id = reviewer.person_id
-                persons[person_id] = {'name': reviewer.person_name}
+                if person_id not in persons:
+                    persons[person_id] = {
+                        'id': reviewer.person_id,
+                        'name': reviewer.person_name,
+                        'can_view': (is_admin or reviewer.person_public),
+                    }
 
                 ratings[proposal.id][person_id] = rating
                 weights[proposal.id][person_id] = weight
 
         return {
-            'proposals': proposals.map_values(lambda x: ProposalWithCode(
-                *x, code=self.make_proposal_code(db, x))),
+            'proposals': proposals,
             'persons': OrderedDict(sorted(
                 persons.items(), key=(lambda x: x[1]['name']))),
+            'peer_reviewer_proposals': peer_reviewer_proposals,
             'ratings': ratings,
             'weights': weights,
         }

@@ -2,6 +2,7 @@
 {% set navigation=[((call.semester_name, call.queue_name, (call.type | call_type_name(facility_call_type_class))) | fmt('{} {} {}'), url_for('.review_call', call_id=call.id))] %}
 
 {% set help_link=url_for('help.admin_page', page_name='review_statistics') %}
+{% set scripts = ['jquery_stickytableheaders', 'review_statistics'] %}
 
 {% block content %}
 
@@ -27,86 +28,117 @@
     </li>
 </ul>
 
-<table>
+<table id="statistics">
     <thead>
         <tr>
-            <th>Proposal</th>
+            <th class="sideways"><div><div>Reviewer</div></div></th>
             {% for person in persons.values() %}
-                <th class="sideways"><div><div>{{ person.name | abbr(25) }}</div></div></th>
+                <th class="sideways"><div><div>
+                    {% if person.can_view %}
+                        <a href="{{ url_for('people.person_view', person_id=person.id)  }}">{{ person.name | abbr(25) }}</a>
+                    {% else %}
+                        {{ person.name | abbr(25) }}
+                    {% endif %}
+                </div></div></th>
             {% endfor %}
-            <th class="sideways spacer_left"><div><div>Rating mean</div></div></th>
-            <th class="sideways"><div><div>Rating std. dev.</div></div></th>
-            <th class="sideways spacer_left"><div><div>Weight mean</div></div></th>
-            <th class="sideways"><div><div>Weight std. dev.</div></div></th>
+            <th rowspan="{{ 2 if peer_reviewer_proposals else 1}}" class="sideways spacer_left"><div><div>Rating mean</div></div></th>
+            <th rowspan="{{ 2 if peer_reviewer_proposals else 1}}" class="sideways"><div><div>Rating std. dev.</div></div></th>
+            <th rowspan="{{ 2 if peer_reviewer_proposals else 1}}" class="sideways spacer_left"><div><div>Weight mean</div></div></th>
+            <th rowspan="{{ 2 if peer_reviewer_proposals else 1}}" class="sideways"><div><div>Weight std. dev.</div></div></th>
         </tr>
-    </thead>
-    {% for proposal in proposals.values() %}
-        {% if proposal.id in ratings %}
+        {% if peer_reviewer_proposals %}
             <tr>
-                {% with proposal_ratings = ratings[proposal.id] %}
-                {% with proposal_weights = weights[proposal.id] %}
-                    <td>{{ proposal.code }}</td>
-                    {% for (person_id, person) in persons.items() %}
-                        {% if person_id in proposal_ratings %}
-                            <td class="number_center" style="background-color: {{ proposal_weights[person_id] | color_scale() }};">
-                                {{ proposal_ratings[person_id] }}
-                            </td>
-                        {% else %}
-                            <td>&nbsp;</td>
-                        {% endif %}
-                        </td>
-                    {% endfor %}
-                {% endwith %}
-                {% endwith %}
-                <td class="spacer_left total">
-                    {{ rating_proposal_mean[proposal.id] | fmt('{:.0f}') }}
-                </td>
-                <td class="total">
-                    {{ rating_proposal_stdev[proposal.id] | fmt('{:.0f}') }}
-                </td>
-                <td class="spacer_left total">
-                    {{ weight_proposal_mean[proposal.id] | fmt('{:.0f}') }}
-                </td>
-                <td class="total">
-                    {{ weight_proposal_stdev[proposal.id] | fmt('{:.0f}') }}
-                </td>
+                <th class="sideways"><div><div>Proposal</div></div></th>
+                {% for person in persons.values() %}
+                    {% if person.id in peer_reviewer_proposals %}
+                        <th class="sideways"><div><div>
+                            {% with peer_proposals = peer_reviewer_proposals[person.id] %}
+                                {% with proposal = peer_proposals[0] %}
+                                    <a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a>
+                                {% endwith %}
+                                {% if (peer_proposals | length ) > 1 %}
+                                    <abbr title="{% for i in range(1, (peer_proposals | length))%}{{ peer_proposals[i].code }}{% if not loop.last %}, {% endif %}{% endfor %}">&hellip;</abbr>
+                                {% endif %}
+                            {% endwith %}
+                        </div></div></th>
+                    {% else %}
+                        <th>&nbsp;</th>
+                    {% endif %}
+            {% endfor %}
             </tr>
         {% endif %}
-    {% endfor %}
-    <tr class="spacer_above">
-        <th>Rating mean</th>
-        {% for person_id in persons.keys() %}
-            <td class="spacer_above total">
-                {{ rating_person_mean[person_id] | fmt('{:.0f}') }}
-            </td>
+    </thead>
+    <tbody>
+        {% for proposal in proposals.values() %}
+            {% if proposal.id in ratings %}
+                <tr>
+                    {% with proposal_ratings = ratings[proposal.id] %}
+                    {% with proposal_weights = weights[proposal.id] %}
+                        <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+                        {% for (person_id, person) in persons.items() %}
+                            {% if person_id in proposal_ratings %}
+                                <td class="number_center" style="background-color: {{ proposal_weights[person_id] | color_scale() }};">
+                                    {{ proposal_ratings[person_id] }}
+                                </td>
+                            {% else %}
+                                <td>&nbsp;</td>
+                            {% endif %}
+                            </td>
+                        {% endfor %}
+                    {% endwith %}
+                    {% endwith %}
+                    <td class="spacer_left total">
+                        {{ rating_proposal_mean[proposal.id] | fmt('{:.0f}') }}
+                    </td>
+                    <td class="total">
+                        {{ rating_proposal_stdev[proposal.id] | fmt('{:.0f}') }}
+                    </td>
+                    <td class="spacer_left total">
+                        {{ weight_proposal_mean[proposal.id] | fmt('{:.0f}') }}
+                    </td>
+                    <td class="total">
+                        {{ weight_proposal_stdev[proposal.id] | fmt('{:.0f}') }}
+                    </td>
+                </tr>
+            {% endif %}
         {% endfor %}
-        <td class="spacer_left spacer_above grandtotal" colspan="4" rowspan="4">&nbsp;</td>
-    </tr>
-    <tr>
-        <th>Rating std. dev.</th>
-        {% for person_id in persons.keys() %}
-            <td class="spacer_above total">
-                {{ rating_person_stdev[person_id] | fmt('{:.0f}') }}
-            </td>
-        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr class="spacer_above">
+            <th>Rating mean</th>
+            {% for person_id in persons.keys() %}
+                <td class="spacer_above total">
+                    {{ rating_person_mean[person_id] | fmt('{:.0f}') }}
+                </td>
+            {% endfor %}
+            <td class="spacer_left spacer_above grandtotal" colspan="4" rowspan="4">&nbsp;</td>
+        </tr>
+        <tr>
+            <th>Rating std. dev.</th>
+            {% for person_id in persons.keys() %}
+                <td class="spacer_above total">
+                    {{ rating_person_stdev[person_id] | fmt('{:.0f}') }}
+                </td>
+            {% endfor %}
 
-    </tr>
-    <tr class="spacer_above">
-        <th>Weight mean</th>
-        {% for person_id in persons.keys() %}
-            <td class="spacer_above total">
-                {{ weight_person_mean[person_id] | fmt('{:.0f}') }}
-            </td>
-        {% endfor %}
-    </tr>
-    <tr>
-        <th>Weight std. dev.</th>
-        {% for person_id in persons.keys() %}
-            <td class="spacer_above total">
-                {{ weight_person_stdev[person_id] | fmt('{:.0f}') }}
-            </td>
-        {% endfor %}
-    </tr>
+        </tr>
+        <tr class="spacer_above">
+            <th>Weight mean</th>
+            {% for person_id in persons.keys() %}
+                <td class="spacer_above total">
+                    {{ weight_person_mean[person_id] | fmt('{:.0f}') }}
+                </td>
+            {% endfor %}
+        </tr>
+        <tr>
+            <th>Weight std. dev.</th>
+            {% for person_id in persons.keys() %}
+                <td class="spacer_above total">
+                    {{ weight_person_stdev[person_id] | fmt('{:.0f}') }}
+                </td>
+            {% endfor %}
+        </tr>
+    </tfoot>
 </table>
 
 {% endblock %}
