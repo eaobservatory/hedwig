@@ -118,31 +118,31 @@ a#callout_dismiss:before {
     margin-right: 0.5ex;
 }
 
-th.sortable, th.sorted_asc, th.sorted_desc {
+th.sortable, th.sorted_asc, th.sorted_desc, th.col_sortable, th.col_sorted_asc, th.col_sorted_desc {
     cursor: pointer;
 }
 
-th.sortable:not(.sideways):after, th.sortable.sideways span:after {
+th.sortable:not(.sideways):after, th.sortable.sideways span:after, th.col_sortable:not(.sideways):after, th.col_sortable.sideways span:after {
     content: ' \25A0';
     color: #888;
 }
 
-th.sorted_asc:not(.sideways):after {
+th.sorted_asc:not(.sideways):after, th.col_sorted_asc.sideways span:after {
     content: ' \25B2';
     color: #888;
 }
 
-th.sorted_asc.sideways span:after {
+th.sorted_asc.sideways span:after, th.col_sorted_desc:not(.sideways):after {
     content: ' \25B6';
     color: #888;
 }
 
-th.sorted_desc:not(.sideways):after {
+th.sorted_desc:not(.sideways):after, th.col_sorted_desc.sideways span:after {
     content: ' \25BC';
     color: #888;
 }
 
-th.sorted_desc.sideways span:after {
+th.sorted_desc.sideways span:after, th.col_sorted_asc:not(.sideways):after {
     content: ' \25C0';
     color: #888;
 }

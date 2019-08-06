@@ -2,7 +2,7 @@
 {% set navigation=[((call.semester_name, call.queue_name, (call.type | call_type_name(facility_call_type_class))) | fmt('{} {} {}'), url_for('.review_call', call_id=call.id))] %}
 
 {% set help_link=url_for('help.admin_page', page_name='review_statistics') %}
-{% set scripts = ['jquery_stickytableheaders', 'review_statistics'] %}
+{% set scripts = ['jquery_stickytableheaders', 'hedwig_util', 'review_statistics'] %}
 
 {% block content %}
 
@@ -31,9 +31,16 @@
 <table id="statistics">
     <thead>
         <tr>
-            <th class="sideways"><div><div>Reviewer</div></div></th>
+            <th class="col_sortable col_sortedalready sideways" data-col_sortkey="person_name"><div><div><span>Reviewer</span></div></div></th>
             {% for person in persons.values() %}
-                <th class="sideways"><div><div>
+                <th rowspan="{{ 1 if peer_reviewer_proposals else 2 }}" class="sideways" data-col_sortinfo="{{ {
+                            'person_name': person.name,
+                            'proposal_code': peer_reviewer_proposals.get(person.id, [{'code': None}])[0].code,
+                            'rat_mean': rating_person_mean[person.id],
+                            'rat_stdev': rating_person_stdev[person.id],
+                            'weight_mean': weight_person_mean[person.id],
+                            'weight_stdev': weight_person_stdev[person.id],
+                        } | json }}"><div><div>
                     {% if person.can_view %}
                         <a href="{{ url_for('people.person_view', person_id=person.id)  }}">{{ person.name | abbr(25) }}</a>
                     {% else %}
@@ -41,17 +48,17 @@
                     {% endif %}
                 </div></div></th>
             {% endfor %}
-            <th rowspan="{{ 2 if peer_reviewer_proposals else 1}}" class="sideways spacer_left"><div><div>Rating mean</div></div></th>
-            <th rowspan="{{ 2 if peer_reviewer_proposals else 1}}" class="sideways"><div><div>Rating std. dev.</div></div></th>
-            <th rowspan="{{ 2 if peer_reviewer_proposals else 1}}" class="sideways spacer_left"><div><div>Weight mean</div></div></th>
-            <th rowspan="{{ 2 if peer_reviewer_proposals else 1}}" class="sideways"><div><div>Weight std. dev.</div></div></th>
+            <th rowspan="{{ 3 if peer_reviewer_proposals else 2 }}" class="sortable sortreverse sideways spacer_left" data-sortkey="rat_mean"><div><div><span>Rating mean</span></div></div></th>
+            <th rowspan="{{ 3 if peer_reviewer_proposals else 2 }}" class="sortable sortreverse sideways" data-sortkey="rat_stdev"><div><div><span>Rating std. dev.</span></div></div></th>
+            <th rowspan="{{ 3 if peer_reviewer_proposals else 2 }}" class="sortable sortreverse sideways spacer_left" data-sortkey="weight_mean"><div><div><span>Weight mean</span></div></div></th>
+            <th rowspan="{{ 3 if peer_reviewer_proposals else 2 }}" class="sortable sortreverse sideways" data-sortkey="weight_stdev"><div><div><span>Weight std. dev.</span></div></div></th>
         </tr>
         {% if peer_reviewer_proposals %}
             <tr>
-                <th class="sideways"><div><div>Proposal</div></div></th>
+                <th class="col_sortable sideways" data-col_sortkey="proposal_code"><div><div><span>Proposal</span></div></div></th>
                 {% for person in persons.values() %}
                     {% if person.id in peer_reviewer_proposals %}
-                        <th class="sideways"><div><div>
+                        <th rowspan="2" class="sideways"><div><div>
                             {% with peer_proposals = peer_reviewer_proposals[person.id] %}
                                 {% with proposal = peer_proposals[0] %}
                                     <a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a>
@@ -62,16 +69,25 @@
                             {% endwith %}
                         </div></div></th>
                     {% else %}
-                        <th>&nbsp;</th>
+                        <th rowspan="2">&nbsp;</th>
                     {% endif %}
             {% endfor %}
             </tr>
         {% endif %}
+        <tr>
+            <th class="sortable sortedalready" data-sortkey="proposal_code">Proposal</th>
+        </tr>
     </thead>
     <tbody>
         {% for proposal in proposals.values() %}
             {% if proposal.id in ratings %}
-                <tr>
+                <tr data-sortinfo="{{ {
+                            'proposal_code': proposal.code,
+                            'rat_mean': rating_proposal_mean[proposal.id],
+                            'rat_stdev': rating_proposal_stdev[proposal.id],
+                            'weight_mean': weight_proposal_mean[proposal.id],
+                            'weight_stdev': weight_proposal_stdev[proposal.id],
+                        } | json }}">
                     {% with proposal_ratings = ratings[proposal.id] %}
                     {% with proposal_weights = weights[proposal.id] %}
                         <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
@@ -105,7 +121,7 @@
     </tbody>
     <tfoot>
         <tr class="spacer_above">
-            <th>Rating mean</th>
+            <th class="col_sortable col_sortreverse" data-col_sortkey="rat_mean">Rating mean</th>
             {% for person_id in persons.keys() %}
                 <td class="spacer_above total">
                     {{ rating_person_mean[person_id] | fmt('{:.0f}') }}
@@ -114,7 +130,7 @@
             <td class="spacer_left spacer_above grandtotal" colspan="4" rowspan="4">&nbsp;</td>
         </tr>
         <tr>
-            <th>Rating std. dev.</th>
+            <th class="col_sortable col_sortreverse" data-col_sortkey="rat_stdev">Rating std. dev.</th>
             {% for person_id in persons.keys() %}
                 <td class="spacer_above total">
                     {{ rating_person_stdev[person_id] | fmt('{:.0f}') }}
@@ -123,7 +139,7 @@
 
         </tr>
         <tr class="spacer_above">
-            <th>Weight mean</th>
+            <th class="col_sortable col_sortreverse" data-col_sortkey="weight_mean">Weight mean</th>
             {% for person_id in persons.keys() %}
                 <td class="spacer_above total">
                     {{ weight_person_mean[person_id] | fmt('{:.0f}') }}
@@ -131,7 +147,7 @@
             {% endfor %}
         </tr>
         <tr>
-            <th>Weight std. dev.</th>
+            <th class="col_sortable col_sortreverse" data-col_sortkey="weight_stdev">Weight std. dev.</th>
             {% for person_id in persons.keys() %}
                 <td class="spacer_above total">
                     {{ weight_person_stdev[person_id] | fmt('{:.0f}') }}
