@@ -311,6 +311,23 @@
         <td>{{ output_extra.zenith_angle | fmt('{:.3f}') }} degrees</td>
     </tr>
     {% endif %}
+    {% if 'if_freq' in output_extra %}
+    <tr>
+        <th>IF frequency</th>
+        <td>{{ output_extra.if_freq | fmt('{:.3f}') }} GHz</td>
+    </tr>
+    {% endif %}
+    {% if 'lo_freq' in output_extra %}
+    <tr>
+        <th>LO frequency</th>
+        <td>
+            {{ output_extra.lo_freq | fmt('{:.3f}') }} GHz
+            {% if 'sideband' in output_extra %}
+                ({{ output_extra.sideband}})
+            {% endif %}
+        </td>
+    </tr>
+    {% endif %}
     {% if 'rest_freq' in output_extra %}
     <tr>
         <th>Rest frequency</th>
