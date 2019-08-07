@@ -25,48 +25,69 @@ from .base_calculator import CalculatorTestCase
 
 expect = {
     HeterodyneCalculator.CALC_TIME: {
+        3: {
+            'input':
+                'rx res res_unit sb sep_pol cont '
+                'species trans freq rv rv_sys pos pos_type tau '
+                'mm sw n_pt sep_off dim_x dim_y dx dy basket rms',
+            'output': 'elapsed',
+        },
         2: {
             'input':
-                'rx res res_unit sb dual_pol cont '
+                'rx res res_unit sb cont dual_pol '
                 'species trans freq rv rv_sys pos pos_type tau '
                 'mm sw n_pt sep_off dim_x dim_y dx dy basket rms',
             'output': 'elapsed',
         },
         1: {
             'input':
-                'rx res res_unit sb dual_pol cont freq pos pos_type tau '
+                'rx res res_unit sb cont dual_pol freq pos pos_type tau '
                 'mm sw n_pt sep_off dim_x dim_y dx dy basket rms',
             'output': 'elapsed',
         },
     },
 
     HeterodyneCalculator.CALC_RMS_FROM_ELAPSED_TIME: {
+        3: {
+            'input':
+                'rx res res_unit sb sep_pol  cont '
+                'species trans freq rv rv_sys pos pos_type tau '
+                'mm sw n_pt sep_off dim_x dim_y dx dy basket elapsed',
+            'output': 'rms',
+        },
         2: {
             'input':
-                'rx res res_unit sb dual_pol cont '
+                'rx res res_unit sb cont dual_pol '
                 'species trans freq rv rv_sys pos pos_type tau '
                 'mm sw n_pt sep_off dim_x dim_y dx dy basket elapsed',
             'output': 'rms',
         },
         1: {
             'input':
-                'rx res res_unit sb dual_pol cont freq pos pos_type tau '
+                'rx res res_unit sb cont dual_pol freq pos pos_type tau '
                 'mm sw n_pt sep_off dim_x dim_y dx dy basket elapsed',
             'output': 'rms',
         },
     },
 
     HeterodyneCalculator.CALC_RMS_FROM_INT_TIME: {
+        3: {
+            'input':
+                'rx res res_unit sb sep_pol cont '
+                'species trans freq rv rv_sys pos pos_type tau '
+                'mm sw n_pt sep_off dim_x dim_y dx dy basket int_time',
+            'output': 'rms elapsed',
+        },
         2: {
             'input':
-                'rx res res_unit sb dual_pol cont '
+                'rx res res_unit sb cont dual_pol '
                 'species trans freq rv rv_sys pos pos_type tau '
                 'mm sw n_pt sep_off dim_x dim_y dx dy basket int_time',
             'output': 'rms elapsed',
         },
         1: {
             'input':
-                'rx res res_unit sb dual_pol cont freq pos pos_type tau '
+                'rx res res_unit sb cont dual_pol freq pos pos_type tau '
                 'mm sw n_pt sep_off dim_x dim_y dx dy basket int_time',
             'output': 'rms elapsed',
         },

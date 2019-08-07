@@ -21,7 +21,7 @@
                             data-ssb_available="{{ 'true' if receiver_info.ssb_available else 'false' }}"
                             data-dsb_available="{{ 'true' if receiver_info.dsb_available else 'false' }}"
                             data-frsw_available="{{ 'true' if receiver_info.frsw_available else 'false' }}"
-                            data-dual_pol_available="{{ 'true' if receiver_info.n_mix > 1 else 'false' }}"
+                            data-sep_pol_available="{{ 'true' if receiver_info.n_mix > 1 else 'false' }}"
                             data-pixel_size="{{ receiver_info.pixel_size }}"
                             data-is_array="{{ 'false' if receiver_info.array is none else 'true' }}"
                         >{{ receiver_info.name }}</option>
@@ -163,8 +163,21 @@
             {% elif value.code == 'sb' %}
                 <input type="radio" name="{{ value.code }}" value="ssb" {{ 'checked="checked"' | safe if input == 'ssb' }} /><span class="checkboxlabel">Single sideband</span>
                 <input type="radio" name="{{ value.code }}" value="dsb" {{ 'checked="checked"' | safe if input == 'dsb' }} /><span class="checkboxlabel">Dual sideband</span>
-            {% elif value.code == 'dual_pol' %}
+            {% elif value.code == 'sep_pol' %}
                 <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
+                <div class="formtip">
+                    <div>
+                        <p>
+                            Some receivers have two mixers observing the same position in orthogonal polarizations.
+                            Normally the data are combined to reduce the integration time required,
+                            but you can use this option to see what the effect would be
+                            of processing each polarization individually.
+                        </p>
+                        <p>
+                            <a href="http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/" target="_blank">Heterodyne receiver information</a>
+                        </p>
+                    </div>
+                </div>
             {% elif value.code == 'n_pt' %}
                 <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="1" />
             {% elif value.code == 'dim_x' %}

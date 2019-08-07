@@ -20,12 +20,18 @@ then it is the frequency resolution as observed,
 i.e. the sky frequency resolution.
 
 The current receivers each have only one sideband mode:
-single or dual,
+single, dual or sideband-separating (2SB),
 so only one option will be available here.
-`Receiver WD <http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/rxw/>`_
-has two mixers observing the same position in orthogonal polarizations
---- select the "Dual polarization" option to use both
+For sideband-separating receivers,
+a single-sideband calculation should be used.
+Some receivers (e.g.
+`ʻŪʻū and ʻĀweoweo <http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/namakanui/>`_)
+have two mixers observing the same position in orthogonal polarizations.
+By default the calculator will assume that you intend to use both
 mixers together to reduce the integration time required.
+However if you wish to estimate the sensitivity which would
+be obtained in each polarization individually,
+you should select the "Separate polarizations" option.
 
 You may select "Continuum mode" if it is required for your observations.
 

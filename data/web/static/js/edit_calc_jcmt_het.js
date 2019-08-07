@@ -18,14 +18,14 @@ $(document).ready(function () {
     var check_rx_opt = (function () {
         var rx = rx_select.find(':selected');
         var is_array = rx.data('is_array');
-        var dual_pol_available = rx.data('dual_pol_available');
+        var sep_pol_available = rx.data('sep_pol_available');
         var ssb_available = rx.data('ssb_available');
         var dsb_available = rx.data('dsb_available');
 
-        $('input[name=dual_pol]').prop('disabled', ! dual_pol_available);
+        $('input[name=sep_pol]').prop('disabled', ! sep_pol_available);
 
-        if (! dual_pol_available) {
-            $('input[name=dual_pol]').prop('checked', false);
+        if (! sep_pol_available) {
+            $('input[name=sep_pol]').prop('checked', false);
         }
 
         $('input[name=sb][value=ssb]').prop('disabled', ! ssb_available);

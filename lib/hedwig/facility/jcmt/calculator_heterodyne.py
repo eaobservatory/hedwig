@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -87,7 +87,7 @@ class HeterodyneCalculator(JCMTCalculator):
         ('opt', RVSystem(HeterodyneITC.RV_DEF_OPT, 'optical',  False)),
     ))
 
-    version = 2
+    version = 3
 
     @classmethod
     def get_code(cls):
@@ -176,7 +176,7 @@ class HeterodyneCalculator(JCMTCalculator):
             CalculatorValue(
                 'sb', 'Sideband mode', 'SB', '{}', None),
             CalculatorValue(
-                'dual_pol', 'Dual polarization', 'DP', '{}', None),
+                'sep_pol', 'Separate polarizations', 'SP', '{}', None),
             CalculatorValue(
                 'cont', 'Continuum mode', 'CM', '{}', None),
         ], section='rx', section_name='Receiver')
@@ -224,20 +224,23 @@ class HeterodyneCalculator(JCMTCalculator):
                 'basket', 'Basket weave', 'BW', '{}', None),
         ], section='obs', section_name='Observation')
 
-        if version == 2:
-            pass
+        if version < 3:
+            inputs.delete_item_where(lambda x: x.code in (
+                'sep_pol'))
 
-        elif version == 1:
+            inputs.append(
+                CalculatorValue(
+                    'dual_pol', 'Dual polarization', 'DP', '{}', None),
+                section='rx')
+
+        if version < 2:
             inputs.delete_item_where(lambda x: x.code in (
                 'rv', 'rv_sys', 'species', 'trans'))
-
-        else:
-            raise CalculatorError('Unknown version.')
 
         inputs.add_section('req', 'Requirement')
 
         if mode == self.CALC_TIME:
-            if version in (1, 2):
+            if version in (1, 2, 3):
                 inputs.extend([
                     CalculatorValue(
                         'rms', 'Target sensitivity',
@@ -247,7 +250,7 @@ class HeterodyneCalculator(JCMTCalculator):
                 raise CalculatorError('Unknown version.')
 
         elif mode == self.CALC_RMS_FROM_ELAPSED_TIME:
-            if version in (1, 2):
+            if version in (1, 2, 3):
                 inputs.extend([
                     CalculatorValue(
                         'elapsed', 'Elapsed time',
@@ -257,7 +260,7 @@ class HeterodyneCalculator(JCMTCalculator):
                 raise CalculatorError('Unknown version.')
 
         elif mode == self.CALC_RMS_FROM_INT_TIME:
-            if version in (1, 2):
+            if version in (1, 2, 3):
                 inputs.extend([
                     CalculatorValue(
                         'int_time', 'Integration time',
@@ -291,7 +294,7 @@ class HeterodyneCalculator(JCMTCalculator):
             ('pos', 40.0),
             ('pos_type', 'dec'),
             ('sb', 'ssb'),
-            ('dual_pol', False),
+            ('sep_pol', False),
             ('n_pt', 1),
             ('dim_x', 180),
             ('dim_y', 180),
@@ -356,7 +359,7 @@ class HeterodyneCalculator(JCMTCalculator):
                 formatted = '' if (value is None) else x.format.format(value)
 
             elif code in (
-                    'rx', 'mm', 'sw', 'sb', 'dual_pol', 'n_pt',
+                    'rx', 'mm', 'sw', 'sb', 'sep_pol', 'n_pt',
                     'basket', 'sep_off', 'cont', 'res_unit', 'rv_sys',
                     ):
                 formatted = value
@@ -398,7 +401,7 @@ class HeterodyneCalculator(JCMTCalculator):
         values = {}
 
         for input_ in inputs:
-            if input_.code in ('dual_pol', 'basket', 'sep_off', 'cont'):
+            if input_.code in ('sep_pol', 'basket', 'sep_off', 'cont'):
                 # Checkboxes: true if they appear in the form parameters.
                 values[input_.code] = input_.code in form
 
@@ -511,13 +514,16 @@ class HeterodyneCalculator(JCMTCalculator):
         used with the current version of the calculator.
         """
 
-        if old_version == 1:
-            input_ = input_.copy()
+        input_ = input_.copy()
 
+        if old_version < 2:
             input_['species'] = None
             input_['trans'] = None
             input_['rv'] = 0.0
             input_['rv_sys'] = 'z'
+
+        if old_version < 3:
+            input_['sep_pol'] = (not input_.pop('dual_pol'))
 
         return input_
 
@@ -533,7 +539,7 @@ class HeterodyneCalculator(JCMTCalculator):
         outputs = []
 
         if mode == self.CALC_TIME:
-            if version in (1, 2):
+            if version in (1, 2, 3):
                 outputs.extend([
                     CalculatorValue(
                         'elapsed', 'Elapsed time', 'Elapsed',
@@ -543,7 +549,7 @@ class HeterodyneCalculator(JCMTCalculator):
                 raise CalculatorError('Unknown version.')
 
         elif mode == self.CALC_RMS_FROM_ELAPSED_TIME:
-            if version in (1, 2):
+            if version in (1, 2, 3):
                 outputs.extend([
                     CalculatorValue(
                         'rms', 'Sensitivity', '\u03c3', '{:.3f}', 'K TA*'),
@@ -552,7 +558,7 @@ class HeterodyneCalculator(JCMTCalculator):
                 raise CalculatorError('Unknown version.')
 
         elif mode == self.CALC_RMS_FROM_INT_TIME:
-            if version in (1, 2):
+            if version in (1, 2, 3):
                 outputs.extend([
                     CalculatorValue(
                         'rms', 'Sensitivity', '\u03c3', '{:.3f}', 'K TA*'),
@@ -779,6 +785,8 @@ class HeterodyneCalculator(JCMTCalculator):
                 'frequency ({} GHz) of this receiver.',
                 sky_freq, receiver.f_max)
 
+        dual_pol = ((receiver.n_mix > 1) and not input_['sep_pol'])
+
         kwargs = {
             'receiver': receiver.id,
             'map_mode': self.map_modes[input_['mm']].id,
@@ -787,7 +795,7 @@ class HeterodyneCalculator(JCMTCalculator):
             'freq_res': sky_freq_res,
             'zenith_angle_deg': zenith_angle_deg,
             'is_dsb': (input_['sb'] == 'dsb'),
-            'dual_polarization': input_['dual_pol'],
+            'dual_polarization': dual_pol,
             'n_points': input_['n_pt'],
             'dim_x': input_['dim_x'],
             'dim_y': input_['dim_y'],
