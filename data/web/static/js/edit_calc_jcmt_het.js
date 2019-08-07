@@ -261,7 +261,7 @@ $(document).ready(function () {
     species_select.change(check_species_selection);
     transition_select.change(apply_transition_selection);
 
-    $.ajax(species_select.data('line-catalog'), dataType='json'
+    $.ajax(species_select.data('line_catalog'), dataType='json'
     ).done(function (result) {
         species_select.children().detach();
         line_catalog = {};

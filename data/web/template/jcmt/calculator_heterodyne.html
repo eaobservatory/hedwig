@@ -78,7 +78,7 @@
                 </div>
             {% elif value.code == 'species' %}
                 <label>Transition line</label>
-                <select name="species" data-line-catalog="{{ url_for('.calc_heterodyne_line_cat') }}" data-selected="{{ input }}">
+                <select name="species" data-line_catalog="{{ url_for('.calc_heterodyne_line_cat') }}" data-selected="{{ input }}">
                     <option value="">Loading&hellip;</option>
                 </select>
                 <select name="trans" data-selected="{{ input_values.trans }}">
