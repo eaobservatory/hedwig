@@ -109,7 +109,7 @@ $(document).ready(function () {
         var mm = mm_select.find(':selected');
         var bmsw_allowed = mm.data('bmsw_allowed');
         var pssw_allowed = mm.data('pssw_allowed');
-        var frsw_allowed = mm.data('frsw_allowed');
+        var frsw_allowed = (mm.data('frsw_allowed') && rx.data('frsw_available'));
 
         var sw_mode_radio = $('input[name=sw]');
         sw_mode_radio.filter('[value=bmsw]').prop('disabled', ! bmsw_allowed);
