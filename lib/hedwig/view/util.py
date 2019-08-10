@@ -66,6 +66,15 @@ def int_or_none(value):
     return None if (value == '') else int(value)
 
 
+def str_or_none(value):
+    """
+    Returns the given string as is, unless it is empty, in
+    which case None is returned.
+    """
+
+    return None if (value == '') else value
+
+
 def join_list(words, conjunction='and'):
     """
     Join the words in the given list with commas, ending the list
