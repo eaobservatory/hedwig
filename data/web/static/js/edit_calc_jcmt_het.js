@@ -6,6 +6,10 @@ $(document).ready(function () {
     var freq_res_box = $('input[name=res]');
     var freq_res_unit = $('select[name=res_unit]');
 
+    var freq_if_select = $('select[name=if_type]');
+    var freq_if_box = $('input[name=if_value]');
+    var side_select = $('select[name=side]');
+
     var line_catalog = null;
     var species_select = $('select[name=species]');
     var transition_select = $('select[name=trans]');
@@ -17,10 +21,19 @@ $(document).ready(function () {
 
     var check_rx_opt = (function () {
         var rx = rx_select.find(':selected');
+        var if_option = rx.data('if_option');
         var is_array = rx.data('is_array');
         var sep_pol_available = rx.data('sep_pol_available');
         var ssb_available = rx.data('ssb_available');
         var dsb_available = rx.data('dsb_available');
+
+        freq_if_select.prop('disabled', ! if_option);
+        side_select.prop('disabled', ! if_option);
+
+        if (! if_option) {
+            freq_if_select.val('default');
+            side_select.val('');
+        }
 
         $('input[name=sep_pol]').prop('disabled', ! sep_pol_available);
 
@@ -49,9 +62,23 @@ $(document).ready(function () {
             acsis_mode.prop('disabled', is_disabled);
         });
 
+        check_if_opt();
+
         check_mode_opt();
 
         check_radial_vel();
+    });
+
+    var check_if_opt = (function () {
+        var rx = rx_select.find(':selected');
+
+        var if_other = (rx.data('if_option') && (freq_if_select.val() === 'other'));
+
+        freq_if_box.prop('disabled', ! if_other);
+
+        if (! if_other) {
+            freq_if_box.val(rx.data('f_if'));
+        }
     });
 
     var check_sep_off = (function () {
@@ -124,6 +151,7 @@ $(document).ready(function () {
     });
 
     rx_select.change(check_rx_opt);
+    freq_if_select.change(check_if_opt);
     mm_select.change(check_mode_opt);
     $('input[name=sw]').change(check_sep_off);
 

@@ -32,7 +32,7 @@ from ...type.simple import \
     CalculatorMode, CalculatorResult, CalculatorValue, \
     RouteInfo
 from ...util import FormatSigFig
-from ...view.util import parse_time
+from ...view.util import float_or_none, str_or_none, parse_time
 from .calculator_jcmt import JCMTCalculator
 from .type import JCMTWeather
 
@@ -174,7 +174,11 @@ class HeterodyneCalculator(JCMTCalculator):
                 'res_unit', 'Resolution unit',
                 '\u0394\u03bd unit', '{}', None),
             CalculatorValue(
-                'sb', 'Sideband mode', 'SB', '{}', None),
+                'if', 'Intermediate frequency', 'IF','{:.3f}', 'GHz'),
+            CalculatorValue(
+                'side', 'Sideband', 'SB', '{}', None),
+            CalculatorValue(
+                'sb', 'Sideband mode', 'SB mode', '{}', None),
             CalculatorValue(
                 'sep_pol', 'Separate polarizations', 'SP', '{}', None),
             CalculatorValue(
@@ -226,7 +230,7 @@ class HeterodyneCalculator(JCMTCalculator):
 
         if version < 3:
             inputs.delete_item_where(lambda x: x.code in (
-                'sep_pol'))
+                'if', 'side', 'sep_pol'))
 
             inputs.append(
                 CalculatorValue(
@@ -290,6 +294,8 @@ class HeterodyneCalculator(JCMTCalculator):
             ('rv_sys', 'z'),
             ('res', 0.488),
             ('res_unit', 'MHz'),
+            ('if', None),
+            ('side', None),
             ('tau', 0.1),
             ('pos', 40.0),
             ('pos_type', 'dec'),
@@ -355,11 +361,13 @@ class HeterodyneCalculator(JCMTCalculator):
             if formatted is not None:
                 pass
 
-            elif code == 'freq':
+            elif code in (
+                    'freq', 'if',
+                    ):
                 formatted = '' if (value is None) else x.format.format(value)
 
             elif code in (
-                    'rx', 'mm', 'sw', 'sb', 'sep_pol', 'n_pt',
+                    'rx', 'mm', 'sw', 'sb', 'side', 'sep_pol', 'n_pt',
                     'basket', 'sep_off', 'cont', 'res_unit', 'rv_sys',
                     ):
                 formatted = value
@@ -407,6 +415,15 @@ class HeterodyneCalculator(JCMTCalculator):
 
             elif input_.code in ('freq', 'species', 'trans'):
                 values[input_.code] = form.get(input_.code, '')
+
+            elif input_.code == 'if':
+                if form.get('if_type', '') == 'other':
+                    values[input_.code] = form.get('if_value', '')
+                else:
+                    values[input_.code] = ''
+
+            elif input_.code == 'side':
+                values[input_.code] = str_or_none(form.get(input_.code, ''))
 
             elif input_.code == 'tau':
                 (tau, tau_band) = self.get_form_tau(form)
@@ -524,6 +541,8 @@ class HeterodyneCalculator(JCMTCalculator):
 
         if old_version < 3:
             input_['sep_pol'] = (not input_.pop('dual_pol'))
+            input_['if'] = None
+            input_['side'] = None
 
         return input_
 
@@ -587,6 +606,8 @@ class HeterodyneCalculator(JCMTCalculator):
             'jiggle_patterns': self.itc.get_jiggle_patterns(),
             'acsis_modes': self.acsis_modes,
             'int_time_minimum': self.itc.int_time_minimum,
+            'if_freq_minimum': self.itc.if_freq_minimum,
+            'if_freq_maximum': self.itc.if_freq_maximum,
             'position_types': self.position_type,
             'rv_systems': self.rv_systems,
         }
@@ -603,10 +624,8 @@ class HeterodyneCalculator(JCMTCalculator):
 
         for field in self.get_inputs(mode):
             try:
-                if field.code == 'freq':
-                    parsed[field.code] = (
-                        None if (input_[field.code] == '')
-                        else float(input_[field.code]))
+                if field.code in ('freq', 'if'):
+                    parsed[field.code] = float_or_none(input_[field.code])
 
                 elif field.code in ('res', 'pos', 'rms', 'tau', 'rv'):
                     parsed[field.code] = float(input_[field.code])
@@ -804,6 +823,10 @@ class HeterodyneCalculator(JCMTCalculator):
             'basket_weave': input_['basket'],
             'separate_offs': input_['sep_off'],
             'continuum_mode': input_['cont'],
+            'if_freq': input_['if'],
+            'sideband': (
+                None if (input_['side'] is None)
+                else input_['side'].upper()),
             'with_extra_output': True,
         }
 

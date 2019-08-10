@@ -27,7 +27,7 @@ expect = {
     HeterodyneCalculator.CALC_TIME: {
         3: {
             'input':
-                'rx res res_unit sb sep_pol cont '
+                'rx res res_unit if side sb sep_pol cont '
                 'species trans freq rv rv_sys pos pos_type tau '
                 'mm sw n_pt sep_off dim_x dim_y dx dy basket rms',
             'output': 'elapsed',
@@ -50,7 +50,7 @@ expect = {
     HeterodyneCalculator.CALC_RMS_FROM_ELAPSED_TIME: {
         3: {
             'input':
-                'rx res res_unit sb sep_pol  cont '
+                'rx res res_unit if side sb sep_pol  cont '
                 'species trans freq rv rv_sys pos pos_type tau '
                 'mm sw n_pt sep_off dim_x dim_y dx dy basket elapsed',
             'output': 'rms',
@@ -73,7 +73,7 @@ expect = {
     HeterodyneCalculator.CALC_RMS_FROM_INT_TIME: {
         3: {
             'input':
-                'rx res res_unit sb sep_pol cont '
+                'rx res res_unit if side sb sep_pol cont '
                 'species trans freq rv rv_sys pos pos_type tau '
                 'mm sw n_pt sep_off dim_x dim_y dx dy basket int_time',
             'output': 'rms elapsed',

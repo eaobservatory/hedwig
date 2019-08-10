@@ -4,7 +4,7 @@
 {% set help_link_text = 'Help on this calculator' %}
 
 {% block calculator_input_item %}
-    {% if value.code not in ('dim_y', 'dy', 'res_unit', 'pos_type', 'rv_sys', 'trans') %}
+    {% if value.code not in ('dim_y', 'dy', 'res_unit', 'pos_type', 'rv_sys', 'trans', 'side') %}
         {% if value.code == 'dim_x' %}
             <li>&nbsp;</li>
         {% endif %}
@@ -18,12 +18,14 @@
                         <option value="{{ receiver_info.name }}" {{ 'selected="selected"' | safe if receiver_info.name == input }}
                             data-f_min="{{ receiver_info.f_min }}"
                             data-f_max="{{ receiver_info.f_max }}"
+                            data-f_if="{{ receiver_info.f_if }}"
                             data-ssb_available="{{ 'true' if receiver_info.ssb_available else 'false' }}"
                             data-dsb_available="{{ 'true' if receiver_info.dsb_available else 'false' }}"
                             data-frsw_available="{{ 'true' if receiver_info.frsw_available else 'false' }}"
                             data-sep_pol_available="{{ 'true' if receiver_info.n_mix > 1 else 'false' }}"
                             data-pixel_size="{{ receiver_info.pixel_size }}"
                             data-is_array="{{ 'false' if receiver_info.array is none else 'true' }}"
+                            data-if_option="{{ 'true' if receiver_info.t_rx_lo else 'false' }}"
                         >{{ receiver_info.name }}</option>
                     {% endfor %}
                 </select>
@@ -126,6 +128,12 @@
                         </p>
                     </div>
                 </div>
+            {% elif value.code == 'if' %}
+                <select name="{{ value.code }}_type">
+                    <option value="default" {{ 'selected="selected"' | safe if not input }}>Receiver default</option>
+                    <option value="other" {{ 'selected="selected"' | safe if input }}>Other</option>
+                </select>
+                <input type="number" name="{{ value.code }}_value" value="{{ input }}" min="{{ if_freq_minimum}}" max="{{ if_freq_maximum}}" step="any" />
             {% elif value.code == 'tau' %}
                 <select name="tau_band">
                     {% for (band_num, band_info) in weather_bands.items() %}
@@ -257,6 +265,12 @@
                     {% for (rv_sys, rv_sys_info) in rv_systems.items() %}
                         <option value="{{ rv_sys }}" {{ 'selected="selected"' | safe if rv_sys == input_values.rv_sys }} data-no_unit="{{ 'true' if rv_sys_info.no_unit else 'false' }}">{{ rv_sys_info.name }}</option>
                     {% endfor %}
+                </select>
+            {% elif value.code == 'if' %}
+                <select name="side">
+                    <option value="" {{ 'selected="selected"' | safe if input_values.side is none }}>best sideband</option>
+                    <option value="lsb" {{ 'selected="selected"' | safe if input_values.side == 'lsb'}} >lower sideband</option>
+                    <option value="usb" {{ 'selected="selected"' | safe if input_values.side == 'usb'}} >upper sideband</option>
                 </select>
             {% endif %}
         </li>
