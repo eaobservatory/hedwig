@@ -35,6 +35,9 @@ $(document).ready(function () {
             side_select.val('');
         }
 
+        freq_if_box.attr('min', rx.data('f_if_min'));
+        freq_if_box.attr('max', rx.data('f_if_max'));
+
         $('input[name=sep_pol]').prop('disabled', ! sep_pol_available);
 
         if (! sep_pol_available) {

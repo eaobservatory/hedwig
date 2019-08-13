@@ -606,8 +606,6 @@ class HeterodyneCalculator(JCMTCalculator):
             'jiggle_patterns': self.itc.get_jiggle_patterns(),
             'acsis_modes': self.acsis_modes,
             'int_time_minimum': self.itc.int_time_minimum,
-            'if_freq_minimum': self.itc.if_freq_minimum,
-            'if_freq_maximum': self.itc.if_freq_maximum,
             'position_types': self.position_type,
             'rv_systems': self.rv_systems,
         }

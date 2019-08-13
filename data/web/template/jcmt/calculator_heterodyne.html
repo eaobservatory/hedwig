@@ -19,6 +19,8 @@
                             data-f_min="{{ receiver_info.f_min }}"
                             data-f_max="{{ receiver_info.f_max }}"
                             data-f_if="{{ receiver_info.f_if }}"
+                            data-f_if_min="{{ receiver_info.f_if_min }}"
+                            data-f_if_max="{{ receiver_info.f_if_max }}"
                             data-ssb_available="{{ 'true' if receiver_info.ssb_available else 'false' }}"
                             data-dsb_available="{{ 'true' if receiver_info.dsb_available else 'false' }}"
                             data-frsw_available="{{ 'true' if receiver_info.frsw_available else 'false' }}"
@@ -133,7 +135,7 @@
                     <option value="default" {{ 'selected="selected"' | safe if not input }}>Receiver default</option>
                     <option value="other" {{ 'selected="selected"' | safe if input }}>Other</option>
                 </select>
-                <input type="number" name="{{ value.code }}_value" value="{{ input }}" min="{{ if_freq_minimum}}" max="{{ if_freq_maximum}}" step="any" />
+                <input type="number" name="{{ value.code }}_value" value="{{ input }}" step="any" />
             {% elif value.code == 'tau' %}
                 <select name="tau_band">
                     {% for (band_num, band_info) in weather_bands.items() %}
