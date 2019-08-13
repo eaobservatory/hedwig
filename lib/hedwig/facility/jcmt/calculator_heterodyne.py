@@ -540,7 +540,15 @@ class HeterodyneCalculator(JCMTCalculator):
             input_['rv_sys'] = 'z'
 
         if old_version < 3:
-            input_['sep_pol'] = (not input_.pop('dual_pol'))
+            has_dual_pol = False
+            try:
+                receiver = self.get_receiver_by_name(
+                    input_['rx'], as_object=True)
+                has_dual_pol = (receiver.n_mix > 1)
+            except:
+                pass
+
+            input_['sep_pol'] = (has_dual_pol and not input_.pop('dual_pol'))
             input_['if'] = None
             input_['side'] = None
 
