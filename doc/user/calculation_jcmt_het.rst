@@ -19,6 +19,19 @@ If this is given as a frequency (in MHz),
 then it is the frequency resolution as observed,
 i.e. the sky frequency resolution.
 
+The "intermediate frequency" (IF) line will only be available for
+newer instruments where the calculator has receiver temperature data
+as a function of local oscillator (LO) frequency.
+(For other instruments this input line will be disabled.)
+Normally you can use the receiver default IF and the "best" sideband ---
+the results will show the IF and LO frequency
+which the calculator has used.
+However if you wish to adjust the IF,
+for example as part of a tuning for multiple simultaneous lines,
+you can select "Other" from the menu and then enter the desired frequency.
+Similarly you can select a specific sideband if you do not
+want the "best" sideband to be selected automatically.
+
 The current receivers each have only one sideband mode:
 single, dual or sideband-separating (2SB),
 so only one option will be available here.
@@ -29,6 +42,8 @@ Some receivers (e.g.
 have two mixers observing the same position in orthogonal polarizations.
 By default the calculator will assume that you intend to use both
 mixers together to reduce the integration time required.
+This is generally the best option, as the two polarization measurements
+are insufficient for polarimetry.
 However if you wish to estimate the sensitivity which would
 be obtained in each polarization individually,
 you should select the "Separate polarizations" option.
