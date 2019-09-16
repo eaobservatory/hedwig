@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017 East Asian Observatory
+# Copyright (C) 2016-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -23,13 +23,18 @@ from datetime import datetime
 from hedwig.error import UserError
 from hedwig.type.simple import DateAndTime
 from hedwig.web.util import \
-    format_datetime, parse_datetime, \
+    ascii_safe, format_datetime, parse_datetime, \
     url_add_args, url_relative
 
 from .compat import TestCase
 
 
 class WebUtilTestCase(TestCase):
+    def test_ascii_safe(self):
+        self.assertEqual(ascii_safe('abcdef.pdf'), 'abcdef.pdf')
+        self.assertEqual(ascii_safe(
+            'cr\xe8me br\xfbl\xe9e.pdf'), 'cr_me br_l_e.pdf')
+
     def test_format_datetime(self):
         dt = datetime(2016, 4, 1, 15, 0, 0)
 

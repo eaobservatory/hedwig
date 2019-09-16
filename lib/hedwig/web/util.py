@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from datetime import datetime
 import json
 import functools
+import re
 
 # Import the names we wish to expose.
 from flask import session, url_for
@@ -98,6 +99,14 @@ class ErrorPage(ExceptionWithMessage):
 
         self.title = kwargs.get('title', 'Error')
         self.links = kwargs.get('links', None)
+
+
+def ascii_safe(value):
+    """
+    Convert value to a form which is safe for inclusion in HTTP headers.
+    """
+
+    return re.sub('[^\u0020-\u007e]', '_', value)
 
 
 def flash(message, *args):
@@ -445,10 +454,10 @@ def send_file(
             if filename is not None:
                 if can_view_inline:
                     response.headers.add('Content-Disposition', 'inline',
-                                         filename=filename)
+                                         filename=ascii_safe(filename))
                 else:
                     response.headers.add('Content-Disposition', 'attachment',
-                                         filename=filename)
+                                         filename=ascii_safe(filename))
 
             if allow_cache:
                 # Set maximum age to one day to allow the user's browser
