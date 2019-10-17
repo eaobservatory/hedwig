@@ -110,7 +110,13 @@ $(document).ready(function () {
         var is_raster = (mm_select.val() === 'raster');
 
         $('input[name=n_pt]').prop('disabled', (! is_grid));
-        $('select[name=n_pt_jiggle]').prop('disabled', (! is_jiggle) || is_array);
+
+        if (is_jiggle && (! is_array)) {
+            $('select[name=n_pt_jiggle]').prop('disabled', false);
+            $('input[name=n_pt]').val($('select[name=n_pt_jiggle]').val());
+        } else {
+            $('select[name=n_pt_jiggle]').prop('disabled', true);
+        }
 
         $('input[name=dim_x]').prop('disabled', ! is_raster);
         $('input[name=dim_y]').prop('disabled', ! is_raster);
@@ -134,6 +140,7 @@ $(document).ready(function () {
 
         if (is_jiggle && is_array) {
             $('select[name=n_pt_jiggle_' + rx_name + ']').prop('disabled', false);
+            $('input[name=n_pt]').val($('select[name=n_pt_jiggle_' + rx_name + ']').val());
         }
 
         var mm = mm_select.find(':selected');
