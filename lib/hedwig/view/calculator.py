@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2019 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -98,6 +98,47 @@ class BaseCalculator(object):
 
         Accepts additional keyword arguments for use via the proposal and
         review calculation route view functions.
+
+        This view handler tracks two sets of identifiers:
+
+        * `for_proposal_id` / `for_reviewer_id`
+
+          This is a proposal / review which we are definitely interacting with.
+          I.e. it:
+
+          - Is the parent of the calculation / review calculation
+            given as a keyword argument.
+
+          - Is the proposal / review to which a calculation was saved.
+
+          - Is passed as a query parameter `proposal_id` / `reviewer_id`
+            when the user follows a link from the proposal / review to add a
+            calculation.
+
+          - Is passed as posted form argument `for_proposal_id` /
+            `for_reviewer_id`.  (This is a hidden parameter allowing
+            the calculator to remember the value selected in any
+            of the above ways.)
+
+          - Is used to set up the title and "back to" links on the page.
+
+        * `calculation_info.parent_id` / `review_calculation_info.parent_id`
+
+          This is the value posted in the form `calculation_id` /
+          `review_calculation_id` select input, giving the user's choice
+          from the save area of the form (or as a hidden parameter when
+          there is no output thus no save area).
+
+          This value:
+
+          - Is initialized when a calculation / review calculation is given
+            as a keyword argument.
+
+          - Is also initialized via query parameter when the user follows
+            a link to add a calculation for a proposal / review.
+
+          - Is otherwise initialized to the first review editable by the user
+            for the proposal specified by `for_proposal_id`.
         """
 
         role_class = self.facility.get_reviewer_roles()
@@ -175,6 +216,16 @@ class BaseCalculator(object):
                         auth_cache=auth_cache,
                         skip_membership_test=True,
                         allow_unaccepted=False).edit))
+
+            # If the user is viewing a proposal calculation, but is a reviewer
+            # for this proposal, default to saving to that review.
+            if ((for_proposal_id is not None)
+                    and (review_calculation_info.parent_id is None)):
+                for review_proposal in review_proposals.values():
+                    if review_proposal.id == for_proposal_id:
+                        review_calculation_info = review_calculation_info._replace(
+                            parent_id=review_proposal.reviewer.id)
+                        break
 
         if form is not None:
             try:
@@ -409,6 +460,12 @@ class BaseCalculator(object):
             proposal = proposals.get(for_proposal_id)
             if proposal is not None:
                 for_proposal_code = proposal.code
+
+            else:
+                for review_proposal in review_proposals.values():
+                    if review_proposal.id == for_proposal_id:
+                        for_proposal_code = review_proposal.code
+                        break
 
         ctx = {
             'title': self.get_name(),
