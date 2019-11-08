@@ -92,12 +92,16 @@ class BaseCalculator(object):
 
     def view(
             self, db, mode, args, form,
-            calculation=None, review_calculation=None, can=None):
+            calculation=None, review_calculation=None, can=None,
+            parent_proposal=None, parent_reviewer=None):
         """
         Web view handler for a generic calculator.
 
         Accepts additional keyword arguments for use via the proposal and
-        review calculation route view functions.
+        review calculation route view functions.  The `parent_proposal` and
+        `parent_reviewer` can be used to generate information about the
+        proposal / review (proposal code and reviewer role) and so providing
+        them may avoid additional database queries being required.
 
         This view handler tracks two sets of identifiers:
 
@@ -449,23 +453,62 @@ class BaseCalculator(object):
         for_proposal_code = None
         for_reviewer_role = None
         if for_reviewer_id is not None:
+            # If we can edit this review, we will already have its code.
             proposal = review_proposals.get(for_reviewer_id)
             if proposal is not None:
                 for_proposal_id = proposal.id
                 for_proposal_code = proposal.code
                 for_reviewer_role = proposal.reviewer.role
 
+            else:
+                # Use the given parent_reviewer and parent_proposal, updating
+                # if not given or the ID no longer matches.
+                try:
+                    if ((parent_reviewer is None) or
+                            (parent_reviewer.id != for_reviewer_id) or
+                            (parent_proposal is None)):
+                        parent_reviewer = db.search_reviewer(
+                            reviewer_id=for_reviewer_id).get_single()
+                        parent_proposal = db.get_proposal(
+                            self.facility.id_, parent_reviewer.proposal_id)
+
+                    for_reviewer_role = parent_reviewer.role
+                    for_proposal_id = parent_proposal.id
+                    for_proposal_code = self.facility.make_proposal_code(
+                        db, parent_proposal)
+
+                except NoSuchRecord:
+                    pass
+
         # Or, if we have a specific proposal ID, see if we know its code.
         elif for_proposal_id is not None:
+            # If we can edit this proposal, we will already have its code.
             proposal = proposals.get(for_proposal_id)
             if proposal is not None:
                 for_proposal_code = proposal.code
 
             else:
+                # If we can edit a review of proposal, we will also already
+                # have its code.
                 for review_proposal in review_proposals.values():
                     if review_proposal.id == for_proposal_id:
                         for_proposal_code = review_proposal.code
                         break
+
+                else:
+                    # Use the given parent_proposal, updating if not given
+                    # or the ID no longer matches.
+                    try:
+                        if ((parent_proposal is None) or
+                                (parent_proposal.id != for_proposal_id)):
+                            parent_proposal = db.get_proposal(
+                                self.facility.id_, for_proposal_id)
+
+                        for_proposal_code = self.facility.make_proposal_code(
+                            db, parent_proposal)
+
+                    except NoSuchRecord:
+                        pass
 
         ctx = {
             'title': self.get_name(),

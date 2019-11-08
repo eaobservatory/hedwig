@@ -1832,7 +1832,9 @@ class GenericReview(object):
         if view_func is None:
             raise HTTPNotFound('Calculator mode not found.')
 
-        return view_func(review_calculation=calculation, can=can)
+        return view_func(
+            review_calculation=calculation, can=can,
+            parent_proposal=proposal, parent_reviewer=reviewer)
 
     @with_review(permission=PermissionType.EDIT)
     def view_review_edit_figure(

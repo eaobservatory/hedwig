@@ -2294,7 +2294,8 @@ class GenericProposal(object):
         if view_func is None:
             raise HTTPNotFound('Calculator mode not found.')
 
-        return view_func(calculation=calculation, can=can)
+        return view_func(
+            calculation=calculation, can=can, parent_proposal=proposal)
 
     @with_proposal(permission=PermissionType.FEEDBACK, with_decision_note=True)
     def view_proposal_feedback(self, db, proposal, can):
