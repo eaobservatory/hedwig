@@ -11,12 +11,20 @@
 
 <ul>
     {% set n_permission = 0 %}
+    {% if group_info.private_moc %}
+        <li>Can search private coverage maps.</li>
+        {% set n_permission = n_permission + 1 %}
+    {% endif %}
     {% if group_info.view_all_prop %}
         <li>Can view all proposals.</li>
         {% set n_permission = n_permission + 1 %}
     {% endif %}
-    {% if group_info.private_moc %}
-        <li>Can search private coverage maps.</li>
+    {% if group_info.review_view %}
+        <li>Can view all reviews.</li>
+        {% set n_permission = n_permission + 1 %}
+    {% endif %}
+    {% if group_info.feedback_view %}
+        <li>Can view proposal feedback.</li>
         {% set n_permission = n_permission + 1 %}
     {% endif %}
     {% if group_info.review_coord %}

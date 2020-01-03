@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -311,6 +311,8 @@ class EnumTypeTestCase(TestCase):
         self.assertIsInstance(GroupType.view_all_groups(), list)
         self.assertIsInstance(GroupType.private_moc_groups(), list)
         self.assertIsInstance(GroupType.review_coord_groups(), list)
+        self.assertIsInstance(GroupType.review_view_groups(), list)
+        self.assertIsInstance(GroupType.feedback_view_groups(), list)
 
         url_paths = GroupType.get_url_paths()
         self.assertIsInstance(url_paths, list)

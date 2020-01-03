@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -327,8 +327,18 @@ def for_proposal_feedback(role_class, db, proposal, auth_cache=None):
             and can_be_admin(db, auth_cache=auth_cache)):
         return view_only
 
+    person_id = session['person']['id']
+
     # Allow proposal members to view.
-    if proposal.members.has_person(session['person']['id']):
+    if proposal.members.has_person(person_id):
+        return view_only
+
+    # Give access to review groups with permission to view all feedback.
+    group_members = _get_group_membership(auth_cache, db, person_id)
+
+    if group_members.has_entry(
+            queue_id=proposal.queue_id,
+            group_type=GroupType.feedback_view_groups()):
         return view_only
 
     # Otherwise deny access.

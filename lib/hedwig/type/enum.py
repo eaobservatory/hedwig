@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -283,28 +283,33 @@ class GroupType(EnumAllowUser, EnumBasic, EnumURLPath):
     CTTEE = 1
     TECH = 2
     COORD = 3
+    VIEWER = 4
 
     PEER = -1
 
     GroupInfo = namedtuple(
         'GroupInfo',
         ('name', 'view_all_prop', 'private_moc',
-         'review_coord', 'review_view', 'allow_user', 'url_path'))
+         'review_coord', 'review_view',  'feedback_view',
+         'allow_user', 'url_path'))
 
     _info = OrderedDict((
-        #           Authorization: Prop   MOC    Rv.Ed  Rv.Vw  User
+        #           Authorization: Prop   MOC    Rv.Ed  Rv.Vw  Fb.Vw  User
         (CTTEE, GroupInfo(
-            'Committee members',   True,  False, False, True,  True,
+            'Committee members',   True,  False, False, True,  False, True,
             'committee')),
         (TECH,  GroupInfo(
-            'Technical assessors', False, True,  False, False, True,
+            'Technical assessors', False, True,  False, False, False, True,
             'technical')),
         (COORD, GroupInfo(
-            'Review coordinators', True,  False, True,  True,  True,
+            'Review coordinators', True,  False, True,  True,  False, True,
             'coordinator')),
+        (VIEWER, GroupInfo(
+            'Viewers',             True,  False, False, True,  True,  True,
+            'viewer')),
 
         (PEER, GroupInfo(
-            'Peer reviewers',      False, False, False, False, False,
+            'Peer reviewers',      False, False, False, False, False, False,
             None)),
     ))
 
@@ -331,6 +336,12 @@ class GroupType(EnumAllowUser, EnumBasic, EnumURLPath):
         """Get a list of groups with the `review_view` privilege."""
 
         return [k for (k, v) in cls._info.items() if v.review_view]
+
+    @classmethod
+    def feedback_view_groups(cls):
+        """Get a list of groups with the `feedback_view` privilege."""
+
+        return [k for (k, v) in cls._info.items() if v.feedback_view]
 
 
 class MessageState(EnumAllowUser, EnumBasic):

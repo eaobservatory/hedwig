@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -299,6 +299,11 @@ class WebAppAuthTestCase(WebAppTestCase):
         reviewer_a2x1 = self.db.add_reviewer(
             role_class, proposal_a2, person_a2x1, role_class.CTTEE_SECONDARY)
 
+        # Create additional profiles.
+        user_a_v = self.db.add_user('av', 'pass')
+        person_a_v = self.db.add_person('Person V', user_id=user_a_v)
+        self.db.add_group_member(queue_a, GroupType.VIEWER, person_a_v)
+
         all_proposals = [proposal_a1, proposal_a2, proposal_b1, proposal_b2]
 
         # Create auth cache dictionary.  The database should not be updated
@@ -515,6 +520,9 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (68, person_a1rpn, False, proposal_a1, 'oooroooo', 'oooooooo', 'oooooooo'),
                 (69, person_a1rpa, False, proposal_a1, 'ooovoooo', 'oooooooo', 'oooooooo'),
                 (70, person_a1rpr, False, proposal_a1, 'oooooooo', 'oooooooo', 'oooooooo'),
+                # Viewers: view access for proposals and feedback in same queue.
+                (71, person_a_v,   False, proposal_a1, 'oovvvvvo', 'ooooovvo', 'oooooooo'),
+                (72, person_a_v,   False, proposal_b1, 'oooooooo', 'oooooooo', 'oooooooo'),
                 ]:
             self._test_auth_proposal(role_class, auth_cache, *test_case)
 
@@ -585,6 +593,9 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (66, person_a1rpr, False, reviewer_a1rpr, 'oooooooo'),
                 # Special case: proposal member can access feedback.
                 (67, person_a1x3,  False, reviewer_a1rf,  'vvvVEVVv'),
+                # Viewers: view access for reviews in same queue.
+                (68, person_a_v,   False, reviewer_a1rt,  'vvvVVVVv'),
+                (69, person_a_v,   False, reviewer_b1reu, 'oooooooo'),
                 ]:
             self._test_auth_review(role_class, auth_cache, *test_case)
 
