@@ -583,6 +583,8 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (64, person_a1rpn, False, reviewer_a1rpn, 'oooroooo'),
                 (65, person_a1rpa, False, reviewer_a1rpa, 'oooEoooo'),
                 (66, person_a1rpr, False, reviewer_a1rpr, 'oooooooo'),
+                # Special case: proposal member can access feedback.
+                (67, person_a1x3,  False, reviewer_a1rf,  'vvvVEVVv'),
                 ]:
             self._test_auth_review(role_class, auth_cache, *test_case)
 

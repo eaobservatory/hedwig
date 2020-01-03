@@ -361,7 +361,10 @@ def for_review(
     that the person is not a member of the proposal.  This should
     only be used when considering access for non-sensitive information
     which it is acceptable for the proposal members to see, such as
-    calculation results.
+    calculation results.  The membership check is not applied if
+    "reviewer" is given and the role is FEEDBACK because feedback
+    reports should not contain sensitive information and the review
+    coordinator may need to process feedback for thier own proposal.
 
     The `allow_unaccepted` argument controls handling of reviews roles
     with acceptance (`role_class.is_accepted_review` returns `True`).
@@ -380,10 +383,12 @@ def for_review(
 
     person_id = session['person']['id']
 
-    # Forbid access if the person is a member of the proposal.
+    # Forbid access if the person is a member of the proposal, unless this
+    # is for the feedback review.
     if not skip_membership_test:
         if proposal.members.has_person(person_id):
-            return AuthorizationWithRating(*no, view_rating=False)
+            if (reviewer is None) or (reviewer.role != role_class.FEEDBACK):
+                return AuthorizationWithRating(*no, view_rating=False)
 
     # Determine whether the proposal is in a state where this review is
     # editable.  If we have a specific reviewer, check that role's states.
