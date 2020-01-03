@@ -1990,7 +1990,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element_by_name('submit').click()
 
-        self.assertRegexpMatches(
+        self.assertRegex(
             self.browser.page_source,
             'The decision for proposal [A-Z0-9]+ has been saved\.')
 
