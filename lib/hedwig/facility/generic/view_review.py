@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -49,7 +49,7 @@ from ...type.util import null_tuple, \
 
 ProposalWithInviteRoles = namedtuple(
     'ProposalWithInviteRoles',
-    ProposalWithCode._fields + ('invite_roles',))
+    ProposalWithCode._fields + ('invite_roles', 'add_roles'))
 
 ProposalWithExtraPermissions = namedtuple(
     'ProposalWithExtraPermissions',
@@ -561,7 +561,7 @@ class GenericReview(object):
 
         for proposal in db.search_proposal(
                 call_id=call.id, state=ProposalState.review_states(),
-                with_member_pi=True, with_reviewers=True,
+                with_members=True, with_reviewers=True,
                 with_review_info=True,
                 with_reviewer_role=role, with_review_state=state).values():
             roles = state_editable_roles.get(proposal.state)
@@ -570,8 +570,12 @@ class GenericReview(object):
                 state_editable_roles[proposal.state] = roles
 
             proposals.append(ProposalWithInviteRoles(
-                *proposal,
+                *proposal._replace(
+                    member=proposal.members.get_pi(default=None)),
                 invite_roles=[x for x in invite_roles if x in roles],
+                add_roles=auth.can_add_review_roles(
+                    type_class, role_class, db, proposal,
+                    auth_cache=can.cache),
                 code=self.make_proposal_code(db, proposal)))
 
             for reviewer in proposal.reviewers.values():
