@@ -47,14 +47,14 @@ from ...type.util import null_tuple, \
     with_can_edit, with_can_view, with_can_view_edit_rating
 
 
-ProposalWithInviteRoles = namedtuple(
-    'ProposalWithInviteRoles',
-    ProposalWithCode._fields + ('invite_roles', 'add_roles'))
-
 ProposalWithExtraPermissions = namedtuple(
     'ProposalWithExtraPermissions',
     ProposalWithCode._fields + (
         'can_view_review', 'can_edit_decision'))
+
+ProposalWithInviteRoles = namedtuple(
+    'ProposalWithInviteRoles',
+    ProposalWithExtraPermissions._fields + ('invite_roles', 'add_roles'))
 
 ProposalWithReviewerPersons = namedtuple(
     'ProposalWithReviewerPersons',
@@ -576,7 +576,10 @@ class GenericReview(object):
                 add_roles=auth.can_add_review_roles(
                     type_class, role_class, db, proposal,
                     auth_cache=can.cache),
-                code=self.make_proposal_code(db, proposal)))
+                code=self.make_proposal_code(db, proposal),
+                can_view_review=auth.for_review(
+                    role_class, db, None, proposal, auth_cache=can.cache).view,
+                can_edit_decision=None))
 
             for reviewer in proposal.reviewers.values():
                 if ((reviewer.role in assigned_roles)

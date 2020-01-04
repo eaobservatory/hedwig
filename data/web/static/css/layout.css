@@ -112,6 +112,10 @@ div#facilities a {
     text-decoration: none;
 }
 
+td > nav ol {
+    margin: 0px;
+}
+
 nav ol {
     padding: 0px;
 }
