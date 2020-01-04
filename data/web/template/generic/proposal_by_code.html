@@ -1,0 +1,23 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="GET" action="{{ url_for('.proposal_by_code') }}">
+    <ol>
+        <li>
+            <label for="code">Proposal identifier</label>
+            <input type="text" name="code" value="{{ code }}" autofocus="autofocus" required="required" size="20" />
+        </li>
+        <li>
+            <input type="submit" value="Search" name="submit" />
+        </li>
+    </ol>
+</form>
+
+{% endblock %}

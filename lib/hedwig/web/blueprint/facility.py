@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -514,6 +514,11 @@ def create_facility_blueprint(db, facility):
         return facility.view_reviewer_add(
             db, proposal_id, reviewer_role,
             (request.form if request.method == 'POST' else None))
+
+    @bp.route('/proposal_by_code')
+    @facility_template('proposal_by_code.html')
+    def proposal_by_code():
+        return facility.view_proposal_by_code(db, request.args)
 
     @bp.route('/review/<int:reviewer_id>/remove',
               methods=['GET', 'POST'])

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -2336,6 +2336,31 @@ class GenericProposal(object):
         return {
             'feedback_reviews': reviewers,
             'decision_note': decision_note,
+        }
+
+    def view_proposal_by_code(self, db, args):
+        message = None
+        code = args.get('code', '')
+
+        if code:
+            try:
+                proposal_id = self.parse_proposal_code(db, code)
+
+                raise HTTPRedirect(url_for(
+                    '.proposal_view', proposal_id=proposal_id))
+
+            except ParseError:
+                message = (
+                    'The given proposal identifier '
+                    'is not of the expected format.')
+
+            except NoSuchRecord:
+                message = 'The specified proposal was not found.'
+
+        return {
+            'title': 'Find Proposal by Identifier',
+            'message': message,
+            'code': code,
         }
 
     def _edit_text(self, db, proposal, role, word_limit, target, form, rows,
