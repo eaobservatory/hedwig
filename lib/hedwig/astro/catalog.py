@@ -71,7 +71,8 @@ def parse_source_list(source_list, number_from=1, as_object_list=False):
 
         for target in csv.DictReader(
                 lines,
-                fieldnames=['name', 'x', 'y', 'system', 'time', 'priority'],
+                fieldnames=[
+                    'name', 'x', 'y', 'system', 'time', 'priority', 'note'],
                 dialect=dialect, restkey=None, restval=None):
 
             # Drop any trailing values and decode UTF-8.
@@ -128,6 +129,9 @@ def write_source_list(catalog):
 
                 if target.priority:
                     row.append(target.priority)
+
+                    if target.note:
+                        row.append(target.note)
 
         writer.add_row(row)
 
