@@ -1700,7 +1700,8 @@ class GenericProposal(object):
                     form['x_' + id_],
                     form['y_' + id_],
                     form['time_' + id_],
-                    form['priority_' + id_])
+                    form['priority_' + id_],
+                    form['note_' + id_])
 
             records = TargetCollection.organize_collection(
                 updated_records, added_records)

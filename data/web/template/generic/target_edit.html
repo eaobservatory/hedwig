@@ -25,6 +25,11 @@
         The observing time and target priority are optional.
         Targets may be assigned priorities from 1 (highest) to 100 (lowest).
     </li>
+    <li>
+        You may use the notes column for any additional information
+        (e.g. source type, flux or distance)
+        which is relevant to your proposal.
+    </li>
 </ul>
 
 {% if message is not none %}
@@ -40,8 +45,9 @@
             <th>RA / Longitude</th>
             <th>Dec / Latitude</th>
             <th>System</th>
-            <th>Time</th>
+            <th>Time<br />(hours)</th>
             <th>Priority<br />(1 highest)</th>
+            <th>Notes</th>
             <th>Actions</th>
         </tr>
         {% for target in targets.values_in_sorted_order() %}
@@ -57,8 +63,9 @@
                         {% endfor %}
                     </select>
                 </td>
-                <td><input type="number" class="narrow_number" name="time_{{ target.id }}" value="{{ target.time }}" step="any" min="0" /> hours</td>
+                <td><input type="number" class="narrow_number" name="time_{{ target.id }}" value="{{ target.time }}" step="any" min="0" /></td>
                 <td><input type="number" class="narrow_number" name="priority_{{ target.id }}" value="{{ target.priority }}" step="1" min="1" max="100" /></td>
+                <td><input type="text" name="note_{{ target.id }}" value="{{ target.note }}" size="15" /></td>
                 <td>
                     <input type="button" id="delete_{{ target.id }}" value="Delete" />
                     <input type="button" id="resolve_{{ target.id }}" value="Resolve name" />
@@ -80,8 +87,9 @@
                     {% endfor %}
                 </select>
             </td>
-            <td><input type="number" class="narrow_number" name="time" value="" step="any" min="0" /> hours</td>
+            <td><input type="number" class="narrow_number" name="time" value="" step="any" min="0" /></td>
             <td><input type="number" class="narrow_number" name="priority" value="" step="1" min="1" max="100" /></td>
+            <td><input type="text" name="note" value="" size="15" /></td>
             <td>
                 <input type="button" id="delete_template" value="Delete" />
                 <input type="button" id="resolve_template" value="Resolve name" />

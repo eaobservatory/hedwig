@@ -79,9 +79,9 @@ class GenericFacilityWebAppTestCase(WebAppTestCase):
 
         # ... targets.
         self.db.sync_proposal_target(proposal_id, TargetCollection([
-            (1, Target(1, proposal_id, 1, 'T1', None, None, None, None, None)),
-            (2, Target(2, proposal_id, 2, 'T2', None, None, None, None, None)),
-            (3, Target(3, proposal_id, 3, 'T3', None, None, None, None, None)),
+            (1, Target(1, proposal_id, 1, 'T1', None, None, None, None, None, None)),
+            (2, Target(2, proposal_id, 2, 'T2', None, None, None, None, None, None)),
+            (3, Target(3, proposal_id, 3, 'T3', None, None, None, None, None, None)),
         ]))
 
         # ... calculations.

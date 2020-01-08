@@ -8,6 +8,7 @@ function addTargetRow(newRowNumber) {
     newrow.find('[name=system]').attr('name', 'system_' + nid);
     newrow.find('[name=time]').attr('name', 'time_' + nid);
     newrow.find('[name=priority]').attr('name', 'priority_' + nid);
+    newrow.find('[name=note]').attr('name', 'note_' + nid);
     newrow.find('[name=sort_order]').attr('name', 'sort_order_' + nid);
     var deletelink = newrow.find('#delete_template');
     deletelink.attr('id', 'delete_' + nid);

@@ -769,6 +769,7 @@ target = Table(
     Column('y', Float(precision=53, asdecimal=False), nullable=True),
     Column('time', Float(precision=53, asdecimal=False), nullable=True),
     Column('priority', Integer, nullable=True),
+    Column('note', Unicode(255), nullable=True),
     **table_opts)
 
 user = Table(

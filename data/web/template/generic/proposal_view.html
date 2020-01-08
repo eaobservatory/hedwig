@@ -256,8 +256,9 @@
                     <th>RA / Longitude</th>
                     <th>Dec / Latitude</th>
                     <th>System</th>
-                    <th>Time</th>
+                    <th>Time<br />(hours)</th>
                     <th>Priority<br />(1 highest)</th>
+                    <th>Notes</th>
                 </tr>
                 {% for target in targets.to_formatted_collection().values() %}
                     <tr>
@@ -265,15 +266,16 @@
                         <td>{{ target.x }}</td>
                         <td>{{ target.y }}</td>
                         <td>{{ target.system | coord_system_name }}</td>
-                        <td>{{ target.time }} {{ 'hours' if target.time }}</td>
+                        <td>{{ target.time }}</td>
                         <td>{{ target.priority }}</td>
+                        <td>{{ target.note }}</td>
                     </tr>
                 {% endfor %}
                 {% if target_total_time and (targets | length > 1) %}
                     <tr>
                         <th colspan="4">Total</th>
-                        <td class="total">{{ target_total_time | fmt('{}') }} hours</td>
-                        <td class="total">&nbsp;</td>
+                        <td class="total">{{ target_total_time | fmt('{}') }}</td>
+                        <td colspan="2" class="total">&nbsp;</td>
                     </tr>
                 {% endif %}
             </table>

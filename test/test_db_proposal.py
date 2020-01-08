@@ -2065,9 +2065,9 @@ class DBProposalTest(DBTestCase):
         self.assertFalse(result)
 
         records = TargetCollection([
-            (1, Target(1, proposal_id, 1, 'Obj 1', 1, 0.5, -0.5, 15.5, 1)),
-            (2, Target(2, proposal_id, 2, 'Obj 2', None, None, None, 13.5, 2)),
-            (3, Target(3, proposal_id, 3, 'Obj 3', 2, 335, 1.5, None, None)),
+            (1, Target(1, proposal_id, 1, 'Obj 1', 1, 0.5, -0.5, 15.5, 1, "Note 1")),
+            (2, Target(2, proposal_id, 2, 'Obj 2', None, None, None, 13.5, 2, "Note 2")),
+            (3, Target(3, proposal_id, 3, 'Obj 3', 2, 335, 1.5, None, None, "Note 3")),
         ])
 
         n = self.db.sync_proposal_target(proposal_id, records)
@@ -2083,6 +2083,7 @@ class DBProposalTest(DBTestCase):
             self.assertEqual(t.proposal_id, proposal_id)
             self.assertEqual(t.sort_order, i)
             self.assertEqual(t.name, 'Obj {}'.format(i))
+            self.assertEqual(t.note, 'Note {}'.format(i))
             i += 1
 
     def test_category(self):

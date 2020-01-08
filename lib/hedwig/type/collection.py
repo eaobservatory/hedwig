@@ -770,7 +770,13 @@ class TargetCollection(ResultCollection, CollectionOrdered,
             else:
                 priority = '{}'.format(v.priority)
 
-            ans[k] = v._replace(x=x, y=y, time=time, priority=priority)
+            if v.note is None:
+                note = ''
+            else:
+                note = v.note
+
+            ans[k] = v._replace(
+                x=x, y=y, time=time, priority=priority, note=note)
 
         return ans
 
@@ -829,8 +835,13 @@ class TargetCollection(ResultCollection, CollectionOrdered,
             except ValueError:
                 raise UserError('Could not parse priority for "{}".', v.name)
 
+            if v.note:
+                note = v.note
+            else:
+                note = None
+
             ans[k] = v._replace(system=system, x=x, y=y,
-                                time=time, priority=priority)
+                                time=time, priority=priority, note=note)
 
         return ans
 
