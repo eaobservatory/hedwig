@@ -259,7 +259,7 @@
                     <th>Time</th>
                     <th>Priority<br />(1 highest)</th>
                 </tr>
-                {% for target in targets.values() %}
+                {% for target in targets.to_formatted_collection().values() %}
                     <tr>
                         <td>{{ target.name }}</td>
                         <td>{{ target.x }}</td>

@@ -645,7 +645,7 @@ class GenericProposal(object):
 
         extra = {
             'abstract': proposal_text.get_role(role_class.ABSTRACT, None),
-            'targets': targets.to_formatted_collection(),
+            'targets': targets,
             'target_total_time': target_total_time,
             'calculators': self.calculators,
             'calculations': self._prepare_calculations(calculations),
@@ -822,6 +822,20 @@ class GenericProposal(object):
                     'A note on the target tool results has not been added.',
                     'Check targets with tools and edit note',
                     url_for('.tool_note_edit', proposal_id=proposal.id)))
+
+            for target in extra['targets'].values():
+                if (target.x == 0.0) and (target.y == 0.0):
+                    messages.append(ValidationMessage(
+                        False,
+                        'Target {} has coordinates (0, 0). '
+                        'This can cause your proposal to be processed '
+                        'incorrectly unless you really intend to observe '
+                        'at (0, 0). '
+                        'If the target does not have suitable fixed '
+                        'coordinates, please leave its position blank '
+                        'instead.'.format(target.name),
+                        'Edit target list',
+                        url_for('.target_edit', proposal_id=proposal.id)))
 
         with report.accumulate_notes('proposal_calculations') as messages:
             if extra['calculators'] and (not extra['calculations']):
