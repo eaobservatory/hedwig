@@ -125,8 +125,9 @@ class BaseTargetTool(object):
                     else target.name)
                 target_object = TargetObject(
                     target_name, target.system,
-                    parse_coord(target.system, target.x, target.y,
-                                target_name))
+                    coord=parse_coord(
+                        target.system, target.x, target.y, target_name),
+                    time=None)
 
             except UserError as e:
                 message = e.message
@@ -364,7 +365,9 @@ class BaseTargetTool(object):
 
         try:
             return (
-                TargetObject(name, system, coord_from_dec_deg(system, x, y)),
+                TargetObject(
+                    name, system, coord=coord_from_dec_deg(system, x, y),
+                    time=None),
                 extra_info)
         except:
             raise ParseError('Did not understand encoded query.')

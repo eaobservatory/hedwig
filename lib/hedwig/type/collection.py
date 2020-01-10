@@ -801,10 +801,28 @@ class TargetCollection(ResultCollection, CollectionOrdered,
             if not v.name:
                 raise UserError('Each target object should have a name.')
 
+            try:
+                if v.time:
+                    time = float(v.time)
+                else:
+                    time = None
+
+            except ValueError:
+                raise UserError('Could not parse time for "{}".', v.name)
+
+            try:
+                if v.priority:
+                    priority = int(v.priority)
+                else:
+                    priority = None
+            except ValueError:
+                raise UserError('Could not parse priority for "{}".', v.name)
+
             if v.x and v.y:
                 coord = parse_coord(system, v.x, v.y, v.name)
                 if as_object_list:
-                    ans.append(TargetObject(v.name, system, coord))
+                    ans.append(TargetObject(
+                        v.name, system, coord=coord, time=time))
                     continue
 
                 (x, y) = coord_to_dec_deg(coord)
@@ -818,22 +836,6 @@ class TargetCollection(ResultCollection, CollectionOrdered,
 
             else:
                 system = x = y = None
-
-            try:
-                if v.time:
-                    time = float(v.time)
-                else:
-                    time = None
-            except ValueError:
-                raise UserError('Could not parse time for "{}".', v.name)
-
-            try:
-                if v.priority:
-                    priority = int(v.priority)
-                else:
-                    priority = None
-            except ValueError:
-                raise UserError('Could not parse priority for "{}".', v.name)
 
             if v.note:
                 note = v.note
@@ -856,7 +858,8 @@ class TargetCollection(ResultCollection, CollectionOrdered,
         for v in self.values():
             if not (v.x is None or v.y is None):
                 ans.append(TargetObject(
-                    v.name, v.system, coord_from_dec_deg(v.system, v.x, v.y)))
+                    v.name, v.system,
+                    coord=coord_from_dec_deg(v.system, v.x, v.y), time=v.time))
 
         return ans
 

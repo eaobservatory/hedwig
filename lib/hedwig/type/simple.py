@@ -288,7 +288,7 @@ Target = namedtuple(
     'Target',
     [x.name for x in target.columns])
 
-TargetObject = namedtuple('TargetObject', ('name', 'system', 'coord'))
+TargetObject = namedtuple('TargetObject', ('name', 'system', 'coord', 'time'))
 
 TargetToolInfo = namedtuple(
     'TargetToolInfo',
