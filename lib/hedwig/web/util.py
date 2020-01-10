@@ -474,6 +474,30 @@ def send_file(
     return decorator
 
 
+def send_json():
+    """
+    Decorator for route functions which return JSON.
+
+    :raises Exception: if applied to a function with an attribute
+        `_hedwig_require_auth` because :func:`require_auth` should be
+        the outermost decorator.
+    """
+
+    def decorator(f):
+        if hasattr(f, '_hedwig_require_auth'):
+            raise Exception('@send_json applied after @require_auth')
+
+        @functools.wraps(f)
+        def decorated_function(*args, **kwargs):
+            return _FlaskResponse(
+                json.dumps(f(*args, **kwargs)),
+                mimetype='application/json')
+
+        return decorated_function
+
+    return decorator
+
+
 def templated(template):
     """
     Template application decorator.
