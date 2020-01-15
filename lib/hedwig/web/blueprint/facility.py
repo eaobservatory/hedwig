@@ -24,7 +24,7 @@ from ...error import FormattedError
 from ...type.enum import FigureType
 from ...type.simple import CalculatorInfo, TargetToolInfo
 from ..util import HTTPRedirect, \
-    require_admin, require_auth, send_file, templated, url_for
+    require_admin, require_auth, send_file, send_json, templated, url_for
 
 
 def create_facility_blueprint(db, facility):
@@ -137,6 +137,18 @@ def create_facility_blueprint(db, facility):
     @send_file()
     def review_call_tabulation_download(call_id):
         return facility.view_review_call_tabulation_download(db, call_id)
+
+    @bp.route('/call/<int:call_id>/review/allocation')
+    @require_auth(require_person=True)
+    @facility_template('call_review_allocation.html')
+    def review_call_allocation(call_id):
+        return facility.view_review_call_allocation(db, call_id)
+
+    @bp.route('/call/<int:call_id>/review/allocation/query')
+    @require_auth(require_person=True)
+    @send_json()
+    def review_call_allocation_query(call_id):
+        return facility.view_review_call_allocation_query(db, call_id)
 
     @bp.route('/call/<int:call_id>/review/review_stats')
     @require_auth(require_person=True)

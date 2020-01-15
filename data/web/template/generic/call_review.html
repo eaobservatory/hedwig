@@ -15,6 +15,9 @@
                 or
                 <a href="{{ url_for('.review_call_stats_download', call_id=call_id) }}">download as a CSV file</a>
             </li>
+            <li>
+                <a href="{{ url_for('.review_call_allocation', call_id=call_id) }}">View allocation details</a>
+            </li>
         {% endif %}
         {% if can_edit %}
             <li><a href="{{ url_for('.review_affiliation_weight', call_id=call_id) }}">Edit affiliation weights</a></li>

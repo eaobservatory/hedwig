@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -875,6 +875,59 @@ class JCMT(EAOFacility):
                 [allocation.total],
                 [allocation.weather.get(x) for x in weathers],
                 [allocation.instrument.get(x) for x in instruments])
+
+    def _get_review_call_allocation(self, db, call, can):
+        alloc = super(JCMT, self)._get_review_call_allocation(db, call, can)
+
+        alloc['categories'].update({
+            'jcmt_weather': {
+                'name': 'Weather',
+                'values': [
+                    ('{}'.format(k), v) for (k, v) in
+                    JCMTWeather.get_options().items()],
+                'is_scale': True,
+            },
+            'jcmt_instrument': {
+                'name': 'Instrument',
+                'values': [
+                    ('{}-{}'.format(*k), v) for (k, v) in
+                    JCMTInstrument.get_options_with_ancillary().items()],
+            },
+        })
+
+        return alloc
+
+    def _get_review_call_allocation_dynamic(self, db, call, can, proposals):
+        dyn = super(JCMT, self)._get_review_call_allocation_dynamic(
+            db, call, can, proposals)
+
+        proposal_ids = [x.id for x in proposals.values()]
+
+        jcmt_requests = db.search_jcmt_request(proposal_id=proposal_ids)
+        jcmt_allocations = db.search_jcmt_allocation(proposal_id=proposal_ids)
+
+        for proposal in proposals.values():
+            proposal_id = proposal.id
+
+            allocation = jcmt_allocations.subset_by_proposal(proposal_id)
+            if allocation:
+                total = allocation.get_total()
+            else:
+                total = jcmt_requests.subset_by_proposal(
+                    proposal_id).get_total()
+
+            dyn[proposal_id]['time'] = time = total.total
+
+            if time:
+                dyn[proposal_id]['category']['jcmt_weather'] = {
+                    '{}'.format(k): v / time
+                    for (k, v) in total.weather.items()}
+
+                dyn[proposal_id]['category']['jcmt_instrument'] = {
+                    '{}-{}'.format(*k): v / time
+                    for (k, v) in total.instrument.items()}
+
+        return dyn
 
     @with_proposal(permission=PermissionType.EDIT)
     def view_request_edit(self, db, proposal, can, form):

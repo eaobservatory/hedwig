@@ -314,6 +314,133 @@ class GenericReview(object):
                 [proposal['affiliations'].get(x.id) for x in affiliations])
 
     @with_call_review(permission=PermissionType.VIEW)
+    def view_review_call_allocation(self, db, call, can):
+        type_class = self.get_call_types()
+
+        ctx = {
+            'title': 'Allocation Details: {} {} {}'.format(
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type)),
+            'call': call,
+        }
+
+        ctx.update(self._get_review_call_allocation(db, call, can))
+
+        return ctx
+
+    def _get_review_call_allocation(self, db, call, can):
+        proposals = db.search_proposal(
+            call_id=call.id, state=ProposalState.submitted_states(),
+            with_members=True, with_decision=True)
+
+        affiliations = db.search_affiliation(
+            queue_id=call.queue_id, hidden=False,
+            with_weight_call_id=call.id)
+
+        affiliation_names = [
+            ('{}'.format(x.id), x.name) for x in affiliations.values()
+            if x.type == AffiliationType.STANDARD]
+
+        affiliation_names.append(('0', 'Unknown'))
+
+        proposal_ids = [x.id for x in proposals.values()]
+
+        targets = db.search_target(proposal_id=proposal_ids)
+
+        proposal_list = []
+        ra_bins = list(range(0, 24))
+        for proposal in proposals.values():
+            # Determine the fractional time spent in each RA bin, so that this
+            # can be scaled by the proposal's allocation, which may change
+            # later.  (At this level of detail we can't know whether an altered
+            # allocation corresponds to excluding particular targets.)
+            proposal_targets = targets.subset_by_proposal(proposal.id)
+
+            n_target = len(proposal_targets)
+            total_time = proposal_targets.total_time()
+
+            ra_fraction = defaultdict(float)
+            for target in proposal_targets.to_object_list():
+                if total_time:
+                    if target.time:
+                        fraction = target.time / total_time
+                    else:
+                        # The proposal does assign time to targets, but has
+                        # not done so for this one -- skip it for now.
+                        continue
+                else:
+                    fraction = 1.0 / n_target
+
+                ra = int(round(target.coord.icrs.ra.hour))
+                if ra > 23:
+                    ra -= 24
+
+                ra_fraction[ra] += fraction
+
+            info = {
+                'id': '{}'.format(proposal.id),
+                'code': self.make_proposal_code(db, proposal),
+                'ra': [ra_fraction[x] for x in ra_bins],
+                'category': {
+                    'affiliation': self.calculate_affiliation_assignment(
+                        db, proposal.members, affiliations),
+                },
+            }
+
+            proposal_list.append(info)
+
+        return {
+            'proposals': proposal_list,
+            'categories': {
+                'decision': {
+                    'name': 'Decision',
+                    'values': [
+                        ('e', 'Exempt'),
+                        ('a', 'Accept'),
+                        ('u', 'Undecided'),
+                        ('r', 'Reject'),
+                    ],
+                    'default': ['e', 'a'],
+                },
+                'affiliation': {
+                    'name': 'Affiliation',
+                    'values': affiliation_names},
+            },
+            'dynamic': self._get_review_call_allocation_dynamic(
+                db, call, can, proposals),
+            'ra_bins': ra_bins,
+        }
+
+    @with_call_review(permission=PermissionType.VIEW)
+    def view_review_call_allocation_query(self, db, call, can):
+        proposals = db.search_proposal(
+            call_id=call.id, state=ProposalState.submitted_states(),
+            with_decision=True)
+
+        return self._get_review_call_allocation_dynamic(
+            db, call, can, proposals)
+
+    def _get_review_call_allocation_dynamic(self, db, call, can, proposals):
+        """
+        Get dynamic information, including total time (hours) for each
+        proposal.
+
+        This method should be overridden by subclasses to return the most
+        suitable representative total time for each proposal.  For example
+        this could be the total allocation, falling back to the total
+        request if no allocation has yet been assigned.
+        """
+
+        return {
+            x.id: {
+                'decision': (
+                    ('e' if x.decision_exempt else 'a')
+                    if x.decision_accept else
+                    ('u' if x.decision_accept is None else 'r')),
+                'category': {},
+            } for x in proposals.values()}
+
+    @with_call_review(permission=PermissionType.VIEW)
     def view_review_call_stats(self, db, call, can):
         type_class = self.get_call_types()
 

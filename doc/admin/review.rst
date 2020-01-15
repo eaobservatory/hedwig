@@ -13,4 +13,5 @@ Review Processes
     review_final
     tabulation_decision
     review_statistics
+    review_allocation
     feedback
