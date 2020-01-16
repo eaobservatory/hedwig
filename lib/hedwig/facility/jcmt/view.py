@@ -879,21 +879,23 @@ class JCMT(EAOFacility):
     def _get_review_call_allocation(self, db, call, can):
         alloc = super(JCMT, self)._get_review_call_allocation(db, call, can)
 
-        alloc['categories'].update({
-            'jcmt_weather': {
+        alloc['categories'].extend([
+            {
+                'code': 'jcmt_weather',
                 'name': 'Weather',
                 'values': [
                     ('{}'.format(k), v) for (k, v) in
                     JCMTWeather.get_options().items()],
                 'is_scale': True,
             },
-            'jcmt_instrument': {
+            {
+                'code': 'jcmt_instrument',
                 'name': 'Instrument',
                 'values': [
                     ('{}-{}'.format(*k), v) for (k, v) in
                     JCMTInstrument.get_options_with_ancillary().items()],
             },
-        })
+        ])
 
         return alloc
 

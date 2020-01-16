@@ -391,8 +391,9 @@ class GenericReview(object):
 
         return {
             'proposals': proposal_list,
-            'categories': {
-                'decision': {
+            'categories': [
+                {
+                    'code': 'decision',
                     'name': 'Decision',
                     'values': [
                         ('e', 'Exempt'),
@@ -402,10 +403,11 @@ class GenericReview(object):
                     ],
                     'default': ['e', 'a'],
                 },
-                'affiliation': {
+                {
+                    'code': 'affiliation',
                     'name': 'Affiliation',
                     'values': affiliation_names},
-            },
+            ],
             'dynamic': self._get_review_call_allocation_dynamic(
                 db, call, can, proposals),
             'ra_bins': ra_bins,
