@@ -12,7 +12,7 @@ $(document).ready(function () {
     var proposals = alloc.data('proposals');
     var categories = alloc.data('categories');
     var ra_bins = alloc.data('ra_bins');
-    var default_bins = ra_bins.map(function () {return 0.0});
+    var default_bins = ra_bins.map(function () {return 0.0;});
 
     var merge_proposal_info = (function (dynamic) {
         for (var i in proposals) {
@@ -51,10 +51,10 @@ $(document).ready(function () {
         }
     });
 
-    alloc_chart = new Chart(alloc_canvas.get(0).getContext('2d'), {
+    var alloc_chart = new Chart(alloc_canvas.get(0).getContext('2d'), {
         type: 'bar',
         data: {
-            labels: ra_bins,
+            labels: ra_bins
         },
         options: {
             responsive: false,
@@ -108,7 +108,6 @@ $(document).ready(function () {
         radio.prop('value', category.code);
         radio.data('is_scale', (!! category.is_scale));
         radio.data('default', category['default']);
-        radio.change(function () {});
         var group = $('<span>Group by</span>');
         group.prepend(radio);
         row_group.append($('<td></td>').append(group));
@@ -320,7 +319,7 @@ $(document).ready(function () {
                 alloc_chart.data.datasets.push({
                     label: category.title,
                     backgroundColor: colors[color],
-                    data: category.ra,
+                    data: category.ra
                 });
             }
         }
