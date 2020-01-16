@@ -259,6 +259,29 @@ class UKIRT(EAOFacility):
 
         return tabulation
 
+    def _get_review_call_allocation_dynamic(self, db, call, can, proposals):
+        dyn = super(UKIRT, self)._get_review_call_allocation_dynamic(
+            db, call, can, proposals)
+
+        proposal_ids = [x.id for x in proposals.values()]
+
+        ukirt_requests = db.search_ukirt_request(proposal_id=proposal_ids)
+        ukirt_allocations = db.search_ukirt_allocation(proposal_id=proposal_ids)
+
+        for proposal in proposals.values():
+            proposal_id = proposal.id
+
+            allocation = ukirt_allocations.subset_by_proposal(proposal_id)
+            if allocation:
+                total = allocation.get_total()
+            else:
+                total = ukirt_requests.subset_by_proposal(
+                    proposal_id).get_total()
+
+            dyn[proposal_id]['time'] = total.total
+
+        return dyn
+
     def _get_proposal_tabulation_titles(self, tabulation):
         return chain(
             super(UKIRT, self)._get_proposal_tabulation_titles(tabulation),
