@@ -2005,6 +2005,14 @@ class IntegrationTest(DummyConfigTestCase):
         self._save_screenshot(self.admin_image_root,
                               'review_statistics')
 
+        # Look at the allocation details page
+        self.browser.get(review_process_url)
+        self.browser.find_element_by_link_text(
+            'View allocation details').click()
+
+        self._save_screenshot(self.admin_image_root,
+                              'allocation_details')
+
         # View reviews page.
         self.browser.get(review_process_url)
         self.browser.find_element_by_link_text('Reviews').click()
