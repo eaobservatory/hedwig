@@ -923,11 +923,13 @@ class JCMT(EAOFacility):
             if time:
                 dyn[proposal_id]['category']['jcmt_weather'] = {
                     '{}'.format(k): v / time
-                    for (k, v) in total.weather.items()}
+                    for (k, v) in total.weather.items()
+                    if k is not None}
 
                 dyn[proposal_id]['category']['jcmt_instrument'] = {
                     '{}-{}'.format(*k): v / time
-                    for (k, v) in total.instrument.items()}
+                    for (k, v) in total.instrument.items()
+                    if k is not None}
 
         return dyn
 
