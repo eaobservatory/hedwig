@@ -396,6 +396,11 @@ class GenericAdmin(object):
                 note_format=int(form['note_format']),
                 multi_semester=('multi_semester' in form))
 
+            if call_id is None:
+                call = call._replace(
+                    semester_id=int(form['semester_id']),
+                    queue_id=int(form['queue_id']))
+
             extra_info = self._view_call_edit_get(db, call, form)
 
             try:
@@ -404,10 +409,6 @@ class GenericAdmin(object):
 
                 if call_id is None:
                     # Create new call.
-                    call = call._replace(
-                        semester_id=int(form['semester_id']),
-                        queue_id=int(form['queue_id']))
-
                     if (call.semester_id, call.queue_id) in existing_calls:
                         raise UserError(
                             'A call of this type for the selected semester '
