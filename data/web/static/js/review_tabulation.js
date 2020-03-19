@@ -1,7 +1,7 @@
 $(document).ready(function () {
     var tabulation = $('table#tabulation');
 
-    enable_table_sorting(tabulation);
+    enable_table_sorting(tabulation, true);
     tabulation.stickyTableHeaders();
 
     var filter_boxes = $('#filter_decision').find('input[type=checkbox]');

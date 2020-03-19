@@ -6,15 +6,55 @@ function disable_futile_labels() {
     });
 }
 
-function enable_table_sorting(table) {
+function enable_table_sorting(table, alter_url) {
     var sort_headings = table.find('th.sortable');
     var table_body = table.find('tbody').first();
     var last_sorted_by = null;
     var sort_direction = -1;
 
+    var apply_sort_column = (function (sort_key) {
+        var arr = [];
+        var i;
+
+        last_sorted_by = sort_key;
+
+        table_body.children('tr').each(function () {
+            arr.push({row: this, value: $(this).data('sortinfo')[sort_key]});
+        });
+
+        arr.sort(function (a, b) {
+            if (a.value === b.value) {
+                return 0;
+            }
+            if (a.value === null && b.value !== null) {
+                return 1;
+            }
+            if (b.value === null && a.value !== null) {
+                return -1;
+            }
+            return (sort_direction * (a.value < b.value ? -1 : 1));
+        });
+
+        for (i in arr) {
+            table_body.append($(arr[i].row).detach());
+        }
+
+        sort_direction = - sort_direction;
+
+        sort_headings.removeClass('sorted_asc').addClass('sortable');
+        sort_headings.removeClass('sorted_desc').addClass('sortable');
+        sort_headings.each(function () {
+            var heading = $(this);
+            if (heading.data('sortkey') === sort_key) {
+                heading.removeClass('sortable').addClass((sort_direction < 0 ) ? 'sorted_asc' : 'sorted_desc');
+            }
+        });
+    });
+
     var enable_sort_column = (function (heading) {
         var sort_key = heading.data('sortkey');
         var default_sort_order = 1;
+        var sort_total = false;
 
         if (heading.hasClass('sortreverse')) {
             default_sort_order = -1;
@@ -24,47 +64,51 @@ function enable_table_sorting(table) {
             last_sorted_by = sort_key;
         }
 
+        if (heading.hasClass('sorttotal')) {
+            sort_total = true;
+        }
+
         heading.click(function () {
             if (sort_key !== last_sorted_by) {
-                last_sorted_by = sort_key;
                 sort_direction = default_sort_order;
             }
 
-            var arr = [];
-            var i;
+            apply_sort_column(sort_key);
 
-            table_body.children('tr').each(function () {
-                arr.push({row: this, value: $(this).data('sortinfo')[sort_key]});
-            });
-
-            arr.sort(function (a, b) {
-                if (a.value === b.value) {
-                    return 0;
+            if (alter_url) {
+                var params = new URLSearchParams();
+                if (! sort_total) {
+                    var prevparams = new URLSearchParams(window.location.search);
+                    prevparams.forEach(function (value, key) {
+                        if (value !== sort_key) {
+                            params.append(key, value);
+                        }
+                    });
                 }
-                if (a.value === null && b.value !== null) {
-                    return 1;
-                }
-                if (b.value === null && a.value !== null) {
-                    return -1;
-                }
-                return (sort_direction * (a.value < b.value ? -1 : 1));
-            });
-
-            for (i in arr) {
-                table_body.append($(arr[i].row).detach());
+                params.append((sort_direction < 0 ? 'sortasc' : 'sortdesc'), sort_key);
+                window.history.replaceState(
+                    null, 'Sort by ' + sort_key + (sort_direction < 0 ? ' ascending' : ' descending)'),
+                    window.location.pathname + '?' + params.toString());
             }
-
-            sort_direction = - sort_direction;
-
-            sort_headings.removeClass('sorted_asc').addClass('sortable');
-            sort_headings.removeClass('sorted_desc').addClass('sortable');
-            heading.removeClass('sortable').addClass((sort_direction < 0 ) ? 'sorted_asc' : 'sorted_desc');
         });
     });
 
     sort_headings.each(function () {
         enable_sort_column($(this));
     });
+
+    if (alter_url) {
+        var params = new URLSearchParams(window.location.search);
+        params.forEach(function (value, key) {
+            if (key === 'sortasc') {
+                sort_direction = 1;
+                apply_sort_column(value);
+            } else if (key === 'sortdesc') {
+                sort_direction = -1;
+                apply_sort_column(value);
+            }
+        });
+    }
 }
 
 function enable_table_col_sorting(table) {
