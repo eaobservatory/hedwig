@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -505,11 +505,11 @@ class PeopleView(object):
 
     def person_list(self, db, args):
         # Only show public, registered members unless the user has
-        # administrative privileges.
+        # suitable authorization.
         public = True
         can_view_unregistered = False
         registered = True
-        if session.get('is_admin', False) and auth.can_be_admin(db):
+        if auth.for_person(db, None).view:
             public = None
             can_view_unregistered = True
             registered = int_or_none(args.get('registered', '1'))
@@ -1078,11 +1078,11 @@ class PeopleView(object):
     @with_institution(permission=PermissionType.VIEW)
     def institution_view(self, db, institution, can):
         # Only show public, registered members unless the user has
-        # administrative privileges.
+        # suitable authorization.
         public = True
         registered = True
         is_admin = session.get('is_admin', False)
-        if is_admin and auth.can_be_admin(db):
+        if auth.for_person(db, None, auth_cache=can.cache).view:
             public = None
             registered = None
 

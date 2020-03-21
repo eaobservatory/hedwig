@@ -80,8 +80,6 @@ class GenericReview(object):
         role_class = self.get_reviewer_roles()
         type_class = self.get_call_types()
 
-        is_admin = session.get('is_admin', False)
-
         # Which reviewer roles do we wish to show in the list of proposals?
         reviewer_roles = [
             x for x in [role_class.CTTEE_PRIMARY, role_class.CTTEE_SECONDARY]
@@ -97,7 +95,8 @@ class GenericReview(object):
             member_pi = proposal.members.get_pi(default=None)
             if member_pi is not None:
                 member_pi = with_can_view(
-                    member_pi, (is_admin or member_pi.person_public))
+                    member_pi, auth.for_person_member(
+                        db, member_pi, auth_cache=can.cache).view)
 
             review_can = auth.for_review(
                 role_class, db, reviewer=None, proposal=proposal,
@@ -108,8 +107,9 @@ class GenericReview(object):
 
             reviewers = None
             if proposal.reviewers is not None:
-                reviewers = proposal.reviewers.map_values(lambda x:
-                    with_can_view(x, (is_admin or x.person_public)))
+                reviewers = proposal.reviewers.map_values(
+                    lambda x: with_can_view(x, auth.for_person_reviewer(
+                        db, x, auth_cache=can.cache).view))
 
             proposals.append(ProposalWithExtraPermissions(
                 *proposal._replace(member=member_pi, reviewers=reviewers),
@@ -184,8 +184,6 @@ class GenericReview(object):
         is retrieved.
         """
 
-        is_admin = session.get('is_admin', False)
-
         role_class = self.get_reviewer_roles()
 
         proposals = db.search_proposal(
@@ -200,11 +198,14 @@ class GenericReview(object):
 
         proposal_list = []
         for proposal in proposals.values():
-            member_pi = proposal.members.get_pi(default=None)
-
             can_view_review = auth.for_review(
                 role_class, db, reviewer=None, proposal=proposal,
                 auth_cache=can.cache).view
+
+            members = proposal.members.map_values(lambda x: with_can_view(
+                x, auth.for_person_member(db, x, auth_cache=can.cache).view))
+
+            member_pi = members.get_pi(default=None)
 
             n_other = 0
             for member in proposal.members.values():
@@ -218,8 +219,7 @@ class GenericReview(object):
                 'can_view_review': can_view_review,
                 'member_pi': member_pi,
                 'members_other': n_other,
-                'members': proposal.members.map_values(
-                    lambda x: with_can_view(x, (is_admin or x.person_public))),
+                'members': members,
                 'code': self.make_proposal_code(db, proposal),
                 'affiliations': self.calculate_affiliation_assignment(
                     db, proposal.members, affiliations),
@@ -239,7 +239,8 @@ class GenericReview(object):
 
                     reviewers[reviewer_id] = with_can_view_edit_rating(
                         reviewer,
-                        (is_admin or reviewer.person_public),
+                        auth.for_person_reviewer(
+                            db, reviewer, auth_cache=can.cache).view,
                         reviewer_can.edit, reviewer_can.view_rating)
 
                 (overall_rating, std_dev) = self.calculate_overall_rating(
@@ -501,8 +502,6 @@ class GenericReview(object):
                 re.sub('[^-_a-z0-9]', '_', type_class.url_path(call.type))))
 
     def _get_review_statistics(self, db, call, can):
-        is_admin = session.get('is_admin', False)
-
         role_class = self.get_reviewer_roles()
 
         proposals = db.search_proposal(
@@ -551,7 +550,8 @@ class GenericReview(object):
                     persons[person_id] = {
                         'id': reviewer.person_id,
                         'name': reviewer.person_name,
-                        'can_view': (is_admin or reviewer.person_public),
+                        'can_view': auth.for_person_reviewer(
+                            db, reviewer, auth_cache=can.cache).view,
                     }
 
                 ratings[proposal.id][person_id] = rating
@@ -698,9 +698,17 @@ class GenericReview(object):
                 roles = role_class.get_editable_roles(proposal.state)
                 state_editable_roles[proposal.state] = roles
 
+            member_pi = proposal.members.get_pi(default=None)
+            if member_pi is not None:
+                member_pi = with_can_view(member_pi, auth.for_person_member(
+                    db, member_pi, auth_cache=can.cache).view)
+
             proposals.append(ProposalWithInviteRoles(
                 *proposal._replace(
-                    member=proposal.members.get_pi(default=None)),
+                    member=member_pi,
+                    reviewers=proposal.reviewers.map_values(
+                        lambda x: with_can_view(x, auth.for_person_reviewer(
+                            db, x, auth_cache=can.cache).view))),
                 invite_roles=[x for x in invite_roles if x in roles],
                 add_roles=auth.can_add_review_roles(
                     type_class, role_class, db, proposal,
@@ -768,8 +776,8 @@ class GenericReview(object):
             member_pi = proposal.members.get_pi(default=None)
             if member_pi is not None:
                 proposal = proposal._replace(member=with_can_view(
-                    member_pi, (session.get('is_admin', False)
-                                or member_pi.person_public)))
+                    member_pi, auth.for_person_member(
+                        db, member_pi, auth_cache=can.cache).view))
 
             return ProposalWithReviewerPersons(
                 *proposal, code=self.make_proposal_code(db, proposal),
@@ -970,7 +978,6 @@ class GenericReview(object):
 
         # Prepare the list of reviewers and proposal reviews.  (This is needed
         # both to display the confirmation page and to send the notifications.)
-        is_admin = session.get('is_admin', False)
         reviewers = OrderedDict()
 
         for proposal in db.search_proposal(
@@ -987,7 +994,8 @@ class GenericReview(object):
 
                 reviewers[person_id].append(proposal._replace(
                     reviewers=None, reviewer=with_can_view(
-                        reviewer, (is_admin or reviewer.person_public))))
+                        reviewer, auth.for_person_reviewer(
+                            db, reviewer, auth_cache=can.cache).view)))
 
         # Get the deadline for this review role.
         deadline = db.search_review_deadline(
@@ -1137,7 +1145,9 @@ class GenericReview(object):
         except NoSuchRecord:
             raise HTTPError('The corresponding call was not found')
 
-        if not auth.for_call_review(db, call).edit:
+        auth_cache = {}
+
+        if not auth.for_call_review(db, call, auth_cache=auth_cache).edit:
             raise HTTPForbidden('Edit permission denied for this call.')
 
         proposal_person_ids = [
@@ -1265,9 +1275,8 @@ class GenericReview(object):
         # Get the PI of the proposal (as for a with_member_pi search).
         member_pi = proposal.members.get_pi(default=None)
         if member_pi is not None:
-            member_pi = with_can_view(
-                member_pi,
-                (session.get('is_admin', False) or member_pi.person_public))
+            member_pi = with_can_view(member_pi, auth.for_person_member(
+                db, member_pi, auth_cache=auth_cache).view)
 
         proposal_code = self.make_proposal_code(db, proposal)
 
@@ -1523,8 +1532,10 @@ class GenericReview(object):
                 'There is already a "{}" reviewer for this proposal.',
                 role_info.name)
 
+        auth_cache = {}
+
         can_add_roles = auth.can_add_review_roles(
-            type_class, role_class, db, proposal)
+            type_class, role_class, db, proposal, auth_cache=auth_cache)
 
         if reviewer_role not in can_add_roles:
             raise HTTPForbidden(
@@ -1532,7 +1543,8 @@ class GenericReview(object):
                     role_info.name))
 
         return self._view_review_new_or_edit(
-            db, None, proposal, args, form, reviewer_role=reviewer_role)
+            db, None, proposal, args, form, reviewer_role=reviewer_role,
+            auth_cache=auth_cache)
 
     @with_review(permission=PermissionType.EDIT, allow_unaccepted=True)
     def view_review_accept(self, db, reviewer, proposal, can, args, form):
@@ -1650,16 +1662,14 @@ class GenericReview(object):
         except NoSuchRecord:
             abstract = None
 
-        is_admin = session.get('is_admin', False)
-
         return {
             'title': '{}: Accept {}'.format(
                 proposal_code,
                 role_class.get_name_with_review(reviewer.role)),
             'reviewer': reviewer,
             'proposal': proposal._replace(members=proposal.members.map_values(
-                lambda x: with_can_view(
-                    x, (is_admin or x.person_public)))),
+                lambda x: with_can_view(x, auth.for_person_member(
+                    db, x, auth_cache=can.cache).view))),
             'proposal_code': proposal_code,
             'abstract': abstract,
             'categories': db.search_proposal_category(
@@ -1685,10 +1695,10 @@ class GenericReview(object):
                  with_decision=True, with_decision_note=True)
     def view_review_edit(self, db, reviewer, proposal, can, args, form):
         return self._view_review_new_or_edit(
-            db, reviewer, proposal, args, form)
+            db, reviewer, proposal, args, form, auth_cache=can.cache)
 
     def _view_review_new_or_edit(self, db, reviewer, proposal, args, form,
-                                 reviewer_role=None):
+                                 reviewer_role=None, auth_cache=None):
         role_class = self.get_reviewer_roles()
 
         if reviewer is None:
@@ -1877,9 +1887,8 @@ class GenericReview(object):
             'target': target,
             'proposal_code': proposal_code,
             'proposal': proposal,
-            'reviewer': with_can_view(
-                reviewer,
-                (session.get('is_admin', False) or reviewer.person_public)),
+            'reviewer': with_can_view(reviewer, auth.for_person_reviewer(
+                db, reviewer, auth_cache=auth_cache).view),
             'role_info': role_info,
             'assessment_options': Assessment.get_options(),
             'message': message,
@@ -2054,8 +2063,6 @@ class GenericReview(object):
         role_class = self.get_reviewer_roles()
         text_role_class = self.get_text_roles()
 
-        is_admin = session.get('is_admin', False)
-
         auth_cache = {}
         if not auth.for_review(role_class, db,
                                reviewer=None, proposal=proposal,
@@ -2077,7 +2084,8 @@ class GenericReview(object):
         member_pi = proposal.members.get_pi(default=None)
         if member_pi is not None:
             member_pi = with_can_view(
-                member_pi, (is_admin or member_pi.person_public))
+                member_pi, auth.for_person_member(
+                    db, member_pi, auth_cache=auth_cache).view)
         proposal = proposal._replace(member=member_pi, reviewers=reviewers)
 
         # Add permission fields and hide non-public notes so that we don't
@@ -2110,7 +2118,8 @@ class GenericReview(object):
             reviewers[reviewer_id] = ReviewerWithCalcFig(
                 *reviewer,
                 calculations=calculations, figures=figures,
-                can_view=(is_admin or reviewer.person_public),
+                can_view=auth.for_person_reviewer(
+                    db, reviewer, auth_cache=auth_cache).view,
                 can_edit=reviewer_can.edit,
                 can_view_rating=reviewer_can.view_rating)
 
@@ -2136,7 +2145,10 @@ class GenericReview(object):
     @with_proposal(permission=PermissionType.NONE,
                    with_decision=True, with_decision_note=True)
     def view_proposal_decision(self, db, proposal, args, form):
-        if not auth.for_proposal_decision(db, proposal).edit:
+        auth_cache = {}
+
+        if not auth.for_proposal_decision(
+                db, proposal, auth_cache=auth_cache).edit:
             raise HTTPForbidden(
                 'Decision edit permission denied for this proposal.')
 
@@ -2201,8 +2213,8 @@ class GenericReview(object):
         member_pi = proposal.members.get_pi(default=None)
         if member_pi is not None:
             member_pi = with_can_view(
-                member_pi,
-                session.get('is_admin', False) or member_pi.person_public)
+                member_pi, auth.for_person_member(
+                    db, member_pi, auth_cache=auth_cache).view)
 
         ctx = {
             'title': '{}: Decision'.format(proposal_code),
@@ -2298,13 +2310,12 @@ class GenericReview(object):
             raise HTTPRedirect(url_for('.review_call', call_id=call.id))
 
         if call_proposals is not None:
-            is_admin = session.get('is_admin', False)
-
             call_proposals = call_proposals.map_values(
                 lambda x: ProposalWithCode(
                     *x, code=self.make_proposal_code(db, x)
                 )._replace(member=with_can_view(
-                    x.member, (is_admin or x.member.person_public))))
+                    x.member, auth.for_person_member(
+                        db, x.member, auth_cache=can.cache).view)))
 
         # For information, determine which review roles are closing and what
         # their deadlines are.
@@ -2393,8 +2404,6 @@ class GenericReview(object):
             except UserError as e:
                 message = e.message
 
-        is_admin = session.get('is_admin', False)
-
         return {
             'title': 'Feedback: {} {} {}'.format(
                 call.semester_name, call.queue_name,
@@ -2404,7 +2413,7 @@ class GenericReview(object):
                 lambda x: ProposalWithCode(
                     *x, code=self.make_proposal_code(db, x)
                 )._replace(reviewers=x.reviewers.map_values(
-                    lambda y: with_can_view(
-                        y, (is_admin or y.person_public))))),
+                    lambda y: with_can_view(y, auth.for_person_reviewer(
+                        db, y, auth_cache=can.cache).view)))),
             'message': message,
         }

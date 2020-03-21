@@ -24,7 +24,7 @@ from ..db.util import memoized
 from ..error import NoSuchRecord, NoSuchValue
 from ..type.collection import ProposalCollection, ReviewerCollection
 from ..type.enum import GroupType, ProposalState, ReviewState
-from ..type.simple import Reviewer
+from ..type.simple import Person, Reviewer
 from ..type.util import null_tuple
 from ..web.util import session, HTTPError, HTTPForbidden, \
     HTTPRedirectWithReferrer, url_for
@@ -83,6 +83,9 @@ def for_person(db, person, auth_cache=None):
     """
     Determine the current user's authorization regarding this
     profile.
+
+    `person` can be set to `None` to skip person-specific authorization.
+    (Access will then be granted based only on administrative access.)
     """
 
     if 'user_id' not in session:
@@ -90,6 +93,9 @@ def for_person(db, person, auth_cache=None):
     elif (session.get('is_admin', False)
             and can_be_admin(db, auth_cache=auth_cache)):
         return yes
+
+    if person is None:
+        return no
 
     if person.user_id is not None:
         # This is a registered user: allow access based on the "public"
@@ -129,6 +135,34 @@ def for_person(db, person, auth_cache=None):
                 return yes
 
     return auth
+
+
+def for_person_member(db, member, auth_cache=None):
+    """
+    Determine authorization for a person profile, based on a member record.
+
+    This constucts a dummy person record and then calls :func:`for_person`.
+    """
+
+    return for_person(db, null_tuple(Person)._replace(
+        id=member.person_id,
+        user_id=member.user_id,
+        public=member.person_public,
+    ), auth_cache=auth_cache)
+
+
+def for_person_reviewer(db, reviewer, auth_cache=None):
+    """
+    Determine authorization for a person profile, based on a reviewer record.
+
+    This constucts a dummy person record and then calls :func:`for_person`.
+    """
+
+    return for_person(db, null_tuple(Person)._replace(
+        id=reviewer.person_id,
+        user_id=reviewer.user_id,
+        public=reviewer.person_public,
+    ), auth_cache=auth_cache)
 
 
 def for_institution(db, institution, auth_cache=None):

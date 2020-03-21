@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1318,6 +1318,7 @@ class ProposalPart(object):
             person.c.name.label('person_name'),
             person.c.public.label('person_public'),
             (person.c.user_id.isnot(None)).label('person_registered'),
+            person.c.user_id.label('user_id'),
             affiliation.c.name.label('affiliation_name'),
             coalesce(member.c.institution_id, person.c.institution_id).label(
                 'resolved_institution_id'),
@@ -1591,6 +1592,7 @@ class ProposalPart(object):
                 member.c.person_id,
                 person.c.name.label('pi_name'),
                 person.c.public.label('pi_public'),
+                person.c.user_id.label('pi_user_id'),
                 affiliation.c.name.label('pi_affiliation'),
             ])
             select_from = select_from.outerjoin(
@@ -1778,6 +1780,7 @@ class ProposalPart(object):
                         values.pop('person_id'),
                         values.pop('pi_name'),
                         values.pop('pi_public'),
+                        values.pop('pi_user_id'),
                         values.pop('pi_affiliation'))
 
                     # If there was no such person, set the whole "member_info"

@@ -594,8 +594,7 @@ class GenericProposal(object):
             'is_submitted': ProposalState.is_submitted(proposal.state),
             'proposal': proposal._replace(members=proposal.members.map_values(
                 lambda x: with_can_view(
-                    x, (is_admin or x.person_public
-                        or (can.edit and not x.person_registered))))),
+                    x, auth.for_person_member(db, x, auth_cache=can.cache).view))),
             'students': proposal.members.get_students(),
             'proposal_code': self.make_proposal_code(db, proposal),
             'show_person_proposals_callout': is_first_view,

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -365,6 +365,7 @@ class ReviewPart(object):
             person.c.name.label('person_name'),
             person.c.public.label('person_public'),
             (person.c.user_id.isnot(None)).label('person_registered'),
+            person.c.user_id.label('user_id'),
             person.c.institution_id,
             institution.c.name.label('institution_name'),
             institution.c.department.label('institution_department'),

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -128,7 +128,7 @@ Link = namedtuple(
 Member = namedtuple(
     'Member',
     [x.name for x in member.columns if x.name not in ('institution_id',)] +
-    ['person_name', 'person_public', 'person_registered',
+    ['person_name', 'person_public', 'person_registered', 'user_id',
      'affiliation_name',
      'resolved_institution_id',
      'institution_name', 'institution_department',
@@ -144,7 +144,7 @@ MemberInstitution = namedtuple(
 
 MemberPIInfo = namedtuple(
     'MemberPIInfo',
-    ['person_id', 'person_name', 'person_public', 'affiliation_name'])
+    ['person_id', 'person_name', 'person_public', 'user_id', 'affiliation_name'])
 
 Message = namedtuple(
     'Message',
@@ -240,7 +240,7 @@ ProposalText = namedtuple(
 Reviewer = namedtuple(
     'Reviewer',
     [x.name for x in reviewer.columns] +
-    ['person_name', 'person_public', 'person_registered',
+    ['person_name', 'person_public', 'person_registered', 'user_id',
      'institution_id', 'institution_name', 'institution_department',
      'institution_organization', 'institution_country',
      'invitation_token', 'invitation_expiry', 'review_extra',
