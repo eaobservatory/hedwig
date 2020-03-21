@@ -775,6 +775,7 @@ class PeoplePart(object):
         else:
             stmt = stmt.order_by(
                 institution.c.name.asc(),
+                institution.c.id.asc(),
                 institution_log.c.id.desc())
 
         ans = ResultCollection()
