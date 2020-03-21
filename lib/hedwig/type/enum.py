@@ -64,7 +64,7 @@ class AnnotationType(EnumBasic):
     ))
 
 
-class CallState(EnumBasic):
+class CallState(EnumBasic, EnumDisplayClass):
     """
     Class representing states of a call for proposals.
 
@@ -77,12 +77,12 @@ class CallState(EnumBasic):
     CLOSED = 3
 
     StateInfo = namedtuple(
-        'StateInfo', ('name',))
+        'StateInfo', ('name', 'display_class'))
 
     _info = OrderedDict((
-        (UNOPENED,  StateInfo('Not yet open')),
-        (OPEN,      StateInfo('Open')),
-        (CLOSED,    StateInfo('Closed')),
+        (UNOPENED,  StateInfo('Not yet open', 'future')),
+        (OPEN,      StateInfo('Open',         'open')),
+        (CLOSED,    StateInfo('Closed',       'closed')),
     ))
 
 
@@ -930,7 +930,7 @@ class ReviewState(EnumBasic, EnumAvailable, EnumDisplayClass):
         return cls._info[state].present
 
 
-class SemesterState(EnumBasic):
+class SemesterState(EnumBasic, EnumDisplayClass):
     """
     Class representing states of a semester.
 
@@ -943,12 +943,12 @@ class SemesterState(EnumBasic):
     PAST = 3
 
     StateInfo = namedtuple(
-        'StateInfo', ('name',))
+        'StateInfo', ('name', 'display_class'))
 
     _info = OrderedDict((
-        (FUTURE,  StateInfo('Future')),
-        (CURRENT, StateInfo('Current')),
-        (PAST,    StateInfo('Past')),
+        (FUTURE,  StateInfo('Future',  'future')),
+        (CURRENT, StateInfo('Current', 'current')),
+        (PAST,    StateInfo('Past',    'past')),
     ))
 
 

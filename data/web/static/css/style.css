@@ -162,6 +162,18 @@ td.no_change {
     color: #888;
 }
 
+td.semester_future, td.call_future {
+    background: #4F4;
+}
+
+td.semester_current, td.call_open {
+    background: #FFA;
+}
+
+td.semester_past, td.call_closed {
+    background: #F88;
+}
+
 p.warning {
     font-weight: bold;
     background: #FAA;

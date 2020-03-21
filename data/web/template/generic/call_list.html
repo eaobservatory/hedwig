@@ -52,7 +52,7 @@
                                 {{ call.type | call_type_name(facility_call_type_class) }}
                             </a>
                         </td>
-                        <td>{{ call.state | call_state_name }}</td>
+                        <td class="{{ call.state | call_state_class }}">{{ call.state | call_state_name }}</td>
                         <td class="number_center">
                             {% if call.proposal_count %}
                                 {{ call.proposal_count }}

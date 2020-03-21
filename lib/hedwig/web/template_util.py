@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -109,6 +109,14 @@ def register_template_utils(app):
         if value is None:
             return ''
         return CallState.get_name(value)
+
+    @app.template_filter()
+    def call_state_class(value):
+        try:
+            return 'call_{}'.format(
+                CallState.get_display_class(value))
+        except KeyError:
+            return ''
 
     @app.template_filter()
     def call_type_name(value, type_class):
@@ -337,6 +345,14 @@ def register_template_utils(app):
             return SemesterState.get_name(value)
         except KeyError:
             return 'Unknown state'
+
+    @app.template_filter()
+    def semester_state_class(value):
+        try:
+            return 'semester_{}'.format(
+                SemesterState.get_display_class(value))
+        except KeyError:
+            return ''
 
     @app.template_filter()
     def text_role_name(value, role_class):
