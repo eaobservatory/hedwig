@@ -33,7 +33,7 @@ from ..config import get_countries
 from ..type.enum import AffiliationType, Assessment, \
     AttachmentState, CallState, GroupType, MessageState, MessageThreadType, \
     PersonTitle, ProposalState, PublicationType, \
-    ReviewState, SemesterState, UserLogEvent
+    ReviewState, SemesterState, SiteGroupType, UserLogEvent
 
 from .format import format_text
 from .util import mangle_email_address as _mangle_email_address
@@ -353,6 +353,12 @@ def register_template_utils(app):
                 SemesterState.get_display_class(value))
         except KeyError:
             return ''
+
+    @app.template_filter()
+    def site_group_type_name(value):
+        if value is None:
+            return ''
+        return SiteGroupType.get_name(value)
 
     @app.template_filter()
     def text_role_name(value, role_class):

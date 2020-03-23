@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2018 East Asian Observatory.
+# Copyright (C) 2015-2020 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -26,7 +26,7 @@ from flask import Flask
 from jinja2_orderblocks import OrderBlocks
 
 from ..config import get_config, get_database, get_facilities, get_home
-from ..type.enum import GroupType, MessageThreadType
+from ..type.enum import GroupType, MessageThreadType, SiteGroupType
 from ..type.simple import FacilityInfo
 from .template_util import register_template_utils
 from .util import check_session_expiry, \
@@ -120,6 +120,8 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
     app.url_map.converters['hedwig_group'] = make_enum_converter(GroupType)
     app.url_map.converters['hedwig_thread'] = \
         make_enum_converter(MessageThreadType)
+    app.url_map.converters['hedwig_site_group'] = \
+        make_enum_converter(SiteGroupType)
 
     for facility in facilities.values():
         app.url_map.converters['hedwig_call_type_{}'.format(facility.code)] = \

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -753,6 +753,17 @@ semester = Table(
     Column('description_format', Integer, nullable=False),
     UniqueConstraint('facility_id', 'name'),
     UniqueConstraint('facility_id', 'code'),
+    **table_opts)
+
+site_group_member = Table(
+    'site_group_member',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('site_group_type', Integer, nullable=False),
+    Column('person_id', None,
+           ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    UniqueConstraint('site_group_type', 'person_id'),
     **table_opts)
 
 target = Table(

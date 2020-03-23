@@ -952,6 +952,32 @@ class SemesterState(EnumBasic, EnumDisplayClass):
     ))
 
 
+class SiteGroupType(EnumAllowUser, EnumBasic, EnumURLPath):
+    """
+    Class representing groups of people with site-wide administrative roles.
+    """
+
+    PROFILE_VIEWER = 1
+
+    SiteGroupInfo = namedtuple(
+        'SiteGroupInfo',
+        ('name', 'view_all_profile',
+         'allow_user', 'url_path'))
+
+    _info = OrderedDict((
+        #           Authorization: Prof.  User
+        (PROFILE_VIEWER, SiteGroupInfo(
+            'Profile viewers',     True,  True,
+            'prof_view')),
+    ))
+
+    @classmethod
+    def view_all_profile_groups(cls):
+        """Get a list of groups with the `view_all_profile` privilege."""
+
+        return [k for (k, v) in cls._info.items() if v.view_all_profile]
+
+
 class BaseTextRole(EnumBasic, EnumCode, EnumURLPath):
     """
     Base for classes representing roles which a piece of text may have

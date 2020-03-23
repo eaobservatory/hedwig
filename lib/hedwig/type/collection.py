@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -737,6 +737,33 @@ class ReviewFigureCollection(ResultCollection, CollectionOrdered):
     """
 
     pass
+
+
+class SiteGroupMemberCollection(ResultCollection):
+    """
+    Class to hold a collection of site group members.
+    """
+
+    def has_entry(self, site_group_type=None, person_id=None):
+        """
+        Check whether the collection has an entry matching the given
+        criteria.
+        """
+
+        for x in self.values():
+            if (all((matches_constraint(x.site_group_type, site_group_type),
+                     matches_constraint(x.person_id, person_id)))):
+                return True
+
+        return False
+
+    def values_by_site_group_type(self, site_group_type):
+        """
+        Get a list of the group members with the given role.
+        """
+
+        return [x for x in self.values()
+                if matches_constraint(x.site_group_type, site_group_type)]
 
 
 class TargetCollection(ResultCollection, CollectionOrdered,

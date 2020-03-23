@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -27,13 +27,14 @@ from hedwig.type.collection import \
     AffiliationCollection, CallCollection, CallPreambleCollection, \
     EmailCollection, GroupMemberCollection, MemberCollection, \
     ResultCollection, ReviewDeadlineCollection, \
-    ProposalCollection, ProposalFigureCollection, ReviewerCollection
+    ProposalCollection, ProposalFigureCollection, ReviewerCollection, \
+    SiteGroupMemberCollection
 from hedwig.type.enum import AffiliationType, BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, \
-    ReviewState
+    ReviewState, SiteGroupType
 from hedwig.type.simple import \
     Affiliation, Call, CallPreamble, Email, GroupMember, Member, \
-    Proposal, ProposalFigureInfo, Reviewer, ReviewDeadline
+    Proposal, ProposalFigureInfo, Reviewer, ReviewDeadline, SiteGroupMember
 from hedwig.type.util import null_tuple
 
 from .compat import TestCase
@@ -633,3 +634,23 @@ class CollectionTypeTestCase(TestCase):
         self.assertEqual(c.get_role(3, default="my default"), "my default")
         with self.assertRaises(NoSuchValue):
             c.get_role(3)
+
+    def test_site_group_member_collection(self):
+        c = SiteGroupMemberCollection()
+
+        c[101] = null_tuple(SiteGroupMember)._replace(
+            id=101, site_group_type=SiteGroupType.PROFILE_VIEWER)
+        c[102] = null_tuple(SiteGroupMember)._replace(
+            id=102, site_group_type=SiteGroupType.PROFILE_VIEWER)
+
+        self.assertEqual(
+            sorted([x.id for x in c.values_by_site_group_type(
+                SiteGroupType.PROFILE_VIEWER)]),
+            [101, 102])
+
+        self.assertEqual(
+            sorted([x.id for x in c.values_by_site_group_type(999)]),
+            [])
+
+        self.assertTrue(c.has_entry(site_group_type=SiteGroupType.PROFILE_VIEWER))
+        self.assertFalse(c.has_entry(site_group_type=999))

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -27,12 +27,13 @@ from hedwig.compat import string_type
 from hedwig.db.meta import auth_failure, invitation, reset_token
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
-from hedwig.type.collection import EmailCollection, ResultCollection
+from hedwig.type.collection import EmailCollection, ResultCollection, \
+    SiteGroupMemberCollection
 from hedwig.type.enum import BaseCallType, BaseTextRole, FormatType, \
-    UserLogEvent
+    SiteGroupType, UserLogEvent
 from hedwig.type.simple import Email, \
     Institution, InstitutionInfo, MemberInstitution, \
-    Person, UserInfo
+    Person, SiteGroupMember, UserInfo
 from .dummy_db import DBTestCase
 
 
@@ -983,6 +984,75 @@ class DBPeopleTest(DBTestCase):
         self.db.add_user('user3', 'pass3', person_id=person_id_3)
         with self.assertRaisesRegex(ConsistencyError, 'already registered'):
             self.db.use_invitation(token, new_person_id=person_id_new_3)
+
+    def test_site_group(self):
+        person_id_1 = self.db.add_person('Person One')
+        person_id_2 = self.db.add_person('Person Two')
+
+        # Check null search result.
+        result = self.db.search_site_group_member(SiteGroupType.PROFILE_VIEWER)
+        self.assertIsInstance(result, SiteGroupMemberCollection)
+        self.assertEqual(len(result), 0)
+
+        # Check member add constraints.
+        with self.assertRaisesRegex(Error, 'invalid site group type'):
+            self.db.add_site_group_member(999, person_id_1)
+
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.add_site_group_member(
+                SiteGroupType.PROFILE_VIEWER, 1999999, _test_skip_check=True)
+
+        # Add two members.
+        self.db.add_site_group_member(
+            SiteGroupType.PROFILE_VIEWER, person_id_1)
+        self.db.add_site_group_member(
+            SiteGroupType.PROFILE_VIEWER, person_id_2)
+
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.add_site_group_member(
+                SiteGroupType.PROFILE_VIEWER, person_id_2)
+
+        # Check we don't find them when searching another group.
+        result = self.db.search_site_group_member(999)
+        self.assertEqual(len(result), 0)
+
+        # Check the search results (without and then with person info).
+        result = self.db.search_site_group_member(SiteGroupType.PROFILE_VIEWER)
+        self.assertIsInstance(result, SiteGroupMemberCollection)
+        self.assertEqual(len(result), 2)
+
+        for v in result.values():
+            self.assertIsInstance(v, SiteGroupMember)
+            self.assertIsNone(v.person_name)
+
+        result = self.db.search_site_group_member(
+            SiteGroupType.PROFILE_VIEWER, with_person=True)
+        self.assertIsInstance(result, SiteGroupMemberCollection)
+        self.assertEqual(len(result), 2)
+
+        for ((k, v), person_id, person_name) in zip(
+                result.items(),
+                (person_id_1, person_id_2),
+                ('Person One', 'Person Two')):
+            self.assertIsInstance(k, int)
+            self.assertIsInstance(v, SiteGroupMember)
+            self.assertEqual(k, v.id)
+            self.assertEqual(v.site_group_type, SiteGroupType.PROFILE_VIEWER)
+            self.assertEqual(v.person_id, person_id)
+            self.assertEqual(v.person_name, person_name)
+
+        # Check additional search criteria.
+        result = self.db.search_site_group_member(person_id=person_id_1)
+        self.assertEqual(len(result), 1)
+
+        result = self.db.search_site_group_member(person_id=1999999)
+        self.assertEqual(len(result), 0)
+
+        # Remove members via sync.
+        records = SiteGroupMemberCollection()
+        self.db.sync_site_group_member(SiteGroupType.PROFILE_VIEWER, records)
+        result = self.db.search_site_group_member(SiteGroupType.PROFILE_VIEWER)
+        self.assertEqual(len(result), 0)
 
     def _create_test_proposal(self, person_id):
         """

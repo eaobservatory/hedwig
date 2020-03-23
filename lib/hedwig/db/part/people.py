@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -31,17 +31,18 @@ from ...config import get_countries
 from ...email.util import is_valid_email
 from ...error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
-from ...type.collection import EmailCollection, ResultCollection
-from ...type.enum import PersonTitle, UserLogEvent
+from ...type.collection import EmailCollection, ResultCollection, \
+    SiteGroupMemberCollection
+from ...type.enum import PersonTitle, SiteGroupType, UserLogEvent
 from ...type.simple import Email, \
     Institution, InstitutionInfo, InstitutionLog, \
-    Person, PersonInfo, UserInfo, UserLog
+    Person, PersonInfo, SiteGroupMember, UserInfo, UserLog
 from ...util import is_list_like
 from ..meta import auth_failure, email, group_member, \
     institution, institution_log, \
     invitation, member, message_recipient, person, \
     proposal_fig, proposal_pdf, proposal_text, \
-    reset_token, reviewer, user, user_log, verify_token
+    reset_token, reviewer, site_group_member, user, user_log, verify_token
 from ..util import require_not_none
 
 
@@ -146,6 +147,25 @@ class PeoplePart(object):
                     person_id, primary_email, primary=True, _conn=conn)
 
         return person_id
+
+    def add_site_group_member(
+            self, site_group_type, person_id,
+            _conn=None, _test_skip_check=False):
+        if not SiteGroupType.is_valid(site_group_type):
+            raise Error('invalid site group type')
+
+        with self._transaction(_conn=_conn) as conn:
+            if not _test_skip_check:
+                if not self._exists_id(conn, person, person_id):
+                    raise ConsistencyError('person does not exist with id={}',
+                                           person_id)
+
+            result = conn.execute(site_group_member.insert().values({
+                site_group_member.c.site_group_type: site_group_type,
+                site_group_member.c.person_id: person_id,
+            }))
+
+        return result.inserted_primary_key[0]
 
     def add_user(self, name, password_raw, person_id=None, remote_addr=None,
                  _test_skip_check=False):
@@ -617,7 +637,8 @@ class PeoplePart(object):
                     (proposal_fig, 'uploader'),
                     (proposal_pdf, 'uploader'),
                     (proposal_text, 'editor'),
-                    (reviewer, 'person_id')):
+                    (reviewer, 'person_id'),
+                    (site_group_member, 'person_id')):
                 column = getattr(table.c, column_name)
                 conn.execute(table.update().where(
                     column == duplicate_person_id
@@ -869,6 +890,77 @@ class PeoplePart(object):
 
         return ans
 
+    def search_site_group_member(
+            self, site_group_type=None, person_id=None,
+            site_group_member_id=None, with_person=False, _conn=None):
+        select_from = site_group_member
+
+        select_columns = [
+            site_group_member,
+        ]
+
+        if with_person:
+            select_columns.extend([
+                person.c.name.label('person_name'),
+                person.c.public.label('person_public'),
+                (person.c.user_id.isnot(None)).label('person_registered'),
+                person.c.institution_id,
+                institution.c.name.label('institution_name'),
+                institution.c.department.label('institution_department'),
+                institution.c.organization.label('institution_organization'),
+                institution.c.country.label('institution_country'),
+            ])
+
+            select_from = select_from.join(person).outerjoin(institution)
+
+            default = None
+        else:
+            default = {
+                'person_name': None,
+                'person_public': None,
+                'person_registered': None,
+                'institution_id': None,
+                'institution_name': None,
+                'institution_department': None,
+                'institution_organization': None,
+                'institution_country': None,
+            }
+
+        stmt = select(select_columns).select_from(select_from)
+
+        if site_group_type is not None:
+            if is_list_like(site_group_type):
+                stmt = stmt.where(
+                    site_group_member.c.site_group_type.in_(site_group_type))
+            else:
+                stmt = stmt.where(
+                    site_group_member.c.site_group_type == site_group_type)
+
+        if person_id is not None:
+            stmt = stmt.where(site_group_member.c.person_id == person_id)
+
+        if site_group_member_id is not None:
+            stmt = stmt.where(site_group_member.c.id == site_group_member_id)
+
+        if with_person:
+            stmt = stmt.order_by(person.c.name.asc())
+        else:
+            stmt = stmt.order_by(site_group_member.c.id.asc())
+
+        ans = SiteGroupMemberCollection()
+
+        with self._transaction(_conn=_conn) as conn:
+            for row in conn.execute(stmt):
+                if default is not None:
+                    values = default.copy()
+                    values.update(**row)
+                else:
+                    values = row
+
+                ans[row['id']] = SiteGroupMember(**values)
+
+        return ans
+
     def search_user(self, registered=None):
         """
         Search for user accounts.
@@ -984,6 +1076,26 @@ class PeoplePart(object):
                     email.c.address, email.c.primary, email.c.public,
                 ), verified_columns=(email.c.address,),
                 unique_columns=(email.c.address,))
+
+    def sync_site_group_member(self, site_group_type, records):
+        """
+        Update the member records of the given site group.
+
+        Currently this just allows removing members of the group,
+        but could be extended if group members gain extra attributes.
+        """
+
+        if not SiteGroupType.is_valid(site_group_type):
+            raise Error('invalid site group type')
+
+        with self._transaction() as conn:
+            self._sync_records(
+                conn, site_group_member,
+                key_column=site_group_member.c.site_group_type,
+                key_value=site_group_type,
+                records=records,
+                update_columns=(),
+                forbid_add=True)
 
     def update_institution(self, institution_id, updater_person_id=None,
                            name=None, department=None,

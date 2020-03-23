@@ -31,7 +31,7 @@ from ..db.meta import affiliation, \
     review, reviewer, reviewer_acceptance, \
     review_calculation, review_deadline, \
     review_fig, review_fig_link, \
-    semester, target, user_log
+    semester, site_group_member, target, user_log
 
 Affiliation = namedtuple(
     'Affiliation',
@@ -283,6 +283,13 @@ Semester = namedtuple(
 SemesterInfo = namedtuple(
     'SemesterInfo',
     ['id', 'facility_id', 'name', 'code', 'date_start', 'date_end', 'state'])
+
+SiteGroupMember = namedtuple(
+    'SiteGroupMember',
+    [x.name for x in site_group_member.columns] +
+    ['person_name', 'person_public', 'person_registered',
+     'institution_id', 'institution_name', 'institution_department',
+     'institution_organization', 'institution_country'])
 
 Target = namedtuple(
     'Target',
