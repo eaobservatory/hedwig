@@ -57,7 +57,7 @@ The following Python modules should be installed:
 * Pillow
 * pymoc
 * PyPDF2
-* python-magic
+* python-magic (or python-magic-bin if libmagic is not available)
 * requests
 * SQLAlchemy
 
