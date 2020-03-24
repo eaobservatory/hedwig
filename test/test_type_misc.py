@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017 East Asian Observatory
+# Copyright (C) 2016-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,8 +18,8 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from hedwig.error import UserError
-from hedwig.type.misc import SectionedList, SectionedListSection
+from hedwig.error import Error, UserError
+from hedwig.type.misc import ErrorCatcher, SectionedList, SectionedListSection
 
 from .compat import TestCase
 
@@ -273,3 +273,28 @@ class MiscTypeTestCase(TestCase):
             'minerals': ['Quartz is a mineral.'],
             'other_including_empty': [],
         })
+
+    def test_error_catcher(self):
+        c = ErrorCatcher({'a': 1})
+
+        # Try catching an error and raising it properly.
+        with c.catch_() as info:
+            self.assertEqual(info, {'a': 1})
+            info['b'] = 2
+
+            raise UserError('test error')
+
+        with c.release() as info:
+            self.assertEqual(info, {'a': 1, 'b': 2})
+
+            with self.assertRaisesRegex(UserError, '^test error$'):
+                c.raise_()
+
+        # Try catching an error and failing to raise it.
+        with c.catch_() as info:
+            raise UserError('another error')
+
+        with self.assertRaisesRegex(
+                Error, 'Exception not raised: another error'):
+            with c.release() as info:
+                pass

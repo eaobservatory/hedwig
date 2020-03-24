@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2019 East Asian Observatory
+# Copyright (C) 2016-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -21,11 +21,63 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict, namedtuple
 from contextlib import contextmanager
 
-from ..error import UserError
+from ..error import FormattedError, UserError
 
 
 SectionedListSection = namedtuple(
     'SectionedListSection', ('section', 'name', 'items'))
+
+
+class ErrorCatcher(object):
+    """
+    Wrapper class to contain data and possibly an exception.
+
+    This is designed to allow a function to return data plus an exception
+    which it would have liked to have raised.
+    """
+
+    def __init__(self, data):
+        self.data = data
+        self.error = None
+
+    @contextmanager
+    def catch_(self):
+        """
+        Context manager which unwraps the data attribute and traps exceptions.
+        """
+
+        try:
+            yield self.data
+
+        except Exception as e:
+            self.error = e
+
+    @contextmanager
+    def release(self):
+        """
+        Context manager which unwraps the data attribute, expecting the
+        exception to be raised.
+
+        The managed block should call :meth:`raise_` to raise any stored
+        exception.  If an exception was stored and this is not done, another
+        exception is raised.
+        """
+
+        yield self.data
+
+        if self.error is not None:
+            raise FormattedError(
+                'Exception not raised: {}', self.error.args[0])
+
+    def raise_(self):
+        """
+        Raises the stored exception, if there is one.
+        """
+
+        if self.error is not None:
+            error = self.error
+            self.error = None
+            raise error
 
 
 class SectionedList(object):
