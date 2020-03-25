@@ -1237,26 +1237,24 @@ class GenericProposal(object):
         if not affiliations:
             raise HTTPError('No affiliations appear to be available.')
 
-        if form is not None:
-            member['editor'] = 'editor' in form
-            member['observer'] = 'observer' in form
-            if 'person_id' in form:
-                member['person_id'] = int(form['person_id'])
-            member['name'] = form.get('name', '')
-            if 'person_title' in form:
-                member['title'] = int_or_none(form['person_title'])
-            member['email'] = form.get('email', '')
-            member['affiliation_id'] = int(form['affiliation_id'])
+        member_info = self._read_member_form(form)
 
-            affiliation = affiliations.get(member['affiliation_id'])
-            if affiliation is None:
-                raise ErrorPage('Selected affiliation not found.')
+        with member_info.release() as member:
+            if form is not None:
+                member['editor'] = 'editor' in form
+                member['observer'] = 'observer' in form
+                member['affiliation_id'] = int(form['affiliation_id'])
 
-            if 'submit_link' in form:
+                affiliation = affiliations.get(member['affiliation_id'])
+                if affiliation is None:
+                    raise ErrorPage('Selected affiliation not found.')
+
+            if member['is_link'] is None:
+                member_info.raise_()
+
+            elif member['is_link']:
                 try:
-                    if member['person_id'] is None:
-                        raise UserError(
-                            'No-one was selected from the directory.')
+                    member_info.raise_()
 
                     try:
                         person = db.get_person(person_id=member['person_id'])
@@ -1289,15 +1287,9 @@ class GenericProposal(object):
                 except UserError as e:
                     message_link = e.message
 
-            elif 'submit_invite' in form:
+            else:
                 try:
-                    if not member['name']:
-                        raise UserError('Please enter the person\'s name.')
-                    if not member['email']:
-                        raise UserError('Please enter an email address.')
-
-                    member['name'] = member['name'].strip()
-                    member['email'] = member['email'].strip()
+                    member_info.raise_()
 
                     person_id = db.add_person(
                         member['name'], title=member['title'],
@@ -1329,9 +1321,6 @@ class GenericProposal(object):
                 except UserError as e:
                     message_invite = e.message
 
-            else:
-                raise ErrorPage('Unknown action.')
-
         # Prepare list of people to display as the registered member
         # directory, filtering out current proposal members.
         current_persons = [m.person_id for m in proposal.members.values()]
@@ -1350,7 +1339,7 @@ class GenericProposal(object):
             'call_type': proposal.call_type,
             'persons': persons,
             'affiliations': affiliations,
-            'member': member,
+            'member': member_info.data,
             'proposal_code': self.make_proposal_code(db, proposal),
             'target': url_for('.member_add', proposal_id=proposal.id),
             'title_link': 'Add a Member from the Directory',

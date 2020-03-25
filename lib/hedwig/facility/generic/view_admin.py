@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -34,7 +34,7 @@ from ...type.util import null_tuple
 from ...view import auth
 from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
     flash, format_datetime, parse_datetime, session, url_for
-from ...view.util import int_or_none, with_verified_admin
+from ...view.util import with_verified_admin
 
 
 class GenericAdmin(object):
@@ -720,21 +720,16 @@ class GenericAdmin(object):
         message_link = None
         message_invite = None
 
-        member = dict(person_id=None, name='', title=None, email='')
+        member_info = self._read_member_form(form)
 
-        if form is not None:
-            if 'person_id' in form:
-                member['person_id'] = int(form['person_id'])
-            member['name'] = form.get('name', '')
-            if 'person_title' in form:
-                member['title'] = int_or_none(form['person_title'])
-            member['email'] = form.get('email', '')
+        with member_info.release() as member:
+            if member['is_link'] is None:
+                member_info.raise_()
 
-            if 'submit_link' in form:
+            elif member['is_link']:
                 try:
-                    if member['person_id'] is None:
-                        raise UserError(
-                            'No-one was selected from the directory.')
+                    member_info.raise_()
+
                     try:
                         person = db.get_person(person_id=member['person_id'])
                     except NoSuchRecord:
@@ -751,15 +746,9 @@ class GenericAdmin(object):
                 except UserError as e:
                     message_link = e.message
 
-            elif 'submit_invite' in form:
+            else:
                 try:
-                    if not member['name']:
-                        raise UserError('Please enter the person\'s name.')
-                    if not member['email']:
-                        raise UserError('Please enter an email address.')
-
-                    member['name'] = member['name'].strip()
-                    member['email'] = member['email'].strip()
+                    member_info.raise_()
 
                     person_id = db.add_person(
                         member['name'], title=member['title'],
@@ -786,9 +775,6 @@ class GenericAdmin(object):
                 except UserError as e:
                     message_invite = e.message
 
-            else:
-                raise ErrorPage('Unknown action.')
-
         # Prepare list of people to display as the registered member directory.
         # Note that this includes people without public profiles as this page
         # is restricted to administrators.
@@ -803,7 +789,7 @@ class GenericAdmin(object):
         return {
             'title': 'Add Group Member',
             'persons': persons,
-            'member': member,
+            'member': member_info.data,
             'message_link': message_link,
             'message_invite': message_invite,
             'target': url_for('.group_member_add',

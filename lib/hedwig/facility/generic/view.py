@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -26,6 +26,7 @@ from ...type.enum import AffiliationType, \
     FormatType
 from ...type.simple import Call, FacilityObsInfo
 from ...type.util import null_tuple
+from ...view.base import ViewMember
 from .tool_clash import ClashTool
 from .tool_avail import AvailabilityTool
 from .view_admin import GenericAdmin
@@ -34,7 +35,9 @@ from .view_proposal import GenericProposal
 from .view_review import GenericReview
 
 
-class Generic(GenericAdmin, GenericHome, GenericProposal, GenericReview):
+class Generic(
+        GenericAdmin, GenericHome, GenericProposal, GenericReview,
+        ViewMember):
     """
     Base class for Facility objects.
     """

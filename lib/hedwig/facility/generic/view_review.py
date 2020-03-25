@@ -1162,21 +1162,16 @@ class GenericReview(object):
         message_link = None
         message_invite = None
 
-        member = dict(person_id=None, name='', title=None, email='')
+        member_info = self._read_member_form(form)
 
-        if form is not None:
-            if 'person_id' in form:
-                member['person_id'] = int(form['person_id'])
-            member['name'] = form.get('name', '')
-            if 'person_title' in form:
-                member['title'] = int_or_none(form['person_title'])
-            member['email'] = form.get('email', '')
+        with member_info.release() as member:
+            if member['is_link'] is None:
+                member_info.raise_()
 
-            if 'submit_link' in form:
+            elif member['is_link']:
                 try:
-                    if member['person_id'] is None:
-                        raise UserError(
-                            'No-one was selected from the directory.')
+                    member_info.raise_()
+
                     try:
                         person = db.get_person(person_id=member['person_id'])
                     except NoSuchRecord:
@@ -1213,15 +1208,9 @@ class GenericReview(object):
                 except UserError as e:
                     message_link = e.message
 
-            elif 'submit_invite' in form:
+            else:
                 try:
-                    if not member['name']:
-                        raise UserError('Please enter the person\'s name.')
-                    if not member['email']:
-                        raise UserError('Please enter an email address.')
-
-                    member['name'] = member['name'].strip()
-                    member['email'] = member['email'].strip()
+                    member_info.raise_()
 
                     person_id = db.add_person(
                         member['name'], title=member['title'],
@@ -1253,9 +1242,6 @@ class GenericReview(object):
 
                 except UserError as e:
                     message_invite = e.message
-
-            else:
-                raise ErrorPage('Unknown action.')
 
         # Prepare list of people to display as the registered member directory.
         # Note that this includes people without public profiles as this page
@@ -1289,7 +1275,7 @@ class GenericReview(object):
             'title': '{}: Add {} Reviewer'.format(
                 proposal_code, role_info.name.title()),
             'persons': persons,
-            'member': member,
+            'member': member_info.data,
             'message_link': message_link,
             'message_invite': message_invite,
             'target': url_for('.proposal_reviewer_add',
