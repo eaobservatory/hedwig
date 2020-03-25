@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -2158,6 +2158,52 @@ class IntegrationTest(DummyConfigTestCase):
                               'institution_subsume_confirm')
 
         self.browser.find_element_by_name('submit_cancel').click()
+
+        # Test the site group system.
+        self.browser.get(admin_menu_url)
+        self.browser.find_element_by_link_text('Profile viewers').click()
+
+        self.browser.find_element_by_link_text('Add member').click()
+
+        self._save_screenshot(
+            self.admin_image_root, 'site_group_view_prof_add')
+
+        self.browser.find_element_by_name('name').send_keys(
+            'Site Group Member')
+        self.browser.find_element_by_name('email').send_keys(
+            'member@somewhere.edu')
+
+        self.browser.find_element_by_name('submit_invite').click()
+
+        self.assertIn(
+            'Site Group Member has been added to the site group.',
+            self.browser.page_source)
+
+        Select(
+            self.browser.find_element_by_name('institution_id')
+        ).select_by_visible_text(
+            'Test Institution, United States')
+
+        self.browser.find_element_by_name('submit_select').click()
+
+        self.assertIn(
+            'The institution has been selected.',
+            self.browser.page_source)
+
+        self.browser.get(self.browser.current_url)
+
+        self._save_screenshot(self.admin_image_root, 'site_group_view_prof')
+
+        self.browser.find_element_by_link_text('Edit members').click()
+
+        self._save_screenshot(
+            self.admin_image_root, 'site_group_view_prof_edit')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The site group membership has been saved.',
+            self.browser.page_source)
 
     def view_user_directory(self):
         self.browser.get(self.base_url + 'person')

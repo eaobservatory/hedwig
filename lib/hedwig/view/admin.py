@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -21,18 +21,23 @@ from __future__ import absolute_import, division, print_function, \
 from collections import namedtuple
 
 from ..compat import first_value
-from ..error import NoSuchRecord
+from ..email.format import render_email_template
+from ..error import NoSuchRecord, UserError
 from ..type.simple import ProposalWithCode
-from ..type.enum import AttachmentState, MessageState, MessageThreadType
-from ..web.util import ErrorPage, HTTPNotFound, HTTPRedirect, flash, url_for
+from ..type.enum import AttachmentState, MessageState, MessageThreadType, \
+    PersonTitle, SiteGroupType
+from ..web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
+    flash, session, url_for
+from .base import ViewMember
 from .util import with_verified_admin
 
 
-class AdminView(object):
+class AdminView(ViewMember):
     def home(self, facilities):
         return {
             'title': 'Site Administration',
             'facilities': facilities,
+            'site_groups': SiteGroupType.get_options(),
         }
 
     @with_verified_admin
@@ -381,4 +386,219 @@ class AdminView(object):
         return {
             'title': 'Unregistered Users',
             'users': db.search_user(registered=False),
+        }
+
+    @with_verified_admin
+    def site_group_view(self, db, site_group_type):
+        try:
+            site_group_info = SiteGroupType.get_info(site_group_type)
+        except KeyError:
+            raise HTTPNotFound('Unknown site group.')
+
+        members = db.search_site_group_member(
+            site_group_type=site_group_type, with_person=True)
+
+        return {
+            'title': '{}'.format(site_group_info.name),
+            'site_group_type': site_group_type,
+            'site_group_info': site_group_info,
+            'members': members,
+        }
+
+    @with_verified_admin
+    def site_group_member_add(self, db, site_group_type, form):
+        try:
+            site_group_info = SiteGroupType.get_info(site_group_type)
+        except KeyError:
+            raise HTTPNotFound('Unknown site group.')
+
+        message_link = None
+        message_invite = None
+
+        member_info = self._read_member_form(form)
+
+        with member_info.release() as member:
+            if member['is_link'] is None:
+                member_info.raise_()
+
+            elif member['is_link']:
+                try:
+                    member_info.raise_()
+
+                    try:
+                        person = db.get_person(person_id=member['person_id'])
+                    except NoSuchRecord:
+                        raise UserError('Could not find the person profile.')
+
+                    db.add_site_group_member(site_group_type, person.id)
+
+                    flash('{} has been added to the site group.', person.name)
+
+                    raise HTTPRedirect(url_for(
+                        '.site_group_view', site_group_type=site_group_type))
+
+                except UserError as e:
+                    message_link = e.message
+
+            else:
+                try:
+                    member_info.raise_()
+
+                    person_id = db.add_person(
+                        member['name'], title=member['title'],
+                        primary_email=member['email'])
+
+                    db.add_site_group_member(site_group_type, person_id)
+
+                    self._message_site_group_invite(
+                        db,
+                        site_group_info=site_group_info,
+                        person_id=person_id,
+                        person_name=member['name'])
+
+                    flash(
+                        '{} has been added to the site group.', member['name'])
+
+                    # Return to the site group page after editing the new
+                    # member's institution.
+                    raise HTTPRedirect(url_for(
+                        'people.person_edit_institution',
+                        person_id=person_id, next_page=url_for(
+                            '.site_group_view',
+                            site_group_type=site_group_type)))
+
+                except UserError as e:
+                    message_invite = e.message
+
+        # Prepare list of people to display as the registered member directory.
+        # Note that this includes people without public profiles as this page
+        # is restricted to administrators.
+        existing_person_ids = [
+            x.person_id for x in db.search_site_group_member(
+                site_group_type=site_group_type).values()]
+        persons = [
+            p for p in db.search_person(
+                registered=True, with_institution=True).values()
+            if p.id not in existing_person_ids]
+
+        return {
+            'title': 'Add Site Group Member',
+            'persons': persons,
+            'member': member_info.data,
+            'message_link': message_link,
+            'message_invite': message_invite,
+            'target': url_for(
+                '.site_group_member_add', site_group_type=site_group_type),
+            'title_link': 'Add a Member from the Directory',
+            'title_invite': 'Invite a Member to Register',
+            'submit_link': 'Add to site group',
+            'submit_invite': 'Invite to register',
+            'label_link': 'Member',
+            'navigation': [
+                'site_admin',
+                (site_group_info.name, url_for(
+                    '.site_group_view', site_group_type=site_group_type))],
+            'help_link': url_for('help.admin_page', page_name='site_group'),
+            'titles': PersonTitle.get_options(),
+        }
+
+    def _message_site_group_invite(
+            self, db, site_group_info, person_id, person_name):
+        (token, expiry) = db.issue_invitation(person_id, days_valid=7)
+
+        email_ctx = {
+            'inviter_name': session['person']['name'],
+            'recipient_name': person_name,
+            'site_group': site_group_info,
+            'token': token,
+            'expiry': expiry,
+            'target_url': url_for(
+                'people.invitation_token_enter',
+                token=token, _external=True),
+            'target_plain': url_for(
+                'people.invitation_token_enter',
+                _external=True),
+        }
+
+        db.add_message(
+            '{} invitation'.format(site_group_info.name),
+            render_email_template('site_group_invitation.txt', email_ctx),
+            [person_id])
+
+    @with_verified_admin
+    def site_group_member_edit(self, db, site_group_type, form):
+        try:
+            site_group_info = SiteGroupType.get_info(site_group_type)
+        except KeyError:
+            raise HTTPNotFound('Unknown site group.')
+
+        message = None
+
+        members = db.search_site_group_member(
+            site_group_type=site_group_type, with_person=True)
+
+        if form is not None:
+            try:
+                for member_id in list(members.keys()):
+                    if 'member_{}'.format(member_id) in form:
+                        # Currently nothing to update for existing members.
+                        pass
+
+                    else:
+                        del members[member_id]
+
+                db.sync_site_group_member(site_group_type, members)
+                flash('The site group membership has been saved.')
+                raise HTTPRedirect(url_for(
+                    '.site_group_view', site_group_type=site_group_type))
+
+            except UserError as e:
+                message = e.message
+
+        return {
+            'title': 'Edit Site Group Membership',
+            'site_group_type': site_group_type,
+            'site_group_info': site_group_info,
+            'members': members,
+            'message': message,
+        }
+
+    @with_verified_admin
+    def site_group_member_reinvite(
+            self, db, site_group_type, member_id, form):
+        try:
+            site_group_info = SiteGroupType.get_info(site_group_type)
+        except KeyError:
+            raise HTTPNotFound('Unknown site group.')
+
+        try:
+            member = db.search_site_group_member(
+                site_group_type=site_group_type,
+                site_group_member_id=member_id, with_person=True).get_single()
+        except NoSuchRecord:
+            raise HTTPNotFound('Site group member record not found.')
+
+        if member.person_registered:
+            raise ErrorPage('This site group member is already registered.')
+
+        if form:
+            if 'submit_confirm' in form:
+                self._message_site_group_invite(
+                    db,
+                    site_group_info=site_group_info,
+                    person_id=member.person_id,
+                    person_name=member.person_name)
+
+                flash('{} has been re-invited to the site group.',
+                      member.person_name)
+
+            raise HTTPRedirect(url_for(
+                '.site_group_view', site_group_type=site_group_type))
+
+        return {
+            'title': 'Re-send Site Group Member Invitation',
+            'message':
+                'Would you like to re-send an invitation to '
+                'site group "{}" to {}?'.format(
+                    site_group_info.name, member.person_name),
         }

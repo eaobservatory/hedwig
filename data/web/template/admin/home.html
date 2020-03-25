@@ -15,6 +15,16 @@
     <li><a href="{{ url_for('.user_unregistered') }}">Unregistered users</a></li>
 </ul>
 
+<h2>Site Groups</h2>
+
+<ul>
+    {% for (site_group_type, site_group_name) in site_groups.items() %}
+        <li>
+            <a href="{{ url_for('.site_group_view', site_group_type=site_group_type) }}">{{ site_group_name }}</a>
+        </li>
+    {% endfor %}
+</ul>
+
 <h2>Facility Administrative Menus</h2>
 
 <ul>

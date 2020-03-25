@@ -1,4 +1,4 @@
-{% extends 'generic/person_select.html' %}
+{% extends 'person_select.html' %}
 {% set navigation=[((call.semester_name, call.queue_name, (call.type | call_type_name(facility_call_type_class))) | fmt('{} {} {}'), url_for('.review_call', call_id=call.id)),
                    ('Reviewers', url_for('.review_call_reviewers', call_id=call.id))] %}
 {% set help_link=url_for('help.admin_page', page_name='review_process') %}

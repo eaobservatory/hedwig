@@ -1,4 +1,4 @@
-{% extends 'generic/person_select.html' %}
+{% extends 'person_select.html' %}
 {% from 'macro/affiliation_tip.html' import render_affiliation_tip %}
 {% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
 {% set help_link=url_for('help.user_page', page_name='member') %}

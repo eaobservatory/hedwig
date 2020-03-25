@@ -1,0 +1,69 @@
+{% extends 'layout.html' %}
+{% set navigation=['site_admin'] %}
+{% set help_link=url_for('help.admin_page', page_name='site_group') %}
+
+{% from 'macro/institution.html' import render_member_institution %}
+
+{% block content %}
+<p>
+    Members of this group:
+</p>
+
+<ul>
+    {% set n_permission = 0 %}
+    {% if site_group_info.view_all_profile %}
+        <li>Can view all person profiles.</li>
+        {% set n_permission = n_permission + 1 %}
+    {% endif %}
+    {% if n_permission == 0 %}
+        <li>Have no special access rights.</li>
+    {% endif %}
+</ul>
+
+{% if not members %}
+    <p class="not_present">
+        This group currently has no members.
+    </p>
+{% else %}
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Institution</th>
+            <th>Links</th>
+        </tr>
+        {% for member in members.values() %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name }}</a>
+                    {% if not member.person_registered %}
+                        <span class="label">unregistered</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if member.institution_id is none %}
+                        &nbsp;
+                    {% else %}
+                        {{ render_member_institution(member) }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not member.person_registered %}
+                        <a href="{{ url_for('.site_group_member_reinvite', site_group_type=site_group_type, member_id=member.id) }}">Re-send invitation</a>
+                    {% else %}
+                        &nbsp;
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endif %}
+
+<nav>
+    <ol>
+        <li><a href="{{ url_for('.site_group_member_add', site_group_type=site_group_type) }}">Add member</a></li>
+        {% if members %}
+            <li><a href="{{ url_for('.site_group_member_edit', site_group_type=site_group_type) }}">Edit members</a></li>
+        {% endif %}
+    </ol>
+<nav>
+{% endblock %}

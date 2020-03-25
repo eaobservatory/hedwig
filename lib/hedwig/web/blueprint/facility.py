@@ -659,7 +659,7 @@ def create_facility_blueprint(db, facility):
     @bp.route('/admin/queue/<int:queue_id>/group/<hedwig_group:group_type>/'
               'add',
               methods=['GET', 'POST'])
-    @facility_template('person_select.html')
+    @templated('person_select.html')
     @require_admin
     def group_member_add(queue_id, group_type):
         return facility.view_group_member_add(

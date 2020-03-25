@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -71,5 +71,39 @@ def create_admin_blueprint(db, facilities):
     @require_admin
     def user_unregistered():
         return view.user_unregistered(db)
+
+    @bp.route('/group/<hedwig_site_group:site_group_type>')
+    @templated('admin/site_group_view.html')
+    @require_admin
+    def site_group_view(site_group_type):
+        return view.site_group_view(db, site_group_type)
+
+    @bp.route('/group/<hedwig_site_group:site_group_type>/add',
+              methods=['GET', 'POST'])
+    @templated('person_select.html')
+    @require_admin
+    def site_group_member_add(site_group_type):
+        return view.site_group_member_add(
+            db, site_group_type,
+            (request.form if request.method == 'POST' else None))
+
+    @bp.route('/group/<hedwig_site_group:site_group_type>/edit',
+              methods=['GET', 'POST'])
+    @templated('admin/site_group_member_edit.html')
+    @require_admin
+    def site_group_member_edit(site_group_type):
+        return view.site_group_member_edit(
+            db, site_group_type,
+            (request.form if request.method == 'POST' else None))
+
+    @bp.route(
+        '/group/<hedwig_site_group:site_group_type>/reinvite/<int:member_id>',
+        methods=['GET', 'POST'])
+    @templated('confirm.html')
+    @require_admin
+    def site_group_member_reinvite(site_group_type, member_id):
+        return view.site_group_member_reinvite(
+            db, site_group_type, member_id,
+            (request.form if request.method == 'POST' else None))
 
     return bp

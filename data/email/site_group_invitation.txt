@@ -1,0 +1,19 @@
+{% extends 'layout.txt' %}
+
+{% block content %}
+You have been invited by {{ inviter_name }} to be part of the
+"{{ site_group.name }}" site group of our proposal handling system.
+
+You can begin the registration process by entering the following
+invitation code on the invitation page:
+
+Invitation code: {{ token }}
+
+Invitation page: {{ target_plain }}
+
+Alternatively you may click the following link:
+
+{{ target_url }}
+
+This code will expire at {{ expiry | format_datetime }} UT.
+{% endblock %}
