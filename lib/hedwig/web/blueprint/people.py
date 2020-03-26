@@ -128,7 +128,7 @@ def create_people_blueprint(db, facilities):
     @require_auth()
     @templated('people/person_view.html')
     def person_view(person_id):
-        return view.person_view(db, person_id)
+        return view.person_view(db, person_id, facilities)
 
     @bp.route('/person/<int:person_id>/invite', methods=['GET', 'POST'])
     @require_admin

@@ -105,7 +105,7 @@ GroupMember = namedtuple(
     ['person_name', 'person_public', 'person_registered',
      'institution_id', 'institution_name', 'institution_department',
      'institution_organization', 'institution_country',
-     'facility_id'])
+     'queue_code', 'queue_name', 'facility_id',])
 
 Institution = namedtuple(
     'Institution',

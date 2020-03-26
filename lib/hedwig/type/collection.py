@@ -27,8 +27,8 @@ from ..compat import first_value
 from ..email.util import is_valid_email
 from ..error import NoSuchRecord, NoSuchValue, MultipleRecords, UserError
 from ..util import is_list_like, matches_constraint
-from .base import CollectionByCall, CollectionByProposal, \
-    CollectionByReviewerRole, \
+from .base import CollectionByCall, CollectionByFacility, \
+    CollectionByProposal, CollectionByReviewerRole, \
     CollectionOrdered, CollectionSortable
 from .enum import AffiliationType, PublicationType, ReviewState
 from .simple import TargetObject
@@ -246,10 +246,15 @@ class EmailCollection(ResultCollection):
             raise UserError('There is more than one primary address.')
 
 
-class GroupMemberCollection(ResultCollection):
+class GroupMemberCollection(
+        ResultCollection, CollectionByFacility, CollectionSortable):
     """
     Class to hold a collection of review group members.
     """
+
+    sort_attr = (
+        (False, ('queue_name', 'queue_id', 'group_type', 'id')),
+    )
 
     def has_entry(self, group_type=None, queue_id=None,
                   person_id=None, facility_id=None):
@@ -513,7 +518,8 @@ class PrevProposalCollection(ResultCollection):
                           if v.this_proposal_id == this_proposal_id)
 
 
-class ProposalCollection(ResultCollection, CollectionSortable):
+class ProposalCollection(
+        ResultCollection, CollectionByFacility, CollectionSortable):
     """
     Class to contain results of a proposal search.
     """
@@ -527,15 +533,6 @@ class ProposalCollection(ResultCollection, CollectionSortable):
         (True, ('semester_start',)),
         (False, ('semester_name', 'queue_name', 'call_type', 'number')),
     )
-
-    def values_by_facility(self, facility_id):
-        """
-        Iterate values for the given facility identifier.
-        """
-
-        for value in self.values():
-            if value.facility_id == facility_id:
-                yield value
 
 
 class ProposalCategoryCollection(ResultCollection, CollectionByProposal):

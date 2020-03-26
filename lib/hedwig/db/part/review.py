@@ -274,13 +274,15 @@ class ReviewPart(object):
     def search_group_member(self, queue_id=None, group_type=None,
                             person_id=None, facility_id=None,
                             group_member_id=None,
-                            with_person=False, _conn=None):
+                            with_person=False, with_queue=False, _conn=None):
         select_from = group_member.join(queue)
 
         select_columns = [
             group_member,
             queue.c.facility_id,
         ]
+
+        default = {}
 
         if with_person:
             select_columns.extend([
@@ -297,9 +299,8 @@ class ReviewPart(object):
 
             select_from = select_from.join(person).outerjoin(institution)
 
-            default = None
         else:
-            default = {
+            default.update({
                 'person_name': None,
                 'person_public': None,
                 'person_registered': None,
@@ -308,7 +309,19 @@ class ReviewPart(object):
                 'institution_department': None,
                 'institution_organization': None,
                 'institution_country': None,
-            }
+            })
+
+        if with_queue:
+            select_columns.extend([
+                queue.c.code.label('queue_code'),
+                queue.c.name.label('queue_name'),
+            ])
+
+        else:
+            default.update({
+                'queue_code': None,
+                'queue_name': None,
+            })
 
         stmt = select(select_columns).select_from(select_from)
 
@@ -339,7 +352,7 @@ class ReviewPart(object):
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt):
-                if default is not None:
+                if default:
                     values = default.copy()
                     values.update(**row)
                 else:

@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2019 East Asian Observatory
+# Copyright (C) 2016-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -36,6 +36,21 @@ class CollectionByCall(object):
 
         return type(self)((k, v) for (k, v) in self.items()
                           if v.call_id == call_id)
+
+
+class CollectionByFacility(object):
+    """
+    Mix-in for collections of items with a `facility_id` attribute.
+    """
+
+    def values_by_facility(self, facility_id):
+        """
+        Iterate values for the given facility identifier.
+        """
+
+        for value in self.values():
+            if value.facility_id == facility_id:
+                yield value
 
 
 class CollectionByProposal(object):

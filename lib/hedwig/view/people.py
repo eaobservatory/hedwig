@@ -26,7 +26,7 @@ from ..email.format import render_email_template
 from ..error import ConsistencyError, DatabaseIntegrityError, Error, \
     MultipleRecords, NoSuchRecord, NoSuchValue, \
     UserError
-from ..type.collection import EmailCollection, \
+from ..type.collection import EmailCollection, GroupMemberCollection, \
     ProposalCollection, ReviewerCollection
 from ..type.enum import PermissionType, PersonTitle, ProposalState, \
     ReviewState
@@ -43,6 +43,10 @@ from . import auth
 InstitutionLogExtra = namedtuple(
     'InstitutionLogExtra',
     InstitutionLog._fields + ('new',))
+
+GroupsByFacility = namedtuple(
+    'GroupsByFacility',
+    ('name', 'code', 'groups'))
 
 ProposalsByFacility = namedtuple(
     'ProposalsByFacility',
@@ -525,7 +529,7 @@ class PeopleView(object):
         }
 
     @with_person(permission=PermissionType.VIEW)
-    def person_view(self, db, person, can):
+    def person_view(self, db, person, can, facilities):
         is_admin = session.get('is_admin', False)
         is_current_user = person.user_id == session['user_id']
 
@@ -544,12 +548,32 @@ class PeopleView(object):
             email=[x for x in person.email.values()
                    if x.public or view_all_email])
 
+        site_group_membership = None
+        review_group_membership = []
+        if is_admin:
+            site_group_membership = db.search_site_group_member(
+                person_id=person.id)
+            all_review_group_membership = db.search_group_member(
+                person_id=person.id, with_queue=True)
+
+            for facility in facilities.values():
+                facility_members = all_review_group_membership.map_values(
+                    filter_value=(lambda x: x.facility_id == facility.id))
+
+                if not facility_members:
+                    continue
+
+                review_group_membership.append(GroupsByFacility(
+                    facility.name, facility.code, facility_members))
+
         return {
             'title': '{}: Profile'.format(person.name),
             'is_current_user': is_current_user,
             'can_edit': can.edit,
             'person': person,
             'show_admin_links': is_admin,
+            'site_group_membership': site_group_membership,
+            'review_group_membership': review_group_membership,
         }
 
     @with_verified_admin

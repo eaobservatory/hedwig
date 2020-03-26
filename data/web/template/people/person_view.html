@@ -108,4 +108,43 @@
     </nav>
 {% endif %}
 
+{% if site_group_membership %}
+    <h2>Site Groups</h2>
+
+    <table>
+        <tr>
+            <th>Group</th>
+        </tr>
+        {% for member in site_group_membership.values() %}
+            <tr>
+                <td><a href="{{ url_for('admin.site_group_view', site_group_type=member.site_group_type) }}">{{ member.site_group_type | site_group_type_name }}</a></td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endif %}
+
+{% if review_group_membership %}
+    <h2>Review Groups</h2>
+
+    {% for facility in review_group_membership %}
+        <h3>{{ facility.name }}</h3>
+
+        <table>
+            <tr>
+                <th>Queue</th>
+                <th>Group</th>
+            </tr>
+            {% for queue_groups in facility.groups.values_in_sorted_order() | plain_group_by('queue_id') %}
+                {% for group in queue_groups %}
+                    <tr>
+                        {% if loop.first %}
+                            <td rowspan="{{ queue_groups | length }}"><a href="{{ url_for(facility.code + '.queue_view', queue_id=group.queue_id) }}">{{ group.queue_name }}</a></td>
+                        {% endif %}
+                        <td><a href="{{ url_for(facility.code + '.group_view', queue_id=group.queue_id, group_type=group.group_type) }}">{{ group.group_type | group_type_name }}</a></td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+        </table>
+    {% endfor %}
+{% endif %}
 {% endblock %}
