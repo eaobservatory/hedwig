@@ -23,7 +23,7 @@ from datetime import datetime
 
 from hedwig.type.enum import BaseCallType, BaseReviewerRole, \
     FormatType, GroupType, \
-    ProposalState
+    ProposalState, SiteGroupType
 from hedwig.type.simple import Person
 from hedwig.view import auth
 from hedwig.view.people import _update_session_user, _update_session_person
@@ -304,6 +304,10 @@ class WebAppAuthTestCase(WebAppTestCase):
         person_a_v = self.db.add_person('Person V', user_id=user_a_v)
         self.db.add_group_member(queue_a, GroupType.VIEWER, person_a_v)
 
+        user_svp = self.db.add_user('svp', 'pass')
+        person_svp = self.db.add_person('Person SVP', user_id=user_svp)
+        self.db.add_site_group_member(SiteGroupType.PROFILE_VIEWER, person_svp)
+
         all_proposals = [proposal_a1, proposal_a2, proposal_b1, proposal_b2]
 
         # Create auth cache dictionary.  The database should not be updated
@@ -378,6 +382,8 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (32, person_a1re,  False, person_a1e,   auth.no),
                 (33, person_a1re,  False, person_a2e,   auth.no),
                 (34, person_a1re,  False, person_a2p,   auth.view_only),
+                # Member of site group with view all profile permission.
+                (35, person_svp,   False, person_a1e,   auth.view_only),
                 ]:
             self._test_auth_person(auth_cache, *test_case)
 

@@ -23,7 +23,7 @@ from collections import namedtuple
 from ..db.util import memoized
 from ..error import NoSuchRecord, NoSuchValue
 from ..type.collection import ProposalCollection, ReviewerCollection
-from ..type.enum import GroupType, ProposalState, ReviewState
+from ..type.enum import GroupType, ProposalState, ReviewState, SiteGroupType
 from ..type.simple import Person, Reviewer
 from ..type.util import null_tuple
 from ..web.util import session, HTTPError, HTTPForbidden, \
@@ -94,21 +94,31 @@ def for_person(db, person, auth_cache=None):
             and can_be_admin(db, auth_cache=auth_cache)):
         return yes
 
+    auth = no
+    session_person_id = (
+        session['person']['id'] if ('person' in session) else None)
+
+    if session_person_id is not None:
+        site_group_members = _get_site_group_membership(
+            auth_cache, db, session_person_id)
+        if site_group_members.has_entry(
+                site_group_type=SiteGroupType.view_all_profile_groups()):
+            auth = auth._replace(view=True)
+
     if person is None:
-        return no
+        return auth
 
     if person.user_id is not None:
         # This is a registered user: allow access based on the "public"
         # flag and only allow them to edit their profile.
         is_user = (person.user_id == session['user_id'])
 
-        return Authorization(view=is_user or person.public, edit=is_user)
+        return Authorization(
+            view=auth.view or is_user or person.public,
+            edit=auth.edit or is_user)
 
-    if 'person' not in session:
-        return no
-
-    auth = no
-    session_person_id = session['person']['id']
+    if session_person_id is None:
+        return auth
 
     # Look for proposals of which this person is a member and allow
     # access based on the proposal settings.
@@ -672,6 +682,11 @@ def _get_proposal_co_membership(db, person_id):
     return db.search_co_member(
         person_id, with_institution_id=True,
         proposal_state=ProposalState.editable_states())
+
+
+@memoized
+def _get_site_group_membership(db, person_id):
+    return db.search_site_group_member(person_id=person_id)
 
 
 @memoized
