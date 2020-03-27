@@ -274,7 +274,7 @@
                 {% if target_total_time and (targets | length > 1) %}
                     <tr>
                         <th colspan="4">Total</th>
-                        <td class="total">{{ target_total_time | fmt('{}') }}</td>
+                        <td class="total">{{ target_total_time | fmt_max_dp(3) }}</td>
                         <td colspan="2" class="total">&nbsp;</td>
                     </tr>
                 {% endif %}

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,7 +18,8 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from hedwig.util import FormatSigFig, \
+from hedwig.error import Error
+from hedwig.util import FormatMaxDP, FormatSigFig, \
     is_list_like, list_in_blocks, list_in_ranges, \
     matches_constraint
 
@@ -123,3 +124,12 @@ class UtilTest(TestCase):
         self.assertEqual(fmt.format(-1000000), '-1000000.0')
         self.assertEqual(fmt.format(-0.11111), '-0.11')
         self.assertEqual(fmt.format(-0.0000011111), '-0.000001')
+
+    def test_max_dp(self):
+        with self.assertRaisesRegex(Error, 'number of digits must be'):
+            fmt = FormatMaxDP(0)
+
+        fmt = FormatMaxDP(3)
+        self.assertEqual(fmt.format(123.456789), '123.457')
+        self.assertEqual(fmt.format(123.4), '123.4')
+        self.assertEqual(fmt.format(120), '120')

@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2018 East Asian Observatory
+# Copyright (C) 2016-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -146,6 +146,18 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(f(None, '<{}>'), '')
         self.assertEqual(f(40, '<{}>'), '<40>')
         self.assertEqual(f((30, 40), '<{}, {}>'), '<30, 40>')
+
+    def test_filter_fmt_max_dp(self):
+        f = self.app.jinja_env.filters['fmt_max_dp']
+
+        self.assertEqual(f(None, 3), '')
+        self.assertEqual(f(150, 3), '150')
+
+    def test_filter_fmt_sig_fig(self):
+        f = self.app.jinja_env.filters['fmt_sig_fig']
+
+        self.assertEqual(f(None, 3), '')
+        self.assertEqual(f(15, 3), '15.0')
 
     def test_filter_first_value(self):
         f = self.app.jinja_env.filters['first_value']

@@ -34,7 +34,7 @@ from ..type.enum import AffiliationType, Assessment, \
     AttachmentState, CallState, GroupType, MessageState, MessageThreadType, \
     PersonTitle, ProposalState, PublicationType, \
     ReviewState, SemesterState, SiteGroupType, UserLogEvent
-
+from ..util import FormatMaxDP, FormatSigFig
 from .format import format_text
 from .util import mangle_email_address as _mangle_email_address
 
@@ -175,6 +175,28 @@ def register_template_utils(app):
             return format_.format(*value)
 
         return format_.format(value)
+
+    @app.template_filter()
+    def fmt_max_dp(value, digits):
+        """
+        Format a number using :class:`~hedwig.util.FormatMaxDP`.
+        """
+
+        if value is None or isinstance(value, Undefined):
+            return ''
+
+        return FormatMaxDP(digits).format(value)
+
+    @app.template_filter()
+    def fmt_sig_fig(value, digits):
+        """
+        Format a number using :class:`~hedwig.util.FormatSigFig`.
+        """
+
+        if value is None or isinstance(value, Undefined):
+            return ''
+
+        return FormatSigFig(digits).format(value)
 
     @app.template_filter()
     def first_value(dictionary):

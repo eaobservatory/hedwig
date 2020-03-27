@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,8 +20,10 @@ from __future__ import absolute_import, division, print_function, \
 
 import logging
 from math import log10
+import re
 
 from .compat import floor
+from .error import Error
 
 
 class FormattedLogger(object):
@@ -155,6 +157,32 @@ def matches_constraint(value, constraint):
         return (value in constraint)
 
     return (value == constraint)
+
+
+class FormatMaxDP(object):
+    """
+    Class for formatting numbers to a maximum number of decimal places.
+
+    Formats numbers to a certain number of decimal places, removing
+    any trailing zeros and decimal point.
+
+    Instances of this class are intended to work like format strings,
+    in that they have a `format` method which is called with the number
+    to be formatted.
+    """
+
+    trailing = re.compile(r'\.?0+$')
+
+    def __init__(self, digits=3):
+        if digits < 1:
+            # This would cause our regular expression to fail as there
+            # would not be a decimal point to stop trailing zero removal.
+            raise Error('number of digits must be 1 or more')
+        self.digits = digits
+
+    def format(self, value):
+        return self.trailing.sub(
+            '', '{{:.{:d}f}}'.format(self.digits).format(value))
 
 
 class FormatSigFig(object):
