@@ -60,6 +60,7 @@ The following Python modules should be installed:
 * python-magic (or python-magic-bin if libmagic is not available)
 * requests
 * SQLAlchemy
+* Authlib (for the OAuth2 provider)
 
 In addition the following back-ported modules may be required
 when using older versions of Python:
@@ -196,6 +197,28 @@ You will then need to edit the file to complete the configuration.
   `new version of ADS <https://ui.adsabs.harvard.edu/>`_
   and select
   "API Token" under "Customize Settings".
+
+* **oauth_oidc**
+
+  If you intend to use OAuth2 and OIDC, this section should contain:
+
+  * *iss*
+
+    Issuer URL.
+
+  * *key*
+
+    Relative path to RSA private key.  This can be generated as follows::
+
+        openssl genrsa -out keypair.pem 2048
+
+        openssl rsa -in keypair.pem -pubout -out publickey.crt
+
+    Where the `publickey.crt` file is given to the clients.
+
+* **oauth_clients**
+
+  This section should list authorized OAuth2 clients.
 
 Tests
 ~~~~~

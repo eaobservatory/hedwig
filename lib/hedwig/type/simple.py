@@ -19,11 +19,13 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import namedtuple
+from datetime import datetime
 
 from ..db.meta import affiliation, \
     calculation, call, call_mid_close, call_preamble, category, \
     email, group_member, institution, institution_log, \
-    member, message, message_recipient, moc, person, \
+    member, message, message_recipient, moc, \
+    oauth_code, oauth_token, person, \
     prev_proposal, prev_proposal_pub, \
     proposal, proposal_annotation, proposal_category, \
     proposal_fig, proposal_fig_link, proposal_pdf, proposal_pdf_link, \
@@ -159,6 +161,39 @@ MessageRecipient = namedtuple(
 MOCInfo = namedtuple(
     'MOCInfo',
     [x.name for x in moc.columns])
+
+
+class OAuthCode(namedtuple(
+        '_OAuthCode', [x.name for x in oauth_code.columns])):
+    def get_redirect_uri(self):
+        return self.redirect_uri
+
+    def get_scope(self):
+        return self.scope
+
+    def get_nonce(self):
+        return self.nonce
+
+    def get_auth_time(self):
+        return int(
+            (self.issued - datetime.utcfromtimestamp(0)).total_seconds())
+
+
+class OAuthToken(namedtuple(
+        '_OAuthToken', [x.name for x in oauth_token.columns])):
+    def get_client_id(self):
+        return self.client_id
+
+    def get_scope(self):
+        return self.scope
+
+    def get_expires_in(self):
+        return int((self.expiry - self.issued).total_seconds())
+
+    def get_expires_at(self):
+        return int(
+            (self.expiry - datetime.utcfromtimestamp(0)).total_seconds())
+
 
 Person = namedtuple(
     'Person',

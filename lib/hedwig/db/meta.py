@@ -369,6 +369,42 @@ moc_fits = Table(
     Column('fits', LargeBinary(2**32 - 1), nullable=False),
     **table_opts)
 
+
+def _oauth_cols():
+    return [
+        Column('client_id', Unicode(63), nullable=False),
+        Column('scope', Unicode(255), default='', nullable=False),
+        Column(
+            'person_id', None,
+            ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+            nullable=False),
+        Column('issued', DateTime(), nullable=False),
+        Column('expiry', DateTime(), nullable=False, index=True),
+    ]
+
+
+oauth_code = Table(
+    'oauth_code',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('code', Unicode(255), unique=True, nullable=False),
+    Column('redirect_uri', Unicode(255), nullable=False),
+    Column('response_type', Unicode(255), nullable=False),
+    Column('nonce', Unicode(255), nullable=True),
+    *_oauth_cols(),
+    **table_opts)
+
+oauth_token = Table(
+    'oauth_token',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('token_type', Unicode(63), nullable=False),
+    Column('access_token', Unicode(255), unique=True, nullable=False),
+    Column('refresh_token', Unicode(255), index=True, nullable=True),
+    Column('revoked', Boolean, default=False, nullable=False),
+    *_oauth_cols(),
+    **table_opts)
+
 person = Table(
     'person',
     metadata,

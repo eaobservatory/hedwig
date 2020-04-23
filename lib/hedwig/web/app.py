@@ -36,6 +36,7 @@ from .blueprint.admin import create_admin_blueprint
 from .blueprint.facility import create_facility_blueprint
 from .blueprint.help import create_help_blueprint
 from .blueprint.home import create_home_blueprint
+from .blueprint.oauth import create_oauth_blueprint
 from .blueprint.people import create_people_blueprint
 from .blueprint.query import create_query_blueprint
 
@@ -143,6 +144,7 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
     app.register_blueprint(create_people_blueprint(db, facilities))
     app.register_blueprint(create_help_blueprint(db), url_prefix='/help')
     app.register_blueprint(create_query_blueprint(db), url_prefix='/query')
+    app.register_blueprint(create_oauth_blueprint(db, app), url_prefix='/user/oauth')
 
     # Register blueprints for each facility.
     for facility in facilities.values():

@@ -67,3 +67,12 @@ api_token=
 [test]
 query_ads=no
 query_arxiv=no
+
+# This section should contain the OIDC issuer and path to an RSA private key.
+[oauth_oidc]
+iss=
+key=
+
+# This section lists allowed OAuth2 clients, in the form:
+# client_id=name,secret,comma-separated-redirect-uris
+[oauth_clients]

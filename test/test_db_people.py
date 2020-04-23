@@ -33,7 +33,7 @@ from hedwig.type.enum import BaseCallType, BaseTextRole, FormatType, \
     SiteGroupType, UserLogEvent
 from hedwig.type.simple import Email, \
     Institution, InstitutionInfo, MemberInstitution, \
-    Person, SiteGroupMember, UserInfo
+    OAuthCode, OAuthToken, Person, SiteGroupMember, UserInfo
 from .dummy_db import DBTestCase
 
 
@@ -1053,6 +1053,51 @@ class DBPeopleTest(DBTestCase):
         self.db.sync_site_group_member(SiteGroupType.PROFILE_VIEWER, records)
         result = self.db.search_site_group_member(SiteGroupType.PROFILE_VIEWER)
         self.assertEqual(len(result), 0)
+
+    def test_oauth(self):
+        person_id = self.db.add_person('Test Person')
+
+        code_id = self.db.add_oauth_code(
+            'XYZ', 'xxx://yyy.zzz/', 'code', None, '123', 'openid', person_id)
+
+        self.assertIsInstance(code_id, int)
+
+        codes = self.db.search_oauth_code('123', 'ZYX')
+        self.assertFalse(codes)
+
+        codes = self.db.search_oauth_code('321', 'XYZ')
+        self.assertFalse(codes)
+
+        code = self.db.search_oauth_code('123', 'XYZ').get_single()
+        self.assertIsInstance(code, OAuthCode)
+
+        self.assertEqual(code.id, code_id)
+
+        self.assertEqual(code.redirect_uri, 'xxx://yyy.zzz/')
+
+        self.db.delete_oauth_code(code.id)
+
+        codes = self.db.search_oauth_code('123', 'XYZ')
+        self.assertFalse(codes)
+
+        token_id = self.db.add_oauth_token(
+            'Bearer', 'XYZ', None, '123', 'openid', person_id, 864000)
+
+        self.assertIsInstance(token_id, int)
+
+        tokens = self.db.search_oauth_token('123', access_token='ZYX')
+        self.assertFalse(tokens)
+
+        tokens = self.db.search_oauth_token('321', access_token='XYZ')
+        self.assertFalse(tokens)
+
+        tokens = self.db.search_oauth_token('123', access_token='XYZ')
+        token = tokens.get_single()
+        self.assertIsInstance(token, OAuthToken)
+
+        self.assertEqual(token.id, token.id)
+
+        self.assertEqual(token.scope, 'openid')
 
     def _create_test_proposal(self, person_id):
         """

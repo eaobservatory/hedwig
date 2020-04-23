@@ -35,12 +35,13 @@ from ...type.collection import EmailCollection, ResultCollection, \
     SiteGroupMemberCollection
 from ...type.enum import PersonTitle, SiteGroupType, UserLogEvent
 from ...type.simple import Email, \
-    Institution, InstitutionInfo, InstitutionLog, \
+    Institution, InstitutionInfo, InstitutionLog, OAuthCode, OAuthToken, \
     Person, PersonInfo, SiteGroupMember, UserInfo, UserLog
 from ...util import is_list_like
 from ..meta import auth_failure, email, group_member, \
     institution, institution_log, \
-    invitation, member, message_recipient, person, \
+    invitation, member, message_recipient, \
+    oauth_code, oauth_token, person, \
     proposal_fig, proposal_pdf, proposal_text, \
     reset_token, reviewer, site_group_member, user, user_log, verify_token
 from ..util import require_not_none
@@ -147,6 +148,46 @@ class PeoplePart(object):
                     person_id, primary_email, primary=True, _conn=conn)
 
         return person_id
+
+    def add_oauth_code(
+            self, code, redirect_uri, response_type, nonce,
+            client_id, scope, person_id):
+        values = {
+            oauth_code.c.code: code,
+            oauth_code.c.redirect_uri: redirect_uri,
+            oauth_code.c.response_type: response_type,
+            oauth_code.c.nonce: nonce,
+            oauth_code.c.client_id: client_id,
+            oauth_code.c.scope: scope,
+            oauth_code.c.person_id: person_id,
+            oauth_code.c.issued: datetime.utcnow(),
+            oauth_code.c.expiry: datetime.utcnow() + timedelta(minutes=10),
+        }
+
+        with self._transaction() as conn:
+            result = conn.execute(oauth_code.insert().values(values))
+
+        return result.inserted_primary_key[0]
+
+    def add_oauth_token(
+            self, token_type, access_token, refresh_token,
+            client_id, scope, person_id, expires_in):
+        values = {
+            oauth_token.c.token_type: token_type,
+            oauth_token.c.access_token: access_token,
+            oauth_token.c.refresh_token: refresh_token,
+            oauth_token.c.client_id: client_id,
+            oauth_token.c.scope: scope,
+            oauth_token.c.person_id: person_id,
+            oauth_token.c.issued: datetime.utcnow(),
+            oauth_token.c.expiry: datetime.utcnow() + timedelta(
+                seconds=expires_in),
+        }
+
+        with self._transaction() as conn:
+            result = conn.execute(oauth_token.insert().values(values))
+
+        return result.inserted_primary_key[0]
 
     def add_site_group_member(
             self, site_group_type, person_id,
@@ -331,6 +372,29 @@ class PeoplePart(object):
         with self._transaction(_conn=_conn) as conn:
             conn.execute(auth_failure.delete().where(
                 auth_failure.c.user_name == user_name))
+
+    def delete_oauth_code(self, code_id):
+        """
+        Delete the given authorization code.
+        """
+
+        with self._transaction() as conn:
+            conn.execute(oauth_code.delete().where(
+                oauth_code.c.id == code_id))
+
+    def _delete_oauth_expired(self, conn):
+        """
+        Delete expired OAuth data.
+
+        This removes authorization codes and, since refresh is not
+        implemented, access tokens.
+        """
+
+        conn.execute(oauth_code.delete().where(
+            oauth_code.c.expiry < datetime.utcnow()))
+
+        conn.execute(oauth_token.delete().where(
+            oauth_token.c.expiry < datetime.utcnow()))
 
     def get_institution(self, institution_id, _conn=None):
         """
@@ -816,6 +880,44 @@ class PeoplePart(object):
                 )
 
                 ans[values['id']] = InstitutionLog(prev=prev, **values)
+
+        return ans
+
+    def search_oauth_code(self, client_id, code=None, nonce=None):
+        ans = ResultCollection()
+
+        stmt = oauth_code.select()
+
+        if client_id is not None:
+            stmt = stmt.where(oauth_code.c.client_id == client_id)
+        if code is not None:
+            stmt = stmt.where(oauth_code.c.code == code)
+        if nonce is not None:
+            stmt = stmt.where(oauth_code.c.nonce == nonce)
+
+        with self._transaction() as conn:
+            self._delete_oauth_expired(conn)
+
+            for row in conn.execute(stmt):
+                ans[row['id']] = OAuthCode(**row)
+
+        return ans
+
+    def search_oauth_token(self, client_id, access_token=None):
+        ans = ResultCollection()
+
+        stmt = oauth_token.select().where(not_(oauth_token.c.revoked))
+
+        if client_id is not None:
+            stmt = stmt.where(oauth_token.c.client_id == client_id)
+        if access_token is not None:
+            stmt = stmt.where(oauth_token.c.access_token == access_token)
+
+        with self._transaction() as conn:
+            self._delete_oauth_expired(conn)
+
+            for row in conn.execute(stmt):
+                ans[row['id']] = OAuthToken(**row)
 
         return ans
 
