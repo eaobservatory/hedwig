@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import namedtuple
 import functools
 import os
+import re
 
 from authlib.oauth2 import OAuth2Error
 from authlib.oauth2.rfc6749 import grants
@@ -231,6 +232,9 @@ class Client(namedtuple('Client_', ['id', 'name', 'secret', 'redirect_uris'])):
         return list_to_scope([s for s in scope.split() if s in allowed])
 
     def check_redirect_uri(self, redirect_uri):
+        # Allow any port with loopback IP literal (see e.g. RFC8252 7.3).
+        redirect_uri = re.sub(r'^(http://(?:127.0.0.1|\[::1\])):\d+', r'\1', redirect_uri)
+
         return redirect_uri in self.redirect_uris
 
     def has_client_secret(self):
