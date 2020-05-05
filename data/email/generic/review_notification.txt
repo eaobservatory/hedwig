@@ -31,9 +31,11 @@ Alternatively you may click the following link:
 {{ target_url }}
 
 This code will expire at {{ expiry | format_datetime }} UT.
+{% if role_is_peer %}
 Please note that this new invitation code
 supersedes any invitation codes you may have received
 for the proposal of which you are a member.
+{% endif %}
 {% endif %}
 {% endblock %}
 
