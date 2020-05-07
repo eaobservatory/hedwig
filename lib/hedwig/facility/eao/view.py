@@ -37,7 +37,7 @@ class EAOFacility(Generic):
             urls.append(Link(
                 'OMP', self.OMP_CGI_BIN + 'projecthome.pl?' +
                 url_encode({
-                    'urlprojid': proposal_code,
+                    'project': proposal_code,
                 })))
 
         except:
