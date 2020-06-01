@@ -26,13 +26,17 @@
         </ol>
     </nav>
 {% endif %}
+{% if show_viewer_links and not is_current_user %}
+    <nav>
+        <ol id="account_viewer_links">
+            <li><a href="{{ url_for('.person_view_proposals', person_id=person.id) }}">View proposal list</a></li>
+            <li><a href="{{ url_for('.person_view_reviews', person_id=person.id) }}">View review list</a></li>
+        </ol>
+    </nav>
+{% endif %}
 {% if show_admin_links %}
     <nav>
         <ol id="account_admin_links">
-            {% if not is_current_user %}
-                <li><a href="{{ url_for('.person_view_proposals', person_id=person.id) }}">View proposal list</a></li>
-                <li><a href="{{ url_for('.person_view_reviews', person_id=person.id) }}">View review list</a></li>
-            {% endif %}
             <li><a href="{{ url_for('admin.message_list', person_id=person.id) }}">View messages</a></li>
             {% if person.user_id is none %}
                 <li><a href="{{ url_for('.person_invite', person_id=person.id) }}">Invite to register</a></li>

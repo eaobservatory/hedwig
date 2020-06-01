@@ -572,6 +572,8 @@ class PeopleView(object):
             'can_edit': can.edit,
             'person': person,
             'show_admin_links': is_admin,
+            'show_viewer_links': auth.for_person(
+                db, None, auth_cache=can.cache).view,
             'site_group_membership': site_group_membership,
             'review_group_membership': review_group_membership,
         }
@@ -875,9 +877,8 @@ class PeopleView(object):
         return self._person_proposals(
             db, session['person']['id'], facilities, None, 'Your Proposals')
 
-    @with_verified_admin
-    @with_person(permission=PermissionType.NONE)
-    def person_proposals_other(self, db, person, facilities):
+    @with_person(permission=PermissionType.UNIVERSAL_VIEW)
+    def person_proposals_other(self, db, person, can, facilities):
         return self._person_proposals(
             db, person.id, facilities, person,
             '{}: Proposals'.format(person.name))
@@ -910,16 +911,14 @@ class PeopleView(object):
         return self._person_reviews(
             db, session['person']['id'], facilities, None)
 
-    @with_verified_admin
-    @with_person(permission=PermissionType.NONE)
-    def person_reviews_other(self, db, person, facilities):
+    @with_person(permission=PermissionType.UNIVERSAL_VIEW)
+    def person_reviews_other(self, db, person, can, facilities):
         return self._person_reviews(
-            db, person.id, facilities, person, as_admin=True)
+            db, person.id, facilities, person, as_admin=True,
+            auth_cache=can.cache)
 
     def _person_reviews(self, db, person_id, facilities, person,
-                        as_admin=False):
-        auth_cache = {}
-
+                        as_admin=False, auth_cache={}):
         # Get a list of proposals, in all review states, for which this
         # person has reviews.  (Will filter later to list only those
         # which are editable in each proposal's actual state.)

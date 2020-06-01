@@ -405,6 +405,7 @@ class PermissionType(object):
     NONE = 1
     VIEW = 2
     EDIT = 3
+    UNIVERSAL_VIEW = 4
 
     # Special permission types for particular types of resource.
     FEEDBACK = 10

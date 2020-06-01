@@ -207,6 +207,17 @@ def with_person(permission):
             if permission == PermissionType.NONE:
                 return f(self, db, person, *args, **kwargs)
 
+            elif permission == PermissionType.UNIVERSAL_VIEW:
+                auth_cache = {}
+                can = auth.for_person(db, None, auth_cache=auth_cache)
+
+                if not can.view:
+                    raise HTTPForbidden(
+                        'Permission denied for person profiles.')
+
+                return f(self, db, person, with_cache(can, auth_cache),
+                         *args, **kwargs)
+
             else:
                 auth_cache = {}
                 can = auth.for_person(db, person, auth_cache=auth_cache)

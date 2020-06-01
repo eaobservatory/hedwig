@@ -186,7 +186,7 @@ def create_people_blueprint(db, facilities):
         return view.person_proposals_own(db, facilities)
 
     @bp.route('/person/<int:person_id>/proposals')
-    @require_admin
+    @require_auth(require_person=True)
     @templated('person_proposals.html')
     def person_view_proposals(person_id):
         return view.person_proposals_other(db, person_id, facilities)
@@ -198,7 +198,7 @@ def create_people_blueprint(db, facilities):
         return view.person_reviews_own(db, facilities)
 
     @bp.route('/person/<int:person_id>/reviews')
-    @require_admin
+    @require_auth(require_person=True)
     @templated('person_reviews.html')
     def person_view_reviews(person_id):
         return view.person_reviews_other(db, person_id, facilities)
