@@ -19,7 +19,7 @@ your review while the proposal remains in the "Under review" status.
 
 Please be aware that the system will prompt you
 to log in again if you have not loaded any new pages
-for about two hours.
+for about twelve hours.
 If this happens when you try to save your review,
 log in and then use your browser's back button
 (twice) to return to the review you were editing.

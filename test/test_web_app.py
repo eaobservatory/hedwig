@@ -108,8 +108,8 @@ class BasicWebAppTestCase(WebAppTestCase):
             self.assertLess(
                 abs((sess['date_set'] - dt_curr).total_seconds()), 5)
 
-            # Set date back 10 hours - should cause session expiry.
-            sess['date_set'] = dt_curr - timedelta(seconds=36000)
+            # Set date back 20 hours - should cause session expiry.
+            sess['date_set'] = dt_curr - timedelta(seconds=72000)
 
         self.client.get('/')
 

@@ -67,7 +67,7 @@ Note your name and the "log out" link at the top right of the page.
 This serves as a reminder that you are logged in.  Don't forget
 to log out when you are done using this system if someone else
 may have access to your computer.  Your session will automatically
-time out after two hours of inactivity --- you will be prompted to
+time out after twelve hours of inactivity --- you will be prompted to
 log in again in this case.
 
 .. image:: image/profile_complete.png

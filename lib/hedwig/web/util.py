@@ -578,7 +578,7 @@ def check_session_expiry():
     This function manages the `date_set` session variable in order to detect
     when the user has been idle for too long.
 
-    * If over 2 hours ago, the session is cleared.
+    * If over 12 hours ago, the session is cleared.
     * If over 10 minutes ago, `date_set` is set to the current time.
 
     This is invoked at the start of each request, as it is registered
@@ -597,7 +597,7 @@ def check_session_expiry():
 
         delta = (date_current - date_set).total_seconds()
 
-        if delta < 7200:
+        if delta < 43200:
             if delta > 600:
                 session['date_set'] = date_current
 

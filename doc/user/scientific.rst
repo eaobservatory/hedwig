@@ -68,7 +68,7 @@ You can save the text as often as you like
 and return to this page.
 Please be aware that the system will prompt you
 to log in again if you have not loaded any new pages
-for about two hours.
+for about twelve hours.
 If this happens when you try to save your text,
 log in and then use your browser's back button
 (twice) to return to the text you were editing.
