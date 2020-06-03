@@ -8,7 +8,11 @@
 {% block content %}
     {% if not proposals %}
         <p class="not_present">
-            You do not currently have any active reviews in this system.
+            {% if person is none %}
+                You do not currently have any active reviews in this system.
+            {% else %}
+                This person does not have any active reviews in the system.
+            {% endif %}
         </p>
     {% else %}
         <p>
