@@ -70,6 +70,8 @@ class UKIRTCallType(BaseCallType):
         BaseCallType.MULTICLOSE: {
             'name': 'Rapid Turnaround', 'code': 'RT', 'url_path': 'rapid',
             'name_proposal': True},
+        BaseCallType.SUPPLEMENTAL: {
+            'code': 'SPLM'},
     }
 
     _info = OrderedDict()

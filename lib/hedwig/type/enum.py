@@ -1053,6 +1053,7 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
     IMMEDIATE = 2
     TEST = 3
     MULTICLOSE = 4
+    SUPPLEMENTAL = 5
 
     TypeInfo = namedtuple(
         'TypeInfo',
@@ -1061,27 +1062,32 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
 
     _cttee = tuple(BaseReviewerRole.get_cttee_roles())
 
-    #       Code   Name         Avail.  URL         Im.Rv. Nm.Pr. Md.Cl.
+    #       Code   Name         Avail.  URL          Im.Rv. Nm.Pr. Md.Cl.
     #       (Reviewer roles)
     #       (Notify groups)
     _info = OrderedDict((
         (STANDARD,  TypeInfo(
-            None,  'Standard',  True,  'standard',  False, False, False,
+            None,  'Standard',  True,  'standard',   False, False, False,
             (BaseReviewerRole.TECH, BaseReviewerRole.EXTERNAL,
              BaseReviewerRole.FEEDBACK) + _cttee,
             ())),
         (IMMEDIATE, TypeInfo(
-            'I',   'Immediate', True,  'immediate', True,  False, False,
+            'I',   'Immediate', True,  'immediate',  True,  False, False,
             (BaseReviewerRole.TECH, BaseReviewerRole.CTTEE_OTHER,
              BaseReviewerRole.FEEDBACK),
             (GroupType.CTTEE,))),
         (MULTICLOSE,  TypeInfo(
-            'M',  'Multiple-close', True, 'multi',  False, False, True,
+            'M',  'Multiple-close', True, 'multi',   False, False, True,
             (BaseReviewerRole.TECH, BaseReviewerRole.PEER,
-            BaseReviewerRole.FEEDBACK),
+             BaseReviewerRole.FEEDBACK),
+            ())),
+        (SUPPLEMENTAL, TypeInfo(
+            'S', 'Supplemental', True, 'supplement', False, False, False,
+            (BaseReviewerRole.TECH, BaseReviewerRole.EXTERNAL,
+             BaseReviewerRole.PEER, BaseReviewerRole.FEEDBACK) + _cttee,
             ())),
         (TEST, TypeInfo(
-            'T',   'Test',      True,  'test',      False, True,  False,
+            'T',   'Test',      True,  'test',       False, True,  False,
             (BaseReviewerRole.TECH, BaseReviewerRole.EXTERNAL,
              BaseReviewerRole.PEER, BaseReviewerRole.FEEDBACK) + _cttee,
             ())),

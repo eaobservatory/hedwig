@@ -126,6 +126,8 @@ class JCMTCallType(BaseCallType):
         BaseCallType.MULTICLOSE: {
             'name': 'Rapid Turnaround', 'code': 'R', 'url_path': 'rapid',
             'name_proposal': True},
+        BaseCallType.SUPPLEMENTAL: {
+            'code': 'E'},
     }
 
     _info = OrderedDict()
