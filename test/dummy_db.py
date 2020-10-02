@@ -109,7 +109,7 @@ class DBTestCase(DummyConfigTestCase):
             BaseCallType, semester_id, queue_id, call_type,
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             100, 1000, 0, 1, 2000, 4, 3, 100, 100,
-            '', '', '', FormatType.PLAIN, False)
+            '', '', '', FormatType.PLAIN, False, False)
         self.assertIsInstance(call_id, int)
 
         affiliations = self.db.search_affiliation(queue_id=queue_id)
@@ -133,7 +133,7 @@ class DBTestCase(DummyConfigTestCase):
             BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', '',
-            FormatType.PLAIN, False)
+            FormatType.PLAIN, False, False)
         affiliation_id = self.db.add_affiliation(queue_id, 'test')
         person_id = self.db.add_person('Test Person')
 

@@ -87,7 +87,7 @@ class ProposalPart(object):
                  sci_word_lim, sci_fig_lim, sci_page_lim,
                  capt_word_lim, expl_word_lim,
                  tech_note, sci_note, prev_prop_note, note_format,
-                 multi_semester,
+                 multi_semester, separate,
                  _test_skip_check=False):
         """
         Add a call for proposals to the database.
@@ -139,6 +139,7 @@ class ProposalPart(object):
                 call.c.prev_prop_note: prev_prop_note,
                 call.c.note_format: note_format,
                 call.c.multi_semester: multi_semester,
+                call.c.separate: separate,
             }))
 
         return result.inserted_primary_key[0]
@@ -1016,6 +1017,7 @@ class ProposalPart(object):
                     queue_id=None, queue_code=None,
                     type_=None, state=None,
                     has_proposal_state=None, date_close_before=None,
+                    separate=None,
                     with_queue_description=False, with_case_notes=False,
                     with_facility_code=False,
                     with_proposal_count=False, with_proposal_count_state=None,
@@ -1131,6 +1133,12 @@ class ProposalPart(object):
 
         if date_close_before is not None:
             stmt = stmt.where(call.c.date_close < date_close_before)
+
+        if separate is not None:
+            if separate:
+                stmt = stmt.where(call.c.separate)
+            else:
+                stmt = stmt.where(not_(call.c.separate))
 
         ans = CallCollection()
 
@@ -2759,7 +2767,7 @@ class ProposalPart(object):
                     sci_word_lim=None, sci_fig_lim=None, sci_page_lim=None,
                     capt_word_lim=None, expl_word_lim=None,
                     tech_note=None, sci_note=None, prev_prop_note=None,
-                    note_format=None, multi_semester=None,
+                    note_format=None, multi_semester=None, separate=None,
                     _test_skip_check=False):
         """
         Update a call for proposals record.
@@ -2805,6 +2813,8 @@ class ProposalPart(object):
             values['note_format'] = note_format
         if multi_semester is not None:
             values['multi_semester'] = multi_semester
+        if separate is not None:
+            values['separate'] = separate
 
         if not values:
             raise Error('no call updates specified')

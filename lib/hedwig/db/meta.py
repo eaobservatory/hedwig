@@ -139,6 +139,7 @@ call = Table(
     Column('prev_prop_note', UnicodeText, nullable=False),
     Column('note_format', Integer, nullable=False),
     Column('multi_semester', Boolean, default=False, nullable=False),
+    Column('separate', Boolean, default=False, nullable=False),
     UniqueConstraint('semester_id', 'queue_id', 'type'),
     **table_opts)
 

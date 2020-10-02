@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -104,7 +104,7 @@ class DBProposalTest(DBTestCase):
             BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             1, 1, 1, 1, 1, 1, 1, 1, 1, '', '', '',
-            FormatType.PLAIN, False)
+            FormatType.PLAIN, False, False)
         person_id = self.db.add_person('Person1')
         (affiliation_id, affiliation_record) = result.popitem()
         self.db.add_proposal(call_id, person_id, affiliation_id, 'Title')
@@ -119,7 +119,7 @@ class DBProposalTest(DBTestCase):
             BaseCallType, semester_id_2, queue_id, BaseCallType.STANDARD,
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             1, 1, 1, 1, 1, 1, 1, 1, 1, '', '', '',
-            FormatType.PLAIN, False)
+            FormatType.PLAIN, False, False)
 
         # Store different sets of weights for the two calls.
         result = self.db.search_affiliation(queue_id=queue_id,
@@ -305,7 +305,7 @@ class DBProposalTest(DBTestCase):
             capt_word_lim=8, expl_word_lim=9,
             tech_note='technical note', sci_note='scientific note',
             prev_prop_note='previous proposal note',
-            note_format=FormatType.PLAIN, multi_semester=False)
+            note_format=FormatType.PLAIN, multi_semester=False, separate=False)
         self.assertIsInstance(call_id, int)
 
         # Check tests for bad values.
@@ -314,19 +314,19 @@ class DBProposalTest(DBTestCase):
                 BaseCallType, 1999999, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False)
+                '', '', '', FormatType.PLAIN, False, False)
         with self.assertRaisesRegex(ConsistencyError, 'queue does not'):
             self.db.add_call(
                 BaseCallType, semester_id, 1999999, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False)
+                '', '', '', FormatType.PLAIN, False, False)
         with self.assertRaisesRegex(UserError, 'Closing date is before open'):
             self.db.add_call(
                 BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
                 date_close, date_open,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False)
+                '', '', '', FormatType.PLAIN, False, False)
 
         # Check uniqueness constraint.
         with self.assertRaises(DatabaseIntegrityError):
@@ -334,7 +334,7 @@ class DBProposalTest(DBTestCase):
                 BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False)
+                '', '', '', FormatType.PLAIN, False, False)
 
         # Check facility consistency check.
         facility_id_2 = self.db.ensure_facility('my_other_tel')
@@ -347,7 +347,7 @@ class DBProposalTest(DBTestCase):
                 BaseCallType, semester_id_2, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False)
+                '', '', '', FormatType.PLAIN, False, False)
 
         # Try the search_call method.
         result = self.db.search_call(call_id=call_id)
@@ -368,7 +368,7 @@ class DBProposalTest(DBTestCase):
                         prev_prop_note='previous proposal note',
                         note_format=FormatType.PLAIN,
                         facility_code=None, proposal_count=None,
-                        multi_semester=False)
+                        multi_semester=False, separate=False)
         self.assertEqual(result[call_id],
                          expected._replace(tech_note=None, sci_note=None,
                                            prev_prop_note=None))
@@ -380,22 +380,39 @@ class DBProposalTest(DBTestCase):
         with self.assertRaises(NoSuchRecord):
             self.db.get_call(1999999, call_id)
 
+        self.assertEqual(self.db.search_call(
+            call_id=call_id, separate=False,
+            with_case_notes=True).get_single(), expected)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.search_call(call_id=call_id, separate=True).get_single()
+
         # Try updating the call.
         with self.assertRaisesRegex(ConsistencyError, 'call does not exist'):
             self.db.update_call(1999999, date_open=date_open)
         with self.assertRaisesRegex(UserError, 'Closing date is before open'):
             self.db.update_call(call_id,
                                 date_close=date_open, date_open=date_close)
-        self.db.update_call(call_id, date_close=datetime(1999, 10, 1))
+        self.db.update_call(
+            call_id, date_close=datetime(1999, 10, 1), separate=True)
         call = self.db.get_call(facility_id, call_id)
         self.assertEqual(call.date_close.month, 10)
+        self.assertTrue(call.separate)
+
+        self.assertEqual(
+            set(self.db.search_call(call_id=call_id, separate=False).keys()),
+            set(()))
+        self.assertEqual(
+            set(self.db.search_call(call_id=call_id, separate=True).keys()),
+            set((call_id,)))
 
         # Test the get_call method's with_facility_code option.
         queue_id_2 = self.db.add_queue(facility_id_2, 'Another Queue', 'AQ')
         call_id_2 = self.db.add_call(
             BaseCallType, semester_id_2, queue_id_2, BaseCallType.STANDARD,
             date_open, date_close,
-            1, 1, 1, 1, 1, 1, 1, 1, 1, '', '', '', FormatType.PLAIN, False)
+            1, 1, 1, 1, 1, 1, 1, 1, 1, '', '', '', FormatType.PLAIN,
+            False, False)
 
         result = self.db.get_call(
             facility_id=None, call_id=call_id, with_facility_code=True)
