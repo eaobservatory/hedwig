@@ -143,7 +143,7 @@ class IntegrationTest(DummyConfigTestCase):
             # (Process the MOC so that it can be searched later.)
             self.log_in_user(user_name='test')
 
-            semester_name = self.set_up_facility('jcmt')
+            (semester_name, queue_name) = self.set_up_facility('jcmt')
 
             self.log_out_user()
 
@@ -187,7 +187,7 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.log_in_user(user_name='test')
 
-            self.administer_facility('jcmt', semester_name)
+            self.administer_facility('jcmt', semester_name, queue_name)
 
             # Set up review process.
             close_call_proposals(self.db, 1)
@@ -520,7 +520,7 @@ class IntegrationTest(DummyConfigTestCase):
             'The new coverage map has been stored.',
             self.browser.page_source)
 
-        return semester_name
+        return (semester_name, queue_name)
 
     def _create_semester(self, suffix, screenshot_path=None):
         self.browser.find_element_by_link_text('Semesters').click()
@@ -1449,7 +1449,7 @@ class IntegrationTest(DummyConfigTestCase):
             'Your password has been changed.',
             self.browser.page_source)
 
-    def administer_facility(self, facility_code, semester_name):
+    def administer_facility(self, facility_code, semester_name, queue_name):
         """
         This test performs some administrative tasks on a facility.
 
@@ -1475,7 +1475,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         self._save_screenshot(self.admin_image_root, 'call_list')
 
-        self.browser.find_elements_by_link_text('Regular')[-1].click()
+        self.browser.find_element_by_link_text(queue_name).click()
 
         self.assertIn('<h1>Call:',
                       self.browser.page_source)

@@ -22,18 +22,18 @@
     <table>
         <tr>
             <th>Semester</th>
-            <th>Queue</th>
             <th>Type</th>
+            <th>Queue</th>
             <th>Status</th>
             <th>Submitted<br />proposals</th>
             <th colspan="2">Links</th>
         </tr>
         {% for semester_calls in calls.values() | plain_group_by('semester_id') %}
-            {% for queue_calls in semester_calls | plain_group_by('queue_id') %}
-                {% set queue_loop = loop %}
-                {% for call in queue_calls %}
+            {% for type_calls in semester_calls | plain_group_by('type') %}
+                {% set type_loop = loop %}
+                {% for call in type_calls %}
                     <tr>
-                        {% if loop.first and queue_loop.first %}
+                        {% if loop.first and type_loop.first %}
                             <td rowspan="{{ semester_calls | length }}">
                                 <a href="{{ url_for('.semester_view', semester_id=call.semester_id) }}">
                                     {{ call.semester_name }}
@@ -42,15 +42,16 @@
                         {% endif %}
                         {% if loop.first %}
                             <td rowspan="{{ loop.length }}">
-                                <a href="{{ url_for('.queue_view', queue_id=call.queue_id) }}">
-                                    {{ call.queue_name }}
-                                </a>
+                                {{ call.type | call_type_name(facility_call_type_class) }}
                             </td>
                         {% endif %}
                         <td>
                             <a href="{{ url_for('.call_view', call_id=call.id) }}">
-                                {{ call.type | call_type_name(facility_call_type_class) }}
+                                {{ call.queue_name }}
                             </a>
+                            {% if call.separate %}
+                                <span class="label">separate</span>
+                            {% endif %}
                         </td>
                         <td class="{{ call.state | call_state_class }}">{{ call.state | call_state_name }}</td>
                         <td class="number_center">
