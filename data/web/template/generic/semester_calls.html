@@ -50,15 +50,19 @@
 {{ semester.description | format_text(semester.description_format) }}
 
 {% if calls %}
-    <h2>Available Queues</h2>
+    {% if not separate %}
+        <h2>Available Queues</h2>
 
-    <p>
-        The following queues have open calls for this semester.
-        Please select a queue to start a new proposal.
-    </p>
+        <p>
+            The following queues have open calls for this semester.
+            Please select a queue to start a new proposal.
+        </p>
+    {% endif %}
 
     {% for call in calls.values() %}
-        <h3 id="queue_{{ call.queue_id }}">{{ call.queue_name }}</h3>
+        {% if not separate %}
+            <h3 id="queue_{{ call.queue_id }}">{{ call.queue_name }}</h3>
+        {% endif %}
 
         <table>
             <tr>

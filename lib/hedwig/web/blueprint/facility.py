@@ -99,7 +99,15 @@ def create_facility_blueprint(db, facility):
               '<hedwig_call_type_{}:call_type>'.format(code))
     @facility_template('semester_calls.html')
     def semester_calls(semester_id, call_type):
-        return facility.view_semester_calls(db, semester_id, call_type)
+        return facility.view_semester_calls(
+            db, semester_id, call_type, None)
+
+    @bp.route('/semester/<int:semester_id>/'
+              '<hedwig_call_type_{}:call_type>/<int:queue_id>'.format(code))
+    @facility_template('semester_calls.html')
+    def semester_call_separate(semester_id, call_type, queue_id):
+        return facility.view_semester_calls(
+            db, semester_id, call_type, queue_id)
 
     @bp.route('/semester/closed')
     @facility_template('semester_closed.html')

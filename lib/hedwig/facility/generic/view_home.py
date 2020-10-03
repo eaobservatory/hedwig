@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2020 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple, OrderedDict
 
-from ...error import NoSuchRecord
+from ...error import NoSuchRecord, MultipleRecords
 from ...type.enum import CallState, GroupType, ProposalState
 from ...web.util import ErrorPage, HTTPNotFound, session
 
@@ -96,18 +96,34 @@ class GenericHome(object):
             'show_admin_links': session.get('is_admin', False),
         }
 
-    def view_semester_calls(self, db, semester_id, call_type):
+    def view_semester_calls(self, db, semester_id, call_type, queue_id):
         type_class = self.get_call_types()
 
         try:
             semester = db.get_semester(self.id_, semester_id)
             assert semester.id == semester_id
         except NoSuchRecord:
-            raise HTTPNotFound('Semester not found')
+            raise HTTPNotFound('Semester not found.')
+
+        title = '{} Call for Semester {}'.format(
+            type_class.get_name(call_type), semester.name)
+
+        separate = (queue_id is not None)
 
         calls = db.search_call(facility_id=self.id_, semester_id=semester_id,
                                state=CallState.OPEN, type_=call_type,
+                               queue_id=queue_id, separate=separate,
                                with_queue_description=True)
+
+        if separate:
+            try:
+                separate_call = calls.get_single()
+                title = '{} ({} Queue)'.format(
+                    title, separate_call.queue_name)
+            except NoSuchRecord:
+                raise HTTPNotFound('Call not found.')
+            except MultipleRecords:
+                raise ErrorPage('Multiple calls found.')
 
         try:
             call_preamble = db.get_call_preamble(semester_id=semester.id,
@@ -121,8 +137,8 @@ class GenericHome(object):
                 call_id=list(calls.keys()), closed=False)
 
         return {
-            'title': '{} Call for Semester {}'.format(
-                type_class.get_name(call_type), semester.name),
+            'title': title,
+            'separate': separate,
             'semester': semester,
             'calls': calls,
             'call_type': call_type,
