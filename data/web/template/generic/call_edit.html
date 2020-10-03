@@ -40,6 +40,12 @@
             </li>
         {% endif %}
         <li>
+            <label for="separate">Separate display</label>
+            <input type="checkbox" name="separate" {{ 'checked="checked"' | safe if call.separate }} />
+            call should be displayed separately from those for other queues
+        </li>
+
+        <li>
             <label for="multi_semester">Semester range</label>
             <input type="checkbox" name="multi_semester" {{ 'checked="checked"' | safe if call.multi_semester }} />
             observations may span multiple semesters

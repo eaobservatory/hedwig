@@ -394,7 +394,8 @@ class GenericAdmin(object):
                 sci_note=form['sci_note'],
                 prev_prop_note=form['prev_prop_note'],
                 note_format=int(form['note_format']),
-                multi_semester=('multi_semester' in form))
+                multi_semester=('multi_semester' in form),
+                separate=('separate' in form))
 
             if call_id is None:
                 call = call._replace(
@@ -438,7 +439,8 @@ class GenericAdmin(object):
                         sci_note=call.sci_note,
                         prev_prop_note=call.prev_prop_note,
                         note_format=call.note_format,
-                        multi_semester=call.multi_semester)
+                        multi_semester=call.multi_semester,
+                        separate=call.separate)
 
                     # Update information in the call named tuple in case of a
                     # later error so that we have to show the edit page again.
@@ -467,7 +469,8 @@ class GenericAdmin(object):
                         sci_note=call.sci_note,
                         prev_prop_note=call.prev_prop_note,
                         note_format=call.note_format,
-                        multi_semester=call.multi_semester)
+                        multi_semester=call.multi_semester,
+                        separate=call.separate)
 
                     flash_message = 'The call has been updated.'
 
