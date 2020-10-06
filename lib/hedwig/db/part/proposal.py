@@ -1144,8 +1144,9 @@ class ProposalPart(object):
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(semester.c.date_start.desc(),
-                                                  queue.c.name.asc(),
-                                                  call.c.type.asc())):
+                                                  semester.c.code.desc(),
+                                                  call.c.type.asc(),
+                                                  queue.c.name.asc())):
                 values = default.copy()
                 values.update(**row)
                 ans[row['id']] = Call(**values)
