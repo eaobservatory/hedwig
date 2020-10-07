@@ -1,0 +1,53 @@
+{% macro render_call_list(facility_call_type_class, calls, call_type=none) %}
+    <ul>
+        {% for (semester_id, semester_calls) in calls.group_by('semester_id') %}
+            <li>
+                {% with call = semester_calls | first_value %}
+                    <p>
+                        {% if semester_calls.subset_separate(separate=false) and (call_type is not none) %}
+                            <a id="semester_{{ call.semester_id }}_{{ call_type }}_link" href="{{ url_for('.semester_calls', semester_id=call.semester_id, call_type=call_type) }}">{{ call.semester_name }}</a>
+                        {% else %}
+                            {{ call.semester_name }}
+                        {% endif %}
+                    </p>
+                {% endwith %}
+                {% if call_type is not none %}
+                    {% with calls_separate = semester_calls.subset_separate() %}
+                        {% if calls_separate %}
+                            <ul>
+                                {% for call in calls_separate.values() %}
+                                    <li><a id="semester_{{ call.semester_id }}_{{ call.type }}_{{ call.queue_id }}_link" href="{{ url_for('.semester_call_separate', semester_id=call.semester_id, call_type=call.type, queue_id=call.queue_id) }}">{{ call.queue_name }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endwith %}
+                {% else %}
+                    <ul>
+                        {% for (type_id, type_calls) in semester_calls.group_by('type') %}
+                            <li>
+                                {% with call = type_calls | first_value %}
+                                    <p>
+                                        {% if type_calls.subset_separate(separate=false) %}
+                                            <a id="semester_{{ call.semester_id }}_{{ call.type }}_link" href="{{ url_for('.semester_calls', semester_id=call.semester_id, call_type=call.type) }}">{{ call.type | call_type_name(facility_call_type_class) }}</a>
+                                        {% else %}
+                                            {{ call.type | call_type_name(facility_call_type_class) }}
+                                        {% endif %}
+                                    </p>
+                                {% endwith %}
+                                {% with calls_separate = type_calls.subset_separate() %}
+                                    {% if calls_separate %}
+                                        <ul>
+                                            {% for call in calls_separate.values() %}
+                                                <li><a id="semester_{{ call.semester_id }}_{{ call.type }}_{{ call.queue_id }}_link" href="{{ url_for('.semester_call_separate', semester_id=call.semester_id, call_type=call.type, queue_id=call.queue_id) }}">{{ call.queue_name }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                {% endwith %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% endmacro %}

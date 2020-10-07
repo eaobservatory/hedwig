@@ -2,27 +2,25 @@
 
 {% set help_link=url_for('help.user_page', page_name='proposal_create') %}
 
+{% from 'macro/call.html' import render_call_list %}
+
 {% block content %}
+{% if open_calls %}
+    {% with plural = (open_calls_count > 1) %}
+        <p>
+            The following special
+            {{ 'calls are' if plural else 'call is' }} open:
+        </p>
+    {% endwith %}
 
-<p>
-    The following special calls for proposals are open:
-</p>
-
-<ul>
-    {% for (semester_id, semester_info) in semesters.items() %}
-        <li>
-            {{ semester_info.name }}
-
-            <ul>
-                {% for call_type in semester_info.call_types %}
-                    <li><a href="{{ url_for('.semester_calls', semester_id=semester_id, call_type=call_type) }}">
-                        {{ call_type | call_type_name(facility_call_type_class) }}
-                    </a>
-                {% endfor %}
-            </ul>
-        </li>
-    {% endfor %}
-</ul>
+    {{ render_call_list(facility_call_type_class, open_calls) }}
+{% else %}
+    <p>
+        There are currently no open
+        {{ facility_call_type_class.STANDARD | call_type_name(facility_call_type_class) | lower }}
+        calls for proposals.
+    </p>
+{% endif %}
 
 <nav>
     <p>

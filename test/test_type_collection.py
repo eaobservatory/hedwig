@@ -57,6 +57,28 @@ class CollectionTypeTestCase(TestCase):
         self.assertEqual(list(c.values()), [
             TT(10, 'a'), TT(20, 'b'), TT(21, 'c'), TT(22, 'd')])
 
+    def test_group_by(self):
+        TT = namedtuple('TT', ('id', 'flag'))
+
+        c = ResultCollection()
+        c[0] = TT(0, 1)
+        c[1] = TT(1, 1)
+        c[2] = TT(2, 2)
+        c[3] = TT(3, 2)
+        c[4] = TT(4, 1)
+        c[5] = TT(5, 3)
+
+        cc = OrderedDict(c.group_by('flag'))
+
+        self.assertEqual(len(cc), 3)
+        self.assertEqual(list(cc.keys()), [1, 2, 3])
+        self.assertEqual(list(cc[1].keys()), [0, 1, 4])
+        self.assertEqual(list(cc[2].keys()), [2, 3])
+        self.assertEqual(list(cc[3].keys()), [5])
+        self.assertEqual(list(cc[1].values()), [TT(0, 1), TT(1, 1), TT(4, 1)])
+        self.assertEqual(list(cc[2].values()), [TT(2, 2), TT(3, 2)])
+        self.assertEqual(list(cc[3].values()), [TT(5, 3)])
+
     def test_by_proposal_collection(self):
         class BPCollection(ResultCollection, CollectionByProposal):
             pass
@@ -205,6 +227,20 @@ class CollectionTypeTestCase(TestCase):
         self.assertEqual(
             [x.id for x in c.values_matching(queue_id=(11, 12))],
             [1, 2])
+
+        cc = c.subset_separate()
+        self.assertEqual(len(cc), 0)
+        cc = c.subset_separate(separate=False)
+        self.assertEqual(len(cc), 4)
+
+        c[3] = c[3]._replace(separate=True)
+
+        cc = c.subset_separate()
+        self.assertEqual(len(cc), 1)
+        self.assertEqual(list(cc.keys()), [3])
+        cc = c.subset_separate(separate=False)
+        self.assertEqual(len(cc), 3)
+        self.assertEqual(list(cc.keys()), [1, 2, 4])
 
     def test_email_collection(self):
         c = EmailCollection()

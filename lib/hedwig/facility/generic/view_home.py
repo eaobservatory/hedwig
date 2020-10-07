@@ -25,9 +25,6 @@ from ...type.enum import CallState, GroupType, ProposalState
 from ...web.util import ErrorPage, HTTPNotFound, session
 
 
-SpecialSemesterInfo = namedtuple('SpecialSemesterInfo', ('name', 'call_types'))
-
-
 class GenericHome(object):
     def view_facility_home(self, db):
         type_class = self.get_call_types()
@@ -56,21 +53,21 @@ class GenericHome(object):
         facility_calls = db.search_call(facility_id=self.id_, **kwargs)
 
         # Determine which semesters have standard open calls for proposals.
-        open_semesters = OrderedDict()
-        open_nonstandard_semesters = False
-        for call in facility_calls.values_matching(state=CallState.OPEN):
-            if call.type == type_class.STANDARD:
-                if call.semester_id not in open_semesters:
-                    open_semesters[call.semester_id] = call.semester_name
-            else:
-                open_nonstandard_semesters = True
+        open_calls_std = facility_calls.map_values(filter_value=(
+            lambda x: x.state == CallState.OPEN
+            and x.type == type_class.STANDARD))
 
-        # Determine if there are any semesters with only closed standard calls.
-        closed_semesters = False
-        for call in facility_calls.values_matching(state=CallState.CLOSED,
-                                                   type_=type_class.STANDARD):
+        open_calls_nonstd = facility_calls.map_values(filter_value=(
+            lambda x: x.state == CallState.OPEN
+            and x.type != type_class.STANDARD))
+
+        open_semesters = set((x.semester_id for x in open_calls_std.values()))
+
+        closed_calls_std = False
+        for call in facility_calls.values_matching(
+                state=CallState.CLOSED, type_=type_class.STANDARD):
             if call.semester_id not in open_semesters:
-                closed_semesters = True
+                closed_calls_std = True
                 break
 
         # If the user can see reviews,  create a list of the review processes.
@@ -79,17 +76,21 @@ class GenericHome(object):
 
         elif membership is True:
             # Administrators can see reviews for all calls.
-            review_calls = facility_calls.values()
+            review_calls = facility_calls
 
         else:
-            review_calls = facility_calls.values_matching(
-                queue_id=[x.queue_id for x in membership.values()])
+            membership_queues = set((x.queue_id for x in membership.values()))
+            review_calls = facility_calls.map_values(filter_value=(
+                lambda x: x.queue_id in membership_queues))
 
         return {
             'title': self.get_name(),
-            'open_semesters': open_semesters,
-            'open_nonstandard_semesters': open_nonstandard_semesters,
-            'closed_semesters': closed_semesters,
+            'open_calls_std': open_calls_std,
+            'open_calls_std_count': len(set((
+                (x.semester_id, (x.queue_id if x.separate else None))
+                for x in open_calls_std.values()))),
+            'open_calls_nonstd': open_calls_nonstd,
+            'closed_calls_std': closed_calls_std,
             'calculators': self.calculators,
             'target_tools': self.target_tools,
             'review_calls': review_calls,
@@ -121,7 +122,9 @@ class GenericHome(object):
                 title = '{} ({} Queue)'.format(
                     title, separate_call.queue_name)
             except NoSuchRecord:
-                raise HTTPNotFound('Call not found.')
+                queue = db.get_queue(facility_id=self.id_, queue_id=queue_id)
+                title = '{} ({} Queue)'.format(
+                    title, queue.name)
             except MultipleRecords:
                 raise ErrorPage('Multiple calls found.')
 
@@ -154,21 +157,22 @@ class GenericHome(object):
 
         open_semesters = set(
             x.semester_id for x in calls.values_matching(state=CallState.OPEN))
+        closed_semesters = set(
+            x.semester_id for x in calls.values_matching(state=CallState.CLOSED))
 
-        # Determine which semesters have closed, but no open, calls for
-        # proposals.
-        closed_semesters = OrderedDict()
-        for call in calls.values_matching(state=CallState.CLOSED):
-            if ((call.semester_id not in open_semesters) and
-                    (call.semester_id not in closed_semesters)):
-                closed_semesters[call.semester_id] = call.semester_name
+        closed_calls = calls.map_values(filter_value=(
+            lambda x: (x.semester_id in closed_semesters)
+            and (x.semester_id not in open_semesters)))
 
-        if not closed_semesters:
+        if not closed_calls:
             raise ErrorPage('No previous calls for proposals were found.')
 
         return {
             'title': 'Previous Calls for Proposals',
-            'closed_semesters': closed_semesters,
+            'closed_calls_std': closed_calls,
+            'closed_calls_std_count': len(set((
+                (x.semester_id, (x.queue_id if x.separate else None))
+                for x in closed_calls.values()))),
         }
 
     def view_semester_non_standard(self, db):
@@ -184,18 +188,10 @@ class GenericHome(object):
         if not calls:
             raise ErrorPage('No open special calls for proposals were found.')
 
-        # Group into semesters.
-        semesters = OrderedDict()
-        for call in calls.values():
-            if call.semester_id in semesters:
-                semester_info = semesters[call.semester_id]
-                if call.type not in semester_info.call_types:
-                    semester_info.call_types.append(call.type)
-            else:
-                semesters[call.semester_id] = SpecialSemesterInfo(
-                    call.semester_name, [call.type])
-
         return {
             'title': 'Special Calls for Proposals',
-            'semesters': semesters,
+            'open_calls': calls,
+            'open_calls_count': len(set((
+                (x.semester_id, x.type, (x.queue_id if x.separate else None))
+                for x in calls.values()))),
         }

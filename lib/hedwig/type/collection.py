@@ -68,6 +68,24 @@ class ResultCollection(OrderedDict):
         else:
             return first_value(self)
 
+    def group_by(self, attr):
+        """
+        Group members of a collection by a given attribute.
+
+        Yields a series of (attribute value, collection subset) tuples where
+        the collection subset is of the same class as the original collection.
+        The attribute values (and their assocoated collection subsets) are
+        yielded in the order in which they appear in the collection, but the
+        collection need not be sorted by this attribute.
+        """
+
+        values = OrderedDict((
+            (getattr(x, attr), None) for x in self.values()))
+
+        for value in values:
+            yield (value, type(self)((
+                k, v) for (k, v) in self.items() if getattr(v, attr) == value))
+
     def map_values(
             self, function=(lambda x: x),
             filter_key=(lambda x: True),
@@ -153,6 +171,17 @@ class CallCollection(ResultCollection):
     """
     Class to hold the results of a search for calls for proposals.
     """
+
+    def subset_separate(self, separate=True):
+        """
+        Return a subset of this collection based on the call "separate" flag.
+
+        :param separate: whether to return calls with the separate flag
+            (`True`, default) or without it (`False`).
+        """
+
+        return self.map_values(filter_value=(
+            lambda x: x.separate if separate else not x.separate))
 
     def values_matching(self, state=None, queue_id=None, type_=None):
         """

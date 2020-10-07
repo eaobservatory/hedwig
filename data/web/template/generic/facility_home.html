@@ -2,6 +2,8 @@
 
 {% set help_link=url_for('help.user_page', page_name='proposal_create') %}
 
+{% from 'macro/call.html' import render_call_list %}
+
 {% block content %}
 
 {% if show_admin_links %}
@@ -14,8 +16,8 @@
 
 <h2 id="call">Calls for Proposals</h2>
 
-{% if open_semesters %}
-    {% with plural = ((open_semesters | length) > 1) %}
+{% if open_calls_std %}
+    {% with plural = (open_calls_std_count > 1) %}
         <p>
             The following
             {{ facility_call_type_class.STANDARD | full_call_type_name(facility_call_type_class, plural=plural) }}
@@ -23,11 +25,7 @@
         </p>
     {% endwith %}
 
-    <ul>
-        {% for semester_id, semester_name in open_semesters.items() %}
-            <li><a id="semester_{{ semester_id }}_link" href="{{ url_for('.semester_calls', semester_id=semester_id, call_type=facility_call_type_class.STANDARD) }}">{{ semester_name }}</a></li>
-        {% endfor %}
-    </ul>
+    {{ render_call_list(facility_call_type_class, open_calls_std, call_type=facility_call_type_class.STANDARD) }}
 {% else %}
     <p>
         There are currently no open
@@ -36,7 +34,7 @@
     </p>
 {% endif %}
 
-{% if open_nonstandard_semesters %}
+{% if open_calls_nonstd %}
     <nav>
         <ol>
             <li><a href="{{ url_for('.semester_non_standard') }}">Other calls for proposals</a></li>
@@ -44,7 +42,7 @@
     </nav>
 {% endif %}
 
-{% if closed_semesters %}
+{% if closed_calls_std %}
     <nav>
         <ol>
             <li><a href="{{ url_for('.semester_closed') }}">Previous calls for proposals</a></li>
@@ -93,14 +91,19 @@
     <h2 id="reviewprocess">Review Processes</h2>
 
     <ul>
-        {% for semester_review_calls in review_calls | plain_group_by('semester_id') %}
+        {% for (semester_id, semester_review_calls) in review_calls.group_by('semester_id') %}
             <li>
-                {{ semester_review_calls[0].semester_name }}
+
+                {% with call = semester_review_calls | first_value %}
+                    {{ call.semester_name }}
+                {% endwith %}
                 <ul>
-                    {% for queue_review_calls in semester_review_calls | plain_group_by('queue_id') %}
+                    {% for (queue_id, queue_review_calls) in semester_review_calls.group_by('queue_id') %}
                         <li>
-                            {{ queue_review_calls[0].queue_name }}:
-                            {% for review_call in queue_review_calls %}
+                            {% with call = queue_review_calls | first_value %}
+                                {{ call.queue_name }}:
+                            {% endwith %}
+                            {% for review_call in queue_review_calls.values() %}
                                 <a href="{{ url_for('.review_call', call_id=review_call.id) }}" class="{{ 'active_entries' if (review_call.proposal_count > 0) else 'inactive_entries'}}">{{ review_call.type | call_type_name(facility_call_type_class) | lower }}</a>{% if not loop.last %},{% endif %}
                             {% endfor %}
                         </li>

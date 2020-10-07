@@ -1,15 +1,17 @@
 {% extends 'layout.html' %}
 
+{% from 'macro/call.html' import render_call_list %}
+
 {% block content %}
 
-<p>
-    The following calls for proposals are no longer open:
-</p>
+{% with plural = (closed_calls_std_count > 1) %}
+    <p>
+        The following
+        {{ 'calls for proposals are' if plural else 'call for proposals is' }}
+        no longer open:
+    </p>
+{% endwith %}
 
-<ul>
-    {% for semester_id, semester_name in closed_semesters.items() %}
-        <li><a id="semester_{{ semester_id }}_link" href="{{ url_for('.semester_calls', semester_id=semester_id, call_type=facility_call_type_class.STANDARD) }}">{{ semester_name }}</a></li>
-    {% endfor %}
-</ul>
+{{ render_call_list(facility_call_type_class, closed_calls_std, call_type=facility_call_type_class.STANDARD) }}
 
 {% endblock %}
