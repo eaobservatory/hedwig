@@ -22,6 +22,8 @@ from collections import namedtuple, OrderedDict
 
 from ...error import NoSuchRecord, MultipleRecords
 from ...type.enum import CallState, GroupType, ProposalState
+from ...type.simple import CallPreamble
+from ...type.util import null_tuple
 from ...web.util import ErrorPage, HTTPNotFound, session
 
 
@@ -114,13 +116,23 @@ class GenericHome(object):
         calls = db.search_call(facility_id=self.id_, semester_id=semester_id,
                                state=CallState.OPEN, type_=call_type,
                                queue_id=queue_id, separate=separate,
-                               with_queue_description=True)
+                               with_queue_description=True,
+                               with_preamble=separate)
+
+        call_preamble = None
 
         if separate:
             try:
                 separate_call = calls.get_single()
                 title = '{} ({} Queue)'.format(
                     title, separate_call.queue_name)
+
+                if ((separate_call.preamble is not None)
+                        and (separate_call.preamble_format is not None)):
+                    call_preamble = null_tuple(CallPreamble)._replace(
+                        description=separate_call.preamble,
+                        description_format=separate_call.preamble_format)
+
             except NoSuchRecord:
                 queue = db.get_queue(facility_id=self.id_, queue_id=queue_id)
                 title = '{} ({} Queue)'.format(
@@ -128,11 +140,13 @@ class GenericHome(object):
             except MultipleRecords:
                 raise ErrorPage('Multiple calls found.')
 
-        try:
-            call_preamble = db.get_call_preamble(semester_id=semester.id,
-                                                 type_=call_type)
-        except NoSuchRecord:
-            call_preamble = None
+        if call_preamble is None:
+            try:
+                call_preamble = db.get_call_preamble(
+                    semester_id=semester.id, type_=call_type)
+
+            except NoSuchRecord:
+                pass
 
         call_mid_closes = None
         if type_class.get_info(call_type).mid_close:

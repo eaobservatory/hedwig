@@ -44,7 +44,14 @@
             <input type="checkbox" name="separate" {{ 'checked="checked"' | safe if call.separate }} />
             call should be displayed separately from those for other queues
         </li>
-
+        <li id="item_preamble">
+            <label for="preamble">Preamble</label>
+            <textarea name="preamble" cols="40" rows="10">{{ call.preamble if call.preamble is not none }}</textarea>
+        </li>
+        <li id="item_preamble_format">
+            <label for="preamble_format">Preamble format</label>
+            {{ render_format_control('preamble_format', call.preamble_format, format_types) }}
+        </li>
         <li>
             <label for="multi_semester">Semester range</label>
             <input type="checkbox" name="multi_semester" {{ 'checked="checked"' | safe if call.multi_semester }} />

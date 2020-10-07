@@ -113,6 +113,12 @@
         <th>Explanations</th>
         <td>{{ call.expl_word_lim }} word{% if call.expl_word_lim != 1 %}s{% endif %}</td>
     </tr>
+    {% if call.separate and (call.preamble is not none) %}
+        <tr>
+            <th>Preamble</th>
+            <td>{{ call.preamble | format_text(call.preamble_format) }}</td>
+        </tr>
+    {% endif %}
 </table>
 
 <nav>

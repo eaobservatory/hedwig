@@ -34,7 +34,7 @@ from ...type.util import null_tuple
 from ...view import auth
 from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
     flash, format_datetime, parse_datetime, session, url_for
-from ...view.util import with_verified_admin
+from ...view.util import int_or_none, str_or_none, with_verified_admin
 
 
 class GenericAdmin(object):
@@ -397,6 +397,14 @@ class GenericAdmin(object):
                 multi_semester=('multi_semester' in form),
                 separate=('separate' in form))
 
+            if call.separate and (form['preamble'] != ''):
+                call = call._replace(
+                    preamble=form['preamble'],
+                    preamble_format=int(form['preamble_format']))
+            else:
+                call = call._replace(
+                    preamble=None, preamble_format=None)
+
             if call_id is None:
                 call = call._replace(
                     semester_id=int(form['semester_id']),
@@ -440,7 +448,9 @@ class GenericAdmin(object):
                         prev_prop_note=call.prev_prop_note,
                         note_format=call.note_format,
                         multi_semester=call.multi_semester,
-                        separate=call.separate)
+                        separate=call.separate,
+                        preamble=call.preamble,
+                        preamble_format=call.preamble_format)
 
                     # Update information in the call named tuple in case of a
                     # later error so that we have to show the edit page again.
@@ -470,7 +480,9 @@ class GenericAdmin(object):
                         prev_prop_note=call.prev_prop_note,
                         note_format=call.note_format,
                         multi_semester=call.multi_semester,
-                        separate=call.separate)
+                        separate=call.separate,
+                        preamble=call.preamble,
+                        preamble_format=call.preamble_format)
 
                     flash_message = 'The call has been updated.'
 

@@ -21,7 +21,7 @@ $(document).ready(function () {
         } else {
             queueWarning.hide();
         }
-   });
+    });
 
     if (semesterSelect.length && queueSelect.length && queueWarning.length) {
         callList = semesterSelect.data('existing');
@@ -29,4 +29,19 @@ $(document).ready(function () {
         queueSelect.change(check_semester_queue);
         check_semester_queue();
     }
+
+    var separateBox = $('[name="separate"]').first();
+
+    var check_preamble_visibility = (function () {
+        if (separateBox.prop('checked')) {
+            $('#item_preamble').show();
+            $('#item_preamble_format').show();
+        } else {
+            $('#item_preamble').hide();
+            $('#item_preamble_format').hide();
+        }
+    });
+
+    separateBox.change(check_preamble_visibility);
+    check_preamble_visibility();
 });
