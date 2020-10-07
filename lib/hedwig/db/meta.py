@@ -140,6 +140,8 @@ call = Table(
     Column('note_format', Integer, nullable=False),
     Column('multi_semester', Boolean, default=False, nullable=False),
     Column('separate', Boolean, default=False, nullable=False),
+    Column('preamble', UnicodeText, nullable=True),
+    Column('preamble_format', Integer, nullable=True),
     UniqueConstraint('semester_id', 'queue_id', 'type'),
     **table_opts)
 

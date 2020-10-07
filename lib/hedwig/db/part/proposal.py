@@ -87,7 +87,7 @@ class ProposalPart(object):
                  sci_word_lim, sci_fig_lim, sci_page_lim,
                  capt_word_lim, expl_word_lim,
                  tech_note, sci_note, prev_prop_note, note_format,
-                 multi_semester, separate,
+                 multi_semester, separate, preamble, preamble_format,
                  _test_skip_check=False):
         """
         Add a call for proposals to the database.
@@ -100,7 +100,17 @@ class ProposalPart(object):
             raise UserError('Closing date is before opening date.')
 
         if not FormatType.is_valid(note_format, is_system=True):
-            raise UserError('Text format not recognised.')
+            raise UserError('Note text format not recognised.')
+
+        if preamble is None:
+            preamble_format = None
+
+        else:
+            if preamble_format is None:
+                raise Error('Preamble text format not specified.')
+
+            elif not FormatType.is_valid(preamble_format, is_system=True):
+                raise UserError('Preamble text format not recognised.')
 
         with self._transaction() as conn:
             if not _test_skip_check:
@@ -140,6 +150,8 @@ class ProposalPart(object):
                 call.c.note_format: note_format,
                 call.c.multi_semester: multi_semester,
                 call.c.separate: separate,
+                call.c.preamble: preamble,
+                call.c.preamble_format: preamble_format,
             }))
 
         return result.inserted_primary_key[0]
@@ -572,7 +584,8 @@ class ProposalPart(object):
 
         return self.search_call(
             facility_id=facility_id, call_id=call_id,
-            with_case_notes=True, with_facility_code=with_facility_code,
+            with_case_notes=True, with_preamble=True,
+            with_facility_code=with_facility_code,
         ).get_single()
 
     def get_call_preamble(self, semester_id, type_):
@@ -1019,24 +1032,23 @@ class ProposalPart(object):
                     has_proposal_state=None, date_close_before=None,
                     separate=None,
                     with_queue_description=False, with_case_notes=False,
-                    with_facility_code=False,
+                    with_preamble=False, with_facility_code=False,
                     with_proposal_count=False, with_proposal_count_state=None,
                     _conn=None):
         """
         Search for call records.
         """
 
-        default = {}
+        fields_exclude = set()
 
-        if with_case_notes:
-            fields = [call]
-        else:
-            fields = [x for x in call.columns
-                      if x.name not in
-                      ('tech_note', 'sci_note', 'prev_prop_note')]
-            default['tech_note'] = None
-            default['sci_note'] = None
-            default['prev_prop_note'] = None
+        if not with_case_notes:
+            fields_exclude.update(('tech_note', 'sci_note', 'prev_prop_note'))
+
+        if not with_preamble:
+            fields_exclude.update(('preamble',))
+
+        fields = [x for x in call.columns if x.name not in fields_exclude]
+        default = {x: None for x in fields_exclude}
 
         dt_current = datetime.utcnow()
 
@@ -2770,6 +2782,7 @@ class ProposalPart(object):
                     capt_word_lim=None, expl_word_lim=None,
                     tech_note=None, sci_note=None, prev_prop_note=None,
                     note_format=None, multi_semester=None, separate=None,
+                    preamble=(), preamble_format=(),
                     _test_skip_check=False):
         """
         Update a call for proposals record.
@@ -2811,12 +2824,27 @@ class ProposalPart(object):
             values['prev_prop_note'] = prev_prop_note
         if note_format is not None:
             if not FormatType.is_valid(note_format, is_system=True):
-                raise UserError('Text format not recognised.')
+                raise UserError('Note text format not recognised.')
             values['note_format'] = note_format
         if multi_semester is not None:
             values['multi_semester'] = multi_semester
         if separate is not None:
             values['separate'] = separate
+
+        if preamble != ():
+            values['preamble'] = preamble
+
+            if preamble is None:
+                preamble_format = None
+            elif (preamble_format is None) or (preamble_format == ()):
+                raise Error('Preamble text format not specified.')
+            elif not FormatType.is_valid(preamble_format, is_system=True):
+                raise UserError('Preamble text format not recognised.')
+
+            values['preamble_format'] = preamble_format
+
+        elif preamble_format != ():
+            raise Error('Preamble text format specified without preamble.')
 
         if not values:
             raise Error('no call updates specified')

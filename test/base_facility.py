@@ -138,7 +138,7 @@ class FacilityTestCase(DBTestCase):
                 self.view.get_call_types(), semester_id, queue_id, call_type,
                 datetime(2019, 8, 1), datetime(2019, 9, 1),
                 100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', '',
-                FormatType.PLAIN, False, False)
+                FormatType.PLAIN, False, False, None, None)
 
         key = (queue_code, pi_affiliation)
         affiliation_id = self.id_cache.get(key)
