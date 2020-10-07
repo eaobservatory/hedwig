@@ -26,7 +26,7 @@
             <th>Queue</th>
             <th>Status</th>
             <th>Submitted<br />proposals</th>
-            <th colspan="2">Links</th>
+            <th colspan="3">Links</th>
         </tr>
         {% for semester_calls in calls.values() | plain_group_by('semester_id') %}
             {% for type_calls in semester_calls | plain_group_by('type') %}
@@ -60,6 +60,11 @@
                             {% else %}
                                 &nbsp;
                             {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('.semester_call_separate', semester_id=call.semester_id, call_type=call.type, queue_id=call.queue_id) if call.separate else url_for('.semester_calls', semester_id=call.semester_id, call_type=call.type) }}">
+                                Call
+                            </a>
                         </td>
                         <td>
                             <a href="{{ url_for('.call_proposals', call_id=call.id) }}">
