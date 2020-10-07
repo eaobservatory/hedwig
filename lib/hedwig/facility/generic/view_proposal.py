@@ -1218,7 +1218,9 @@ class GenericProposal(object):
             'message': message,
             'proposal_id': proposal.id,
             'semester_id': proposal.semester_id,
+            'queue_id': proposal.queue_id,
             'call_type': proposal.call_type,
+            'call_separate': proposal.call_separate,
             'members': records.map_values(
                 lambda x: with_can_edit(x, x.person_id != person_id)),
             'affiliations': affiliations,
@@ -1336,7 +1338,9 @@ class GenericProposal(object):
             'message_invite': message_invite,
             'proposal_id': proposal.id,
             'semester_id': proposal.semester_id,
+            'queue_id': proposal.queue_id,
             'call_type': proposal.call_type,
+            'call_separate': proposal.call_separate,
             'persons': persons,
             'affiliations': affiliations,
             'member': member_info.data,
@@ -1365,9 +1369,17 @@ class GenericProposal(object):
             'inviter_name': session['person']['name'],
             'affiliation': affiliation_name,
             'is_editor': is_editor,
-            'target_semester': url_for(
-                '.semester_calls', semester_id=proposal.semester_id,
-                call_type=proposal.call_type, _external=True),
+            'target_semester': (
+                url_for(
+                    '.semester_call_separate',
+                    semester_id=proposal.semester_id,
+                    call_type=proposal.call_type, queue_id=proposal.queue_id,
+                    _external=True)
+                if proposal.call_separate else
+                url_for(
+                    '.semester_calls',
+                    semester_id=proposal.semester_id,
+                    call_type=proposal.call_type, _external=True)),
             'copy_proposal_code': copy_proposal_code,
         }
 

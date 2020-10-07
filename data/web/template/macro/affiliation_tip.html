@@ -1,4 +1,4 @@
-{% macro render_affiliation_tip(semester_id, call_type) %}
+{% macro render_affiliation_tip(semester_id, call_type, queue_id, separate) %}
     <div class="formtip">
         <div>
             <p>
@@ -14,7 +14,7 @@
             </p>
             <p>
                 Please see the
-                <a href="{{ url_for('.semester_calls', semester_id=semester_id, call_type=call_type) }}" target="_blank">call for proposals</a>
+                <a href="{{ url_for('.semester_call_separate', semester_id=semester_id, call_type=call_type, queue_id=queue_id) if separate else url_for('.semester_calls', semester_id=semester_id, call_type=call_type) }}" target="_blank">call for proposals</a>
                 for more information about the affiliation requirements.
             </p>
         </div>

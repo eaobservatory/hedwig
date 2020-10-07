@@ -225,7 +225,7 @@ Proposal = namedtuple(
     [x.name for x in proposal.columns] + [
         'semester_id', 'semester_name', 'semester_code',
         'semester_start', 'semester_end',
-        'queue_id', 'queue_name', 'queue_code', 'call_type',
+        'queue_id', 'queue_name', 'queue_code', 'call_type', 'call_separate',
         'facility_id',
         'abst_word_lim',
         'tech_word_lim', 'tech_fig_lim', 'tech_page_lim',

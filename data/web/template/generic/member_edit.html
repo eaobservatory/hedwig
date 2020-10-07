@@ -20,7 +20,7 @@
     <table id="members">
         <tr>
             <th colspan="2">Member</th>
-            <th>Affiliation {{ render_affiliation_tip(semester_id, call_type) }}</th>
+            <th>Affiliation {{ render_affiliation_tip(semester_id, call_type, queue_id, call_separate) }}</th>
             <th>Is PI?</th>
             <th>Can edit proposal?</th>
             {% if has_peer_review %}
