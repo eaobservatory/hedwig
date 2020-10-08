@@ -4,8 +4,8 @@
 {% if (proposal.decision_accept and ukirt_allocations) %}
 {% if is_peer_review %}
 Following the peer review process, the
-observing {{ 'times' if (jcmt_allocation | length) > 1 else 'time' }}
-given below {{ 'have' if (jcmt_allocation | length) > 1 else 'has' }}
+observing {{ 'times' if (ukirt_allocations | length) > 1 else 'time' }}
+given below {{ 'have' if (ukirt_allocations | length) > 1 else 'has' }}
 been approved for your project:
 {% else %}
 The committee has approved the following
