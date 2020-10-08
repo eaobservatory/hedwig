@@ -113,8 +113,12 @@ class GenericHome(object):
 
         separate = (queue_id is not None)
 
+        # Search for open calls, unless this is a "separate" queue-based call
+        # page, in which case we need all calls so that we can get the correct
+        # preamble (and will filter by state = OPEN later).
         calls = db.search_call(facility_id=self.id_, semester_id=semester_id,
-                               state=CallState.OPEN, type_=call_type,
+                               state=(None if separate else CallState.OPEN),
+                               type_=call_type,
                                queue_id=queue_id, separate=separate,
                                with_queue_description=True,
                                with_preamble=separate)
@@ -139,6 +143,9 @@ class GenericHome(object):
                     title, queue.name)
             except MultipleRecords:
                 raise ErrorPage('Multiple calls found.')
+
+            calls = calls.map_values(
+                filter_value=(lambda x: x.state == CallState.OPEN))
 
         if call_preamble is None:
             try:
