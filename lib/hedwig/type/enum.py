@@ -1084,7 +1084,7 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
         (SUPPLEMENTAL, TypeInfo(
             'S', 'Supplemental', True, 'supplement', False, False, False,
             (BaseReviewerRole.TECH, BaseReviewerRole.EXTERNAL,
-             BaseReviewerRole.PEER, BaseReviewerRole.FEEDBACK) + _cttee,
+             BaseReviewerRole.FEEDBACK) + _cttee,
             ())),
         (TEST, TypeInfo(
             'T',   'Test',      True,  'test',       False, True,  False,
