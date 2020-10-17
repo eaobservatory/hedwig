@@ -40,7 +40,7 @@
                         {% for queue_proposals in type_proposals | plain_group_by('queue_id') %}
                             {% set queue_loop = loop %}
                             {% for proposal in queue_proposals %}
-                                <tr>
+                                <tr {{ combined_class(('spacer_above', loop.first and queue_loop.first and type_loop.first),) | safe }}>
                                     {% if loop.first and queue_loop.first and type_loop.first %}
                                         <td rowspan="{{ semester_proposals | length }}">{{ proposal.semester_name }}</td>
                                     {% endif %}
