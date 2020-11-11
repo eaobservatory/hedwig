@@ -29,6 +29,9 @@
             <tr>
                 <th>Status</th>
                 <th>Date (UT)</th>
+                {% if person is none %}
+                    <th>Recipient</th>
+                {% endif %}
                 <th>Subject</th>
                 <th>Update?</th>
             </tr>
@@ -38,6 +41,17 @@
                     {{ message.state | message_state_name }}
                 </td>
                 <td>{{ message.date | format_datetime }}</td>
+                {% if person is none %}
+                    <td>
+                        {% if (message.recipients | length) == 1 %}
+                            {% with recipient = message.recipients | first_value %}
+                                <a href="{{ url_for('people.person_view', person_id=recipient.person_id) }}">{{ recipient.person_name | abbr(20) }}</a>
+                            {% endwith %}
+                        {% else %}
+                            <span class="missing_data">Multiple recipients</span>
+                        {% endif %}
+                    </td>
+                {% endif %}
                 <td><a href="{{ url_for('.message_view', message_id=message.id) }}">{{ message.subject }}</a></td>
                 <td>
                     {% if message.state is message_state_resettable %}

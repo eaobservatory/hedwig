@@ -87,6 +87,9 @@ class AdminView(ViewMember):
             kwargs['person_id'] = person_id
             url_params['person_id'] = person_id
 
+        else:
+            kwargs['with_recipients'] = True
+
         state = current_input.get('state')
         if not state:
             state = None
