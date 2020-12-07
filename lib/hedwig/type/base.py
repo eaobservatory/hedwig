@@ -191,6 +191,21 @@ class CollectionSortable(object):
     in the attributes tuples and in the sequence as a whole.
     """
 
+    def sorted(self):
+        """
+        Return a similar type of collection with values in sorted order.
+        """
+
+        entries = list(self.items())
+
+        for (reverse, attrs) in reversed(self.sort_attr):
+            entries.sort(
+                key=(lambda entry: tuple(
+                    getattr(entry[1], attr) for attr in attrs)),
+                reverse=reverse)
+
+        return type(self)(entries)
+
     def values_in_sorted_order(self):
         """
         Return values in a suitably sorted order.

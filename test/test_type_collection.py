@@ -155,11 +155,21 @@ class CollectionTypeTestCase(TestCase):
         c[208] = TS(208, 1, 2)
         c[209] = TS(209, 1, 1)
 
+        expected = [
+            106, 209, 108, 208, 101, 203,
+            103, 201, 109, 206, 105, 205,
+            104, 202, 102, 204, 107, 207]
+
         self.assertEqual(
-            [x.id for x in c.values_in_sorted_order()],
-            [106, 209, 108, 208, 101, 203,
-             103, 201, 109, 206, 105, 205,
-             104, 202, 102, 204, 107, 207])
+            [x.id for x in c.values_in_sorted_order()], expected)
+
+        sc = c.sorted()
+
+        self.assertIsInstance(sc, TSCollection)
+
+        self.assertEqual(list(sc.keys()), expected)
+
+        self.assertEqual([x.id for x in sc.values()], expected)
 
     def test_affiliation_collection(self):
         affiliations = AffiliationCollection()
