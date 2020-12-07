@@ -563,6 +563,20 @@ class ProposalCollection(
         (False, ('semester_name', 'queue_name', 'call_type', 'number')),
     )
 
+    @property
+    def n_reviews(self):
+        """
+        The total number of reviews of proposals in the collection.
+        """
+
+        ans = 0
+
+        for proposal in self.values():
+            if proposal.reviewers is not None:
+                ans += len(proposal.reviewers)
+
+        return ans
+
 
 class ProposalCategoryCollection(ResultCollection, CollectionByProposal):
     """

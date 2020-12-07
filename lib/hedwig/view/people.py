@@ -912,19 +912,21 @@ class PeopleView(object):
             db, session['person']['id'], facilities, None)
 
     @with_person(permission=PermissionType.UNIVERSAL_VIEW)
-    def person_reviews_other(self, db, person, can, facilities):
+    def person_reviews_other(self, db, person, can, facilities, args):
         return self._person_reviews(
             db, person.id, facilities, person, as_admin=True,
+            view_all=int_or_none(args.get('view_all', '0')),
             auth_cache=can.cache)
 
     def _person_reviews(self, db, person_id, facilities, person,
-                        as_admin=False, auth_cache={}):
+                        as_admin=False, view_all=None, auth_cache={}):
         # Get a list of proposals, in all review states, for which this
         # person has reviews.  (Will filter later to list only those
         # which are editable in each proposal's actual state.)
         all_proposals = db.search_proposal(
             reviewer_person_id=person_id,
-            with_members=True, state=ProposalState.review_states())
+            with_members=True,
+            state=(None if view_all else ProposalState.review_states()))
         calls = set((x.call_id for x in all_proposals.values()))
 
         if as_admin:
@@ -1012,6 +1014,7 @@ class PeopleView(object):
                       else '{}: Reviews'.format(person.name)),
             'proposals': proposals,
             'person': person,
+            'view_all': view_all,
         }
 
     @with_verified_admin

@@ -15,26 +15,41 @@
             {% endif %}
         </p>
     {% else %}
-        <p>
-            The following
-            {% if (proposals | length) > 1 %}
-                tables show
-            {% else %}
-                table shows
-            {% endif %}
-            proposals for which you have active reviews.
-        </p>
+        {% if person is none %}
+            <p>
+                The following
+                {% if (proposals | length) > 1 %}
+                    tables show
+                {% else %}
+                    table shows
+                {% endif %}
+                proposals for which you have active reviews.
+            </p>
 
-        <ul>
-            <li>Click the proposal identifier to view a proposal.</li>
-            <li>Click a review role to edit the corresponding review.</li>
-        </ul>
+            <ul>
+                <li>Click the proposal identifier to view a proposal.</li>
+                <li>Click a review role to edit the corresponding review.</li>
+            </ul>
+        {% else %}
+            <form method="GET" action="{{ url_for('.person_view_reviews', person_id=person.id) }}">
+                <p>
+                    <select name="view_all">
+                        <option value="0" {{ 'selected="selected"' | safe if not view_all }}>Active reviews</option>
+                        <option value="1" {{ 'selected="selected"' | safe if view_all }}>All reviews</option>
+                    </select>
+                    <input type="submit" value="Filter" />
+                </p>
+            </form>
+        {% endif %}
 
         {% for facility in proposals %}
             <h2>{{ facility.name }}</h2>
 
             <table>
                 <tr>
+                    {% if view_all %}
+                        <th>Semester</th>
+                    {% endif %}
                     <th>Proposal</th>
                     <th>PI Name</th>
                     <th>Title</th>
@@ -42,30 +57,36 @@
                     <th>Review role</th>
                     <th>Due by</th>
                 </tr>
-                {% for proposal in facility.proposals.values_in_sorted_order() %}
-                    {% for reviewer in proposal.reviewers.values_in_role_order(facility.role_class) %}
-                        <tr>
-                            {% if loop.first %}
-                                <td rowspan="{{ proposal.reviewers | length }}"><a href="{{ url_for(facility.code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
-                                <td rowspan="{{ proposal.reviewers | length }}">
-                                    {% if proposal.member is not none %}
-                                        {{ proposal.member.person_name | abbr(25) }}
-                                    {% else %}
-                                        &nbsp;
-                                    {% endif %}
-                                    </td>
-                                <td rowspan="{{ proposal.reviewers | length }}">{{ proposal.title | abbr(25) }}</td>
-                            {% endif %}
-                            <td class="{{ reviewer.review_state | review_state_class }}">{{ reviewer.review_state | review_state_name }}</td>
-                            <td><a href="{{ url_for(facility.code + '.proposal_review_new', proposal_id=proposal.id, reviewer_role=reviewer.role) if reviewer.id is none else url_for(facility.code + '.review_edit', reviewer_id=reviewer.id) }}">{{ reviewer.role | reviewer_role_name(facility.role_class) }}</a></td>
-                            <td>
-                                {% if reviewer.deadline is none %}
-                                    <span class="missing_data">Not specified</span>
-                                {% else %}
-                                    {{ reviewer.deadline.date | format_datetime }} UT
+                {% for (semseter_id, semester_proposals) in facility.proposals.sorted().group_by('semester_id') %}
+                    {% for proposal in semester_proposals.values() %}
+                        {% set proposal_loop = loop %}
+                        {% for reviewer in proposal.reviewers.values_in_role_order(facility.role_class) %}
+                            <tr {{ combined_class(('spacer_above', view_all and loop.first and proposal_loop.first),) | safe }}>
+                                {% if view_all and loop.first and proposal_loop.first %}
+                                    <td rowspan="{{ semester_proposals.n_reviews }}">{{ proposal.semester_name }}</td>
                                 {% endif %}
-                            </td>
-                        </tr>
+                                {% if loop.first %}
+                                    <td rowspan="{{ proposal.reviewers | length }}"><a href="{{ url_for(facility.code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+                                    <td rowspan="{{ proposal.reviewers | length }}">
+                                        {% if proposal.member is not none %}
+                                            {{ proposal.member.person_name | abbr(25) }}
+                                        {% else %}
+                                            &nbsp;
+                                        {% endif %}
+                                        </td>
+                                    <td rowspan="{{ proposal.reviewers | length }}">{{ proposal.title | abbr(25) }}</td>
+                                {% endif %}
+                                <td class="{{ reviewer.review_state | review_state_class }}">{{ reviewer.review_state | review_state_name }}</td>
+                                <td><a href="{{ url_for(facility.code + '.proposal_review_new', proposal_id=proposal.id, reviewer_role=reviewer.role) if reviewer.id is none else url_for(facility.code + '.review_edit', reviewer_id=reviewer.id) }}">{{ reviewer.role | reviewer_role_name(facility.role_class) }}</a></td>
+                                <td>
+                                    {% if reviewer.deadline is none %}
+                                        <span class="missing_data">Not specified</span>
+                                    {% else %}
+                                        {{ reviewer.deadline.date | format_datetime }} UT
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
                     {% endfor %}
                 {% endfor %}
             </table>

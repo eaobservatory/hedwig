@@ -201,7 +201,8 @@ def create_people_blueprint(db, facilities):
     @require_auth(require_person=True)
     @templated('person_reviews.html')
     def person_view_reviews(person_id):
-        return view.person_reviews_other(db, person_id, facilities)
+        return view.person_reviews_other(
+            db, person_id, facilities, request.args)
 
     @bp.route('/person/<int:person_id>/subsume',
               methods=['GET', 'POST'])
