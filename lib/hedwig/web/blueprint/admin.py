@@ -56,7 +56,7 @@ def create_admin_blueprint(db, facilities):
     @templated('admin/message_thread.html')
     @require_admin
     def message_thread(thread_type, thread_id):
-        return view.message_thread(db, thread_type, thread_id)
+        return view.message_thread(db, facilities, thread_type, thread_id)
 
     @bp.route('/processing', methods=['GET', 'POST'])
     @templated('admin/processing_status.html')

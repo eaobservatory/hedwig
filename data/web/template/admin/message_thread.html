@@ -3,6 +3,16 @@
 {% set help_link=url_for('help.admin_page', page_name='messages') %}
 
 {% block content %}
+{% if thread_links %}
+    <nav>
+        <ol>
+            {% for thread_link in thread_links %}
+                <li><a href="{{ thread_link.url }}">{{ thread_link.text }}</a></li>
+            {% endfor %}
+        </ol>
+    </nav>
+{% endif %}
+
 <table>
     <tr>
         <th>Status</th>

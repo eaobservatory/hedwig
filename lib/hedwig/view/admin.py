@@ -23,11 +23,12 @@ from collections import namedtuple
 from ..compat import first_value
 from ..email.format import render_email_template
 from ..error import NoSuchRecord, UserError
-from ..type.simple import ProposalWithCode
+from ..type.simple import ProposalWithCode, Link
 from ..type.enum import AttachmentState, MessageState, MessageThreadType, \
     PersonTitle, SiteGroupType
 from ..web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
+from . import auth
 from .base import ViewMember
 from .util import with_verified_admin
 
@@ -170,7 +171,7 @@ class AdminView(ViewMember):
         }
 
     @with_verified_admin
-    def message_thread(self, db, thread_type, thread_id):
+    def message_thread(self, db, facilities, thread_type, thread_id):
         messages = db.search_message(
             thread_type=thread_type, thread_id=thread_id, oldest_first=True)
 
@@ -178,7 +179,62 @@ class AdminView(ViewMember):
             'title': 'Message thread: {}'.format(
                 MessageThreadType.get_name(thread_type)),
             'messages': messages,
+            'thread_links': self._make_thread_links(
+                db, facilities, thread_type, thread_id)
         }
+
+    def _make_thread_links(self, db, facilities, thread_type, thread_id):
+        links = []
+
+        proposal = None
+        reviewer = None
+        facility = None
+
+        try:
+            if thread_type in (
+                    MessageThreadType.PROPOSAL_STATUS,
+                    MessageThreadType.PROPOSAL_REVIEW):
+                proposal = db.get_proposal(None, thread_id)
+
+            elif thread_type == MessageThreadType.REVIEW_INVITATION:
+                reviewer = db.search_reviewer(
+                    reviewer_id=thread_id).get_single()
+                proposal = db.get_proposal(
+                    None, reviewer.proposal_id, with_members=True)
+
+            facility = facilities.get(proposal.facility_id)
+
+        except NoSuchRecord:
+            pass
+
+        if facility is not None:
+            if proposal is not None:
+                links.append(Link('View proposal', url_for(
+                    '{}.proposal_view'.format(facility.code),
+                    proposal_id=proposal.id)))
+
+            if reviewer is not None:
+                role_class = facility.view.get_reviewer_roles()
+
+                can = auth.for_review(
+                    role_class, db, reviewer=None, proposal=proposal,
+                    allow_unaccepted=True)
+
+                links.append(Link('Review assignment', url_for(
+                    '{}.review_call_reviewers'.format(facility.code),
+                    call_id=proposal.call_id)))
+
+                if can.view:
+                    links.append(Link('View proposal reviews', url_for(
+                        '{}.proposal_reviews'.format(facility.code),
+                        proposal_id=proposal.id)))
+
+                if can.edit:
+                    links.append(Link('Edit review', url_for(
+                        '{}.review_edit'.format(facility.code),
+                        reviewer_id=reviewer.id)))
+
+        return links
 
     @with_verified_admin
     def processing_status(self, db, facilities, form):
