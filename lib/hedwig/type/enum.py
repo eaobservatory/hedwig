@@ -469,6 +469,9 @@ class ProposalState(EnumBasic, EnumShortName):
         For calls with the "immediate_review" attribute set, submission
         of the proposal changes the state directly from PREPARATION
         to REVIEW.
+
+        RETRACTED is an additional state, equivalent to ABANDONED, which
+        can be manually set via the administrative interface.
     """
 
     PREPARATION = 1
@@ -479,6 +482,7 @@ class ProposalState(EnumBasic, EnumShortName):
     ACCEPTED = 6
     REJECTED = 7
     FINAL_REVIEW = 8
+    RETRACTED = 9
 
     StateInfo = namedtuple(
         'StateInfo',
@@ -505,6 +509,8 @@ class ProposalState(EnumBasic, EnumShortName):
             StateInfo('Rej',   'Rejected',       False, True,  False, True)),
         (ABANDONED,
             StateInfo('Abnd',  'Abandoned',      False, False, False, False)),
+        (RETRACTED,
+            StateInfo('Rtrd',  'Retracted',      False, False, False, False)),
     ))
 
     @classmethod

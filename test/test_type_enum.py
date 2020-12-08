@@ -188,8 +188,11 @@ class EnumTypeTestCase(TestCase):
                 ProposalState.SUBMITTED,
                 ProposalState.WITHDRAWN,
                 ProposalState.REVIEW,
+                ProposalState.FINAL_REVIEW,
                 ProposalState.ACCEPTED,
                 ProposalState.REJECTED,
+                ProposalState.ABANDONED,
+                ProposalState.RETRACTED
                 ):
             # Check state is an integer.
             self.assertIsInstance(state, int)
