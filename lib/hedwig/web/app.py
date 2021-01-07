@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from itertools import count
 import logging
 import os
 
@@ -38,6 +39,8 @@ from .blueprint.home import create_home_blueprint
 from .blueprint.oauth import create_oauth_blueprint
 from .blueprint.people import create_people_blueprint
 from .blueprint.query import create_query_blueprint
+
+_mem_ctr = count()
 
 
 def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
@@ -78,8 +81,11 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
         template_folder=os.path.join(home, 'data', 'web', 'template'),
     )
 
+    app._mem_id = next(_mem_ctr)
+
     if 'extensions' not in app.jinja_options:
         app.jinja_options['extensions'] = []
+
     app.jinja_options['extensions'].append(OrderBlocks)
 
     if not without_logger:
