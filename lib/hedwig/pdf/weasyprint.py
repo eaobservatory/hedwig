@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory.
+# Copyright (C) 2016-2020 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -17,6 +17,8 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+import logging
+
 from flask import request as _flask_request
 from flask_weasyprint import HTML as FWP_HTML, make_url_fetcher
 from weasyprint import HTML as WP_HTML, CSS
@@ -24,6 +26,10 @@ from weasyprint import HTML as WP_HTML, CSS
 from ..error import FormattedError
 from ..web.util import parse_multipart_response
 from .flask import PDFWriterFlask
+
+# Suppress warnings from weasyprint (e.g. those about CSS properties which
+# it does not recognize).
+logging.getLogger('weasyprint').setLevel(logging.ERROR)
 
 
 class PDFWriterWeasyPrint(PDFWriterFlask):
