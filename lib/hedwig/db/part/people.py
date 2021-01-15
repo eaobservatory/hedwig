@@ -44,7 +44,7 @@ from ..meta import auth_failure, auth_token, email, group_member, \
     invitation, member, message_recipient, \
     oauth_code, oauth_token, person, person_log, \
     proposal_fig, proposal_pdf, proposal_text, \
-    request_prop_copy, \
+    request_prop_copy, request_prop_pdf, \
     reset_token, reviewer, site_group_member, user, user_log, verify_token
 from ..util import require_not_none
 
@@ -905,6 +905,7 @@ class PeoplePart(object):
                     (proposal_text, 'editor'),
                     (reviewer, 'person_id'),
                     (request_prop_copy, 'requester'),
+                    (request_prop_pdf, 'requester'),
                     (site_group_member, 'person_id')):
                 column = getattr(table.c, column_name)
                 conn.execute(table.update().where(

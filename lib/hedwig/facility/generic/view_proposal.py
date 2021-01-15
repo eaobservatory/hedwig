@@ -29,6 +29,7 @@ from ...config import get_config
 from ...error import ConsistencyError, NoSuchRecord, ParseError, UserError
 from ...file.info import determine_figure_type, determine_pdf_page_count
 from ...file.pdf import pdf_to_svg
+from ...pdf.request import get_proposal_filename
 from ...publication.url import make_publication_url
 from ...type.collection import CalculationCollection, \
     PrevProposalCollection, ResultCollection, \
@@ -2566,6 +2567,128 @@ class GenericProposal(object):
 
         return view_func(
             calculation=calculation, can=can, parent_proposal=proposal)
+
+    @with_proposal(permission=PermissionType.VIEW)
+    def view_proposal_pdf_request(
+            self, current_user, db, proposal, can, form):
+        requests = db.search_request_prop_pdf(
+            proposal_id=proposal.id, state=RequestState.visible_states())
+
+        # Are there already requests pending?  If so, we can redirect there
+        # automatically because the PDF will be up to date once processed.
+        requests_pre_ready = requests.subset_by_state(
+            RequestState.pre_ready_states())
+        if requests_pre_ready:
+            request = first_value(requests_pre_ready)
+
+            flash(
+                'A PDF file download of this proposal '
+                'has already been requested.')
+
+            raise HTTPRedirect(url_for(
+                '.proposal_pdf_request_status', proposal_id=proposal.id,
+                request_id=request.id))
+
+        if form is not None:
+            if 'submit_confirm' in form:
+                request_id = db.add_request_prop_pdf(
+                    proposal_id=proposal.id,
+                    requester_person_id=current_user.person.id)
+
+                flash('Your PDF file download has been requested.')
+
+                raise HTTPRedirect(url_for(
+                    '.proposal_pdf_request_status', proposal_id=proposal.id,
+                    request_id=request_id))
+
+            else:
+                raise HTTPRedirect(url_for(
+                    '.proposal_view', proposal_id=proposal.id))
+
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        return {
+            'title': '{}: Download PDF File'.format(proposal_code),
+            'proposal': proposal,
+            'proposal_code': proposal_code,
+            'requests': requests,
+        }
+
+    @with_proposal(permission=PermissionType.VIEW)
+    def view_proposal_pdf_request_status(
+            self, current_user, db, proposal, can, request_id):
+        try:
+            request = db.search_request_prop_pdf(
+                proposal_id=proposal.id, request_id=request_id).get_single()
+        except NoSuchRecord:
+            raise HTTPNotFound('Request not found.')
+
+        if RequestState.is_ready(request.state):
+            raise HTTPRedirect(url_for(
+                '.proposal_pdf_download', proposal_id=proposal.id,
+                request_id=request_id))
+
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        return {
+            'title': '{}: Download PDF File'.format(proposal_code),
+            'proposal': proposal,
+            'proposal_code': proposal_code,
+            'request': request,
+            'dynamic': self._get_proposal_pdf_request_dynamic(request),
+            'message': 'Please wait while your PDF file download is prepared.',
+            'target_query': url_for(
+                '.proposal_pdf_request_query',
+                proposal_id=proposal.id, request_id=request.id),
+            'target_redirect': url_for(
+                '.proposal_pdf_download',
+                proposal_id=proposal.id, request_id=request.id),
+        }
+
+    @with_proposal(permission=PermissionType.VIEW)
+    def view_proposal_pdf_request_query(
+            self, current_user, db, proposal, can, request_id):
+        try:
+            request = db.search_request_prop_pdf(
+                proposal_id=proposal.id, request_id=request_id).get_single()
+        except NoSuchRecord:
+            raise HTTPNotFound('Request not found.')
+
+        return self._get_proposal_pdf_request_dynamic(request)
+
+    def _get_proposal_pdf_request_dynamic(self, request):
+        return {
+            'state_name': RequestState.get_name(request.state),
+            'is_ready': RequestState.is_ready(request.state),
+            'is_pre_ready': RequestState.is_pre_ready(request.state),
+        }
+
+    @with_proposal(permission=PermissionType.VIEW)
+    def view_proposal_pdf_download(
+            self, current_user, db, proposal, can, request_id):
+        try:
+            request = db.search_request_prop_pdf(
+                proposal_id=proposal.id, request_id=request_id).get_single()
+        except NoSuchRecord:
+            raise HTTPNotFound('Request not found.')
+
+        if RequestState.is_expired(request.state):
+            raise HTTPError('Request has expired.')
+
+        if not RequestState.is_ready(request.state):
+            raise HTTPError('Request not ready.')
+
+        with open(get_proposal_filename(request), 'rb') as f:
+            pdf = f.read(50 * 1024 * 1024)
+
+            # Did we get all of the file within the size limit?
+            if len(f.read(1)):
+                raise UserError('The generated PDF is too large.')
+
+        return (
+            pdf,
+            FigureType.PDF,
+            '{}.pdf'.format(self.make_proposal_code(db, proposal)))
 
     @with_proposal(permission=PermissionType.FEEDBACK, with_decision_note=True)
     def view_proposal_feedback(self, current_user, db, proposal, can):

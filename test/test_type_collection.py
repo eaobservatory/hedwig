@@ -27,15 +27,17 @@ from hedwig.type.collection import \
     AffiliationCollection, CallCollection, CallPreambleCollection, \
     EmailCollection, GroupMemberCollection, MemberCollection, \
     ResultCollection, ReviewDeadlineCollection, \
-    ProposalCollection, ProposalFigureCollection, ReviewerCollection, \
+    ProposalCollection, ProposalFigureCollection, \
+    RequestCollection, ReviewerCollection, \
     SiteGroupMemberCollection
 from hedwig.type.enum import BaseAffiliationType, \
     BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, \
-    ReviewState, SiteGroupType
+    RequestState, ReviewState, SiteGroupType
 from hedwig.type.simple import \
     Affiliation, Call, CallPreamble, Email, GroupMember, Member, \
-    Proposal, ProposalFigureInfo, Reviewer, ReviewDeadline, SiteGroupMember
+    Proposal, ProposalFigureInfo, \
+    RequestPropPDF, Reviewer, ReviewDeadline, SiteGroupMember
 from hedwig.type.util import null_tuple
 
 from .compat import TestCase
@@ -701,3 +703,23 @@ class CollectionTypeTestCase(TestCase):
 
         self.assertTrue(c.has_entry(site_group_type=SiteGroupType.PROFILE_VIEWER))
         self.assertFalse(c.has_entry(site_group_type=999))
+
+    def test_request_collection(self):
+        c = RequestCollection()
+
+        c[1] = null_tuple(RequestPropPDF)._replace(
+            id=1, state=RequestState.NEW)
+        c[2] = null_tuple(RequestPropPDF)._replace(
+            id=2, state=RequestState.PROCESSING)
+        c[3] = null_tuple(RequestPropPDF)._replace(
+            id=3, state=RequestState.ERROR)
+        c[4] = null_tuple(RequestPropPDF)._replace(
+            id=4, state=RequestState.EXPIRED)
+
+        cc = c.subset_by_state(RequestState.NEW)
+        self.assertEqual([x for x in cc.keys()], [1])
+        self.assertEqual([x.id for x in cc.values()], [1])
+
+        cc = c.subset_by_state(RequestState.pre_ready_states())
+        self.assertEqual([x for x in cc.keys()], [1, 2])
+        self.assertEqual([x.id for x in cc.values()], [1, 2])

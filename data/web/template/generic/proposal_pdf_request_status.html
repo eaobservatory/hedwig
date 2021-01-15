@@ -1,0 +1,14 @@
+{% extends 'generic/request_status.html' %}
+
+{% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal.id))] %}
+{% set help_link=url_for('help.user_page', page_name='proposal_complete', _anchor='requesting-a-pdf-file-download') %}
+
+{% block content %}
+<nav>
+    <ol>
+        <li><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">Back to proposal</a></li>
+    </ol>
+</nav>
+
+{{ super() }}
+{% endblock %}

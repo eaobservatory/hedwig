@@ -564,6 +564,35 @@ def create_facility_blueprint(db, facility):
         return facility.view_proposal_copy_request_query(
             current_user, db, proposal_id, request_id)
 
+    @bp.route('/proposal/<int:proposal_id>/pdf/', methods=['GET', 'POST'])
+    @require_auth()
+    @facility_template('proposal_pdf_request.html')
+    def proposal_pdf_request(current_user, proposal_id):
+        return facility.view_proposal_pdf_request(
+            current_user, db, proposal_id,
+            (request.form if request.method == 'POST' else None))
+
+    @bp.route('/proposal/<int:proposal_id>/pdf/<int:request_id>/')
+    @require_auth()
+    @facility_template('proposal_pdf_request_status.html')
+    def proposal_pdf_request_status(current_user, proposal_id, request_id):
+        return facility.view_proposal_pdf_request_status(
+            current_user, db, proposal_id, request_id)
+
+    @bp.route('/proposal/<int:proposal_id>/pdf/<int:request_id>/query')
+    @require_auth()
+    @send_json()
+    def proposal_pdf_request_query(current_user, proposal_id, request_id):
+        return facility.view_proposal_pdf_request_query(
+            current_user, db, proposal_id, request_id)
+
+    @bp.route('/proposal/<int:proposal_id>/pdf/<int:request_id>/download')
+    @require_auth()
+    @send_file()
+    def proposal_pdf_download(current_user, proposal_id, request_id):
+        return facility.view_proposal_pdf_download(
+            current_user, db, proposal_id, request_id)
+
     @bp.route('/proposal/<int:proposal_id>/feedback')
     @require_auth()
     @facility_template('proposal_feedback.html')

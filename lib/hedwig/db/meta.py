@@ -748,6 +748,16 @@ request_prop_copy = Table(
     *_request_cols(),
     **table_opts)
 
+request_prop_pdf = Table(
+    'request_prop_pdf',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    *_request_cols(),
+    **table_opts)
+
 reset_token = Table(
     'reset_token',
     metadata,

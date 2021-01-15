@@ -14,22 +14,43 @@ Things to check include:
 
 .. image:: image/proposal_complete.png
 
-Saving as a PDF File
---------------------
+Requesting a PDF File Download
+------------------------------
 
-Note that there is not (yet) a way to download a PDF file of your
-whole proposal.
-In the meantime, many systems offer the ability to print to a PDF file.
+If you require a copy of your proposal as a PDF file,
+you can use the "Request PDF file download"
+link near the top of the proposal page to request one be prepared for you.
+This will take you to a page where you can confirm your request.
+
+.. image:: image/proposal_pdf_request.png
+
+Your request will be queued until the system is able to prepare
+the proposal PDF file.
+This can take some time.
+The request status page will refresh every few seconds to show
+the status of your request.
+As soon as the PDF file is ready,
+your browser will be redirected to download it.
+If instead an error occurs while the file is being prepared,
+the "Request status" box will be updated to indicate this,
+and the page will stop refreshing.
+Once the PDF file has been prepared,
+it will be available for a limited time before the request expires.
+
+.. image:: image/proposal_pdf_status.png
+
+Saving Directly as a PDF File
+-----------------------------
+
+As a quicker method to save your proposal as a PDF file,
+many systems offer the ability to print to a PDF file from your web browser.
 Printing the proposal view page should produce a sensible version
-of the proposal (without the menu bar and navigation links),
-so you should be able to use this to save a copy of the proposal
-from your web browser.
+of the proposal (without the menu bar and navigation links).
 
 * Using **Google Chrome**
 
-  With recent versions of Chrome, on the "Google Cloud Print"
-  panel, you can click "Change" in the "Destination" section.
-  Then select "Save as PDF".
+  With recent versions of Chrome, on the "Print" panel,
+  you can select "Save as PDF" in the "Destination" section.
 
 * With **Linux** systems
 
@@ -42,7 +63,7 @@ from your web browser.
   --- this may be called "cups-pdf" or "printer-driver-cups-pdf"
   depending on your Linux distribution.
 
-* With **Mac OS X**
+* With **macOS**
 
   There is normally an option to save as PDF in the lower left corner
   of the print dialog box.

@@ -1,0 +1,77 @@
+{% extends 'layout.html' %}
+
+{% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal.id))] %}
+{% set help_link=url_for('help.user_page', page_name='proposal_complete', _anchor='requesting-a-pdf-file-download') %}
+
+{% block content %}
+<nav>
+    <ol>
+        <li><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">Back to proposal</a></li>
+    </ol>
+</nav>
+
+<p class="section_label">
+    New request
+</p>
+
+<section>
+    <h2>Request PDF File Download</h2>
+
+    <p>
+        If you require a PDF copy of this proposal,
+        you may request that a file be prepared for you to download.
+        This may take a few moments.
+        After clicking the &lsquo;Request download&rsquo; button,
+        please wait on the following page until the PDF file is ready.
+    </p>
+
+    <form method="POST" action="{{ url_for('.proposal_pdf_request', proposal_id=proposal.id) }}">
+        <p>
+            <input type="submit" name="submit_confirm" value="Request download" />
+            <input type="submit" name="submit_cancel" value="Cancel" />
+        </p>
+    </form>
+</section>
+
+{% if requests %}
+<p class="section_label">
+    Existing requests
+</p>
+
+<section>
+    <h2>Existing PDF File Requests</h2>
+
+    <p>
+        {% set plural = (requests | length) > 1 %}
+        The following PDF file
+        {{ 'requests have' if plural else 'request has' }}
+        already been made.
+        You may download
+        {{ 'one of these files' if plural else 'this file' }}
+        if there have not been any subsequent changes to the proposal
+        which you wish to include.
+    </p>
+
+    <table>
+        <tr>
+            <th>State</th>
+            <th>Date</th>
+        </tr>
+        {% for request in requests.values() | reverse %}
+            <tr>
+                <td>{{ request.state | request_state_name }}</td>
+                <td>
+                    <a href="{{ url_for(('.proposal_pdf_download' if request.state is request_state_ready else '.proposal_pdf_request_status'), proposal_id=proposal.id, request_id=request.id) }}">
+                        {% if request.processed is none %}
+                            Requested {{ request.requested | format_datetime }} UT
+                        {% else %}
+                            Processed {{ request.processed | format_datetime }} UT
+                        {% endif %}
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+</section>
+{% endif %}
+{% endblock %}

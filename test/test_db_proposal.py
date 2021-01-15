@@ -38,7 +38,7 @@ from hedwig.type.simple import Affiliation, Annotation, \
     Call, CallMidClose, CallPreamble, Category, \
     Member, MemberInfo, MemberInstitution, \
     Proposal, ProposalCategory, ProposalFigureInfo, ProposalPDFInfo, \
-    ProposalText, RequestPropCopy, Target
+    ProposalText, RequestPropCopy, RequestPropPDF, Target
 from hedwig.type.util import null_tuple
 from .dummy_db import DBTestCase
 
@@ -2207,6 +2207,65 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(request.state, RequestState.READY)
         self.assertEqual(request.copy_proposal_id, copy_proposal_id)
         self.assertEqual(request.requester_name, 'Requester')
+
+    def test_request_prop_pdf(self):
+        proposal_id = self._create_test_proposal()
+        person_id = self.db.add_person('Requester')
+
+        request_id = self.db.add_request_prop_pdf(proposal_id, person_id)
+
+        request = self.db.search_request_prop_pdf().get_single()
+        self.assertEqual(request.id, request_id)
+        self.assertEqual(request.proposal_id, proposal_id)
+        self.assertEqual(request.state, RequestState.NEW)
+        self.assertEqual(request.requester, person_id)
+
+        self.db.update_request_prop_pdf(
+            request_id=request_id, state=RequestState.ERROR,
+            state_is_system=True)
+
+        request = self.db.search_request_prop_pdf(
+            proposal_id=proposal_id).get_single()
+        self.assertEqual(request.id, request_id)
+        self.assertEqual(request.proposal_id, proposal_id)
+        self.assertEqual(request.state, RequestState.ERROR)
+        self.assertEqual(request.requester, person_id)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.search_request_prop_pdf(
+                state=RequestState.READY).get_single()
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.search_request_prop_pdf(
+                state=[RequestState.READY]).get_single()
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.search_request_prop_pdf(
+                proposal_id=[1999999]).get_single()
+
+        with self.assertRaisesRegex(Error, 'invalid request state'):
+            self.db.update_request_prop_pdf(
+                request_id=request_id, state=999)
+
+        with self.assertRaisesRegex(ConsistencyError, '^request does not'):
+            self.db.update_request_prop_pdf(
+                request_id=1999999, state=RequestState.READY)
+
+        with self.assertRaisesRegex(ConsistencyError, '^no rows matched'):
+            self.db.update_request_prop_pdf(
+                request_id=1999999, state=RequestState.READY,
+                _test_skip_check=True)
+
+        self.db.delete_request_prop_pdf(request_id=request_id)
+
+        self.assertEqual(len(self.db.search_request_prop_pdf()), 0)
+
+        with self.assertRaisesRegex(ConsistencyError, '^request does not'):
+            self.db.delete_request_prop_pdf(request_id=request_id)
+
+        with self.assertRaisesRegex(ConsistencyError, '^no rows matched'):
+            self.db.delete_request_prop_pdf(
+                request_id=request_id, _test_skip_check=True)
 
     def test_category(self):
         facility_id = self.db.ensure_facility('cat test facility')

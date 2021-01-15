@@ -30,7 +30,7 @@ from ..db.meta import affiliation, \
     proposal, proposal_annotation, proposal_category, \
     proposal_fig, proposal_fig_link, proposal_pdf, proposal_pdf_link, \
     proposal_text, proposal_text_link, queue, \
-    request_prop_copy, \
+    request_prop_copy, request_prop_pdf, \
     review, reviewer, reviewer_acceptance, \
     review_calculation, review_deadline, \
     review_fig, review_fig_link, \
@@ -295,6 +295,11 @@ ProposalText = namedtuple(
 RequestPropCopy = namedtuple(
     'RequestPropCopy',
     [x.name for x in request_prop_copy.columns] +
+    ['requester_name'])
+
+RequestPropPDF = namedtuple(
+    'RequestPropPDF',
+    [x.name for x in request_prop_pdf.columns] +
     ['requester_name'])
 
 Reviewer = namedtuple(

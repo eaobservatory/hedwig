@@ -88,3 +88,6 @@ key=
 
 [pdf_write]
 writer=WeasyPrint
+
+[pdf_request]
+prop_dir=
