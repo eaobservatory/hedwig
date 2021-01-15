@@ -62,27 +62,43 @@
         <tr>
             <th>Facility</th>
             <td>{{ facility_name }}</td>
-            <td class="borderless">&nbsp;</td>
+            <td class="borderless control_links" rowspan="6">
+                <nav>
+                    <ol>
+                        {% if can_edit %}
+                            {% if is_submitted %}
+                                <li><a id="withdraw_proposal_link" href="{{ url_for('.proposal_withdraw', proposal_id=proposal.id) }}">Withdraw proposal</a></li>
+                                <li><a id="validate_proposal_link" href="{{ url_for('.proposal_validate', proposal_id=proposal.id) }}">Validate proposal</a></li>
+                            {% else %}
+                                <li><a id="submit_proposal_link" href="{{ url_for('.proposal_submit', proposal_id=proposal.id) }}">Submit proposal</a></li>
+                            {% endif %}
+                        {% elif (can_view_review or can_view_feedback) %}
+                            {% if can_view_review %}
+                                <li><a id="view_review_link" href="{{ url_for('.proposal_reviews', proposal_id=proposal.id) }}">View{{ '/edit' if can_edit_review }} reviews</a></li>
+                            {% endif %}
+                            {% if can_view_feedback %}
+                                <li><a id="view_feedback_link" href="{{ url_for('.proposal_feedback', proposal_id=proposal.id) }}">View feedback</a></li>
+                            {% endif %}
+                        {% endif %}
+                    </ol>
+                </nav>
+            </td>
         </tr>
         <tr>
             <th>Semester</th>
             <td>{{ proposal.semester_name }}</td>
-            <td class="borderless">&nbsp;</td>
         </tr>
         <tr>
             <th>Queue</th>
             <td>{{ proposal.queue_name }}</td>
-            <td class="borderless">&nbsp;</td>
         </tr>
         <tr>
             <th>Call type</th>
             <td>{{ proposal.call_type | call_type_name(facility_call_type_class) }}</td>
-            <td class="borderless">&nbsp;</td>
         </tr>
         <tr>
             <th>Proposal identifier</th>
             <td id="proposal_identifier_cell">{{ proposal_code }}</td>
-            <td class="borderless">&nbsp;</td>
         </tr>
         <tr>
             <th>Proposal status</th>
@@ -92,30 +108,6 @@
                     <nav>
                         <a href="{{ url_for('.proposal_alter_state', proposal_id=proposal.id) }}" id="alter_state_link">edit</a>
                     </nav>
-                {% endif %}
-            </td>
-            <td class="borderless">
-                {% if can_edit %}
-                    <nav>
-                        {% if is_submitted %}
-                            <a id="withdraw_proposal_link" href="{{ url_for('.proposal_withdraw', proposal_id=proposal.id) }}">Withdraw proposal</a>
-                            <br />
-                            <a id="validate_proposal_link" href="{{ url_for('.proposal_validate', proposal_id=proposal.id) }}">Validate proposal</a>
-                        {% else %}
-                            <a id="submit_proposal_link" href="{{ url_for('.proposal_submit', proposal_id=proposal.id) }}">Submit proposal</a>
-                        {% endif %}
-                    </nav>
-                {% elif (can_view_review or can_view_feedback) %}
-                    <nav>
-                        {% if can_view_review %}
-                            <a id="view_review_link" href="{{ url_for('.proposal_reviews', proposal_id=proposal.id) }}">View{{ '/edit' if can_edit_review }} reviews</a><br />
-                        {% endif %}
-                        {% if can_view_feedback %}
-                            <a id="view_feedback_link" href="{{ url_for('.proposal_feedback', proposal_id=proposal.id) }}">View feedback</a>
-                        {% endif %}
-                    </nav>
-                {% else %}
-                    &nbsp;
                 {% endif %}
             </td>
         </tr>

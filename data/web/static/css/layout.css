@@ -300,3 +300,7 @@ th.sideways > div > div:after {
 tr.oneline td, tr.oneline th {
     white-space: nowrap;
 }
+
+td.control_links {
+    vertical-align: bottom;
+}
