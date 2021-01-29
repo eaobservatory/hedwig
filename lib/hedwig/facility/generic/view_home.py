@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2021 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,6 +24,7 @@ from ...error import NoSuchRecord, MultipleRecords
 from ...type.enum import CallState, GroupType, ProposalState
 from ...type.simple import CallPreamble
 from ...type.util import null_tuple
+from ...util import matches_constraint
 from ...web.util import ErrorPage, HTTPNotFound, session
 
 
@@ -52,22 +53,27 @@ class GenericHome(object):
             'with_proposal_count_state': ProposalState.review_states(),
         } if membership else {}
 
+        hidden = (None if session.get('is_admin', False) else False)
+
         facility_calls = db.search_call(facility_id=self.id_, **kwargs)
 
         # Determine which semesters have standard open calls for proposals.
         open_calls_std = facility_calls.map_values(filter_value=(
             lambda x: x.state == CallState.OPEN
-            and x.type == type_class.STANDARD))
+            and x.type == type_class.STANDARD
+            and matches_constraint(x.hidden, hidden)))
 
         open_calls_nonstd = facility_calls.map_values(filter_value=(
             lambda x: x.state == CallState.OPEN
-            and x.type != type_class.STANDARD))
+            and x.type != type_class.STANDARD
+            and matches_constraint(x.hidden, hidden)))
 
         open_semesters = set((x.semester_id for x in open_calls_std.values()))
 
         closed_calls_std = False
         for call in facility_calls.values_matching(
-                state=CallState.CLOSED, type_=type_class.STANDARD):
+                state=CallState.CLOSED, type_=type_class.STANDARD,
+                hidden=hidden):
             if call.semester_id not in open_semesters:
                 closed_calls_std = True
                 break
@@ -116,12 +122,14 @@ class GenericHome(object):
         # Search for open calls, unless this is a "separate" queue-based call
         # page, in which case we need all calls so that we can get the correct
         # preamble (and will filter by state = OPEN later).
-        calls = db.search_call(facility_id=self.id_, semester_id=semester_id,
-                               state=(None if separate else CallState.OPEN),
-                               type_=call_type,
-                               queue_id=queue_id, separate=separate,
-                               with_queue_description=True,
-                               with_preamble=separate)
+        calls = db.search_call(
+            facility_id=self.id_, semester_id=semester_id,
+            state=(None if separate else CallState.OPEN),
+            type_=call_type,
+            queue_id=queue_id, separate=separate,
+            with_queue_description=True,
+            with_preamble=separate,
+            hidden=(None if session.get('is_admin', False) else False))
 
         call_preamble = None
 
@@ -174,7 +182,9 @@ class GenericHome(object):
         type_class = self.get_call_types()
 
         # Get list of calls, considering only those of standard type.
-        calls = db.search_call(facility_id=self.id_, type_=type_class.STANDARD)
+        calls = db.search_call(
+            facility_id=self.id_, type_=type_class.STANDARD,
+            hidden=(None if session.get('is_admin', False) else False))
 
         open_semesters = set(
             x.semester_id for x in calls.values_matching(state=CallState.OPEN))
@@ -204,7 +214,8 @@ class GenericHome(object):
             facility_id=self.id_,
             state=CallState.OPEN,
             type_=[x for x in type_class.get_options()
-                   if x != type_class.STANDARD])
+                   if x != type_class.STANDARD],
+            hidden=(None if session.get('is_admin', False) else False))
 
         if not calls:
             raise ErrorPage('No open special calls for proposals were found.')

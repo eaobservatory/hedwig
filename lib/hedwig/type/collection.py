@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2021 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -183,7 +183,8 @@ class CallCollection(ResultCollection):
         return self.map_values(filter_value=(
             lambda x: x.separate if separate else not x.separate))
 
-    def values_matching(self, state=None, queue_id=None, type_=None):
+    def values_matching(
+            self, state=None, queue_id=None, type_=None, hidden=None):
         """
         Iterate values matching the given criteria.
         """
@@ -191,7 +192,8 @@ class CallCollection(ResultCollection):
         for call in self.values():
             if all((matches_constraint(call.state, state),
                     matches_constraint(call.queue_id, queue_id),
-                    matches_constraint(call.type, type_))):
+                    matches_constraint(call.type, type_),
+                    matches_constraint(call.hidden, hidden))):
                 yield call
 
 

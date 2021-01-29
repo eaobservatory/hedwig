@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2021 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -70,7 +70,8 @@ class GenericProposal(object):
 
         try:
             call = db.search_call(
-                facility_id=self.id_, call_id=call_id, state=CallState.OPEN
+                facility_id=self.id_, call_id=call_id, state=CallState.OPEN,
+                hidden=(None if session.get('is_admin', False) else False)
             ).get_single()
         except NoSuchRecord:
             raise HTTPNotFound('Call not found')
