@@ -6,12 +6,24 @@
 {% endif %}
 
 {% block content %}
+    {% if person is not none %}
+        <form method="GET" action="{{ url_for('.person_view_reviews', person_id=person.id) }}">
+            <p>
+                <select name="view_all">
+                    <option value="0" {{ 'selected="selected"' | safe if not view_all }}>Active reviews</option>
+                    <option value="1" {{ 'selected="selected"' | safe if view_all }}>All reviews</option>
+                </select>
+                <input type="submit" value="Filter" />
+            </p>
+        </form>
+    {% endif %}
+
     {% if not proposals %}
         <p class="not_present">
             {% if person is none %}
                 You do not currently have any active reviews in this system.
             {% else %}
-                This person does not have any active reviews in the system.
+                This person does not have any {{ 'active' if not view_all }} reviews in the system.
             {% endif %}
         </p>
     {% else %}
@@ -30,16 +42,6 @@
                 <li>Click the proposal identifier to view a proposal.</li>
                 <li>Click a review role to edit the corresponding review.</li>
             </ul>
-        {% else %}
-            <form method="GET" action="{{ url_for('.person_view_reviews', person_id=person.id) }}">
-                <p>
-                    <select name="view_all">
-                        <option value="0" {{ 'selected="selected"' | safe if not view_all }}>Active reviews</option>
-                        <option value="1" {{ 'selected="selected"' | safe if view_all }}>All reviews</option>
-                    </select>
-                    <input type="submit" value="Filter" />
-                </p>
-            </form>
         {% endif %}
 
         {% for facility in proposals %}
