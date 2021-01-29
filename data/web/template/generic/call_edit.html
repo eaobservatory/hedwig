@@ -74,6 +74,11 @@
             {{ render_format_control('note_format', call.note_format, format_types) }}
             <span class="explanation">applies to all notes below</span>
         </li>
+        <li>
+            <label for="hidden">Hidden</label>
+            <input type="checkbox" name="hidden" {{ 'checked="checked"' | safe if call.hidden }} />
+            call should be omitted from lists
+        </li>
         {% orderblocks proposal_order %}
             {% block proposal_abstract %}
                 <li class="separator">Abstract</li>

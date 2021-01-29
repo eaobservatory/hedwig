@@ -52,6 +52,9 @@
                             {% if call.separate %}
                                 <span class="label">separate</span>
                             {% endif %}
+                            {% if call.hidden %}
+                                <span class="label">hidden</span>
+                            {% endif %}
                         </td>
                         <td class="{{ call.state | call_state_class }}">{{ call.state | call_state_name }}</td>
                         <td class="number_center">

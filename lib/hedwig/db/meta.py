@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2021 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -142,6 +142,7 @@ call = Table(
     Column('separate', Boolean, default=False, nullable=False),
     Column('preamble', UnicodeText, nullable=True),
     Column('preamble_format', Integer, nullable=True),
+    Column('hidden', Boolean, default=False, nullable=False),
     UniqueConstraint('semester_id', 'queue_id', 'type'),
     **table_opts)
 

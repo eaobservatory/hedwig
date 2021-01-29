@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2021 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -225,7 +225,8 @@ Proposal = namedtuple(
     [x.name for x in proposal.columns] + [
         'semester_id', 'semester_name', 'semester_code',
         'semester_start', 'semester_end',
-        'queue_id', 'queue_name', 'queue_code', 'call_type', 'call_separate',
+        'queue_id', 'queue_name', 'queue_code',
+        'call_type', 'call_separate', 'call_hidden',
         'facility_id',
         'abst_word_lim',
         'tech_word_lim', 'tech_fig_lim', 'tech_page_lim',
