@@ -50,6 +50,9 @@ class ConfigTestCase(DummyConfigTestCase):
         self.assertEqual(c['TW'], 'Taiwan')
         self.assertEqual(c['JP'], 'Japan')
 
+        # Test country with non-ASCII character in name.
+        self.assertEqual(c['CW'], 'Cura\u00e7ao')
+
         # Check we get the same object if we call the function again.
         cc = config.get_countries()
         self.assertIs(cc, c)

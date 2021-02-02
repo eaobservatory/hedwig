@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2017 East Asian Observatory.
+# Copyright (C) 2015-2021 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -37,6 +37,10 @@ if python_version < 3:
             config.readfp(f, file_)
         return config
 
+    def read_json(file_):
+        with io_open(file_, mode='rt', encoding='utf_8') as f:
+            return json.load(f)
+
 else:
     from configparser import ConfigParser as _ConfigParser
 
@@ -44,6 +48,10 @@ else:
         config = _ConfigParser()
         config.read(file_, encoding='utf_8')
         return config
+
+    def read_json(file_):
+        with open(file_, 'rt', encoding='utf_8') as f:
+            return json.load(f)
 
 
 config_file = ('etc', 'hedwig.ini')
@@ -93,8 +101,7 @@ def get_countries():
         if not os.path.exists(file_):
             raise FormattedError('countries file {} doesn\'t exist', file_)
 
-        with open(file_, 'r') as f:
-            country_info = json.load(f)
+        country_info = read_json(file_)
 
         items = []
 
