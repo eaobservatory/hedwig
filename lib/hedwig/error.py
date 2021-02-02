@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2021 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -36,8 +36,13 @@ class DatabaseError(Error):
         which itself is stored as the "orig" attribute.
         """
 
-        Error.__init__(self, string_type(orig))
+        Error.__init__(self, _truncate_message(string_type(orig)))
         self.orig = orig
+
+        # For Python 2, compatability, we can't use `raise ... from None`
+        # to avoid building exception context in Python 3.  Therefore set
+        # this attribute to avoid generating excessively long log entries.
+        self.__suppress_context__ = True
 
 
 class DatabaseIntegrityError(DatabaseError):
@@ -120,3 +125,15 @@ class UserError(FormattedError):
     """
 
     pass
+
+
+def _truncate_message(
+        message, max_length=500, start_length=200, end_length=200):
+    """
+    Function to trim an error message to avoid excessively long log messages.
+    """
+
+    if len(message) <= max_length:
+        return message
+
+    return '{}...{}'.format(message[:start_length], message[-end_length:])
