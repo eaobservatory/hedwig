@@ -34,7 +34,8 @@ from ...type.collection import CalculationCollection, \
 from ...type.enum import AffiliationType, AnnotationType, AttachmentState, \
     CallState, FigureType, FormatType, \
     GroupType, MessageThreadType, \
-    PermissionType, PersonTitle, ProposalState, PublicationType, ReviewState
+    PermissionType, PersonTitle, ProposalState, PublicationType, \
+    RequestState, ReviewState
 from ...type.misc import SectionedList
 from ...type.simple import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \

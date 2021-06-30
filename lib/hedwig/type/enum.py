@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2021 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -670,6 +670,62 @@ class PublicationType(EnumBasic, EnumAvailable):
             ['arxiv:'])),
     ))
 
+
+class RequestState(AttachmentState):
+    """
+    Class representing the state of a request.
+    """
+
+    EXPIRING = 101
+    EXPIRED = 102
+    EXPIRE_ERROR = 103
+
+    RequestStateInfo = namedtuple(
+        'RequestStateInfo', ('name', 'ready', 'error', 'pre_ready', 'expired'))
+
+    #       Name            Ready  Error  Pre.   Exp'd
+    _info = OrderedDict((
+        (AttachmentState.NEW, RequestStateInfo(
+            'Queued',       False, False, True,  False)),
+        (AttachmentState.PROCESSING, RequestStateInfo(
+            'Processing',   False, False, True,  False)),
+        (AttachmentState.READY, RequestStateInfo(
+            'Ready',        True,  False, False, False)),
+        (AttachmentState.ERROR, RequestStateInfo(
+            'Error',        False, True,  False, False)),
+        (EXPIRING, RequestStateInfo(
+            'Expiring',     False, False, False, True)),
+        (EXPIRED, RequestStateInfo(
+            'Expired',      False, False, False, True)),
+        (EXPIRE_ERROR, RequestStateInfo(
+            'Expiry error', False, True,  False, True)),
+    ))
+
+    @classmethod
+    def pre_ready_states(cls):
+        """
+        Return a list of values correspond to states which occur before
+        processing completes.
+        """
+
+        return [k for (k, v) in cls._info.items() if v.pre_ready]
+
+    @classmethod
+    def is_pre_ready(cls, state):
+        return cls._info[state].pre_ready
+
+    @classmethod
+    def is_expired(cls, state):
+        return cls._info[state].expired
+
+    @classmethod
+    def visible_states(cls):
+        """
+        Return the list of states for requests which should be shown
+        to requesters.
+        """
+
+        return [k for (k, v) in cls._info.items() if v.ready or v.pre_ready]
 
 class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
     """

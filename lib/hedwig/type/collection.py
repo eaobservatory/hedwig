@@ -629,6 +629,24 @@ class ProposalFigureCollection(
         return [x for x in self.values() if x.role == role]
 
 
+class RequestCollection(ResultCollection):
+    """
+    Class representing a collection of requests.
+    """
+
+    def subset_by_state(self, state):
+        """
+        Create a subset of the collection (of the same type) containing
+        the entries which match the given state.
+        """
+
+        condition = (
+            (lambda x: x.state in state) if is_list_like(state) else
+            (lambda x: x.state == state))
+
+        return type(self)((k, v) for (k, v) in self.items() if condition(v))
+
+
 class ReviewerCollection(
         ResultCollection, CollectionByProposal, CollectionByReviewerRole):
     """

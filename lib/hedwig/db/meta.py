@@ -652,6 +652,18 @@ queue = Table(
     UniqueConstraint('facility_id', 'code'),
     **table_opts)
 
+
+def _request_cols():
+    return [
+        Column('state', Integer, nullable=False, index=True),
+        Column('requested', DateTime(), nullable=False),
+        Column('requester', None,
+               ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+               nullable=False),
+        Column('processed', DateTime(), nullable=True),
+    ]
+
+
 reset_token = Table(
     'reset_token',
     metadata,

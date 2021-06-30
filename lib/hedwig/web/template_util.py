@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2021 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -33,7 +33,7 @@ from ..config import get_countries
 from ..type.enum import AffiliationType, Assessment, \
     AttachmentState, CallState, GroupType, MessageState, MessageThreadType, \
     PersonTitle, ProposalState, PublicationType, \
-    ReviewState, SemesterState, SiteGroupType, UserLogEvent
+    RequestState, ReviewState, SemesterState, SiteGroupType, UserLogEvent
 from ..util import FormatMaxDP, FormatSigFig
 from .format import format_text
 from .util import mangle_email_address as _mangle_email_address
@@ -329,6 +329,13 @@ def register_template_utils(app):
             return ''
 
     @app.template_filter()
+    def request_state_name(value):
+        try:
+            return RequestState.get_name(value)
+        except KeyError:
+            return 'Unknown state'
+
+    @app.template_filter()
     def review_state_name(value):
         try:
             return ReviewState.get_name(value)
@@ -460,6 +467,10 @@ def register_template_utils(app):
             return True
 
         return re.match(r'^\s*$', value) is not None
+
+    @app.template_test()
+    def request_state_ready(value):
+        return RequestState.is_ready(value)
 
     @app.template_test()
     def review_state_done(value):

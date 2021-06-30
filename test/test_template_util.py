@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2020 East Asian Observatory
+# Copyright (C) 2016-2021 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -28,7 +28,7 @@ from hedwig.astro.coord import CoordSystem
 from hedwig.type.enum import Assessment, AttachmentState, \
     BaseCallType, BaseReviewerRole, BaseTextRole, CallState, \
     MessageState, MessageThreadType, ProposalState, \
-    PublicationType, ReviewState, SemesterState, UserLogEvent
+    PublicationType, RequestState, ReviewState, SemesterState, UserLogEvent
 from hedwig.web.template_util import Counter
 
 from .base_app import WebAppTestCase
@@ -235,6 +235,12 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(f(None), '')
         self.assertEqual(f(PublicationType.ARXIV), '0000.00000')
 
+    def test_filter_request_state(self):
+        f = self.app.jinja_env.filters['request_state_name']
+
+        self.assertEqual(f(RequestState.NEW), 'Queued')
+        self.assertEqual(f(999), 'Unknown state')
+
     def test_filter_review_state(self):
         f = self.app.jinja_env.filters['review_state_name']
 
@@ -352,6 +358,12 @@ class TemplateUtilTestCase(WebAppTestCase):
 
         self.assertTrue(t(MessageState.SENDING))
         self.assertFalse(t(MessageState.DISCARD))
+
+    def test_test_request_state(self):
+        t = self.app.jinja_env.tests['request_state_ready']
+
+        self.assertTrue(t(RequestState.READY))
+        self.assertFalse(t(RequestState.PROCESSING))
 
     def test_test_review_state(self):
         t = self.app.jinja_env.tests['review_state_done']

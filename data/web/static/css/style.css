@@ -472,3 +472,22 @@ a.active_entries {
 a.inactive_entries {
     opacity: 0.5;
 }
+
+table.request_status {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 4ex;
+    margin-bottom: 4ex;
+}
+
+table.request_status th {
+    width: 50%;
+    text-align: right;
+}
+
+table.request_status td.countdown {
+    text-align: center;
+    font-size: 200%;
+    color: #666;
+}

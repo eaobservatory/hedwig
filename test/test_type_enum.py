@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2021 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -27,7 +27,7 @@ from hedwig.type.enum import \
     BaseCallType, BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, \
     MessageState, PersonTitle, ProposalState, PublicationType, \
-    ReviewState, SemesterState
+    RequestState, ReviewState, SemesterState
 
 from .compat import TestCase
 
@@ -321,6 +321,34 @@ class EnumTypeTestCase(TestCase):
         self.assertIsInstance(url_paths, list)
         for url_path in url_paths:
             self.assertIsInstance(url_path, string_type)
+
+    def test_request_state(self):
+        self.assertEqual(RequestState.get_name(RequestState.NEW), 'Queued')
+
+        states = RequestState.pre_ready_states()
+        self.assertIsInstance(states, list)
+        for state in states:
+            self.assertIsInstance(state, int)
+
+        self.assertTrue(RequestState.is_pre_ready(RequestState.NEW))
+        self.assertTrue(RequestState.is_pre_ready(RequestState.PROCESSING))
+        self.assertFalse(RequestState.is_pre_ready(RequestState.READY))
+        self.assertFalse(RequestState.is_pre_ready(RequestState.ERROR))
+        self.assertFalse(RequestState.is_pre_ready(RequestState.EXPIRING))
+        self.assertFalse(RequestState.is_pre_ready(RequestState.EXPIRED))
+        self.assertFalse(RequestState.is_pre_ready(RequestState.EXPIRE_ERROR))
+
+        self.assertFalse(RequestState.is_expired(RequestState.NEW))
+        self.assertFalse(RequestState.is_expired(RequestState.PROCESSING))
+        self.assertFalse(RequestState.is_expired(RequestState.READY))
+        self.assertFalse(RequestState.is_expired(RequestState.ERROR))
+        self.assertTrue(RequestState.is_expired(RequestState.EXPIRING))
+        self.assertTrue(RequestState.is_expired(RequestState.EXPIRED))
+        self.assertTrue(RequestState.is_expired(RequestState.EXPIRE_ERROR))
+
+        self.assertEqual(
+            RequestState.visible_states(),
+            [RequestState.NEW, RequestState.PROCESSING, RequestState.READY])
 
     def test_review_state(self):
         self.assertEqual(ReviewState.get_name(ReviewState.NOT_DONE),

@@ -1,0 +1,17 @@
+{% extends 'layout.html' %}
+
+{% set scripts=['request_status'] %}
+
+{% block content %}
+<h2>Request Status</h2>
+
+{% if message is not none %}
+    <p>
+        {{ message }}
+    </p>
+{% endif %}
+
+<div id="request_status" data-query_url="{{ target_query }}" {% if target_redirect is not none %} data-redirect_url="{{ target_redirect }}" {% endif %} data-dynamic="{{ dynamic | json }}">
+    <p>Loading&hellip;</p>
+</div>
+{% endblock %}

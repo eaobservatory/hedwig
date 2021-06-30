@@ -34,10 +34,10 @@ from ...type.collection import AffiliationCollection, \
     MemberCollection, \
     PrevProposalCollection, ProposalCollection, ProposalCategoryCollection, \
     ProposalFigureCollection, ProposalTextCollection, \
-    ResultCollection, TargetCollection
+    RequestCollection, ResultCollection, TargetCollection
 from ...type.enum import AffiliationType, AnnotationType, AttachmentState, \
     CallState, FigureType, FormatType, \
-    ProposalState, PublicationType, SemesterState
+    ProposalState, PublicationType, RequestState, SemesterState
 from ...type.simple import Affiliation, Annotation, \
     Call, CallMidClose, CallPreamble, Category, CoMemberInfo, \
     Member, MemberInfo, MemberPIInfo, \
@@ -374,6 +374,29 @@ class ProposalPart(object):
 
             return result.inserted_primary_key[0]
 
+    def _add_request_prop(
+            self, table, proposal_id, requester_person_id,
+            _conn=None, _test_skip_check=False):
+        with self._transaction(_conn=_conn) as conn:
+            if not _test_skip_check and not self._exists_id(
+                    conn, proposal, proposal_id):
+                raise ConsistencyError(
+                    'proposal does not exist with id={}', proposal_id)
+
+            if not _test_skip_check and not self._exists_id(
+                    conn, person, requester_person_id):
+                raise ConsistencyError(
+                    'person does not exist with id={}', uploader_person_id)
+
+            result = conn.execute(table.insert().values({
+                table.c.proposal_id: proposal_id,
+                table.c.state: RequestState.NEW,
+                table.c.requested: datetime.utcnow(),
+                table.c.requester: requester_person_id,
+            }))
+
+            return result.inserted_primary_key[0]
+
     def add_semester(self, facility_id, name, code,
                      date_start, date_end, description='',
                      description_format=FormatType.PLAIN,
@@ -551,6 +574,22 @@ class ProposalPart(object):
 
             self._remove_orphan_records(
                 conn, proposal_text, proposal_text_link.c.text_id)
+
+    def _delete_request(
+            self, table, request_id,
+            _conn=None, _test_skip_check=False):
+        with self._transaction(_conn=_conn) as conn:
+            if not _test_skip_check and not self._exists_id(
+                    conn, table, request_id):
+                raise ConsistencyError(
+                    'request does not exist with id {}', request_id)
+
+            result = conn.execute(table.delete().where(
+                table.c.id == request_id))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched deleting request {}', request_id)
 
     def ensure_facility(self, code):
         """
@@ -2210,6 +2249,49 @@ class ProposalPart(object):
 
         return ans
 
+    def _search_request_prop(
+            self, table, result_class, request_id, proposal_id, state,
+            requested_before, processed_before,
+            _conn=None):
+        iter_field = None
+        iter_list = None
+
+        stmt = table.select()
+
+        if request_id is not None:
+            stmt = stmt.where(table.c.id == request_id)
+
+        if proposal_id is not None:
+            if is_list_like(proposal_id):
+                assert iter_field is None
+                iter_field = table.c.proposal_id
+                iter_list = proposal_id
+            else:
+                stmt = stmt.where(
+                    table.c.proposal_id == proposal_id)
+
+        if state is not None:
+            if is_list_like(state):
+                stmt = stmt.where(table.c.state.in_(state))
+            else:
+                stmt = stmt.where(table.c.state == state)
+
+        if requested_before is not None:
+            stmt = stmt.where(table.c.requested < requested_before)
+
+        if processed_before is not None:
+            stmt = stmt.where(table.c.processed < processed_before)
+
+        ans = RequestCollection()
+
+        with self._transaction(_conn=_conn) as conn:
+            for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
+                for row in conn.execute(
+                        iter_stmt.order_by(table.c.id.asc())):
+                    ans[row['id']] = result_class(**row)
+
+        return ans
+
     def search_target(self, proposal_id):
         """
         Retrieve the targets of a given proposal.
@@ -2962,6 +3044,43 @@ class ProposalPart(object):
             if result.rowcount == 0:
                 raise ConsistencyError(
                     'Did not update previous proposal publication info')
+
+    def _update_request_prop(
+            self, table,  request_id, state=None, processed=None,
+            state_prev=None,
+            _conn=None, _test_skip_check=False):
+        values = {}
+
+        stmt = table.update().where(
+            table.c.id == request_id)
+
+        if state is not None:
+            if not RequestState.is_valid(state):
+                raise Error('invalid request state')
+            values['state'] = state
+
+        if processed is not None:
+            values['processed'] = processed
+
+        if state_prev is not None:
+            if not RequestState.is_valid(state_prev):
+                raise Error('Invalid previous state.')
+            stmt = stmt.where(table.c.state == state_prev)
+
+        if not values:
+            raise Error('no request updates specified')
+
+        with self._transaction(_conn=_conn) as conn:
+            if not _test_skip_check and not self._exists_id(
+                    conn, table, request_id):
+                raise ConsistencyError(
+                    'request does not exist with id {}', request_id)
+
+            result = conn.execute(stmt.values(values))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched updating request {}', request_id)
 
     def update_semester(self, semester_id, name=None, code=None,
                         date_start=None, date_end=None, description=None,
