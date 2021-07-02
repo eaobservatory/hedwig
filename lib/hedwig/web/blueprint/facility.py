@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2021 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -502,6 +502,20 @@ def create_facility_blueprint(db, facility):
     def calculation_view(proposal_id, calculation_id):
         return facility.view_calculation_view(
             db, proposal_id, calculation_id)
+
+    @bp.route('/proposal/<int:proposal_id>/copy/<int:request_id>/')
+    @require_auth(require_person=True)
+    @facility_template('request_status.html')
+    def proposal_copy_request_status(proposal_id, request_id):
+        return facility.view_proposal_copy_request_status(
+            db, proposal_id, request_id)
+
+    @bp.route('/proposal/<int:proposal_id>/copy/<int:request_id>/query')
+    @require_auth(require_person=True)
+    @send_json()
+    def proposal_copy_request_query(proposal_id, request_id):
+        return facility.view_proposal_copy_request_query(
+            db, proposal_id, request_id)
 
     @bp.route('/proposal/<int:proposal_id>/feedback')
     @require_auth(require_person=True)

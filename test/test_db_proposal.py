@@ -33,12 +33,12 @@ from hedwig.type.enum import AffiliationType, AnnotationType, \
     AttachmentState, \
     BaseCallType, BaseTextRole, \
     CallState, FigureType, \
-    FormatType, ProposalState
+    FormatType, ProposalState, RequestState
 from hedwig.type.simple import Affiliation, Annotation, \
     Call, CallMidClose, CallPreamble, Category, \
     Member, MemberInfo, MemberInstitution, \
     Proposal, ProposalCategory, ProposalFigureInfo, ProposalPDFInfo, \
-    ProposalText, Target
+    ProposalText, RequestPropCopy, Target
 from hedwig.type.util import null_tuple
 from .dummy_db import DBTestCase
 
@@ -2156,6 +2156,51 @@ class DBProposalTest(DBTestCase):
             self.assertEqual(t.name, 'Obj {}'.format(i))
             self.assertEqual(t.note, 'Note {}'.format(i))
             i += 1
+
+    def test_request_prop_copy(self):
+        (call_id, affiliation_id) = self._create_test_call()
+        person_id = self.db.add_person('Requester')
+        proposal_id = self.db.add_proposal(
+            call_id, person_id, affiliation_id, 'Test Title')
+
+        (copy_call_id, copy_affiliation_id) = self._create_test_call(
+            semester_name='copy', queue_name='copy')
+
+        request_id = self.db.add_request_prop_copy(
+            proposal_id, person_id, call_id=copy_call_id,
+            affiliation_id=copy_affiliation_id, copy_members=True)
+
+        self.assertIsInstance(request_id, int)
+
+        request = self.db.search_request_prop_copy(
+            request_id=request_id).get_single()
+
+        self.assertIsInstance(request, RequestPropCopy)
+
+        self.assertEqual(request.id, request_id)
+        self.assertEqual(request.proposal_id, proposal_id)
+        self.assertEqual(request.state, RequestState.NEW)
+        self.assertEqual(request.requester, person_id)
+        self.assertEqual(request.call_id, copy_call_id)
+        self.assertEqual(request.affiliation_id, copy_affiliation_id)
+        self.assertTrue(request.copy_members, True)
+        self.assertIsNone(request.copy_proposal_id)
+
+        copy_proposal_id = self.db.add_proposal(
+            copy_call_id, person_id, copy_affiliation_id, 'Copy Title')
+
+        self.db.update_request_prop_copy(
+            request_id, state=RequestState.READY,
+            copy_proposal_id=copy_proposal_id)
+
+        request = self.db.search_request_prop_copy(
+            request_id=request_id).get_single()
+
+        self.assertIsInstance(request, RequestPropCopy)
+
+        self.assertEqual(request.id, request_id)
+        self.assertEqual(request.state, RequestState.READY)
+        self.assertEqual(request.copy_proposal_id, copy_proposal_id)
 
     def test_category(self):
         facility_id = self.db.ensure_facility('cat test facility')

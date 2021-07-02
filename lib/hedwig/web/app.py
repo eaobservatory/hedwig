@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2020 East Asian Observatory.
+# Copyright (C) 2015-2021 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -42,7 +42,7 @@ from .blueprint.query import create_query_blueprint
 
 
 def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
-                   _test_return_extra=False):
+                   without_logger=False, _test_return_extra=False):
     """
     Function to prepare the Flask web application.
 
@@ -53,6 +53,9 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
         object (if not given, via :func:`hedwig.config.get_database`).
     :param auto_reload_templates: Configure whether Jinja2 should automatically
         reload template files.  (Only applies with Flask 0.11 or later.)
+    :param without_logger: if `True`, do not configure the application's
+        logger.  (Otherwise it is configured to log to the file specified
+        in the configuration file.)
     :param _test_return_extra: if true, instead of just returning the
         application object, return a dictionary of values useful for
         debugging.  (Currently just returns the output of `locals()`.)
@@ -88,14 +91,15 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
 
     app.jinja_options['extensions'].append(OrderBlocks)
 
-    log_file = config.get('application', 'log_file')
-    if log_file:
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setLevel(logging.WARNING)
-        file_handler.setFormatter(logging.Formatter(
-            fmt='%(asctime)s %(levelname)s %(name)s %(message)s',
-            datefmt='%Y-%m-%dT%H:%M:%S'))
-        app.logger.addHandler(file_handler)
+    if not without_logger:
+        log_file = config.get('application', 'log_file')
+        if log_file:
+            file_handler = logging.FileHandler(log_file)
+            file_handler.setLevel(logging.WARNING)
+            file_handler.setFormatter(logging.Formatter(
+                fmt='%(asctime)s %(levelname)s %(name)s %(message)s',
+                datefmt='%Y-%m-%dT%H:%M:%S'))
+            app.logger.addHandler(file_handler)
 
     # Determine maximum upload size: check all upload limits from the
     # configuration file.

@@ -23,6 +23,7 @@ from itertools import chain, count
 
 from ...astro.coord import CoordSystem
 from ...astro.catalog import parse_source_list, write_source_list
+from ...compat import first_value
 from ...email.format import render_email_template
 from ...config import get_config
 from ...error import ConsistencyError, NoSuchRecord, ParseError, UserError
@@ -31,7 +32,7 @@ from ...publication.url import make_publication_url
 from ...type.collection import CalculationCollection, \
     PrevProposalCollection, ResultCollection, \
     TargetCollection
-from ...type.enum import AffiliationType, AnnotationType, AttachmentState, \
+from ...type.enum import AffiliationType, AttachmentState, \
     CallState, FigureType, FormatType, \
     GroupType, MessageThreadType, \
     PermissionType, PersonTitle, ProposalState, PublicationType, \
@@ -93,8 +94,6 @@ class GenericProposal(object):
 
         if form is not None:
             try:
-                old_proposal = None
-
                 affiliation_id = int(form['affiliation_id'])
                 if affiliation_id not in affiliations:
                     raise ErrorPage('Invalid affiliation selected.')
@@ -107,7 +106,18 @@ class GenericProposal(object):
                 member_copy = 'member_copy' in form
 
                 if 'submit_new' in form:
-                    pass
+                    proposal_id = db.add_proposal(
+                        call_id=call_id, person_id=session['person']['id'],
+                        affiliation_id=affiliation_id,
+                        title=proposal_title,
+                        person_is_reviewer=type_class.has_reviewer_role(
+                            call.type, role_class.PEER))
+
+                    flash('Your new proposal has been created.')
+
+                    raise HTTPRedirect(url_for(
+                        '.proposal_view', proposal_id=proposal_id,
+                        first_view='true'))
 
                 elif 'submit_copy' in form:
                     if old_proposal_id is None:
@@ -138,49 +148,36 @@ class GenericProposal(object):
                     if ProposalState.is_open(old_proposal.state):
                         raise ErrorPage('Proposal to copy is still open.')
 
+                    requests = db.search_request_prop_copy(
+                        proposal_id=old_proposal.id,
+                        state=RequestState.pre_ready_states())
+
+                    if requests:
+                        request = first_value(requests)
+
+                        flash(
+                            'A copy of this proposal '
+                            'has already been requested.')
+
+                        raise HTTPRedirect(url_for(
+                            '.proposal_copy_request_status',
+                            proposal_id=old_proposal.id,
+                            request_id=request.id))
+
+                    request_id = db.add_request_prop_copy(
+                        proposal_id=old_proposal.id,
+                        requester_person_id=session['person']['id'],
+                        call_id=call_id, affiliation_id=affiliation_id,
+                        copy_members=member_copy)
+
+                    flash('Your proposal copy has been requested.')
+
+                    raise HTTPRedirect(url_for(
+                        '.proposal_copy_request_status',
+                        proposal_id=old_proposal.id, request_id=request_id))
+
                 else:
                     raise ErrorPage('Unknown action selected.')
-
-                proposal_id = db.add_proposal(
-                    call_id=call_id, person_id=session['person']['id'],
-                    affiliation_id=affiliation_id,
-                    title=(proposal_title if old_proposal is None
-                           else old_proposal.title),
-                    person_is_reviewer=type_class.has_reviewer_role(
-                        call.type, role_class.PEER))
-
-                if old_proposal is None:
-                    flash('Your new proposal has been created.')
-
-                else:
-                    try:
-                        proposal = db.get_proposal(
-                            self.id_, proposal_id, with_members=True)
-
-                        assert proposal.id == proposal_id
-
-                        atn = self._copy_proposal(
-                            db, old_proposal, proposal,
-                            copy_members=member_copy)
-
-                        db.add_proposal_annotation(
-                            proposal.id, AnnotationType.PROPOSAL_COPY, atn)
-
-                    except:
-                        get_logger().exception(
-                            'Failed to copy from proposal {} to {}',
-                            old_proposal.id, proposal_id)
-
-                        flash('An unexpected error occurred while your '
-                              'proposal was being copied. '
-                              'It may not be complete.')
-
-                    else:
-                        flash('Your proposal has been copied.')
-
-                raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal_id,
-                                           first_view='true'))
 
             except UserError as e:
                 message = e.message
@@ -202,6 +199,61 @@ class GenericProposal(object):
                     *x, code=self.make_proposal_code(db, x))),
             'proposal_id': old_proposal_id,
             'member_copy': member_copy,
+        }
+
+    @with_proposal(permission=PermissionType.VIEW)
+    def view_proposal_copy_request_status(
+            self, db, proposal, can, request_id):
+        try:
+            request = db.search_request_prop_copy(
+                proposal_id=proposal.id, request_id=request_id).get_single()
+        except NoSuchRecord:
+            raise HTTPNotFound('Request not found.')
+
+        if RequestState.is_ready(request.state):
+            raise HTTPRedirect(url_for(
+                '.proposal_view', proposal_id=request.copy_proposal_id,
+                first_view='true'))
+
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        return {
+            'title': '{}: Copy'.format(proposal_code),
+            'proposal': proposal,
+            'proposal_code': proposal_code,
+            'request': request,
+            'dynamic': self._get_proposal_copy_request_dynamic(request),
+            'message': 'Please wait while your proposal is copied.',
+            'target_query': url_for(
+                '.proposal_copy_request_query',
+                proposal_id=proposal.id, request_id=request.id),
+            'target_redirect': None,
+        }
+
+    @with_proposal(permission=PermissionType.VIEW)
+    def view_proposal_copy_request_query(
+            self, db, proposal, can, request_id):
+        try:
+            request = db.search_request_prop_copy(
+                proposal_id=proposal.id, request_id=request_id).get_single()
+        except NoSuchRecord:
+            raise HTTPNotFound('Request not found.')
+
+        return self._get_proposal_copy_request_dynamic(request)
+
+    def _get_proposal_copy_request_dynamic(self, request):
+        redirect_url = None
+        is_ready = RequestState.is_ready(request.state)
+        if is_ready:
+            redirect_url = url_for(
+                '.proposal_view', proposal_id=request.copy_proposal_id,
+                first_view='true')
+
+        return {
+            'state_name': RequestState.get_name(request.state),
+            'is_ready': is_ready,
+            'is_pre_ready': RequestState.is_pre_ready(request.state),
+            'redirect_url': redirect_url,
         }
 
     def _copy_proposal(

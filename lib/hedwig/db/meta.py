@@ -664,6 +664,27 @@ def _request_cols():
     ]
 
 
+request_prop_copy = Table(
+    'request_prop_copy',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('call_id', None,
+           ForeignKey('call.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('affiliation_id', None,
+           ForeignKey('affiliation.id', onupdate='RESTRICT',
+                      ondelete='RESTRICT'),
+           nullable=False),
+    Column('copy_members', Boolean, nullable=False),
+    Column('copy_proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=True),
+    *_request_cols(),
+    **table_opts)
+
 reset_token = Table(
     'reset_token',
     metadata,

@@ -45,7 +45,9 @@ from ...type.simple import Affiliation, Annotation, \
     Proposal, ProposalCategory, ProposalFigure, \
     ProposalFigureInfo, ProposalPDFInfo, \
     ProposalText, \
-    Queue, QueueInfo, ReviewerInfo, Semester, SemesterInfo, Target
+    Queue, QueueInfo, \
+    RequestPropCopy, \
+    ReviewerInfo, Semester, SemesterInfo, Target
 from ...util import is_list_like
 from ..meta import affiliation, affiliation_weight, \
     call, call_mid_close, call_preamble, category, decision, \
@@ -56,7 +58,8 @@ from ..meta import affiliation, affiliation_weight, \
     proposal_fig_preview, proposal_fig_thumbnail, \
     proposal_pdf, proposal_pdf_link, proposal_pdf_preview, \
     proposal_text, proposal_text_link, \
-    queue, review, reviewer, semester, target
+    queue, request_prop_copy, \
+    review, reviewer, semester, target
 from ..util import require_not_none
 
 
@@ -374,9 +377,32 @@ class ProposalPart(object):
 
             return result.inserted_primary_key[0]
 
+    def add_request_prop_copy(
+            self, proposal_id, requester_person_id,
+            call_id, affiliation_id, copy_members,
+            _test_skip_check=False):
+        return self._add_request_prop(
+            request_prop_copy, proposal_id, requester_person_id,
+            extra_values={
+                request_prop_copy.c.call_id: call_id,
+                request_prop_copy.c.affiliation_id: affiliation_id,
+                request_prop_copy.c.copy_members: copy_members,
+            },
+            _test_skip_check=_test_skip_check)
+
     def _add_request_prop(
-            self, table, proposal_id, requester_person_id,
+            self, table, proposal_id, requester_person_id, extra_values=None,
             _conn=None, _test_skip_check=False):
+        values = {
+            table.c.proposal_id: proposal_id,
+            table.c.state: RequestState.NEW,
+            table.c.requested: datetime.utcnow(),
+            table.c.requester: requester_person_id,
+        }
+
+        if extra_values is not None:
+            values.update(extra_values)
+
         with self._transaction(_conn=_conn) as conn:
             if not _test_skip_check and not self._exists_id(
                     conn, proposal, proposal_id):
@@ -388,12 +414,7 @@ class ProposalPart(object):
                 raise ConsistencyError(
                     'person does not exist with id={}', uploader_person_id)
 
-            result = conn.execute(table.insert().values({
-                table.c.proposal_id: proposal_id,
-                table.c.state: RequestState.NEW,
-                table.c.requested: datetime.utcnow(),
-                table.c.requester: requester_person_id,
-            }))
+            result = conn.execute(table.insert().values(values))
 
             return result.inserted_primary_key[0]
 
@@ -574,6 +595,10 @@ class ProposalPart(object):
 
             self._remove_orphan_records(
                 conn, proposal_text, proposal_text_link.c.text_id)
+
+    def delete_request_prop_copy(self, request_id, _test_skip_check=False):
+        self._delete_request(
+            request_prop_copy, request_id, _test_skip_check=_test_skip_check)
 
     def _delete_request(
             self, table, request_id,
@@ -2249,6 +2274,15 @@ class ProposalPart(object):
 
         return ans
 
+    def search_request_prop_copy(
+        self, request_id=None, proposal_id=None, state=None,
+            requested_before=None, processed_before=None):
+        return self._search_request_prop(
+            request_prop_copy, RequestPropCopy,
+            request_id=request_id, proposal_id=proposal_id, state=state,
+            requested_before=requested_before,
+            processed_before=processed_before)
+
     def _search_request_prop(
             self, table, result_class, request_id, proposal_id, state,
             requested_before, processed_before,
@@ -3045,9 +3079,23 @@ class ProposalPart(object):
                 raise ConsistencyError(
                     'Did not update previous proposal publication info')
 
+    def update_request_prop_copy(
+            self, request_id, state=None, processed=None,
+            state_prev=None, copy_proposal_id=None,
+            _test_skip_check=False):
+        values = {}
+
+        if copy_proposal_id is not None:
+            values['copy_proposal_id'] = copy_proposal_id
+
+        self._update_request_prop(
+            request_prop_copy, request_id, state=state, processed=processed,
+            state_prev=state_prev, extra_values=values,
+            _test_skip_check=_test_skip_check)
+
     def _update_request_prop(
             self, table,  request_id, state=None, processed=None,
-            state_prev=None,
+            state_prev=None, extra_values=None,
             _conn=None, _test_skip_check=False):
         values = {}
 
@@ -3066,6 +3114,9 @@ class ProposalPart(object):
             if not RequestState.is_valid(state_prev):
                 raise Error('Invalid previous state.')
             stmt = stmt.where(table.c.state == state_prev)
+
+        if extra_values is not None:
+            values.update(extra_values)
 
         if not values:
             raise Error('no request updates specified')

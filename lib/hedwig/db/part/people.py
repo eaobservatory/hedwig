@@ -43,6 +43,7 @@ from ..meta import auth_failure, email, group_member, \
     invitation, member, message_recipient, \
     oauth_code, oauth_token, person, \
     proposal_fig, proposal_pdf, proposal_text, \
+    request_prop_copy, \
     reset_token, reviewer, site_group_member, user, user_log, verify_token
 from ..util import require_not_none
 
@@ -702,6 +703,7 @@ class PeoplePart(object):
                     (proposal_pdf, 'uploader'),
                     (proposal_text, 'editor'),
                     (reviewer, 'person_id'),
+                    (request_prop_copy, 'requester'),
                     (site_group_member, 'person_id')):
                 column = getattr(table.c, column_name)
                 conn.execute(table.update().where(
