@@ -479,12 +479,30 @@ class JCMT(EAOFacility):
                 option_values = db.get_jcmt_options(
                     proposal_id=old_proposal.id)
 
+                n_true_option = 0
+
+                for (option, option_name) in JCMTOptionValue.get_options(
+                        include_unavailable=True).items():
+                    if getattr(option_values, option):
+                        if JCMTOptionValue.is_available(option):
+                            n_true_option += 1
+                        else:
+                            notes.append({
+                                'item': '{} option'.format(option_name),
+                                'comment': 'not copied because '
+                                'it is no longer available.'})
+                            option_values = option_values._replace(
+                                **{option: False})
+
                 db.set_jcmt_options(**option_values._replace(
                     proposal_id=proposal.id)._asdict())
 
-                notes.append({
-                    'item': 'Additional options',
-                    'comment': 'copied to the proposal.'})
+                if n_true_option:
+                    notes.append({
+                        'item': '{} additional {}'.format(
+                            n_true_option,
+                            'options' if n_true_option > 1 else 'option'),
+                        'comment': 'copied to the proposal.'})
 
             except NoSuchRecord:
                 pass
