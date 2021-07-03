@@ -276,7 +276,8 @@ ProposalText = namedtuple(
 
 RequestPropCopy = namedtuple(
     'RequestPropCopy',
-    [x.name for x in request_prop_copy.columns])
+    [x.name for x in request_prop_copy.columns] +
+    ['requester_name'])
 
 Reviewer = namedtuple(
     'Reviewer',

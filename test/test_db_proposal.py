@@ -2185,6 +2185,7 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(request.affiliation_id, copy_affiliation_id)
         self.assertTrue(request.copy_members, True)
         self.assertIsNone(request.copy_proposal_id)
+        self.assertIsNone(request.requester_name)
 
         copy_proposal_id = self.db.add_proposal(
             copy_call_id, person_id, copy_affiliation_id, 'Copy Title')
@@ -2194,13 +2195,14 @@ class DBProposalTest(DBTestCase):
             copy_proposal_id=copy_proposal_id)
 
         request = self.db.search_request_prop_copy(
-            request_id=request_id).get_single()
+            request_id=request_id, with_requester_name=True).get_single()
 
         self.assertIsInstance(request, RequestPropCopy)
 
         self.assertEqual(request.id, request_id)
         self.assertEqual(request.state, RequestState.READY)
         self.assertEqual(request.copy_proposal_id, copy_proposal_id)
+        self.assertEqual(request.requester_name, 'Requester')
 
     def test_category(self):
         facility_id = self.db.ensure_facility('cat test facility')

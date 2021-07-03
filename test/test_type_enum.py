@@ -55,6 +55,7 @@ class EnumTypeTestCase(TestCase):
 
         unready = AttachmentState.unready_states()
         self.assertIsInstance(unready, list)
+        self.assertEqual(len(unready), 3)
 
         for state in states:
             self.assertTrue(AttachmentState.is_valid(state))
@@ -349,6 +350,10 @@ class EnumTypeTestCase(TestCase):
         self.assertEqual(
             RequestState.visible_states(),
             [RequestState.NEW, RequestState.PROCESSING, RequestState.READY])
+
+        unready = RequestState.unready_states()
+        self.assertIsInstance(unready, list)
+        self.assertEqual(len(unready), 5)
 
     def test_review_state(self):
         self.assertEqual(ReviewState.get_name(ReviewState.NOT_DONE),

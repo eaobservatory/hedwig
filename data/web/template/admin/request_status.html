@@ -1,0 +1,78 @@
+{% extends 'layout_wide.html' %}
+{% set navigation = ['site_admin'] %}
+
+{% set update_counter = create_counter(0) %}
+
+{% macro request_table(requests, checkbox_fmt, extra_columns=[], has_expiry=False) %}
+    {% if requests %}
+        <table>
+            <tr>
+                <th>State</th>
+                <th>Date requested (UT)</th>
+                <th>Proposal</th>
+                <th>Requester</th>
+                {% for extra_column in extra_columns %}
+                    <th>{{ extra_column }}</th>
+                {% endfor %}
+                {% if has_expiry %}
+                    <th>Date processed (UT)</th>
+                {% endif %}
+                <th>Reset new?</th>
+                {% if has_expiry %}
+                    <th>Reset ready?</th>
+                {% endif %}
+            </tr>
+            {% for request in requests %}
+                <tr>
+                    <td>
+                        {{ request.state | request_state_name }}
+                        <input type="hidden" name="prev_{{ request.id | fmt(checkbox_fmt) }}" value="{{ request.state }}" />
+                    </td>
+                    <td>{{ request.requested | format_datetime }}</td>
+                    <td><a href="{{ url_for(request.facility_code | fmt('{}.proposal_view'), proposal_id=request.proposal.id) }}">{{ request.proposal.code }}</a></td>
+                    <td><a href="{{ url_for('people.person_view', person_id=request.requester) }}">{{ request.requester_name }}</a></td>
+                    {{ caller(request) }}
+                    {% if has_expiry %}
+                        <td>{{ request.processed | format_datetime }}</td>
+                    {% endif %}
+                    <td>
+                        {% if request.state is request_state_unready_proc %}
+                            <input type="checkbox" name="{{ request.id | fmt(checkbox_fmt) }}" value="1" id="{{ update_counter() | fmt('update_box_{}') }}" />
+                        {% else %}
+                            &nbsp;
+                        {% endif %}
+                    </td>
+                    {% if has_expiry %}
+                        <td>
+                        {% if request.state is request_state_unready_exp %}
+                            <input type="checkbox" name="exp_{{ request.id | fmt(checkbox_fmt) }}" value="1" id="{{ update_counter() | fmt('update_box_{}') }}" />
+                        {% else %}
+                            &nbsp;
+                        {% endif %}
+                        </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p class="not_present">
+            There appear to be no outstanding requests.
+        </p>
+    {% endif %}
+{% endmacro %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('.request_status') }}">
+    <h2>Proposal Copies</h2>
+
+    {% call(request) request_table(req_prop_copy, 'prop_copy_{}', extra_columns=['Call']) %}
+        <td><a href="{{ url_for(request.facility_code | fmt('{}.call_view'), call_id=request.call_id) }}">{{ request.call_id }}</a></td>
+    {% endcall %}
+
+    {% if update_counter() > 0 %}
+        <p>
+            <input type="submit" name="submit" value="Reset marked entries" />
+        </p>
+    {% endif %}
+</form>
+{% endblock %}

@@ -719,6 +719,20 @@ class RequestState(AttachmentState):
         return cls._info[state].expired
 
     @classmethod
+    def unready_states(cls):
+        """
+        Return a list of states values which do not correspond to
+        successfully completed processing.
+
+        This extends the super-class (AttachmentState) implementation
+        also to exclude EXPIRED.
+        """
+
+        return [
+            k for (k, v) in cls._info.items()
+            if not (v.ready or k == cls.EXPIRED)]
+
+    @classmethod
     def visible_states(cls):
         """
         Return the list of states for requests which should be shown

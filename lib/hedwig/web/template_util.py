@@ -473,6 +473,18 @@ def register_template_utils(app):
         return RequestState.is_ready(value)
 
     @app.template_test()
+    def request_state_unready_proc(value):
+        return (
+            value == RequestState.PROCESSING or
+            value == RequestState.ERROR)
+
+    @app.template_test()
+    def request_state_unready_exp(value):
+        return (
+            value == RequestState.EXPIRING or
+            value == RequestState.EXPIRE_ERROR)
+
+    @app.template_test()
     def review_state_done(value):
         return (value == ReviewState.DONE)
 

@@ -25,7 +25,7 @@ from ..email.format import render_email_template
 from ..error import NoSuchRecord, UserError
 from ..type.simple import ProposalWithCode, Link
 from ..type.enum import AttachmentState, MessageState, MessageThreadType, \
-    PersonTitle, SiteGroupType
+    PersonTitle, RequestState, SiteGroupType
 from ..web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
 from . import auth
@@ -437,6 +437,80 @@ class AdminView(ViewMember):
             result.append(namedtuple(
                 'EntryWithCode', entry._fields + ('facility_code',))(
                 *entry, facility_code=facility.code))
+
+        return result
+
+    @with_verified_admin
+    def request_status(self, db, facilities, form):
+        if form is not None:
+            n_reset = 0
+
+            for param in form:
+                if param.startswith('prop_copy_'):
+                    id_ = int(param[10:])
+                    state_prev = int(form['prev_{}'.format(param)])
+                    db.update_request_prop_copy(
+                        request_id=id_, state=RequestState.NEW,
+                        state_prev=state_prev)
+                    n_reset += 1
+
+            if n_reset:
+                flash('The status for {} {} has been reset.',
+                      n_reset, ('request' if n_reset == 1 else 'requests'))
+            raise HTTPRedirect(url_for('.request_status'))
+
+        search_kwargs = {
+            'state': RequestState.unready_states(),
+            'with_requester_name': True,
+        }
+
+        cache = {
+            'proposals': {},
+            'proposal_facilities': {},
+        }
+
+        ctx = {
+            'title': 'Request Status',
+            'req_prop_copy': self._add_req_prop(
+                db, facilities,
+                db.search_request_prop_copy(**search_kwargs), **cache),
+        }
+
+        return ctx
+
+    def _add_req_prop(
+            self, db, facilities, requests, proposals, proposal_facilities):
+        if not requests:
+            return None
+
+        result = []
+
+        EntryWithProp = namedtuple(
+            'EntryWithProp', first_value(requests)._fields + (
+                'proposal', 'facility_code'))
+
+        for request in reversed(requests.values()):
+            proposal = proposals.get(request.proposal_id)
+
+            if proposal is None:
+                proposal = db.get_proposal(
+                    facility_id=None, proposal_id=request.proposal_id)
+                facility = facilities.get(proposal.facility_id)
+                if facility is None:
+                    continue
+                proposal = ProposalWithCode(
+                    *proposal,
+                    code=facility.view.make_proposal_code(db, proposal))
+
+                proposals[request.proposal_id] = proposal
+                proposal_facilities[request.proposal_id] = \
+                    facility_code = facility.code
+
+            else:
+                facility_code = proposal_facilities[request.proposal_id]
+
+            result.append(EntryWithProp(
+                *request, proposal=proposal, facility_code=facility_code))
 
         return result
 

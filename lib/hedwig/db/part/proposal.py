@@ -2275,22 +2275,34 @@ class ProposalPart(object):
         return ans
 
     def search_request_prop_copy(
-        self, request_id=None, proposal_id=None, state=None,
-            requested_before=None, processed_before=None):
+        self, request_id=None, proposal_id=None, state=None, **kwargs):
         return self._search_request_prop(
             request_prop_copy, RequestPropCopy,
             request_id=request_id, proposal_id=proposal_id, state=state,
-            requested_before=requested_before,
-            processed_before=processed_before)
+            **kwargs)
 
     def _search_request_prop(
             self, table, result_class, request_id, proposal_id, state,
-            requested_before, processed_before,
+            requested_before=None, processed_before=None,
+            with_requester_name=False,
             _conn=None):
+        select_from = table
+        select_columns = [table]
+
+        default = {
+            'requester_name': None,
+        }
+
+        if with_requester_name:
+            select_columns.append(person.c.name.label('requester_name'))
+            select_from = select_from.join(
+                person, table.c.requester == person.c.id)
+            del default['requester_name']
+
+        stmt = select(select_columns).select_from(select_from)
+
         iter_field = None
         iter_list = None
-
-        stmt = table.select()
 
         if request_id is not None:
             stmt = stmt.where(table.c.id == request_id)
@@ -2322,7 +2334,9 @@ class ProposalPart(object):
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(
                         iter_stmt.order_by(table.c.id.asc())):
-                    ans[row['id']] = result_class(**row)
+                    values = default.copy()
+                    values.update(**row)
+                    ans[values['id']] = result_class(**values)
 
         return ans
 
