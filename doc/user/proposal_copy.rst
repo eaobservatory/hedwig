@@ -28,9 +28,15 @@ Finally click the "Copy existing proposal" button to create a copy.
 
 .. image:: image/proposal_copy.png
 
-The next page should show your newly-copied proposal.
-A yellow note at the top right of the screen will indicate
-whether the copying process was generally successful or not.
+Since copying a proposal can be somewhat time-consuming,
+your request will be queued for processing.
+The next page will refresh every few seconds
+to show the current status of your copy request.
+As soon as your copied proposal is ready,
+you should be taken to the new version.
+However if a serious error in copying occurs,
+this will be shown as the "Request status",
+and the status page will stop refreshing.
 
 The copying process goes through your proposal section by section
 and attempts to ensure that all of the information is still
