@@ -43,6 +43,7 @@ from hedwig.admin.poll import send_proposal_feedback
 from hedwig.file.poll import process_moc, \
     process_proposal_figure, process_proposal_pdf, \
     process_review_figure
+from hedwig.request.poll import process_request_prop_copy
 from hedwig.type.enum import BaseReviewerRole, MessageState, ProposalState
 from hedwig.view.query import QueryView
 from hedwig.web.app import create_web_app
@@ -86,13 +87,13 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.db = get_dummy_database(randomize_ids=False,
                                      allow_multi_threaded=True)
-        server = DummyServer(self.db)
+        self.server = DummyServer(self.db)
 
         self.browser = webdriver.Firefox(
             firefox_binary=FirefoxBinary(config.get('utilities', 'firefox')))
         self.browser.set_window_size(1200, 800)
 
-        server.start()
+        self.server.start()
 
         sleep(1)
 
@@ -2290,7 +2291,16 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_name('submit_copy').click()
 
         self.assertIn(
-            'Your proposal has been copied.',
+            'Please wait while your proposal is copied.',
+            self.browser.page_source)
+
+        # Process the request and refresh now -- should be redirected to copy.
+        process_request_prop_copy(self.db, self.server.app)
+
+        self.browser.refresh()
+
+        self.assertIn(
+            'Proposal Copy Report',
             self.browser.page_source)
 
         self.assertNotIn(
