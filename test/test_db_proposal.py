@@ -741,9 +741,6 @@ class DBProposalTest(DBTestCase):
         proposal_id = self.db.add_proposal(call_id, person_id_1,
                                            affiliation_id, 'Proposal 1')
 
-        self.assertEqual(self.db.get_proposal_facility_code(proposal_id),
-                         'my_tel')
-
         for id_ in (call_id, person_id_1, person_id_2, person_id_3,
                     proposal_id):
             self.assertIsInstance(id_, int)
