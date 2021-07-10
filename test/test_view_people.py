@@ -18,9 +18,9 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from hedwig.compat import make_type
+from hedwig.compat import first_value, make_type
 from hedwig.type.collection import ResultCollection
-from hedwig.type.simple import Person, Member, Reviewer
+from hedwig.type.simple import Person, Proposal, Member, Reviewer
 from hedwig.type.util import null_tuple
 from hedwig.view.people import PeopleView
 
@@ -32,7 +32,8 @@ class PeopleViewTestCase(WebAppTestCase):
         view = PeopleView()
 
         dummy_db = make_type('Dummy', (), {
-            'get_proposal_facility_code': (lambda *_: 'generic'),
+            'get_proposal': (lambda *_: null_tuple(Proposal)._replace(
+                facility_id=first_value(self.facilities).id)),
         })()
 
         def make_record(n_proposals, n_reviews):
@@ -46,32 +47,41 @@ class PeopleViewTestCase(WebAppTestCase):
 
         with self.app.test_request_context(path='/invitation'):
             self.assertIsNone(
-                view._determine_invitee_target(dummy_db, make_record(0, 0)))
+                view._determine_invitee_target(
+                    dummy_db, self.facilities, make_record(0, 0)))
 
             self.assertEqual(
-                view._determine_invitee_target(dummy_db, make_record(1, 0)),
+                view._determine_invitee_target(
+                    dummy_db, self.facilities, make_record(1, 0)),
                 '/generic/proposal/0')
 
             self.assertEqual(
-                view._determine_invitee_target(dummy_db, make_record(2, 0)),
+                view._determine_invitee_target(
+                    dummy_db, self.facilities, make_record(2, 0)),
                 '/proposals')
 
             self.assertEqual(
-                view._determine_invitee_target(dummy_db, make_record(0, 1)),
+                view._determine_invitee_target(
+                    dummy_db, self.facilities, make_record(0, 1)),
                 '/generic/review/0/information')
 
             self.assertEqual(
-                view._determine_invitee_target(dummy_db, make_record(0, 2)),
+                view._determine_invitee_target(
+                    dummy_db, self.facilities, make_record(0, 2)),
                 '/reviews')
 
             self.assertIsNone(
-                view._determine_invitee_target(dummy_db, make_record(1, 1)))
+                view._determine_invitee_target(
+                    dummy_db, self.facilities, make_record(1, 1)))
 
             self.assertIsNone(
-                view._determine_invitee_target(dummy_db, make_record(1, 2)))
+                view._determine_invitee_target(
+                    dummy_db, self.facilities, make_record(1, 2)))
 
             self.assertIsNone(
-                view._determine_invitee_target(dummy_db, make_record(2, 1)))
+                view._determine_invitee_target(
+                    dummy_db, self.facilities, make_record(2, 1)))
 
             self.assertIsNone(
-                view._determine_invitee_target(dummy_db, make_record(2, 2)))
+                view._determine_invitee_target(
+                    dummy_db, self.facilities, make_record(2, 2)))

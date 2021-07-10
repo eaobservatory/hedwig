@@ -268,7 +268,7 @@ def create_people_blueprint(db, facilities):
     @templated('people/invitation_token_accept.html')
     def invitation_token_accept():
         return view.invitation_token_accept(
-            db, request.args,
+            db, facilities, request.args,
             (request.form if request.method == 'POST' else None),
             str_to_unicode(request.remote_addr))
 

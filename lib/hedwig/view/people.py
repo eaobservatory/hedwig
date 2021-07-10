@@ -1338,7 +1338,7 @@ class PeopleView(object):
             'token': args.get('token', ''),
         }
 
-    def invitation_token_accept(self, db, args, form, remote_addr):
+    def invitation_token_accept(self, db, facilities, args, form, remote_addr):
         token = (form.get('token', None) if (form is not None)
                  else args.get('token', None))
 
@@ -1368,7 +1368,8 @@ class PeopleView(object):
                 person = db.search_person(user_id=user_id).get_single()
                 _update_session_person(person)
 
-                target = self._determine_invitee_target(db, old_person_record)
+                target = self._determine_invitee_target(
+                    db, facilities, old_person_record)
 
                 if person.institution_id is None:
                     # If the user has no institution, take them to the
@@ -1407,7 +1408,7 @@ class PeopleView(object):
             'person': person,
         }
 
-    def _determine_invitee_target(self, db, person):
+    def _determine_invitee_target(self, db, facilities, person):
         """
         Attempt to determine where to redirect, based on the "old"
         person record (from before invitation acceptance).
@@ -1424,22 +1425,28 @@ class PeopleView(object):
         try:
             member = person.proposals.get_single()
             proposal_id = member.proposal_id
-            code = db.get_proposal_facility_code(proposal_id)
+            code = facilities[db.get_proposal(
+                None, proposal_id).facility_id].code
             targets.append(url_for(
                 '{}.proposal_view'.format(code), proposal_id=proposal_id))
 
         except NoSuchRecord:
+            pass
+        except KeyError:
             pass
         except MultipleRecords:
             targets.append(url_for('.person_proposals'))
 
         try:
             reviewer = person.reviews.get_single()
-            code = db.get_proposal_facility_code(reviewer.proposal_id)
+            code = facilities[db.get_proposal(
+                None, reviewer.proposal_id).facility_id].code
             targets.append(url_for(
                 '{}.review_info'.format(code), reviewer_id=reviewer.id))
 
         except NoSuchRecord:
+            pass
+        except KeyError:
             pass
         except MultipleRecords:
             targets.append(url_for('.person_reviews'))
