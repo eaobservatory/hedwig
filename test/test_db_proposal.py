@@ -55,15 +55,6 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(facility_id_copy, facility_id)
         self.assertNotEqual(facility_id_diff, facility_id)
 
-        # Test the get_facility_code_method.
-        self.assertEqual(self.db.get_facility_code(facility_id),
-                         'my_tel')
-        self.assertEqual(self.db.get_facility_code(facility_id_diff),
-                         'my_other_tel')
-
-        with self.assertRaises(NoSuchRecord):
-            self.db.get_facility_code(1999999)
-
     def test_affiliation(self):
         # Get test facility ID.
         facility_id = self.db.ensure_facility('test_tel')
