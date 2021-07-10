@@ -84,8 +84,16 @@ class ReadOnlyWrapper(object):
         self._db = db
 
     def __getattr__(self, name):
-        if name.startswith('__') or name.split('_', 1)[0] in ('get', 'search'):
+        first_word = name.split('_', 1)[0]
+
+        if name.startswith('__') or first_word in ('get', 'search'):
             return getattr(self._db, name)
+
+        if first_word == 'ensure':
+            meth_ensure = getattr(self._db, name)
+            def meth_ro(*args, **kwargs):
+                return meth_ensure(*args, _read_only=True, **kwargs)
+            return meth_ro
 
         raise FormattedError(
             'read-only wrapper: attribute \'{}\' is not available', name)

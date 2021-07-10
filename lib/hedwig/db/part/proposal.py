@@ -616,7 +616,7 @@ class ProposalPart(object):
                 raise ConsistencyError(
                     'no rows matched deleting request {}', request_id)
 
-    def ensure_facility(self, code):
+    def ensure_facility(self, code, _read_only=False):
         """
         Ensure that a facility exists in the database.
 
@@ -635,6 +635,10 @@ class ProposalPart(object):
 
             if result is not None:
                 return result['id']
+
+            if _read_only:
+                raise FormattedError(
+                    'read-only option: can not create facility \'{}\'', code)
 
             result = conn.execute(facility.insert().values({
                 facility.c.code: code,

@@ -106,6 +106,13 @@ class DBUtilTest(TestCase):
             def __init__(self):
                 self.data = {}
 
+            def ensure_x(self, id_, _read_only=False):
+                if id_ not in self.data:
+                    if _read_only:
+                        raise Error('read-only ensure')
+                    self.data[id_] = 'Assigned value'
+                return self.data[id_]
+
             def get_x(self, id_):
                 return self.data.get(id_, 'Undefined')
 
@@ -119,12 +126,20 @@ class DBUtilTest(TestCase):
         db.update_x(99, 'Message 1')
         self.assertEqual(db.get_x(99), 'Message 1')
 
+        self.assertEqual(db.get_x(55), 'Undefined')
+        self.assertEqual(db.ensure_x(55), 'Assigned value')
+        self.assertEqual(db.get_x(55), 'Assigned value')
+
         # Can read by not write with wrapped object.
         db_ro = ReadOnlyWrapper(db)
 
         self.assertEqual(db_ro.get_x(99), 'Message 1')
         with self.assertRaisesRegex(Error, 'read-only wrapper'):
             db_ro.update_x(99, 'Message 2')
+
+        self.assertEqual(db_ro.ensure_x(55), 'Assigned value')
+        with self.assertRaisesRegex(Error, 'read-only ensure'):
+            db_ro.ensure_x(1111)
 
         # Attempt to write should not have changed the value.
         self.assertEqual(db.get_x(99), 'Message 1')

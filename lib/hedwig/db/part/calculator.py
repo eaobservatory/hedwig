@@ -27,7 +27,7 @@ from sqlalchemy.sql.expression import and_, exists, not_, or_
 from sqlalchemy.sql.functions import coalesce
 from sqlalchemy.sql.functions import max as max_
 
-from ...error import ConsistencyError, Error, UserError
+from ...error import ConsistencyError, Error, FormattedError, UserError
 from ...file.moc import write_moc
 from ...type.collection import CalculationCollection, ResultCollection
 from ...type.enum import AttachmentState, FormatType
@@ -118,7 +118,7 @@ class CalculatorPart(object):
                 raise ConsistencyError(
                     'no rows matched deleting moc with id={}', moc_id)
 
-    def ensure_calculator(self, facility_id, code):
+    def ensure_calculator(self, facility_id, code, _read_only=False):
         """
         Ensure that a calculator exists in the database.
 
@@ -136,6 +136,10 @@ class CalculatorPart(object):
 
             if result is not None:
                 return result['id']
+
+            if _read_only:
+                raise FormattedError(
+                    'read-only option: can not create calculator \'{}\'', code)
 
             result = conn.execute(calculator.insert().values({
                 calculator.c.facility_id: facility_id,
