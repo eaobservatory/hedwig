@@ -18,7 +18,6 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import OrderedDict
 import logging
 import os
 
@@ -27,7 +26,6 @@ from jinja2_orderblocks import OrderBlocks
 
 from ..config import get_config, get_database, get_facilities, get_home
 from ..type.enum import GroupType, MessageThreadType, SiteGroupType
-from ..type.simple import FacilityInfo
 from .template_util import register_template_utils
 from .util import check_session_expiry, \
     make_enum_converter, register_error_handlers
@@ -68,17 +66,7 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
         db = get_database(facility_spec=facility_spec)
 
     # Load facilities as specified in the configuration.
-    facilities = OrderedDict()
-
-    for facility_class in get_facilities(facility_spec=facility_spec):
-        # Create facility object.
-        facility_code = facility_class.get_code()
-        facility_id = db.ensure_facility(facility_code)
-        facility = facility_class(facility_id)
-
-        # Store in our facilities list.
-        facilities[facility_id] = FacilityInfo(
-            facility_id, facility_code, facility.get_name(), facility)
+    facilities = get_facilities(db=db, facility_spec=facility_spec)
 
     # Configure the web application.
     application_name = config.get('application', 'name')

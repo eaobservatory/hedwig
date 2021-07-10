@@ -85,20 +85,18 @@ def _copy_proposal(db, app, request, dry_run=False):
 
     try:
         call = db.search_call(
-            call_id=request.call_id, with_facility_code=True).get_single()
+            call_id=request.call_id).get_single()
     except NoSuchRecord:
         raise FormattedError('Call not found.')
 
     assert call.id == request.call_id
 
-    for facility_class in get_facilities():
-        if facility_class.get_code() == call.facility_code:
-            facility = facility_class(call.facility_id)
-            break
-    else:
+    try:
+        facility = get_facilities(db=db)[call.facility_id].view
+    except KeyError:
         raise FormattedError(
             'Call {} facility {} not found',
-            call.id, call.facility_code)
+            call.id, call.facility_id)
 
     type_class = facility.get_call_types()
     role_class = facility.get_reviewer_roles()

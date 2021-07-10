@@ -20,12 +20,14 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict
 from importlib import import_module
+from itertools import count
 import json
 import os
 
 from .compat import make_type, python_version
 from .error import FormattedError
 from .db.engine import get_engine
+from .type.simple import CalculatorInfo, FacilityInfo, TargetToolInfo
 
 if python_version < 3:
     from io import open as io_open
@@ -61,6 +63,7 @@ countries = None
 database = None
 facilities = None
 home_directory = None
+dummy_id = count(9000000)
 
 
 def get_config():
@@ -206,26 +209,75 @@ def _get_db_class(facility_spec):
     return make_type('CombinedDatabase', tuple(db_parts), {})
 
 
-def get_facilities(facility_spec=None):
+def get_facilities(db=None, facility_spec=None):
     """
-    Get a list of the facility classes as listed in the configuration file.
+    Get a dictionary of facilities as listed in the configuration file.
 
     The facility specifier text (comma-separated string) can be given for
     testing -- otherwise it is read from the configuration.
+
+    If no database is available, `db` can be given as `()` (the empty
+    tuple), and dummy identifiers will be used.  Otherwise if `db` is
+    `None`, then `get_database` will be used to obtain a database object.
     """
 
     global facilities
 
-    if facilities is None or facility_spec is not None:
-        facilities = []
+    if facilities is None or (db is not None) or (facility_spec is not None):
+        facility_classes = []
 
         if facility_spec is None:
             facility_spec = get_config().get('application', 'facilities')
 
         for name in facility_spec.split(','):
-            facilities.append(_import_class(name, 'hedwig.facility.{}.view'))
+            facility_classes.append(_import_class(
+                name, 'hedwig.facility.{}.view'))
+
+        if db is None:
+            db = get_database(facility_spec=facility_spec)
+
+        facilities = OrderedDict()
+
+        for facility_class in facility_classes:
+            facility = _create_facility(db, facility_class)
+            facilities[facility.id] = facility
 
     return facilities
+
+
+def _create_facility(db, facility_class):
+    # Create facility object.
+    facility_code = facility_class.get_code()
+    facility_id = (
+        next(dummy_id) if db == () else
+        db.ensure_facility(facility_code))
+    facility = facility_class(facility_id)
+
+    # Create the facility's calculators.
+    for calculator_class in facility.get_calculator_classes():
+        calculator_code = calculator_class.get_code()
+        calculator_id = (
+            next(dummy_id) if db == () else
+            db.ensure_calculator(facility_id, calculator_code))
+        calculator = calculator_class(facility, calculator_id)
+        calculator_name = calculator.get_name()
+
+        facility.calculators[calculator_id] = CalculatorInfo(
+            calculator_id, calculator_code, calculator_name,
+            calculator, calculator.modes, {})
+
+    # Create the facility's target tools.
+    for tool_class in facility.get_target_tool_classes():
+        tool_code = tool_class.get_code()
+        tool_id = next(dummy_id)
+        tool = tool_class(facility, tool_id)
+        tool_name = tool.get_name()
+
+        facility.target_tools[tool_id] = TargetToolInfo(
+            tool_id, tool_code, tool_name, tool)
+
+    return FacilityInfo(
+        facility_id, facility_code, facility.get_name(), facility)
 
 
 def get_home():

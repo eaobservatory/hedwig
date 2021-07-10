@@ -505,7 +505,7 @@ to obtain the necessary information before calling
       constructed, using the SQLAlchemy engine object
       prepared by :func:`hedwig.db.engine.get_engine`.
 
-#.  :func:`~hedwig.config.get_facilities` gets a list of facility
+#.  :func:`~hedwig.config.get_facilities` first gets a list of facility
     classes with the assistance of the private function
     :func:`~hedwig.config._import_class`.
 
@@ -518,10 +518,9 @@ to obtain the necessary information before calling
     * Otherwise if a plain class name is given, it is loaded from the
       module `hedwig.facility.<lower case name>.view`.
 
-#.  The :func:`hedwig.web.app.create_web_app` function now has a database
-    control object and list of facility classes.
-    It can then go ahead and construct an instance of each
-    facility class as follows:
+#.  It can then go ahead and construct an instance of each
+    facility class using the private function
+    :func:`~hedwig.config._create_facility` as follows:
 
     * It obtains the facility's code using the
       class method :meth:`~hedwig.facility.generic.view.Generic.get_code`.
@@ -540,26 +539,6 @@ to obtain the necessary information before calling
       Therefore within a facility method, the identifier can always
       be obtained from `self.id_`.
 
-#.  A :class:`~hedwig.type.simple.FacilityInfo` instance,
-    with the constructed facility view object stored in the
-    `view` attribute, is added to the `facilities` ordered dictionary.
-    This is used by some of the other blueprints --- for example the
-    "home" blueprint uses it to show each of the facilities on the
-    home page.
-
-#.  :func:`~hedwig.web.blueprint.facility.create_facility_blueprint`
-    is then passed the facility view object in order to create
-    a Flask blueprint which will be registered in the application
-    with an URL prefix containing the facility code.
-
-    * An additional template context parameter `facility_name` is
-      set up using the value returned by the
-      :meth:`~hedwig.facility.generic.view.Generic.get_name` method.
-
-    * All of the fixed facility routes are registered with the
-      blueprint, using functions which invoke the methods of the
-      view object.
-
     * The facility's
       :meth:`~hedwig.facility.generic.view.Generic.get_calculator_classes`
       method is used to get a tuple of calculator classes.
@@ -572,11 +551,9 @@ to obtain the necessary information before calling
         and then the calculator can be constructed,
         giving the facility view object and calculator identifier.
 
-      * Calculator routes are then registered with the blueprint.
-
-      * A default redirect route is added for the calculator's first mode,
-        allowing links to be created to the calculator without
-        specifying a mode.
+      * A :class:`~hedwig.type.simple.CalculatorInfo` instance
+        including the calculator object is stored in the facility's
+        `calculators` dictionary, by identifier.
 
     * The facility's
       :meth:`~hedwig.facility.generic.view.Generic.get_target_tool_classes`
@@ -586,8 +563,46 @@ to obtain the necessary information before calling
         :meth:`~hedwig.view.tool.BaseTargetTool.get_code` method.
         There are currently no tool identifiers since no database
         tables refer to target tools --- a placeholder tool identifier
-        of 0 is passed to the tool constructor along with the facility
+        is passed to the tool constructor along with the facility
         view object.
+
+      * A :class:`~hedwig.type.simple.TargetToolInfo` instance
+        including the target tool object is stored in the facility's
+        `target_tools` dictionary, by identifier.
+
+#.  A :class:`~hedwig.type.simple.FacilityInfo` instance,
+    with the constructed facility view object stored in the
+    `view` attribute, is added to the `facilities` ordered dictionary.
+    This dictionary is returned by :func:`~hedwig.config.get_facilities`.
+
+    The dictionary is used by some of the other blueprints --- for example the
+    "home" blueprint uses it to show each of the facilities on the
+    home page.
+
+#.  The :func:`~hedwig.web.app.create_web_app` function passes
+    the facility view object to
+    :func:`~hedwig.web.blueprint.facility.create_facility_blueprint`
+    in order to create
+    a Flask blueprint which will be registered in the application
+    with an URL prefix containing the facility code.
+
+    * An additional template context parameter `facility_name` is
+      set up using the value returned by the
+      :meth:`~hedwig.facility.generic.view.Generic.get_name` method.
+
+    * All of the fixed facility routes are registered with the
+      blueprint, using functions which invoke the methods of the
+      view object.
+
+    * Each calculator is configured:
+
+      * Calculator routes are then registered with the blueprint.
+
+      * A default redirect route is added for the calculator's first mode,
+        allowing links to be created to the calculator without
+        specifying a mode.
+
+    * Each target tool is configured:
 
       * Various routes for each target tool are registered.
 

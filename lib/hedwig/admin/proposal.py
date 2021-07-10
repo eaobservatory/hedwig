@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2021 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -211,21 +211,18 @@ def send_call_proposal_feedback(db, call_id, proposals, dry_run=False):
     # Determine the facility class.
     logger.debug('Determining facility class for this call')
     try:
-        call = db.get_call(facility_id=None, call_id=call_id,
-                           with_facility_code=True)
+        call = db.get_call(facility_id=None, call_id=call_id)
         assert call.id == call_id
 
     except NoSuchRecord:
         logger.error('Call {} not found', call_id)
         return 0
 
-    for facility_class in get_facilities():
-        if facility_class.get_code() == call.facility_code:
-            facility = facility_class(call.facility_id)
-            break
-    else:
+    try:
+        facility = get_facilities(db=db)[call.facility_id].view
+    except KeyError:
         logger.error('Call {} facility {} not present',
-                     call_id, call.facility_code)
+                     call_id, call.facility_id)
         return 0
 
     role_class = facility.get_reviewer_roles()

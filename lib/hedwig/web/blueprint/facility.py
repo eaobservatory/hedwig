@@ -22,7 +22,6 @@ from flask import Blueprint, request
 
 from ...error import FormattedError
 from ...type.enum import FigureType
-from ...type.simple import CalculatorInfo, TargetToolInfo
 from ..util import HTTPRedirect, \
     require_admin, require_auth, send_file, send_json, templated, url_for
 
@@ -865,46 +864,41 @@ def create_facility_blueprint(db, facility):
             **options)
 
     # Configure the facility's calculators.
-    for calculator_class in facility.get_calculator_classes():
-        calculator_code = calculator_class.get_code()
-        calculator_id = db.ensure_calculator(facility.id_, calculator_code)
-        calculator = calculator_class(facility, calculator_id)
-        calculator_name = calculator.get_name()
-        view_funcs = {}
-
-        facility.calculators[calculator_id] = CalculatorInfo(
-            calculator_id, calculator_code, calculator_name,
-            calculator, calculator.modes, view_funcs)
+    for calculator_info in facility.calculators.values():
+        calculator = calculator_info.calculator
 
         # Prepare information to generate list of templates to use.
-        template_params = [(code, calculator_code)]
+        template_params = [(code, calculator_info.code)]
 
         default_facility_code = calculator.get_default_facility_code()
         if ((default_facility_code is not None) and
                 (default_facility_code != code)):
-            template_params.append((default_facility_code, calculator_code))
+            template_params.append((
+                default_facility_code, calculator_info.code))
 
         template_params.append(('generic', 'base'))
 
         extra_context = {
-            'calculator_code': calculator_code,
-            'calculator_name': calculator_name,
+            'calculator_code': calculator_info.code,
+            'calculator_name': calculator_info.name,
         }
 
         # Create redirect for calculator to its default (first) mode.
         bp.add_url_rule(
-            '/calculator/{}/'.format(calculator_code),
-            'calc_{}'.format(calculator_code),
+            '/calculator/{}/'.format(calculator_info.code),
+            'calc_{}'.format(calculator_info.code),
             make_custom_redirect(
                 '.calc_{}_{}'.format(
-                    calculator_code,
-                    list(calculator.modes.values())[0].code)))
+                    calculator_info.code,
+                    list(calculator_info.modes.values())[0].code)))
 
         # Create routes for each calculator mode.
-        for (calculator_mode_id, calculator_mode) in calculator.modes.items():
-            route_opts = (calculator_code, calculator_mode.code)
+        for (calculator_mode_id, calculator_mode) in \
+                calculator_info.modes.items():
+            route_opts = (calculator_info.code, calculator_mode.code)
 
-            view_funcs[calculator_mode_id] = view_func = make_custom_route(
+            calculator_info.view_functions[calculator_mode_id] = \
+                view_func = make_custom_route(
                 db,
                 ['{}/calculator_{}.html'.format(*x) for x in template_params],
                 calculator.view, include_args=True, allow_post=True,
@@ -923,13 +917,13 @@ def create_facility_blueprint(db, facility):
                 options['methods'] = ['GET', 'POST']
 
             bp.add_url_rule(
-                '/calculator/{}/{}'.format(calculator_code, route.rule),
-                'calc_{}_{}'.format(calculator_code, route.endpoint),
+                '/calculator/{}/{}'.format(calculator_info.code, route.rule),
+                'calc_{}_{}'.format(calculator_info.code, route.endpoint),
                 make_custom_route(
                     db,
-                    (None if route.template is None
-                     else ['{}/calculator_{}_{}'.format(*(x + (route.template,)))
-                           for x in template_params]),
+                    (None if route.template is None else [
+                        '{}/calculator_{}_{}'.format(*(x + (route.template,)))
+                        for x in template_params]),
                     route.func,
                     extra_context=(None if route.template is None
                                    else extra_context),
@@ -937,34 +931,27 @@ def create_facility_blueprint(db, facility):
                 **options)
 
     # Configure the facility's target tools.
-    tool_id = 0
-    for tool_class in facility.get_target_tool_classes():
-        tool_code = tool_class.get_code()
-        tool_id += 1  # TODO: db.ensure_target_tool(facility.id, tool_code)
-        tool = tool_class(facility, tool_id)
-        tool_name = tool.get_name()
-
-        facility.target_tools[tool_id] = TargetToolInfo(
-            tool_id, tool_code, tool_name, tool)
+    for tool_info in facility.target_tools.values():
+        tool = tool_info.tool
 
         # Prepare information to generate list of templates to use.
-        template_params = [(code, tool_code)]
+        template_params = [(code, tool_info.code)]
 
         default_facility_code = tool.get_default_facility_code()
         if ((default_facility_code is not None) and
                 (default_facility_code != code)):
-            template_params.append((default_facility_code, tool_code))
+            template_params.append((default_facility_code, tool_info.code))
 
         template_params.append(('generic', 'base'))
 
         extra_context = {
-            'target_tool_code': tool_code,
-            'target_tool_name': tool_name,
+            'target_tool_code': tool_info.code,
+            'target_tool_name': tool_info.name,
         }
 
         bp.add_url_rule(
-            '/tool/{}'.format(tool_code),
-            'tool_{}'.format(tool_code),
+            '/tool/{}'.format(tool_info.code),
+            'tool_{}'.format(tool_info.code),
             make_custom_route(
                 db, ['{}/tool_{}.html'.format(*x) for x in template_params],
                 tool.view_single, include_args=True, allow_post=True,
@@ -972,8 +959,8 @@ def create_facility_blueprint(db, facility):
             methods=['GET', 'POST'])
 
         bp.add_url_rule(
-            '/tool/{}/upload'.format(tool_code),
-            'tool_{}_upload'.format(tool_code),
+            '/tool/{}/upload'.format(tool_info.code),
+            'tool_{}_upload'.format(tool_info.code),
             make_custom_route(
                 db, ['{}/tool_{}.html'.format(*x) for x in template_params],
                 tool.view_upload, include_args=True,
@@ -982,8 +969,8 @@ def create_facility_blueprint(db, facility):
             methods=['GET', 'POST'])
 
         bp.add_url_rule(
-            '/tool/{}/proposal/<int:proposal_id>'.format(tool_code),
-            'tool_{}_proposal'.format(tool_code),
+            '/tool/{}/proposal/<int:proposal_id>'.format(tool_info.code),
+            'tool_{}_proposal'.format(tool_info.code),
             make_custom_route(
                 db, ['{}/tool_{}.html'.format(*x) for x in template_params],
                 tool.view_proposal, include_args=True, auth_required=True,
@@ -996,13 +983,13 @@ def create_facility_blueprint(db, facility):
                 options['methods'] = ['GET', 'POST']
 
             bp.add_url_rule(
-                '/tool/{}/{}'.format(tool_code, route.rule),
-                'tool_{}_{}'.format(tool_code, route.endpoint),
+                '/tool/{}/{}'.format(tool_info.code, route.rule),
+                'tool_{}_{}'.format(tool_info.code, route.endpoint),
                 make_custom_route(
                     db,
-                    (None if route.template is None
-                     else ['{}/tool_{}_{}'.format(*(x + (route.template,)))
-                           for x in template_params]),
+                    (None if route.template is None else [
+                        '{}/tool_{}_{}'.format(*(x + (route.template,)))
+                        for x in template_params]),
                     route.func,
                     extra_context=(None if route.template is None
                                    else extra_context),

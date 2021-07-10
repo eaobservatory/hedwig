@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime
 
-from hedwig.compat import string_type
+from hedwig.compat import first_value, string_type
 from hedwig.config import get_facilities
 from hedwig.type.enum import FormatType
 from hedwig.type.simple import Call
@@ -41,13 +41,13 @@ class FacilityTestCase(DBTestCase):
 
         self.id_cache = {}
 
-        facilities = get_facilities(facility_spec=self.facility_spec)
+        facilities = get_facilities(
+            db=self.db, facility_spec=self.facility_spec)
         assert len(facilities) == 1
-        facility_class = facilities[0]
+        facility = first_value(facilities)
 
-        self.facility_id = self.db.ensure_facility(facility_class.get_code())
-
-        self.view = facility_class(self.facility_id)
+        self.facility_id = facility.id
+        self.view = facility.view
 
     def tearDown(self):
         del self.facility_id

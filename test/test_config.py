@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015 East Asian Observatory.
+# Copyright (C) 2015-2021 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -30,6 +30,7 @@ from hedwig import config
 from hedwig.error import Error
 from hedwig.db.control import Database
 from hedwig.facility.jcmt.control import JCMTPart
+from hedwig.type.simple import FacilityInfo
 
 from .dummy_config import DummyConfigTestCase
 
@@ -79,20 +80,21 @@ class ConfigTestCase(DummyConfigTestCase):
     def test_get_facility(self):
         # Default facility from template configuration file.
         self.assertEqual(
-            [x.__name__ for x in config.get_facilities()],
-            ['Generic'])
+            [x.name for x in config.get_facilities(db=()).values()],
+            ['Generic Facility'])
 
         # Facility by plain class name.
         self.assertEqual(
-            [x.__name__ for x in config.get_facilities(facility_spec='JCMT')],
+            [x.name for x in config.get_facilities(
+                db=(), facility_spec='JCMT').values()],
             ['JCMT'])
 
         # Facilities by full module and class name.
         self.assertEqual(
-            [x.__name__ for x in config.get_facilities(
-                facility_spec='hedwig.facility.generic.view.Generic,'
-                'hedwig.facility.jcmt.view.JCMT')],
-            ['Generic', 'JCMT'])
+            [x.name for x in config.get_facilities(
+                db=(), facility_spec='hedwig.facility.generic.view.Generic,'
+                'hedwig.facility.jcmt.view.JCMT').values()],
+            ['Generic Facility', 'JCMT'])
 
     def test_get_database(self):
         database_url = 'sqlite:///:memory:'
@@ -119,8 +121,8 @@ class ConfigTestCase(DummyConfigTestCase):
         self.assertIsInstance(db, JCMTPart)
 
     def test_facilities(self):
-        facilities = config.get_facilities()
+        facilities = config.get_facilities(db=())
 
-        self.assertIsInstance(facilities, list)
-        for facility in facilities:
-            self.assertIsInstance(facility, type)
+        self.assertIsInstance(facilities, OrderedDict)
+        for facility in facilities.values():
+            self.assertIsInstance(facility, FacilityInfo)
