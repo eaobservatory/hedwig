@@ -68,7 +68,7 @@ Call = namedtuple(
     'Call',
     [x.name for x in call.columns] +
     ['state', 'facility_id', 'semester_name', 'queue_name',
-     'queue_description', 'queue_description_format', 'facility_code',
+     'queue_description', 'queue_description_format',
      'proposal_count'])
 
 CallMidClose = namedtuple(

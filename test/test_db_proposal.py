@@ -381,7 +381,7 @@ class DBProposalTest(DBTestCase):
                         tech_note='technical note', sci_note='scientific note',
                         prev_prop_note='previous proposal note',
                         note_format=FormatType.PLAIN,
-                        facility_code=None, proposal_count=None,
+                        proposal_count=None,
                         multi_semester=False, separate=False,
                         preamble='preamble text', preamble_format=FormatType.RST,
                         hidden=False)
@@ -460,7 +460,7 @@ class DBProposalTest(DBTestCase):
             set(self.db.search_call(call_id=call_id, hidden=True).keys()),
             set((call_id,)))
 
-        # Test the get_call method's with_facility_code option.
+        # Test the get_call method's facility_id results.
         queue_id_2 = self.db.add_queue(facility_id_2, 'Another Queue', 'AQ')
         call_id_2 = self.db.add_call(
             BaseCallType, semester_id_2, queue_id_2, BaseCallType.STANDARD,
@@ -468,21 +468,16 @@ class DBProposalTest(DBTestCase):
             1, 1, 1, 1, 1, 1, 1, 1, 1, '', '', '', FormatType.PLAIN,
             False, False, None, None, False)
 
-        result = self.db.get_call(
-            facility_id=None, call_id=call_id, with_facility_code=True)
+        result = self.db.get_call(facility_id=None, call_id=call_id)
         self.assertIsInstance(result, Call)
-        self.assertEqual(result.facility_code, 'my_tel')
         self.assertEqual(result.facility_id, facility_id)
 
-        result = self.db.get_call(
-            facility_id=None, call_id=call_id_2, with_facility_code=True)
+        result = self.db.get_call(facility_id=None, call_id=call_id_2)
         self.assertIsInstance(result, Call)
-        self.assertEqual(result.facility_code, 'my_other_tel')
         self.assertEqual(result.facility_id, facility_id_2)
 
         with self.assertRaises(NoSuchRecord):
-            self.db.get_call(
-                facility_id=None, call_id=1999999, with_facility_code=True)
+            self.db.get_call(facility_id=None, call_id=1999999)
 
         # Test the call state filtering.
         result = self.db.search_call()

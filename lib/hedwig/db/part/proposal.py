@@ -646,7 +646,7 @@ class ProposalPart(object):
 
             return result.inserted_primary_key[0]
 
-    def get_call(self, facility_id, call_id, with_facility_code=False):
+    def get_call(self, facility_id, call_id):
         """
         Get a call record.
         """
@@ -654,7 +654,6 @@ class ProposalPart(object):
         return self.search_call(
             facility_id=facility_id, call_id=call_id,
             with_case_notes=True, with_preamble=True,
-            with_facility_code=with_facility_code,
         ).get_single()
 
     def get_call_preamble(self, semester_id, type_):
@@ -1101,7 +1100,7 @@ class ProposalPart(object):
                     has_proposal_state=None, date_close_before=None,
                     separate=None, hidden=None,
                     with_queue_description=False, with_case_notes=False,
-                    with_preamble=False, with_facility_code=False,
+                    with_preamble=False,
                     with_proposal_count=False, with_proposal_count_state=None,
                     _conn=None):
         """
@@ -1142,13 +1141,6 @@ class ProposalPart(object):
         else:
             default['queue_description'] = None
             default['queue_description_format'] = None
-
-        if with_facility_code:
-            fields.append(facility.c.code.label('facility_code'))
-            select_from = select_from.join(
-                facility, facility.c.id == semester.c.facility_id)
-        else:
-            default['facility_code'] = None
 
         if with_proposal_count:
             proposal_count = select([
