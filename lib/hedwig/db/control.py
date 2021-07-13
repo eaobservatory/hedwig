@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2021 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import deque, namedtuple
 from contextlib import contextmanager
+from itertools import count as itertools_count
 from threading import Lock
 
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
@@ -46,6 +47,8 @@ RecordUpdate = namedtuple(
 
 class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                ReviewPart):
+    _mem_ctr = itertools_count()
+
     def __init__(self, engine, query_block_size=50):
         """
         Create database controller object.
@@ -53,6 +56,7 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
 
         self._engine = engine
         self._lock = Lock()
+        self._mem_id = next(self._mem_ctr)
 
         self.query_block_size = query_block_size
 

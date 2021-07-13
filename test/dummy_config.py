@@ -47,9 +47,7 @@ class DummyConfigTestCase(TestCase):
 
     def _clear_config(self):
         # Unload existing configuation.
-        config.config = None
-        config.database = None
-        config.facilities = None
+        config.MemoCache.clear_all()
 
         # Unset home directory variable.
         if 'HEDWIG_DIR' in os.environ:

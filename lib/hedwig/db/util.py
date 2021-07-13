@@ -86,7 +86,9 @@ class ReadOnlyWrapper(object):
     def __getattr__(self, name):
         first_word = name.split('_', 1)[0]
 
-        if name.startswith('__') or first_word in ('get', 'search'):
+        if (name.startswith('__')
+                or first_word in ('get', 'search')
+                or name in ('_mem_id',)):
             return getattr(self._db, name)
 
         if first_word == 'ensure':

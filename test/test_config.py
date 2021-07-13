@@ -126,3 +126,70 @@ class ConfigTestCase(DummyConfigTestCase):
         self.assertIsInstance(facilities, OrderedDict)
         for facility in facilities.values():
             self.assertIsInstance(facility, FacilityInfo)
+
+    def test_memo_cache(self):
+        @config.MemoCache()
+        def func(x):
+            return [x * 2]
+
+        x2 = func(2)
+        self.assertIsInstance(x2, list)
+        self.assertEqual(x2[0], 4)
+
+        x3 = func(3)
+        self.assertIsInstance(x3, list)
+        self.assertEqual(x3[0], 6)
+        self.assertIsNot(x3, x2)
+
+        x2b = func(2)
+        self.assertIs(x2b, x2)
+
+        x3b = func(3)
+        self.assertIs(x3b, x3)
+
+        self.assertEqual(
+            list(sorted(config.MemoCache.instances[-1].cache.keys())),
+            [(2,), (3,)])
+
+        config.MemoCache.clear_all()
+
+        x2c = func(2)
+        self.assertIsNot(x2c, x2)
+        self.assertIsInstance(x2c, list)
+        self.assertEqual(x2c[0], 4)
+
+        class DummyID(object):
+            n_call = 0
+
+            def __init__(self, id_):
+                self._mem_id = id_
+
+            def meth(self, num):
+                DummyID.n_call += 1
+                return [self._mem_id * num]
+
+        dummy1 = DummyID(1)
+        dummy2 = DummyID(2)
+
+        @config.MemoCache()
+        def func2(obj, num):
+            return obj.meth(num)
+
+        ans1 = func2(dummy1, 4)
+
+        self.assertEqual(ans1[0], 4)
+        self.assertEqual(DummyID.n_call, 1)
+
+        ans2 = func2(dummy2, 4)
+
+        self.assertEqual(ans2[0], 8)
+        self.assertEqual(DummyID.n_call, 2)
+
+        ans3 = func2(dummy2, 4)
+
+        self.assertIs(ans3, ans2)
+        self.assertEqual(DummyID.n_call, 2)
+
+        self.assertEqual(
+            list(sorted(config.MemoCache.instances[-1].cache.keys())),
+            [(1, 4), (2, 4)])

@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict
+from functools import wraps
 from importlib import import_module
 from itertools import count
 import json
@@ -57,15 +58,36 @@ else:
 
 
 config_file = ('etc', 'hedwig.ini')
-config = None
 countries_file = ('data', 'misc', 'countries.json')
-countries = None
-database = None
-facilities = None
 home_directory = None
 dummy_id = count(9000000)
 
 
+class MemoCache(object):
+    instances = []
+
+    def __init__(self):
+        self.cache = {}
+        self.instances.append(self)
+
+    def __call__(self, func):
+        @wraps(func)
+        def decorated(*args):
+            key = tuple((getattr(arg, '_mem_id', arg) for arg in args))
+            if key in self.cache:
+                return self.cache[key]
+            value = func(*args)
+            self.cache[key] = value
+            return value
+        return decorated
+
+    @classmethod
+    def clear_all(cls):
+        for instance in cls.instances:
+            instance.cache.clear()
+
+
+@MemoCache()
 def get_config():
     """
     Read the configuration file.
@@ -73,55 +95,46 @@ def get_config():
     Returns a ConfigParser object.
     """
 
-    global config
+    file_ = os.path.join(get_home(), *config_file)
 
-    if config is None:
-        file_ = os.path.join(get_home(), *config_file)
+    if not os.path.exists(file_):
+        raise FormattedError('config file {} doesn\'t exist', file_)
 
-        if not os.path.exists(file_):
-            raise FormattedError('config file {} doesn\'t exist', file_)
-
-        config = read_config(file_)
-
-    return config
+    return read_config(file_)
 
 
+@MemoCache()
 def get_countries():
     """
     Get ordered dictionary of 2-letter country codes mapping to
     country names.  This is sorted by country name.
     """
 
-    global countries
+    # Read country name overrides from the configuration file.
+    override = dict(get_config().items('countries'))
 
-    if countries is None:
-        # Read country name overrides from the configuration file.
-        override = dict(get_config().items('countries'))
+    # Read countries file.
+    file_ = os.path.join(get_home(), *countries_file)
 
-        # Read countries file.
-        file_ = os.path.join(get_home(), *countries_file)
+    if not os.path.exists(file_):
+        raise FormattedError('countries file {} doesn\'t exist', file_)
 
-        if not os.path.exists(file_):
-            raise FormattedError('countries file {} doesn\'t exist', file_)
+    country_info = read_json(file_)
 
-        country_info = read_json(file_)
+    items = []
 
-        items = []
+    for country in country_info['3166-1']:
+        code = country['alpha_2']
+        name = override.get(code.lower())
+        if name is None:
+            # Try to get the "common_name" if it exists, otherwise use the
+            # normal "name" field.
+            name = country.get('common_name', country['name'])
+        items.append((code, name))
 
-        for country in country_info['3166-1']:
-            code = country['alpha_2']
-            name = override.get(code.lower())
-            if name is None:
-                # Try to get the "common_name" if it exists, otherwise use the
-                # normal "name" field.
-                name = country.get('common_name', country['name'])
-            items.append((code, name))
+    items.sort(key=lambda x: x[1])
 
-        items.sort(key=lambda x: x[1])
-
-        countries = OrderedDict(items)
-
-    return countries
+    return OrderedDict(items)
 
 
 def get_database(database_url=None, facility_spec=None):
@@ -132,33 +145,34 @@ def get_database(database_url=None, facility_spec=None):
     can be given for testing -- otherwise they are read from the configuration.
     """
 
-    global database
+    return _get_database(database_url, facility_spec)
 
-    if database is None or facility_spec is not None:
-        config = get_config()
 
-        if database_url is None:
-            database_url = config.get('database', 'url')
+@MemoCache()
+def _get_database(database_url, facility_spec):
+    config = get_config()
 
-        engine_options = {}
+    if database_url is None:
+        database_url = config.get('database', 'url')
 
-        if not database_url.startswith('sqlite'):
-            engine_options.update({
-                'pool_size': 15,
-                'max_overflow': 5,
-            })
+    engine_options = {}
 
-            if config.get('database', 'pool_size'):
-                engine_options['pool_size'] = int(config.get(
-                    'database', 'pool_size'))
-            if config.get('database', 'pool_overflow'):
-                engine_options['max_overflow'] = int(config.get(
-                    'database', 'pool_overflow'))
+    if not database_url.startswith('sqlite'):
+        engine_options.update({
+            'pool_size': 15,
+            'max_overflow': 5,
+        })
 
-        CombinedDatabase = _get_db_class(facility_spec)
-        database = CombinedDatabase(get_engine(database_url, **engine_options))
+        if config.get('database', 'pool_size'):
+            engine_options['pool_size'] = int(config.get(
+                'database', 'pool_size'))
+        if config.get('database', 'pool_overflow'):
+            engine_options['max_overflow'] = int(config.get(
+                'database', 'pool_overflow'))
 
-    return database
+    CombinedDatabase = _get_db_class(facility_spec)
+
+    return CombinedDatabase(get_engine(database_url, **engine_options))
 
 
 def _get_db_class(facility_spec):
@@ -221,26 +235,31 @@ def get_facilities(db=None, facility_spec=None):
     `None`, then `get_database` will be used to obtain a database object.
     """
 
-    global facilities
+    # Ensure a database control object is available (if not ()) so that
+    # the facilities dictionary can be cached with regard to the database
+    # used to configure it.
+    if db is None:
+        db = get_database(facility_spec=facility_spec)
 
-    if facilities is None or (db is not None) or (facility_spec is not None):
-        facility_classes = []
+    return _get_facilities(db, facility_spec)
 
-        if facility_spec is None:
-            facility_spec = get_config().get('application', 'facilities')
 
-        for name in facility_spec.split(','):
-            facility_classes.append(_import_class(
-                name, 'hedwig.facility.{}.view'))
+@MemoCache()
+def _get_facilities(db, facility_spec):
+    facility_classes = []
 
-        if db is None:
-            db = get_database(facility_spec=facility_spec)
+    if facility_spec is None:
+        facility_spec = get_config().get('application', 'facilities')
 
-        facilities = OrderedDict()
+    for name in facility_spec.split(','):
+        facility_classes.append(_import_class(
+            name, 'hedwig.facility.{}.view'))
 
-        for facility_class in facility_classes:
-            facility = _create_facility(db, facility_class)
-            facilities[facility.id] = facility
+    facilities = OrderedDict()
+
+    for facility_class in facility_classes:
+        facility = _create_facility(db, facility_class)
+        facilities[facility.id] = facility
 
     return facilities
 
