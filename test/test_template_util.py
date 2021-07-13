@@ -77,6 +77,11 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(f(None), '')
         self.assertEqual(f(AttachmentState.READY), 'Ready')
 
+        f = self.app.jinja_env.filters['attachment_state_class']
+
+        self.assertEqual(f(None), '')
+        self.assertEqual(f(AttachmentState.READY), 'att_req_ready')
+
     def test_filter_call(self):
         f = self.app.jinja_env.filters['call_state_name']
 
@@ -240,6 +245,11 @@ class TemplateUtilTestCase(WebAppTestCase):
 
         self.assertEqual(f(RequestState.NEW), 'Queued')
         self.assertEqual(f(999), 'Unknown state')
+
+        f = self.app.jinja_env.filters['request_state_class']
+
+        self.assertEqual(f(RequestState.NEW), 'att_req_new')
+        self.assertEqual(f(999), '')
 
     def test_filter_review_state(self):
         f = self.app.jinja_env.filters['review_state_name']

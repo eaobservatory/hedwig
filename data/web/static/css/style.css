@@ -174,6 +174,27 @@ td.semester_past, td.call_closed {
     background: #F88;
 }
 
+td.att_req_new {
+    background: #000;
+    color: #FFF;
+}
+
+td.att_req_proc {
+    background: #FFA;
+}
+
+td.att_req_ready {
+    background: #4F4;
+}
+
+td.att_req_expire {
+    background: #88F;
+}
+
+td.att_req_error {
+    background: #F88;
+}
+
 p.warning {
     font-weight: bold;
     background: #FAA;

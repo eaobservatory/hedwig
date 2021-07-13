@@ -127,7 +127,7 @@ class Assessment(EnumBasic, EnumAvailable):
     ))
 
 
-class AttachmentState(EnumBasic):
+class AttachmentState(EnumBasic, EnumDisplayClass):
     """
     Class representing possible processing states for proposal attachments.
 
@@ -140,14 +140,20 @@ class AttachmentState(EnumBasic):
     READY = 3
     ERROR = 4
 
-    AttachmentStateInfo = namedtuple('AttachmentStateInfo',
-                                     ('name', 'ready', 'error'))
+    AttachmentStateInfo = namedtuple(
+        'AttachmentStateInfo',
+        ('name', 'ready', 'error', 'display_class'))
 
+    #       Name            Ready  Error  Disp.Cl.  Pre.   Exp'd
     _info = OrderedDict((
-        (NEW,         AttachmentStateInfo('New',        False, False)),
-        (PROCESSING,  AttachmentStateInfo('Processing', False, False)),
-        (READY,       AttachmentStateInfo('Ready',      True,  False)),
-        (ERROR,       AttachmentStateInfo('Error',      False, True)),
+        (NEW,         AttachmentStateInfo(
+            'New',          False, False, 'new')),
+        (PROCESSING,  AttachmentStateInfo(
+            'Processing',   False, False, 'proc')),
+        (READY,       AttachmentStateInfo(
+            'Ready',        True,  False, 'ready')),
+        (ERROR,       AttachmentStateInfo(
+            'Error',        False, True,  'error')),
     ))
 
     @classmethod
@@ -681,24 +687,25 @@ class RequestState(AttachmentState):
     EXPIRE_ERROR = 103
 
     RequestStateInfo = namedtuple(
-        'RequestStateInfo', ('name', 'ready', 'error', 'pre_ready', 'expired'))
+        'RequestStateInfo',
+        ('name', 'ready', 'error', 'display_class', 'pre_ready', 'expired'))
 
-    #       Name            Ready  Error  Pre.   Exp'd
+    #       Name            Ready  Error  Disp.Cl.  Pre.   Exp'd
     _info = OrderedDict((
         (AttachmentState.NEW, RequestStateInfo(
-            'Queued',       False, False, True,  False)),
+            'Queued',       False, False, 'new',    True,  False)),
         (AttachmentState.PROCESSING, RequestStateInfo(
-            'Processing',   False, False, True,  False)),
+            'Processing',   False, False, 'proc',   True,  False)),
         (AttachmentState.READY, RequestStateInfo(
-            'Ready',        True,  False, False, False)),
+            'Ready',        True,  False, 'ready',  False, False)),
         (AttachmentState.ERROR, RequestStateInfo(
-            'Error',        False, True,  False, False)),
+            'Error',        False, True,  'error',  False, False)),
         (EXPIRING, RequestStateInfo(
-            'Expiring',     False, False, False, True)),
+            'Expiring',     False, False, 'proc',   False, True)),
         (EXPIRED, RequestStateInfo(
-            'Expired',      False, False, False, True)),
+            'Expired',      False, False, 'expire', False, True)),
         (EXPIRE_ERROR, RequestStateInfo(
-            'Expiry error', False, True,  False, True)),
+            'Expiry error', False, True,  'error',  False, True)),
     ))
 
     @classmethod

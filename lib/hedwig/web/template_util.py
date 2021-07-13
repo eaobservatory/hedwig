@@ -99,6 +99,14 @@ def register_template_utils(app):
         return Assessment.get_name(value)
 
     @app.template_filter()
+    def attachment_state_class(value):
+        try:
+            return 'att_req_{}'.format(
+                AttachmentState.get_display_class(value))
+        except KeyError:
+            return ''
+
+    @app.template_filter()
     def attachment_state_name(value):
         if value is None:
             return ''
@@ -325,6 +333,14 @@ def register_template_utils(app):
     def publication_type_placeholder(value):
         try:
             return PublicationType.get_info(value).placeholder
+        except KeyError:
+            return ''
+
+    @app.template_filter()
+    def request_state_class(value):
+        try:
+            return 'att_req_{}'.format(
+                RequestState.get_display_class(value))
         except KeyError:
             return ''
 

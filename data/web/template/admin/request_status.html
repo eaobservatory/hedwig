@@ -24,7 +24,7 @@
             </tr>
             {% for request in requests %}
                 <tr>
-                    <td>
+                    <td class="{{ request.state | request_state_class }}">
                         {{ request.state | request_state_name }}
                         <input type="hidden" name="prev_{{ request.id | fmt(checkbox_fmt) }}" value="{{ request.state }}" />
                     </td>

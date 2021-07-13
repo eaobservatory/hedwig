@@ -25,7 +25,7 @@
             </tr>
             {% for entry in entries %}
                 <tr>
-                    <td>{{ entry.state | attachment_state_name }}</td>
+                    <td class="{{ entry.state | attachment_state_class }}">{{ entry.state | attachment_state_name }}</td>
                     <td>{{ entry.uploaded | format_datetime }}</td>
                     <td><a href="{{ url_for(entry.facility_code | fmt('{}.proposal_view'), proposal_id=entry.proposal.id) }}">{{ entry.proposal.code }}</a></td>
                     {% if is_review %}
