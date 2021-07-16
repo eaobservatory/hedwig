@@ -59,6 +59,7 @@ def close_call_proposals(db, call_id, dry_run=False):
         call_id=call_id) else False
 
     n_closed = 0
+    n_submitted = 0
 
     for proposal in db.search_proposal(call_id=call_id,
                                        with_members=True).values():
@@ -69,6 +70,7 @@ def close_call_proposals(db, call_id, dry_run=False):
 
         if proposal.state == ProposalState.SUBMITTED:
             new_state = ProposalState.REVIEW
+            n_submitted += 1
 
         elif proposal.state in (ProposalState.PREPARATION,
                                 ProposalState.WITHDRAWN):
@@ -92,6 +94,9 @@ def close_call_proposals(db, call_id, dry_run=False):
 
         n_closed += 1
 
+    _message_call_closed(
+        db, call, n_proposal=n_submitted, is_mid_close=False, dry_run=dry_run)
+
     return n_closed
 
 
@@ -108,6 +113,11 @@ def close_mid_call(db, call_id, mid_close_id, dry_run=False):
         'Preparing to perform intermediate closure {} for call {}',
         mid_close_id, call_id)
 
+    try:
+        call = db.search_call(call_id=call_id).get_single()
+    except NoSuchRecord:
+        raise UserError('Call with id={} not found or not open.', call_id)
+
     n_closed = 0
 
     for proposal in db.search_proposal(
@@ -121,6 +131,9 @@ def close_mid_call(db, call_id, mid_close_id, dry_run=False):
 
     if not dry_run:
         db.update_call_mid_close(mid_close_id, closed=True)
+
+    _message_call_closed(
+        db, call, n_proposal=n_closed, is_mid_close=True, dry_run=dry_run)
 
     return n_closed
 
@@ -149,6 +162,37 @@ def _close_proposal(db, proposal, new_state, dry_run=False):
         logger.exception(
             'Consistency error closing call for proposal {}',
             proposal.id)
+
+
+def _message_call_closed(
+        db, call, n_proposal, is_mid_close, dry_run=False):
+    try:
+        facility = get_facilities(db=db)[call.facility_id].view
+    except KeyError:
+        logger.error(
+            'Call {} facility {} not present',
+            call.id, call.facility_id)
+        return
+
+    type_class = facility.get_call_types()
+
+    email_ctx = {
+        'call': call,
+        'call_type': type_class.get_name(call.type),
+        'n_proposal': n_proposal,
+        'is_mid_close': is_mid_close,
+    }
+
+    # For now send this notification to site administrators.
+    site_administrators = db.search_person(admin=True)
+
+    if not dry_run:
+        db.add_message(
+            'Call for proposals closed',
+            render_email_template(
+                'call_closed.txt',
+                email_ctx, facility=facility),
+            [x.id for x in site_administrators.values()])
 
 
 def finalize_call_review(db, call_id, proposals=None):

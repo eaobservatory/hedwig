@@ -1,0 +1,25 @@
+{% extends 'layout.txt' %}
+
+{% block content %}
+This is to inform you that a call for proposals
+to use {{ facility_definite_name }} has closed.
+This was
+{% if is_mid_close %}
+an intermediate closure
+{% else %}
+the final closure
+{% endif %}
+of the {{ call_type }} Call
+for the {{ call.queue_name }} Queue
+for Semester {{ call.semester_name }}.
+
+There
+{% if n_proposal == 0 %}
+were no proposals
+{% elif n_proposal == 1 %}
+was one proposal
+{% else %}
+were {{ n_proposal }} proposals
+{% endif %}
+included in this closure.
+{% endblock %}
