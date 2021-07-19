@@ -616,6 +616,37 @@ class GenericProposal(object):
                             'item': figure_name,
                             'comment': 'the figure was copied to the proposal.'})
 
+        # Copy categories.
+        with atn['notes'].accumulate_notes('proposal_abstract') as notes:
+            records = db.search_proposal_category(
+                proposal_id=old_proposal.id)
+
+            categories = db.search_category(
+                facility_id=self.id_, hidden=False)
+
+            records_invalid = []
+
+            for id_, record in records.items():
+                if record.category_id not in categories:
+                    records_invalid.append(id_)
+                    notes.append({
+                        'item': record.category_name,
+                        'comment': 'category is no longer available.'})
+
+            for id_ in records_invalid:
+                del records[id_]
+
+            if records:
+                (n_insert, n_update, n_delete) = db.sync_proposal_category(
+                    proposal.id, records=records.map_values(
+                        lambda x: x._replace(id=None)))
+
+                notes.append({
+                    'item': '{} {}'.format(
+                        n_insert,
+                        'categories' if n_insert > 1 else 'category'),
+                    'comment': 'copied to the proposal.'})
+
         return atn
 
     @with_proposal(permission=PermissionType.VIEW)

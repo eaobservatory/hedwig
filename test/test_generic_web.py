@@ -1,4 +1,4 @@
-# Copyright (C) 2019 East Asian Observatory
+# Copyright (C) 2019-2021 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -21,10 +21,13 @@ from __future__ import absolute_import, division, print_function, \
 from hedwig.compat import first_value
 from hedwig.facility.example.calculator_example import ExampleCalculator
 from hedwig.type.collection import CalculationCollection, \
-    PrevProposalCollection, ProposalTextCollection, TargetCollection
+    PrevProposalCollection, \
+    ProposalCategoryCollection, ProposalTextCollection, \
+    ResultCollection, TargetCollection
 from hedwig.type.enum import BaseTextRole, FigureType, FormatType
 from hedwig.type.misc import SectionedList
-from hedwig.type.simple import CalculatorInfo, PrevProposal, Target
+from hedwig.type.simple import CalculatorInfo, Category, \
+    PrevProposal, ProposalCategory, Target
 from hedwig.type.util import null_tuple
 from hedwig.view.people import _update_session_person
 from hedwig.web.util import session
@@ -36,7 +39,8 @@ class GenericFacilityWebAppTestCase(WebAppTestCase):
     def test_copy_proposal(self):
         view = self._get_facility_view('generic')
 
-        (call_id, affiliation_id) = self._create_test_call()
+        (call_id, affiliation_id) = self._create_test_call(
+            facility_id=view.id_)
         self.assertIsInstance(call_id, int)
         self.assertIsInstance(affiliation_id, int)
 
@@ -116,6 +120,10 @@ class GenericFacilityWebAppTestCase(WebAppTestCase):
             BaseTextRole, proposal_id, BaseTextRole.SCIENCE_CASE,
             'technical text', FormatType.PLAIN, 2, person_id_1)
 
+        (abst_text_link_id, abst_text_id) = self.db.set_proposal_text(
+            BaseTextRole, proposal_id, BaseTextRole.ABSTRACT,
+            'abstract text', FormatType.PLAIN, 2, person_id_1)
+
         # ... figures.
         (fig_link_id_1, fig_id_1) = self.db.add_proposal_figure(
             BaseTextRole, proposal_id, BaseTextRole.SCIENCE_CASE,
@@ -123,6 +131,19 @@ class GenericFacilityWebAppTestCase(WebAppTestCase):
         (fig_link_id_2, fig_id_2) = self.db.add_proposal_figure(
             BaseTextRole, proposal_id, BaseTextRole.SCIENCE_CASE,
             FigureType.PNG, b'dummy2', 'Fig 2', 'fig2.png', person_id_1)
+
+        # ... categories.
+        n = self.db.sync_facility_category(view.id_, ResultCollection((
+            (0, Category(None, view.id_, 'Cat 1', False)),
+            (1, Category(None, view.id_, 'Cat 2', False)),
+        )))
+        self.assertEqual(n, (2, 0, 0))
+        category = first_value(self.db.search_category(
+            facility_id=view.id_))
+        self.db.sync_proposal_category(
+            proposal_id, ProposalCategoryCollection((
+                (1, ProposalCategory(1, proposal_id, category.id, None)),
+            )))
 
         # Copy the proposal.
         proposal = self.db.get_proposal(None, proposal_id, with_members=True)
@@ -228,11 +249,16 @@ class GenericFacilityWebAppTestCase(WebAppTestCase):
 
         # ... text.
         records = self.db.search_proposal_text(proposal_id=copy_id)
-        self.assertEqual(len(records), 1)
-        record = first_value(records)
+        self.assertEqual(len(records), 2)
+        record = records.get_role(BaseTextRole.SCIENCE_CASE)
         self.assertNotEqual(record.id, text_link_id)
         self.assertEqual(record.text_id, text_id)
         self.assertEqual(record.role, BaseTextRole.SCIENCE_CASE)
+        self.assertEqual(record.words, 2)
+        record = records.get_role(BaseTextRole.ABSTRACT)
+        self.assertNotEqual(record.id, abst_text_link_id)
+        self.assertEqual(record.text_id, abst_text_id)
+        self.assertEqual(record.role, BaseTextRole.ABSTRACT)
         self.assertEqual(record.words, 2)
 
         # ... figures.
@@ -247,3 +273,10 @@ class GenericFacilityWebAppTestCase(WebAppTestCase):
             self.assertEqual(record.fig_id, fig_id)
             self.assertEqual(record.caption, caption)
             self.assertEqual(record.filename, filename)
+
+        # ... categories.
+        proposal_categories = self.db.search_proposal_category(
+            proposal_id=copy_id)
+        self.assertEqual(len(proposal_categories), 1)
+        self.assertEqual(
+            first_value(proposal_categories).category_id, category.id)
