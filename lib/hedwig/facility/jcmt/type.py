@@ -161,7 +161,7 @@ class JCMTInstrument(EnumBasic, EnumAvailable):
         (UU,     InstrumentInfo('\u02bb\u016a\u02bb\u016b',
                                            True,  ())),
         (AWEOWEO,InstrumentInfo('\u02bb\u0100weoweo',
-                                           False, ())),
+                                           True, ())),
     ))
 
     @classmethod
