@@ -466,13 +466,14 @@ class JCMT(EAOFacility):
                 for id_ in records_invalid:
                     del records[id_]
 
-                (n_insert, n_update, n_delete) = \
-                    db.sync_jcmt_proposal_request(proposal.id, records)
+                if records:
+                    (n_insert, n_update, n_delete) = \
+                        db.sync_jcmt_proposal_request(proposal.id, records)
 
-                notes.append({
-                    'item': '{} {}'.format(
-                        n_insert, 'requests' if n_insert > 1 else 'request'),
-                    'comment': 'copied to the proposal.'})
+                    notes.append({
+                        'item': '{} {}'.format(
+                            n_insert, 'requests' if n_insert > 1 else 'request'),
+                        'comment': 'copied to the proposal.'})
 
             # Copy JCMT options.
             try:
