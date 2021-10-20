@@ -26,7 +26,7 @@ from ..web.util import HTTPError
 
 class QueryView(object):
     cadc_name_resolver = \
-        'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/cadc-target-resolver/find'
+        'https://ws.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/cadc-target-resolver/find'
 
     fixed_name_responses = {}
 
