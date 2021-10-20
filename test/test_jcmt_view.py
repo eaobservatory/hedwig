@@ -154,7 +154,7 @@ class JCMTFacilityTestCase(FacilityTestCase):
     def test_archive_url(self):
         url = self.view.make_archive_search_url(180.0, 45.0)
         self.assertIsInstance(url, string_type)
-        self.assertTrue(url.startswith('http://www.cadc-ccda'))
+        self.assertTrue(url.startswith('https://www.cadc-ccda'))
 
     def test_proposal_urls(self):
         urls = self.view.make_proposal_info_urls('M99XY001')

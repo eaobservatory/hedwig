@@ -52,7 +52,7 @@ from .type import \
 
 class JCMT(EAOFacility):
     cadc_advanced_search = \
-        'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/search/'
+        'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/search/'
 
     @classmethod
     def get_code(cls):
