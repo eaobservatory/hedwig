@@ -149,6 +149,7 @@ th.sorted_desc.sideways span:after, th.col_sorted_asc:not(.sideways):after {
 
 input:disabled, select:disabled {
     cursor: not-allowed;
+    opacity: 0.5;
 }
 
 tr.dragged td {
