@@ -605,7 +605,7 @@ def create_facility_blueprint(db, facility):
     @require_admin
     def semester_new():
         return facility.view_semester_edit(
-            db, None,
+            db, None, request.args,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/admin/semester/<int:semester_id>')
@@ -620,7 +620,7 @@ def create_facility_blueprint(db, facility):
     @require_admin
     def semester_edit(semester_id):
         return facility.view_semester_edit(
-            db, semester_id,
+            db, semester_id, None,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/admin/semester/<int:semester_id>/preamble/'
@@ -719,7 +719,7 @@ def create_facility_blueprint(db, facility):
     @require_admin
     def call_new(call_type):
         return facility.view_call_edit(
-            db, None, call_type,
+            db, None, call_type, request.args,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/admin/call/<int:call_id>')
@@ -733,7 +733,7 @@ def create_facility_blueprint(db, facility):
     @require_admin
     def call_edit(call_id):
         return facility.view_call_edit(
-            db, call_id, None,
+            db, call_id, None, None,
             (request.form if request.method == 'POST' else None))
 
     @bp.route(

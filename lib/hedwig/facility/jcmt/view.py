@@ -524,6 +524,14 @@ class JCMT(EAOFacility):
 
         return ctx
 
+    def _view_call_edit_copy(self, db, call_orig):
+        try:
+            info = db.get_jcmt_call_options(call_id=call_orig.id)
+        except NoSuchRecord:
+            return None
+
+        return info._replace(call_id=None)
+
     def _view_call_edit_get(self, db, call, form):
         info = None
         if call.id is not None:

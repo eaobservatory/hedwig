@@ -26,6 +26,7 @@
 <nav>
     <ol>
         <li><a href="{{ url_for('.semester_edit', semester_id=semester.id) }}">Edit semester</a></li>
+        <li><a href="{{ url_for('.semester_new', copy=semester.id) }}">Copy semester</a></li>
     </ol>
 </nav>
 

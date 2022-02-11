@@ -66,7 +66,7 @@ class GenericAdmin(object):
         }
 
     @with_verified_admin
-    def view_semester_edit(self, db, semester_id, form):
+    def view_semester_edit(self, db, semester_id, args, form):
         """
         Edit or create a new semester.
 
@@ -76,11 +76,26 @@ class GenericAdmin(object):
         """
 
         if semester_id is None:
-            # We are creating a new semester.
-            semester = Semester(None, None, name='', code='',
-                                date_start=None, date_end=None,
-                                description='',
-                                description_format=FormatType.PLAIN)
+            # We are creating a new semester: args should be provided
+            # so that we can check for "copy" request.
+            if (args is not None) and ('copy' in args):
+                try:
+                    semester_orig = db.get_semester(self.id_, int(args['copy']))
+                except NoSuchRecord:
+                    raise ErrorPage('Original semester to copy not found.')
+
+                # Remove semester-specific identifying information.
+                semester = semester_orig._replace(
+                    id=None, facility_id=None, name='', code='',
+                    date_start=None, date_end=None)
+
+                flash('Details have been copied from Semester "{}".',
+                      semester_orig.name)
+            else:
+                semester = Semester(None, None, name='', code='',
+                                    date_start=None, date_end=None,
+                                    description='',
+                                    description_format=FormatType.PLAIN)
             title = 'Add New Semester'
             target = url_for('.semester_new')
         else:
@@ -329,7 +344,7 @@ class GenericAdmin(object):
         return {}
 
     @with_verified_admin
-    def view_call_edit(self, db, call_id, call_type, form):
+    def view_call_edit(self, db, call_id, call_type, args, form):
         """
         Create or edit a call.
         """
@@ -341,10 +356,32 @@ class GenericAdmin(object):
         extra_info = None
 
         if call_id is None:
+            if (args is not None) and ('copy' in args):
+                try:
+                    call_orig = db.get_call(self.id_, int(args['copy']))
+                except NoSuchRecord:
+                    raise ErrorPage('Original call to copy not found.')
+                if call_orig.type != call_type:
+                    raise ErrorPage('Original call is of different type.')
+
+                # Remove call-specific identifying information.
+                call = call_orig._replace(
+                    id=None, semester_id=None, queue_id=None,
+                    date_open=None, date_close=None,
+                    state=None, facility_id=None,
+                    semester_name='', queue_name='')
+
+                extra_info = self._view_call_edit_copy(db, call_orig)
+
+                flash('Details have been copied from {} {} {}.'.format(
+                    call_orig.semester_name, call_orig.queue_name,
+                    type_class.get_name(call_orig.type)))
+            else:
+                call = self.get_new_call_default(call_type)._replace(
+                    type=call_type)
+
             # We are creating a new call, so need to be able to offer
             # menus of semesters and queues.
-            call = self.get_new_call_default(call_type)._replace(
-                type=call_type)
             semesters = db.search_semester(
                 facility_id=self.id_,
                 state=(SemesterState.FUTURE, SemesterState.CURRENT))
@@ -527,6 +564,9 @@ class GenericAdmin(object):
         ctx.update(self._view_call_edit_extra(db, call, extra_info))
 
         return ctx
+
+    def _view_call_edit_copy(self, db, call):
+        return None
 
     def _view_call_edit_get(self, db, call, form):
         return None
