@@ -2,12 +2,12 @@
 
 {% block invitation_introduction %}
 {% if is_reminder %}
-The JCMT Time Allocation Committee would like to remind you
-of their recent request that you assist with the review
-of an observing proposal.
+Recently the JCMT Time Allocation Committee requested
+your assistance in the evaluation of an observing proposal.
 {% else %}
-The JCMT Time Allocation Committee have asked for your opinion
-on an observing proposal submitted recently.
+The JCMT Time Allocation Committee would like
+to request your scientific evaluation
+of an observing proposal submitted recently.
 {% endif %}
 The proposal, {{ proposal_code }},
 entitled "{{ proposal.title }}",
