@@ -281,7 +281,8 @@ class GenericReview(object):
     def _get_proposal_tabulation_titles(self, tabulation):
         return chain(
             [
-                'Proposal', 'PI name', 'PI affiliation', 'Co-Investigators',
+                'Proposal', 'PI name', 'PI affiliation', 'PI institution',
+                'Co-Investigators',
                 'Title', 'State',
                 'Decision', 'Exempt', 'Rating', 'Rating std. dev.',
                 'Categories',
@@ -301,6 +302,8 @@ class GenericReview(object):
                      else proposal['member_pi'].person_name),
                     (None if proposal['member_pi'] is None
                      else proposal['member_pi'].affiliation_name),
+                    (None if proposal['member_pi'] is None
+                     else proposal['member_pi'].institution_name),
                     proposal['members_other'],
                     proposal['title'],
                     ProposalState.get_name(proposal['state']),
