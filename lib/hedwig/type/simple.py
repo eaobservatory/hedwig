@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2021 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -287,7 +287,8 @@ Reviewer = namedtuple(
      'institution_organization', 'institution_country',
      'invitation_token', 'invitation_expiry', 'review_extra',
      'acceptance_accepted', 'acceptance_text', 'acceptance_format',
-     'acceptance_date'] +
+     'acceptance_date',
+     'note', 'note_format'] +
     ['review_{}'.format(x.name) for x in review.columns
      if x != review.c.reviewer_id])
 

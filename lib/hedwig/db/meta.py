@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2021 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -745,6 +745,17 @@ reviewer_acceptance = Table(
     Column('format', Integer, nullable=True),
     Column('date', DateTime(), nullable=False),
     UniqueConstraint('proposal_id', 'person_id', 'role'),
+    **table_opts)
+
+reviewer_note = Table(
+    'reviewer_note',
+    metadata,
+    Column('reviewer_id', None,
+           ForeignKey('reviewer.id',
+                      onupdate='RESTRICT', ondelete='CASCADE'),
+           primary_key=True, nullable=False),
+    Column('note', UnicodeText, nullable=False),
+    Column('note_format', Integer, nullable=False),
     **table_opts)
 
 review_calculation = Table(

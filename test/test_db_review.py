@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -163,7 +163,8 @@ class DBReviewTest(DBTestCase):
         self.assertIsInstance(reviewer_id_4, int)
 
         # Try searching for reviewers.
-        result = self.db.search_reviewer(proposal_id=proposal_id)
+        result = self.db.search_reviewer(
+            proposal_id=proposal_id, with_note=True)
         self.assertEqual(len(result), 4)
 
         for ((k, v), ref) in zip(result.items(), (
@@ -189,6 +190,8 @@ class DBReviewTest(DBTestCase):
             self.assertIsNone(v.review_format)
             self.assertFalse(v.notified)
             self.assertIsNone(v.accepted)
+            self.assertIsNone(v.note)
+            self.assertIsNone(v.note_format)
 
         institution_id = self.db.add_institution(
             'Inst', 'Dept', 'Org', '', 'AX')
@@ -253,6 +256,37 @@ class DBReviewTest(DBTestCase):
                                          person_id=person_id_2)
 
         self.assertEqual(list(result.keys()), [reviewer_id_2])
+
+        # Try setting a note.
+        with self.assertRaisesRegex(ConsistencyError, 'reviewer does not'):
+            self.db.set_reviewer_note(1999999, 'a note', FormatType.PLAIN)
+
+        self.db.set_reviewer_note(reviewer_id_2, 'a note', FormatType.PLAIN)
+
+        result = self.db.search_reviewer(
+            reviewer_id=reviewer_id_2).get_single()
+        self.assertIsNone(result.note)
+        self.assertIsNone(result.note_format)
+
+        result = self.db.search_reviewer(
+            reviewer_id=reviewer_id_2, with_note=True).get_single()
+        self.assertEqual(result.note, 'a note')
+        self.assertEqual(result.note_format, FormatType.PLAIN)
+
+        self.db.set_reviewer_note(reviewer_id_2, 'b note', FormatType.PLAIN)
+        result = self.db.search_reviewer(
+            reviewer_id=reviewer_id_2, with_note=True).get_single()
+        self.assertEqual(result.note, 'b note')
+        self.assertEqual(result.note_format, FormatType.PLAIN)
+
+        with self.assertRaises(ConsistencyError):
+            self.db.delete_reviewer_note(1999999)
+
+        self.db.delete_reviewer_note(reviewer_id_2)
+        result = self.db.search_reviewer(
+            reviewer_id=reviewer_id_2, with_note=True).get_single()
+        self.assertIsNone(result.note)
+        self.assertIsNone(result.note_format)
 
         # Try specifying a review.
         with self.assertRaisesRegex(Error, 'invalid review state'):

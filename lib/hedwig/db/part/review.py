@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -36,7 +36,7 @@ from ...util import is_list_like
 from ..meta import call, decision, group_member, \
     institution, invitation, person, \
     proposal, queue, \
-    review, reviewer, reviewer_acceptance, review_deadline, \
+    review, reviewer, reviewer_acceptance, reviewer_note, review_deadline, \
     review_fig, review_fig_link, review_fig_preview, review_fig_thumbnail
 
 
@@ -202,6 +202,18 @@ class ReviewPart(object):
                 raise ConsistencyError(
                     'no row matched deleting reviewer acceptance {}',
                     reviewer_acceptance_id)
+
+    def delete_reviewer_note(self, reviewer_id, _conn=None):
+        stmt = reviewer_note.delete().where(
+            reviewer_note.c.reviewer_id == reviewer_id)
+
+        with self._transaction(_conn=_conn) as conn:
+            result = conn.execute(stmt)
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no row matched deleting note for reviewer {}',
+                    reviewer_id)
 
     def delete_review_figure(self, reviewer_id, id_):
         where_extra = []
@@ -372,6 +384,7 @@ class ReviewPart(object):
                         with_review_note=False,
                         with_invitation=False,
                         with_acceptance=False,
+                        with_note=False,
                         _conn=None):
         select_columns = [
             reviewer,
@@ -464,6 +477,20 @@ class ReviewPart(object):
                 'acceptance_text': None,
                 'acceptance_format': None,
                 'acceptance_date': None,
+            })
+
+        if with_note:
+            select_columns.extend((
+                reviewer_note.c.note.label('note'),
+                reviewer_note.c.note_format.label('note_format'),
+            ))
+
+            select_from = select_from.outerjoin(reviewer_note)
+
+        else:
+            default.update({
+                'note': None,
+                'note_format': None,
             })
 
         stmt = select(select_columns).select_from(select_from)
@@ -819,6 +846,49 @@ class ReviewPart(object):
     def set_review_figure_thumbnail(self, fig_id, thumbnail):
         self._set_figure_alternate(
             review_fig_thumbnail.c.thumbnail, fig_id, thumbnail)
+
+    def set_reviewer_note(
+            self, reviewer_id, note=None, format_=None,
+            _conn=None):
+        values = {}
+
+        if note is not None:
+            if not format_:
+                raise UserError('Note format not specified.')
+            if not FormatType.is_valid(format_):
+                raise UserError('Note format not recognised.')
+            values[reviewer_note.c.note] = note
+            values[reviewer_note.c.note_format] = format_
+
+        if not values:
+            raise Error('no reviewer note update specified')
+
+        with self._transaction(_conn=_conn) as conn:
+            try:
+                reviewer_record = self.search_reviewer(
+                    reviewer_id=reviewer_id,
+                    with_note=True, _conn=conn).get_single()
+
+            except NoSuchRecord:
+                raise ConsistencyError(
+                    'reviewer does not exist with id={}', reviewer_id)
+
+            if reviewer_record.note is not None:
+                result = conn.execute(reviewer_note.update().where(
+                    reviewer_note.c.reviewer_id == reviewer_id
+                ).values(values))
+
+                if result.rowcount != 1:
+                    raise ConsistencyError(
+                        'no rows matched updating note for reviewer {}',
+                        reviewer_id)
+
+            else:
+                values.update({
+                    reviewer_note.c.reviewer_id: reviewer_id,
+                })
+
+                conn.execute(reviewer_note.insert().values(values))
 
     def sync_call_review_deadline(
             self, role_class, call_id, records, _conn=None):
