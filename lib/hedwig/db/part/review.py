@@ -298,7 +298,6 @@ class ReviewPart(object):
 
         if with_person:
             select_columns.extend([
-                group_member,
                 person.c.name.label('person_name'),
                 person.c.public.label('person_public'),
                 (person.c.user_id.isnot(None)).label('person_registered'),
