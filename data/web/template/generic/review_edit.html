@@ -7,6 +7,7 @@
 {% endif %}
 {% set scripts=concatenate_lists(['edit_review', 'formtip'], scripts) %}
 {% from 'macro/proposal_summary.html' import render_proposal_summary %}
+{% from 'macro/review_summary.html' import render_review_summary %}
 {% from 'macro/figure.html' import render_review_figure_table %}
 {% from 'macro/calculation.html' import render_calculation_title, render_calculation %}
 
@@ -14,28 +15,7 @@
 <h2>Proposal and Review Information</h2>
 
 {% call render_proposal_summary(facility_name, facility_call_type_class, proposal, proposal_code) %}
-    <tr>
-        <th>Review role</th>
-        <td>{{ role_info.name }}</td>
-    </tr>
-    {% if reviewer.person_id is not none %}
-        <tr>
-            <th>Reviewer</th>
-            <td>
-                {% if reviewer.can_view %}
-                    <a href="{{ url_for('people.person_view', person_id=reviewer.person_id) }}">{{ reviewer.person_name }}</a>
-                {% else %}
-                    {{ reviewer.person_name }}
-                {% endif %}
-            </td>
-        </tr>
-    {% endif %}
-    {% if review_deadline is not none %}
-        <tr>
-            <th>Review due by</th>
-            <td>{{ review_deadline.date | format_datetime }} UT</td>
-        </tr>
-    {% endif %}
+    {{ render_review_summary(reviewer, role_info, review_deadline=review_deadline) }}
 {% endcall %}
 
 {% block calculations %}

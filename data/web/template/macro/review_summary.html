@@ -1,0 +1,24 @@
+{% macro render_review_summary(reviewer, role_info, review_deadline=none) %}
+    <tr>
+        <th>Review role</th>
+        <td>{{ role_info.name }}</td>
+    </tr>
+    {% if reviewer.person_id is not none %}
+        <tr>
+            <th>Reviewer</th>
+            <td>
+                {% if reviewer.can_view %}
+                    <a href="{{ url_for('people.person_view', person_id=reviewer.person_id) }}">{{ reviewer.person_name }}</a>
+                {% else %}
+                    {{ reviewer.person_name }}
+                {% endif %}
+            </td>
+        </tr>
+    {% endif %}
+    {% if review_deadline is not none %}
+        <tr>
+            <th>Review due by</th>
+            <td>{{ review_deadline.date | format_datetime }} UT</td>
+        </tr>
+    {% endif %}
+{% endmacro %}
