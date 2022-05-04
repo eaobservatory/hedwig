@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% set navigation=[((call.semester_name, call.queue_name, (call.type | call_type_name(facility_call_type_class))) | fmt('{} {} {}'), url_for('.review_call', call_id=call.id)),
+                   ('Reviewers', url_for('.review_call_reviewers', call_id=call.id))] %}
+{% set help_link=url_for('help.admin_page', page_name='review_process') %}
+{% from 'macro/proposal_summary.html' import render_proposal_summary %}
+{% from 'macro/review_summary.html' import render_review_summary %}
+
+{% block content %}
+{% call render_proposal_summary(none, none, proposal, proposal_code, without_basic_info=true) %}
+    {{ render_review_summary(reviewer, role_info, review_deadline=none, show_review_link=true) }}
+{% endcall %}
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.proposal_reviewer_note', reviewer_id=reviewer.id) }}">
+    <p>
+        <textarea name="note" autofocus="autofocus" cols="80" rows="{{ 10 }}">{{ reviewer.note }}</textarea>
+    </p>
+    <p>
+        <input type="hidden" name="note_format" value="{{ reviewer.note_format }}" />
+        <input type="submit" value="Save" name="submit" />
+    </p>
+</form>
+{% endblock %}

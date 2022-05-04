@@ -589,6 +589,15 @@ def create_facility_blueprint(db, facility):
             db, reviewer_id,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/review/<int:reviewer_id>/note',
+              methods=['GET', 'POST'])
+    @require_auth(require_person=True)
+    @facility_template('reviewer_note_edit.html')
+    def proposal_reviewer_note(reviewer_id):
+        return facility.view_reviewer_note(
+            db, reviewer_id,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/proposal/<int:proposal_id>/decision', methods=['GET', 'POST'])
     @require_auth(require_person=True)
     @facility_template('proposal_decision.html')

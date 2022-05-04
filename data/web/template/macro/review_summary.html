@@ -1,7 +1,13 @@
-{% macro render_review_summary(reviewer, role_info, review_deadline=none) %}
+{% macro render_review_summary(reviewer, role_info, review_deadline=none, show_review_link=false) %}
     <tr>
         <th>Review role</th>
-        <td>{{ role_info.name }}</td>
+        <td>
+            {% if show_review_link %}
+                <a href="{{ url_for('.review_edit', reviewer_id=reviewer.id) }}">{{ role_info.name }}</a>
+            {% else %}
+                {{ role_info.name }}
+            {% endif %}
+        </td>
     </tr>
     {% if reviewer.person_id is not none %}
         <tr>

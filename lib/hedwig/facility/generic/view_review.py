@@ -694,7 +694,7 @@ class GenericReview(object):
         for proposal in db.search_proposal(
                 call_id=call.id, state=ProposalState.review_states(),
                 with_members=True, with_reviewers=True,
-                with_review_info=True,
+                with_review_info=True, with_reviewer_note=True,
                 with_reviewer_role=role, with_review_state=state).values():
             roles = state_editable_roles.get(proposal.state)
             if roles is None:
@@ -962,6 +962,78 @@ class GenericReview(object):
             'message': message,
             'is_peer_review': (group_type == GroupType.PEER),
             'acceptance': acceptance,
+        }
+
+    @with_review(permission=PermissionType.NONE, with_note=True)
+    def view_reviewer_note(self, db, reviewer, proposal, form):
+        auth_cache = {}
+        role_class = self.get_reviewer_roles()
+
+        try:
+            call = db.get_call(facility_id=self.id_, call_id=proposal.call_id)
+        except NoSuchRecord:
+            raise HTTPError('The corresponding call was not found')
+
+        if not auth.for_call_review(db, call, auth_cache=auth_cache).edit:
+            raise HTTPForbidden('Edit permission denied for this call.')
+
+        try:
+            role_info = role_class.get_info(reviewer.role)
+        except KeyError:
+            raise HTTPError('Unknown reviewer role')
+
+        if not role_info.invite:
+            raise ErrorPage('Reviewer role is not invited.')
+
+        note_exists = (reviewer.note is not None)
+        proposal_code = self.make_proposal_code(db, proposal)
+        message = None
+
+        if form:
+            try:
+                reviewer = reviewer._replace(
+                    note=form['note'],
+                    note_format=int(form['note_format']))
+
+                if not reviewer.note:
+                    if note_exists:
+                        db.delete_reviewer_note(reviewer_id=reviewer.id)
+
+                        flash(
+                            'The note for proposal {} has been deleted.',
+                            proposal_code)
+
+                else:
+                    db.set_reviewer_note(
+                        reviewer_id=reviewer.id,
+                        note=reviewer.note,
+                        format_=reviewer.note_format)
+
+                    flash(
+                        'The note for proposal {} has been saved.',
+                        proposal_code)
+
+                raise HTTPRedirect(url_for(
+                    '.review_call_reviewers', call_id=call.id))
+
+            except UserError as e:
+                message = e.message
+
+        elif not note_exists:
+            reviewer = reviewer._replace(
+                note='',
+                note_format=FormatType.PLAIN)
+
+        return {
+            'title': '{}: {} Reviewer Note'.format(
+                proposal_code, role_info.name.title()),
+            'reviewer': with_can_view(reviewer, auth.for_person_reviewer(
+                db, reviewer, auth_cache=auth_cache).view),
+            'proposal': proposal,
+            'proposal_code': proposal_code,
+            'role_info': role_info,
+            'call': call,
+            'message': message,
         }
 
     @with_call_review(permission=PermissionType.EDIT)

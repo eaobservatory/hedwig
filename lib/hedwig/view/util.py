@@ -332,7 +332,8 @@ def with_proposal(
 
 
 def with_review(
-        permission, with_invitation=False, allow_unaccepted=None,
+        permission, with_invitation=False, with_note=False,
+        allow_unaccepted=None,
         **get_proposal_kwargs):
     """
     Decorator for methods which deal with reviews of proposals.
@@ -357,7 +358,8 @@ def with_review(
                 reviewer = db.search_reviewer(
                     reviewer_id=reviewer_id,
                     with_review=True, with_review_text=True,
-                    with_review_note=True, with_invitation=with_invitation
+                    with_review_note=True, with_invitation=with_invitation,
+                    with_note=with_note
                 ).get_single()
             except NoSuchRecord:
                 raise HTTPNotFound('Reviewer record not found')
