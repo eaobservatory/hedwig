@@ -6,19 +6,37 @@
         <li>
             This will send an additional reminder message to the reviewer.
         </li>
-        <li>
-            It will include their existing invitation code unless it has
-            expired.
-        </li>
         {% if not person_registered %}
             <li>
-                If you have reason to believe that they never received the
-                original message, it may be better to
-                <a href="{{ url_for('.proposal_reviewer_reinvite', proposal_id=proposal_id, reviewer_id=reviewer_id) }}">re-send the invitation</a>
-                instead, after you have resolved any problems which
-                prevented them receiving it.
+                It will include their existing invitation code unless it has
+                expired.
             </li>
         {% endif %}
+        <li>
+            If you have reason to believe that they never received the
+            original message, it may be better to
+            {% if person_registered %}
+                <a href="{{ url_for('.proposal_reviewer_notify_again', reviewer_id=reviewer_id) }}">re-send the notification</a>
+            {% else %}
+                <a href="{{ url_for('.proposal_reviewer_reinvite', reviewer_id=reviewer_id) }}">re-send the invitation</a>
+            {% endif %}
+            instead, after you have resolved any problems which
+            prevented them receiving it.
+        </li>
+    </ul>
+{% elif is_repeat_notification %}
+    <ul>
+        <li>
+            This will send a new review notification to the reviewer.
+        </li>
+        <li>
+            You should only do this if you think they never received the
+            original message, for example if you have corrected
+            their email address.
+            Otherwise it may be better to
+            <a href="{{ url_for('.proposal_reviewer_remind', reviewer_id=reviewer_id) }}">send a reminder</a>
+            instead.
+        </li>
     </ul>
 {% else %}
     <ul>
@@ -35,7 +53,7 @@
             Unless you are correcting a problem with the original invitation
             (such as an incorrect email address),
             it may be better to
-            <a href="{{ url_for('.proposal_reviewer_remind', proposal_id=proposal_id, reviewer_id=reviewer_id) }}">send a reminder</a>
+            <a href="{{ url_for('.proposal_reviewer_remind', reviewer_id=reviewer_id) }}">send a reminder</a>
             instead.
         </li>
     </ul>

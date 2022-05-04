@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1426,15 +1426,21 @@ class GenericReview(object):
     @with_review(permission=PermissionType.NONE)
     def view_reviewer_reinvite(self, db, reviewer, proposal, form):
         return self._view_reviewer_reinvite_remind(
-            db, reviewer, proposal, form, is_reminder=False)
+            db, reviewer, proposal, form)
 
     @with_review(permission=PermissionType.NONE, with_invitation=True)
     def view_reviewer_remind(self, db, reviewer, proposal, form):
         return self._view_reviewer_reinvite_remind(
             db, reviewer, proposal, form, is_reminder=True)
 
-    def _view_reviewer_reinvite_remind(self, db, reviewer, proposal,
-                                       form, is_reminder):
+    @with_review(permission=PermissionType.NONE, with_invitation=True)
+    def view_reviewer_notify_again(self, db, reviewer, proposal, form):
+        return self._view_reviewer_reinvite_remind(
+            db, reviewer, proposal, form, is_repeat_notification=True)
+
+    def _view_reviewer_reinvite_remind(
+            self, db, reviewer, proposal, form,
+            is_reminder=False, is_repeat_notification=False):
         role_class = self.get_reviewer_roles()
 
         if proposal.state not in role_class.get_editable_states(reviewer.role):
@@ -1450,9 +1456,6 @@ class GenericReview(object):
         if not auth.for_call_review(db, call).edit:
             raise HTTPForbidden('Edit permission denied for this call.')
 
-        if reviewer.person_registered and not is_reminder:
-            raise ErrorPage('This reviewer is already registered.')
-
         try:
             role_info = role_class.get_info(reviewer.role)
         except KeyError:
@@ -1460,6 +1463,30 @@ class GenericReview(object):
 
         if not role_info.invite:
             raise HTTPError('Unexpected reviewer role.')
+
+        if is_reminder:
+            if is_repeat_notification:
+                raise Exception('both reminder and notification specified')
+
+            endpoint_suffix = 'remind'
+            description = 'sent a reminder message'
+            title = 'Remind'
+
+        elif is_repeat_notification:
+            if not reviewer.person_registered:
+                raise ErrorPage('This reviewer is not registered.')
+
+            endpoint_suffix = 'notify_again'
+            description = 'sent another notification message'
+            title = 'Notify'
+
+        else:
+            if reviewer.person_registered:
+                raise ErrorPage('This reviewer is already registered.')
+
+            endpoint_suffix = 'reinvite'
+            description = 're-invited to register'
+            title = 'Re-invite'
 
         if form is not None:
             if 'submit_confirm' in form:
@@ -1477,9 +1504,7 @@ class GenericReview(object):
 
                 flash(
                     '{} has been {}.',
-                    reviewer.person_name,
-                    ('sent a reminder message' if is_reminder
-                     else 're-invited to register'))
+                    reviewer.person_name, description)
 
             raise HTTPRedirect(url_for('.review_call_reviewers',
                                        call_id=call.id))
@@ -1488,18 +1513,16 @@ class GenericReview(object):
 
         return {
             'title': '{}: {} {} Reviewer'.format(
-                proposal_code,
-                ('Remind' if is_reminder else 'Re-invite'),
-                role_info.name.title()),
+                proposal_code, title, role_info.name.title()),
             'message':
                 'Would you like to re-send an invitation to {} '
                 'to review proposal {}?'.format(
                     reviewer.person_name, proposal_code),
             'target': url_for(
-                '.proposal_reviewer_{}'.format(
-                    'remind' if is_reminder else 'reinvite'),
+                '.proposal_reviewer_{}'.format(endpoint_suffix),
                 reviewer_id=reviewer.id),
             'is_reminder': is_reminder,
+            'is_repeat_notification': is_repeat_notification,
             'proposal_id': proposal.id,
             'reviewer_id': reviewer.id,
             'person_registered': reviewer.person_registered,

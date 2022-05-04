@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2021 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -568,6 +568,15 @@ def create_facility_blueprint(db, facility):
     @facility_template('reviewer_reinvite_confirm.html')
     def proposal_reviewer_reinvite(reviewer_id):
         return facility.view_reviewer_reinvite(
+            db, reviewer_id,
+            (request.form if request.method == 'POST' else None))
+
+    @bp.route('/review/<int:reviewer_id>/notify',
+              methods=['GET', 'POST'])
+    @require_auth(require_person=True)
+    @facility_template('reviewer_reinvite_confirm.html')
+    def proposal_reviewer_notify_again(reviewer_id):
+        return facility.view_reviewer_notify_again(
             db, reviewer_id,
             (request.form if request.method == 'POST' else None))
 
