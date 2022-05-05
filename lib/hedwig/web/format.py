@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -26,13 +26,16 @@ from ..type.enum import FormatType
 from .util import HTTPError
 
 
-def format_text(text, format=None, as_email=False):
+def format_text(text, format=None, as_email=False, as_inline=False):
     """
     Format text, possibly using different formatting schemes.
 
     If "format" is not specified, it defaults to PLAIN unless
     "text" has attributes "text" and "format", in which case those
     are used instead.
+
+    The "as_inline" option requests inline formatting elements only,
+    if the format type supports this.
     """
 
     if format is None:
@@ -50,6 +53,8 @@ def format_text(text, format=None, as_email=False):
             prefix = Markup('<p class="warning">Format is not plain text.</p>')
 
     if format == FormatType.PLAIN:
+        if as_inline:
+            return prefix + format_text_plain_inline(text)
         return prefix + format_text_plain(text)
 
     elif format == FormatType.RST:
@@ -81,6 +86,21 @@ def format_text_plain(text):
             Markup('</p>')
 
     return result
+
+
+def format_text_plain_inline(text):
+    """
+    Format plain text for display as inline HTML.
+
+    This is a variation of `format_text_plain` which only adds
+    line breaks, not paragraphs.  This can be used for small pieces
+    of text inside other elements, such as <td>.
+
+    :return: Flask Markup object containing the formatted text
+    """
+
+    return Markup('<br />').join(
+        filter((lambda x: x), text.replace('\r', '').split('\n')))
 
 
 def format_text_rst(text, extract_title_toc=False, start_heading=3):

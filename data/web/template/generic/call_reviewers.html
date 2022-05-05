@@ -117,7 +117,7 @@
                                 <a href="{{ url_for('.proposal_reviewer_note', reviewer_id=reviewer.id) }}">{{ 'Add' if reviewer.note is none else 'Edit' }} note</a>
                             {% endif %}
                             {% if reviewer.note is not none %}
-                                <br /><b>Note:</b> {{ reviewer.note | format_text(reviewer.note_format) }}
+                                <br /><b>Note:</b> {{ reviewer.note | format_text(reviewer.note_format, as_inline=true) }}
                             {% endif %}
                         </td>
                     {% endif %}

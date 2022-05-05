@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,7 +20,8 @@ from __future__ import absolute_import, division, print_function, \
 
 from hedwig.type.enum import FormatType
 from hedwig.type.simple import ProposalText
-from hedwig.web.format import format_text, format_text_plain
+from hedwig.web.format import format_text, \
+    format_text_plain, format_text_plain_inline
 from hedwig.web.util import HTTPError
 from hedwig.type.util import null_tuple
 
@@ -75,3 +76,17 @@ class TextFormatTest(TestCase):
         self.assertEqual(format_text_plain(
             '&ldquo;a\n<i>b</i>\n\nc\nd'),
             '<p>&amp;ldquo;a<br />&lt;i&gt;b&lt;/i&gt;</p><p>c<br />d</p>')
+
+    def test_format_plain_inline(self):
+        # Empty input should give no output.
+        self.assertEqual(format_text_plain_inline(''), '')
+
+        # Check escaping of characters.
+        self.assertEqual(format_text_plain_inline('<i>'), '&lt;i&gt;')
+        self.assertEqual(format_text_plain_inline('&nbsp;'), '&amp;nbsp;')
+
+        # Check processing of line feeds.
+        self.assertEqual(format_text_plain_inline('a\nb'), 'a<br />b')
+        self.assertEqual(format_text_plain_inline('a\r\nb'), 'a<br />b')
+        self.assertEqual(format_text_plain_inline('\na\n\nb\n'), 'a<br />b')
+        self.assertEqual(format_text_plain_inline('a\r\n\r\nb'), 'a<br />b')
