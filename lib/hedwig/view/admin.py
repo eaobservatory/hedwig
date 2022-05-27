@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,7 +22,7 @@ from collections import namedtuple
 
 from ..compat import first_value
 from ..email.format import render_email_template
-from ..error import NoSuchRecord, UserError
+from ..error import ConsistencyError, NoSuchRecord, UserError
 from ..type.simple import ProposalWithCode, Link
 from ..type.enum import AttachmentState, MessageState, MessageThreadType, \
     PersonTitle, RequestState, SiteGroupType
@@ -168,6 +168,47 @@ class AdminView(ViewMember):
         return {
             'title': 'Message: {}'.format(message.subject),
             'message': message,
+        }
+
+    @with_verified_admin
+    def message_alter_state(self, db, message_id, form):
+        try:
+            message = db.get_message(message_id)
+        except NoSuchRecord:
+            raise HTTPNotFound('Message not found')
+
+        warning_message = None
+        if form is not None:
+            try:
+                state_new = int(form['state'])
+                state_prev = int(form['state_prev'])
+
+                if state_new != state_prev:
+                    try:
+                        db.update_message(
+                            message_id=message_id,
+                            state=state_new, state_prev=state_prev)
+
+                        flash(
+                            'The state has been set to {}.',
+                            MessageState.get_name(state_new).lower())
+
+                    except ConsistencyError:
+                        raise ErrorPage(
+                            'The state could not be updated.  Perhaps it '
+                            'changed since you opened the page.')
+
+                raise HTTPRedirect(url_for(
+                    '.message_view', message_id=message_id))
+
+            except UserError as e:
+                warning_message = e.message
+
+        return {
+            'title': 'Alter status: {}'.format(message.subject),
+            'message': message,
+            'warning_message': warning_message,
+            'states': MessageState.get_options(),
         }
 
     @with_verified_admin

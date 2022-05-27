@@ -1,46 +1,10 @@
 {% extends 'layout.html' %}
 {% set navigation = ['site_admin', ('Messages', url_for('.message_list'))] %}
 {% set help_link=url_for('help.admin_page', page_name='messages') %}
+{% from 'macro/message_summary.html' import render_message_summary %}
 
 {% block content %}
-<table>
-    <tr>
-        <th>Date</th>
-        <td>{{ message.date | format_datetime }} UT</td>
-    </tr>
-    <tr>
-        <th>Subject</th>
-        <td>{{ message.subject }}</td>
-    </tr>
-    <tr>
-        <th>State</th>
-        <td>{{ message.state | message_state_name }}</td>
-    </tr>
-    {% if message.timestamp_send is not none %}
-        <tr>
-            <th>Date sending started</th>
-            <td>{{ message.timestamp_send | format_datetime }} UT</td>
-        </tr>
-    {% endif %}
-    {% if message.timestamp_sent is not none %}
-        <tr>
-            <th>Date message sent</th>
-            <td>{{ message.timestamp_sent | format_datetime }} UT</td>
-        </tr>
-    {% endif %}
-    {% if message.identifier is not none %}
-        <tr>
-            <th>Identifier</th>
-            <td>{{ message.identifier }}</td>
-        </tr>
-    {% endif %}
-    {% if (message.thread_type is not none) and (message.thread_id is not none) %}
-        <tr>
-            <th>Thread</th>
-            <td><a href="{{ url_for('.message_thread', thread_type=message.thread_type, thread_id=message.thread_id) }}" id="message_thread_link">{{ message.thread_type | message_thread_type_name }}</a></td>
-        </tr>
-    {% endif %}
-</table>
+{{ render_message_summary(message, show_state=true) }}
 
 <table>
     <tr>

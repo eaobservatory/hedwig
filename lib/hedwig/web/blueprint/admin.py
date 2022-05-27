@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -51,6 +51,15 @@ def create_admin_blueprint(db, facilities):
     @require_admin
     def message_view(message_id):
         return view.message_view(db, message_id)
+
+    @bp.route('/message/<int:message_id>/alter_state',
+              methods=['GET', 'POST'])
+    @templated('admin/message_alter_state.html')
+    @require_admin
+    def message_alter_state(message_id):
+        return view.message_alter_state(
+            db, message_id,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/message_thread/<hedwig_thread:thread_type>/<int:thread_id>')
     @templated('admin/message_thread.html')

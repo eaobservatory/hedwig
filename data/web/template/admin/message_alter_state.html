@@ -1,0 +1,31 @@
+{% extends 'layout.html' %}
+{% set navigation = ['site_admin', ('Messages', url_for('.message_list'))] %}
+{% set help_link=url_for('help.admin_page', page_name='messages') %}
+{% from 'macro/message_summary.html' import render_message_summary %}
+
+{% block content %}
+{{ render_message_summary(message) }}
+
+{% if warning_message is not none %}
+    <p class="warning">
+        {{ warning_message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.message_alter_state', message_id=message.id) }}">
+    <ol>
+        <li>
+            <label for="state">Status</label>
+            <select name="state">
+                {% for (state_id, state_name) in states.items() %}
+                    <option value="{{ state_id }}" {{ 'selected="selected"' | safe if state_id == message.state }}>{{ state_name }}</option>
+                {% endfor %}
+            </select>
+        </li>
+        <li>
+            <input type="submit" value="Save" name="submit" />
+            <input type="hidden" name="state_prev" value="{{ message.state }}" />
+        </li>
+    </ol>
+</form>
+{% endblock %}
