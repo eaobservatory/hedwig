@@ -18,6 +18,37 @@
     {{ render_review_summary(reviewer, role_info, review_deadline=review_deadline) }}
 {% endcall %}
 
+{% block acceptance %}
+    {% if session.is_admin and not (reviewer.accepted is none and reviewer.acceptance_accepted is none) %}
+        <h3 id="acceptance">Acceptance</h3>
+
+        <table>
+            <tr>
+                <th>Status</th>
+                <td>
+                    {% if reviewer.accepted is not none %}
+                        {{ 'Accepted' if reviewer.accepted else 'Rejected' }}
+                    {% else %}
+                        Previously {{ 'accepted' if reviewer.acceptance_accepted else 'rejected' }}
+                    {% endif %}
+                </td>
+            </tr>
+            {% if reviewer.acceptance_text is not none_or_whitespace %}
+                <tr>
+                    <th>Explanation</th>
+                    <td>{{ reviewer.acceptance_text | format_text(reviewer.acceptance_format) }}</td>
+                </tr>
+            {% endif %}
+            {% if reviewer.acceptance_date is not none %}
+                <tr>
+                    <th>Date</th>
+                    <td>{{ reviewer.acceptance_date  | format_datetime }}</td>
+                </tr>
+            {% endif %}
+        </table>
+    {% endif %}
+{% endblock %}
+
 {% block calculations %}
     {% if role_info.calc %}
         <h3 id="calculations">Calculations</h3>

@@ -1776,7 +1776,8 @@ class GenericReview(object):
         }
 
     @with_review(permission=PermissionType.EDIT,
-                 with_decision=True, with_decision_note=True)
+                 with_decision=True, with_decision_note=True,
+                 with_acceptance=True)
     def view_review_edit(self, db, reviewer, proposal, can, args, form):
         return self._view_review_new_or_edit(
             db, reviewer, proposal, args, form, auth_cache=can.cache)

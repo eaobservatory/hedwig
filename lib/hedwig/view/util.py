@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -333,6 +333,7 @@ def with_proposal(
 
 def with_review(
         permission, with_invitation=False, with_note=False,
+        with_acceptance=False,
         allow_unaccepted=None,
         **get_proposal_kwargs):
     """
@@ -359,7 +360,7 @@ def with_review(
                     reviewer_id=reviewer_id,
                     with_review=True, with_review_text=True,
                     with_review_note=True, with_invitation=with_invitation,
-                    with_note=with_note
+                    with_note=with_note, with_acceptance=with_acceptance
                 ).get_single()
             except NoSuchRecord:
                 raise HTTPNotFound('Reviewer record not found')
