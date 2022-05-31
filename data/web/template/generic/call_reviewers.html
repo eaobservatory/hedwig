@@ -106,13 +106,15 @@
                                 {% if reviewer.review_state is not review_state_present %}
                                     <a href="{{ url_for('.proposal_reviewer_remove', reviewer_id=reviewer.id) }}">Remove</a>
                                 {% endif %}
-                                {% if reviewer.review_state is not review_state_done %}
-                                    <a href="{{ url_for('.proposal_reviewer_remind', reviewer_id=reviewer.id) }}">Send reminder</a>
-                                {% endif %}
-                                {% if not reviewer.person_registered %}
-                                    <a href="{{ url_for('.proposal_reviewer_reinvite', reviewer_id=reviewer.id) }}">Re-send invitation</a>
-                                {% elif reviewer.review_state is not review_state_present %}
-                                    <a href="{{ url_for('.proposal_reviewer_notify_again', reviewer_id=reviewer.id) }}">Re-send notification</a>
+                                {% if (reviewer.accepted is none) or reviewer.accepted %}
+                                    {% if reviewer.review_state is not review_state_done %}
+                                        <a href="{{ url_for('.proposal_reviewer_remind', reviewer_id=reviewer.id) }}">Send reminder</a>
+                                    {% endif %}
+                                    {% if not reviewer.person_registered %}
+                                        <a href="{{ url_for('.proposal_reviewer_reinvite', reviewer_id=reviewer.id) }}">Re-send invitation</a>
+                                    {% elif reviewer.review_state is not review_state_present %}
+                                        <a href="{{ url_for('.proposal_reviewer_notify_again', reviewer_id=reviewer.id) }}">Re-send notification</a>
+                                    {% endif %}
                                 {% endif %}
                                 <a href="{{ url_for('.proposal_reviewer_note', reviewer_id=reviewer.id) }}">{{ 'Add' if reviewer.note is none else 'Edit' }} note</a>
                             {% endif %}
