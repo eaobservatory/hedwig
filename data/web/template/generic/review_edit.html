@@ -19,7 +19,7 @@
 {% endcall %}
 
 {% block acceptance %}
-    {% if session.is_admin and not (reviewer.accepted is none and reviewer.acceptance_accepted is none) %}
+    {% if show_review_acceptance and not (reviewer.accepted is none and reviewer.acceptance_accepted is none) %}
         <h3 id="acceptance">Acceptance</h3>
 
         <table>

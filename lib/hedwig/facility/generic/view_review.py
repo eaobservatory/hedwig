@@ -2009,6 +2009,9 @@ class GenericReview(object):
             'calculations': calculations,
             'figures': figures,
             'review_deadline': deadline,
+            'show_review_acceptance': (
+                role_info.accept and auth.for_call_review_proposal(
+                    db, proposal, auth_cache=auth_cache).edit),
         }
 
         ctx.update(self._view_review_edit_extra(
