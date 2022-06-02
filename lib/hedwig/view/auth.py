@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,7 +24,7 @@ from ..db.util import memoized
 from ..error import NoSuchRecord, NoSuchValue
 from ..type.collection import ProposalCollection, ReviewerCollection
 from ..type.enum import GroupType, ProposalState, ReviewState, SiteGroupType
-from ..type.simple import Person, Reviewer
+from ..type.simple import Call, Person, Reviewer
 from ..type.util import null_tuple
 from ..web.util import session, HTTPError, HTTPForbidden, \
     HTTPRedirectWithReferrer, url_for
@@ -77,6 +77,19 @@ def for_call_review(db, call, auth_cache=None):
         return view_only
 
     return no
+
+
+def for_call_review_proposal(db, proposal, auth_cache=None):
+    """
+    Determine general authorization for call reviews,
+    based on a proposal record.
+
+    This constucts a dummy call record and then calls :func:`for_call_review`.
+    """
+
+    return for_call_review(db, null_tuple(Call)._replace(
+        queue_id=proposal.queue_id,
+    ), auth_cache=auth_cache)
 
 
 def for_person(db, person, auth_cache=None):

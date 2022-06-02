@@ -1454,12 +1454,7 @@ class GenericReview(object):
                 'This proposal is not in a suitable state '
                 'for this type of review.')
 
-        try:
-            call = db.get_call(facility_id=self.id_, call_id=proposal.call_id)
-        except NoSuchRecord:
-            raise HTTPError('The corresponding call was not found')
-
-        if not auth.for_call_review(db, call).edit:
+        if not auth.for_call_review_proposal(db, proposal).edit:
             raise HTTPForbidden('Edit permission denied for this call.')
 
         if ReviewState.is_present(reviewer.review_state):
@@ -1483,7 +1478,7 @@ class GenericReview(object):
                       reviewer.person_name, proposal_code)
 
             raise HTTPRedirect(url_for('.review_call_reviewers',
-                                       call_id=call.id))
+                                       call_id=proposal.call_id))
 
         return {
             'title': '{}: Remove {} Reviewer'.format(
@@ -1520,12 +1515,7 @@ class GenericReview(object):
                 'This proposal is not in a suitable state '
                 'for this type of review.')
 
-        try:
-            call = db.get_call(facility_id=self.id_, call_id=proposal.call_id)
-        except NoSuchRecord:
-            raise HTTPError('The corresponding call was not found')
-
-        if not auth.for_call_review(db, call).edit:
+        if not auth.for_call_review_proposal(db, proposal).edit:
             raise HTTPForbidden('Edit permission denied for this call.')
 
         try:
@@ -1579,7 +1569,7 @@ class GenericReview(object):
                     reviewer.person_name, description)
 
             raise HTTPRedirect(url_for('.review_call_reviewers',
-                                       call_id=call.id))
+                                       call_id=proposal.call_id))
 
         proposal_code = self.make_proposal_code(db, proposal)
 
@@ -1775,12 +1765,8 @@ class GenericReview(object):
         if not (reviewer.accepted is not None and not reviewer.accepted):
             raise ErrorPage('This review has not been rejected.')
 
-        try:
-            call = db.get_call(facility_id=self.id_, call_id=proposal.call_id)
-        except NoSuchRecord:
-            raise HTTPError('The corresponding call was not found')
-
-        if not auth.for_call_review(db, call, auth_cache=auth_cache).edit:
+        if not auth.for_call_review_proposal(
+                db, proposal, auth_cache=auth_cache).edit:
             raise HTTPForbidden('Edit permission denied for this call.')
 
         if form is not None:
