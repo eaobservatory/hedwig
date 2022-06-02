@@ -27,7 +27,14 @@
                 <th>Status</th>
                 <td>
                     {% if reviewer.accepted is not none %}
-                        {{ 'Accepted' if reviewer.accepted else 'Rejected' }}
+                        {% if reviewer.accepted %}
+                            Accepted
+                        {% else %}
+                            Rejected
+                            <nav>
+                                <a href="{{ url_for('.review_clear_accept', reviewer_id=reviewer.id) }}">clear</a>
+                            </nav>
+                        {% endif %}
                     {% else %}
                         Previously {{ 'accepted' if reviewer.acceptance_accepted else 'rejected' }}
                     {% endif %}

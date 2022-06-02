@@ -1765,6 +1765,45 @@ class GenericReview(object):
                 role=reviewer.role),
         }
 
+    @with_review(permission=PermissionType.NONE)
+    def view_review_clear_accept(self, db, reviewer, proposal, form):
+        auth_cache = {}
+        role_class = self.get_reviewer_roles()
+        if not role_class.is_accepted_review(reviewer.role):
+            raise ErrorPage('This review does not require acceptance.')
+
+        if not (reviewer.accepted is not None and not reviewer.accepted):
+            raise ErrorPage('This review has not been rejected.')
+
+        try:
+            call = db.get_call(facility_id=self.id_, call_id=proposal.call_id)
+        except NoSuchRecord:
+            raise HTTPError('The corresponding call was not found')
+
+        if not auth.for_call_review(db, call, auth_cache=auth_cache).edit:
+            raise HTTPForbidden('Edit permission denied for this call.')
+
+        if form is not None:
+            if 'submit_confirm' in form:
+                db.update_reviewer(
+                    role_class, reviewer.id, accepted=None)
+
+                flash('The review rejection has been cleared.')
+
+            raise HTTPRedirect(url_for(
+                '.review_edit', reviewer_id=reviewer.id))
+
+        proposal_code = self.make_proposal_code(db, proposal)
+
+        return {
+            'title': '{}: Clear Rejection of {}'.format(
+                proposal_code,
+                role_class.get_name_with_review(reviewer.role)),
+            'message':
+                'Are you sure you wish to clear the review '
+                'rejection by {}?'.format(reviewer.person_name),
+        }
+
     @with_review(permission=PermissionType.EDIT)
     def view_review_info(self, db, reviewer, proposal, can):
         proposal_code = self.make_proposal_code(db, proposal)
