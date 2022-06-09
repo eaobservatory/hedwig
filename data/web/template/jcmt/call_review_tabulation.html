@@ -61,13 +61,19 @@
     ('jcmt_instrument', (jcmt_instruments.keys(), [none]) | chain, false, (proposal.jcmt_request.instrument_total if proposal.jcmt_allocation is none else proposal.jcmt_allocation.instrument_total), 0),
 ]) }}{% endblock %}
 
-{% macro render_cell_class(is_total, is_first) %}number_right{{ ' total' if is_total }}{{ ' spacer_left' if is_first }}{% endmacro %}
+{% macro render_cell_class(is_total, is_first, is_percentage) %}{{ combined_class(('number_right', true), ('total', is_total), ('percentage', is_percentage), ('spacer_left', is_first)) | safe }}{% endmacro %}
 
-{% macro render_jcmt_request(req_or_alloc, is_total=false) %}
+{% macro render_jcmt_request(req_or_alloc, is_total=false, percentage_of=none) %}
     {% for weather in (jcmt_weathers.keys(), [none]) | chain %}
-        <td class="{{ render_cell_class(is_total, loop.first) }}">
+        <td {{ render_cell_class(is_total, loop.first, (percentage_of is not none)) }}>
             {% if weather in req_or_alloc.weather %}
-                {{ req_or_alloc.weather[weather] | fmt('{:.1f}')}}
+                {% if percentage_of is none %}
+                    {{ req_or_alloc.weather[weather] | fmt('{:.1f}')}}
+                {% elif weather in percentage_of.weather and percentage_of.weather[weather] %}
+                    {{ (100 * req_or_alloc.weather[weather] / percentage_of.weather[weather]) | fmt('{:.0f}%') }}
+                {% else %}
+                    &mdash;
+                {% endif %}
             {% else %}
                 &nbsp;
             {% endif %}
@@ -76,8 +82,8 @@
     {% set req_or_alloc_inst_group = req_or_alloc.instrument_grouped %}
     {% set req_or_alloc_inst_total = req_or_alloc.instrument_total %}
     {% for instrument in (jcmt_instruments.keys(), [none]) | chain %}
-        <td class="{{ render_cell_class(is_total, loop.first) }}">
-            {% if instrument in req_or_alloc_inst_total %}
+        <td {{ render_cell_class(is_total, loop.first, false) }}>
+            {% if instrument in req_or_alloc_inst_total and percentage_of is none %}
                 {% with instrument_value = (req_or_alloc_inst_total if is_total else req_or_alloc_inst_group)[instrument] %}
                     {% if is_total %}
                         {{ instrument_value | fmt('{:.1f}')}}
@@ -115,7 +121,7 @@
 {% endmacro %}
 
 {% block row_extra %}
-    <td class="{{ render_cell_class(false, false) }}">
+    <td {{ render_cell_class(false, false, false) }}>
         {% if proposal.jcmt_allocation_different %}
             <div class="hovertable">
                 <b>{{ proposal.jcmt_request.total | fmt('{:.1f}') }}</b>
@@ -135,10 +141,10 @@
         {% endif %}
     </td>
     {% if proposal.jcmt_allocation is none %}
-        <td class="{{ render_cell_class(false, false) }}">&nbsp;</td>
+        <td {{ render_cell_class(false, false, false) }}>&nbsp;</td>
         {{ render_jcmt_request(proposal.jcmt_request) }}
     {% else %}
-        <td class="{{ render_cell_class(false, false) }}">{{ proposal.jcmt_allocation.total | fmt('{:.1f}') }}</td>
+        <td {{ render_cell_class(false, false, false) }}>{{ proposal.jcmt_allocation.total | fmt('{:.1f}') }}</td>
         {{ render_jcmt_request(proposal.jcmt_allocation) }}
     {% endif %}
 {% endblock %}
@@ -166,28 +172,61 @@
 {% endblock %}
 
 {% block footer_exempt_extra %}
-    <td colspan="2" class="{{ render_cell_class(true, false) }}">{{ jcmt_exempt_total.total | fmt('{:.1f}') }}</td>
+    <td colspan="2" {{ render_cell_class(true, false, false) }}>{{ jcmt_exempt_total.total | fmt('{:.1f}') }}</td>
     {{ render_jcmt_request(jcmt_exempt_total, is_total=true) }}
 {% endblock %}
 
 {% block footer_accepted_extra %}
-    <td colspan="2" class="{{ render_cell_class(true, false) }}">{{ jcmt_accepted_total.total | fmt('{:.1f}') }}</td>
+    <td colspan="2" {{ render_cell_class(true, false, false) }}>{{ jcmt_accepted_total.total | fmt('{:.1f}') }}</td>
     {{ render_jcmt_request(jcmt_accepted_total, is_total=true) }}
 {% endblock %}
 
+{% block footer_accepted_percentage_extra %}
+    <td colspan="2" {{ render_cell_class(true, false, true) }}>
+        {% if jcmt_available.total %}
+            {{ (100 * jcmt_accepted_total.total / jcmt_available.total) | fmt('{:.0f}%') }}
+        {% else %}
+            &mdash;
+        {% endif %}
+    </td>
+    {{ render_jcmt_request(jcmt_accepted_total, is_total=true, percentage_of=jcmt_available) }}
+{% endblock %}
+
 {% block footer_available_extra %}
-    <td colspan="2" class="{{ render_cell_class(true, false) }}">{{ jcmt_available.total | fmt('{:.1f}') }}</td>
+    <td colspan="2" {{ render_cell_class(true, false, false) }}>{{ jcmt_available.total | fmt('{:.1f}') }}</td>
     {{ render_jcmt_request(jcmt_available, is_total=true) }}
 {% endblock %}
 
 {% block footer_total_extra %}
-    <td colspan="2" class="{{ render_cell_class(true, false) }}">{{ jcmt_request_total.total | fmt('{:.1f}') }}</td>
+    <td colspan="2" {{ render_cell_class(true, false, false) }}>{{ jcmt_request_total.total | fmt('{:.1f}') }}</td>
     {{ render_jcmt_request(jcmt_request_total, is_total=true) }}
 {% endblock %}
 
+{% block footer_total_percentage_extra %}
+    <td colspan="2" {{ render_cell_class(true, false, true) }}>
+        {% if jcmt_available.total %}
+            {{ (100 * jcmt_request_total.total / jcmt_available.total) | fmt('{:.0f}%') }}
+        {% else %}
+            &mdash;
+        {% endif %}
+    </td>
+    {{ render_jcmt_request(jcmt_request_total, is_total=true, percentage_of=jcmt_available) }}
+{% endblock %}
+
 {% block footer_original_extra %}
-    <td colspan="2" class="{{ render_cell_class(true, false) }}">{{ jcmt_request_original.total | fmt('{:.1f}') }}</td>
+    <td colspan="2" {{ render_cell_class(true, false, false) }}>{{ jcmt_request_original.total | fmt('{:.1f}') }}</td>
     {{ render_jcmt_request(jcmt_request_original, is_total=true) }}
+{% endblock %}
+
+{% block footer_original_percentage_extra %}
+    <td colspan="2" {{ render_cell_class(true, false, true) }}>
+        {% if jcmt_available.total %}
+            {{ (100 * jcmt_request_original.total / jcmt_available.total) | fmt('{:.0f}%') }}
+        {% else %}
+            &mdash;
+        {% endif %}
+    </td>
+    {{ render_jcmt_request(jcmt_request_original, is_total=true, percentage_of=jcmt_available) }}
 {% endblock %}
 
 {% block footer_head_extra %}

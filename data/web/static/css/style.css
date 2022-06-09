@@ -80,6 +80,12 @@ th, td.total {
     background: #DDD;
 }
 
+td.total.percentage {
+    font-weight: normal;
+    color: #666;
+    font-size: smaller;
+}
+
 td.grandtotal {
     background: #BBB;
     font-weight: bold;

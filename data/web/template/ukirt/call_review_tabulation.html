@@ -34,6 +34,10 @@
     <td colspan="2" class="number_right total">{{ ukirt_accepted_total | fmt('{:.1f}') }}</td>
 {% endblock %}
 
+{% block footer_accepted_percentage_extra %}
+    <td colspan="2" class="number_right total percentage">&nbsp;</td>
+{% endblock %}
+
 {% block footer_available_extra %}
     <td colspan="2" class="number_right total">&nbsp;</td>
 {% endblock %}
@@ -42,8 +46,16 @@
     <td colspan="2" class="number_right total">{{ ukirt_request_total | fmt('{:.1f}') }}</td>
 {% endblock %}
 
+{% block footer_total_percentage_extra %}
+    <td colspan="2" class="number_right total percentage">&nbsp;</td>
+{% endblock %}
+
 {% block footer_original_extra %}
     <td colspan="2" class="number_right total">{{ ukirt_request_original | fmt('{:.1f}') }}</td>
+{% endblock %}
+
+{% block footer_original_percentage_extra %}
+    <td colspan="2" class="number_right total percentage">&nbsp;</td>
 {% endblock %}
 
 {% block footer_head_extra %}

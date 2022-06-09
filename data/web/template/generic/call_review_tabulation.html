@@ -11,11 +11,17 @@
     {% endfor %}
 {% endmacro %}
 
-{% macro render_affiliation_totals(affiliations, affiliation_totals) %}
+{% macro render_affiliation_totals(affiliations, affiliation_totals, percentage_of=none) %}
     {% for affiliation in affiliations %}
-        <td {{ combined_class(('number_right total', true), ('spacer_left', loop.first)) | safe }}>
+        <td {{ combined_class(('number_right total', true), ('percentage', percentage_of is not none), ('spacer_left', loop.first)) | safe }}>
             {% if affiliation.id in affiliation_totals %}
-                {{ affiliation_totals[affiliation.id] | fmt('{:.1f}') }}
+                {% if percentage_of is none %}
+                    {{ affiliation_totals[affiliation.id] | fmt('{:.1f}') }}
+                {% elif affiliation.id in percentage_of and percentage_of[affiliation.id] %}
+                    {{ (100 * affiliation_totals[affiliation.id] / percentage_of[affiliation.id]) | fmt('{:.0f}%') }}
+                {% else %}
+                    &mdash;
+                {% endif %}
             {% else %}
                 &nbsp;
             {% endif %}
@@ -248,6 +254,13 @@
             {{ render_affiliation_totals(affiliations, affiliation_accepted) }}
         </tr>
         <tr>
+            <th colspan="4">Total accepted (percentage)</th>
+            <td colspan="4" class="total spacer_left">&nbsp;</td>
+            {% block footer_accepted_percentage_extra %}
+            {% endblock %}
+            {{ render_affiliation_totals(affiliations, affiliation_accepted, percentage_of=affiliation_available) }}
+        </tr>
+        <tr class="spacer_above">
             <th colspan="4">Time available (hours)</th>
             <td colspan="4" class="total spacer_left">&nbsp;</td>
             {% block footer_available_extra %}
@@ -262,11 +275,25 @@
             {{ render_affiliation_totals(affiliations, affiliation_total) }}
         </tr>
         <tr>
+            <th colspan="4">Total as shown (percentage)</th>
+            <td colspan="4" class="total spacer_left">&nbsp;</td>
+            {% block footer_total_percentage_extra %}
+            {% endblock %}
+            {{ render_affiliation_totals(affiliations, affiliation_total, percentage_of=affiliation_available) }}
+        </tr>
+        <tr class="spacer_above">
             <th colspan="4">Total original request (hours)</th>
             <td colspan="4" class="total spacer_left">&nbsp;</td>
             {% block footer_original_extra %}
             {% endblock %}
             {{ render_affiliation_totals(affiliations, affiliation_original) }}
+        </tr>
+        <tr>
+            <th colspan="4">Total original request (percentage)</th>
+            <td colspan="4" class="total spacer_left">&nbsp;</td>
+            {% block footer_original_percentage_extra %}
+            {% endblock %}
+            {{ render_affiliation_totals(affiliations, affiliation_original, percentage_of=affiliation_available) }}
         </tr>
         <tr>
             <th colspan="4">&nbsp;</th>
