@@ -48,6 +48,21 @@
     to see a table of all the proposal&rsquo;s reviews.
 </p>
 
+{% if n_decision_accept %}
+    <table>
+        <tr>
+            {% for decision_accept in n_decision_accept.keys() %}
+                <th>{{ 'Undecided' if decision_accept is none else ('Accept' if decision_accept else 'Reject') }}</th>
+            {% endfor %}
+        </tr>
+        <tr>
+            {% for n_proposals in n_decision_accept.values() %}
+                <td class="number_center">{{ n_proposals }}</td>
+            {% endfor %}
+        </tr>
+    </table>
+{% endif %}
+
 <p id="filter_decision">
     Show:
     <input type="checkbox" data-decision="undecided" checked="checked" /> <span class="checkboxlabel">Undecided</span>

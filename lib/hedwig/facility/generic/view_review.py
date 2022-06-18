@@ -138,7 +138,17 @@ class GenericReview(object):
             'call': call,
         }
 
-        ctx.update(self._get_proposal_tabulation(db, call, can))
+        tabulation = self._get_proposal_tabulation(db, call, can)
+
+        n_accept = defaultdict(int)
+        for proposal in tabulation['proposals']:
+            n_accept[proposal['decision_accept']] += 1
+
+        ctx['n_decision_accept'] = OrderedDict(
+            (k, n_accept[k]) for k in (None, True, False)
+            if k in n_accept)
+
+        ctx.update(tabulation)
 
         return ctx
 
