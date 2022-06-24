@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -110,6 +110,7 @@ def send_email_message(message, dry_run=False):
 
     config = get_config()
     server = config.get('email', 'server')
+    port = int(config.get('email', 'port'))
     from_ = config.get('email', 'from')
 
     (identifier, msg, recipients) = _prepare_email_message(message, from_)
@@ -118,7 +119,7 @@ def send_email_message(message, dry_run=False):
         return 'DRY-RUN'
 
     try:
-        with quitting(SMTP(server)) as smtp:
+        with quitting(SMTP(server, port=port)) as smtp:
             refusal = smtp.sendmail(
                 from_, recipients, msg)
 

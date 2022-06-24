@@ -153,6 +153,11 @@ You will then need to edit the file to complete the configuration.
     Here you should enter the name of a mail server to which Hedwig can
     connect to send email messages.
 
+  * *port*
+
+    The port number to use to connect to the mail server.  This can be 0 to
+    use the default value.
+
   * *from*
 
     This specifies the from header which should be used.  You may wish to

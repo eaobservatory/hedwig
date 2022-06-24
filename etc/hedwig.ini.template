@@ -46,6 +46,7 @@ downscale=4
 
 [email]
 server=
+port=0
 from=
 footer_title=
 footer_url=
