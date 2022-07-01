@@ -813,9 +813,14 @@ class PeopleView(object):
                             email.address)
 
         if form:
-            (token, expiry) = db.issue_email_verify_token(
-                person.id, email.address, user_id=person.user_id,
-                remote_addr=remote_addr)
+            try:
+                (token, expiry) = db.issue_email_verify_token(
+                    person.id, email.address, user_id=person.user_id,
+                    remote_addr=remote_addr)
+
+            except UserError as e:
+                raise ErrorPage(e.message)
+
             db.add_message(
                 'Email verification code',
                 render_email_template('email_verify.txt', {

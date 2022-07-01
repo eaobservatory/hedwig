@@ -48,6 +48,10 @@ from ..meta import auth_failure, email, group_member, \
 from ..util import require_not_none
 
 
+rate_limit_period = timedelta(minutes=120)
+rate_limit_verify = 5
+
+
 class PeoplePart(object):
     def add_email(self, person_id, address, primary=False, verified=False,
                   public=False, _conn=None, _test_skip_check=False):
@@ -533,6 +537,16 @@ class PeoplePart(object):
         expiry = datetime.utcnow() + timedelta(hours=24)
 
         with self._transaction() as conn:
+            if user_id is not None:
+                events = self.search_user_log(
+                    user_id=user_id,
+                    event=UserLogEvent.GET_EMAIL_TOKEN,
+                    date_after=(datetime.utcnow() - rate_limit_period),
+                    _conn=conn)
+
+                if len(events) >= rate_limit_verify:
+                    raise UserError('Excess email verify requests.')
+
             conn.execute(verify_token.delete().where(and_(
                 verify_token.c.email_address == email_address,
                 verify_token.c.person_id == person_id)))
@@ -1097,16 +1111,23 @@ class PeoplePart(object):
 
         return ans
 
-    def search_user_log(self, user_id):
+    def search_user_log(
+            self, user_id, event=None, date_after=None, _conn=None):
         """
         Search for user log entries.
         """
 
         stmt = user_log.select().where(user_log.c.user_id == user_id)
 
+        if event is not None:
+            stmt = stmt.where(user_log.c.event == event)
+
+        if date_after is not None:
+            stmt = stmt.where(user_log.c.date > date_after)
+
         ans = ResultCollection()
 
-        with self._transaction() as conn:
+        with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(user_log.c.id.desc())):
                 ans[row['id']] = UserLog(**row)
 
