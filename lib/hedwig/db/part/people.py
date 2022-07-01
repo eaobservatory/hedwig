@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -519,7 +519,8 @@ class PeoplePart(object):
                 user.c.id == user_id
             )).scalar()
 
-    def issue_email_verify_token(self, person_id, email_address):
+    def issue_email_verify_token(
+            self, person_id, email_address, user_id, remote_addr=None):
         """
         Create a email address verification token.
 
@@ -542,6 +543,10 @@ class PeoplePart(object):
                 verify_token.c.email_address: email_address,
                 verify_token.c.expiry: expiry,
             }))
+
+            if user_id is not None:
+                self._add_user_log_entry(
+                    conn, user_id, UserLogEvent.GET_EMAIL_TOKEN, remote_addr)
 
         return (token, expiry)
 
@@ -1370,7 +1375,8 @@ class PeoplePart(object):
                 self._add_user_log_entry(
                     conn, user_id, UserLogEvent.CHANGE_PASS, remote_addr)
 
-    def use_email_verify_token(self, person_id, token):
+    def use_email_verify_token(
+            self, person_id, token, user_id, remote_addr=None):
         """
         Tries to use the given email verification token.
         """
@@ -1406,6 +1412,10 @@ class PeoplePart(object):
             # Finally delete the token (which has now been used).
             conn.execute(verify_token.delete().where(
                 verify_token.c.token == token))
+
+            if user_id is not None:
+                self._add_user_log_entry(
+                    conn, user_id, UserLogEvent.USE_EMAIL_TOKEN, remote_addr)
 
         return email_address
 

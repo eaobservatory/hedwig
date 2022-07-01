@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -275,16 +275,18 @@ class DBPeopleTest(DBTestCase):
         self.assertFalse(email.get_single().verified)
 
         # Perform verification.
-        (token, expiry) = self.db.issue_email_verify_token(person_id, address)
+        (token, expiry) = self.db.issue_email_verify_token(
+            person_id, address, user_id=None)
 
         self.assertIsInstance(token, string_type)
         self.assertRegex(token, '^[0-9a-f]{32}$')
         self.assertIsInstance(expiry, datetime)
 
         with self.assertRaisesRegex(UserError, 'someone else'):
-            self.db.use_email_verify_token(person_id + 1, token)
+            self.db.use_email_verify_token(person_id + 1, token, user_id=None)
 
-        verified_address = self.db.use_email_verify_token(person_id, token)
+        verified_address = self.db.use_email_verify_token(
+            person_id, token, user_id=None)
 
         self.assertEqual(verified_address, address)
 
@@ -716,7 +718,7 @@ class DBPeopleTest(DBTestCase):
 
         # Associate some information with the second (the duplicate).
         self.db.issue_invitation(person_2)
-        self.db.issue_email_verify_token(person_2, 'a@b')
+        self.db.issue_email_verify_token(person_2, 'a@b', user_id=None)
 
         (proposal_id, affiliation_id) = self._create_test_proposal(person_2)
         self.db.set_proposal_text(

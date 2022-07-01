@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -169,7 +169,8 @@ def create_people_blueprint(db, facilities):
     def person_email_verify_get(person_id, email_id):
         return view.person_email_verify_get(
             db, person_id, email_id,
-            (request.form if request.method == 'POST' else None))
+            (request.form if request.method == 'POST' else None),
+            str_to_unicode(request.remote_addr))
 
     @bp.route('/verify', methods=['GET', 'POST'])
     @require_auth(require_person=True)
@@ -177,7 +178,8 @@ def create_people_blueprint(db, facilities):
     def person_email_verify_use():
         return view.person_email_verify_use(
             db, request.args,
-            (request.form if request.method == 'POST' else None))
+            (request.form if request.method == 'POST' else None),
+            str_to_unicode(request.remote_addr))
 
     @bp.route('/proposals')
     @require_auth(require_person=True)

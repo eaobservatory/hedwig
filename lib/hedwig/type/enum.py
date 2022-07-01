@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2021 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1105,6 +1105,8 @@ class UserLogEvent(EnumBasic):
     USE_TOKEN = 6
     USE_INVITE = 7
     MERGED = 8
+    GET_EMAIL_TOKEN = 9
+    USE_EMAIL_TOKEN = 10
 
     EventInfo = namedtuple('EventInfo', ('description',))
 
@@ -1117,6 +1119,8 @@ class UserLogEvent(EnumBasic):
         USE_TOKEN:    EventInfo('Used password reset code'),
         USE_INVITE:   EventInfo('Profile linked via invitation'),
         MERGED:       EventInfo('Profile merged'),
+        GET_EMAIL_TOKEN: EventInfo('Issued email verify token'),
+        USE_EMAIL_TOKEN: EventInfo('Used email verify token'),
     }
 
 

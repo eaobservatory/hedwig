@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -801,7 +801,8 @@ class PeopleView(object):
         }
 
     @with_person(permission=PermissionType.EDIT)
-    def person_email_verify_get(self, db, person, can, email_id, form):
+    def person_email_verify_get(
+            self, db, person, can, email_id, form, remote_addr):
         try:
             email = person.email[email_id]
         except KeyError:
@@ -813,7 +814,8 @@ class PeopleView(object):
 
         if form:
             (token, expiry) = db.issue_email_verify_token(
-                person.id, email.address)
+                person.id, email.address, user_id=person.user_id,
+                remote_addr=remote_addr)
             db.add_message(
                 'Email verification code',
                 render_email_template('email_verify.txt', {
@@ -835,17 +837,20 @@ class PeopleView(object):
             'email': email,
         }
 
-    def person_email_verify_use(self, db, args, form):
+    def person_email_verify_use(self, db, args, form, remote_addr):
         message = None
         token = args.get('token', '')
         person_id = session['person']['id']
+        user_id = session['user_id']
 
         if form is not None:
             token = form['token'].strip()
 
             try:
                 try:
-                    email_address = db.use_email_verify_token(person_id, token)
+                    email_address = db.use_email_verify_token(
+                        person_id, token, user_id=user_id,
+                        remote_addr=remote_addr)
 
                 except NoSuchRecord:
                     raise UserError(
