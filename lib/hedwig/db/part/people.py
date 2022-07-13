@@ -50,6 +50,7 @@ from ..util import require_not_none
 
 rate_limit_period = timedelta(minutes=120)
 rate_limit_verify = 5
+rate_limit_password_reset = 3
 
 
 class PeoplePart(object):
@@ -538,14 +539,9 @@ class PeoplePart(object):
 
         with self._transaction() as conn:
             if user_id is not None:
-                events = self.search_user_log(
-                    user_id=user_id,
-                    event=UserLogEvent.GET_EMAIL_TOKEN,
-                    date_after=(datetime.utcnow() - rate_limit_period),
-                    _conn=conn)
-
-                if len(events) >= rate_limit_verify:
-                    raise UserError('Excess email verify requests.')
+                self._check_rate_limit(
+                    conn, user_id, UserLogEvent.GET_EMAIL_TOKEN,
+                    rate_limit_verify)
 
             conn.execute(verify_token.delete().where(and_(
                 verify_token.c.email_address == email_address,
@@ -616,6 +612,10 @@ class PeoplePart(object):
         expiry = datetime.utcnow() + timedelta(hours=4)
 
         with self._transaction() as conn:
+            self._check_rate_limit(
+                conn, user_id, UserLogEvent.GET_TOKEN,
+                rate_limit_password_reset)
+
             conn.execute(reset_token.delete().where(
                 reset_token.c.user_id == user_id))
 
@@ -1585,6 +1585,23 @@ class PeoplePart(object):
             user_log.c.event: event,
             user_log.c.remote_addr: remote_addr,
         }))
+
+    def _check_rate_limit(self, conn, user_id, event, limit):
+        """
+        Checks the number of user log entries for the given event type
+        against the specified limit.
+
+        :raises: UserError if excess entries present.
+        """
+
+        events = self.search_user_log(
+            user_id=user_id,
+            event=event,
+            date_after=(datetime.utcnow() - rate_limit_period),
+            _conn=conn)
+
+        if len(events) >= limit:
+            raise UserError('Excess requests of this type.')
 
     def _exists_person_user(self, conn, user_id):
         """Test whether a person exists with the given user_id."""
