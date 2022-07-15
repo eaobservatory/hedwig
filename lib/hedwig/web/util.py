@@ -272,14 +272,16 @@ def require_admin(f):
     Decorator to require that the user has administrative access.
 
     Simply checks that the user is logged in and has administrative
-    privileges enabled -- i.e. that the session `is_admin` flag
+    privileges enabled -- i.e. that the `current_user.is_admin` flag
     is set.  Views should double-check that the user is
     still entitled to administrative privileges (e.g. using
     :func:`hedwig.view.auth.can_be_admin`).
     """
     @functools.wraps(f)
     def decorated(*args, **kwargs):
-        if 'user_id' in session and session.get('is_admin', False):
+        current_user = flask_g.current_user
+
+        if current_user.is_admin:
             return f(*args, **kwargs)
 
         raise HTTPForbidden(
@@ -297,8 +299,8 @@ def require_auth(require_person=False, require_person_admin=False,
     :param require_person: require the user to have a profile.
 
     :param require_person_admin: also check that the
-        person record in the session has the admin flag.
-        (This is not the same as the session `is_admin` flag -- use
+        person record in the `current_user` has the admin flag.
+        (This is not the same as the `current_user.is_admin` flag -- use
         :func:`require_admin` for that.)
 
     :param require_institution: require the user to have an institution
@@ -337,7 +339,9 @@ def require_auth(require_person=False, require_person_admin=False,
                     redirect_kwargs['log_in_referrer'] = url_relative(
                         request_referrer)
 
-            if 'user_id' not in session:
+            current_user = flask_g.current_user
+
+            if current_user.user is None:
                 if _flask_request.method == 'POST':
                     # If someone logged out (in another tab) or their
                     # session expired while they were filling in a form,
@@ -360,19 +364,19 @@ def require_auth(require_person=False, require_person_admin=False,
                     'people.log_in', **redirect_kwargs))
 
             elif ((require_person or require_person_admin or
-                    require_institution) and 'person' not in session):
+                    require_institution) and (current_user.person is None)):
                 flash('Please complete your profile before proceeding.')
                 raise HTTPRedirect(url_for(
                     'people.register_person', **redirect_kwargs))
 
             elif (require_institution and
-                    session['person']['institution_id'] is None):
+                    current_user.person.institution_id is None):
                 flash('Please select your institution before proceeding.')
                 raise HTTPRedirect(url_for(
                     'people.person_edit_institution',
-                    person_id=session['person']['id'], **redirect_kwargs))
+                    person_id=current_user.person.id, **redirect_kwargs))
 
-            if require_person_admin and not session['person']['admin']:
+            if require_person_admin and not current_user.person.admin:
                 raise HTTPForbidden('Permission denied.')
 
             return f(*args, **kwargs)
@@ -396,7 +400,7 @@ def require_not_auth(f):
     @functools.wraps(f)
     def decorated(*args, **kwargs):
         try:
-            if 'user_id' in session:
+            if flask_g.current_user.user is not None:
                 raise ErrorPage('You are already logged in.')
         except ErrorPage as err:
             return _error_page_response(err)
@@ -631,6 +635,7 @@ def check_current_user():
         person=(None if current_person is None else null_tuple(Person)._replace(
             id=current_person['id'],
             name=current_person['name'],
+            institution_id=current_person['institution_id'],
             admin=current_person['admin'],
         )),
         is_admin=session.get('is_admin', False))
