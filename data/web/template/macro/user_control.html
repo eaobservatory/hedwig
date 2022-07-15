@@ -1,17 +1,17 @@
-{% macro render_user_panel() %}
-{% if session.user_id is defined %}
+{% macro render_user_panel(current_user) %}
+{% if current_user.user is not none %}
     Logged in as
-    {% if session.person is defined %}
-        <a id="user_profile_link" href="{{ url_for('people.person_view', person_id=session.person.id) }}">{{ session.person.name }}</a>
-        {% if session.is_admin is defined %}
+    {% if current_user.person is not none %}
+        <a id="user_profile_link" href="{{ url_for('people.person_view', person_id=current_user.person.id) }}">{{ current_user.person.name }}</a>
+        {% if current_user.is_admin %}
             &mdash;
             <a id="drop_admin_link" href="{{ url_for('people.drop_admin') }}">drop admin</a>
-        {% elif session.person.admin %}
+        {% elif current_user.person.admin %}
             &mdash;
             <a id="take_admin_link" href="{{ url_for('people.take_admin') }}">take admin</a>
         {% endif %}
     {% else %}
-        &ldquo;User {{ session.user_id }}&rdquo;
+        &ldquo;User {{ current_user.user.id }}&rdquo;
         &mdash;
         <a href="{{ url_for('people.register_person') }}">create profile</a>
     {% endif %}

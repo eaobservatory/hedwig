@@ -7,7 +7,7 @@
 <p>
     If you have received an invitation code for this system,
     please enter it here.
-    {% if session.user_id is defined %}
+    {% if current_user.user is not none %}
         Since you are already logged in, the invitation will be added
         to your existing account.
         On the next page

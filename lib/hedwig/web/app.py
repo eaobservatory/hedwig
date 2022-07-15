@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2021 East Asian Observatory.
+# Copyright (C) 2015-2022 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -22,12 +22,13 @@ import logging
 import os
 
 from flask import Flask
+from flask import g as flask_g
 from jinja2_orderblocks import OrderBlocks
 
 from ..config import get_config, get_database, get_facilities, get_home
 from ..type.enum import GroupType, MessageThreadType, SiteGroupType
 from .template_util import register_template_utils
-from .util import check_session_expiry, \
+from .util import check_current_user , \
     make_enum_converter, register_error_handlers
 
 from .blueprint.admin import create_admin_blueprint
@@ -143,13 +144,14 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
         app.register_blueprint(create_facility_blueprint(db, facility.view),
                                url_prefix='/' + facility.code)
 
-    # Add beginning of request function to check session expiry.
-    app.before_request(check_session_expiry)
+    # Add beginning of request function to check session for user log in.
+    app.before_request(check_current_user)
 
     @app.context_processor
     def add_to_context():
         return {
             'application_name': application_name,
+            'current_user': flask_g.current_user,
         }
 
     register_error_handlers(app)

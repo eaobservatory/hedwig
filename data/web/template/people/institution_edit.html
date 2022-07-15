@@ -17,7 +17,7 @@
     <p>
         Are you sure you want to edit this institution?
         If you have moved, please
-        <a href="{{ url_for('people.person_edit_institution', person_id=session.person.id) }}">update the institution associated with your profile</a>
+        <a href="{{ url_for('people.person_edit_institution', person_id=current_user.person.id) }}">update the institution associated with your profile</a>
         instead.
     </p>
     {% if person_affected_list or person_affected_other %}

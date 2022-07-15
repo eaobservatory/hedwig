@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2019 East Asian Observatory.
+# Copyright (C) 2015-2022 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -25,6 +25,7 @@ import re
 
 # Import the names we wish to expose.
 from flask import session, url_for
+from flask import g as flask_g
 
 # Import the names which we use but do not wish to expose.
 from flask import current_app as _flask_current_app
@@ -39,8 +40,9 @@ from werkzeug import urls as _werkzeug_urls
 
 from ..compat import ExceptionWithMessage, string_type
 from ..error import UserError
-from ..type.simple import DateAndTime
+from ..type.simple import CurrentUser, DateAndTime, Person, UserInfo
 from ..type.enum import FigureType, FileTypeInfo
+from ..type.util import null_tuple
 from ..util import FormattedLogger
 
 
@@ -571,9 +573,14 @@ def _make_response(template, result, status=None):
     return resp
 
 
-def check_session_expiry():
+def check_current_user():
     """
-    Clear the user's session if it has expired.
+    Check the user's session for log in information.
+
+    This function sets the `current_user` entry in the Flask `g` variable
+    to an instance of :class:`~hedwig.type.simple.CurrentUser`.  This will
+    have `user` None if the user is not logged in or `person` None if they
+    do not have a registered profile.
 
     This function manages the `date_set` session variable in order to detect
     when the user has been idle for too long.
@@ -597,23 +604,36 @@ def check_session_expiry():
 
         delta = (date_current - date_set).total_seconds()
 
-        if delta < 43200:
-            if delta > 600:
-                session['date_set'] = date_current
+        if delta > 43200:
+            # Save flashed messages so that we can restore them after clearing the
+            # session.  (Otherwise the logged out message never displays because
+            # logging out clears the whole session, including date_set.  We can't
+            # use `get_flashed_messages` as Flask will then store them in the
+            # request context not not clear them when they are displayed.)
+            messages = session.get('_flashes', None)
 
-            return
+            session.clear()
 
-    # Save flashed messages so that we can restore them after clearing the
-    # session.  (Otherwise the logged out message never displays because
-    # logging out clears the whole session, including date_set.  We can't
-    # use `get_flashed_messages` as Flask will then store them in the
-    # request context not not clear them when they are displayed.)
-    messages = session.get('_flashes', None)
+            if messages is not None:
+                session['_flashes'] = messages
 
-    session.clear()
+        elif delta > 600:
+            session['date_set'] = date_current
 
-    if messages is not None:
-        session['_flashes'] = messages
+    current_user_id = session.get('user_id')
+    current_person = session.get('person')
+
+    flask_g.current_user = CurrentUser(
+        user=(None if current_user_id is None else UserInfo(
+            id=current_user_id,
+            name=None,
+        )),
+        person=(None if current_person is None else null_tuple(Person)._replace(
+            id=current_person['id'],
+            name=current_person['name'],
+            admin=current_person['admin'],
+        )),
+        is_admin=session.get('is_admin', False))
 
 
 def _url_manipulation(f):

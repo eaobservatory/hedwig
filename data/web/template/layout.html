@@ -25,7 +25,7 @@
             <ul id="navbar">
                 {{ render_main_menu(facility_name, navigation, show_person_proposals_callout, proposal_code) }}
                 <li id="user_control">
-                    {{ render_user_panel() }}
+                    {{ render_user_panel(current_user) }}
                     {% if help_link is defined %}
                         <a class="help_link" href="{{ help_link }}" target="_blank">Help</a>
                     {% else %}

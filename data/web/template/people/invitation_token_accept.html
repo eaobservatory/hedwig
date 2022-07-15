@@ -15,7 +15,7 @@
 </p>
 
 <p>
-    {% if session.person is defined %}
+    {% if current_user.person is not none %}
         Since you have already registered,
         your existing profile will be retained,
         so do not worry if these details are not entirely correct.
