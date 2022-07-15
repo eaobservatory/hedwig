@@ -600,7 +600,8 @@ class PeoplePart(object):
 
         return (token, expiry)
 
-    def issue_password_reset_token(self, user_id, remote_addr):
+    def issue_password_reset_token(
+            self, user_id, remote_addr, _test_skip_check=False):
         """
         Create a password reset token for a given user.
 
@@ -612,9 +613,10 @@ class PeoplePart(object):
         expiry = datetime.utcnow() + timedelta(hours=4)
 
         with self._transaction() as conn:
-            self._check_rate_limit(
-                conn, user_id, UserLogEvent.GET_TOKEN,
-                rate_limit_password_reset)
+            if not _test_skip_check:
+                self._check_rate_limit(
+                    conn, user_id, UserLogEvent.GET_TOKEN,
+                    rate_limit_password_reset)
 
             conn.execute(reset_token.delete().where(
                 reset_token.c.user_id == user_id))

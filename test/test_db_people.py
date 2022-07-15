@@ -788,8 +788,8 @@ class DBPeopleTest(DBTestCase):
         self.assertIsInstance(user_id, int)
 
         # Try making a reset token.
-        (token, expiry) = self.db.issue_password_reset_token(user_id,
-                                                             remote_addr=None)
+        (token, expiry) = self.db.issue_password_reset_token(
+            user_id, remote_addr=None)
         self.assertIsInstance(token, string_type)
         self.assertRegex(token, '^[0-9a-f]{32}$')
 
@@ -816,10 +816,10 @@ class DBPeopleTest(DBTestCase):
             self.db.use_password_reset_token(token, 'pass4', remote_addr=None)
 
         # Issue two more tokens: the older should be removed automatically.
-        (token1, expiry) = self.db.issue_password_reset_token(user_id,
-                                                              remote_addr=None)
-        (token2, expiry) = self.db.issue_password_reset_token(user_id,
-                                                              remote_addr=None)
+        (token1, expiry) = self.db.issue_password_reset_token(
+            user_id, remote_addr=None, _test_skip_check=True)
+        (token2, expiry) = self.db.issue_password_reset_token(
+            user_id, remote_addr=None, _test_skip_check=True)
         with self.assertRaises(NoSuchRecord):
             self.db.use_password_reset_token(token1, 'pass5', remote_addr=None)
         token_user_name = self.db.use_password_reset_token(token2, 'pass6',
@@ -828,8 +828,8 @@ class DBPeopleTest(DBTestCase):
 
         # Create a token and artificially age it by putting the expiry
         # date in the past.  It should then not work.
-        (token, expiry) = self.db.issue_password_reset_token(user_id,
-                                                             remote_addr=None)
+        (token, expiry) = self.db.issue_password_reset_token(
+            user_id, remote_addr=None, _test_skip_check=True)
         with self.db._transaction() as conn:
             result = conn.execute(reset_token.update().where(
                 reset_token.c.token == token
@@ -840,6 +840,11 @@ class DBPeopleTest(DBTestCase):
             self.assertEqual(result.rowcount, 1)
         with self.assertRaises(NoSuchRecord):
             self.db.use_password_reset_token(token, 'pass7', remote_addr=None)
+
+        # Test rate limit, when _test_skip_check not specified.
+        with self.assertRaisesRegex(UserError, 'Excess requests'):
+            (token, expiry) = self.db.issue_password_reset_token(
+                user_id, remote_addr=None)
 
     def test_invitation_new_user(self):
         # Create a person record.
