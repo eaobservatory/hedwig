@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -25,7 +25,7 @@ from flask import Blueprint, send_from_directory
 from ...config import get_home
 from ...type.enum import FigureType
 from ...view.help import HelpView
-from ..util import send_file, templated
+from ..util import send_file, templated, with_current_user
 
 
 def create_help_blueprint(db):
@@ -53,60 +53,72 @@ def create_help_blueprint(db):
     admin_toc_cache = {}
 
     @bp.route('/')
+    @with_current_user
     @templated('help/index.html')
-    def help_index():
+    def help_index(current_user):
         return view.help_home(db)
 
     @bp.route('/about')
+    @with_current_user
     @templated('help/help_page.html')
-    def help_about():
+    def help_about(current_user):
         return view.help_page(about_doc_root, None, {})
 
     @bp.route('/user/')
+    @with_current_user
     @templated('help/help_page.html')
-    def user_index():
+    def user_index(current_user):
         return view.help_page(user_doc_root, None, user_toc_cache)
 
     @bp.route('/user/<page_name>')
+    @with_current_user
     @templated('help/help_page.html')
-    def user_page(page_name):
+    def user_page(current_user, page_name):
         return view.help_page(user_doc_root, page_name, user_toc_cache)
 
     @bp.route('/user/image/<path:file_name>')
-    def user_image(file_name):
+    @with_current_user
+    def user_image(current_user, file_name):
         return send_from_directory(user_image_root, file_name)
 
     @bp.route('/review/')
+    @with_current_user
     @templated('help/help_page.html')
-    def review_index():
+    def review_index(current_user):
         return view.help_page(review_doc_root, None, review_toc_cache)
 
     @bp.route('/review/<page_name>')
+    @with_current_user
     @templated('help/help_page.html')
-    def review_page(page_name):
+    def review_page(current_user, page_name):
         return view.help_page(review_doc_root, page_name, review_toc_cache)
 
     @bp.route('/review/image/<path:file_name>')
-    def review_image(file_name):
+    @with_current_user
+    def review_image(current_user, file_name):
         return send_from_directory(review_image_root, file_name)
 
     @bp.route('/admin/')
+    @with_current_user
     @templated('help/help_page.html')
-    def admin_index():
+    def admin_index(current_user):
         return view.help_page(admin_doc_root, None, admin_toc_cache)
 
     @bp.route('/admin/<page_name>')
+    @with_current_user
     @templated('help/help_page.html')
-    def admin_page(page_name):
+    def admin_page(current_user, page_name):
         return view.help_page(admin_doc_root, page_name, admin_toc_cache)
 
     @bp.route('/admin/image/<path:file_name>')
-    def admin_image(file_name):
+    @with_current_user
+    def admin_image(current_user, file_name):
         return send_from_directory(admin_image_root, file_name)
 
     @bp.route('/admin/graph/<path:file_name>')
+    @with_current_user
     @send_file(fixed_type=FigureType.PNG)
-    def admin_graph(file_name):
+    def admin_graph(current_user, file_name):
         return view.help_graph(admin_doc_root, file_name)
 
     return bp

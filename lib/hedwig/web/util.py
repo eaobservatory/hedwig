@@ -282,7 +282,7 @@ def require_admin(f):
         current_user = flask_g.current_user
 
         if current_user.is_admin:
-            return f(*args, **kwargs)
+            return f(current_user, *args, **kwargs)
 
         raise HTTPForbidden(
             'You need administrative privileges to view this page.')
@@ -379,7 +379,7 @@ def require_auth(require_person=False, require_person_admin=False,
             if require_person_admin and not current_user.person.admin:
                 raise HTTPForbidden('Permission denied.')
 
-            return f(*args, **kwargs)
+            return f(current_user, *args, **kwargs)
 
         decorated_function._hedwig_require_auth = True
 
@@ -535,6 +535,18 @@ def templated(template):
         return decorated_function
 
     return decorator
+
+
+def with_current_user(f):
+    """
+    Decorator to provided current_user object.
+    """
+
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        return f(flask_g.current_user, *args, **kwargs)
+
+    return decorated
 
 
 def _error_page_response(err):

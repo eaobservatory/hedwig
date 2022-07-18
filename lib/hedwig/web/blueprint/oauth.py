@@ -71,7 +71,7 @@ def create_oauth_blueprint(db, app):
     @bp.route('/authorize', methods=['GET', 'POST'])
     @db_in_g
     @require_auth(require_person=True)
-    def authorize():
+    def authorize(current_user):
         logger = get_logger()
 
         if flask_request.method == 'POST':

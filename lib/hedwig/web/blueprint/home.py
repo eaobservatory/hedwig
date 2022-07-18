@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from flask import Blueprint
 
 from ...view.home import HomeView
-from ..util import templated
+from ..util import templated, with_current_user
 
 
 def create_home_blueprint(db, facilities):
@@ -33,13 +33,15 @@ def create_home_blueprint(db, facilities):
     view = HomeView()
 
     @bp.route('/')
+    @with_current_user
     @templated('home.html')
-    def home_page():
+    def home_page(current_user):
         return view.home(facilities)
 
     @bp.route('/contact-us')
+    @with_current_user
     @templated('contact.html')
-    def contact_page():
+    def contact_page(current_user):
         return view.contact_page()
 
     return bp
