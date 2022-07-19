@@ -152,9 +152,9 @@ class UKIRT(EAOFacility):
 
         return report
 
-    def _view_proposal_feedback_extra(self, db, proposal, can):
+    def _view_proposal_feedback_extra(self, current_user, db, proposal, can):
         ctx = super(UKIRT, self)._view_proposal_feedback_extra(
-            db, proposal, can)
+            current_user, db, proposal, can)
 
         if proposal.state == ProposalState.ACCEPTED:
             allocations = db.search_ukirt_allocation(
@@ -168,9 +168,10 @@ class UKIRT(EAOFacility):
 
         return ctx
 
-    def _get_proposal_tabulation(self, db, call, can, with_extra=False):
+    def _get_proposal_tabulation(
+            self, current_user, db, call, can, with_extra=False):
         tabulation = super(UKIRT, self)._get_proposal_tabulation(
-            db, call, can, with_extra)
+            current_user, db, call, can, with_extra)
 
         exempt = UKIRTRequestTotal(
             total=0.0, instrument=defaultdict(float), brightness=defaultdict(float))

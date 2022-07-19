@@ -217,10 +217,11 @@ class AdminView(ViewMember):
                 MessageThreadType.get_name(thread_type)),
             'messages': messages,
             'thread_links': self._make_thread_links(
-                db, facilities, thread_type, thread_id)
+                current_user, db, facilities, thread_type, thread_id)
         }
 
-    def _make_thread_links(self, db, facilities, thread_type, thread_id):
+    def _make_thread_links(
+            self, current_user, db, facilities, thread_type, thread_id):
         links = []
 
         proposal = None
@@ -254,7 +255,8 @@ class AdminView(ViewMember):
                 role_class = facility.view.get_reviewer_roles()
 
                 can = auth.for_review(
-                    role_class, db, reviewer=None, proposal=proposal,
+                    role_class, current_user, db,
+                    reviewer=None, proposal=proposal,
                     allow_unaccepted=True)
 
                 links.append(Link('Review assignment', url_for(

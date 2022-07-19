@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018 East Asian Observatory
+# Copyright (C) 2017-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -81,19 +81,21 @@ class AvailabilityTool(BaseTargetTool):
         return 'generic'
 
     def _view_proposal(
-            self, db, proposal, target_objects, extra_info, args, auth_cache):
+            self, current_user, db, proposal, target_objects,
+            extra_info, args, auth_cache):
         # Overwrite the "extra_info" with the semester start and end dates.
         # If the proposal is for a multi-semester call, use one year from the
         # semester start instead.
         return self._view_any_mode(
-            db, target_objects,
+            current_user, db, target_objects,
             [proposal.semester_start,
              ((proposal.semester_start + timedelta(days=365))
               if proposal.multi_semester else proposal.semester_end)],
             args, None, auth_cache)
 
     def _view_any_mode(
-            self, db, target_objects, extra_info, args, form, auth_cache):
+            self, current_user, db, target_objects,
+            extra_info, args, form, auth_cache):
         if self.location is None:
             raise ErrorPage(
                 'Observing information is not available for this facility.')

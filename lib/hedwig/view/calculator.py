@@ -201,7 +201,7 @@ class BaseCalculator(object):
                         code=self.facility.make_proposal_code(db, proposal))),
                     filter_value=(lambda proposal: auth.for_proposal(
                         # Emulate search_proposal(with_members=True) behavior.
-                        role_class, db, proposal._replace(
+                        role_class, current_user, db, proposal._replace(
                             members=MemberCollection((
                                 (proposal.member.id, proposal.member),))),
                         auth_cache=auth_cache,
@@ -216,7 +216,8 @@ class BaseCalculator(object):
                         *proposal,
                         code=self.facility.make_proposal_code(db, proposal))),
                     filter_value=(lambda proposal: auth.for_review(
-                        role_class, db, proposal.reviewer, proposal,
+                        role_class, current_user, db,
+                        proposal.reviewer, proposal,
                         auth_cache=auth_cache,
                         skip_membership_test=True,
                         allow_unaccepted=False).edit))

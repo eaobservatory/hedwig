@@ -511,7 +511,7 @@ class PeopleView(object):
         public = True
         can_view_unregistered = False
         registered = True
-        if auth.for_person(db, None).view:
+        if auth.for_person(current_user, db, None).view:
             public = None
             can_view_unregistered = True
             registered = int_or_none(args.get('registered', '1'))
@@ -571,7 +571,7 @@ class PeopleView(object):
             'person': person,
             'show_admin_links': is_admin,
             'show_viewer_links': auth.for_person(
-                db, None, auth_cache=can.cache).view,
+                current_user, db, None, auth_cache=can.cache).view,
             'site_group_membership': site_group_membership,
             'review_group_membership': review_group_membership,
         }
@@ -919,17 +919,17 @@ class PeopleView(object):
 
     def person_reviews_own(self, current_user, db, facilities):
         return self._person_reviews(
-            db, session['person']['id'], facilities, None)
+            current_user, db, session['person']['id'], facilities, None)
 
     @with_person(permission=PermissionType.UNIVERSAL_VIEW)
     def person_reviews_other(
             self, current_user, db, person, can, facilities, args):
         return self._person_reviews(
-            db, person.id, facilities, person, as_admin=True,
+            current_user, db, person.id, facilities, person, as_admin=True,
             view_all=int_or_none(args.get('view_all', '0')),
             auth_cache=can.cache)
 
-    def _person_reviews(self, db, person_id, facilities, person,
+    def _person_reviews(self, current_user, db, person_id, facilities, person,
                         as_admin=False, view_all=None, auth_cache={}):
         # Get a list of proposals, in all review states, for which this
         # person has reviews.  (Will filter later to list only those
@@ -944,7 +944,7 @@ class PeopleView(object):
             all_addable = None
         else:
             all_addable = auth.find_addable_reviews(
-                db, facilities, auth_cache=auth_cache)
+                current_user, db, facilities, auth_cache=auth_cache)
             calls.update((x.call_id for x in all_addable.values()))
 
         # Get the review deadlines for the calls of interest.
@@ -968,7 +968,8 @@ class PeopleView(object):
                 # when viewing the administrative version of this page,
                 # and exclude rejected reviews otherwise.
                 if as_admin or (auth.for_review(
-                        role_class, db, proposal.reviewer, proposal,
+                        role_class, current_user, db,
+                        proposal.reviewer, proposal,
                         auth_cache=auth_cache,
                         allow_unaccepted=True).edit
                         and (proposal.reviewer.review_state
@@ -1118,7 +1119,7 @@ class PeopleView(object):
         public = True
         registered = True
         is_admin = session.get('is_admin', False)
-        if auth.for_person(db, None, auth_cache=can.cache).view:
+        if auth.for_person(current_user, db, None, auth_cache=can.cache).view:
             public = None
             registered = None
 
@@ -1163,7 +1164,7 @@ class PeopleView(object):
                     # If the user is making the update as an administrator,
                     # mark the update as already approved in the edit log.
                     log_approved = (session.get('is_admin', False) and
-                                    auth.can_be_admin(db))
+                                    auth.can_be_admin(current_user, db))
 
                     db.update_institution(
                         institution.id,

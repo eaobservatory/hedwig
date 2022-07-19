@@ -161,7 +161,8 @@ class ClashTool(BaseTargetTool):
         ]
 
     def _view_any_mode(
-            self, db, target_objects, extra_info, args, form, auth_cache):
+            self, current_user, db, target_objects,
+            extra_info, args, form, auth_cache):
         """
         Prepare clash tool template context for all tool modes.
 
@@ -173,7 +174,8 @@ class ClashTool(BaseTargetTool):
         non_clashes = None
         message = None
 
-        public = self._determine_public_constraint(db, auth_cache=auth_cache)
+        public = self._determine_public_constraint(
+            current_user, db, auth_cache=auth_cache)
 
         mocs = db.search_moc(facility_id=self.facility.id_, public=public)
 
@@ -231,7 +233,7 @@ class ClashTool(BaseTargetTool):
 
         return [radius]
 
-    def _determine_public_constraint(self, db, auth_cache=None):
+    def _determine_public_constraint(self, current_user, db, auth_cache=None):
         """
         Determine the database search constraint we should use on the public
         field.
@@ -242,8 +244,9 @@ class ClashTool(BaseTargetTool):
 
         public = True
 
-        if auth.for_private_moc(db, self.facility.id_,
-                                auth_cache=auth_cache).view:
+        if auth.for_private_moc(
+                current_user, db, self.facility.id_,
+                auth_cache=auth_cache).view:
             public = None
 
         return public
@@ -317,7 +320,7 @@ class ClashTool(BaseTargetTool):
             public = None
         else:
             can_edit = False
-            public = self._determine_public_constraint(db)
+            public = self._determine_public_constraint(current_user, db)
 
         mocs = db.search_moc(facility_id=self.facility.id_, public=public)
 
@@ -332,7 +335,7 @@ class ClashTool(BaseTargetTool):
         View handler for MOC info custom route.
         """
 
-        public = self._determine_public_constraint(db)
+        public = self._determine_public_constraint(current_user, db)
 
         try:
             moc = db.search_moc(
@@ -351,7 +354,7 @@ class ClashTool(BaseTargetTool):
         View handler for MOC FITS download custom route.
         """
 
-        public = self._determine_public_constraint(db)
+        public = self._determine_public_constraint(current_user, db)
 
         try:
             moc = db.search_moc(

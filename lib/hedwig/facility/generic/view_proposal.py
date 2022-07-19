@@ -132,7 +132,8 @@ class GenericProposal(object):
                     assert old_proposal.id == old_proposal_id
 
                     role_class = self.get_reviewer_roles()
-                    can = auth.for_proposal(role_class, db, old_proposal)
+                    can = auth.for_proposal(
+                        role_class, current_user, db, old_proposal)
 
                     if not can.view:
                         raise HTTPForbidden(
@@ -653,10 +654,11 @@ class GenericProposal(object):
     def view_proposal_view(self, current_user, db, proposal, can, args):
         role_class = self.get_reviewer_roles()
         review_can = auth.for_review(
-            role_class, db, reviewer=None, proposal=proposal,
+            role_class, current_user, db, reviewer=None, proposal=proposal,
             auth_cache=can.cache)
         feedback_can = auth.for_proposal_feedback(
-            role_class, db, proposal=proposal, auth_cache=can.cache)
+            role_class, current_user, db, proposal=proposal,
+            auth_cache=can.cache)
 
         type_class = self.get_call_types()
         call_mid_closes = None
@@ -679,7 +681,8 @@ class GenericProposal(object):
             'is_submitted': ProposalState.is_submitted(proposal.state),
             'proposal': proposal._replace(members=proposal.members.map_values(
                 lambda x: with_can_view(
-                    x, auth.for_person_member(db, x, auth_cache=can.cache).view))),
+                    x, auth.for_person_member(
+                        current_user, db, x, auth_cache=can.cache).view))),
             'students': proposal.members.get_students(),
             'proposal_code': self.make_proposal_code(db, proposal),
             'show_person_proposals_callout': is_first_view,
@@ -2411,11 +2414,12 @@ class GenericProposal(object):
             'proposal_code': proposal_code,
         }
 
-        ctx.update(self._view_proposal_feedback_extra(db, proposal, can))
+        ctx.update(self._view_proposal_feedback_extra(
+            current_user, db, proposal, can))
 
         return ctx
 
-    def _view_proposal_feedback_extra(self, db, proposal, can):
+    def _view_proposal_feedback_extra(self, current_user, db, proposal, can):
         """
         Method to gather additional information for the proposal feedback page.
         """
@@ -2429,7 +2433,7 @@ class GenericProposal(object):
 
         # Show the decision note if viewing as an administrator.
         if (session.get('is_admin', False)
-                and auth.can_be_admin(db, auth_cache=can.cache)
+                and auth.can_be_admin(current_user, db, auth_cache=can.cache)
                 and proposal.decision_note):
             decision_note = null_tuple(ProposalText)._replace(
                 text=proposal.decision_note,

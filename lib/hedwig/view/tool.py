@@ -161,14 +161,15 @@ class BaseTargetTool(object):
         }
 
         ctx.update(self._view_single(
-            db, target_object, extra_info, args, form))
+            current_user, db, target_object, extra_info, args, form))
 
         if message is not None:
             ctx['message'] = message
 
         return ctx
 
-    def _view_single(self, db, target_object, extra_info, args, form):
+    def _view_single(
+            self, current_user, db, target_object, extra_info, args, form):
         """
         Prepare extra template context for target tool in "single" mode.
 
@@ -180,7 +181,8 @@ class BaseTargetTool(object):
         """
 
         return self._view_any_mode(
-            db, (None if target_object is None else [target_object]),
+            current_user, db,
+            (None if target_object is None else [target_object]),
             extra_info, args, form, None)
 
     def view_upload(self, current_user, db, args, form, file_):
@@ -227,14 +229,15 @@ class BaseTargetTool(object):
         }
 
         ctx.update(self._view_upload(
-            db, target_objects, extra_info, args, form))
+            current_user, db, target_objects, extra_info, args, form))
 
         if message is not None:
             ctx['message'] = message
 
         return ctx
 
-    def _view_upload(self, db, target_objects, extra_info, args, form):
+    def _view_upload(
+            self, current_user, db, target_objects, extra_info, args, form):
         """
         Prepare extra template context for target tool in "upload" mode.
 
@@ -246,7 +249,7 @@ class BaseTargetTool(object):
         """
 
         return self._view_any_mode(
-            db, target_objects, extra_info, args, form, None)
+            current_user, db, target_objects, extra_info, args, form, None)
 
     @with_proposal(
             permission=PermissionType.VIEW, indirect_facility=True,
@@ -291,7 +294,8 @@ class BaseTargetTool(object):
         extra_info = self._view_extra_info(args, None)
 
         ctx.update(self._view_proposal(
-            db, proposal, target_objects, extra_info, args, can.cache))
+            current_user, db, proposal, target_objects,
+            extra_info, args, can.cache))
 
         if self.proposal_message_error and (ctx['message'] is not None):
             raise ErrorPage(ctx['message'])
@@ -299,7 +303,8 @@ class BaseTargetTool(object):
         return ctx
 
     def _view_proposal(
-            self, db, proposal, target_objects, extra_info, args, auth_cache):
+            self, current_user, db, proposal, target_objects,
+            extra_info, args, auth_cache):
         """
         Prepare extra template context for target tool in "proposal" mode.
 
@@ -311,10 +316,12 @@ class BaseTargetTool(object):
         """
 
         return self._view_any_mode(
-            db, target_objects, extra_info, args, None, auth_cache)
+            current_user, db, target_objects,
+            extra_info, args, None, auth_cache)
 
     def _view_any_mode(
-            self, db, target_objects, extra_info, args, form, auth_cache):
+            self, current_user, db, target_objects,
+            extra_info, args, form, auth_cache):
         """
         Prepare extra template context for target tool in any mode.
 

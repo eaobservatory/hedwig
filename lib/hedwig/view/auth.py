@@ -40,7 +40,7 @@ AuthorizationWithRating = namedtuple(
     'AuthorizationWithRating', Authorization._fields + ('view_rating',))
 
 
-def for_call_review(db, call, auth_cache=None):
+def for_call_review(current_user, db, call, auth_cache=None):
     """
     Determine the current user's authorization regarding the general
     review of proposals for a given call.
@@ -57,7 +57,7 @@ def for_call_review(db, call, auth_cache=None):
     if 'user_id' not in session or 'person' not in session:
         return no
     elif (session.get('is_admin', False)
-            and can_be_admin(db, auth_cache=auth_cache)):
+            and can_be_admin(current_user, db, auth_cache=auth_cache)):
         return yes
 
     person_id = session['person']['id']
@@ -79,7 +79,7 @@ def for_call_review(db, call, auth_cache=None):
     return no
 
 
-def for_call_review_proposal(db, proposal, auth_cache=None):
+def for_call_review_proposal(current_user, db, proposal, auth_cache=None):
     """
     Determine general authorization for call reviews,
     based on a proposal record.
@@ -87,12 +87,12 @@ def for_call_review_proposal(db, proposal, auth_cache=None):
     This constucts a dummy call record and then calls :func:`for_call_review`.
     """
 
-    return for_call_review(db, null_tuple(Call)._replace(
+    return for_call_review(current_user, db, null_tuple(Call)._replace(
         queue_id=proposal.queue_id,
     ), auth_cache=auth_cache)
 
 
-def for_person(db, person, auth_cache=None):
+def for_person(current_user, db, person, auth_cache=None):
     """
     Determine the current user's authorization regarding this
     profile.
@@ -104,7 +104,7 @@ def for_person(db, person, auth_cache=None):
     if 'user_id' not in session:
         return no
     elif (session.get('is_admin', False)
-            and can_be_admin(db, auth_cache=auth_cache)):
+            and can_be_admin(current_user, db, auth_cache=auth_cache)):
         return yes
 
     auth = no
@@ -160,35 +160,35 @@ def for_person(db, person, auth_cache=None):
     return auth
 
 
-def for_person_member(db, member, auth_cache=None):
+def for_person_member(current_user, db, member, auth_cache=None):
     """
     Determine authorization for a person profile, based on a member record.
 
     This constucts a dummy person record and then calls :func:`for_person`.
     """
 
-    return for_person(db, null_tuple(Person)._replace(
+    return for_person(current_user, db, null_tuple(Person)._replace(
         id=member.person_id,
         user_id=member.user_id,
         public=member.person_public,
     ), auth_cache=auth_cache)
 
 
-def for_person_reviewer(db, reviewer, auth_cache=None):
+def for_person_reviewer(current_user, db, reviewer, auth_cache=None):
     """
     Determine authorization for a person profile, based on a reviewer record.
 
     This constucts a dummy person record and then calls :func:`for_person`.
     """
 
-    return for_person(db, null_tuple(Person)._replace(
+    return for_person(current_user, db, null_tuple(Person)._replace(
         id=reviewer.person_id,
         user_id=reviewer.user_id,
         public=reviewer.person_public,
     ), auth_cache=auth_cache)
 
 
-def for_institution(db, institution, auth_cache=None):
+def for_institution(current_user, db, institution, auth_cache=None):
     """
     Determine the current user's authorization regarding this
     institution.
@@ -197,7 +197,7 @@ def for_institution(db, institution, auth_cache=None):
     if 'user_id' not in session:
         return no
     elif (session.get('is_admin', False)
-            and can_be_admin(db, auth_cache=auth_cache)):
+            and can_be_admin(current_user, db, auth_cache=auth_cache)):
         return yes
 
     # Fetch the user's profile in case their institution changed since their
@@ -239,7 +239,7 @@ def for_institution(db, institution, auth_cache=None):
     return view_only
 
 
-def for_private_moc(db, facility_id, auth_cache=None):
+def for_private_moc(current_user, db, facility_id, auth_cache=None):
     """
     Determine whether the current user can view/search private MOCs.
 
@@ -269,7 +269,7 @@ def for_private_moc(db, facility_id, auth_cache=None):
 
 
 def for_proposal(
-        role_class, db, proposal, auth_cache=None,
+        role_class, current_user, db, proposal, auth_cache=None,
         allow_unaccepted_review=None):
     """
     Determine the current user's authorization regarding this proposal.
@@ -283,7 +283,7 @@ def for_proposal(
     person_id = session['person']['id']
 
     if (session.get('is_admin', False)
-            and can_be_admin(db, auth_cache=auth_cache)):
+            and can_be_admin(current_user, db, auth_cache=auth_cache)):
         auth = auth._replace(view=True)
 
     try:
@@ -329,7 +329,8 @@ def for_proposal(
     return auth
 
 
-def for_proposal_decision(db, proposal, call=None, auth_cache=None):
+def for_proposal_decision(
+        current_user, db, proposal, call=None, auth_cache=None):
     """
     Determine the current user's authorization regarding the
     review committee decision.
@@ -355,13 +356,14 @@ def for_proposal_decision(db, proposal, call=None, auth_cache=None):
 
     # Assume that the user has permission to edit the decision of they
     # can edit the call.  (I.e. they are review coordinator or admin.)
-    if for_call_review(db, call, auth_cache=auth_cache).edit:
+    if for_call_review(current_user, db, call, auth_cache=auth_cache).edit:
         return edit_only
 
     return no
 
 
-def for_proposal_feedback(role_class, db, proposal, auth_cache=None):
+def for_proposal_feedback(
+        role_class, current_user, db, proposal, auth_cache=None):
     """
     Determine the current user's authorization regarding general feedback
     for a proposal.
@@ -381,7 +383,7 @@ def for_proposal_feedback(role_class, db, proposal, auth_cache=None):
 
     # Allow administrators to view.
     if (session.get('is_admin', False)
-            and can_be_admin(db, auth_cache=auth_cache)):
+            and can_be_admin(current_user, db, auth_cache=auth_cache)):
         return view_only
 
     person_id = session['person']['id']
@@ -403,7 +405,7 @@ def for_proposal_feedback(role_class, db, proposal, auth_cache=None):
 
 
 def for_review(
-        role_class, db, reviewer, proposal, auth_cache=None,
+        role_class, current_user, db, reviewer, proposal, auth_cache=None,
         skip_membership_test=False,
         allow_unaccepted=None):
     """
@@ -512,7 +514,7 @@ def for_review(
     # still under review.  (This is to allow them to adjust review ratings
     # during the committee meeting.)
     if (session.get('is_admin', False)
-            and can_be_admin(db, auth_cache=auth_cache)):
+            and can_be_admin(current_user, db, auth_cache=auth_cache)):
         return AuthorizationWithRating(
             view=True, edit=review_is_editable, view_rating=rating_is_viewable)
 
@@ -534,7 +536,7 @@ def for_review(
     return AuthorizationWithRating(*no, view_rating=False)
 
 
-def can_be_admin(db, auth_cache=None):
+def can_be_admin(current_user, db, auth_cache=None):
     """
     Check whether the user is permitted to take administrative
     privileges.
@@ -548,7 +550,8 @@ def can_be_admin(db, auth_cache=None):
 
 
 def can_add_review_roles(
-        type_class, role_class, db, proposal, include_indirect=True,
+        type_class, role_class,
+        current_user, db, proposal, include_indirect=True,
         auth_cache=None):
     """
     Determine for which reviewer roles a person can add a review to
@@ -592,7 +595,7 @@ def can_add_review_roles(
                         include_indirect=include_indirect))
                     or (include_indirect and (
                         (session.get('is_admin', False)
-                            and can_be_admin(db, auth_cache=auth_cache))
+                            and can_be_admin(current_user, db, auth_cache=auth_cache))
                         or group_members.has_entry(
                             queue_id=proposal.queue_id,
                             group_type=GroupType.review_coord_groups())))):
@@ -601,7 +604,7 @@ def can_add_review_roles(
     return roles
 
 
-def find_addable_reviews(db, facilities, auth_cache=None):
+def find_addable_reviews(current_user, db, facilities, auth_cache=None):
     """
     Find proposals for which the user can add reviews.
 
@@ -643,9 +646,10 @@ def find_addable_reviews(db, facilities, auth_cache=None):
         type_class = facility.view.get_call_types()
 
         for proposal in proposals.values_by_facility(facility.id):
-            roles = can_add_review_roles(type_class, role_class, db, proposal,
-                                         include_indirect=False,
-                                         auth_cache=auth_cache)
+            roles = can_add_review_roles(
+                type_class, role_class, current_user, db, proposal,
+                include_indirect=False,
+                auth_cache=auth_cache)
             if not roles:
                 continue
 

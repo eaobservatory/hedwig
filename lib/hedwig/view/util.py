@@ -117,7 +117,8 @@ def with_call_review(permission):
             assert call.id == call_id
 
             auth_cache = {}
-            can = auth.for_call_review(db, call, auth_cache=auth_cache)
+            can = auth.for_call_review(
+                current_user, db, call, auth_cache=auth_cache)
 
             if permission == PermissionType.VIEW:
                 if not can.view:
@@ -162,7 +163,8 @@ def with_institution(permission):
             assert institution.id == institution_id
 
             auth_cache = {}
-            can = auth.for_institution(db, institution, auth_cache=auth_cache)
+            can = auth.for_institution(
+                current_user, db, institution, auth_cache=auth_cache)
 
             if permission == PermissionType.VIEW:
                 if not can.view:
@@ -213,7 +215,8 @@ def with_person(permission):
 
             elif permission == PermissionType.UNIVERSAL_VIEW:
                 auth_cache = {}
-                can = auth.for_person(db, None, auth_cache=auth_cache)
+                can = auth.for_person(
+                    current_user, db, None, auth_cache=auth_cache)
 
                 if not can.view:
                     raise HTTPForbidden(
@@ -225,7 +228,8 @@ def with_person(permission):
 
             else:
                 auth_cache = {}
-                can = auth.for_person(db, person, auth_cache=auth_cache)
+                can = auth.for_person(
+                    current_user, db, person, auth_cache=auth_cache)
 
                 if permission == PermissionType.VIEW:
                     if not can.view:
@@ -299,8 +303,9 @@ def with_proposal(
                 return f(self, current_user, db, proposal, *args, **kwargs)
 
             elif permission == PermissionType.FEEDBACK:
-                can = auth.for_proposal_feedback(role_class, db, proposal,
-                                                 auth_cache=auth_cache)
+                can = auth.for_proposal_feedback(
+                    role_class, current_user, db, proposal,
+                    auth_cache=auth_cache)
 
                 if not can.view:
                     raise HTTPForbidden(
@@ -312,7 +317,7 @@ def with_proposal(
 
             else:
                 can = auth.for_proposal(
-                    role_class, db, proposal,
+                    role_class, current_user, db, proposal,
                     auth_cache=auth_cache,
                     allow_unaccepted_review=allow_unaccepted_review)
 
@@ -398,7 +403,7 @@ def with_review(
             else:
                 auth_cache = {}
                 can = auth.for_review(
-                    role_class, db, reviewer, proposal,
+                    role_class, current_user, db, reviewer, proposal,
                     auth_cache=auth_cache, allow_unaccepted=allow_unaccepted)
 
                 if permission == PermissionType.VIEW:
