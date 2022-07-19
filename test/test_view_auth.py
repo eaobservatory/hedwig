@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2021 East Asian Observatory
+# Copyright (C) 2016-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,10 +24,9 @@ from datetime import datetime
 from hedwig.type.enum import BaseCallType, BaseReviewerRole, \
     FormatType, GroupType, \
     ProposalState, SiteGroupType
-from hedwig.type.simple import Person
+from hedwig.type.simple import CurrentUser, Person, UserInfo
 from hedwig.view import auth
-from hedwig.view.people import _update_session_user, _update_session_person
-from hedwig.web.util import session, HTTPForbidden, HTTPRedirectWithReferrer
+from hedwig.web.util import HTTPForbidden, HTTPRedirectWithReferrer
 
 from .base_app import WebAppTestCase
 
@@ -44,44 +43,16 @@ class WebAppAuthTestCase(WebAppTestCase):
 
         unreg = self.db.add_user('unreg', 'pass')
 
-        # Basic tests with no auth cache.
-        with self._as_person(person_user):
-            self.assertFalse(auth.can_be_admin(self.db))
+        # Basic tests.
+        self.assertFalse(auth.can_be_admin(
+            self._current_user(person_user), self.db))
 
-        with self._as_person(person_admin):
-            self.assertTrue(auth.can_be_admin(self.db))
+        self.assertTrue(auth.can_be_admin(
+            self._current_user(person_admin), self.db))
 
-        with self._as_person(None, user_id=unreg):
-            with self.assertRaises(HTTPForbidden):
-                self.assertFalse(auth.can_be_admin(self.db))
-
-        # Repeat tests with auth cache.
-        auth_cache = {}
-
-        with self._as_person(person_user):
-            self.assertFalse(auth.can_be_admin(self.db, auth_cache=auth_cache))
-
-        with self._as_person(person_admin):
-            self.assertTrue(auth.can_be_admin(self.db, auth_cache=auth_cache))
-
-        with self._as_person(None, user_id=unreg):
-            with self.assertRaises(HTTPForbidden):
-                self.assertFalse(auth.can_be_admin(self.db,
-                                                   auth_cache=auth_cache))
-
-        # Check contents of auth cache.
-        self.assertEqual(len(auth_cache), 3)
-
-        value = auth_cache[('_get_user_profile', user)]
-        self.assertIsInstance(value, Person)
-        self.assertEqual(value.id, person_user)
-
-        value = auth_cache[('_get_user_profile', admin)]
-        self.assertIsInstance(value, Person)
-        self.assertEqual(value.id, person_admin)
-
-        value = auth_cache[('_get_user_profile', unreg)]
-        self.assertIsNone(value)
+        with self.assertRaises(HTTPForbidden):
+            auth.can_be_admin(
+                self._current_user(None, user_id=unreg), self.db)
 
     def test_view_auth(self):
         # Display default assert method failure messages as well as our
@@ -652,37 +623,39 @@ class WebAppAuthTestCase(WebAppTestCase):
                                case_number, person_id, is_admin,
                                call_id, expect):
         call = self.db.get_call(None, call_id)
-        with self._as_person(person_id, is_admin):
-            self.assertEqual(
-                auth.for_call_review(self.db, call, auth_cache=auth_cache),
-                expect, 'auth call review case {}'.format(case_number))
+        self.assertEqual(
+            auth.for_call_review(
+                self._current_user(person_id, is_admin), self.db,
+                call, auth_cache=auth_cache),
+            expect, 'auth call review case {}'.format(case_number))
 
     def _test_auth_person(self, auth_cache, case_number, person_id, is_admin,
                           for_person_id, expect):
-        with self._as_person(person_id, is_admin):
-            self.assertEqual(
-                auth.for_person(self.db, self.db.get_person(for_person_id),
-                                auth_cache=auth_cache),
-                expect, 'auth person case {}'.format(case_number))
+        self.assertEqual(
+            auth.for_person(
+                self._current_user(person_id, is_admin), self.db,
+                self.db.get_person(for_person_id),
+                auth_cache=auth_cache),
+            expect, 'auth person case {}'.format(case_number))
 
     def _test_auth_institution(self, auth_cache,
                                case_number, person_id, is_admin,
                                institution_id, expect):
         institution = self.db.get_institution(institution_id)
-        with self._as_person(person_id, is_admin):
-            self.assertEqual(
-                auth.for_institution(self.db, institution,
-                                     auth_cache=auth_cache),
-                expect, 'auth institution case {}'.format(case_number))
+        self.assertEqual(
+            auth.for_institution(
+                self._current_user(person_id, is_admin), self.db,
+                institution, auth_cache=auth_cache),
+            expect, 'auth institution case {}'.format(case_number))
 
     def _test_auth_private_moc(self, auth_cache,
                                case_number, person_id, is_admin,
                                facility_id, expect):
-        with self._as_person(person_id, is_admin):
-            self.assertEqual(
-                auth.for_private_moc(self.db, facility_id,
-                                     auth_cache=auth_cache),
-                expect, 'auth private moc {}'.format(case_number))
+        self.assertEqual(
+            auth.for_private_moc(
+                self._current_user(person_id, is_admin), self.db,
+                facility_id, auth_cache=auth_cache),
+            expect, 'auth private moc {}'.format(case_number))
 
     def _test_auth_proposal(self, role_class, auth_cache,
                             case_number, person_id, is_admin,
@@ -725,41 +698,50 @@ class WebAppAuthTestCase(WebAppTestCase):
                 proposal = self.db.get_proposal(
                     None, proposal_id, with_members=True, with_reviewers=True)
 
-            with self._as_person(person_id, is_admin, ctx_kwargs=ctx_kwargs):
+            current_user = self._current_user(person_id, is_admin)
+
+            with self._with_ctx(ctx_kwargs=ctx_kwargs):
                 if isinstance(expect, type):
                     with self.assertRaises(expect):
-                        auth.for_proposal(role_class, self.db, proposal,
-                                          auth_cache=auth_cache)
+                        auth.for_proposal(
+                            role_class, current_user, self.db, proposal,
+                            auth_cache=auth_cache)
+
                     self.assertEqual(
-                        auth.for_proposal(role_class, self.db, proposal,
-                                          auth_cache=auth_cache,
-                                          allow_unaccepted_review=False),
+                        auth.for_proposal(
+                            role_class, current_user, self.db, proposal,
+                            auth_cache=auth_cache,
+                            allow_unaccepted_review=False),
                         auth.no,
                         'auth proposal case {} state {} no unaccepted'.format(
                             case_number, state_name))
 
                     self.assertEqual(
-                        auth.for_proposal(role_class, self.db, proposal,
-                                          auth_cache=auth_cache,
-                                          allow_unaccepted_review=True),
+                        auth.for_proposal(
+                            role_class, current_user, self.db, proposal,
+                            auth_cache=auth_cache,
+                            allow_unaccepted_review=True),
                         auth.view_only,
                         'auth proposal case {} state {} w/ unaccepted'.format(
                             case_number, state_name))
 
                 else:
                     self.assertEqual(
-                        auth.for_proposal(role_class, self.db, proposal,
-                                          auth_cache=auth_cache),
+                        auth.for_proposal(
+                            role_class, current_user, self.db, proposal,
+                            auth_cache=auth_cache),
                         expect, 'auth proposal case {} state {}'.format(
                             case_number, state_name))
                 self.assertEqual(
-                    auth.for_proposal_feedback(role_class, self.db, proposal,
-                                               auth_cache=auth_cache),
+                    auth.for_proposal_feedback(
+                        role_class, current_user, self.db, proposal,
+                        auth_cache=auth_cache),
                     expect_fb, 'auth proposal fb case {} state {}'.format(
                         case_number, state_name))
                 self.assertEqual(
-                    auth.for_proposal_decision(self.db, proposal,
-                                               auth_cache=auth_cache),
+                    auth.for_proposal_decision(
+                        current_user, self.db, proposal,
+                        auth_cache=auth_cache),
                     expect_dec, 'auth proposal dec case {} state {}'.format(
                         case_number, state_name))
 
@@ -797,32 +779,38 @@ class WebAppAuthTestCase(WebAppTestCase):
                 proposal = self.db.get_proposal(
                     None, reviewer.proposal_id, with_members=True)
 
-            with self._as_person(person_id, is_admin, ctx_kwargs=ctx_kwargs):
+            current_user = self._current_user(person_id, is_admin)
+
+            with self._with_ctx(ctx_kwargs=ctx_kwargs):
                 if isinstance(expect, type):
                     with self.assertRaises(expect):
-                        auth.for_review(role_class, self.db, reviewer, proposal,
-                                        auth_cache=auth_cache)
+                        auth.for_review(
+                            role_class, current_user, self.db,
+                            reviewer, proposal, auth_cache=auth_cache)
 
                     self.assertEqual(
-                        auth.for_review(role_class, self.db, reviewer, proposal,
-                                        auth_cache=auth_cache,
-                                        allow_unaccepted=False),
+                        auth.for_review(
+                            role_class, current_user, self.db, reviewer, proposal,
+                            auth_cache=auth_cache,
+                            allow_unaccepted=False),
                         auth.AuthorizationWithRating(False, False, False),
                         'auth review case {} state {} no unaccepted'.format(
                             case_number, state_name))
 
                     self.assertEqual(
-                        auth.for_review(role_class, self.db, reviewer, proposal,
-                                        auth_cache=auth_cache,
-                                        allow_unaccepted=True),
+                        auth.for_review(
+                            role_class, current_user, self.db,
+                            reviewer, proposal, auth_cache=auth_cache,
+                            allow_unaccepted=True),
                         auth.AuthorizationWithRating(True, True, True),
                         'auth review case {} state {} with unaccepted'.format(
                             case_number, state_name))
 
                 else:
                     self.assertEqual(
-                        auth.for_review(role_class, self.db, reviewer, proposal,
-                                        auth_cache=auth_cache),
+                        auth.for_review(
+                            role_class, current_user, self.db, reviewer, proposal,
+                            auth_cache=auth_cache),
                         expect, 'auth review case {} state {}'.format(
                             case_number, state_name))
 
@@ -843,13 +831,14 @@ class WebAppAuthTestCase(WebAppTestCase):
                 proposal = self.db.get_proposal(
                     None, proposal_id, with_members=True, with_reviewers=True)
 
-            with self._as_person(person_id, is_admin):
-                self.assertEqual(
-                    set(auth.can_add_review_roles(
-                        type_class, role_class, self.db, proposal,
-                        auth_cache=auth_cache)),
-                    expect, 'add review case {} state {}'.format(
-                        case_number, state_name))
+            self.assertEqual(
+                set(auth.can_add_review_roles(
+                    type_class, role_class,
+                    self._current_user(person_id, is_admin),
+                    self.db, proposal,
+                    auth_cache=auth_cache)),
+                expect, 'add review case {} state {}'.format(
+                    case_number, state_name))
 
     def _expect_code(self, case_type, case_number, code, rating=False):
         expect = None
@@ -880,16 +869,39 @@ class WebAppAuthTestCase(WebAppTestCase):
 
         return expect
 
-    @contextmanager
-    def _as_person(
-            self, person_id, is_admin=False, user_id=None, ctx_kwargs={}):
+    def _current_user(
+            self, person_id, is_admin=False, user_id=None):
         """
         Simulate logging in as the given person.
 
-        Sets session user and person values based on the given `person_id`.
+        Creates a CurrentUser object with user and person values
+        based on the given `person_id`.
 
         If `person_id` is `None` then sets just the user value based on the
         `user_id` argument.
+        """
+
+        current_user = CurrentUser(
+            user=None,
+            person=None,
+            is_admin=is_admin)
+
+        if person_id is not None:
+            person = self.db.search_person(person_id=person_id).get_single()
+            current_user = current_user._replace(
+                user=UserInfo(id=person.user_id, name=None),
+                person=person)
+
+        else:
+            current_user = current_user._replace(
+                user=UserInfo(id=user_id, name=None))
+
+        return current_user
+
+    @contextmanager
+    def _with_ctx(self, ctx_kwargs):
+        """
+        Set given context parameters.
 
         A Flask request context is established using its `test_request_context`
         method.  Arguments for this method can be supplied, for example to set
@@ -897,22 +909,8 @@ class WebAppAuthTestCase(WebAppTestCase):
         can only be run in the context of a facility blueprint to be tested.
         """
 
-        if person_id is not None:
-            person = self.db.search_person(person_id=person_id).get_single()
-
         with self.app.test_request_context(**ctx_kwargs):
-            if person_id is None:
-                _update_session_user(user_id)
-            else:
-                _update_session_user(person.user_id)
-                _update_session_person(person)
-
-            if is_admin:
-                session['is_admin'] = True
-
             yield
-
-            session.clear()
 
     def _set_state(self, proposal_ids, state):
         """

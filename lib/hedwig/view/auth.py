@@ -26,7 +26,7 @@ from ..type.collection import ProposalCollection, ReviewerCollection
 from ..type.enum import GroupType, ProposalState, ReviewState, SiteGroupType
 from ..type.simple import Call, Person, Reviewer
 from ..type.util import null_tuple
-from ..web.util import session, HTTPError, HTTPForbidden, \
+from ..web.util import HTTPError, HTTPForbidden, \
     HTTPRedirectWithReferrer, url_for
 
 Authorization = namedtuple('Authorization', ('view', 'edit'))
@@ -54,13 +54,13 @@ def for_call_review(current_user, db, call, auth_cache=None):
     information which it fetches from the database.
     """
 
-    if 'user_id' not in session or 'person' not in session:
+    if (current_user.user is None) or (current_user.person is None):
         return no
-    elif (session.get('is_admin', False)
+    elif (current_user.is_admin
             and can_be_admin(current_user, db, auth_cache=auth_cache)):
         return yes
 
-    person_id = session['person']['id']
+    person_id = current_user.person.id
 
     # Give full access to review coordinators and
     # view access to committee members.
@@ -101,19 +101,19 @@ def for_person(current_user, db, person, auth_cache=None):
     (Access will then be granted based only on administrative access.)
     """
 
-    if 'user_id' not in session:
+    if current_user.user is None:
         return no
-    elif (session.get('is_admin', False)
+    elif (current_user.is_admin
             and can_be_admin(current_user, db, auth_cache=auth_cache)):
         return yes
 
     auth = no
-    session_person_id = (
-        session['person']['id'] if ('person' in session) else None)
+    current_person_id = (
+        None if (current_user.person is None) else current_user.person.id)
 
-    if session_person_id is not None:
+    if current_person_id is not None:
         site_group_members = _get_site_group_membership(
-            auth_cache, db, session_person_id)
+            auth_cache, db, current_person_id)
         if site_group_members.has_entry(
                 site_group_type=SiteGroupType.view_all_profile_groups()):
             auth = auth._replace(view=True)
@@ -124,19 +124,19 @@ def for_person(current_user, db, person, auth_cache=None):
     if person.user_id is not None:
         # This is a registered user: allow access based on the "public"
         # flag and only allow them to edit their profile.
-        is_user = (person.user_id == session['user_id'])
+        is_user = (person.user_id == current_user.user.id)
 
         return Authorization(
             view=auth.view or is_user or person.public,
             edit=auth.edit or is_user)
 
-    if session_person_id is None:
+    if current_person_id is None:
         return auth
 
     # Look for proposals of which this person is a member and allow
     # access based on the proposal settings.
     for member in _get_proposal_co_membership(
-            auth_cache, db, session_person_id).values():
+            auth_cache, db, current_person_id).values():
         if member.co_member_person_id == person.id:
             if member.editor:
                 return yes
@@ -145,7 +145,7 @@ def for_person(current_user, db, person, auth_cache=None):
 
     # Look for reviews for which this person is the reviewer and allow
     # access to review coordinators.
-    group_members = _get_group_membership(auth_cache, db, session_person_id)
+    group_members = _get_group_membership(auth_cache, db, current_person_id)
 
     queue_ids = frozenset((
         x.queue_id for x in group_members.values_by_group_type(
@@ -194,20 +194,16 @@ def for_institution(current_user, db, institution, auth_cache=None):
     institution.
     """
 
-    if 'user_id' not in session:
+    if current_user.user is None:
         return no
-    elif (session.get('is_admin', False)
+    elif (current_user.is_admin
             and can_be_admin(current_user, db, auth_cache=auth_cache)):
         return yes
 
-    # Fetch the user's profile in case their institution changed since their
-    # session was last updated.
-    person = _get_user_profile(auth_cache, db, session['user_id'])
-
-    if person is None:
+    if current_user.person is None:
         return view_only
 
-    if institution.id == person.institution_id:
+    if institution.id == current_user.person.institution_id:
         # If this is the person's institution, allow them to edit it.
         return yes
 
@@ -217,14 +213,15 @@ def for_institution(current_user, db, institution, auth_cache=None):
         # Is the person an editor for a proposal with a representative of
         # this institution?
         for member in _get_proposal_co_membership(
-                auth_cache, db, person.id).values():
+                auth_cache, db, current_user.person.id).values():
             if ((member.co_member_institution_id == institution.id)
                     and member.editor):
                 return yes
 
         # Look for reviews for which a representative of the institution
         # is the reviewer and allow access to review coordinators.
-        group_members = _get_group_membership(auth_cache, db, person.id)
+        group_members = _get_group_membership(
+            auth_cache, db, current_user.person.id)
 
         queue_ids = frozenset((
             x.queue_id for x in group_members.values_by_group_type(
@@ -246,19 +243,16 @@ def for_private_moc(current_user, db, facility_id, auth_cache=None):
     Currently only "view" authorization is considered.
     """
 
-    if 'user_id' not in session or 'person' not in session:
+    if (current_user.user is None) or (current_user.person is None):
         return no
 
     # If user is an administrator, allow access.
-    # Probably not worthwhile to re-validate administrative access here.
-    # NOTE: If this function is updated to also control editing MOCs
-    # then administrative access should be verified.
-    if session.get('is_admin', False):
+    if current_user.is_admin:
         return view_only
 
     # Otherwise check groups for the given facility.
     group_members = _get_group_membership(
-        auth_cache, db, session['person']['id'])
+        auth_cache, db, current_user.person.id)
 
     if group_members.has_entry(
             group_type=GroupType.private_moc_groups(),
@@ -275,14 +269,14 @@ def for_proposal(
     Determine the current user's authorization regarding this proposal.
     """
 
-    if 'user_id' not in session or 'person' not in session:
+    if (current_user.user is None) or (current_user.person is None):
         return no
 
     redirect = None
     auth = no
-    person_id = session['person']['id']
+    person_id = current_user.person.id
 
-    if (session.get('is_admin', False)
+    if (current_user.is_admin
             and can_be_admin(current_user, db, auth_cache=auth_cache)):
         auth = auth._replace(view=True)
 
@@ -373,7 +367,7 @@ def for_proposal_feedback(
     This function currently only allows view access.
     """
 
-    if 'user_id' not in session or 'person' not in session:
+    if (current_user.user is None) or (current_user.person is None):
         return no
 
     # Only allow access to the feedback information when the review is
@@ -382,11 +376,11 @@ def for_proposal_feedback(
         return no
 
     # Allow administrators to view.
-    if (session.get('is_admin', False)
+    if (current_user.is_admin
             and can_be_admin(current_user, db, auth_cache=auth_cache)):
         return view_only
 
-    person_id = session['person']['id']
+    person_id = current_user.person.id
 
     # Allow proposal members to view.
     if proposal.members.has_person(person_id):
@@ -447,10 +441,10 @@ def for_review(
         the ratings can be viewed.
     """
 
-    if 'user_id' not in session or 'person' not in session:
+    if (current_user.user is None) or (current_user.person is None):
         return AuthorizationWithRating(*no, view_rating=False)
 
-    person_id = session['person']['id']
+    person_id = current_user.person.id
 
     # Forbid access if the person is a member of the proposal, unless this
     # is for the feedback review.
@@ -513,7 +507,7 @@ def for_review(
     # Allow administrators and review coordinators to view, with edit too if
     # still under review.  (This is to allow them to adjust review ratings
     # during the committee meeting.)
-    if (session.get('is_admin', False)
+    if (current_user.is_admin
             and can_be_admin(current_user, db, auth_cache=auth_cache)):
         return AuthorizationWithRating(
             view=True, edit=review_is_editable, view_rating=rating_is_viewable)
@@ -542,11 +536,10 @@ def can_be_admin(current_user, db, auth_cache=None):
     privileges.
     """
 
-    person = _get_user_profile(auth_cache, db, session['user_id'])
-    if person is None:
+    if current_user.person is None:
         raise HTTPForbidden('Could not verify administrative access.')
 
-    return person.admin
+    return current_user.person.admin
 
 
 def can_add_review_roles(
@@ -560,7 +553,7 @@ def can_add_review_roles(
     If no reviews can be added then an empty list is returned.
     """
 
-    person_id = session['person']['id']
+    person_id = current_user.person.id
 
     # If the person is a member of the proposal, they can't add any reviews.
     if proposal.members.has_person(person_id=person_id):
@@ -594,7 +587,7 @@ def can_add_review_roles(
                     roles=role_class.get_feedback_roles(
                         include_indirect=include_indirect))
                     or (include_indirect and (
-                        (session.get('is_admin', False)
+                        (current_user.is_admin
                             and can_be_admin(current_user, db, auth_cache=auth_cache))
                         or group_members.has_entry(
                             queue_id=proposal.queue_id,
@@ -627,7 +620,7 @@ def find_addable_reviews(current_user, db, facilities, auth_cache=None):
     # Assume that they can't add a review if they're not a member of any
     # review groups, so give up now if that is the case.
     group_members = _get_group_membership(
-        auth_cache, db, session['person']['id'])
+        auth_cache, db, current_user.person.id)
     if not group_members:
         return ans
 
@@ -704,14 +697,6 @@ def _get_proposal_co_membership(db, person_id):
 @memoized
 def _get_site_group_membership(db, person_id):
     return db.search_site_group_member(person_id=person_id)
-
-
-@memoized
-def _get_user_profile(db, user_id):
-    try:
-        return db.get_person(person_id=None, user_id=user_id)
-    except NoSuchRecord:
-        return None
 
 
 @memoized
