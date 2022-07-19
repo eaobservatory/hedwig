@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2021 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -66,7 +66,7 @@ PrevProposalPubExtra = namedtuple(
 
 
 class GenericProposal(object):
-    def view_proposal_new(self, db, call_id, form):
+    def view_proposal_new(self, current_user, db, call_id, form):
         type_class = self.get_call_types()
         role_class = self.get_reviewer_roles()
 
@@ -203,7 +203,7 @@ class GenericProposal(object):
 
     @with_proposal(permission=PermissionType.VIEW)
     def view_proposal_copy_request_status(
-            self, db, proposal, can, request_id):
+            self, current_user, db, proposal, can, request_id):
         try:
             request = db.search_request_prop_copy(
                 proposal_id=proposal.id, request_id=request_id).get_single()
@@ -232,7 +232,7 @@ class GenericProposal(object):
 
     @with_proposal(permission=PermissionType.VIEW)
     def view_proposal_copy_request_query(
-            self, db, proposal, can, request_id):
+            self, current_user, db, proposal, can, request_id):
         try:
             request = db.search_request_prop_copy(
                 proposal_id=proposal.id, request_id=request_id).get_single()
@@ -650,7 +650,7 @@ class GenericProposal(object):
         return atn
 
     @with_proposal(permission=PermissionType.VIEW)
-    def view_proposal_view(self, db, proposal, can, args):
+    def view_proposal_view(self, current_user, db, proposal, can, args):
         role_class = self.get_reviewer_roles()
         review_can = auth.for_review(
             role_class, db, reviewer=None, proposal=proposal,
@@ -755,7 +755,7 @@ class GenericProposal(object):
 
     @with_verified_admin
     @with_proposal(permission=PermissionType.NONE)
-    def view_proposal_alter_state(self, db, proposal, form):
+    def view_proposal_alter_state(self, current_user, db, proposal, form):
         message = None
 
         if form is not None:
@@ -976,7 +976,7 @@ class GenericProposal(object):
         return report
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_proposal_submit(self, db, proposal, can, form):
+    def view_proposal_submit(self, current_user, db, proposal, can, form):
         if ProposalState.is_submitted(proposal.state):
             raise ErrorPage('The proposal has already been submitted.')
 
@@ -1103,7 +1103,7 @@ class GenericProposal(object):
             thread_id=proposal.id)
 
     @with_proposal(permission=PermissionType.VIEW)
-    def view_proposal_validate(self, db, proposal, can):
+    def view_proposal_validate(self, current_user, db, proposal, can):
         messages = self._validate_proposal(db, proposal)
 
         return {
@@ -1117,7 +1117,7 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_proposal_withdraw(self, db, proposal, can, form):
+    def view_proposal_withdraw(self, current_user, db, proposal, can, form):
         if not ProposalState.is_submitted(proposal.state):
             raise ErrorPage('The proposal has not been submitted.')
 
@@ -1158,7 +1158,7 @@ class GenericProposal(object):
             thread_id=proposal.id)
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_title_edit(self, db, proposal, can, form):
+    def view_title_edit(self, current_user, db, proposal, can, form):
         message = None
 
         if form is not None:
@@ -1181,7 +1181,7 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_abstract_edit(self, db, proposal, can, form):
+    def view_abstract_edit(self, current_user, db, proposal, can, form):
         role_class = self.get_text_roles()
         return self._edit_text(
             db, proposal, role_class.ABSTRACT, proposal.abst_word_lim,
@@ -1241,7 +1241,7 @@ class GenericProposal(object):
         return ctx
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_member_edit(self, db, proposal, can, form):
+    def view_member_edit(self, current_user, db, proposal, can, form):
         type_class = self.get_call_types()
         role_class = self.get_reviewer_roles()
         has_peer_review = type_class.has_reviewer_role(
@@ -1314,7 +1314,7 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_member_add(self, db, proposal, can, form):
+    def view_member_add(self, current_user, db, proposal, can, form):
         message_link = message_invite = None
         member = dict(editor=None, observer=None, person_id=None,
                       name='', title=None, email='')
@@ -1496,7 +1496,8 @@ class GenericProposal(object):
             [person_id])
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_member_reinvite(self, db, proposal, can, member_id, form):
+    def view_member_reinvite(
+            self, current_user, db, proposal, can, member_id, form):
         member = proposal.members.get(member_id)
         if member is None:
             raise HTTPNotFound('Proposal member not found.')
@@ -1532,7 +1533,7 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.VIEW)
-    def view_member_remove_self(self, db, proposal, can, form):
+    def view_member_remove_self(self, current_user, db, proposal, can, form):
         if not ProposalState.can_edit(proposal.state):
             raise ErrorPage('This proposal is not in an editable state.')
 
@@ -1567,7 +1568,7 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_student_edit(self, db, proposal, can, form):
+    def view_student_edit(self, current_user, db, proposal, can, form):
         message = None
         records = proposal.members
 
@@ -1600,7 +1601,8 @@ class GenericProposal(object):
 
     @with_verified_admin
     @with_proposal(permission=PermissionType.NONE)
-    def view_member_affiliation_edit(self, db, proposal, member_id, form):
+    def view_member_affiliation_edit(
+            self, current_user, db, proposal, member_id, form):
         message = None
         records = proposal.members
 
@@ -1643,7 +1645,7 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_previous_edit(self, db, proposal, can, form):
+    def view_previous_edit(self, current_user, db, proposal, can, form):
         message = None
 
         records = db.search_prev_proposal(proposal_id=proposal.id)
@@ -1754,7 +1756,7 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_target_edit(self, db, proposal, can, form):
+    def view_target_edit(self, current_user, db, proposal, can, form):
         message = None
 
         records = db.search_target(
@@ -1815,7 +1817,7 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_target_upload(self, db, proposal, can, form, file_):
+    def view_target_upload(self, current_user, db, proposal, can, form, file_):
         message = None
 
         records = db.search_target(proposal_id=proposal.id)
@@ -1869,7 +1871,7 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.VIEW)
-    def view_target_download(self, db, proposal, can):
+    def view_target_download(self, current_user, db, proposal, can):
         targets = db.search_target(proposal_id=proposal.id)
 
         return (
@@ -1878,7 +1880,7 @@ class GenericProposal(object):
             '{}-targets.txt'.format(self.make_proposal_code(db, proposal)))
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_tool_note_edit(self, db, proposal, can, form):
+    def view_tool_note_edit(self, current_user, db, proposal, can, form):
         role_class = self.get_text_roles()
         return self._edit_text(
             db, proposal, role_class.TOOL_NOTE, proposal.expl_word_lim,
@@ -1895,11 +1897,11 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_request_edit(self, db, proposal, can, form):
+    def view_request_edit(self, current_user, db, proposal, can, form):
         raise ErrorPage('Observing request not implemented for this facility.')
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_case_edit(self, db, proposal, can, role):
+    def view_case_edit(self, current_user, db, proposal, can, role):
         role_class = self.get_text_roles()
         code = role_class.get_code(role)
         call = db.get_call(facility_id=None, call_id=proposal.call_id)
@@ -1938,7 +1940,7 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_case_edit_text(self, db, proposal, can, role, form):
+    def view_case_edit_text(self, current_user, db, proposal, can, role, form):
         role_class = self.get_text_roles()
         code = role_class.get_code(role)
 
@@ -1959,8 +1961,8 @@ class GenericProposal(object):
             url_for('.case_edit', proposal_id=proposal.id, role=role))
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_case_edit_figure(self, db, proposal, can, fig_id, role,
-                              form, file_):
+    def view_case_edit_figure(
+            self, current_user, db, proposal, can, fig_id, role, form, file_):
         role_class = self.get_text_roles()
         code = role_class.get_code(role)
         name = role_class.get_name(role)
@@ -2117,7 +2119,8 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_case_manage_figure(self, db, proposal, can, role, form):
+    def view_case_manage_figure(
+            self, current_user, db, proposal, can, role, form):
         role_class = self.get_text_roles()
         name = role_class.get_name(role)
 
@@ -2185,8 +2188,9 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.VIEW)
-    def view_case_view_figure(self, db, proposal, can, fig_id, role, md5sum,
-                              type_=None):
+    def view_case_view_figure(
+            self, current_user, db, proposal, can, fig_id, role, md5sum,
+            type_=None):
         if type_ is None:
             try:
                 return db.get_proposal_figure(
@@ -2212,7 +2216,7 @@ class GenericProposal(object):
             raise HTTPError('Unknown figure view type.')
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_case_edit_pdf(self, db, proposal, can, role, file):
+    def view_case_edit_pdf(self, current_user, db, proposal, can, role, file):
         role_class = self.get_text_roles()
         code = role_class.get_code(role)
         name = role_class.get_name(role)
@@ -2273,7 +2277,8 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.VIEW)
-    def view_case_view_pdf(self, db, proposal, can, role, md5sum):
+    def view_case_view_pdf(
+            self, current_user, db, proposal, can, role, md5sum):
         role_class = self.get_text_roles()
         try:
             return db.get_proposal_pdf(proposal.id, role, md5sum=md5sum)
@@ -2282,8 +2287,8 @@ class GenericProposal(object):
                 role_class.get_name(role).capitalize()))
 
     @with_proposal(permission=PermissionType.VIEW)
-    def view_case_view_pdf_preview(self, db, proposal, can, page, role,
-                                   md5sum):
+    def view_case_view_pdf_preview(
+            self, current_user, db, proposal, can, page, role, md5sum):
         try:
             return db.get_proposal_pdf_preview(proposal.id, role, page,
                                                md5sum=md5sum)
@@ -2291,7 +2296,7 @@ class GenericProposal(object):
             raise HTTPNotFound('PDF preview page not found.')
 
     @with_proposal(permission=PermissionType.VIEW)
-    def view_calculation_manage(self, db, proposal, can, form):
+    def view_calculation_manage(self, current_user, db, proposal, can, form):
         return self._view_calculation_manage(
             db, proposal, None, can, form,
             title='{} Calculations'.format('Manage' if can.edit else 'View'),
@@ -2376,7 +2381,8 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.VIEW)
-    def view_calculation_view(self, db, proposal, can, calculation_id):
+    def view_calculation_view(
+            self, current_user, db, proposal, can, calculation_id):
         # Retrieve the calculation to identify the calculator and mode.
         try:
             calculation = db.search_calculation(
@@ -2398,7 +2404,7 @@ class GenericProposal(object):
             calculation=calculation, can=can, parent_proposal=proposal)
 
     @with_proposal(permission=PermissionType.FEEDBACK, with_decision_note=True)
-    def view_proposal_feedback(self, db, proposal, can):
+    def view_proposal_feedback(self, current_user, db, proposal, can):
         proposal_code = self.make_proposal_code(db, proposal)
 
         ctx = {
@@ -2438,7 +2444,7 @@ class GenericProposal(object):
             'decision_note': decision_note,
         }
 
-    def view_proposal_by_code(self, db, args):
+    def view_proposal_by_code(self, current_user, db, args):
         message = None
         code = args.get('code', '')
 

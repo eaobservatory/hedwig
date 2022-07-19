@@ -36,12 +36,12 @@ def create_home_blueprint(db, facilities):
     @with_current_user
     @templated('home.html')
     def home_page(current_user):
-        return view.home(facilities)
+        return view.home(current_user, facilities)
 
     @bp.route('/contact-us')
     @with_current_user
     @templated('contact.html')
     def contact_page(current_user):
-        return view.contact_page()
+        return view.contact_page(current_user)
 
     return bp

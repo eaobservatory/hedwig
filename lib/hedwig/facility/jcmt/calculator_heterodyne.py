@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -949,7 +949,7 @@ class HeterodyneCalculator(JCMTCalculator):
         calculation.inputs.delete_item_where(
             lambda x: x.code == code_sys)
 
-    def view_line_catalog(self, db):
+    def view_line_catalog(self, current_user, db):
         """
         View handler for line catalog query function.
 

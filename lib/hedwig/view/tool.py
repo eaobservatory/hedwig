@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -96,7 +96,7 @@ class BaseTargetTool(object):
 
         return []
 
-    def view_single(self, db, args, form):
+    def view_single(self, current_user, db, args, form):
         """
         View handler function for stand-alone usage of a target tool.
 
@@ -183,7 +183,7 @@ class BaseTargetTool(object):
             db, (None if target_object is None else [target_object]),
             extra_info, args, form, None)
 
-    def view_upload(self, db, args, form, file_):
+    def view_upload(self, current_user, db, args, form, file_):
         """
         View handler for stand-alone usage by file upload.
 
@@ -251,7 +251,7 @@ class BaseTargetTool(object):
     @with_proposal(
             permission=PermissionType.VIEW, indirect_facility=True,
             allow_unaccepted_review=False)
-    def view_proposal(self, db, proposal, can, args):
+    def view_proposal(self, current_user, db, proposal, can, args):
         """
         View handler function for proposal-based usage of a target tool.
 

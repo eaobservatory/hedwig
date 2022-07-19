@@ -108,7 +108,7 @@ def with_call_review(permission):
 
     def decorator(f):
         @functools.wraps(f)
-        def decorated_method(self, db, call_id, *args, **kwargs):
+        def decorated_method(self, current_user, db, call_id, *args, **kwargs):
             try:
                 call = db.get_call(facility_id=self.id_, call_id=call_id)
             except NoSuchRecord:
@@ -131,8 +131,9 @@ def with_call_review(permission):
             else:
                 raise HTTPError('Unknown permission type.')
 
-            return f(self, db, call, with_cache(can, auth_cache),
-                     *args, **kwargs)
+            return f(
+                self, current_user, db, call, with_cache(can, auth_cache),
+                *args, **kwargs)
 
         return decorated_method
 
@@ -151,7 +152,8 @@ def with_institution(permission):
 
     def decorator(f):
         @functools.wraps(f)
-        def decorated_method(self, db, institution_id, *args, **kwargs):
+        def decorated_method(
+                self, current_user, db, institution_id, *args, **kwargs):
             try:
                 institution = db.get_institution(institution_id)
             except NoSuchRecord:
@@ -175,8 +177,9 @@ def with_institution(permission):
             else:
                 raise HTTPError('Unknown permission type.')
 
-            return f(self, db, institution, with_cache(can, auth_cache),
-                     *args, **kwargs)
+            return f(
+                self, current_user, db, institution,
+                with_cache(can, auth_cache), *args, **kwargs)
 
         return decorated_method
 
@@ -195,7 +198,8 @@ def with_person(permission):
 
     def decorator(f):
         @functools.wraps(f)
-        def decorated_method(self, db, person_id, *args, **kwargs):
+        def decorated_method(
+                self, current_user, db, person_id, *args, **kwargs):
             try:
                 person = db.get_person(person_id=person_id,
                                        with_institution=True, with_email=True)
@@ -205,7 +209,7 @@ def with_person(permission):
             assert person.id == person_id
 
             if permission == PermissionType.NONE:
-                return f(self, db, person, *args, **kwargs)
+                return f(self, current_user, db, person, *args, **kwargs)
 
             elif permission == PermissionType.UNIVERSAL_VIEW:
                 auth_cache = {}
@@ -215,8 +219,9 @@ def with_person(permission):
                     raise HTTPForbidden(
                         'Permission denied for person profiles.')
 
-                return f(self, db, person, with_cache(can, auth_cache),
-                         *args, **kwargs)
+                return f(
+                    self, current_user, db, person,
+                    with_cache(can, auth_cache), *args, **kwargs)
 
             else:
                 auth_cache = {}
@@ -235,8 +240,9 @@ def with_person(permission):
                 else:
                     raise HTTPError('Unknown permission type.')
 
-                return f(self, db, person, with_cache(can, auth_cache),
-                         *args, **kwargs)
+                return f(
+                    self, current_user, db, person,
+                    with_cache(can, auth_cache), *args, **kwargs)
 
         return decorated_method
 
@@ -273,7 +279,8 @@ def with_proposal(
 
     def decorator(f):
         @functools.wraps(f)
-        def decorated_method(self, db, proposal_id, *args, **kwargs):
+        def decorated_method(
+                self, current_user, db, proposal_id, *args, **kwargs):
             facility = (self.facility if indirect_facility else self)
             role_class = facility.get_reviewer_roles()
             auth_cache = {}
@@ -289,7 +296,7 @@ def with_proposal(
             assert proposal.id == proposal_id
 
             if permission == PermissionType.NONE:
-                return f(self, db, proposal, *args, **kwargs)
+                return f(self, current_user, db, proposal, *args, **kwargs)
 
             elif permission == PermissionType.FEEDBACK:
                 can = auth.for_proposal_feedback(role_class, db, proposal,
@@ -299,8 +306,9 @@ def with_proposal(
                     raise HTTPForbidden(
                         'Permission denied for this proposal feedback.')
 
-                return f(self, db, proposal, with_cache(can, auth_cache),
-                         *args, **kwargs)
+                return f(
+                    self, current_user, db, proposal,
+                    with_cache(can, auth_cache), *args, **kwargs)
 
             else:
                 can = auth.for_proposal(
@@ -323,8 +331,9 @@ def with_proposal(
                 else:
                     raise HTTPError('Unknown permission type.')
 
-                return f(self, db, proposal, with_cache(can, auth_cache),
-                         *args, **kwargs)
+                return f(
+                    self, current_user, db, proposal,
+                    with_cache(can, auth_cache), *args, **kwargs)
 
         return decorated_method
 
@@ -352,7 +361,8 @@ def with_review(
 
     def decorator(f):
         @functools.wraps(f)
-        def decorated_method(self, db, reviewer_id, *args, **kwargs):
+        def decorated_method(
+                self, current_user, db, reviewer_id, *args, **kwargs):
             role_class = self.get_reviewer_roles()
 
             try:
@@ -381,7 +391,9 @@ def with_review(
             assert proposal.id == proposal_id
 
             if permission == PermissionType.NONE:
-                return f(self, db, reviewer, proposal, *args, **kwargs)
+                return f(
+                    self, current_user, db, reviewer, proposal,
+                    *args, **kwargs)
 
             else:
                 auth_cache = {}
@@ -402,8 +414,9 @@ def with_review(
                 else:
                     raise HTTPError('Unknown permission type.')
 
-                return f(self, db, reviewer, proposal,
-                         with_cache(can, auth_cache), *args, **kwargs)
+                return f(
+                    self, current_user, db, reviewer, proposal,
+                    with_cache(can, auth_cache), *args, **kwargs)
 
         return decorated_method
 
@@ -419,11 +432,11 @@ def with_verified_admin(f):
     """
 
     @functools.wraps(f)
-    def decorated(self, db, *args, **kwargs):
+    def decorated(self, current_user, db, *args, **kwargs):
         if not auth.can_be_admin(db):
             raise HTTPForbidden('Could not verify administrative access.')
 
-        return f(self, db, *args, **kwargs)
+        return f(self, current_user, db, *args, **kwargs)
 
     return decorated
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2019 East Asian Observatory
+# Copyright (C) 2018-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -301,7 +301,7 @@ class UKIRT(EAOFacility):
                 [request.total, allocation.total])
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_request_edit(self, db, proposal, can, form):
+    def view_request_edit(self, current_user, db, proposal, can, form):
         message = None
 
         records = db.search_ukirt_request(proposal_id=proposal.id)

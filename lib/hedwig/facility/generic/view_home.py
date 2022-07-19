@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2021 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -29,7 +29,7 @@ from ...web.util import ErrorPage, HTTPNotFound, session
 
 
 class GenericHome(object):
-    def view_facility_home(self, db):
+    def view_facility_home(self, current_user, db):
         type_class = self.get_call_types()
 
         # Determine whether the person is a committee member (or administrator)
@@ -105,7 +105,8 @@ class GenericHome(object):
             'show_admin_links': session.get('is_admin', False),
         }
 
-    def view_semester_calls(self, db, semester_id, call_type, queue_id):
+    def view_semester_calls(
+            self, current_user, db, semester_id, call_type, queue_id):
         type_class = self.get_call_types()
 
         try:
@@ -178,7 +179,7 @@ class GenericHome(object):
             'call_mid_closes': call_mid_closes,
         }
 
-    def view_semester_closed(self, db):
+    def view_semester_closed(self, current_user, db):
         type_class = self.get_call_types()
 
         # Get list of calls, considering only those of standard type.
@@ -206,7 +207,7 @@ class GenericHome(object):
                 for x in closed_calls.values()))),
         }
 
-    def view_semester_non_standard(self, db):
+    def view_semester_non_standard(self, current_user, db):
         type_class = self.get_call_types()
 
         # Get list of open, non-standard calls.

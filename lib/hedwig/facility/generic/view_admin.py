@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2021 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -38,12 +38,12 @@ from ...view.util import int_or_none, str_or_none, with_verified_admin
 
 
 class GenericAdmin(object):
-    def view_facility_admin(self, db):
+    def view_facility_admin(self, current_user, db):
         return {
             'title': self.get_name() + ': Administrative Menu',
         }
 
-    def view_semester_list(self, db):
+    def view_semester_list(self, current_user, db):
         semesters = db.search_semester(facility_id=self.id_)
 
         return {
@@ -51,7 +51,7 @@ class GenericAdmin(object):
             'semesters': semesters,
         }
 
-    def view_semester_view(self, db, semester_id):
+    def view_semester_view(self, current_user, db, semester_id):
         try:
             semester = db.get_semester(self.id_, semester_id)
         except NoSuchRecord:
@@ -66,7 +66,7 @@ class GenericAdmin(object):
         }
 
     @with_verified_admin
-    def view_semester_edit(self, db, semester_id, args, form):
+    def view_semester_edit(self, current_user, db, semester_id, args, form):
         """
         Edit or create a new semester.
 
@@ -161,7 +161,8 @@ class GenericAdmin(object):
             'format_types': FormatType.get_options(is_system=True),
         }
 
-    def view_call_preamble_edit(self, db, semester_id, call_type, form):
+    def view_call_preamble_edit(
+            self, current_user, db, semester_id, call_type, form):
         type_class = self.get_call_types()
 
         if not type_class.is_valid(call_type):
@@ -218,7 +219,7 @@ class GenericAdmin(object):
             'format_types': FormatType.get_options(is_system=True),
         }
 
-    def view_queue_list(self, db):
+    def view_queue_list(self, current_user, db):
         queues = db.search_queue(facility_id=self.id_)
 
         return {
@@ -226,7 +227,7 @@ class GenericAdmin(object):
             'queues': queues,
         }
 
-    def view_queue_view(self, db, queue_id):
+    def view_queue_view(self, current_user, db, queue_id):
         try:
             queue = db.get_queue(self.id_, queue_id)
         except NoSuchRecord:
@@ -242,7 +243,7 @@ class GenericAdmin(object):
         }
 
     @with_verified_admin
-    def view_queue_edit(self, db, queue_id, form):
+    def view_queue_edit(self, current_user, db, queue_id, form):
         """
         Edit or create a new queue.
         """
@@ -303,7 +304,7 @@ class GenericAdmin(object):
             'format_types': FormatType.get_options(is_system=True),
         }
 
-    def view_call_list(self, db):
+    def view_call_list(self, current_user, db):
         calls = db.search_call(
             facility_id=self.id_, with_proposal_count=True,
             with_proposal_count_state=ProposalState.submitted_states())
@@ -315,7 +316,7 @@ class GenericAdmin(object):
             'calls': calls,
         }
 
-    def view_call_view(self, db, call_id):
+    def view_call_view(self, current_user, db, call_id):
         try:
             call = db.get_call(facility_id=self.id_, call_id=call_id)
         except NoSuchRecord:
@@ -344,7 +345,8 @@ class GenericAdmin(object):
         return {}
 
     @with_verified_admin
-    def view_call_edit(self, db, call_id, call_type, args, form):
+    def view_call_edit(
+            self, current_user, db, call_id, call_type, args, form):
         """
         Create or edit a call.
         """
@@ -578,7 +580,7 @@ class GenericAdmin(object):
         return {}
 
     @with_verified_admin
-    def view_call_mid_close(self, db, call_id, form):
+    def view_call_mid_close(self, current_user, db, call_id, form):
         """
         Edit a call's intermediate close dates.
         """
@@ -657,7 +659,7 @@ class GenericAdmin(object):
         }
 
     @with_verified_admin
-    def view_call_proposals(self, db, call_id):
+    def view_call_proposals(self, current_user, db, call_id):
         try:
             call = db.get_call(self.id_, call_id)
         except NoSuchRecord:
@@ -686,7 +688,7 @@ class GenericAdmin(object):
         }
 
     @with_verified_admin
-    def view_affiliation_edit(self, db, queue_id, form):
+    def view_affiliation_edit(self, current_user, db, queue_id, form):
         try:
             queue = db.get_queue(self.id_, queue_id)
         except NoSuchRecord:
@@ -741,7 +743,7 @@ class GenericAdmin(object):
         }
 
     @with_verified_admin
-    def view_group_view(self, db, queue_id, group_type):
+    def view_group_view(self, current_user, db, queue_id, group_type):
         try:
             queue = db.get_queue(self.id_, queue_id)
         except NoSuchRecord:
@@ -764,7 +766,8 @@ class GenericAdmin(object):
         }
 
     @with_verified_admin
-    def view_group_member_add(self, db, queue_id, group_type, form):
+    def view_group_member_add(
+            self, current_user, db, queue_id, group_type, form):
         try:
             queue = db.get_queue(self.id_, queue_id)
         except NoSuchRecord:
@@ -893,7 +896,8 @@ class GenericAdmin(object):
             [person_id])
 
     @with_verified_admin
-    def view_group_member_edit(self, db, queue_id, group_type, form):
+    def view_group_member_edit(
+            self, current_user, db, queue_id, group_type, form):
         try:
             queue = db.get_queue(self.id_, queue_id)
         except NoSuchRecord:
@@ -937,8 +941,8 @@ class GenericAdmin(object):
         }
 
     @with_verified_admin
-    def view_group_member_reinvite(self, db, queue_id, group_type, member_id,
-                                   form):
+    def view_group_member_reinvite(
+            self, current_user, db, queue_id, group_type, member_id, form):
         try:
             queue = db.get_queue(self.id_, queue_id)
         except NoSuchRecord:
@@ -983,7 +987,7 @@ class GenericAdmin(object):
         }
 
     @with_verified_admin
-    def view_category_edit(self, db, form):
+    def view_category_edit(self, current_user, db, form):
         message = None
         records = db.search_category(facility_id=self.id_)
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -961,7 +961,7 @@ class JCMT(EAOFacility):
         return dyn
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_request_edit(self, db, proposal, can, form):
+    def view_request_edit(self, current_user, db, proposal, can, form):
         message = None
 
         records = db.search_jcmt_request(proposal_id=proposal.id)
@@ -1262,7 +1262,7 @@ class JCMT(EAOFacility):
         }
 
     @with_call_review(permission=PermissionType.EDIT)
-    def view_review_call_available(self, db, call, can, form):
+    def view_review_call_available(self, current_user, db, call, can, form):
         type_class = self.get_call_types()
         message = None
 
@@ -1367,7 +1367,7 @@ class JCMT(EAOFacility):
         }
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_pr_summary_edit(self, db, proposal, can, form):
+    def view_pr_summary_edit(self, current_user, db, proposal, can, form):
         role_class = self.get_text_roles()
         return self._edit_text(
             db, proposal, role_class.PR_SUMMARY, 300,

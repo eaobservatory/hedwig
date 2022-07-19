@@ -143,7 +143,7 @@ class PeopleView(object):
             'register_only': register_only,
         }
 
-    def log_out(self):
+    def log_out(self, current_user):
         session.clear()
         flash('You have been logged out.')
         raise HTTPRedirect(url_for('home.home_page'))
@@ -190,7 +190,7 @@ class PeopleView(object):
             'register_only': register_only,
         }
 
-    def change_user_name(self, db, form, remote_addr):
+    def change_user_name(self, current_user, db, form, remote_addr):
         message = None
         user_id = session['user_id']
 
@@ -224,7 +224,7 @@ class PeopleView(object):
             'user_name': user_name,
         }
 
-    def change_password(self, db, form, remote_addr):
+    def change_password(self, current_user, db, form, remote_addr):
         message = None
 
         if form is not None:
@@ -408,7 +408,7 @@ class PeopleView(object):
         }
 
     @with_verified_admin
-    def take_admin(self, db, args, referrer):
+    def take_admin(self, current_user, db, args, referrer):
         session['is_admin'] = True
         flash('You have taken administrative privileges.')
 
@@ -417,13 +417,13 @@ class PeopleView(object):
             target = referrer if referrer else url_for('home.home_page')
         raise HTTPRedirect(target)
 
-    def drop_admin(self, referrer):
+    def drop_admin(self, current_user, referrer):
         session.pop('is_admin', None)
         flash('You have dropped administrative privileges.')
         raise HTTPRedirect(referrer if referrer else url_for('home.home_page'))
 
     @with_verified_admin
-    def user_log(self, db, user_id):
+    def user_log(self, current_user, db, user_id):
         try:
             user_name = db.get_user_name(user_id=user_id)
         except NoSuchRecord:
@@ -445,7 +445,7 @@ class PeopleView(object):
             'events': events,
         }
 
-    def register_person(self, db, args, form, remote_addr):
+    def register_person(self, current_user, db, args, form, remote_addr):
         if 'person' in session:
             raise ErrorPage('You have already created a profile.')
 
@@ -507,7 +507,7 @@ class PeopleView(object):
             'log_in_for': log_in_for,
         }
 
-    def person_list(self, db, args):
+    def person_list(self, current_user, db, args):
         # Only show public, registered members unless the user has
         # suitable authorization.
         public = True
@@ -529,7 +529,7 @@ class PeopleView(object):
         }
 
     @with_person(permission=PermissionType.VIEW)
-    def person_view(self, db, person, can, facilities):
+    def person_view(self, current_user, db, person, can, facilities):
         is_admin = session.get('is_admin', False)
         is_current_user = person.user_id == session['user_id']
 
@@ -580,7 +580,7 @@ class PeopleView(object):
 
     @with_verified_admin
     @with_person(permission=PermissionType.NONE)
-    def person_invite(self, db, person, args, form):
+    def person_invite(self, current_user, db, person, args, form):
         if person.user_id is not None:
             raise ErrorPage('This user is already registered.')
 
@@ -617,7 +617,7 @@ class PeopleView(object):
         }
 
     @with_person(permission=PermissionType.EDIT)
-    def person_edit(self, db, person, can, args, form):
+    def person_edit(self, current_user, db, person, can, args, form):
         message = None
 
         if form is not None:
@@ -654,7 +654,8 @@ class PeopleView(object):
         }
 
     @with_person(permission=PermissionType.EDIT)
-    def person_edit_institution(self, db, person, can, args, form):
+    def person_edit_institution(
+            self, current_user, db, person, can, args, form):
         message = None
 
         # Accept either query argument "log_in_for" or "next_page"
@@ -733,7 +734,7 @@ class PeopleView(object):
         }
 
     @with_person(permission=PermissionType.EDIT)
-    def person_edit_email(self, db, person, can, form):
+    def person_edit_email(self, current_user, db, person, can, form):
         message = None
         is_current_user = person.user_id == session['user_id']
         records = person.email
@@ -802,7 +803,7 @@ class PeopleView(object):
 
     @with_person(permission=PermissionType.EDIT)
     def person_email_verify_get(
-            self, db, person, can, email_id, form, remote_addr):
+            self, current_user, db, person, can, email_id, form, remote_addr):
         try:
             email = person.email[email_id]
         except KeyError:
@@ -842,7 +843,8 @@ class PeopleView(object):
             'email': email,
         }
 
-    def person_email_verify_use(self, db, args, form, remote_addr):
+    def person_email_verify_use(
+            self, current_user, db, args, form, remote_addr):
         message = None
         token = args.get('token', '')
         person_id = session['person']['id']
@@ -883,12 +885,13 @@ class PeopleView(object):
             'token': token,
         }
 
-    def person_proposals_own(self, db, facilities):
+    def person_proposals_own(self, current_user, db, facilities):
         return self._person_proposals(
             db, session['person']['id'], facilities, None, 'Your Proposals')
 
     @with_person(permission=PermissionType.UNIVERSAL_VIEW)
-    def person_proposals_other(self, db, person, can, facilities):
+    def person_proposals_other(
+            self, current_user, db, person, can, facilities):
         return self._person_proposals(
             db, person.id, facilities, person,
             '{}: Proposals'.format(person.name))
@@ -917,12 +920,13 @@ class PeopleView(object):
             'person': person,
         }
 
-    def person_reviews_own(self, db, facilities):
+    def person_reviews_own(self, current_user, db, facilities):
         return self._person_reviews(
             db, session['person']['id'], facilities, None)
 
     @with_person(permission=PermissionType.UNIVERSAL_VIEW)
-    def person_reviews_other(self, db, person, can, facilities, args):
+    def person_reviews_other(
+            self, current_user, db, person, can, facilities, args):
         return self._person_reviews(
             db, person.id, facilities, person, as_admin=True,
             view_all=int_or_none(args.get('view_all', '0')),
@@ -1029,7 +1033,7 @@ class PeopleView(object):
 
     @with_verified_admin
     @with_person(permission=PermissionType.NONE)
-    def person_subsume(self, db, person, form):
+    def person_subsume(self, current_user, db, person, form):
         ctx = {
             'title': '{}: Subsume Duplicate'.format(person.name),
             'person': person,
@@ -1105,14 +1109,14 @@ class PeopleView(object):
 
         return ctx
 
-    def institution_list(self, db):
+    def institution_list(self, current_user, db):
         return {
             'title': 'Institutions',
             'institutions': db.search_institution(),
         }
 
     @with_institution(permission=PermissionType.VIEW)
-    def institution_view(self, db, institution, can):
+    def institution_view(self, current_user, db, institution, can):
         # Only show public, registered members unless the user has
         # suitable authorization.
         public = True
@@ -1134,7 +1138,7 @@ class PeopleView(object):
         }
 
     @with_institution(permission=PermissionType.EDIT)
-    def institution_edit(self, db, institution, can, form):
+    def institution_edit(self, current_user, db, institution, can, form):
         show_confirm_prompt = True
         message = None
         person_affected_list = []
@@ -1209,11 +1213,11 @@ class PeopleView(object):
         }
 
     @with_verified_admin
-    def institution_log(self, db, institution_id, form):
+    def institution_log(self, current_user, db, institution_id, form):
         return self._display_institution_log(db, institution_id, form)
 
     @with_verified_admin
-    def institution_log_approval(self, db, form):
+    def institution_log_approval(self, current_user, db, form):
         return self._display_institution_log(db, None, form)
 
     def _display_institution_log(self, db, institution_id, form):
@@ -1289,7 +1293,7 @@ class PeopleView(object):
         }
 
     @with_verified_admin
-    def institution_subsume(self, db, institution_id, form):
+    def institution_subsume(self, current_user, db, institution_id, form):
         try:
             institution = db.get_institution(institution_id)
         except NoSuchRecord:
@@ -1342,13 +1346,14 @@ class PeopleView(object):
 
         return ctx
 
-    def invitation_token_enter(self, db, args):
+    def invitation_token_enter(self, current_user, db, args):
         return {
             'title': 'Enter Invitation Code',
             'token': args.get('token', ''),
         }
 
-    def invitation_token_accept(self, db, facilities, args, form, remote_addr):
+    def invitation_token_accept(
+            self, current_user, db, facilities, args, form, remote_addr):
         token = (form.get('token', None) if (form is not None)
                  else args.get('token', None))
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -308,7 +308,7 @@ class ClashTool(BaseTargetTool):
 
         return (clashes, non_clashes)
 
-    def view_moc_list(self, db):
+    def view_moc_list(self, current_user, db):
         """
         View handler for MOC listing custom route.
         """
@@ -328,7 +328,7 @@ class ClashTool(BaseTargetTool):
             'can_edit': can_edit,
         }
 
-    def view_moc_info(self, db, moc_id):
+    def view_moc_info(self, current_user, db, moc_id):
         """
         View handler for MOC info custom route.
         """
@@ -347,7 +347,7 @@ class ClashTool(BaseTargetTool):
             'moc': moc,
         }
 
-    def view_moc_fits(self, db, moc_id):
+    def view_moc_fits(self, current_user, db, moc_id):
         """
         View handler for MOC FITS download custom route.
         """
@@ -373,7 +373,7 @@ class ClashTool(BaseTargetTool):
             '{}.fits'.format(re.sub('[^-_a-z0-9]', '_', moc.name.lower())))
 
     @with_verified_admin
-    def view_moc_edit(self, db, moc_id, form, file_):
+    def view_moc_edit(self, current_user, db, moc_id, form, file_):
         if moc_id is None:
             # We are uploading a new MOC -- create a blank record.
             moc = null_tuple(MOCInfo)._replace(
@@ -446,7 +446,7 @@ class ClashTool(BaseTargetTool):
         }
 
     @with_verified_admin
-    def view_moc_delete(self, db, moc_id, form):
+    def view_moc_delete(self, current_user, db, moc_id, form):
         try:
             moc = db.search_moc(facility_id=self.facility.id_, moc_id=moc_id,
                                 public=None).get_single()

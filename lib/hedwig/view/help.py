@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -39,7 +39,7 @@ TreeEntry = namedtuple('TreeEntry', ('mtime', 'toc'))
 
 
 class HelpView(object):
-    def help_home(self, db):
+    def help_home(self, current_user, db):
         show_admin_links = False
         if ('user_id' in session) and ('person' in session):
             if session['person'].get('admin', False):
@@ -56,7 +56,7 @@ class HelpView(object):
             'show_admin_links': show_admin_links,
         }
 
-    def help_page(self, doc_root, page_name, toc_cache):
+    def help_page(self, current_user, doc_root, page_name, toc_cache):
         """
         Prepare template context information for viewing a help page.
 
@@ -118,7 +118,7 @@ class HelpView(object):
             'nav_link': nav_link,
         }
 
-    def help_graph(self, doc_root, graph_name):
+    def help_graph(self, current_user, doc_root, graph_name):
         """
         Convert Graphviz image and return as a PNG image.
         """

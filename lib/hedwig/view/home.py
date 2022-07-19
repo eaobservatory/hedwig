@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -23,13 +23,13 @@ from ..web.util import session
 
 
 class HomeView(object):
-    def home(self, facilities):
+    def home(self, current_user, facilities):
         return {
             'facilities': facilities,
             'show_admin_links': session.get('is_admin', False),
         }
 
-    def contact_page(self):
+    def contact_page(self, current_user):
         # NB: shares email address with the one used in the email footer.
         # If this is not OK they could have separate configuration entries.
         email = get_config().get('email', 'footer_email')
