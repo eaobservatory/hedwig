@@ -30,7 +30,6 @@ from ..web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
 from . import auth
 from .base import ViewMember
-from .util import with_verified_admin
 
 
 class AdminView(ViewMember):
@@ -41,7 +40,6 @@ class AdminView(ViewMember):
             'site_groups': SiteGroupType.get_options(),
         }
 
-    @with_verified_admin
     def message_list(self, current_user, db, args, form):
         # Apply state updates if a form was submitted via a POST request.
         if form is not None:
@@ -158,7 +156,6 @@ class AdminView(ViewMember):
             'states_allowed': MessageState.get_options(),
         }
 
-    @with_verified_admin
     def message_view(self, current_user, db, message_id):
         try:
             message = db.get_message(message_id)
@@ -170,7 +167,6 @@ class AdminView(ViewMember):
             'message': message,
         }
 
-    @with_verified_admin
     def message_alter_state(self, current_user, db, message_id, form):
         try:
             message = db.get_message(message_id)
@@ -211,7 +207,6 @@ class AdminView(ViewMember):
             'states': MessageState.get_options(),
         }
 
-    @with_verified_admin
     def message_thread(
             self, current_user, db, facilities, thread_type, thread_id):
         messages = db.search_message(
@@ -278,7 +273,6 @@ class AdminView(ViewMember):
 
         return links
 
-    @with_verified_admin
     def processing_status(self, current_user, db, facilities, form):
         if form is not None:
             n_reset = 0
@@ -482,7 +476,6 @@ class AdminView(ViewMember):
 
         return result
 
-    @with_verified_admin
     def request_status(self, current_user, db, facilities, form):
         if form is not None:
             n_reset = 0
@@ -556,14 +549,12 @@ class AdminView(ViewMember):
 
         return result
 
-    @with_verified_admin
     def user_unregistered(self, current_user, db):
         return {
             'title': 'Unregistered Users',
             'users': db.search_user(registered=False),
         }
 
-    @with_verified_admin
     def site_group_view(self, current_user, db, site_group_type):
         try:
             site_group_info = SiteGroupType.get_info(site_group_type)
@@ -580,7 +571,6 @@ class AdminView(ViewMember):
             'members': members,
         }
 
-    @with_verified_admin
     def site_group_member_add(self, current_user, db, site_group_type, form):
         try:
             site_group_info = SiteGroupType.get_info(site_group_type)
@@ -700,7 +690,6 @@ class AdminView(ViewMember):
             render_email_template('site_group_invitation.txt', email_ctx),
             [person_id])
 
-    @with_verified_admin
     def site_group_member_edit(self, current_user, db, site_group_type, form):
         try:
             site_group_info = SiteGroupType.get_info(site_group_type)
@@ -738,7 +727,6 @@ class AdminView(ViewMember):
             'message': message,
         }
 
-    @with_verified_admin
     def site_group_member_reinvite(
             self, current_user, db, site_group_type, member_id, form):
         try:

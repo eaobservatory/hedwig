@@ -36,7 +36,7 @@ from ..type.util import null_tuple, with_deadline
 from ..view.util import int_or_none
 from ..web.util import flash, session, url_for, url_add_args, url_relative, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
-from .util import with_institution, with_person, with_verified_admin
+from .util import with_institution, with_person
 from . import auth
 
 
@@ -407,7 +407,6 @@ class PeopleView(object):
             'log_in_for': log_in_for,
         }
 
-    @with_verified_admin
     def take_admin(self, current_user, db, args, referrer):
         session['is_admin'] = True
         flash('You have taken administrative privileges.')
@@ -422,7 +421,6 @@ class PeopleView(object):
         flash('You have dropped administrative privileges.')
         raise HTTPRedirect(referrer if referrer else url_for('home.home_page'))
 
-    @with_verified_admin
     def user_log(self, current_user, db, user_id):
         try:
             user_name = db.get_user_name(user_id=user_id)
@@ -578,7 +576,6 @@ class PeopleView(object):
             'review_group_membership': review_group_membership,
         }
 
-    @with_verified_admin
     @with_person(permission=PermissionType.NONE)
     def person_invite(self, current_user, db, person, args, form):
         if person.user_id is not None:
@@ -1031,7 +1028,6 @@ class PeopleView(object):
             'view_all': view_all,
         }
 
-    @with_verified_admin
     @with_person(permission=PermissionType.NONE)
     def person_subsume(self, current_user, db, person, form):
         ctx = {
@@ -1212,11 +1208,9 @@ class PeopleView(object):
             'countries': get_countries(),
         }
 
-    @with_verified_admin
     def institution_log(self, current_user, db, institution_id, form):
         return self._display_institution_log(db, institution_id, form)
 
-    @with_verified_admin
     def institution_log_approval(self, current_user, db, form):
         return self._display_institution_log(db, None, form)
 
@@ -1292,7 +1286,6 @@ class PeopleView(object):
             'entries': entries,
         }
 
-    @with_verified_admin
     def institution_subsume(self, current_user, db, institution_id, form):
         try:
             institution = db.get_institution(institution_id)

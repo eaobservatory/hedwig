@@ -30,7 +30,6 @@ from ...error import NoSuchRecord, UserError
 from ...file.moc import read_moc
 from ...view import auth
 from ...view.tool import BaseTargetTool
-from ...view.util import with_verified_admin
 from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
     flash, session, url_for
 from ...type.enum import AttachmentState, FormatType
@@ -372,7 +371,6 @@ class ClashTool(BaseTargetTool):
             'application/fits',
             '{}.fits'.format(re.sub('[^-_a-z0-9]', '_', moc.name.lower())))
 
-    @with_verified_admin
     def view_moc_edit(self, current_user, db, moc_id, form, file_):
         if moc_id is None:
             # We are uploading a new MOC -- create a blank record.
@@ -445,7 +443,6 @@ class ClashTool(BaseTargetTool):
             'format_types': FormatType.get_options(is_system=True),
         }
 
-    @with_verified_admin
     def view_moc_delete(self, current_user, db, moc_id, form):
         try:
             moc = db.search_moc(facility_id=self.facility.id_, moc_id=moc_id,

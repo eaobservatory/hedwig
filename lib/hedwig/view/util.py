@@ -423,24 +423,6 @@ def with_review(
     return decorator
 
 
-def with_verified_admin(f):
-    """
-    Method decorator which double-checks administrative access.
-
-    Assumes that the method takes the database control object as
-    its first positional argument.
-    """
-
-    @functools.wraps(f)
-    def decorated(self, current_user, db, *args, **kwargs):
-        if not auth.can_be_admin(db):
-            raise HTTPForbidden('Could not verify administrative access.')
-
-        return f(self, current_user, db, *args, **kwargs)
-
-    return decorated
-
-
 def parse_time(input_time):
     """
     Accepts a time string, either as a decimal number of hours,

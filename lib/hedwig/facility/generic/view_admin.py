@@ -34,7 +34,7 @@ from ...type.util import null_tuple
 from ...view import auth
 from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
     flash, format_datetime, parse_datetime, session, url_for
-from ...view.util import int_or_none, str_or_none, with_verified_admin
+from ...view.util import int_or_none, str_or_none
 
 
 class GenericAdmin(object):
@@ -65,7 +65,6 @@ class GenericAdmin(object):
             'call_preambles': call_preambles,
         }
 
-    @with_verified_admin
     def view_semester_edit(self, current_user, db, semester_id, args, form):
         """
         Edit or create a new semester.
@@ -242,7 +241,6 @@ class GenericAdmin(object):
             'groups': GroupType.get_options(),
         }
 
-    @with_verified_admin
     def view_queue_edit(self, current_user, db, queue_id, form):
         """
         Edit or create a new queue.
@@ -344,7 +342,6 @@ class GenericAdmin(object):
     def _view_call_extra(self, db, call):
         return {}
 
-    @with_verified_admin
     def view_call_edit(
             self, current_user, db, call_id, call_type, args, form):
         """
@@ -579,7 +576,6 @@ class GenericAdmin(object):
     def _view_call_edit_extra(self, db, call, info):
         return {}
 
-    @with_verified_admin
     def view_call_mid_close(self, current_user, db, call_id, form):
         """
         Edit a call's intermediate close dates.
@@ -658,7 +654,6 @@ class GenericAdmin(object):
             'mid_closes': records,
         }
 
-    @with_verified_admin
     def view_call_proposals(self, current_user, db, call_id):
         try:
             call = db.get_call(self.id_, call_id)
@@ -687,7 +682,6 @@ class GenericAdmin(object):
                 if k in n_state),
         }
 
-    @with_verified_admin
     def view_affiliation_edit(self, current_user, db, queue_id, form):
         try:
             queue = db.get_queue(self.id_, queue_id)
@@ -742,7 +736,6 @@ class GenericAdmin(object):
             'queue': queue,
         }
 
-    @with_verified_admin
     def view_group_view(self, current_user, db, queue_id, group_type):
         try:
             queue = db.get_queue(self.id_, queue_id)
@@ -765,7 +758,6 @@ class GenericAdmin(object):
             'members': members,
         }
 
-    @with_verified_admin
     def view_group_member_add(
             self, current_user, db, queue_id, group_type, form):
         try:
@@ -895,7 +887,6 @@ class GenericAdmin(object):
                                   email_ctx, facility=self),
             [person_id])
 
-    @with_verified_admin
     def view_group_member_edit(
             self, current_user, db, queue_id, group_type, form):
         try:
@@ -940,7 +931,6 @@ class GenericAdmin(object):
             'message': message,
         }
 
-    @with_verified_admin
     def view_group_member_reinvite(
             self, current_user, db, queue_id, group_type, member_id, form):
         try:
@@ -986,7 +976,6 @@ class GenericAdmin(object):
                     queue.name, group_info.name, member.person_name),
         }
 
-    @with_verified_admin
     def view_category_edit(self, current_user, db, form):
         message = None
         records = db.search_category(facility_id=self.id_)

@@ -50,7 +50,7 @@ from ...web.util import ErrorPage, HTTPError, HTTPForbidden, \
     HTTPNotFound, HTTPRedirect, \
     flash, get_logger, session, url_for
 from ...view.util import count_words, int_or_none, \
-    with_proposal, with_verified_admin
+    with_proposal
 
 CalculationExtra = namedtuple(
     'CalculationExtra', Calculation._fields + (
@@ -753,7 +753,6 @@ class GenericProposal(object):
 
         return extra
 
-    @with_verified_admin
     @with_proposal(permission=PermissionType.NONE)
     def view_proposal_alter_state(self, current_user, db, proposal, form):
         message = None
@@ -1599,7 +1598,6 @@ class GenericProposal(object):
             'proposal_code': self.make_proposal_code(db, proposal),
         }
 
-    @with_verified_admin
     @with_proposal(permission=PermissionType.NONE)
     def view_member_affiliation_edit(
             self, current_user, db, proposal, member_id, form):
