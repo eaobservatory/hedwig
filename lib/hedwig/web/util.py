@@ -273,9 +273,7 @@ def require_admin(f):
 
     Simply checks that the user is logged in and has administrative
     privileges enabled -- i.e. that the `current_user.is_admin` flag
-    is set.  Views should double-check that the user is
-    still entitled to administrative privileges (e.g. using
-    :func:`hedwig.view.auth.can_be_admin`).
+    is set.
     """
     @functools.wraps(f)
     def decorated(*args, **kwargs):

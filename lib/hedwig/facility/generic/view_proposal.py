@@ -2433,7 +2433,6 @@ class GenericProposal(object):
 
         # Show the decision note if viewing as an administrator.
         if (session.get('is_admin', False)
-                and auth.can_be_admin(current_user, db, auth_cache=can.cache)
                 and proposal.decision_note):
             decision_note = null_tuple(ProposalText)._replace(
                 text=proposal.decision_note,

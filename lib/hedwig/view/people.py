@@ -1163,8 +1163,7 @@ class PeopleView(object):
 
                     # If the user is making the update as an administrator,
                     # mark the update as already approved in the edit log.
-                    log_approved = (session.get('is_admin', False) and
-                                    auth.can_be_admin(current_user, db))
+                    log_approved = session.get('is_admin', False)
 
                     db.update_institution(
                         institution.id,

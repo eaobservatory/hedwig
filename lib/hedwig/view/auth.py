@@ -56,8 +56,7 @@ def for_call_review(current_user, db, call, auth_cache=None):
 
     if (current_user.user is None) or (current_user.person is None):
         return no
-    elif (current_user.is_admin
-            and can_be_admin(current_user, db, auth_cache=auth_cache)):
+    elif current_user.is_admin:
         return yes
 
     person_id = current_user.person.id
@@ -103,8 +102,7 @@ def for_person(current_user, db, person, auth_cache=None):
 
     if current_user.user is None:
         return no
-    elif (current_user.is_admin
-            and can_be_admin(current_user, db, auth_cache=auth_cache)):
+    elif current_user.is_admin:
         return yes
 
     auth = no
@@ -196,8 +194,7 @@ def for_institution(current_user, db, institution, auth_cache=None):
 
     if current_user.user is None:
         return no
-    elif (current_user.is_admin
-            and can_be_admin(current_user, db, auth_cache=auth_cache)):
+    elif current_user.is_admin:
         return yes
 
     if current_user.person is None:
@@ -276,8 +273,7 @@ def for_proposal(
     auth = no
     person_id = current_user.person.id
 
-    if (current_user.is_admin
-            and can_be_admin(current_user, db, auth_cache=auth_cache)):
+    if current_user.is_admin:
         auth = auth._replace(view=True)
 
     try:
@@ -376,8 +372,7 @@ def for_proposal_feedback(
         return no
 
     # Allow administrators to view.
-    if (current_user.is_admin
-            and can_be_admin(current_user, db, auth_cache=auth_cache)):
+    if current_user.is_admin:
         return view_only
 
     person_id = current_user.person.id
@@ -507,8 +502,7 @@ def for_review(
     # Allow administrators and review coordinators to view, with edit too if
     # still under review.  (This is to allow them to adjust review ratings
     # during the committee meeting.)
-    if (current_user.is_admin
-            and can_be_admin(current_user, db, auth_cache=auth_cache)):
+    if current_user.is_admin:
         return AuthorizationWithRating(
             view=True, edit=review_is_editable, view_rating=rating_is_viewable)
 
@@ -587,8 +581,7 @@ def can_add_review_roles(
                     roles=role_class.get_feedback_roles(
                         include_indirect=include_indirect))
                     or (include_indirect and (
-                        (current_user.is_admin
-                            and can_be_admin(current_user, db, auth_cache=auth_cache))
+                        current_user.is_admin
                         or group_members.has_entry(
                             queue_id=proposal.queue_id,
                             group_type=GroupType.review_coord_groups())))):

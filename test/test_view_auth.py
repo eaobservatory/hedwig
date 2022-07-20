@@ -884,13 +884,14 @@ class WebAppAuthTestCase(WebAppTestCase):
         current_user = CurrentUser(
             user=None,
             person=None,
-            is_admin=is_admin)
+            is_admin=False)
 
         if person_id is not None:
             person = self.db.search_person(person_id=person_id).get_single()
             current_user = current_user._replace(
                 user=UserInfo(id=person.user_id, name=None),
-                person=person)
+                person=person,
+                is_admin=(person.admin and is_admin))
 
         else:
             current_user = current_user._replace(
