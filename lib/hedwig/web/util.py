@@ -288,7 +288,7 @@ def require_admin(f):
     return decorated
 
 
-def require_auth(require_person=False, require_person_admin=False,
+def require_auth(require_person=True, require_person_admin=False,
                  require_institution=False,
                  register_user_only=False, record_referrer=False):
     """

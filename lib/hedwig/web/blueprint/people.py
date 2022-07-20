@@ -64,7 +64,7 @@ def create_people_blueprint(db, facilities):
             str_to_unicode(request.remote_addr))
 
     @bp.route('/user/name', methods=['GET', 'POST'])
-    @require_auth()
+    @require_auth(require_person=False)
     @templated('people/change_user_name.html')
     def change_user_name(current_user):
         return view.change_user_name(
@@ -73,7 +73,7 @@ def create_people_blueprint(db, facilities):
             str_to_unicode(request.remote_addr))
 
     @bp.route('/user/password', methods=['GET', 'POST'])
-    @require_auth()
+    @require_auth(require_person=False)
     @templated('people/change_password.html')
     def change_password(current_user):
         return view.change_password(
@@ -117,7 +117,7 @@ def create_people_blueprint(db, facilities):
         return view.user_log(current_user, db, user_id)
 
     @bp.route('/person/register', methods=['GET', 'POST'])
-    @require_auth()
+    @require_auth(require_person=False)
     @templated('people/person_edit.html')
     def register_person(current_user):
         return view.register_person(
@@ -126,13 +126,13 @@ def create_people_blueprint(db, facilities):
             str_to_unicode(request.remote_addr))
 
     @bp.route('/person/')
-    @require_auth()
+    @require_auth(require_person=False)
     @templated('people/person_list.html')
     def person_list(current_user):
         return view.person_list(current_user, db, request.args)
 
     @bp.route('/person/<int:person_id>')
-    @require_auth()
+    @require_auth(require_person=False)
     @templated('people/person_view.html')
     def person_view(current_user, person_id):
         return view.person_view(current_user, db, person_id, facilities)
@@ -146,7 +146,7 @@ def create_people_blueprint(db, facilities):
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/person/<int:person_id>/edit', methods=['GET', 'POST'])
-    @require_auth()
+    @require_auth(require_person=False)
     @templated('people/person_edit.html')
     def person_edit(current_user, person_id):
         return view.person_edit(
@@ -154,7 +154,7 @@ def create_people_blueprint(db, facilities):
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/person/<int:person_id>/institution', methods=['GET', 'POST'])
-    @require_auth()
+    @require_auth(require_person=False)
     @templated('people/person_edit_institution.html')
     def person_edit_institution(current_user, person_id):
         return view.person_edit_institution(
@@ -162,7 +162,7 @@ def create_people_blueprint(db, facilities):
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/person/<int:person_id>/email', methods=['GET', 'POST'])
-    @require_auth()
+    @require_auth(require_person=False)
     @templated('people/person_edit_email.html')
     def person_edit_email(current_user, person_id):
         return view.person_edit_email(
@@ -171,7 +171,7 @@ def create_people_blueprint(db, facilities):
 
     @bp.route('/person/<int:person_id>/email/verify/<int:email_id>',
               methods=['GET', 'POST'])
-    @require_auth(require_person=True)
+    @require_auth()
     @templated('people/person_email_verify_get.html')
     def person_email_verify_get(current_user, person_id, email_id):
         return view.person_email_verify_get(
@@ -180,7 +180,7 @@ def create_people_blueprint(db, facilities):
             str_to_unicode(request.remote_addr))
 
     @bp.route('/verify', methods=['GET', 'POST'])
-    @require_auth(require_person=True)
+    @require_auth()
     @templated('people/person_email_verify_use.html')
     def person_email_verify_use(current_user):
         return view.person_email_verify_use(
@@ -189,26 +189,26 @@ def create_people_blueprint(db, facilities):
             str_to_unicode(request.remote_addr))
 
     @bp.route('/proposals')
-    @require_auth(require_person=True)
+    @require_auth()
     @templated('person_proposals.html')
     def person_proposals(current_user):
         return view.person_proposals_own(current_user, db, facilities)
 
     @bp.route('/person/<int:person_id>/proposals')
-    @require_auth(require_person=True)
+    @require_auth()
     @templated('person_proposals.html')
     def person_view_proposals(current_user, person_id):
         return view.person_proposals_other(
             current_user, db, person_id, facilities)
 
     @bp.route('/reviews')
-    @require_auth(require_person=True)
+    @require_auth()
     @templated('person_reviews.html')
     def person_reviews(current_user):
         return view.person_reviews_own(current_user, db, facilities)
 
     @bp.route('/person/<int:person_id>/reviews')
-    @require_auth(require_person=True)
+    @require_auth()
     @templated('person_reviews.html')
     def person_view_reviews(current_user, person_id):
         return view.person_reviews_other(
@@ -224,20 +224,20 @@ def create_people_blueprint(db, facilities):
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/institution/')
-    @require_auth()
+    @require_auth(require_person=False)
     @templated('people/institution_list.html')
     def institution_list(current_user):
         return view.institution_list(current_user, db)
 
     @bp.route('/institution/<int:institution_id>')
-    @require_auth()
+    @require_auth(require_person=False)
     @templated('people/institution_view.html')
     def institution_view(current_user, institution_id):
         return view.institution_view(current_user, db, institution_id)
 
     @bp.route('/institution/<int:institution_id>/edit',
               methods=['GET', 'POST'])
-    @require_auth(require_person=True)
+    @require_auth()
     @templated('people/institution_edit.html')
     def institution_edit(current_user, institution_id):
         return view.institution_edit(
@@ -276,7 +276,7 @@ def create_people_blueprint(db, facilities):
         return view.invitation_token_enter(current_user, db, request.args)
 
     @bp.route('/invitation/accept', methods=['GET', 'POST'])
-    @require_auth(register_user_only=True)
+    @require_auth(require_person=False, register_user_only=True)
     @templated('people/invitation_token_accept.html')
     def invitation_token_accept(current_user):
         return view.invitation_token_accept(
