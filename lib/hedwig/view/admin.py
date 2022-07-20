@@ -27,7 +27,7 @@ from ..type.simple import ProposalWithCode, Link
 from ..type.enum import AttachmentState, MessageState, MessageThreadType, \
     PersonTitle, RequestState, SiteGroupType
 from ..web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
-    flash, session, url_for
+    flash, url_for
 from . import auth
 from .base import ViewMember
 
@@ -618,7 +618,7 @@ class AdminView(ViewMember):
                     db.add_site_group_member(site_group_type, person_id)
 
                     self._message_site_group_invite(
-                        db,
+                        current_user, db,
                         site_group_info=site_group_info,
                         person_id=person_id,
                         person_name=member['name'])
@@ -670,11 +670,11 @@ class AdminView(ViewMember):
         }
 
     def _message_site_group_invite(
-            self, db, site_group_info, person_id, person_name):
+            self, current_user, db, site_group_info, person_id, person_name):
         (token, expiry) = db.issue_invitation(person_id, days_valid=7)
 
         email_ctx = {
-            'inviter_name': session['person']['name'],
+            'inviter_name': current_user.person.name,
             'recipient_name': person_name,
             'site_group': site_group_info,
             'token': token,
@@ -749,7 +749,7 @@ class AdminView(ViewMember):
         if form:
             if 'submit_confirm' in form:
                 self._message_site_group_invite(
-                    db,
+                    current_user, db,
                     site_group_info=site_group_info,
                     person_id=member.person_id,
                     person_name=member.person_name)

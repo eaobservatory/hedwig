@@ -25,7 +25,7 @@ from ...type.enum import CallState, GroupType, ProposalState
 from ...type.simple import CallPreamble
 from ...type.util import null_tuple
 from ...util import matches_constraint
-from ...web.util import ErrorPage, HTTPNotFound, session
+from ...web.util import ErrorPage, HTTPNotFound
 
 
 class GenericHome(object):
@@ -34,17 +34,18 @@ class GenericHome(object):
 
         # Determine whether the person is a committee member (or administrator)
         # by having membership of appropriate review groups.
-        if ('user_id' in session) and session.get('is_admin', False):
+        if current_user.is_admin:
             membership = True
 
-        elif ('user_id' in session) and ('person' in session):
-            membership = db.search_group_member(
-                group_type=GroupType.review_view_groups(),
-                person_id=session['person']['id'],
-                facility_id=self.id_)
+        elif (current_user.user is None) or (current_user.person is None):
+            membership = None
 
         else:
-            membership = None
+            membership = db.search_group_member(
+                group_type=GroupType.review_view_groups(),
+                person_id=current_user.person.id,
+                facility_id=self.id_)
+
 
         # Retrieve all calls for this facility.  Include proposals under review
         # counts if necessary.
@@ -53,7 +54,7 @@ class GenericHome(object):
             'with_proposal_count_state': ProposalState.review_states(),
         } if membership else {}
 
-        hidden = (None if session.get('is_admin', False) else False)
+        hidden = (None if current_user.is_admin else False)
 
         facility_calls = db.search_call(facility_id=self.id_, **kwargs)
 
@@ -102,7 +103,7 @@ class GenericHome(object):
             'calculators': self.calculators,
             'target_tools': self.target_tools,
             'review_calls': review_calls,
-            'show_admin_links': session.get('is_admin', False),
+            'show_admin_links': current_user.is_admin,
         }
 
     def view_semester_calls(
@@ -130,7 +131,7 @@ class GenericHome(object):
             queue_id=queue_id, separate=separate,
             with_queue_description=True,
             with_preamble=separate,
-            hidden=(None if session.get('is_admin', False) else False))
+            hidden=(None if current_user.is_admin else False))
 
         call_preamble = None
 
@@ -185,7 +186,7 @@ class GenericHome(object):
         # Get list of calls, considering only those of standard type.
         calls = db.search_call(
             facility_id=self.id_, type_=type_class.STANDARD,
-            hidden=(None if session.get('is_admin', False) else False))
+            hidden=(None if current_user.is_admin else False))
 
         open_semesters = set(
             x.semester_id for x in calls.values_matching(state=CallState.OPEN))
@@ -216,7 +217,7 @@ class GenericHome(object):
             state=CallState.OPEN,
             type_=[x for x in type_class.get_options()
                    if x != type_class.STANDARD],
-            hidden=(None if session.get('is_admin', False) else False))
+            hidden=(None if current_user.is_admin else False))
 
         if not calls:
             raise ErrorPage('No open special calls for proposals were found.')

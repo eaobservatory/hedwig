@@ -33,7 +33,7 @@ from ...type.simple import Affiliation, \
 from ...type.util import null_tuple
 from ...view import auth
 from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
-    flash, format_datetime, parse_datetime, session, url_for
+    flash, format_datetime, parse_datetime, url_for
 from ...view.util import int_or_none, str_or_none
 
 
@@ -809,7 +809,7 @@ class GenericAdmin(object):
                     db.add_group_member(queue_id, group_type, person_id)
 
                     self._message_group_invite(
-                        db,
+                        current_user, db,
                         group_info=group_info,
                         queue=queue,
                         person_id=person_id,
@@ -862,12 +862,12 @@ class GenericAdmin(object):
             'titles': PersonTitle.get_options(),
         }
 
-    def _message_group_invite(self, db, group_info, queue,
+    def _message_group_invite(self, current_user, db, group_info, queue,
                               person_id, person_name):
         (token, expiry) = db.issue_invitation(person_id, days_valid=7)
 
         email_ctx = {
-            'inviter_name': session['person']['name'],
+            'inviter_name': current_user.person.name,
             'recipient_name': person_name,
             'group': group_info,
             'queue': queue,
@@ -956,7 +956,7 @@ class GenericAdmin(object):
         if form:
             if 'submit_confirm' in form:
                 self._message_group_invite(
-                    db,
+                    current_user, db,
                     group_info=group_info,
                     queue=queue,
                     person_id=member.person_id,

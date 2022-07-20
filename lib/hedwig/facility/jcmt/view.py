@@ -425,7 +425,8 @@ class JCMT(EAOFacility):
         return {k: (v / affiliation_total)
                 for (k, v) in affiliation_count.items()}
 
-    def _copy_proposal(self, db, old_proposal, proposal, *args, **kwargs):
+    def _copy_proposal(
+            self, current_user, db, old_proposal, proposal, *args, **kwargs):
         role_class = self.get_text_roles()
         text_roles = [
             TextCopyInfo(
@@ -433,7 +434,7 @@ class JCMT(EAOFacility):
         ]
 
         atn = super(JCMT, self)._copy_proposal(
-            db, old_proposal, proposal, *args,
+            current_user, db, old_proposal, proposal, *args,
             extra_text_roles=text_roles, **kwargs)
 
         # Copy observing request.
@@ -1371,7 +1372,7 @@ class JCMT(EAOFacility):
     def view_pr_summary_edit(self, current_user, db, proposal, can, form):
         role_class = self.get_text_roles()
         return self._edit_text(
-            db, proposal, role_class.PR_SUMMARY, 300,
+            current_user, db, proposal, role_class.PR_SUMMARY, 300,
             url_for('.pr_summary_edit', proposal_id=proposal.id), form, 10,
             target_redir=url_for('.proposal_view', proposal_id=proposal.id,
                                  _anchor='jcmt_pr_summary'))

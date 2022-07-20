@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2021 East Asian Observatory
+# Copyright (C) 2019-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -29,8 +29,6 @@ from hedwig.type.misc import SectionedList
 from hedwig.type.simple import CalculatorInfo, Category, \
     PrevProposal, ProposalCategory, Target
 from hedwig.type.util import null_tuple
-from hedwig.view.people import _update_session_person
-from hedwig.web.util import session
 
 from .base_app import WebAppTestCase
 
@@ -159,10 +157,9 @@ class GenericFacilityWebAppTestCase(WebAppTestCase):
         self.assertEqual(copy.id, copy_id)
 
         with self.app.test_request_context(path='/generic/'):
-            _update_session_person(person_2)
             atn = view._copy_proposal(
-                self.db, proposal, copy, copy_members=True)
-            session.clear()
+                self._current_user(person_2.id), self.db,
+                proposal, copy, copy_members=True)
 
         self.assertIsInstance(atn, dict)
         self.assertEqual(atn['copier_person_id'], person_id_2)

@@ -192,7 +192,7 @@ class PeopleView(object):
 
     def change_user_name(self, current_user, db, form, remote_addr):
         message = None
-        user_id = session['user_id']
+        user_id = current_user.user.id
 
         if form is not None:
             try:
@@ -206,9 +206,9 @@ class PeopleView(object):
                 db.update_user_name(user_id, user_name,
                                     remote_addr=remote_addr)
                 flash('Your user name has been changed.')
-                if 'person' in session:
+                if current_user.person is not None:
                     raise HTTPRedirect(url_for(
-                        '.person_view', person_id=session['person']['id']))
+                        '.person_view', person_id=current_user.person.id))
                 else:
                     raise HTTPRedirect(url_for('home.home_page'))
 
@@ -229,7 +229,7 @@ class PeopleView(object):
 
         if form is not None:
             try:
-                user_id = session['user_id']
+                user_id = current_user.user.id
                 password = form['password']
                 password_new = form['password_new']
                 if password_new != form['password_check']:
@@ -245,9 +245,9 @@ class PeopleView(object):
                                         remote_addr=remote_addr)
                 flash('Your password has been changed.')
 
-                if 'person' in session:
+                if current_user.person is not None:
                     raise HTTPRedirect(url_for(
-                        '.person_view', person_id=session['person']['id']))
+                        '.person_view', person_id=current_user.person.id))
                 else:
                     raise HTTPRedirect(url_for('home.home_page'))
 
@@ -444,18 +444,8 @@ class PeopleView(object):
         }
 
     def register_person(self, current_user, db, args, form, remote_addr):
-        if 'person' in session:
+        if current_user.person is not None:
             raise ErrorPage('You have already created a profile.')
-
-        # Check if the user already created a profile in another session.
-        user_id = session['user_id']
-        try:
-            person = db.search_person(user_id=user_id).get_single()
-            _update_session_person(person)
-            raise ErrorPage(
-                'You have already created a profile in another session.')
-        except NoSuchRecord:
-            pass
 
         message = None
 
@@ -480,7 +470,7 @@ class PeopleView(object):
 
                 person_id = db.add_person(
                     person.name, title=person.title, public=person.public,
-                    user_id=user_id, remote_addr=remote_addr,
+                    user_id=current_user.user.id, remote_addr=remote_addr,
                     primary_email=email)
                 flash('Your user profile has been saved.')
                 _update_session_person_from_db(db, person_id)
@@ -528,8 +518,8 @@ class PeopleView(object):
 
     @with_person(permission=PermissionType.VIEW)
     def person_view(self, current_user, db, person, can, facilities):
-        is_admin = session.get('is_admin', False)
-        is_current_user = person.user_id == session['user_id']
+        is_admin = current_user.is_admin
+        is_current_user = (person.user_id == current_user.user.id)
 
         # Show all email addresses if:
         # * It's your own profile.
@@ -591,7 +581,7 @@ class PeopleView(object):
                     'Invitation to register with {}'.format(application_name),
                     render_email_template('administrative_invitation.txt', {
                         'recipient_name': person.name,
-                        'inviter_name': session['person']['name'],
+                        'inviter_name': current_user.person.name,
                         'token': token,
                         'expiry': expiry,
                         'target_url': url_for(
@@ -630,7 +620,7 @@ class PeopleView(object):
                     person.id, name=person.name, title=person.title,
                     public=(person.public and person.user_id is not None))
 
-                if session['user_id'] == person.user_id:
+                if current_user.user.id == person.user_id:
                     flash('Your user profile has been saved.')
                     _update_session_person_from_db(db, person.id)
                 else:
@@ -659,7 +649,7 @@ class PeopleView(object):
         # to be used for subsequent navigation.
         next_page = args.get('next_page', args.get('log_in_for', None))
 
-        is_current_user = person.user_id == session['user_id']
+        is_current_user = (person.user_id == current_user.user.id)
         institutions = db.search_institution()
 
         # Prepare blank record for an institution to potentially be
@@ -733,7 +723,7 @@ class PeopleView(object):
     @with_person(permission=PermissionType.EDIT)
     def person_edit_email(self, current_user, db, person, can, form):
         message = None
-        is_current_user = person.user_id == session['user_id']
+        is_current_user = (person.user_id == current_user.user.id)
         records = person.email
 
         if form is not None:
@@ -844,8 +834,8 @@ class PeopleView(object):
             self, current_user, db, args, form, remote_addr):
         message = None
         token = args.get('token', '')
-        person_id = session['person']['id']
-        user_id = session['user_id']
+        person_id = current_user.person.id
+        user_id = current_user.user.id
 
         if form is not None:
             token = form['token'].strip()
@@ -884,7 +874,7 @@ class PeopleView(object):
 
     def person_proposals_own(self, current_user, db, facilities):
         return self._person_proposals(
-            db, session['person']['id'], facilities, None, 'Your Proposals')
+            db, current_user.person.id, facilities, None, 'Your Proposals')
 
     @with_person(permission=PermissionType.UNIVERSAL_VIEW)
     def person_proposals_other(
@@ -919,7 +909,7 @@ class PeopleView(object):
 
     def person_reviews_own(self, current_user, db, facilities):
         return self._person_reviews(
-            current_user, db, session['person']['id'], facilities, None)
+            current_user, db, current_user.person.id, facilities, None)
 
     @with_person(permission=PermissionType.UNIVERSAL_VIEW)
     def person_reviews_other(
@@ -1118,7 +1108,7 @@ class PeopleView(object):
         # suitable authorization.
         public = True
         registered = True
-        is_admin = session.get('is_admin', False)
+        is_admin = current_user.is_admin
         if auth.for_person(current_user, db, None, auth_cache=can.cache).view:
             public = None
             registered = None
@@ -1163,11 +1153,11 @@ class PeopleView(object):
 
                     # If the user is making the update as an administrator,
                     # mark the update as already approved in the edit log.
-                    log_approved = session.get('is_admin', False)
+                    log_approved = current_user.is_admin
 
                     db.update_institution(
                         institution.id,
-                        updater_person_id=session['person']['id'],
+                        updater_person_id=current_user.person.id,
                         name=institution.name,
                         department=institution.department,
                         organization=institution.organization,
@@ -1189,7 +1179,7 @@ class PeopleView(object):
             # public, registered people and a simple count of the others.
             for person in db.search_person(
                     institution_id=institution.id).values():
-                if person.id == session['person']['id']:
+                if person.id == current_user.person.id:
                     continue
 
                 if person.public and (person.user_id is not None):
@@ -1360,14 +1350,10 @@ class PeopleView(object):
 
         try:
             if form is not None:
-                # Re-fetch the current user's profile, in case they registered
-                # a profile in another session.  We need to be sure we know
-                # whether they are registered or not.
-                user_id = session['user_id']
-                try:
-                    person = db.get_person(person_id=None, user_id=user_id)
-                    kwargs = {'new_person_id': person.id}
-                except NoSuchRecord:
+                user_id = current_user.user.id
+                if current_user.person is not None:
+                    kwargs = {'new_person_id': current_user.person.id}
+                else:
                     kwargs = {'user_id': user_id}
 
                 old_person_record = db.use_invitation(

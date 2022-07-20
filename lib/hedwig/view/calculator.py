@@ -27,7 +27,7 @@ from ..type.simple import CalculatorResult, ProposalWithCode
 from ..type.util import null_tuple
 from ..web.query_encode import encode_query, decode_query
 from ..web.util import HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
-    flash, session, url_for
+    flash, url_for
 from .util import int_or_none
 from . import auth
 
@@ -191,10 +191,11 @@ class BaseCalculator(object):
         # or reviews to which they can add calculator results.
         proposals = {}
         review_proposals = {}
-        if 'user_id' in session and 'person' in session:
+        if ((current_user.user is not None)
+                and (current_user.person is not None)):
             proposals = db.search_proposal(
                 facility_id=self.facility.id_,
-                person_id=session['person']['id'], person_is_editor=True,
+                person_id=current_user.person.id, person_is_editor=True,
                 state=ProposalState.editable_states()).map_values(
                     (lambda proposal: ProposalWithCode(
                         *proposal,
@@ -209,7 +210,7 @@ class BaseCalculator(object):
 
             review_proposals = db.search_proposal(
                 facility_id=self.facility.id_,
-                reviewer_person_id=session['person']['id'],
+                reviewer_person_id=current_user.person.id,
                 with_reviewer_role=role_class.get_calc_roles(),
                 state=ProposalState.review_states()).map_values(
                     (lambda proposal: ProposalWithCode(

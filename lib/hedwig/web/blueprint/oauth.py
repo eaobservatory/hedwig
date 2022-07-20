@@ -37,7 +37,7 @@ from ...compat import str_to_unicode
 from ...config import get_config, get_home
 from ...error import NoSuchValue
 from ...type.simple import OAuthCode, OAuthToken
-from ..util import get_logger, _make_response, require_auth, session, url_for
+from ..util import get_logger, _make_response, require_auth, url_for
 
 
 clients = None
@@ -82,7 +82,7 @@ def create_oauth_blueprint(db, app):
                         grant_user=None)
                 if 'submit_confirm' in form:
                     return server.create_authorization_response(
-                        grant_user=session['person']['id'])
+                        grant_user=current_user.person.id)
             except OAuth2Error as e:
                 return _make_response('error.html', {
                     'title': 'Error',

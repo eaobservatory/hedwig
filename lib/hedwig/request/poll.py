@@ -23,8 +23,7 @@ from datetime import datetime
 from ..config import get_config, get_facilities
 from ..error import ConsistencyError, FormattedError, NoSuchRecord, UserError
 from ..type.enum import AnnotationType, RequestState
-from ..view.people import _update_session_person
-from ..web.util import session
+from hedwig.type.simple import CurrentUser, UserInfo
 from ..util import get_logger
 
 logger = get_logger(__name__)
@@ -129,15 +128,17 @@ def _copy_proposal(db, app, request, dry_run=False):
 
     assert proposal.id == proposal_id
 
+    current_user = CurrentUser(
+        user=UserInfo(id=copier.user_id, name=None),
+        person=copier,
+        is_admin=False)
+
     with app.test_request_context(
             path='/{}/'.format(facility.get_code()),
             base_url=config.get('application', 'base_url')):
-        _update_session_person(copier)
-
         atn = facility._copy_proposal(
-            db, old_proposal, proposal, copy_members=request.copy_members)
-
-        session.clear()
+            current_user, db, old_proposal, proposal,
+            copy_members=request.copy_members)
 
     db.add_proposal_annotation(
         proposal.id, AnnotationType.PROPOSAL_COPY, atn)

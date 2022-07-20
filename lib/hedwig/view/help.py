@@ -25,7 +25,7 @@ import re
 from ..error import ConversionError
 from ..file.graphviz import graphviz_to_png
 from ..web.format import format_text_rst
-from ..web.util import HTTPError, HTTPNotFound, session, url_for
+from ..web.util import HTTPError, HTTPNotFound, url_for
 
 
 valid_page_name = re.compile('^([-_a-z0-9]+)$')
@@ -41,14 +41,15 @@ TreeEntry = namedtuple('TreeEntry', ('mtime', 'toc'))
 class HelpView(object):
     def help_home(self, current_user, db):
         show_admin_links = False
-        if ('user_id' in session) and ('person' in session):
-            if session['person'].get('admin', False):
+        if ((current_user.user is not None)
+                and (current_user.person is not None)):
+            if current_user.person.admin:
                 show_admin_links = True
 
             else:
                 # Also show administrator's guide if they're a member of
                 # any review group.
-                if db.search_group_member(person_id=session['person']['id']):
+                if db.search_group_member(person_id=current_user.person.id):
                     show_admin_links = True
 
         return {

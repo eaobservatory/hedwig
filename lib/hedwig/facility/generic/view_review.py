@@ -34,7 +34,7 @@ from ...view.util import int_or_none, \
     with_proposal, with_call_review, with_review
 from ...web.util import ErrorPage, \
     HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
-    flash, format_datetime, parse_datetime, session, url_for
+    flash, format_datetime, parse_datetime, url_for
 from ...type.collection import MemberCollection, \
     ReviewerCollection, ReviewDeadlineCollection
 from ...type.enum import AffiliationType, Assessment, \
@@ -1114,7 +1114,8 @@ class GenericReview(object):
                             continue
 
                         self._message_review_notification(
-                            db, role, person_id, proposals, deadline)
+                            current_user, db,
+                            role, person_id, proposals, deadline)
 
                         n_notifications += 1
 
@@ -1141,7 +1142,7 @@ class GenericReview(object):
         }
 
     def _message_review_notification(
-            self, db, role, person_id, proposals, deadline):
+            self, current_user, db, role, person_id, proposals, deadline):
         """
         Send a message to a an assigned reviewer informing them of their
         review assignments and update the notified flag for the
@@ -1169,7 +1170,7 @@ class GenericReview(object):
 
         email_ctx = {
             'recipient_name': reviewer.person_name,
-            'inviter_name': session['person']['name'],
+            'inviter_name': current_user.person.name,
             'queue_name': proposals[0].queue_name,
             'semester_name': proposals[0].semester_name,
             'call_type': type_class.get_name(proposals[0].call_type),
@@ -1291,7 +1292,7 @@ class GenericReview(object):
                         person_id=person.id, role=role)
 
                     self._message_review_invite(
-                        db,
+                        current_user, db,
                         proposal=proposal,
                         role=role,
                         person_id=person.id,
@@ -1321,7 +1322,7 @@ class GenericReview(object):
                         person_id=person_id, role=role)
 
                     self._message_review_invite(
-                        db,
+                        current_user, db,
                         proposal=proposal,
                         role=role,
                         person_id=person_id,
@@ -1395,7 +1396,7 @@ class GenericReview(object):
             'review_deadline': deadline,
         }
 
-    def _message_review_invite(self, db, proposal, role,
+    def _message_review_invite(self, current_user, db, proposal, role,
                                person_id, person_name, person_registered,
                                reviewer_id, is_reminder=False,
                                reminder_token=None, reminder_expiry=None):
@@ -1419,7 +1420,7 @@ class GenericReview(object):
             'proposal_code': proposal_code,
             'call_type': type_class.get_name(proposal.call_type),
             'role_info': role_info,
-            'inviter_name': session['person']['name'],
+            'inviter_name': current_user.person.name,
             'target_proposal': url_for(
                 '.proposal_view', proposal_id=proposal.id, _external=True),
             'target_review': url_for(
@@ -1582,7 +1583,7 @@ class GenericReview(object):
         if form is not None:
             if 'submit_confirm' in form:
                 self._message_review_invite(
-                    db,
+                    current_user, db,
                     proposal=proposal,
                     role=reviewer.role,
                     person_id=reviewer.person_id,
@@ -1658,7 +1659,7 @@ class GenericReview(object):
         if not role_class.is_accepted_review(reviewer.role):
             raise ErrorPage('This review does not require acceptance.')
 
-        if reviewer.person_id != session['person']['id']:
+        if reviewer.person_id != current_user.person.id:
             raise HTTPForbidden(
                 'Accept permission denied for this review.')
 
@@ -1856,7 +1857,7 @@ class GenericReview(object):
 
         else:
             is_new_reviewer = False
-            is_own_review = (reviewer.person_id == session['person']['id'])
+            is_own_review = (reviewer.person_id == current_user.person.id)
             target = url_for('.review_edit', reviewer_id=reviewer.id)
 
         referrer = args.get('referrer')
@@ -1937,7 +1938,7 @@ class GenericReview(object):
                     reviewer = reviewer._replace(id=db.add_reviewer(
                         role_class=role_class,
                         proposal_id=proposal.id,
-                        person_id=session['person']['id'],
+                        person_id=current_user.person.id,
                         role=reviewer.role))
 
                     # Change target in case of a UserError occurring while
@@ -2162,7 +2163,8 @@ class GenericReview(object):
                 '.review_edit_figure', reviewer_id=reviewer.id, fig_id=fig_id)
 
         return self._view_edit_figure(
-            db, form, file_, figure, proposal, reviewer, title=name,
+            current_user, db, form, file_, figure, proposal, reviewer,
+            title=name,
             target_edit=target,
             target_redirect=url_for(
                 '.review_edit', reviewer_id=reviewer.id))

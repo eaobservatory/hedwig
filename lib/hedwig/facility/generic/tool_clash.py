@@ -31,7 +31,7 @@ from ...file.moc import read_moc
 from ...view import auth
 from ...view.tool import BaseTargetTool
 from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
-    flash, session, url_for
+    flash, url_for
 from ...type.enum import AttachmentState, FormatType
 from ...type.simple import MOCInfo, RouteInfo
 from ...type.util import null_tuple
@@ -183,7 +183,7 @@ class ClashTool(BaseTargetTool):
             moc_ready = all(
                 AttachmentState.is_ready(x.state) for x in mocs.values())
 
-        elif session.get('is_admin', False):
+        elif current_user.is_admin:
             # Allow site administrators to view the clash tool when
             # "empty" so that they can set up coverage maps.
             moc_ready = True
@@ -315,7 +315,7 @@ class ClashTool(BaseTargetTool):
         View handler for MOC listing custom route.
         """
 
-        if session.get('is_admin', False):
+        if current_user.is_admin:
             can_edit = True
             public = None
         else:

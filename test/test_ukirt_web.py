@@ -1,4 +1,4 @@
-# Copyright (C) 2019 East Asian Observatory
+# Copyright (C) 2019-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,8 +22,6 @@ from hedwig.facility.ukirt.type import \
     UKIRTBrightness, UKIRTInstrument, \
     UKIRTRequest, UKIRTRequestCollection
 from hedwig.type.misc import SectionedList
-from hedwig.view.people import _update_session_person
-from hedwig.web.util import session
 
 from .base_app import WebAppTestCase
 
@@ -68,10 +66,9 @@ class UKIRTWebAppTestCase(WebAppTestCase):
         self.assertEqual(copy.id, copy_id)
 
         with self.app.test_request_context(path='/ukirt/'):
-            _update_session_person(person)
             atn = view._copy_proposal(
-                self.db, proposal, copy, copy_members=True)
-            session.clear()
+                self._current_user(person.id), self.db,
+                proposal, copy, copy_members=True)
 
         self.assertIsInstance(atn, dict)
         self.assertEqual(atn['copier_person_id'], person_id_1)

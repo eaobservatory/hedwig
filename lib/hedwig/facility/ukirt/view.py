@@ -90,9 +90,10 @@ class UKIRT(EAOFacility):
         except NoSuchValue:
             raise ParseError('Did not recognise call type code')
 
-    def _copy_proposal(self, db, old_proposal, proposal, *args, **kwargs):
+    def _copy_proposal(
+            self, current_user, db, old_proposal, proposal, *args, **kwargs):
         atn = super(UKIRT, self)._copy_proposal(
-            db, old_proposal, proposal, *args, **kwargs)
+            current_user, db, old_proposal, proposal, *args, **kwargs)
 
         # Copy observing request.
         with atn['notes'].accumulate_notes('proposal_request') as notes:

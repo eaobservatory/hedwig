@@ -48,7 +48,7 @@ from ...type.util import null_tuple, with_can_edit, with_can_view
 from ...view import auth
 from ...web.util import ErrorPage, HTTPError, HTTPForbidden, \
     HTTPNotFound, HTTPRedirect, \
-    flash, get_logger, session, url_for
+    flash, get_logger, url_for
 from ...view.util import count_words, int_or_none, \
     with_proposal
 
@@ -73,7 +73,7 @@ class GenericProposal(object):
         try:
             call = db.search_call(
                 facility_id=self.id_, call_id=call_id, state=CallState.OPEN,
-                hidden=(None if session.get('is_admin', False) else False)
+                hidden=(None if current_user.is_admin else False)
             ).get_single()
         except NoSuchRecord:
             raise HTTPNotFound('Call not found')
@@ -107,7 +107,7 @@ class GenericProposal(object):
 
                 if 'submit_new' in form:
                     proposal_id = db.add_proposal(
-                        call_id=call_id, person_id=session['person']['id'],
+                        call_id=call_id, person_id=current_user.person.id,
                         affiliation_id=affiliation_id,
                         title=proposal_title,
                         person_is_reviewer=type_class.has_reviewer_role(
@@ -141,7 +141,7 @@ class GenericProposal(object):
                             'selected for copying.')
 
                     if not old_proposal.members.has_person(
-                            session['person']['id']):
+                            current_user.person.id):
                         raise HTTPForbidden(
                             'You can only copy proposals '
                             'of which you are a member.')
@@ -167,7 +167,7 @@ class GenericProposal(object):
 
                     request_id = db.add_request_prop_copy(
                         proposal_id=old_proposal.id,
-                        requester_person_id=session['person']['id'],
+                        requester_person_id=current_user.person.id,
                         call_id=call_id, affiliation_id=affiliation_id,
                         copy_members=member_copy)
 
@@ -185,7 +185,7 @@ class GenericProposal(object):
 
         proposals = db.search_proposal(
             facility_id=self.id_,
-            person_id=session['person']['id'],
+            person_id=current_user.person.id,
             state=ProposalState.closed_states())
 
         return {
@@ -258,10 +258,10 @@ class GenericProposal(object):
         }
 
     def _copy_proposal(
-            self, db, old_proposal, proposal, copy_members,
+            self, current_user, db, old_proposal, proposal, copy_members,
             extra_text_roles=[]):
         role_class = self.get_text_roles()
-        copier_person_id = session['person']['id']
+        copier_person_id = current_user.person.id
         old_proposal_code = self.make_proposal_code(db, old_proposal)
 
         atn = {
@@ -353,7 +353,7 @@ class GenericProposal(object):
                     editor=member.editor, observer=member.observer)
 
                 self._message_proposal_invite(
-                    db, proposal=proposal,
+                    current_user, db, proposal=proposal,
                     person_id=member_person_id,
                     person_name=member.person_name,
                     is_editor=member.editor,
@@ -666,14 +666,14 @@ class GenericProposal(object):
             call_mid_closes = db.search_call_mid_close(
                 call_id=proposal.call_id, closed=False)
 
-        is_admin = session.get('is_admin', False)
+        is_admin = current_user.is_admin
         is_first_view = ('first_view' in args)
 
         ctx = {
             'title': proposal.title,
             'can_edit': can.edit,
             'can_remove_self': (ProposalState.can_edit(proposal.state) and
-                                any(x.person_id == session['person']['id']
+                                any(x.person_id == current_user.person.id
                                     for x in proposal.members.values())),
             'can_view_review': review_can.view,
             'can_edit_review': review_can.edit,
@@ -999,7 +999,7 @@ class GenericProposal(object):
                     ProposalState.REVIEW if immediate_review else
                     ProposalState.SUBMITTED))
 
-                self._message_proposal_submit(db, proposal)
+                self._message_proposal_submit(current_user, db, proposal)
 
                 self._message_proposal_review_notification(db, proposal)
 
@@ -1030,7 +1030,7 @@ class GenericProposal(object):
             'proposal_order': self.get_proposal_order_names(),
         }
 
-    def _message_proposal_submit(self, db, proposal):
+    def _message_proposal_submit(self, current_user, db, proposal):
         type_class = self.get_call_types()
         proposal_code = self.make_proposal_code(db, proposal)
         immediate_review = type_class.has_immediate_review(proposal.call_type)
@@ -1045,7 +1045,7 @@ class GenericProposal(object):
                     'target_url': url_for(
                         '.proposal_view',
                         proposal_id=proposal.id, _external=True),
-                    'submitter_name': session['person']['name'],
+                    'submitter_name': current_user.person.name,
                 },
                 facility=self),
             [x.person_id for x in proposal.members.values()],
@@ -1127,7 +1127,7 @@ class GenericProposal(object):
             if 'submit_confirm' in form:
                 db.update_proposal(proposal.id, state=ProposalState.WITHDRAWN)
 
-                self._message_proposal_withdraw(db, proposal)
+                self._message_proposal_withdraw(current_user, db, proposal)
 
                 flash('The proposal has been withdrawn.')
 
@@ -1143,7 +1143,7 @@ class GenericProposal(object):
             'proposal_code': self.make_proposal_code(db, proposal),
         }
 
-    def _message_proposal_withdraw(self, db, proposal):
+    def _message_proposal_withdraw(self, current_user, db, proposal):
         proposal_code = self.make_proposal_code(db, proposal)
 
         db.add_message(
@@ -1152,7 +1152,7 @@ class GenericProposal(object):
                 'proposal_withdrawn.txt', {
                     'proposal': proposal,
                     'proposal_code': proposal_code,
-                    'withdrawer_name': session['person']['name'],
+                    'withdrawer_name': current_user.person.name,
                 },
                 facility=self),
             [x.person_id for x in proposal.members.values()],
@@ -1186,7 +1186,8 @@ class GenericProposal(object):
     def view_abstract_edit(self, current_user, db, proposal, can, form):
         role_class = self.get_text_roles()
         return self._edit_text(
-            db, proposal, role_class.ABSTRACT, proposal.abst_word_lim,
+            current_user, db,
+            proposal, role_class.ABSTRACT, proposal.abst_word_lim,
             url_for('.abstract_edit', proposal_id=proposal.id), form, 10,
             extra_initialization=self._view_abstract_edit_init,
             extra_form_read=self._view_abstract_edit_read,
@@ -1251,7 +1252,7 @@ class GenericProposal(object):
 
         message = None
         records = proposal.members
-        person_id = session['person']['id']
+        person_id = current_user.person.id
 
         affiliations = db.search_affiliation(
             queue_id=proposal.queue_id, hidden=False)
@@ -1361,7 +1362,7 @@ class GenericProposal(object):
                                   observer=member['observer'])
 
                     self._message_proposal_invite(
-                        db, proposal=proposal,
+                        current_user, db, proposal=proposal,
                         person_id=person.id,
                         person_name=person.name,
                         is_editor=member['editor'],
@@ -1389,7 +1390,7 @@ class GenericProposal(object):
                                   observer=member['observer'])
 
                     self._message_proposal_invite(
-                        db, proposal=proposal,
+                        current_user, db, proposal=proposal,
                         person_id=person_id,
                         person_name=member['name'],
                         is_editor=member['editor'],
@@ -1442,7 +1443,7 @@ class GenericProposal(object):
         }
 
     def _message_proposal_invite(
-            self, db, proposal, person_id, person_name,
+            self, current_user, db, proposal, person_id, person_name,
             is_editor, affiliation_name, send_token,
             copy_proposal_code=None):
         type_class = self.get_call_types()
@@ -1453,7 +1454,7 @@ class GenericProposal(object):
             'proposal': proposal,
             'proposal_code': proposal_code,
             'call_type': type_class.get_name(proposal.call_type),
-            'inviter_name': session['person']['name'],
+            'inviter_name': current_user.person.name,
             'affiliation': affiliation_name,
             'is_editor': is_editor,
             'target_semester': (
@@ -1512,7 +1513,7 @@ class GenericProposal(object):
         if form:
             if 'submit_confirm' in form:
                 self._message_proposal_invite(
-                    db, proposal=proposal,
+                    current_user, db, proposal=proposal,
                     person_id=member.person_id,
                     person_name=member.person_name,
                     is_editor=member.editor,
@@ -1551,7 +1552,7 @@ class GenericProposal(object):
                 try:
                     db.delete_member_person(
                         proposal_id=proposal.id,
-                        person_id=session['person']['id'])
+                        person_id=current_user.person.id)
                 except ConsistencyError:
                     raise ErrorPage(
                         'It was not possible to remove you from the proposal. '
@@ -1737,7 +1738,7 @@ class GenericProposal(object):
         call = db.get_call(facility_id=None, call_id=proposal.call_id)
 
         accepted_proposals = db.search_proposal(
-            facility_id=self.id_, person_id=session['person']['id'],
+            facility_id=self.id_, person_id=current_user.person.id,
             state=ProposalState.ACCEPTED)
 
         accepted_proposal_codes = [
@@ -1884,7 +1885,8 @@ class GenericProposal(object):
     def view_tool_note_edit(self, current_user, db, proposal, can, form):
         role_class = self.get_text_roles()
         return self._edit_text(
-            db, proposal, role_class.TOOL_NOTE, proposal.expl_word_lim,
+            current_user, db,
+            proposal, role_class.TOOL_NOTE, proposal.expl_word_lim,
             url_for('.tool_note_edit', proposal_id=proposal.id), form, 10,
             extra_initialization=self._view_tool_note_edit_init,
             target_redir=url_for('.proposal_view', proposal_id=proposal.id,
@@ -1918,7 +1920,7 @@ class GenericProposal(object):
             proposal_id=proposal.id, role=role,
             with_caption=True, with_uploader_name=True)
 
-        is_admin = session.get('is_admin', False)
+        is_admin = current_user.is_admin
 
         return {
             'title': 'Edit {}'.format(role_class.get_name(role).title()),
@@ -1955,7 +1957,7 @@ class GenericProposal(object):
             calculations = None
 
         return self._edit_text(
-            db, proposal, role,
+            current_user, db, proposal, role,
             getattr(proposal, code + '_word_lim'),
             url_for('.case_edit_text', proposal_id=proposal.id, role=role),
             form, 30, figures, calculations,
@@ -2002,14 +2004,15 @@ class GenericProposal(object):
                              fig_id=fig_id)
 
         return self._view_edit_figure(
-            db, form, file_, figure, proposal, None, title=name.title(),
+            current_user, db, form, file_, figure, proposal, None,
+            title=name.title(),
             target_edit=target,
             target_redirect=url_for(
                 '.case_edit', proposal_id=proposal.id, role=role),
             word_limit=proposal.capt_word_lim)
 
     def _view_edit_figure(
-            self, db, form, file_, figure, proposal, reviewer,
+            self, current_user, db, form, file_, figure, proposal, reviewer,
             title, target_edit, target_redirect, word_limit=None):
         max_size = int(get_config().get('upload', 'max_fig_size'))
         message = None
@@ -2051,7 +2054,7 @@ class GenericProposal(object):
                         'figure': buff,
                         'type_': type_,
                         'filename': filename,
-                        'uploader_person_id': session['person']['id'],
+                        'uploader_person_id': current_user.person.id,
                         'caption': figure.caption,
                     }
 
@@ -2256,7 +2259,7 @@ class GenericProposal(object):
 
                 db.set_proposal_pdf(
                     role_class, proposal.id, role, buff, page_count,
-                    filename, session['person']['id'])
+                    filename, current_user.person.id)
 
                 flash('The {} has been uploaded.', name.lower())
 
@@ -2432,8 +2435,7 @@ class GenericProposal(object):
             with_review=True, with_review_text=True)
 
         # Show the decision note if viewing as an administrator.
-        if (session.get('is_admin', False)
-                and proposal.decision_note):
+        if current_user.is_admin and proposal.decision_note:
             decision_note = null_tuple(ProposalText)._replace(
                 text=proposal.decision_note,
                 format=proposal.decision_note_format)
@@ -2470,10 +2472,12 @@ class GenericProposal(object):
             'code': code,
         }
 
-    def _edit_text(self, db, proposal, role, word_limit, target, form, rows,
-                   figures=None, calculations=None, target_redir=None,
-                   extra_initialization=None, extra_form_read=None,
-                   extra_form_proc=None):
+    def _edit_text(
+            self, current_user, db,
+            proposal, role, word_limit, target, form, rows,
+            figures=None, calculations=None, target_redir=None,
+            extra_initialization=None, extra_form_read=None,
+            extra_form_proc=None):
         role_class = self.get_text_roles()
         name = role_class.get_name(role)
         message = None
@@ -2499,7 +2503,7 @@ class GenericProposal(object):
 
                 db.set_proposal_text(role_class, proposal.id, role,
                                      text.text, text.format, word_count,
-                                     session['person']['id'])
+                                     current_user.person.id)
 
                 if extra_form_proc is not None:
                     ctx = extra_form_proc(db, proposal, role, ctx)

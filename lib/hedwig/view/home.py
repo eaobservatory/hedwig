@@ -19,14 +19,13 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from ..config import get_config
-from ..web.util import session
 
 
 class HomeView(object):
     def home(self, current_user, facilities):
         return {
             'facilities': facilities,
-            'show_admin_links': session.get('is_admin', False),
+            'show_admin_links': current_user.is_admin,
         }
 
     def contact_page(self, current_user):
