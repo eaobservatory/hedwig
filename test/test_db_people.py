@@ -161,6 +161,29 @@ class DBPeopleTest(DBTestCase):
 
         self.assertIsNone(self.db.authenticate_user('user1', 'wrongpass'))
 
+    def test_user_auth_token(self):
+        user_id = self.db.add_user('user1', 'pass1')
+
+        (token, expiry) = self.db.issue_auth_token(
+            user_id, remote_addr=None, remote_agent=None)
+
+        self.assertIsInstance(token, string_type)
+        self.assertRegex(token, '^[0-9a-f]{64}$')
+        self.assertIsInstance(expiry, datetime)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.authenticate_token('invalid token')
+
+        user = self.db.authenticate_token(token)
+        self.assertIsInstance(user, UserInfo)
+        self.assertEqual(user.id, user_id)
+        self.assertEqual(user.name, 'user1')
+
+        self.db.delete_auth_token(token)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.authenticate_token(token)
+
     def test_user_person(self):
         # Check that we can create a person and get an integer person_id.
         person_id = self.db.add_person('User Zero')

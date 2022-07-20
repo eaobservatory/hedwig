@@ -38,7 +38,7 @@ from ...type.simple import Email, \
     Institution, InstitutionInfo, InstitutionLog, OAuthCode, OAuthToken, \
     Person, PersonInfo, SiteGroupMember, UserInfo, UserLog
 from ...util import is_list_like
-from ..meta import auth_failure, email, group_member, \
+from ..meta import auth_failure, auth_token, email, group_member, \
     institution, institution_log, \
     invitation, member, message_recipient, \
     oauth_code, oauth_token, person, \
@@ -47,6 +47,7 @@ from ..meta import auth_failure, email, group_member, \
     reset_token, reviewer, site_group_member, user, user_log, verify_token
 from ..util import require_not_none
 
+auth_token_expiry = timedelta(hours=24)
 
 rate_limit_period = timedelta(minutes=120)
 rate_limit_verify = 5
@@ -379,6 +380,73 @@ class PeoplePart(object):
             conn.execute(auth_failure.delete().where(
                 auth_failure.c.user_name == user_name))
 
+    def authenticate_token(self, token):
+        """
+        If the given token is valid, return the corresponding user.
+
+        Expired token are automatically deleted before the search
+        is performed.  Additionally if more that 10 minutes of the
+        token's duration has elapsed, its expiry date is refreshed.
+        """
+
+        select_columns = [
+            user.c.id,
+            user.c.name,
+            auth_token.c.id.label('token_id'),
+            auth_token.c.expiry,
+        ]
+        select_from = user.join(auth_token)
+
+        stmt = select(select_columns).select_from(select_from).where(
+            auth_token.c.token == token)
+
+        with self._transaction() as conn:
+            self._delete_auth_expired(conn)
+
+            result = conn.execute(stmt).first()
+
+            if result is not None:
+                expiry = result['expiry']
+
+                time_left = expiry - datetime.utcnow()
+
+                time_gone = (
+                    auth_token_expiry.total_seconds()
+                    - time_left.total_seconds())
+
+                if time_gone > 600:
+                    expiry = datetime.utcnow() + auth_token_expiry
+
+                    refresh_result = conn.execute(auth_token.update().where(
+                        auth_token.c.id == result['token_id']
+                    ).values({
+                        auth_token.c.expiry: expiry,
+                    }))
+
+                    if refresh_result.rowcount != 1:
+                        raise ConsistencyError('could not refresh token')
+
+        if result is None:
+            raise NoSuchRecord('token not found')
+
+        return UserInfo(id=result['id'], name=result['name'])
+
+    def _delete_auth_expired(self, conn):
+        conn.execute(auth_token.delete().where(
+            auth_token.c.expiry < datetime.utcnow()))
+
+    def delete_auth_token(self, token, user_id=None):
+        stmt = auth_token.delete()
+
+        if token is not None:
+            stmt = stmt.where(auth_token.c.token == token)
+
+        if user_id is not None:
+            stmt = stmt.where(auth_token.c.user_id == user_id)
+
+        with self._transaction() as conn:
+            conn.execute(stmt)
+
     def delete_oauth_code(self, code_id):
         """
         Delete the given authorization code.
@@ -523,6 +591,26 @@ class PeoplePart(object):
             return conn.execute(select([user.c.name]).where(
                 user.c.id == user_id
             )).scalar()
+
+    def issue_auth_token(
+            self, user_id, remote_addr, remote_agent):
+        """
+        Create a user authentication token.
+        """
+
+        token = generate_token(32)
+        expiry = datetime.utcnow() + auth_token_expiry
+
+        with self._transaction() as conn:
+            result = conn.execute(auth_token.insert().values({
+                auth_token.c.token: token,
+                auth_token.c.user_id: user_id,
+                auth_token.c.expiry: expiry,
+                auth_token.c.remote_addr: remote_addr,
+                auth_token.c.remote_agent: remote_agent,
+            }))
+
+        return (token, expiry)
 
     def issue_email_verify_token(
             self, person_id, email_address, user_id, remote_addr=None):

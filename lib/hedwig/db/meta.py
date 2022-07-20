@@ -73,6 +73,19 @@ auth_failure = Table(
     Column('expiry', DateTime(), nullable=False, index=True),
     **table_opts)
 
+auth_token = Table(
+    'auth_token',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('token', Unicode(255), unique=True, nullable=False),
+    Column('user_id', None,
+           ForeignKey('user.id', onupdate='RESTRICT', ondelete='CASCADE'),
+           nullable=False),
+    Column('expiry', DateTime(), nullable=False, index=True),
+    Column('remote_addr', Unicode(255), nullable=True),
+    Column('remote_agent', Unicode(255), nullable=True),
+    **table_opts)
+
 calculator = Table(
     'calculator',
     metadata,

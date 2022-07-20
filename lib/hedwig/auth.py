@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -62,10 +62,10 @@ def check_password_hash(password_raw, password_hash, password_salt):
         _rounds)))[0]
 
 
-def generate_token():
+def generate_token(n=16):
     """
     Generate random token strings, to be used for things such as password
     reset codes and invitations.
     """
 
-    return ascii_decode(hexlify(urandom(16)))[0]
+    return ascii_decode(hexlify(urandom(n)))[0]
