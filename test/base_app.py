@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,6 +22,7 @@ from codecs import utf_8_decode
 
 from hedwig import auth
 from hedwig.config import get_config
+from hedwig.type.simple import CurrentUser, Person, UserInfo
 from hedwig.web.app import create_web_app
 
 from .dummy_db import DBTestCase
@@ -72,3 +73,33 @@ class WebAppTestCase(DBTestCase):
                 return facility.view
 
         raise Exception('facility {} not found'.format(code))
+
+    def _current_user(
+            self, person_id, is_admin=False, user_id=None):
+        """
+        Simulate logging in as the given person.
+
+        Creates a CurrentUser object with user and person values
+        based on the given `person_id`.
+
+        If `person_id` is `None` then sets just the user value based on the
+        `user_id` argument.
+        """
+
+        current_user = CurrentUser(
+            user=None,
+            person=None,
+            is_admin=False)
+
+        if person_id is not None:
+            person = self.db.search_person(person_id=person_id).get_single()
+            current_user = current_user._replace(
+                user=UserInfo(id=person.user_id, name=None),
+                person=person,
+                is_admin=(person.admin and is_admin))
+
+        else:
+            current_user = current_user._replace(
+                user=UserInfo(id=user_id, name=None))
+
+        return current_user

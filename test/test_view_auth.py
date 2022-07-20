@@ -24,7 +24,6 @@ from datetime import datetime
 from hedwig.type.enum import BaseCallType, BaseReviewerRole, \
     FormatType, GroupType, \
     ProposalState, SiteGroupType
-from hedwig.type.simple import CurrentUser, Person, UserInfo
 from hedwig.view import auth
 from hedwig.web.util import HTTPForbidden, HTTPRedirectWithReferrer
 
@@ -868,36 +867,6 @@ class WebAppAuthTestCase(WebAppTestCase):
                                                   view_rating=view_rating)
 
         return expect
-
-    def _current_user(
-            self, person_id, is_admin=False, user_id=None):
-        """
-        Simulate logging in as the given person.
-
-        Creates a CurrentUser object with user and person values
-        based on the given `person_id`.
-
-        If `person_id` is `None` then sets just the user value based on the
-        `user_id` argument.
-        """
-
-        current_user = CurrentUser(
-            user=None,
-            person=None,
-            is_admin=False)
-
-        if person_id is not None:
-            person = self.db.search_person(person_id=person_id).get_single()
-            current_user = current_user._replace(
-                user=UserInfo(id=person.user_id, name=None),
-                person=person,
-                is_admin=(person.admin and is_admin))
-
-        else:
-            current_user = current_user._replace(
-                user=UserInfo(id=user_id, name=None))
-
-        return current_user
 
     @contextmanager
     def _with_ctx(self, ctx_kwargs):
