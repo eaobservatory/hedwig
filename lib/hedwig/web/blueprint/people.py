@@ -129,13 +129,13 @@ def create_people_blueprint(db, facilities):
             str_to_unicode(request.remote_addr))
 
     @bp.route('/person/')
-    @require_auth(require_person=False)
+    @require_auth()
     @templated('people/person_list.html')
     def person_list(current_user):
         return view.person_list(current_user, db, request.args)
 
     @bp.route('/person/<int:person_id>')
-    @require_auth(require_person=False)
+    @require_auth()
     @templated('people/person_view.html')
     def person_view(current_user, person_id):
         return view.person_view(current_user, db, person_id, facilities)
@@ -149,7 +149,7 @@ def create_people_blueprint(db, facilities):
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/person/<int:person_id>/edit', methods=['GET', 'POST'])
-    @require_auth(require_person=False)
+    @require_auth()
     @templated('people/person_edit.html')
     def person_edit(current_user, person_id):
         return view.person_edit(
@@ -157,7 +157,7 @@ def create_people_blueprint(db, facilities):
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/person/<int:person_id>/institution', methods=['GET', 'POST'])
-    @require_auth(require_person=False)
+    @require_auth()
     @templated('people/person_edit_institution.html')
     def person_edit_institution(current_user, person_id):
         return view.person_edit_institution(
@@ -165,7 +165,7 @@ def create_people_blueprint(db, facilities):
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/person/<int:person_id>/email', methods=['GET', 'POST'])
-    @require_auth(require_person=False)
+    @require_auth()
     @templated('people/person_edit_email.html')
     def person_edit_email(current_user, person_id):
         return view.person_edit_email(
@@ -227,13 +227,13 @@ def create_people_blueprint(db, facilities):
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/institution/')
-    @require_auth(require_person=False)
+    @require_auth()
     @templated('people/institution_list.html')
     def institution_list(current_user):
         return view.institution_list(current_user, db)
 
     @bp.route('/institution/<int:institution_id>')
-    @require_auth(require_person=False)
+    @require_auth()
     @templated('people/institution_view.html')
     def institution_view(current_user, institution_id):
         return view.institution_view(current_user, db, institution_id)
