@@ -41,6 +41,8 @@ def create_people_blueprint(db, facilities):
         return view.log_in(
             db, request.args,
             (request.form if request.method == 'POST' else None),
+            str_to_unicode(request.remote_addr),
+            str_to_unicode(request.environ.get('HTTP_USER_AGENT')),
             request.referrer)
 
     @bp.route('/user/log_in/done')
@@ -52,7 +54,7 @@ def create_people_blueprint(db, facilities):
     @bp.route('/user/log_out')
     @with_current_user
     def log_out(current_user):
-        view.log_out(current_user)
+        view.log_out(current_user, db)
 
     @bp.route('/user/register', methods=['GET', 'POST'])
     @require_not_auth
@@ -61,7 +63,8 @@ def create_people_blueprint(db, facilities):
         return view.register_user(
             db, request.args,
             (request.form if request.method == 'POST' else None),
-            str_to_unicode(request.remote_addr))
+            str_to_unicode(request.remote_addr),
+            str_to_unicode(request.environ.get('HTTP_USER_AGENT')))
 
     @bp.route('/user/name', methods=['GET', 'POST'])
     @require_auth(require_person=False)

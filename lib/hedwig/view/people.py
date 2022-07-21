@@ -58,7 +58,7 @@ ReviewsByFacility = namedtuple(
 
 
 class PeopleView(object):
-    def log_in(self, db, args, form, referrer):
+    def log_in(self, db, args, form, remote_addr, remote_agent, referrer):
         message = None
 
         user_name = args.get('user_name', '')
@@ -78,7 +78,9 @@ class PeopleView(object):
                 if user_id is None:
                     raise UserError('User name or password not recognised.')
                 else:
-                    _update_session_user(user_id)
+                    _update_session_user(
+                        db, user_id, remote_addr=remote_addr,
+                        remote_agent=remote_agent)
                     flash('You have been logged in.')
 
                     redirect_kwargs = {}
@@ -115,8 +117,6 @@ class PeopleView(object):
                             'Your account is associated with multiple '
                             'profiles.')
 
-                    _update_session_person(person)
-
                     if (person.institution_id is None) and (not register_only):
                         # If the user has no institution, take them to the
                         # institution selection page.
@@ -143,12 +143,17 @@ class PeopleView(object):
             'register_only': register_only,
         }
 
-    def log_out(self, current_user):
+    def log_out(self, current_user, db):
+        token = session.get('token')
+        if token is not None:
+            db.delete_auth_token(token=token)
+
         session.clear()
+
         flash('You have been logged out.')
         raise HTTPRedirect(url_for('home.home_page'))
 
-    def register_user(self, db, args, form, remote_addr):
+    def register_user(self, db, args, form, remote_addr, remote_agent):
         message = None
 
         user_name = ''
@@ -167,7 +172,9 @@ class PeopleView(object):
                 user_id = db.add_user(user_name, password,
                                       remote_addr=remote_addr)
 
-                _update_session_user(user_id)
+                _update_session_user(
+                    db, user_id, remote_addr=remote_addr,
+                    remote_agent=remote_agent)
 
                 flash('Your user account has been created.')
 
@@ -473,7 +480,6 @@ class PeopleView(object):
                     user_id=current_user.user.id, remote_addr=remote_addr,
                     primary_email=email)
                 flash('Your user profile has been saved.')
-                _update_session_person_from_db(db, person_id)
 
                 raise HTTPRedirect(url_for(
                     '.person_edit_institution',
@@ -622,7 +628,6 @@ class PeopleView(object):
 
                 if current_user.user.id == person.user_id:
                     flash('Your user profile has been saved.')
-                    _update_session_person_from_db(db, person.id)
                 else:
                     flash('The user profile has been saved.')
                 raise HTTPRedirect(url_for(
@@ -693,7 +698,6 @@ class PeopleView(object):
                     raise ErrorPage('Unknown action')
 
                 if is_current_user:
-                    _update_session_person_from_db(db, person.id)
                     flash('Your institution has been {}.', action)
                 else:
                     flash('The institution has been {}.', action)
@@ -1360,7 +1364,6 @@ class PeopleView(object):
                     token, remote_addr=remote_addr, **kwargs)
                 flash('The invitation has been accepted successfully.')
                 person = db.search_person(user_id=user_id).get_single()
-                _update_session_person(person)
 
                 target = self._determine_invitee_target(
                     db, facilities, old_person_record)
@@ -1452,34 +1455,17 @@ class PeopleView(object):
         return None
 
 
-def _update_session_user(user_id, sess=session):
+def _update_session_user(
+        db, user_id, sess=session, remote_addr=None, remote_agent=None):
     """
-    Clears the session and inserts the given user identifier.
+    Clears the session and inserts a token for the given user identifier.
 
     This should be done on log in to ensure that nothing from a
     previous session remains.
     """
 
+    (token, expiry) = db.issue_auth_token(
+        user_id, remote_addr=remote_addr, remote_agent=remote_agent)
+
     sess.clear()
-    sess['user_id'] = user_id
-    sess['date_set'] = datetime.utcnow()
-
-
-def _update_session_person(person, sess=session):
-    """
-    Adds the given person information to the session.
-
-    :param PersonInfo person: record from `db.search_person(...).get_single()`
-    """
-
-    sess['person'] = person._asdict()
-
-
-def _update_session_person_from_db(db, person_id):
-    """
-    Fetch the given person record by ID and add to the session.
-
-    :raises NoSuchRecord: if the given person ID is not found.
-    """
-
-    _update_session_person(db.search_person(person_id=person_id).get_single())
+    sess['token'] = token

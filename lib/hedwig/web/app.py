@@ -145,7 +145,9 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
                                url_prefix='/' + facility.code)
 
     # Add beginning of request function to check session for user log in.
-    app.before_request(check_current_user)
+    @app.before_request
+    def _check_current_user():
+        check_current_user(db)
 
     @app.context_processor
     def add_to_context():

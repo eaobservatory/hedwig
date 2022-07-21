@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017 East Asian Observatory
+# Copyright (C) 2016-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,6 +20,10 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime, timedelta
 
+from sqlalchemy.sql import select
+
+from hedwig.db.meta import auth_token
+
 from .base_app import WebAppTestCase
 
 
@@ -39,7 +43,7 @@ class BasicWebAppTestCase(WebAppTestCase):
             rv.data)
 
         with self.client.session_transaction() as sess:
-            self.assertNotIn('user_id', sess)
+            self.assertNotIn('token', sess)
 
         self.db.add_user('user1', 'pass1')
 
@@ -49,7 +53,7 @@ class BasicWebAppTestCase(WebAppTestCase):
             rv.data)
 
         with self.client.session_transaction() as sess:
-            self.assertIn('user_id', sess)
+            self.assertIn('token', sess)
 
         rv = self.log_out()
         self.assertInEncoded(
@@ -57,63 +61,81 @@ class BasicWebAppTestCase(WebAppTestCase):
             rv.data)
 
         with self.client.session_transaction() as sess:
-            self.assertNotIn('user_id', sess)
+            self.assertNotIn('token', sess)
 
     def test_session_expiry(self):
         dt_curr = datetime.utcnow()
+        dt_expect = dt_curr + timedelta(hours=24)
 
-        # At first, should be no 'date_set' in the session.
+        # At first, should be no 'token' in the session.
         with self.client.session_transaction() as sess:
-            self.assertNotIn('date_set', sess)
-            self.assertNotIn('user_id', sess)
+            self.assertNotIn('token', sess)
 
-        self.db.add_user('user1', 'pass1')
+        user_id = self.db.add_user('user1', 'pass1')
+        self.assertIsInstance(user_id, int)
+
         self.log_in('user1', 'pass1')
 
-        with self.client.session_transaction() as sess:
-            # Should now have a 'date_set' value.
-            self.assertIn('date_set', sess)
-            self.assertIn('user_id', sess)
+        def _get_expiry():
+            with self.db._transaction() as conn:
+                return conn.execute(select([
+                    auth_token.c.expiry,
+                ]).where(auth_token.c.user_id == user_id)).scalar()
 
-            # Should get a time close to the current time.
-            self.assertIsInstance(sess['date_set'], datetime)
+        def _set_expiry(expiry):
+            with self.db._transaction() as conn:
+                conn.execute(auth_token.update().where(
+                    auth_token.c.user_id == user_id
+                ).values({
+                    auth_token.c.expiry: expiry,
+                }))
+
+        with self.client.session_transaction() as sess:
+            # Should now have a 'token' value.
+            self.assertIn('token', sess)
+
+            # Should get a time close to the current time plus 24 hours.
+            expiry = _get_expiry()
+            self.assertIsInstance(expiry, datetime)
             self.assertLess(
-                abs((sess['date_set'] - dt_curr).total_seconds()), 5)
+                abs((expiry - dt_expect).total_seconds()), 5)
 
             # Set date back 5 minutes - should be kept.
-            sess['date_set'] = dt_curr - timedelta(seconds=300)
+            _set_expiry(expiry - timedelta(seconds=300))
 
         self.client.get('/')
 
         with self.client.session_transaction() as sess:
-            self.assertIn('date_set', sess)
-            self.assertIn('user_id', sess)
+            self.assertIn('token', sess)
 
-            # Should get a time close to the 5 minutes before the current time.
+            # Should get a time close to the 5 minutes before original expiry.
+            expiry = _get_expiry()
             self.assertLess(
-                abs(abs((sess['date_set'] - dt_curr).total_seconds()) - 300),
-                5)
+                abs(abs((expiry - dt_expect).total_seconds()) - 300), 5)
 
             # Set date back 20 minutes - should reset.
-            sess['date_set'] = dt_curr - timedelta(seconds=1200)
+            _set_expiry(expiry - timedelta(seconds=1200))
 
         self.client.get('/')
 
         with self.client.session_transaction() as sess:
-            self.assertIn('date_set', sess)
-            self.assertIn('user_id', sess)
+            self.assertIn('token', sess)
 
-            # The session should have been updated to now have a time
-            # close to the current time.
+            # The token should have been updated to now have an expiry
+            # close to the current time + 24 hours.
+            expiry = _get_expiry()
             self.assertLess(
-                abs((sess['date_set'] - dt_curr).total_seconds()), 5)
+                abs((expiry - dt_expect).total_seconds()), 5)
 
-            # Set date back 20 hours - should cause session expiry.
-            sess['date_set'] = dt_curr - timedelta(seconds=72000)
+            # Set date back 1 hour from now - should cause session expiry.
+            _set_expiry(dt_curr - timedelta(seconds=3600))
 
         self.client.get('/')
 
         with self.client.session_transaction() as sess:
             # Session should have expired.
-            self.assertNotIn('date_set', sess)
-            self.assertNotIn('user_id', sess)
+            self.assertNotIn('token', sess)
+
+        # Database entry for token should have been cleared.
+        expiry = _get_expiry()
+        self.assertIsNone(expiry)

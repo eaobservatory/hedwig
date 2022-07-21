@@ -39,7 +39,7 @@ from werkzeug import routing as _werkzeug_routing
 from werkzeug import urls as _werkzeug_urls
 
 from ..compat import ExceptionWithMessage, string_type
-from ..error import UserError
+from ..error import NoSuchRecord, UserError
 from ..type.simple import CurrentUser, DateAndTime, Person, UserInfo
 from ..type.enum import FigureType, FileTypeInfo
 from ..type.util import null_tuple
@@ -587,7 +587,7 @@ def _make_response(template, result, status=None):
     return resp
 
 
-def check_current_user():
+def check_current_user(db):
     """
     Check the user's session for log in information.
 
@@ -596,59 +596,39 @@ def check_current_user():
     have `user` None if the user is not logged in or `person` None if they
     do not have a registered profile.
 
-    This function manages the `date_set` session variable in order to detect
-    when the user has been idle for too long.
-
-    * If over 12 hours ago, the session is cleared.
-    * If over 10 minutes ago, `date_set` is set to the current time.
-
     This is invoked at the start of each request, as it is registered
     with Flask as a `before_request` function by the
     :func:`~hedwig.web.app.create_web_app` function.
     It should run before the :func:`require_admin` and :func:`require_auth`
-    functions examine the session.  `date_set` is originally
-    written when the user logs in by the
-    :func:`~hedwig.view.people._update_session_user` function.
+    functions examine the session.
     """
 
-    date_set = session.get('date_set', None)
+    user = None
+    person = None
+    is_admin = False
 
-    if date_set is not None:
-        date_current = datetime.utcnow()
+    token = session.get('token')
 
-        delta = (date_current - date_set).total_seconds()
+    if token is not None:
+        try:
+            user = db.authenticate_token(token)
 
-        if delta > 43200:
-            # Save flashed messages so that we can restore them after clearing the
-            # session.  (Otherwise the logged out message never displays because
-            # logging out clears the whole session, including date_set.  We can't
-            # use `get_flashed_messages` as Flask will then store them in the
-            # request context not not clear them when they are displayed.)
-            messages = session.get('_flashes', None)
-
+        except NoSuchRecord:
             session.clear()
 
-            if messages is not None:
-                session['_flashes'] = messages
+    if user is not None:
+        try:
+            person = db.search_person(user_id=user.id).get_single()
 
-        elif delta > 600:
-            session['date_set'] = date_current
+        except NoSuchRecord:
+            pass
 
-    current_user_id = session.get('user_id')
-    current_person = session.get('person')
+    if person is not None:
+        if person.admin and session.get('is_admin', False):
+            is_admin = True
 
     flask_g.current_user = CurrentUser(
-        user=(None if current_user_id is None else UserInfo(
-            id=current_user_id,
-            name=None,
-        )),
-        person=(None if current_person is None else null_tuple(Person)._replace(
-            id=current_person['id'],
-            name=current_person['name'],
-            institution_id=current_person['institution_id'],
-            admin=current_person['admin'],
-        )),
-        is_admin=session.get('is_admin', False))
+        user=user, person=person, is_admin=is_admin)
 
 
 def _url_manipulation(f):
