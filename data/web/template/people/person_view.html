@@ -8,10 +8,15 @@
 {% block content %}
 
 {% if person.user_id is none %}
-    <p>
+    <p class="minor_warning">
         This profile does not belong to a registered user.
     </p>
-{% elif is_current_user %}
+{% elif show_admin_links and not person.verified %}
+    <p class="warning">
+        This profile has not been verified.
+    </p>
+{% endif %}
+{% if is_current_user %}
     <p>
         This is your profile.
     </p>
