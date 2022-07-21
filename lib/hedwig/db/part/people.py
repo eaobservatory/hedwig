@@ -1380,7 +1380,7 @@ class PeoplePart(object):
 
     def update_person(self, person_id,
                       name=None, title=(), public=None, institution_id=(),
-                      admin=None,
+                      admin=None, verified=None,
                       _test_skip_check=False):
         """
         Update a person database record.
@@ -1388,6 +1388,7 @@ class PeoplePart(object):
 
         stmt = person.update().where(person.c.id == person_id)
         values = {}
+        require_registered = False
 
         if name is not None:
             values['name'] = name
@@ -1401,15 +1402,20 @@ class PeoplePart(object):
             values['institution_id'] = institution_id
         if admin is not None:
             values['admin'] = admin
-            # Don't allow setting of the admin flag for non-registered users.
-            if admin and not _test_skip_check:
-                stmt = stmt.where(not_(person.c.user_id.is_(None)))
+            require_registered = (require_registered or admin)
+        if verified is not None:
+            values['verified'] = verified
+            require_registered = (require_registered or verified)
 
         # The values dictionary is only empty if the caller specified
         # no parameters, i.e. everything was left at the default of ()
         # meaning do nothing.  In this case, raise an error.
         if not values:
             raise Error('no person updates specified')
+
+        # Don't allow setting admin / verified flags for non-registered users.
+        if require_registered and not _test_skip_check:
+            stmt = stmt.where(not_(person.c.user_id.is_(None)))
 
         with self._transaction() as conn:
             if (not _test_skip_check and

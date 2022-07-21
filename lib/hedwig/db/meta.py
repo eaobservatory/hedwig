@@ -436,6 +436,7 @@ person = Table(
            ForeignKey('institution.id', onupdate='RESTRICT',
                       ondelete='RESTRICT')),
     Column('admin', Boolean, default=False, nullable=False),
+    Column('verified', Boolean, default=False, nullable=False),
     **table_opts)
 
 prev_proposal = Table(

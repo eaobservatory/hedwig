@@ -684,6 +684,7 @@ class DBPeopleTest(DBTestCase):
         self.assertIsNone(person.institution_id)
         self.assertFalse(person.public)
         self.assertFalse(person.admin)
+        self.assertFalse(person.verified)
 
         # Create a test institution record.
         institution_id = self.db.add_institution('Institution One',
@@ -715,13 +716,22 @@ class DBPeopleTest(DBTestCase):
         # for registered users.
         with self.assertRaises(ConsistencyError):
             self.db.update_person(person_id, admin=True)
+        with self.assertRaises(ConsistencyError):
+            self.db.update_person(person_id, verified=True)
         person = self.db.get_person(person_id)
         self.assertFalse(person.admin)
+        self.assertFalse(person.verified)
 
         self.db.add_user('user1', 'pass1', person_id=person_id)
         self.db.update_person(person_id, admin=True)
         person = self.db.get_person(person_id)
         self.assertTrue(person.admin)
+        self.assertFalse(person.verified)
+
+        self.db.update_person(person_id, verified=True)
+        person = self.db.get_person(person_id)
+        self.assertTrue(person.admin)
+        self.assertTrue(person.verified)
 
     def test_person_merge(self):
         # Create two test person records.
