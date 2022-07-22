@@ -290,12 +290,16 @@ class DBPeopleTest(DBTestCase):
 
     def test_verify_email(self):
         address = 'someone@somewhere.edu'
-        person_id = self.db.add_person('A Person')
+        user_id = self.db.add_user('user', 'pass')
+        person_id = self.db.add_person('A Person', user_id=user_id)
         email_id = self.db.add_email(person_id, address)
 
         # Email record starts off not verified.
         email = self.db.search_email(person_id=person_id, address=address)
         self.assertFalse(email.get_single().verified)
+
+        person = self.db.get_person(person_id)
+        self.assertFalse(person.verified)
 
         # Perform verification.
         (token, expiry) = self.db.issue_email_verify_token(
@@ -316,6 +320,9 @@ class DBPeopleTest(DBTestCase):
         # Email record should now be verified.
         email = self.db.search_email(person_id=person_id, address=address)
         self.assertTrue(email.get_single().verified)
+
+        person = self.db.get_person(person_id)
+        self.assertTrue(person.verified)
 
     def test_sync_person_email(self):
         # Set up email addresses.
@@ -902,6 +909,7 @@ class DBPeopleTest(DBTestCase):
         # Try using the token: user_id is None before but set afterwards.
         person = self.db.get_person(person_id=person_id)
         self.assertIsNone(person.user_id)
+        self.assertFalse(person.verified)
         old_person_record = self.db.use_invitation(token, user_id=user_id)
         person = self.db.get_person(person_id=person_id)
         self.assertEqual(person.user_id, user_id)
@@ -910,6 +918,9 @@ class DBPeopleTest(DBTestCase):
         self.assertIsInstance(old_person_record, Person)
         self.assertEqual(old_person_record.id, person_id)
         self.assertIsNone(old_person_record.user_id)
+
+        # Check the database record was marked as verified.
+        self.assertTrue(person.verified)
 
         # The token should no longer exist.
         with self.assertRaisesRegex(NoSuchRecord, 'expired or non-existant'):
@@ -974,8 +985,12 @@ class DBPeopleTest(DBTestCase):
         person_id_2 = self.db.add_person('Person 2')
         self.db.add_email(person_id_2, '2@email')
 
-        person_id_new = self.db.add_person('Person New')
+        user_id = self.db.add_user('user', 'pass')
+        person_id_new = self.db.add_person('Person New', user_id=user_id)
         self.db.add_email(person_id_new, 'new@email')
+
+        person = self.db.get_person(person_id_new)
+        self.assertFalse(person.verified)
 
         # Create a proposal with 2 members.
         (proposal_id, affiliation_id) = self._create_test_proposal(person_id_1)
@@ -1001,6 +1016,10 @@ class DBPeopleTest(DBTestCase):
         self.assertEqual(
             [x.proposal_id for x in old_user_record.proposals.values()],
             [proposal_id])
+
+        # The person should now be verified.
+        person = self.db.get_person(person_id_new)
+        self.assertTrue(person.verified)
 
         # The "temporary" person record should have gone.
         with self.assertRaises(NoSuchRecord):

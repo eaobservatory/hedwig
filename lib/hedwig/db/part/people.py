@@ -1381,7 +1381,7 @@ class PeoplePart(object):
     def update_person(self, person_id,
                       name=None, title=(), public=None, institution_id=(),
                       admin=None, verified=None,
-                      _test_skip_check=False):
+                      _conn=None, _test_skip_check=False):
         """
         Update a person database record.
         """
@@ -1417,7 +1417,7 @@ class PeoplePart(object):
         if require_registered and not _test_skip_check:
             stmt = stmt.where(not_(person.c.user_id.is_(None)))
 
-        with self._transaction() as conn:
+        with self._transaction(_conn=_conn) as conn:
             if (not _test_skip_check and
                     not self._exists_id(conn, person, person_id)):
                 raise ConsistencyError(
@@ -1496,6 +1496,8 @@ class PeoplePart(object):
             self, person_id, token, user_id, remote_addr=None):
         """
         Tries to use the given email verification token.
+
+        Also ensures the person record is marked as verified.
         """
 
         with self._transaction() as conn:
@@ -1525,6 +1527,9 @@ class PeoplePart(object):
             if result.rowcount != 1:
                 raise ConsistencyError(
                     'no rows matched verifying email address')
+
+            # Ensure the person profile is marked as verified.
+            self.update_person(person_id, verified=True, _conn=conn)
 
             # Finally delete the token (which has now been used).
             conn.execute(verify_token.delete().where(
@@ -1586,6 +1591,8 @@ class PeoplePart(object):
         Uses the invitation token to link the given user_id to the
         person record associated with the invitation.
 
+        Also ensures the person record is marked as verified.
+
         Returns the person record to which the invitation refers as it was
         before the invitation was accepted.
         """
@@ -1631,13 +1638,15 @@ class PeoplePart(object):
                     invitation.c.token == token))
 
                 # They have registered a new user account to link to the
-                # invited person record.  Simply set the user_id there.
+                # invited person record.  Simply set the user_id there
+                # and mark as verified.
                 result = conn.execute(person.update().where(and_(
                     person.c.id == old_person_id,
                     person.c.user_id.is_(None),
                     not_(person.c.admin)
                 )).values({
                     person.c.user_id: user_id,
+                    person.c.verified: True,
                 }))
 
                 if result.rowcount != 1:
@@ -1659,6 +1668,9 @@ class PeoplePart(object):
                     duplicate_person_id=old_person_id,
                     duplicate_person_registered=False,
                     _conn=conn)
+
+                # Ensure the "new" profile is marked as verified.
+                self.update_person(new_person_id, verified=True, _conn=conn)
 
             else:
                 # They were there at the start of the method so this
