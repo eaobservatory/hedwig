@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
+
+import logging
+
+from sqlalchemy.sql import select
+from sqlalchemy.sql.expression import and_, not_
+
+from hedwig.config import get_database
+from hedwig.db.meta import email, person, user_log
+from hedwig.type.enum import UserLogEvent
+from hedwig.util import get_logger
+
+logger = get_logger('update_message_state')
+
+
+def main():
+    logging.basicConfig(level=logging.DEBUG)
+
+    db = get_database()
+
+    # Note: use email.c.verified rather than event USE_EMAIL_TOKEN
+    # because that was only recently added.
+
+    logger.info('Setting person verified flag based on verified email')
+
+    with db._transaction() as conn:
+        result = conn.execute(person.update().where(and_(
+            not_(person.c.verified),
+            person.c.user_id.isnot(None),
+            person.c.id.in_(
+                select([email.c.person_id]).where(email.c.verified))
+        )).values({
+            person.c.verified: True,
+        }))
+
+    logger.info('Verified {} person profiles', result.rowcount)
+
+    logger.info('Setting person verified flag based on accepted invitations')
+
+    with db._transaction() as conn:
+        result = conn.execute(person.update().where(and_(
+            not_(person.c.verified),
+            person.c.user_id.isnot(None),
+            person.c.user_id.in_(
+                select([user_log.c.user_id]).where(
+                    user_log.c.event == UserLogEvent.USE_INVITE))
+        )).values({
+            person.c.verified: True,
+        }))
+
+    logger.info('Verified {} person profiles', result.rowcount)
+
+
+if __name__ == '__main__':
+    main()

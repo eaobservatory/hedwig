@@ -4,6 +4,22 @@ Updates Requiring Intervention
 The `util/update` directory contains scripts to assist with updates
 to the Hedwig database which cannot be handled automatically by `Alembic`.
 
+* 2022-07-21: Addition of verified column to person table
+
+  A new flag has been added to the person table to record whether
+  their account has been verified.  When creating the new column
+  with `Alembic`, a false default value should be given::
+
+      op.add_column('person', sa.Column(
+        'verified', sa.Boolean(), nullable=False, server_default='0'))
+
+  Then if you want existing verified users to be able to continue to use the
+  system without being prompted to re-verify their account:
+
+  * Run the `util/update/003_person_verified` script to set the verified
+    flag for existing registered accounts with verified addresses or
+    logged invitation acceptances.
+
 * 2019-02-26: Transition to linked text, PDF and figure records
 
   In order to support operations such as copying proposals, extra linking
