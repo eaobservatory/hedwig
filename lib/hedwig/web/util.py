@@ -290,11 +290,13 @@ def require_admin(f):
 
 def require_auth(require_person=True, require_person_admin=False,
                  require_institution=False,
+                 allow_unverified=False,
                  register_user_only=False, record_referrer=False):
     """
     Decorator to require that the user is authenticated.
 
-    :param require_person: require the user to have a profile.
+    :param require_person: require the user to have a profile,
+        which must be verified unless `allow_verified` is specified.
 
     :param require_person_admin: also check that the
         person record in the `current_user` has the admin flag.
@@ -303,6 +305,9 @@ def require_auth(require_person=True, require_person_admin=False,
 
     :param require_institution: require the user to have an institution
         associated with thir profile.
+
+    :param allow_unverified: when requiring a person profile, do not
+        require that profile to be verified.
 
     :param register_user_only: used when we want the user to log in or
         create a user account but not to complete a profile before
@@ -366,6 +371,13 @@ def require_auth(require_person=True, require_person_admin=False,
                 flash('Please complete your profile before proceeding.')
                 raise HTTPRedirect(url_for(
                     'people.register_person', **redirect_kwargs))
+
+            elif (require_person and (not allow_unverified) and
+                    (not current_user.person.verified)):
+                flash('Please verify your email address before proceeding.')
+                raise HTTPRedirect(url_for(
+                    'people.person_email_verify_primary',
+                    person_id=current_user.person.id, **redirect_kwargs))
 
             elif (require_institution and
                     current_user.person.institution_id is None):

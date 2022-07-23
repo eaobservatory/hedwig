@@ -172,18 +172,28 @@ def create_people_blueprint(db, facilities):
             current_user, db, person_id,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/person/<int:person_id>/email/verify/',
+              methods=['GET', 'POST'])
+    @require_auth(allow_unverified=True)
+    @templated('people/person_email_verify_get.html')
+    def person_email_verify_primary(current_user, person_id):
+        return view.person_email_verify_get(
+            current_user, db, person_id, None, request.args,
+            (request.form if request.method == 'POST' else None),
+            str_to_unicode(request.remote_addr))
+
     @bp.route('/person/<int:person_id>/email/verify/<int:email_id>',
               methods=['GET', 'POST'])
-    @require_auth()
+    @require_auth(allow_unverified=True)
     @templated('people/person_email_verify_get.html')
     def person_email_verify_get(current_user, person_id, email_id):
         return view.person_email_verify_get(
-            current_user, db, person_id, email_id,
+            current_user, db, person_id, email_id, None,
             (request.form if request.method == 'POST' else None),
             str_to_unicode(request.remote_addr))
 
     @bp.route('/verify', methods=['GET', 'POST'])
-    @require_auth()
+    @require_auth(allow_unverified=True)
     @templated('people/person_email_verify_use.html')
     def person_email_verify_use(current_user):
         return view.person_email_verify_use(

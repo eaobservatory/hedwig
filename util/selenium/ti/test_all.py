@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -327,6 +327,8 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn('Your user profile has been saved.',
                       self.browser.page_source)
 
+        self._do_verify_email(person_email, screenshot_path=screenshot_path)
+
         try:
             Select(
                 self.browser.find_element_by_name('institution_id')
@@ -360,6 +362,32 @@ class IntegrationTest(DummyConfigTestCase):
 
         profile_link.click()
         self._save_screenshot(screenshot_path, 'profile_view')
+
+    def _do_verify_email(self, email_address, screenshot_path=None):
+        self.assertIn(
+            'You can verify your address by sending a verification',
+            self.browser.page_source)
+
+        self._save_screenshot(screenshot_path, 'email_verify_get')
+
+        self.browser.find_element_by_name('submit_send').click()
+
+        self.assertIn(
+            'Your address verification code has been sent by email to',
+            self.browser.page_source)
+
+        self._save_screenshot(screenshot_path, 'email_verify_use')
+
+        with self.db._transaction() as conn:
+            token = conn.execute(select([verify_token.c.token])).scalar()
+
+        self.browser.find_element_by_name('token').send_keys(token)
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'Your email address {} has been verified.'.format(email_address),
+            self.browser.page_source)
 
     def _do_register_user(self, user_name, password, screenshot_path=None):
         self.browser.find_element_by_name('user_name').send_keys(user_name)
@@ -1241,11 +1269,6 @@ class IntegrationTest(DummyConfigTestCase):
 
         profile_link.click()
 
-        self._save_screenshot(
-            self.user_image_root, 'profile_edit_links',
-            ['account_manage_links', 'profile_manage_links',
-             self.browser.find_element_by_link_text('verify')])
-
         # Change password.
         self.browser.find_element_by_link_text('Change password').click()
 
@@ -1297,42 +1320,30 @@ class IntegrationTest(DummyConfigTestCase):
         # Edit email addresses.
         self.browser.find_element_by_link_text('Edit email addresses').click()
 
-        self.assertIn(
-            'not verified',
-            self.browser.page_source)
-
         self._save_screenshot(self.user_image_root, 'email_edit',
                               ['delete_2', 'add_email'])
 
+        email_new = 'example@somewhere.else.edu'
+
+        self.browser.find_element_by_id('add_email').click()
+
+        self.browser.find_element_by_name('email_new_1').send_keys(email_new)
         self.browser.find_element_by_name('submit').click()
 
         self.assertIn(
             'Your email addresses have been updated.',
             self.browser.page_source)
 
+        self.browser.refresh()
+        self._save_screenshot(
+            self.user_image_root, 'profile_edit_links',
+            ['account_manage_links', 'profile_manage_links',
+             self.browser.find_element_by_link_text('verify')])
+
         # Verify email address.
         self.browser.find_element_by_link_text('verify').click()
 
-        self.assertIn(
-            'You can verify your address by sending a verification',
-            self.browser.page_source)
-
-        self.browser.find_element_by_name('submit_sent').click()
-
-        self.assertIn(
-            'Your address verification code has been sent by email to',
-            self.browser.page_source)
-
-        with self.db._transaction() as conn:
-            token = conn.execute(select([verify_token.c.token])).scalar()
-
-        self.browser.find_element_by_name('token').send_keys(token)
-
-        self.browser.find_element_by_name('submit').click()
-
-        self.assertIn(
-            'Your email address example@somewhere.edu has been verified.',
-            self.browser.page_source)
+        self._do_verify_email(email_new)
 
         # Change institution.
         self.browser.find_element_by_link_text('Change institution').click()

@@ -13,7 +13,7 @@ and then click your name at the top right of the page.
 
 * For each email address you have entered there will be a
   link labeled "verify" allowing you to send a verification
-  code to that address.
+  code to that address, unless it has already been verified.
 
 * Below the information table are links to edit your information
   as it is displayed: your profile (name and privacy setting),

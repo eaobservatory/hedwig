@@ -40,6 +40,11 @@ inactive for a long time.
 
 .. image:: image/profile_new.png
 
+The system will then send a message including a verification code
+to your email address.  Click the "Send code" button to begin
+this process.  When you receive the code, you can copy and
+paste it into the box on the following page.
+
 Finally you should select the institution with which you are
 affiliated.  Please check the menu of institutions which are
 already known to the system.  If your institution appears here,

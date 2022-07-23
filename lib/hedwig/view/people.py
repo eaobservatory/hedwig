@@ -108,7 +108,7 @@ class PeopleView(object):
                         # If the user has no profile, take them to the profile
                         # registration page.
                         flash('It appears your registration was not complete. '
-                              'If convenient, please complete your profile.')
+                              'Please complete your profile.')
                         raise HTTPRedirect(url_for(
                             '.register_person', **redirect_kwargs))
                     except MultipleRecords:
@@ -117,14 +117,26 @@ class PeopleView(object):
                             'Your account is associated with multiple '
                             'profiles.')
 
-                    if (person.institution_id is None) and (not register_only):
-                        # If the user has no institution, take them to the
-                        # institution selection page.
-                        flash('It appears your registration was not complete. '
-                              'If convenient, please select your institution.')
-                        raise HTTPRedirect(url_for(
-                            '.person_edit_institution',
-                            person_id=person.id, **redirect_kwargs))
+                    if not register_only:
+                        if not person.verified:
+                            # If the user is not verified, take them to the
+                            # primary address verification page.
+                            flash(
+                                'It appears your registration was not complete. '
+                                'Please verify your email address.')
+                            raise HTTPRedirect(url_for(
+                                '.person_email_verify_primary',
+                                person_id=person.id, **redirect_kwargs))
+
+                        if person.institution_id is None:
+                            # If the user has no institution, take them to the
+                            # institution selection page.
+                            flash(
+                                'It appears your registration was not complete. '
+                                'Please select your institution.')
+                            raise HTTPRedirect(url_for(
+                                '.person_edit_institution',
+                                person_id=person.id, **redirect_kwargs))
 
                     raise HTTPRedirect(target)
 
@@ -482,7 +494,7 @@ class PeopleView(object):
                 flash('Your user profile has been saved.')
 
                 raise HTTPRedirect(url_for(
-                    '.person_edit_institution',
+                    '.person_email_verify_primary',
                     person_id=person_id, log_in_for=log_in_for))
 
             except UserError as e:
@@ -712,8 +724,13 @@ class PeopleView(object):
             except UserError as e:
                 message = e.message
 
+        title = 'Select Institution'
+
+        if not (is_current_user and (person.institution_id is None)):
+            title = '{}: {}'.format(person.name, title)
+
         return {
-            'title': '{}: Select Institution'.format(person.name),
+            'title': title,
             'message': message,
             'person': person,
             'institution': institution,
@@ -794,17 +811,36 @@ class PeopleView(object):
 
     @with_person(permission=PermissionType.EDIT)
     def person_email_verify_get(
-            self, current_user, db, person, can, email_id, form, remote_addr):
-        try:
-            email = person.email[email_id]
-        except KeyError:
-            raise HTTPNotFound('Email address record not found.')
+            self, current_user, db, person, can, email_id,
+            args, form, remote_addr):
+        # Is this an automated request (email_id = None) as would be triggered
+        # during registration or via require_auth?
+        is_registration = False
+        log_in_for = None
 
-        if email.verified:
-            raise ErrorPage('The email address {} has already been verified.',
-                            email.address)
+        if email_id is not None:
+            try:
+                email = person.email[email_id]
+            except KeyError:
+                raise HTTPNotFound('Email address record not found.')
+
+            if email.verified:
+                raise ErrorPage(
+                    'The email address {} has already been verified.',
+                    email.address)
+
+        else:
+            is_registration = True
+            log_in_for = args.get('log_in_for', None)
+
+            try:
+                email = person.email.get_primary()
+            except NoSuchValue:
+                raise ErrorPage('No primary email address found.')
 
         if form:
+            log_in_for = form.get('log_in_for', None)
+
             try:
                 (token, expiry) = db.issue_email_verify_token(
                     person.id, email.address, user_id=person.user_id,
@@ -826,22 +862,34 @@ class PeopleView(object):
                 email_addresses=[email.address])
             flash('Your address verification code has been sent by email '
                   'to {}.', email.address)
-            raise HTTPRedirect(url_for('.person_email_verify_use'))
+            raise HTTPRedirect(url_for(
+                '.person_email_verify_use', log_in_for=log_in_for))
+
+        is_registration = True
+
+        title = 'Verify Email Address'
+        if not is_registration:
+            title = '{}: {}'.format(person.name, title)
 
         return {
-            'title': '{}: Verify Email Address'.format(person.name),
+            'title': title,
             'person': person,
             'email': email,
+            'is_registration': is_registration,
+            'log_in_for': log_in_for,
         }
 
     def person_email_verify_use(
             self, current_user, db, args, form, remote_addr):
         message = None
         token = args.get('token', '')
+        log_in_for = args.get('log_in_for', None)
+
         person_id = current_user.person.id
         user_id = current_user.user.id
 
         if form is not None:
+            log_in_for = form.get('log_in_for', None)
             token = form['token'].strip()
 
             try:
@@ -864,6 +912,15 @@ class PeopleView(object):
 
                 flash('Your email address {} has been verified.',
                       email_address)
+
+                if log_in_for is not None:
+                    if current_user.person.institution_id is None:
+                        raise HTTPRedirect(url_for(
+                            '.person_edit_institution',
+                            person_id=person_id, log_in_for=log_in_for))
+
+                    raise HTTPRedirect(log_in_for)
+
                 raise HTTPRedirect(url_for(
                     '.person_view', person_id=person_id))
 
@@ -874,6 +931,7 @@ class PeopleView(object):
             'title': 'Enter Email Verification Code',
             'message': message,
             'token': token,
+            'log_in_for': log_in_for,
         }
 
     def person_proposals_own(self, current_user, db, facilities):

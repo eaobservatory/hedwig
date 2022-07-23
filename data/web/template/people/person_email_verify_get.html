@@ -3,6 +3,12 @@
 
 {% block content %}
 
+{% if is_registration %}
+    <p class="progress">
+        Registration step 3/5.
+    </p>
+{% endif %}
+
 <p>
     You can verify your address by sending a verification
     code by email.
@@ -10,14 +16,20 @@
     to complete the verification process.
 </p>
 
-<p>
-    Address: <a href="mailto:{{ email.address }}">{{ email.address }}</a>
-</p>
-
 <form method="POST" action="{{ url_for('.person_email_verify_get', person_id=person.id, email_id=email.id) }}">
-    <p>
-        <input type="submit" name="submit_sent" value="Send code" />
-    </p>
+    <ol>
+        <li>
+            <label>Email address</label>
+            <a href="mailto:{{ email.address }}">{{ email.address }}</a>
+        </li>
+
+        <li>
+            <input type="submit" name="submit_send" value="Send code" />
+            {% if log_in_for is not none %}
+                <input type="hidden" name="log_in_for" value="{{ log_in_for }}" />
+            {% endif %}
+        </li>
+    </ol>
 </form>
 
 {% endblock %}
