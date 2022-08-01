@@ -377,7 +377,7 @@ def require_auth(require_person=True, require_person_admin=False,
                 flash('Please verify your email address before proceeding.')
                 raise HTTPRedirect(url_for(
                     'people.person_email_verify_primary',
-                    person_id=current_user.person.id, **redirect_kwargs))
+                    **redirect_kwargs))
 
             elif (require_institution and
                     current_user.person.institution_id is None):

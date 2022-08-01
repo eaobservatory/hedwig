@@ -164,6 +164,14 @@ def create_people_blueprint(db, facilities):
             current_user, db, person_id, request.args,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/user/email/edit', methods=['GET', 'POST'])
+    @require_auth(allow_unverified=True)
+    @templated('people/person_edit_email.html')
+    def person_edit_email_own(current_user):
+        return view.person_edit_email_own(
+            current_user, db, request.args,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/person/<int:person_id>/email', methods=['GET', 'POST'])
     @require_auth()
     @templated('people/person_edit_email.html')
@@ -172,13 +180,12 @@ def create_people_blueprint(db, facilities):
             current_user, db, person_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/person/<int:person_id>/email/verify/',
-              methods=['GET', 'POST'])
+    @bp.route('/user/email/verify', methods=['GET', 'POST'])
     @require_auth(allow_unverified=True)
     @templated('people/person_email_verify_get.html')
-    def person_email_verify_primary(current_user, person_id):
-        return view.person_email_verify_get(
-            current_user, db, person_id, None, request.args,
+    def person_email_verify_primary(current_user):
+        return view.person_email_verify_get_primary(
+            current_user, db, request.args,
             (request.form if request.method == 'POST' else None),
             str_to_unicode(request.remote_addr))
 
@@ -188,7 +195,7 @@ def create_people_blueprint(db, facilities):
     @templated('people/person_email_verify_get.html')
     def person_email_verify_get(current_user, person_id, email_id):
         return view.person_email_verify_get(
-            current_user, db, person_id, email_id, None,
+            current_user, db, person_id, email_id,
             (request.form if request.method == 'POST' else None),
             str_to_unicode(request.remote_addr))
 

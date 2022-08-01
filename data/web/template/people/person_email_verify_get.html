@@ -16,7 +16,14 @@
     to complete the verification process.
 </p>
 
-<form method="POST" action="{{ url_for('.person_email_verify_get', person_id=person.id, email_id=email.id) }}">
+{% if is_registration %}
+    <p>
+        If your email address is not set correctly, you can
+        <a href="{{ url_for('.person_edit_email_own', log_in_for=log_in_for) }}">edit your address</a>.
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ target }}">
     <ol>
         <li>
             <label>Email address</label>

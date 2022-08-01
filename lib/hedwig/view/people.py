@@ -126,7 +126,7 @@ class PeopleView(object):
                                 'Please verify your email address.')
                             raise HTTPRedirect(url_for(
                                 '.person_email_verify_primary',
-                                person_id=person.id, **redirect_kwargs))
+                                **redirect_kwargs))
 
                         if person.institution_id is None:
                             # If the user has no institution, take them to the
@@ -495,7 +495,7 @@ class PeopleView(object):
 
                 raise HTTPRedirect(url_for(
                     '.person_email_verify_primary',
-                    person_id=person_id, log_in_for=log_in_for))
+                    log_in_for=log_in_for))
 
             except UserError as e:
                 message = e.message
@@ -741,14 +741,34 @@ class PeopleView(object):
             'next_page': next_page,
         }
 
+    def person_edit_email_own(self, current_user, db, args, form):
+        return self._person_edit_email(
+            current_user, db, current_user.person, args, form)
+
     @with_person(permission=PermissionType.EDIT)
     def person_edit_email(self, current_user, db, person, can, form):
+        return self._person_edit_email(
+            current_user, db, person, None, form)
+
+    def _person_edit_email(self, current_user, db, person, args, form):
         message = None
-        is_current_user = (person.user_id == current_user.user.id)
-        records = person.email
+        is_current_user = True
+        is_registration = False
+        log_in_for = None
+
+        if args is not None:
+            is_registration = True
+            log_in_for = args.get('log_in_for', None)
+            records = db.search_email(person_id=person.id)
+
+        else:
+            is_current_user = (person.user_id == current_user.user.id)
+            records = person.email
 
         if form is not None:
             try:
+                log_in_for = form.get('log_in_for', None)
+
                 # Temporary (unsorted) dictionaries for new records.
                 updated_records = {}
                 added_records = {}
@@ -777,8 +797,8 @@ class PeopleView(object):
                         email_id = int(id_)
 
                         verified = False
-                        if email_id in person.email:
-                            verified = person.email[email_id].verified
+                        if email_id in records:
+                            verified = records[email_id].verified
 
                         updated_records[email_id] = Email(
                             email_id, person.id, form[param].strip(),
@@ -796,49 +816,73 @@ class PeopleView(object):
                     flash('Your email addresses have been updated.')
                 else:
                     flash('The email addresses have been updated.')
-                raise HTTPRedirect(url_for(
-                    '.person_view', person_id=person.id))
+
+                if not is_registration:
+                    raise HTTPRedirect(url_for(
+                        '.person_view', person_id=person.id))
+                else:
+                    raise HTTPRedirect(url_for(
+                        '.person_email_verify_primary', log_in_for=log_in_for))
 
             except UserError as e:
                 message = e.message
 
+        title = 'Edit Email Addresses'
+        if not is_registration:
+            title = '{}: {}'.format(person.name, title)
+
         return {
-            'title': '{}: Edit Email Addresses'.format(person.name),
+            'title': title,
             'message': message,
             'person': person,
             'emails': records,
+            'target': (
+                url_for('.person_edit_email_own') if is_registration else
+                url_for('.person_edit_email', person_id=person.id)),
+            'log_in_for': log_in_for,
         }
+
+    def person_email_verify_get_primary(
+            self, current_user, db, args, form, remote_addr):
+        try:
+            email = db.search_email(
+                person_id=current_user.person.id).get_primary()
+        except NoSuchValue:
+            raise ErrorPage('No primary email address found.')
+
+        return self._person_email_verify_get(
+            current_user, db, current_user.person, email,
+            args, form, remote_addr)
 
     @with_person(permission=PermissionType.EDIT)
     def person_email_verify_get(
-            self, current_user, db, person, can, email_id,
-            args, form, remote_addr):
-        # Is this an automated request (email_id = None) as would be triggered
+            self, current_user, db, person, can, email_id, form, remote_addr):
+        try:
+            email = person.email[email_id]
+        except KeyError:
+            raise HTTPNotFound('Email address record not found.')
+
+        if email.verified:
+            raise ErrorPage(
+                'The email address {} has already been verified.',
+                email.address)
+
+        return self._person_email_verify_get(
+            current_user, db, person, email,
+            None, form, remote_addr)
+
+    def _person_email_verify_get(
+            self, current_user, db, person, email, args, form, remote_addr):
+        # Is this an automated request (args not None) as would be triggered
         # during registration or via require_auth?
         is_registration = False
         log_in_for = None
 
-        if email_id is not None:
-            try:
-                email = person.email[email_id]
-            except KeyError:
-                raise HTTPNotFound('Email address record not found.')
-
-            if email.verified:
-                raise ErrorPage(
-                    'The email address {} has already been verified.',
-                    email.address)
-
-        else:
+        if args is not None:
             is_registration = True
             log_in_for = args.get('log_in_for', None)
 
-            try:
-                email = person.email.get_primary()
-            except NoSuchValue:
-                raise ErrorPage('No primary email address found.')
-
-        if form:
+        if form is not None:
             log_in_for = form.get('log_in_for', None)
 
             try:
@@ -865,8 +909,6 @@ class PeopleView(object):
             raise HTTPRedirect(url_for(
                 '.person_email_verify_use', log_in_for=log_in_for))
 
-        is_registration = True
-
         title = 'Verify Email Address'
         if not is_registration:
             title = '{}: {}'.format(person.name, title)
@@ -876,6 +918,12 @@ class PeopleView(object):
             'person': person,
             'email': email,
             'is_registration': is_registration,
+            'target': (
+                url_for('.person_email_verify_primary')
+                if is_registration else
+                url_for(
+                    '.person_email_verify_get',
+                    person_id=person.id, email_id=email.id)),
             'log_in_for': log_in_for,
         }
 

@@ -11,7 +11,7 @@
     </p>
 {% endif %}
 
-<form method="POST" action="{{ url_for('.person_edit_email', person_id=person.id) }}">
+<form method="POST" action="{{ target }}">
     <table id="emailaddresses">
         <tr>
             <th>Address</th>
@@ -50,6 +50,9 @@
     </p>
     <p>
         <input type="submit" value="Save" name="submit" />
+        {% if log_in_for is not none %}
+            <input type="hidden" name="log_in_for" value="{{ log_in_for }}" />
+        {% endif %}
     </p>
 </form>
 
