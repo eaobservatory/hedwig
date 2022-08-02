@@ -4,7 +4,7 @@ body {
     color: black;
 }
 
-header, footer, nav {
+header, footer, nav, p#status_notice {
     display: none;
 }
 

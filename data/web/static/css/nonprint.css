@@ -26,6 +26,20 @@ ul#flashes {
     animation-timing-function: linear;
 }
 
+p#status_notice {
+    color: #000;
+    background: #AAF;
+    box-shadow: 0ex 0ex 1ex black;
+    border-radius: 1ex;
+    border: 1px solid black;
+    max-width: 60ex;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 4ex;
+    margin-bottom: 4ex;
+    padding: 2ex;
+}
+
 div#content {
     background: white;
     color: black;

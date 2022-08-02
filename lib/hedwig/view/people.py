@@ -59,6 +59,10 @@ ReviewsByFacility = namedtuple(
 
 class PeopleView(object):
     def log_in(self, db, args, form, remote_addr, remote_agent, referrer):
+        if get_config().getboolean('status', 'disable_log_in'):
+            raise ErrorPage(
+                'Account log in is not available at this time.')
+
         message = None
 
         user_name = args.get('user_name', '')
@@ -166,6 +170,10 @@ class PeopleView(object):
         raise HTTPRedirect(url_for('home.home_page'))
 
     def register_user(self, db, args, form, remote_addr, remote_agent):
+        if get_config().getboolean('status', 'disable_register'):
+            raise ErrorPage(
+                'Account registration is not available at this time.')
+
         message = None
 
         user_name = ''

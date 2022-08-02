@@ -36,6 +36,10 @@
             {{ render_flashes() }}
         </header>
 
+        {% if application_status_notice %}
+            <p id="status_notice">{{ application_status_notice }}</p>
+        {% endif %}
+
         {% block body %}
             {% if content_class is defined %}
                 <div id="content" class="{{ content_class }}">

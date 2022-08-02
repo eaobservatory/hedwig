@@ -153,6 +153,7 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
     def add_to_context():
         return {
             'application_name': application_name,
+            'application_status_notice': config.get('status', 'notice'),
             'current_user': flask_g.current_user,
         }
 

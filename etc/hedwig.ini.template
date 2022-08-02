@@ -15,6 +15,11 @@ log_file=
 grace_period=5
 base_url=
 
+[status]
+notice=
+disable_register=no
+disable_log_in=no
+
 # The maximum file upload sizes for proposal PDFs and figures are specified
 # here in MiB.
 [upload]
