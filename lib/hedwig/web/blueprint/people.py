@@ -119,6 +119,32 @@ def create_people_blueprint(db, facilities):
     def user_log(current_user, user_id):
         return view.user_log(current_user, db, user_id)
 
+    @bp.route('/user/session/')
+    @require_admin
+    @templated('people/user_session_list.html')
+    def user_session_list(current_user):
+        return view.user_session_list(current_user, db)
+
+    @bp.route(
+        '/user/session/log_out/',
+        methods=['GET', 'POST'])
+    @require_admin
+    @templated('confirm.html')
+    def user_session_log_out_all(current_user):
+        return view.user_session_log_out(
+            current_user, db, None,
+            (request.form if request.method == 'POST' else None))
+
+    @bp.route(
+        '/user/session/log_out/<int:auth_token_id>',
+        methods=['GET', 'POST'])
+    @require_admin
+    @templated('confirm.html')
+    def user_session_log_out(current_user, auth_token_id):
+        return view.user_session_log_out(
+            current_user, db, auth_token_id,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/person/register', methods=['GET', 'POST'])
     @require_auth(require_person=False)
     @templated('people/person_edit.html')

@@ -44,6 +44,12 @@ Annotation = namedtuple(
     'Annotation',
     [x.name for x in proposal_annotation.columns])
 
+AuthTokenInfo = namedtuple(
+    'AuthTokenInfo',
+    ['id', 'user_id', 'expiry', 'remote_addr', 'remote_agent',
+     'user_name',
+     'person_id', 'person_name'])
+
 CalculatorInfo = namedtuple(
     'CalculatorInfo',
     ['id', 'code', 'name', 'calculator', 'modes', 'view_functions'])

@@ -21,6 +21,13 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict, namedtuple
 from datetime import datetime
 
+have_user_agents = False
+try:
+    from user_agents import parse as user_agents_parse
+    have_user_agents = True
+except ImportError:
+    pass
+
 from ..config import get_config, get_countries
 from ..email.format import render_email_template
 from ..error import ConsistencyError, DatabaseIntegrityError, Error, \
@@ -469,6 +476,36 @@ class PeopleView(object):
             'person': person,
             'events': events,
         }
+
+    def user_session_list(self, current_user, db):
+        sessions = db.search_auth_token()
+
+        return {
+            'title': 'Log in sessions',
+            'sessions': sessions.map_values(
+                lambda x: x._replace(remote_agent=(
+                    user_agents_parse(x.remote_agent)
+                    if have_user_agents else None))
+            ),
+        }
+
+    def user_session_log_out(self, current_user, db, auth_token_id, form):
+        if form:
+            if 'submit_confirm' in form:
+                db.delete_auth_token(auth_token_id=auth_token_id)
+
+            raise HTTPRedirect(url_for('.user_session_list'))
+
+        if auth_token_id is None:
+            return {
+                'title': 'Log out sessions',
+                'message': 'Log out all sessions?',
+            }
+        else:
+            return {
+                'title': 'Log out session',
+                'message': 'Log out user session?',
+            }
 
     def register_person(self, current_user, db, args, form, remote_addr):
         if current_user.person is not None:

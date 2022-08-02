@@ -179,7 +179,7 @@ class DBPeopleTest(DBTestCase):
         self.assertEqual(user.id, user_id)
         self.assertEqual(user.name, 'user1')
 
-        self.db.delete_auth_token(token)
+        self.db.delete_auth_token(token=token)
 
         with self.assertRaises(NoSuchRecord):
             self.db.authenticate_token(token)

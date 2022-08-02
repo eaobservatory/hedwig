@@ -34,7 +34,7 @@ from ...error import ConsistencyError, DatabaseIntegrityError, \
 from ...type.collection import EmailCollection, ResultCollection, \
     SiteGroupMemberCollection
 from ...type.enum import PersonTitle, SiteGroupType, UserLogEvent
-from ...type.simple import Email, \
+from ...type.simple import AuthTokenInfo, Email, \
     Institution, InstitutionInfo, InstitutionLog, OAuthCode, OAuthToken, \
     Person, PersonInfo, SiteGroupMember, UserInfo, UserLog
 from ...util import is_list_like
@@ -435,7 +435,8 @@ class PeoplePart(object):
         conn.execute(auth_token.delete().where(
             auth_token.c.expiry < datetime.utcnow()))
 
-    def delete_auth_token(self, token, user_id=None):
+    def delete_auth_token(
+            self, token=None, user_id=None, auth_token_id=None):
         stmt = auth_token.delete()
 
         if token is not None:
@@ -443,6 +444,9 @@ class PeoplePart(object):
 
         if user_id is not None:
             stmt = stmt.where(auth_token.c.user_id == user_id)
+
+        if auth_token_id is not None:
+            stmt = stmt.where(auth_token.c.id == auth_token_id)
 
         with self._transaction() as conn:
             conn.execute(stmt)
@@ -846,6 +850,30 @@ class PeoplePart(object):
             if main_user_id is not None:
                 self._add_user_log_entry(
                     conn, main_user_id, UserLogEvent.MERGED)
+
+    def search_auth_token(self):
+        """
+        Find authentication token records.
+        """
+
+        stmt = select([
+            auth_token.c.id,
+            auth_token.c.user_id,
+            auth_token.c.expiry,
+            auth_token.c.remote_addr,
+            auth_token.c.remote_agent,
+            user.c.name.label('user_name'),
+            person.c.id.label('person_id'),
+            person.c.name.label('person_name'),
+        ]).select_from(auth_token.join(user).outerjoin(person))
+
+        ans = ResultCollection()
+
+        with self._transaction() as conn:
+            for row in conn.execute(stmt.order_by(auth_token.c.id)):
+                ans[row['id']] = AuthTokenInfo(**row)
+
+        return ans
 
     def search_email(self, person_id, address=None, _conn=None):
         """

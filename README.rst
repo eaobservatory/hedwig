@@ -61,6 +61,7 @@ The following Python modules should be installed:
 * requests
 * SQLAlchemy
 * Authlib (for the OAuth2 provider)
+* user-agents (optional, for log in session list)
 
 In addition the following back-ported modules may be required
 when using older versions of Python:
