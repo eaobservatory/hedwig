@@ -117,7 +117,7 @@ def create_people_blueprint(db, facilities):
     @require_admin
     @templated('people/user_log.html')
     def user_log(current_user, user_id):
-        return view.user_log(current_user, db, user_id)
+        return view.user_log(current_user, db, user_id, request.args)
 
     @bp.route('/user/session/')
     @require_admin

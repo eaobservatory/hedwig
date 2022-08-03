@@ -35,8 +35,9 @@ from ..error import ConsistencyError, DatabaseIntegrityError, Error, \
     UserError
 from ..type.collection import EmailCollection, GroupMemberCollection, \
     ProposalCollection, ReviewerCollection
-from ..type.enum import PermissionType, PersonTitle, ProposalState, \
-    ReviewState
+from ..type.enum import LogEventLevel, \
+    PermissionType, PersonTitle, ProposalState, \
+    ReviewState, UserLogEvent
 from ..type.simple import Email, \
     Institution, InstitutionLog, Person, ProposalWithCode
 from ..type.util import null_tuple, with_deadline
@@ -456,7 +457,7 @@ class PeopleView(object):
         flash('You have dropped administrative privileges.')
         raise HTTPRedirect(referrer if referrer else url_for('home.home_page'))
 
-    def user_log(self, current_user, db, user_id):
+    def user_log(self, current_user, db, user_id, args):
         try:
             user_name = db.get_user_name(user_id=user_id)
         except NoSuchRecord:
@@ -469,13 +470,21 @@ class PeopleView(object):
         except NoSuchRecord:
             name = 'User {}'.format(user_id)
 
-        events = db.search_user_log(user_id=user_id)
+        level = (
+            int(args['level']) if 'level' in args
+            else LogEventLevel.INTERMEDIATE)
+
+        events = db.search_user_log(
+            user_id=user_id, event=UserLogEvent.events_of_level(level))
 
         return {
             'title': '{}: Account Log'.format(name),
+            'user_id': user_id,
             'user_name': user_name,
             'person': person,
             'events': events,
+            'level': level,
+            'levels': LogEventLevel.get_options(),
         }
 
     def user_session_list(self, current_user, db):

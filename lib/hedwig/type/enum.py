@@ -375,6 +375,10 @@ class LogEventLevel(EnumBasic):
         (MAJOR,         LevelInfo('Major')),
     ))
 
+    @classmethod
+    def get_options(cls):
+        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
+
 
 class MessageState(EnumAllowUser, EnumBasic):
     """

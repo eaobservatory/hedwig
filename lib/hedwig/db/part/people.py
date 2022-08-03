@@ -1249,7 +1249,10 @@ class PeoplePart(object):
         stmt = user_log.select().where(user_log.c.user_id == user_id)
 
         if event is not None:
-            stmt = stmt.where(user_log.c.event == event)
+            if is_list_like(event):
+                stmt = stmt.where(user_log.c.event.in_(event))
+            else:
+                stmt = stmt.where(user_log.c.event == event)
 
         if date_after is not None:
             stmt = stmt.where(user_log.c.date > date_after)
