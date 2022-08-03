@@ -12,26 +12,32 @@
             <th>Remote agent</th>
             <th>Actions</th>
         </tr>
-        {% for session in sessions.values() %}
+        {% for user_session in sessions.values() %}
             <tr>
                 <td>
-                    {% if session.person_id is none %}
-                        <a href="{{ url_for('.user_log', user_id=session.user_id) }}">{{ session.user_name }}</a>
+                    {% if user_session.person_id is none %}
+                        <a href="{{ url_for('.user_log', user_id=user_session.user_id) }}">{{ user_session.user_name }}</a>
                         <span class="label">unregistered</span>
                     {% else %}
-                        <a href="{{ url_for('.person_view', person_id=session.person_id) }}">{{ session.person_name }}</a>
+                        <a href="{{ url_for('.person_view', person_id=user_session.person_id) }}">{{ user_session.person_name }}</a>
                     {% endif %}
                 </td>
-                <td>{{ session.expiry | format_datetime }}</td>
-                <td>{{ session.remote_addr }}</td>
+                <td>{{ user_session.expiry | format_datetime }}</td>
+                <td>{{ user_session.remote_addr }}</td>
                 <td>
-                    {% if session.remote_agent is none %}
+                    {% if user_session.remote_agent is none %}
                         &nbsp;
                     {% else %}
-                        {{ session.remote_agent }}
+                        {{ user_session.remote_agent }}
                     {% endif %}
                 </td>
-                <td><a href="{{ url_for('.user_session_log_out', auth_token_id=session.id) }}">Log out</a></td>
+                <td>
+                    {% if current_user.auth_token_id == user_session.id %}
+                        <span class="label">this session</span>
+                    {% else %}
+                        <a href="{{ url_for('.user_session_log_out', auth_token_id=user_session.id) }}">Log out</a>
+                    {% endif %}
+                </td>
             </tr>
         {% endfor %}
     </table>

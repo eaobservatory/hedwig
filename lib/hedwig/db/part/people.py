@@ -451,7 +451,8 @@ class PeoplePart(object):
             auth_token.c.expiry < datetime.utcnow()))
 
     def delete_auth_token(
-            self, token=None, user_id=None, auth_token_id=None):
+            self, token=None, user_id=None,
+            auth_token_id=None, auth_token_id_not=None):
         stmt = auth_token.delete()
 
         if token is not None:
@@ -462,6 +463,9 @@ class PeoplePart(object):
 
         if auth_token_id is not None:
             stmt = stmt.where(auth_token.c.id == auth_token_id)
+
+        if auth_token_id_not is not None:
+            stmt = stmt.where(auth_token.c.id != auth_token_id_not)
 
         with self._transaction() as conn:
             conn.execute(stmt)

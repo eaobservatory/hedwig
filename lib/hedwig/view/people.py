@@ -502,14 +502,18 @@ class PeopleView(object):
     def user_session_log_out(self, current_user, db, auth_token_id, form):
         if form:
             if 'submit_confirm' in form:
-                db.delete_auth_token(auth_token_id=auth_token_id)
+                if auth_token_id is None:
+                    db.delete_auth_token(
+                        auth_token_id_not=current_user.auth_token_id)
+                else:
+                    db.delete_auth_token(auth_token_id=auth_token_id)
 
             raise HTTPRedirect(url_for('.user_session_list'))
 
         if auth_token_id is None:
             return {
                 'title': 'Log out sessions',
-                'message': 'Log out all sessions?',
+                'message': 'Log out all other sessions?',
             }
         else:
             return {
