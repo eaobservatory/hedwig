@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2020 East Asian Observatory
+# Copyright (C) 2016-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -355,6 +355,21 @@ class EnumDisplayClass(object):
         """Get a CSS class which can be used to display a given value."""
 
         return cls._info[value].display_class
+
+
+class EnumLevel(object):
+    """
+    Mix-in for enum-style classes with an `_info` dictionary
+    including a `level` attribute.
+    """
+
+    @classmethod
+    def events_of_level(cls, level):
+        """
+        Return a list of events at or above the given level.
+        """
+
+        return [k for (k, v) in cls._info.items() if v.level >= level]
 
 
 class EnumShortName(object):

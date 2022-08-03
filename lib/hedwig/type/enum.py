@@ -23,7 +23,7 @@ import re
 
 from ..error import NoSuchValue, UserError
 from .base import EnumAllowUser, EnumAvailable, EnumBasic, EnumCode, \
-    EnumDisplayClass, EnumShortName, EnumURLPath
+    EnumDisplayClass, EnumLevel, EnumShortName, EnumURLPath
 
 
 class AffiliationType(EnumBasic):
@@ -348,6 +348,32 @@ class GroupType(EnumAllowUser, EnumBasic, EnumURLPath):
         """Get a list of groups with the `feedback_view` privilege."""
 
         return [k for (k, v) in cls._info.items() if v.feedback_view]
+
+
+class LogEventLevel(EnumBasic):
+    """
+    Class representing log event levels.
+
+    .. note::
+        These levels should be ordered with higher priority events having
+        higher numerical values.  (See e.g. the `EnumLevel.events_of_level`
+        method.)  As such they may change, and should therefore only be used
+        in `_info` dictionaries of other classes, rather than being stored
+        in the database.
+    """
+
+    MINOR = 1
+    INTERMEDIATE = 2
+    MAJOR = 3
+
+    LevelInfo = namedtuple(
+        'LevelInfo', ('name',))
+
+    _info = OrderedDict((
+        (MINOR,         LevelInfo('Minor')),
+        (INTERMEDIATE,  LevelInfo('Intermediate')),
+        (MAJOR,         LevelInfo('Major')),
+    ))
 
 
 class MessageState(EnumAllowUser, EnumBasic):
@@ -1091,7 +1117,7 @@ class BaseTextRole(EnumBasic, EnumCode, EnumURLPath):
     }
 
 
-class UserLogEvent(EnumBasic):
+class UserLogEvent(EnumBasic, EnumLevel):
     """
     Class representing different types of events which are stored in the
     user account log.
@@ -1107,20 +1133,44 @@ class UserLogEvent(EnumBasic):
     MERGED = 8
     GET_EMAIL_TOKEN = 9
     USE_EMAIL_TOKEN = 10
+    LOG_IN = 11
 
-    EventInfo = namedtuple('EventInfo', ('description',))
+    EventInfo = namedtuple('EventInfo', ('description', 'level'))
 
     _info = {
-        CREATE:       EventInfo('Account created'),
-        LINK_PROFILE: EventInfo('Profile linked'),
-        CHANGE_NAME:  EventInfo('Changed user name'),
-        CHANGE_PASS:  EventInfo('Changed password'),
-        GET_TOKEN:    EventInfo('Issued password reset code'),
-        USE_TOKEN:    EventInfo('Used password reset code'),
-        USE_INVITE:   EventInfo('Profile linked via invitation'),
-        MERGED:       EventInfo('Profile merged'),
-        GET_EMAIL_TOKEN: EventInfo('Issued email verify token'),
-        USE_EMAIL_TOKEN: EventInfo('Used email verify token'),
+        CREATE: EventInfo(
+            'Account created',
+            LogEventLevel.MAJOR),
+        LINK_PROFILE: EventInfo(
+            'Profile linked',
+            LogEventLevel.MAJOR),
+        CHANGE_NAME: EventInfo(
+            'Changed user name',
+            LogEventLevel.INTERMEDIATE),
+        CHANGE_PASS: EventInfo(
+            'Changed password',
+            LogEventLevel.INTERMEDIATE),
+        GET_TOKEN: EventInfo(
+            'Issued password reset code',
+            LogEventLevel.INTERMEDIATE),
+        USE_TOKEN: EventInfo(
+            'Used password reset code',
+            LogEventLevel.INTERMEDIATE),
+        USE_INVITE: EventInfo(
+            'Profile linked via invitation',
+            LogEventLevel.MAJOR),
+        MERGED: EventInfo(
+            'Profile merged',
+            LogEventLevel.MAJOR),
+        GET_EMAIL_TOKEN: EventInfo(
+            'Issued email verify token',
+            LogEventLevel.INTERMEDIATE),
+        USE_EMAIL_TOKEN: EventInfo(
+            'Used email verify token',
+            LogEventLevel.INTERMEDIATE),
+        LOG_IN: EventInfo(
+            'Logged in',
+            LogEventLevel.MINOR),
     }
 
 

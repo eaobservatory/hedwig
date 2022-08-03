@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2021 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -25,9 +25,10 @@ from hedwig.error import Error, NoSuchValue
 from hedwig.type.enum import \
     Assessment, AttachmentState, \
     BaseCallType, BaseReviewerRole, BaseTextRole, \
-    CallState, GroupType, \
+    CallState, GroupType, LogEventLevel, \
     MessageState, PersonTitle, ProposalState, PublicationType, \
-    RequestState, ReviewState, SemesterState
+    RequestState, ReviewState, SemesterState, \
+    UserLogEvent
 
 from .compat import TestCase
 
@@ -504,3 +505,36 @@ class EnumTypeTestCase(TestCase):
             BaseTextRole.by_url_path('something_else')
 
         self.assertIsNone(BaseTextRole.by_url_path('something_else', None))
+
+    def test_user_log_event(self):
+        expect = [
+            UserLogEvent.CREATE,
+            UserLogEvent.LINK_PROFILE,
+            UserLogEvent.USE_INVITE,
+            UserLogEvent.MERGED,
+        ]
+
+        events = UserLogEvent.events_of_level(LogEventLevel.MAJOR)
+        self.assertIsInstance(events, list)
+        self.assertEqual(events, expect)
+
+        expect = sorted(expect + [
+            UserLogEvent.CHANGE_NAME,
+            UserLogEvent.CHANGE_PASS,
+            UserLogEvent.GET_TOKEN,
+            UserLogEvent.USE_TOKEN,
+            UserLogEvent.GET_EMAIL_TOKEN,
+            UserLogEvent.USE_EMAIL_TOKEN,
+        ])
+
+        events = UserLogEvent.events_of_level(LogEventLevel.INTERMEDIATE)
+        self.assertIsInstance(events, list)
+        self.assertEqual(events, expect)
+
+        expect = sorted(expect + [
+            UserLogEvent.LOG_IN,
+        ])
+
+        events = UserLogEvent.events_of_level(LogEventLevel.MINOR)
+        self.assertIsInstance(events, list)
+        self.assertEqual(events, expect)
