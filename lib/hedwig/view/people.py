@@ -84,7 +84,8 @@ class PeopleView(object):
                 log_in_referrer = form.get('log_in_referrer', None)
                 register_only = ('register_only' in form)
 
-                user_id = db.authenticate_user(user_name, form['password'])
+                user_id = db.authenticate_user(
+                    user_name, form['password'], remote_addr=remote_addr)
 
                 if user_id is None:
                     raise UserError('User name or password not recognised.')

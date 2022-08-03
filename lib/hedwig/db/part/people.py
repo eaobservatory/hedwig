@@ -273,7 +273,8 @@ class PeoplePart(object):
 
         return user_id
 
-    def authenticate_user(self, name, password_raw, user_id=None):
+    def authenticate_user(
+            self, name, password_raw, user_id=None, remote_addr=None):
         """
         Given a user name and raw password, try to authenitcate the user.
 
@@ -334,7 +335,17 @@ class PeoplePart(object):
         else:
             if check_password_hash(password_raw, result[user.c.password],
                                    result[user.c.salt]):
-                return result[user.c.id]
+                verified_user_id = result['id']
+
+                # If this is a new log in (not re-authentication), add to log:
+                if user_id is None:
+                    with self._transaction() as conn:
+                        self._add_user_log_entry(
+                            conn, verified_user_id, UserLogEvent.LOG_IN,
+                            remote_addr)
+
+                return verified_user_id
+
             else:
                 if name is not None:
                     self._record_auth_failure(name)
