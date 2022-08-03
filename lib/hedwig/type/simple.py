@@ -95,7 +95,7 @@ CoMemberInfo = namedtuple(
 
 CurrentUser = namedtuple(
     'CurrentUser',
-    ['user', 'person', 'is_admin'])
+    ['user', 'person', 'is_admin', 'auth_token_id'])
 
 # Pair type for conveniently passing date and time strings around.
 DateAndTime = namedtuple('DateAndTime', ('date', 'time'))

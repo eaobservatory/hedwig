@@ -618,12 +618,13 @@ def check_current_user(db):
     user = None
     person = None
     is_admin = False
+    auth_token_id = None
 
     token = session.get('token')
 
     if token is not None:
         try:
-            user = db.authenticate_token(token)
+            (user, auth_token_id) = db.authenticate_token(token)
 
         except NoSuchRecord:
             session.clear()
@@ -640,7 +641,8 @@ def check_current_user(db):
             is_admin = True
 
     flask_g.current_user = CurrentUser(
-        user=user, person=person, is_admin=is_admin)
+        user=user, person=person, is_admin=is_admin,
+        auth_token_id=auth_token_id)
 
 
 def _url_manipulation(f):

@@ -174,10 +174,11 @@ class DBPeopleTest(DBTestCase):
         with self.assertRaises(NoSuchRecord):
             self.db.authenticate_token('invalid token')
 
-        user = self.db.authenticate_token(token)
+        (user, auth_token_id) = self.db.authenticate_token(token)
         self.assertIsInstance(user, UserInfo)
         self.assertEqual(user.id, user_id)
         self.assertEqual(user.name, 'user1')
+        self.assertIsInstance(auth_token_id, int)
 
         self.db.delete_auth_token(token=token)
 

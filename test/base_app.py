@@ -89,7 +89,8 @@ class WebAppTestCase(DBTestCase):
         current_user = CurrentUser(
             user=None,
             person=None,
-            is_admin=False)
+            is_admin=False,
+            auth_token_id=None)
 
         if person_id is not None:
             person = self.db.search_person(person_id=person_id).get_single()

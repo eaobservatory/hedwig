@@ -398,6 +398,8 @@ class PeoplePart(object):
         Expired token are automatically deleted before the search
         is performed.  Additionally if more that 10 minutes of the
         token's duration has elapsed, its expiry date is refreshed.
+
+        :return: a (`CurrentUser`, `auth_token_id`) tuple
         """
 
         select_columns = [
@@ -440,7 +442,9 @@ class PeoplePart(object):
         if result is None:
             raise NoSuchRecord('token not found')
 
-        return UserInfo(id=result['id'], name=result['name'])
+        return (
+            UserInfo(id=result['id'], name=result['name']),
+            result['token_id'])
 
     def _delete_auth_expired(self, conn):
         conn.execute(auth_token.delete().where(
