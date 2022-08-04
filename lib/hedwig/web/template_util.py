@@ -32,7 +32,7 @@ from ..compat import first_value as _first_value
 from ..config import get_countries
 from ..type.enum import AffiliationType, Assessment, \
     AttachmentState, CallState, GroupType, MessageState, MessageThreadType, \
-    PersonTitle, ProposalState, PublicationType, \
+    PersonLogEvent, PersonTitle, ProposalState, PublicationType, \
     RequestState, ReviewState, SemesterState, SiteGroupType, UserLogEvent
 from ..util import FormatMaxDP, FormatSigFig
 from .format import format_text
@@ -293,6 +293,13 @@ def register_template_utils(app):
             return MessageThreadType.get_name(value)
         except KeyError:
             return 'Unknown thread type'
+
+    @app.template_filter()
+    def person_log_event_description(value):
+        try:
+            return PersonLogEvent.get_info(value).description
+        except KeyError:
+            return 'Unknown event'
 
     @app.template_filter()
     def plain_group_by(value, attr):

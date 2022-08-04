@@ -1,0 +1,37 @@
+{% extends 'layout.html' %}
+{% set navigation=['people', (person.name, url_for('.person_view', person_id=person.id))] %}
+{% set help_link=url_for('help.admin_page', page_name='user') %}
+
+{% block content %}
+<h2>Action Log Events</h2>
+
+<form method="GET" action="{{ url_for('.person_log', person_id=person.id) }}">
+    <p>
+        <select name="level">
+            {% for (level_num, level_name) in levels.items() %}
+                <option value="{{ level_num }}" {{ 'selected="selected"' | safe if level_num == level }}>{{ level_name }}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="Filter" name="submit" />
+    </p>
+</form>
+
+{% if events %}
+    <table>
+        <tr>
+            <th>Date (UT)</th>
+            <th>Event</th>
+        </tr>
+        {% for event in events.values() %}
+            <tr>
+                <td>{{ event.date | format_datetime }}</td>
+                <td>{{ event.event | person_log_event_description }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p class="not_present">
+        No action log events are present.
+    </p>
+{% endif %}
+{% endblock %}

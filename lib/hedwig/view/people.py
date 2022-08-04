@@ -36,7 +36,7 @@ from ..error import ConsistencyError, DatabaseIntegrityError, Error, \
 from ..type.collection import EmailCollection, GroupMemberCollection, \
     ProposalCollection, ReviewerCollection
 from ..type.enum import LogEventLevel, \
-    PermissionType, PersonTitle, ProposalState, \
+    PermissionType, PersonLogEvent, PersonTitle, ProposalState, \
     ReviewState, UserLogEvent
 from ..type.simple import Email, \
     Institution, InstitutionLog, Person, ProposalWithCode
@@ -1187,6 +1187,23 @@ class PeopleView(object):
             'proposals': proposals,
             'person': person,
             'view_all': view_all,
+        }
+
+    @with_person(permission=PermissionType.NONE)
+    def person_log(self, current_user, db, person, args):
+        level = (
+            int(args['level']) if 'level' in args
+            else LogEventLevel.INTERMEDIATE)
+
+        events = db.search_person_log(
+            person_id=person.id, event=PersonLogEvent.events_of_level(level))
+
+        return {
+            'title': '{}: Action Log'.format(person.name),
+            'person': person,
+            'events': events,
+            'level': level,
+            'levels': LogEventLevel.get_options(),
         }
 
     @with_person(permission=PermissionType.NONE)

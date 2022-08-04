@@ -25,7 +25,7 @@ from ..db.meta import affiliation, \
     calculation, call, call_mid_close, call_preamble, category, \
     email, group_member, institution, institution_log, \
     member, message, message_recipient, moc, \
-    oauth_code, oauth_token, person, \
+    oauth_code, oauth_token, person, person_log, \
     prev_proposal, prev_proposal_pub, \
     proposal, proposal_annotation, proposal_category, \
     proposal_fig, proposal_fig_link, proposal_pdf, proposal_pdf_link, \
@@ -216,6 +216,10 @@ PersonInfo = namedtuple(
     [x.name for x in person.columns] +
     ['institution_name', 'institution_department',
      'institution_organization', 'institution_country'])
+
+PersonLog = namedtuple(
+    'PersonLog',
+    [x.name for x in person_log.columns])
 
 PrevProposal = namedtuple(
     'PrevProposal',

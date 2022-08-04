@@ -47,6 +47,7 @@
                 <li><a href="{{ url_for('.person_invite', person_id=person.id) }}">Invite to register</a></li>
             {% else %}
                 <li><a href="{{ url_for('.user_log', user_id=person.user_id) }}">User account log</a></li>
+                <li><a href="{{ url_for('.person_log', person_id=person.id) }}">Person action log</a></li>
                 <li><a href="{{ url_for('.person_subsume', person_id=person.id) }}">Subsume duplicate profile</a></li>
             {% endif %}
         </ol>

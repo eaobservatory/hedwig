@@ -269,6 +269,13 @@ def create_people_blueprint(db, facilities):
             current_user, db, person_id,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/person/<int:person_id>/log')
+    @require_admin
+    @templated('people/person_log.html')
+    def person_log(current_user, person_id):
+        return view.person_log(
+            current_user, db, person_id, request.args)
+
     @bp.route('/institution/')
     @require_auth()
     @templated('people/institution_list.html')

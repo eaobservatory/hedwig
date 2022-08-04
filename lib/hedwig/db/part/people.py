@@ -37,7 +37,7 @@ from ...type.enum import PersonLogEvent, PersonTitle, \
     SiteGroupType, UserLogEvent
 from ...type.simple import AuthTokenInfo, Email, \
     Institution, InstitutionInfo, InstitutionLog, OAuthCode, OAuthToken, \
-    Person, PersonInfo, SiteGroupMember, UserInfo, UserLog
+    Person, PersonInfo, PersonLog, SiteGroupMember, UserInfo, UserLog
 from ...util import is_list_like
 from ..meta import auth_failure, auth_token, email, group_member, \
     institution, institution_log, \
@@ -1182,6 +1182,16 @@ class PeoplePart(object):
 
         return ans
 
+    def search_person_log(self, person_id, **kwargs):
+        """
+        Search for person log entries.
+        """
+
+        assert 'user_id' not in kwargs
+
+        return self._search_event_log(
+            person_log, PersonLog, person_id=person_id, **kwargs)
+
     def search_site_group_member(
             self, site_group_type=None, person_id=None,
             site_group_member_id=None, with_person=False, _conn=None):
@@ -1280,28 +1290,42 @@ class PeoplePart(object):
 
         return ans
 
-    def search_user_log(
-            self, user_id, event=None, date_after=None, _conn=None):
+    def search_user_log(self, user_id, **kwargs):
         """
         Search for user log entries.
         """
 
-        stmt = user_log.select().where(user_log.c.user_id == user_id)
+        assert 'person_id' not in kwargs
+
+        return self._search_event_log(
+            user_log, UserLog, user_id=user_id, **kwargs)
+
+    def _search_event_log(
+            self, table, result_class,
+            user_id=None, person_id=None, event=None, date_after=None,
+            _conn=None):
+        stmt = table.select()
+
+        if user_id is not None:
+            stmt = stmt.where(table.c.user_id == user_id)
+
+        if person_id is not None:
+            stmt = stmt.where(table.c.person_id == person_id)
 
         if event is not None:
             if is_list_like(event):
-                stmt = stmt.where(user_log.c.event.in_(event))
+                stmt = stmt.where(table.c.event.in_(event))
             else:
-                stmt = stmt.where(user_log.c.event == event)
+                stmt = stmt.where(table.c.event == event)
 
         if date_after is not None:
-            stmt = stmt.where(user_log.c.date > date_after)
+            stmt = stmt.where(table.c.date > date_after)
 
         ans = ResultCollection()
 
         with self._transaction(_conn=_conn) as conn:
-            for row in conn.execute(stmt.order_by(user_log.c.id.desc())):
-                ans[row['id']] = UserLog(**row)
+            for row in conn.execute(stmt.order_by(table.c.id.desc())):
+                ans[row['id']] = result_class(**row)
 
         return ans
 
