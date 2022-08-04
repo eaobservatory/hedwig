@@ -2226,7 +2226,7 @@ class IntegrationTest(DummyConfigTestCase):
             self.browser.find_element_by_name('registered')
         ).select_by_visible_text('Any status')
 
-        self.browser.find_element_by_name('submit').click()
+        self.browser.find_element_by_id('submit_filter').click()
 
         self._save_screenshot(self.admin_image_root, 'person_list')
 

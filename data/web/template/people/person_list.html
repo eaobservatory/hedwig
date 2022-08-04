@@ -11,7 +11,7 @@
                 <option value="0" {{ 'selected="selected"' | safe if (registered is not none) and (not registered) }}>Unregistered</option>
                 <option value="" {{ 'selected="selected"' | safe if registered is none }}>Any status</option>
             </select>
-            <input type="submit" value="Filter" name="submit" />
+            <input type="submit" value="Filter" id="submit_filter" />
         </p>
     </form>
 {% endif %}
