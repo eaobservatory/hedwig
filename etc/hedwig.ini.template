@@ -19,6 +19,7 @@ base_url=
 notice=
 disable_register=no
 disable_log_in=no
+disable_reset_password=no
 
 # The maximum file upload sizes for proposal PDFs and figures are specified
 # here in MiB.

@@ -296,6 +296,10 @@ class PeopleView(object):
         }
 
     def password_reset_token_get(self, db, args, form, remote_addr):
+        if get_config().getboolean('status', 'disable_reset_password'):
+            raise ErrorPage(
+                'Password reset is not available at this time.')
+
         message = None
 
         log_in_for = args.get('log_in_for', None)
@@ -404,6 +408,10 @@ class PeopleView(object):
         }
 
     def password_reset_token_use(self, db, args, form, remote_addr):
+        if get_config().getboolean('status', 'disable_reset_password'):
+            raise ErrorPage(
+                'Password reset is not available at this time.')
+
         message = None
         token = args.get('token', '')
         log_in_for = args.get('log_in_for', None)
