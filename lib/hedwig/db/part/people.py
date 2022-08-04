@@ -504,6 +504,37 @@ class PeoplePart(object):
         with self._transaction() as conn:
             conn.execute(stmt)
 
+    def delete_user(self, user_id, _test_skip_check=False):
+        """
+        Delete a user record.
+
+        The user can not be registered, i.e. there can not be a person
+        record with this `user_id`.
+        """
+
+        stmt = user.delete().where(user.c.id == user_id)
+
+        with self._transaction() as conn:
+            if not _test_skip_check:
+                if not self._exists_id(conn, user, user_id):
+                    raise ConsistencyError(
+                        'user does not exist with id={}', user_id)
+
+                if self._exists_person_user(conn, user_id):
+                    raise ConsistencyError(
+                        'person exists with user_id={}', user_id)
+
+            # Delete entries in related tables.
+            for table in (auth_token, reset_token, user_log):
+                conn.execute(table.delete().where(table.c.user_id == user_id))
+
+            # Finally delete the user record.
+            result = conn.execute(stmt)
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no row matched deleting user with id {}', user_id)
+
     def delete_oauth_code(self, code_id):
         """
         Delete the given authorization code.

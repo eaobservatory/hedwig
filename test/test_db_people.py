@@ -241,6 +241,35 @@ class DBPeopleTest(DBTestCase):
         with self.assertRaisesRegex(Error, 'specified'):
             self.db.get_person(person_id=None, user_id=None)
 
+    def test_delete_user(self):
+        user_id_1 = self.db.add_user('user1', 'pass1')
+        user_id_2 = self.db.add_user('user2', 'pass2')
+
+        result = self.db.search_user()
+        self.assertEqual(set(result), set((user_id_1, user_id_2)))
+
+        # Delete a user record and check it has gone.
+        self.db.delete_user(user_id_1)
+
+        result = self.db.search_user()
+        self.assertEqual(set(result), set((user_id_2,)))
+
+        # Try deleting the record which does not exist.
+        with self.assertRaisesRegex(ConsistencyError, '^user does not exist'):
+            self.db.delete_user(user_id_1)
+
+        with self.assertRaisesRegex(ConsistencyError, '^no row matched'):
+            self.db.delete_user(user_id_1, _test_skip_check=True)
+
+        # Try deleting the record for a registered user.
+        self.db.add_person('User Two', user_id=user_id_2)
+
+        with self.assertRaisesRegex(ConsistencyError, '^person exists with'):
+            self.db.delete_user(user_id_2)
+
+        with self.assertRaises(DatabaseIntegrityError):
+            self.db.delete_user(user_id_2, _test_skip_check=True)
+
     def test_email(self):
         # Check that we can add an email address.
         person_id = self.db.add_person('User One')
