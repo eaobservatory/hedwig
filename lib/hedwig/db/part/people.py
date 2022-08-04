@@ -477,7 +477,7 @@ class PeoplePart(object):
             raise NoSuchRecord('token not found')
 
         return (
-            UserInfo(id=result['id'], name=result['name']),
+            UserInfo(id=result['id'], name=result['name'], disabled=None),
             result['token_id'])
 
     def _delete_auth_expired(self, conn):
@@ -1299,12 +1299,12 @@ class PeoplePart(object):
 
         return ans
 
-    def search_user(self, registered=None):
+    def search_user(self, registered=None, user_id=None):
         """
         Search for user accounts.
         """
 
-        select_columns = [user.c.id, user.c.name]
+        select_columns = [user.c.id, user.c.name, user.c.disabled]
         select_from = user
 
         if registered is not None:
@@ -1317,6 +1317,9 @@ class PeoplePart(object):
                 stmt = stmt.where(person.c.id.isnot(None))
             else:
                 stmt = stmt.where(person.c.id.is_(None))
+
+        if user_id is not None:
+            stmt = stmt.where(user.c.id == user_id)
 
         ans = ResultCollection()
 

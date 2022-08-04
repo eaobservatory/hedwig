@@ -65,6 +65,7 @@ class DBPeopleTest(DBTestCase):
         self.assertIsInstance(user_info, UserInfo)
         self.assertEqual(user_info.id, user_id)
         self.assertEqual(user_info.name, 'user1')
+        self.assertFalse(user_info.disabled)
 
         records = self.db.search_user(registered=True)
         self.assertEqual(len(records), 0)
@@ -136,8 +137,15 @@ class DBPeopleTest(DBTestCase):
 
         # Test a disabled account.
         self.db.update_user(user_id, disabled=True)
+        self.assertTrue(self.db.search_user(
+            user_id=user_id).get_single().disabled)
+
         with self.assertRaisesRegex(UserError, 'account is disabled'):
             self.db.authenticate_user('user1', 'pass1')
+
+        self.db.update_user(user_id, disabled=False)
+        self.assertFalse(self.db.search_user(
+            user_id=user_id).get_single().disabled)
 
     def test_user_auth_failure(self):
         allowed_failures = 5

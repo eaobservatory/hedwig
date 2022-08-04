@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2021 East Asian Observatory
+# Copyright (C) 2019-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -23,6 +23,7 @@ from datetime import datetime
 from ..config import get_config, get_facilities
 from ..error import ConsistencyError, FormattedError, NoSuchRecord, UserError
 from ..type.enum import AnnotationType, RequestState
+from ..type.util import null_tuple
 from hedwig.type.simple import CurrentUser, UserInfo
 from ..util import get_logger
 
@@ -130,7 +131,7 @@ def _copy_proposal(db, app, request, dry_run=False):
     assert proposal.id == proposal_id
 
     current_user = CurrentUser(
-        user=UserInfo(id=copier.user_id, name=None),
+        user=null_tuple(UserInfo)._replace(id=copier.user_id),
         person=copier,
         is_admin=False,
         auth_token_id=None)

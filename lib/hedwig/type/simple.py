@@ -364,7 +364,7 @@ TextCopyInfo = namedtuple(
 
 UserInfo = namedtuple(
     'UserInfo',
-    ['id', 'name'])
+    ['id', 'name', 'disabled'])
 
 UserLog = namedtuple(
     'UserLog',
