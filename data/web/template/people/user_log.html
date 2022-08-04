@@ -7,16 +7,32 @@
 {% block content %}
 <h2>Account Details</h2>
 
+{% if user.disabled %}
+    <p class="warning">
+        This user account is disabled.
+    </p>
+{% endif %}
+
 <table>
     <tr>
         <th>User name</th>
-        <td>{{ user_name }}</td>
+        <td>{{ user.name }}</td>
     </tr>
 </table>
 
+<nav>
+    <p>
+        {% if user.disabled %}
+            <a href="{{ url_for('.user_enable', user_id=user.id) }}">Enable account</a>
+        {% else %}
+            <a href="{{ url_for('.user_disable', user_id=user.id) }}">Disable account</a>
+        {% endif %}
+    </p>
+</nav>
+
 <h2>Account Log Events</h2>
 
-<form method="GET" action="{{ url_for('.user_log', user_id=user_id) }}">
+<form method="GET" action="{{ url_for('.user_log', user_id=user.id) }}">
     <p>
         <select name="level">
             {% for (level_num, level_name) in levels.items() %}

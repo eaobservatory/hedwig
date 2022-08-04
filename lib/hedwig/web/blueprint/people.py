@@ -119,6 +119,22 @@ def create_people_blueprint(db, facilities):
     def user_log(current_user, user_id):
         return view.user_log(current_user, db, user_id, request.args)
 
+    @bp.route('/user/disable/<int:user_id>', methods=['GET', 'POST'])
+    @require_admin
+    @templated('confirm.html')
+    def user_disable(current_user, user_id):
+        return view.user_enable_disable(
+            current_user, db, user_id, True,
+            (request.form if request.method == 'POST' else None))
+
+    @bp.route('/user/enable/<int:user_id>', methods=['GET', 'POST'])
+    @require_admin
+    @templated('confirm.html')
+    def user_enable(current_user, user_id):
+        return view.user_enable_disable(
+            current_user, db, user_id, False,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/user/session/')
     @require_admin
     @templated('people/user_session_list.html')

@@ -44,7 +44,7 @@ from ..type.util import null_tuple, with_deadline
 from ..view.util import int_or_none
 from ..web.util import flash, session, url_for, url_add_args, url_relative, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
-from .util import with_institution, with_person
+from .util import with_institution, with_person, with_user
 from . import auth
 
 
@@ -457,34 +457,51 @@ class PeopleView(object):
         flash('You have dropped administrative privileges.')
         raise HTTPRedirect(referrer if referrer else url_for('home.home_page'))
 
-    def user_log(self, current_user, db, user_id, args):
-        try:
-            user_name = db.get_user_name(user_id=user_id)
-        except NoSuchRecord:
-            raise HTTPNotFound('User not found.')
-
-        person = None
-        try:
-            person = db.search_person(user_id=user_id).get_single()
-            name = person.name
-        except NoSuchRecord:
-            name = 'User {}'.format(user_id)
-
+    @with_user()
+    def user_log(self, current_user, db, user, person, name, args):
         level = (
             int(args['level']) if 'level' in args
             else LogEventLevel.INTERMEDIATE)
 
         events = db.search_user_log(
-            user_id=user_id, event=UserLogEvent.events_of_level(level))
+            user_id=user.id, event=UserLogEvent.events_of_level(level))
 
         return {
             'title': '{}: Account Log'.format(name),
-            'user_id': user_id,
-            'user_name': user_name,
+            'user': user,
             'person': person,
             'events': events,
             'level': level,
             'levels': LogEventLevel.get_options(),
+        }
+
+    @with_user()
+    def user_enable_disable(
+            self, current_user, db, user, person, name, disabled, form):
+        if disabled:
+            action = 'disable'
+            if user.disabled:
+                raise ErrorPage('Account already disabled.')
+
+        else:
+            action = 'enable'
+            if not user.disabled:
+                raise ErrorPage('Account already enabled.')
+
+        if form is not None:
+            if 'submit_confirm' in form:
+                db.update_user(user_id=user.id, disabled=disabled)
+
+                flash('Account {}d.'.format(action))
+
+            raise HTTPRedirect(url_for('.user_log', user_id=user.id))
+
+        return {
+            'title': '{}: {} Account'.format(name, action.title()),
+            'message': 'Are you sure you wish to {} this account?'.format(action),
+            'target': url_for(
+                ('.user_disable' if disabled else '.user_enable'),
+                user_id=user.id),
         }
 
     def user_session_list(self, current_user, db):

@@ -428,6 +428,36 @@ def with_review(
     return decorator
 
 
+def with_user():
+    def decorator(f):
+        @functools.wraps(f)
+        def decorated_method(self, current_user, db, user_id, *args, **kwargs):
+            try:
+                user = db.search_user(user_id=user_id).get_single()
+
+            except NoSuchRecord:
+                raise HTTPNotFound('User not found.')
+
+            assert user.id == user_id
+
+            person = None
+
+            try:
+                person = db.search_person(user_id=user.id).get_single()
+                display_name = person.name
+
+            except NoSuchRecord:
+                display_name = 'User {}'.format(user.id)
+
+            return f(
+                self, current_user, db, user, person, display_name,
+                *args, **kwargs)
+
+        return decorated_method
+
+    return decorator
+
+
 def parse_time(input_time):
     """
     Accepts a time string, either as a decimal number of hours,
