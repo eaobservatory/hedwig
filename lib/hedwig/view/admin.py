@@ -25,7 +25,7 @@ from ..email.format import render_email_template
 from ..error import ConsistencyError, NoSuchRecord, UserError
 from ..type.simple import ProposalWithCode, Link
 from ..type.enum import AttachmentState, MessageState, MessageThreadType, \
-    PersonTitle, RequestState, SiteGroupType
+    PersonTitle, RequestState, SiteGroupType, UserLogEvent
 from ..web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
     flash, url_for
 from . import auth
@@ -551,10 +551,37 @@ class AdminView(ViewMember):
 
         return result
 
-    def user_unregistered(self, current_user, db):
+    def user_unregistered(self, current_user, db, form):
+        users = db.search_user(registered=False)
+
+        if form is not None:
+            n_delete = 0
+
+            for user in users.values():
+                if 'user_{}'.format(user.id) in form:
+                    db.delete_user(user.id)
+                    n_delete += 1
+
+            if n_delete:
+                flash(
+                    '{} {} deleted.', n_delete,
+                    ('user has been' if n_delete == 1 else 'users have been'))
+
+            raise HTTPRedirect(url_for('.user_unregistered'))
+
+        if users:
+            UserInfoWithEvent = namedtuple(
+                'UserInfoWithEvent', first_value(users)._fields + ('event',))
+
+            events = db.search_user_log(
+                list(users.keys()), event=UserLogEvent.CREATE)
+
+            users = users.map_values(lambda x: UserInfoWithEvent(
+                *x, event=events.get_user(x.id, default=None)))
+
         return {
             'title': 'Unregistered Users',
-            'users': db.search_user(registered=False),
+            'users': users,
         }
 
     def site_group_view(self, current_user, db, site_group_type):

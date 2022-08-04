@@ -11,18 +11,32 @@
         </li>
     </ul>
 
-    <table>
-        <tr>
-            <th>User name</th>
-            <th>Links</th>
-        </tr>
-        {% for user in users.values() %}
+    <form method="POST" action="{{ url_for('.user_unregistered') }}">
+        <table>
             <tr>
-                <td>{{ user.name }}</td>
-                <td><a href="{{ url_for('people.user_log', user_id=user.id) }}">Account log</a></td>
+                <th>User name</th>
+                <th>Registered (UT)</th>
+                <th>Delete?</th>
             </tr>
-        {% endfor %}
-    </table>
+            {% for user in users.values() %}
+                <tr>
+                    <td><a href="{{ url_for('people.user_log', user_id=user.id) }}">{{ user.name }}</a></td>
+                    <td>
+                        {% if user.event is not none %}
+                            {{ user.event.date | format_datetime }}
+                        {% else %}
+                            &nbsp;
+                        {% endif %}
+                    </td>
+                    <td><input type="checkbox" name="{{ user.id | fmt('user_{}') }}" value="1" /></td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        <p>
+            <input type="submit" name="submit" value="Delete marked entries" />
+        </p>
+    </form>
 {% else %}
     <p class="not_present">
         There are no user accounts without profiles.

@@ -966,3 +966,15 @@ class TargetCollection(ResultCollection, CollectionOrdered,
                 total += v.time
 
         return total
+
+
+class UserLogCollection(ResultCollection):
+    def get_user(self, user_id, default=()):
+        for value in self.values():
+            if value.user_id == user_id:
+                return value
+
+        if default == ():
+            raise NoSuchValue('no entry for the given user found')
+
+        return default

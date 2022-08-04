@@ -84,11 +84,13 @@ def create_admin_blueprint(db, facilities):
             current_user, db, facilities,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/user_unregistered')
+    @bp.route('/user_unregistered', methods=['GET', 'POST'])
     @templated('admin/user_unregistered.html')
     @require_admin
     def user_unregistered(current_user):
-        return view.user_unregistered(current_user, db)
+        return view.user_unregistered(
+            current_user, db,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/group/<hedwig_site_group:site_group_type>')
     @templated('admin/site_group_view.html')

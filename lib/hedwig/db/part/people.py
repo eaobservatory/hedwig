@@ -32,7 +32,7 @@ from ...email.util import is_valid_email
 from ...error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from ...type.collection import EmailCollection, ResultCollection, \
-    SiteGroupMemberCollection
+    SiteGroupMemberCollection, UserLogCollection
 from ...type.enum import PersonLogEvent, PersonTitle, \
     SiteGroupType, UserLogEvent
 from ...type.simple import AuthTokenInfo, Email, \
@@ -1225,7 +1225,8 @@ class PeoplePart(object):
         assert 'user_id' not in kwargs
 
         return self._search_event_log(
-            person_log, PersonLog, person_id=person_id, **kwargs)
+            person_log, PersonLog, ResultCollection,
+            person_id=person_id, **kwargs)
 
     def search_site_group_member(
             self, site_group_type=None, person_id=None,
@@ -1333,19 +1334,26 @@ class PeoplePart(object):
         assert 'person_id' not in kwargs
 
         return self._search_event_log(
-            user_log, UserLog, user_id=user_id, **kwargs)
+            user_log, UserLog, UserLogCollection,
+            user_id=user_id, **kwargs)
 
     def _search_event_log(
-            self, table, result_class,
+            self, table, result_class, result_collection_class,
             user_id=None, person_id=None, event=None, date_after=None,
             _conn=None):
         stmt = table.select()
 
         if user_id is not None:
-            stmt = stmt.where(table.c.user_id == user_id)
+            if is_list_like(user_id):
+                stmt = stmt.where(table.c.user_id.in_(user_id))
+            else:
+                stmt = stmt.where(table.c.user_id == user_id)
 
         if person_id is not None:
-            stmt = stmt.where(table.c.person_id == person_id)
+            if is_list_like(person_id):
+                stmt = stmt.where(table.c.person_id.in_(person_id))
+            else:
+                stmt = stmt.where(table.c.person_id == person_id)
 
         if event is not None:
             if is_list_like(event):
@@ -1356,7 +1364,7 @@ class PeoplePart(object):
         if date_after is not None:
             stmt = stmt.where(table.c.date > date_after)
 
-        ans = ResultCollection()
+        ans = result_collection_class()
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(table.c.id.desc())):
