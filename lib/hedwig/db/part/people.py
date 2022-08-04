@@ -365,6 +365,9 @@ class PeoplePart(object):
         else:
             if check_password_hash(password_raw, result[user.c.password],
                                    result[user.c.salt]):
+                if result['disabled']:
+                    raise UserError('Your account is disabled.')
+
                 verified_user_id = result['id']
 
                 # If this is a new log in (not re-authentication), add to log:
@@ -440,8 +443,9 @@ class PeoplePart(object):
         ]
         select_from = user.join(auth_token)
 
-        stmt = select(select_columns).select_from(select_from).where(
-            auth_token.c.token == token)
+        stmt = select(select_columns).select_from(select_from).where(and_(
+            auth_token.c.token == token,
+            not_(user.c.disabled)))
 
         with self._transaction() as conn:
             self._delete_auth_expired(conn)
@@ -1538,6 +1542,34 @@ class PeoplePart(object):
             if result.rowcount != 1:
                 raise ConsistencyError(
                     'no rows matched updating person with id={}', person_id)
+
+    def update_user(
+            self, user_id, disabled=None,
+            _test_skip_check=False):
+        """
+        Update general parameters of a user database record.
+        """
+
+        stmt = user.update().where(user.c.id == user_id)
+        values = {}
+
+        if disabled is not None:
+            values['disabled'] = disabled
+
+        if not values:
+            raise Error('no user updates specified')
+
+        with self._transaction() as conn:
+            if (not _test_skip_check and
+                    not self._exists_id(conn, user, user_id)):
+                raise ConsistencyError(
+                    'user does not exist with id={}', user_id)
+
+            result = conn.execute(stmt.values(values))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched updating user with id={}', user_id)
 
     def update_user_name(self, user_id, name, remote_addr=None,
                          _test_skip_check=False):

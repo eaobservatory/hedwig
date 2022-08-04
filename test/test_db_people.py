@@ -92,47 +92,52 @@ class DBPeopleTest(DBTestCase):
 
         # Test creation with reference to an existing person.
         person_id = self.db.add_person('User Three')
-        user_id = self.db.add_user('user3', 'pass3', person_id=person_id)
-        self.assertIsInstance(user_id, int)
+        user_id_3 = self.db.add_user('user3', 'pass3', person_id=person_id)
+        self.assertIsInstance(user_id_3, int)
 
         records = self.db.search_user()
         self.assertEqual(len(records), 2)
         records = self.db.search_user(registered=True)
         self.assertEqual(len(records), 1)
-        self.assertIn(user_id, records)
+        self.assertIn(user_id_3, records)
         records = self.db.search_user(registered=False)
         self.assertEqual(len(records), 1)
-        self.assertNotIn(user_id, records)
+        self.assertNotIn(user_id_3, records)
 
         # Attempting to reference a non-existant person is an error.
         with self.assertRaisesRegex(ConsistencyError,
                                     '^person does not exist'):
-            user_id = self.db.add_user('user4', 'pass4', person_id=1999999)
+            self.db.add_user('user4', 'pass4', person_id=1999999)
 
         # Check that we also detects this error via.
         with self.assertRaisesRegex(ConsistencyError, '^no rows matched'):
-            user_id = self.db.add_user('user4', 'pass4', person_id=1999999,
-                                       _test_skip_check=True)
+            self.db.add_user('user4', 'pass4', person_id=1999999,
+                             _test_skip_check=True)
 
         # Test changing a password.
-        self.assertEqual(self.db.authenticate_user('user3', 'pass3'), user_id)
-        self.db.update_user_password(user_id, '3ssap')
+        self.assertEqual(self.db.authenticate_user('user3', 'pass3'), user_id_3)
+        self.db.update_user_password(user_id_3, '3ssap')
         self.assertIsNone(self.db.authenticate_user('user3', 'pass3'))
-        self.assertEqual(self.db.authenticate_user('user3', '3ssap'), user_id)
+        self.assertEqual(self.db.authenticate_user('user3', '3ssap'), user_id_3)
 
         # Test changing a user name
-        self.db.update_user_name(user_id, '3resu')
-        self.assertEqual(self.db.get_user_name(user_id), '3resu')
+        self.db.update_user_name(user_id_3, '3resu')
+        self.assertEqual(self.db.get_user_name(user_id_3), '3resu')
         with self.assertRaisesRegex(ConsistencyError, '^user does not exist'):
             self.db.update_user_name(1999999, 'newname')
         with self.assertRaisesRegex(ConsistencyError, '^no rows matched'):
             self.db.update_user_name(1999999, 'newname', _test_skip_check=True)
         with self.assertRaisesRegex(UserError, r'already exists\.$'):
-            self.db.update_user_name(user_id, 'user1')
+            self.db.update_user_name(user_id_3, 'user1')
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.update_user_name(user_id, 'user1', _test_skip_check=True)
+            self.db.update_user_name(user_id_3, 'user1', _test_skip_check=True)
         with self.assertRaisesRegex(UserError, 'blank'):
-            self.db.update_user_name(user_id, '')
+            self.db.update_user_name(user_id_3, '')
+
+        # Test a disabled account.
+        self.db.update_user(user_id, disabled=True)
+        with self.assertRaisesRegex(UserError, 'account is disabled'):
+            self.db.authenticate_user('user1', 'pass1')
 
     def test_user_auth_failure(self):
         allowed_failures = 5
@@ -180,6 +185,18 @@ class DBPeopleTest(DBTestCase):
         self.assertEqual(user.name, 'user1')
         self.assertIsInstance(auth_token_id, int)
 
+        # Try disabling the account.
+        self.db.update_user(user_id, disabled=True)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.authenticate_token(token)
+
+        self.db.update_user(user_id, disabled=False)
+
+        (user, auth_token_id) = self.db.authenticate_token(token)
+        self.assertEqual(user.id, user_id)
+
+        # Delete the token.
         self.db.delete_auth_token(token=token)
 
         with self.assertRaises(NoSuchRecord):

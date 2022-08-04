@@ -908,6 +908,7 @@ user = Table(
     Column('name', Unicode(255), unique=True, nullable=False),
     Column('password', Unicode(255)),
     Column('salt', Unicode(255)),
+    Column('disabled', Boolean, default=False, nullable=False),
     **table_opts)
 
 user_log = Table(
