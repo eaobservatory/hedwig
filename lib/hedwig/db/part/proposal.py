@@ -37,7 +37,8 @@ from ...type.collection import AffiliationCollection, \
     RequestCollection, ResultCollection, TargetCollection
 from ...type.enum import AffiliationType, AnnotationType, AttachmentState, \
     CallState, FigureType, FormatType, \
-    ProposalState, PublicationType, RequestState, SemesterState
+    PersonLogEvent, ProposalState, PublicationType, \
+    RequestState, SemesterState
 from ...type.simple import Affiliation, Annotation, \
     Call, CallMidClose, CallPreamble, Category, CoMemberInfo, \
     Member, MemberInfo, MemberPIInfo, \
@@ -162,6 +163,7 @@ class ProposalPart(object):
 
     def add_member(self, proposal_id, person_id, affiliation_id,
                    pi=False, editor=False, observer=False, reviewer=False,
+                   adder_person_id=None, is_invite=False,
                    _conn=None, _test_skip_check=False):
         with self._transaction(_conn=_conn) as conn:
             if not _test_skip_check:
@@ -198,10 +200,19 @@ class ProposalPart(object):
                 member.c.affiliation_id: affiliation_id,
             }))
 
+            if adder_person_id is not None:
+                self.add_person_log_entry(
+                    adder_person_id,
+                    (PersonLogEvent.MEMBER_INVITE if is_invite else
+                     PersonLogEvent.MEMBER_ADD),
+                    proposal_id=proposal_id, other_person_id=person_id,
+                    _conn=conn)
+
         return result.inserted_primary_key[0]
 
     def add_proposal(self, call_id, person_id, affiliation_id, title,
                      state=ProposalState.PREPARATION, person_is_reviewer=False,
+                     is_copy=False,
                      _test_skip_check=False):
         """
         Add a new proposal to the database.
@@ -251,6 +262,12 @@ class ProposalPart(object):
             self.add_member(proposal_id, person_id, affiliation_id,
                             True, True, False, reviewer=person_is_reviewer,
                             _conn=conn, _test_skip_check=_test_skip_check)
+
+            # If this is a copy we should have already logged the copy request.
+            if not is_copy:
+                self.add_person_log_entry(
+                    person_id, PersonLogEvent.PROPOSAL_CREATE,
+                    proposal_id=proposal_id, _conn=conn)
 
         return proposal_id
 
@@ -381,14 +398,21 @@ class ProposalPart(object):
             self, proposal_id, requester_person_id,
             call_id, affiliation_id, copy_members,
             _test_skip_check=False):
-        return self._add_request_prop(
-            request_prop_copy, proposal_id, requester_person_id,
-            extra_values={
-                request_prop_copy.c.call_id: call_id,
-                request_prop_copy.c.affiliation_id: affiliation_id,
-                request_prop_copy.c.copy_members: copy_members,
-            },
-            _test_skip_check=_test_skip_check)
+        with self._transaction() as conn:
+            request_id = self._add_request_prop(
+                request_prop_copy, proposal_id, requester_person_id,
+                extra_values={
+                    request_prop_copy.c.call_id: call_id,
+                    request_prop_copy.c.affiliation_id: affiliation_id,
+                    request_prop_copy.c.copy_members: copy_members,
+                },
+                _conn=conn, _test_skip_check=_test_skip_check)
+
+            self.add_person_log_entry(
+                requester_person_id, PersonLogEvent.PROPOSAL_REQUEST_COPY,
+                proposal_id=proposal_id, _conn=conn)
+
+        return request_id
 
     def _add_request_prop(
             self, table, proposal_id, requester_person_id, extra_values=None,

@@ -35,7 +35,8 @@ from ...type.collection import CalculationCollection, \
 from ...type.enum import AffiliationType, AttachmentState, \
     CallState, FigureType, FormatType, \
     GroupType, MessageThreadType, \
-    PermissionType, PersonTitle, ProposalState, PublicationType, \
+    PermissionType, PersonLogEvent, PersonTitle, \
+    ProposalState, PublicationType, \
     RequestState, ReviewState
 from ...type.misc import SectionedList
 from ...type.simple import Affiliation, \
@@ -1010,6 +1011,10 @@ class GenericProposal(object):
                             x.id, x.resolved_institution_id)
                         for x in proposal.members.values()})
 
+                db.add_person_log_entry(
+                    current_user.person.id, PersonLogEvent.PROPOSAL_SUBMIT,
+                    proposal_id=proposal.id)
+
                 flash('The proposal has been submitted.')
 
             else:
@@ -1128,6 +1133,10 @@ class GenericProposal(object):
                 db.update_proposal(proposal.id, state=ProposalState.WITHDRAWN)
 
                 self._message_proposal_withdraw(current_user, db, proposal)
+
+                db.add_person_log_entry(
+                    current_user.person.id, PersonLogEvent.PROPOSAL_WITHDRAW,
+                    proposal_id=proposal.id)
 
                 flash('The proposal has been withdrawn.')
 
@@ -1359,7 +1368,8 @@ class GenericProposal(object):
                     db.add_member(proposal.id, person.id,
                                   member['affiliation_id'],
                                   editor=member['editor'],
-                                  observer=member['observer'])
+                                  observer=member['observer'],
+                                  adder_person_id=current_user.person.id)
 
                     self._message_proposal_invite(
                         current_user, db, proposal=proposal,
@@ -1387,7 +1397,9 @@ class GenericProposal(object):
                     db.add_member(proposal.id, person_id,
                                   member['affiliation_id'],
                                   editor=member['editor'],
-                                  observer=member['observer'])
+                                  observer=member['observer'],
+                                  adder_person_id=current_user.person.id,
+                                  is_invite=True)
 
                     self._message_proposal_invite(
                         current_user, db, proposal=proposal,
@@ -1519,6 +1531,10 @@ class GenericProposal(object):
                     is_editor=member.editor,
                     affiliation_name=member.affiliation_name,
                     send_token=True)
+
+                db.add_person_log_entry(
+                    current_user.person.id, PersonLogEvent.MEMBER_REINVITE,
+                    proposal_id=proposal.id, other_person_id=member.person_id)
 
                 flash('{} has been re-invited to the proposal.',
                       member.person_name)

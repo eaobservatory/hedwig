@@ -761,7 +761,8 @@ class PeopleView(object):
                     institution_id = db.add_institution(
                         institution.name, institution.department,
                         institution.organization,
-                        institution.address, institution.country)
+                        institution.address, institution.country,
+                        adder_person_id=current_user.person.id)
                     db.update_person(person.id, institution_id=institution_id)
                     action = 'recorded'
 

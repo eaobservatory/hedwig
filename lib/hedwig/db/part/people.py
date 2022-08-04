@@ -33,7 +33,8 @@ from ...error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from ...type.collection import EmailCollection, ResultCollection, \
     SiteGroupMemberCollection
-from ...type.enum import PersonTitle, SiteGroupType, UserLogEvent
+from ...type.enum import PersonLogEvent, PersonTitle, \
+    SiteGroupType, UserLogEvent
 from ...type.simple import AuthTokenInfo, Email, \
     Institution, InstitutionInfo, InstitutionLog, OAuthCode, OAuthToken, \
     Person, PersonInfo, SiteGroupMember, UserInfo, UserLog
@@ -41,7 +42,7 @@ from ...util import is_list_like
 from ..meta import auth_failure, auth_token, email, group_member, \
     institution, institution_log, \
     invitation, member, message_recipient, \
-    oauth_code, oauth_token, person, \
+    oauth_code, oauth_token, person, person_log, \
     proposal_fig, proposal_pdf, proposal_text, \
     request_prop_copy, \
     reset_token, reviewer, site_group_member, user, user_log, verify_token
@@ -83,8 +84,9 @@ class PeoplePart(object):
 
         return result.inserted_primary_key[0]
 
-    def add_institution(self, name, department, organization,
-                        address, country):
+    def add_institution(
+            self, name, department, organization, address, country,
+            adder_person_id=None):
         """
         Add an institution to the database.
 
@@ -103,7 +105,14 @@ class PeoplePart(object):
                 institution.c.country: country,
             }))
 
-        return result.inserted_primary_key[0]
+            institution_id = result.inserted_primary_key[0]
+
+            if adder_person_id is not None:
+                self.add_person_log_entry(
+                    adder_person_id, PersonLogEvent.INSTITUTION_ADD,
+                    institution_id=institution_id, _conn=conn)
+
+        return institution_id
 
     def add_person(self, name, title=None, public=False,
                    user_id=None, remote_addr=None,
@@ -155,6 +164,27 @@ class PeoplePart(object):
                     person_id, primary_email, primary=True, _conn=conn)
 
         return person_id
+
+    def add_person_log_entry(
+            self, person_id, event,
+            proposal_id=None, institution_id=None, other_person_id=None,
+            _conn=None):
+        """
+        Adds an entry to the person log table.
+        """
+
+        if not PersonLogEvent.is_valid(event):
+            raise Error('Invalid person action log event type')
+
+        with self._transaction(_conn=_conn) as conn:
+            conn.execute(person_log.insert().values({
+                person_log.c.person_id: person_id,
+                person_log.c.date: datetime.utcnow(),
+                person_log.c.event: event,
+                person_log.c.proposal_id: proposal_id,
+                person_log.c.institution_id: institution_id,
+                person_log.c.other_person_id: other_person_id,
+            }))
 
     def add_oauth_code(
             self, code, redirect_uri, response_type, nonce,
@@ -771,7 +801,7 @@ class PeoplePart(object):
                 institution_log.c.institution_id == duplicate_institution_id))
 
             # Swap out references in other tables.
-            for table in (member, person):
+            for table in (member, person, person_log):
                 conn.execute(table.update().where(
                     table.c.institution_id == duplicate_institution_id
                 ).values({
@@ -831,6 +861,8 @@ class PeoplePart(object):
                     (institution_log, 'person_id'),
                     (member, 'person_id'),
                     (message_recipient, 'person_id'),
+                    (person_log, 'person_id'),
+                    (person_log, 'other_person_id'),
                     (proposal_fig, 'uploader'),
                     (proposal_pdf, 'uploader'),
                     (proposal_text, 'editor'),
@@ -1427,6 +1459,10 @@ class PeoplePart(object):
                 raise ConsistencyError(
                     'no rows matched updating institution with id={}',
                     institution_id)
+
+            self.add_person_log_entry(
+                updater_person_id, PersonLogEvent.INSTITUTION_EDIT,
+                institution_id=institution_id, _conn=conn)
 
     def update_person(self, person_id,
                       name=None, title=(), public=None, institution_id=(),

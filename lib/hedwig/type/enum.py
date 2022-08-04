@@ -447,6 +447,55 @@ class PermissionType(object):
     FEEDBACK = 10
 
 
+class PersonLogEvent(EnumBasic, EnumLevel):
+    """
+    Class representing different types of events which are stored in the
+    person event log.
+    """
+
+    PROPOSAL_CREATE = 1
+    PROPOSAL_SUBMIT = 2
+    PROPOSAL_WITHDRAW = 3
+    PROPOSAL_REQUEST_COPY = 4
+    INSTITUTION_ADD = 101
+    INSTITUTION_EDIT = 102
+    MEMBER_ADD = 201
+    MEMBER_INVITE = 202
+    MEMBER_REINVITE = 203
+
+    EventInfo = namedtuple('EventInfo', ('description', 'level'))
+
+    _info = {
+        PROPOSAL_CREATE: EventInfo(
+            'Proposal created',
+            LogEventLevel.MAJOR),
+        PROPOSAL_SUBMIT: EventInfo(
+            'Proposal submitted',
+            LogEventLevel.MINOR),
+        PROPOSAL_WITHDRAW: EventInfo(
+            'Proposal withdrawn',
+            LogEventLevel.MINOR),
+        PROPOSAL_REQUEST_COPY: EventInfo(
+            'Proposal copy requested',
+            LogEventLevel.MAJOR),
+        INSTITUTION_ADD: EventInfo(
+            'Institution added',
+            LogEventLevel.MAJOR),
+        INSTITUTION_EDIT: EventInfo(
+            'Institution edited',
+            LogEventLevel.INTERMEDIATE),
+        MEMBER_ADD: EventInfo(
+            'Member added from directory',
+            LogEventLevel.MINOR),
+        MEMBER_INVITE: EventInfo(
+            'Member invited to register',
+            LogEventLevel.INTERMEDIATE),
+        MEMBER_REINVITE: EventInfo(
+            'Member invitation resent',
+            LogEventLevel.INTERMEDIATE),
+    }
+
+
 class PersonTitle(EnumBasic, EnumAvailable):
     """
     Class containing a list of personal titles.

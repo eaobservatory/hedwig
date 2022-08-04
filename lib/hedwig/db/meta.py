@@ -439,6 +439,26 @@ person = Table(
     Column('verified', Boolean, default=False, nullable=False),
     **table_opts)
 
+person_log = Table(
+    'person_log',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('person_id', None,
+           ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=False),
+    Column('date', DateTime(), nullable=False),
+    Column('event', Integer, nullable=False),
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=True),
+    Column('institution_id', None,
+           ForeignKey('institution.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=True),
+    Column('other_person_id', None,
+           ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           nullable=True),
+    **table_opts)
+
 prev_proposal = Table(
     'prev_proposal',
     metadata,

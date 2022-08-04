@@ -122,7 +122,8 @@ def _copy_proposal(db, app, request, dry_run=False):
         call_id=call.id, person_id=copier.id,
         affiliation_id=request.affiliation_id, title=old_proposal.title,
         person_is_reviewer=type_class.has_reviewer_role(
-            call.type, role_class.PEER))
+            call.type, role_class.PEER),
+        is_copy=True)
 
     proposal = db.get_proposal(facility.id_, proposal_id, with_members=True)
 
