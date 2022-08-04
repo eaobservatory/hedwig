@@ -12,7 +12,7 @@
 {% block confirm_extra %}
 {% endblock %}
 
-<form method="POST" action="{{ target }}">
+<form method="POST"{% if target is defined %} action="{{ target }}"{% endif %}>
     {% block confirm_form_extra %}
     {% endblock %}
     <p>

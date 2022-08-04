@@ -793,4 +793,7 @@ class AdminView(ViewMember):
                 'Would you like to re-send an invitation to '
                 'site group "{}" to {}?'.format(
                     site_group_info.name, member.person_name),
+            'target': url_for(
+                '.site_group_member_reinvite',
+                site_group_type=site_group_type, member_id=member_id),
         }

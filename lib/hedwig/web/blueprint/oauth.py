@@ -104,7 +104,6 @@ def create_oauth_blueprint(db, app):
             'title': 'Authorize Access',
             'message': 'Do you wish to allow {} to access your account '
             'information?'.format(grant.client.name),
-            'target': '',
         })
 
     @bp.route('/token', methods=['POST'])
