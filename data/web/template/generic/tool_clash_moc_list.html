@@ -10,16 +10,13 @@
             <li><a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_new')) }}">New coverage map</a></li>
         </ol>
     </nav>
-{% else %}
-    <p>
-        This page lists the coverage maps which are used by the Clash Tool
-        to check for matches with your target coordinates.
-        You can click on the name of a coverage map to see more information
-        about how it is defined.
-    </p>
 {% endif %}
 
-{% if can_edit %}
+{% if not mocs %}
+    <p class="not_present">
+        No coverage maps have been set up yet.
+    </p>
+{% elif can_edit %}
     <table>
         <tr>
             <th>Name</th>
@@ -48,6 +45,13 @@
         {% endfor %}
     </table>
 {% else %}
+    <p>
+        This page lists the coverage maps which are used by the Clash Tool
+        to check for matches with your target coordinates.
+        You can click on the name of a coverage map to see more information
+        about how it is defined.
+    </p>
+
     <ul>
         {% for moc in mocs.values() %}
             <li>
