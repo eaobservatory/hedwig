@@ -1046,12 +1046,12 @@ class PeopleView(object):
                 flash('Your email address {} has been verified.',
                       email_address)
 
-                if log_in_for is not None:
-                    if current_user.person.institution_id is None:
-                        raise HTTPRedirect(url_for(
-                            '.person_edit_institution',
-                            person_id=person_id, log_in_for=log_in_for))
+                if current_user.person.institution_id is None:
+                    raise HTTPRedirect(url_for(
+                        '.person_edit_institution',
+                        person_id=person_id, log_in_for=log_in_for))
 
+                if log_in_for is not None:
                     raise HTTPRedirect(log_in_for)
 
                 raise HTTPRedirect(url_for(
