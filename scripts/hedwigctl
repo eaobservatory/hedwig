@@ -208,8 +208,13 @@ def initialize_database(args):
 
     _configure_logging(args)
 
+    logger.debug('Connecting to database')
     db = get_database()
+
+    logger.debug('Creating database tables')
     metadata.create_all(db._engine)
+
+    logger.info('Database initialized')
 
 
 @command
