@@ -531,6 +531,8 @@ class BaseCalculator(object):
             'calculation': calculation_info,
             'review_calculation': review_calculation_info,
             'query_encoded': query_encoded,
+            'interface_version': self.version,
+            'calculator_version': self.get_calc_version(),
         }
 
         ctx.update(self.get_extra_context())

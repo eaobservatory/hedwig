@@ -84,6 +84,10 @@ ul#footernav li {
     padding-right: 1ex;
 }
 
+p.footerinfo {
+    text-align: center;
+}
+
 ul#flashes {
     display: block;
     width: 40ex;

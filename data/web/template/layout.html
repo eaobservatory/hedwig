@@ -70,6 +70,9 @@
                     <li><a href="{{ url_for('home.contact_page') }}">Contact us</a></li>
                 {% endif %}
             </ul>
+
+            {% block footer_extra %}
+            {% endblock %}
         </footer>
     </body>
 </html>

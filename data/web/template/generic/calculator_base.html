@@ -191,3 +191,10 @@
 </form>
 
 {% endblock %}
+
+{% block footer_extra %}
+    <p class="footerinfo">
+        Calculator version {{ calculator_version }},
+        interface version {{ interface_version }}.
+    </p>
+{% endblock %}
