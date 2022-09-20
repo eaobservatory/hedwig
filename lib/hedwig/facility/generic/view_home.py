@@ -34,29 +34,11 @@ class GenericHome(object):
         type_class = self.get_call_types()
         auth_cache = {}
 
-        # Determine whether the person is a committee member (or administrator)
-        # by having membership of appropriate review groups.
-        if current_user.is_admin:
-            membership = True
-
-        elif (current_user.user is None) or (current_user.person is None):
-            membership = None
-
-        else:
-            membership = db.search_group_member(
-                group_type=GroupType.review_view_groups(),
-                person_id=current_user.person.id,
-                facility_id=self.id_)
-
-
-        # Retrieve all calls for this facility.  Include proposals under review
-        # counts if necessary.
-        kwargs = {
-            'with_proposal_count': True,
-            'with_proposal_count_state': ProposalState.review_states(),
-        } if membership else {}
-
-        facility_calls = db.search_call(facility_id=self.id_, **kwargs)
+        # Retrieve all calls for this facility.
+        facility_calls = db.search_call(
+            facility_id=self.id_,
+            with_proposal_count=True,
+            with_proposal_count_state=ProposalState.review_states())
 
         # Determine which semesters have standard open calls for proposals.
         open_calls_std = facility_calls.map_values(filter_value=(
@@ -82,18 +64,10 @@ class GenericHome(object):
                 closed_calls_std = True
                 break
 
-        # If the user can see reviews,  create a list of the review processes.
-        if not membership:
-            review_calls = None
-
-        elif membership is True:
-            # Administrators can see reviews for all calls.
-            review_calls = facility_calls
-
-        else:
-            membership_queues = set((x.queue_id for x in membership.values()))
-            review_calls = facility_calls.map_values(filter_value=(
-                lambda x: x.queue_id in membership_queues))
+        # Create a list of the review processes which the user can view.
+        review_calls = facility_calls.map_values(filter_value=(
+            lambda x: auth.for_call_review(
+                current_user, db, x, auth_cache=auth_cache).view))
 
         return {
             'title': self.get_name(),
