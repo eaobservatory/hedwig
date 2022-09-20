@@ -25,12 +25,14 @@ from ...type.enum import CallState, GroupType, ProposalState
 from ...type.simple import CallPreamble
 from ...type.util import null_tuple
 from ...util import matches_constraint
+from ...view import auth
 from ...web.util import ErrorPage, HTTPNotFound
 
 
 class GenericHome(object):
     def view_facility_home(self, current_user, db):
         type_class = self.get_call_types()
+        auth_cache = {}
 
         # Determine whether the person is a committee member (or administrator)
         # by having membership of appropriate review groups.
@@ -54,28 +56,29 @@ class GenericHome(object):
             'with_proposal_count_state': ProposalState.review_states(),
         } if membership else {}
 
-        hidden = (None if current_user.is_admin else False)
-
         facility_calls = db.search_call(facility_id=self.id_, **kwargs)
 
         # Determine which semesters have standard open calls for proposals.
         open_calls_std = facility_calls.map_values(filter_value=(
             lambda x: x.state == CallState.OPEN
             and x.type == type_class.STANDARD
-            and matches_constraint(x.hidden, hidden)))
+            and auth.for_call(
+                current_user, db, x, auth_cache=auth_cache).view))
 
         open_calls_nonstd = facility_calls.map_values(filter_value=(
             lambda x: x.state == CallState.OPEN
             and x.type != type_class.STANDARD
-            and matches_constraint(x.hidden, hidden)))
+            and auth.for_call(
+                current_user, db, x, auth_cache=auth_cache).view))
 
         open_semesters = set((x.semester_id for x in open_calls_std.values()))
 
         closed_calls_std = False
         for call in facility_calls.values_matching(
-                state=CallState.CLOSED, type_=type_class.STANDARD,
-                hidden=hidden):
-            if call.semester_id not in open_semesters:
+                state=CallState.CLOSED, type_=type_class.STANDARD):
+            if ((call.semester_id not in open_semesters)
+                    and auth.for_call(
+                        current_user, db, call, auth_cache=auth_cache).view):
                 closed_calls_std = True
                 break
 
@@ -109,6 +112,7 @@ class GenericHome(object):
     def view_semester_calls(
             self, current_user, db, semester_id, call_type, queue_id):
         type_class = self.get_call_types()
+        auth_cache = {}
 
         try:
             semester = db.get_semester(self.id_, semester_id)
@@ -130,8 +134,10 @@ class GenericHome(object):
             type_=call_type,
             queue_id=queue_id, separate=separate,
             with_queue_description=True,
-            with_preamble=separate,
-            hidden=(None if current_user.is_admin else False))
+            with_preamble=separate
+        ).map_values(
+            filter_value=(lambda x: auth.for_call(
+                current_user, db, x, auth_cache=auth_cache).view))
 
         call_preamble = None
 
@@ -182,11 +188,14 @@ class GenericHome(object):
 
     def view_semester_closed(self, current_user, db):
         type_class = self.get_call_types()
+        auth_cache = {}
 
         # Get list of calls, considering only those of standard type.
         calls = db.search_call(
-            facility_id=self.id_, type_=type_class.STANDARD,
-            hidden=(None if current_user.is_admin else False))
+            facility_id=self.id_, type_=type_class.STANDARD
+        ).map_values(
+            filter_value=(lambda x: auth.for_call(
+                current_user, db, x, auth_cache=auth_cache).view))
 
         open_semesters = set(
             x.semester_id for x in calls.values_matching(state=CallState.OPEN))
@@ -210,14 +219,17 @@ class GenericHome(object):
 
     def view_semester_non_standard(self, current_user, db):
         type_class = self.get_call_types()
+        auth_cache = {}
 
         # Get list of open, non-standard calls.
         calls = db.search_call(
             facility_id=self.id_,
             state=CallState.OPEN,
             type_=[x for x in type_class.get_options()
-                   if x != type_class.STANDARD],
-            hidden=(None if current_user.is_admin else False))
+                   if x != type_class.STANDARD]
+        ).map_values(
+            filter_value=(lambda x: auth.for_call(
+                current_user, db, x, auth_cache=auth_cache).view))
 
         if not calls:
             raise ErrorPage('No open special calls for proposals were found.')

@@ -40,6 +40,25 @@ AuthorizationWithRating = namedtuple(
     'AuthorizationWithRating', Authorization._fields + ('view_rating',))
 
 
+def for_call(current_user, db, call, auth_cache=None):
+    """
+    Determine the current user's authorization regarding the
+    given call.
+
+    Currently only "view" authorization is considered.
+    """
+
+    if not call.hidden:
+        return view_only
+
+    if (current_user.user is None) or (current_user.person is None):
+        return no
+    elif current_user.is_admin:
+        return view_only
+
+    return no
+
+
 def for_call_review(current_user, db, call, auth_cache=None):
     """
     Determine the current user's authorization regarding the general

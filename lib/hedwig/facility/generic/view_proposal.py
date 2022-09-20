@@ -70,16 +70,20 @@ class GenericProposal(object):
     def view_proposal_new(self, current_user, db, call_id, form):
         type_class = self.get_call_types()
         role_class = self.get_reviewer_roles()
+        auth_cache = {}
 
         try:
             call = db.search_call(
-                facility_id=self.id_, call_id=call_id, state=CallState.OPEN,
-                hidden=(None if current_user.is_admin else False)
+                facility_id=self.id_, call_id=call_id, state=CallState.OPEN
             ).get_single()
         except NoSuchRecord:
             raise HTTPNotFound('Call not found')
         except MultipleRecords:
             raise HTTPError('Multiple calls found')
+
+        if not auth.for_call(
+                current_user, db, call, auth_cache=auth_cache).view:
+            raise HTTPForbidden('Permission denied for this call.')
 
         affiliations = db.search_affiliation(
             queue_id=call.queue_id, hidden=False)
@@ -134,7 +138,8 @@ class GenericProposal(object):
 
                     role_class = self.get_reviewer_roles()
                     can = auth.for_proposal(
-                        role_class, current_user, db, old_proposal)
+                        role_class, current_user, db, old_proposal,
+                        auth_cache=auth_cache)
 
                     if not can.view:
                         raise HTTPForbidden(
