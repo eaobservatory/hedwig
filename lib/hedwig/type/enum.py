@@ -290,6 +290,7 @@ class GroupType(EnumAllowUser, EnumBasic, EnumURLPath):
     TECH = 2
     COORD = 3
     VIEWER = 4
+    HIDDEN_CALL = 5
 
     PEER = -1
 
@@ -313,6 +314,9 @@ class GroupType(EnumAllowUser, EnumBasic, EnumURLPath):
         (VIEWER, GroupInfo(
             'Viewers',             True,  False, False, True,  True,  True,
             'viewer')),
+        (HIDDEN_CALL, GroupInfo(
+            'Hidden call',         False, False, False, False, False, True,
+            'hidden')),
 
         (PEER, GroupInfo(
             'Peer reviewers',      False, False, False, False, False, False,

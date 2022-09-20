@@ -56,6 +56,15 @@ def for_call(current_user, db, call, auth_cache=None):
     elif current_user.is_admin:
         return view_only
 
+    person_id = current_user.person.id
+
+    group_members = _get_group_membership(auth_cache, db, person_id)
+
+    if group_members.has_entry(
+            queue_id=call.queue_id,
+            group_type=GroupType.HIDDEN_CALL):
+        return view_only
+
     return no
 
 
