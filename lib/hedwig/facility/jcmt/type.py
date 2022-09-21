@@ -577,7 +577,7 @@ class JCMTReviewerRole(BaseReviewerRole):
     _jcmt_info = {
         BaseReviewerRole.EXTERNAL: (
             (False, True, False, False),
-            {}),
+            {'accept': True}),
         BaseReviewerRole.CTTEE_PRIMARY: (
             (True, False, False, False),
             {'name': 'TAC Primary', 'weight': False}),
