@@ -1725,12 +1725,11 @@ class GenericReview(object):
 
                 if reviewer.accepted is None:
                     raise UserError(
-                        'Please select a conflict of interest declaration.')
+                        'Please select a declaration.')
 
                 elif (not reviewer.accepted) and (not acceptance.text):
                     raise UserError(
-                        'Please enter an explanation '
-                        'of your conflict of interest.')
+                        'Please enter an explanation.')
 
                 if acceptance.id is not None:
                     db.update_reviewer_acceptance(
@@ -1786,6 +1785,7 @@ class GenericReview(object):
             'referrer': referrer,
             'target_guideline': self.make_review_guidelines_url(
                 role=reviewer.role),
+            'role_is_peer': (reviewer.role == role_class.PEER),
         }
 
     @with_review(permission=PermissionType.NONE)
