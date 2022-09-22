@@ -22,21 +22,21 @@
                 {{ render_ext_review_question('jcmt_review_aims') }}
             </div>
             <label for="jcmt_review_aims">Aims</label>
-            <textarea name="jcmt_review_aims" cols="80" rows="10" autofocus="autofocus">{{ jcmt_review.review_aims if jcmt_review.review_aims is not none }}</textarea>
+            <textarea name="jcmt_review_aims" cols="70" rows="10" autofocus="autofocus">{{ jcmt_review.review_aims if jcmt_review.review_aims is not none }}</textarea>
         </li>
         <li>
             <div class="explanation">
                 {{ render_ext_review_question('jcmt_review_goals') }}
             </div>
             <label for="jcmt_review_goals">Goals</label>
-            <textarea name="jcmt_review_goals" cols="80" rows="10">{{ jcmt_review.review_goals if jcmt_review.review_goals is not none }}</textarea>
+            <textarea name="jcmt_review_goals" cols="70" rows="10">{{ jcmt_review.review_goals if jcmt_review.review_goals is not none }}</textarea>
         </li>
         <li>
             <div class="explanation">
                 {{ render_ext_review_question('jcmt_review_difficulties') }}
             </div>
             <label for="jcmt_review_difficulties">Difficulties</label>
-            <textarea name="jcmt_review_difficulties" cols="80" rows="10">{{ jcmt_review.review_difficulties if jcmt_review.review_difficulties is not none }}</textarea>
+            <textarea name="jcmt_review_difficulties" cols="70" rows="10">{{ jcmt_review.review_difficulties if jcmt_review.review_difficulties is not none }}</textarea>
         </li>
         <li>
             <div class="explanation">
@@ -56,21 +56,21 @@
                 {{ render_ext_review_question('jcmt_review_details') }}
             </div>
             <label for="jcmt_review_details">Details</label>
-            <textarea name="jcmt_review_details" cols="80" rows="10">{{ jcmt_review.review_details if jcmt_review.review_details is not none }}</textarea>
+            <textarea name="jcmt_review_details" cols="70" rows="10">{{ jcmt_review.review_details if jcmt_review.review_details is not none }}</textarea>
         </li>
         <li>
             <div class="explanation">
                 {{ render_ext_review_question('jcmt_review_obj_inst') }}
             </div>
             <label for="jcmt_review_obj_inst">Targets</label>
-            <textarea name="jcmt_review_obj_inst" cols="80" rows="10">{{ jcmt_review.review_obj_inst if jcmt_review.review_obj_inst is not none }}</textarea>
+            <textarea name="jcmt_review_obj_inst" cols="70" rows="10">{{ jcmt_review.review_obj_inst if jcmt_review.review_obj_inst is not none }}</textarea>
         </li>
         <li>
             <div class="explanation">
                 {{ render_ext_review_question('jcmt_review_telescope') }}
             </div>
             <label for="jcmt_review_telescope">Telescope</label>
-            <textarea name="jcmt_review_telescope" cols="80" rows="10">{{ jcmt_review.review_telescope if jcmt_review.review_telescope is not none }}</textarea>
+            <textarea name="jcmt_review_telescope" cols="70" rows="10">{{ jcmt_review.review_telescope if jcmt_review.review_telescope is not none }}</textarea>
         </li>
         <li>
             <div class="explanation">
@@ -108,7 +108,7 @@
                 <li class="separator">{{ 'Review' if role_info.name_review else role_info.name }}</li>
                 <label for="text">Review</label>
             {% endif %}
-            <textarea name="text" cols="80" rows="16" {{ 'autofocus="autofocus"' | safe if not role_info.jcmt_external }}>{{ reviewer.review_text if reviewer.review_text is not none }}</textarea>
+            <textarea name="text" cols="70" rows="16" {{ 'autofocus="autofocus"' | safe if not role_info.jcmt_external }}>{{ reviewer.review_text if reviewer.review_text is not none }}</textarea>
         </li>
     {% endif %}
 {% endblock %}

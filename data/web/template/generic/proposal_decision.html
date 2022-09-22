@@ -38,7 +38,7 @@
         {% endblock %}
         <li>
             <label for="decision_note">Note</label>
-            <textarea name="decision_note" cols="80" rows="10">{{ '' if proposal.decision_note is none else proposal.decision_note }}</textarea>
+            <textarea name="decision_note" cols="70" rows="10">{{ '' if proposal.decision_note is none else proposal.decision_note }}</textarea>
         <li>
             <input type="submit" name="submit" value="Save" />
             {% if referrer is not none %}
