@@ -1814,6 +1814,8 @@ class IntegrationTest(DummyConfigTestCase):
         after accepting an invitation.
         """
 
+        self.accept_review()
+
         self._save_screenshot(self.review_image_root, 'review_info',
                               ['person_reviews_link', 'review_action_links'])
 
@@ -1900,11 +1902,18 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element_by_link_text('Peer').click()
 
+        self.accept_review(screenshot_prefix='peer_review')
+
+        self._save_screenshot(self.review_image_root, 'peer_review_edit')
+
+    def accept_review(self, screenshot_prefix=None):
         Select(
             self.browser.find_element_by_name('accepted')
         ).select_by_value('1')
 
-        self._save_screenshot(self.review_image_root, 'peer_review_accept')
+        if screenshot_prefix is not None:
+            self._save_screenshot(
+                self.review_image_root, '{}_accept'.format(screenshot_prefix))
 
         self.browser.find_element_by_name('submit').click()
 
@@ -1914,8 +1923,6 @@ class IntegrationTest(DummyConfigTestCase):
 
         # Reload page to remove the yellow flash box for the screenshot.
         self.browser.get(self.browser.current_url)
-
-        self._save_screenshot(self.review_image_root, 'peer_review_edit')
 
     def view_person_reviews(self):
         # Now acquire a screenshot of the "Your reviews" page.
