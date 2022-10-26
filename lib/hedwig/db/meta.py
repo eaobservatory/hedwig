@@ -393,7 +393,7 @@ def _oauth_cols():
         Column('scope', Unicode(255), default='', nullable=False),
         Column(
             'person_id', None,
-            ForeignKey('person.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+            ForeignKey('person.id', onupdate='RESTRICT', ondelete='CASCADE'),
             nullable=False),
         Column('issued', DateTime(), nullable=False),
         Column('expiry', DateTime(), nullable=False, index=True),
