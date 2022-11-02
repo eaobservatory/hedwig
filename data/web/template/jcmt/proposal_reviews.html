@@ -34,6 +34,12 @@
             {{ review.review_extra.review_goals | format_text(review.review_extra.review_format) }}
         {% endif %}
 
+        {% if review.review_extra.review_analysis is not none %}
+            <p><i>{{ render_ext_review_question('jcmt_review_analysis') }}</i></p>
+
+            {{ review.review_extra.review_analysis | format_text(review.review_extra.review_format) }}
+        {% endif %}
+
         {% if review.review_extra.review_difficulties is not none %}
             <p><i>{{ render_ext_review_question('jcmt_review_difficulties') }}</i></p>
 

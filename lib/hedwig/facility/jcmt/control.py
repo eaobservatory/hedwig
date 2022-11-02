@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -336,7 +336,8 @@ class JCMTPart(object):
             attr_req = {
                 jcmt_review.c.expertise: role_info.jcmt_expertise,
                 jcmt_review.c.review_aims: role_info.jcmt_external,
-                jcmt_review.c.review_goals: role_info.jcmt_external,
+                jcmt_review.c.review_goals: (None if role_info.jcmt_external else False),
+                jcmt_review.c.review_analysis: role_info.jcmt_external,
                 jcmt_review.c.review_difficulties: role_info.jcmt_external,
                 jcmt_review.c.rating_justification: role_info.jcmt_external,
                 jcmt_review.c.review_details: role_info.jcmt_external,
@@ -355,6 +356,11 @@ class JCMTPart(object):
                     if state_done and (values[attr] is None):
                         raise FormattedError(
                             '{} should be specified', attr.name)
+
+                elif attr_allowed is None:
+                    # Attribute is optional.
+                    pass
+
                 else:
                     if values[attr] is not None:
                         raise FormattedError(

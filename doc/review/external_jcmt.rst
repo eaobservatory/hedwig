@@ -28,7 +28,8 @@ Scientific justification
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 * How do you rate the scientific aims of the proposal?
-* Are there conflicting / confusing goals?
+  Are there conflicting / confusing goals?
+* Is the proposed analysis feasible and well-described?
 * Have the potential difficulties been raised and discussed?
 
 Where would you place this proposal within the following scale?

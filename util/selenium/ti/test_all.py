@@ -1824,8 +1824,8 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_name('jcmt_review_aims').send_keys(
             'The aims of this proposal ...')
 
-        self.browser.find_element_by_name('jcmt_review_goals').send_keys(
-            'The goals of this proposal ...')
+        self.browser.find_element_by_name('jcmt_review_analysis').send_keys(
+            'The proposed analysis ...')
 
         self.browser.find_element_by_name(
             'jcmt_review_difficulties').send_keys(

@@ -24,12 +24,21 @@
             <label for="jcmt_review_aims">Aims</label>
             <textarea name="jcmt_review_aims" cols="70" rows="10" autofocus="autofocus">{{ jcmt_review.review_aims if jcmt_review.review_aims is not none }}</textarea>
         </li>
+        {% if jcmt_review.review_goals is not none %}
+            <li>
+                <div class="explanation">
+                    {{ render_ext_review_question('jcmt_review_goals') }}
+                </div>
+                <label for="jcmt_review_goals">Goals</label>
+                <textarea name="jcmt_review_goals" cols="70" rows="10">{{ jcmt_review.review_goals }}</textarea>
+            </li>
+        {% endif %}
         <li>
             <div class="explanation">
-                {{ render_ext_review_question('jcmt_review_goals') }}
+                {{ render_ext_review_question('jcmt_review_analysis') }}
             </div>
-            <label for="jcmt_review_goals">Goals</label>
-            <textarea name="jcmt_review_goals" cols="70" rows="10">{{ jcmt_review.review_goals if jcmt_review.review_goals is not none }}</textarea>
+            <label for="jcmt_review_analysis">Analysis</label>
+            <textarea name="jcmt_review_analysis" cols="70" rows="10">{{ jcmt_review.review_analysis if jcmt_review.review_analysis is not none }}</textarea>
         </li>
         <li>
             <div class="explanation">

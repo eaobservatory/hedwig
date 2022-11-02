@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -100,6 +100,7 @@ jcmt_review = Table(
     # Detailed information for external reviews:
     Column('review_aims', UnicodeText, nullable=True),
     Column('review_goals', UnicodeText, nullable=True),
+    Column('review_analysis', UnicodeText, nullable=True),
     Column('review_difficulties', UnicodeText, nullable=True),
     Column('rating_justification', Integer, nullable=True),
     Column('review_details', UnicodeText, nullable=True),

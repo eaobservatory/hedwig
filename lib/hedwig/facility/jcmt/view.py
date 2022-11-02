@@ -1097,7 +1097,8 @@ class JCMT(EAOFacility):
             # Read text fields.
             jcmt_review = jcmt_review._replace(
                 review_aims=form['jcmt_review_aims'],
-                review_goals=form['jcmt_review_goals'],
+                review_goals=form.get('jcmt_review_goals', None),
+                review_analysis=form['jcmt_review_analysis'],
                 review_difficulties=form['jcmt_review_difficulties'],
                 review_details=form['jcmt_review_details'],
                 review_obj_inst=form['jcmt_review_obj_inst'],

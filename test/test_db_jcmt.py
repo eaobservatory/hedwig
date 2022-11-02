@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2022 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -415,6 +415,58 @@ class DBJCMTTest(DBTestCase):
         self.assertIsInstance(result, ResultCollection)
 
         self.assertEqual(set(result.keys()), set((reviewer_id, reviewer_id_2)))
+
+        # Add an external review to check field restrictions.
+        reviewer_id_3 = self.db.add_reviewer(
+            role_class, proposal_id, person_id, role_class.EXTERNAL)
+
+        self.assertIsInstance(reviewer_id_3, int)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_jcmt_review(reviewer_id_3)
+
+        # Original format: goals and no analysis.
+        jcmt_review = null_tuple(JCMTReview)._replace(
+            review_aims='aims',
+            review_goals='goals',
+            review_difficulties='difficulties',
+            review_details='details',
+            review_obj_inst='obj_inst',
+            review_telescope='telescope',
+            rating_justification=1,
+            rating_technical=1,
+            rating_urgency=1,
+            review_format=FormatType.PLAIN)
+
+        with self.assertRaisesRegex(
+                Error, 'analysis should be specified'):
+            self.db.set_jcmt_review(
+                role_class, reviewer_id_3, review_state=ReviewState.DONE,
+                review=jcmt_review)
+
+        # Transitional format: goals and analysis.
+        jcmt_review = jcmt_review._replace(
+            review_analysis='analysis')
+
+        self.db.set_jcmt_review(
+            role_class, reviewer_id_3, review_state=ReviewState.DONE,
+            review=jcmt_review)
+
+        fetched = self.db.get_jcmt_review(reviewer_id_3)
+        self.assertIsNotNone(fetched.review_goals)
+        self.assertIsNotNone(fetched.review_analysis)
+
+        # New format: analysis and no goals.
+        jcmt_review = jcmt_review._replace(
+            review_goals=None)
+
+        self.db.set_jcmt_review(
+            role_class, reviewer_id_3, review_state=ReviewState.DONE,
+            review=jcmt_review)
+
+        fetched = self.db.get_jcmt_review(reviewer_id_3)
+        self.assertIsNone(fetched.review_goals)
+        self.assertIsNotNone(fetched.review_analysis)
 
     def _create_test_proposal(self):
         (call_id, affiliation_id) = self._create_test_call()
