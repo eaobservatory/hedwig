@@ -981,6 +981,11 @@ class DBPeopleTest(DBTestCase):
         with self.assertRaisesRegex(NoSuchRecord, 'expired or non-existant'):
             self.db.use_invitation(token, user_id=user_id)
 
+        # Check the user log.
+        self.assertEqual(
+            [x.event for x in self.db.search_user_log(user_id).values()],
+            [UserLogEvent.USE_INVITE, UserLogEvent.CREATE])
+
         # Check error trapping.
         with self.assertRaisesRegex(ConsistencyError,
                                     'person does not exist'):
@@ -1089,6 +1094,12 @@ class DBPeopleTest(DBTestCase):
         person_id_new_2 = self.db.add_person('Person New 2')
         with self.assertRaisesRegex(NoSuchRecord, 'expired or non-existant'):
             self.db.use_invitation(token, new_person_id=person_id_new_2)
+
+        # Check the user log.
+        self.assertEqual(
+            [x.event for x in self.db.search_user_log(user_id).values()],
+            [UserLogEvent.MERGED_INVITE,
+             UserLogEvent.LINK_PROFILE, UserLogEvent.CREATE])
 
         # Check we can't accept a token for a person who somehow became
         # a registered user in the meantime.

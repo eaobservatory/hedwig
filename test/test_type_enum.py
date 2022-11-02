@@ -512,6 +512,7 @@ class EnumTypeTestCase(TestCase):
             UserLogEvent.LINK_PROFILE,
             UserLogEvent.USE_INVITE,
             UserLogEvent.MERGED,
+            UserLogEvent.MERGED_INVITE,
         ]
 
         events = UserLogEvent.events_of_level(LogEventLevel.MAJOR)

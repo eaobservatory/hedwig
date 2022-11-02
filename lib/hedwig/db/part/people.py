@@ -848,6 +848,8 @@ class PeoplePart(object):
 
     def merge_person_records(self, main_person_id, duplicate_person_id,
                              duplicate_person_registered=None,
+                             _user_log_event=UserLogEvent.MERGED,
+                             _user_log_remote_addr=None,
                              _conn=None, _test_skip_check=False):
         """
         Merge the two given person records.
@@ -935,7 +937,8 @@ class PeoplePart(object):
             # Add a log entry to for the main person, if registered.
             if main_user_id is not None:
                 self._add_user_log_entry(
-                    conn, main_user_id, UserLogEvent.MERGED)
+                    conn, main_user_id, _user_log_event,
+                    remote_addr=_user_log_remote_addr)
 
     def search_auth_token(self):
         """
@@ -1851,6 +1854,8 @@ class PeoplePart(object):
                     main_person_id=new_person_id,
                     duplicate_person_id=old_person_id,
                     duplicate_person_registered=False,
+                    _user_log_event=UserLogEvent.MERGED_INVITE,
+                    _user_log_remote_addr=remote_addr,
                     _conn=conn)
 
                 # Ensure the "new" profile is marked as verified.

@@ -1191,6 +1191,7 @@ class UserLogEvent(EnumBasic, EnumLevel):
     GET_EMAIL_TOKEN = 9
     USE_EMAIL_TOKEN = 10
     LOG_IN = 11
+    MERGED_INVITE = 12
 
     EventInfo = namedtuple('EventInfo', ('description', 'level'))
 
@@ -1218,6 +1219,9 @@ class UserLogEvent(EnumBasic, EnumLevel):
             LogEventLevel.MAJOR),
         MERGED: EventInfo(
             'Profile merged',
+            LogEventLevel.MAJOR),
+        MERGED_INVITE: EventInfo(
+            'Profile merged via invitation',
             LogEventLevel.MAJOR),
         GET_EMAIL_TOKEN: EventInfo(
             'Issued email verify token',
