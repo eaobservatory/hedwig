@@ -376,26 +376,13 @@ class GenericReview(object):
             # allocation corresponds to excluding particular targets.)
             proposal_targets = targets.subset_by_proposal(proposal.id)
 
-            n_target = len(proposal_targets)
-            total_time = proposal_targets.total_time()
-
             ra_fraction = defaultdict(float)
-            for target in proposal_targets.to_object_list():
-                if total_time:
-                    if target.time:
-                        fraction = target.time / total_time
-                    else:
-                        # The proposal does assign time to targets, but has
-                        # not done so for this one -- skip it for now.
-                        continue
-                else:
-                    fraction = 1.0 / n_target
-
+            for target in proposal_targets.to_frac_time_list():
                 ra = int(round(target.coord.icrs.ra.hour))
                 if ra > 23:
                     ra -= 24
 
-                ra_fraction[ra] += fraction
+                ra_fraction[ra] += target.frac_time
 
             info = {
                 'id': '{}'.format(proposal.id),

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2021 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -31,7 +31,7 @@ from .base import CollectionByCall, CollectionByFacility, \
     CollectionByProposal, CollectionByReviewerRole, \
     CollectionOrdered, CollectionSortable
 from .enum import AffiliationType, PublicationType, ReviewState
-from .simple import TargetObject
+from .simple import TargetFracTime, TargetObject
 
 ResultTable = namedtuple('ResultTable', ('table', 'columns', 'rows'))
 
@@ -947,6 +947,34 @@ class TargetCollection(ResultCollection, CollectionOrdered,
                 ans.append(TargetObject(
                     v.name, v.system,
                     coord=coord_from_dec_deg(v.system, v.x, v.y), time=v.time))
+
+        return ans
+
+    def to_frac_time_list(self):
+        """
+        Returns a list of `TargetFracTime` instances based on the results
+        of `to_object_list`.
+        """
+
+        objects = self.to_object_list()
+
+        n_target = len(objects)
+        total_time = self.total_time()
+
+        ans = []
+
+        for v in objects:
+            if total_time:
+                if v.time:
+                    frac_time = v.time / total_time
+                else:
+                    # The proposal does assign time to targets, but has
+                    # not done so for this one -- skip it for now.
+                    continue
+            else:
+                frac_time = 1.0 / n_target
+
+            ans.append(TargetFracTime(coord=v.coord, frac_time=frac_time))
 
         return ans
 

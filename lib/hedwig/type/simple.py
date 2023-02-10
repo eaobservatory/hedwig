@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -351,6 +351,8 @@ SiteGroupMember = namedtuple(
 Target = namedtuple(
     'Target',
     [x.name for x in target.columns])
+
+TargetFracTime = namedtuple('TargetFracTime', ('coord', 'frac_time'))
 
 TargetObject = namedtuple('TargetObject', ('name', 'system', 'coord', 'time'))
 

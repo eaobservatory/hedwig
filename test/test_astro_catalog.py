@@ -1,4 +1,4 @@
-# Copyright (C) 2017 East Asian Observatory
+# Copyright (C) 2017-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,10 +18,13 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from astropy.coordinates import SkyCoord
+
 from hedwig.astro.catalog import parse_source_list, write_source_list
 from hedwig.astro.coord import CoordSystem
 from hedwig.compat import byte_type
 from hedwig.type.collection import TargetCollection
+from hedwig.type.simple import TargetFracTime, TargetObject
 
 from .compat import TestCase
 
@@ -81,3 +84,37 @@ class AstroCatalogTest(TestCase):
 
         self.assertIsInstance(generated, byte_type)
         self.assertEqual(generated, example_catalog)
+
+        # Test TargetCollection methods of the catalog.
+        self.assertAlmostEqual(catalog.total_time(), 15.6)
+
+        objects = catalog.to_object_list()
+        self.assertIsInstance(objects, list)
+        self.assertEqual(len(objects), 4)
+
+        for object_ in objects:
+            self.assertIsInstance(object_, TargetObject)
+            self.assertIsInstance(object_.coord, SkyCoord)
+
+        frac_times = catalog.to_frac_time_list()
+        self.assertIsInstance(frac_times, list)
+        self.assertEqual(len(frac_times), 3)
+
+        for frac_time in frac_times:
+            self.assertIsInstance(frac_time, TargetFracTime)
+            self.assertIsInstance(frac_time.coord, SkyCoord)
+
+        self.assertAlmostEqual(frac_times[0].frac_time, 0.2884615384615385)
+        self.assertAlmostEqual(frac_times[1].frac_time, 0.6346153846153847)
+        self.assertAlmostEqual(frac_times[2].frac_time, 0.07692307692307693)
+
+        catalog_without_times = catalog.map_values(
+            lambda x: x._replace(time=None))
+        frac_times = catalog_without_times.to_frac_time_list()
+        self.assertIsInstance(frac_times, list)
+        self.assertEqual(len(frac_times), 4)
+
+        for frac_time in frac_times:
+            self.assertIsInstance(frac_time, TargetFracTime)
+            self.assertIsInstance(frac_time.coord, SkyCoord)
+            self.assertAlmostEqual(frac_time.frac_time, 0.25)
