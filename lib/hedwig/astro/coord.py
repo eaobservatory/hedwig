@@ -143,10 +143,15 @@ def format_coord(system, coord):
 
     sph = coord.spherical
 
-    return (sph.lon.to_string(sep=':', decimal=info.decimal,
-                              unit=info.unit[0], pad=True, alwayssign=False),
-            sph.lat.to_string(sep=':', decimal=info.decimal,
-                              unit=info.unit[1], pad=True, alwayssign=True))
+    kwargs = {'pad': True}
+
+    if info.decimal:
+        kwargs['decimal'] = True
+    else:
+        kwargs['sep'] = ':'
+
+    return (sph.lon.to_string(unit=info.unit[0], alwayssign=False, **kwargs),
+            sph.lat.to_string(unit=info.unit[1], alwayssign=True, **kwargs))
 
 
 def coord_to_dec_deg(coord):
