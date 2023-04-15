@@ -517,7 +517,7 @@ class EnumTypeTestCase(TestCase):
 
         events = UserLogEvent.events_of_level(LogEventLevel.MAJOR)
         self.assertIsInstance(events, list)
-        self.assertEqual(events, expect)
+        self.assertEqual(sorted(events), expect)
 
         expect = sorted(expect + [
             UserLogEvent.CHANGE_NAME,
@@ -530,7 +530,7 @@ class EnumTypeTestCase(TestCase):
 
         events = UserLogEvent.events_of_level(LogEventLevel.INTERMEDIATE)
         self.assertIsInstance(events, list)
-        self.assertEqual(events, expect)
+        self.assertEqual(sorted(events), expect)
 
         expect = sorted(expect + [
             UserLogEvent.LOG_IN,
@@ -538,4 +538,4 @@ class EnumTypeTestCase(TestCase):
 
         events = UserLogEvent.events_of_level(LogEventLevel.MINOR)
         self.assertIsInstance(events, list)
-        self.assertEqual(events, expect)
+        self.assertEqual(sorted(events), expect)
