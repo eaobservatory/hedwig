@@ -78,6 +78,8 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
         template_folder=os.path.join(home, 'data', 'web', 'template'),
     )
 
+    if 'extensions' not in app.jinja_options:
+        app.jinja_options['extensions'] = []
     app.jinja_options['extensions'].append(OrderBlocks)
 
     if not without_logger:
