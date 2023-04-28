@@ -335,6 +335,11 @@ Finally you can list people with administrative access using the
 
     scripts/hedwigctl admin --list
 
+Similarly, if you have not yet set up email sending,
+you can mark your account as verified using `hedwigctl`::
+
+    scripts/hedwigctl verify --person 1
+
 Poll Process
 ~~~~~~~~~~~~
 

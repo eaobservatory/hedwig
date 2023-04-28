@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2021 East Asian Observatory.
+# Copyright (C) 2015-2023 East Asian Observatory.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ hedwigctl - Hedwig proposal system control tool
 Usage:
     hedwigctl admin [-v | -q] [--remove] --person <person>
     hedwigctl admin [-v | -q] --list
+    hedwigctl verify [-v | -q] [--remove] --person <person>
     hedwigctl poll [-v | -q] [--dry-run]
         [--close | --no-close]
         [--email | --no-email]
@@ -86,6 +87,7 @@ from hedwig.util import get_logger
 integer_arguments = (
     '--port',
     '--pause',
+    '--person',
 )
 
 commands = OrderedDict()
@@ -175,7 +177,7 @@ def admin(args):
             print('{:<8d} {}'.format(person.id, person.name))
 
     else:
-        person_id = int(args['--person'])
+        person_id = args['--person']
         admin = (not args['--remove'])
 
         person = db.get_person(person_id)
@@ -427,6 +429,43 @@ def test_server(args):
 
     app = create_web_app(**app_options)
     app.run(**options)
+
+
+@command
+def verify(args):
+    """
+    Manually verify the account of a given person.
+    """
+
+    from hedwig.config import get_database
+
+    _configure_logging(args)
+
+    db = get_database()
+
+    person_id = args['--person']
+    verified = (not args['--remove'])
+
+    person = db.get_person(person_id)
+
+    if person.user_id is None:
+        logger.error(
+            '{} (person {}) is unregistered',
+            person.name, person_id)
+
+    elif person.verified == verified:
+        logger.error(
+            '{} (person {}) {} verified',
+            person.name, person_id,
+            ('is already' if person.verified else 'is not'))
+
+    else:
+        logger.info(
+            '{} {} (person {})',
+            ('Verifying' if verified else 'Removing verified flag from'),
+            person.name, person_id)
+
+        db.update_person(person_id, verified=verified)
 
 
 if __name__ == '__main__':
