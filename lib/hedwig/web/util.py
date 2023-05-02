@@ -421,8 +421,8 @@ def require_not_auth(f):
 
 
 def send_file(
-        fixed_type=None, allow_cache=False,
-        cache_max_age=86400, cache_private=True):
+        fixed_type=None,
+        allow_cache=False, cache_max_age=86400, cache_private=True):
     """
     Decorator for route functions which send files.
 
@@ -436,6 +436,10 @@ def send_file(
     :param allow_cache: if enabled, HTTP headers will be added to enable
         caching.  In this case it is assumed that the caller will ensure
         the resource hasn't changed, e.g. by including a checksum in the URL.
+    :param cache_max_age: specify how long to allow the user's browser
+        to cache the file.  (Default is one day.)
+    :param cache_private: unless set to `False` assume the file is part of a
+        proposal, or other private information, so request no public caching.
 
     :raises Exception: if applied to a function with an attribute
         `_hedwig_require_auth` because :func:`require_auth` should be
@@ -476,12 +480,7 @@ def send_file(
                                          filename=ascii_safe(filename))
 
             if allow_cache:
-                # Set maximum age to one day to allow the user's browser
-                # to cache the file.  However this is assumed to be a part
-                # of their proposal, so request no public caching.
-                response.cache_control.max_age = cache_max_age
-                if cache_private:
-                    response.cache_control.private = True
+                _set_response_caching(response, cache_max_age, cache_private)
 
             return response
 
@@ -490,7 +489,8 @@ def send_file(
     return decorator
 
 
-def send_json():
+def send_json(
+        allow_cache=False, cache_max_age=86400, cache_private=True):
     """
     Decorator for route functions which return JSON.
 
@@ -505,13 +505,24 @@ def send_json():
 
         @functools.wraps(f)
         def decorated_function(*args, **kwargs):
-            return _FlaskResponse(
+            response = _FlaskResponse(
                 json.dumps(f(*args, **kwargs)),
                 mimetype='application/json')
+
+            if allow_cache:
+                _set_response_caching(response, cache_max_age, cache_private)
+
+            return response
 
         return decorated_function
 
     return decorator
+
+
+def _set_response_caching(response, max_age, private):
+    response.cache_control.max_age = max_age
+    if private:
+        response.cache_control.private = True
 
 
 def templated(template):
