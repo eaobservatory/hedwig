@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2020 East Asian Observatory
+# Copyright (C) 2016-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -277,6 +277,8 @@ class MiscTypeTestCase(TestCase):
     def test_error_catcher(self):
         c = ErrorCatcher({'a': 1})
 
+        self.assertEqual(len(c.errors), 0)
+
         # Try catching an error and raising it properly.
         with c.catch_() as info:
             self.assertEqual(info, {'a': 1})
@@ -284,11 +286,24 @@ class MiscTypeTestCase(TestCase):
 
             raise UserError('test error')
 
-        with c.release() as info:
+        self.assertEqual(len(c.errors), 1)
+
+        # Try adding a second error.
+        with c.catch_() as info:
             self.assertEqual(info, {'a': 1, 'b': 2})
+            info['c'] = 3
+
+            raise UserError('another error')
+
+        self.assertEqual(len(c.errors), 2)
+
+        with c.release() as info:
+            self.assertEqual(info, {'a': 1, 'b': 2, 'c': 3})
 
             with self.assertRaisesRegex(UserError, '^test error$'):
                 c.raise_()
+
+        self.assertEqual(len(c.errors), 0)
 
         # Try catching an error and failing to raise it.
         with c.catch_() as info:

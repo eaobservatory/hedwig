@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2020 East Asian Observatory
+# Copyright (C) 2016-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -30,7 +30,7 @@ SectionedListSection = namedtuple(
 
 class ErrorCatcher(object):
     """
-    Wrapper class to contain data and possibly an exception.
+    Wrapper class to contain data and possibly exceptions.
 
     This is designed to allow a function to return data plus an exception
     which it would have liked to have raised.
@@ -38,7 +38,7 @@ class ErrorCatcher(object):
 
     def __init__(self, data):
         self.data = data
-        self.error = None
+        self.errors = []
 
     @contextmanager
     def catch_(self):
@@ -50,7 +50,7 @@ class ErrorCatcher(object):
             yield self.data
 
         except Exception as e:
-            self.error = e
+            self.errors.append(e)
 
     @contextmanager
     def release(self):
@@ -65,18 +65,19 @@ class ErrorCatcher(object):
 
         yield self.data
 
-        if self.error is not None:
+        if self.errors:
             raise FormattedError(
-                'Exception not raised: {}', self.error.args[0])
+                'Exception not raised: {}', self.errors[0].args[0])
 
     def raise_(self):
         """
-        Raises the stored exception, if there is one.
+        Raises the first stored exception, if there are any, then clears
+        the list of exceptions.
         """
 
-        if self.error is not None:
-            error = self.error
-            self.error = None
+        if self.errors:
+            error = self.errors[0]
+            del self.errors[:]
             raise error
 
 
