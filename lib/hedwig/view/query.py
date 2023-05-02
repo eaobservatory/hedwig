@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,9 +18,12 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+import json
+
 import requests
 
 from ..compat import str_to_unicode
+from ..config import get_countries
 from ..web.util import HTTPError
 
 
@@ -31,7 +34,17 @@ class QueryView(object):
     fixed_name_responses = {}
 
     def __init__(self):
-        pass
+        # Prepare JSON version of the country list.
+        self.country_list_json = json.dumps([
+            {
+                'value': code,
+                'text': name,
+            }
+            for (code, name) in get_countries().items()
+        ])
+
+    def get_country_list(self):
+        return self.country_list_json
 
     @classmethod
     def add_fixed_name_response(

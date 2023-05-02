@@ -2,6 +2,9 @@
 {% set navigation=['people', (person.name, url_for('.person_view', person_id=person.id))] %}
 {% set help_link=url_for('help.user_page', page_name='register') %}
 
+{% set stylesheets = ['selectize'] %}
+{% set scripts = ['selectize', 'country_select'] %}
+
 {% from 'macro/institution.html' import render_institution_form, render_institution_summary %}
 
 {% block content %}
@@ -79,7 +82,7 @@
 
     <form method="POST" action="{{ url_for('.person_edit_institution', person_id=person.id) }}">
         <ol>
-            {{ render_institution_form(institution, countries) }}
+            {{ render_institution_form(institution) }}
             <li>
                 <input type="submit" value="Add new institution" name="submit_add" />
                 {% if next_page is not none %}

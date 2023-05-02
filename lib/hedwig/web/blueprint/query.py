@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -32,6 +32,11 @@ def create_query_blueprint(db):
 
     bp = Blueprint('query', __name__)
     view = QueryView()
+
+    @bp.route('/countries')
+    @send_file(fixed_type='application/json', allow_cache=True)
+    def country_list():
+        return view.get_country_list()
 
     @bp.route('/nameresolver')
     @send_file(allow_cache=True, cache_max_age=3600, cache_private=False)

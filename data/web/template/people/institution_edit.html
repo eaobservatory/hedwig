@@ -2,6 +2,9 @@
 {% set navigation=[('Institutions', url_for('.institution_list')), (institution.name, url_for('.institution_view', institution_id=institution_id))] %}
 {% set help_link=url_for('help.user_page', page_name='profile', _anchor='editing-institutions') %}
 
+{% set stylesheets = ['selectize'] %}
+{% set scripts = ['selectize', 'country_select'] %}
+
 {% from 'macro/institution.html' import render_institution_form %}
 
 {% block content %}
@@ -54,7 +57,7 @@
     </p>
 {% else %}
     <ol>
-        {{ render_institution_form(institution, countries) }}
+        {{ render_institution_form(institution) }}
         <li>
             <input type="submit" name="submit_edit" value="Save" />
         </li>

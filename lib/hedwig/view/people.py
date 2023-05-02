@@ -28,7 +28,7 @@ try:
 except ImportError:
     pass
 
-from ..config import get_config, get_countries
+from ..config import get_config
 from ..email.format import render_email_template
 from ..error import ConsistencyError, DatabaseIntegrityError, Error, \
     MultipleRecords, NoSuchRecord, NoSuchValue, \
@@ -821,7 +821,6 @@ class PeopleView(object):
             'institution': institution,
             'institution_id': person.institution_id,
             'institutions': institutions,
-            'countries': get_countries(),
             'is_current_user': is_current_user,
             'next_page': next_page,
         }
@@ -1407,7 +1406,6 @@ class PeopleView(object):
             'person_affected_other': person_affected_other,
             'institution_id': institution.id,
             'institution': institution,
-            'countries': get_countries(),
         }
 
     def institution_log(self, current_user, db, institution_id, form):
