@@ -6,8 +6,8 @@
 .selectize-input input {
   color: #000;
   font-family: system-ui;
-  font-size: 13px;
-  line-height: 18px;
+  font-size: 12px;
+  line-height: 12px;
   -webkit-font-smoothing: inherit;
 }
 .selectize-input,
