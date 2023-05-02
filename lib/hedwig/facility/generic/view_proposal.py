@@ -99,9 +99,7 @@ class GenericProposal(object):
 
         if form is not None:
             try:
-                affiliation_id = int(form['affiliation_id'])
-                if affiliation_id not in affiliations:
-                    raise ErrorPage('Invalid affiliation selected.')
+                affiliation_id = int_or_none(form['affiliation_id'])
 
                 proposal_title = form['proposal_title'].strip()
 
@@ -109,6 +107,11 @@ class GenericProposal(object):
                     old_proposal_id = int(form['proposal_id'])
 
                 member_copy = 'member_copy' in form
+
+                if affiliation_id is None:
+                    raise UserError('Please select an affiliation.')
+                if affiliation_id not in affiliations:
+                    raise ErrorPage('Invalid affiliation selected.')
 
                 if 'submit_new' in form:
                     proposal_id = db.add_proposal(
@@ -1343,16 +1346,19 @@ class GenericProposal(object):
 
         member_info = self._read_member_form(form)
 
-        with member_info.release() as member:
+        with member_info.catch_() as member:
             if form is not None:
                 member['editor'] = 'editor' in form
                 member['observer'] = 'observer' in form
-                member['affiliation_id'] = int(form['affiliation_id'])
+                member['affiliation_id'] = int_or_none(form['affiliation_id'])
+                if member['affiliation_id'] is None:
+                    raise UserError('Please select an affiliation.')
 
                 affiliation = affiliations.get(member['affiliation_id'])
                 if affiliation is None:
                     raise ErrorPage('Selected affiliation not found.')
 
+        with member_info.release() as member:
             if member['is_link'] is None:
                 member_info.raise_()
 
