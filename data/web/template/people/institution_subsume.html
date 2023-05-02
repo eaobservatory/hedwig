@@ -2,7 +2,8 @@
 {% set navigation=[('Institutions', url_for('.institution_list')), (institution.name, url_for('.institution_view', institution_id=institution.id))] %}
 {% set help_link=url_for('help.admin_page', page_name='institution_edits') %}
 
-{% from 'macro/institution.html' import render_institution_summary %}
+{% set stylesheets = ['selectize'] %}
+{% set scripts = ['selectize', 'institution_select'] %}
 
 {% block content %}
 {% if show_confirm_prompt %}
@@ -67,13 +68,9 @@
         <ol>
             <li>
                 <label for="duplicate_id">Institution</label>
-                <select name="duplicate_id">
-                    {% for institution in institutions %}
-                        <option value="{{ institution.id }}">
-                            {{ render_institution_summary(institution) }}
-                        </option>
-                    {% endfor %}
-                </select>
+                <div style="display: inline-block; width: 70ex;"><select id="select_institution" name="duplicate_id" data-institution_list="{{ url_for('query.institution_list') }}" data-excluded="{{ [institution.id] | json }}">
+                    <option value="">Loading&hellip;</option>
+                </select><div>
             </li>
             <li>
                 <input type="submit" value="Select duplicate institution" name="submit" />

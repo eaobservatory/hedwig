@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -745,13 +745,13 @@ class PeopleView(object):
     def person_edit_institution(
             self, current_user, db, person, can, args, form):
         message = None
+        message_select = None
 
         # Accept either query argument "log_in_for" or "next_page"
         # to be used for subsequent navigation.
         next_page = args.get('next_page', args.get('log_in_for', None))
 
         is_current_user = (person.user_id == current_user.user.id)
-        institutions = db.search_institution()
 
         # Prepare blank record for an institution to potentially be
         # added to the database.
@@ -760,17 +760,32 @@ class PeopleView(object):
             address='', country='')
 
         if form is not None:
-            try:
-                next_page = form.get('next_page', None)
+            next_page = form.get('next_page', None)
+            if next_page is None:
+                next_page = url_for('.person_view', person_id=person.id)
 
-                if 'submit_select' in form:
-                    institution_id = int(form['institution_id'])
+            description = (
+                'Your institution' if is_current_user else 'The institution')
+
+            if 'submit_select' in form:
+                try:
+                    institution_id = int_or_none(form['institution_id'])
+                    if institution_id is None:
+                        raise UserError('Please select an institution.')
+                    institutions = db.search_institution()
                     if institution_id not in institutions:
                         raise HTTPError('Institution not found.')
                     db.update_person(person.id, institution_id=institution_id)
-                    action = 'selected'
 
-                elif 'submit_add' in form:
+                    flash('{} has been selected.', description)
+
+                    raise HTTPRedirect(next_page)
+
+                except UserError as e:
+                    message_select = e.message
+
+            elif 'submit_add' in form:
+                try:
                     institution = institution._replace(
                         name=form['institution_name'].strip(),
                         department=form['department'].strip(),
@@ -789,25 +804,16 @@ class PeopleView(object):
                         institution.address, institution.country,
                         adder_person_id=current_user.person.id)
                     db.update_person(person.id, institution_id=institution_id)
-                    action = 'recorded'
 
-                else:
-                    raise ErrorPage('Unknown action')
+                    flash('{} has been recorded.', description)
 
-                if is_current_user:
-                    flash('Your institution has been {}.', action)
-                else:
-                    flash('The institution has been {}.', action)
-
-                # If an explicit "next page" has been set, go there now.
-                if next_page is not None:
                     raise HTTPRedirect(next_page)
 
-                raise HTTPRedirect(url_for(
-                    '.person_view', person_id=person.id))
+                except UserError as e:
+                    message = e.message
 
-            except UserError as e:
-                message = e.message
+            else:
+                raise ErrorPage('Unknown action')
 
         title = 'Select Institution'
 
@@ -817,10 +823,10 @@ class PeopleView(object):
         return {
             'title': title,
             'message': message,
+            'message_select': message_select,
             'person': person,
             'institution': institution,
             'institution_id': person.institution_id,
-            'institutions': institutions,
             'is_current_user': is_current_user,
             'next_page': next_page,
         }
@@ -1500,9 +1506,6 @@ class PeopleView(object):
         if form is None:
             ctx.update({
                 'show_confirm_prompt': False,
-                'institutions': [
-                    i for i in db.search_institution().values()
-                    if i.id != institution_id]
             })
 
         else:

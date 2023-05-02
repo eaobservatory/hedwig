@@ -3,9 +3,9 @@
 {% set help_link=url_for('help.user_page', page_name='register') %}
 
 {% set stylesheets = ['selectize'] %}
-{% set scripts = ['selectize', 'country_select'] %}
+{% set scripts = ['selectize', 'institution_select', 'country_select'] %}
 
-{% from 'macro/institution.html' import render_institution_form, render_institution_summary %}
+{% from 'macro/institution.html' import render_institution_form %}
 
 {% block content %}
 
@@ -39,17 +39,19 @@
     institution appears here, please select it from this list.
     </p>
 
+    {% if message_select is not none %}
+        <p class="warning">
+            {{ message_select }}
+        </p>
+    {% endif %}
+
     <form method="POST" action="{{ url_for('.person_edit_institution', person_id=person.id) }}">
         <ol>
             <li>
                 <label for="institution_id">Institution</label>
-                <select name="institution_id">
-                    {% for institution in institutions.values() %}
-                        <option value="{{ institution.id }}" {{'selected="selected"' | safe if institution.id == institution_id }}>
-                            {{ render_institution_summary(institution) }}
-                        </option>
-                    {% endfor %}
-                </select>
+                <div style="display: inline-block; width: 70ex;"><select id="select_institution" name="institution_id" data-institution_list="{{ url_for('query.institution_list') }}" data-selected="{{ institution_id }}">
+                    <option value="">Loading&hellip;</option>
+                </select></div>
             </li>
             <li>
                 <input type="submit" value="Select institution" name="submit_select" />

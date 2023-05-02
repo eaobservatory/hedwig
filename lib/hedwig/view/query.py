@@ -46,6 +46,27 @@ class QueryView(object):
     def get_country_list(self):
         return self.country_list_json
 
+    def get_institution_list(self, db):
+        countries = get_countries()
+        institutions = []
+
+        for institution in db.search_institution().values():
+            text = truncate(institution.name, 25)
+            if institution.department:
+                text += ', ' + truncate(institution.department, 15)
+            if institution.organization:
+                text += ', ' + truncate(institution.organization, 15)
+            if institution.country:
+                text += ', ' + truncate(
+                    countries.get(institution.country, 'Unknown country'), 15)
+
+            institutions.append({
+                'value': institution.id,
+                'text': text,
+            })
+
+        return institutions
+
     @classmethod
     def add_fixed_name_response(
             cls, target, response, format_='json',
@@ -75,3 +96,13 @@ class QueryView(object):
 
         except requests.exceptions.RequestException:
             raise HTTPError('Failed to resolve name via CADC.')
+
+
+def truncate(value, length):
+    if value is None:
+        return ''
+
+    if len(value) <= length:
+        return value
+
+    return value[:length] + '\u2026'

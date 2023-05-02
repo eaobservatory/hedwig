@@ -27,14 +27,6 @@
     </li>
 {% endmacro %}
 
-{% macro render_institution_summary(institution) %}
-    {{ institution.name | truncate(35, killwords=true, end='\u2026') }}{% if institution.department %} ({{ institution.department | truncate(25, killwords=true, end='\u2026') }}){% endif %},
-    {% if institution.organization %}
-        {{ institution.organization | truncate(15, killwords=true, end='\u2026') }},
-    {% endif %}
-    {{ institution.country | country_name | truncate(15, killwords=true, end='\u2026') }}
-{% endmacro %}
-
 {% macro render_member_institution(member, part_truncate=100) %}
     {{ member.institution_name | abbr(part_truncate) }}{% if member.institution_department %} ({{ member.institution_department | abbr(part_truncate) }}){% endif %},
     {% if member.institution_organization %}
