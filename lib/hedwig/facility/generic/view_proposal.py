@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1434,14 +1434,8 @@ class GenericProposal(object):
                 except UserError as e:
                     message_invite = e.message
 
-        # Prepare list of people to display as the registered member
-        # directory, filtering out current proposal members.
+        # Prepare list of current members to exclude from the directory.
         current_persons = [m.person_id for m in proposal.members.values()]
-        persons = [
-            p for p in db.search_person(registered=True, public=True,
-                                        with_institution=True).values()
-            if p.id not in current_persons
-        ]
 
         return {
             'title': 'Add Member',
@@ -1452,7 +1446,8 @@ class GenericProposal(object):
             'queue_id': proposal.queue_id,
             'call_type': proposal.call_type,
             'call_separate': proposal.call_separate,
-            'persons': persons,
+            'person_list_url': url_for('query.person_list'),
+            'persons_exclude': current_persons,
             'affiliations': affiliations,
             'member': member_info.data,
             'proposal_code': self.make_proposal_code(db, proposal),

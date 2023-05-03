@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from flask import Blueprint, request
 
 from ...view.query import QueryView
-from ..util import send_file, send_json
+from ..util import require_auth, send_file, send_json
 
 
 def create_query_blueprint(db):
@@ -47,5 +47,17 @@ def create_query_blueprint(db):
     @send_file(allow_cache=True, cache_max_age=3600, cache_private=False)
     def name_resolver():
         return view.resolve_name(request.args)
+
+    @bp.route('/people/public')
+    @require_auth()
+    @send_json(allow_cache=True, cache_max_age=60)
+    def person_list(current_user):
+        return view.get_person_list(current_user, db, public=True)
+
+    @bp.route('/people/all')
+    @require_auth()
+    @send_json(allow_cache=True, cache_max_age=60)
+    def person_list_all(current_user):
+        return view.get_person_list(current_user, db, public=None)
 
     return bp

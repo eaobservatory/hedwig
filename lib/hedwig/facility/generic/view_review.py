@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1331,14 +1331,8 @@ class GenericReview(object):
                 except UserError as e:
                     message_invite = e.message
 
-        # Prepare list of people to display as the registered member directory.
-        # Note that this includes people without public profiles as this page
-        # is restricted to privileged users administering a review process.
+        # Prepare list of people to exclude from the member directory.
         exclude_person_ids = proposal_person_ids + existing_person_ids
-        persons = [
-            p for p in db.search_person(registered=True,
-                                        with_institution=True).values()
-            if p.id not in exclude_person_ids]
 
         try:
             abstract = db.get_proposal_text(proposal.id,
@@ -1362,7 +1356,8 @@ class GenericReview(object):
         return {
             'title': '{}: Add {} Reviewer'.format(
                 proposal_code, role_info.name.title()),
-            'persons': persons,
+            'person_list_url': url_for('query.person_list_all'),
+            'persons_exclude': exclude_person_ids,
             'member': member_info.data,
             'message_link': message_link,
             'message_invite': message_invite,

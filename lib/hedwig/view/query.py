@@ -24,7 +24,8 @@ import requests
 
 from ..compat import str_to_unicode
 from ..config import get_countries
-from ..web.util import HTTPError
+from ..web.util import HTTPError, HTTPForbidden
+from . import auth
 
 
 class QueryView(object):
@@ -66,6 +67,33 @@ class QueryView(object):
             })
 
         return institutions
+
+    def get_person_list(self, current_user, db, public):
+        countries = get_countries()
+        persons = []
+
+        if not public:
+            can = auth.for_person_list(current_user, db)
+            if not can.view:
+                raise HTTPForbidden('Permission denied.')
+
+        for person in db.search_person(
+                registered=True, public=public,
+                with_institution=True).values():
+            text = truncate(person.name, 30)
+            if person.institution_id:
+                text += ', ' + truncate(person.institution_name, 25)
+            if person.institution_country:
+                text += ', ' + truncate(
+                    countries.get(
+                        person.institution_country, 'Unknown country'), 15)
+
+            persons.append({
+                'value': person.id,
+                'text': text,
+            })
+
+        return persons
 
     @classmethod
     def add_fixed_name_response(

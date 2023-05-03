@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -41,7 +41,7 @@ class ViewMember(object):
         with info.catch_() as member:
             if form is not None:
                 if 'person_id' in form:
-                    member['person_id'] = int(form['person_id'])
+                    member['person_id'] = int_or_none(form['person_id'])
                 if 'person_title' in form:
                     member['title'] = int_or_none(form['person_title'])
                 member['name'] = form.get('name', '').strip()

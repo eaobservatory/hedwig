@@ -22,16 +22,8 @@
             <ol>
                 <li>
                     <label for="person_id">{{ label_link }}</label>
-                    <div style="display: inline-block; width: 70ex;"><select name="person_id">
-                        {% for person in persons %}
-                            <option value="{{ person.id }}" {{ 'selected="selected"' | safe if member.person_id == person.id }}>
-                                {{ person.name | truncate(40, killwords=true, end='\u2026') }}{% if person.institution_id is not none %},
-                                    {{ person.institution_name | truncate(35, killwords=true, end='\u2026') }}{% if person.institution_country is not none %},
-                                        {{ person.institution_country | country_name | truncate(15, killwords=true, end='\u2026')}}
-                                    {% endif %}
-                                {% endif %}
-                            </option>
-                        {% endfor %}
+                    <div style="display: inline-block; width: 70ex;"><select name="person_id" data-person_list="{{ person_list_url }}" data-excluded="{{ persons_exclude | json }}" data-selected="{{ '' if member.person_id is none else member.person_id }}">
+                        <option value="">Loading&hellip;</option>
                     </select></div>
                 </li>
                 {% block person_link_form_extra %}

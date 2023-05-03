@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -828,20 +828,15 @@ class GenericAdmin(object):
                 except UserError as e:
                     message_invite = e.message
 
-        # Prepare list of people to display as the registered member directory.
-        # Note that this includes people without public profiles as this page
-        # is restricted to administrators.
+        # Prepare list of people to exclude from the member directory.
         existing_person_ids = [
             x.person_id for x in db.search_group_member(
                 queue_id=queue_id, group_type=group_type).values()]
-        persons = [
-            p for p in db.search_person(registered=True,
-                                        with_institution=True).values()
-            if p.id not in existing_person_ids]
 
         return {
             'title': 'Add Group Member',
-            'persons': persons,
+            'person_list_url': url_for('query.person_list_all'),
+            'persons_exclude': existing_person_ids,
             'member': member_info.data,
             'message_link': message_link,
             'message_invite': message_invite,

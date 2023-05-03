@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2022 East Asian Observatory
+# Copyright (C) 2016-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -618,6 +618,21 @@ class WebAppAuthTestCase(WebAppTestCase):
             self._test_auth_add_review(
                 type_class, role_class, auth_cache, *test_case)
 
+        # Test authorization to view the full person list.
+        for test_case in [
+                (1,  person_admin, False, auth.no),
+                (2,  person_admin, True,  auth.view_only),
+                (3,  person_a1e,   False, auth.no),
+                (4,  person_a_rc,  False, auth.view_only),
+                (5,  person_b_rc,  False, auth.view_only),
+                (6,  person_a1rt,  False, auth.no),
+                (7,  person_a1rc1, False, auth.no),
+                (8,  person_b2rc1, False, auth.no),
+                (9,  person_a_v,   False, auth.no),
+                (10, person_svp,   False, auth.no),
+                ]:
+            self._test_auth_person_list(auth_cache, *test_case)
+
     def _test_auth_call_review(self, auth_cache,
                                case_number, person_id, is_admin,
                                call_id, expect):
@@ -636,6 +651,14 @@ class WebAppAuthTestCase(WebAppTestCase):
                 self.db.get_person(for_person_id),
                 auth_cache=auth_cache),
             expect, 'auth person case {}'.format(case_number))
+
+    def _test_auth_person_list(
+            self, auth_cache, case_number, person_id, is_admin, expect):
+        self.assertEqual(
+            auth.for_person_list(
+                self._current_user(person_id, is_admin),
+                self.db, auth_cache=auth_cache),
+            expect, 'auth person list case {}'.format(case_number))
 
     def _test_auth_institution(self, auth_cache,
                                case_number, person_id, is_admin,

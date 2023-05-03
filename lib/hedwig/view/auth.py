@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -184,6 +184,30 @@ def for_person(current_user, db, person, auth_cache=None):
                 return yes
 
     return auth
+
+
+def for_person_list(current_user, db, auth_cache=None):
+    """
+    Determine the current user's authorization regarding the full person list
+    (including those without public profiles).
+
+    This is limited to site administrators and review coordinators.
+    """
+
+    if (current_user.user is None) or (current_user.person is None):
+        return no
+
+    elif current_user.is_admin:
+        return view_only
+
+    group_members = _get_group_membership(
+        auth_cache, db, current_user.person.id)
+
+    if group_members.has_entry(
+            group_type=GroupType.review_coord_groups()):
+        return view_only
+
+    return no
 
 
 def for_person_member(current_user, db, member, auth_cache=None):
