@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -47,6 +47,7 @@ from hedwig.request.poll import process_request_prop_copy
 from hedwig.type.enum import BaseReviewerRole, MessageState, ProposalState
 from hedwig.view.query import QueryView
 from hedwig.web.app import create_web_app
+import hedwig.web.util as hedwig_web_util
 
 from test.dummy_config import DummyConfigTestCase
 from test.dummy_db import get_dummy_database
@@ -75,6 +76,9 @@ class IntegrationTest(DummyConfigTestCase):
     def test_app(self):
         # Speed up password hashing for the test.
         auth._rounds = 10
+
+        # Disable caching (of sent files and JSON data).
+        hedwig_web_util._set_response_caching = (lambda *args: None)
 
         config = get_config()
         # Use the JCMT facility for our examples.
