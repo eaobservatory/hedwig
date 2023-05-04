@@ -334,10 +334,9 @@ class IntegrationTest(DummyConfigTestCase):
         self._do_verify_email(person_email, screenshot_path=screenshot_path)
 
         try:
-            Select(
-                self.browser.find_element_by_name('institution_id')
-            ).select_by_visible_text('{}, {}'.format(
-                institution_name, institution_country))
+            self._select_value_selectize(
+                'institution_id',
+                text='{}, {}'.format(institution_name, institution_country))
 
             self._save_screenshot(screenshot_path, 'profile_institution')
 
@@ -349,9 +348,7 @@ class IntegrationTest(DummyConfigTestCase):
         except NoSuchElementException:
             self.browser.find_element_by_name('institution_name').send_keys(
                 institution_name)
-            Select(
-                self.browser.find_element_by_name('country_code')
-            ).select_by_visible_text(institution_country)
+            self._select_value_selectize('country_code', text=institution_country)
 
             self._save_screenshot(screenshot_path, 'profile_institution')
 
@@ -682,13 +679,12 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_link_text('Add member').click()
 
         Select(
-            self.browser.find_element_by_name('person_id')
-        ).select_by_visible_text(
-            'Another Person, Test Institution, United States')
+            self.browser.find_elements_by_name('affiliation_id')[0]
+        ).select_by_visible_text('Other')
 
-        for affiliation_selection in self.browser.find_elements_by_name(
-                'affiliation_id'):
-            Select(affiliation_selection).select_by_visible_text('Other')
+        self._select_value_selectize(
+            'person_id',
+            text='Another Person, Test Institution, United States')
 
         self._save_screenshot(self.user_image_root, 'member_add')
 
@@ -740,9 +736,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element_by_name('institution_name').send_keys(
             'Your Institution')
-        Select(
-            self.browser.find_element_by_name('country_code')
-        ).select_by_visible_text('United States')
+        self._select_value_selectize('country_code', text='United States')
 
         self.browser.find_element_by_name('submit_add').click()
         self.assertIn(
@@ -1359,9 +1353,7 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_name('institution_name').send_keys(
             'Another Institution')
 
-        Select(
-            self.browser.find_element_by_name('country_code')
-        ).select_by_visible_text('United States')
+        self._select_value_selectize('country_code', text='United States')
 
         self._save_screenshot(self.user_image_root, 'institution_change')
 
@@ -1373,10 +1365,8 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element_by_link_text('Change institution').click()
 
-        Select(
-            self.browser.find_element_by_name('institution_id')
-        ).select_by_visible_text(
-            'Test Institution, United States')
+        self._select_value_selectize(
+            'institution_id', text='Test Institution, United States')
 
         self.browser.find_element_by_name('submit_select').click()
 
@@ -1596,10 +1586,10 @@ class IntegrationTest(DummyConfigTestCase):
             first_person = True
             for person_name in group_members:
                 self.browser.find_element_by_link_text('Add member').click()
-                Select(
-                    self.browser.find_element_by_name('person_id')
-                ).select_by_visible_text(
-                    '{}, Test Institution, United States'.format(person_name))
+                self._select_value_selectize(
+                    'person_id',
+                    text='{}, Test Institution, United States'.format(
+                        person_name))
 
                 if first_person:
                     self._save_screenshot(self.admin_image_root,
@@ -1683,10 +1673,8 @@ class IntegrationTest(DummyConfigTestCase):
             'Invited Reviewer has been invited to register.',
             self.browser.page_source)
 
-        Select(
-            self.browser.find_element_by_name('institution_id')
-        ).select_by_visible_text(
-            'Test Institution, United States')
+        self._select_value_selectize(
+            'institution_id', text='Test Institution, United States')
 
         self.browser.find_element_by_name('submit_select').click()
 
@@ -2142,10 +2130,9 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_link_text(
             'Subsume duplicate profile').click()
 
-        Select(
-            self.browser.find_element_by_name('duplicate_id')
-        ).select_by_visible_text(
-            'Another Person, Test Institution, United States')
+        self._select_value_selectize(
+            'duplicate_id',
+            text='Another Person, Test Institution, United States')
 
         self._save_screenshot(self.admin_image_root, 'person_subsume')
 
@@ -2169,9 +2156,8 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_link_text(
             'Subsume duplicate record').click()
 
-        Select(
-            self.browser.find_element_by_name('duplicate_id')
-        ).select_by_visible_text('Another Institution, United States')
+        self._select_value_selectize(
+            'duplicate_id', text='Another Institution, United States')
 
         self._save_screenshot(self.admin_image_root, 'institution_subsume')
 
@@ -2202,10 +2188,8 @@ class IntegrationTest(DummyConfigTestCase):
             'Site Group Member has been added to the site group.',
             self.browser.page_source)
 
-        Select(
-            self.browser.find_element_by_name('institution_id')
-        ).select_by_visible_text(
-            'Test Institution, United States')
+        self._select_value_selectize(
+            'institution_id', text='Test Institution, United States')
 
         self.browser.find_element_by_name('submit_select').click()
 
@@ -2401,3 +2385,26 @@ class IntegrationTest(DummyConfigTestCase):
     def _get_example_path(self, file_name):
         return os.path.join(
             os.getcwd(), 'util', 'selenium', 'data', file_name)
+
+    def _select_value_selectize(self, name, text):
+        delay = 0.5
+
+        sleep(delay)
+
+        control = self.browser.find_element_by_xpath(
+            '//select[@name="{}"]/following-sibling::'
+            'div[contains(@class, "selectize-control")]'.format(name))
+
+        control.find_element_by_xpath(
+            './/div[contains(@class, "selectize-input")]'
+        ).click()
+
+        sleep(delay)
+
+        control.find_element_by_xpath(
+            './div[contains(@class, "selectize-dropdown")]'
+            '/div[contains(@class, "selectize-dropdown-content")]'
+            '/div[normalize-space(.) = "{}"]'.format(text)
+        ).click()
+
+        sleep(delay)
