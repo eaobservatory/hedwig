@@ -22,7 +22,7 @@
             <ol>
                 <li>
                     <label for="person_id">{{ label_link }}</label>
-                    <div style="display: inline-block; width: 70ex;"><select name="person_id" data-person_list="{{ person_list_url }}" data-excluded="{{ persons_exclude | json }}" data-selected="{{ '' if member.person_id is none else member.person_id }}">
+                    <div style="display: inline-block; width: 70ex;"><select id="select_person" name="person_id" data-person_list="{{ person_list_url }}" data-excluded="{{ persons_exclude | json }}" data-selected="{{ '' if member.person_id is none else member.person_id }}">
                         <option value="">Loading&hellip;</option>
                     </select></div>
                 </li>

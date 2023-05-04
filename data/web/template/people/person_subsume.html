@@ -1,7 +1,9 @@
 {% extends 'layout.html' %}
 {% set navigation=['people', (person.name, url_for('.person_view', person_id=person.id))] %}
 {% set help_link=url_for('help.admin_page', page_name='user') %}
-{% set scripts = ['unmangle'] %}
+
+{% set stylesheets = ['selectize'] %}
+{% set scripts = ['selectize', 'person_select', 'unmangle'] %}
 
 {% block content %}
 {% if show_confirm_prompt %}
@@ -107,17 +109,9 @@
         <ol>
             <li>
                 <label for="duplicate_id">Person</label>
-                <select name="duplicate_id">
-                    {% for person in persons %}
-                        <option value="{{ person.id }}">
-                            {{ person.name | truncate(40, killwords=true, end='\u2026') }}{% if person.institution_id is not none %},
-                                {{ person.institution_name | truncate(35, killwords=true, end='\u2026') }}{% if person.institution_country is not none %},
-                                    {{ person.institution_country | country_name | truncate(15, killwords=true, end='\u2026')}}
-                                {% endif %}
-                            {% endif %}
-                        </option>
-                    {% endfor %}
-                </select>
+                <div style="display: inline-block; width: 70ex;"><select id="select_person" name="duplicate_id" data-person_list="{{ url_for('query.person_list_all') }}" data-excluded="{{ [person.id] | json }}" data-selected="">
+                    <option value="">Loading&hellip;</option>
+                </select></div>
             </li>
             <li>
                 <input type="submit" value="Select duplicate profile" name="submit" />

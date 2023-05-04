@@ -1246,14 +1246,12 @@ class PeopleView(object):
         if form is None:
             ctx.update({
                 'show_confirm_prompt': False,
-                'persons': [
-                    p for p in db.search_person(
-                        registered=True, with_institution=True).values()
-                    if p.id != person.id],
             })
 
         else:
-            duplicate_id = int(form['duplicate_id'])
+            duplicate_id = int_or_none(form['duplicate_id'])
+            if duplicate_id is None:
+                raise ErrorPage('No duplicate entry was selected.')
 
             if duplicate_id == person.id:
                 raise ErrorPage('Main and duplicate identifiers are the same.')

@@ -1,5 +1,5 @@
 $(document).ready(function () {
-    var person_select = $('select[name=person_id]');
+    var person_select = $('select#select_person');
 
     $.ajax(person_select.data('person_list'), dataType='json'
     ).done(function (result) {
