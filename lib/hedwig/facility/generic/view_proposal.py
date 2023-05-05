@@ -1738,6 +1738,7 @@ class GenericProposal(object):
                     proposal_id=prev_proposal_id,
                     proposal_code=prev_proposal_code,
                     continuation=(('continuation_' + id_) in form),
+                    sort_order=int_or_none(form['sort_order_' + id_]),
                     publications=publications
                 )
 

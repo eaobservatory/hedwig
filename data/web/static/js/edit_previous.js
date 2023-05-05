@@ -14,6 +14,7 @@ function addPreviousRow(newRowNumber) {
     newcode.attr('name', 'code_' + nid);
     newcode.attr('required', 'required');
     newrow.find('[name=continuation]').attr('name', 'continuation_' + nid);
+    newrow.find('[name=sort_order]').attr('name', 'sort_order_' + nid);
 
     var i;
     for (i = 0; i < 6; i ++) {
@@ -27,7 +28,11 @@ function addPreviousRow(newRowNumber) {
     deletelink.click(function (event) {
         deletePreviousRow(nid);
     });
-    newrow.appendTo($('table#previousproposals'));
+
+    var previous_table = $('table#previousproposals');
+    newrow.appendTo(previous_table);
+    reassign_sort_order(previous_table);
+    enable_table_drag_row(previous_table, newrow);
 }
 
 function deletePreviousRow(previousid) {
@@ -55,4 +60,6 @@ $(document).ready(function () {
     if ($('table#previousproposals tr').length === 1) {
         addPreviousRow(newRowCounter ++);
     }
+
+    enable_table_drag($('table#previousproposals'));
 });

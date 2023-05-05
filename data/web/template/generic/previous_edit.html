@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
-{% set scripts=['edit_previous'] %}
+{% set scripts=['table_row_drag', 'edit_previous'] %}
 {% set help_link=url_for('help.user_page', page_name='prev_proposal') %}
 
 {% block content %}
@@ -39,13 +39,14 @@
 <form method="POST" action="{{ url_for('.previous_edit', proposal_id=proposal_id) }}">
     <table id="previousproposals">
         <tr>
-            <th>Proposal identifier</th>
+            <th colspan="2">Proposal identifier</th>
             <th>Continuation?</th>
             <th>Publications</th>
             <th>Actions</th>
         </tr>
-        {% for prev_proposal in prev_proposals.values() %}
+        {% for prev_proposal in prev_proposals.values_in_sorted_order() %}
             <tr id="previousrow_{{ prev_proposal.id }}">
+            <td class="draggrip">&vellip;&vellip;</td>
             <td><input type="text" name="code_{{ prev_proposal.id }}" value="{{ prev_proposal.proposal_code }}" size="20" list="accepted_proposals" /></td>
             <td><input type="checkbox" name="continuation_{{ prev_proposal.id }}" {{ 'checked="checked"' | safe if prev_proposal.continuation }} /></td>
             <td>
@@ -68,13 +69,16 @@
                     {% endif %}
                 {% endfor %}
             </td>
-            <td><input type="button" id="delete_{{ prev_proposal.id }}" value="Delete" /></td>
-
+            <td>
+                <input type="button" id="delete_{{ prev_proposal.id }}" value="Delete" />
+                <input name="sort_order_{{ prev_proposal.id }}" type="hidden" value="{{ prev_proposal.sort_order if prev_proposal.sort_order is not none }}" />
+            </td>
             </tr>
         {% endfor %}
     </table>
     <table class="template">
         <tr id="previousrow_template">
+            <td class="draggrip">&vellip;&vellip;</td>
             <td><input type="text" name="code" value="" size="20" list="accepted_proposals" /></td>
             <td><input type="checkbox" name="continuation" /></td>
             <td>
@@ -90,7 +94,10 @@
                     {% endif %}
                 {% endfor %}
             </td>
-            <td><input type="button" id="delete_template" value="Delete" /></td>
+            <td>
+                <input type="button" id="delete_template" value="Delete" />
+                <input name="sort_order" type="hidden" value="" />
+            </td>
         </tr>
     </table>
 
