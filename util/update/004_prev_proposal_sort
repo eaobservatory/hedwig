@@ -1,0 +1,64 @@
+#!/usr/bin/env python
+
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
+
+from collections import defaultdict, OrderedDict
+import logging
+
+from sqlalchemy.sql import select
+from sqlalchemy.sql.expression import or_
+
+from hedwig.config import get_database
+from hedwig.db.meta import prev_proposal
+from hedwig.error import ConsistencyError
+from hedwig.util import get_logger
+
+logger = get_logger('prev_proposal_sort')
+
+
+def main():
+    logging.basicConfig(level=logging.DEBUG)
+
+    db = get_database()
+
+    logger.info('Reading previous proposal information')
+
+    sort_order = OrderedDict()
+    proposal_max = defaultdict(int)
+
+    with db._transaction() as conn:
+        for (id_, proposal_id) in conn.execute(select([
+                prev_proposal.c.id, prev_proposal.c.this_proposal_id
+                ]).where(or_(
+                    prev_proposal.c.sort_order == 0,
+                    prev_proposal.c.sort_order.is_(None)
+                )).order_by(prev_proposal.c.id.asc())):
+            proposal_max[proposal_id] += 1
+            sort_order[id_] = proposal_max[proposal_id]
+
+    logger.info('Found {} entries to update', len(sort_order))
+
+    logger.info('Setting previous proposal sort order values')
+
+    n_updated = 0
+
+    with db._transaction() as conn:
+        for (id_, sort_order) in sort_order.items():
+            result = conn.execute(prev_proposal.update().where(
+                prev_proposal.c.id == id_
+            ).values({
+                prev_proposal.c.sort_order: sort_order,
+            }))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'Update rowcount={} for id={}', result.rowcount, id_)
+
+            n_updated += 1
+
+    logger.info('Updated {} entries', n_updated)
+
+
+if __name__ == '__main__':
+    main()

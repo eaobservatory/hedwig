@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -471,6 +471,7 @@ prev_proposal = Table(
            nullable=True),
     Column('proposal_code', Unicode(255), nullable=False),
     Column('continuation', Boolean, nullable=False),
+    Column('sort_order', Integer, nullable=False),
     **table_opts)
 
 prev_proposal_pub = Table(

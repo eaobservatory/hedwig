@@ -458,7 +458,7 @@ class MessageRecipientCollection(ResultCollection):
                           if v.message_id == message_id)
 
 
-class PrevProposalCollection(ResultCollection):
+class PrevProposalCollection(ResultCollection, CollectionOrdered):
     """
     Class to represent a collection of previous proposals.
     """

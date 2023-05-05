@@ -4,6 +4,21 @@ Updates Requiring Intervention
 The `util/update` directory contains scripts to assist with updates
 to the Hedwig database which cannot be handled automatically by `Alembic`.
 
+* 2023-05-04: Addition of sort_order column to prev_proposal table
+
+  A `sort_order` column has been added to the `prev_proposal` table to
+  allow entries to be ordered as desired in a similar way to other
+  parts of a proposal.
+
+  * Use `Alembic` to add the new column, giving a `server_default`
+    argument of 0::
+
+      op.add_column('prev_proposal', sa.Column(
+        'sort_order', sa.Integer(), nullable=False, server_default='0'))
+
+  * Run the `util/update/004_prev_proposal_sort` script to fill the
+    new column based on the previous ordering (order in which added).
+
 * 2022-07-21: Addition of verified column to person table
 
   A new flag has been added to the person table to record whether

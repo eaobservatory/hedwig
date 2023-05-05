@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1503,7 +1503,7 @@ class ProposalPart(object):
         with self._transaction(_conn=_conn) as conn:
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(iter_stmt.order_by(
-                        prev_proposal.c.id.asc(),
+                        prev_proposal.c.sort_order.asc(),
                         prev_proposal_pub.c.id.asc())):
                     # Convert row to a dictionary so that we can manipulate
                     # its entries.
@@ -2747,6 +2747,8 @@ class ProposalPart(object):
 
         records.validate()
 
+        records.ensure_sort_order()
+
         # Initialize debugging counters.
         n_insert = n_update = n_delete = 0
 
@@ -2768,6 +2770,7 @@ class ProposalPart(object):
                         prev_proposal.c.proposal_id: value.proposal_id,
                         prev_proposal.c.proposal_code: value.proposal_code,
                         prev_proposal.c.continuation: value.continuation,
+                        prev_proposal.c.sort_order: value.sort_order,
                     }))
 
                     prev_proposal_id = result.inserted_primary_key[0]
@@ -2783,13 +2786,15 @@ class ProposalPart(object):
                     # Check if needs update
                     if ((previous.proposal_id != value.proposal_id) or
                             (previous.proposal_code != value.proposal_code) or
-                            (previous.continuation != value.continuation)):
+                            (previous.continuation != value.continuation) or
+                            (previous.sort_order != value.sort_order)):
                         conn.execute(prev_proposal.update().where(
                             prev_proposal.c.id == id_
                         ).values({
                             prev_proposal.c.proposal_id: value.proposal_id,
                             prev_proposal.c.proposal_code: value.proposal_code,
                             prev_proposal.c.continuation: value.continuation,
+                            prev_proposal.c.sort_order: value.sort_order,
                         }))
 
                         n_update += 1
