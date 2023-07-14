@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2021 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -28,7 +28,8 @@ from hedwig import auth
 from hedwig.config import _get_db_class
 from hedwig.db.meta import metadata
 from hedwig.db.engine import get_engine
-from hedwig.type.enum import BaseCallType, BaseReviewerRole, FormatType
+from hedwig.type.enum import BaseAffiliationType, BaseCallType, \
+    BaseReviewerRole, FormatType
 
 from .dummy_config import DummyConfigTestCase
 
@@ -115,7 +116,8 @@ class DBTestCase(DummyConfigTestCase):
         affiliations = self.db.search_affiliation(queue_id=queue_id)
         self.assertFalse(affiliations)
 
-        affiliation_id = self.db.add_affiliation(queue_id, 'test aff/n')
+        affiliation_id = self.db.add_affiliation(
+            BaseAffiliationType, queue_id, 'test aff/n')
         self.assertIsInstance(affiliation_id, int)
 
         return (call_id, affiliation_id)
@@ -134,7 +136,8 @@ class DBTestCase(DummyConfigTestCase):
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', '',
             FormatType.PLAIN, False, False, None, None, False)
-        affiliation_id = self.db.add_affiliation(queue_id, 'test')
+        affiliation_id = self.db.add_affiliation(
+            BaseAffiliationType, queue_id, 'test')
         person_id = self.db.add_person('Test Person')
 
         return self.db.add_proposal(

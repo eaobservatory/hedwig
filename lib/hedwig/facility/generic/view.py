@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import defaultdict, OrderedDict
 
 from ...error import NoSuchRecord, NoSuchValue, ParseError
-from ...type.enum import AffiliationType, \
+from ...type.enum import BaseAffiliationType, \
     BaseCallType, BaseReviewerRole, BaseTextRole, \
     FormatType
 from ...type.simple import Call, FacilityObsInfo
@@ -124,6 +124,14 @@ class Generic(
         """
 
         return (ClashTool, AvailabilityTool)
+
+    def get_affiliation_types(self):
+        """
+        Get the affiliation type enum-style class to be used with this
+        facility.
+        """
+
+        return BaseAffiliationType
 
     def get_call_types(self):
         """
@@ -401,6 +409,7 @@ class Generic(
         implementing its own actual assignment rules.
         """
 
+        affiliation_type_class = self.get_affiliation_types()
         affiliation_count = defaultdict(float)
         affiliation_total = 0.0
 
@@ -408,7 +417,8 @@ class Generic(
             affiliation = member.affiliation_id
             if (affiliation is None) or (affiliation not in affiliations):
                 affiliation = 0
-            elif affiliations[affiliation].type != AffiliationType.STANDARD:
+            elif (affiliations[affiliation].type
+                    != affiliation_type_class.STANDARD):
                 continue
 
             affiliation_count[affiliation] += 1.0

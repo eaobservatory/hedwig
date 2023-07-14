@@ -25,7 +25,7 @@ from ...email.format import render_email_template
 from ...error import NoSuchRecord, UserError
 from ...type.collection import AffiliationCollection, \
     CallMidCloseCollection, ResultCollection
-from ...type.enum import AffiliationType, FormatType, GroupType, \
+from ...type.enum import FormatType, GroupType, \
     PersonTitle, ProposalState, SemesterState
 from ...type.simple import Affiliation, \
     CallMidClose, CallPreamble, Category, DateAndTime, \
@@ -683,6 +683,8 @@ class GenericAdmin(object):
         }
 
     def view_affiliation_edit(self, current_user, db, queue_id, form):
+        affiliation_type_class = self.get_affiliation_types()
+
         try:
             queue = db.get_queue(self.id_, queue_id)
         except NoSuchRecord:
@@ -720,7 +722,8 @@ class GenericAdmin(object):
                 records = AffiliationCollection.organize_collection(
                     updated_records, added_records)
 
-                db.sync_queue_affiliation(queue_id, records)
+                db.sync_queue_affiliation(
+                    affiliation_type_class, queue_id, records)
 
                 flash('The affiliations have been updated.')
                 raise HTTPRedirect(url_for('.queue_view', queue_id=queue_id))
@@ -732,7 +735,7 @@ class GenericAdmin(object):
             'title': 'Edit Affiliations',
             'message': message,
             'affiliations': records,
-            'affiliation_types': AffiliationType.get_options(),
+            'affiliation_types': affiliation_type_class.get_options(),
             'queue': queue,
         }
 

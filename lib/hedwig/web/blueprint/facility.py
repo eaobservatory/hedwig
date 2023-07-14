@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1058,6 +1058,7 @@ def create_facility_blueprint(db, facility):
         return {
             'facility_name': name,
             'facility_role_class': facility.get_reviewer_roles(),
+            'facility_affiliation_type_class': facility.get_affiliation_types(),
             'facility_call_type_class': facility.get_call_types(),
         }
 

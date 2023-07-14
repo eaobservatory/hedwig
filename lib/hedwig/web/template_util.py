@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2021 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -30,7 +30,7 @@ from jinja2.runtime import Undefined
 from ..astro.coord import CoordSystem
 from ..compat import first_value as _first_value
 from ..config import get_countries
-from ..type.enum import AffiliationType, Assessment, \
+from ..type.enum import Assessment, \
     AttachmentState, CallState, GroupType, MessageState, MessageThreadType, \
     PersonLogEvent, PersonTitle, ProposalState, PublicationType, \
     RequestState, ReviewState, SemesterState, SiteGroupType, UserLogEvent
@@ -87,10 +87,10 @@ def register_template_utils(app):
         return result
 
     @app.template_filter()
-    def affiliation_type_name(value):
+    def affiliation_type_name(value, type_class):
         if value is None:
             return ''
-        return AffiliationType.get_name(value)
+        return type_class.get_name(value)
 
     @app.template_filter()
     def assessment_name(value):
@@ -451,8 +451,8 @@ def register_template_utils(app):
             value[:length] + Markup('&hellip;</abbr>')
 
     @app.template_test()
-    def affiliation_type_standard(value):
-        return (value == AffiliationType.STANDARD)
+    def affiliation_type_standard(value, type_class):
+        return (value == type_class.STANDARD)
 
     @app.template_test()
     def attachment_new(value):

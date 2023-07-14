@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2021 East Asian Observatory
+# Copyright (C) 2016-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,7 +22,7 @@ from datetime import datetime
 
 from hedwig.compat import first_value, string_type
 from hedwig.config import get_facilities
-from hedwig.type.enum import FormatType
+from hedwig.type.enum import BaseAffiliationType, FormatType
 from hedwig.type.simple import Call
 
 from .dummy_db import DBTestCase
@@ -144,7 +144,7 @@ class FacilityTestCase(DBTestCase):
         affiliation_id = self.id_cache.get(key)
         if affiliation_id is None:
             affiliation_id = self.id_cache[key] = self.db.add_affiliation(
-                queue_id, pi_affiliation)
+                BaseAffiliationType, queue_id, pi_affiliation)
 
         key = (pi_name,)
         person_id = self.id_cache.get(key)

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -29,7 +29,7 @@ from ...web.util import HTTPError, HTTPRedirect, flash, url_for
 from ...view.util import float_or_none, int_or_none, join_list, \
     with_call_review, with_proposal
 from ...type.collection import ResultTable
-from ...type.enum import AffiliationType, FormatType, \
+from ...type.enum import FormatType, \
     PermissionType, ProposalState, ReviewState
 from ...type.simple import FacilityObsInfo, Link, RouteInfo, TextCopyInfo, \
     ValidationMessage
@@ -305,6 +305,8 @@ class JCMT(EAOFacility):
         the JCMT affiliation assignment rules.
         """
 
+        affiliation_type_class = self.get_affiliation_types()
+
         affiliation_count = defaultdict(float)
         affiliation_total = 0.0
 
@@ -313,8 +315,8 @@ class JCMT(EAOFacility):
         max_weight = 0.0
         affiliation_weight = {}
         for affiliation in affiliations.values():
-            if ((affiliation.type == AffiliationType.EXCLUDED) or
-                    (affiliation.type == AffiliationType.SHARED) or
+            if ((affiliation.type == affiliation_type_class.EXCLUDED) or
+                    (affiliation.type == affiliation_type_class.SHARED) or
                     (affiliation.weight is None)):
                 continue
 
@@ -340,10 +342,10 @@ class JCMT(EAOFacility):
             if ((pi_affiliation is None) or
                     (pi_affiliation not in affiliations) or
                     (affiliations[pi_affiliation].type ==
-                        AffiliationType.EXCLUDED)):
+                        affiliation_type_class.EXCLUDED)):
                 pi_affiliation = 0
 
-            elif affiliations[pi_affiliation].type == AffiliationType.SHARED:
+            elif affiliations[pi_affiliation].type == affiliation_type_class.SHARED:
                 # Use special value "None" for shared affiliation (not to be
                 # confused with "0" meaning unknown).
                 pi_affiliation = None
@@ -364,11 +366,11 @@ class JCMT(EAOFacility):
             affiliation = member.affiliation_id
             if (affiliation is None) or (affiliation not in affiliations):
                 affiliation = 0
-            elif affiliations[affiliation].type == AffiliationType.EXCLUDED:
+            elif affiliations[affiliation].type == affiliation_type_class.EXCLUDED:
                 # Members with excluded affiliations count as the PI's
                 # affiliation.
                 affiliation = pi_affiliation
-            elif affiliations[affiliation].type == AffiliationType.SHARED:
+            elif affiliations[affiliation].type == affiliation_type_class.SHARED:
                 # Count type "SHARED" as if it were "EXCLUDED" for non-PIs.
                 affiliation = pi_affiliation
 

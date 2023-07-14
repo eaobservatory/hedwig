@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from hedwig.error import UserError
 from hedwig.type.collection import AffiliationCollection, ResultCollection
-from hedwig.type.enum import AffiliationType
+from hedwig.type.enum import BaseAffiliationType
 from hedwig.type.simple import Affiliation, Category
 
 from .dummy_db import DBTestCase
@@ -39,19 +39,20 @@ class DBSyncTest(DBTestCase):
 
         records = AffiliationCollection()
         records[0] = Affiliation(
-            None, queue_id, 'Aff A', False, AffiliationType.STANDARD, None)
+            None, queue_id, 'Aff A', False, BaseAffiliationType.STANDARD, None)
         records[1] = Affiliation(
-            None, queue_id, 'Aff B', False, AffiliationType.STANDARD, None)
+            None, queue_id, 'Aff B', False, BaseAffiliationType.STANDARD, None)
         records[2] = Affiliation(
-            None, queue_id, 'Aff C', False, AffiliationType.STANDARD, None)
+            None, queue_id, 'Aff C', False, BaseAffiliationType.STANDARD, None)
         records[3] = Affiliation(
-            None, queue_id, 'Aff D', False, AffiliationType.STANDARD, None)
+            None, queue_id, 'Aff D', False, BaseAffiliationType.STANDARD, None)
         records[4] = Affiliation(
-            None, queue_id, 'Aff E', False, AffiliationType.STANDARD, None)
+            None, queue_id, 'Aff E', False, BaseAffiliationType.STANDARD, None)
         records[5] = Affiliation(
-            None, queue_id, 'Aff F', False, AffiliationType.STANDARD, None)
+            None, queue_id, 'Aff F', False, BaseAffiliationType.STANDARD, None)
 
-        n = self.db.sync_queue_affiliation(queue_id, records)
+        n = self.db.sync_queue_affiliation(
+            BaseAffiliationType, queue_id, records)
         self.assertEqual(n, (6, 0, 0))
 
         records = self.db.search_affiliation(queue_id=queue_id,
@@ -61,9 +62,11 @@ class DBSyncTest(DBTestCase):
         # Delete an affiliation and rename another affiliation to its old name.
         records[id_[0]] = records[id_[0]]._replace(name='Aff F')
         with self.assertRaisesRegex(UserError, 'duplicate values'):
-            self.db.sync_queue_affiliation(queue_id, records)
+            self.db.sync_queue_affiliation(
+                BaseAffiliationType, queue_id, records)
         del records[id_[5]]
-        n = self.db.sync_queue_affiliation(queue_id, records)
+        n = self.db.sync_queue_affiliation(
+            BaseAffiliationType, queue_id, records)
         self.assertEqual(n, (0, 1, 1))
 
         self.assertEqual(
@@ -74,7 +77,8 @@ class DBSyncTest(DBTestCase):
         # Rename an affiliation and rename another to its previous name.
         records[id_[1]] = records[id_[1]]._replace(name='Aff E')
         records[id_[4]] = records[id_[4]]._replace(name='Aff EE')
-        n = self.db.sync_queue_affiliation(queue_id, records)
+        n = self.db.sync_queue_affiliation(
+            BaseAffiliationType, queue_id, records)
         self.assertEqual(n, (0, 2, 0))
 
         self.assertEqual(
@@ -94,17 +98,18 @@ class DBSyncTest(DBTestCase):
 
         records = AffiliationCollection()
         records[0] = Affiliation(
-            None, queue_id, 'Aff A', False, AffiliationType.STANDARD, None)
+            None, queue_id, 'Aff A', False, BaseAffiliationType.STANDARD, None)
         records[1] = Affiliation(
-            None, queue_id, 'Aff B', False, AffiliationType.STANDARD, None)
+            None, queue_id, 'Aff B', False, BaseAffiliationType.STANDARD, None)
         records[2] = Affiliation(
-            None, queue_id, 'Aff C', False, AffiliationType.STANDARD, None)
+            None, queue_id, 'Aff C', False, BaseAffiliationType.STANDARD, None)
         records[3] = Affiliation(
-            None, queue_id, 'Aff D', False, AffiliationType.STANDARD, None)
+            None, queue_id, 'Aff D', False, BaseAffiliationType.STANDARD, None)
         records[4] = Affiliation(
-            None, queue_id, 'Aff E', False, AffiliationType.STANDARD, None)
+            None, queue_id, 'Aff E', False, BaseAffiliationType.STANDARD, None)
 
-        n = self.db.sync_queue_affiliation(queue_id, records)
+        n = self.db.sync_queue_affiliation(
+            BaseAffiliationType, queue_id, records)
         self.assertEqual(n, (5, 0, 0))
 
         records = self.db.search_affiliation(queue_id=queue_id,
@@ -116,7 +121,8 @@ class DBSyncTest(DBTestCase):
         records[id_[3]] = records[id_[3]]._replace(name='Aff B')
 
         with self.assertRaisesRegex(UserError, 'Circular update'):
-            self.db.sync_queue_affiliation(queue_id, records)
+            self.db.sync_queue_affiliation(
+                BaseAffiliationType, queue_id, records)
 
     def test_sync_category(self):
         """

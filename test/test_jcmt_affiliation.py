@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from hedwig.facility.jcmt.view import JCMT
 from hedwig.type.collection import AffiliationCollection, MemberCollection
-from hedwig.type.enum import AffiliationType
+from hedwig.type.enum import BaseAffiliationType
 from hedwig.type.simple import Affiliation, Member
 from hedwig.type.util import null_tuple
 
@@ -43,19 +43,19 @@ class JCMTAffiliationTestCase(TestCase):
 
         affiliations[AFF_1] = Affiliation(
             AFF_1, None, 'Aff 1',
-            hidden=False, type=AffiliationType.STANDARD, weight=50)
+            hidden=False, type=BaseAffiliationType.STANDARD, weight=50)
         affiliations[AFF_2] = Affiliation(
             AFF_2, None, 'Aff 2',
-            hidden=False, type=AffiliationType.STANDARD, weight=20)
+            hidden=False, type=BaseAffiliationType.STANDARD, weight=20)
         affiliations[AFF_3] = Affiliation(
             AFF_3, None, 'Aff 3',
-            hidden=False, type=AffiliationType.STANDARD, weight=20)
+            hidden=False, type=BaseAffiliationType.STANDARD, weight=20)
         affiliations[STAFF] = Affiliation(
             STAFF, None, 'Staff',
-            hidden=False, type=AffiliationType.SHARED, weight=None)
+            hidden=False, type=BaseAffiliationType.SHARED, weight=None)
         affiliations[OTHER] = Affiliation(
             OTHER, None, 'Other',
-            hidden=False, type=AffiliationType.EXCLUDED, weight=None)
+            hidden=False, type=BaseAffiliationType.EXCLUDED, weight=None)
 
         # Perform test: no members at all.
         self._test_affiliation_assignment(

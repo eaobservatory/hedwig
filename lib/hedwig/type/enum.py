@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -26,7 +26,7 @@ from .base import EnumAllowUser, EnumAvailable, EnumBasic, EnumCode, \
     EnumDisplayClass, EnumLevel, EnumShortName, EnumURLPath
 
 
-class AffiliationType(EnumBasic):
+class BaseAffiliationType(EnumBasic):
     """
     Class representing types of affiliations.
     """

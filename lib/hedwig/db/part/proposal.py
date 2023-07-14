@@ -35,7 +35,7 @@ from ...type.collection import AffiliationCollection, \
     PrevProposalCollection, ProposalCollection, ProposalCategoryCollection, \
     ProposalFigureCollection, ProposalTextCollection, \
     RequestCollection, ResultCollection, TargetCollection
-from ...type.enum import AffiliationType, AnnotationType, AttachmentState, \
+from ...type.enum import AnnotationType, AttachmentState, \
     CallState, FigureType, FormatType, \
     PersonLogEvent, ProposalState, PublicationType, \
     RequestState, SemesterState
@@ -65,14 +65,14 @@ from ..util import require_not_none
 
 
 class ProposalPart(object):
-    def add_affiliation(self, queue_id, name, type_=None):
+    def add_affiliation(self, type_class, queue_id, name, type_=None):
         """
         Add an affiliation to the database.
         """
 
         if type_ is None:
-            type_ = AffiliationType.STANDARD
-        elif not AffiliationType.is_valid(type_):
+            type_ = type_class.STANDARD
+        elif not type_class.is_valid(type_):
             raise FormattedError('Invalid affiliation type {}', type_)
 
         with self._transaction() as conn:
@@ -2885,13 +2885,13 @@ class ProposalPart(object):
             return self._sync_records(
                 conn, target, target.c.proposal_id, proposal_id, records)
 
-    def sync_queue_affiliation(self, queue_id, records):
+    def sync_queue_affiliation(self, type_class, queue_id, records):
         """
         Update the affiliation records for a queue to match those
         given by "records".
         """
 
-        records.validate()
+        records.validate(type_class)
 
         with self._transaction() as conn:
             if not self._exists_id(conn, queue, queue_id):

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -29,7 +29,8 @@ from hedwig.type.collection import \
     ResultCollection, ReviewDeadlineCollection, \
     ProposalCollection, ProposalFigureCollection, ReviewerCollection, \
     SiteGroupMemberCollection
-from hedwig.type.enum import AffiliationType, BaseReviewerRole, BaseTextRole, \
+from hedwig.type.enum import BaseAffiliationType, \
+    BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, \
     ReviewState, SiteGroupType
 from hedwig.type.simple import \
@@ -178,9 +179,9 @@ class CollectionTypeTestCase(TestCase):
 
         for name in ['Aff. 1', 'Aff. 2', 'Aff. 3']:
             for (type_name, type_) in [
-                    ('ex', AffiliationType.EXCLUDED),
-                    ('st', AffiliationType.STANDARD),
-                    ('sh', AffiliationType.SHARED)]:
+                    ('ex', BaseAffiliationType.EXCLUDED),
+                    ('st', BaseAffiliationType.STANDARD),
+                    ('sh', BaseAffiliationType.SHARED)]:
                 affiliations[id_] = Affiliation(
                     id_, None, '{} ({})'.format(name, type_name),
                     hidden=False, type=type_, weight=None)
@@ -193,7 +194,7 @@ class CollectionTypeTestCase(TestCase):
                 'Aff. 3 (ex)', 'Aff. 3 (st)', 'Aff. 3 (sh)'])
 
         self.assertEqual(
-            list(x.name for x in affiliations.values_in_type_order()), [
+            list(x.name for x in affiliations.values_in_type_order(BaseAffiliationType)), [
                 'Aff. 1 (st)', 'Aff. 2 (st)', 'Aff. 3 (st)',
                 'Aff. 1 (sh)', 'Aff. 2 (sh)', 'Aff. 3 (sh)',
                 'Aff. 1 (ex)', 'Aff. 2 (ex)', 'Aff. 3 (ex)'])

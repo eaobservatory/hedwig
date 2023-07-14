@@ -37,7 +37,7 @@ from ...web.util import ErrorPage, \
     flash, format_datetime, parse_datetime, url_for
 from ...type.collection import MemberCollection, \
     ReviewerCollection, ReviewDeadlineCollection
-from ...type.enum import AffiliationType, Assessment, \
+from ...type.enum import Assessment, \
     FormatType, GroupType, \
     MessageThreadType, PermissionType, PersonTitle, ProposalState, ReviewState
 from ...type.simple import Affiliation, DateAndTime, Link, MemberPIInfo, \
@@ -196,6 +196,7 @@ class GenericReview(object):
         is retrieved.
         """
 
+        affiliation_type_class = self.get_affiliation_types()
         role_class = self.get_reviewer_roles()
 
         proposals = db.search_proposal(
@@ -286,7 +287,7 @@ class GenericReview(object):
             'proposals': proposal_list,
             'affiliations':
                 [x for x in affiliations.values()
-                 if x.type == AffiliationType.STANDARD] +
+                 if x.type == affiliation_type_class.STANDARD] +
                 [null_tuple(Affiliation)._replace(id=0, name='Unknown')],
             'affiliation_total': {},
             'affiliation_accepted': {},
@@ -349,6 +350,8 @@ class GenericReview(object):
         return ctx
 
     def _get_review_call_allocation(self, db, call, can):
+        affiliation_type_class = self.get_affiliation_types()
+
         proposals = db.search_proposal(
             call_id=call.id, state=ProposalState.submitted_states(),
             with_members=True, with_decision=True)
@@ -359,7 +362,7 @@ class GenericReview(object):
 
         affiliation_names = [
             ('{}'.format(x.id), x.name) for x in affiliations.values()
-            if x.type == AffiliationType.STANDARD]
+            if x.type == affiliation_type_class.STANDARD]
 
         affiliation_names.append(('0', 'Unknown'))
 
@@ -578,12 +581,13 @@ class GenericReview(object):
     @with_call_review(permission=PermissionType.EDIT)
     def view_review_affiliation_weight(
             self, current_user, db, call, can, form):
+        affiliation_type_class = self.get_affiliation_types()
         type_class = self.get_call_types()
         message = None
 
         affiliations = db.search_affiliation(
             queue_id=call.queue_id, hidden=False,
-            type_=AffiliationType.STANDARD,
+            type_=affiliation_type_class.STANDARD,
             with_weight_call_id=call.id)
 
         if form is not None:

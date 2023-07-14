@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -29,7 +29,8 @@ from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError
 from hedwig.type.collection import EmailCollection, ResultCollection, \
     SiteGroupMemberCollection
-from hedwig.type.enum import BaseCallType, BaseTextRole, FormatType, \
+from hedwig.type.enum import BaseAffiliationType, BaseCallType, BaseTextRole, \
+    FormatType, \
     SiteGroupType, UserLogEvent
 from hedwig.type.simple import Email, \
     Institution, InstitutionInfo, MemberInstitution, \
@@ -1239,7 +1240,8 @@ class DBPeopleTest(DBTestCase):
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             100, 1000, 0, 1, 2000, 4, 3, 100, 100,
             '', '', '', FormatType.PLAIN, False, False, None, None, False)
-        affiliation_id = self.db.add_affiliation(queue_id, 'Aff/n 1')
+        affiliation_id = self.db.add_affiliation(
+            BaseAffiliationType, queue_id, 'Aff/n 1')
         proposal_id = self.db.add_proposal(call_id, person_id,
                                            affiliation_id, 'Proposal 1')
 

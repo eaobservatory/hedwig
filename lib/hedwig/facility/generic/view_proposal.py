@@ -32,7 +32,7 @@ from ...publication.url import make_publication_url
 from ...type.collection import CalculationCollection, \
     PrevProposalCollection, ResultCollection, \
     TargetCollection
-from ...type.enum import AffiliationType, AttachmentState, \
+from ...type.enum import AttachmentState, \
     CallState, FigureType, FormatType, \
     GroupType, MessageThreadType, \
     PermissionType, PersonLogEvent, PersonTitle, \
@@ -821,6 +821,7 @@ class GenericProposal(object):
     def _validate_proposal_extra(self, db, proposal, extra,
                                  skip_missing_targets=False,
                                  check_excluded_pi=False):
+        affiliation_type_class = self.get_affiliation_types()
         type_class = self.get_call_types()
         reviewer_role_class = self.get_reviewer_roles()
         role_class = self.get_text_roles()
@@ -863,7 +864,7 @@ class GenericProposal(object):
                 if member_pi is not None:
                     exclude = db.search_affiliation(
                         queue_id=proposal.queue_id,
-                        type_=AffiliationType.EXCLUDED)
+                        type_=affiliation_type_class.EXCLUDED)
 
                     if member_pi.affiliation_id in exclude:
                         exclude_names = [

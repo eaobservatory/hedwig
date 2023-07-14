@@ -21,10 +21,10 @@
 
 {% if affiliations %}
     <ul>
-        {% for affiliation in affiliations.values_in_type_order() %}
+        {% for affiliation in affiliations.values_in_type_order(facility_affiliation_type_class) %}
             <li>
                 {{ affiliation.name }}
-                {% if affiliation.type is not affiliation_type_standard %}<span class="label">{{ affiliation.type | affiliation_type_name }}</span>{% endif %}
+                {% if affiliation.type is not affiliation_type_standard(facility_affiliation_type_class) %}<span class="label">{{ affiliation.type | affiliation_type_name(facility_affiliation_type_class) }}</span>{% endif %}
             </li>
         {% endfor %}
     </ul>

@@ -30,7 +30,7 @@ from ..util import is_list_like, matches_constraint
 from .base import CollectionByCall, CollectionByFacility, \
     CollectionByProposal, CollectionByReviewerRole, \
     CollectionOrdered, CollectionSortable
-from .enum import AffiliationType, PublicationType, ReviewState
+from .enum import PublicationType, ReviewState
 from .simple import TargetFracTime, TargetObject
 
 ResultTable = namedtuple('ResultTable', ('table', 'columns', 'rows'))
@@ -131,7 +131,7 @@ class AffiliationCollection(ResultCollection):
     Class to hold th results of an affiliation search,
     """
 
-    def validate(self):
+    def validate(self, type_class):
         """
         Validates a set of affiliation records.
 
@@ -143,17 +143,17 @@ class AffiliationCollection(ResultCollection):
         """
 
         for affiliation in self.values():
-            if not AffiliationType.is_valid(affiliation.type):
+            if not type_class.is_valid(affiliation.type):
                 raise UserError(
                     'Affiliation "{}" has invalid type', affiliation.name)
 
-    def values_in_type_order(self):
+    def values_in_type_order(self, type_class):
         """
         Iterate over the values in the collection in order
         of the affiliation type.
         """
 
-        for type_ in AffiliationType.get_options().keys():
+        for type_ in type_class.get_options().keys():
             for affiliation in self.values():
                 if affiliation.type == type_:
                     yield affiliation

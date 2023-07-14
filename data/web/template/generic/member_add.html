@@ -21,7 +21,7 @@
         <label for="affiliation_id">Affiliation</label>
         <select name="affiliation_id" required="required">
             <option value="">Select an affiliation&hellip;</option>
-            {% for affiliation in affiliations.values_in_type_order() %}
+            {% for affiliation in affiliations.values_in_type_order(facility_affiliation_type_class) %}
                 <option value="{{ affiliation.id }}" {{ 'selected="selected"' | safe if affiliation.id == member.affiliation_id }}>{{ affiliation.name }}</option>
             {% endfor %}
         </select>

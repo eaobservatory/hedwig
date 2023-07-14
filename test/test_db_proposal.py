@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2021 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -29,7 +29,7 @@ from hedwig.type.collection import AffiliationCollection, \
     ProposalCollection, ProposalCategoryCollection, \
     ProposalFigureCollection, ProposalTextCollection, \
     ResultCollection, TargetCollection
-from hedwig.type.enum import AffiliationType, AnnotationType, \
+from hedwig.type.enum import BaseAffiliationType, AnnotationType, \
     AttachmentState, \
     BaseCallType, BaseTextRole, \
     CallState, FigureType, \
@@ -70,11 +70,12 @@ class DBProposalTest(DBTestCase):
         # Generate a collection of 2 records and sync it.
         records = AffiliationCollection()
         records[0] = Affiliation(
-            None, queue_id, 'Aff 1', True, AffiliationType.STANDARD, None)
+            None, queue_id, 'Aff 1', True, BaseAffiliationType.STANDARD, None)
         records[1] = Affiliation(
-            None, queue_id, 'Aff 2', False, AffiliationType.STANDARD, None)
+            None, queue_id, 'Aff 2', False, BaseAffiliationType.STANDARD, None)
 
-        n = self.db.sync_queue_affiliation(queue_id, records)
+        n = self.db.sync_queue_affiliation(
+            BaseAffiliationType, queue_id, records)
         self.assertEqual(n, (2, 0, 0))
 
         # Check that we now have the expected 2 records.
@@ -100,7 +101,8 @@ class DBProposalTest(DBTestCase):
         (affiliation_id, affiliation_record) = result.popitem()
         self.db.add_proposal(call_id, person_id, affiliation_id, 'Title')
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.sync_queue_affiliation(queue_id, result)
+            self.db.sync_queue_affiliation(
+                BaseAffiliationType, queue_id, result)
 
         # Test affiliation weights: first make a second call.
         semester_id_2 = self.db.add_semester(
@@ -245,7 +247,8 @@ class DBProposalTest(DBTestCase):
                 facility_id=facility_id, has_affiliation=True).keys()),
             [])
 
-        self.db.add_affiliation(queue_id, 'Test affiliation')
+        self.db.add_affiliation(
+            BaseAffiliationType, queue_id, 'Test affiliation')
 
         self.assertEqual(
             list(self.db.search_queue(
@@ -720,8 +723,8 @@ class DBProposalTest(DBTestCase):
         other_facility_id = self.db.ensure_facility('another_tel')
         other_queue_id = self.db.add_queue(other_facility_id, 'another queue',
                                            'aq')
-        other_affiliation_id = self.db.add_affiliation(other_queue_id,
-                                                       'another aff/n')
+        other_affiliation_id = self.db.add_affiliation(
+            BaseAffiliationType, other_queue_id, 'another aff/n')
         with self.assertRaisesRegex(ConsistencyError, 'affiliation does not'):
             self.db.add_proposal(call_id_1, person_id, other_affiliation_id,
                                  'title')
@@ -778,7 +781,8 @@ class DBProposalTest(DBTestCase):
         person_id_4 = self.db.add_person('Person 4')
         other_facility = self.db.ensure_facility('another_tel')
         other_queue = self.db.add_queue(other_facility, 'another queue', 'aq')
-        other_affiliation = self.db.add_affiliation(other_queue, 'Aff/n')
+        other_affiliation = self.db.add_affiliation(
+            BaseAffiliationType, other_queue, 'Aff/n')
         with self.assertRaisesRegex(ConsistencyError, 'affiliation does not'):
             self.db.add_member(proposal_id, person_id_4, other_affiliation)
 

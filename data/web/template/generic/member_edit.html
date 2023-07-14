@@ -57,7 +57,7 @@
                 </td>
                 <td>
                     <select name="affiliation_{{ member.id }}">
-                        {% for affiliation in affiliations.values_in_type_order() %}
+                        {% for affiliation in affiliations.values_in_type_order(facility_affiliation_type_class) %}
                             <option value="{{ affiliation.id }}" {{ 'selected="selected"' | safe if affiliation.id == member.affiliation_id }}>{{ affiliation.name }}</option>
                         {% endfor %}
                     </select>
