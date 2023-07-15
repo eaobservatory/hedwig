@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,7 +24,7 @@ from hedwig.compat import string_type
 from hedwig.error import Error, NoSuchValue
 from hedwig.type.enum import \
     Assessment, AttachmentState, \
-    BaseCallType, BaseReviewerRole, BaseTextRole, \
+    BaseAffiliationType, BaseCallType, BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, LogEventLevel, \
     MessageState, PersonTitle, ProposalState, PublicationType, \
     RequestState, ReviewState, SemesterState, \
@@ -34,6 +34,16 @@ from .compat import TestCase
 
 
 class EnumTypeTestCase(TestCase):
+    def test_affiliation_type(self):
+        self.assertTrue(BaseAffiliationType.is_tabulated(
+            BaseAffiliationType.STANDARD))
+        self.assertFalse(BaseAffiliationType.is_tabulated(
+            BaseAffiliationType.EXCLUDED))
+
+        types = BaseAffiliationType.get_tabulated_types()
+        self.assertIsInstance(types, list)
+        self.assertEqual(types, [BaseAffiliationType.STANDARD])
+
     def test_assessment(self):
         self.assertTrue(Assessment.is_valid(Assessment.PROBLEM))
         self.assertFalse(Assessment.is_valid(999))

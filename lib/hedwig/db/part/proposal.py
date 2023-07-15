@@ -1063,7 +1063,10 @@ class ProposalPart(object):
                 stmt = stmt.where(not_(affiliation.c.hidden))
 
         if type_ is not None:
-            stmt = stmt.where(affiliation.c.type == type_)
+            if is_list_like(type_):
+                stmt = stmt.where(affiliation.c.type.in_(type_))
+            else:
+                stmt = stmt.where(affiliation.c.type == type_)
 
         if order_by_id:
             stmt = stmt.order_by(affiliation.c.id.asc())

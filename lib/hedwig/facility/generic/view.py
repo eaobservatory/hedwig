@@ -417,8 +417,8 @@ class Generic(
             affiliation = member.affiliation_id
             if (affiliation is None) or (affiliation not in affiliations):
                 affiliation = 0
-            elif (affiliations[affiliation].type
-                    != affiliation_type_class.STANDARD):
+            elif not affiliation_type_class.is_tabulated(
+                    affiliations[affiliation].type):
                 continue
 
             affiliation_count[affiliation] += 1.0

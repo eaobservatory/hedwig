@@ -286,8 +286,9 @@ class GenericReview(object):
         return {
             'proposals': proposal_list,
             'affiliations':
-                [x for x in affiliations.values()
-                 if x.type == affiliation_type_class.STANDARD] +
+                [x for x in affiliations.values_in_type_order(
+                    affiliation_type_class)
+                 if affiliation_type_class.is_tabulated(x.type)] +
                 [null_tuple(Affiliation)._replace(id=0, name='Unknown')],
             'affiliation_total': {},
             'affiliation_accepted': {},
@@ -362,7 +363,7 @@ class GenericReview(object):
 
         affiliation_names = [
             ('{}'.format(x.id), x.name) for x in affiliations.values()
-            if x.type == affiliation_type_class.STANDARD]
+            if affiliation_type_class.is_tabulated(x.type)]
 
         affiliation_names.append(('0', 'Unknown'))
 
@@ -587,7 +588,7 @@ class GenericReview(object):
 
         affiliations = db.search_affiliation(
             queue_id=call.queue_id, hidden=False,
-            type_=affiliation_type_class.STANDARD,
+            type_=affiliation_type_class.get_tabulated_types(),
             with_weight_call_id=call.id)
 
         if form is not None:

@@ -36,17 +36,25 @@ class BaseAffiliationType(EnumBasic):
     SHARED = 3
 
     TypeInfo = namedtuple(
-        'TypeInfo', ('name',))
+        'TypeInfo', ('name', 'tabulated'))
 
     _info = OrderedDict((
-        (STANDARD, TypeInfo('Standard')),
-        (SHARED,   TypeInfo('Shared')),
-        (EXCLUDED, TypeInfo('Excluded')),
+        (STANDARD, TypeInfo('Standard', True)),
+        (SHARED,   TypeInfo('Shared',   False)),
+        (EXCLUDED, TypeInfo('Excluded', False)),
     ))
 
     @classmethod
     def get_options(cls):
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
+
+    @classmethod
+    def get_tabulated_types(cls):
+        return [k for (k, v) in cls._info.items() if v.tabulated]
+
+    @classmethod
+    def is_tabulated(cls, value):
+        return cls._info[value].tabulated
 
 
 class AnnotationType(EnumBasic):
