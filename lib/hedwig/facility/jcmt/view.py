@@ -38,6 +38,7 @@ from ..eao.view import EAOFacility
 from .calculator_heterodyne import HeterodyneCalculator
 from .calculator_scuba2 import SCUBA2Calculator
 from .type import \
+    JCMTAffiliationType, \
     JCMTAvailable, JCMTAvailableCollection, JCMTAncillary, \
     JCMTCallOptions, JCMTCallType, JCMTInstrument, \
     JCMTOptionValue, JCMTOptions, \
@@ -60,6 +61,9 @@ class JCMT(EAOFacility):
 
     def get_name(self):
         return 'JCMT'
+
+    def get_affiliation_types(self):
+        return JCMTAffiliationType
 
     def get_call_types(self):
         return JCMTCallType

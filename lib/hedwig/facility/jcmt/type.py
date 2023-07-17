@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -19,10 +19,12 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict, namedtuple
+from itertools import chain
 
 from ...type.base import CollectionByProposal, \
     EnumAvailable, EnumBasic, EnumShortName
-from ...type.enum import BaseCallType, BaseReviewerRole, BaseTextRole
+from ...type.enum import BaseAffiliationType, BaseCallType, \
+    BaseReviewerRole, BaseTextRole
 from ...type.collection import ResultCollection, ResultTable
 from ...error import UserError
 from .meta import jcmt_available, jcmt_call_options, jcmt_options, \
@@ -93,6 +95,21 @@ class JCMTRequestTotal(namedtuple(
                 record[ancillary] = record.get(ancillary, 0.0) + time
 
         return group
+
+
+class JCMTAffiliationType(BaseAffiliationType):
+    EXPANDING = 101
+
+    _info = OrderedDict(chain(
+        (
+            (BaseAffiliationType.STANDARD,
+                BaseAffiliationType._info[BaseAffiliationType.STANDARD]),
+            (EXPANDING, BaseAffiliationType.TypeInfo(
+                'Expanding partner program', True)),
+        ),
+        ((k, v) for (k, v) in BaseAffiliationType._info.items()
+            if k != BaseAffiliationType.STANDARD),
+    ))
 
 
 class JCMTAncillary(EnumBasic, EnumAvailable):
