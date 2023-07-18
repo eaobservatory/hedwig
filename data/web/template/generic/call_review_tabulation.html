@@ -261,6 +261,8 @@
                 <td {{ combined_class(('total', true), ('spacer_left', loop.first)) | safe }}>&nbsp;</td>
             {% endfor %}
         </tr>
+        {% block footer_accepted_custom %}
+        {% endblock %}
         <tr>
             <th colspan="4">Total accepted (hours)</th>
             <td colspan="4" class="total spacer_left">&nbsp;</td>

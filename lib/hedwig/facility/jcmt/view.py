@@ -712,27 +712,28 @@ class JCMT(EAOFacility):
 
     def _get_proposal_tabulation(
             self, current_user, db, call, can, with_extra=False):
+        affiliation_type_class = self.get_affiliation_types()
+
         tabulation = super(JCMT, self)._get_proposal_tabulation(
             current_user, db, call, can, with_extra)
 
-        exempt = JCMTRequestTotal(total=0.0, weather=defaultdict(float),
-                                  instrument=defaultdict(float),
-                                  total_non_free=None)
-        accepted = JCMTRequestTotal(total=0.0, weather=defaultdict(float),
-                                    instrument=defaultdict(float),
-                                    total_non_free=None)
-        total = JCMTRequestTotal(total=0.0, weather=defaultdict(float),
-                                 instrument=defaultdict(float),
-                                 total_non_free=None)
-        original = JCMTRequestTotal(total=0.0, weather=defaultdict(float),
-                                    instrument=defaultdict(float),
-                                    total_non_free=None)
+        empty_total = lambda: JCMTRequestTotal(
+            total=0.0, weather=defaultdict(float),
+            instrument=defaultdict(float), total_non_free=None)
+
+        exempt = empty_total()
+        accepted = empty_total()
+        accepted_expanding = empty_total()
+        accepted_non_expanding = empty_total()
+        total = empty_total()
+        original = empty_total()
 
         accepted_affiliation = defaultdict(float)
         total_affiliation = defaultdict(float)
         original_affiliation = defaultdict(float)
 
-        affiliation_ids = [x.id for x in tabulation['affiliations']]
+        affiliation_ids = OrderedDict((
+            (x.id, x.type) for x in tabulation['affiliations']))
 
         # Make list of proposal_id values and query all JCMT-specific
         # information from the database.
@@ -769,14 +770,6 @@ class JCMT(EAOFacility):
             proposal['jcmt_allocation_different'] = \
                 ((allocation is not None) and (allocation != request))
 
-            if proposal_accepted and allocation is not None:
-                if proposal_exempt:
-                    exempt = exempt._replace(
-                        total=(exempt.total + allocation.total))
-
-                accepted = accepted._replace(
-                    total=(accepted.total + allocation.total))
-
             if allocation is not None:
                 total = total._replace(total=(total.total + allocation.total))
             else:
@@ -790,32 +783,20 @@ class JCMT(EAOFacility):
                 if allocation is None:
                     total.weather[weather] += time
 
-            if allocation is not None:
-                for (weather, time) in allocation.weather.items():
-                    if proposal_accepted:
-                        if proposal_exempt:
-                            exempt.weather[weather] += time
-                        accepted.weather[weather] += time
-                    total.weather[weather] += time
-
             for (instrument, time) in request.instrument.items():
                 original.instrument[instrument] += time
                 if allocation is None:
                     total.instrument[instrument] += time
 
-            if allocation is not None:
-                for (instrument, time) in allocation.instrument.items():
-                    if proposal_accepted:
-                        if proposal_exempt:
-                            exempt.instrument[instrument] += time
-                        accepted.instrument[instrument] += time
-                    total.instrument[instrument] += time
-
             proposal_affiliations = proposal['affiliations']
-            for affiliation in affiliation_ids:
+            fraction_expanding = 0.0
+            for (affiliation, affiliation_type) in affiliation_ids.items():
                 fraction = proposal_affiliations.get(affiliation)
                 if fraction is None:
                     continue
+
+                if affiliation_type == affiliation_type_class.EXPANDING:
+                    fraction_expanding += fraction
 
                 original_affiliation[affiliation] += \
                     request.total_non_free * fraction
@@ -831,6 +812,53 @@ class JCMT(EAOFacility):
                     if proposal_accepted and not proposal_exempt:
                         accepted_affiliation[affiliation] += \
                             allocation.total_non_free * fraction
+
+            fraction_non_expanding = 1.0 - fraction_expanding
+
+            if proposal_accepted and allocation is not None:
+                accepted = accepted._replace(total=(
+                    accepted.total + allocation.total))
+
+                if proposal_exempt:
+                    exempt = exempt._replace(
+                        total=(exempt.total + allocation.total))
+                else:
+                    accepted_expanding = accepted_expanding._replace(total=(
+                        accepted_expanding.total
+                        + fraction_expanding * allocation.total))
+
+                    accepted_non_expanding = accepted_non_expanding._replace(total=(
+                        accepted_non_expanding.total
+                        + fraction_non_expanding * allocation.total))
+
+            if allocation is not None:
+                for (weather, time) in allocation.weather.items():
+                    if proposal_accepted:
+                        accepted.weather[weather] += time
+                        if proposal_exempt:
+                            exempt.weather[weather] += time
+                        else:
+                            if fraction_expanding:
+                                accepted_expanding.weather[weather] += \
+                                    fraction_expanding * time
+                            if fraction_non_expanding:
+                                accepted_non_expanding.weather[weather] += \
+                                    fraction_non_expanding * time
+                    total.weather[weather] += time
+
+                for (instrument, time) in allocation.instrument.items():
+                    if proposal_accepted:
+                        accepted.instrument[instrument] += time
+                        if proposal_exempt:
+                            exempt.instrument[instrument] += time
+                        else:
+                            if fraction_expanding:
+                                accepted_expanding.instrument[instrument] += \
+                                    fraction_expanding * time
+                            if fraction_non_expanding:
+                                accepted_non_expanding.instrument[instrument] += \
+                                    fraction_non_expanding * time
+                    total.instrument[instrument] += time
 
         # Fetch the amount of time available and distribute it among the
         # affiliations under the assumption that the affiliation weights
@@ -861,6 +889,8 @@ class JCMT(EAOFacility):
             'jcmt_ancillaries': JCMTAncillary.get_options(),
             'jcmt_exempt_total': exempt,
             'jcmt_accepted_total': accepted,
+            'jcmt_accepted_expanding': accepted_expanding,
+            'jcmt_accepted_non_expanding': accepted_non_expanding,
             'jcmt_request_total': total,
             'jcmt_request_original': original,
             'jcmt_available': available,
