@@ -1300,69 +1300,59 @@ class JCMT(EAOFacility):
             'weathers': JCMTWeather.get_available(),
         }
 
-    @with_call_review(permission=PermissionType.EDIT)
-    def view_review_call_available(self, current_user, db, call, can, form):
-        type_class = self.get_call_types()
-        message = None
-
+    def _view_review_call_available_get(self, db, call, form):
         weathers = JCMTWeather.get_available()
         available = db.search_jcmt_available(call_id=call.id)
 
-        if form is not None:
-            updated_records = {}
-            added_records = {}
+        updated_records = {}
+        added_records = {}
+
+        for weather_id in weathers.keys():
+            time = form.get('available_{}'.format(weather_id), '')
+            if time == '':
+                continue
             try:
-                for weather_id in weathers.keys():
-                    time = form.get('available_{}'.format(weather_id), '')
-                    if time == '':
-                        continue
-                    try:
-                        time = float(time)
-                    except ValueError:
-                        # Ignore parsing error for now so that we can return
-                        # the string to the user for correction.
-                        pass
+                time = float(time)
+            except ValueError:
+                # Ignore parsing error for now so that we can return
+                # the string to the user for correction.
+                pass
 
-                    for record in available.values():
-                        if record.weather == weather_id:
-                            updated_records[record.id] = record._replace(
-                                time=time)
-                            break
-                    else:
-                        added_records[weather_id] = JCMTAvailable(
-                            id=None, call_id=None,
-                            weather=weather_id, time=time)
+            for record in available.values():
+                if record.weather == weather_id:
+                    updated_records[record.id] = record._replace(
+                        time=time)
+                    break
+            else:
+                added_records[weather_id] = JCMTAvailable(
+                    id=None, call_id=None,
+                    weather=weather_id, time=time)
 
-                available = JCMTAvailableCollection.organize_collection(
-                    updated_records, added_records)
+        return JCMTAvailableCollection.organize_collection(
+            updated_records, added_records)
 
-                updates = db.sync_jcmt_call_available(call.id, available)
+    def _view_review_call_available_save(self, db, call, info):
+        updates = db.sync_jcmt_call_available(call.id, info)
 
-                if any(updates):
-                    flash('The time available has been saved.')
+        if any(updates):
+            flash('The time available has been saved.')
 
-                raise HTTPRedirect(url_for('.review_call', call_id=call.id))
-
-            except UserError as e:
-                message = e.message
+    def _view_review_call_available_extra(self, db, call, info):
+        if info is None:
+            info = db.search_jcmt_available(call_id=call.id)
 
         # Straightforwardly organize available time by weather band (assuming
         # no duplicated) rather than using get_total so that we can allow for
         # unparsed strings still being present.
         available_weather = {}
-        for record in available.values():
+        for record in info.values():
             weather = record.weather
             if not JCMTWeather.get_info(weather).available:
                 weather = 0
             available_weather[weather] = record.time
 
         return {
-            'title': 'Time Available: {} {} {}'.format(
-                call.semester_name, call.queue_name,
-                type_class.get_name(call.type)),
-            'call': call,
-            'message': message,
-            'weathers': weathers,
+            'weathers': JCMTWeather.get_available(),
             'available': available_weather,
         }
 

@@ -52,7 +52,13 @@
     </table>
 
     <p>
+        Notes:
+        <br />
+        <textarea name="note" cols="80" rows="5">{{ note.text }}</textarea>
+    </p>
+    <p>
         <input type="submit" name="submit" value="Save" />
+        <input type="hidden" name="note_format" value="{{ note.format }}" />
     </p>
 </form>
 

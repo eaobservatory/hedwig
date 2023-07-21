@@ -41,6 +41,7 @@ from ...type.enum import Assessment, \
     FormatType, GroupType, \
     MessageThreadType, PermissionType, PersonTitle, ProposalState, ReviewState
 from ...type.simple import Affiliation, DateAndTime, Link, MemberPIInfo, \
+    Note, \
     ProposalWithCode, Reviewer, ReviewerAcceptance, \
     ReviewFigureInfo, ReviewDeadline
 from ...type.util import null_tuple, \
@@ -590,6 +591,13 @@ class GenericReview(object):
             queue_id=call.queue_id,
             with_weight_call_id=call.id, with_weight_separate=True)
 
+        try:
+            note = db.get_affiliation_weight_note(call_id=call.id)
+            note_exists = True
+        except NoSuchRecord:
+            note = Note(text='', format=FormatType.PLAIN)
+            note_exists = False
+
         if form is not None:
             try:
                 for (id_, affiliation) in list(affiliations.items()):
@@ -606,6 +614,10 @@ class GenericReview(object):
                             ) if hidden_field in form else False),
                             type=int_or_none(form['type_{}'.format(id_)]),
                         ))
+
+                note = Note(
+                    text=form['note'],
+                    format=int(form['note_format']))
 
                 updated_affiliations = AffiliationCollection()
                 for affiliation in affiliations.values():
@@ -638,6 +650,12 @@ class GenericReview(object):
                     affiliation_type_class,
                     call_id=call.id, records=updated_affiliations)
 
+                if note.text:
+                    db.set_affiliation_weight_note(
+                        call_id=call.id, note=note.text, format_=note.format)
+                elif note_exists:
+                    db.delete_affiliation_weight_note(call_id=call.id)
+
                 if any(updates):
                     flash('The affiliation weights have been updated.')
                 raise HTTPRedirect(url_for('.review_call', call_id=call.id))
@@ -653,11 +671,68 @@ class GenericReview(object):
             'message': message,
             'affiliations': affiliations,
             'affiliation_types': affiliation_type_class.get_options(),
+            'note': note,
         }
 
     @with_call_review(permission=PermissionType.EDIT)
     def view_review_call_available(self, current_user, db, call, can, form):
-        raise ErrorPage('Time available not implemented for this facility.')
+        type_class = self.get_call_types()
+
+        extra_info = None
+        message = None
+
+        try:
+            note = db.get_available_note(call_id=call.id)
+            note_exists = True
+        except NoSuchRecord:
+            note = Note(text='', format=FormatType.PLAIN)
+            note_exists = False
+
+        if form is not None:
+            try:
+                extra_info = self._view_review_call_available_get(
+                    db, call, form)
+
+                note = Note(
+                    text=form['note'],
+                    format=int(form['note_format']))
+
+                self._view_review_call_available_save(
+                    db, call, extra_info)
+
+                if note.text:
+                    db.set_available_note(
+                        call_id=call.id, note=note.text, format_=note.format)
+                elif note_exists:
+                    db.delete_available_note(call_id=call.id)
+
+                raise HTTPRedirect(url_for('.review_call', call_id=call.id))
+
+            except UserError as e:
+                message = e.message
+
+        ctx = {
+            'title': 'Time Available: {} {} {}'.format(
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type)),
+            'call': call,
+            'note': note,
+            'message': message,
+        }
+
+        ctx.update(self._view_review_call_available_extra(
+            db, call, extra_info))
+
+        return ctx
+
+    def _view_review_call_available_get(self, db, call, form):
+        return None
+
+    def _view_review_call_available_save(self, db, call, info):
+        pass
+
+    def _view_review_call_available_extra(self, db, call, info):
+        return {}
 
     @with_call_review(permission=PermissionType.EDIT)
     def view_review_call_deadline(self, current_user, db, call, can, form):
