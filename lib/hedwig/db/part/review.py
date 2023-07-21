@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -30,10 +30,12 @@ from ...type.collection import GroupMemberCollection, ResultCollection, \
     ReviewerCollection, ReviewerAcceptanceCollection, ReviewDeadlineCollection, \
     ReviewFigureCollection
 from ...type.enum import Assessment, FormatType, GroupType, ReviewState
-from ...type.simple import GroupMember, Reviewer, ReviewerAcceptance, \
+from ...type.simple import GroupMember, Note, \
+    Reviewer, ReviewerAcceptance, \
     ReviewDeadline, ReviewFigureInfo
 from ...util import is_list_like
-from ..meta import call, decision, group_member, \
+from ..meta import affiliation_weight_note, available_note, \
+    call, decision, group_member, \
     institution, invitation, person, \
     proposal, queue, \
     review, reviewer, reviewer_acceptance, reviewer_note, review_deadline, \
@@ -140,6 +142,20 @@ class ReviewPart(object):
             type_, figure, caption, filename, uploader_person_id,
             _test_skip_check=_test_skip_check)
 
+    def delete_affiliation_weight_note(self, call_id, _conn=None):
+        self._delete_note(
+            table=affiliation_weight_note,
+            key_column=affiliation_weight_note.c.call_id,
+            key_value=call_id,
+            _conn=_conn)
+
+    def delete_available_note(self, call_id, _conn=None):
+        self._delete_note(
+            table=available_note,
+            key_column=available_note.c.call_id,
+            key_value=call_id,
+            _conn=_conn)
+
     def delete_reviewer(self, reviewer_id=None,
                         proposal_id=None, person_id=None, role=None,
                         delete_review=False, _conn=None):
@@ -204,16 +220,21 @@ class ReviewPart(object):
                     reviewer_acceptance_id)
 
     def delete_reviewer_note(self, reviewer_id, _conn=None):
-        stmt = reviewer_note.delete().where(
-            reviewer_note.c.reviewer_id == reviewer_id)
+        self._delete_note(
+            table=reviewer_note,
+            key_column=reviewer_note.c.reviewer_id,
+            key_value=reviewer_id,
+            _conn=_conn)
+
+    def _delete_note(self, table, key_column, key_value, _conn):
+        stmt = table.delete().where(key_column == key_value)
 
         with self._transaction(_conn=_conn) as conn:
             result = conn.execute(stmt)
 
             if result.rowcount != 1:
                 raise ConsistencyError(
-                    'no row matched deleting note for reviewer {}',
-                    reviewer_id)
+                    'no row matched deleting note for id {}', key_value)
 
     def delete_review_figure(self, reviewer_id, id_):
         where_extra = []
@@ -223,6 +244,31 @@ class ReviewPart(object):
 
         return self._delete_figure(
             review_fig, review_fig_link, id_, where_extra=where_extra)
+
+    def get_affiliation_weight_note(self, call_id, _conn=None):
+        return self._get_note(
+            table=affiliation_weight_note,
+            key_column=affiliation_weight_note.c.call_id,
+            key_value=call_id,
+            _conn=_conn)
+
+    def get_available_note(self, call_id, _conn=None):
+        return self._get_note(
+            table=available_note,
+            key_column=available_note.c.call_id,
+            key_value=call_id,
+            _conn=_conn)
+
+    def _get_note(self, table, key_column, key_value, _conn):
+        stmt = table.select().where(key_column == key_value)
+
+        with self._transaction(_conn=_conn) as conn:
+            row = conn.execute(stmt).first()
+
+        if row is None:
+            raise NoSuchRecord('note does not exist')
+
+        return Note(text=row['note'], format=row['note_format'])
 
     def get_review_figure(self, reviewer_id, link_id, fig_id=None, md5sum=None):
         where_extra = []
@@ -712,6 +758,26 @@ class ReviewPart(object):
             select_extra=select_extra, default_extra=default_extra,
             where_extra=where_extra)
 
+    def set_affiliation_weight_note(
+            self, call_id, note=None, format_=None,
+            _conn=None):
+        self._set_note(
+            parent_table=call,
+            table=affiliation_weight_note,
+            key_column=affiliation_weight_note.c.call_id,
+            key_value=call_id,
+            note=note, format_=format_, _conn=_conn)
+
+    def set_available_note(
+            self, call_id, note=None, format_=None,
+            _conn=None):
+        self._set_note(
+            parent_table=call,
+            table=available_note,
+            key_column=available_note.c.call_id,
+            key_value=call_id,
+            note=note, format_=format_, _conn=_conn)
+
     def set_decision(self, proposal_id, accept=(), exempt=None, ready=None,
                      note=None, note_format=None):
         values = {}
@@ -849,45 +915,53 @@ class ReviewPart(object):
     def set_reviewer_note(
             self, reviewer_id, note=None, format_=None,
             _conn=None):
+        self._set_note(
+            parent_table=reviewer,
+            table=reviewer_note,
+            key_column=reviewer_note.c.reviewer_id,
+            key_value=reviewer_id,
+            note=note, format_=format_, _conn=_conn)
+
+    def _set_note(
+            self, parent_table, table, key_column, key_value,
+            note, format_, _conn):
         values = {}
 
         if note is not None:
             if not format_:
                 raise UserError('Note format not specified.')
-            if not FormatType.is_valid(format_):
+            if not FormatType.is_valid(format_, is_system=True):
                 raise UserError('Note format not recognised.')
-            values[reviewer_note.c.note] = note
-            values[reviewer_note.c.note_format] = format_
+            values[table.c.note] = note
+            values[table.c.note_format] = format_
 
         if not values:
-            raise Error('no reviewer note update specified')
+            raise Error('no note update specified')
 
         with self._transaction(_conn=_conn) as conn:
-            try:
-                reviewer_record = self.search_reviewer(
-                    reviewer_id=reviewer_id,
-                    with_note=True, _conn=conn).get_single()
-
-            except NoSuchRecord:
+            if not self._exists_id(conn, parent_table, key_value):
                 raise ConsistencyError(
-                    'reviewer does not exist with id={}', reviewer_id)
+                    'parent entry does not exist for note with id={}',
+                    key_value)
 
-            if reviewer_record.note is not None:
-                result = conn.execute(reviewer_note.update().where(
-                    reviewer_note.c.reviewer_id == reviewer_id
+            already_exists = self._exists_note(conn, key_column, key_value)
+
+            if already_exists:
+                result = conn.execute(table.update().where(
+                    key_column == key_value
                 ).values(values))
 
                 if result.rowcount != 1:
                     raise ConsistencyError(
-                        'no rows matched updating note for reviewer {}',
-                        reviewer_id)
+                        'no rows matched updating note for id {}',
+                        key_value)
 
             else:
                 values.update({
-                    reviewer_note.c.reviewer_id: reviewer_id,
+                    key_column: key_value,
                 })
 
-                conn.execute(reviewer_note.insert().values(values))
+                conn.execute(table.insert().values(values))
 
     def sync_call_review_deadline(
             self, role_class, call_id, records, _conn=None):
@@ -1066,6 +1140,15 @@ class ReviewPart(object):
             state, state_prev, caption,
             where_extra=where_extra,
         )
+
+    def _exists_note(self, conn, key_column, key_value):
+        """
+        Test whether the given note exists.
+        """
+
+        return 0 < conn.execute(select([count(key_column)]).where(
+            key_column == key_value
+        )).scalar()
 
     def _exists_reviewer(self, conn, proposal_id, role, person_id=None):
         """

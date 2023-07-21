@@ -173,6 +173,10 @@ MOCInfo = namedtuple(
     'MOCInfo',
     [x.name for x in moc.columns])
 
+Note = namedtuple(
+    'Note',
+    ['text', 'format'])
+
 
 class OAuthCode(namedtuple(
         '_OAuthCode', [x.name for x in oauth_code.columns])):

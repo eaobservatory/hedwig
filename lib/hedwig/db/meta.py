@@ -67,6 +67,23 @@ affiliation_weight = Table(
     UniqueConstraint('affiliation_id', 'call_id'),
     **table_opts)
 
+
+def _note_cols():
+    return [
+        Column('note', UnicodeText, nullable=False),
+        Column('note_format', Integer, nullable=False),
+    ]
+
+
+affiliation_weight_note = Table(
+    'affiliation_weight_note',
+    metadata,
+    Column('call_id', None,
+           ForeignKey('call.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           primary_key=True, nullable=False),
+    *_note_cols(),
+    **table_opts)
+
 auth_failure = Table(
     'auth_failure',
     metadata,
@@ -86,6 +103,15 @@ auth_token = Table(
     Column('expiry', DateTime(), nullable=False, index=True),
     Column('remote_addr', Unicode(255), nullable=True),
     Column('remote_agent', Unicode(255), nullable=True),
+    **table_opts)
+
+available_note = Table(
+    'available_note',
+    metadata,
+    Column('call_id', None,
+           ForeignKey('call.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           primary_key=True, nullable=False),
+    *_note_cols(),
     **table_opts)
 
 calculator = Table(
@@ -791,8 +817,7 @@ reviewer_note = Table(
            ForeignKey('reviewer.id',
                       onupdate='RESTRICT', ondelete='CASCADE'),
            primary_key=True, nullable=False),
-    Column('note', UnicodeText, nullable=False),
-    Column('note_format', Integer, nullable=False),
+    *_note_cols(),
     **table_opts)
 
 review_calculation = Table(

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -28,7 +28,8 @@ from hedwig.type.collection import GroupMemberCollection, \
     ReviewDeadlineCollection, ReviewFigureCollection
 from hedwig.type.enum import Assessment, AttachmentState, BaseReviewerRole, \
     FigureType, FormatType, GroupType, ReviewState
-from hedwig.type.simple import GroupMember, Reviewer, ReviewerAcceptance, \
+from hedwig.type.simple import GroupMember, Note, \
+    Reviewer, ReviewerAcceptance, \
     ReviewDeadline, ReviewFigureInfo
 from hedwig.type.util import null_tuple
 
@@ -258,7 +259,7 @@ class DBReviewTest(DBTestCase):
         self.assertEqual(list(result.keys()), [reviewer_id_2])
 
         # Try setting a note.
-        with self.assertRaisesRegex(ConsistencyError, 'reviewer does not'):
+        with self.assertRaisesRegex(ConsistencyError, 'parent entry does not'):
             self.db.set_reviewer_note(1999999, 'a note', FormatType.PLAIN)
 
         self.db.set_reviewer_note(reviewer_id_2, 'a note', FormatType.PLAIN)
@@ -814,3 +815,53 @@ class DBReviewTest(DBTestCase):
         result = self.db.search_review_deadline(call_id=call_id)
         self.assertIsInstance(result, ReviewDeadlineCollection)
         self.assertEqual(len(result), 0)
+
+    def test_review_notes(self):
+        (call_id, affiliation_id) = self._create_test_call()
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_affiliation_weight_note(call_id=call_id)
+
+        self.db.set_affiliation_weight_note(
+            call_id, 'note a', FormatType.PLAIN)
+
+        note = self.db.get_affiliation_weight_note(call_id=call_id)
+        self.assertIsInstance(note, Note)
+        self.assertEqual(note.text, 'note a')
+        self.assertEqual(note.format, FormatType.PLAIN)
+
+        self.db.set_affiliation_weight_note(
+            call_id, 'note b', FormatType.RST)
+
+        note = self.db.get_affiliation_weight_note(call_id=call_id)
+        self.assertIsInstance(note, Note)
+        self.assertEqual(note.text, 'note b')
+        self.assertEqual(note.format, FormatType.RST)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_available_note(call_id=call_id)
+
+        self.db.set_available_note(
+            call_id, 'note c', FormatType.PLAIN)
+
+        note = self.db.get_available_note(call_id=call_id)
+        self.assertIsInstance(note, Note)
+        self.assertEqual(note.text, 'note c')
+        self.assertEqual(note.format, FormatType.PLAIN)
+
+        self.db.set_available_note(
+            call_id, 'note d', FormatType.RST)
+
+        note = self.db.get_available_note(call_id=call_id)
+        self.assertIsInstance(note, Note)
+        self.assertEqual(note.text, 'note d')
+        self.assertEqual(note.format, FormatType.RST)
+
+        self.db.delete_affiliation_weight_note(call_id)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_affiliation_weight_note(call_id=call_id)
+
+        self.db.delete_available_note(call_id)
+
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_available_note(call_id=call_id)
