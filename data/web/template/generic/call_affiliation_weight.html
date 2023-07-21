@@ -1,6 +1,7 @@
 {% extends 'layout.html' %}
 {% set navigation=[((call.semester_name, call.queue_name, (call.type | call_type_name(facility_call_type_class))) | fmt('{} {} {}'), url_for('.review_call', call_id=call.id))] %}
 {% set help_link=url_for('help.admin_page', page_name='affiliation_weight') %}
+{% set scripts=['checkbox_indeterminate'] %}
 
 {% block content %}
 <ul>
@@ -27,12 +28,26 @@
         <tr>
             <th>Affiliation</th>
             <th>Weight</th>
+            <th>Override hidden</th>
+            <th>Override assignment type</th>
         </tr>
-        {% for affiliation in affiliations.values() %}
-            <tr>
-                <td>{{ affiliation.name }}</td>
-                <td><input type="number" name="weight_{{ affiliation.id }}" value="{{ affiliation.weight if affiliation.weight is not none }}" min="0" step="any" required="required"></td>
-            </tr>
+        {% for (hidden, hidden_affiliations) in affiliations.group_by_hidden() %}
+            {% for affiliation in hidden_affiliations.values_in_type_order(facility_affiliation_type_class) %}
+                <tr {{ combined_class(('spacer_above', loop.first and hidden),) | safe }}>
+                    <td>
+                        {{ affiliation.name }}
+                        {% if affiliation.type is not affiliation_type_standard(facility_affiliation_type_class) %}<span class="label">{{ affiliation.type | affiliation_type_name(facility_affiliation_type_class) }}</span>{% endif %}
+                    </td>
+                    <td><input type="number" name="weight_{{ affiliation.id }}" value="{{ affiliation.weight.weight if affiliation.weight.weight is not none }}" min="0" step="any"></td>
+                    <td><input type="checkbox" name="hidden_{{ affiliation.id }}" class="checkbox_indeterminate" value="{{ 'indeterminate' if affiliation.weight.hidden is none else 'yes' }}" {{ 'checked="checked"' | safe if affiliation.weight.hidden or (affiliation.weight.hidden is none)}} /></td>
+                    <td><select name="type_{{ affiliation.id }}">
+                        <option value="" {{ 'selected="selected"' | safe if affiliation.weight.type is none }}>&mdash;</option>
+                        {% for (type_id, type_name) in affiliation_types.items() %}
+                            <option value="{{ type_id }}" {{ 'selected="selected"' | safe if type_id == affiliation.weight.type }}>{{ type_name }}</option>
+                        {% endfor %}
+                    </select></td>
+                </tr>
+            {% endfor %}
         {% endfor %}
     </table>
 

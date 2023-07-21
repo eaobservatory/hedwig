@@ -1033,40 +1033,67 @@ class ProposalPart(object):
 
         return result.inserted_primary_key[0]
 
-    def search_affiliation(self, queue_id=None, hidden=None, type_=None,
-                           with_weight_call_id=None, order_by_id=False):
+    def search_affiliation(
+            self, queue_id=None, hidden=None, type_=None,
+            with_weight_call_id=None, with_weight_separate=False,
+            order_by_id=False):
         """
         Search for affiliation records.
         """
 
+        default = {}
+        field_hidden = affiliation.c.hidden
+        field_type = affiliation.c.type
+
         if with_weight_call_id is None:
             stmt = affiliation.select()
-            default = {'weight': None}
+            default['weight'] = None
 
         else:
-            stmt = select(
-                [affiliation, affiliation_weight.c.weight]
-            ).select_from(
+            if with_weight_separate:
+                select_columns = [
+                    affiliation,
+                    affiliation_weight.c.weight,
+                    affiliation_weight.c.hidden.label('weight_hidden'),
+                    affiliation_weight.c.type.label('weight_type'),
+                ]
+
+            else:
+                field_hidden = coalesce(
+                    affiliation_weight.c.hidden,
+                    affiliation.c.hidden)
+                field_type = coalesce(
+                    affiliation_weight.c.type,
+                    affiliation.c.type)
+                select_columns = [
+                    affiliation.c.id,
+                    affiliation.c.queue_id,
+                    affiliation.c.name,
+                    field_hidden.label('hidden'),
+                    field_type.label('type'),
+                    affiliation_weight.c.weight,
+                ]
+
+            stmt = select(select_columns).select_from(
                 affiliation.outerjoin(affiliation_weight, and_(
                     affiliation_weight.c.affiliation_id == affiliation.c.id,
                     affiliation_weight.c.call_id == with_weight_call_id))
             )
-            default = {}
 
         if queue_id is not None:
             stmt = stmt.where(affiliation.c.queue_id == queue_id)
 
         if hidden is not None:
             if hidden:
-                stmt = stmt.where(affiliation.c.hidden)
+                stmt = stmt.where(field_hidden)
             else:
-                stmt = stmt.where(not_(affiliation.c.hidden))
+                stmt = stmt.where(not_(field_hidden))
 
         if type_ is not None:
             if is_list_like(type_):
-                stmt = stmt.where(affiliation.c.type.in_(type_))
+                stmt = stmt.where(field_type.in_(type_))
             else:
-                stmt = stmt.where(affiliation.c.type == type_)
+                stmt = stmt.where(field_type == type_)
 
         if order_by_id:
             stmt = stmt.order_by(affiliation.c.id.asc())
@@ -1079,6 +1106,16 @@ class ProposalPart(object):
             for row in conn.execute(stmt):
                 values = default.copy()
                 values.update(**row)
+
+                if with_weight_separate:
+                    values['weight'] = Affiliation(
+                        id=None,
+                        queue_id=None,
+                        name=None,
+                        hidden=values.pop('weight_hidden'),
+                        type=values.pop('weight_type'),
+                        weight=values.pop('weight'))
+
                 ans[values['id']] = Affiliation(**values)
 
         return ans
@@ -2595,14 +2632,17 @@ class ProposalPart(object):
 
         return (link_id, text_id)
 
-    def sync_affiliation_weight(self, call_id, records):
+    def sync_affiliation_weight(self, type_class, call_id, records):
         """
-        Update the affiliation weighting values for a given call.
+        Update the affiliation weighting values and possible hidden
+        and type overrides for a given call.
 
         This takes a set of Affiliation records including weights,
         where the "id" is actually the "affiliation.id" rather than
         the "affiliation_weight.id".
         """
+
+        records.validate(type_class, allow_type_none=True)
 
         with self._transaction() as conn:
             if not self._exists_id(conn, call, call_id):
@@ -2613,7 +2653,11 @@ class ProposalPart(object):
                 conn, affiliation_weight,
                 key_column=affiliation_weight.c.call_id, key_value=call_id,
                 records=records,
-                update_columns=(affiliation_weight.c.weight,),
+                update_columns=(
+                    affiliation_weight.c.weight,
+                    affiliation_weight.c.hidden,
+                    affiliation_weight.c.type,
+                ),
                 record_match_column=affiliation_weight.c.affiliation_id)
 
     def sync_call_call_mid_close(self, call_id, records):

@@ -131,7 +131,16 @@ class AffiliationCollection(ResultCollection):
     Class to hold th results of an affiliation search,
     """
 
-    def validate(self, type_class):
+    def group_by_hidden(self):
+        items = [(k, v) for (k, v) in self.items() if not v.hidden]
+        if items:
+            yield (False, type(self)(items))
+
+        items = [(k, v) for (k, v) in self.items() if v.hidden]
+        if items:
+            yield (True, type(self)(items))
+
+    def validate(self, type_class, allow_type_none=False):
         """
         Validates a set of affiliation records.
 
@@ -143,7 +152,11 @@ class AffiliationCollection(ResultCollection):
         """
 
         for affiliation in self.values():
-            if not type_class.is_valid(affiliation.type):
+            if affiliation.type is None:
+                if not allow_type_none:
+                    raise UserError(
+                        'Affiliation "{}" has no type', affiliation.name)
+            elif not type_class.is_valid(affiliation.type):
                 raise UserError(
                     'Affiliation "{}" has invalid type', affiliation.name)
 

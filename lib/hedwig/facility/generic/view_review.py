@@ -30,12 +30,12 @@ from ...error import DatabaseIntegrityError, NoSuchRecord, NoSuchValue, \
 from ...file.csv import CSVWriter
 from ...stats.table import table_mean_stdev
 from ...view import auth
-from ...view.util import int_or_none, \
+from ...view.util import int_or_none, float_or_none, \
     with_proposal, with_call_review, with_review
 from ...web.util import ErrorPage, \
     HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, format_datetime, parse_datetime, url_for
-from ...type.collection import MemberCollection, \
+from ...type.collection import AffiliationCollection, MemberCollection, \
     ReviewerCollection, ReviewDeadlineCollection
 from ...type.enum import Assessment, \
     FormatType, GroupType, \
@@ -587,19 +587,55 @@ class GenericReview(object):
         message = None
 
         affiliations = db.search_affiliation(
-            queue_id=call.queue_id, hidden=False,
-            type_=affiliation_type_class.get_tabulated_types(),
-            with_weight_call_id=call.id)
+            queue_id=call.queue_id,
+            with_weight_call_id=call.id, with_weight_separate=True)
 
         if form is not None:
             try:
-                updated_affiliations = OrderedDict()
+                for (id_, affiliation) in list(affiliations.items()):
+                    assert id_ == affiliation.id
+                    hidden_field = 'hidden_{}'.format(id_)
+                    affiliations[id_] = affiliation._replace(
+                        weight=null_tuple(Affiliation)._replace(
+                            id=id_,
+                            name=affiliation.name,
+                            weight=float_or_none(form['weight_{}'.format(id_)]),
+                            hidden=((
+                                None if form[hidden_field] == 'indeterminate'
+                                else True
+                            ) if hidden_field in form else False),
+                            type=int_or_none(form['type_{}'.format(id_)]),
+                        ))
+
+                updated_affiliations = AffiliationCollection()
                 for affiliation in affiliations.values():
-                    id_ = affiliation.id
-                    updated_affiliations[id_] = affiliation._replace(
-                        weight=float(form['weight_{}'.format(id_)]))
+                    weight = affiliation.weight
+
+                    hidden = (
+                        affiliation.hidden
+                        if weight.hidden is None else weight.hidden)
+                    tabulated = affiliation_type_class.is_tabulated(
+                        affiliation.type
+                        if weight.type is None else weight.type)
+
+                    if tabulated and (weight.weight is None) and not hidden:
+                        raise UserError(
+                            'Affiliation "{}" has no weight.',
+                            affiliation.name)
+                    elif (hidden or not tabulated) and (weight.weight is not None):
+                        raise UserError(
+                            'Affiliation "{}" should not have a weight.',
+                            affiliation.name)
+
+                    if not ((weight.weight is not None)
+                            or (weight.hidden is not None)
+                            or (weight.type is not None)):
+                        continue
+
+                    updated_affiliations[affiliation.id] = weight
 
                 updates = db.sync_affiliation_weight(
+                    affiliation_type_class,
                     call_id=call.id, records=updated_affiliations)
 
                 if any(updates):
@@ -608,7 +644,6 @@ class GenericReview(object):
 
             except UserError as e:
                 message = e.message
-                affiliations = updated_affiliations
 
         return {
             'title': 'Affiliation Weight: {} {} {}'.format(
@@ -617,6 +652,7 @@ class GenericReview(object):
             'call': call,
             'message': message,
             'affiliations': affiliations,
+            'affiliation_types': affiliation_type_class.get_options(),
         }
 
     @with_call_review(permission=PermissionType.EDIT)

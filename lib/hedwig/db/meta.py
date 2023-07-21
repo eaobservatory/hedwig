@@ -59,9 +59,11 @@ affiliation_weight = Table(
     Column('call_id', None,
            ForeignKey('call.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
-    Column('weight', Float(precision=53, asdecimal=False), nullable=False,
+    Column('weight', Float(precision=53, asdecimal=False), nullable=True,
            doc='Weighting factor for assignment calculations, if necessary. '
            'The actual calculation will be facility-specific.'),
+    Column('hidden', Boolean, default=None, nullable=True),
+    Column('type', Integer, default=None, nullable=True),
     UniqueConstraint('affiliation_id', 'call_id'),
     **table_opts)
 

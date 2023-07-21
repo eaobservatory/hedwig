@@ -52,17 +52,19 @@
             <th>Assignment type</th>
             <th>Actions</th>
         </tr>
-        {% for affiliation in affiliations.values_in_type_order(facility_affiliation_type_class) %}
-            <tr id="affiliationrow_{{ affiliation.id }}">
-                <td><input type="text" name="name_{{ affiliation.id }}" value="{{ affiliation.name }}" required="required" /></td>
-                <td><input type="checkbox" name="hidden_{{ affiliation.id }}" value="yes" {{ 'checked="checked"' | safe if affiliation.hidden }} /></td>
-                <td><select name="type_{{ affiliation.id }}">
-                    {% for (type_id, type_name) in affiliation_types.items() %}
-                        <option value="{{ type_id }}" {{ 'selected="selected"' | safe if type_id == affiliation.type }}>{{ type_name }}</option>
-                    {% endfor %}
-                </select></td>
-                <td><input type="button" id="delete_{{ affiliation.id }}" value="Delete" />
-            </tr>
+        {% for (hidden, hidden_affiliations) in affiliations.group_by_hidden() %}
+            {% for affiliation in hidden_affiliations.values_in_type_order(facility_affiliation_type_class) %}
+                <tr id="affiliationrow_{{ affiliation.id }}" {{ combined_class(('spacer_above', loop.first and hidden),) | safe }}>
+                    <td><input type="text" name="name_{{ affiliation.id }}" value="{{ affiliation.name }}" required="required" /></td>
+                    <td><input type="checkbox" name="hidden_{{ affiliation.id }}" value="yes" {{ 'checked="checked"' | safe if affiliation.hidden }} /></td>
+                    <td><select name="type_{{ affiliation.id }}">
+                        {% for (type_id, type_name) in affiliation_types.items() %}
+                            <option value="{{ type_id }}" {{ 'selected="selected"' | safe if type_id == affiliation.type }}>{{ type_name }}</option>
+                        {% endfor %}
+                    </select></td>
+                    <td><input type="button" id="delete_{{ affiliation.id }}" value="Delete" />
+                </tr>
+            {% endfor %}
         {% endfor %}
     </table>
     <table class="template">

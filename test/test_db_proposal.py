@@ -123,8 +123,8 @@ class DBProposalTest(DBTestCase):
         weights_1 = [1.2, 7.8]
         weights_2 = [3.4, 6.7]
 
-        records_1 = ResultCollection()
-        records_2 = ResultCollection()
+        records_1 = AffiliationCollection()
+        records_2 = AffiliationCollection()
 
         for (row, weight_1, weight_2) in zip(result.values(),
                                              weights_1, weights_2):
@@ -132,8 +132,10 @@ class DBProposalTest(DBTestCase):
             records_1[row.id] = row._replace(weight=weight_1)
             records_2[row.id] = row._replace(weight=weight_2)
 
-        self.db.sync_affiliation_weight(call_id, records_1)
-        self.db.sync_affiliation_weight(call_id_2, records_2)
+        self.db.sync_affiliation_weight(
+            BaseAffiliationType, call_id, records_1)
+        self.db.sync_affiliation_weight(
+            BaseAffiliationType, call_id_2, records_2)
 
         # Check we can recover the two sets of weights.
         result = self.db.search_affiliation(queue_id=queue_id,
