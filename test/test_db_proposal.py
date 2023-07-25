@@ -975,10 +975,10 @@ class DBProposalTest(DBTestCase):
         proposal_id = self.db.add_proposal(call_id, person_id_1,
                                            affiliation_id, 'Proposal 1')
 
-        self.db.add_member(proposal_id, person_id_2, affiliation_id,
-                           False, False, False)
-        self.db.add_member(proposal_id, person_id_3, affiliation_id,
-                           False, False, False)
+        member_id_2 = self.db.add_member(
+            proposal_id, person_id_2, affiliation_id, False, False, False)
+        member_id_3 = self.db.add_member(
+            proposal_id, person_id_3, affiliation_id, False, False, False)
 
         # Institutions should be undefined at first except person 3.
         expect_ref = (institution_id_3, None, None)
@@ -1028,6 +1028,20 @@ class DBProposalTest(DBTestCase):
         result = self.db.search_member(proposal_id=proposal_id)
         self.assertEqual(len(result), 3)
         expect = list(expect_ref)
+        for row in result.values():
+            self.assertEqual(row.resolved_institution_id, expect.pop())
+
+        # Try basic set_member_institution method.
+        with self.assertRaisesRegex(ConsistencyError, 'institution does'):
+            self.db.set_member_institution(member_id_2, 1999999)
+
+        with self.assertRaisesRegex(ConsistencyError, 'no rows matched'):
+            self.db.set_member_institution(1999999, institution_id_2)
+
+        self.db.set_member_institution(member_id_2, institution_id_2)
+        result = self.db.search_member(proposal_id=proposal_id)
+        expect = list(expect_ref)
+        expect[1] = institution_id_2
         for row in result.values():
             self.assertEqual(row.resolved_institution_id, expect.pop())
 

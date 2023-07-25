@@ -2440,6 +2440,25 @@ class ProposalPart(object):
 
         return preamble_id
 
+    def set_member_institution(
+            self, member_id, institution_id, _test_skip_check=False):
+        with self._transaction() as conn:
+            if not _test_skip_check and not self._exists_id(
+                    conn, institution, institution_id):
+                raise ConsistencyError(
+                    'institution does not exist with id {}', institution_id)
+
+            result = conn.execute(member.update().where(
+                member.c.id == member_id
+            ).values({
+                member.c.institution_id: institution_id,
+            }))
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no rows matched updating member {} institution',
+                    member_id)
+
     def set_proposal_figure_preview(self, fig_id, preview):
         self._set_figure_alternate(
             proposal_fig_preview.c.preview, fig_id, preview)
