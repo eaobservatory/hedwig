@@ -1632,7 +1632,7 @@ class GenericProposal(object):
         records = proposal.members
 
         if member_id not in records:
-            raise ErrorPage('Proposal member not found.')
+            raise HTTPNotFound('Proposal member not found.')
 
         affiliations = db.search_affiliation(
             queue_id=proposal.queue_id, hidden=False)
