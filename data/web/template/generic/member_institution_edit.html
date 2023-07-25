@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+{% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
+
+{% set stylesheets = ['selectize'] %}
+{% set scripts = ['selectize', 'institution_select'] %}
+
+{% block content %}
+<p>
+    <b>Note:</b>
+</p>
+
+<ul>
+    <li>
+        This page can be used to change the institution
+        &ldquo;frozen&rdquo; into the proposal member record
+        (usually on call closure).
+    </li>
+    <li>
+        To change the institution associated with a person&rsquo;s
+        general profile, please use their
+        <a href="{{ url_for('people.person_edit_institution', person_id=member.person_id) }}">change institution</a>
+        page instead.
+    </li>
+</ul>
+
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.member_institution_edit', proposal_id=proposal_id, member_id=member.id) }}">
+    <ol>
+        <li>
+            <label for="institution_id">Institution</label>
+            <div style="display: inline-block; width: 70ex;"><select id="select_institution" name="institution_id" data-institution_list="{{ url_for('query.institution_list') }}" data-selected="{{ '' if member.resolved_institution_id is none else member.resolved_institution_id }}">
+                <option value="">Loading&hellip;</option>
+            </select></div>
+        </li>
+        <li>
+            <input type="submit" value="Save" name="submit" />
+        </li>
+    </ol>
+</form>
+
+{% endblock %}

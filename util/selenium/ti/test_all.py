@@ -1533,7 +1533,22 @@ class IntegrationTest(DummyConfigTestCase):
             'The affiliation has been updated.',
             self.browser.page_source)
 
-        edit_link = self.browser.find_element_by_id('alter_state_link').click()
+        # Edit a frozen member institution.
+        self.browser.find_element_by_id('member_inst_ed_2').click()
+
+        self._select_value_selectize(
+            'institution_id', text='Another Institution, United States')
+
+        self._save_screenshot(self.admin_image_root, 'proposal_mem_inst_edit')
+
+        self.browser.find_element_by_name('submit').click()
+
+        self.assertIn(
+            'The institution has been updated.',
+            self.browser.page_source)
+
+        # Change proposal state.
+        self.browser.find_element_by_id('alter_state_link').click()
 
         self._save_screenshot(self.admin_image_root, 'proposal_alter_state')
 

@@ -1669,6 +1669,47 @@ class GenericProposal(object):
             'affiliations': affiliations,
         }
 
+    @with_proposal(permission=PermissionType.NONE)
+    def view_member_institution_edit(
+            self, current_user, db, proposal, member_id, form):
+        message = None
+        records = proposal.members
+
+        if member_id not in records:
+            raise HTTPNotFound('Proposal member not found.')
+
+        if form is not None:
+            try:
+                records[member_id] = records[member_id]._replace(
+                    resolved_institution_id=int_or_none(form['institution_id']))
+
+                if records[member_id].resolved_institution_id is None:
+                    raise UserError('No institution was selected.')
+
+                # Note: we can not use sync_proposal_member_institution
+                # here since that would freeze all other member institutions.
+                db.set_member_institution(
+                    member_id, records[member_id].resolved_institution_id)
+
+                flash('The institution has been updated.')
+
+                raise HTTPRedirect(url_for('.proposal_view',
+                                           proposal_id=proposal.id,
+                                           _anchor='members'))
+
+            except UserError as e:
+                message = e.message
+
+        member = records[member_id]
+
+        return {
+            'title': 'Edit institution: {}'.format(member.person_name),
+            'proposal_id': proposal.id,
+            'proposal_code': self.make_proposal_code(db, proposal),
+            'message': message,
+            'member': member,
+        }
+
     @with_proposal(permission=PermissionType.EDIT)
     def view_previous_edit(self, current_user, db, proposal, can, form):
         message = None

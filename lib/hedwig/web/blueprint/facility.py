@@ -353,6 +353,15 @@ def create_facility_blueprint(db, facility):
             current_user, db, proposal_id, member_id,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/proposal/<int:proposal_id>/member_institution/<int:member_id>',
+              methods=['GET', 'POST'])
+    @require_admin
+    @facility_template('member_institution_edit.html')
+    def member_institution_edit(current_user, proposal_id, member_id):
+        return facility.view_member_institution_edit(
+            current_user, db, proposal_id, member_id,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/proposal/<int:proposal_id>/previous',
               methods=['GET', 'POST'])
     @require_auth()

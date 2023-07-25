@@ -56,6 +56,11 @@
                     {% else %}
                         <i>Unknown institution</i>
                     {% endif %}
+                    {% if show_admin_links %}
+                        <nav>
+                            <a href="{{ url_for('.member_institution_edit', proposal_id=proposal_id, member_id=member.id) }}" id="member_inst_ed_{{ member.id }}">edit</a>
+                        </nav>
+                    {% endif %}
                 </td>
                 <td>
                     {% if member.pi %}<span class="label">PI</span>{% endif %}
