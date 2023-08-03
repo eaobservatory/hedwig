@@ -112,8 +112,14 @@ def send_email_message(message, dry_run=False):
     server = config.get('email', 'server')
     port = int(config.get('email', 'port'))
     from_ = config.get('email', 'from')
+    maxheaderlen_str = config.get('email', 'maxheaderlen')
 
-    (identifier, msg, recipients) = _prepare_email_message(message, from_)
+    maxheaderlen = None
+    if maxheaderlen_str:
+        maxheaderlen = int(maxheaderlen_str)
+
+    (identifier, msg, recipients) = _prepare_email_message(
+        message, from_, maxheaderlen=maxheaderlen)
 
     if dry_run:
         return 'DRY-RUN'
@@ -138,13 +144,19 @@ def send_email_message(message, dry_run=False):
     return identifier
 
 
-def _prepare_email_message(message, from_, identifier=None):
+def _prepare_email_message(message, from_, identifier=None, maxheaderlen=None):
     """
     Prepare an email message.
 
     This is a separate function to allow this routine to be tested
     independently of actual message sending.
     """
+
+    header_kwargs = {}
+    generator_kwargs = {}
+    if maxheaderlen is not None:
+        header_kwargs['maxlinelen'] = maxheaderlen
+        generator_kwargs['maxheaderlen'] = maxheaderlen
 
     # Collect recipients in the ("to") list based on their public setting
     # unless there is only one recipient, in which case there's no
@@ -166,18 +178,18 @@ def _prepare_email_message(message, from_, identifier=None):
     # Construct message.
     msg = MIMETextFlowed(message.body)
 
-    msg['Subject'] = Header(message.subject)
-    msg['Date'] = Header(format_datetime(message.date))
-    msg['From'] = Header(from_)
-    msg['To'] = Header(', '.join(recipients_public))
-    msg['Message-ID'] = Header(identifier)
+    msg['Subject'] = Header(message.subject, **header_kwargs)
+    msg['Date'] = Header(format_datetime(message.date), **header_kwargs)
+    msg['From'] = Header(from_, **header_kwargs)
+    msg['To'] = Header(', '.join(recipients_public), **header_kwargs)
+    msg['Message-ID'] = Header(identifier, **header_kwargs)
     if message.thread_identifiers:
         # Currently set this to the last message in the thread,
         # to create a nested thread structure.
         # Alternatively could set "In-Reply-To" to be the first message
         # in the thread to make a thread with a flat structure.
-        msg['In-Reply-To'] = Header(message.thread_identifiers[-1])
-        msg['References'] = Header(' '.join(message.thread_identifiers))
+        msg['In-Reply-To'] = Header(message.thread_identifiers[-1], **header_kwargs)
+        msg['References'] = Header(' '.join(message.thread_identifiers), **header_kwargs)
 
     # Add Hedwig-specific headers to aid in dealing with bounce messages.
     msg['X-Hedwig-ID'] = '{}'.format(message.id)
@@ -186,7 +198,7 @@ def _prepare_email_message(message, from_, identifier=None):
             MessageThreadType.url_path(message.thread_type), message.thread_id)
 
     with closing(BytesIO()) as f:
-        BytesGenerator(f, mangle_from_=False).flatten(msg)
+        BytesGenerator(f, mangle_from_=False, **generator_kwargs).flatten(msg)
         msg = f.getvalue()
 
     return (identifier, msg, recipients_plain)
