@@ -27,6 +27,7 @@ from hedwig.type.collection import \
     AffiliationCollection, CallCollection, CallPreambleCollection, \
     EmailCollection, GroupMemberCollection, MemberCollection, \
     ResultCollection, ReviewDeadlineCollection, \
+    PrevProposalCollection, \
     ProposalCollection, ProposalFigureCollection, \
     RequestCollection, ReviewerCollection, \
     SiteGroupMemberCollection
@@ -36,6 +37,7 @@ from hedwig.type.enum import BaseAffiliationType, \
     RequestState, ReviewState, SiteGroupType
 from hedwig.type.simple import \
     Affiliation, Call, CallPreamble, Email, GroupMember, Member, \
+    PrevProposal, \
     Proposal, ProposalFigureInfo, \
     RequestPropPDF, Reviewer, ReviewDeadline, SiteGroupMember
 from hedwig.type.util import null_tuple
@@ -723,3 +725,26 @@ class CollectionTypeTestCase(TestCase):
         cc = c.subset_by_state(RequestState.pre_ready_states())
         self.assertEqual([x for x in cc.keys()], [1, 2])
         self.assertEqual([x.id for x in cc.values()], [1, 2])
+
+    def test_prev_proposal_collection(self):
+        c = PrevProposalCollection()
+
+        c[1] = null_tuple(PrevProposal)._replace(id=1, continuation=False)
+        c[2] = null_tuple(PrevProposal)._replace(id=2, continuation=False)
+
+        with self.assertRaises(NoSuchValue):
+            c.get_continuation()
+
+        self.assertIsNone(c.get_continuation(default=None))
+
+        c[3] = null_tuple(PrevProposal)._replace(id=3, continuation=True)
+
+        pp = c.get_continuation()
+
+        self.assertIsInstance(pp, PrevProposal)
+        self.assertEqual(pp.id, 3)
+
+        c[4] = null_tuple(PrevProposal)._replace(id=4, continuation=True)
+
+        with self.assertRaises(MultipleRecords):
+            c.get_continuation()

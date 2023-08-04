@@ -549,6 +549,31 @@ class PrevProposalCollection(ResultCollection, CollectionOrdered):
             if pp.proposal_id is not None:
                 seen_ids[pp.proposal_id] = pp.proposal_code
 
+    def get_continuation(self, default=()):
+        """
+        Retrieve a record with the continuation flag set.
+
+        :raises NoSuchValue: if no continuation found and no default given.
+        :raises MultipleRecords: if multiple continuation records are found.
+        """
+
+        result = None
+
+        for entry in self.values():
+            if entry.continuation:
+                if result is not None:
+                    raise MultipleRecords('multiple continuation records')
+
+                result = entry
+
+        if result is not None:
+            return result
+
+        if default == ():
+            raise NoSuchValue('no continuation record')
+
+        return default
+
     def subset_by_this_proposal(self, this_proposal_id):
         """
         Create a subset of the collection (of the same type) containing
