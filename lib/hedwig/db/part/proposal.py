@@ -36,7 +36,7 @@ from ...type.collection import AffiliationCollection, \
     RequestCollection, ResultCollection, TargetCollection
 from ...type.enum import AnnotationType, AttachmentState, \
     CallState, FigureType, FormatType, \
-    PersonLogEvent, ProposalState, PublicationType, \
+    PersonLogEvent, ProposalState, ProposalType, PublicationType, \
     RequestState, SemesterState
 from ...type.simple import Affiliation, Annotation, \
     Call, CallMidClose, CallPreamble, Category, CoMemberInfo, \
@@ -211,6 +211,7 @@ class ProposalPart(object):
         return result.inserted_primary_key[0]
 
     def add_proposal(self, call_id, person_id, affiliation_id, title,
+                     type_=ProposalType.STANDARD,
                      state=ProposalState.PREPARATION, person_is_reviewer=False,
                      is_copy=False,
                      _test_skip_check=False):
@@ -226,6 +227,9 @@ class ProposalPart(object):
 
         if not title:
             raise UserError('The proposal title should not be blank.')
+
+        if not ProposalType.is_valid(type_):
+            raise Error('Invalid proposal type.')
 
         if not ProposalState.is_valid(state):
             raise Error('Invalid state.')
@@ -255,6 +259,7 @@ class ProposalPart(object):
                     proposal_alias.c.call_id == call_id)),
                 proposal.c.state: state,
                 proposal.c.title: title,
+                proposal.c.type: type_,
             }))
 
             proposal_id = result.inserted_primary_key[0]

@@ -529,6 +529,7 @@ proposal = Table(
     Column('number', Integer, nullable=False),
     Column('state', Integer, nullable=False),
     Column('title', Unicode(255), nullable=False),
+    Column('type', Integer, nullable=False),
     UniqueConstraint('call_id', 'number'),
     **table_opts)
 

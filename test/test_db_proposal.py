@@ -33,7 +33,7 @@ from hedwig.type.enum import BaseAffiliationType, AnnotationType, \
     AttachmentState, \
     BaseCallType, BaseTextRole, \
     CallState, FigureType, \
-    FormatType, ProposalState, RequestState
+    FormatType, ProposalState, ProposalType, RequestState
 from hedwig.type.simple import Affiliation, Annotation, \
     Call, CallMidClose, CallPreamble, Category, \
     Member, MemberInfo, MemberInstitution, \
@@ -706,6 +706,15 @@ class DBProposalTest(DBTestCase):
         # The proposal must have a title.
         with self.assertRaisesRegex(UserError, 'blank'):
             self.db.add_proposal(call_id_1, person_id, affiliation_id_1, '')
+
+        # The type and state must be valid.
+        with self.assertRaisesRegex(Error, 'Invalid state'):
+            self.db.add_proposal(
+                call_id_1, person_id, affiliation_id_1, 'Title', state=999)
+
+        with self.assertRaisesRegex(Error, 'Invalid proposal type'):
+            self.db.add_proposal(
+                call_id_1, person_id, affiliation_id_1, 'Title', type_=999)
 
         # Check for error raised when the call or person doesn't exist.
         with self.assertRaisesRegex(ConsistencyError, '^call does not'):

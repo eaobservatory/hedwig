@@ -716,6 +716,27 @@ class ProposalState(EnumBasic, EnumShortName):
         return OrderedDict((k, v.name) for (k, v) in cls._info.items())
 
 
+class ProposalType(EnumBasic, EnumShortName):
+    """
+    Class representing various types of proposal.
+    """
+
+    STANDARD = 1
+    CONTINUATION = 2
+
+    TypeInfo = namedtuple(
+        'TypeInfo',
+        ('short_name', 'name'))
+
+    #                Abbr   Name
+    _info = OrderedDict((
+        (STANDARD,
+            TypeInfo('Std', 'Standard')),
+        (CONTINUATION,
+            TypeInfo('CR',  'Continuation request')),
+    ))
+
+
 class PublicationType(EnumBasic, EnumAvailable):
     """
     Class representing different ways in which a publication can be
