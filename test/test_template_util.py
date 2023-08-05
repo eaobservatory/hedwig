@@ -27,7 +27,7 @@ from markupsafe import Markup
 from hedwig.astro.coord import CoordSystem
 from hedwig.type.enum import Assessment, AttachmentState, \
     BaseCallType, BaseReviewerRole, BaseTextRole, CallState, \
-    MessageState, MessageThreadType, ProposalState, \
+    MessageState, MessageThreadType, ProposalState, ProposalType, \
     PublicationType, RequestState, ReviewState, SemesterState, UserLogEvent
 from hedwig.web.template_util import Counter
 
@@ -417,3 +417,22 @@ class TemplateUtilTestCase(WebAppTestCase):
         f = self.app.jinja_env.filters['format_text']
 
         self.assertEqual(f('Hello'), '<p>Hello</p>')
+
+    def test_filter_proposal_type(self):
+        f = self.app.jinja_env.filters['proposal_type_name']
+
+        self.assertEqual(f(ProposalType.STANDARD), 'Standard')
+        self.assertEqual(f(ProposalType.CONTINUATION), 'Continuation request')
+        self.assertEqual(f(999), 'Unknown type')
+
+        f = self.app.jinja_env.filters['proposal_type_short_name']
+
+        self.assertEqual(f(ProposalType.STANDARD), 'Std')
+        self.assertEqual(f(ProposalType.CONTINUATION), 'CR')
+        self.assertEqual(f(999), '?')
+
+    def test_test_proposal_type(self):
+        t = self.app.jinja_env.tests['proposal_type_standard']
+
+        self.assertTrue(t(ProposalType.STANDARD))
+        self.assertFalse(t(ProposalType.CONTINUATION))

@@ -33,7 +33,8 @@ from ..config import get_countries
 from ..type.enum import Assessment, \
     AttachmentState, CallState, FigureType, GroupType, \
     MessageState, MessageThreadType, \
-    PersonLogEvent, PersonTitle, ProposalState, PublicationType, \
+    PersonLogEvent, PersonTitle, \
+    ProposalState, ProposalType, PublicationType, \
     RequestState, ReviewState, SemesterState, SiteGroupType, UserLogEvent
 from ..util import FormatMaxDP, FormatSigFig
 from .format import format_text
@@ -339,6 +340,20 @@ def register_template_utils(app):
             return '?'
 
     @app.template_filter()
+    def proposal_type_name(value):
+        try:
+            return ProposalType.get_name(value)
+        except KeyError:
+            return 'Unknown type'
+
+    @app.template_filter()
+    def proposal_type_short_name(value):
+        try:
+            return ProposalType.get_short_name(value)
+        except KeyError:
+            return '?'
+
+    @app.template_filter()
     def publication_type_name(value):
         try:
             return PublicationType.get_name(value)
@@ -503,6 +518,10 @@ def register_template_utils(app):
             return True
 
         return re.match(r'^\s*$', value) is not None
+
+    @app.template_test()
+    def proposal_type_standard(value):
+        return value == ProposalType.STANDARD
 
     @app.template_test()
     def request_state_ready(value):
