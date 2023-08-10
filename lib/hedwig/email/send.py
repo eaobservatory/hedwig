@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -43,6 +43,12 @@ try:
 except ImportError:
     from email.utils import formatdate
     from calendar import timegm
+    from email.charset import add_charset, QP, BASE64
+
+    # Override "header_enc" method for UTF-8 to use quoted printable
+    # because the default (SHORTEST) may choose BASE64 which seems to
+    # ignore the maxlinelen parameter.
+    add_charset(b'utf-8', QP, BASE64, b'utf-8')
 
     def format_datetime(dt):
         result = formatdate(timegm(dt.utctimetuple()))
@@ -156,6 +162,7 @@ def _prepare_email_message(message, from_, identifier=None, maxheaderlen=None):
     generator_kwargs = {}
     if maxheaderlen is not None:
         header_kwargs['maxlinelen'] = maxheaderlen
+        header_kwargs['charset'] = 'utf-8'
         generator_kwargs['maxheaderlen'] = maxheaderlen
 
     # Collect recipients in the ("to") list based on their public setting
