@@ -76,7 +76,12 @@
         </thead>
         {% for proposal in proposals.values() %}
             <tr>
-                <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+                <td>
+                    <a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a>
+                    {% if proposal.type is not proposal_type_standard %}
+                        <span class="label">{{ proposal.type | proposal_type_short_name }}</span>
+                    {% endif %}
+                </td>
                 <td>
                     {% if proposal.member is not none %}
                         {% if proposal.member.can_view %}

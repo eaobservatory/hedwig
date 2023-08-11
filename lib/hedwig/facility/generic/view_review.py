@@ -40,7 +40,8 @@ from ...type.collection import AffiliationCollection, MemberCollection, \
     ReviewerCollection, ReviewDeadlineCollection
 from ...type.enum import Assessment, \
     FigureType, FormatType, GroupType, \
-    MessageThreadType, PermissionType, PersonTitle, ProposalState, ReviewState
+    MessageThreadType, PermissionType, PersonTitle, \
+    ProposalState, ProposalType, ReviewState
 from ...type.simple import Affiliation, DateAndTime, Link, MemberPIInfo, \
     Note, \
     ProposalWithCode, Reviewer, ReviewerAcceptance, \
@@ -302,7 +303,8 @@ class GenericReview(object):
     def _get_proposal_tabulation_titles(self, tabulation):
         return chain(
             [
-                'Proposal', 'PI name', 'PI affiliation', 'PI institution',
+                'Proposal', 'Type',
+                'PI name', 'PI affiliation', 'PI institution',
                 'Co-Investigators',
                 'Title', 'State',
                 'Decision', 'Exempt', 'Rating', 'Rating std. dev.',
@@ -319,6 +321,7 @@ class GenericReview(object):
             yield chain(
                 [
                     proposal['code'],
+                    ProposalType.get_short_name(proposal['type']),
                     (None if proposal['member_pi'] is None
                      else proposal['member_pi'].person_name),
                     (None if proposal['member_pi'] is None

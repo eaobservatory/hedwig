@@ -24,6 +24,12 @@
                 <a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal_code }}</a>
             </td>
         </tr>
+        {% if proposal.type is not proposal_type_standard %}
+            <tr>
+                <th>Proposal type</th>
+                <td>{{ proposal.type | proposal_type_name }}</td>
+            </tr>
+        {% endif %}
         <tr class="volatile">
             <th>Proposal status</th>
             <td>{{ proposal.state | proposal_state_name }}</td>

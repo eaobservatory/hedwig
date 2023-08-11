@@ -48,6 +48,7 @@
 <table>
     <tr>
         <th>Proposal</th>
+        <th>Type</th>
         <th>State</th>
         <th>PI Name</th>
         <th>Title</th>
@@ -62,6 +63,7 @@
                 <tr>
                     {% if loop.first %}
                         <td rowspan="{{ loop.length }}"><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+                        <td rowspan="{{ loop.length }}">{{ proposal.type | proposal_type_short_name }}</td>
                         <td rowspan="{{ loop.length }}">{{ proposal.state | proposal_state_name }}</td>
                         <td rowspan="{{ loop.length }}">
                             {% if proposal.member is not none %}

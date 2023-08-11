@@ -50,7 +50,12 @@
                                     {% if loop.first %}
                                         <td rowspan="{{ queue_proposals | length }}">{{ proposal.queue_name }}</td>
                                     {% endif %}
-                                    <td><a href="{{ url_for(facility.code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+                                    <td>
+                                        <a href="{{ url_for(facility.code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a>
+                                        {% if proposal.type is not proposal_type_standard %}
+                                            <span class="label">{{ proposal.type | proposal_type_short_name }}</span>
+                                        {% endif %}
+                                    </td>
                                     <td>{{ proposal.title | abbr(35) }}</td>
                                     <td>{{ proposal.state | proposal_state_name }}</td>
                                     <td>
