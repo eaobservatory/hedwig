@@ -290,6 +290,10 @@ class DBPeopleTest(DBTestCase):
         with self.assertRaisesRegex(UserError, 'does not appear to be valid'):
             self.db.add_email(person_id, 'A B <a.b@c.d>')
 
+        # Test that we can't add a person with an invalid primary email.
+        with self.assertRaisesRegex(UserError, 'does not appear to be valid'):
+            self.db.add_person('Invalid Email', primary_email='@z')
+
         # Test person_id existance checking.
         with self.assertRaisesRegex(ConsistencyError,
                                     '^person does not exist'):
