@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017 East Asian Observatory
+# Copyright (C) 2016-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,10 +18,12 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from codecs import ascii_decode
 from datetime import datetime
+import re
 
-from hedwig.compat import byte_type
-from hedwig.email.send import MIMETextFlowed, quitting, _prepare_email_message
+from hedwig.compat import byte_type, python_version
+from hedwig.email.send import quitting, _prepare_email_message
 from hedwig.type.enum import MessageThreadType
 from hedwig.type.collection import MessageRecipientCollection
 from hedwig.type.simple import Message, MessageRecipient
@@ -53,9 +55,50 @@ class EmailSendTestCase(DummyConfigTestCase):
     def test_text_flowed(self):
         """Test the `MIMETextFlowed` class."""
 
+        if not python_version < 3:
+            self.skipTest('test only for Python 2')
+
+        from hedwig.email.send import MIMETextFlowed
+
         msg = MIMETextFlowed('test message')
         self.assertEqual(sorted(msg['Content-type'].split('; ')),
                          ['charset="utf-8"', 'format="flowed"', 'text/plain'])
+
+    def test_address_header(self):
+        """Test the `_prepare_address_header` function."""
+
+        if not python_version < 3:
+            self.skipTest('test only for Python 2')
+
+        from hedwig.email.send import _prepare_address_header
+
+        printable = re.compile(r'^[ !-~]*$')
+
+        def _header_valid(header):
+            self.assertIsInstance(header, byte_type)
+            # Should raise UnicodeDecodeError if header is not ASCII:
+            decoded = ascii_decode(header)[0]
+            self.assertTrue(
+                printable.match(decoded),
+                'header \'{}\' is printable'.format(decoded))
+
+        header = _prepare_address_header((('name', 'email@address'),))
+        _header_valid(header)
+        self.assertEqual(header, b'"name" <email@address>')
+
+        header = _prepare_address_header((('N \\ " E', 'email@address'),))
+        _header_valid(header)
+        self.assertEqual(header, b'"N \\\\ \\" E" <email@address>')
+
+        header = _prepare_address_header((('n\u00e1zev', 'email@address'),))
+        _header_valid(header)
+        self.assertEqual(header, b'=?utf-8?q?n=C3=A1zev?= <email@address>')
+
+        header = _prepare_address_header((
+            ('1', 'a@b'), ('2', 'c@d'), ('3', 'e@f'),
+        ))
+        _header_valid(header)
+        self.assertEqual(header, b'"1" <a@b>, "2" <c@d>, "3" <e@f>')
 
     def test_prepare_message(self):
         """Test the `_prepare_email_message` function."""
@@ -93,10 +136,13 @@ class EmailSendTestCase(DummyConfigTestCase):
              b'Content-Type: text/plain; format="flowed"; charset="utf-8"'),
             b'MIME-Version: 1.0',
             b'Content-Transfer-Encoding: base64',
-            b'Subject: =?utf-8?q?Message_exp=C3=A9rimental?=',
+            (b'Subject: =?utf-8?q?Message_exp=C3=A9rimental?=',
+             b'Subject: Message =?utf-8?q?exp=C3=A9rimental?='),
             b'Date: Wed, 01 Apr 2015 00:00:00 +0000',
-            b'From: =?utf-8?q?Hedwig_Pr=C3=BCfung_=3Chedwig=40test=3E?=',
-            (b'To: =?utf-8?b?UGVyc29vbiDDqcOpbiA8b25lQHRlc3Q+?=',
+            (b'From: =?utf-8?q?Hedwig_Pr=C3=BCfung?= <hedwig@test>',
+             b'From: Hedwig =?utf-8?q?Pr=C3=BCfung?= <hedwig@test>'),
+            (b'To: =?utf-8?q?Persoon_=C3=A9=C3=A9n?= <one@test>',
+             b'To: Persoon =?utf-8?b?w6nDqW4=?= <one@test>',
              b'To: =?utf-8?b?UGVyc29vbiDDqcOpbg==?= <one@test>'),
             b'Message-ID: test-msg-1',
             b'In-Reply-To: test-ref-2',
@@ -104,8 +150,13 @@ class EmailSendTestCase(DummyConfigTestCase):
             b'X-Hedwig-ID: 1234',
             b'X-Hedwig-Thread: prop_stat 5678',
             b'',
-            b'Qydlc3QgdW4gbWVzc2FnZSBleHDDqXJpbWVudGFsLg==',
+            (b'Qydlc3QgdW4gbWVzc2FnZSBleHDDqXJpbWVudGFsLg==',
+             b'Qydlc3QgdW4gbWVzc2FnZSBleHDDqXJpbWVudGFsLgo='),
             b'']
+
+        # Python 3 seems to put Content-Transfer-Encoding first.
+        if not python_version < 3:
+            msg_expect.insert(0, msg_expect.pop(2))
 
         self.assertEqual(len(msg_lines), len(msg_expect))
 

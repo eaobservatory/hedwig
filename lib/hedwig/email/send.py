@@ -18,37 +18,38 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import OrderedDict
 from contextlib import closing, contextmanager
-from email.header import Header
-from email.mime.nonmultipart import MIMENonMultipart
-from email.utils import formataddr, make_msgid
+from email.utils import parseaddr, make_msgid
 from io import BytesIO
 import socket
 from smtplib import SMTP, SMTPException
 
-try:
-    from email.generator import BytesGenerator
-except ImportError:
-    from email.generator import Generator as BytesGenerator
+from ..compat import python_version, unicode_to_str
+from ..config import get_config
+from ..error import FormattedError
+from ..type.enum import MessageThreadType
+from ..type.simple import MessageRecipient
+from ..type.util import null_tuple
+from ..util import get_logger
 
-try:
-    from email.utils import format_datetime as _format_datetime
-    from datetime import timezone
-
-    def format_datetime(dt):
-        # Only Python 3 has datetime.timezone, so we have to do this here
-        # rather than in the main code.
-        return _format_datetime(dt.replace(tzinfo=timezone.utc))
-
-except ImportError:
-    from email.utils import formatdate
+if python_version < 3:
     from calendar import timegm
-    from email.charset import add_charset, QP, BASE64
+    from codecs import ascii_encode, utf_8_encode
+    from email.charset import Charset, add_charset, QP, BASE64
+    from email.generator import Generator as BytesGenerator
+    from email.header import Header
+    from email.mime.nonmultipart import MIMENonMultipart
+    from email.utils import formatdate
+    import re
 
     # Override "header_enc" method for UTF-8 to use quoted printable
     # because the default (SHORTEST) may choose BASE64 which seems to
     # ignore the maxlinelen parameter.
     add_charset(b'utf-8', QP, BASE64, b'utf-8')
+    charset_utf_8 = Charset(b'utf-8')
+
+    non_qtext = re.compile(r'[\\"]')
 
     def format_datetime(dt):
         result = formatdate(timegm(dt.utctimetuple()))
@@ -58,11 +59,47 @@ except ImportError:
             result = result[:-5] + '+0000'
         return result
 
-from ..compat import unicode_to_str
-from ..config import get_config
-from ..error import FormattedError
-from ..type.enum import MessageThreadType
-from ..util import get_logger
+    def _prepare_email_message_bytes(*args, **kwargs):
+        return _prepare_email_message_py2(*args, **kwargs)
+
+    class MIMETextFlowed(MIMENonMultipart):
+        """
+        MIME message class for flowed text.
+        """
+
+        def __init__(self, text, charset='utf-8'):
+            """
+            Based on email.mime.text.MIMEText but adds format=flowed
+            to the content type.  Also defaults to UTF-8.
+            """
+
+            MIMENonMultipart.__init__(
+                self, 'text', 'plain', charset=charset, format='flowed')
+            self.set_payload(text, charset)
+
+        def __setitem__(self, name, val):
+            """
+            Overridden `__setitem__` method to ensure header names are
+            native strings.  Note: we don't currently use `add_header`
+            so we don't provide an overridden version of it.
+            """
+
+            MIMENonMultipart.__setitem__(self, unicode_to_str(name), val)
+
+else:
+    from datetime import timezone
+    from email.message import EmailMessage
+    from email.generator import BytesGenerator
+    from email.headerregistry import Address
+    from email.policy import EmailPolicy
+
+    policy = EmailPolicy().clone(
+        cte_type='7bit',
+    )
+
+    def _prepare_email_message_bytes(*args, **kwargs):
+        return _prepare_email_message_py3(*args, **kwargs)
+
 
 logger = get_logger(__name__)
 
@@ -80,31 +117,6 @@ def quitting(smtp):
         yield smtp
     finally:
         smtp.quit()
-
-
-class MIMETextFlowed(MIMENonMultipart):
-    """
-    MIME message class for flowed text.
-    """
-
-    def __init__(self, text, charset='utf-8'):
-        """
-        Based on email.mime.text.MIMEText but adds format=flowed
-        to the content type.  Also defaults to UTF-8.
-        """
-
-        MIMENonMultipart.__init__(self, 'text', 'plain',
-                                  charset=charset, format='flowed')
-        self.set_payload(text, charset)
-
-    def __setitem__(self, name, val):
-        """
-        Overridden `__setitem__` method to ensure header names are
-        native strings.  Note: we don't currently use `add_header`
-        so we don't provide an overridden version of it.
-        """
-
-        MIMENonMultipart.__setitem__(self, unicode_to_str(name), val)
 
 
 def send_email_message(message, dry_run=False):
@@ -158,12 +170,7 @@ def _prepare_email_message(message, from_, identifier=None, maxheaderlen=None):
     independently of actual message sending.
     """
 
-    header_kwargs = {}
-    generator_kwargs = {}
-    if maxheaderlen is not None:
-        header_kwargs['maxlinelen'] = maxheaderlen
-        header_kwargs['charset'] = 'utf-8'
-        generator_kwargs['maxheaderlen'] = maxheaderlen
+    (from_name, from_address) = parseaddr(from_)
 
     # Collect recipients in the ("to") list based on their public setting
     # unless there is only one recipient, in which case there's no
@@ -175,37 +182,131 @@ def _prepare_email_message(message, from_, identifier=None, maxheaderlen=None):
     for recipient in message.recipients.values():
         recipients_plain.append(recipient.email_address)
         if single_recipient or recipient.email_public:
-            recipients_public.append(formataddr((recipient.person_name,
-                                                 recipient.email_address)))
+            recipients_public.append(
+                (recipient.person_name, recipient.email_address))
 
     # Generate message identifier if one has not been provided.
     if identifier is None:
         identifier = make_msgid('{}'.format(message.id))
 
-    # Construct message.
-    msg = MIMETextFlowed(message.body)
+    # Prepare extra header values.
+    extra_headers = OrderedDict()
 
-    msg['Subject'] = Header(message.subject, **header_kwargs)
-    msg['Date'] = Header(format_datetime(message.date), **header_kwargs)
-    msg['From'] = Header(from_, **header_kwargs)
-    msg['To'] = Header(', '.join(recipients_public), **header_kwargs)
-    msg['Message-ID'] = Header(identifier, **header_kwargs)
+    extra_headers['Message-ID'] = identifier
     if message.thread_identifiers:
         # Currently set this to the last message in the thread,
         # to create a nested thread structure.
         # Alternatively could set "In-Reply-To" to be the first message
         # in the thread to make a thread with a flat structure.
-        msg['In-Reply-To'] = Header(message.thread_identifiers[-1], **header_kwargs)
-        msg['References'] = Header(' '.join(message.thread_identifiers), **header_kwargs)
+        extra_headers['In-Reply-To'] = message.thread_identifiers[-1]
+        extra_headers['References'] = ' '.join(message.thread_identifiers)
 
-    # Add Hedwig-specific headers to aid in dealing with bounce messages.
-    msg['X-Hedwig-ID'] = '{}'.format(message.id)
+    extra_headers['X-Hedwig-ID'] = '{}'.format(message.id)
     if (message.thread_id is not None) and (message.thread_type is not None):
-        msg['X-Hedwig-Thread'] = '{} {}'.format(
+        extra_headers['X-Hedwig-Thread'] = '{} {}'.format(
             MessageThreadType.url_path(message.thread_type), message.thread_id)
+
+    msg = _prepare_email_message_bytes(
+        message=message,
+        from_=null_tuple(MessageRecipient)._replace(
+            person_name=from_name, email_address=from_address),
+        recipients=recipients_public,
+        extra_headers=extra_headers,
+        maxheaderlen=maxheaderlen)
+
+    return (identifier, msg, recipients_plain)
+
+
+def _prepare_email_message_py3(
+        message, from_, recipients, extra_headers, maxheaderlen):
+    """
+    Generate email message using the "new" EmailMessage API.
+    """
+
+    generator_kwargs = {}
+    if maxheaderlen is not None:
+        generator_kwargs['maxheaderlen'] = maxheaderlen
+
+    msg = EmailMessage(policy=policy)
+
+    msg.set_content(
+        message.body, charset='utf-8', cte='base64',
+        params={'format': 'flowed'})
+
+    msg['Subject'] = message.subject
+    msg['Date'] = message.date.replace(tzinfo=timezone.utc)
+    msg['From'] = Address(
+        display_name=from_.person_name, addr_spec=from_.email_address)
+    msg['To'] = [
+        Address(display_name=person_name, addr_spec=email_address)
+        for (person_name, email_address) in recipients]
+
+    for (extra_header, header_value) in extra_headers.items():
+        msg[extra_header] = header_value
 
     with closing(BytesIO()) as f:
         BytesGenerator(f, mangle_from_=False, **generator_kwargs).flatten(msg)
         msg = f.getvalue()
 
-    return (identifier, msg, recipients_plain)
+    return msg
+
+
+def _prepare_email_message_py2(
+        message, from_, recipients, extra_headers, maxheaderlen):
+    """
+    Generate email message using the email.mime package found in Python 2.
+    """
+
+    header_kwargs = {}
+    generator_kwargs = {}
+    if maxheaderlen is not None:
+        header_kwargs['maxlinelen'] = maxheaderlen
+        header_kwargs['charset'] = 'utf-8'
+        generator_kwargs['maxheaderlen'] = maxheaderlen
+
+    msg = MIMETextFlowed(message.body)
+
+    msg['Subject'] = Header(message.subject, **header_kwargs)
+    msg['Date'] = Header(format_datetime(message.date), **header_kwargs)
+    msg['From'] = _prepare_address_header(
+        ((from_.person_name, from_.email_address),))
+    msg['To'] = _prepare_address_header(recipients)
+
+    for (extra_header, header_value) in extra_headers.items():
+        msg[extra_header] = Header(header_value, **header_kwargs)
+
+    with closing(BytesIO()) as f:
+        BytesGenerator(f, mangle_from_=False, **generator_kwargs).flatten(msg)
+        msg = f.getvalue()
+
+    return msg
+
+
+def _prepare_address_header(names_addresses):
+    """
+    Encode an email address header ('From' or 'To') with the given names and
+    addresses.  The addresses must be ASCII and will be enclosed in angle
+    brackets.  The names will be enclosed in double quotes if ASCII or
+    encoded as quoted printable otherwise.
+    """
+
+    encoded = []
+
+    for (name, address) in names_addresses:
+        try:
+            name_ascii = ascii_encode(name)[0]
+            name_encoded = b'"{}"'.format(
+                non_qtext.sub(r'\\\g<0>', name_ascii))
+        except UnicodeEncodeError:
+            name_encoded = charset_utf_8.header_encode(utf_8_encode(name)[0])
+
+        try:
+            address_encoded = ascii_encode(address)[0]
+        except UnicodeEncodeError:
+            raise FormattedError(
+                'Could not prepare email message because address "{}" could '
+                'not be encoded as ASCII.', address)
+
+        encoded.append(b'{} <{}>'.format(name_encoded, address_encoded))
+
+    return b', '.join(encoded)

@@ -42,7 +42,7 @@ For more information about using Flask-based applications
 Requirements
 ~~~~~~~~~~~~
 
-Hedwig requires Python 2.7, or Python 3, version 3.4 or later.
+Hedwig requires Python 2.7, or Python 3, version 3.6 or later.
 
 The following Python modules should be installed:
 
