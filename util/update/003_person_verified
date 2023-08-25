@@ -13,7 +13,7 @@ from hedwig.db.meta import email, person, user_log
 from hedwig.type.enum import UserLogEvent
 from hedwig.util import get_logger
 
-logger = get_logger('update_message_state')
+logger = get_logger('set_person_verified')
 
 
 def main():
