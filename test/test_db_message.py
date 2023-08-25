@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -248,6 +248,12 @@ class DBMessageTest(DBTestCase):
         self.db.add_email(person_3, '3@a', primary=True, public=False)
         self.db.add_email(person_3, '3@b', primary=False, public=True)
         self.db.add_email(person_3, '3@c', primary=False, public=False)
+
+        # Try setting an invalid specific email address.
+        with self.assertRaisesRegex(Error, 'does not appear to be valid'):
+            self.db.add_message(
+                'test invalid address', 'test message',
+                [person_1], ['@xyz'])
 
         # Create test message, giving specific email addresses.
         message_id = self.db.add_message('test', 'test message',

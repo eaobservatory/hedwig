@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -29,6 +29,7 @@ from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_, case, column, not_
 from sqlalchemy.sql.functions import coalesce
 
+from ...email.util import is_valid_email
 from ...error import ConsistencyError, Error, FormattedError, \
     NoSuchRecord, MultipleRecords
 from ...type.collection import ResultCollection, MessageRecipientCollection
@@ -50,6 +51,12 @@ class MessagePart(object):
         then it can be a list with email addresses in the same order as the
         person_ids list.
         """
+
+        for email_address in email_addresses:
+            if not is_valid_email(email_address):
+                raise FormattedError(
+                    'email address "{}" does not appear to be valid',
+                    email_address)
 
         if thread_type is not None:
             if not MessageThreadType.is_valid(thread_type):
