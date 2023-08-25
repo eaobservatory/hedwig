@@ -1,4 +1,4 @@
-# Copyright (C) 2018 East Asian Observatory
+# Copyright (C) 2018-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -17,11 +17,13 @@
 
 import re
 
-
-# Basic email address validation pattern.  This is not entirely correct
-# but is just intended to detect cases where something other than an email
-# address has been entered (such as a "Name <address>" specification).
-valid_email_address = re.compile(r'^\S+@\S+')
+# Basic email address validation pattern, based on the dot-atom "@" dot-atom
+# form given in RFC2822.
+# Note: atext is all printable ASCII except space and specials: ()<>[]:;@\,."
+_atext = r'[-A-Za-z0-9!#$%&\'*+/=?^_`{|}~]'
+_dot_atom_text = _atext + r'+(\.' + _atext + r'+)*'
+valid_email_address = re.compile(
+    r'^' + _dot_atom_text + r'@' + _dot_atom_text + r'$')
 
 
 def is_valid_email(address):

@@ -4,6 +4,17 @@ Updates Requiring Intervention
 The `util/update` directory contains scripts to assist with updates
 to the Hedwig database which cannot be handled automatically by `Alembic`.
 
+* 2023-08-24: New email validation check
+
+  The regular expression used to check that email addresses are valid
+  has been updated to be more specific.  You may check whether all
+  addresses would still be considered valid as follows:
+
+  * Run the `util/update/005_check_email` script to look for existing
+    database entries which do not match the new pattern.
+
+  * Adjust or remove any invalid addresses via the web interface.
+
 * 2023-05-04: Addition of sort_order column to prev_proposal table
 
   A `sort_order` column has been added to the `prev_proposal` table to

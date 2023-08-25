@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
+
+import logging
+
+from hedwig.config import get_database
+from hedwig.email.util import is_valid_email
+from hedwig.util import get_logger
+
+logger = get_logger('check_email_addresses')
+
+
+def main():
+    logging.basicConfig(level=logging.DEBUG)
+
+    db = get_database()
+
+    n_invalid = 0
+    for (id_, record) in db.search_email(person_id=None).items():
+        assert(id_ == record.id)
+        if not is_valid_email(record.address):
+            n_invalid += 1
+            logger.info('Invalid adddress: {!r}', record)
+
+    logger.info('Number of invalid addresses found: {}', n_invalid)
+
+
+if __name__ == '__main__':
+    main()
