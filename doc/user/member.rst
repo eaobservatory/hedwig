@@ -30,14 +30,14 @@ Invite a New Member to the Proposal
     you are responsible for entering their details
     (name, email address and institution) correctly.
     You will be able to edit this information
-    (until the person accepts the invitation)
+    (until the person applies the invitation to their account)
     by clicking on their name in the proposal member list.
     If you need to re-send the invitation email,
     for example after correcting the person's email address,
     you can use the "Re-send invitation" link in the member list.
 
-    Once the new member has registered for an account and
-    accepted the invitation, only they will be able to edit their profile.
+    Once the new member has registered for an account,
+    using their invitation, only they will be able to edit their profile.
 
 **Note:** if you give give someone permission to edit the proposal they
 will have exactly the same editing privileges as you.

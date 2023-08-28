@@ -1,4 +1,4 @@
-Accepting an Invitation
+Receiving an Invitation
 =======================
 
 If someone adds you to their proposal, you may receive
@@ -31,8 +31,8 @@ been entered by the person who invited you to their proposal.
 Then you will see a page giving the details of the invitation
 you have received.
 Don't worry if the details aren't quite right --- you will be
-able to edit your profile after accepting the invitation.
-Press the "Accept invitation" button to continue.
+able to edit your profile after applying the invitation to your account.
+Press the "Apply invitation to account" button to continue.
 
 .. image:: image/invitation_accept.png
 
@@ -61,10 +61,10 @@ If you find that you have been added as a member of a proposal
 with which you do not wish to be involved,
 you can remove yourself as follows:
 
-1. Accept the invitation normally as described above.
+1. Apply the invitation to your account normally as described above.
 
 2. Go to the proposal view page.  Normally you will be redirected
-   to this page on accepting an invitation --- otherwise you can
+   to this page on applying an invitation to your account --- otherwise you can
    find it from the "Your proposals" page.
 
 3. You can then read the proposal to ensure you do not wish to

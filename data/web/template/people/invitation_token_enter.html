@@ -8,18 +8,18 @@
     If you have received an invitation code for this system,
     please enter it here.
     {% if current_user.user is not none %}
-        Since you are already logged in, the invitation will be added
+        Since you are already logged in, the invitation will be applied
         to your existing account.
         On the next page
     {% else %}
         The next page will allow you to log in or register for
         a new account.
         If you already have an account, please log in using that account,
-        and the invitation will be added to it.
+        and the invitation will be applied to it.
         Once you have logged in
     {% endif %}
     you will be able to view the details of the invitation
-    and choose whether to accept it.
+    and choose whether to apply it to your account.
 </p>
 
 <form method="GET" action="{{ url_for('.invitation_token_accept') }}">

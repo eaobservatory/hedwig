@@ -1569,7 +1569,7 @@ class PeopleView(object):
 
                 old_person_record = db.use_invitation(
                     token, remote_addr=remote_addr, **kwargs)
-                flash('The invitation has been accepted successfully.')
+                flash('The invitation has been applied to your account.')
                 person = db.search_person(user_id=user_id).get_single()
 
                 target = self._determine_invitee_target(
@@ -1607,7 +1607,7 @@ class PeopleView(object):
                             'to a proposal of which you are already a member?')
 
         return {
-            'title': 'Accept Invitation',
+            'title': 'Apply Invitation to Account',
             'token': token,
             'person': person,
         }

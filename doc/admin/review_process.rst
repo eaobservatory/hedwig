@@ -94,7 +94,7 @@ If you invite someone to register via name and email address,
 please remember to select their institution on the
 next page.
 This will prevent the system from having to prompt them
-for their institution when they accept the invitation.
+for their institution when they apply the invitation to their account.
 
 In either case the person will be sent an email to inform
 them that they have been invited to review the proposal.

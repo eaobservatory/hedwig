@@ -6,7 +6,7 @@
 
 <p>
     The details of this invitation are shown below.
-    Please do not accept if the invitation appears
+    Please do not apply it to your account if the invitation appears
     not to refer to you.
     If you have been invited to a proposal but do not
     wish to be involved,
@@ -21,7 +21,7 @@
         so do not worry if these details are not entirely correct.
     {% else %}
         These details will be the basis for your new profile.
-        After accepting the invitation,
+        After applying the invitation to your account,
         you will be able to edit everything
         on your profile page,
         which you can get to by clicking your name
@@ -58,7 +58,7 @@
 <form method="POST" action="{{ url_for('.invitation_token_accept') }}">
     <p>
         <input type="hidden" name="token" value="{{ token }}" />
-        <input type="submit" value="Accept invitation" name="submit_accept" />
+        <input type="submit" value="Apply invitation to account" name="submit_accept" />
     </p>
 </form>
 

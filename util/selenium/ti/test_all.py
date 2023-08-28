@@ -1238,7 +1238,7 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element_by_name('submit_accept').click()
 
         self.assertIn(
-            'The invitation has been accepted successfully.',
+            'The invitation has been applied to your account.',
             self.browser.page_source)
 
     def remove_self(self):

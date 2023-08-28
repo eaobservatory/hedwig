@@ -16,7 +16,7 @@ Technical feasibility is assessed separately by JCMT personnel.
 Completing the Review
 ---------------------
 
-After :doc:`accepting your invitation <invitation>`
+After :doc:`entering an invitation code <invitation>`
 or from :doc:`your review list <review_list>`
 you can view the proposal and :doc:`edit your review <external>`.
 You may 'Save' your report at any time, and any number of times.
