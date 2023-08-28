@@ -42,8 +42,14 @@ inactive for a long time.
 
 The system will then send a message including a verification code
 to your email address.  Click the "Send code" button to begin
-this process.  When you receive the code, you can copy and
+this process.
+
+.. image:: image/email_verify_get.png
+
+When you receive the code, you can copy and
 paste it into the box on the following page.
+
+.. image:: image/email_verify_use.png
 
 Finally you should select the institution with which you are
 affiliated.  Please check the menu of institutions which are
