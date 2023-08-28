@@ -33,6 +33,7 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from selenium.common.exceptions import NoSuchElementException
 from sqlalchemy.sql import select
+import werkzeug.serving
 
 from hedwig import auth
 from hedwig.admin.proposal import close_call_proposals
@@ -57,6 +58,7 @@ class DummyServer(Thread):
     def __init__(self, db):
         Thread.__init__(self)
         self.app = create_web_app(db=db)
+        self.server = None
 
         log_handler = logging.StreamHandler()
         log_handler.setLevel(logging.WARNING)
@@ -64,10 +66,19 @@ class DummyServer(Thread):
 
         @self.app.route('/shutdown')
         def shutdown():
-            request.environ['werkzeug.server.shutdown']()
+            # Shut down server as werkzeug.server.shutdown used to:
+            self.server._BaseServer__shutdown_request = True
             return make_response('')
 
     def run(self):
+        # Patch werkzeug.serving.make_server to save a reference
+        # to the server so that we can shut it down when needed.
+        make_server_orig = werkzeug.serving.make_server
+        def make_server_save(*args, **kwargs):
+            self.server = make_server_orig(*args, **kwargs)
+            return self.server
+        werkzeug.serving.make_server = make_server_save
+
         self.app.run(host='127.0.0.1', port=11111,
                      debug=False, use_reloader=False)
 
