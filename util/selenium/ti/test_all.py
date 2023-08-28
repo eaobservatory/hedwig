@@ -27,7 +27,9 @@ from time import sleep
 from flask import request, make_response
 from PIL import Image
 from selenium import webdriver
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions
@@ -104,8 +106,9 @@ class IntegrationTest(DummyConfigTestCase):
                                      allow_multi_threaded=True)
         self.server = DummyServer(self.db)
 
-        self.browser = webdriver.Firefox(
-            firefox_binary=FirefoxBinary(config.get('utilities', 'firefox')))
+        options = Options()
+        options.binary = FirefoxBinary(config.get('utilities', 'firefox'))
+        self.browser = webdriver.Firefox(options=options)
         self.browser.set_window_size(1200, 800)
 
         self.server.start()
@@ -2007,6 +2010,15 @@ class IntegrationTest(DummyConfigTestCase):
             By.LINK_TEXT, 'View detailed tabulation').click()
 
         decision_link = self.browser.find_element(By.ID, 'decision_1_link')
+
+        # We need to ensure `decision_link` is visible so that we can
+        # click it: turn off stickyTableHeaders and scroll down a bit.
+        # (It would be nice to be able to use scroll_to_element(decision_link)
+        # but that currently only works if the element is already in view.)
+        self.browser.execute_script(
+            '$("table#tabulation").stickyTableHeaders("destroy");')
+        ActionChains(self.browser).scroll_by_amount(0, 200).perform()
+
         self._save_screenshot(self.admin_image_root, 'review_tabulation',
                               [decision_link])
 
@@ -2398,7 +2410,7 @@ class IntegrationTest(DummyConfigTestCase):
         path_small = os.path.join(path, name + '.png')
         path_large = os.path.join(path, name + '_large.png')
 
-        self.browser.save_screenshot(path_large)
+        self.browser.save_full_page_screenshot(path_large)
 
         im = Image.open(path_large)
 
