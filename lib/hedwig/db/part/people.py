@@ -432,7 +432,7 @@ class PeoplePart(object):
         is performed.  Additionally if more that 10 minutes of the
         token's duration has elapsed, its expiry date is refreshed.
 
-        :return: a (`CurrentUser`, `auth_token_id`) tuple
+        :return: a (`UserInfo`, `auth_token_id`) tuple
         """
 
         select_columns = [
