@@ -17,6 +17,9 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from contextlib import contextmanager
+
+from flask import g as flask_g
 from werkzeug.test import create_environ
 
 from ..compat import first_value
@@ -24,7 +27,8 @@ from ..config import get_facilities
 from ..error import FormattedError, NoSuchValue
 from ..file.pdf import pdf_merge
 from ..type.enum import GroupType
-from ..view.people import _update_session_user
+from ..type.simple import CurrentUser, UserInfo
+from ..type.util import null_tuple
 from .write import PDFWriter
 
 
@@ -84,7 +88,43 @@ class PDFWriterFlask(PDFWriter):
         # Request and return the PDF.
         return self._request_pdf(url, person_id)
 
-    def _prepare_environ(self, person_id=None, session_extra=None):
+    @contextmanager
+    def _fixed_auth(self, person_id):
+        """
+        Prepare fixed log-in information by temporarily setting a
+        `before_request` function to place a fixed `current_user`
+        object in the flask `g` object.
+        """
+
+        # Make sure there are no "before_request" functions, since we
+        # will clear them later -- `create_web_app` should have been called
+        # using: without_auth=True.
+        assert (not self.app.before_request_funcs), 'no before_request func.'
+
+        user = None
+        person = None
+        if person_id is not None:
+            person = self.db.get_person(person_id)
+            user = null_tuple(UserInfo)._replace(id=person.user_id)
+
+        current_user = CurrentUser(
+            user=user,
+            person=person,
+            is_admin=False,
+            auth_token_id=None)
+
+        try:
+            @self.app.before_request
+            def apply_fixed_auth():
+                flask_g.current_user = current_user
+
+            yield
+
+        finally:
+            # Remove our fixed log-in "before_request" function.
+            self.app.before_request_funcs.clear()
+
+    def _prepare_environ(self, session_extra=None):
         """
         Prepare a request environment.
 
@@ -92,20 +132,13 @@ class PDFWriterFlask(PDFWriter):
         entries to be added to the session.
         """
 
-        person = None
-        if person_id is not None:
-            person = self.db.get_person(person_id)
-
         environ = create_environ(path='/', base_url=self.base_url)
 
-        if (person is not None) or (session_extra is not None):
-            # Emulate logging in as the given person and set the given
-            # session values, then add the session cookie to the environment.
+        if session_extra is not None:
+            # Set the given session values, then add the session cookie
+            # to the environment.
             with self.app.test_client() as client:
                 with client.session_transaction() as sess:
-                    if person is not None:
-                        _update_session_user(person.user_id, sess=sess)
-
                     if session_extra is not None:
                         sess.update(session_extra)
 

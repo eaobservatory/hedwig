@@ -335,7 +335,7 @@ def get_pdf_writer(db=None, app=None):
 
     if app is None:
         from hedwig.web.app import create_web_app
-        app = create_web_app(db=db, without_logger=True)
+        app = create_web_app(db=db, without_logger=True, without_auth=True)
 
     return _get_pdf_writer(db, app)
 

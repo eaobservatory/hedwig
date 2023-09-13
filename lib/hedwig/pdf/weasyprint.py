@@ -43,7 +43,6 @@ class PDFWriterWeasyPrint(PDFWriterFlask):
             session_extra['allow_section'] = True
 
         environ = self._prepare_environ(
-            person_id=person_id,
             session_extra=session_extra)
 
         # Set up additional stylesheets.
@@ -51,7 +50,7 @@ class PDFWriterWeasyPrint(PDFWriterFlask):
         stylesheets.append(CSS(string='@page {size: letter;}'))
 
         # Perform the request to generate the PDF using WeasyPrint.
-        with self.app.request_context(environ):
+        with self._fixed_auth(person_id), self.app.request_context(environ):
             if not section:
                 return FWP_HTML(url).write_pdf(stylesheets=stylesheets)
 
