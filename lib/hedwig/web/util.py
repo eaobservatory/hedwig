@@ -443,11 +443,12 @@ def require_session_option(option):
                 '@require_session_option applied after @require_auth')
 
         @functools.wraps(f)
-        def decorated_function(*args, **kwargs):
-            if not session.get(option, False):
+        def decorated_function(current_user, *args, **kwargs):
+            if not ((current_user.options is not None)
+                    and current_user.options.get(option, False)):
                 raise HTTPForbidden('Request not permitted in this context.')
 
-            return f(*args, **kwargs)
+            return f(current_user, *args, **kwargs)
 
         return decorated_function
 
@@ -718,7 +719,7 @@ def check_current_user(db):
 
     flask_g.current_user = CurrentUser(
         user=user, person=person, is_admin=is_admin,
-        auth_token_id=auth_token_id)
+        auth_token_id=auth_token_id, options={})
 
 
 def _url_manipulation(f):

@@ -155,7 +155,7 @@
             {% block science_case_content %}
                 {% if sci_case.text is not none %}
                     {{ sci_case.text | format_text }}
-                    {{ render_proposal_figures(sci_case.fig, proposal.id, sci_case.role) }}
+                    {{ render_proposal_figures(sci_case.fig, proposal.id, sci_case.role, pdf_as_svg=current_user.options.pdf_as_svg) }}
                 {% elif sci_case.pdf is not none %}
                     {{ render_proposal_pdf(sci_case.pdf, proposal.id, sci_case.role) }}
                 {% else %}
@@ -380,7 +380,7 @@
             {% block technical_case_content %}
             {% if tech_case.text is not none %}
                 {{ tech_case.text | format_text }}
-                {{ render_proposal_figures(tech_case.fig, proposal.id, tech_case.role) }}
+                {{ render_proposal_figures(tech_case.fig, proposal.id, tech_case.role, pdf_as_svg=current_user.options.pdf_as_svg) }}
             {% elif tech_case.pdf is not none %}
                 {{ render_proposal_pdf(tech_case.pdf, proposal.id, tech_case.role) }}
             {% else %}

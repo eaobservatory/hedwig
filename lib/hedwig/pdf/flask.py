@@ -89,11 +89,14 @@ class PDFWriterFlask(PDFWriter):
         return self._request_pdf(url, person_id)
 
     @contextmanager
-    def _fixed_auth(self, person_id):
+    def _fixed_auth(self, person_id, session_options={}):
         """
         Prepare fixed log-in information by temporarily setting a
         `before_request` function to place a fixed `current_user`
         object in the flask `g` object.
+
+        If `session_options` is provided, it should be a dictionary of extra
+        information to include in the `current_user` object.
         """
 
         # Make sure there are no "before_request" functions, since we
@@ -111,7 +114,8 @@ class PDFWriterFlask(PDFWriter):
             user=user,
             person=person,
             is_admin=False,
-            auth_token_id=None)
+            auth_token_id=None,
+            options=session_options)
 
         try:
             @self.app.before_request
@@ -124,26 +128,11 @@ class PDFWriterFlask(PDFWriter):
             # Remove our fixed log-in "before_request" function.
             self.app.before_request_funcs.clear()
 
-    def _prepare_environ(self, session_extra=None):
+    def _prepare_environ(self):
         """
         Prepare a request environment.
-
-        If session_extra is provided, it should be a dictionary of extra
-        entries to be added to the session.
         """
 
         environ = create_environ(path='/', base_url=self.base_url)
-
-        if session_extra is not None:
-            # Set the given session values, then add the session cookie
-            # to the environment.
-            with self.app.test_client() as client:
-                with client.session_transaction() as sess:
-                    if session_extra is not None:
-                        sess.update(session_extra)
-
-                environ['HTTP_COOKIE'] = '; '.join(map(
-                    lambda x: '{}={}'.format(x.name, x.value),
-                    client.cookie_jar))
 
         return environ

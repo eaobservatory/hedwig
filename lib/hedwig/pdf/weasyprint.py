@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2020 East Asian Observatory.
+# Copyright (C) 2016-2023 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -35,22 +35,20 @@ logging.getLogger('weasyprint').setLevel(logging.ERROR)
 class PDFWriterWeasyPrint(PDFWriterFlask):
     def _request_pdf(self, url, person_id=None, section=False):
         # Set up request environment.
-        session_extra = {
+        session_options = {
             'pdf_as_svg': True,
         }
 
         if section:
-            session_extra['allow_section'] = True
-
-        environ = self._prepare_environ(
-            session_extra=session_extra)
+            session_options['allow_section'] = True
 
         # Set up additional stylesheets.
         stylesheets = []
         stylesheets.append(CSS(string='@page {size: letter;}'))
 
         # Perform the request to generate the PDF using WeasyPrint.
-        with self._fixed_auth(person_id), self.app.request_context(environ):
+        with self._fixed_auth(person_id, session_options=session_options), \
+                self.app.request_context(self._prepare_environ()):
             if not section:
                 return FWP_HTML(url).write_pdf(stylesheets=stylesheets)
 
