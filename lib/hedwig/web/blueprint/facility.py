@@ -951,6 +951,14 @@ def create_facility_blueprint(db, facility):
         return facility.view_review_view_figure(
             current_user, db, reviewer_id, fig_id, md5sum, 'preview')
 
+    @bp.route('/review/<int:reviewer_id>/figure/<int:fig_id>/svg/<md5sum>')
+    @require_auth()
+    @require_session_option('pdf_as_svg')
+    @send_file(fixed_type=FigureType.SVG, allow_cache=True)
+    def review_view_figure_svg(current_user, reviewer_id, fig_id, md5sum):
+        return facility.view_review_view_figure(
+            current_user, db, reviewer_id, fig_id, md5sum, 'svg')
+
     @bp.route('/review/<int:reviewer_id>/figure/manage',
               methods=['GET', 'POST'])
     @require_auth()
