@@ -107,6 +107,7 @@ autodoc_member_order = 'bysource'
 autodoc_default_flags = ['members', 'undoc-members', 'private-members']
 
 autodoc_mock_imports = [
+    'authlib',
     'backports.pbkdf2',
     'flask',
     'jcmt_itc_scuba2',
