@@ -21,6 +21,11 @@ hedwig.web.blueprint.home
 
 .. automodule:: hedwig.web.blueprint.home
 
+hedwig.web.blueprint.oauth
+--------------------------
+
+.. automodule:: hedwig.web.blueprint.oauth
+
 hedwig.web.blueprint.people
 ---------------------------
 
