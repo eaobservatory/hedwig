@@ -104,7 +104,11 @@ pygments_style = 'sphinx'
 
 autodoc_member_order = 'bysource'
 
-autodoc_default_flags = ['members', 'undoc-members', 'private-members']
+autodoc_default_options = {
+    'members': True,
+    'undoc-members': True,
+    'private-members': True,
+}
 
 autodoc_mock_imports = [
     'authlib',
