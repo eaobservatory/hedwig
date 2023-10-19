@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from flask import Markup
+from markupsafe import Markup
 
 from ..email.format import wrap_email_text
 from ..format.rst import rst_to_html

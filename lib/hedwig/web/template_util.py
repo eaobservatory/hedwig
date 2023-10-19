@@ -24,8 +24,8 @@ import json as json_module
 from operator import attrgetter
 import re
 
-from flask import Markup
 from jinja2.runtime import Undefined
+from markupsafe import Markup
 
 from ..astro.coord import CoordSystem
 from ..compat import first_value as _first_value
