@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2022 East Asian Observatory.
+# Copyright (C) 2015-2023 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -36,7 +36,18 @@ from flask import request as _flask_request
 from flask import Response as _FlaskResponse
 from werkzeug import exceptions as _werkzeug_exceptions
 from werkzeug import routing as _werkzeug_routing
-from werkzeug import urls as _werkzeug_urls
+
+try:
+    from werkzeug.urls import url_parse, url_unparse, url_decode, url_encode
+
+except ImportError:
+    from urllib.parse import urlparse as url_parse
+    from urllib.parse import urlunparse as url_unparse
+    from urllib.parse import parse_qs as _parse_qs
+    from urllib.parse import urlencode as url_encode
+
+    def url_decode(query):
+        return {k: v[0] for (k, v) in _parse_qs(query).items()}
 
 from ..compat import ExceptionWithMessage, string_type
 from ..error import NoSuchRecord, UserError
@@ -660,15 +671,14 @@ def _url_manipulation(f):
     """
     Decorator to assist in URL manipulation.
 
-    The URL is "parsed" by `_werkzeug_urls.parse_url` before being
+    The URL is "parsed" by `url_parse` before being
     passed to the decorated function and the return value is then
-    reconstructed by `_werkzeug_urls.unparse_url` afterwards.
+    reconstructed by `url_unparse` afterwards.
     """
 
     @functools.wraps(f)
     def decorated(url, *args, **kwargs):
-        return _werkzeug_urls.url_unparse(
-            f(_werkzeug_urls.url_parse(url), *args, **kwargs))
+        return url_unparse(f(url_parse(url), *args, **kwargs))
 
     return decorated
 
@@ -679,11 +689,11 @@ def url_add_args(url, **kwargs):
     Add keyword arguments to the given URL as query parameters.
     """
 
-    query = url.decode_query()
+    query = url_decode(url.query)
 
     query.update(kwargs)
 
-    return url.replace(query=_werkzeug_urls.url_encode(query, sort=True))
+    return url._replace(query=url_encode(sorted(query.items())))
 
 
 @_url_manipulation
@@ -692,4 +702,4 @@ def url_relative(url):
     Convert an URL to relative form, by removing the scheme and location.
     """
 
-    return url.replace(scheme='', netloc='')
+    return url._replace(scheme='', netloc='')
