@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -23,7 +23,14 @@ from contextlib import closing
 from io import BytesIO
 
 from PIL import Image
-from PyPDF2 import PdfFileWriter
+try:
+    from PyPDF2 import PdfWriter as PdfFileWriter
+    def pdf_blank_page(w, *args, **kwargs):
+        w.add_blank_page(*args, **kwargs)
+except ImportError:
+    from PyPDF2 import PdfFileWriter
+    def pdf_blank_page(w, *args, **kwargs):
+        w.addBlankPage(*args, **kwargs)
 
 with closing(BytesIO()) as f:
     im = Image.new('RGB', (25, 50))
@@ -37,7 +44,7 @@ with closing(BytesIO()) as f:
 
 with closing(BytesIO()) as f:
     w = PdfFileWriter()
-    w.addBlankPage(1, 1)
+    pdf_blank_page(w, 1, 1)
     w.write(f)
     example_pdf = f.getvalue()
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,8 +22,18 @@ from contextlib import closing
 from io import BytesIO
 
 from magic import Magic
-from PyPDF2 import PdfFileReader
-from PyPDF2.utils import PdfReadError
+try:
+    from PyPDF2 import PdfReader as PdfFileReader
+    def pdf_num_pages(r):
+        return len(r.pages)
+except ImportError:
+    from PyPDF2 import PdfFileReader
+    def pdf_num_pages(r):
+        return r.numPages
+try:
+    from PyPDF2.errors import PdfReadError
+except ImportError:
+    from PyPDF2.utils import PdfReadError
 
 from ..error import UserError
 from ..type.enum import FigureType
@@ -53,7 +63,7 @@ def determine_pdf_page_count(buff):
     with closing(BytesIO(buff)) as s:
         try:
             r = PdfFileReader(s)
-            return r.numPages
+            return pdf_num_pages(r)
 
         except PdfReadError:
             raise UserError('Could not read the PDF file.')
