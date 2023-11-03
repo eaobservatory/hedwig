@@ -269,7 +269,7 @@ class FigureType(EnumAllowUser):
         we wish to show the original figure directly in a proposal -- see
         the `needs_preview` method for the latter.
 
-        Currently implemented as any "image/\*" MIME type or PDF.
+        Currently implemented as any "image/\\*" MIME type or PDF.
         """
 
         return (type_ == cls.PDF or
