@@ -147,6 +147,7 @@ class AttachmentState(EnumBasic, EnumDisplayClass):
     PROCESSING = 2
     READY = 3
     ERROR = 4
+    DISCARD = 5
 
     AttachmentStateInfo = namedtuple(
         'AttachmentStateInfo',
@@ -162,6 +163,8 @@ class AttachmentState(EnumBasic, EnumDisplayClass):
             'Ready',        True,  False, 'ready')),
         (ERROR,       AttachmentStateInfo(
             'Error',        False, True,  'error')),
+        (DISCARD,     AttachmentStateInfo(
+            'Discarded',    False, False, 'discard')),
     ))
 
     @classmethod
@@ -182,13 +185,16 @@ class AttachmentState(EnumBasic, EnumDisplayClass):
         return cls._info[state].error
 
     @classmethod
-    def unready_states(cls):
+    def unready_states(cls, include_discard=True):
         """
         Return a list of states values which do not correspond to
         successfully completed processing.
         """
 
-        return [k for (k, v) in cls._info.items() if not v.ready]
+        return [
+            k for (k, v) in cls._info.items() if not (
+                v.ready
+                or (k == cls.DISCARD and not include_discard))]
 
 
 FileTypeInfo = namedtuple('FileTypeInfo',
@@ -791,6 +797,8 @@ class RequestState(AttachmentState):
             'Ready',        True,  False, 'ready',  False, False)),
         (AttachmentState.ERROR, RequestStateInfo(
             'Error',        False, True,  'error',  False, False)),
+        (AttachmentState.DISCARD, RequestStateInfo(
+            'Discarded',    False, False, 'discard', False, False)),
         (EXPIRING, RequestStateInfo(
             'Expiring',     False, False, 'proc',   False, True)),
         (EXPIRED, RequestStateInfo(
@@ -817,7 +825,7 @@ class RequestState(AttachmentState):
         return cls._info[state].expired
 
     @classmethod
-    def unready_states(cls):
+    def unready_states(cls, include_discard=True):
         """
         Return a list of states values which do not correspond to
         successfully completed processing.
@@ -827,8 +835,10 @@ class RequestState(AttachmentState):
         """
 
         return [
-            k for (k, v) in cls._info.items()
-            if not (v.ready or k == cls.EXPIRED)]
+            k for (k, v) in cls._info.items() if not (
+                v.ready
+                or k == cls.EXPIRED
+                or (k == cls.DISCARD and not include_discard))]
 
     @classmethod
     def visible_states(cls):
