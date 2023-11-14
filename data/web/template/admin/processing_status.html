@@ -91,7 +91,7 @@
             <tr>
             {% for pub in pubs %}
                 <tr>
-                    <td>{{ pub.state | attachment_state_name }}</td>
+                    <td class="{{ pub.state | attachment_state_class }}">{{ pub.state | attachment_state_name }}</td>
                     <td>{{ pub.edited | format_datetime }}</td>
                     <td><a href="{{ url_for(pub.facility_code | fmt('{}.proposal_view'), proposal_id=pub.proposal_id) }}">{{ pub.proposal.code }}</a></td>
                     <td>{{ pub.proposal.state | proposal_state_name }}</td>
@@ -126,7 +126,7 @@
             </tr>
             {% for moc in mocs %}
                     <tr>
-                    <td>{{ moc.state | attachment_state_name }}</td>
+                    <td class="{{ moc.state | attachment_state_class }}">{{ moc.state | attachment_state_name }}</td>
                     <td>{{ moc.uploaded | format_datetime }}</td>
                     <td><a href="{{ url_for(moc.facility_code | fmt('{}.tool_clash_moc_edit'), moc_id=moc.id) }}">{{ moc.name }}</a></td>
                     <td>
