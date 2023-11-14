@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2021 East Asian Observatory
+# Copyright (C) 2016-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -211,6 +211,11 @@ class TemplateUtilTestCase(WebAppTestCase):
 
         self.assertEqual(f(MessageState.UNSENT), 'Unsent')
         self.assertEqual(f(999), 'Unknown state')
+
+        f = self.app.jinja_env.filters['message_state_class']
+
+        self.assertEqual(f(MessageState.UNSENT), 'att_req_new')
+        self.assertEqual(f(999), '')
 
     def test_filter_message_thread(self):
         f = self.app.jinja_env.filters['message_thread_type_name']

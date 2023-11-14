@@ -201,6 +201,11 @@ td.att_req_error {
     background: #F88;
 }
 
+td.att_req_discard {
+    background: #DDD;
+    color: #666;
+}
+
 p.warning {
     font-weight: bold;
     background: #FAA;

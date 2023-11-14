@@ -392,7 +392,7 @@ class LogEventLevel(EnumBasic):
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
 
-class MessageState(EnumAllowUser, EnumBasic):
+class MessageState(EnumAllowUser, EnumBasic, EnumDisplayClass):
     """
     Class representing possible status values for email messages.
 
@@ -407,14 +407,14 @@ class MessageState(EnumAllowUser, EnumBasic):
     ERROR = 5
 
     StateInfo = namedtuple(
-        'StateInfo', ('name', 'resettable', 'allow_user'))
+        'StateInfo', ('name', 'resettable', 'allow_user', 'display_class'))
 
     _info = OrderedDict((
-        (UNSENT,  StateInfo('Unsent',    False, True)),
-        (SENDING, StateInfo('Sending',   True,  False)),
-        (SENT,    StateInfo('Sent',      False, False)),
-        (DISCARD, StateInfo('Discarded', False, True)),
-        (ERROR,   StateInfo('Error',     True,  False)),
+        (UNSENT,  StateInfo('Unsent',    False, True,  'new')),
+        (SENDING, StateInfo('Sending',   True,  False, 'proc')),
+        (SENT,    StateInfo('Sent',      False, False, 'ready')),
+        (DISCARD, StateInfo('Discarded', False, True,  'discard')),
+        (ERROR,   StateInfo('Error',     True,  False, 'error')),
     ))
 
 

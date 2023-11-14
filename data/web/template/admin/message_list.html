@@ -37,7 +37,7 @@
             </tr>
             {% for message in messages.values() %}
             <tr>
-                <td>
+                <td class="{{ message.state | message_state_class }}">
                     {{ message.state | message_state_name }}
                 </td>
                 <td>{{ message.date | format_datetime }}</td>

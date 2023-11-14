@@ -281,6 +281,14 @@ def register_template_utils(app):
         return _mangle_email_address(value)
 
     @app.template_filter()
+    def message_state_class(value):
+        try:
+            return 'att_req_{}'.format(
+                MessageState.get_display_class(value))
+        except KeyError:
+            return ''
+
+    @app.template_filter()
     def message_state_name(value):
         try:
             return MessageState.get_name(value)
