@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,9 +18,9 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from sqlalchemy.sql import select
 from sqlalchemy.sql.functions import count
 
+from ...db.compat import row_as_mapping, select
 from ...db.meta import call, proposal, reviewer
 from ...error import ConsistencyError, FormattedError, UserError
 from ...type.collection import ResultCollection
@@ -85,7 +85,7 @@ class JCMTPart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(jcmt_available.c.id.asc())):
-                ans[row['id']] = JCMTAvailable(**row)
+                ans[row['id']] = JCMTAvailable(**row_as_mapping(row))
 
         return ans
 
@@ -112,7 +112,7 @@ class JCMTPart(object):
         with self._transaction() as conn:
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(iter_stmt):
-                    ans[row['call_id']] = JCMTCallOptions(**row)
+                    ans[row['call_id']] = JCMTCallOptions(**row_as_mapping(row))
 
         return ans
 
@@ -139,7 +139,7 @@ class JCMTPart(object):
         with self._transaction() as conn:
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(iter_stmt):
-                    ans[row['proposal_id']] = JCMTOptions(**row)
+                    ans[row['proposal_id']] = JCMTOptions(**row_as_mapping(row))
 
         return ans
 
@@ -174,7 +174,7 @@ class JCMTPart(object):
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(
                         iter_stmt.order_by(table.c.id.asc())):
-                    ans[row['id']] = JCMTRequest(**row)
+                    ans[row['id']] = JCMTRequest(**row_as_mapping(row))
 
         return ans
 

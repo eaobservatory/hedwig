@@ -20,10 +20,9 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime, timedelta
 
-from sqlalchemy.sql import select
-
 from hedwig import auth
 from hedwig.compat import string_type
+from hedwig.db.compat import select
 from hedwig.db.meta import auth_failure, invitation, reset_token
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, UserError

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -21,7 +21,6 @@ from __future__ import absolute_import, division, print_function, \
 from datetime import datetime, timedelta
 from time import sleep
 
-from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_, exists, not_
 from sqlalchemy.sql.functions import count
 
@@ -39,6 +38,7 @@ from ...type.simple import AuthTokenInfo, Email, \
     Institution, InstitutionInfo, InstitutionLog, OAuthCode, OAuthToken, \
     Person, PersonInfo, PersonLog, SiteGroupMember, UserInfo, UserLog
 from ...util import is_list_like
+from ..compat import row_as_mapping, select
 from ..meta import auth_failure, auth_token, email, group_member, \
     institution, institution_log, \
     invitation, member, message_recipient, \
@@ -572,7 +572,7 @@ class PeoplePart(object):
             raise NoSuchRecord('institution does not exist with id={}',
                                institution_id)
 
-        return Institution(**result)
+        return Institution(**row_as_mapping(result))
 
     def get_invitation_person(self, token, *args, **kwargs):
         """
@@ -655,8 +655,9 @@ class PeoplePart(object):
             if with_reviews:
                 reviews = self.search_reviewer(person_id=person_id, _conn=conn)
 
-        return Person(email=email, institution=institution,
-                      proposals=proposals, reviews=reviews, **result)
+        return Person(
+            email=email, institution=institution,
+            proposals=proposals, reviews=reviews, **row_as_mapping(result))
 
     @require_not_none
     def get_user_id(self, user_name):
@@ -960,7 +961,7 @@ class PeoplePart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(auth_token.c.id)):
-                ans[row['id']] = AuthTokenInfo(**row)
+                ans[row['id']] = AuthTokenInfo(**row_as_mapping(row))
 
         return ans
 
@@ -984,7 +985,7 @@ class PeoplePart(object):
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(email.c.id)):
-                ans[row['id']] = Email(**row)
+                ans[row['id']] = Email(**row_as_mapping(row))
 
         return ans
 
@@ -1020,7 +1021,7 @@ class PeoplePart(object):
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(
                     institution.c.name, institution.c.department)):
-                ans[row['id']] = InstitutionInfo(**row)
+                ans[row['id']] = InstitutionInfo(**row_as_mapping(row))
 
         return ans
 
@@ -1096,7 +1097,7 @@ class PeoplePart(object):
         with self._transaction() as conn:
             for row in conn.execute(stmt):
                 values = default.copy()
-                values.update(**row)
+                values.update(**row_as_mapping(row))
 
                 prev = Institution(
                     id=values['institution_id'],
@@ -1127,7 +1128,7 @@ class PeoplePart(object):
             self._delete_oauth_expired(conn)
 
             for row in conn.execute(stmt):
-                ans[row['id']] = OAuthCode(**row)
+                ans[row['id']] = OAuthCode(**row_as_mapping(row))
 
         return ans
 
@@ -1145,7 +1146,7 @@ class PeoplePart(object):
             self._delete_oauth_expired(conn)
 
             for row in conn.execute(stmt):
-                ans[row['id']] = OAuthToken(**row)
+                ans[row['id']] = OAuthToken(**row_as_mapping(row))
 
         return ans
 
@@ -1215,7 +1216,7 @@ class PeoplePart(object):
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(person.c.name)):
                 values = default.copy()
-                values.update(**row)
+                values.update(**row_as_mapping(row))
                 ans[row['id']] = PersonInfo(**values)
 
         return ans
@@ -1294,9 +1295,9 @@ class PeoplePart(object):
             for row in conn.execute(stmt):
                 if default is not None:
                     values = default.copy()
-                    values.update(**row)
+                    values.update(**row_as_mapping(row))
                 else:
-                    values = row
+                    values = row_as_mapping(row)
 
                 ans[row['id']] = SiteGroupMember(**values)
 
@@ -1328,7 +1329,7 @@ class PeoplePart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(user.c.name.asc())):
-                ans[row['id']] = UserInfo(**row)
+                ans[row['id']] = UserInfo(**row_as_mapping(row))
 
         return ans
 
@@ -1374,7 +1375,7 @@ class PeoplePart(object):
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(table.c.id.desc())):
-                ans[row['id']] = result_class(**row)
+                ans[row['id']] = result_class(**row_as_mapping(row))
 
         return ans
 

@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from datetime import datetime
 from random import randint
 
-from sqlalchemy.sql import insert
+from sqlalchemy.sql import text
 from sqlalchemy.pool import StaticPool
 
 from hedwig import auth
@@ -62,9 +62,9 @@ def get_dummy_database(randomize_ids=True, allow_multi_threaded=False,
     if randomize_ids:
         with engine.begin() as conn:
             for table in metadata.tables.keys():
-                conn.execute('INSERT INTO sqlite_sequence (name, seq)'
-                             'VALUES ("{}", {})'.format(table,
-                                                        randint(1, 1000000)))
+                conn.execute(text(
+                    'INSERT INTO sqlite_sequence (name, seq)'
+                    'VALUES ("{}", {})'.format(table, randint(1, 1000000))))
 
     return CombinedDatabase(engine)
 

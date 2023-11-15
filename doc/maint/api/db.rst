@@ -1,6 +1,11 @@
 Database Modules
 ================
 
+hedwig.db.compat
+----------------
+
+.. automodule:: hedwig.db.compat
+
 hedwig.db.control
 -----------------
 

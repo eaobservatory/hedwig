@@ -25,8 +25,7 @@ try:
 except ImportError:
     from itertools import izip_longest as zip_longest
 
-from sqlalchemy.sql import select
-from sqlalchemy.sql.expression import and_, case, column, not_
+from sqlalchemy.sql.expression import and_, column, not_
 from sqlalchemy.sql.functions import coalesce
 
 from ...email.util import is_valid_email
@@ -36,6 +35,7 @@ from ...type.collection import ResultCollection, MessageRecipientCollection
 from ...type.enum import MessageState, MessageThreadType
 from ...type.simple import Message, MessageRecipient
 from ...util import is_list_like
+from ..compat import case, row_as_mapping, select
 from ..meta import email, message, message_recipient, person
 
 
@@ -174,7 +174,7 @@ class MessagePart(object):
                 message_ids.add(row_key)
 
                 values = default.copy()
-                values.update(**row)
+                values.update(**row_as_mapping(row))
 
                 # For now, perform separate query for thread identifiers of
                 # each message.  In principle we could do this instead for all
@@ -270,7 +270,7 @@ class MessagePart(object):
                     i += 1
 
                     values = default.copy()
-                    values.update(**row)
+                    values.update(**row_as_mapping(row))
 
                     ans[i] = MessageRecipient(**values)
 

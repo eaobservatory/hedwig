@@ -20,8 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime
 
-from sqlalchemy.sql import select
-from sqlalchemy.sql.expression import and_, case, not_
+from sqlalchemy.sql.expression import and_, not_
 from sqlalchemy.sql.functions import count
 
 from ...error import ConsistencyError, Error, FormattedError, \
@@ -34,6 +33,7 @@ from ...type.simple import GroupMember, Note, \
     Reviewer, ReviewerAcceptance, \
     ReviewDeadline, ReviewFigureInfo
 from ...util import is_list_like
+from ..compat import case, row_as_mapping, select
 from ..meta import affiliation_weight_note, available_note, \
     call, decision, group_member, \
     institution, invitation, person, \
@@ -411,7 +411,7 @@ class ReviewPart(object):
             for row in conn.execute(stmt):
                 if default:
                     values = default.copy()
-                    values.update(**row)
+                    values.update(**row_as_mapping(row))
                 else:
                     values = row
 
@@ -608,7 +608,7 @@ class ReviewPart(object):
                 for row in conn.execute(iter_stmt.order_by(
                         reviewer.c.role, person.c.name, reviewer.c.id)):
                     values = default.copy()
-                    values.update(**row)
+                    values.update(**row_as_mapping(row))
                     ans[row['id']] = Reviewer(**values)
 
         return ans
@@ -685,7 +685,7 @@ class ReviewPart(object):
                 for row in conn.execute(iter_stmt.order_by(
                         reviewer_acceptance.c.id)):
                     values = default.copy()
-                    values.update(**row)
+                    values.update(**row_as_mapping(row))
                     ans[row['id']] = ReviewerAcceptance(**values)
 
         return ans
@@ -720,7 +720,7 @@ class ReviewPart(object):
         with self._transaction(_conn=_conn) as conn:
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(iter_stmt):
-                    ans[row['id']] = ReviewDeadline(**row)
+                    ans[row['id']] = ReviewDeadline(**row_as_mapping(row))
 
         return ans
 

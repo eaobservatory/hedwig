@@ -34,13 +34,13 @@ from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from selenium.common.exceptions import NoSuchElementException
-from sqlalchemy.sql import select
 import werkzeug.serving
 
 from hedwig import auth
 from hedwig.admin.proposal import close_call_proposals
 from hedwig.compat import first_value, string_type
 from hedwig.config import get_config
+from hedwig.db.compat import select
 from hedwig.db.meta import invitation, reset_token, verify_token
 from hedwig.admin.poll import send_proposal_feedback
 from hedwig.file.poll import process_moc, \

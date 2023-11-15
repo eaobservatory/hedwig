@@ -6,10 +6,11 @@ from __future__ import absolute_import, division, print_function, \
 import logging
 
 from sqlalchemy.schema import Column
-from sqlalchemy.sql.expression import and_, case
+from sqlalchemy.sql.expression import and_
 from sqlalchemy.types import Boolean
 
 from hedwig.config import get_database
+from hedwig.db.compat import case
 from hedwig.db.meta import message
 from hedwig.util import get_logger
 from hedwig.type.enum import MessageState, MessageThreadType

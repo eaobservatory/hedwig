@@ -21,8 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from datetime import datetime
 from hashlib import md5
 
-from sqlalchemy.sql import select
-from sqlalchemy.sql.expression import and_, case, column, not_
+from sqlalchemy.sql.expression import and_, column, not_
 from sqlalchemy.sql.functions import coalesce, count
 from sqlalchemy.sql.functions import max as max_
 
@@ -50,6 +49,7 @@ from ...type.simple import Affiliation, Annotation, \
     RequestPropCopy, \
     ReviewerInfo, Semester, SemesterInfo, Target
 from ...util import is_list_like
+from ..compat import case, row_as_dict, row_as_mapping, scalar_subquery, select
 from ..meta import affiliation, affiliation_weight, \
     call, call_mid_close, call_preamble, category, decision, \
     facility, institution, \
@@ -189,9 +189,9 @@ class ProposalPart(object):
 
             result = conn.execute(member.insert().values({
                 member.c.proposal_id: proposal_id,
-                member.c.sort_order: select(
+                member.c.sort_order: scalar_subquery(select(
                     [coalesce(max_(member_alias.c.sort_order), 0) + 1]).where(
-                    member_alias.c.proposal_id == proposal_id),
+                    member_alias.c.proposal_id == proposal_id)),
                 member.c.person_id: person_id,
                 member.c.pi: pi,
                 member.c.editor: editor,
@@ -250,9 +250,9 @@ class ProposalPart(object):
 
             result = conn.execute(proposal.insert().values({
                 proposal.c.call_id: call_id,
-                proposal.c.number: select(
+                proposal.c.number: scalar_subquery(select(
                     [coalesce(max_(proposal_alias.c.number), 0) + 1]).where(
-                    proposal_alias.c.call_id == call_id),
+                    proposal_alias.c.call_id == call_id)),
                 proposal.c.state: state,
                 proposal.c.title: title,
             }))
@@ -350,9 +350,9 @@ class ProposalPart(object):
 
             values = {
                 key_column: key_value,
-                table_link.c.sort_order: select(
+                table_link.c.sort_order: scalar_subquery(select(
                     [coalesce(max_(table_alias.c.sort_order), 0) + 1]
-                    ).where(key_column_alias == key_value),
+                    ).where(key_column_alias == key_value)),
                 table_link.c.caption: caption,
                 table_link.c.fig_id: fig_id,
             }
@@ -904,7 +904,7 @@ class ProposalPart(object):
         if result is None:
             raise NoSuchRecord('semester does not exist')
 
-        return Semester(**result)
+        return Semester(**row_as_mapping(result))
 
     def get_queue(self, facility_id, queue_id, _conn=None):
         """
@@ -922,7 +922,7 @@ class ProposalPart(object):
         if result is None:
             raise NoSuchRecord('queue does not exist')
 
-        return Queue(**result)
+        return Queue(**row_as_mapping(result))
 
     def link_proposal_pdf(
             self, role_class, proposal_id, role, pdf_id,
@@ -1105,7 +1105,7 @@ class ProposalPart(object):
         with self._transaction() as conn:
             for row in conn.execute(stmt):
                 values = default.copy()
-                values.update(**row)
+                values.update(**row_as_mapping(row))
 
                 if with_weight_separate:
                     values['weight'] = Affiliation(
@@ -1254,7 +1254,7 @@ class ProposalPart(object):
                                                   call.c.type.asc(),
                                                   queue.c.name.asc())):
                 values = default.copy()
-                values.update(**row)
+                values.update(**row_as_mapping(row))
                 ans[row['id']] = Call(**values)
 
         return ans
@@ -1294,7 +1294,7 @@ class ProposalPart(object):
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(
                         iter_stmt.order_by(call_mid_close.c.date.asc())):
-                    ans[row['id']] = CallMidClose(**row)
+                    ans[row['id']] = CallMidClose(**row_as_mapping(row))
 
         return ans
 
@@ -1317,7 +1317,7 @@ class ProposalPart(object):
             for row in conn.execute(stmt.order_by(
                     call_preamble.c.semester_id.asc(),
                     call_preamble.c.type.asc())):
-                ans[row['id']] = CallPreamble(**row)
+                ans[row['id']] = CallPreamble(**row_as_mapping(row))
 
         return ans
 
@@ -1347,7 +1347,7 @@ class ProposalPart(object):
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt):
-                ans[row['id']] = Category(**row)
+                ans[row['id']] = Category(**row_as_mapping(row))
 
         return ans
 
@@ -1416,7 +1416,7 @@ class ProposalPart(object):
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt):
                 values = default.copy()
-                values.update(**row)
+                values.update(**row_as_mapping(row))
                 ans[values['id']] = CoMemberInfo(**values)
 
         return ans
@@ -1473,7 +1473,7 @@ class ProposalPart(object):
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(
                         iter_stmt.order_by(member.c.sort_order.asc())):
-                    ans[row['id']] = Member(**row)
+                    ans[row['id']] = Member(**row_as_mapping(row))
 
         return ans
 
@@ -1508,7 +1508,7 @@ class ProposalPart(object):
         with self._transaction() as conn:
             for row in conn.execute(
                     stmt.order_by(semester.c.date_start.desc())):
-                ans[row['id']] = SemesterInfo(**row)
+                ans[row['id']] = SemesterInfo(**row_as_mapping(row))
 
         return ans
 
@@ -1547,7 +1547,7 @@ class ProposalPart(object):
                         prev_proposal_pub.c.id.asc())):
                     # Convert row to a dictionary so that we can manipulate
                     # its entries.
-                    row = dict(row.items())
+                    row = row_as_dict(row)
 
                     # Move the entries relating to the publication table
                     # to another dictionary.
@@ -1616,7 +1616,7 @@ class ProposalPart(object):
         with self._transaction() as conn:
             for row in conn.execute(stmt):
                 values = default.copy()
-                values.update(**row)
+                values.update(**row_as_mapping(row))
                 ans[values['id']] = PrevProposalPub(**values)
 
         return ans
@@ -1881,7 +1881,7 @@ class ProposalPart(object):
                 member_info = None
                 reviewer_info = None
                 values = default.copy()
-                values.update(**row)
+                values.update(**row_as_mapping(row))
                 row_key = values['id']
                 proposal_ids.add(row_key)
 
@@ -1977,7 +1977,7 @@ class ProposalPart(object):
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(
                     proposal_annotation.c.date.asc())):
-                ans[row['id']] = Annotation(**row)
+                ans[row['id']] = Annotation(**row_as_mapping(row))
 
         return ans
 
@@ -2009,7 +2009,7 @@ class ProposalPart(object):
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(
                         iter_stmt.order_by(category.c.name.asc())):
-                    ans[row['id']] = ProposalCategory(**row)
+                    ans[row['id']] = ProposalCategory(**row_as_mapping(row))
 
         return ans
 
@@ -2148,7 +2148,7 @@ class ProposalPart(object):
         with self._transaction() as conn:
             for row in conn.execute(stmt):
                 values = default.copy()
-                values.update(**row)
+                values.update(**row_as_mapping(row))
                 ans[row[key_col]] = result_class(**values)
 
         return ans
@@ -2224,7 +2224,7 @@ class ProposalPart(object):
         with self._transaction() as conn:
             for row in conn.execute(stmt):
                 values = default.copy()
-                values.update(**row)
+                values.update(**row_as_mapping(row))
                 ans[row[key_col]] = ProposalPDFInfo(**values)
 
         return ans
@@ -2267,7 +2267,7 @@ class ProposalPart(object):
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt):
                 values = default.copy()
-                values.update(**row)
+                values.update(**row_as_mapping(row))
                 ans[values['id']] = ProposalText(**values)
 
         return ans
@@ -2295,7 +2295,7 @@ class ProposalPart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by((queue.c.name))):
-                ans[row['id']] = QueueInfo(**row)
+                ans[row['id']] = QueueInfo(**row_as_mapping(row))
 
         return ans
 
@@ -2360,7 +2360,7 @@ class ProposalPart(object):
                 for row in conn.execute(
                         iter_stmt.order_by(table.c.id.asc())):
                     values = default.copy()
-                    values.update(**row)
+                    values.update(**row_as_mapping(row))
                     ans[values['id']] = result_class(**values)
 
         return ans
@@ -2388,7 +2388,7 @@ class ProposalPart(object):
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(
                         iter_stmt.order_by(target.c.sort_order.asc())):
-                    ans[row['id']] = Target(**row)
+                    ans[row['id']] = Target(**row_as_mapping(row))
 
         return ans
 

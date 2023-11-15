@@ -22,7 +22,6 @@ from datetime import datetime
 from time import sleep
 
 from pymoc import MOC
-from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_, exists, not_, or_
 from sqlalchemy.sql.functions import coalesce
 from sqlalchemy.sql.functions import max as max_
@@ -33,6 +32,7 @@ from ...type.collection import CalculationCollection, ResultCollection
 from ...type.enum import AttachmentState, FormatType
 from ...type.simple import Calculation, MOCInfo, ReviewCalculation
 from ...util import is_list_like, list_in_blocks, list_in_ranges
+from ..compat import row_as_mapping, scalar_subquery, select
 from ..meta import calculator, calculation, facility, \
     moc, moc_cell, moc_fits, review_calculation
 from ..util import require_not_none
@@ -55,9 +55,9 @@ class CalculatorPart(object):
 
             result = conn.execute(table.insert().values({
                 key_column: key_value,
-                table.c.sort_order: select(
+                table.c.sort_order: scalar_subquery(select(
                     [coalesce(max_(table_alias.c.sort_order), 0) + 1]
-                    ).where(key_column_alias == key_value),
+                    ).where(key_column_alias == key_value)),
                 table.c.calculator_id: calculator_id,
                 table.c.mode: mode,
                 table.c.version: version,
@@ -182,7 +182,7 @@ class CalculatorPart(object):
         with self._transaction() as conn:
             for row in conn.execute(
                     stmt.order_by(table.c.sort_order.asc())):
-                ans[row['id']] = result_class(**row)
+                ans[row['id']] = result_class(**row_as_mapping(row))
 
         return ans
 
@@ -240,7 +240,7 @@ class CalculatorPart(object):
         with self._transaction() as conn:
             for row in conn.execute(stmt):
                 values = default.copy()
-                values.update(**row)
+                values.update(**row_as_mapping(row))
                 ans[row['id']] = MOCInfo(**values)
 
         return ans
@@ -303,7 +303,7 @@ class CalculatorPart(object):
                                          description_format=None,
                                          uploaded=None,
                                          num_cells=None, area=None, state=None,
-                                         **row)
+                                         **row_as_mapping(row))
 
         return ans
 

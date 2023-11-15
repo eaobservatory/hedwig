@@ -6,10 +6,10 @@ from __future__ import absolute_import, division, print_function, \
 from collections import defaultdict, OrderedDict
 import logging
 
-from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import or_
 
 from hedwig.config import get_database
+from hedwig.db.compat import select
 from hedwig.db.meta import prev_proposal
 from hedwig.error import ConsistencyError
 from hedwig.util import get_logger

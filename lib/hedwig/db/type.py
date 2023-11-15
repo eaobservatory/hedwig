@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -47,6 +47,8 @@ class JSONEncoded(TypeDecorator):
     """
 
     impl = UnicodeText
+
+    cache_ok = False
 
     def process_bind_param(self, value, dialect):
         if value is None:

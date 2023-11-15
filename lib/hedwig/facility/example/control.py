@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,6 +20,7 @@ from __future__ import \
     unicode_literals
 
 from ...type.collection import ResultCollection
+from ...db.compat import row_as_mapping
 from ...db.meta import proposal
 from ...util import is_list_like
 from .meta import example_request
@@ -56,7 +57,7 @@ class ExamplePart(object):
                 for row in conn.execute(
                         iter_stmt.order_by(
                             example_request.c.id.asc())):
-                    ans[row['id']] = ExampleRequest(**row)
+                    ans[row['id']] = ExampleRequest(**row_as_mapping(row))
 
         return ans
 

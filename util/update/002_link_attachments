@@ -5,11 +5,11 @@ from __future__ import absolute_import, division, print_function, \
 
 import logging
 
-from sqlalchemy.sql import select
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.types import Integer, UnicodeText
 
 from hedwig.config import get_database
+from hedwig.db.compat import select
 from hedwig.db.meta import \
     proposal_fig, proposal_fig_link, \
     proposal_pdf, proposal_pdf_link, \

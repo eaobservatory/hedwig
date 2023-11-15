@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2021 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,7 +24,6 @@ from itertools import count as itertools_count
 from threading import Lock
 
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_
 from sqlalchemy.sql.functions import count
 
@@ -32,6 +31,7 @@ from ..error import ConsistencyError, Error, \
     DatabaseError, DatabaseIntegrityError, UserError
 from ..type.collection import ResultCollection
 from ..util import is_list_like, list_in_blocks
+from .compat import select
 from .part.calculator import CalculatorPart
 from .part.message import MessagePart
 from .part.people import PeoplePart

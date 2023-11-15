@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2022 East Asian Observatory
+# Copyright (C) 2016-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,8 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from datetime import datetime, timedelta
 
-from sqlalchemy.sql import select
-
+from hedwig.db.compat import select
 from hedwig.db.meta import auth_token
 
 from .base_app import WebAppTestCase

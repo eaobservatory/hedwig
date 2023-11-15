@@ -1,4 +1,4 @@
-# Copyright (C) 2017 East Asian Observatory
+# Copyright (C) 2017-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,9 +18,9 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from sqlalchemy.sql import select
 from sqlalchemy.sql.functions import count
 
+from ...db.compat import row_as_mapping, select
 from ...db.meta import call, proposal, reviewer
 from ...error import ConsistencyError, FormattedError, UserError
 from ...type.collection import ResultCollection
@@ -58,7 +58,7 @@ class UKIRTPart(object):
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(
                         iter_stmt.order_by(ukirt_allocation.c.id.asc())):
-                    ans[row['id']] = UKIRTRequest(**row)
+                    ans[row['id']] = UKIRTRequest(**row_as_mapping(row))
 
         return ans
 
@@ -87,7 +87,7 @@ class UKIRTPart(object):
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(
                         iter_stmt.order_by(ukirt_request.c.id.asc())):
-                    ans[row['id']] = UKIRTRequest(**row)
+                    ans[row['id']] = UKIRTRequest(**row_as_mapping(row))
 
         return ans
 

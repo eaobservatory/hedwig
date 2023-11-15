@@ -5,10 +5,10 @@ from __future__ import absolute_import, division, print_function, \
 
 import logging
 
-from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_, not_
 
 from hedwig.config import get_database
+from hedwig.db.compat import select
 from hedwig.db.meta import email, person, user_log
 from hedwig.type.enum import UserLogEvent
 from hedwig.util import get_logger
