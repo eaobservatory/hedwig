@@ -62,7 +62,7 @@ class EnumTypeTestCase(TestCase):
         # Get list of all states for subsequent tests.
         states = list(AttachmentState._info.keys())
 
-        self.assertFalse(AttachmentState.is_valid(999))
+        self.assertFalse(AttachmentState.is_valid(999, is_system=True))
 
         unready = AttachmentState.unready_states(include_discard=False)
         self.assertIsInstance(unready, list)
@@ -75,7 +75,12 @@ class EnumTypeTestCase(TestCase):
         self.assertIn(AttachmentState.DISCARD, unready)
 
         for state in states:
-            self.assertTrue(AttachmentState.is_valid(state))
+            self.assertTrue(AttachmentState.is_valid(state, is_system=True))
+            if state in (AttachmentState.NEW, AttachmentState.DISCARD):
+                self.assertTrue(AttachmentState.is_valid(state))
+            else:
+                self.assertFalse(AttachmentState.is_valid(state))
+
             self.assertIsInstance(AttachmentState.get_name(state), string_type)
 
             if state == AttachmentState.READY:

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -283,18 +283,22 @@ class DBCalculatorTest(DBTestCase):
 
         with self.assertRaises(ConsistencyError):
             self.db.update_moc(moc_id, state=AttachmentState.ERROR,
-                               state_prev=AttachmentState.PROCESSING)
+                               state_prev=AttachmentState.PROCESSING,
+                               state_is_system=True)
 
         with self.assertRaisesRegex(Error, 'Invalid state'):
             self.db.update_moc(moc_id, state=999,
-                               state_prev=AttachmentState.PROCESSING)
+                               state_prev=AttachmentState.PROCESSING,
+                               state_is_system=True)
 
         with self.assertRaisesRegex(Error, 'Invalid previous state'):
             self.db.update_moc(moc_id, state=AttachmentState.ERROR,
-                               state_prev=999)
+                               state_prev=999,
+                               state_is_system=True)
 
         self.db.update_moc(moc_id, state=AttachmentState.ERROR,
-                           state_prev=AttachmentState.NEW)
+                           state_prev=AttachmentState.NEW,
+                           state_is_system=True)
 
         moc_info = self.db.search_moc(facility_id, None, moc_id=moc_id,
                                       with_description=True).get_single()

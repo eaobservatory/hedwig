@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -400,7 +400,8 @@ class CalculatorPart(object):
 
     def update_moc(self, moc_id, name=None,
                    description=None, description_format=None, public=None,
-                   moc_object=None, state=None, state_prev=None):
+                   moc_object=None, state=None, state_prev=None,
+                   state_is_system=False):
         values = {}
 
         stmt = moc.update().where(moc.c.id == moc_id)
@@ -426,13 +427,13 @@ class CalculatorPart(object):
             values[moc.c.state] = AttachmentState.NEW
 
         elif state is not None:
-            if not AttachmentState.is_valid(state):
+            if not AttachmentState.is_valid(state, is_system=state_is_system):
                 raise Error('Invalid state.')
 
             values[moc.c.state] = state
 
         if state_prev is not None:
-            if not AttachmentState.is_valid(state_prev):
+            if not AttachmentState.is_valid(state_prev, is_system=True):
                 raise Error('Invalid previous state.')
             stmt = stmt.where(moc.c.state == state_prev)
 

@@ -1345,7 +1345,7 @@ class DBProposalTest(DBTestCase):
 
         # Try changing proposal state.
         self.db.update_proposal_pdf(
-            pdf_id=pdf_id, state=AttachmentState.READY)
+            pdf_id=pdf_id, state=AttachmentState.READY, state_is_system=True)
 
         result = self.db.search_proposal_pdf(proposal_id=proposal_id)
         self.assertEqual(result[link_id].state, AttachmentState.READY)
@@ -1354,11 +1354,11 @@ class DBProposalTest(DBTestCase):
         with self.assertRaisesRegex(ConsistencyError, 'no rows matched'):
             self.db.update_proposal_pdf(
                 pdf_id=pdf_id, state=AttachmentState.READY,
-                state_prev=AttachmentState.ERROR)
+                state_prev=AttachmentState.ERROR, state_is_system=True)
 
         self.db.update_proposal_pdf(
             pdf_id=pdf_id, state=AttachmentState.ERROR,
-            state_prev=AttachmentState.READY)
+            state_prev=AttachmentState.READY, state_is_system=True)
 
         # Test setting preview images.
         self.db.set_proposal_pdf_preview(pdf_id, [b'dummy 1', b'dummy 2'])
@@ -1477,7 +1477,7 @@ class DBProposalTest(DBTestCase):
         # ... change figure state.
         result = self.db.update_proposal_figure(
             None, None, None, fig_id, state=AttachmentState.ERROR,
-            state_prev=AttachmentState.NEW)
+            state_prev=AttachmentState.NEW, state_is_system=True)
         self.assertIsNone(result)
 
         result = self.db.search_proposal_figure(proposal_id=proposal_id,
@@ -1930,7 +1930,7 @@ class DBProposalTest(DBTestCase):
             self.db.update_proposal_figure(
                 None, None, link_id_1, fig_id=fig_id_1,
                 state=AttachmentState.ERROR, state_prev=AttachmentState.NEW,
-                caption='Modified caption')
+                caption='Modified caption', state_is_system=True)
 
         with self.assertRaisesRegex(Error, 'main-table constraints'):
             # Can't apply constraints from edited main table
@@ -2011,7 +2011,8 @@ class DBProposalTest(DBTestCase):
 
         result = self.db.update_proposal_figure(
             None, None, None, fig_id=fig_id_1,
-            state=AttachmentState.ERROR, state_prev=AttachmentState.NEW)
+            state=AttachmentState.ERROR, state_prev=AttachmentState.NEW,
+            state_is_system=True)
         self.assertEqual(result, None)
 
         result = self.db.search_proposal_figure(with_caption=True)
@@ -2195,7 +2196,8 @@ class DBProposalTest(DBTestCase):
 
         self.db.update_request_prop_copy(
             request_id, state=RequestState.READY,
-            copy_proposal_id=copy_proposal_id)
+            copy_proposal_id=copy_proposal_id,
+            state_is_system=True)
 
         request = self.db.search_request_prop_copy(
             request_id=request_id, with_requester_name=True).get_single()

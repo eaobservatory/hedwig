@@ -135,7 +135,7 @@ class Assessment(EnumBasic, EnumAvailable):
     ))
 
 
-class AttachmentState(EnumBasic, EnumDisplayClass):
+class AttachmentState(EnumAllowUser, EnumBasic, EnumDisplayClass):
     """
     Class representing possible processing states for proposal attachments.
 
@@ -151,20 +151,20 @@ class AttachmentState(EnumBasic, EnumDisplayClass):
 
     AttachmentStateInfo = namedtuple(
         'AttachmentStateInfo',
-        ('name', 'ready', 'error', 'display_class'))
+        ('name', 'ready', 'error', 'allow_user', 'display_class'))
 
-    #       Name            Ready  Error  Disp.Cl.  Pre.   Exp'd
+    #       Name            Ready  Error  User   Disp.Cl.
     _info = OrderedDict((
         (NEW,         AttachmentStateInfo(
-            'New',          False, False, 'new')),
+            'New',          False, False, True,  'new')),
         (PROCESSING,  AttachmentStateInfo(
-            'Processing',   False, False, 'proc')),
+            'Processing',   False, False, False, 'proc')),
         (READY,       AttachmentStateInfo(
-            'Ready',        True,  False, 'ready')),
+            'Ready',        True,  False, False, 'ready')),
         (ERROR,       AttachmentStateInfo(
-            'Error',        False, True,  'error')),
+            'Error',        False, True,  False, 'error')),
         (DISCARD,     AttachmentStateInfo(
-            'Discarded',    False, False, 'discard')),
+            'Discarded',    False, False, True,  'discard')),
     ))
 
     @classmethod
@@ -785,26 +785,27 @@ class RequestState(AttachmentState):
 
     RequestStateInfo = namedtuple(
         'RequestStateInfo',
-        ('name', 'ready', 'error', 'display_class', 'pre_ready', 'expired'))
+        ('name', 'ready', 'error', 'allow_user', 'display_class',
+         'pre_ready', 'expired'))
 
-    #       Name            Ready  Error  Disp.Cl.  Pre.   Exp'd
+    #       Name            Ready  Error  User   Disp.Cl.   Pre.   Exp'd
     _info = OrderedDict((
         (AttachmentState.NEW, RequestStateInfo(
-            'Queued',       False, False, 'new',    True,  False)),
+            'Queued',       False, False, True,  'new',     True,  False)),
         (AttachmentState.PROCESSING, RequestStateInfo(
-            'Processing',   False, False, 'proc',   True,  False)),
+            'Processing',   False, False, False, 'proc',    True,  False)),
         (AttachmentState.READY, RequestStateInfo(
-            'Ready',        True,  False, 'ready',  False, False)),
+            'Ready',        True,  False, False, 'ready',   False, False)),
         (AttachmentState.ERROR, RequestStateInfo(
-            'Error',        False, True,  'error',  False, False)),
+            'Error',        False, True,  False, 'error',   False, False)),
         (AttachmentState.DISCARD, RequestStateInfo(
-            'Discarded',    False, False, 'discard', False, False)),
+            'Discarded',    False, False, True,  'discard', False, False)),
         (EXPIRING, RequestStateInfo(
-            'Expiring',     False, False, 'proc',   False, True)),
+            'Expiring',     False, False, False, 'proc',    False, True)),
         (EXPIRED, RequestStateInfo(
-            'Expired',      False, False, 'expire', False, True)),
+            'Expired',      False, False, False, 'expire',  False, True)),
         (EXPIRE_ERROR, RequestStateInfo(
-            'Expiry error', False, True,  'error',  False, True)),
+            'Expiry error', False, True,  False, 'error',   False, True)),
     ))
 
     @classmethod

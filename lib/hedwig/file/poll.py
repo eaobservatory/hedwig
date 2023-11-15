@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -45,7 +45,7 @@ def process_moc(db, dry_run=False):
             if not dry_run:
                 db.update_moc(
                     moc_id=moc_info.id, state=AttachmentState.PROCESSING,
-                    state_prev=AttachmentState.NEW)
+                    state_prev=AttachmentState.NEW, state_is_system=True)
         except ConsistencyError:
             continue
 
@@ -59,7 +59,8 @@ def process_moc(db, dry_run=False):
                 if not dry_run:
                     db.update_moc(
                         moc_id=moc_info.id, state=AttachmentState.READY,
-                        state_prev=AttachmentState.PROCESSING)
+                        state_prev=AttachmentState.PROCESSING,
+                        state_is_system=True)
 
                 n_processed += 1
 
@@ -70,7 +71,9 @@ def process_moc(db, dry_run=False):
             logger.exception('Error importing MOC {}', moc_info.id)
 
             if not dry_run:
-                db.update_moc(moc_id=moc_info.id, state=AttachmentState.ERROR)
+                db.update_moc(
+                    moc_id=moc_info.id, state=AttachmentState.ERROR,
+                    state_is_system=True)
 
     return n_processed
 
@@ -105,7 +108,7 @@ def _process_figure(db, _type, dry_run=False):
         def set_state(fig_id, state, state_prev=None):
             db.update_proposal_figure(
                 proposal_id=None, role=None, link_id=None, fig_id=fig_id,
-                state=state, state_prev=state_prev)
+                state=state, state_prev=state_prev, state_is_system=True)
 
         def set_thumbnail(*args):
             db.set_proposal_figure_thumbnail(*args)
@@ -126,7 +129,7 @@ def _process_figure(db, _type, dry_run=False):
         def set_state(fig_id, state, state_prev=None):
             db.update_review_figure(
                 reviewer_id=None, link_id=None, fig_id=fig_id,
-                state=state, state_prev=state_prev)
+                state=state, state_prev=state_prev, state_is_system=True)
 
         def set_thumbnail(*args):
             db.set_review_figure_thumbnail(*args)
@@ -261,7 +264,8 @@ def process_proposal_pdf(db, dry_run=False):
                 db.update_proposal_pdf(
                     pdf_id=pdf.pdf_id,
                     state=AttachmentState.PROCESSING,
-                    state_prev=AttachmentState.NEW)
+                    state_prev=AttachmentState.NEW,
+                    state_is_system=True)
         except ConsistencyError:
             continue
 
@@ -282,7 +286,8 @@ def process_proposal_pdf(db, dry_run=False):
                     db.update_proposal_pdf(
                         pdf_id=pdf.pdf_id,
                         state=AttachmentState.READY,
-                        state_prev=AttachmentState.PROCESSING)
+                        state_prev=AttachmentState.PROCESSING,
+                        state_is_system=True)
 
                 n_processed += 1
 
@@ -297,7 +302,8 @@ def process_proposal_pdf(db, dry_run=False):
             if not dry_run:
                 try:
                     db.update_proposal_pdf(
-                        pdf_id=pdf.pdf_id, state=AttachmentState.ERROR)
+                        pdf_id=pdf.pdf_id, state=AttachmentState.ERROR,
+                        state_is_system=True)
                 except:
                     # It's possible that whatever prevented us setting the
                     # previews also prevents us updating the state, e.g.

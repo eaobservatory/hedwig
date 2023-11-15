@@ -3152,6 +3152,7 @@ class ProposalPart(object):
     def update_request_prop_copy(
             self, request_id, state=None, processed=None,
             state_prev=None, copy_proposal_id=None,
+            state_is_system=False,
             _test_skip_check=False):
         values = {}
 
@@ -3161,11 +3162,12 @@ class ProposalPart(object):
         self._update_request_prop(
             request_prop_copy, request_id, state=state, processed=processed,
             state_prev=state_prev, extra_values=values,
+            state_is_system=state_is_system,
             _test_skip_check=_test_skip_check)
 
     def _update_request_prop(
             self, table,  request_id, state=None, processed=None,
-            state_prev=None, extra_values=None,
+            state_prev=None, extra_values=None, state_is_system=False,
             _conn=None, _test_skip_check=False):
         values = {}
 
@@ -3173,7 +3175,7 @@ class ProposalPart(object):
             table.c.id == request_id)
 
         if state is not None:
-            if not RequestState.is_valid(state):
+            if not RequestState.is_valid(state, is_system=state_is_system):
                 raise Error('invalid request state')
             values['state'] = state
 
@@ -3181,7 +3183,7 @@ class ProposalPart(object):
             values['processed'] = processed
 
         if state_prev is not None:
-            if not RequestState.is_valid(state_prev):
+            if not RequestState.is_valid(state_prev, is_system=True):
                 raise Error('Invalid previous state.')
             stmt = stmt.where(table.c.state == state_prev)
 
@@ -3296,7 +3298,7 @@ class ProposalPart(object):
                                figure=None, type_=None,
                                filename=None, uploader_person_id=None,
                                state=None, state_prev=None,
-                               caption=None):
+                               caption=None, state_is_system=False):
         """
         Update the record of a figure attached to a proposal.
 
@@ -3323,14 +3325,14 @@ class ProposalPart(object):
             proposal_fig_preview, proposal_fig_thumbnail,
             link_id, fig_id, figure, type_, filename, uploader_person_id,
             state, state_prev, caption,
-            where_extra=where_extra,
+            where_extra=where_extra, state_is_system=state_is_system,
         )
 
     def _update_figure(
             self, table, table_link, table_preview, table_thumbnail,
             link_id, fig_id, figure, type_, filename, uploader_person_id,
             state, state_prev, caption,
-            where_extra=[]):
+            where_extra=[], state_is_system=False):
         where = []
         where_link = []
         values = {}
@@ -3349,7 +3351,7 @@ class ProposalPart(object):
             raise Error('figure identifier not specified')
 
         if state_prev is not None:
-            if not AttachmentState.is_valid(state_prev):
+            if not AttachmentState.is_valid(state_prev, is_system=True):
                 raise Error('Invalid previous state.')
             where.append(table.c.state == state_prev)
 
@@ -3387,7 +3389,7 @@ class ProposalPart(object):
             })
 
         elif state is not None:
-            if not AttachmentState.is_valid(state):
+            if not AttachmentState.is_valid(state, is_system=state_is_system):
                 raise Error('Invalid state.')
             values['state'] = state
 
@@ -3475,8 +3477,9 @@ class ProposalPart(object):
 
         return new_fig_id
 
-    def update_proposal_pdf(self, pdf_id, state=None, state_prev=None,
-                            _test_skip_check=False):
+    def update_proposal_pdf(
+            self, pdf_id, state=None, state_prev=None, state_is_system=False,
+            _test_skip_check=False):
         """
         Update the record for a PDF attached to a proposal.
         """
@@ -3485,12 +3488,12 @@ class ProposalPart(object):
         stmt = proposal_pdf.update().where(proposal_pdf.c.id == pdf_id)
 
         if state is not None:
-            if not AttachmentState.is_valid(state):
+            if not AttachmentState.is_valid(state, is_system=state_is_system):
                 raise Error('Invalid state.')
             values['state'] = state
 
         if state_prev is not None:
-            if not AttachmentState.is_valid(state):
+            if not AttachmentState.is_valid(state, is_system=True):
                 raise Error('Invalid previous state.')
             stmt = stmt.where(proposal_pdf.c.state == state_prev)
 

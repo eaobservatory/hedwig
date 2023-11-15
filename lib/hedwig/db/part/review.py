@@ -1114,7 +1114,7 @@ class ReviewPart(object):
     def update_review_figure(
             self, reviewer_id, link_id, fig_id=None,
             figure=None, type_=None, filename=None, uploader_person_id=None,
-            state=None, state_prev=None, caption=None):
+            state=None, state_prev=None, caption=None, state_is_system=False):
         """
         Update the record of a figure attached to a review.
 
@@ -1138,7 +1138,7 @@ class ReviewPart(object):
             review_fig_preview, review_fig_thumbnail,
             link_id, fig_id, figure, type_, filename, uploader_person_id,
             state, state_prev, caption,
-            where_extra=where_extra,
+            where_extra=where_extra, state_is_system=state_is_system,
         )
 
     def _exists_note(self, conn, key_column, key_value):

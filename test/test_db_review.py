@@ -665,7 +665,7 @@ class DBReviewTest(DBTestCase):
         # ... change figure state.
         result = self.db.update_review_figure(
             None, None, fig_id, state=AttachmentState.ERROR,
-            state_prev=AttachmentState.NEW)
+            state_prev=AttachmentState.NEW, state_is_system=True)
         self.assertIsNone(result)
 
         result = self.db.search_review_figure(

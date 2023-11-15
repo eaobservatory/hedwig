@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2022 East Asian Observatory
+# Copyright (C) 2019-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -47,7 +47,7 @@ def process_request_prop_copy(db, app, dry_run=False):
             if not dry_run:
                 db.update_request_prop_copy(
                     request_id=request.id, state=RequestState.PROCESSING,
-                    state_prev=RequestState.NEW)
+                    state_prev=RequestState.NEW, state_is_system=True)
         except ConsistencyError:
             continue
 
@@ -61,7 +61,8 @@ def process_request_prop_copy(db, app, dry_run=False):
                         request_id=request.id, state=RequestState.READY,
                         processed=datetime.utcnow(),
                         copy_proposal_id=copy_proposal_id,
-                        state_prev=RequestState.PROCESSING)
+                        state_prev=RequestState.PROCESSING,
+                        state_is_system=True)
 
                 n_processed += 1
 
@@ -75,7 +76,8 @@ def process_request_prop_copy(db, app, dry_run=False):
 
             if not dry_run:
                 db.update_request_prop_copy(
-                    request_id=request.id, state=RequestState.ERROR)
+                    request_id=request.id, state=RequestState.ERROR,
+                    state_is_system=True)
 
     return n_processed
 
