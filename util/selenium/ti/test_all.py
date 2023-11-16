@@ -2150,6 +2150,11 @@ class IntegrationTest(DummyConfigTestCase):
         self._save_screenshot(self.admin_image_root, 'processing_status')
 
         self.browser.get(admin_menu_url)
+        self.browser.find_element(
+            By.LINK_TEXT, 'View user request status').click()
+        self._save_screenshot(self.admin_image_root, 'request_status')
+
+        self.browser.get(admin_menu_url)
         self.browser.find_element(By.LINK_TEXT, 'Unregistered users').click()
         self._save_screenshot(self.admin_image_root, 'user_unregistered')
 

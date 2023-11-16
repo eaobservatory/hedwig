@@ -1,5 +1,6 @@
 {% extends 'layout_wide.html' %}
 {% set navigation = ['site_admin'] %}
+{% set help_link=url_for('help.admin_page', page_name='request_status') %}
 
 {% set update_counter = create_counter(0) %}
 

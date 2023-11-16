@@ -8,4 +8,5 @@ Site Administration
     messages
     institution_edits
     processing_status
+    request_status
     site_group
