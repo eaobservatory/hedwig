@@ -18,10 +18,7 @@
                 {% if has_expiry %}
                     <th>Date processed (UT)</th>
                 {% endif %}
-                <th>Reset new?</th>
-                {% if has_expiry %}
-                    <th>Reset ready?</th>
-                {% endif %}
+                <th>Update?</th>
             </tr>
             {% for request in requests %}
                 <tr>
@@ -37,21 +34,12 @@
                         <td>{{ request.processed | format_datetime }}</td>
                     {% endif %}
                     <td>
-                        {% if request.state is request_state_unready_proc %}
+                        {% if request.state is request_state_resettable %}
                             <input type="checkbox" name="{{ request.id | fmt(checkbox_fmt) }}" value="1" id="{{ update_counter() | fmt('update_box_{}') }}" />
                         {% else %}
                             &nbsp;
                         {% endif %}
                     </td>
-                    {% if has_expiry %}
-                        <td>
-                        {% if request.state is request_state_unready_exp %}
-                            <input type="checkbox" name="exp_{{ request.id | fmt(checkbox_fmt) }}" value="1" id="{{ update_counter() | fmt('update_box_{}') }}" />
-                        {% else %}
-                            &nbsp;
-                        {% endif %}
-                        </td>
-                    {% endif %}
                 </tr>
             {% endfor %}
         </table>
@@ -72,7 +60,12 @@
 
     {% if update_counter() > 0 %}
         <p>
-            <input type="submit" name="submit" value="Reset marked entries" />
+            <select name="state_new">
+                {% for (state_num, state_name) in states_allowed.items() %}
+                    <option value="{{ state_num }}">{{ state_name }}</option>
+                {% endfor %}
+            </select>
+            <input type="submit" name="submit" value="Set state of marked entries" />
         </p>
     {% endif %}
 </form>

@@ -484,24 +484,39 @@ class AdminView(ViewMember):
 
     def request_status(self, current_user, db, facilities, form):
         if form is not None:
-            n_reset = 0
+            n_update = 0
+
+            state_new = int(form['state_new'])
+
+            if not RequestState.is_valid(state_new):
+                raise ErrorPage('Requested new state is invalid.')
 
             for param in form:
                 if param.startswith('prop_copy_'):
                     id_ = int(param[10:])
                     state_prev = int(form['prev_{}'.format(param)])
-                    db.update_request_prop_copy(
-                        request_id=id_, state=RequestState.NEW,
-                        state_prev=state_prev)
-                    n_reset += 1
 
-            if n_reset:
-                flash('The status for {} {} has been reset.',
-                      n_reset, ('request' if n_reset == 1 else 'requests'))
+                    if not RequestState.is_resettable(
+                            state_prev, state_new=state_new):
+                        raise ErrorPage(
+                            'This page can not change the status of '
+                            'a request from "{}" to "{}".'.format(
+                                RequestState.get_name(state_prev),
+                                RequestState.get_name(state_new)))
+
+                    db.update_request_prop_copy(
+                        request_id=id_, state=state_new,
+                        state_prev=state_prev)
+                    n_update += 1
+
+            if n_update:
+                flash('The status for {} {} has been set to {}.',
+                      n_update, ('request' if n_update == 1 else 'requests'),
+                      RequestState.get_name(state_new).lower())
             raise HTTPRedirect(url_for('.request_status'))
 
         search_kwargs = {
-            'state': RequestState.unready_states(),
+            'state': RequestState.unready_states(include_discard=False),
             'with_requester_name': True,
         }
 
@@ -512,6 +527,7 @@ class AdminView(ViewMember):
 
         ctx = {
             'title': 'Request Status',
+            'states_allowed': RequestState.get_options(),
             'req_prop_copy': self._add_req_prop(
                 db, facilities,
                 db.search_request_prop_copy(**search_kwargs), **cache),

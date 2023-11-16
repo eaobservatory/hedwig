@@ -357,6 +357,7 @@ class EnumTypeTestCase(TestCase):
         self.assertTrue(RequestState.is_pre_ready(RequestState.PROCESSING))
         self.assertFalse(RequestState.is_pre_ready(RequestState.READY))
         self.assertFalse(RequestState.is_pre_ready(RequestState.ERROR))
+        self.assertFalse(RequestState.is_pre_ready(RequestState.DISCARD))
         self.assertFalse(RequestState.is_pre_ready(RequestState.EXPIRING))
         self.assertFalse(RequestState.is_pre_ready(RequestState.EXPIRED))
         self.assertFalse(RequestState.is_pre_ready(RequestState.EXPIRE_ERROR))
@@ -365,9 +366,53 @@ class EnumTypeTestCase(TestCase):
         self.assertFalse(RequestState.is_expired(RequestState.PROCESSING))
         self.assertFalse(RequestState.is_expired(RequestState.READY))
         self.assertFalse(RequestState.is_expired(RequestState.ERROR))
+        self.assertFalse(RequestState.is_expired(RequestState.DISCARD))
         self.assertTrue(RequestState.is_expired(RequestState.EXPIRING))
         self.assertTrue(RequestState.is_expired(RequestState.EXPIRED))
         self.assertTrue(RequestState.is_expired(RequestState.EXPIRE_ERROR))
+
+        self.assertFalse(RequestState.is_resettable(RequestState.NEW))
+        self.assertTrue(RequestState.is_resettable(RequestState.PROCESSING))
+        self.assertFalse(RequestState.is_resettable(RequestState.READY))
+        self.assertTrue(RequestState.is_resettable(RequestState.ERROR))
+        self.assertFalse(RequestState.is_resettable(RequestState.DISCARD))
+        self.assertTrue(RequestState.is_resettable(RequestState.EXPIRING))
+        self.assertFalse(RequestState.is_resettable(RequestState.EXPIRED))
+        self.assertTrue(RequestState.is_resettable(RequestState.EXPIRE_ERROR))
+
+        self.assertFalse(RequestState.is_resettable(
+            RequestState.NEW, state_new=RequestState.READY))
+        self.assertFalse(RequestState.is_resettable(
+            RequestState.PROCESSING, state_new=RequestState.READY))
+        self.assertFalse(RequestState.is_resettable(
+            RequestState.READY, state_new=RequestState.READY))
+        self.assertFalse(RequestState.is_resettable(
+            RequestState.ERROR, state_new=RequestState.READY))
+        self.assertFalse(RequestState.is_resettable(
+            RequestState.DISCARD, state_new=RequestState.READY))
+        self.assertTrue(RequestState.is_resettable(
+            RequestState.EXPIRING, state_new=RequestState.READY))
+        self.assertFalse(RequestState.is_resettable(
+            RequestState.EXPIRED, state_new=RequestState.READY))
+        self.assertTrue(RequestState.is_resettable(
+            RequestState.EXPIRE_ERROR, state_new=RequestState.READY))
+
+        self.assertFalse(RequestState.is_resettable(
+            RequestState.NEW, state_new=RequestState.NEW))
+        self.assertTrue(RequestState.is_resettable(
+            RequestState.PROCESSING, state_new=RequestState.NEW))
+        self.assertFalse(RequestState.is_resettable(
+            RequestState.READY, state_new=RequestState.NEW))
+        self.assertTrue(RequestState.is_resettable(
+            RequestState.ERROR, state_new=RequestState.NEW))
+        self.assertFalse(RequestState.is_resettable(
+            RequestState.DISCARD, state_new=RequestState.NEW))
+        self.assertFalse(RequestState.is_resettable(
+            RequestState.EXPIRING, state_new=RequestState.NEW))
+        self.assertFalse(RequestState.is_resettable(
+            RequestState.EXPIRED, state_new=RequestState.NEW))
+        self.assertFalse(RequestState.is_resettable(
+            RequestState.EXPIRE_ERROR, state_new=RequestState.NEW))
 
         self.assertEqual(
             RequestState.visible_states(),

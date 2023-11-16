@@ -795,7 +795,7 @@ class RequestState(AttachmentState):
         (AttachmentState.PROCESSING, RequestStateInfo(
             'Processing',   False, False, False, 'proc',    True,  False)),
         (AttachmentState.READY, RequestStateInfo(
-            'Ready',        True,  False, False, 'ready',   False, False)),
+            'Ready',        True,  False, True,  'ready',   False, False)),
         (AttachmentState.ERROR, RequestStateInfo(
             'Error',        False, True,  False, 'error',   False, False)),
         (AttachmentState.DISCARD, RequestStateInfo(
@@ -824,6 +824,42 @@ class RequestState(AttachmentState):
     @classmethod
     def is_expired(cls, state):
         return cls._info[state].expired
+
+    @classmethod
+    def is_resettable(cls, state, state_new=None):
+        """
+        Determine whether a state should be resettable by an administrator.
+
+        If `state_new` is not given then this method returns `True` for any
+        state which can be reset.  Otherwise it returns `True` only if it
+        would be appropriate to reset the state to the given new state.
+        """
+
+        # States which can be reset to READY.
+        allow_ready = (
+            RequestState.EXPIRING,
+            RequestState.EXPIRE_ERROR,
+        )
+
+        # States which can be reset to any other state with allow_user=True.
+        allow_other = (
+            RequestState.PROCESSING,
+            RequestState.ERROR,
+        )
+
+        if state_new is None:
+            return (state in allow_ready) or (state in allow_other)
+
+        elif not cls.is_valid(state_new):
+            # Calling `is_valid` without `is_system` returned False,
+            # so this state must not have allow_user=True.
+            return False
+
+        elif state_new == RequestState.READY:
+            return state in allow_ready
+
+        else:
+            return state in allow_other
 
     @classmethod
     def unready_states(cls, include_discard=True):

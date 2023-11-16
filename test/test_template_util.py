@@ -380,6 +380,17 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertTrue(t(RequestState.READY))
         self.assertFalse(t(RequestState.PROCESSING))
 
+        t = self.app.jinja_env.tests['request_state_resettable']
+
+        self.assertTrue(t(RequestState.PROCESSING))
+        self.assertTrue(t(RequestState.ERROR))
+        self.assertTrue(t(RequestState.EXPIRING))
+        self.assertTrue(t(RequestState.EXPIRE_ERROR))
+        self.assertFalse(t(RequestState.NEW))
+        self.assertFalse(t(RequestState.READY))
+        self.assertFalse(t(RequestState.DISCARD))
+        self.assertFalse(t(RequestState.EXPIRED))
+
     def test_test_review_state(self):
         t = self.app.jinja_env.tests['review_state_done']
 
