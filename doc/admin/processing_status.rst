@@ -38,7 +38,9 @@ Error
 .. image:: image/processing_status.png
 
 When there are entries in the "Processing" or "Error" state,
-there will be a check box in the "Reset?" column of the table.
+there will be a check box in the "Update?" column of the table.
 You can use these to select entries for which you would like
 the system to try again,
-and then press the "Reset marked entries" button at the bottom of the page.
+and then press the "Set state of marked entries" button at the bottom of the page.
+You can also use this button to discard
+processing entries which are no longer relevant.

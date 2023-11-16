@@ -277,62 +277,65 @@ class AdminView(ViewMember):
 
     def processing_status(self, current_user, db, facilities, form):
         if form is not None:
-            n_reset = 0
+            n_update = 0
+
+            state_new = int(form['state_new'])
+
+            if not AttachmentState.is_valid(state_new):
+                raise ErrorPage('Requested new state is invalid.')
 
             for param in form:
                 if param.startswith('pdf_'):
                     id_ = int(param[4:])
                     state_prev = int(form['prev_{}'.format(param)])
-                    if state_prev == AttachmentState.NEW:
+                    if state_prev == state_new:
                         continue
                     db.update_proposal_pdf(
-                        pdf_id=id_, state=AttachmentState.NEW,
-                        state_prev=state_prev)
-                    n_reset += 1
+                        pdf_id=id_, state=state_new, state_prev=state_prev)
+                    n_update += 1
 
                 elif param.startswith('prop_fig_'):
                     id_ = int(param[9:])
                     state_prev = int(form['prev_{}'.format(param)])
-                    if state_prev == AttachmentState.NEW:
+                    if state_prev == state_new:
                         continue
                     db.update_proposal_figure(
                         proposal_id=None, role=None, link_id=None, fig_id=id_,
-                        state=AttachmentState.NEW, state_prev=state_prev)
-                    n_reset += 1
+                        state=state_new, state_prev=state_prev)
+                    n_update += 1
 
                 elif param.startswith('rev_fig_'):
                     id_ = int(param[8:])
                     state_prev = int(form['prev_{}'.format(param)])
-                    if state_prev == AttachmentState.NEW:
+                    if state_prev == state_new:
                         continue
                     db.update_review_figure(
                         reviewer_id=None, link_id=None, fig_id=id_,
-                        state=AttachmentState.NEW, state_prev=state_prev)
-                    n_reset += 1
+                        state=state_new, state_prev=state_prev)
+                    n_update += 1
 
                 elif param.startswith('pub_'):
                     id_ = int(param[4:])
                     state_prev = int(form['prev_{}'.format(param)])
-                    if state_prev == AttachmentState.NEW:
+                    if state_prev == state_new:
                         continue
                     db.update_prev_proposal_pub(
-                        pp_pub_id=id_, state=AttachmentState.NEW,
-                        state_prev=state_prev)
-                    n_reset += 1
+                        pp_pub_id=id_, state=state_new, state_prev=state_prev)
+                    n_update += 1
 
                 elif param.startswith('moc_'):
                     id_ = int(param[4:])
                     state_prev = int(form['prev_{}'.format(param)])
-                    if state_prev == AttachmentState.NEW:
+                    if state_prev == state_new:
                         continue
                     db.update_moc(
-                        moc_id=id_, state=AttachmentState.NEW,
-                        state_prev=state_prev)
-                    n_reset += 1
+                        moc_id=id_, state=state_new, state_prev=state_prev)
+                    n_update += 1
 
-            if n_reset:
-                flash('The status for {} {} has been reset.',
-                      n_reset, ('entry' if n_reset == 1 else 'entries'))
+            if n_update:
+                flash('The status for {} {} has been set to {}.',
+                      n_update, ('entry' if n_update == 1 else 'entries'),
+                      AttachmentState.get_name(state_new).lower())
             raise HTTPRedirect(url_for('.processing_status'))
 
         # We would like to search with the "no_link" option to only
@@ -342,7 +345,7 @@ class AdminView(ViewMember):
         # method based on the real ID field.
 
         search_kwargs = {
-            'state': AttachmentState.unready_states(),
+            'state': AttachmentState.unready_states(include_discard=False),
             'order_by_date': True,
         }
 
@@ -372,6 +375,7 @@ class AdminView(ViewMember):
 
         ctx = {
             'title': 'Processing Status',
+            'states_allowed': AttachmentState.get_options(),
             'mocs': self._add_moc_facility(
                 db.search_moc(
                     facility_id=None, public=None, **search_kwargs).values(),
