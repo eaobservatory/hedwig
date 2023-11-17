@@ -658,7 +658,7 @@ class ProposalPart(object):
             )).first()
 
             if result is not None:
-                return result['id']
+                return result.id
 
             if _read_only:
                 raise FormattedError(
@@ -756,7 +756,7 @@ class ProposalPart(object):
         if row is None:
             raise NoSuchRecord('figure does not exist')
 
-        return ProposalFigure(row['figure'], row['type'], row['filename'])
+        return ProposalFigure(row.figure, row.type, row.filename)
 
     def get_proposal_figure_preview(
             self, proposal_id, role, link_id, fig_id=None, md5sum=None):
@@ -850,7 +850,7 @@ class ProposalPart(object):
             raise NoSuchRecord('PDF does not exist for {} role {}',
                                proposal_id, role)
 
-        return ProposalFigure(row['pdf'], FigureType.PDF, row['filename'])
+        return ProposalFigure(row.pdf, FigureType.PDF, row.filename)
 
     def get_proposal_pdf_preview(self, proposal_id, role, page, md5sum=None):
         """
@@ -1255,7 +1255,7 @@ class ProposalPart(object):
                                                   queue.c.name.asc())):
                 values = default.copy()
                 values.update(**row_as_mapping(row))
-                ans[row['id']] = Call(**values)
+                ans[row.id] = Call(**values)
 
         return ans
 
@@ -1294,7 +1294,7 @@ class ProposalPart(object):
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(
                         iter_stmt.order_by(call_mid_close.c.date.asc())):
-                    ans[row['id']] = CallMidClose(**row_as_mapping(row))
+                    ans[row.id] = CallMidClose(**row_as_mapping(row))
 
         return ans
 
@@ -1317,7 +1317,7 @@ class ProposalPart(object):
             for row in conn.execute(stmt.order_by(
                     call_preamble.c.semester_id.asc(),
                     call_preamble.c.type.asc())):
-                ans[row['id']] = CallPreamble(**row_as_mapping(row))
+                ans[row.id] = CallPreamble(**row_as_mapping(row))
 
         return ans
 
@@ -1347,7 +1347,7 @@ class ProposalPart(object):
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt):
-                ans[row['id']] = Category(**row_as_mapping(row))
+                ans[row.id] = Category(**row_as_mapping(row))
 
         return ans
 
@@ -1473,7 +1473,7 @@ class ProposalPart(object):
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(
                         iter_stmt.order_by(member.c.sort_order.asc())):
-                    ans[row['id']] = Member(**row_as_mapping(row))
+                    ans[row.id] = Member(**row_as_mapping(row))
 
         return ans
 
@@ -1508,7 +1508,7 @@ class ProposalPart(object):
         with self._transaction() as conn:
             for row in conn.execute(
                     stmt.order_by(semester.c.date_start.desc())):
-                ans[row['id']] = SemesterInfo(**row_as_mapping(row))
+                ans[row.id] = SemesterInfo(**row_as_mapping(row))
 
         return ans
 
@@ -1977,7 +1977,7 @@ class ProposalPart(object):
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(
                     proposal_annotation.c.date.asc())):
-                ans[row['id']] = Annotation(**row_as_mapping(row))
+                ans[row.id] = Annotation(**row_as_mapping(row))
 
         return ans
 
@@ -2009,7 +2009,7 @@ class ProposalPart(object):
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(
                         iter_stmt.order_by(category.c.name.asc())):
-                    ans[row['id']] = ProposalCategory(**row_as_mapping(row))
+                    ans[row.id] = ProposalCategory(**row_as_mapping(row))
 
         return ans
 
@@ -2149,7 +2149,7 @@ class ProposalPart(object):
             for row in conn.execute(stmt):
                 values = default.copy()
                 values.update(**row_as_mapping(row))
-                ans[row[key_col]] = result_class(**values)
+                ans[getattr(row, key_col)] = result_class(**values)
 
         return ans
 
@@ -2225,7 +2225,7 @@ class ProposalPart(object):
             for row in conn.execute(stmt):
                 values = default.copy()
                 values.update(**row_as_mapping(row))
-                ans[row[key_col]] = ProposalPDFInfo(**values)
+                ans[getattr(row, key_col)] = ProposalPDFInfo(**values)
 
         return ans
 
@@ -2295,7 +2295,7 @@ class ProposalPart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by((queue.c.name))):
-                ans[row['id']] = QueueInfo(**row_as_mapping(row))
+                ans[row.id] = QueueInfo(**row_as_mapping(row))
 
         return ans
 
@@ -2388,7 +2388,7 @@ class ProposalPart(object):
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(
                         iter_stmt.order_by(target.c.sort_order.asc())):
-                    ans[row['id']] = Target(**row_as_mapping(row))
+                    ans[row.id] = Target(**row_as_mapping(row))
 
         return ans
 

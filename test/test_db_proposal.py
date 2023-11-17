@@ -995,10 +995,9 @@ class DBProposalTest(DBTestCase):
         with self.db._engine.begin() as conn:
             for row in conn.execute(
                     member.select().order_by(member.c.id.asc())):
-                self.assertIsNone(row['institution_id'])
+                self.assertIsNone(row.institution_id)
 
-                records[row['id']] = MemberInstitution(row['id'],
-                                                       institutions.pop())
+                records[row.id] = MemberInstitution(row.id, institutions.pop())
 
         self.assertEqual(len(records), 3)
         result = self.db.sync_proposal_member_institution(proposal_id, records)
@@ -1017,8 +1016,8 @@ class DBProposalTest(DBTestCase):
         with self.db._engine.begin() as conn:
             for row in conn.execute(
                     member.select().order_by(member.c.id.asc())):
-                self.assertEqual(row['institution_id'], institutions.pop())
-                records[row['id']] = MemberInstitution(row['id'], None)
+                self.assertEqual(row.institution_id, institutions.pop())
+                records[row.id] = MemberInstitution(row.id, None)
         self.assertEqual(institutions, [])
 
         # Sync all the records back to null.

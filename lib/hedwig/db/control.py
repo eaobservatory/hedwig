@@ -198,7 +198,7 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
         # Fetch the current set of records.
         existing = ResultCollection()
         for row in conn.execute(table.select().where(condition)):
-            existing[row[record_match_column_name]] = row
+            existing[getattr(row, record_match_column_name)] = row
 
         # Keep track of identifiers in case the input "records" list tries
         # mentioning the same record twice.
@@ -255,7 +255,7 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                 values = {}
                 for column in update_columns:
                     col_val = getattr(value, column.name)
-                    if previous[column] != col_val:
+                    if getattr(previous, column.name) != col_val:
                         values[column] = col_val
                         if column in verified_columns:
                             values[table.c.verified] = False
@@ -264,11 +264,12 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                     if unique_columns is None:
                         previous_unique_key = None
                     else:
-                        previous_unique_key = \
-                            tuple((previous[x] for x in unique_columns))
+                        previous_unique_key = tuple((
+                            getattr(previous, x.name)
+                            for x in unique_columns))
 
                     record_updates.append(RecordUpdate(
-                        previous['id'], value, values,
+                        previous.id, value, values,
                         value_unique_key, previous_unique_key, None))
 
         # Delete remaining un-matched entries.
@@ -277,7 +278,7 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
                 raise UserError('Entries can not be deleted here.')
 
             conn.execute(
-                table.delete().where(table.c.id == existing_record['id']))
+                table.delete().where(table.c.id == existing_record.id))
             n_delete += 1
 
         # Iterate over record updates and apply as required.

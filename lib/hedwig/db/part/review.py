@@ -268,7 +268,7 @@ class ReviewPart(object):
         if row is None:
             raise NoSuchRecord('note does not exist')
 
-        return Note(text=row['note'], format=row['note_format'])
+        return Note(text=row.note, format=row.note_format)
 
     def get_review_figure(self, reviewer_id, link_id, fig_id=None, md5sum=None):
         where_extra = []
@@ -415,7 +415,7 @@ class ReviewPart(object):
                 else:
                     values = row
 
-                ans[row['id']] = GroupMember(**values)
+                ans[row.id] = GroupMember(**values)
 
         return ans
 
@@ -609,7 +609,7 @@ class ReviewPart(object):
                         reviewer.c.role, person.c.name, reviewer.c.id)):
                     values = default.copy()
                     values.update(**row_as_mapping(row))
-                    ans[row['id']] = Reviewer(**values)
+                    ans[row.id] = Reviewer(**values)
 
         return ans
 
@@ -686,7 +686,7 @@ class ReviewPart(object):
                         reviewer_acceptance.c.id)):
                     values = default.copy()
                     values.update(**row_as_mapping(row))
-                    ans[row['id']] = ReviewerAcceptance(**values)
+                    ans[row.id] = ReviewerAcceptance(**values)
 
         return ans
 
@@ -720,7 +720,7 @@ class ReviewPart(object):
         with self._transaction(_conn=_conn) as conn:
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(iter_stmt):
-                    ans[row['id']] = ReviewDeadline(**row_as_mapping(row))
+                    ans[row.id] = ReviewDeadline(**row_as_mapping(row))
 
         return ans
 

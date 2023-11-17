@@ -170,7 +170,7 @@ class MessagePart(object):
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt):
-                row_key = row['id']
+                row_key = row.id
                 message_ids.add(row_key)
 
                 values = default.copy()

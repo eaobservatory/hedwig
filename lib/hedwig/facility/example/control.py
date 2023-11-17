@@ -57,7 +57,7 @@ class ExamplePart(object):
                 for row in conn.execute(
                         iter_stmt.order_by(
                             example_request.c.id.asc())):
-                    ans[row['id']] = ExampleRequest(**row_as_mapping(row))
+                    ans[row.id] = ExampleRequest(**row_as_mapping(row))
 
         return ans
 

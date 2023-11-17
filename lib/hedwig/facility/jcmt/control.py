@@ -85,7 +85,7 @@ class JCMTPart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(jcmt_available.c.id.asc())):
-                ans[row['id']] = JCMTAvailable(**row_as_mapping(row))
+                ans[row.id] = JCMTAvailable(**row_as_mapping(row))
 
         return ans
 
@@ -112,7 +112,7 @@ class JCMTPart(object):
         with self._transaction() as conn:
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(iter_stmt):
-                    ans[row['call_id']] = JCMTCallOptions(**row_as_mapping(row))
+                    ans[row.call_id] = JCMTCallOptions(**row_as_mapping(row))
 
         return ans
 
@@ -139,7 +139,7 @@ class JCMTPart(object):
         with self._transaction() as conn:
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(iter_stmt):
-                    ans[row['proposal_id']] = JCMTOptions(**row_as_mapping(row))
+                    ans[row.proposal_id] = JCMTOptions(**row_as_mapping(row))
 
         return ans
 
@@ -174,7 +174,7 @@ class JCMTPart(object):
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(
                         iter_stmt.order_by(table.c.id.asc())):
-                    ans[row['id']] = JCMTRequest(**row_as_mapping(row))
+                    ans[row.id] = JCMTRequest(**row_as_mapping(row))
 
         return ans
 
@@ -214,7 +214,7 @@ class JCMTPart(object):
         with self._transaction() as conn:
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(iter_stmt):
-                    ans[row['reviewer_id']] = JCMTReview(*row)
+                    ans[row.reviewer_id] = JCMTReview(*row)
 
         return ans
 

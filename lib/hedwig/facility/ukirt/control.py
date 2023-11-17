@@ -58,7 +58,7 @@ class UKIRTPart(object):
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(
                         iter_stmt.order_by(ukirt_allocation.c.id.asc())):
-                    ans[row['id']] = UKIRTRequest(**row_as_mapping(row))
+                    ans[row.id] = UKIRTRequest(**row_as_mapping(row))
 
         return ans
 
@@ -87,7 +87,7 @@ class UKIRTPart(object):
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(
                         iter_stmt.order_by(ukirt_request.c.id.asc())):
-                    ans[row['id']] = UKIRTRequest(**row_as_mapping(row))
+                    ans[row.id] = UKIRTRequest(**row_as_mapping(row))
 
         return ans
 

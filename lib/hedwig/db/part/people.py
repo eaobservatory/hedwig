@@ -363,12 +363,11 @@ class PeoplePart(object):
             return None
 
         else:
-            if check_password_hash(password_raw, result[user.c.password],
-                                   result[user.c.salt]):
-                if result['disabled']:
+            if check_password_hash(password_raw, result.password, result.salt):
+                if result.disabled:
                     raise UserError('Your account is disabled.')
 
-                verified_user_id = result['id']
+                verified_user_id = result.id
 
                 # If this is a new log in (not re-authentication), add to log:
                 if user_id is None:
@@ -453,7 +452,7 @@ class PeoplePart(object):
             result = conn.execute(stmt).first()
 
             if result is not None:
-                expiry = result['expiry']
+                expiry = result.expiry
 
                 time_left = expiry - datetime.utcnow()
 
@@ -465,7 +464,7 @@ class PeoplePart(object):
                     expiry = datetime.utcnow() + auth_token_expiry
 
                     refresh_result = conn.execute(auth_token.update().where(
-                        auth_token.c.id == result['token_id']
+                        auth_token.c.id == result.token_id
                     ).values({
                         auth_token.c.expiry: expiry,
                     }))
@@ -477,8 +476,8 @@ class PeoplePart(object):
             raise NoSuchRecord('token not found')
 
         return (
-            UserInfo(id=result['id'], name=result['name'], disabled=None),
-            result['token_id'])
+            UserInfo(id=result.id, name=result.name, disabled=None),
+            result.token_id)
 
     def _delete_auth_expired(self, conn):
         conn.execute(auth_token.delete().where(
@@ -601,7 +600,7 @@ class PeoplePart(object):
             if result is None:
                 raise NoSuchRecord('invitation token expired or non-existant')
 
-        return self.get_person(person_id=result['person_id'],
+        return self.get_person(person_id=result.person_id,
                                *args, **kwargs)
 
     def get_person(self, person_id, user_id=None,
@@ -640,11 +639,11 @@ class PeoplePart(object):
             # If we weren't searching by person_id, we need to retrieve it
             # from the record.
             if person_id is None:
-                person_id = result['id']
+                person_id = result.id
 
-            if with_institution and result['institution_id'] is not None:
-                institution = self.get_institution(result['institution_id'],
-                                                   _conn=conn)
+            if with_institution and result.institution_id is not None:
+                institution = self.get_institution(
+                    result.institution_id, _conn=conn)
 
             if with_email:
                 email = self.search_email(person_id=person_id, _conn=conn)
@@ -761,9 +760,9 @@ class PeoplePart(object):
                 if result is None:
                     raise ConsistencyError('person does not exist with id={}',
                                            person_id)
-                elif result['user_id'] is not None:
+                elif result.user_id is not None:
                     raise ConsistencyError('person is already registered')
-                elif result['admin']:
+                elif result.admin:
                     raise UserError('person has administrative privileges')
 
             conn.execute(invitation.delete().where(
@@ -961,7 +960,7 @@ class PeoplePart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(auth_token.c.id)):
-                ans[row['id']] = AuthTokenInfo(**row_as_mapping(row))
+                ans[row.id] = AuthTokenInfo(**row_as_mapping(row))
 
         return ans
 
@@ -985,7 +984,7 @@ class PeoplePart(object):
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(email.c.id)):
-                ans[row['id']] = Email(**row_as_mapping(row))
+                ans[row.id] = Email(**row_as_mapping(row))
 
         return ans
 
@@ -1021,7 +1020,7 @@ class PeoplePart(object):
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(
                     institution.c.name, institution.c.department)):
-                ans[row['id']] = InstitutionInfo(**row_as_mapping(row))
+                ans[row.id] = InstitutionInfo(**row_as_mapping(row))
 
         return ans
 
@@ -1128,7 +1127,7 @@ class PeoplePart(object):
             self._delete_oauth_expired(conn)
 
             for row in conn.execute(stmt):
-                ans[row['id']] = OAuthCode(**row_as_mapping(row))
+                ans[row.id] = OAuthCode(**row_as_mapping(row))
 
         return ans
 
@@ -1146,7 +1145,7 @@ class PeoplePart(object):
             self._delete_oauth_expired(conn)
 
             for row in conn.execute(stmt):
-                ans[row['id']] = OAuthToken(**row_as_mapping(row))
+                ans[row.id] = OAuthToken(**row_as_mapping(row))
 
         return ans
 
@@ -1217,7 +1216,7 @@ class PeoplePart(object):
             for row in conn.execute(stmt.order_by(person.c.name)):
                 values = default.copy()
                 values.update(**row_as_mapping(row))
-                ans[row['id']] = PersonInfo(**values)
+                ans[row.id] = PersonInfo(**values)
 
         return ans
 
@@ -1299,7 +1298,7 @@ class PeoplePart(object):
                 else:
                     values = row_as_mapping(row)
 
-                ans[row['id']] = SiteGroupMember(**values)
+                ans[row.id] = SiteGroupMember(**values)
 
         return ans
 
@@ -1329,7 +1328,7 @@ class PeoplePart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt.order_by(user.c.name.asc())):
-                ans[row['id']] = UserInfo(**row_as_mapping(row))
+                ans[row.id] = UserInfo(**row_as_mapping(row))
 
         return ans
 
@@ -1375,7 +1374,7 @@ class PeoplePart(object):
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(table.c.id.desc())):
-                ans[row['id']] = result_class(**row_as_mapping(row))
+                ans[row.id] = result_class(**row_as_mapping(row))
 
         return ans
 
@@ -1404,7 +1403,7 @@ class PeoplePart(object):
 
             not_approved = set()
             for row in conn.execute(stmt):
-                not_approved.add(row['id'])
+                not_approved.add(row.id)
 
             # Now update the records which changed.
             for (id_, approved) in records.items():
@@ -1700,8 +1699,8 @@ class PeoplePart(object):
             if result is None:
                 raise NoSuchRecord('verify token expired or non-existant')
 
-            email_address = result['email_address']
-            if person_id != result['person_id']:
+            email_address = result.email_address
+            if person_id != result.person_id:
                 raise UserError('This verification code appears to have been '
                                 'issued to someone else.')
 
@@ -1752,7 +1751,7 @@ class PeoplePart(object):
             if result is None:
                 raise NoSuchRecord('reset token expired or non-existant')
 
-            user_id = result['user_id']
+            user_id = result.user_id
 
             # Log the usage of this token.
             self._add_user_log_entry(
@@ -1814,7 +1813,7 @@ class PeoplePart(object):
             if result is None:
                 raise NoSuchRecord('invitation token expired or non-existant')
 
-            old_person_id = result['person_id']
+            old_person_id = result.person_id
             old_person_record = self.get_person(old_person_id,
                                                 with_proposals=True,
                                                 with_reviews=True,

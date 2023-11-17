@@ -135,7 +135,7 @@ class CalculatorPart(object):
                 calculator.c.code == code))).first()
 
             if result is not None:
-                return result['id']
+                return result.id
 
             if _read_only:
                 raise FormattedError(
@@ -182,7 +182,7 @@ class CalculatorPart(object):
         with self._transaction() as conn:
             for row in conn.execute(
                     stmt.order_by(table.c.sort_order.asc())):
-                ans[row['id']] = result_class(**row_as_mapping(row))
+                ans[row.id] = result_class(**row_as_mapping(row))
 
         return ans
 
@@ -241,7 +241,7 @@ class CalculatorPart(object):
             for row in conn.execute(stmt):
                 values = default.copy()
                 values.update(**row_as_mapping(row))
-                ans[row['id']] = MOCInfo(**values)
+                ans[row.id] = MOCInfo(**values)
 
         return ans
 
@@ -299,11 +299,12 @@ class CalculatorPart(object):
 
         with self._transaction() as conn:
             for row in conn.execute(stmt):
-                ans[row['id']] = MOCInfo(description=None,
-                                         description_format=None,
-                                         uploaded=None,
-                                         num_cells=None, area=None, state=None,
-                                         **row_as_mapping(row))
+                ans[row.id] = MOCInfo(
+                    description=None,
+                    description_format=None,
+                    uploaded=None,
+                    num_cells=None, area=None, state=None,
+                    **row_as_mapping(row))
 
         return ans
 
