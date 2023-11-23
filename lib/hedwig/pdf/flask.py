@@ -73,6 +73,7 @@ class PDFWriterFlask(PDFWriter):
             facility_id=None, proposal_id=proposal_id, with_members=True)
         for group_member in self.db.search_group_member(
                 facility_id=proposal.facility_id,
+                queue_id=proposal.queue_id,
                 group_type=GroupType.review_view_groups()).values():
             if not proposal.members.has_person(group_member.person_id):
                 person_id = group_member.person_id
