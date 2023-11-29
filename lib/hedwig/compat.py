@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017 East Asian Observatory
+# Copyright (C) 2016-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -27,6 +27,7 @@ if python_version < 3:
     # Python 2.
 
     from codecs import ascii_decode, ascii_encode, utf_8_encode
+    from collections import OrderedDict
     from math import floor as _math_floor
     from urllib import quote as _url_quote
     from urllib import urlencode as _urlencode
@@ -71,9 +72,9 @@ if python_version < 3:
 
     def url_encode(query):
         """Unicode-safe wrapper for urllib.urlencode."""
-        return _urlencode({
-            utf_8_encode(k)[0]: utf_8_encode(v)[0]
-            for (k, v) in query.items()})
+        return _urlencode(OrderedDict((
+            (utf_8_encode(k)[0], utf_8_encode(v)[0])
+            for (k, v) in query.items())))
 
     ExceptionWithMessage = Exception
 
