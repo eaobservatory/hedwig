@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -180,8 +180,11 @@ class ClashTool(BaseTargetTool):
         mocs = db.search_moc(facility_id=self.facility.id_, public=public)
 
         if mocs:
+            unready_states = AttachmentState.unready_states(
+                include_discard=False)
+
             moc_ready = all(
-                AttachmentState.is_ready(x.state) for x in mocs.values())
+                x.state not in unready_states for x in mocs.values())
 
         elif current_user.is_admin:
             # Allow site administrators to view the clash tool when
