@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2019 East Asian Observatory
+# Copyright (C) 2016-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from hedwig.astro.coord import CoordSystem, parse_coord
 from hedwig.compat import string_type
 from hedwig.error import NoSuchRecord, ParseError
 from hedwig.facility.jcmt.type import JCMTAncillary, JCMTInstrument, \
@@ -151,10 +152,17 @@ class JCMTFacilityTestCase(FacilityTestCase):
         self.assertAlmostEqual(
             self.view.calculate_overall_rating(c), 58.333, places=3)
 
-    def test_archive_url(self):
-        url = self.view.make_archive_search_url(180.0, 45.0)
-        self.assertIsInstance(url, string_type)
-        self.assertTrue(url.startswith('https://www.cadc-ccda'))
+    def test_archive_urls(self):
+        coord = parse_coord(CoordSystem.ICRS, '180.0', '45.0', 'test')
+        urls = self.view.make_archive_search_urls(coord)
+        self.assertIsInstance(urls, list)
+        self.assertEqual(len(urls), 1)
+        url = urls[0]
+        self.assertIsInstance(url, Link)
+        self.assertIsInstance(url.url, string_type)
+        self.assertEqual(url.url, 'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/search/?Observation.collection=JCMT&Plane.position.bounds@Shape1Resolver.value=ALL&Plane.position.bounds=180.00000%2045.00000#resultTableTab')
+        self.assertIsInstance(url.text, string_type)
+        self.assertEqual(url.text, 'Search CADC at 12:00:00 +45:00:00')
 
     def test_proposal_urls(self):
         urls = self.view.make_proposal_info_urls('M99XY001')

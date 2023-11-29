@@ -319,15 +319,22 @@ class Generic(
         except NoSuchValue:
             raise ParseError('Did not recognise call type component')
 
-    def make_archive_search_url(self, ra_deg, dec_deg):
+    def make_archive_search_urls(self, coord, public=True):
         """
-        Make an URL to the facility's archive search page for
+        Make URLs to the facility's archive search pages for
         the given coordinates.
 
-        Returns None when not implemented.
+        :param coord: coordinates as an astropy `SkyCoord` object
+            in ICRS.
+        :param public: `True` if only publicly accessible links should be
+            given, e.g. when the Clash Tool performs a search as a user
+            unable to view private MOCs.
+
+        :return: list of `Link` namedtuple instances with "text"
+            and "url" attributes.
         """
 
-        return None
+        return []
 
     def make_proposal_info_urls(self, proposal_code):
         """

@@ -23,6 +23,7 @@ from datetime import time, timedelta
 from itertools import chain
 import re
 
+from ...astro.coord import CoordSystem, format_coord
 from ...compat import url_encode
 from ...error import NoSuchRecord, NoSuchValue, ParseError, UserError
 from ...web.util import HTTPError, HTTPRedirect, flash, url_for
@@ -195,30 +196,38 @@ class JCMT(EAOFacility):
     def get_calculator_classes(self):
         return (SCUBA2Calculator, HeterodyneCalculator)
 
-    def make_archive_search_url(self, ra_deg, dec_deg):
+    def make_archive_search_urls(self, coord, public=True):
         """
         Make an URL to search the JSA at CADC.
         """
 
-        position = '{:.5f} {:.5f}'.format(ra_deg, dec_deg)
+        result = []
+
+        ra_deg = coord.spherical.lon.deg
+        dec_deg = coord.spherical.lat.deg
+
+        (ra_str, dec_str) = format_coord(CoordSystem.ICRS, coord)
 
         try:
-            url = (
-                self.cadc_advanced_search + '?' +
-                url_encode({
-                    'Observation.collection': 'JCMT',
-                    'Plane.position.bounds@Shape1Resolver.value': 'ALL',
-                    'Plane.position.bounds': position,
-                }) +
-                '#resultTableTab')
+            url = '{}?{}#resultTableTab'.format(
+                self.cadc_advanced_search,
+                url_encode(OrderedDict((
+                    ('Observation.collection', 'JCMT'),
+                    ('Plane.position.bounds@Shape1Resolver.value', 'ALL'),
+                    ('Plane.position.bounds', '{:.5f} {:.5f}'.format(
+                        ra_deg, dec_deg)),
+                ))))
 
-        except:
-            # `url_encode` could possibly raise UnicodeEncodeError.
-            return None
+            # Advanced Search doesn't seem to like + as part of the
+            # coordinates, or "@" encoded as "%40".
+            result.append(Link(
+                'Search CADC at {} {}'.format(ra_str, dec_str),
+                url.replace('+', '%20').replace('%40', '@')))
 
-        # Advanced Search doesn't seem to like + as part of the coordinates,
-        # or "@" encoded as "%40".
-        return url.replace('+', '%20').replace('%40', '@')
+        except UnicodeEncodeError:
+            pass
+
+        return result
 
     def make_proposal_info_urls(self, proposal_code):
         """

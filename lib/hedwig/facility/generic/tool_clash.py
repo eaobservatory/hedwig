@@ -25,7 +25,7 @@ import re
 
 from pymoc.util.catalog import catalog_to_cells
 
-from ...astro.coord import CoordSystem, format_coord
+from ...astro.coord import CoordSystem
 from ...error import NoSuchRecord, UserError
 from ...file.moc import read_moc
 from ...view import auth
@@ -36,8 +36,7 @@ from ...type.enum import AttachmentState, FormatType
 from ...type.simple import MOCInfo, RouteInfo
 from ...type.util import null_tuple
 
-TargetClash = namedtuple('TargetClash', ('target', 'mocs', 'target_search',
-                                         'display_coord'))
+TargetClash = namedtuple('TargetClash', ('target', 'mocs', 'target_links'))
 
 
 class ClashTool(BaseTargetTool):
@@ -299,17 +298,16 @@ class ClashTool(BaseTargetTool):
                 facility_id=self.facility.id_, public=public,
                 order=self.order, cell=cells)
 
-            archive_url = self.facility.make_archive_search_url(
-                coord.spherical.lon.deg, coord.spherical.lat.deg)
-            archive_url_text = ' '.join(format_coord(CoordSystem.ICRS, coord))
+            archive_links = self.facility.make_archive_search_urls(
+                coord, public=public)
 
             if target_clashes:
                 clashes.append(TargetClash(
-                    target, target_clashes, archive_url, archive_url_text))
+                    target, target_clashes, archive_links))
 
             else:
                 non_clashes.append(TargetClash(
-                    target, None, archive_url, archive_url_text))
+                    target, None, archive_links))
 
         return (clashes, non_clashes)
 

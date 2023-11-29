@@ -326,11 +326,11 @@ Some examples of such methods are:
   :meth:`~hedwig.facility.generic.view.Generic.parse_proposal_code`
   method itself.
 
-* :meth:`~hedwig.facility.generic.view.Generic.make_archive_search_url`
+* :meth:`~hedwig.facility.generic.view.Generic.make_archive_search_urls`
 
   If your facility has a data archive which can be searched by sky coordinates,
   you can override this method to provide a routine capable of producing
-  a suitable URL.
+  a list of suitable URLs.
 
 * :meth:`~hedwig.facility.generic.view.Generic.make_proposal_info_urls`
 

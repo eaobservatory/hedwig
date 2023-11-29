@@ -13,6 +13,18 @@
     </li>
 {% endmacro %}
 
+{% macro render_target_links(target_links) %}
+    {% if target_links %}
+        <nav>
+            <ol>
+                {% for target_link in target_links %}
+                    <li><a href="{{ target_link.url }}" target="_blank">{{ target_link.text }}</a></li>
+                {% endfor %}
+            </ol>
+        </nav>
+    {% endif %}
+{% endmacro %}
+
 {% block tool_input_list_extra %}
     {{ search_radius_input() }}
 {% endblock %}
@@ -87,11 +99,8 @@
                                 </li>
                             {% endfor %}
                         </ul>
-                        {% if clash.target_search is not none %}
-                            <p>
-                                <a href="{{ clash.target_search }}" target="_blank">Search archive at {{ clash.display_coord }}</a>
-                            </p>
-                        {% endif %}
+
+                        {{ render_target_links(clash.target_links) }}
                     </li>
                 {% endfor %}
             </ul>
@@ -111,11 +120,7 @@
                             {{ clash.target.name }}
                         </p>
 
-                        {% if clash.target_search is not none %}
-                            <p>
-                                <a href="{{ clash.target_search }}" target="_blank">Search archive at {{ clash.display_coord }}</a>
-                            </p>
-                        {% endif %}
+                        {{ render_target_links(clash.target_links) }}
                     </li>
                 {% endfor %}
             </ul>
