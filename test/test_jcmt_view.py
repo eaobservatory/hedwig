@@ -180,7 +180,7 @@ class JCMTFacilityTestCase(FacilityTestCase):
         url_omp = urls['OMP']
         self.assertIsInstance(url_omp, string_type)
         self.assertEqual(
-            url_omp, 'http://omp.eao.hawaii.edu/cgi-bin/'
+            url_omp, 'https://omp.eao.hawaii.edu/cgi-bin/'
             'projecthome.pl?project=M99%E2%80%9CZZZ%E2%80%9D001')
 
     def test_attach_review(self):

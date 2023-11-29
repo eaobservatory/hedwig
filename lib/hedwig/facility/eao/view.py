@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2023 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,7 +24,7 @@ from ..generic.view import Generic
 
 
 class EAOFacility(Generic):
-    OMP_CGI_BIN = 'http://omp.eao.hawaii.edu/cgi-bin/'
+    OMP_CGI_BIN = 'https://omp.eao.hawaii.edu/cgi-bin/'
 
     def make_proposal_info_urls(self, proposal_code):
         """
@@ -40,8 +40,7 @@ class EAOFacility(Generic):
                     'project': proposal_code,
                 })))
 
-        except:
-            # `url_encode` could possibly raise UnicodeEncodeError.
+        except UnicodeEncodeError:
             pass
 
         return urls
