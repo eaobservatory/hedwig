@@ -238,16 +238,15 @@ class JCMT(EAOFacility):
             proposal_code)
 
         try:
-            result.append(
-                Link(
-                    'CADC', self.cadc_advanced_search + '?' +
-                    url_encode({
-                        'Observation.collection': 'JCMT',
-                        'Observation.proposal.id': proposal_code,
-                    }) + '#resultTableTab'))
+            result.append(Link(
+                'CADC', '{}?{}#resultTableTab'.format(
+                    self.cadc_advanced_search,
+                    url_encode(OrderedDict((
+                        ('Observation.collection', 'JCMT'),
+                        ('Observation.proposal.id', proposal_code),
+                    ))))))
 
-        except:
-            # `url_encode` could possibly raise UnicodeEncodeError.
+        except UnicodeEncodeError:
             pass
 
         return result

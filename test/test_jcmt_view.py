@@ -182,6 +182,10 @@ class JCMTFacilityTestCase(FacilityTestCase):
         self.assertEqual(
             url_omp, 'https://omp.eao.hawaii.edu/cgi-bin/'
             'projecthome.pl?project=M99%E2%80%9CZZZ%E2%80%9D001')
+        url_cadc = urls['CADC']
+        self.assertIsInstance(url_cadc, string_type)
+        self.assertEqual(
+            url_cadc, 'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/search/?Observation.collection=JCMT&Observation.proposal.id=M99%E2%80%9CZZZ%E2%80%9D001#resultTableTab')
 
     def test_attach_review(self):
         types = self.view.get_call_types()
