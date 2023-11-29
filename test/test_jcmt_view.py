@@ -164,6 +164,16 @@ class JCMTFacilityTestCase(FacilityTestCase):
         self.assertIsInstance(url.text, string_type)
         self.assertEqual(url.text, 'Search CADC at 12:00:00 +45:00:00')
 
+        urls = self.view.make_archive_search_urls(coord, public=False)
+        self.assertIsInstance(urls, list)
+        self.assertEqual(len(urls), 2)
+        url = urls[0]
+        self.assertEqual(url.url, 'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/search/?Observation.collection=JCMT&Plane.position.bounds@Shape1Resolver.value=ALL&Plane.position.bounds=180.00000%2045.00000#resultTableTab')
+        self.assertEqual(url.text, 'Search CADC at 12:00:00 +45:00:00')
+        url = urls[1]
+        self.assertEqual(url.url, 'https://omp.eao.hawaii.edu/cgi-bin/findtarget.pl?tel=JCMT&ra=12%3A00%3A00&dec=%2B45%3A00%3A00&sep=1800&submit_find=1')
+        self.assertEqual(url.text, 'Search OMP MSBs at 12:00:00 +45:00:00')
+
     def test_proposal_urls(self):
         urls = self.view.make_proposal_info_urls('M99XY001')
         self.assertIsInstance(urls, list)

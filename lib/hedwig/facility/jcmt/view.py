@@ -227,6 +227,23 @@ class JCMT(EAOFacility):
         except UnicodeEncodeError:
             pass
 
+        if not public:
+            try:
+                result.append(Link(
+                    'Search OMP MSBs at {} {}'.format(ra_str, dec_str),
+                    '{}findtarget.pl?{}'.format(
+                        self.OMP_CGI_BIN,
+                        url_encode(OrderedDict((
+                            ('tel', 'JCMT'),
+                            ('ra', ra_str),
+                            ('dec', dec_str),
+                            ('sep', '1800'),
+                            ('submit_find', '1'),
+                        ))))))
+
+            except UnicodeEncodeError:
+                pass
+
         return result
 
     def make_proposal_info_urls(self, proposal_code):
