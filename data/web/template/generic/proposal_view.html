@@ -80,7 +80,9 @@
                                 <li><a id="view_feedback_link" href="{{ url_for('.proposal_feedback', proposal_id=proposal.id) }}">View feedback</a></li>
                             {% endif %}
                         {% endif %}
-                        <li class="space_above"><a class="request_download_link" href="{{ url_for('.proposal_pdf_request', proposal_id=proposal.id) }}">Request PDF file download</a></li>
+                        {% if can_request_pdf %}
+                            <li class="space_above"><a class="request_download_link" href="{{ url_for('.proposal_pdf_request', proposal_id=proposal.id) }}">Request PDF file download</a></li>
+                        {% endif %}
                     </ol>
                 </nav>
             </td>

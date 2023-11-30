@@ -689,6 +689,7 @@ class GenericProposal(object):
             'can_view_review': review_can.view,
             'can_edit_review': review_can.edit,
             'can_view_feedback': feedback_can.view,
+            'can_request_pdf': get_config().getboolean('pdf_request', 'enable_request'),
             'is_submitted': ProposalState.is_submitted(proposal.state),
             'proposal': proposal._replace(members=proposal.members.map_values(
                 lambda x: with_can_view(
@@ -2571,6 +2572,9 @@ class GenericProposal(object):
     @with_proposal(permission=PermissionType.VIEW)
     def view_proposal_pdf_request(
             self, current_user, db, proposal, can, form):
+        if not get_config().getboolean('pdf_request', 'enable_request'):
+            raise ErrorPage('PDF download is not currently available.')
+
         requests = db.search_request_prop_pdf(
             proposal_id=proposal.id, state=RequestState.visible_states())
 

@@ -90,4 +90,5 @@ key=
 writer=WeasyPrint
 
 [pdf_request]
+enable_request=no
 prop_dir=
