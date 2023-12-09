@@ -136,7 +136,8 @@ def _copy_proposal(db, app, request, dry_run=False):
         user=null_tuple(UserInfo)._replace(id=copier.user_id),
         person=copier,
         is_admin=False,
-        auth_token_id=None)
+        auth_token_id=None,
+        options={})
 
     with app.test_request_context(
             path='/{}/'.format(facility.get_code()),

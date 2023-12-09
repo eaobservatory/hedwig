@@ -1,9 +1,11 @@
-{% macro render_figures(figures, url_prefix, url_args) %}
+{% macro render_figures(figures, url_prefix, url_args, pdf_as_svg) %}
     {% if figures %}
         {% for fig in figures %}
             <figure>
                 {% if fig.state is attachment_ready %}
-                    {% if fig.has_preview %}
+                    {% if (fig.type is figure_type_pdf) and pdf_as_svg %}
+                        <img src="{{ url_for(url_prefix | fmt('.{}_view_figure_svg'), fig_id=fig.id, md5sum=fig.md5sum, **url_args) }}" alt="Figure {{ loop.index }}" />
+                    {% elif fig.has_preview %}
                         <a href="{{ url_for(url_prefix | fmt('.{}_view_figure'), fig_id=fig.id, md5sum=fig.md5sum, **url_args) }}">
                             <img src="{{  url_for(url_prefix | fmt('.{}_view_figure_preview'), fig_id=fig.id, md5sum=fig.md5sum, **url_args)}}" alt="Figure {{ loop.index }}" />
                         </a>
@@ -35,12 +37,12 @@
     {% endif %}
 {% endmacro %}
 
-{% macro render_proposal_figures(figures, proposal_id, role) %}
-    {{ render_figures(figures, url_prefix='case', url_args={'proposal_id': proposal_id, 'role': role}) }}
+{% macro render_proposal_figures(figures, proposal_id, role, pdf_as_svg=false) %}
+    {{ render_figures(figures, url_prefix='case', url_args={'proposal_id': proposal_id, 'role': role}, pdf_as_svg=pdf_as_svg) }}
 {% endmacro %}
 
-{% macro render_review_figures(figures, reviewer_id) %}
-    {{ render_figures(figures, url_prefix='review', url_args={'reviewer_id': reviewer_id}) }}
+{% macro render_review_figures(figures, reviewer_id, pdf_as_svg=false) %}
+    {{ render_figures(figures, url_prefix='review', url_args={'reviewer_id': reviewer_id}, pdf_as_svg=pdf_as_svg) }}
 {% endmacro %}
 
 {% macro render_figure_table(figures, url_prefix, url_args, description) %}

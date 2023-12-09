@@ -28,6 +28,7 @@ from ...email.format import render_email_template
 from ...error import DatabaseIntegrityError, NoSuchRecord, NoSuchValue, \
     UserError
 from ...file.csv import CSVWriter
+from ...file.pdf import pdf_to_svg
 from ...stats.table import table_mean_stdev
 from ...view import auth
 from ...view.util import int_or_none, float_or_none, \
@@ -38,7 +39,7 @@ from ...web.util import ErrorPage, \
 from ...type.collection import AffiliationCollection, MemberCollection, \
     ReviewerCollection, ReviewDeadlineCollection
 from ...type.enum import Assessment, \
-    FormatType, GroupType, \
+    FigureType, FormatType, GroupType, \
     MessageThreadType, PermissionType, PersonTitle, ProposalState, ReviewState
 from ...type.simple import Affiliation, DateAndTime, Link, MemberPIInfo, \
     Note, \
@@ -2271,12 +2272,25 @@ class GenericReview(object):
     def view_review_view_figure(
             self, current_user, db, reviewer, proposal, can,
             fig_id, md5sum, type_=None):
-        if type_ is None:
+        if (type_ is None) or (type_ == 'svg'):
             try:
-                return db.get_review_figure(
+                figure = db.get_review_figure(
                     reviewer.id, fig_id, md5sum=md5sum)
             except NoSuchRecord:
                 raise HTTPNotFound('Figure not found.')
+
+            if type_ is None:
+                return figure
+
+            elif type_ == 'svg':
+                if figure.type == FigureType.PDF:
+                    return pdf_to_svg(figure.data, 1)
+
+                else:
+                    raise HTTPError('Figure type cannot be converted to SVG.')
+
+            else:
+                raise HTTPError('Figure view type unexpectedly didn\'t match.')
 
         elif type_ == 'thumbnail':
             try:

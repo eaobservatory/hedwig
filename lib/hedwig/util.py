@@ -159,6 +159,40 @@ def matches_constraint(value, constraint):
     return (value == constraint)
 
 
+class ClosingMultiple(object):
+    """
+    Context manager object for handling closing multile file objects.
+    """
+
+    def __init__(self):
+        self._files = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc_info):
+        for file_ in self._files:
+            try:
+                file_.close()
+            except:
+                pass
+
+    def __call__(self, file_):
+        """
+        Add a file to the context manager's list of file objects being
+        managed.
+
+        As a convenience, the file itself is returned to allow this to
+        be combined with assigment, e.g.::
+
+            with ClosingMultiple() as closer:
+                f = closer(BytesIO())
+        """
+
+        self._files.append(file_)
+        return file_
+
+
 class FormatMaxDP(object):
     """
     Class for formatting numbers to a maximum number of decimal places.

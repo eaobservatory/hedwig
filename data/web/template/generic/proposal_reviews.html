@@ -153,7 +153,7 @@
             {% if show_fig %}
                 <tr>
                     <td colspan="{{ review_info_columns | length + 3 }}">
-                        {{ render_review_figures(review.figures.values(), review.id) }}
+                        {{ render_review_figures(review.figures.values(), review.id, pdf_as_svg=current_user.options.pdf_as_svg) }}
                     </td>
                 </tr>
             {% endif %}

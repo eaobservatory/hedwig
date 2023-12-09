@@ -46,7 +46,7 @@ from ...type.simple import Affiliation, Annotation, \
     ProposalFigureInfo, ProposalPDFInfo, \
     ProposalText, \
     Queue, QueueInfo, \
-    RequestPropCopy, \
+    RequestPropCopy, RequestPropPDF, \
     ReviewerInfo, Semester, SemesterInfo, Target
 from ...util import is_list_like
 from ..compat import case, row_as_dict, row_as_mapping, scalar_subquery, select
@@ -59,7 +59,7 @@ from ..meta import affiliation, affiliation_weight, \
     proposal_fig_preview, proposal_fig_thumbnail, \
     proposal_pdf, proposal_pdf_link, proposal_pdf_preview, \
     proposal_text, proposal_text_link, \
-    queue, request_prop_copy, \
+    queue, request_prop_copy, request_prop_pdf, \
     review, reviewer, semester, target
 from ..util import require_not_none
 
@@ -414,6 +414,13 @@ class ProposalPart(object):
 
         return request_id
 
+    def add_request_prop_pdf(
+            self, proposal_id, requester_person_id,
+            _test_skip_check=False):
+        return self._add_request_prop(
+            request_prop_pdf, proposal_id, requester_person_id,
+            _test_skip_check=_test_skip_check)
+
     def _add_request_prop(
             self, table, proposal_id, requester_person_id, extra_values=None,
             _conn=None, _test_skip_check=False):
@@ -623,6 +630,10 @@ class ProposalPart(object):
     def delete_request_prop_copy(self, request_id, _test_skip_check=False):
         self._delete_request(
             request_prop_copy, request_id, _test_skip_check=_test_skip_check)
+
+    def delete_request_prop_pdf(self, request_id, _test_skip_check=False):
+        self._delete_request(
+            request_prop_pdf, request_id, _test_skip_check=_test_skip_check)
 
     def _delete_request(
             self, table, request_id,
@@ -2306,6 +2317,13 @@ class ProposalPart(object):
             request_id=request_id, proposal_id=proposal_id, state=state,
             **kwargs)
 
+    def search_request_prop_pdf(
+            self, request_id=None, proposal_id=None, state=None, **kwargs):
+        return self._search_request_prop(
+            request_prop_pdf, RequestPropPDF,
+            request_id=request_id, proposal_id=proposal_id, state=state,
+            **kwargs)
+
     def _search_request_prop(
             self, table, result_class, request_id, proposal_id, state,
             requested_before=None, processed_before=None,
@@ -3162,6 +3180,17 @@ class ProposalPart(object):
         self._update_request_prop(
             request_prop_copy, request_id, state=state, processed=processed,
             state_prev=state_prev, extra_values=values,
+            state_is_system=state_is_system,
+            _test_skip_check=_test_skip_check)
+
+    def update_request_prop_pdf(
+            self, request_id, state=None, processed=None,
+            state_prev=None,
+            state_is_system=False,
+            _test_skip_check=False):
+        self._update_request_prop(
+            request_prop_pdf, request_id, state=state, processed=processed,
+            state_prev=state_prev,
             state_is_system=state_is_system,
             _test_skip_check=_test_skip_check)
 

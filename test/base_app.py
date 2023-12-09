@@ -91,7 +91,8 @@ class WebAppTestCase(DBTestCase):
             user=None,
             person=None,
             is_admin=False,
-            auth_token_id=None)
+            auth_token_id=None,
+            options={})
 
         if person_id is not None:
             person = self.db.search_person(person_id=person_id).get_single()

@@ -58,6 +58,11 @@
         <td><a href="{{ url_for(request.facility_code | fmt('{}.call_view'), call_id=request.call_id) }}">{{ request.call_id }}</a></td>
     {% endcall %}
 
+    <h2>Proposal PDF Downloads</h2>
+
+    {% call(request) request_table(req_prop_pdf, 'prop_pdf_{}', has_expiry=True) %}
+    {% endcall %}
+
     {% if update_counter() > 0 %}
         <p>
             <select name="state_new">

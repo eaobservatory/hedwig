@@ -132,6 +132,10 @@ ul ul + nav ol {
     padding-top: 1ex;
 }
 
+nav ol li.space_above {
+    margin-top: 2ex;
+}
+
 form ol li:not(:first-child) {
     padding-top: 0.5ex;
 }

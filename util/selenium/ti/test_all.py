@@ -1076,6 +1076,14 @@ class IntegrationTest(DummyConfigTestCase):
         self._save_screenshot(self.user_image_root, 'proposal_complete',
                               ['proposal_status_cell'])
 
+        self.browser.find_element(By.LINK_TEXT, 'Request PDF file download').click()
+        self._save_screenshot(self.user_image_root, 'proposal_pdf_request')
+
+        self.browser.find_element(By.NAME, 'submit_confirm').click()
+        self._save_screenshot(self.user_image_root, 'proposal_pdf_status')
+
+        self.browser.find_element(By.LINK_TEXT, 'Back to proposal').click()
+
         self.browser.find_element(By.LINK_TEXT, 'Withdraw proposal').click()
 
         self._save_screenshot(self.user_image_root, 'withdraw')

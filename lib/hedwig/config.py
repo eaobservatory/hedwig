@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2021 East Asian Observatory.
+# Copyright (C) 2015-2023 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -322,6 +322,37 @@ def set_home(directory):
     global home_directory
 
     home_directory = directory
+
+
+def get_pdf_writer(db=None, app=None):
+    """
+    Get a PDF writer object.
+    """
+
+    # Obtain database and web application first if necessary.
+    if db is None:
+        db = get_database()
+
+    if app is None:
+        from hedwig.web.app import create_web_app
+        app = create_web_app(db=db, without_logger=True, without_auth=True)
+
+    return _get_pdf_writer(db, app)
+
+
+@MemoCache()
+def _get_pdf_writer(db, app):
+    config = get_config()
+
+    class_ = _import_class(
+        config.get('pdf_write', 'writer'),
+        module_pattern='hedwig.pdf.{}',
+        class_pattern='PDFWriter{}')
+
+    return class_(
+        db=db, app=app,
+        base_url=config.get('application', 'base_url'),
+        page_size=config.get('pdf_write', 'page_size'))
 
 
 def _import_class(class_name, module_pattern, class_pattern=None):

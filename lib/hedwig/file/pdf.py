@@ -19,14 +19,37 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from codecs import latin_1_decode
+from io import BytesIO
 import subprocess
+
+from PyPDF2 import PdfFileMerger
 
 from ..config import get_config
 from ..error import Error, ConversionError
 from ..type.enum import FigureType
+from ..util import ClosingMultiple
 from .info import determine_pdf_page_count
 
 ghostscript_version = None
+
+
+def pdf_merge(pdfs):
+    """
+    Merge a sequence of PDFs (supplied as buffers containing the PDF data)
+    into a single document (returned also as a buffer).
+    """
+
+    with ClosingMultiple() as closer:
+        merger = closer(PdfFileMerger(strict=False))
+
+        for buff in pdfs:
+            f = closer(BytesIO(buff))
+            merger.append(f, import_bookmarks=False)
+
+        f = closer(BytesIO())
+        merger.write(f)
+
+        return f.getvalue()
 
 
 def pdf_to_png(pdf, page_count=None, renderer='ghostscript', **kwargs):

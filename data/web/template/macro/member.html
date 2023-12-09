@@ -65,7 +65,7 @@
                 <td>
                     {% if member.pi %}<span class="label">PI</span>{% endif %}
                     {% if with_extra_labels %}
-                        {% if member.editor %}<span class="label">editor</span>{% endif %}
+                        {% if member.editor %}<span class="label volatile">editor</span>{% endif %}
                         {% if member.reviewer %}<span class="label">reviewer</span>{% endif %}
                         {% if member.observer%}<span class="label">observer</span>{% endif %}
                         {% if can_edit and not member.person_registered %}

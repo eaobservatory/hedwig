@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from itertools import count
 import logging
 import os
 
@@ -39,9 +40,12 @@ from .blueprint.oauth import create_oauth_blueprint
 from .blueprint.people import create_people_blueprint
 from .blueprint.query import create_query_blueprint
 
+_mem_ctr = count()
+
 
 def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
-                   without_logger=False, _test_return_extra=False):
+                   without_logger=False, without_auth=False,
+                   _test_return_extra=False):
     """
     Function to prepare the Flask web application.
 
@@ -55,6 +59,8 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
     :param without_logger: if `True`, do not configure the application's
         logger.  (Otherwise it is configured to log to the file specified
         in the configuration file.)
+    :param without_auth: if `True`, do not set up the `before_request`
+        function to check for log in information.
     :param _test_return_extra: if true, instead of just returning the
         application object, return a dictionary of values useful for
         debugging.  (Currently just returns the output of `locals()`.)
@@ -78,8 +84,11 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
         template_folder=os.path.join(home, 'data', 'web', 'template'),
     )
 
+    app._mem_id = next(_mem_ctr)
+
     if 'extensions' not in app.jinja_options:
         app.jinja_options['extensions'] = []
+
     app.jinja_options['extensions'].append(OrderBlocks)
 
     if not without_logger:
@@ -146,10 +155,11 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
         app.register_blueprint(create_facility_blueprint(db, facility.view),
                                url_prefix='/' + facility.code)
 
-    # Add beginning of request function to check session for user log in.
-    @app.before_request
-    def _check_current_user():
-        check_current_user(db)
+    if not without_auth:
+        # Add beginning of request function to check session for user log in.
+        @app.before_request
+        def _check_current_user():
+            check_current_user(db)
 
     @app.context_processor
     def add_to_context():

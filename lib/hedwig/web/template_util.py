@@ -31,7 +31,8 @@ from ..astro.coord import CoordSystem
 from ..compat import first_value as _first_value
 from ..config import get_countries
 from ..type.enum import Assessment, \
-    AttachmentState, CallState, GroupType, MessageState, MessageThreadType, \
+    AttachmentState, CallState, FigureType, GroupType, \
+    MessageState, MessageThreadType, \
     PersonLogEvent, PersonTitle, ProposalState, PublicationType, \
     RequestState, ReviewState, SemesterState, SiteGroupType, UserLogEvent
 from ..util import FormatMaxDP, FormatSigFig
@@ -484,6 +485,10 @@ def register_template_utils(app):
             return type_class.has_immediate_review(value)
         except KeyError:
             return False
+
+    @app.template_test()
+    def figure_type_pdf(value):
+        return (value == FigureType.PDF)
 
     @app.template_test()
     def message_state_resettable(value):

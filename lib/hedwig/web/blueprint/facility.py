@@ -23,8 +23,8 @@ from flask import Blueprint, request
 from ...error import FormattedError
 from ...type.enum import FigureType
 from ..util import HTTPRedirect, \
-    require_admin, require_auth, send_file, send_json, \
-    templated, url_for, with_current_user
+    require_admin, require_auth, require_session_option, \
+    send_file, send_json, templated, url_for, with_current_user
 
 
 def create_facility_blueprint(db, facility):
@@ -75,7 +75,7 @@ def create_facility_blueprint(db, facility):
 
     bp = Blueprint(code, __name__)
 
-    def facility_template(template):
+    def facility_template(template, **kwargs):
         """
         Decorator which uses the template from the facility's directory if it
         exists, otherwise the generic template.
@@ -87,7 +87,8 @@ def create_facility_blueprint(db, facility):
         """
 
         def decorator(f):
-            return templated((code + '/' + template, 'generic/' + template))(f)
+            return templated(
+                (code + '/' + template, 'generic/' + template), **kwargs)(f)
         return decorator
 
     @bp.route('/')
@@ -251,6 +252,14 @@ def create_facility_blueprint(db, facility):
     @facility_template('proposal_view.html')
     def proposal_view(current_user, proposal_id):
         return facility.view_proposal_view(
+            current_user, db, proposal_id, request.args)
+
+    @bp.route('/proposal/<int:proposal_id>/section')
+    @require_auth()
+    @require_session_option('allow_section')
+    @facility_template('proposal_view.html', section=True)
+    def proposal_view_sections(current_user, proposal_id):
+        return facility.view_proposal_sections(
             current_user, db, proposal_id, request.args)
 
     @bp.route('/proposal/<int:proposal_id>/alter_state',
@@ -490,6 +499,16 @@ def create_facility_blueprint(db, facility):
             current_user, db, proposal_id, fig_id, role, md5sum,
             'preview')
 
+    @bp.route('/proposal/<int:proposal_id>/<hedwig_text_{}:role>/'
+              'figure/<int:fig_id>/svg/<md5sum>'.format(code))
+    @require_auth()
+    @require_session_option('pdf_as_svg')
+    @send_file(fixed_type=FigureType.SVG, allow_cache=True)
+    def case_view_figure_svg(current_user, proposal_id, role, fig_id, md5sum):
+        return facility.view_case_view_figure(
+            current_user, db, proposal_id, fig_id, role, md5sum,
+            'svg')
+
     @bp.route('/proposal/<int:proposal_id>/'
               '<hedwig_text_{}:role>/pdf/edit'.format(code),
               methods=['GET', 'POST'])
@@ -543,6 +562,35 @@ def create_facility_blueprint(db, facility):
     @send_json()
     def proposal_copy_request_query(current_user, proposal_id, request_id):
         return facility.view_proposal_copy_request_query(
+            current_user, db, proposal_id, request_id)
+
+    @bp.route('/proposal/<int:proposal_id>/pdf/', methods=['GET', 'POST'])
+    @require_auth()
+    @facility_template('proposal_pdf_request.html')
+    def proposal_pdf_request(current_user, proposal_id):
+        return facility.view_proposal_pdf_request(
+            current_user, db, proposal_id,
+            (request.form if request.method == 'POST' else None))
+
+    @bp.route('/proposal/<int:proposal_id>/pdf/<int:request_id>/')
+    @require_auth()
+    @facility_template('proposal_pdf_request_status.html')
+    def proposal_pdf_request_status(current_user, proposal_id, request_id):
+        return facility.view_proposal_pdf_request_status(
+            current_user, db, proposal_id, request_id)
+
+    @bp.route('/proposal/<int:proposal_id>/pdf/<int:request_id>/query')
+    @require_auth()
+    @send_json()
+    def proposal_pdf_request_query(current_user, proposal_id, request_id):
+        return facility.view_proposal_pdf_request_query(
+            current_user, db, proposal_id, request_id)
+
+    @bp.route('/proposal/<int:proposal_id>/pdf/<int:request_id>/download')
+    @require_auth()
+    @send_file()
+    def proposal_pdf_download(current_user, proposal_id, request_id):
+        return facility.view_proposal_pdf_download(
             current_user, db, proposal_id, request_id)
 
     @bp.route('/proposal/<int:proposal_id>/feedback')
@@ -902,6 +950,14 @@ def create_facility_blueprint(db, facility):
     def review_view_figure_preview(current_user, reviewer_id, fig_id, md5sum):
         return facility.view_review_view_figure(
             current_user, db, reviewer_id, fig_id, md5sum, 'preview')
+
+    @bp.route('/review/<int:reviewer_id>/figure/<int:fig_id>/svg/<md5sum>')
+    @require_auth()
+    @require_session_option('pdf_as_svg')
+    @send_file(fixed_type=FigureType.SVG, allow_cache=True)
+    def review_view_figure_svg(current_user, reviewer_id, fig_id, md5sum):
+        return facility.view_review_view_figure(
+            current_user, db, reviewer_id, fig_id, md5sum, 'svg')
 
     @bp.route('/review/<int:reviewer_id>/figure/manage',
               methods=['GET', 'POST'])

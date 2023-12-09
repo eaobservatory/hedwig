@@ -491,20 +491,34 @@ class AdminView(ViewMember):
             if not RequestState.is_valid(state_new):
                 raise ErrorPage('Requested new state is invalid.')
 
+            def _check_state_resettable(state_prev):
+                if not RequestState.is_resettable(
+                        state_prev, state_new=state_new):
+                    raise ErrorPage(
+                        'This page can not change the status of '
+                        'a request from "{}" to "{}".'.format(
+                            RequestState.get_name(state_prev),
+                            RequestState.get_name(state_new)))
+
             for param in form:
                 if param.startswith('prop_copy_'):
                     id_ = int(param[10:])
                     state_prev = int(form['prev_{}'.format(param)])
 
-                    if not RequestState.is_resettable(
-                            state_prev, state_new=state_new):
-                        raise ErrorPage(
-                            'This page can not change the status of '
-                            'a request from "{}" to "{}".'.format(
-                                RequestState.get_name(state_prev),
-                                RequestState.get_name(state_new)))
+                    _check_state_resettable(state_prev)
 
                     db.update_request_prop_copy(
+                        request_id=id_, state=state_new,
+                        state_prev=state_prev)
+                    n_update += 1
+
+                elif param.startswith('prop_pdf_'):
+                    id_ = int(param[9:])
+                    state_prev = int(form['prev_{}'.format(param)])
+
+                    _check_state_resettable(state_prev)
+
+                    db.update_request_prop_pdf(
                         request_id=id_, state=state_new,
                         state_prev=state_prev)
                     n_update += 1
@@ -531,6 +545,9 @@ class AdminView(ViewMember):
             'req_prop_copy': self._add_req_prop(
                 db, facilities,
                 db.search_request_prop_copy(**search_kwargs), **cache),
+            'req_prop_pdf': self._add_req_prop(
+                db, facilities,
+                db.search_request_prop_pdf(**search_kwargs), **cache),
         }
 
         return ctx

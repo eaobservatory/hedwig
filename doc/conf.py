@@ -114,6 +114,7 @@ autodoc_mock_imports = [
     'authlib',
     'backports.pbkdf2',
     'flask',
+    'flask_weasyprint',
     'jcmt_itc_scuba2',
     'jinja2',
     'jinja2_orderblocks',
@@ -128,6 +129,7 @@ autodoc_mock_imports = [
     'sqlalchemy',
     'ukirt_itc',
     'werkzeug',
+    'werkzeug', 'werkzeug.test',
 ]
 
 with open('mock_extra.py') as f:

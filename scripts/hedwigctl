@@ -33,6 +33,8 @@ Usage:
         [--feedback | --no-feedback]
         [--moc | --no-moc]
         [--reqpropcopy | --no-reqpropcopy]
+        [--reqproppdf | --no-reqproppdf]
+        [--reqproppdfexp | --no-reqproppdfexp]
         [--pause <delay>] [--pidfile <file>] [--logfile <file>]
     hedwigctl test_server [--debug] [--https] [--port <port>]
     hedwigctl [-v | -q] initialize_database
@@ -67,6 +69,10 @@ Options:
     --no-moc                  Disable polling for MOC files to import.
     --reqpropcopy             Enable polling for proposal copy requests.
     --no-reqpropcopy          Disable polling for proposal copy requests.
+    --reqproppdf              Enable polling for proposal PDF requests.
+    --no-reqproppdf           Disable polling for proposal PDF requests.
+    --reqproppdfexp           Enable polling for proposal PDF request expiry.
+    --no-reqproppdfexp        Disable polling for proposal PDF request expiry.
 """
 
 
@@ -381,13 +387,39 @@ def poll_reqpropcopy(db, dry_run):
         logger.info('Handled {} proposal copy request(s)', n_processed)
 
 
+@poll_option
+def poll_reqproppdf(db, dry_run):
+    from hedwig.pdf.poll import process_request_prop_pdf
+
+    logger.debug('Checking for proposal PDF requests')
+
+    n_processed = process_request_prop_pdf(
+        db, app=_get_poll_web_app(db), dry_run=dry_run)
+
+    if n_processed:
+        logger.info('Handled {} proposal PDF request(s)', n_processed)
+
+
+@poll_option
+def poll_reqproppdfexp(db, dry_run):
+    from hedwig.pdf.poll import process_request_prop_pdf_expiry
+
+    logger.debug('Checking for proposal PDF request expiry')
+
+    n_expired = process_request_prop_pdf_expiry(db, dry_run=dry_run)
+
+    if n_expired:
+        logger.info('Expired {} proposal PDF request(s)', n_expired)
+
+
 def _get_poll_web_app(db):
     global poll_web_app
 
     if poll_web_app is None:
         from hedwig.web.app import create_web_app
 
-        poll_web_app = create_web_app(db=db, without_logger=True)
+        poll_web_app = create_web_app(
+            db=db, without_logger=True, without_auth=True)
 
     return poll_web_app
 
