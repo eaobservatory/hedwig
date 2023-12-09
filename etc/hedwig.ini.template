@@ -86,8 +86,11 @@ key=
 # client_id=name,secret,comma-separated-redirect-uris
 [oauth_clients]
 
+# Configure class used to write PDF files.  The page_size should be
+# a value suitable for the CSS page size rule, e.g. letter or A4.
 [pdf_write]
 writer=WeasyPrint
+page_size=letter
 
 [pdf_request]
 enable_request=no

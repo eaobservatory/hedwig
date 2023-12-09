@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory.
+# Copyright (C) 2016-2023 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -25,7 +25,7 @@ class PDFWriter(object):
     Base class for Hedwig PDF writers.
     """
 
-    def __init__(self, db, app, base_url):
+    def __init__(self, db, app, base_url, page_size):
         """
         Construct PDF writer object.
         """
@@ -33,6 +33,7 @@ class PDFWriter(object):
         self.db = db
         self.app = app
         self.base_url = base_url
+        self.page_size = page_size
 
     def proposal(self, proposal_id):
         """

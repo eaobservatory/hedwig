@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2021 East Asian Observatory.
+# Copyright (C) 2015-2023 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -350,7 +350,9 @@ def _get_pdf_writer(db, app):
         class_pattern='PDFWriter{}')
 
     return class_(
-        db=db, app=app, base_url=config.get('application', 'base_url'))
+        db=db, app=app,
+        base_url=config.get('application', 'base_url'),
+        page_size=config.get('pdf_write', 'page_size'))
 
 
 def _import_class(class_name, module_pattern, class_pattern=None):

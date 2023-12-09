@@ -44,7 +44,8 @@ class PDFWriterWeasyPrint(PDFWriterFlask):
 
         # Set up additional stylesheets.
         stylesheets = []
-        stylesheets.append(CSS(string='@page {size: letter;}'))
+        stylesheets.append(CSS(
+            string='@page {{size: {};}}'.format(self.page_size)))
 
         # Perform the request to generate the PDF using WeasyPrint.
         with self._fixed_auth(person_id, session_options=session_options), \
