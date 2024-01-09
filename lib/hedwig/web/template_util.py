@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -522,6 +522,10 @@ def register_template_utils(app):
     @app.template_test()
     def proposal_type_standard(value):
         return value == ProposalType.STANDARD
+
+    @app.template_test()
+    def proposal_type_continuation(value):
+        return value == ProposalType.CONTINUATION
 
     @app.template_test()
     def request_state_ready(value):

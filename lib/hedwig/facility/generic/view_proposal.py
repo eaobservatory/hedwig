@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -26,7 +26,8 @@ from ...astro.catalog import parse_source_list, write_source_list
 from ...compat import first_value
 from ...email.format import render_email_template
 from ...config import get_config
-from ...error import ConsistencyError, NoSuchRecord, ParseError, UserError
+from ...error import ConsistencyError, MultipleRecords, \
+    NoSuchRecord, NoSuchValue, ParseError, UserError
 from ...file.info import determine_figure_type, determine_pdf_page_count
 from ...file.pdf import pdf_to_svg
 from ...pdf.request import get_proposal_filename
@@ -38,7 +39,7 @@ from ...type.enum import AttachmentState, \
     CallState, FigureType, FormatType, \
     GroupType, MessageThreadType, \
     PermissionType, PersonLogEvent, PersonTitle, \
-    ProposalState, PublicationType, \
+    ProposalState, ProposalType, PublicationType, \
     RequestState, ReviewState
 from ...type.misc import SectionedList
 from ...type.simple import Affiliation, \
@@ -733,14 +734,7 @@ class GenericProposal(object):
 
         calculations = db.search_calculation(proposal_id=proposal.id)
 
-        prev_proposals = [
-            PrevProposalExtra(
-                *x._replace(publications=[
-                    PrevProposalPubExtra(
-                        *p, url=make_publication_url(p.type, p.description))
-                    for p in x.publications]),
-                links=self.make_proposal_info_urls(x.proposal_code))
-            for x in db.search_prev_proposal(proposal_id=proposal.id).values()]
+        prev_proposals = db.search_prev_proposal(proposal_id=proposal.id)
 
         extra = {
             'abstract': proposal_text.get_role(role_class.ABSTRACT, None),
@@ -752,7 +746,14 @@ class GenericProposal(object):
             'tool_note': proposal_text.get_role(role_class.TOOL_NOTE, None),
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id),
-            'prev_proposals': prev_proposals,
+            'prev_proposals': prev_proposals.map_values(
+                lambda x: PrevProposalExtra(
+                    *x._replace(publications=[
+                        PrevProposalPubExtra(
+                            *p,
+                            url=make_publication_url(p.type, p.description))
+                        for p in x.publications]),
+                    links=self.make_proposal_info_urls(x.proposal_code))),
         }
 
         for role in (role_class.TECHNICAL_CASE, role_class.SCIENCE_CASE):
@@ -978,7 +979,29 @@ class GenericProposal(object):
                     url_for('.abstract_edit', proposal_id=proposal.id)))
 
         with report.accumulate_notes('proposal_previous') as messages:
-            if not extra['prev_proposals']:
+            if proposal.type == ProposalType.CONTINUATION:
+                try:
+                    extra['prev_proposals'].get_continuation()
+                except MultipleRecords:
+                    messages.append(ValidationMessage(
+                        True,
+                        'This proposal is a continuation request, '
+                        'but the continuation box is checked for '
+                        'multiple entries in the previous proposals list.',
+                        'Edit previous proposals and publications',
+                        url_for('.previous_edit', proposal_id=proposal.id)))
+                except NoSuchValue:
+                    messages.append(ValidationMessage(
+                        True,
+                        'This proposal is a continuation request, '
+                        'so the previous proposal list must indicate '
+                        'which project you wish to continue. '
+                        'Please ensure the continuation box is checked for '
+                        'one entry in the previous proposals list.',
+                        'Edit previous proposals and publications',
+                        url_for('.previous_edit', proposal_id=proposal.id)))
+
+            elif not extra['prev_proposals']:
                 messages.append(ValidationMessage(
                     False,
                     'No previous proposals have been listed.  If you do not '
@@ -1896,7 +1919,7 @@ class GenericProposal(object):
 
         return {
             'title': 'Previous Proposals and Publications',
-            'proposal_id': proposal.id,
+            'proposal': proposal,
             'message': message,
             'proposal_code': self.make_proposal_code(db, proposal),
             'accepted_proposals': accepted_proposal_codes,

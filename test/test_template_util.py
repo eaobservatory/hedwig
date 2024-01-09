@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2023 East Asian Observatory
+# Copyright (C) 2016-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -436,3 +436,8 @@ class TemplateUtilTestCase(WebAppTestCase):
 
         self.assertTrue(t(ProposalType.STANDARD))
         self.assertFalse(t(ProposalType.CONTINUATION))
+
+        t = self.app.jinja_env.tests['proposal_type_continuation']
+
+        self.assertFalse(t(ProposalType.STANDARD))
+        self.assertTrue(t(ProposalType.CONTINUATION))

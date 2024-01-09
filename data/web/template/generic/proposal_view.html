@@ -427,7 +427,7 @@
                     <th>Links</th>
                     <th>Publications</th>
                 </tr>
-                {% for prev_proposal in prev_proposals %}
+                {% for prev_proposal in prev_proposals.values() %}
                     {% with publications = prev_proposal.publications | default([none], true) %}
                         {% for publication in publications %}
                             <tr>
