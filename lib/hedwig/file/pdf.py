@@ -22,7 +22,10 @@ from codecs import latin_1_decode
 from io import BytesIO
 import subprocess
 
-from PyPDF2 import PdfFileMerger
+try:
+    from PyPDF2 import PdfMerger as PdfFileMerger
+except ImportError:
+    from PyPDF2 import PdfFileMerger
 
 from ..config import get_config
 from ..error import Error, ConversionError
