@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -26,7 +26,7 @@ from ...error import ConsistencyError, FormattedError, UserError
 from ...type.collection import ResultCollection
 from ...type.enum import FormatType, ReviewState
 from ...util import is_list_like
-from .meta import jcmt_available, jcmt_allocation, \
+from .meta import jcmt_available, jcmt_alloc_options, jcmt_allocation, \
     jcmt_call_options, jcmt_options, \
     jcmt_request, jcmt_review
 from .type import \
@@ -40,6 +40,14 @@ from .type import \
 
 
 class JCMTPart(object):
+    def get_jcmt_alloc_options(self, proposal_id):
+        """
+        Retrieve the JCMT allocation options for a given proposal.
+        """
+
+        return self.search_jcmt_alloc_options(
+            proposal_id=proposal_id).get_single()
+
     def get_jcmt_call_options(self, call_id):
         """
         Retrieve the JCMT call options for a given call.
@@ -62,6 +70,14 @@ class JCMTPart(object):
         """
 
         return self.search_jcmt_review(reviewer_id=reviewer_id).get_single()
+
+    def search_jcmt_alloc_options(self, proposal_id=None):
+        """
+        Retrieve JCMT allocation options for one or more proposals.
+        """
+
+        return self._search_jcmt_prop_alloc_opt(
+            jcmt_alloc_options, proposal_id=proposal_id)
 
     def search_jcmt_allocation(self, proposal_id):
         """
@@ -121,18 +137,22 @@ class JCMTPart(object):
         Retrieve JCMT options for one or more proposals.
         """
 
+        return self._search_jcmt_prop_alloc_opt(
+            jcmt_options, proposal_id=proposal_id)
+
+    def _search_jcmt_prop_alloc_opt(self, table, proposal_id):
         iter_field = None
         iter_list = None
 
-        stmt = jcmt_options.select()
+        stmt = table.select()
 
         if proposal_id is not None:
             if is_list_like(proposal_id):
                 assert iter_field is None
-                iter_field = jcmt_options.c.proposal_id
+                iter_field = table.c.proposal_id
                 iter_list = proposal_id
             else:
-                stmt = stmt.where(jcmt_options.c.proposal_id == proposal_id)
+                stmt = stmt.where(table.c.proposal_id == proposal_id)
 
         ans = JCMTOptionsCollection()
 
@@ -218,6 +238,14 @@ class JCMTPart(object):
 
         return ans
 
+    def set_jcmt_alloc_options(self, proposal_id, **kwargs):
+        """
+        Set the JCMT proposal options for a given proposal.
+        """
+
+        self._set_jcmt_prop_alloc_opt(
+            jcmt_alloc_options, proposal_id, **kwargs)
+
     def set_jcmt_call_options(
             self, call_id, time_min, time_max, time_excl_free):
         """
@@ -256,26 +284,32 @@ class JCMTPart(object):
 
                 conn.execute(jcmt_call_options.insert().values(values))
 
-    def set_jcmt_options(self, proposal_id, target_of_opp, daytime,
-                         time_specific, polarimetry):
+    def set_jcmt_options(self, proposal_id, **kwargs):
         """
         Set the JCMT proposal options for a given proposal.
         """
 
+        self._set_jcmt_prop_alloc_opt(
+            jcmt_options, proposal_id, **kwargs)
+
+    def _set_jcmt_prop_alloc_opt(
+            self, table, proposal_id,
+            target_of_opp=None, daytime=None, time_specific=None,
+            polarimetry=None):
         values = {
-            jcmt_options.c.target_of_opp: target_of_opp,
-            jcmt_options.c.daytime: daytime,
-            jcmt_options.c.time_specific: time_specific,
-            jcmt_options.c.polarimetry: polarimetry,
+            table.c.target_of_opp: target_of_opp,
+            table.c.daytime: daytime,
+            table.c.time_specific: time_specific,
+            table.c.polarimetry: polarimetry,
         }
 
         with self._transaction() as conn:
             if 0 < conn.execute(select(
-                    [count(jcmt_options.c.proposal_id)]).where(
-                        jcmt_options.c.proposal_id == proposal_id)).scalar():
+                    [count(table.c.proposal_id)]).where(
+                        table.c.proposal_id == proposal_id)).scalar():
                 # Update existing options.
-                result = conn.execute(jcmt_options.update().where(
-                    jcmt_options.c.proposal_id == proposal_id
+                result = conn.execute(table.update().where(
+                    table.c.proposal_id == proposal_id
                 ).values(values))
 
                 if result.rowcount != 1:
@@ -285,10 +319,10 @@ class JCMTPart(object):
             else:
                 # Add new options record.
                 values.update({
-                    jcmt_options.c.proposal_id: proposal_id,
+                    table.c.proposal_id: proposal_id,
                 })
 
-                conn.execute(jcmt_options.insert().values(values))
+                conn.execute(table.insert().values(values))
 
     def set_jcmt_review(
             self, role_class, reviewer_id, review_state, review):

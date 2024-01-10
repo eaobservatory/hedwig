@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -118,6 +118,23 @@ class DBJCMTTest(DBTestCase):
         result = self.db.search_jcmt_options(proposal_id=[1999998, 1999999])
         self.assertIsInstance(result, ResultCollection)
         self.assertEqual(len(result), 0)
+
+        # Also test allocation options.
+        with self.assertRaises(NoSuchRecord):
+            self.db.get_jcmt_alloc_options(proposal_id)
+
+        self.db.set_jcmt_alloc_options(
+            proposal_id, target_of_opp=True,
+            daytime=False, time_specific=False,
+            polarimetry=False)
+
+        options = self.db.get_jcmt_alloc_options(proposal_id)
+        self.assertIsInstance(options, JCMTOptions)
+
+        self.assertTrue(options.target_of_opp)
+        self.assertFalse(options.daytime)
+        self.assertFalse(options.time_specific)
+        self.assertFalse(options.polarimetry)
 
     def test_jcmt_request(self):
         proposal_id = self._create_test_proposal()

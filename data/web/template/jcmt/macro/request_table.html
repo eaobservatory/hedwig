@@ -120,3 +120,56 @@
         <input type="button" id="add_request" value="Add {{ description }}" />
     </p>
 {% endmacro %}
+
+{% macro render_request_options(options, option_values) %}
+    <ol>
+        {% for (option, option_name) in options.items() %}
+        <li>
+            <input type="checkbox" name="option_{{ option }}" {{ 'checked="checked"' | safe if option_values[option] }} />
+            <span class="checkboxlabel">{{ option_name }}</span>
+            {% if option == 'target_of_opp' %}
+                <div class="formtip">
+                    <div>
+                        <p>
+                            Please select this option if your proposal involves
+                            observations of a certain class of phenomena
+                            when a triggering event occurs.
+                            The targets for this kind of observation are
+                            generally not known in advance.
+                        </p>
+                        <p>
+                            <a href="http://www.eaobservatory.org/jcmt/observing/guidelines-for-flexible-observing/#target_of_opp" target="_blank">Flexible observing guidelines for targets of opportunity</a>
+                        </p>
+                    </div>
+                </div>
+            {% elif option == 'time_specific' %}
+                <div class="formtip">
+                    <div>
+                        <p>
+                            This option applies when you wish to observe
+                            an event which is expected to occur at a given
+                            time.
+                            Generally the targets and times should be
+                            known in advance and included in your proposal.
+                        </p>
+                        <p>
+                            Examples might include perihelion of comets
+                            or planetary transits.
+                        </p>
+                    </div>
+                </div>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ol>
+{% endmacro %}
+
+{% macro render_request_options_display(options) %}
+    {% if options %}
+        <p>
+            {% for option in options %}
+                <span class="label">{{ option }}</span>
+            {% endfor %}
+        </p>
+    {% endif %}
+{% endmacro %}

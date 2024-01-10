@@ -1,6 +1,6 @@
 {% extends "generic/proposal_view.html" %}
 
-{% from 'jcmt/macro/request_table.html' import render_request_display %}
+{% from 'jcmt/macro/request_table.html' import render_request_display, render_request_options_display %}
 
 {% block science_case_extra %}
     <h2 id="jcmt_pr_summary">Public Summary</h2>
@@ -34,13 +34,7 @@
             {{ render_request_display(requests.to_table()) }}
         {% endif %}
 
-        {% if jcmt_options %}
-            <p>
-                {% for jcmt_option in jcmt_options %}
-                    <span class="label">{{ jcmt_option }}</span>
-                {% endfor %}
-            </p>
-        {% endif %}
+        {{ render_request_options_display(jcmt_options) }}
 
         {% if can_edit %}
             <nav>

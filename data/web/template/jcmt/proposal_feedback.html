@@ -1,6 +1,6 @@
 {% extends 'generic/proposal_feedback.html' %}
 
-{% from 'jcmt/macro/request_table.html' import render_request_display %}
+{% from 'jcmt/macro/request_table.html' import render_request_display, render_request_options_display %}
 
 {% block feedback_extra %}
 {% if jcmt_allocations.table %}
@@ -11,6 +11,8 @@
     <p>
         Times are shown in hours.
     </p>
+
+    {{ render_request_options_display(jcmt_alloc_options) }}
 {% else %}
 
 {% endif %}

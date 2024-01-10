@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -641,11 +641,16 @@ class JCMT(EAOFacility):
         if proposal.state == ProposalState.ACCEPTED:
             allocations = db.search_jcmt_allocation(
                 proposal_id=proposal.id).to_table()
+            option_values = db.search_jcmt_alloc_options(
+                proposal_id=proposal.id).get_single(default=None)
+
         else:
             allocations = null_tuple(ResultTable)
+            option_values = None
 
         ctx.update({
             'jcmt_allocations': allocations,
+            'jcmt_alloc_options': self._get_option_names(option_values),
         })
 
         return ctx
@@ -1031,16 +1036,12 @@ class JCMT(EAOFacility):
         try:
             option_values = db.get_jcmt_options(proposal_id=proposal.id)
         except NoSuchRecord:
-            option_values = JCMTOptions(
-                proposal.id, *((False,) * (len(JCMTOptions._fields) - 1)))
+            option_values = self._get_option_default(proposal)
 
         if form is not None:
             records = self._read_request_form(proposal, form)
 
-            option_update = {}
-            for option in JCMTOptionValue.get_options().keys():
-                option_update[option] = 'option_{}'.format(option) in form
-            option_values = option_values._replace(**option_update)
+            option_values = self._read_option_form(form, option_values)
 
             try:
                 db.sync_jcmt_proposal_request(proposal.id, records)
@@ -1077,6 +1078,17 @@ class JCMT(EAOFacility):
             'time_free_desc': join_list(
                 [x.name for x in weathers.values() if x.free]),
         }
+
+    def _get_option_default(self, proposal):
+        return JCMTOptions(
+            proposal.id, *((False,) * (len(JCMTOptions._fields) - 1)))
+
+    def _read_option_form(self, form, option_values):
+        option_update = {}
+        for option in JCMTOptionValue.get_options().keys():
+            option_update[option] = 'option_{}'.format(option) in form
+
+        return option_values._replace(**option_update)
 
     def _read_request_form(self, proposal, form, skip_blank_time=False):
         """
@@ -1280,19 +1292,34 @@ class JCMT(EAOFacility):
         parsing errors yet.
         """
 
-        return self._read_request_form(proposal, form, skip_blank_time=True)
+        try:
+            option_values = db.get_jcmt_alloc_options(proposal_id=proposal.id)
+        except NoSuchRecord:
+            option_values = self._get_option_default(proposal)
+
+        return {
+            'allocations': self._read_request_form(
+                proposal, form, skip_blank_time=True),
+            'options': self._read_option_form(
+                form, option_values),
+        }
 
     def _view_proposal_decision_save(self, db, proposal, info):
         """
         Store the JCMT observing allocation.
         """
 
-        if proposal.decision_accept and (not info.get_total().total):
+        allocations = info['allocations']
+        option_values = info['options']
+
+        if proposal.decision_accept and (not allocations.get_total().total):
             raise UserError('An accepted proposal should not have '
                             'zero total time allocation.')
 
         db.sync_jcmt_proposal_allocation(proposal_id=proposal.id,
-                                         records=info)
+                                         records=allocations)
+
+        db.set_jcmt_alloc_options(**option_values._asdict())
 
     def _view_proposal_decision_extra(self, db, proposal, info):
         """
@@ -1302,6 +1329,11 @@ class JCMT(EAOFacility):
 
         original_request = db.search_jcmt_request(proposal_id=proposal.id)
         is_prefilled = False
+
+        try:
+            original_options = db.get_jcmt_options(proposal_id=proposal.id)
+        except NoSuchRecord:
+            original_options = self._get_option_default(proposal)
 
         if info is None:
             allocations = db.search_jcmt_allocation(proposal_id=proposal.id)
@@ -1314,13 +1346,25 @@ class JCMT(EAOFacility):
                     for (n, r) in enumerate(original_request.values(), 1)))
                 is_prefilled = True
 
+            # Get allocation options, or if there are none, options from
+            # the proposal, or failing that the default values.
+            try:
+                option_values = db.get_jcmt_alloc_options(
+                    proposal_id=proposal.id)
+            except NoSuchRecord:
+                option_values = original_options
+
         else:
-            allocations = info
+            allocations = info['allocations']
+            option_values = info['options']
 
         return {
             'original_request': original_request.to_table(),
+            'original_options': self._get_option_names(original_options),
             'is_prefilled': is_prefilled,
             'allocations': allocations,
+            'jcmt_options': JCMTOptionValue.get_options(),
+            'jcmt_option_values': option_values,
             'instruments': JCMTInstrument.get_options_with_ancillary(),
             'weathers': JCMTWeather.get_available(),
         }

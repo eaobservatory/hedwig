@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -41,11 +41,29 @@ def _request_cols():
     ]
 
 
+def _option_cols():
+    return [
+        Column('target_of_opp', Boolean, nullable=False),
+        Column('daytime', Boolean, nullable=False),
+        Column('time_specific', Boolean, nullable=False),
+        Column('polarimetry', Boolean, nullable=False),
+    ]
+
+
 jcmt_allocation = Table(
     'jcmt_allocation',
     metadata,
     Column('id', Integer, primary_key=True),
     *_request_cols(),
+    **table_opts)
+
+jcmt_alloc_options = Table(
+    'jcmt_alloc_options',
+    metadata,
+    Column('proposal_id', None,
+           ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
+           primary_key=True, nullable=False),
+    *_option_cols(),
     **table_opts)
 
 jcmt_available = Table(
@@ -77,10 +95,7 @@ jcmt_options = Table(
     Column('proposal_id', None,
            ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            primary_key=True, nullable=False),
-    Column('target_of_opp', Boolean, nullable=False),
-    Column('daytime', Boolean, nullable=False),
-    Column('time_specific', Boolean, nullable=False),
-    Column('polarimetry', Boolean, nullable=False),
+    *_option_cols(),
     **table_opts)
 
 jcmt_request = Table(
