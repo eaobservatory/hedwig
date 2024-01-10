@@ -23,7 +23,8 @@ from collections import namedtuple
 from ..db.util import memoized
 from ..error import NoSuchRecord, NoSuchValue
 from ..type.collection import ProposalCollection, ReviewerCollection
-from ..type.enum import GroupType, ProposalState, ReviewState, SiteGroupType
+from ..type.enum import GroupType, ProposalState, ProposalType, \
+    ReviewState, SiteGroupType
 from ..type.simple import Call, Person, Reviewer
 from ..type.util import null_tuple
 from ..web.util import HTTPError, HTTPForbidden, \
@@ -605,6 +606,8 @@ def can_add_review_roles(
     if proposal.members.has_person(person_id=person_id):
         return []
 
+    excluded_roles = ProposalType.get_excluded_roles(proposal.type)
+
     roles = []
 
     group_members = _get_group_membership(auth_cache, db, person_id)
@@ -614,7 +617,8 @@ def can_add_review_roles(
     # review.
     if (type_class.has_reviewer_role(proposal.call_type, role_class.CTTEE_OTHER)
             and (proposal.state in role_class.get_editable_states(
-                role_class.CTTEE_OTHER))):
+                role_class.CTTEE_OTHER))
+            and (role_class.CTTEE_OTHER not in excluded_roles)):
         if not proposal.reviewers.has_person(
                 person_id=person_id, roles=role_class.get_cttee_roles()):
             if group_members.has_entry(
@@ -626,7 +630,8 @@ def can_add_review_roles(
     # there should not already be a review of this role.
     if (type_class.has_reviewer_role(proposal.call_type, role_class.FEEDBACK)
             and (proposal.state in role_class.get_editable_states(
-                role_class.FEEDBACK))):
+                role_class.FEEDBACK))
+            and (role_class.FEEDBACK not in excluded_roles)):
         if not proposal.reviewers.has_role(role_class.FEEDBACK):
             if (proposal.reviewers.has_person(
                     person_id=person_id,

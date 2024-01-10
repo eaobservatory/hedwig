@@ -716,27 +716,6 @@ class ProposalState(EnumBasic, EnumShortName):
         return OrderedDict((k, v.name) for (k, v) in cls._info.items())
 
 
-class ProposalType(EnumBasic, EnumShortName):
-    """
-    Class representing various types of proposal.
-    """
-
-    STANDARD = 1
-    CONTINUATION = 2
-
-    TypeInfo = namedtuple(
-        'TypeInfo',
-        ('short_name', 'name'))
-
-    #                Abbr   Name
-    _info = OrderedDict((
-        (STANDARD,
-            TypeInfo('Std', 'Standard')),
-        (CONTINUATION,
-            TypeInfo('CR',  'Continuation request')),
-    ))
-
-
 class PublicationType(EnumBasic, EnumAvailable):
     """
     Class representing different ways in which a publication can be
@@ -1309,6 +1288,36 @@ class UserLogEvent(EnumBasic, EnumLevel):
             'Logged in',
             LogEventLevel.MINOR),
     }
+
+
+# NOTE: this is defined at the end since it refers to values from
+# BaseReviewerRole.
+class ProposalType(EnumBasic, EnumShortName):
+    """
+    Class representing various types of proposal.
+    """
+
+    STANDARD = 1
+    CONTINUATION = 2
+
+    TypeInfo = namedtuple(
+        'TypeInfo',
+        ('short_name', 'name', 'reviewer_roles_excluded'))
+
+    #       Abbr   Name
+    #       (Reviewer roles exclude)
+    _info = OrderedDict((
+        (STANDARD, TypeInfo(
+            'Std', 'Standard',
+            ())),
+        (CONTINUATION, TypeInfo(
+            'CR',  'Continuation request',
+            (BaseReviewerRole.EXTERNAL,))),
+    ))
+
+    @classmethod
+    def get_excluded_roles(cls, value):
+        return cls._info[value].reviewer_roles_excluded
 
 
 # NOTE: this is defined at the end since it refers to values from

@@ -818,6 +818,7 @@ class GenericReview(object):
             if type_class.has_reviewer_role(call.type, role_num)))
         unnotified_roles = defaultdict(int)
         state_editable_roles = {}
+        type_excluded_roles = {}
 
         for proposal in db.search_proposal(
                 call_id=call.id, state=ProposalState.review_states(),
@@ -828,6 +829,11 @@ class GenericReview(object):
             if roles is None:
                 roles = role_class.get_editable_roles(proposal.state)
                 state_editable_roles[proposal.state] = roles
+            excluded_roles = type_excluded_roles.get(proposal.type)
+            if excluded_roles is None:
+                excluded_roles = ProposalType.get_excluded_roles(
+                    proposal.type)
+                type_excluded_roles[proposal.type] = excluded_roles
 
             member_pi = proposal.members.get_pi(default=None)
             if member_pi is not None:
@@ -840,7 +846,9 @@ class GenericReview(object):
                     reviewers=proposal.reviewers.map_values(
                         lambda x: with_can_view(x, auth.for_person_reviewer(
                             current_user, db, x, auth_cache=can.cache).view))),
-                invite_roles=[x for x in invite_roles if x in roles],
+                invite_roles=[
+                    x for x in invite_roles
+                    if x in roles and x not in excluded_roles],
                 add_roles=auth.can_add_review_roles(
                     type_class, role_class, current_user, db, proposal,
                     auth_cache=can.cache),
@@ -919,12 +927,22 @@ class GenericReview(object):
                     for x in proposal.reviewers.values_by_role(role_id)}
                     for role_id in all_roles})
 
+        type_excluded_roles = {}
+        def filter_proposal(proposal):
+            excluded_roles = type_excluded_roles.get(proposal.type)
+            if excluded_roles is None:
+                excluded_roles = ProposalType.get_excluded_roles(
+                    proposal.type)
+                type_excluded_roles[proposal.type] = excluded_roles
+
+            return primary_role not in excluded_roles
+
         proposals = db.search_proposal(
             call_id=call.id,
             state=role_class.get_editable_states(primary_role),
             with_members=True, with_reviewers=True,
             with_review_info=True, with_reviewer_role=all_roles
-        ).map_values(augment_proposal)
+        ).map_values(augment_proposal, filter_value=filter_proposal)
 
         # Determine group membership.
         if group_type == GroupType.PEER:
@@ -1348,6 +1366,10 @@ class GenericReview(object):
             raise ErrorPage(
                 'This proposal is not in a suitable state '
                 'for this type of review.')
+
+        if role in ProposalType.get_excluded_roles(proposal.type):
+            raise ErrorPage(
+                'Reviewer role is not expected for this proposal type.')
 
         try:
             call = db.get_call(facility_id=self.id_, call_id=proposal.call_id)
