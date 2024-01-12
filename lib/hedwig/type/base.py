@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2022 East Asian Observatory
+# Copyright (C) 2016-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -130,6 +130,32 @@ class CollectionByReviewerRole(object):
             for entry in self.values():
                 if entry.role == role:
                     yield entry
+
+
+class CollectionByType(object):
+    """
+    Mix-in for collections of items with a `type` attribute.
+    """
+
+    def has_type(self, type_):
+        """
+        Check if the collection has an entry of the given type.
+        """
+
+        for entry in self.values():
+            if entry.type == type_:
+                return True
+
+        return False
+
+    def values_by_type(self, type_):
+        """
+        Iterate entries with the given type.
+        """
+
+        for entry in self.values():
+            if entry.type == type_:
+                yield entry
 
 
 class CollectionOrdered(object):

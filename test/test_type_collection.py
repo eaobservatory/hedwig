@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,19 +24,20 @@ from hedwig.error import MultipleRecords, NoSuchRecord, NoSuchValue, UserError
 from hedwig.type.base import CollectionByProposal, CollectionOrdered, \
     CollectionSortable
 from hedwig.type.collection import \
-    AffiliationCollection, CallCollection, CallPreambleCollection, \
+    AffiliationCollection, AnnotationCollection, \
+    CallCollection, CallPreambleCollection, \
     EmailCollection, GroupMemberCollection, MemberCollection, \
     ResultCollection, ReviewDeadlineCollection, \
     PrevProposalCollection, \
     ProposalCollection, ProposalFigureCollection, \
     RequestCollection, ReviewerCollection, \
     SiteGroupMemberCollection
-from hedwig.type.enum import BaseAffiliationType, \
+from hedwig.type.enum import AnnotationType, BaseAffiliationType, \
     BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, \
     RequestState, ReviewState, SiteGroupType
 from hedwig.type.simple import \
-    Affiliation, Call, CallPreamble, Email, GroupMember, Member, \
+    Affiliation, Annotation, Call, CallPreamble, Email, GroupMember, Member, \
     PrevProposal, \
     Proposal, ProposalFigureInfo, \
     RequestPropPDF, Reviewer, ReviewDeadline, SiteGroupMember
@@ -202,6 +203,25 @@ class CollectionTypeTestCase(TestCase):
                 'Aff. 1 (st)', 'Aff. 2 (st)', 'Aff. 3 (st)',
                 'Aff. 1 (sh)', 'Aff. 2 (sh)', 'Aff. 3 (sh)',
                 'Aff. 1 (ex)', 'Aff. 2 (ex)', 'Aff. 3 (ex)'])
+
+    def test_annotation_collection(self):
+        c = AnnotationCollection()
+
+        c[1] = null_tuple(Annotation)._replace(
+            id=1, type=AnnotationType.PROPOSAL_COPY)
+
+        self.assertTrue(c.has_type(AnnotationType.PROPOSAL_COPY))
+        self.assertFalse(c.has_type(AnnotationType.PROPOSAL_CONTINUATION))
+
+        self.assertEqual(
+            [x.id for x in c.values_by_type(
+                AnnotationType.PROPOSAL_COPY)],
+            [1])
+
+        self.assertEqual(
+            [x.id for x in c.values_by_type(
+                AnnotationType.PROPOSAL_CONTINUATION)],
+            [])
 
     def test_call_collection(self):
         c = CallCollection()

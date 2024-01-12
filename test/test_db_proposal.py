@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,7 +24,7 @@ from hedwig.compat import first_value
 from hedwig.db.meta import member
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, NoSuchValue, UserError
-from hedwig.type.collection import AffiliationCollection, \
+from hedwig.type.collection import AffiliationCollection, AnnotationCollection, \
     CallCollection, CallMidCloseCollection, MemberCollection, \
     ProposalCollection, ProposalCategoryCollection, \
     ProposalFigureCollection, ProposalTextCollection, \
@@ -1082,6 +1082,7 @@ class DBProposalTest(DBTestCase):
         proposal_id = self._create_test_proposal()
 
         result = self.db.search_proposal_annotation(proposal_id=proposal_id)
+        self.assertIsInstance(result, AnnotationCollection)
         self.assertEqual(len(result), 0)
 
         annotation_id = self.db.add_proposal_annotation(

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -28,7 +28,7 @@ from sqlalchemy.sql.functions import max as max_
 from ...compat import str_to_unicode
 from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
-from ...type.collection import AffiliationCollection, \
+from ...type.collection import AffiliationCollection, AnnotationCollection, \
     CallCollection, CallMidCloseCollection, CallPreambleCollection, \
     MemberCollection, \
     PrevProposalCollection, ProposalCollection, ProposalCategoryCollection, \
@@ -1988,7 +1988,7 @@ class ProposalPart(object):
         if type_ is not None:
             stmt = stmt.where(proposal_annotation.c.type == type_)
 
-        ans = ResultCollection()
+        ans = AnnotationCollection()
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -63,12 +63,16 @@ class AnnotationType(EnumBasic):
     """
 
     PROPOSAL_COPY = 1
+    PROPOSAL_CONTINUATION = 2
 
     TypeInfo = namedtuple(
         'TypeInfo', ('name',))
 
     _info = OrderedDict((
-        (PROPOSAL_COPY, TypeInfo('Proposal copy')),
+        (PROPOSAL_COPY, TypeInfo(
+            'Proposal copy')),
+        (PROPOSAL_CONTINUATION, TypeInfo(
+            'Proposal continuation request')),
     ))
 
 
