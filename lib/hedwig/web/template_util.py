@@ -30,7 +30,7 @@ from markupsafe import Markup
 from ..astro.coord import CoordSystem
 from ..compat import first_value as _first_value
 from ..config import get_countries
-from ..type.enum import Assessment, \
+from ..type.enum import AnnotationType, Assessment, \
     AttachmentState, CallState, FigureType, GroupType, \
     MessageState, MessageThreadType, \
     PersonLogEvent, PersonTitle, \
@@ -477,6 +477,14 @@ def register_template_utils(app):
     @app.template_test()
     def affiliation_type_standard(value, type_class):
         return (value == type_class.STANDARD)
+
+    @app.template_test()
+    def annotation_proposal_copy(value):
+        return value == AnnotationType.PROPOSAL_COPY
+
+    @app.template_test()
+    def annotation_proposal_continuation(value):
+        return value == AnnotationType.PROPOSAL_CONTINUATION
 
     @app.template_test()
     def attachment_new(value):

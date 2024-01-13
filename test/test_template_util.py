@@ -25,7 +25,7 @@ from jinja2.runtime import Undefined
 from markupsafe import Markup
 
 from hedwig.astro.coord import CoordSystem
-from hedwig.type.enum import Assessment, AttachmentState, \
+from hedwig.type.enum import AnnotationType, Assessment, AttachmentState, \
     BaseCallType, BaseReviewerRole, BaseTextRole, CallState, \
     MessageState, MessageThreadType, ProposalState, ProposalType, \
     PublicationType, RequestState, ReviewState, SemesterState, UserLogEvent
@@ -329,6 +329,15 @@ class TemplateUtilTestCase(WebAppTestCase):
 
         self.assertEqual(f('1234567890', 5),
                          '<abbr title="1234567890">12345&hellip;</abbr>')
+
+    def test_test_annotation(self):
+        t = self.app.jinja_env.tests['annotation_proposal_copy']
+        self.assertTrue(t(AnnotationType.PROPOSAL_COPY))
+        self.assertFalse(t(AnnotationType.PROPOSAL_CONTINUATION))
+
+        t = self.app.jinja_env.tests['annotation_proposal_continuation']
+        self.assertFalse(t(AnnotationType.PROPOSAL_COPY))
+        self.assertTrue(t(AnnotationType.PROPOSAL_CONTINUATION))
 
     def test_test_attachment(self):
         t = self.app.jinja_env.tests['attachment_new']

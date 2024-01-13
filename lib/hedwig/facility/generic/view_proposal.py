@@ -707,7 +707,7 @@ class GenericProposal(object):
         ctx.update(self._view_proposal_extra(db, proposal))
 
         if is_first_view:
-            ctx['copy_annotations'] = db.search_proposal_annotation(
+            ctx['proposal_annotations'] = db.search_proposal_annotation(
                 proposal_id=proposal.id)
 
         return ctx

@@ -3,7 +3,7 @@
 {% from 'macro/pdf.html' import render_proposal_pdf %}
 {% from 'macro/figure.html' import render_proposal_figures %}
 {% from 'macro/calculation.html' import render_calculation_title, render_calculation %}
-{% from 'macro/annotation.html' import render_copy_annotation %}
+{% from 'macro/annotation.html' import render_proposal_annotation %}
 {% from 'macro/member.html' import render_proposal_members %}
 
 {% set navigation=[(proposal_code, none)] %}
@@ -12,7 +12,7 @@
 {% if show_person_proposals_callout %}
     {% set scripts = ['dismiss_callout'] %}
 {% endif %}
-{% if copy_annotations %}
+{% if proposal_annotations %}
     {% set scripts = concatenate_lists(['closeable'], scripts) %}
 {% endif %}
 
@@ -27,9 +27,9 @@
         </nav>
     {% endif %}
 
-    {% if copy_annotations %}
-        {% for annotation in copy_annotations.values() %}
-            {{ render_copy_annotation(annotation, proposal_order) }}
+    {% if proposal_annotations %}
+        {% for annotation in proposal_annotations.values() %}
+            {{ render_proposal_annotation(annotation, proposal_order) }}
         {% endfor %}
     {% endif %}
 
