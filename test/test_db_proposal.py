@@ -96,7 +96,7 @@ class DBProposalTest(DBTestCase):
             BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             1, 1, 1, 1, 1, 1, 1, 1, 1, '', '', '',
-            FormatType.PLAIN, False, False, None, None, False)
+            FormatType.PLAIN, False, False, None, None, False, False)
         person_id = self.db.add_person('Person1')
         (affiliation_id, affiliation_record) = result.popitem()
         self.db.add_proposal(call_id, person_id, affiliation_id, 'Title')
@@ -112,7 +112,7 @@ class DBProposalTest(DBTestCase):
             BaseCallType, semester_id_2, queue_id, BaseCallType.STANDARD,
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             1, 1, 1, 1, 1, 1, 1, 1, 1, '', '', '',
-            FormatType.PLAIN, False, False, None, None, False)
+            FormatType.PLAIN, False, False, None, None, False, False)
 
         # Store different sets of weights for the two calls.
         result = self.db.search_affiliation(queue_id=queue_id,
@@ -303,7 +303,7 @@ class DBProposalTest(DBTestCase):
             prev_prop_note='previous proposal note',
             note_format=FormatType.PLAIN, multi_semester=False, separate=False,
             preamble='preamble text', preamble_format=FormatType.RST,
-            hidden=False)
+            hidden=False, allow_continuation=False)
         self.assertIsInstance(call_id, int)
 
         # Check tests for bad values.
@@ -312,31 +312,36 @@ class DBProposalTest(DBTestCase):
                 BaseCallType, 1999999, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False, False, None, None, False)
+                '', '', '', FormatType.PLAIN, False, False, None, None, False,
+                False)
         with self.assertRaisesRegex(ConsistencyError, 'queue does not'):
             self.db.add_call(
                 BaseCallType, semester_id, 1999999, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False, False, None, None, False)
+                '', '', '', FormatType.PLAIN, False, False, None, None, False,
+                False)
         with self.assertRaisesRegex(UserError, 'Closing date is before open'):
             self.db.add_call(
                 BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
                 date_close, date_open,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False, False, None, None, False)
+                '', '', '', FormatType.PLAIN, False, False, None, None, False,
+                False)
         with self.assertRaisesRegex(Error, 'Preamble text .* specified'):
             self.db.add_call(
                 BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False, False, '', None, False)
+                '', '', '', FormatType.PLAIN, False, False, '', None, False,
+                False)
         with self.assertRaisesRegex(Error, 'Preamble text .* recognised'):
             self.db.add_call(
                 BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False, False, '', 999999, False)
+                '', '', '', FormatType.PLAIN, False, False, '', 999999, False,
+                False)
 
         # Check uniqueness constraint.
         with self.assertRaises(DatabaseIntegrityError):
@@ -344,7 +349,8 @@ class DBProposalTest(DBTestCase):
                 BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False, False, None, None, False)
+                '', '', '', FormatType.PLAIN, False, False, None, None, False,
+                False)
 
         # Check facility consistency check.
         facility_id_2 = self.db.ensure_facility('my_other_tel')
@@ -357,7 +363,8 @@ class DBProposalTest(DBTestCase):
                 BaseCallType, semester_id_2, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False, False, None, None, False)
+                '', '', '', FormatType.PLAIN, False, False, None, None, False,
+                False)
 
         # Try the search_call method.
         result = self.db.search_call(call_id=call_id, with_preamble=True)
@@ -380,7 +387,7 @@ class DBProposalTest(DBTestCase):
                         proposal_count=None,
                         multi_semester=False, separate=False,
                         preamble='preamble text', preamble_format=FormatType.RST,
-                        hidden=False)
+                        hidden=False, allow_continuation=False)
         self.assertEqual(result[call_id],
                          expected._replace(tech_note=None, sci_note=None,
                                            prev_prop_note=None))
@@ -462,7 +469,7 @@ class DBProposalTest(DBTestCase):
             BaseCallType, semester_id_2, queue_id_2, BaseCallType.STANDARD,
             date_open, date_close,
             1, 1, 1, 1, 1, 1, 1, 1, 1, '', '', '', FormatType.PLAIN,
-            False, False, None, None, False)
+            False, False, None, None, False, False)
 
         result = self.db.get_call(facility_id=None, call_id=call_id)
         self.assertIsInstance(result, Call)

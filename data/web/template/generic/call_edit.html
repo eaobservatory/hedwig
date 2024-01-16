@@ -79,6 +79,11 @@
             <input type="checkbox" name="hidden" {{ 'checked="checked"' | safe if call.hidden }} />
             call should be omitted from lists
         </li>
+        <li>
+            <label for="allow_continuation">Continuation</label>
+            <input type="checkbox" name="allow_continuation" {{ 'checked="checked"' | safe if call.allow_continuation }} />
+            continuation requests may be submitted
+        </li>
         {% orderblocks proposal_order %}
             {% block proposal_abstract %}
                 <li class="separator">Abstract</li>

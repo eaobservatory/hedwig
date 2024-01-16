@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -432,7 +432,8 @@ class GenericAdmin(object):
                 note_format=int(form['note_format']),
                 multi_semester=('multi_semester' in form),
                 separate=('separate' in form),
-                hidden=('hidden' in form))
+                hidden=('hidden' in form),
+                allow_continuation=('allow_continuation' in form))
 
             if call.separate and (form['preamble'] != ''):
                 call = call._replace(
@@ -488,7 +489,8 @@ class GenericAdmin(object):
                         separate=call.separate,
                         preamble=call.preamble,
                         preamble_format=call.preamble_format,
-                        hidden=call.hidden)
+                        hidden=call.hidden,
+                        allow_continuation=call.allow_continuation)
 
                     # Update information in the call named tuple in case of a
                     # later error so that we have to show the edit page again.
@@ -521,7 +523,8 @@ class GenericAdmin(object):
                         separate=call.separate,
                         preamble=call.preamble,
                         preamble_format=call.preamble_format,
-                        hidden=call.hidden)
+                        hidden=call.hidden,
+                        allow_continuation=call.allow_continuation)
 
                     flash_message = 'The call has been updated.'
 

@@ -92,6 +92,7 @@ class ProposalPart(object):
                  capt_word_lim, expl_word_lim,
                  tech_note, sci_note, prev_prop_note, note_format,
                  multi_semester, separate, preamble, preamble_format, hidden,
+                 allow_continuation,
                  _test_skip_check=False):
         """
         Add a call for proposals to the database.
@@ -157,6 +158,7 @@ class ProposalPart(object):
                 call.c.preamble: preamble,
                 call.c.preamble_format: preamble_format,
                 call.c.hidden: hidden,
+                call.c.allow_continuation: allow_continuation,
             }))
 
         return result.inserted_primary_key[0]
@@ -3000,6 +3002,7 @@ class ProposalPart(object):
                     tech_note=None, sci_note=None, prev_prop_note=None,
                     note_format=None, multi_semester=None, separate=None,
                     preamble=(), preamble_format=(), hidden=None,
+                    allow_continuation=None,
                     _test_skip_check=False):
         """
         Update a call for proposals record.
@@ -3065,6 +3068,9 @@ class ProposalPart(object):
 
         if hidden is not None:
             values['hidden'] = hidden
+
+        if allow_continuation is not None:
+            values['allow_continuation'] = allow_continuation
 
         if not values:
             raise Error('no call updates specified')
