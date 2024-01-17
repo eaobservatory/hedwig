@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,8 +24,10 @@ import subprocess
 
 try:
     from PyPDF2 import PdfMerger as PdfFileMerger
+    merge_kwargs = {'import_outline': False}
 except ImportError:
     from PyPDF2 import PdfFileMerger
+    merge_kwargs = {'import_bookmarks': False}
 
 from ..config import get_config
 from ..error import Error, ConversionError
@@ -47,7 +49,7 @@ def pdf_merge(pdfs):
 
         for buff in pdfs:
             f = closer(BytesIO(buff))
-            merger.append(f, import_bookmarks=False)
+            merger.append(f, **merge_kwargs)
 
         f = closer(BytesIO())
         merger.write(f)
