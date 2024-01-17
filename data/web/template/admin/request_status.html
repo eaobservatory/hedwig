@@ -52,7 +52,7 @@
 
 {% block content %}
 <form method="POST" action="{{ url_for('.request_status') }}">
-    <h2>Proposal Copies</h2>
+    <h2>Proposal Copies and Continuation Requests</h2>
 
     {% call(request) request_table(req_prop_copy, 'prop_copy_{}', extra_columns=['Call']) %}
         <td><a href="{{ url_for(request.facility_code | fmt('{}.call_view'), call_id=request.call_id) }}">{{ request.call_id }}</a></td>

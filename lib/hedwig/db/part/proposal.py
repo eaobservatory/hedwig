@@ -1642,6 +1642,7 @@ class ProposalPart(object):
 
     def search_proposal(self, call_id=None, facility_id=None, proposal_id=None,
                         person_id=None, person_is_editor=None, state=None,
+                        type_=None,
                         with_member_pi=False, with_members=False,
                         with_reviewers=False,
                         with_review_info=False, with_review_text=False,
@@ -1844,6 +1845,12 @@ class ProposalPart(object):
                 stmt = stmt.where(proposal.c.state.in_(state))
             else:
                 stmt = stmt.where(proposal.c.state == state)
+
+        if type_ is not None:
+            if is_list_like(type_):
+                stmt = stmt.where(proposal.c.type.in_(type_))
+            else:
+                stmt = stmt.where(proposal.c.type == type_)
 
         if decision_accept is not None:
             if decision_accept:

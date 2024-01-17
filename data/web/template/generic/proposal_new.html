@@ -66,10 +66,10 @@
         {% if proposals %}
             <li class="separator">Copy an existing proposal</li>
             <li>
-                <label for="proposal_id">Proposal</label>
-                <select name="proposal_id" />
+                <label for="proposal_copy">Proposal</label>
+                <select name="proposal_copy" />
                     {% for proposal in proposals.values() %}
-                        <option value="{{ proposal.id }}" {{ 'selected="selected"' | safe if proposal.id == proposal_id }} data-queue_id="{{ proposal.queue_id }}">
+                        <option value="{{ proposal.id }}" {{ 'selected="selected"' | safe if proposal.id == proposal_copy }} data-queue_id="{{ proposal.queue_id }}">
                             {{ proposal.code }}:
                             {{ proposal.title | truncate(40, killwords=true, end='\u2026') }}
                         </option>
@@ -89,6 +89,33 @@
             </li>
             <li>
                 <input type="submit" name="submit_copy" value="Copy existing proposal" formnovalidate="formnovalidate" />
+            </li>
+        {% endif %}
+
+        {% if proposals_continuable %}
+            <li class="separator">Request continuation of an accepted proposal</li>
+            <li>
+                <div class="explanation">
+                    If approved observing for a previous proposal
+                    is as yet incomplete,
+                    you may request that the project be continued
+                    in the semester associated with this call.
+                    Please do not select this option if you wish
+                    to make any changes &mdash; a continuation request
+                    can only carry forward existing approved observing.
+                </div>
+                <label for="proposal_continuation">Proposal</label>
+                <select name="proposal_continuation" />
+                    {% for proposal in proposals_continuable.values() %}
+                        <option value="{{ proposal.id }}" {{ 'selected="selected"' | safe if proposal.id == proposal_continuation }}>
+                            {{ proposal.code }}:
+                            {{ proposal.title | truncate(40, killwords=true, end='\u2026') }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </li>
+            <li>
+                <input type="submit" name="submit_continue" value="Request continuation of proposal" formnovalidate="formnovalidate" />
             </li>
         {% endif %}
     </ol>

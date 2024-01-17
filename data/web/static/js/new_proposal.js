@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    var old_proposal = $('[name=proposal_id]');
+    var old_proposal = $('[name=proposal_copy]');
 
     if (old_proposal.length) {
         var member_copy = $('[name=member_copy]');
