@@ -817,7 +817,8 @@ class GenericProposal(object):
             'proposal_code': self.make_proposal_code(db, proposal),
             'show_person_proposals_callout': is_first_view,
             'show_admin_links': is_admin,
-            'proposal_order': self.get_proposal_order_names(),
+            'proposal_order': self.get_proposal_order_names(
+                type_=proposal.type),
             'call_mid_closes': call_mid_closes,
         }
 
@@ -1265,7 +1266,8 @@ class GenericProposal(object):
             'can_edit': True,
             'is_submit_page': True,
             'immediate_review': immediate_review,
-            'proposal_order': self.get_proposal_order_names(),
+            'proposal_order': self.get_proposal_order_names(
+                type_=proposal.type),
         }
 
     def _message_proposal_submit(self, current_user, db, proposal):
@@ -1353,7 +1355,8 @@ class GenericProposal(object):
             'validation_messages': messages,
             'can_edit': can.edit,
             'is_submit_page': False,
-            'proposal_order': self.get_proposal_order_names(),
+            'proposal_order': self.get_proposal_order_names(
+                type_=proposal.type),
         }
 
     @with_proposal(permission=PermissionType.EDIT)

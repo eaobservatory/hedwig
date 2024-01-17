@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2023 East Asian Observatory
+# Copyright (C) 2016-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,7 +22,7 @@ from datetime import datetime
 
 from hedwig.compat import first_value, string_type
 from hedwig.config import get_facilities
-from hedwig.type.enum import BaseAffiliationType, FormatType
+from hedwig.type.enum import BaseAffiliationType, FormatType, ProposalType
 from hedwig.type.simple import Call
 
 from .dummy_db import DBTestCase
@@ -80,9 +80,7 @@ class FacilityTestCase(DBTestCase):
         self.assertIsInstance(self.view.get_moc_order(), int)
         self.assertIsInstance(self.view.get_target_tool_classes(), tuple)
 
-        proposal_order = self.view.get_proposal_order()
-        self.assertIsInstance(proposal_order, list)
-        self.assertEqual(sorted(proposal_order), [
+        order_expected = [
             'proposal_abstract',
             'proposal_calculations',
             'proposal_members',
@@ -92,7 +90,22 @@ class FacilityTestCase(DBTestCase):
             'proposal_targets',
             'science_case',
             'technical_case',
-        ])
+        ]
+
+        # Proposal order should contain all section if type unspecified,
+        # and currently contains all sections if standard.
+        for proposal_type in (None, ProposalType.STANDARD):
+            proposal_order = self.view.get_proposal_order(type_=proposal_type)
+            self.assertIsInstance(proposal_order, list)
+            self.assertEqual(sorted(proposal_order), order_expected)
+
+        # Ordering for other proposal types should contain a selection of the
+        # full list of sections.
+        for proposal_type in (ProposalType.CONTINUATION,):
+            proposal_order = self.view.get_proposal_order(type_=proposal_type)
+            self.assertIsInstance(proposal_order, list)
+            for order_entry in proposal_order:
+                self.assertIn(order_entry, order_expected)
 
         # Test custom type methods.
         type_class = self.view.get_call_types()

@@ -31,7 +31,7 @@ from ...view.util import float_or_none, int_or_none, join_list, \
     with_call_review, with_proposal
 from ...type.collection import ResultTable
 from ...type.enum import FormatType, \
-    PermissionType, ProposalState, ReviewState
+    PermissionType, ProposalState, ProposalType, ReviewState
 from ...type.simple import FacilityObsInfo, Link, RouteInfo, TextCopyInfo, \
     ValidationMessage
 from ...type.util import null_tuple
@@ -124,11 +124,24 @@ class JCMT(EAOFacility):
                 {'allow_post': True, 'init_route_params': ['proposal_id']}),
         ]
 
-    def get_proposal_order(self):
+    def get_proposal_order(self, type_=None):
         """
         Get a list of proposal sections in the order in which they should
         be shown.
         """
+
+        if type_ is None:
+            pass
+
+        elif type_ == ProposalType.CONTINUATION:
+            return [
+                'proposal_summary',
+                'proposal_previous',
+                'proposal_members',
+                'proposal_request',
+                'proposal_calculations',
+                'technical_case',
+            ]
 
         return [
             'proposal_summary',
