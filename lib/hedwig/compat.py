@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2023 East Asian Observatory
+# Copyright (C) 2016-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -21,6 +21,10 @@ from __future__ import absolute_import, division, print_function, \
 from sys import version_info
 
 python_version = version_info[0]
+
+
+def split_version(version):
+    return tuple(int(x) for x in version.split('.'))
 
 
 if python_version < 3:

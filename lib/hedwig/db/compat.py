@@ -1,4 +1,4 @@
-# Copyright (C) 2023 East Asian Observatory
+# Copyright (C) 2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,7 +20,9 @@ from __future__ import absolute_import, division, print_function, \
 
 import sqlalchemy
 
-sqlalchemy_version = tuple(int(x) for x in sqlalchemy.__version__.split('.'))
+from ..compat import split_version
+
+sqlalchemy_version = split_version(sqlalchemy.__version__)
 
 
 if sqlalchemy_version < (1, 4):

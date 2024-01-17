@@ -1,4 +1,4 @@
-# Copyright (C) 2016 East Asian Observatory
+# Copyright (C) 2016-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,12 +20,21 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict
 
-from hedwig.compat import first_value
+from hedwig.compat import first_value, split_version
 
 from .compat import TestCase
 
 
 class CompatTestCase(TestCase):
+    def test_split_version(self):
+        version = split_version('5.2.8')
+        self.assertIsInstance(version, tuple)
+        self.assertEqual(len(version), 3)
+        self.assertIsInstance(version[0], int)
+        self.assertIsInstance(version[1], int)
+        self.assertIsInstance(version[2], int)
+        self.assertEqual(version, (5, 2, 8))
+
     def test_first_value(self):
         self.assertEqual(first_value({4: 8}), 8)
 
