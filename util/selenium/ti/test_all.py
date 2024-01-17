@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -255,7 +255,11 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.administer_site()
 
-            semester_name = self.open_new_call('jcmt')
+            new_semester_name = self.open_new_call(
+                'jcmt', 'Regular', allow_continuation=True)
+
+            self.open_new_call(
+                'jcmt', 'Rapid Turnaround', semester_name=new_semester_name)
 
             self.log_out_user()
 
@@ -267,6 +271,10 @@ class IntegrationTest(DummyConfigTestCase):
             self.log_in_user(user_name='newusername')
 
             self.view_proposal_feedback('jcmt', 1)
+
+            # Try creating a continuation request.
+            self.copy_proposal('jcmt', new_semester_name, continuation=True,
+                               screenshot_path=self.user_image_root)
 
             # Also try copying the proposal into the rapid turnaround call.
             self.copy_proposal('jcmt', None, 'Rapid Turnaround',
@@ -281,7 +289,7 @@ class IntegrationTest(DummyConfigTestCase):
             self.log_out_user()
 
             # Set up peer review process.
-            for proposal_id in (2, 3):
+            for proposal_id in (3, 4):
                 self.db.update_proposal(
                     proposal_id, state=ProposalState.REVIEW)
 
@@ -617,7 +625,10 @@ class IntegrationTest(DummyConfigTestCase):
 
         return semester_name
 
-    def _create_call(self, type_name, semester_name, screenshot_path=None):
+    def _create_call(
+            self, type_name, semester_name,
+            allow_continuation=False,
+            screenshot_path=None):
         self.browser.find_element(By.LINK_TEXT, 'Calls').click()
 
         self._save_screenshot(screenshot_path, 'call_list_empty',
@@ -639,6 +650,9 @@ class IntegrationTest(DummyConfigTestCase):
             current_year + '-12-31')
         self.browser.find_element(By.NAME, 'close_time').send_keys(
             '23:59')
+
+        if allow_continuation:
+            self.browser.find_element(By.NAME, 'allow_continuation').click()
 
         self._save_screenshot(screenshot_path, 'call_new')
 
@@ -687,7 +701,7 @@ class IntegrationTest(DummyConfigTestCase):
             ['submit_proposal_link', 'person_proposals_link',
              'proposal_identifier_cell'])
 
-        proposal_url = self.browser.current_url
+        proposal_url = self.browser.current_url.split('?')[0]
 
         # Add other members to the proposal.
         self.browser.find_element(By.LINK_TEXT, 'Add member').click()
@@ -2290,19 +2304,22 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element(By.NAME, 'submit_cancel').click()
 
-    def open_new_call(self, facility_code):
+    def open_new_call(
+            self, facility_code, type_name,
+            semester_name=None, allow_continuation=False):
         self.browser.get(self.base_url + facility_code)
 
         self.browser.find_element(By.LINK_TEXT, 'Administrative menu').click()
 
-        admin_menu_url = self.browser.current_url
-
-        # Create a new semester.
-        semester_name = self._create_semester('B')
+        if semester_name is None:
+            # Create a new semester.
+            admin_menu_url = self.browser.current_url
+            semester_name = self._create_semester('B')
+            self.browser.get(admin_menu_url)
 
         # Create a call.
-        self.browser.get(admin_menu_url)
-        self._create_call('Rapid Turnaround', semester_name)
+        self._create_call(
+            type_name, semester_name, allow_continuation=allow_continuation)
 
         return semester_name
 
@@ -2323,7 +2340,7 @@ class IntegrationTest(DummyConfigTestCase):
 
     def copy_proposal(
             self, facility_code, semester_name, call_type_name=None,
-            screenshot_path=None):
+            continuation=False, screenshot_path=None):
         self.browser.get(self.base_url + facility_code)
 
         if call_type_name is None:
@@ -2343,13 +2360,21 @@ class IntegrationTest(DummyConfigTestCase):
             self.browser.find_element(By.NAME, 'affiliation_id')
         ).select_by_visible_text('China')
 
-        self._save_screenshot(screenshot_path, 'proposal_copy')
+        if continuation:
+            self.browser.find_element(By.NAME, 'submit_continue').click()
 
-        self.browser.find_element(By.NAME, 'submit_copy').click()
+            self.assertIn(
+                'Please wait while your continuation request is prepared.',
+                self.browser.page_source)
 
-        self.assertIn(
-            'Please wait while your proposal is copied.',
-            self.browser.page_source)
+        else:
+            self._save_screenshot(screenshot_path, 'proposal_copy')
+
+            self.browser.find_element(By.NAME, 'submit_copy').click()
+
+            self.assertIn(
+                'Please wait while your proposal is copied.',
+                self.browser.page_source)
 
         # Process the request and refresh now -- should be redirected to copy.
         process_request_prop_copy(self.db, self.server.app)
@@ -2357,7 +2382,9 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.refresh()
 
         self.assertIn(
-            'Proposal Copy Report',
+            ('Continuation Request Report'
+             if continuation else
+             'Proposal Copy Report'),
             self.browser.page_source)
 
         self.assertNotIn(
@@ -2367,9 +2394,11 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element(By.ID, 'callout_dismiss').click()
 
         self._save_screenshot(
-            screenshot_path, 'proposal_copied')
+            screenshot_path,
+            ('continuation_request' if continuation else 'proposal_copied'))
 
-        self._submit_proposal()
+        if not continuation:
+            self._submit_proposal()
 
     def try_jcmt_itcs(self):
         self.browser.get(self.base_url + 'jcmt/calculator/scuba2/time')
