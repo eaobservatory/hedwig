@@ -29,6 +29,7 @@ except ImportError:
     from PyPDF2 import PdfFileMerger
     merge_kwargs = {'import_bookmarks': False}
 
+from ..compat import split_version
 from ..config import get_config
 from ..error import Error, ConversionError
 from ..type.enum import FigureType
@@ -127,8 +128,10 @@ def _pdf_ps_to_png(buff, page_count, resolution=100, downscale=4):
         # Determine which version of Ghostscript we have in order to tell if it
         # has features we need.
         try:
-            ghostscript_version = float(subprocess.check_output(
-                [ghostscript, '--version'], shell=False).strip())
+            ghostscript_version = split_version(latin_1_decode(
+                subprocess.check_output(
+                    [ghostscript, '--version'], shell=False
+                ).strip(), 'replace')[0])
 
         except subprocess.CalledProcessError:
             raise ConversionError('Could not determine Ghostscript version')
@@ -136,7 +139,7 @@ def _pdf_ps_to_png(buff, page_count, resolution=100, downscale=4):
         except ValueError:
             raise ConversionError('Could not parse Ghostscript version')
 
-    ghostscript_has_downscale = (ghostscript_version >= 9.04)
+    ghostscript_has_downscale = (ghostscript_version >= (9, 4))
 
     # Prepare Ghostscript configuration.
     ghostscript_options = [
