@@ -747,6 +747,7 @@ request_prop_copy = Table(
     Column('copy_proposal_id', None,
            ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=True),
+    Column('continuation', Boolean, nullable=False),
     *_request_cols(),
     **table_opts)
 

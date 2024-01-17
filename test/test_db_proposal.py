@@ -2188,9 +2188,14 @@ class DBProposalTest(DBTestCase):
 
         request_id = self.db.add_request_prop_copy(
             proposal_id, person_id, call_id=copy_call_id,
-            affiliation_id=copy_affiliation_id, copy_members=True)
+            affiliation_id=copy_affiliation_id,
+            copy_members=True, continuation=False)
 
         self.assertIsInstance(request_id, int)
+
+        with self.assertRaises(NoSuchRecord):
+            request = self.db.search_request_prop_copy(
+                request_id=request_id, continuation=True).get_single()
 
         request = self.db.search_request_prop_copy(
             request_id=request_id).get_single()
@@ -2203,7 +2208,8 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(request.requester, person_id)
         self.assertEqual(request.call_id, copy_call_id)
         self.assertEqual(request.affiliation_id, copy_affiliation_id)
-        self.assertTrue(request.copy_members, True)
+        self.assertTrue(request.copy_members)
+        self.assertFalse(request.continuation)
         self.assertIsNone(request.copy_proposal_id)
         self.assertIsNone(request.requester_name)
 
@@ -2224,6 +2230,24 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(request.state, RequestState.READY)
         self.assertEqual(request.copy_proposal_id, copy_proposal_id)
         self.assertEqual(request.requester_name, 'Requester')
+
+        # Create a continuation request to test the search method.
+        request_id = self.db.add_request_prop_copy(
+            proposal_id, person_id, call_id=copy_call_id,
+            affiliation_id=copy_affiliation_id,
+            copy_members=False, continuation=True)
+
+        self.assertIsInstance(request_id, int)
+        self.assertFalse(request.continuation)
+
+        with self.assertRaises(NoSuchRecord):
+            request = self.db.search_request_prop_copy(
+                request_id=request_id, continuation=False).get_single()
+
+        request = self.db.search_request_prop_copy(
+            request_id=request_id, continuation=True).get_single()
+
+        self.assertEqual(request.id, request_id)
 
     def test_request_prop_pdf(self):
         proposal_id = self._create_test_proposal()

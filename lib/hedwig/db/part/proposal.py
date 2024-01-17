@@ -403,7 +403,7 @@ class ProposalPart(object):
 
     def add_request_prop_copy(
             self, proposal_id, requester_person_id,
-            call_id, affiliation_id, copy_members,
+            call_id, affiliation_id, copy_members, continuation,
             _test_skip_check=False):
         with self._transaction() as conn:
             request_id = self._add_request_prop(
@@ -412,6 +412,7 @@ class ProposalPart(object):
                     request_prop_copy.c.call_id: call_id,
                     request_prop_copy.c.affiliation_id: affiliation_id,
                     request_prop_copy.c.copy_members: copy_members,
+                    request_prop_copy.c.continuation: continuation,
                 },
                 _conn=conn, _test_skip_check=_test_skip_check)
 
@@ -2318,10 +2319,20 @@ class ProposalPart(object):
         return ans
 
     def search_request_prop_copy(
-        self, request_id=None, proposal_id=None, state=None, **kwargs):
+            self, request_id=None, proposal_id=None, state=None,
+            continuation=None, **kwargs):
+        where_extra = []
+
+        if continuation is not None:
+            if continuation:
+                where_extra.append(request_prop_copy.c.continuation)
+            else:
+                where_extra.append(not_(request_prop_copy.c.continuation))
+
         return self._search_request_prop(
             request_prop_copy, RequestPropCopy,
             request_id=request_id, proposal_id=proposal_id, state=state,
+            where_extra=where_extra,
             **kwargs)
 
     def search_request_prop_pdf(
@@ -2335,6 +2346,7 @@ class ProposalPart(object):
             self, table, result_class, request_id, proposal_id, state,
             requested_before=None, processed_before=None,
             with_requester_name=False,
+            where_extra=[],
             _conn=None):
         select_from = table
         select_columns = [table]
@@ -2350,6 +2362,9 @@ class ProposalPart(object):
             del default['requester_name']
 
         stmt = select(select_columns).select_from(select_from)
+
+        for where_clause in where_extra:
+            stmt = stmt.where(where_clause)
 
         iter_field = None
         iter_list = None
