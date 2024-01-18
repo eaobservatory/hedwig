@@ -139,9 +139,9 @@ class UKIRT(EAOFacility):
 
         return ctx
 
-    def _validate_proposal_extra(self, db, proposal, extra):
+    def _validate_proposal_extra(self, db, proposal, extra, proposal_order):
         report = super(UKIRT, self)._validate_proposal_extra(
-            db, proposal, extra, check_excluded_pi=True)
+            db, proposal, extra, proposal_order, check_excluded_pi=True)
 
         with report.accumulate_notes('proposal_request') as messages:
             if not extra['requests']:

@@ -32,6 +32,7 @@ from ...view.util import float_or_none, int_or_none, join_list, \
 from ...type.collection import ResultTable
 from ...type.enum import FormatType, \
     PermissionType, ProposalState, ProposalType, ReviewState
+from ...type.misc import SkipSection
 from ...type.simple import FacilityObsInfo, Link, RouteInfo, TextCopyInfo, \
     ValidationMessage
 from ...type.util import null_tuple
@@ -706,15 +707,19 @@ class JCMT(EAOFacility):
 
         return ctx
 
-    def _validate_proposal_extra(self, db, proposal, extra):
+    def _validate_proposal_extra(self, db, proposal, extra, proposal_order):
         is_target_of_opp = (extra['jcmt_option_values'].target_of_opp
             if (extra['jcmt_option_values'] is not None) else False)
 
         report = super(JCMT, self)._validate_proposal_extra(
-            db, proposal, extra, skip_missing_targets=is_target_of_opp,
+            db, proposal, extra, proposal_order,
+            skip_missing_targets=is_target_of_opp,
             check_excluded_pi=True)
 
         with report.accumulate_notes('science_case') as messages:
+            if 'science_case' not in proposal_order:
+                raise SkipSection()
+
             if extra['jcmt_pr_summary'] is None:
                 messages.append(ValidationMessage(
                     False,

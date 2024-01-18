@@ -41,7 +41,7 @@ from ...type.enum import AttachmentState, \
     PermissionType, PersonLogEvent, PersonTitle, \
     ProposalState, ProposalType, PublicationType, \
     RequestState, ReviewState
-from ...type.misc import SectionedList
+from ...type.misc import SectionedList, SkipSection
 from ...type.simple import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
     Member, MemberInstitution, PrevProposal, PrevProposalPub, \
@@ -1002,11 +1002,12 @@ class GenericProposal(object):
             'states': ProposalState.get_options(),
         }
 
-    def _validate_proposal(self, db, proposal):
+    def _validate_proposal(self, db, proposal, proposal_order):
         # Validate the "extra" parts of the proposal.
         extra = self._view_proposal_extra(db, proposal)
 
-        report = self._validate_proposal_extra(db, proposal, extra)
+        report = self._validate_proposal_extra(
+            db, proposal, extra, proposal_order)
 
         # Validate common parts of the proposal.
         with report.accumulate_notes('proposal_summary') as messages:
@@ -1021,7 +1022,7 @@ class GenericProposal(object):
         # Return the list of messages.
         return report
 
-    def _validate_proposal_extra(self, db, proposal, extra,
+    def _validate_proposal_extra(self, db, proposal, extra, proposal_order,
                                  skip_missing_targets=False,
                                  check_excluded_pi=False):
         affiliation_type_class = self.get_affiliation_types()
@@ -1089,6 +1090,9 @@ class GenericProposal(object):
                             url_for('.member_edit', proposal_id=proposal.id)))
 
         with report.accumulate_notes('proposal_abstract') as messages:
+            if 'proposal_abstract' not in proposal_order:
+                raise SkipSection()
+
             if extra['abstract'] is None:
                 messages.append(ValidationMessage(
                     True,
@@ -1129,6 +1133,9 @@ class GenericProposal(object):
                     url_for('.previous_edit', proposal_id=proposal.id)))
 
         with report.accumulate_notes('proposal_targets') as messages:
+            if 'proposal_targets' not in proposal_order:
+                raise SkipSection()
+
             if (not skip_missing_targets) and (not extra['targets']):
                 messages.append(ValidationMessage(
                     False,
@@ -1171,6 +1178,9 @@ class GenericProposal(object):
                 (role_class.TECHNICAL_CASE, 'technical_case'),
                 (role_class.SCIENCE_CASE, 'science_case')):
             with report.accumulate_notes(role_section) as messages:
+                if role_section not in proposal_order:
+                    raise SkipSection()
+
                 role_name = role_class.get_name(role)
                 case = extra['{}_case'.format(role_class.get_code(role))]
 
@@ -1220,7 +1230,8 @@ class GenericProposal(object):
         type_class = self.get_call_types()
         immediate_review = type_class.has_immediate_review(proposal.call_type)
 
-        messages = self._validate_proposal(db, proposal)
+        proposal_order = self.get_proposal_order_names(type_=proposal.type)
+        messages = self._validate_proposal(db, proposal, proposal_order)
         has_error = any(x.is_error for x in messages)
 
         if form is not None:
@@ -1266,8 +1277,7 @@ class GenericProposal(object):
             'can_edit': True,
             'is_submit_page': True,
             'immediate_review': immediate_review,
-            'proposal_order': self.get_proposal_order_names(
-                type_=proposal.type),
+            'proposal_order': proposal_order,
         }
 
     def _message_proposal_submit(self, current_user, db, proposal):
@@ -1346,7 +1356,8 @@ class GenericProposal(object):
 
     @with_proposal(permission=PermissionType.VIEW)
     def view_proposal_validate(self, current_user, db, proposal, can):
-        messages = self._validate_proposal(db, proposal)
+        proposal_order = self.get_proposal_order_names(type_=proposal.type)
+        messages = self._validate_proposal(db, proposal, proposal_order)
 
         return {
             'title': 'Proposal Validation',
@@ -1355,8 +1366,7 @@ class GenericProposal(object):
             'validation_messages': messages,
             'can_edit': can.edit,
             'is_submit_page': False,
-            'proposal_order': self.get_proposal_order_names(
-                type_=proposal.type),
+            'proposal_order': proposal_order,
         }
 
     @with_proposal(permission=PermissionType.EDIT)
