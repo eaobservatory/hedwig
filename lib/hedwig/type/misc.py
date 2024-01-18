@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2023 East Asian Observatory
+# Copyright (C) 2016-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -79,6 +79,15 @@ class ErrorCatcher(object):
             error = self.errors[0]
             del self.errors[:]
             raise error
+
+
+class SkipSection(Exception):
+    """
+    Exception class used to skip a section when using
+    the SectionedList.accumulate_notes context manager.
+    """
+
+    pass
 
 
 class SectionedList(object):
@@ -197,12 +206,19 @@ class SectionedList(object):
         or the `default_error_message` otherwise.  The `note_format`
         method supplied to this class's constructor will be used to convert
         the message to an object to store in the list if it was specified.
+
+        The special exception class `SkipSection` can be used to skip
+        (further) processing of a section without adding an error note
+        to the list.
         """
 
         notes = []
 
         try:
             yield notes
+
+        except SkipSection:
+            pass
 
         except UserError as e:
             notes.append(self.note_format(e.message))
