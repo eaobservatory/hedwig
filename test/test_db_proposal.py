@@ -26,6 +26,7 @@ from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, NoSuchValue, UserError
 from hedwig.type.collection import AffiliationCollection, AnnotationCollection, \
     CallCollection, CallMidCloseCollection, MemberCollection, \
+    PrevProposalCollection, \
     ProposalCollection, ProposalCategoryCollection, \
     ProposalFigureCollection, ProposalTextCollection, \
     ResultCollection, TargetCollection
@@ -33,10 +34,11 @@ from hedwig.type.enum import BaseAffiliationType, AnnotationType, \
     AttachmentState, \
     BaseCallType, BaseTextRole, \
     CallState, FigureType, \
-    FormatType, ProposalState, ProposalType, RequestState
+    FormatType, PublicationType, ProposalState, ProposalType, RequestState
 from hedwig.type.simple import Affiliation, Annotation, \
     Call, CallMidClose, CallPreamble, Category, \
     Member, MemberInfo, MemberInstitution, \
+    PrevProposal, PrevProposalPub, \
     Proposal, ProposalCategory, ProposalFigureInfo, ProposalPDFInfo, \
     ProposalText, RequestPropCopy, RequestPropPDF, Target
 from hedwig.type.util import null_tuple
@@ -1084,6 +1086,88 @@ class DBProposalTest(DBTestCase):
             [x.person_id for x in
              self.db.search_member(proposal_id=proposal_id).values()],
             [person_id_2, person_id_3])
+
+    def test_prev_proposal(self):
+        proposal_id = self._create_test_proposal()
+
+        result = self.db.search_prev_proposal(proposal_id=proposal_id)
+        self.assertIsInstance(result, PrevProposalCollection)
+        self.assertEqual(len(result), 0)
+
+        records = PrevProposalCollection([
+            (1, PrevProposal(
+                None, proposal_id, None, 'OLD1', False, None, [
+                    null_tuple(PrevProposalPub)._replace(
+                        description='Pub 11', type=PublicationType.PLAIN),
+                    null_tuple(PrevProposalPub)._replace(
+                        description='Pub 12', type=PublicationType.PLAIN),
+                ])),
+            (2, PrevProposal(
+                None, proposal_id, None, 'OLD2', True, None, [
+                    null_tuple(PrevProposalPub)._replace(
+                        description='Pub 21', type=PublicationType.PLAIN),
+                    null_tuple(PrevProposalPub)._replace(
+                        description='Pub 22', type=PublicationType.PLAIN),
+                ])),
+            (3, PrevProposal(
+                None, proposal_id, None, 'OLD3', False, None, [
+                    null_tuple(PrevProposalPub)._replace(
+                        description='Pub 31', type=PublicationType.PLAIN),
+                    null_tuple(PrevProposalPub)._replace(
+                        description='Pub 32', type=PublicationType.PLAIN),
+                ])),
+        ])
+
+        (n_insert, n_update, n_delete) = self.db.sync_proposal_prev_proposal(
+            proposal_id, records)
+        self.assertEqual(n_insert, 3)
+        self.assertEqual(n_update, 6)
+        self.assertEqual(n_delete, 0)
+
+        result = self.db.search_prev_proposal(proposal_id=proposal_id)
+        self.assertIsInstance(result, PrevProposalCollection)
+        self.assertEqual(len(result), 3)
+
+        for (row, expect_continuation, expect_code, expect_pub) in zip(
+                result.values(),
+                [False, True, False],
+                ['OLD1', 'OLD2', 'OLD3'],
+                [
+                    ['Pub 11', 'Pub 12'],
+                    ['Pub 21', 'Pub 22'],
+                    ['Pub 31', 'Pub 32'],
+                ]):
+            self.assertIsInstance(row, PrevProposal)
+            self.assertEqual(row.this_proposal_id, proposal_id)
+            self.assertEqual(row.continuation, expect_continuation)
+            self.assertIsInstance(row.publications, list)
+            self.assertEqual(len(row.publications), len(expect_pub))
+            for (pub, expect) in zip(row.publications, expect_pub):
+                self.assertIsInstance(pub, PrevProposalPub)
+                self.assertEqual(pub.type, PublicationType.PLAIN)
+                self.assertEqual(pub.description, expect)
+
+        result = self.db.search_prev_proposal(
+            proposal_id=proposal_id, continuation=False,
+            with_publications=True)
+        self.assertIsInstance(result, PrevProposalCollection)
+        self.assertEqual(len(result), 2)
+        self.assertEqual(
+            [x.proposal_code for x in result.values()],
+            ['OLD1', 'OLD3'])
+        for row in result.values():
+            self.assertIsInstance(row.publications, list)
+            self.assertEqual(len(row.publications), 2)
+
+        result = self.db.search_prev_proposal(
+            proposal_id=proposal_id, continuation=True,
+            with_publications=False)
+        self.assertIsInstance(result, PrevProposalCollection)
+        self.assertEqual(len(result), 1)
+        value = result.get_single()
+
+        self.assertEqual(value.proposal_code, 'OLD2')
+        self.assertIs(value.publications, None)
 
     def test_proposal_annotation(self):
         proposal_id = self._create_test_proposal()

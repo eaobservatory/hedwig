@@ -1531,24 +1531,34 @@ class ProposalPart(object):
 
         return ans
 
-    def search_prev_proposal(self, proposal_id, _conn=None):
+    def search_prev_proposal(
+            self, proposal_id, continuation=None,
+            with_publications=True,
+            _conn=None):
         """
         Search for the previous proposal associated with a given proposal.
         """
 
-        non_id_pub_columns = [x for x in prev_proposal_pub.columns
-                              if x.name != 'id']
-        pub_columns = (non_id_pub_columns +
-                       [prev_proposal_pub.c.id.label('pp_pub_id')])
+        select_columns = [prev_proposal]
+        select_from = prev_proposal
+        order_by = [prev_proposal.c.sort_order.asc()]
+
+        if with_publications:
+            non_id_pub_columns = [
+                x for x in prev_proposal_pub.columns
+                if x.name != 'id']
+
+            select_columns.extend(non_id_pub_columns)
+            select_columns.append(prev_proposal_pub.c.id.label('pp_pub_id'))
+
+            select_from = select_from.outerjoin(prev_proposal_pub)
+
+            order_by.append(prev_proposal_pub.c.id.asc())
+
+        stmt = select(select_columns).select_from(select_from)
 
         iter_field = None
         iter_list = None
-
-        stmt = select(
-            [prev_proposal] + pub_columns
-        ).select_from(
-            prev_proposal.outerjoin(prev_proposal_pub)
-        )
 
         if is_list_like(proposal_id):
             assert iter_field is None
@@ -1557,36 +1567,46 @@ class ProposalPart(object):
         else:
             stmt = stmt.where(prev_proposal.c.this_proposal_id == proposal_id)
 
+        if continuation is not None:
+            if continuation:
+                stmt = stmt.where(prev_proposal.c.continuation)
+            else:
+                stmt = stmt.where(not_(prev_proposal.c.continuation))
+
         ans = PrevProposalCollection()
 
         with self._transaction(_conn=_conn) as conn:
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
-                for row in conn.execute(iter_stmt.order_by(
-                        prev_proposal.c.sort_order.asc(),
-                        prev_proposal_pub.c.id.asc())):
-                    # Convert row to a dictionary so that we can manipulate
-                    # its entries.
-                    row = row_as_dict(row)
+                for row in conn.execute(iter_stmt.order_by(*order_by)):
+                    if with_publications:
+                        # Convert row to a dictionary so that we can manipulate
+                        # its entries.
+                        row = row_as_dict(row)
 
-                    # Move the entries relating to the publication table
-                    # to another dictionary.
-                    pub_id = row.pop('pp_pub_id')
-                    pub = {'id': pub_id, 'proposal_id': None}
-                    for col in [x.name for x in non_id_pub_columns]:
-                        pub[col] = row.pop(col)
-                    if pub_id is None:
-                        pub = None
-                    else:
-                        pub = PrevProposalPub(**pub)
+                        # Move the entries relating to the publication table
+                        # to another dictionary.
+                        pub_id = row.pop('pp_pub_id')
+                        pub = {'id': pub_id, 'proposal_id': None}
+                        for col in [x.name for x in non_id_pub_columns]:
+                            pub[col] = row.pop(col)
+                        if pub_id is None:
+                            pub = None
+                        else:
+                            pub = PrevProposalPub(**pub)
 
-                    # Either make a new entry in the result table or just add
-                    # the publication to it if it already exists.
-                    id_ = row['id']
-                    if id_ in ans and (pub is not None):
-                        ans[id_].publications.append(pub)
+                        # Either make a new entry in the result table or just
+                        # add the publication to it if it already exists.
+                        id_ = row['id']
+                        if id_ in ans and (pub is not None):
+                            ans[id_].publications.append(pub)
+                        else:
+                            ans[id_] = PrevProposal(
+                                publications=([] if pub is None else [pub]),
+                                **row)
+
                     else:
-                        ans[id_] = PrevProposal(
-                            publications=([] if pub is None else [pub]), **row)
+                        ans[row.id] = PrevProposal(
+                            publications=None, **row_as_mapping(row))
 
         return ans
 
