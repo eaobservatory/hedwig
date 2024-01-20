@@ -1532,7 +1532,7 @@ class ProposalPart(object):
         return ans
 
     def search_prev_proposal(
-            self, proposal_id, continuation=None,
+            self, proposal_id, continuation=None, resolved=None,
             with_publications=True,
             _conn=None):
         """
@@ -1572,6 +1572,12 @@ class ProposalPart(object):
                 stmt = stmt.where(prev_proposal.c.continuation)
             else:
                 stmt = stmt.where(not_(prev_proposal.c.continuation))
+
+        if resolved is not None:
+            if resolved:
+                stmt = stmt.where(prev_proposal.c.proposal_id.isnot(None))
+            else:
+                stmt = stmt.where(prev_proposal.c.proposal_id.is_(None))
 
         ans = PrevProposalCollection()
 

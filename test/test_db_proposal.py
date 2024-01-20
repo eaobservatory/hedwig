@@ -1090,6 +1090,13 @@ class DBProposalTest(DBTestCase):
     def test_prev_proposal(self):
         proposal_id = self._create_test_proposal()
 
+        proposal = self.db.get_proposal(
+            facility_id=None, proposal_id=proposal_id, with_members=True)
+        member = proposal.members.get_pi()
+        old_proposal_id = self.db.add_proposal(
+            proposal.call_id, member.person_id, member.affiliation_id,
+            'Previous Proposal Title')
+
         result = self.db.search_prev_proposal(proposal_id=proposal_id)
         self.assertIsInstance(result, PrevProposalCollection)
         self.assertEqual(len(result), 0)
@@ -1110,7 +1117,7 @@ class DBProposalTest(DBTestCase):
                         description='Pub 22', type=PublicationType.PLAIN),
                 ])),
             (3, PrevProposal(
-                None, proposal_id, None, 'OLD3', False, None, [
+                None, proposal_id, old_proposal_id, 'OLD3', False, None, [
                     null_tuple(PrevProposalPub)._replace(
                         description='Pub 31', type=PublicationType.PLAIN),
                     null_tuple(PrevProposalPub)._replace(
@@ -1168,6 +1175,20 @@ class DBProposalTest(DBTestCase):
 
         self.assertEqual(value.proposal_code, 'OLD2')
         self.assertIs(value.publications, None)
+
+        result = self.db.search_prev_proposal(
+            proposal_id=proposal_id, resolved=True, with_publications=False)
+        self.assertIsInstance(result, PrevProposalCollection)
+        self.assertEqual(
+            [x.proposal_code for x in result.values()],
+            ['OLD3'])
+
+        result = self.db.search_prev_proposal(
+            proposal_id=proposal_id, resolved=False, with_publications=False)
+        self.assertIsInstance(result, PrevProposalCollection)
+        self.assertEqual(
+            [x.proposal_code for x in result.values()],
+            ['OLD1', 'OLD2'])
 
     def test_proposal_annotation(self):
         proposal_id = self._create_test_proposal()
