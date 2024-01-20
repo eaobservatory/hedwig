@@ -373,7 +373,26 @@ class GenericReview(object):
 
         affiliation_names.append(('0', 'Unknown'))
 
-        proposal_ids = [x.id for x in proposals.values()]
+        # Determine how to look up the target list for each proposal:
+        # continuation requests do not have their own target list, so we
+        # must fetch the corresponding previous proposal ID.  Then we can
+        # do a combined query for these and all the standard proposals.
+        proposal_ids = set()
+        proposal_ids_cr = set()
+        previous_proposal_ids = {}
+        for proposal in proposals.values():
+            (proposal_ids_cr
+             if proposal.type == ProposalType.CONTINUATION
+             else proposal_ids).add(proposal.id)
+
+        if proposal_ids_cr:
+            for prev_proposal in db.search_prev_proposal(
+                    proposal_id=proposal_ids_cr,
+                    continuation=True, resolved=True,
+                    with_publications=False).values():
+                id_ = prev_proposal.proposal_id
+                proposal_ids.add(id_)
+                previous_proposal_ids[prev_proposal.this_proposal_id] = id_
 
         targets = db.search_target(proposal_id=proposal_ids)
 
@@ -384,7 +403,8 @@ class GenericReview(object):
             # can be scaled by the proposal's allocation, which may change
             # later.  (At this level of detail we can't know whether an altered
             # allocation corresponds to excluding particular targets.)
-            proposal_targets = targets.subset_by_proposal(proposal.id)
+            proposal_targets = targets.subset_by_proposal(
+                previous_proposal_ids.get(proposal.id, proposal.id))
 
             ra_fraction = defaultdict(float)
             for target in proposal_targets.to_frac_time_list():
