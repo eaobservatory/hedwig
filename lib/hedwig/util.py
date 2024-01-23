@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -138,6 +138,21 @@ def list_in_ranges(iterable, min_range_size=3):
             ranges.append((rmin, rmax))
 
     return (ranges, individual)
+
+
+def lower_except_abbr(value):
+    """
+    Converts a string to lower case, except for abbreviations.
+
+    Abbreviations are curently identifed as sequences of 2 or more
+    upper case letters.
+    """
+
+    pattern_abbr = re.compile(r'^[A-Z]{2,}$')
+
+    return ' '.join(
+        x if pattern_abbr.match(x) else x.lower()
+        for x in value.split(' '))
 
 
 def matches_constraint(value, constraint):

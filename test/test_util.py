@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2020 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,7 +22,7 @@ from io import BytesIO
 
 from hedwig.error import Error
 from hedwig.util import ClosingMultiple, FormatMaxDP, FormatSigFig, \
-    is_list_like, list_in_blocks, list_in_ranges, \
+    is_list_like, list_in_blocks, list_in_ranges, lower_except_abbr, \
     matches_constraint
 
 from .compat import TestCase
@@ -97,6 +97,9 @@ class UtilTest(TestCase):
         self.assertFalse(is_list_like(7))
         self.assertFalse(is_list_like('8'))
         self.assertFalse(is_list_like(None))
+
+    def test_lower_except_abbr(self):
+        self.assertEqual(lower_except_abbr('A TLA Review'), 'a TLA review')
 
     def test_matches_constraint(self):
         self.assertTrue(matches_constraint(1, None))
