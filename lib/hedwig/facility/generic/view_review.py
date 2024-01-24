@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -47,6 +47,7 @@ from ...type.simple import Affiliation, DateAndTime, Link, MemberPIInfo, \
     ReviewFigureInfo, ReviewDeadline
 from ...type.util import null_tuple, \
     with_can_edit, with_can_view, with_can_view_edit_rating
+from ...util import lower_except_abbr
 
 
 ProposalWithExtraPermissions = namedtuple(
@@ -996,7 +997,7 @@ class GenericReview(object):
                             raise UserError(
                                 'Multiple {} assignments selected for '
                                 'proposal {}.',
-                                role.name.lower(), proposal.code)
+                                lower_except_abbr(role.name), proposal.code)
 
                         # Check for multiple or conflicting assignments.
                         for person_id in updated:
@@ -1016,7 +1017,8 @@ class GenericReview(object):
                                     raise UserError(
                                         'A reviewer selected for proposal {} '
                                         'already has a {}{}.',
-                                        proposal.code, role_other.name.lower(),
+                                        proposal.code,
+                                        lower_except_abbr(role_other.name),
                                         (' review' if role_other.name_review
                                          else ''))
 
@@ -1309,7 +1311,7 @@ class GenericReview(object):
             })
 
         email_subject = 'Assignment of {} {}'.format(
-            role_name.lower(),
+            lower_except_abbr(role_name),
             ('reviews' if (len(proposals) > 1) else 'review'))
 
         db.add_message(
