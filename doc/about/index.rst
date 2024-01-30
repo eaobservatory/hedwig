@@ -162,3 +162,20 @@ which is available under the LGPL, version 2.1:
     You should have received a copy of the GNU Lesser General Public
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+
+Font Awesome
+~~~~~~~~~~~~
+
+This system uses the Font Awesome Free icon library:
+
+    Font Awesome Free is free, open source, and GPL friendly. You can use it for
+    commercial projects, open source projects, or really almost whatever you want.
+    Full Font Awesome Free license: https://fontawesome.com/license/free
+
+    In the Font Awesome Free download,
+    the `SIL OFL license <https://scripts.sil.org/OFL>`_
+    applies to all icons packaged as web and desktop font files.
+
+    In the Font Awesome Free download,
+    the `MIT license <https://opensource.org/licenses/MIT>`_
+    applies to all non-font and non-icon files.

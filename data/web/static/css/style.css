@@ -25,6 +25,12 @@ a.undecorated:link, a.undecorated:visited {
     text-decoration: none;
 }
 
+a:link > .fa-solid, a:visited > .fa-solid {
+    text-decoration: none;
+    padding-right: 0.25ex;
+    padding-left: 0.25ex;
+}
+
 abbr {
     color: #040;
     text-decoration: none;

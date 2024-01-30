@@ -12,6 +12,8 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" type="text/css" />
         <link rel="stylesheet" href="{{ url_for('static', filename='css/nonprint.css') }}" media="not print" type="text/css" />
         <link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}" media="print" type="text/css" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='misc/fontawesome/css/fontawesome.css') }}" type="text/css">
+        <link rel="stylesheet" href="{{ url_for('static', filename='misc/fontawesome/css/solid.css') }}" type="text/css">
         {% if stylesheets is defined %}
            {% for stylesheet in stylesheets %}
                 <link rel="stylesheet" href="{{ url_for('static', filename='css/' + stylesheet + '.css') }}" type="text/css" />
