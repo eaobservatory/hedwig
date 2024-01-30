@@ -48,7 +48,7 @@
                 </td>
                 <td>
                     {% if not member.person_registered %}
-                        <a href="{{ url_for('.site_group_member_reinvite', site_group_type=site_group_type, member_id=member.id) }}">Re-send invitation</a>
+                        <a href="{{ url_for('.site_group_member_reinvite', site_group_type=site_group_type, member_id=member.id) }}"><span class="fa-solid fa-comment-medical"></span>Re-send invitation</a>
                     {% else %}
                         &nbsp;
                     {% endif %}
@@ -60,9 +60,9 @@
 
 <nav>
     <ol>
-        <li><a href="{{ url_for('.site_group_member_add', site_group_type=site_group_type) }}">Add member</a></li>
+        <li><a href="{{ url_for('.site_group_member_add', site_group_type=site_group_type) }}"><span class="fa-solid fa-user-plus"></span>Add member</a></li>
         {% if members %}
-            <li><a href="{{ url_for('.site_group_member_edit', site_group_type=site_group_type) }}">Edit members</a></li>
+            <li><a href="{{ url_for('.site_group_member_edit', site_group_type=site_group_type) }}"><span class="fa-solid fa-pencil"></span>Edit members</a></li>
         {% endif %}
     </ol>
 <nav>

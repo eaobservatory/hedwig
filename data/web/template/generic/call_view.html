@@ -149,10 +149,10 @@
 
 <nav>
     <ol>
-        <li><a href="{{ url_for('.call_edit', call_id=call.id) }}">Edit call</a></li>
-        <li><a href="{{ url_for('.call_new', call_type=call.type, copy=call.id) }}">Copy call</a></li>
-        <li><a href="{{ url_for('.call_proposals', call_id=call.id) }}">View proposals</a></li>
-        <li><a href="{{ url_for('.review_call', call_id=call.id) }}">Review process</a></li>
+        <li><a href="{{ url_for('.call_edit', call_id=call.id) }}"><span class="fa-solid fa-pencil"></span>Edit call</a></li>
+        <li><a href="{{ url_for('.call_new', call_type=call.type, copy=call.id) }}"><span class="fa-solid fa-copy"></span>Copy call</a></li>
+        <li><a href="{{ url_for('.call_proposals', call_id=call.id) }}"><span class="fa-solid fa-book"></span>View proposals</a></li>
+        <li><a href="{{ url_for('.review_call', call_id=call.id) }}"><span class="fa-solid fa-file-lines"></span>Review process</a></li>
     </ol>
 </nav>
 

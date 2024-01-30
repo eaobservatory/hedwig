@@ -14,7 +14,7 @@
 {{ queue.description | format_text(queue.description_format) }}
 
 <p>
-    <a href="{{ url_for('.queue_edit', queue_id=queue.id) }}">Edit queue</a>
+    <a href="{{ url_for('.queue_edit', queue_id=queue.id) }}"><span class="fa-solid fa-pencil"></span>Edit queue</a>
 </p>
 
 <h2>Affiliations</h2>
@@ -35,7 +35,7 @@
 {% endif %}
 
 <p>
-    <a id="affiliation_edit_link" href="{{ url_for('.affiliation_edit', queue_id=queue.id) }}">Edit affiliations</a>
+    <a id="affiliation_edit_link" href="{{ url_for('.affiliation_edit', queue_id=queue.id) }}"><span class="fa-solid fa-globe"></span>Edit affiliations</a>
 </p>
 
 <h2>Groups</h2>

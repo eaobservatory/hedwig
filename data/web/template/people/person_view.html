@@ -22,33 +22,33 @@
     </p>
     <nav>
         <ol id="account_manage_links">
-            <li><a href="{{ url_for('.change_password') }}">Change password</a></li>
-            <li><a href="{{ url_for('.change_user_name') }}">Change user name</a></li>
+            <li><a href="{{ url_for('.change_password') }}"><span class="fa-solid fa-key"></span>Change password</a></li>
+            <li><a href="{{ url_for('.change_user_name') }}"><span class="fa-solid fa-user-gear"></span>Change user name</a></li>
         </ol>
         <ol>
-            <li><a href="{{ url_for('.person_proposals') }}">Your proposal list</a></li>
-            <li><a href="{{ url_for('.person_reviews') }}">Your review list</a></li>
+            <li><a href="{{ url_for('.person_proposals') }}"><span class="fa-solid fa-book"></span>Your proposal list</a></li>
+            <li><a href="{{ url_for('.person_reviews') }}"><span class="fa-solid fa-file-lines"></span>Your review list</a></li>
         </ol>
     </nav>
 {% endif %}
 {% if show_viewer_links and not is_current_user %}
     <nav>
         <ol id="account_viewer_links">
-            <li><a href="{{ url_for('.person_view_proposals', person_id=person.id) }}">View proposal list</a></li>
-            <li><a href="{{ url_for('.person_view_reviews', person_id=person.id) }}">View review list</a></li>
+            <li><a href="{{ url_for('.person_view_proposals', person_id=person.id) }}"><span class="fa-solid fa-book"></span>View proposal list</a></li>
+            <li><a href="{{ url_for('.person_view_reviews', person_id=person.id) }}"><span class="fa-solid fa-file-lines"></span>View review list</a></li>
         </ol>
     </nav>
 {% endif %}
 {% if show_admin_links %}
     <nav>
         <ol id="account_admin_links">
-            <li><a href="{{ url_for('admin.message_list', person_id=person.id) }}">View messages</a></li>
+            <li><a href="{{ url_for('admin.message_list', person_id=person.id) }}"><span class="fa-solid fa-envelope"></span>View messages</a></li>
             {% if person.user_id is none %}
-                <li><a href="{{ url_for('.person_invite', person_id=person.id) }}">Invite to register</a></li>
+                <li><a href="{{ url_for('.person_invite', person_id=person.id) }}"><span class="fa-solid fa-comment-medical"></span>Invite to register</a></li>
             {% else %}
-                <li><a href="{{ url_for('.user_log', user_id=person.user_id) }}">User account log</a></li>
-                <li><a href="{{ url_for('.person_log', person_id=person.id) }}">Person action log</a></li>
-                <li><a href="{{ url_for('.person_subsume', person_id=person.id) }}">Subsume duplicate profile</a></li>
+                <li><a href="{{ url_for('.user_log', user_id=person.user_id) }}"><span class="fa-solid fa-user-tag"></span>User account log</a></li>
+                <li><a href="{{ url_for('.person_log', person_id=person.id) }}"><span class="fa-solid fa-user-tag"></span>Person action log</a></li>
+                <li><a href="{{ url_for('.person_subsume', person_id=person.id) }}"><span class="fa-solid fa-object-group"></span>Subsume duplicate profile</a></li>
             {% endif %}
         </ol>
     </nav>
@@ -111,9 +111,9 @@
 {% if can_edit %}
     <nav>
         <ol id="profile_manage_links">
-            <li><a href="{{ url_for('.person_edit', person_id=person.id) }}">Edit profile</a></li>
-            <li><a href="{{ url_for('.person_edit_email', person_id=person.id) }}">Edit email addresses</a></li>
-            <li><a href="{{ url_for('.person_edit_institution', person_id=person.id) }}">Change institution</a></li>
+            <li><a href="{{ url_for('.person_edit', person_id=person.id) }}"><span class="fa-solid fa-user-pen"></span>Edit profile</a></li>
+            <li><a href="{{ url_for('.person_edit_email', person_id=person.id) }}"><span class="fa-solid fa-address-card"></span>Edit email addresses</a></li>
+            <li><a href="{{ url_for('.person_edit_institution', person_id=person.id) }}"><span class="fa-solid fa-building-columns"></span>Change institution</a></li>
         </ol>
     </nav>
 {% endif %}

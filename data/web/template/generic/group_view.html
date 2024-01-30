@@ -64,7 +64,7 @@
                 </td>
                 <td>
                     {% if not member.person_registered %}
-                        <a href="{{ url_for('.group_member_reinvite', queue_id=queue.id, group_type=group_type, member_id=member.id) }}">Re-send invitation</a>
+                        <a href="{{ url_for('.group_member_reinvite', queue_id=queue.id, group_type=group_type, member_id=member.id) }}"><span class="fa-solid fa-comment-medical"></span>Re-send invitation</a>
                     {% else %}
                         &nbsp;
                     {% endif %}
@@ -76,9 +76,9 @@
 
 <nav>
     <ol>
-        <li><a href="{{ url_for('.group_member_add', queue_id=queue.id, group_type=group_type) }}">Add member</a></li>
+        <li><a href="{{ url_for('.group_member_add', queue_id=queue.id, group_type=group_type) }}"><span class="fa-solid fa-user-plus"></span>Add member</a></li>
         {% if members %}
-            <li><a href="{{ url_for('.group_member_edit', queue_id=queue.id, group_type=group_type) }}">Edit members</a></li>
+            <li><a href="{{ url_for('.group_member_edit', queue_id=queue.id, group_type=group_type) }}"><span class="fa-solid fa-pencil"></span>Edit members</a></li>
         {% endif %}
     </ol>
 <nav>

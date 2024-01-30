@@ -21,13 +21,13 @@
 </div>
 
 <nav>
-    <ul>
-        <li><a href="{{ url_for('people.invitation_token_enter') }}">Enter an invitation code</a></li>
-        <li><a href="{{ url_for('help.help_index') }}">Help and information</a></li>
+    <ol>
+        <li><a href="{{ url_for('people.invitation_token_enter') }}"><span class="fa-solid fa-envelope-open-text"></span>Enter an invitation code</a></li>
+        <li><a href="{{ url_for('help.help_index') }}"><span class="fa-solid fa-circle-info"></span>Help and information</a></li>
         {% if show_admin_links %}
-            <li><a href="{{ url_for('admin.admin_home') }}">Site administration</a>
+            <li><a href="{{ url_for('admin.admin_home') }}"><span class="fa-solid fa-shield-halved"></span>Site administration</a>
         {% endif %}
-    </ul>
+    </ol>
 </nav>
 
 {% endblock %}

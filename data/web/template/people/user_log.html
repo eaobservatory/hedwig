@@ -23,9 +23,9 @@
 <nav>
     <p>
         {% if user.disabled %}
-            <a href="{{ url_for('.user_enable', user_id=user.id) }}">Enable account</a>
+            <a href="{{ url_for('.user_enable', user_id=user.id) }}"><span class="fa-solid fa-unlock"></span>Enable account</a>
         {% else %}
-            <a href="{{ url_for('.user_disable', user_id=user.id) }}">Disable account</a>
+            <a href="{{ url_for('.user_disable', user_id=user.id) }}"><span class="fa-solid fa-lock"></span>Disable account</a>
         {% endif %}
     </p>
 </nav>

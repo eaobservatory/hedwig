@@ -6,27 +6,27 @@
     <ol>
         {% if proposals  %}
             <li>
-                <a href="{{ url_for('.review_call_tabulation', call_id=call_id) }}">View detailed tabulation</a>
+                <a href="{{ url_for('.review_call_tabulation', call_id=call_id) }}"><span class="fa-solid fa-table"></span>View detailed tabulation</a>
                 or
-                <a href="{{ url_for('.review_call_tabulation_download', call_id=call_id) }}">download as a CSV file</a>
+                <a href="{{ url_for('.review_call_tabulation_download', call_id=call_id) }}"><span class="fa-solid fa-download"></span>download as a CSV file</a>
             </li>
             <li>
-                <a href="{{ url_for('.review_call_stats', call_id=call_id) }}">View review statistics</a>
+                <a href="{{ url_for('.review_call_stats', call_id=call_id) }}"><span class="fa-solid fa-file-waveform"></span>View review statistics</a>
                 or
-                <a href="{{ url_for('.review_call_stats_download', call_id=call_id) }}">download as a CSV file</a>
+                <a href="{{ url_for('.review_call_stats_download', call_id=call_id) }}"><span class="fa-solid fa-download"></span>download as a CSV file</a>
             </li>
             <li>
-                <a href="{{ url_for('.review_call_allocation', call_id=call_id) }}">View allocation details</a>
+                <a href="{{ url_for('.review_call_allocation', call_id=call_id) }}"><span class="fa-solid fa-chart-column"></span>View allocation details</a>
             </li>
         {% endif %}
         {% if can_edit %}
-            <li><a href="{{ url_for('.review_affiliation_weight', call_id=call_id) }}">Edit affiliation weights</a></li>
-            <li><a href="{{ url_for('.review_call_available', call_id=call_id) }}">Edit time available</a></li>
-            <li><a href="{{ url_for('.review_call_deadline', call_id=call_id) }}">Edit review deadlines</a></li>
+            <li><a href="{{ url_for('.review_affiliation_weight', call_id=call_id) }}"><span class="fa-solid fa-weight-hanging"></span>Edit affiliation weights</a></li>
+            <li><a href="{{ url_for('.review_call_available', call_id=call_id) }}"><span class="fa-solid fa-clock"></span>Edit time available</a></li>
+            <li><a href="{{ url_for('.review_call_deadline', call_id=call_id) }}"><span class="fa-solid fa-calendar-days"></span>Edit review deadlines</a></li>
             {% if proposals %}
-                <li><a href="{{ url_for('.review_call_reviewers', call_id=call_id) }}">Assign reviewers</a></li>
-                <li><a href="{{ url_for('.review_call_advance_final', call_id=call_id) }}">Advance to final review phase</a></li>
-                <li><a href="{{ url_for('.review_confirm_feedback', call_id=call_id) }}">Approve feedback reports</a></li>
+                <li><a href="{{ url_for('.review_call_reviewers', call_id=call_id) }}"><span class="fa-solid fa-file-circle-exclamation"></span>Assign reviewers</a></li>
+                <li><a href="{{ url_for('.review_call_advance_final', call_id=call_id) }}"><span class="fa-solid fa-flag-checkered"></span>Advance to final review phase</a></li>
+                <li><a href="{{ url_for('.review_confirm_feedback', call_id=call_id) }}"><span class="fa-solid fa-file-circle-check"></span>Approve feedback reports</a></li>
             {% endif %}
         {% endif %}
     </ol>

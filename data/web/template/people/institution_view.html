@@ -35,7 +35,7 @@
 {% if can_edit %}
     <nav>
         <ol>
-            <li><a href="{{ url_for('.institution_edit', institution_id=institution.id) }}" id="edit_institution_link">Edit this institution</a></li>
+            <li><a href="{{ url_for('.institution_edit', institution_id=institution.id) }}" id="edit_institution_link"><span class="fa-solid fa-pencil"></span>Edit this institution</a></li>
         </ol>
     </nav>
 {% endif %}
@@ -43,8 +43,8 @@
 {% if show_admin_links %}
     <nav>
         <ol id="institution_admin_links">
-            <li><a href="{{ url_for('.institution_log', institution_id=institution.id) }}">View edit log</a></li>
-            <li><a href="{{ url_for('.institution_subsume', institution_id=institution.id) }}">Subsume duplicate record</a></li>
+            <li><a href="{{ url_for('.institution_log', institution_id=institution.id) }}"><span class="fa-solid fa-user-tag"></span>View edit log</a></li>
+            <li><a href="{{ url_for('.institution_subsume', institution_id=institution.id) }}"><span class="fa-solid fa-object-group"></span>Subsume duplicate record</a></li>
         </ol>
     </nav>
 {% endif %}
