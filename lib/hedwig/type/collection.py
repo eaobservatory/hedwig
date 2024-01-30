@@ -784,6 +784,20 @@ class ReviewerCollection(
 
         return [x for x in self.values() if x.person_id == person_id]
 
+    @property
+    def n_with_note(self):
+        """
+        The number of entries in the collection with a note attached.
+        """
+
+        ans = 0
+
+        for value in self.values():
+            if value.note is not None:
+                ans += 1
+
+        return ans
+
 
 class ReviewerAcceptanceCollection(
         ResultCollection, CollectionByProposal, CollectionByReviewerRole):
