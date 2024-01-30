@@ -3,22 +3,18 @@
 {% from 'jcmt/macro/request_table.html' import render_request_display, render_request_options_display %}
 
 {% block science_case_extra %}
-    <h2 id="jcmt_pr_summary">Public Summary</h2>
-
     {% if jcmt_pr_summary is not none %}
-        {{ jcmt_pr_summary | format_text }}
-    {% else %}
-        <p class="missing">
-            This proposal does not yet have a public summary.
-        </p>
-    {% endif %}
+        <h2 id="jcmt_pr_summary">Public Summary</h2>
 
-    {% if can_edit %}
-        <nav>
-            <ol>
-                <li><a href="{{ url_for('.pr_summary_edit', proposal_id=proposal.id) }}">Edit public summary</a></li>
-            </ol>
-        </nav>
+        {{ jcmt_pr_summary | format_text }}
+
+        {% if can_edit %}
+            <nav>
+                <ol>
+                    <li><a href="{{ url_for('.pr_summary_edit', proposal_id=proposal.id) }}">Edit public summary</a></li>
+                </ol>
+            </nav>
+        {% endif %}
     {% endif %}
 {% endblock %}
 

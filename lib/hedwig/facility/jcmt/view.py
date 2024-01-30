@@ -474,15 +474,8 @@ class JCMT(EAOFacility):
 
     def _copy_proposal(
             self, current_user, db, old_proposal, proposal, *args, **kwargs):
-        role_class = self.get_text_roles()
-        text_roles = [
-            TextCopyInfo(
-                role_class.PR_SUMMARY, 'science_case', 300, 0, 0, 0),
-        ]
-
         atn = super(JCMT, self)._copy_proposal(
-            current_user, db, old_proposal, proposal, *args,
-            extra_text_roles=text_roles, **kwargs)
+            current_user, db, old_proposal, proposal, *args, **kwargs)
 
         # Copy observing request.
         with atn['notes'].accumulate_notes('proposal_request') as notes:
@@ -717,17 +710,6 @@ class JCMT(EAOFacility):
             db, proposal, extra, proposal_order,
             skip_missing_targets=is_target_of_opp,
             check_excluded_pi=True)
-
-        with report.accumulate_notes('science_case') as messages:
-            if 'science_case' not in proposal_order:
-                raise SkipSection()
-
-            if extra['jcmt_pr_summary'] is None:
-                messages.append(ValidationMessage(
-                    False,
-                    'The proposal does not have a public summary.',
-                    'Edit the public summary',
-                    url_for('.pr_summary_edit', proposal_id=proposal.id)))
 
         with report.accumulate_notes('proposal_request') as messages:
             if extra['requests']:
