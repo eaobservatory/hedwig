@@ -1101,36 +1101,60 @@ class GenericProposal(object):
                     url_for('.abstract_edit', proposal_id=proposal.id)))
 
         with report.accumulate_notes('proposal_previous') as messages:
+            message_template = ValidationMessage(
+                True, None,
+                'Edit previous proposals and publications',
+                url_for('.previous_edit', proposal_id=proposal.id))
+
             if proposal.type == ProposalType.CONTINUATION:
                 try:
-                    extra['prev_proposals'].get_continuation()
+                    previous = extra['prev_proposals'].get_continuation()
+
                 except MultipleRecords:
-                    messages.append(ValidationMessage(
-                        True,
-                        'This proposal is a continuation request, '
+                    messages.append(message_template._replace(
+                        description='This proposal is a continuation request, '
                         'but the continuation box is checked for '
-                        'multiple entries in the previous proposals list.',
-                        'Edit previous proposals and publications',
-                        url_for('.previous_edit', proposal_id=proposal.id)))
+                        'multiple entries in the previous proposals list.'))
+
                 except NoSuchValue:
-                    messages.append(ValidationMessage(
-                        True,
-                        'This proposal is a continuation request, '
+                    messages.append(message_template._replace(
+                        description='This proposal is a continuation request, '
                         'so the previous proposal list must indicate '
                         'which project you wish to continue. '
                         'Please ensure the continuation box is checked for '
-                        'one entry in the previous proposals list.',
-                        'Edit previous proposals and publications',
-                        url_for('.previous_edit', proposal_id=proposal.id)))
+                        'one entry in the previous proposals list.'))
+
+                else:
+                    if previous.proposal_id is None:
+                        messages.append(message_template._replace(
+                            description='This proposal is a continuation '
+                            'request, but the proposal for which the '
+                            'continuation box is checked is not recognized.'))
+
+                    else:
+                        try:
+                            prev_prop = db.get_proposal(
+                                self.id_, previous.proposal_id)
+                        except NoSuchRecord as e:
+                            messages.append(message_template._replace(
+                                description='The proposal to continue could '
+                                'not be found.'))
+
+                        if prev_prop.type != ProposalType.STANDARD:
+                            messages.append(message_template._replace(
+                                description='The proposal selected for '
+                                'continuation is not a standard proposal.  '
+                                'Please give the original proposal identifier '
+                                'rather than a subsequent '
+                                'continuation request.'))
 
             elif not extra['prev_proposals']:
-                messages.append(ValidationMessage(
-                    False,
-                    'No previous proposals have been listed.  If you do not '
+                messages.append(message_template._replace(
+                    is_error=False,
+                    description='No previous proposals have been listed.  '
+                    'If you do not '
                     'have any previously accepted proposals you should '
-                    'ignore this warning.',
-                    'Edit previous proposals and publications',
-                    url_for('.previous_edit', proposal_id=proposal.id)))
+                    'ignore this warning.'))
 
         with report.accumulate_notes('proposal_targets') as messages:
             if 'proposal_targets' not in proposal_order:
