@@ -1440,15 +1440,26 @@ class ProposalPart(object):
 
         return ans
 
-    def search_member(self, proposal_id=None, person_id=None,
-                      editor=None, _conn=None):
+    def search_member(
+            self, proposal_id=None, person_id=None, editor=None,
+            institution_id=None, with_institution=True,
+            _conn=None):
         """
         Search for proposal members.
+
+        :param proposal_id: the proposal identifier(s)
+        :param person_id: the person idenfifier
+        :param editor: whether or not the member is an editor
+        :param institution_id: institution identifier(s) query constraint,
+            applied only to institutions "frozen" into the member record
+        :param with_institution: whether to include institution information,
+            via the "frozen" institution if present, otherwise the person
         """
 
-        stmt = select([
-            x for x in member.columns if x.name not in ('institution_id',)
-        ] + [
+        select_columns = [
+            x for x in member.columns if x.name not in ('institution_id',)]
+
+        select_columns.extend([
             person.c.name.label('person_name'),
             person.c.public.label('person_public'),
             (person.c.user_id.isnot(None)).label('person_registered'),
@@ -1456,15 +1467,34 @@ class ProposalPart(object):
             affiliation.c.name.label('affiliation_name'),
             coalesce(member.c.institution_id, person.c.institution_id).label(
                 'resolved_institution_id'),
-            institution.c.name.label('institution_name'),
-            institution.c.department.label('institution_department'),
-            institution.c.organization.label('institution_organization'),
-            institution.c.country.label('institution_country'),
-        ]).select_from(
-            member.join(person).join(affiliation).outerjoin(
+        ])
+
+        select_from = member.join(person).join(affiliation)
+
+        default = {}
+
+        if with_institution:
+            select_columns.extend([
+                institution.c.name.label('institution_name'),
+                institution.c.department.label('institution_department'),
+                institution.c.organization.label('institution_organization'),
+                institution.c.country.label('institution_country'),
+            ])
+
+            select_from = select_from.outerjoin(
                 institution, institution.c.id == coalesce(
                     member.c.institution_id, person.c.institution_id
-                )))
+                ))
+
+        else:
+            default.update({
+                'institution_name': None,
+                'institution_department': None,
+                'institution_organization': None,
+                'institution_country': None,
+            })
+
+        stmt = select(select_columns).select_from(select_from)
 
         iter_field = None
         iter_list = None
@@ -1486,13 +1516,23 @@ class ProposalPart(object):
             else:
                 stmt = stmt.where(not_(member.c.editor))
 
+        if institution_id is not None:
+            if is_list_like(institution_id):
+                assert iter_field is None
+                iter_field = member.c.institution_id
+                iter_list = institution_id
+            else:
+                stmt = stmt.where(member.c.institution_id == institution_id)
+
         ans = MemberCollection()
 
         with self._transaction(_conn=_conn) as conn:
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(
                         iter_stmt.order_by(member.c.sort_order.asc())):
-                    ans[row.id] = Member(**row_as_mapping(row))
+                    values = default.copy()
+                    values.update(**row_as_mapping(row))
+                    ans[row.id] = Member(**values)
 
         return ans
 
