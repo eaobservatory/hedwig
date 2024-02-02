@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -162,26 +162,30 @@ def with_institution(permission):
 
             assert institution.id == institution_id
 
-            auth_cache = {}
-            can = auth.for_institution(
-                current_user, db, institution, auth_cache=auth_cache)
-
-            if permission == PermissionType.VIEW:
-                if not can.view:
-                    raise HTTPForbidden(
-                        'Permission denied for this institution.')
-
-            elif permission == PermissionType.EDIT:
-                if not can.edit:
-                    raise HTTPForbidden(
-                        'Edit permission denied for this institution.')
+            if permission == PermissionType.NONE:
+                return f(self, current_user, db, institution, *args, **kwargs)
 
             else:
-                raise HTTPError('Unknown permission type.')
+                auth_cache = {}
+                can = auth.for_institution(
+                    current_user, db, institution, auth_cache=auth_cache)
 
-            return f(
-                self, current_user, db, institution,
-                with_cache(can, auth_cache), *args, **kwargs)
+                if permission == PermissionType.VIEW:
+                    if not can.view:
+                        raise HTTPForbidden(
+                            'Permission denied for this institution.')
+
+                elif permission == PermissionType.EDIT:
+                    if not can.edit:
+                        raise HTTPForbidden(
+                            'Edit permission denied for this institution.')
+
+                else:
+                    raise HTTPError('Unknown permission type.')
+
+                return f(
+                    self, current_user, db, institution,
+                    with_cache(can, auth_cache), *args, **kwargs)
 
         return decorated_method
 
