@@ -1880,7 +1880,10 @@ class ProposalPart(object):
                 stmt = stmt.where(call.c.queue_id == queue_id)
 
         if proposal_id is not None:
-            stmt = stmt.where(proposal.c.id == proposal_id)
+            if is_list_like(proposal_id):
+                stmt = stmt.where(proposal.c.id.in_(proposal_id))
+            else:
+                stmt = stmt.where(proposal.c.id == proposal_id)
 
         if person_id is not None:
             stmt = stmt.where(member.c.person_id == person_id)
