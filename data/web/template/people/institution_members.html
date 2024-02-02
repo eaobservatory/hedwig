@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+{% set navigation=[('Institutions', url_for('.institution_list')), (institution.name, url_for('.institution_view', institution_id=institution.id))] %}
+{% block content %}
+    {% if not proposals %}
+        <p class="not_present">
+            No members were
+            listed with this institution (frozen)
+            in a proposal&rsquo;s member list.
+        </p>
+    {% else %}
+        {% for facility in proposals %}
+            <h2>{{ facility.name }}</h2>
+
+            <table>
+                <tr>
+                    <th>Proposal</th>
+                    <th>Title</th>
+                    <th>State</th>
+                    <th>Member</th>
+                </tr>
+                {% for proposal in facility.proposals.values_in_sorted_order() %}
+                    {% for member in proposal.members.values() %}
+                        <tr>
+                            {% if loop.first %}
+                                <td rowspan="{{ loop.length }}">
+                                    <a href="{{ url_for(facility.code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a>
+                                    {% if proposal.type is not proposal_type_standard %}
+                                        <span class="label">{{ proposal.type | proposal_type_short_name }}</span>
+                                    {% endif %}
+                                </td>
+                                <td rowspan="{{ loop.length }}">{{ proposal.title | abbr(35) }}</td>
+                                <td rowspan="{{ loop.length }}">{{ proposal.state | proposal_state_name }}</td>
+                            {% endif %}
+                            <td>
+                                <a href="{{ url_for('.person_view', person_id=member.person_id) }}">{{ member.person_name }}</a>
+                                {% if not member.person_public %}
+                                    <span class="label">private</span>
+                                {% endif %}
+                                {% if not member.person_registered %}
+                                    <span class="label">unregistered</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% endfor %}
+            </table>
+        {% endfor %}
+    {% endif %}
+{% endblock %}

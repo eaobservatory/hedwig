@@ -45,6 +45,9 @@
         <ol id="institution_admin_links">
             <li><a href="{{ url_for('.institution_log', institution_id=institution.id) }}"><span class="fa-solid fa-user-tag"></span>View edit log</a></li>
             <li><a href="{{ url_for('.institution_subsume', institution_id=institution.id) }}"><span class="fa-solid fa-object-group"></span>Subsume duplicate record</a></li>
+            {% if show_delete_link %}
+                <li><a href="{{ url_for('.institution_delete', institution_id=institution.id) }}"><span class="fa-solid fa-trash-can"></span>Delete institution</a></li>
+            {% endif %}
         </ol>
     </nav>
 {% endif %}
@@ -66,6 +69,28 @@
                 </li>
             {% endfor %}
         </ul>
+    </section>
+{% endif %}
+
+{% if members %}
+    <section>
+        <h2>Proposal Members</h2>
+
+        <p>
+            {% if (members | length) == 1 %}
+                One additional member is
+            {% else %}
+                {{ members | length }} additional members are
+            {% endif %}
+            listed with this institution (frozen)
+            in a proposal&rsquo;s member list.
+        </p>
+
+        <nav>
+            <ol>
+                <li><a href="{{ url_for('.institution_frozen_members', institution_id=institution.id) }}"><span class="fa-solid fa-users"></span>View frozen members</a></li>
+            </ol>
+        </nav>
     </section>
 {% endif %}
 

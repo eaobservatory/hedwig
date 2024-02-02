@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1331,12 +1331,45 @@ class PeopleView(object):
         persons = db.search_person(institution_id=institution.id,
                                    registered=registered, public=public)
 
+        members = None
+        if is_admin:
+            members = db.search_member(
+                institution_id=institution.id,
+                with_institution=False,
+            ).map_values(
+                filter_value=lambda m: m.person_id not in persons)
+
         return {
             'title': 'Institution: {}'.format(institution.name),
             'institution': institution,
             'can_edit': can.edit,
             'persons': persons,
+            'members': members,
             'show_admin_links': is_admin,
+            'show_delete_link': not (persons or members),
+        }
+
+    @with_institution(permission=PermissionType.NONE)
+    def institution_delete(self, current_user, db, institution, form):
+        if form is not None:
+            if 'submit_confirm' in form:
+                db.delete_institution(institution_id=institution.id)
+
+                flash('Institution deleted.')
+
+                raise HTTPRedirect(url_for('.institution_list'))
+
+            raise HTTPRedirect(url_for(
+                '.institution_view', institution_id=institution.id))
+
+        return {
+            'title': 'Delete Institution: {}'.format(institution.name),
+            'message':
+                'Are you sure you wish to delete this institution? '
+                'This may not be successful if the institution is in use, '
+                'for example in a person\'s profile or proposal membership.',
+            'target': url_for(
+                '.institution_delete', institution_id=institution.id),
         }
 
     @with_institution(permission=PermissionType.EDIT)
@@ -1410,6 +1443,47 @@ class PeopleView(object):
             'person_affected_other': person_affected_other,
             'institution_id': institution.id,
             'institution': institution,
+        }
+
+    @with_institution(permission=PermissionType.NONE)
+    def institution_frozen_members(
+            self, current_user, db, institution, facilities):
+        persons = db.search_person(
+            institution_id=institution.id)
+
+        members = db.search_member(
+            institution_id=institution.id,
+            with_institution=False)
+
+        proposal_ids = [
+            m.proposal_id
+            for m in members.values()
+            if m.person_id not in persons]
+
+        all_proposals = db.search_proposal(proposal_id=proposal_ids)
+
+        proposals = []
+        for facility in facilities.values():
+            facility_proposals = ProposalCollection((
+                (p.id, ProposalWithCode(
+                    *(p._replace(members=members.map_values(
+                        filter_value=lambda m:
+                            m.proposal_id == p.id
+                            and m.person_id not in persons))),
+                    code=facility.view.make_proposal_code(db, p)))
+                for p in all_proposals.values_by_facility(facility.id)))
+
+            if not facility_proposals:
+                continue
+
+            proposals.append(ProposalsByFacility(
+                facility.name, facility.code, facility.view.get_call_types(),
+                facility_proposals))
+
+        return {
+            'title': 'Frozen Members: {}'.format(institution.name),
+            'institution': institution,
+            'proposals': proposals,
         }
 
     def institution_log(self, current_user, db, institution_id, form):

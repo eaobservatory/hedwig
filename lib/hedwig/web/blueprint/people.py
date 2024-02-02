@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -304,6 +304,16 @@ def create_people_blueprint(db, facilities):
     def institution_view(current_user, institution_id):
         return view.institution_view(current_user, db, institution_id)
 
+    @bp.route(
+        '/institution/<int:institution_id>/delete',
+          methods=['GET', 'POST'])
+    @require_admin
+    @templated('confirm.html')
+    def institution_delete(current_user, institution_id):
+        return view.institution_delete(
+            current_user, db, institution_id,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/institution/<int:institution_id>/edit',
               methods=['GET', 'POST'])
     @require_auth()
@@ -312,6 +322,13 @@ def create_people_blueprint(db, facilities):
         return view.institution_edit(
             current_user, db, institution_id,
             (request.form if request.method == 'POST' else None))
+
+    @bp.route('/institution/<int:institution_id>/members')
+    @require_admin
+    @templated('people/institution_members.html')
+    def institution_frozen_members(current_user, institution_id):
+         return view.institution_frozen_members(
+            current_user, db, institution_id, facilities)
 
     @bp.route('/institution/<int:institution_id>/log', methods=['GET', 'POST'])
     @require_admin
