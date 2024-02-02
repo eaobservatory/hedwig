@@ -178,7 +178,7 @@
 
 {% block footer_accepted_custom %}
     <tr>
-        <th colspan="4">Total accepted expanding partner program (hours)</th>
+        <th colspan="5">Total accepted expanding partner program (hours)</th>
         <td colspan="4" class="total spacer_left">&nbsp;</td>
         <td colspan="2" {{ render_cell_class(true, false, false) }}>{{ jcmt_accepted_expanding.total | fmt('{:.1f}') }}</td>
         {{ render_jcmt_request(jcmt_accepted_expanding, is_total=true) }}
@@ -187,7 +187,7 @@
         {% endfor %}
     </tr>
     <tr>
-        <th colspan="4">Total accepted non-expanding partner program (hours)</th>
+        <th colspan="5">Total accepted non-expanding partner program (hours)</th>
         <td colspan="4" class="total spacer_left">&nbsp;</td>
         <td colspan="2" {{ render_cell_class(true, false, false) }}>{{ jcmt_accepted_non_expanding.total | fmt('{:.1f}') }}</td>
         {{ render_jcmt_request(jcmt_accepted_non_expanding, is_total=true) }}

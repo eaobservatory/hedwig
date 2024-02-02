@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -28,7 +28,7 @@ from sqlalchemy.sql.functions import max as max_
 from ...compat import str_to_unicode
 from ...error import ConsistencyError, Error, FormattedError, \
     MultipleRecords, NoSuchRecord, UserError
-from ...type.collection import AffiliationCollection, \
+from ...type.collection import AffiliationCollection, AnnotationCollection, \
     CallCollection, CallMidCloseCollection, CallPreambleCollection, \
     MemberCollection, \
     PrevProposalCollection, ProposalCollection, ProposalCategoryCollection, \
@@ -36,7 +36,7 @@ from ...type.collection import AffiliationCollection, \
     RequestCollection, ResultCollection, TargetCollection
 from ...type.enum import AnnotationType, AttachmentState, \
     CallState, FigureType, FormatType, \
-    PersonLogEvent, ProposalState, PublicationType, \
+    PersonLogEvent, ProposalState, ProposalType, PublicationType, \
     RequestState, SemesterState
 from ...type.simple import Affiliation, Annotation, \
     Call, CallMidClose, CallPreamble, Category, CoMemberInfo, \
@@ -92,6 +92,7 @@ class ProposalPart(object):
                  capt_word_lim, expl_word_lim,
                  tech_note, sci_note, prev_prop_note, note_format,
                  multi_semester, separate, preamble, preamble_format, hidden,
+                 allow_continuation,
                  _test_skip_check=False):
         """
         Add a call for proposals to the database.
@@ -157,6 +158,7 @@ class ProposalPart(object):
                 call.c.preamble: preamble,
                 call.c.preamble_format: preamble_format,
                 call.c.hidden: hidden,
+                call.c.allow_continuation: allow_continuation,
             }))
 
         return result.inserted_primary_key[0]
@@ -211,6 +213,7 @@ class ProposalPart(object):
         return result.inserted_primary_key[0]
 
     def add_proposal(self, call_id, person_id, affiliation_id, title,
+                     type_=ProposalType.STANDARD,
                      state=ProposalState.PREPARATION, person_is_reviewer=False,
                      is_copy=False,
                      _test_skip_check=False):
@@ -226,6 +229,9 @@ class ProposalPart(object):
 
         if not title:
             raise UserError('The proposal title should not be blank.')
+
+        if not ProposalType.is_valid(type_):
+            raise Error('Invalid proposal type.')
 
         if not ProposalState.is_valid(state):
             raise Error('Invalid state.')
@@ -255,6 +261,7 @@ class ProposalPart(object):
                     proposal_alias.c.call_id == call_id)),
                 proposal.c.state: state,
                 proposal.c.title: title,
+                proposal.c.type: type_,
             }))
 
             proposal_id = result.inserted_primary_key[0]
@@ -396,7 +403,7 @@ class ProposalPart(object):
 
     def add_request_prop_copy(
             self, proposal_id, requester_person_id,
-            call_id, affiliation_id, copy_members,
+            call_id, affiliation_id, copy_members, continuation,
             _test_skip_check=False):
         with self._transaction() as conn:
             request_id = self._add_request_prop(
@@ -405,6 +412,7 @@ class ProposalPart(object):
                     request_prop_copy.c.call_id: call_id,
                     request_prop_copy.c.affiliation_id: affiliation_id,
                     request_prop_copy.c.copy_members: copy_members,
+                    request_prop_copy.c.continuation: continuation,
                 },
                 _conn=conn, _test_skip_check=_test_skip_check)
 
@@ -1523,24 +1531,34 @@ class ProposalPart(object):
 
         return ans
 
-    def search_prev_proposal(self, proposal_id, _conn=None):
+    def search_prev_proposal(
+            self, proposal_id, continuation=None, resolved=None,
+            with_publications=True,
+            _conn=None):
         """
         Search for the previous proposal associated with a given proposal.
         """
 
-        non_id_pub_columns = [x for x in prev_proposal_pub.columns
-                              if x.name != 'id']
-        pub_columns = (non_id_pub_columns +
-                       [prev_proposal_pub.c.id.label('pp_pub_id')])
+        select_columns = [prev_proposal]
+        select_from = prev_proposal
+        order_by = [prev_proposal.c.sort_order.asc()]
+
+        if with_publications:
+            non_id_pub_columns = [
+                x for x in prev_proposal_pub.columns
+                if x.name != 'id']
+
+            select_columns.extend(non_id_pub_columns)
+            select_columns.append(prev_proposal_pub.c.id.label('pp_pub_id'))
+
+            select_from = select_from.outerjoin(prev_proposal_pub)
+
+            order_by.append(prev_proposal_pub.c.id.asc())
+
+        stmt = select(select_columns).select_from(select_from)
 
         iter_field = None
         iter_list = None
-
-        stmt = select(
-            [prev_proposal] + pub_columns
-        ).select_from(
-            prev_proposal.outerjoin(prev_proposal_pub)
-        )
 
         if is_list_like(proposal_id):
             assert iter_field is None
@@ -1549,36 +1567,52 @@ class ProposalPart(object):
         else:
             stmt = stmt.where(prev_proposal.c.this_proposal_id == proposal_id)
 
+        if continuation is not None:
+            if continuation:
+                stmt = stmt.where(prev_proposal.c.continuation)
+            else:
+                stmt = stmt.where(not_(prev_proposal.c.continuation))
+
+        if resolved is not None:
+            if resolved:
+                stmt = stmt.where(prev_proposal.c.proposal_id.isnot(None))
+            else:
+                stmt = stmt.where(prev_proposal.c.proposal_id.is_(None))
+
         ans = PrevProposalCollection()
 
         with self._transaction(_conn=_conn) as conn:
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
-                for row in conn.execute(iter_stmt.order_by(
-                        prev_proposal.c.sort_order.asc(),
-                        prev_proposal_pub.c.id.asc())):
-                    # Convert row to a dictionary so that we can manipulate
-                    # its entries.
-                    row = row_as_dict(row)
+                for row in conn.execute(iter_stmt.order_by(*order_by)):
+                    if with_publications:
+                        # Convert row to a dictionary so that we can manipulate
+                        # its entries.
+                        row = row_as_dict(row)
 
-                    # Move the entries relating to the publication table
-                    # to another dictionary.
-                    pub_id = row.pop('pp_pub_id')
-                    pub = {'id': pub_id, 'proposal_id': None}
-                    for col in [x.name for x in non_id_pub_columns]:
-                        pub[col] = row.pop(col)
-                    if pub_id is None:
-                        pub = None
-                    else:
-                        pub = PrevProposalPub(**pub)
+                        # Move the entries relating to the publication table
+                        # to another dictionary.
+                        pub_id = row.pop('pp_pub_id')
+                        pub = {'id': pub_id, 'proposal_id': None}
+                        for col in [x.name for x in non_id_pub_columns]:
+                            pub[col] = row.pop(col)
+                        if pub_id is None:
+                            pub = None
+                        else:
+                            pub = PrevProposalPub(**pub)
 
-                    # Either make a new entry in the result table or just add
-                    # the publication to it if it already exists.
-                    id_ = row['id']
-                    if id_ in ans and (pub is not None):
-                        ans[id_].publications.append(pub)
+                        # Either make a new entry in the result table or just
+                        # add the publication to it if it already exists.
+                        id_ = row['id']
+                        if id_ in ans and (pub is not None):
+                            ans[id_].publications.append(pub)
+                        else:
+                            ans[id_] = PrevProposal(
+                                publications=([] if pub is None else [pub]),
+                                **row)
+
                     else:
-                        ans[id_] = PrevProposal(
-                            publications=([] if pub is None else [pub]), **row)
+                        ans[row.id] = PrevProposal(
+                            publications=None, **row_as_mapping(row))
 
         return ans
 
@@ -1634,6 +1668,7 @@ class ProposalPart(object):
 
     def search_proposal(self, call_id=None, facility_id=None, proposal_id=None,
                         person_id=None, person_is_editor=None, state=None,
+                        type_=None,
                         with_member_pi=False, with_members=False,
                         with_reviewers=False,
                         with_review_info=False, with_review_text=False,
@@ -1837,6 +1872,12 @@ class ProposalPart(object):
             else:
                 stmt = stmt.where(proposal.c.state == state)
 
+        if type_ is not None:
+            if is_list_like(type_):
+                stmt = stmt.where(proposal.c.type.in_(type_))
+            else:
+                stmt = stmt.where(proposal.c.type == type_)
+
         if decision_accept is not None:
             if decision_accept:
                 stmt = stmt.where(decision.c.accept)
@@ -1983,7 +2024,7 @@ class ProposalPart(object):
         if type_ is not None:
             stmt = stmt.where(proposal_annotation.c.type == type_)
 
-        ans = ResultCollection()
+        ans = AnnotationCollection()
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(
@@ -2311,10 +2352,20 @@ class ProposalPart(object):
         return ans
 
     def search_request_prop_copy(
-        self, request_id=None, proposal_id=None, state=None, **kwargs):
+            self, request_id=None, proposal_id=None, state=None,
+            continuation=None, **kwargs):
+        where_extra = []
+
+        if continuation is not None:
+            if continuation:
+                where_extra.append(request_prop_copy.c.continuation)
+            else:
+                where_extra.append(not_(request_prop_copy.c.continuation))
+
         return self._search_request_prop(
             request_prop_copy, RequestPropCopy,
             request_id=request_id, proposal_id=proposal_id, state=state,
+            where_extra=where_extra,
             **kwargs)
 
     def search_request_prop_pdf(
@@ -2328,6 +2379,7 @@ class ProposalPart(object):
             self, table, result_class, request_id, proposal_id, state,
             requested_before=None, processed_before=None,
             with_requester_name=False,
+            where_extra=[],
             _conn=None):
         select_from = table
         select_columns = [table]
@@ -2343,6 +2395,9 @@ class ProposalPart(object):
             del default['requester_name']
 
         stmt = select(select_columns).select_from(select_from)
+
+        for where_clause in where_extra:
+            stmt = stmt.where(where_clause)
 
         iter_field = None
         iter_list = None
@@ -2995,6 +3050,7 @@ class ProposalPart(object):
                     tech_note=None, sci_note=None, prev_prop_note=None,
                     note_format=None, multi_semester=None, separate=None,
                     preamble=(), preamble_format=(), hidden=None,
+                    allow_continuation=None,
                     _test_skip_check=False):
         """
         Update a call for proposals record.
@@ -3060,6 +3116,9 @@ class ProposalPart(object):
 
         if hidden is not None:
             values['hidden'] = hidden
+
+        if allow_continuation is not None:
+            values['allow_continuation'] = allow_continuation
 
         if not values:
             raise Error('no call updates specified')

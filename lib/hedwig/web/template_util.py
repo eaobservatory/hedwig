@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -30,10 +30,11 @@ from markupsafe import Markup
 from ..astro.coord import CoordSystem
 from ..compat import first_value as _first_value
 from ..config import get_countries
-from ..type.enum import Assessment, \
+from ..type.enum import AnnotationType, Assessment, \
     AttachmentState, CallState, FigureType, GroupType, \
     MessageState, MessageThreadType, \
-    PersonLogEvent, PersonTitle, ProposalState, PublicationType, \
+    PersonLogEvent, PersonTitle, \
+    ProposalState, ProposalType, PublicationType, \
     RequestState, ReviewState, SemesterState, SiteGroupType, UserLogEvent
 from ..util import FormatMaxDP, FormatSigFig
 from .format import format_text
@@ -339,6 +340,20 @@ def register_template_utils(app):
             return '?'
 
     @app.template_filter()
+    def proposal_type_name(value):
+        try:
+            return ProposalType.get_name(value)
+        except KeyError:
+            return 'Unknown type'
+
+    @app.template_filter()
+    def proposal_type_short_name(value):
+        try:
+            return ProposalType.get_short_name(value)
+        except KeyError:
+            return '?'
+
+    @app.template_filter()
     def publication_type_name(value):
         try:
             return PublicationType.get_name(value)
@@ -464,6 +479,14 @@ def register_template_utils(app):
         return (value == type_class.STANDARD)
 
     @app.template_test()
+    def annotation_proposal_copy(value):
+        return value == AnnotationType.PROPOSAL_COPY
+
+    @app.template_test()
+    def annotation_proposal_continuation(value):
+        return value == AnnotationType.PROPOSAL_CONTINUATION
+
+    @app.template_test()
     def attachment_new(value):
         return (value == AttachmentState.NEW)
 
@@ -503,6 +526,14 @@ def register_template_utils(app):
             return True
 
         return re.match(r'^\s*$', value) is not None
+
+    @app.template_test()
+    def proposal_type_standard(value):
+        return value == ProposalType.STANDARD
+
+    @app.template_test()
+    def proposal_type_continuation(value):
+        return value == ProposalType.CONTINUATION
 
     @app.template_test()
     def request_state_ready(value):

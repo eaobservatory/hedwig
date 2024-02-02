@@ -74,6 +74,7 @@
     <thead>
         <tr>
             <th colspan="2" rowspan="2" class="sortable sortedalready sorttotal" data-sortkey="proposal_code">Proposal</th>
+            <th rowspan="2" class="sortable" data-sortkey="type">Type</th>
             <th rowspan="2" class="sortable" data-sortkey="pi_name">PI<sup>&dagger;</sup></th>
             <th rowspan="2" class="sortable" data-sortkey="title">Title</th>
             <th rowspan="2" class="spacer_left sideways sortable" data-sortkey="state"><div><div><span>State</span></div></div></th>
@@ -96,6 +97,7 @@
                 'proposal_code': proposal.code,
                 'pi_name': (none if proposal.member_pi is none else proposal.member_pi.person_name),
                 'title': proposal.title,
+                'type': proposal.type,
                 'state': proposal.state,
                 'decision': (1 if proposal.decision_accept is none else (0 if not proposal.decision_accept else (3 if proposal.decision_exempt else 2))),
                 'rating': proposal.rating,
@@ -109,6 +111,7 @@
                         &nbsp;
                     {% endif %}
                 </td>
+                <td>{{ proposal.type | proposal_type_short_name }}</td>
                 <td>
                     <div class="hovertable">
                         {% if proposal.member_pi is none %}
@@ -253,7 +256,7 @@
     </tbody>
     <tfoot>
         <tr>
-            <th colspan="4">Total exempt (hours)</th>
+            <th colspan="5">Total exempt (hours)</th>
             <td colspan="4" class="total spacer_left">&nbsp;</td>
             {% block footer_exempt_extra %}
             {% endblock %}
@@ -264,56 +267,56 @@
         {% block footer_accepted_custom %}
         {% endblock %}
         <tr>
-            <th colspan="4">Total accepted (hours)</th>
+            <th colspan="5">Total accepted (hours)</th>
             <td colspan="4" class="total spacer_left">&nbsp;</td>
             {% block footer_accepted_extra %}
             {% endblock %}
             {{ render_affiliation_totals(affiliations, affiliation_accepted) }}
         </tr>
         <tr>
-            <th colspan="4">Total accepted (percentage)</th>
+            <th colspan="5">Total accepted (percentage)</th>
             <td colspan="4" class="total spacer_left">&nbsp;</td>
             {% block footer_accepted_percentage_extra %}
             {% endblock %}
             {{ render_affiliation_totals(affiliations, affiliation_accepted, percentage_of=affiliation_available) }}
         </tr>
         <tr class="spacer_above">
-            <th colspan="4">Time available (hours)</th>
+            <th colspan="5">Time available (hours)</th>
             <td colspan="4" class="total spacer_left">&nbsp;</td>
             {% block footer_available_extra %}
             {% endblock %}
             {{ render_affiliation_totals(affiliations, affiliation_available) }}
         </tr>
         <tr class="spacer_above">
-            <th colspan="4">Total as shown (hours)</th>
+            <th colspan="5">Total as shown (hours)</th>
             <td colspan="4" class="total spacer_left">&nbsp;</td>
             {% block footer_total_extra %}
             {% endblock %}
             {{ render_affiliation_totals(affiliations, affiliation_total) }}
         </tr>
         <tr>
-            <th colspan="4">Total as shown (percentage)</th>
+            <th colspan="5">Total as shown (percentage)</th>
             <td colspan="4" class="total spacer_left">&nbsp;</td>
             {% block footer_total_percentage_extra %}
             {% endblock %}
             {{ render_affiliation_totals(affiliations, affiliation_total, percentage_of=affiliation_available) }}
         </tr>
         <tr class="spacer_above">
-            <th colspan="4">Total original request (hours)</th>
+            <th colspan="5">Total original request (hours)</th>
             <td colspan="4" class="total spacer_left">&nbsp;</td>
             {% block footer_original_extra %}
             {% endblock %}
             {{ render_affiliation_totals(affiliations, affiliation_original) }}
         </tr>
         <tr>
-            <th colspan="4">Total original request (percentage)</th>
+            <th colspan="5">Total original request (percentage)</th>
             <td colspan="4" class="total spacer_left">&nbsp;</td>
             {% block footer_original_percentage_extra %}
             {% endblock %}
             {{ render_affiliation_totals(affiliations, affiliation_original, percentage_of=affiliation_available) }}
         </tr>
         <tr>
-            <th colspan="4">&nbsp;</th>
+            <th colspan="5">&nbsp;</th>
             <td colspan="4" class="total spacer_left">&nbsp;</td>
             {% block footer_head_extra %}
             {% endblock %}

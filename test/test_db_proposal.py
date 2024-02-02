@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,8 +24,9 @@ from hedwig.compat import first_value
 from hedwig.db.meta import member
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, NoSuchValue, UserError
-from hedwig.type.collection import AffiliationCollection, \
+from hedwig.type.collection import AffiliationCollection, AnnotationCollection, \
     CallCollection, CallMidCloseCollection, MemberCollection, \
+    PrevProposalCollection, \
     ProposalCollection, ProposalCategoryCollection, \
     ProposalFigureCollection, ProposalTextCollection, \
     ResultCollection, TargetCollection
@@ -33,10 +34,11 @@ from hedwig.type.enum import BaseAffiliationType, AnnotationType, \
     AttachmentState, \
     BaseCallType, BaseTextRole, \
     CallState, FigureType, \
-    FormatType, ProposalState, RequestState
+    FormatType, PublicationType, ProposalState, ProposalType, RequestState
 from hedwig.type.simple import Affiliation, Annotation, \
     Call, CallMidClose, CallPreamble, Category, \
     Member, MemberInfo, MemberInstitution, \
+    PrevProposal, PrevProposalPub, \
     Proposal, ProposalCategory, ProposalFigureInfo, ProposalPDFInfo, \
     ProposalText, RequestPropCopy, RequestPropPDF, Target
 from hedwig.type.util import null_tuple
@@ -96,7 +98,7 @@ class DBProposalTest(DBTestCase):
             BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             1, 1, 1, 1, 1, 1, 1, 1, 1, '', '', '',
-            FormatType.PLAIN, False, False, None, None, False)
+            FormatType.PLAIN, False, False, None, None, False, False)
         person_id = self.db.add_person('Person1')
         (affiliation_id, affiliation_record) = result.popitem()
         self.db.add_proposal(call_id, person_id, affiliation_id, 'Title')
@@ -112,7 +114,7 @@ class DBProposalTest(DBTestCase):
             BaseCallType, semester_id_2, queue_id, BaseCallType.STANDARD,
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             1, 1, 1, 1, 1, 1, 1, 1, 1, '', '', '',
-            FormatType.PLAIN, False, False, None, None, False)
+            FormatType.PLAIN, False, False, None, None, False, False)
 
         # Store different sets of weights for the two calls.
         result = self.db.search_affiliation(queue_id=queue_id,
@@ -303,7 +305,7 @@ class DBProposalTest(DBTestCase):
             prev_prop_note='previous proposal note',
             note_format=FormatType.PLAIN, multi_semester=False, separate=False,
             preamble='preamble text', preamble_format=FormatType.RST,
-            hidden=False)
+            hidden=False, allow_continuation=False)
         self.assertIsInstance(call_id, int)
 
         # Check tests for bad values.
@@ -312,31 +314,36 @@ class DBProposalTest(DBTestCase):
                 BaseCallType, 1999999, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False, False, None, None, False)
+                '', '', '', FormatType.PLAIN, False, False, None, None, False,
+                False)
         with self.assertRaisesRegex(ConsistencyError, 'queue does not'):
             self.db.add_call(
                 BaseCallType, semester_id, 1999999, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False, False, None, None, False)
+                '', '', '', FormatType.PLAIN, False, False, None, None, False,
+                False)
         with self.assertRaisesRegex(UserError, 'Closing date is before open'):
             self.db.add_call(
                 BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
                 date_close, date_open,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False, False, None, None, False)
+                '', '', '', FormatType.PLAIN, False, False, None, None, False,
+                False)
         with self.assertRaisesRegex(Error, 'Preamble text .* specified'):
             self.db.add_call(
                 BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False, False, '', None, False)
+                '', '', '', FormatType.PLAIN, False, False, '', None, False,
+                False)
         with self.assertRaisesRegex(Error, 'Preamble text .* recognised'):
             self.db.add_call(
                 BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False, False, '', 999999, False)
+                '', '', '', FormatType.PLAIN, False, False, '', 999999, False,
+                False)
 
         # Check uniqueness constraint.
         with self.assertRaises(DatabaseIntegrityError):
@@ -344,7 +351,8 @@ class DBProposalTest(DBTestCase):
                 BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False, False, None, None, False)
+                '', '', '', FormatType.PLAIN, False, False, None, None, False,
+                False)
 
         # Check facility consistency check.
         facility_id_2 = self.db.ensure_facility('my_other_tel')
@@ -357,7 +365,8 @@ class DBProposalTest(DBTestCase):
                 BaseCallType, semester_id_2, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
                 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                '', '', '', FormatType.PLAIN, False, False, None, None, False)
+                '', '', '', FormatType.PLAIN, False, False, None, None, False,
+                False)
 
         # Try the search_call method.
         result = self.db.search_call(call_id=call_id, with_preamble=True)
@@ -380,7 +389,7 @@ class DBProposalTest(DBTestCase):
                         proposal_count=None,
                         multi_semester=False, separate=False,
                         preamble='preamble text', preamble_format=FormatType.RST,
-                        hidden=False)
+                        hidden=False, allow_continuation=False)
         self.assertEqual(result[call_id],
                          expected._replace(tech_note=None, sci_note=None,
                                            prev_prop_note=None))
@@ -462,7 +471,7 @@ class DBProposalTest(DBTestCase):
             BaseCallType, semester_id_2, queue_id_2, BaseCallType.STANDARD,
             date_open, date_close,
             1, 1, 1, 1, 1, 1, 1, 1, 1, '', '', '', FormatType.PLAIN,
-            False, False, None, None, False)
+            False, False, None, None, False, False)
 
         result = self.db.get_call(facility_id=None, call_id=call_id)
         self.assertIsInstance(result, Call)
@@ -706,6 +715,15 @@ class DBProposalTest(DBTestCase):
         # The proposal must have a title.
         with self.assertRaisesRegex(UserError, 'blank'):
             self.db.add_proposal(call_id_1, person_id, affiliation_id_1, '')
+
+        # The type and state must be valid.
+        with self.assertRaisesRegex(Error, 'Invalid state'):
+            self.db.add_proposal(
+                call_id_1, person_id, affiliation_id_1, 'Title', state=999)
+
+        with self.assertRaisesRegex(Error, 'Invalid proposal type'):
+            self.db.add_proposal(
+                call_id_1, person_id, affiliation_id_1, 'Title', type_=999)
 
         # Check for error raised when the call or person doesn't exist.
         with self.assertRaisesRegex(ConsistencyError, '^call does not'):
@@ -1069,10 +1087,114 @@ class DBProposalTest(DBTestCase):
              self.db.search_member(proposal_id=proposal_id).values()],
             [person_id_2, person_id_3])
 
+    def test_prev_proposal(self):
+        proposal_id = self._create_test_proposal()
+
+        proposal = self.db.get_proposal(
+            facility_id=None, proposal_id=proposal_id, with_members=True)
+        member = proposal.members.get_pi()
+        old_proposal_id = self.db.add_proposal(
+            proposal.call_id, member.person_id, member.affiliation_id,
+            'Previous Proposal Title')
+
+        result = self.db.search_prev_proposal(proposal_id=proposal_id)
+        self.assertIsInstance(result, PrevProposalCollection)
+        self.assertEqual(len(result), 0)
+
+        records = PrevProposalCollection([
+            (1, PrevProposal(
+                None, proposal_id, None, 'OLD1', False, None, [
+                    null_tuple(PrevProposalPub)._replace(
+                        description='Pub 11', type=PublicationType.PLAIN),
+                    null_tuple(PrevProposalPub)._replace(
+                        description='Pub 12', type=PublicationType.PLAIN),
+                ])),
+            (2, PrevProposal(
+                None, proposal_id, None, 'OLD2', True, None, [
+                    null_tuple(PrevProposalPub)._replace(
+                        description='Pub 21', type=PublicationType.PLAIN),
+                    null_tuple(PrevProposalPub)._replace(
+                        description='Pub 22', type=PublicationType.PLAIN),
+                ])),
+            (3, PrevProposal(
+                None, proposal_id, old_proposal_id, 'OLD3', False, None, [
+                    null_tuple(PrevProposalPub)._replace(
+                        description='Pub 31', type=PublicationType.PLAIN),
+                    null_tuple(PrevProposalPub)._replace(
+                        description='Pub 32', type=PublicationType.PLAIN),
+                ])),
+        ])
+
+        (n_insert, n_update, n_delete) = self.db.sync_proposal_prev_proposal(
+            proposal_id, records)
+        self.assertEqual(n_insert, 3)
+        self.assertEqual(n_update, 6)
+        self.assertEqual(n_delete, 0)
+
+        result = self.db.search_prev_proposal(proposal_id=proposal_id)
+        self.assertIsInstance(result, PrevProposalCollection)
+        self.assertEqual(len(result), 3)
+
+        for (row, expect_continuation, expect_code, expect_pub) in zip(
+                result.values(),
+                [False, True, False],
+                ['OLD1', 'OLD2', 'OLD3'],
+                [
+                    ['Pub 11', 'Pub 12'],
+                    ['Pub 21', 'Pub 22'],
+                    ['Pub 31', 'Pub 32'],
+                ]):
+            self.assertIsInstance(row, PrevProposal)
+            self.assertEqual(row.this_proposal_id, proposal_id)
+            self.assertEqual(row.continuation, expect_continuation)
+            self.assertIsInstance(row.publications, list)
+            self.assertEqual(len(row.publications), len(expect_pub))
+            for (pub, expect) in zip(row.publications, expect_pub):
+                self.assertIsInstance(pub, PrevProposalPub)
+                self.assertEqual(pub.type, PublicationType.PLAIN)
+                self.assertEqual(pub.description, expect)
+
+        result = self.db.search_prev_proposal(
+            proposal_id=proposal_id, continuation=False,
+            with_publications=True)
+        self.assertIsInstance(result, PrevProposalCollection)
+        self.assertEqual(len(result), 2)
+        self.assertEqual(
+            [x.proposal_code for x in result.values()],
+            ['OLD1', 'OLD3'])
+        for row in result.values():
+            self.assertIsInstance(row.publications, list)
+            self.assertEqual(len(row.publications), 2)
+
+        result = self.db.search_prev_proposal(
+            proposal_id=proposal_id, continuation=True,
+            with_publications=False)
+        self.assertIsInstance(result, PrevProposalCollection)
+        self.assertEqual(len(result), 1)
+        value = result.get_single()
+
+        self.assertEqual(value.proposal_code, 'OLD2')
+        self.assertIs(value.publications, None)
+
+        result = self.db.search_prev_proposal(
+            proposal_id=proposal_id, resolved=True, with_publications=False)
+        self.assertIsInstance(result, PrevProposalCollection)
+        self.assertEqual(
+            [x.proposal_code for x in result.values()],
+            ['OLD3'])
+
+        result = self.db.search_prev_proposal(
+            proposal_id=proposal_id, resolved=False, with_publications=False)
+        self.assertIsInstance(result, PrevProposalCollection)
+        self.assertEqual(
+            [x.proposal_code for x in result.values()],
+            ['OLD1', 'OLD2'])
+
     def test_proposal_annotation(self):
         proposal_id = self._create_test_proposal()
 
         result = self.db.search_proposal_annotation(proposal_id=proposal_id)
+        self.assertIsInstance(result, AnnotationCollection)
         self.assertEqual(len(result), 0)
 
         annotation_id = self.db.add_proposal_annotation(
@@ -2171,9 +2293,14 @@ class DBProposalTest(DBTestCase):
 
         request_id = self.db.add_request_prop_copy(
             proposal_id, person_id, call_id=copy_call_id,
-            affiliation_id=copy_affiliation_id, copy_members=True)
+            affiliation_id=copy_affiliation_id,
+            copy_members=True, continuation=False)
 
         self.assertIsInstance(request_id, int)
+
+        with self.assertRaises(NoSuchRecord):
+            request = self.db.search_request_prop_copy(
+                request_id=request_id, continuation=True).get_single()
 
         request = self.db.search_request_prop_copy(
             request_id=request_id).get_single()
@@ -2186,7 +2313,8 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(request.requester, person_id)
         self.assertEqual(request.call_id, copy_call_id)
         self.assertEqual(request.affiliation_id, copy_affiliation_id)
-        self.assertTrue(request.copy_members, True)
+        self.assertTrue(request.copy_members)
+        self.assertFalse(request.continuation)
         self.assertIsNone(request.copy_proposal_id)
         self.assertIsNone(request.requester_name)
 
@@ -2207,6 +2335,24 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(request.state, RequestState.READY)
         self.assertEqual(request.copy_proposal_id, copy_proposal_id)
         self.assertEqual(request.requester_name, 'Requester')
+
+        # Create a continuation request to test the search method.
+        request_id = self.db.add_request_prop_copy(
+            proposal_id, person_id, call_id=copy_call_id,
+            affiliation_id=copy_affiliation_id,
+            copy_members=False, continuation=True)
+
+        self.assertIsInstance(request_id, int)
+        self.assertFalse(request.continuation)
+
+        with self.assertRaises(NoSuchRecord):
+            request = self.db.search_request_prop_copy(
+                request_id=request_id, continuation=False).get_single()
+
+        request = self.db.search_request_prop_copy(
+            request_id=request_id, continuation=True).get_single()
+
+        self.assertEqual(request.id, request_id)
 
     def test_request_prop_pdf(self):
         proposal_id = self._create_test_proposal()

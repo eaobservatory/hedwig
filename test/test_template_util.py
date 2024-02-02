@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2023 East Asian Observatory
+# Copyright (C) 2016-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -25,9 +25,9 @@ from jinja2.runtime import Undefined
 from markupsafe import Markup
 
 from hedwig.astro.coord import CoordSystem
-from hedwig.type.enum import Assessment, AttachmentState, \
+from hedwig.type.enum import AnnotationType, Assessment, AttachmentState, \
     BaseCallType, BaseReviewerRole, BaseTextRole, CallState, \
-    MessageState, MessageThreadType, ProposalState, \
+    MessageState, MessageThreadType, ProposalState, ProposalType, \
     PublicationType, RequestState, ReviewState, SemesterState, UserLogEvent
 from hedwig.web.template_util import Counter
 
@@ -330,6 +330,15 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(f('1234567890', 5),
                          '<abbr title="1234567890">12345&hellip;</abbr>')
 
+    def test_test_annotation(self):
+        t = self.app.jinja_env.tests['annotation_proposal_copy']
+        self.assertTrue(t(AnnotationType.PROPOSAL_COPY))
+        self.assertFalse(t(AnnotationType.PROPOSAL_CONTINUATION))
+
+        t = self.app.jinja_env.tests['annotation_proposal_continuation']
+        self.assertFalse(t(AnnotationType.PROPOSAL_COPY))
+        self.assertTrue(t(AnnotationType.PROPOSAL_CONTINUATION))
+
     def test_test_attachment(self):
         t = self.app.jinja_env.tests['attachment_new']
         self.assertTrue(t(AttachmentState.NEW))
@@ -417,3 +426,27 @@ class TemplateUtilTestCase(WebAppTestCase):
         f = self.app.jinja_env.filters['format_text']
 
         self.assertEqual(f('Hello'), '<p>Hello</p>')
+
+    def test_filter_proposal_type(self):
+        f = self.app.jinja_env.filters['proposal_type_name']
+
+        self.assertEqual(f(ProposalType.STANDARD), 'Standard')
+        self.assertEqual(f(ProposalType.CONTINUATION), 'Continuation request')
+        self.assertEqual(f(999), 'Unknown type')
+
+        f = self.app.jinja_env.filters['proposal_type_short_name']
+
+        self.assertEqual(f(ProposalType.STANDARD), 'Std')
+        self.assertEqual(f(ProposalType.CONTINUATION), 'CR')
+        self.assertEqual(f(999), '?')
+
+    def test_test_proposal_type(self):
+        t = self.app.jinja_env.tests['proposal_type_standard']
+
+        self.assertTrue(t(ProposalType.STANDARD))
+        self.assertFalse(t(ProposalType.CONTINUATION))
+
+        t = self.app.jinja_env.tests['proposal_type_continuation']
+
+        self.assertFalse(t(ProposalType.STANDARD))
+        self.assertTrue(t(ProposalType.CONTINUATION))

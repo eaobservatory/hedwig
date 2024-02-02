@@ -40,6 +40,7 @@
     <table>
         <tr>
             <th>Proposal</th>
+            <th>Type</th>
             <th>Links</th>
             <th>State</th>
             <th>Decision</th>
@@ -53,6 +54,7 @@
         {% for proposal in proposals %}
             <tr>
                 <td><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+                <td>{{ proposal.type | proposal_type_short_name }}</td>
                 <td>
                     {% if proposal.can_view_review %}
                         <a href="{{ url_for('.proposal_reviews', proposal_id=proposal.id) }}">Reviews</a>

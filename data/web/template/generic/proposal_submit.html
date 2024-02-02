@@ -2,6 +2,26 @@
 {% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal.id))] %}
 {% set help_link=url_for('help.user_page', page_name='submit') %}
 
+{% macro render_validation_messages(messages, show_links=false) %}
+    {% for message in messages %}
+        <li>
+            <p class="valid_{{ 'error' if message.is_error else 'warning' }}">
+                {{ 'Error' if message.is_error else 'Warning' }}
+            </p>
+            <div>
+                <p>
+                    {{ message.description }}
+                </p>
+                {% if show_links and (message.link_url is not none) %}
+                    <p>
+                        <a href="{{ message.link_url }}">{{ message.link_text }}</a>
+                    </p>
+                {% endif %}
+            </div>
+        </li>
+    {% endfor %}
+{% endmacro %}
+
 {% block content %}
 
 {% if is_submit_page %}
@@ -21,26 +41,24 @@
             <p class="section_label">{{ section_name }}</p>
 
             <ul class="valid_message">
-                {% for message in validation_messages.get_section(section) %}
-                    <li>
-                        <p class="valid_{{ 'error' if message.is_error else 'warning' }}">
-                            {{ 'Error' if message.is_error else 'Warning' }}
-                        </p>
-                        <div>
-                            <p>
-                                {{ message.description }}
-                            </p>
-                            {% if can_edit and (message.link_url is not none) %}
-                                <p>
-                                    <a href="{{ message.link_url }}">{{ message.link_text }}</a>
-                                </p>
-                            {% endif %}
-                        </div>
-                    </li>
-                {% endfor %}
+                {{ render_validation_messages(validation_messages.get_section(section), show_links=can_edit) }}
             </ul>
         {% endif %}
     {% endfor %}
+    {% set missing_counter = create_counter(0) %}
+    {% for section in validation_message_sections %}
+        {% if section not in proposal_order %}
+            {% if not missing_counter() %}
+                <p class="section_label">Additional sections</p>
+
+                <ul class="valid_message">
+            {% endif %}
+            {{ render_validation_messages(validation_messages.get_section(section), show_links=can_edit) }}
+        {% endif %}
+    {% endfor %}
+    {% if missing_counter() %}
+        </ul>
+    {% endif %}
 {% else %}
     <p>
         No problems with this proposal have been detected.

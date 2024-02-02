@@ -3,7 +3,7 @@
 {% from 'macro/pdf.html' import render_proposal_pdf %}
 {% from 'macro/figure.html' import render_proposal_figures %}
 {% from 'macro/calculation.html' import render_calculation_title, render_calculation %}
-{% from 'macro/annotation.html' import render_copy_annotation %}
+{% from 'macro/annotation.html' import render_proposal_annotation %}
 {% from 'macro/member.html' import render_proposal_members %}
 
 {% set navigation=[(proposal_code, none)] %}
@@ -12,7 +12,7 @@
 {% if show_person_proposals_callout %}
     {% set scripts = ['dismiss_callout'] %}
 {% endif %}
-{% if copy_annotations %}
+{% if proposal_annotations %}
     {% set scripts = concatenate_lists(['closeable'], scripts) %}
 {% endif %}
 
@@ -27,9 +27,9 @@
         </nav>
     {% endif %}
 
-    {% if copy_annotations %}
-        {% for annotation in copy_annotations.values() %}
-            {{ render_copy_annotation(annotation, proposal_order) }}
+    {% if proposal_annotations %}
+        {% for annotation in proposal_annotations.values() %}
+            {{ render_proposal_annotation(annotation, proposal_order) }}
         {% endfor %}
     {% endif %}
 
@@ -62,7 +62,7 @@
         <tr>
             <th>Facility</th>
             <td>{{ facility_name }}</td>
-            <td class="borderless control_links" rowspan="6">
+            <td class="borderless control_links" rowspan="{{ 6 if proposal.type is proposal_type_standard else 7 }}">
                 <nav>
                     <ol>
                         {% if can_edit %}
@@ -103,6 +103,12 @@
             <th>Proposal identifier</th>
             <td id="proposal_identifier_cell">{{ proposal_code }}</td>
         </tr>
+        {% if proposal.type is not proposal_type_standard %}
+            <tr>
+                <th>Proposal type</th>
+                <td>{{ proposal.type | proposal_type_name }}</td>
+            </tr>
+        {% endif %}
         <tr class="volatile">
             <th>Proposal status</th>
             <td id="proposal_status_cell">
@@ -421,7 +427,7 @@
                     <th>Links</th>
                     <th>Publications</th>
                 </tr>
-                {% for prev_proposal in prev_proposals %}
+                {% for prev_proposal in prev_proposals.values() %}
                     {% with publications = prev_proposal.publications | default([none], true) %}
                         {% for publication in publications %}
                             <tr>

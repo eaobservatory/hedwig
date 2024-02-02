@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -26,7 +26,8 @@ from ...astro.catalog import parse_source_list, write_source_list
 from ...compat import first_value
 from ...email.format import render_email_template
 from ...config import get_config
-from ...error import ConsistencyError, NoSuchRecord, ParseError, UserError
+from ...error import ConsistencyError, MultipleRecords, \
+    NoSuchRecord, NoSuchValue, ParseError, UserError
 from ...file.info import determine_figure_type, determine_pdf_page_count
 from ...file.pdf import pdf_to_svg
 from ...pdf.request import get_proposal_filename
@@ -38,9 +39,9 @@ from ...type.enum import AttachmentState, \
     CallState, FigureType, FormatType, \
     GroupType, MessageThreadType, \
     PermissionType, PersonLogEvent, PersonTitle, \
-    ProposalState, PublicationType, \
+    ProposalState, ProposalType, PublicationType, \
     RequestState, ReviewState
-from ...type.misc import SectionedList
+from ...type.misc import SectionedList, SkipSection
 from ...type.simple import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
     Member, MemberInstitution, PrevProposal, PrevProposalPub, \
@@ -96,7 +97,8 @@ class GenericProposal(object):
 
         proposal_title = ''
         affiliation_id = None
-        old_proposal_id = None
+        copy_proposal_id = None
+        continuation_proposal_id = None
         member_copy = False
 
         if form is not None:
@@ -105,8 +107,11 @@ class GenericProposal(object):
 
                 proposal_title = form['proposal_title'].strip()
 
-                if 'proposal_id' in form:
-                    old_proposal_id = int(form['proposal_id'])
+                if 'proposal_copy' in form:
+                    copy_proposal_id = int(form['proposal_copy'])
+
+                if 'proposal_continuation' in form:
+                    continuation_proposal_id = int(form['proposal_continuation'])
 
                 member_copy = 'member_copy' in form
 
@@ -129,17 +134,42 @@ class GenericProposal(object):
                         '.proposal_view', proposal_id=proposal_id,
                         first_view='true'))
 
-                elif 'submit_copy' in form:
-                    if old_proposal_id is None:
-                        raise UserError('No proposal was selected to copy.')
+                elif 'submit_copy' in form or 'submit_continue' in form:
+                    if 'submit_copy' in form:
+                        is_continuation = False
 
-                    try:
-                        old_proposal = db.get_proposal(
-                            self.id_, old_proposal_id, with_members=True)
-                    except NoSuchRecord:
-                        raise ErrorPage('Proposal to copy not found.')
+                        if copy_proposal_id is None:
+                            raise UserError('No proposal was selected to copy.')
 
-                    assert old_proposal.id == old_proposal_id
+                        try:
+                            old_proposal = db.get_proposal(
+                                self.id_, copy_proposal_id, with_members=True)
+                        except NoSuchRecord:
+                            raise ErrorPage('Proposal to copy not found.')
+
+                        assert old_proposal.id == copy_proposal_id
+
+                    elif 'submit_continue' in form:
+                        is_continuation = True
+
+                        if not call.allow_continuation:
+                            raise ErrorPage(
+                                'Continuation requests may not be submitted'
+                                ' for this call.')
+
+                        if continuation_proposal_id is None:
+                            raise UserError('No proposal was selected to continue.')
+
+                        try:
+                            old_proposal = db.get_proposal(
+                                self.id_, continuation_proposal_id, with_members=True)
+                        except NoSuchRecord:
+                            raise ErrorPage('Proposal to continue not found.')
+
+                        assert old_proposal.id == continuation_proposal_id
+
+                    else:
+                        raise ErrorPage('Action unexpectedly didn\'t match.')
 
                     role_class = self.get_reviewer_roles()
                     can = auth.for_proposal(
@@ -148,28 +178,34 @@ class GenericProposal(object):
 
                     if not can.view:
                         raise HTTPForbidden(
-                            'Permission denied for the proposal '
-                            'selected for copying.')
+                            'Permission denied for the original proposal.')
 
                     if not old_proposal.members.has_person(
                             current_user.person.id):
                         raise HTTPForbidden(
-                            'You can only copy proposals '
+                            'You can only copy or continue proposals '
                             'of which you are a member.')
 
-                    if ProposalState.is_open(old_proposal.state):
-                        raise ErrorPage('Proposal to copy is still open.')
+                    if is_continuation:
+                        if old_proposal.state != ProposalState.ACCEPTED:
+                            raise ErrorPage('Proposal to continue not accepted.')
+
+                    else:
+                        if ProposalState.is_open(old_proposal.state):
+                            raise ErrorPage('Proposal to copy is still open.')
 
                     requests = db.search_request_prop_copy(
                         proposal_id=old_proposal.id,
-                        state=RequestState.pre_ready_states())
+                        state=RequestState.pre_ready_states(),
+                        continuation=is_continuation)
 
                     if requests:
                         request = first_value(requests)
 
                         flash(
-                            'A copy of this proposal '
-                            'has already been requested.')
+                            'A {} of this proposal '
+                            'has already been requested.'.format(
+                                'continuation' if is_continuation else 'copy'))
 
                         raise HTTPRedirect(url_for(
                             '.proposal_copy_request_status',
@@ -180,9 +216,14 @@ class GenericProposal(object):
                         proposal_id=old_proposal.id,
                         requester_person_id=current_user.person.id,
                         call_id=call_id, affiliation_id=affiliation_id,
-                        copy_members=member_copy)
+                        copy_members=(
+                            False if is_continuation else member_copy),
+                        continuation=is_continuation)
 
-                    flash('Your proposal copy has been requested.')
+                    if is_continuation:
+                        flash('Your continuation request is being prepared.')
+                    else:
+                        flash('Your proposal copy has been requested.')
 
                     raise HTTPRedirect(url_for(
                         '.proposal_copy_request_status',
@@ -194,10 +235,26 @@ class GenericProposal(object):
             except UserError as e:
                 message = e.message
 
+        # Find proposals which can be copied or continued.  Allow all closed
+        # proposals to be copied.  Of these, accepted proposals in the same
+        # queue can be continued.  Continuation requests themselves can not
+        # be copied or continued.
         proposals = db.search_proposal(
             facility_id=self.id_,
             person_id=current_user.person.id,
-            state=ProposalState.closed_states())
+            state=ProposalState.closed_states(),
+            type_=ProposalType.STANDARD
+        ).map_values(
+            lambda x: ProposalWithCode(
+                *x, code=self.make_proposal_code(db, x)))
+
+        if not call.allow_continuation:
+            proposals_continuable = None
+        else:
+            proposals_continuable = proposals.map_values(
+                filter_value=lambda x:
+                    x.state == ProposalState.ACCEPTED
+                    and x.queue_id == call.queue_id)
 
         return {
             'title': 'New Proposal',
@@ -206,10 +263,10 @@ class GenericProposal(object):
             'proposal_title': proposal_title,
             'affiliations': affiliations,
             'affiliation_id': affiliation_id,
-            'proposals': proposals.map_values(
-                lambda x: ProposalWithCode(
-                    *x, code=self.make_proposal_code(db, x))),
-            'proposal_id': old_proposal_id,
+            'proposals': proposals,
+            'proposal_copy': copy_proposal_id,
+            'proposals_continuable': proposals_continuable,
+            'proposal_continuation': continuation_proposal_id,
             'member_copy': member_copy,
         }
 
@@ -230,12 +287,17 @@ class GenericProposal(object):
         proposal_code = self.make_proposal_code(db, proposal)
 
         return {
-            'title': '{}: Copy'.format(proposal_code),
+            'title': '{}: {}'.format(
+                proposal_code,
+                'Continuation Request' if request.continuation else 'Copy'),
             'proposal': proposal,
             'proposal_code': proposal_code,
             'request': request,
             'dynamic': self._get_proposal_copy_request_dynamic(request),
-            'message': 'Please wait while your proposal is copied.',
+            'message': (
+                'Please wait while your continuation request is prepared.'
+                if request.continuation else
+                'Please wait while your proposal is copied.'),
             'target_query': url_for(
                 '.proposal_copy_request_query',
                 proposal_id=proposal.id, request_id=request.id),
@@ -272,117 +334,17 @@ class GenericProposal(object):
             self, current_user, db, old_proposal, proposal, copy_members,
             extra_text_roles=[]):
         role_class = self.get_text_roles()
-        copier_person_id = current_user.person.id
         old_proposal_code = self.make_proposal_code(db, old_proposal)
 
-        atn = {
-            'old_proposal_id': old_proposal.id,
-            'old_proposal_code': old_proposal_code,
-            'copier_person_id': copier_person_id,
-            'notes': SectionedList(
-                note_format=lambda x: {'item': 'Error', 'comment': x}),
-        }
+        atn = self._copy_proposal_annotation(
+            current_user, old_proposal, old_proposal_code)
 
         # Copy members (if requested) and student flag (including copier).
         with atn['notes'].accumulate_notes('proposal_members') as notes:
-            affiliations = None
-
-            if not copy_members:
-                notes.append({
-                    'item': 'Previous members',
-                    'comment': 'not invited to the new proposal.',
-                })
-
-            elif proposal.queue_id != old_proposal.queue_id:
-                # Affiliation IDs are different in different queues.
-                notes.append({
-                    'item': 'Previous members',
-                    'comment': 'can not be copied from a proposal '
-                    'in a different queue.'})
-
-            else:
-                # Get a list of the affiliations which are available now.
-                affiliations = db.search_affiliation(
-                    queue_id=proposal.queue_id, hidden=False)
-
-            copier_old_member = old_proposal.members.get_person(
-                copier_person_id)
-            copier_member = proposal.members.get_single()
-
-            for member in old_proposal.members.values():
-                if member.person_id == copier_person_id:
-                    # The copier should already have been added (as the 1st
-                    # member).  We just need to copy the "student" flag.
-                    proposal.members[copier_member.id] = \
-                        copier_member._replace(student=member.student)
-
-                    continue
-
-                elif affiliations is None:
-                    # Skip other members unless asked to copy.
-
-                    continue
-
-                elif member.affiliation_id not in affiliations:
-                    notes.append({
-                        'item': member.person_name,
-                        'comment': 'not added to the proposal because '
-                        'the affiliation "{}" is no longer available.'.format(
-                            member.affiliation_name)})
-
-                    continue
-
-                send_token = False
-
-                if member.person_registered:
-                    # The person was registered, so we can link their profile.
-                    member_person_id = member.person_id
-
-                elif copier_old_member.editor:
-                    # The person was not registered, so make a new profile.
-                    old_person = db.get_person(
-                        member.person_id, with_email=True)
-
-                    member_person_id = db.add_person(
-                        old_person.name, title=old_person.title,
-                        primary_email=old_person.email.get_primary().address,
-                        institution_id=member.resolved_institution_id)
-
-                    send_token = True
-
-                else:
-                    notes.append({
-                        'item': member.person_name,
-                        'comment': 'not added to the proposal because '
-                        'they did not register for an account and you were '
-                        'not an editor of the original proposal.'})
-
-                    continue
-
-                member_id = db.add_member(
-                    proposal.id, member_person_id, member.affiliation_id,
-                    editor=member.editor, observer=member.observer)
-
-                self._message_proposal_invite(
-                    current_user, db, proposal=proposal,
-                    person_id=member_person_id,
-                    person_name=member.person_name,
-                    is_editor=member.editor,
-                    affiliation_name=member.affiliation_name,
-                    send_token=send_token,
-                    copy_proposal_code=old_proposal_code)
-
-                proposal.members[member_id] = null_tuple(Member)._replace(
-                    id=member_id, student=member.student)
-
-                notes.append({
-                    'item': member.person_name,
-                    'comment': (
-                        'invited to register.'
-                        if send_token else 'added to the proposal.'),
-                })
-
-            db.sync_proposal_member_student(proposal.id, proposal.members)
+            self._copy_proposal_members(
+                notes, current_user, db,
+                old_proposal, old_proposal_code, proposal,
+                copy_members=copy_members)
 
         # Copy target objects.
         with atn['notes'].accumulate_notes('proposal_targets') as notes:
@@ -470,36 +432,9 @@ class GenericProposal(object):
 
         # Copy previous proposals.
         with atn['notes'].accumulate_notes('proposal_previous') as notes:
-            records = db.search_prev_proposal(proposal_id=old_proposal.id)
-            n_prev = len(records)
-
-            if ProposalState.is_submitted(old_proposal.state):
-                records['copied'] = null_tuple(PrevProposal)._replace(
-                    proposal_id=old_proposal.id,
-                    proposal_code=old_proposal_code,
-                    continuation=False, publications=[])
-
-                notes.append({
-                    'item': old_proposal_code,
-                    'comment': 'added to the list of previous proposals.'})
-
-            else:
-                notes.append({
-                    'item': old_proposal_code,
-                    'comment': 'not added to the list of previous proposals '
-                    'because it was not submitted.'})
-
-            if records:
-                db.sync_proposal_prev_proposal(
-                    proposal_id=proposal.id, records=records.map_values(
-                        lambda x: x._replace(id=None)),
-                    retain_resolved=True)
-
-                if n_prev:
-                    notes.append({
-                        'item': '{} previous {}'.format(
-                            n_prev, 'proposals' if n_prev > 1 else 'proposal'),
-                        'comment': 'copied to the proposal.'})
+            self._copy_proposal_previous(
+                notes, current_user, db,
+                old_proposal, old_proposal_code, proposal)
 
         # Copy PDF files, text and figures.
         pdfs = db.search_proposal_pdf(old_proposal.id)
@@ -661,6 +596,189 @@ class GenericProposal(object):
 
         return atn
 
+    def _copy_proposal_annotation(
+            self, current_user, old_proposal, old_proposal_code):
+        return {
+            'old_proposal_id': old_proposal.id,
+            'old_proposal_code': old_proposal_code,
+            'copier_person_id': current_user.person.id,
+            'notes': SectionedList(
+                note_format=lambda x: {'item': 'Error', 'comment': x}),
+        }
+
+    def _copy_proposal_members(
+            self, notes, current_user, db,
+            old_proposal, old_proposal_code, proposal,
+            copy_members=False):
+        copier_person_id = current_user.person.id
+
+        affiliations = None
+
+        if not copy_members:
+            notes.append({
+                'item': 'Previous members',
+                'comment': 'not invited to the new proposal.',
+            })
+
+        elif proposal.queue_id != old_proposal.queue_id:
+            # Affiliation IDs are different in different queues.
+            notes.append({
+                'item': 'Previous members',
+                'comment': 'can not be copied from a proposal '
+                'in a different queue.'})
+
+        else:
+            # Get a list of the affiliations which are available now.
+            affiliations = db.search_affiliation(
+                queue_id=proposal.queue_id, hidden=False)
+
+        copier_old_member = old_proposal.members.get_person(
+            copier_person_id)
+        copier_member = proposal.members.get_single()
+
+        for member in old_proposal.members.values():
+            if member.person_id == copier_person_id:
+                # The copier should already have been added (as the 1st
+                # member).  We just need to copy the "student" flag.
+                proposal.members[copier_member.id] = \
+                    copier_member._replace(student=member.student)
+
+                continue
+
+            elif affiliations is None:
+                # Skip other members unless asked to copy.
+
+                continue
+
+            elif member.affiliation_id not in affiliations:
+                notes.append({
+                    'item': member.person_name,
+                    'comment': 'not added to the proposal because '
+                    'the affiliation "{}" is no longer available.'.format(
+                        member.affiliation_name)})
+
+                continue
+
+            send_token = False
+
+            if member.person_registered:
+                # The person was registered, so we can link their profile.
+                member_person_id = member.person_id
+
+            elif copier_old_member.editor:
+                # The person was not registered, so make a new profile.
+                old_person = db.get_person(
+                    member.person_id, with_email=True)
+
+                member_person_id = db.add_person(
+                    old_person.name, title=old_person.title,
+                    primary_email=old_person.email.get_primary().address,
+                    institution_id=member.resolved_institution_id)
+
+                send_token = True
+
+            else:
+                notes.append({
+                    'item': member.person_name,
+                    'comment': 'not added to the proposal because '
+                    'they did not register for an account and you were '
+                    'not an editor of the original proposal.'})
+
+                continue
+
+            member_id = db.add_member(
+                proposal.id, member_person_id, member.affiliation_id,
+                editor=member.editor, observer=member.observer)
+
+            self._message_proposal_invite(
+                current_user, db, proposal=proposal,
+                person_id=member_person_id,
+                person_name=member.person_name,
+                is_editor=member.editor,
+                affiliation_name=member.affiliation_name,
+                send_token=send_token,
+                copy_proposal_code=old_proposal_code)
+
+            proposal.members[member_id] = null_tuple(Member)._replace(
+                id=member_id, student=member.student)
+
+            notes.append({
+                'item': member.person_name,
+                'comment': (
+                    'invited to register.'
+                    if send_token else 'added to the proposal.'),
+            })
+
+        db.sync_proposal_member_student(proposal.id, proposal.members)
+
+    def _copy_proposal_previous(
+            self, notes, current_user, db,
+            old_proposal, old_proposal_code, proposal,
+            is_continuation=False):
+        override = {'id': None, 'sort_order': None}
+        if is_continuation:
+            override['continuation'] = False
+
+        records = db.search_prev_proposal(
+            proposal_id=old_proposal.id
+        ).map_values(
+            lambda x: x._replace(**override)
+        )
+
+        n_prev = len(records)
+
+        if is_continuation or ProposalState.is_submitted(old_proposal.state):
+            records['copied'] = null_tuple(PrevProposal)._replace(
+                proposal_id=old_proposal.id,
+                proposal_code=old_proposal_code,
+                continuation=is_continuation,
+                sort_order=1,
+                publications=[])
+
+            notes.append({
+                'item': old_proposal_code,
+                'comment': 'added to the list of previous proposals.'})
+
+        else:
+            notes.append({
+                'item': old_proposal_code,
+                'comment': 'not added to the list of previous proposals '
+                'because it was not submitted.'})
+
+        if records:
+            db.sync_proposal_prev_proposal(
+                proposal_id=proposal.id, records=records,
+                retain_resolved=True)
+
+            if n_prev:
+                notes.append({
+                    'item': '{} previous {}'.format(
+                        n_prev, 'proposals' if n_prev > 1 else 'proposal'),
+                    'comment': 'copied to the proposal.'})
+
+    def _continue_proposal(
+            self, current_user, db, old_proposal, proposal):
+        old_proposal_code = self.make_proposal_code(db, old_proposal)
+
+        atn = self._copy_proposal_annotation(
+            current_user, old_proposal, old_proposal_code)
+
+        # Copy members and student flag (including copier).
+        with atn['notes'].accumulate_notes('proposal_members') as notes:
+            self._copy_proposal_members(
+                notes, current_user, db,
+                old_proposal, old_proposal_code, proposal,
+                copy_members=True)
+
+        # Copy previous proposals.
+        with atn['notes'].accumulate_notes('proposal_previous') as notes:
+            self._copy_proposal_previous(
+                notes, current_user, db,
+                old_proposal, old_proposal_code, proposal,
+                is_continuation=True)
+
+        return atn
+
     @with_proposal(permission=PermissionType.VIEW)
     def view_proposal_view(self, current_user, db, proposal, can, args):
         role_class = self.get_reviewer_roles()
@@ -699,14 +817,15 @@ class GenericProposal(object):
             'proposal_code': self.make_proposal_code(db, proposal),
             'show_person_proposals_callout': is_first_view,
             'show_admin_links': is_admin,
-            'proposal_order': self.get_proposal_order_names(),
+            'proposal_order': self.get_proposal_order_names(
+                type_=proposal.type),
             'call_mid_closes': call_mid_closes,
         }
 
         ctx.update(self._view_proposal_extra(db, proposal))
 
         if is_first_view:
-            ctx['copy_annotations'] = db.search_proposal_annotation(
+            ctx['proposal_annotations'] = db.search_proposal_annotation(
                 proposal_id=proposal.id)
 
         return ctx
@@ -733,14 +852,7 @@ class GenericProposal(object):
 
         calculations = db.search_calculation(proposal_id=proposal.id)
 
-        prev_proposals = [
-            PrevProposalExtra(
-                *x._replace(publications=[
-                    PrevProposalPubExtra(
-                        *p, url=make_publication_url(p.type, p.description))
-                    for p in x.publications]),
-                links=self.make_proposal_info_urls(x.proposal_code))
-            for x in db.search_prev_proposal(proposal_id=proposal.id).values()]
+        prev_proposals = db.search_prev_proposal(proposal_id=proposal.id)
 
         extra = {
             'abstract': proposal_text.get_role(role_class.ABSTRACT, None),
@@ -752,7 +864,14 @@ class GenericProposal(object):
             'tool_note': proposal_text.get_role(role_class.TOOL_NOTE, None),
             'categories': db.search_proposal_category(
                 proposal_id=proposal.id),
-            'prev_proposals': prev_proposals,
+            'prev_proposals': prev_proposals.map_values(
+                lambda x: PrevProposalExtra(
+                    *x._replace(publications=[
+                        PrevProposalPubExtra(
+                            *p,
+                            url=make_publication_url(p.type, p.description))
+                        for p in x.publications]),
+                    links=self.make_proposal_info_urls(x.proposal_code))),
         }
 
         for role in (role_class.TECHNICAL_CASE, role_class.SCIENCE_CASE):
@@ -883,11 +1002,12 @@ class GenericProposal(object):
             'states': ProposalState.get_options(),
         }
 
-    def _validate_proposal(self, db, proposal):
+    def _validate_proposal(self, db, proposal, proposal_order):
         # Validate the "extra" parts of the proposal.
         extra = self._view_proposal_extra(db, proposal)
 
-        report = self._validate_proposal_extra(db, proposal, extra)
+        report = self._validate_proposal_extra(
+            db, proposal, extra, proposal_order)
 
         # Validate common parts of the proposal.
         with report.accumulate_notes('proposal_summary') as messages:
@@ -902,7 +1022,7 @@ class GenericProposal(object):
         # Return the list of messages.
         return report
 
-    def _validate_proposal_extra(self, db, proposal, extra,
+    def _validate_proposal_extra(self, db, proposal, extra, proposal_order,
                                  skip_missing_targets=False,
                                  check_excluded_pi=False):
         affiliation_type_class = self.get_affiliation_types()
@@ -970,6 +1090,9 @@ class GenericProposal(object):
                             url_for('.member_edit', proposal_id=proposal.id)))
 
         with report.accumulate_notes('proposal_abstract') as messages:
+            if 'proposal_abstract' not in proposal_order:
+                raise SkipSection()
+
             if extra['abstract'] is None:
                 messages.append(ValidationMessage(
                     True,
@@ -978,16 +1101,65 @@ class GenericProposal(object):
                     url_for('.abstract_edit', proposal_id=proposal.id)))
 
         with report.accumulate_notes('proposal_previous') as messages:
-            if not extra['prev_proposals']:
-                messages.append(ValidationMessage(
-                    False,
-                    'No previous proposals have been listed.  If you do not '
+            message_template = ValidationMessage(
+                True, None,
+                'Edit previous proposals and publications',
+                url_for('.previous_edit', proposal_id=proposal.id))
+
+            if proposal.type == ProposalType.CONTINUATION:
+                try:
+                    previous = extra['prev_proposals'].get_continuation()
+
+                except MultipleRecords:
+                    messages.append(message_template._replace(
+                        description='This proposal is a continuation request, '
+                        'but the continuation box is checked for '
+                        'multiple entries in the previous proposals list.'))
+
+                except NoSuchValue:
+                    messages.append(message_template._replace(
+                        description='This proposal is a continuation request, '
+                        'so the previous proposal list must indicate '
+                        'which project you wish to continue. '
+                        'Please ensure the continuation box is checked for '
+                        'one entry in the previous proposals list.'))
+
+                else:
+                    if previous.proposal_id is None:
+                        messages.append(message_template._replace(
+                            description='This proposal is a continuation '
+                            'request, but the proposal for which the '
+                            'continuation box is checked is not recognized.'))
+
+                    else:
+                        try:
+                            prev_prop = db.get_proposal(
+                                self.id_, previous.proposal_id)
+                        except NoSuchRecord as e:
+                            messages.append(message_template._replace(
+                                description='The proposal to continue could '
+                                'not be found.'))
+
+                        if prev_prop.type != ProposalType.STANDARD:
+                            messages.append(message_template._replace(
+                                description='The proposal selected for '
+                                'continuation is not a standard proposal.  '
+                                'Please give the original proposal identifier '
+                                'rather than a subsequent '
+                                'continuation request.'))
+
+            elif not extra['prev_proposals']:
+                messages.append(message_template._replace(
+                    is_error=False,
+                    description='No previous proposals have been listed.  '
+                    'If you do not '
                     'have any previously accepted proposals you should '
-                    'ignore this warning.',
-                    'Edit previous proposals and publications',
-                    url_for('.previous_edit', proposal_id=proposal.id)))
+                    'ignore this warning.'))
 
         with report.accumulate_notes('proposal_targets') as messages:
+            if 'proposal_targets' not in proposal_order:
+                raise SkipSection()
+
             if (not skip_missing_targets) and (not extra['targets']):
                 messages.append(ValidationMessage(
                     False,
@@ -1030,6 +1202,9 @@ class GenericProposal(object):
                 (role_class.TECHNICAL_CASE, 'technical_case'),
                 (role_class.SCIENCE_CASE, 'science_case')):
             with report.accumulate_notes(role_section) as messages:
+                if role_section not in proposal_order:
+                    raise SkipSection()
+
                 role_name = role_class.get_name(role)
                 case = extra['{}_case'.format(role_class.get_code(role))]
 
@@ -1079,7 +1254,8 @@ class GenericProposal(object):
         type_class = self.get_call_types()
         immediate_review = type_class.has_immediate_review(proposal.call_type)
 
-        messages = self._validate_proposal(db, proposal)
+        proposal_order = self.get_proposal_order_names(type_=proposal.type)
+        messages = self._validate_proposal(db, proposal, proposal_order)
         has_error = any(x.is_error for x in messages)
 
         if form is not None:
@@ -1125,7 +1301,7 @@ class GenericProposal(object):
             'can_edit': True,
             'is_submit_page': True,
             'immediate_review': immediate_review,
-            'proposal_order': self.get_proposal_order_names(),
+            'proposal_order': proposal_order,
         }
 
     def _message_proposal_submit(self, current_user, db, proposal):
@@ -1204,7 +1380,8 @@ class GenericProposal(object):
 
     @with_proposal(permission=PermissionType.VIEW)
     def view_proposal_validate(self, current_user, db, proposal, can):
-        messages = self._validate_proposal(db, proposal)
+        proposal_order = self.get_proposal_order_names(type_=proposal.type)
+        messages = self._validate_proposal(db, proposal, proposal_order)
 
         return {
             'title': 'Proposal Validation',
@@ -1213,7 +1390,7 @@ class GenericProposal(object):
             'validation_messages': messages,
             'can_edit': can.edit,
             'is_submit_page': False,
-            'proposal_order': self.get_proposal_order_names(),
+            'proposal_order': proposal_order,
         }
 
     @with_proposal(permission=PermissionType.EDIT)
@@ -1572,6 +1749,7 @@ class GenericProposal(object):
                     semester_id=proposal.semester_id,
                     call_type=proposal.call_type, _external=True)),
             'copy_proposal_code': copy_proposal_code,
+            'is_continuation': (proposal.type == ProposalType.CONTINUATION),
         }
 
         if send_token:
@@ -1896,7 +2074,7 @@ class GenericProposal(object):
 
         return {
             'title': 'Previous Proposals and Publications',
-            'proposal_id': proposal.id,
+            'proposal': proposal,
             'message': message,
             'proposal_code': self.make_proposal_code(db, proposal),
             'accepted_proposals': accepted_proposal_codes,

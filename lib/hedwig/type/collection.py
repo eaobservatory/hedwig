@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -28,7 +28,7 @@ from ..email.util import is_valid_email
 from ..error import NoSuchRecord, NoSuchValue, MultipleRecords, UserError
 from ..util import is_list_like, matches_constraint
 from .base import CollectionByCall, CollectionByFacility, \
-    CollectionByProposal, CollectionByReviewerRole, \
+    CollectionByProposal, CollectionByReviewerRole, CollectionByType, \
     CollectionOrdered, CollectionSortable
 from .enum import PublicationType, ReviewState
 from .simple import TargetFracTime, TargetObject
@@ -170,6 +170,14 @@ class AffiliationCollection(ResultCollection):
             for affiliation in self.values():
                 if affiliation.type == type_:
                     yield affiliation
+
+
+class AnnotationCollection(ResultCollection, CollectionByType):
+    """
+    Class to hold the results of a search for annotations.
+    """
+
+    pass
 
 
 class CalculationCollection(ResultCollection, CollectionOrdered):
@@ -548,6 +556,31 @@ class PrevProposalCollection(ResultCollection, CollectionOrdered):
 
             if pp.proposal_id is not None:
                 seen_ids[pp.proposal_id] = pp.proposal_code
+
+    def get_continuation(self, default=()):
+        """
+        Retrieve a record with the continuation flag set.
+
+        :raises NoSuchValue: if no continuation found and no default given.
+        :raises MultipleRecords: if multiple continuation records are found.
+        """
+
+        result = None
+
+        for entry in self.values():
+            if entry.continuation:
+                if result is not None:
+                    raise MultipleRecords('multiple continuation records')
+
+                result = entry
+
+        if result is not None:
+            return result
+
+        if default == ():
+            raise NoSuchValue('no continuation record')
+
+        return default
 
     def subset_by_this_proposal(self, this_proposal_id):
         """

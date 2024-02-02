@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -184,6 +184,7 @@ call = Table(
     Column('preamble', UnicodeText, nullable=True),
     Column('preamble_format', Integer, nullable=True),
     Column('hidden', Boolean, default=False, nullable=False),
+    Column('allow_continuation', Boolean, default=False, nullable=False),
     UniqueConstraint('semester_id', 'queue_id', 'type'),
     **table_opts)
 
@@ -529,6 +530,7 @@ proposal = Table(
     Column('number', Integer, nullable=False),
     Column('state', Integer, nullable=False),
     Column('title', Unicode(255), nullable=False),
+    Column('type', Integer, nullable=False),
     UniqueConstraint('call_id', 'number'),
     **table_opts)
 
@@ -745,6 +747,7 @@ request_prop_copy = Table(
     Column('copy_proposal_id', None,
            ForeignKey('proposal.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=True),
+    Column('continuation', Boolean, nullable=False),
     *_request_cols(),
     **table_opts)
 

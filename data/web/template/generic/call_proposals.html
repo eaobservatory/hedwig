@@ -27,6 +27,7 @@
     <table>
         <tr>
             <th>Proposal</th>
+            <th>Type</th>
             <th>Title</th>
             <th>State</th>
             <th>PI Name</th>
@@ -37,6 +38,7 @@
                 <td>
                     <a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}" id="proposal_view_{{ proposal.id }}">{{ proposal.code }}</a>
                 </td>
+                <td>{{ proposal.type | proposal_type_short_name }}</td>
                 <td>{{ proposal.title }}</td>
                 <td>{{ proposal.state | proposal_state_name }}</td>
                 {% if proposal.member is not none %}

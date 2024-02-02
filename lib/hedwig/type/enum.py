@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -63,12 +63,16 @@ class AnnotationType(EnumBasic):
     """
 
     PROPOSAL_COPY = 1
+    PROPOSAL_CONTINUATION = 2
 
     TypeInfo = namedtuple(
         'TypeInfo', ('name',))
 
     _info = OrderedDict((
-        (PROPOSAL_COPY, TypeInfo('Proposal copy')),
+        (PROPOSAL_COPY, TypeInfo(
+            'Proposal copy')),
+        (PROPOSAL_CONTINUATION, TypeInfo(
+            'Proposal continuation request')),
     ))
 
 
@@ -1288,6 +1292,36 @@ class UserLogEvent(EnumBasic, EnumLevel):
             'Logged in',
             LogEventLevel.MINOR),
     }
+
+
+# NOTE: this is defined at the end since it refers to values from
+# BaseReviewerRole.
+class ProposalType(EnumBasic, EnumShortName):
+    """
+    Class representing various types of proposal.
+    """
+
+    STANDARD = 1
+    CONTINUATION = 2
+
+    TypeInfo = namedtuple(
+        'TypeInfo',
+        ('short_name', 'name', 'reviewer_roles_excluded'))
+
+    #       Abbr   Name
+    #       (Reviewer roles exclude)
+    _info = OrderedDict((
+        (STANDARD, TypeInfo(
+            'Std', 'Standard',
+            ())),
+        (CONTINUATION, TypeInfo(
+            'CR',  'Continuation request',
+            (BaseReviewerRole.EXTERNAL,))),
+    ))
+
+    @classmethod
+    def get_excluded_roles(cls, value):
+        return cls._info[value].reviewer_roles_excluded
 
 
 # NOTE: this is defined at the end since it refers to values from

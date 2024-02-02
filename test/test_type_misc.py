@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2023 East Asian Observatory
+# Copyright (C) 2016-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -19,7 +19,8 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from hedwig.error import Error, UserError
-from hedwig.type.misc import ErrorCatcher, SectionedList, SectionedListSection
+from hedwig.type.misc import ErrorCatcher, \
+    SectionedList, SectionedListSection, SkipSection
 
 from .compat import TestCase
 
@@ -248,6 +249,8 @@ class MiscTypeTestCase(TestCase):
 
         with sl.accumulate_notes('animals') as notes:
             notes.extend(['moose', 'okapi'])
+            raise SkipSection()
+            notes.extend(['gazelle', 'weasel'])
 
         with sl.accumulate_notes('vegetables') as notes:
             notes.extend(['carrot'])

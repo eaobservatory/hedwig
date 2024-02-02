@@ -197,7 +197,7 @@ class Generic(
             tech_note='', sci_note='', prev_prop_note='',
             note_format=FormatType.PLAIN)
 
-    def get_proposal_order(self):
+    def get_proposal_order(self, type_=None):
         """
         Get a list of proposal sections in the order in which they should
         be shown.
@@ -215,7 +215,7 @@ class Generic(
             'science_case',
         ]
 
-    def get_proposal_order_names(self):
+    def get_proposal_order_names(self, type_=None):
         """
         Get an ordered dictionary which maps proposal section codes
         to their names, in the order in which they should be shown.
@@ -233,7 +233,8 @@ class Generic(
             'science_case': 'Scientific Justification',
         }
 
-        return OrderedDict(((x, names[x]) for x in self.get_proposal_order()))
+        return OrderedDict((
+            (x, names[x]) for x in self.get_proposal_order(type_=type_)))
 
     def get_observing_info(self):
         """

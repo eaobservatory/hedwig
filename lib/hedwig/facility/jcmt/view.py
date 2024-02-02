@@ -31,7 +31,8 @@ from ...view.util import float_or_none, int_or_none, join_list, \
     with_call_review, with_proposal
 from ...type.collection import ResultTable
 from ...type.enum import FormatType, \
-    PermissionType, ProposalState, ReviewState
+    PermissionType, ProposalState, ProposalType, ReviewState
+from ...type.misc import SkipSection
 from ...type.simple import FacilityObsInfo, Link, RouteInfo, TextCopyInfo, \
     ValidationMessage
 from ...type.util import null_tuple
@@ -124,11 +125,24 @@ class JCMT(EAOFacility):
                 {'allow_post': True, 'init_route_params': ['proposal_id']}),
         ]
 
-    def get_proposal_order(self):
+    def get_proposal_order(self, type_=None):
         """
         Get a list of proposal sections in the order in which they should
         be shown.
         """
+
+        if type_ is None:
+            pass
+
+        elif type_ == ProposalType.CONTINUATION:
+            return [
+                'proposal_summary',
+                'proposal_previous',
+                'proposal_members',
+                'proposal_request',
+                'proposal_calculations',
+                'technical_case',
+            ]
 
         return [
             'proposal_summary',
@@ -175,7 +189,9 @@ class JCMT(EAOFacility):
         type_class = self.get_call_types()
 
         try:
-            m = re.match(r'([A-Z])(\d\d[ABXYZW])([A-Z])(\d\d\d)', proposal_code)
+            m = re.match(
+                r'([A-Z])(\d\d[ABXYZW])([A-Z])(\d\d\d)$',
+                proposal_code)
 
             if not m:
                 raise ParseError(
@@ -470,75 +486,113 @@ class JCMT(EAOFacility):
 
         # Copy observing request.
         with atn['notes'].accumulate_notes('proposal_request') as notes:
+            self._copy_proposal_request(
+                notes, current_user, db, old_proposal, proposal)
+
+        return atn
+
+    def _copy_proposal_request(
+            self, notes, current_user, db,
+            old_proposal, proposal, is_continuation=False):
+        if is_continuation:
+            records = db.search_jcmt_allocation(proposal_id=old_proposal.id)
+        else:
             records = db.search_jcmt_request(proposal_id=old_proposal.id)
-            if records:
-                records_invalid = []
-                for id_, record in records.items():
-                    name = '{}, {}'.format(
-                        JCMTInstrument.get_name_with_ancillary(
-                            record.instrument, record.ancillary),
-                        JCMTWeather.get_name(record.weather))
-                    if not JCMTInstrument.is_available(record.instrument):
-                        records_invalid.append(id_)
-                        notes.append({
-                            'item': name,
-                            'comment': 'instrument is no longer available.'})
-                    elif not JCMTInstrument.has_available_ancillary(
-                            record.instrument, record.ancillary):
-                        records_invalid.append(id_)
-                        notes.append({
-                            'item': name,
-                            'comment': 'ancillary is no longer available.'})
-                    elif not JCMTWeather.is_available(record.weather):
-                        records_invalid.append(id_)
-                        notes.append({
-                            'item': name,
-                            'comment': 'weather band is no longer available.'})
 
-                for id_ in records_invalid:
-                    del records[id_]
-
-                if records:
-                    (n_insert, n_update, n_delete) = \
-                        db.sync_jcmt_proposal_request(proposal.id, records)
-
+        if records:
+            records_invalid = []
+            for id_, record in records.items():
+                name = '{}, {}'.format(
+                    JCMTInstrument.get_name_with_ancillary(
+                        record.instrument, record.ancillary),
+                    JCMTWeather.get_name(record.weather))
+                if not JCMTInstrument.is_available(record.instrument):
+                    records_invalid.append(id_)
                     notes.append({
-                        'item': '{} {}'.format(
-                            n_insert, 'requests' if n_insert > 1 else 'request'),
-                        'comment': 'copied to the proposal.'})
+                        'item': name,
+                        'comment': 'instrument is no longer available.'})
+                elif not JCMTInstrument.has_available_ancillary(
+                        record.instrument, record.ancillary):
+                    records_invalid.append(id_)
+                    notes.append({
+                        'item': name,
+                        'comment': 'ancillary is no longer available.'})
+                elif not JCMTWeather.is_available(record.weather):
+                    records_invalid.append(id_)
+                    notes.append({
+                        'item': name,
+                        'comment': 'weather band is no longer available.'})
 
-            # Copy JCMT options.
-            try:
+            for id_ in records_invalid:
+                del records[id_]
+
+            if records:
+                (n_insert, n_update, n_delete) = \
+                    db.sync_jcmt_proposal_request(proposal.id, records)
+
+                notes.append({
+                    'item': '{} {}'.format(
+                        n_insert, 'requests' if n_insert > 1 else 'request'),
+                    'comment': (
+                        'copied from the previous proposal\'s approval.'
+                        if is_continuation else
+                        'copied to the proposal.')})
+
+        # Copy JCMT options.
+        try:
+            if is_continuation:
+                try:
+                    option_values = db.get_jcmt_alloc_options(
+                        proposal_id=old_proposal.id)
+
+                except NoSuchRecord:
+                    # Allow fallback to request options for proposals
+                    # accepted prior to the addition of allocation options.
+                    option_values = db.get_jcmt_options(
+                        proposal_id=old_proposal.id)
+
+            else:
                 option_values = db.get_jcmt_options(
                     proposal_id=old_proposal.id)
 
-                n_true_option = 0
+            n_true_option = 0
 
-                for (option, option_name) in JCMTOptionValue.get_options(
-                        include_unavailable=True).items():
-                    if getattr(option_values, option):
-                        if JCMTOptionValue.is_available(option):
-                            n_true_option += 1
-                        else:
-                            notes.append({
-                                'item': '{} option'.format(option_name),
-                                'comment': 'not copied because '
-                                'it is no longer available.'})
-                            option_values = option_values._replace(
-                                **{option: False})
+            for (option, option_name) in JCMTOptionValue.get_options(
+                    include_unavailable=True).items():
+                if getattr(option_values, option):
+                    if JCMTOptionValue.is_available(option):
+                        n_true_option += 1
+                    else:
+                        notes.append({
+                            'item': '{} option'.format(option_name),
+                            'comment': 'not copied because '
+                            'it is no longer available.'})
+                        option_values = option_values._replace(
+                            **{option: False})
 
-                db.set_jcmt_options(**option_values._replace(
-                    proposal_id=proposal.id)._asdict())
+            db.set_jcmt_options(**option_values._replace(
+                proposal_id=proposal.id)._asdict())
 
-                if n_true_option:
-                    notes.append({
-                        'item': '{} additional {}'.format(
-                            n_true_option,
-                            'options' if n_true_option > 1 else 'option'),
-                        'comment': 'copied to the proposal.'})
+            if n_true_option:
+                notes.append({
+                    'item': '{} additional {}'.format(
+                        n_true_option,
+                        'options' if n_true_option > 1 else 'option'),
+                    'comment': 'copied to the proposal.'})
 
-            except NoSuchRecord:
-                pass
+        except NoSuchRecord:
+            pass
+
+    def _continue_proposal(
+            self, current_user, db, old_proposal, proposal, *args, **kwargs):
+        atn = super(JCMT, self)._continue_proposal(
+            current_user, db, old_proposal, proposal, *args, **kwargs)
+
+        # Copy previous allocation as new observing request.
+        with atn['notes'].accumulate_notes('proposal_request') as notes:
+            self._copy_proposal_request(
+                notes, current_user, db, old_proposal, proposal,
+                is_continuation=True)
 
         return atn
 
@@ -655,15 +709,19 @@ class JCMT(EAOFacility):
 
         return ctx
 
-    def _validate_proposal_extra(self, db, proposal, extra):
+    def _validate_proposal_extra(self, db, proposal, extra, proposal_order):
         is_target_of_opp = (extra['jcmt_option_values'].target_of_opp
             if (extra['jcmt_option_values'] is not None) else False)
 
         report = super(JCMT, self)._validate_proposal_extra(
-            db, proposal, extra, skip_missing_targets=is_target_of_opp,
+            db, proposal, extra, proposal_order,
+            skip_missing_targets=is_target_of_opp,
             check_excluded_pi=True)
 
         with report.accumulate_notes('science_case') as messages:
+            if 'science_case' not in proposal_order:
+                raise SkipSection()
+
             if extra['jcmt_pr_summary'] is None:
                 messages.append(ValidationMessage(
                     False,

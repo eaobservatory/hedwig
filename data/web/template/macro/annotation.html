@@ -1,23 +1,44 @@
-{% macro render_copy_annotation(annotation, proposal_order) %}
-    {% set notes = annotation.annotation.notes %}
+{% macro render_proposal_annotation(annotation, proposal_order) %}
+    {% if annotation.type is annotation_proposal_copy %}
+        {{ render_proposal_copy_annotation(annotation, proposal_order) }}
+    {% elif annotation.type is annotation_proposal_continuation %}
+        {{ render_proposal_continuation_annotation(annotation, proposal_order) }}
+    {% endif %}
+{% endmacro %}
+
+{% macro render_proposal_copy_annotation(annotation, proposal_order) %}
     <div class="annotation closeable">
         <p>
             <h3>Proposal Copy Report</h3>
         </p>
 
-        {% for (section, section_name) in proposal_order.items() %}
-            {% if section in notes %}
-                <p class="section_label">{{ section_name }}</p>
-
-                <ul>
-                    {% for item in notes[section] %}
-                        <li>
-                            <b>{{ item.item }}</b>:
-                            {{ item.comment }}
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        {% endfor %}
+        {{ render_proposal_annotation_notes(annotation.annotation.notes, proposal_order) }}
     </div>
+{% endmacro %}
+
+{% macro render_proposal_continuation_annotation(annotation, proposal_order) %}
+    <div class="annotation closeable">
+        <p>
+            <h3>Continuation Request Report</h3>
+        </p>
+
+        {{ render_proposal_annotation_notes(annotation.annotation.notes, proposal_order) }}
+    </div>
+{% endmacro %}
+
+{% macro render_proposal_annotation_notes(notes, proposal_order) %}
+    {% for (section, section_name) in proposal_order.items() %}
+        {% if section in notes %}
+            <p class="section_label">{{ section_name }}</p>
+
+            <ul>
+                {% for item in notes[section] %}
+                    <li>
+                        <b>{{ item.item }}</b>:
+                        {{ item.comment }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endfor %}
 {% endmacro %}

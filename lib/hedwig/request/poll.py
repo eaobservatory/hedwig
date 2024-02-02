@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2023 East Asian Observatory
+# Copyright (C) 2019-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,7 +22,7 @@ from datetime import datetime
 
 from ..config import get_config, get_facilities
 from ..error import ConsistencyError, FormattedError, NoSuchRecord, UserError
-from ..type.enum import AnnotationType, RequestState
+from ..type.enum import AnnotationType, ProposalType, RequestState
 from ..type.util import null_tuple
 from hedwig.type.simple import CurrentUser, UserInfo
 from ..util import get_logger
@@ -32,7 +32,8 @@ logger = get_logger(__name__)
 
 def process_request_prop_copy(db, app, dry_run=False):
     """
-    Function to handle requests to copy proposals.
+    Function to handle requests to copy proposals and prepare
+    continuation requests.
     """
 
     n_processed = 0
@@ -40,7 +41,8 @@ def process_request_prop_copy(db, app, dry_run=False):
     for request in db.search_request_prop_copy(
             state=RequestState.NEW).values():
         logger.debug(
-            'Handling proposal copy request {} (proposal {})',
+            'Handling proposal {} request {} (proposal {})',
+            ('continuation' if request.continuation else 'copy'),
             request.id, request.proposal_id)
 
         try:
@@ -52,7 +54,7 @@ def process_request_prop_copy(db, app, dry_run=False):
             continue
 
         try:
-            copy_proposal_id = _copy_proposal(
+            copy_proposal_id = _copy_continue_proposal(
                 db, app, request, dry_run=dry_run)
 
             try:
@@ -71,7 +73,8 @@ def process_request_prop_copy(db, app, dry_run=False):
 
         except:
             logger.exception(
-                'Error handling proposal copy request {} (proposal {})',
+                'Error handling proposal {} request {} (proposal {})',
+                ('continuation' if request.continuation else 'copy'),
                 request.id, request.proposal_id)
 
             if not dry_run:
@@ -82,7 +85,12 @@ def process_request_prop_copy(db, app, dry_run=False):
     return n_processed
 
 
-def _copy_proposal(db, app, request, dry_run=False):
+def _copy_continue_proposal(db, app, request, dry_run=False):
+    """
+    Handle a single request to copy a proposal
+    or prepare a continuation request.
+    """
+
     config = get_config()
 
     try:
@@ -121,9 +129,17 @@ def _copy_proposal(db, app, request, dry_run=False):
     if dry_run:
         return None
 
+    if request.continuation:
+        proposal_type = ProposalType.CONTINUATION
+        annotation_type = AnnotationType.PROPOSAL_CONTINUATION
+    else:
+        proposal_type = ProposalType.STANDARD
+        annotation_type = AnnotationType.PROPOSAL_COPY
+
     proposal_id = db.add_proposal(
         call_id=call.id, person_id=copier.id,
         affiliation_id=request.affiliation_id, title=old_proposal.title,
+        type_=proposal_type,
         person_is_reviewer=type_class.has_reviewer_role(
             call.type, role_class.PEER),
         is_copy=True)
@@ -142,11 +158,15 @@ def _copy_proposal(db, app, request, dry_run=False):
     with app.test_request_context(
             path='/{}/'.format(facility.get_code()),
             base_url=config.get('application', 'base_url')):
-        atn = facility._copy_proposal(
-            current_user, db, old_proposal, proposal,
-            copy_members=request.copy_members)
+        if request.continuation:
+            atn = facility._continue_proposal(
+                current_user, db, old_proposal, proposal)
+        else:
+            atn = facility._copy_proposal(
+                current_user, db, old_proposal, proposal,
+                copy_members=request.copy_members)
 
     db.add_proposal_annotation(
-        proposal.id, AnnotationType.PROPOSAL_COPY, atn)
+        proposal.id, annotation_type, atn)
 
     return proposal_id
