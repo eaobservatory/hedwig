@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -683,6 +683,19 @@ class DBPeopleTest(DBTestCase):
         self.assertEqual(len(records), 2)
         for (id_, entry) in records.items():
             self.assertEqual(entry.institution_name, 'Renamed Institution One')
+
+        # Test deleting an institution.
+        with self.assertRaisesRegex(ConsistencyError, 'does not exist'):
+            self.db.delete_institution(1999999)
+
+        with self.assertRaisesRegex(ConsistencyError, 'no row matched'):
+            self.db.delete_institution(1999999, _test_skip_check=True)
+
+        self.db.delete_institution(institution_id)
+
+        self.assertEqual(
+            list(self.db.search_institution().keys()),
+            [institution_id2])
 
     def test_institution_merge(self):
         # Create two institution records with one person each.

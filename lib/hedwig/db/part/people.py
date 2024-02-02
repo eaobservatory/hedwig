@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -502,6 +502,38 @@ class PeoplePart(object):
 
         with self._transaction() as conn:
             conn.execute(stmt)
+
+    def delete_institution(self, institution_id, _test_skip_check=False):
+        """
+        Attempt to delete an institution.
+
+        Note that the database constraints may prevent this method
+        from succeeding, for example if a person has this institution
+        selected in their profile or "frozen" into their membership
+        of a proposal.
+        """
+
+        stmt = institution.delete().where(institution.c.id == institution_id)
+
+        with self._transaction() as conn:
+            if not _test_skip_check:
+                if not self._exists_id(conn, institution, institution_id):
+                    raise ConsistencyError(
+                        'institution does not exist with id={}',
+                        institution_id)
+
+            # Delete entries in related tables.
+            for table in (institution_log, person_log):
+                conn.execute(table.delete().where(
+                    table.c.institution_id == institution_id))
+
+            # Finally delete the institution record.
+            result = conn.execute(stmt)
+
+            if result.rowcount != 1:
+                raise ConsistencyError(
+                    'no row matched deleting institution with id={}',
+                    institution_id)
 
     def delete_user(self, user_id, _test_skip_check=False):
         """
