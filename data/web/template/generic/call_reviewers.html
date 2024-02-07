@@ -58,7 +58,7 @@
         <th colspan="2">Actions</th>
     </tr>
     {% for proposal in proposals %}
-        {% set proposal_rowspan = proposal.reviewers | length + proposal.reviewers.n_with_note %}
+        {% set proposal_rowspan = 1 if not proposal.reviewers else (proposal.reviewers | length + proposal.reviewers.n_with_note) %}
         {% with reviewers = proposal.reviewers %}
             {% for reviewer in ((reviewers.values_in_role_order(facility_role_class) | list) if reviewers else [none]) %}
                 {% set reviewer_rowspan = 1 if reviewer.note is none else 2 %}
