@@ -380,6 +380,19 @@ li.separator:not(:first-child) {
     padding-top: 3ex;
 }
 
+legend {
+    font-variant: small-caps;
+}
+
+fieldset {
+    border: 1px solid #AAA;
+    border-radius: 1ex;
+}
+
+fieldset:not(:first-child) {
+    margin-top: 2ex;
+}
+
 figure {
     text-align: center;
 }

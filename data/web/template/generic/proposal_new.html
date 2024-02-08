@@ -53,72 +53,87 @@
             </select>
             {{ render_affiliation_tip(call.semester_id, call.type, call.queue_id, call.separate) }}
         </li>
-
-        <li class="separator">New proposal</li>
-        <li>
-            <label for="proposal_title">Proposal title</label>
-            <input type="text" name="proposal_title" value="{{ proposal_title }}" required="required" autofocus="autofocus" size="40" />
-        </li>
-        <li>
-            <input type="submit" name="submit_new" value="Create new proposal" />
-        </li>
-
-        {% if proposals %}
-            <li class="separator">Copy an existing proposal</li>
-            <li>
-                <label for="proposal_copy">Proposal</label>
-                <select name="proposal_copy" />
-                    {% for proposal in proposals.values() %}
-                        <option value="{{ proposal.id }}" {{ 'selected="selected"' | safe if proposal.id == proposal_copy }} data-queue_id="{{ proposal.queue_id }}">
-                            {{ proposal.code }}:
-                            {{ proposal.title | truncate(40, killwords=true, end='\u2026') }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </li>
-            <li>
-                <div class="explanation">
-                    Proposals are usually copied with you as the only member.
-                    However if you tick the &ldquo;previous members&rdquo; box,
-                    the system will send invitations to the members of the original proposal.
-                    This is not available when copying a proposal from a different queue.
-                </div>
-                <label for="member_copy">Previous members</label>
-                <input type="checkbox" name="member_copy" {{ 'checked="checked"' | safe if member_copy }} data-queue_id="{{ call.queue_id }}" />
-                <span class="checkboxlabel">Invite all members to the new proposal</span>
-            </li>
-            <li>
-                <input type="submit" name="submit_copy" value="Copy existing proposal" formnovalidate="formnovalidate" />
-            </li>
-        {% endif %}
-
-        {% if proposals_continuable %}
-            <li class="separator">Request continuation of an accepted proposal</li>
-            <li>
-                <div class="explanation">
-                    If approved observing for a previous proposal
-                    is as yet incomplete,
-                    you may request that the project be continued
-                    in the semester associated with this call.
-                    Please do not select this option if you wish
-                    to make any changes &mdash; a continuation request
-                    can only carry forward existing approved observing.
-                </div>
-                <label for="proposal_continuation">Proposal</label>
-                <select name="proposal_continuation" />
-                    {% for proposal in proposals_continuable.values() %}
-                        <option value="{{ proposal.id }}" {{ 'selected="selected"' | safe if proposal.id == proposal_continuation }}>
-                            {{ proposal.code }}:
-                            {{ proposal.title | truncate(40, killwords=true, end='\u2026') }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </li>
-            <li>
-                <input type="submit" name="submit_continue" value="Request continuation of proposal" formnovalidate="formnovalidate" />
-            </li>
-        {% endif %}
     </ol>
+
+    <fieldset>
+        <legend>New proposal</legend>
+
+        <ol>
+            <li>
+                <label for="proposal_title">Proposal title</label>
+                <input type="text" name="proposal_title" value="{{ proposal_title }}" autofocus="autofocus" size="40" />
+            </li>
+            <li>
+                <input type="submit" name="submit_new" value="Create new proposal" />
+            </li>
+        </ol>
+    </fieldset>
+
+    {% if proposals_continuable %}
+        <fieldset>
+            <legend>Request continuation of an accepted proposal</legend>
+
+            <ol>
+                <li>
+                    <div class="explanation">
+                        If approved observing for a previous proposal
+                        is as yet incomplete,
+                        you may request that the project be continued
+                        in the semester associated with this call.
+                        Please do not select this option if you wish
+                        to make any changes &mdash; a continuation request
+                        can only carry forward existing approved observing.
+                    </div>
+                    <label for="proposal_continuation">Proposal</label>
+                    <select name="proposal_continuation" />
+                        {% for proposal in proposals_continuable.values() %}
+                            <option value="{{ proposal.id }}" {{ 'selected="selected"' | safe if proposal.id == proposal_continuation }}>
+                                {{ proposal.code }}:
+                                {{ proposal.title | truncate(40, killwords=true, end='\u2026') }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </li>
+                <li>
+                    <input type="submit" name="submit_continue" value="Request continuation of proposal" />
+                </li>
+            </ol>
+        </fieldset>
+    {% endif %}
+
+    {% if proposals %}
+        <fieldset>
+            <legend>Copy an existing proposal</legend>
+
+            <ol>
+                <li>
+                    <label for="proposal_copy">Proposal</label>
+                    <select name="proposal_copy" />
+                        {% for proposal in proposals.values() %}
+                            <option value="{{ proposal.id }}" {{ 'selected="selected"' | safe if proposal.id == proposal_copy }} data-queue_id="{{ proposal.queue_id }}">
+                                {{ proposal.code }}:
+                                {{ proposal.title | truncate(40, killwords=true, end='\u2026') }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </li>
+                <li>
+                    <div class="explanation">
+                        Proposals are usually copied with you as the only member.
+                        However if you tick the &ldquo;previous members&rdquo; box,
+                        the system will send invitations to the members of the original proposal.
+                        This is not available when copying a proposal from a different queue.
+                    </div>
+                    <label for="member_copy">Previous members</label>
+                    <input type="checkbox" name="member_copy" {{ 'checked="checked"' | safe if member_copy }} data-queue_id="{{ call.queue_id }}" />
+                    <span class="checkboxlabel">Invite all members to the new proposal</span>
+                </li>
+                <li>
+                    <input type="submit" name="submit_copy" value="Copy existing proposal" />
+                </li>
+            </ol>
+        </fieldset>
+    {% endif %}
 </form>
 
 {% endblock %}
