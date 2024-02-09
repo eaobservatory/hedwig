@@ -349,6 +349,10 @@ form ol li div.explanation {
     color: #888;
 }
 
+div.explanation + div.explanation {
+    margin-top: 1ex;
+}
+
 form ol li span.explanation {
     font-style: italic;
     color: #888;
