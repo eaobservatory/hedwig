@@ -131,20 +131,17 @@ class JCMT(EAOFacility):
         be shown.
         """
 
-        if type_ is None:
-            pass
-
-        elif type_ == ProposalType.CONTINUATION:
+        if type_ == ProposalType.CONTINUATION:
             return [
                 'proposal_summary',
                 'proposal_previous',
                 'proposal_members',
                 'proposal_request',
+                'continuation_request',
                 'proposal_calculations',
-                'technical_case',
             ]
 
-        return [
+        order = [
             'proposal_summary',
             'proposal_abstract',
             'science_case',
@@ -155,6 +152,11 @@ class JCMT(EAOFacility):
             'technical_case',
             'proposal_previous',
         ]
+
+        if type_ is None:
+            order.append('continuation_request')
+
+        return order
 
     def get_observing_info(self):
         """

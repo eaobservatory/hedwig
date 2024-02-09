@@ -412,6 +412,40 @@
     </section>
 {% endblock %}
 
+{% block continuation_request %}
+    <section>
+        {% orderblocks continuation_request_order %}
+            {% block continuation_request_intro %}
+                <h2 id="cnrq_case">{{ proposal_order.continuation_request }}</h2>
+            {% endblock %}
+
+            {% block continuation_request_content %}
+                {% if cnrq_case.text is not none %}
+                    {{ cnrq_case.text | format_text }}
+                    {{ render_proposal_figures(cnrq_case.fig, proposal.id, cnrq_case.role, pdf_as_svg=current_user.options.pdf_as_svg) }}
+                {% elif cnrq_case.pdf is not none %}
+                    {{ render_proposal_pdf(cnrq_case.pdf, proposal.id, cnrq_case.role) }}
+                {% else %}
+                    <p class="missing">
+                        This proposal does not yet have a {{ cnrq_case.role | text_role_name(text_roles) | lower }}.
+                    </p>
+                {% endif %}
+
+                {% if can_edit %}
+                    <nav>
+                        <ol>
+                            <li><a href="{{ url_for('.case_edit', proposal_id=proposal.id, role=cnrq_case.role) }}">Edit {{ cnrq_case.role | text_role_name(text_roles) | lower }}</a></li>
+                        </ol>
+                    </nav>
+                {% endif %}
+            {% endblock %}
+
+            {% block continuation_request_extra %}
+            {% endblock %}
+        {% endorderblocks %}
+    </section>
+{% endblock %}
+
 {% block proposal_previous %}
     <section>
         <h2 id="prev_proposals">{{ proposal_order.proposal_previous }}</h2>

@@ -214,6 +214,7 @@ class Generic(
             'proposal_calculations',
             'technical_case',
             'science_case',
+            'continuation_request',
         ]
 
     def get_proposal_order_names(self, type_=None):
@@ -232,6 +233,7 @@ class Generic(
             'proposal_calculations': 'Calculation Results',
             'technical_case': 'Technical Justification',
             'science_case': 'Scientific Justification',
+            'continuation_request': 'Continuation Request',
         }
 
         return OrderedDict((

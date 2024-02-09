@@ -872,9 +872,13 @@ class GenericProposal(object):
                             url=make_publication_url(p.type, p.description))
                         for p in x.publications]),
                     links=self.make_proposal_info_urls(x.proposal_code))),
+            'text_roles': role_class,
         }
 
-        for role in (role_class.TECHNICAL_CASE, role_class.SCIENCE_CASE):
+        for role in (
+                role_class.TECHNICAL_CASE,
+                role_class.SCIENCE_CASE,
+                role_class.CONTINUATION_REQUEST):
             extra['{}_case'.format(role_class.get_code(role))] = {
                 'role': role,
                 'text': proposal_text.get_role(role, None),
@@ -903,6 +907,7 @@ class GenericProposal(object):
         pdf_sections = {
             'science_case': role_class.SCIENCE_CASE,
             'technical_case': role_class.TECHNICAL_CASE,
+            'continuation_request': role_class.CONTINUATION_REQUEST,
         }
 
         ctx = self.view_proposal_view(current_user, db, *args, **kwargs)
@@ -1200,7 +1205,8 @@ class GenericProposal(object):
 
         for (role, role_section) in (
                 (role_class.TECHNICAL_CASE, 'technical_case'),
-                (role_class.SCIENCE_CASE, 'science_case')):
+                (role_class.SCIENCE_CASE, 'science_case'),
+                (role_class.CONTINUATION_REQUEST, 'continuation_request')):
             with report.accumulate_notes(role_section) as messages:
                 if role_section not in proposal_order:
                     raise SkipSection()
@@ -2277,7 +2283,9 @@ class GenericProposal(object):
         figures = db.search_proposal_figure(
             proposal_id=proposal.id, role=role)
 
-        if role == role_class.TECHNICAL_CASE:
+        if role in (
+                role_class.TECHNICAL_CASE,
+                role_class.CONTINUATION_REQUEST):
             calculations = self._prepare_calculations(
                 db.search_calculation(proposal_id=proposal.id))
         else:

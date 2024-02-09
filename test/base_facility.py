@@ -81,6 +81,7 @@ class FacilityTestCase(DBTestCase):
         self.assertIsInstance(self.view.get_target_tool_classes(), tuple)
 
         order_expected = [
+            'continuation_request',
             'proposal_abstract',
             'proposal_calculations',
             'proposal_members',
@@ -92,16 +93,16 @@ class FacilityTestCase(DBTestCase):
             'technical_case',
         ]
 
-        # Proposal order should contain all section if type unspecified,
-        # and currently contains all sections if standard.
-        for proposal_type in (None, ProposalType.STANDARD):
+        # Proposal order should contain all section if type unspecified.
+        for proposal_type in (None,):
             proposal_order = self.view.get_proposal_order(type_=proposal_type)
             self.assertIsInstance(proposal_order, list)
             self.assertEqual(sorted(proposal_order), order_expected)
 
         # Ordering for other proposal types should contain a selection of the
         # full list of sections.
-        for proposal_type in (ProposalType.CONTINUATION,):
+        for proposal_type in (
+                ProposalType.STANDARD, ProposalType.CONTINUATION):
             proposal_order = self.view.get_proposal_order(type_=proposal_type)
             self.assertIsInstance(proposal_order, list)
             for order_entry in proposal_order:
