@@ -145,6 +145,28 @@
                     <textarea name="prev_prop_note" cols="40" rows="5">{{ call.prev_prop_note }}</textarea>
                 </li>
             {% endblock %}
+            {% block continuation_request %}
+                <li class="separator">Continuation request</li>
+                <li>
+                    <label for="cnrq_note">Continuation request note</label>
+                    <textarea name="cnrq_note" cols="40" rows="5">{{ call.cnrq_note }}</textarea>
+                </li>
+                <li>
+                    <label for="cnrq_word_lim">Continuation word limit</label>
+                    <input type="number" name="cnrq_word_lim" value="{{ call.cnrq_word_lim }}" min="0" step="100" size="5" />
+                    <span class="explanation">when edited online</span>
+                </li>
+                <li>
+                    <label for="cnrq_fig_lim">Continuation figure limit</label>
+                    <input type="number" name="cnrq_fig_lim" value="{{ call.cnrq_fig_lim }}" min="0" step="1" size="5" />
+                    <span class="explanation">when edited online</span>
+                </li>
+                <li>
+                    <label for="cnrq_page_lim">Continuation page limit</label>
+                    <input type="number" name="cnrq_page_lim" value="{{ call.cnrq_page_lim }}" min="0" step="1" size="5" />
+                    <span class="explanation">for PDF uploads</span>
+                </li>
+            {% endblock %}
         {% endorderblocks %}
         <li class="separator">Additional options</li>
         <li>

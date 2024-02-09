@@ -433,7 +433,11 @@ class GenericAdmin(object):
                 multi_semester=('multi_semester' in form),
                 separate=('separate' in form),
                 hidden=('hidden' in form),
-                allow_continuation=('allow_continuation' in form))
+                allow_continuation=('allow_continuation' in form),
+                cnrq_note=form['cnrq_note'],
+                cnrq_word_lim=int(form['cnrq_word_lim']),
+                cnrq_fig_lim=int(form['cnrq_fig_lim']),
+                cnrq_page_lim=int(form['cnrq_page_lim']))
 
             if call.separate and (form['preamble'] != ''):
                 call = call._replace(
@@ -490,7 +494,11 @@ class GenericAdmin(object):
                         preamble=call.preamble,
                         preamble_format=call.preamble_format,
                         hidden=call.hidden,
-                        allow_continuation=call.allow_continuation)
+                        allow_continuation=call.allow_continuation,
+                        cnrq_note=call.cnrq_note,
+                        cnrq_word_lim=call.cnrq_word_lim,
+                        cnrq_fig_lim=call.cnrq_fig_lim,
+                        cnrq_page_lim=call.cnrq_page_lim)
 
                     # Update information in the call named tuple in case of a
                     # later error so that we have to show the edit page again.
@@ -524,7 +532,11 @@ class GenericAdmin(object):
                         preamble=call.preamble,
                         preamble_format=call.preamble_format,
                         hidden=call.hidden,
-                        allow_continuation=call.allow_continuation)
+                        allow_continuation=call.allow_continuation,
+                        cnrq_note=call.cnrq_note,
+                        cnrq_word_lim=call.cnrq_word_lim,
+                        cnrq_fig_lim=call.cnrq_fig_lim,
+                        cnrq_page_lim=call.cnrq_page_lim)
 
                     flash_message = 'The call has been updated.'
 

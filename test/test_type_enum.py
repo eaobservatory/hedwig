@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -565,7 +565,8 @@ class EnumTypeTestCase(TestCase):
             BaseTextRole.url_path(BaseTextRole.TOOL_NOTE)
 
         self.assertEqual(
-            BaseTextRole.get_url_paths(), ['technical', 'scientific'])
+            BaseTextRole.get_url_paths(),
+            ['technical', 'scientific', 'continuation'])
 
         self.assertEqual(BaseTextRole.by_url_path('scientific'),
                          BaseTextRole.SCIENCE_CASE)

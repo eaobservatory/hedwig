@@ -120,7 +120,7 @@
         {% endblock %}
         {% block proposal_previous %}
             <tr>
-                <th>Previous proposals</th>
+                <th>Previous Proposals</th>
                 <td>
                     {% if call.prev_prop_note %}
                         {{ call.prev_prop_note | format_text(call.note_format) }}
@@ -128,6 +128,27 @@
                         <p class="missing">Note has not been entered.</p>
                     {% endif %}
                 </td>
+            </tr>
+        {% endblock %}
+        {% block continuation_request %}
+            <tr>
+                <th rowspan="4">Continuation Request</th>
+                <td>
+                    {% if call.cnrq_note %}
+                        {{ call.cnrq_note | format_text(call.note_format) }}
+                    {% else %}
+                        <p class="missing">Note has not been entered.</p>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td>{{ call.cnrq_word_lim }} word{% if call.cnrq_word_lim != 1 %}s{% endif %}</td>
+            </tr>
+            <tr>
+                <td>{{ call.cnrq_fig_lim }} figure{% if call.cnrq_fig_lim != 1 %}s{% endif %}</td>
+            </tr>
+            <tr>
+                <td>{{ call.cnrq_page_lim }} page{% if call.cnrq_page_lim != 1 %}s{% endif %}</td>
             </tr>
         {% endblock %}
     {% endorderblocks %}

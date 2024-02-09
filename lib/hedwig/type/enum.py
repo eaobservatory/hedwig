@@ -1217,19 +1217,22 @@ class BaseTextRole(EnumBasic, EnumCode, EnumURLPath):
     TECHNICAL_CASE = 2
     SCIENCE_CASE = 3
     TOOL_NOTE = 4
+    CONTINUATION_REQUEST = 5
 
     RoleInfo = namedtuple('RoleInfo', ('name', 'code', 'url_path'))
 
     #                Name                        Code    Path
     _info = {
-        ABSTRACT:
-            RoleInfo('Abstract',                 'abst', None),
-        TECHNICAL_CASE:
-            RoleInfo('Technical Justification',  'tech', 'technical'),
-        SCIENCE_CASE:
-            RoleInfo('Scientific Justification', 'sci',  'scientific'),
-        TOOL_NOTE:
-            RoleInfo('Note on Tool Results',     'tool', None),
+        ABSTRACT: RoleInfo(
+            'Abstract',                          'abst', None),
+        TECHNICAL_CASE: RoleInfo(
+            'Technical Justification',           'tech', 'technical'),
+        SCIENCE_CASE: RoleInfo(
+            'Scientific Justification',          'sci',  'scientific'),
+        TOOL_NOTE: RoleInfo(
+            'Note on Tool Results',              'tool', None),
+        CONTINUATION_REQUEST: RoleInfo(
+            'Continuation Request Description',  'cnrq', 'continuation'),
     }
 
 

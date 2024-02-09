@@ -185,6 +185,10 @@ call = Table(
     Column('preamble_format', Integer, nullable=True),
     Column('hidden', Boolean, default=False, nullable=False),
     Column('allow_continuation', Boolean, default=False, nullable=False),
+    Column('cnrq_note', UnicodeText, nullable=False),
+    Column('cnrq_word_lim', Integer, nullable=False),
+    Column('cnrq_fig_lim', Integer, nullable=False),
+    Column('cnrq_page_lim', Integer, nullable=False),
     UniqueConstraint('semester_id', 'queue_id', 'type'),
     **table_opts)
 

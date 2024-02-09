@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -195,7 +195,8 @@ class Generic(
             sci_word_lim=2000, sci_fig_lim=4, sci_page_lim=3,
             capt_word_lim=200, expl_word_lim=200,
             tech_note='', sci_note='', prev_prop_note='',
-            note_format=FormatType.PLAIN)
+            note_format=FormatType.PLAIN,
+            cnrq_note='', cnrq_word_lim=500, cnrq_fig_lim=4, cnrq_page_lim=1)
 
     def get_proposal_order(self, type_=None):
         """

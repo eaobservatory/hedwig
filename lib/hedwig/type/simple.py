@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -252,6 +252,7 @@ Proposal = namedtuple(
         'sci_word_lim', 'sci_fig_lim', 'sci_page_lim',
         'capt_word_lim', 'expl_word_lim',
         'date_close', 'multi_semester',
+        'cnrq_word_lim', 'cnrq_fig_lim', 'cnrq_page_lim',
         'has_decision',
         'decision_accept', 'decision_exempt', 'decision_ready',
         'decision_note', 'decision_note_format',

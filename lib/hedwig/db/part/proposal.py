@@ -93,6 +93,7 @@ class ProposalPart(object):
                  tech_note, sci_note, prev_prop_note, note_format,
                  multi_semester, separate, preamble, preamble_format, hidden,
                  allow_continuation,
+                 cnrq_note, cnrq_word_lim, cnrq_fig_lim, cnrq_page_lim,
                  _test_skip_check=False):
         """
         Add a call for proposals to the database.
@@ -159,6 +160,10 @@ class ProposalPart(object):
                 call.c.preamble_format: preamble_format,
                 call.c.hidden: hidden,
                 call.c.allow_continuation: allow_continuation,
+                call.c.cnrq_note: cnrq_note,
+                call.c.cnrq_word_lim: cnrq_word_lim,
+                call.c.cnrq_fig_lim: cnrq_fig_lim,
+                call.c.cnrq_page_lim: cnrq_page_lim,
             }))
 
         return result.inserted_primary_key[0]
@@ -1156,7 +1161,8 @@ class ProposalPart(object):
         fields_exclude = set()
 
         if not with_case_notes:
-            fields_exclude.update(('tech_note', 'sci_note', 'prev_prop_note'))
+            fields_exclude.update((
+                'tech_note', 'sci_note', 'prev_prop_note', 'cnrq_note'))
 
         if not with_preamble:
             fields_exclude.update(('preamble',))
@@ -1776,6 +1782,9 @@ class ProposalPart(object):
             call.c.expl_word_lim,
             call.c.date_close,
             call.c.multi_semester,
+            call.c.cnrq_word_lim,
+            call.c.cnrq_fig_lim,
+            call.c.cnrq_page_lim,
         ]
 
         select_from = proposal.join(call).join(semester).join(queue)
@@ -3093,7 +3102,8 @@ class ProposalPart(object):
                     tech_note=None, sci_note=None, prev_prop_note=None,
                     note_format=None, multi_semester=None, separate=None,
                     preamble=(), preamble_format=(), hidden=None,
-                    allow_continuation=None,
+                    allow_continuation=None, cnrq_note=None,
+                    cnrq_word_lim=None, cnrq_fig_lim=None, cnrq_page_lim=None,
                     _test_skip_check=False):
         """
         Update a call for proposals record.
@@ -3133,6 +3143,14 @@ class ProposalPart(object):
             values['sci_note'] = sci_note
         if prev_prop_note is not None:
             values['prev_prop_note'] = prev_prop_note
+        if cnrq_note is not None:
+            values['cnrq_note'] = cnrq_note
+        if cnrq_word_lim is not None:
+            values['cnrq_word_lim'] = cnrq_word_lim
+        if cnrq_fig_lim is not None:
+            values['cnrq_fig_lim'] = cnrq_fig_lim
+        if cnrq_page_lim is not None:
+            values['cnrq_page_lim'] = cnrq_page_lim
         if note_format is not None:
             if not FormatType.is_valid(note_format, is_system=True):
                 raise UserError('Note text format not recognised.')

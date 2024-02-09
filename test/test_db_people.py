@@ -1256,7 +1256,7 @@ class DBPeopleTest(DBTestCase):
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             100, 1000, 0, 1, 2000, 4, 3, 100, 100,
             '', '', '', FormatType.PLAIN, False, False, None, None, False,
-            False)
+            False, '', 500, 4, 1)
         affiliation_id = self.db.add_affiliation(
             BaseAffiliationType, queue_id, 'Aff/n 1')
         proposal_id = self.db.add_proposal(call_id, person_id,

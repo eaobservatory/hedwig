@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -111,7 +111,7 @@ class DBTestCase(DummyConfigTestCase):
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             100, 1000, 0, 1, 2000, 4, 3, 100, 100,
             '', '', '', FormatType.PLAIN, False, False, None, None, False,
-            False)
+            False, '', 500, 4, 1)
         self.assertIsInstance(call_id, int)
 
         affiliations = self.db.search_affiliation(queue_id=queue_id)
@@ -136,7 +136,8 @@ class DBTestCase(DummyConfigTestCase):
             BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', '',
-            FormatType.PLAIN, False, False, None, None, False, False)
+            FormatType.PLAIN, False, False, None, None, False, False,
+            '', 500, 4, 1)
         affiliation_id = self.db.add_affiliation(
             BaseAffiliationType, queue_id, 'test')
         person_id = self.db.add_person('Test Person')

@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2023 East Asian Observatory
+# Copyright (C) 2016-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -86,7 +86,8 @@ class WebAppAuthTestCase(WebAppTestCase):
             type_class.STANDARD,
             datetime(1999, 9, 1), datetime(1999, 9, 30),
             100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', '',
-            FormatType.PLAIN, False, False, None, None, False, False)
+            FormatType.PLAIN, False, False, None, None, False, False,
+            '', 500, 4, 1)
 
         call_a = self.db.add_call(
             type_class, semester_id, queue_a, *call_options)
