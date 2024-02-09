@@ -190,10 +190,10 @@ class Generic(
 
         return null_tuple(Call)._replace(
             semester_name='', queue_name='',
-            abst_word_lim=200,
-            tech_word_lim=1000, tech_fig_lim=0, tech_page_lim=1,
-            sci_word_lim=2000, sci_fig_lim=4, sci_page_lim=3,
-            capt_word_lim=200, expl_word_lim=200,
+            abst_word_lim=120,
+            tech_word_lim=500, tech_fig_lim=2, tech_page_lim=1,
+            sci_word_lim=1500, sci_fig_lim=4, sci_page_lim=3,
+            capt_word_lim=120, expl_word_lim=120,
             tech_note='', sci_note='', prev_prop_note='',
             note_format=FormatType.PLAIN,
             cnrq_note='', cnrq_word_lim=500, cnrq_fig_lim=4, cnrq_page_lim=1)
