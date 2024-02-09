@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -446,7 +446,7 @@ def create_facility_blueprint(db, facility):
     @facility_template('figure_edit.html')
     def case_new_figure(current_user, proposal_id, role):
         return facility.view_case_edit_figure(
-            current_user, db, proposal_id, None, role,
+            current_user, db, proposal_id, role, None,
             (request.form if request.method == 'POST' else None),
             (request.files['file'] if request.method == 'POST' else None))
 
@@ -457,7 +457,7 @@ def create_facility_blueprint(db, facility):
     @facility_template('figure_edit.html')
     def case_edit_figure(current_user, proposal_id, role, fig_id):
         return facility.view_case_edit_figure(
-            current_user, db, proposal_id, fig_id, role,
+            current_user, db, proposal_id, role, fig_id,
             (request.form if request.method == 'POST' else None),
             (request.files['file'] if request.method == 'POST' else None))
 

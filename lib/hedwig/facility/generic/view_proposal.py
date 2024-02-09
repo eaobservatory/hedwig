@@ -54,7 +54,7 @@ from ...web.util import ErrorPage, HTTPError, HTTPForbidden, \
     HTTPNotFound, HTTPRedirect, \
     flash, get_logger, url_for
 from ...view.util import count_words, int_or_none, \
-    with_proposal
+    with_proposal, with_relevant_text_role
 
 CalculationExtra = namedtuple(
     'CalculationExtra', Calculation._fields + (
@@ -2237,8 +2237,9 @@ class GenericProposal(object):
         raise ErrorPage('Observing request not implemented for this facility.')
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_case_edit(self, current_user, db, proposal, can, role):
-        role_class = self.get_text_roles()
+    @with_relevant_text_role
+    def view_case_edit(
+            self, current_user, db, proposal, can, role_class, role):
         code = role_class.get_code(role)
         call = db.get_call(facility_id=None, call_id=proposal.call_id)
 
@@ -2276,8 +2277,9 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_case_edit_text(self, current_user, db, proposal, can, role, form):
-        role_class = self.get_text_roles()
+    @with_relevant_text_role
+    def view_case_edit_text(
+            self, current_user, db, proposal, can, role_class, role, form):
         code = role_class.get_code(role)
 
         figures = db.search_proposal_figure(
@@ -2299,9 +2301,10 @@ class GenericProposal(object):
             url_for('.case_edit', proposal_id=proposal.id, role=role))
 
     @with_proposal(permission=PermissionType.EDIT)
+    @with_relevant_text_role
     def view_case_edit_figure(
-            self, current_user, db, proposal, can, fig_id, role, form, file_):
-        role_class = self.get_text_roles()
+            self, current_user, db, proposal, can, role_class, role,
+            fig_id, form, file_):
         code = role_class.get_code(role)
         name = role_class.get_name(role)
         fig_limit = getattr(proposal, code + '_fig_lim')
@@ -2458,9 +2461,9 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.EDIT)
+    @with_relevant_text_role
     def view_case_manage_figure(
-            self, current_user, db, proposal, can, role, form):
-        role_class = self.get_text_roles()
+            self, current_user, db, proposal, can, role_class, role, form):
         name = role_class.get_name(role)
 
         return self._view_manage_figure(
@@ -2568,8 +2571,9 @@ class GenericProposal(object):
             raise HTTPError('Unknown figure view type.')
 
     @with_proposal(permission=PermissionType.EDIT)
-    def view_case_edit_pdf(self, current_user, db, proposal, can, role, file):
-        role_class = self.get_text_roles()
+    @with_relevant_text_role
+    def view_case_edit_pdf(
+            self, current_user, db, proposal, can, role_class, role, file):
         code = role_class.get_code(role)
         name = role_class.get_name(role)
         page_limit = getattr(proposal, code + '_page_lim')

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -659,11 +659,13 @@ class JCMTTextRole(BaseTextRole):
 
     RoleInfo = BaseTextRole.RoleInfo
 
-    #                Name                        Code    Path
+    #       Name
+    #       Code    Path            Section
     _info = BaseTextRole._info.copy()
     _info.update({
-        PR_SUMMARY:
-            RoleInfo('Public Summary',           'pr',   None),
+        PR_SUMMARY: RoleInfo(
+            'Public Summary',
+            'pr',   None,           None),
     })
 
 

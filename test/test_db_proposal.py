@@ -1228,8 +1228,10 @@ class DBProposalTest(DBTestCase):
     def test_proposal_text(self):
         # "Define" extra text roles for the purpose of testing this
         # method before multiple roles are implemented.
-        BaseTextRole._info[40] = BaseTextRole.RoleInfo('Role 40', 'r40', None)
-        BaseTextRole._info[41] = BaseTextRole.RoleInfo('Role 41', 'r41', None)
+        BaseTextRole._info[40] = BaseTextRole.RoleInfo(
+            'Role 40', 'r40', None, None)
+        BaseTextRole._info[41] = BaseTextRole.RoleInfo(
+            'Role 41', 'r41', None, None)
 
         (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
         person_id = self.db.add_person('Person 1')

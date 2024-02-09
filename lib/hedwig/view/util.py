@@ -349,6 +349,46 @@ def with_proposal(
     return decorator
 
 
+def with_relevant_text_role(f):
+    """
+    Decorator to fetch the facility text role class.
+
+    Assumes that the argument list contains the proposal (as set up by
+    `with_proposal` followed by the role identifier.  Gets the facility's
+    text role class and proposal section order for the type of the
+    given proposal.  If the text role has a specified proposal section,
+    and that section is not part of the given proposal, raises an
+    `HTTPNotFound` exception.
+
+    Adds the role class to the argument list, just before the role.
+    (It currently does this rather than replacing the role argument
+    with the role info because some existing view methods interact with
+    the role class itself.)
+
+    Note: this currently can only be used to decorate methods of
+    facility classes because it uses facility methods.
+    """
+
+    @functools.wraps(f)
+    def decorated(
+            self, current_user, db, proposal, can, role,
+            *args, **kwargs):
+        role_class = self.get_text_roles()
+        order = self.get_proposal_order(type_=proposal.type)
+
+        section = role_class.get_info(role).proposal_section
+        if (section is not None) and (section not in order):
+            raise HTTPNotFound(
+                'A {} is not required for proposals of this type.'.format(
+                    role_class.get_name(role).lower()))
+
+        return f(
+            self, current_user, db, proposal, can, role_class, role,
+            *args, **kwargs)
+
+    return decorated
+
+
 def with_review(
         permission, with_invitation=False, with_note=False,
         with_acceptance=False,

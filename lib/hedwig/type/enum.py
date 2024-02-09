@@ -1211,6 +1211,11 @@ class BaseTextRole(EnumBasic, EnumCode, EnumURLPath):
 
     It is recommended that facility-specific subclasses allocate higher
     identifier numbers for facility-specific roles, e.g. numbers above 100.
+
+    A role can specify the `proposal_section` in which the text will
+    appear.  In the case of roles with an `url_path` (for which editing
+    routes will be estabilished), this allows checking of whether the
+    role is relevant to a given type of proposal.
     """
 
     ABSTRACT = 1
@@ -1219,20 +1224,27 @@ class BaseTextRole(EnumBasic, EnumCode, EnumURLPath):
     TOOL_NOTE = 4
     CONTINUATION_REQUEST = 5
 
-    RoleInfo = namedtuple('RoleInfo', ('name', 'code', 'url_path'))
+    RoleInfo = namedtuple('RoleInfo', (
+        'name', 'code', 'url_path', 'proposal_section'))
 
-    #                Name                        Code    Path
+    #       Name
+    #       Code    Path            Section
     _info = {
         ABSTRACT: RoleInfo(
-            'Abstract',                          'abst', None),
+            'Abstract',
+            'abst', None,           None),
         TECHNICAL_CASE: RoleInfo(
-            'Technical Justification',           'tech', 'technical'),
+            'Technical Justification',
+            'tech', 'technical',    'technical_case'),
         SCIENCE_CASE: RoleInfo(
-            'Scientific Justification',          'sci',  'scientific'),
+            'Scientific Justification',
+            'sci',  'scientific',   'science_case'),
         TOOL_NOTE: RoleInfo(
-            'Note on Tool Results',              'tool', None),
+            'Note on Tool Results',
+            'tool', None,           None),
         CONTINUATION_REQUEST: RoleInfo(
-            'Continuation Request Description',  'cnrq', 'continuation'),
+            'Continuation Request Description',
+            'cnrq', 'continuation', 'continuation_request'),
     }
 
 
