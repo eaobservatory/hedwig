@@ -92,6 +92,16 @@ td.total.percentage {
     font-size: smaller;
 }
 
+td.total.remaining {
+    font-weight: normal;
+    color: #F44;
+    font-size: smaller;
+}
+
+td.total.remaining span.negative {
+    color: #0A0;
+}
+
 td.grandtotal {
     background: #BBB;
     font-weight: bold;

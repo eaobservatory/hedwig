@@ -11,17 +11,21 @@
     {% endfor %}
 {% endmacro %}
 
-{% macro render_affiliation_totals(affiliations, affiliation_totals, percentage_of=none) %}
+{% macro render_affiliation_totals(affiliations, affiliation_totals, percentage_of=none, remaining_from=none) %}
     {% for affiliation in affiliations %}
-        <td {{ combined_class(('number_right total', true), ('percentage', percentage_of is not none), ('spacer_left', loop.first)) | safe }}>
+        <td {{ combined_class(('number_right total', true), ('percentage', percentage_of is not none), ('remaining', remaining_from is not none), ('spacer_left', loop.first)) | safe }}>
             {% if affiliation.id in affiliation_totals %}
-                {% if percentage_of is none %}
+                {% if percentage_of is none and remaining_from is none %}
                     {{ affiliation_totals[affiliation.id] | fmt('{:.1f}') }}
-                {% elif affiliation.id in percentage_of and percentage_of[affiliation.id] %}
+                {% elif percentage_of is not none and affiliation.id in percentage_of and percentage_of[affiliation.id] %}
                     {{ (100 * affiliation_totals[affiliation.id] / percentage_of[affiliation.id]) | fmt('{:.0f}%') }}
+                {% elif remaining_from is not none and affiliation.id in remaining_from and remaining_from[affiliation.id] %}
+                    {{ (remaining_from[affiliation.id] - affiliation_totals[affiliation.id]) | fmt_neg('{:.1f}') }}
                 {% else %}
                     &mdash;
                 {% endif %}
+            {% elif remaining_from is not none and affiliation.id in remaining_from and remaining_from[affiliation.id] %}
+                {{ remaining_from[affiliation.id] | fmt('{:.1f}') }}
             {% else %}
                 &nbsp;
             {% endif %}
@@ -279,6 +283,13 @@
             {% block footer_accepted_percentage_extra %}
             {% endblock %}
             {{ render_affiliation_totals(affiliations, affiliation_accepted, percentage_of=affiliation_available) }}
+        </tr>
+        <tr>
+            <th colspan="5">Time remaining (hours)</th>
+            <td colspan="4" class="total spacer_left">&nbsp;</td>
+            {% block footer_remaining_extra %}
+            {% endblock %}
+            {{ render_affiliation_totals(affiliations, affiliation_accepted, remaining_from=affiliation_available) }}
         </tr>
         <tr class="spacer_above">
             <th colspan="5">Time available (hours)</th>
