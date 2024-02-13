@@ -187,6 +187,24 @@ def register_template_utils(app):
         return format_.format(value)
 
     @app.template_filter()
+    def fmt_neg(value, format_):
+        """
+        Format the value using the given format, as `fmt` for a single
+        value, but if the value is negative, wrap in a span.negative element
+        and add a minus entity.
+        """
+
+        if value is None or isinstance(value, Undefined):
+            return ''
+
+        if value < 0:
+            return Markup('<span class="negative">&minus;') \
+                + format_.format(- value) \
+                + Markup('</span>')
+
+        return format_.format(value)
+
+    @app.template_filter()
     def fmt_max_dp(value, digits):
         """
         Format a number using :class:`~hedwig.util.FormatMaxDP`.

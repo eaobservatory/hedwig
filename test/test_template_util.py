@@ -152,6 +152,15 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(f(40, '<{}>'), '<40>')
         self.assertEqual(f((30, 40), '<{}, {}>'), '<30, 40>')
 
+    def test_filter_fmt_neg(self):
+        f = self.app.jinja_env.filters['fmt_neg']
+
+        self.assertEqual(f(None, '{}'), '')
+        self.assertEqual(f(123.45, '{:.1f}'), '123.5')
+        self.assertEqual(
+            f(-123.45, '{:.1f}'),
+            '<span class="negative">&minus;123.5</span>')
+
     def test_filter_fmt_max_dp(self):
         f = self.app.jinja_env.filters['fmt_max_dp']
 
