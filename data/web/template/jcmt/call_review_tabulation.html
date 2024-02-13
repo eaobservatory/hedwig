@@ -124,6 +124,18 @@
     {% endfor %}
 {% endmacro %}
 
+{% macro render_jcmt_blank_request(is_total=false) %}
+    {% for weather in (jcmt_weathers.keys(), [none]) | chain %}
+        <td {{ render_cell_class(is_total, loop.first) }}>&nbsp;</td>
+    {% endfor %}
+    {% for instrument in (jcmt_instruments.keys(), [none]) | chain %}
+        <td {{ render_cell_class(is_total, loop.first) }}>&nbsp;</td>
+    {% endfor %}
+    {% for affiliation in affiliations %}
+        <td {{ render_cell_class(is_total, loop.first) }}>&nbsp;</td>
+    {% endfor %}
+{% endmacro %}
+
 {% block row_extra %}
     <td {{ render_cell_class(false, false) }}>
         {% if proposal.jcmt_allocation_different %}
@@ -191,6 +203,18 @@
         {% endfor %}
     </tr>
     <tr>
+        <th colspan="5">Total accepted expanding partner program (percentage)</th>
+        <td colspan="4" class="total spacer_left">&nbsp;</td>
+        <td colspan="2" {{ render_cell_class(true, false, is_percentage=true) }}>
+            {% if jcmt_available_expanding %}
+                {{ (100 * jcmt_accepted_expanding.total / jcmt_available_expanding) | fmt('{:.0f}%') }}
+            {% else %}
+                &mdash;
+            {% endif %}
+        </td>
+        {{ render_jcmt_blank_request(is_total=true) }}
+    </tr>
+    <tr>
         <th colspan="5">Total accepted non-expanding partner program (hours)</th>
         <td colspan="4" class="total spacer_left">&nbsp;</td>
         <td colspan="2" {{ render_cell_class(true, false) }}>{{ jcmt_accepted_non_expanding.total | fmt('{:.1f}') }}</td>
@@ -198,6 +222,18 @@
         {% for affiliation in affiliations %}
             <td {{ combined_class(('total', true), ('spacer_left', loop.first)) | safe }}>&nbsp;</td>
         {% endfor %}
+    </tr>
+    <tr>
+        <th colspan="5">Total accepted non-expanding partner program (percentage)</th>
+        <td colspan="4" class="total spacer_left">&nbsp;</td>
+        <td colspan="2" {{ render_cell_class(true, false, is_percentage=true) }}>
+            {% if jcmt_available_non_expanding %}
+                {{ (100 * jcmt_accepted_non_expanding.total / jcmt_available_non_expanding) | fmt('{:.0f}%') }}
+            {% else %}
+                &mdash;
+            {% endif %}
+        </td>
+        {{ render_jcmt_blank_request(is_total=true) }}
     </tr>
 {% endblock %}
 

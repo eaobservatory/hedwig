@@ -939,6 +939,8 @@ class JCMT(EAOFacility):
 
         total_weight = 0.0
         available_affiliation = {}
+        available_total_expanding = 0.0
+        available_total_non_expanding = 0.0
 
         for affiliation in tabulation['affiliations']:
             if (affiliation.id == 0) or (affiliation.weight is None):
@@ -946,7 +948,13 @@ class JCMT(EAOFacility):
 
             total_weight += affiliation.weight
             available_affiliation[affiliation.id] = \
+                available_this_affiliation = \
                 available.total_non_free * affiliation.weight / 100.0
+
+            if affiliation.type == affiliation_type_class.EXPANDING:
+                available_total_expanding += available_this_affiliation
+            else:
+                available_total_non_expanding += available_this_affiliation
 
         # Assign the remaining time to the "Unknown" affiliation.
         available_affiliation[0] = \
@@ -966,6 +974,8 @@ class JCMT(EAOFacility):
             'jcmt_request_total': total,
             'jcmt_request_original': original,
             'jcmt_available': available,
+            'jcmt_available_expanding': available_total_expanding,
+            'jcmt_available_non_expanding': available_total_non_expanding,
             'affiliation_accepted': accepted_affiliation,
             'affiliation_available': available_affiliation,
             'affiliation_total': total_affiliation,
