@@ -294,7 +294,7 @@
         {% if targets %}
             <nav>
                 <ol>
-                    <li><a href="{{ url_for('.target_download', proposal_id=proposal.id) }}">Download target list</a></li>
+                    <li><a href="{{ url_for('.target_download', proposal_id=proposal.id) }}"><span class="fa-solid fa-download"></span>Download target list</a></li>
                 </ol>
             </nav>
         {% endif %}

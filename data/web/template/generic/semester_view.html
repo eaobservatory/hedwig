@@ -48,7 +48,7 @@
 
                     <nav>
                         <ol>
-                            <li><a id="preamble_edit_{{ type_num }}" href="{{ url_for('.call_preamble_edit', semester_id=semester.id, call_type=type_num) }}">{{ 'Add' if preamble is none else 'Edit' }} preamble</a></li>
+                            <li><a id="preamble_edit_{{ type_num }}" href="{{ url_for('.call_preamble_edit', semester_id=semester.id, call_type=type_num) }}"><span class="fa-solid fa-pencil"></span>{{ 'Add' if preamble is none else 'Edit' }} preamble</a></li>
                         </ol>
                     </nav>
                 {% endwith %}

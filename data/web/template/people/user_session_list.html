@@ -35,7 +35,7 @@
                     {% if current_user.auth_token_id == user_session.id %}
                         <span class="label">this session</span>
                     {% else %}
-                        <a href="{{ url_for('.user_session_log_out', auth_token_id=user_session.id) }}">Log out</a>
+                        <a href="{{ url_for('.user_session_log_out', auth_token_id=user_session.id) }}"><span class="fa-solid fa-user-slash"></span>Log out</a>
                     {% endif %}
                 </td>
             </tr>
@@ -44,7 +44,7 @@
 
     <nav>
         <p>
-            <a href="{{ url_for('.user_session_log_out_all') }}">Log out all</a></td>
+            <a href="{{ url_for('.user_session_log_out_all') }}"><span class="fa-solid fa-users-slash"></span>Log out all</a></td>
         </p>
     </nav>
 {% else %}
