@@ -52,11 +52,11 @@
 {% block calculator_proposal_link %}
     {% if for_reviewer_id is not none %}
         <p>
-            <a href="{{ url_for('.review_edit', reviewer_id=for_reviewer_id, _anchor="calculations") }}">Back to review</a>
+            <a href="{{ url_for('.review_edit', reviewer_id=for_reviewer_id, _anchor="calculations") }}"><span class="fa-solid fa-arrow-left"></span>Back to review</a>
         </p>
     {% elif for_proposal_id is not none %}
         <p>
-            <a href="{{ url_for('.proposal_view', proposal_id=for_proposal_id, _anchor="calculations") }}">Back to proposal</a>
+            <a href="{{ url_for('.proposal_view', proposal_id=for_proposal_id, _anchor="calculations") }}"><span class="fa-solid fa-arrow-left"></span>Back to proposal</a>
         </p>
     {% endif %}
 {% endblock %}
@@ -94,7 +94,7 @@
 
             {% if query_encoded is not none %}
                 <p>
-                    <a href="{{ url_for((calculator_code, modes[current_mode].code) | fmt('.calc_{}_{}'), query=query_encoded, _external=true) }}" id="perm_query_link">Link to this calculation</a>
+                    <a href="{{ url_for((calculator_code, modes[current_mode].code) | fmt('.calc_{}_{}'), query=query_encoded, _external=true) }}" id="perm_query_link"><span class="fa-solid fa-link"></span>Link to this calculation</a>
                 </p>
             {% endif %}
         </section>

@@ -22,7 +22,7 @@
     {% if can_edit %}
         <nav>
             <ol>
-                <li><a href="{{ url_for('.title_edit', proposal_id=proposal.id) }}">Edit title</a></li>
+                <li><a href="{{ url_for('.title_edit', proposal_id=proposal.id) }}"><span class="fa-solid fa-pencil"></span>Edit title</a></li>
             </ol>
         </nav>
     {% endif %}
@@ -74,10 +74,10 @@
                             {% endif %}
                         {% elif (can_view_review or can_view_feedback) %}
                             {% if can_view_review %}
-                                <li><a id="view_review_link" href="{{ url_for('.proposal_reviews', proposal_id=proposal.id) }}">View{{ '/edit' if can_edit_review }} reviews</a></li>
+                                <li><a id="view_review_link" href="{{ url_for('.proposal_reviews', proposal_id=proposal.id) }}"><span class="fa-solid fa-file-lines"></span>View{{ '/edit' if can_edit_review }} reviews</a></li>
                             {% endif %}
                             {% if can_view_feedback %}
-                                <li><a id="view_feedback_link" href="{{ url_for('.proposal_feedback', proposal_id=proposal.id) }}">View feedback</a></li>
+                                <li><a id="view_feedback_link" href="{{ url_for('.proposal_feedback', proposal_id=proposal.id) }}"><span class="fa-solid fa-receipt"></span>View feedback</a></li>
                             {% endif %}
                         {% endif %}
                         {% if can_request_pdf %}
@@ -146,7 +146,7 @@
         {% if can_edit %}
             <nav>
                 <ol>
-                    <li><a href="{{ url_for('.abstract_edit', proposal_id=proposal.id) }}">Edit abstract and categories</a></li>
+                    <li><a href="{{ url_for('.abstract_edit', proposal_id=proposal.id) }}"><span class="fa-solid fa-pencil"></span>Edit abstract and categories</a></li>
                 </ol>
             </nav>
         {% endif %}
@@ -175,7 +175,7 @@
                 {% if can_edit %}
                     <nav>
                         <ol>
-                            <li><a href="{{ url_for('.case_edit', proposal_id=proposal.id, role=sci_case.role) }}">Edit scientific justification</a></li>
+                            <li><a href="{{ url_for('.case_edit', proposal_id=proposal.id, role=sci_case.role) }}"><span class="fa-solid fa-pencil"></span>Edit scientific justification</a></li>
                         </ol>
                     </nav>
                 {% endif %}
@@ -196,8 +196,8 @@
         {% if can_edit %}
         <nav>
             <ol>
-                <li><a href="{{ url_for('.member_add', proposal_id=proposal.id) }}">Add member</a></li>
-                <li><a href="{{ url_for('.member_edit', proposal_id=proposal.id) }}">Edit members</a></li>
+                <li><a href="{{ url_for('.member_add', proposal_id=proposal.id) }}"><span class="fa-solid fa-user-plus"></span>Add member</a></li>
+                <li><a href="{{ url_for('.member_edit', proposal_id=proposal.id) }}"><span class="fa-solid fa-pencil"></span>Edit members</a></li>
             </ol>
         </nav>
         {% endif %}
@@ -205,7 +205,7 @@
         {% if can_remove_self %}
             <nav>
                 <ol>
-                    <li><a href="{{ url_for('.remove_self', proposal_id=proposal.id) }}">Remove yourself from this proposal</a></li>
+                    <li><a href="{{ url_for('.remove_self', proposal_id=proposal.id) }}"><span class="fa-solid fa-right-from-bracket"></span>Remove yourself from this proposal</a></li>
                 </ol>
             </nav>
         {% endif %}
@@ -231,7 +231,7 @@
         {% if can_edit %}
         <nav>
             <ol>
-                <li><a href="{{ url_for('.student_edit', proposal_id=proposal.id) }}">Edit student list</a></li>
+                <li><a href="{{ url_for('.student_edit', proposal_id=proposal.id) }}"><span class="fa-solid fa-pencil"></span>Edit student list</a></li>
             </ol>
         </nav>
         {% endif %}
@@ -285,8 +285,8 @@
         {% if can_edit %}
             <nav>
                 <ol>
-                    <li><a href="{{ url_for('.target_edit', proposal_id=proposal.id) }}">Edit targets</a></li>
-                    <li><a href="{{ url_for('.target_upload', proposal_id=proposal.id) }}">Upload target list</a></li>
+                    <li><a href="{{ url_for('.target_edit', proposal_id=proposal.id) }}"><span class="fa-solid fa-pencil"></span>Edit targets</a></li>
+                    <li><a href="{{ url_for('.target_upload', proposal_id=proposal.id) }}"><span class="fa-solid fa-upload"></span>Upload target list</a></li>
                 </ol>
             </nav>
         {% endif %}
@@ -320,7 +320,7 @@
             {% if can_edit %}
                 <nav>
                     <ol>
-                        <li><a href="{{ url_for('.tool_note_edit', proposal_id=proposal.id) }}">Edit note</a></li>
+                        <li><a href="{{ url_for('.tool_note_edit', proposal_id=proposal.id) }}"><span class="fa-solid fa-pencil"></span>Edit note</a></li>
                     </ol>
                 </nav>
             {% endif %}
@@ -349,7 +349,7 @@
                 {% if calculation.mode_info.code is not none %}
                     <nav>
                         <ol>
-                            <li><a href="{{ url_for('.calculation_view', proposal_id=proposal.id, calculation_id=calculation.id) }}">View calculation</a></li>
+                            <li><a href="{{ url_for('.calculation_view', proposal_id=proposal.id, calculation_id=calculation.id) }}"><span class="fa-solid fa-calculator"></span>View calculation</a></li>
                         </ol>
                     </nav>
                 {% endif %}
@@ -370,7 +370,7 @@
         {% if calculations %}
             <nav>
                 <ol>
-                    <li><a href="{{ url_for('.calculation_manage', proposal_id=proposal.id) }}">{% if can_edit %}Manage calculations{% else %}View calculation details{% endif %}</a></li>
+                    <li><a href="{{ url_for('.calculation_manage', proposal_id=proposal.id) }}">{% if can_edit %}<span class="fa-solid fa-pen-to-square"></span>Manage calculations{% else %}<span class="fa-solid fa-circle-info"></span>View calculation details{% endif %}</a></li>
                 </ol>
             </nav>
         {% endif %}
@@ -400,7 +400,7 @@
             {% if can_edit %}
                 <nav>
                     <ol>
-                        <li><a href="{{ url_for('.case_edit', proposal_id=proposal.id, role=tech_case.role) }}">Edit technical justification</a></li>
+                        <li><a href="{{ url_for('.case_edit', proposal_id=proposal.id, role=tech_case.role) }}"><span class="fa-solid fa-pencil"></span>Edit technical justification</a></li>
                     </ol>
                 </nav>
             {% endif %}
@@ -434,7 +434,7 @@
                 {% if can_edit %}
                     <nav>
                         <ol>
-                            <li><a href="{{ url_for('.case_edit', proposal_id=proposal.id, role=cnrq_case.role) }}">Edit {{ cnrq_case.role | text_role_name(text_roles) | lower }}</a></li>
+                            <li><a href="{{ url_for('.case_edit', proposal_id=proposal.id, role=cnrq_case.role) }}"><span class="fa-solid fa-pencil"></span>Edit {{ cnrq_case.role | text_role_name(text_roles) | lower }}</a></li>
                         </ol>
                     </nav>
                 {% endif %}
@@ -522,7 +522,7 @@
         {% if can_edit %}
             <nav>
                 <ol>
-                    <li><a href="{{ url_for('.previous_edit', proposal_id=proposal.id) }}">Edit previous proposals and publications</a></li>
+                    <li><a href="{{ url_for('.previous_edit', proposal_id=proposal.id) }}"><span class="fa-solid fa-pencil"></span>Edit previous proposals and publications</a></li>
                 </ol>
             </nav>
         {% endif %}

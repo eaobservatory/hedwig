@@ -137,14 +137,14 @@
                             {% if calculation.mode_info.code is not none %}
                                 <nav>
                                     <ol>
-                                        <li><a href="{{ url_for('.review_calculation_view', reviewer_id=review.id, review_calculation_id=calculation.id) }}">View calculation</a></li>
+                                        <li><a href="{{ url_for('.review_calculation_view', reviewer_id=review.id, review_calculation_id=calculation.id) }}"><span class="fa-solid fa-calculator"></span>View calculation</a></li>
                                     </ol>
                                 </nav>
                             {% endif %}
                         {% endfor %}
                         <nav>
                             <ol>
-                                <li><a href="{{ url_for('.review_calculation_manage', reviewer_id=review.id) }}">View calculation details</a></li>
+                                <li><a href="{{ url_for('.review_calculation_manage', reviewer_id=review.id) }}"><span class="fa-solid fa-circle-info"></span>View calculation details</a></li>
                             </ol>
                         </nav>
                     </td>

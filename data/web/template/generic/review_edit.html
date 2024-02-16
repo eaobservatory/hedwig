@@ -72,7 +72,7 @@
                 {% if calculation.mode_info.code is not none %}
                     <nav>
                         <ol>
-                            <li><a href="{{ url_for('.review_calculation_view', reviewer_id=reviewer.id, review_calculation_id=calculation.id) }}">View calculation</a></li>
+                            <li><a href="{{ url_for('.review_calculation_view', reviewer_id=reviewer.id, review_calculation_id=calculation.id) }}"><span class="fa-solid fa-calculator"></span>View calculation</a></li>
                         </ol>
                     </nav>
                 {% endif %}
@@ -91,7 +91,7 @@
         {% if calculations %}
             <nav>
                 <ol>
-                    <li><a href="{{ url_for('.review_calculation_manage', reviewer_id=reviewer.id) }}">Manage calculations</a></li>
+                    <li><a href="{{ url_for('.review_calculation_manage', reviewer_id=reviewer.id) }}"><span class="fa-solid fa-pen-to-square"></span>Manage calculations</a></li>
                 </ol>
             </nav>
         {% endif %}
@@ -107,14 +107,14 @@
 
             <nav>
                 <ol>
-                    <li><a href="{{ url_for('.review_manage_figure', reviewer_id=reviewer.id) }}">Manage figures</a></li>
+                    <li><a href="{{ url_for('.review_manage_figure', reviewer_id=reviewer.id) }}"><span class="fa-solid fa-images"></span>Manage figures</a></li>
                 </ol>
             </nav>
         {% endif %}
 
         <nav>
             <ol>
-                <li><a id="upload_fig_link" href="{{ url_for('.review_new_figure', reviewer_id=reviewer.id) }}">Upload new figure</a></li>
+                <li><a id="upload_fig_link" href="{{ url_for('.review_new_figure', reviewer_id=reviewer.id) }}"><span class="fa-solid fa-upload"></span>Upload new figure</a></li>
             </ol>
         </nav>
     {% endif %}

@@ -11,7 +11,7 @@
 {% if proposal_id is defined %}
     <nav>
         <ol>
-            <li><a href="{{ url_for('.proposal_view', proposal_id=proposal_id, _anchor='targets') }}">Back to proposal</a></li>
+            <li><a href="{{ url_for('.proposal_view', proposal_id=proposal_id, _anchor='targets') }}"><span class="fa-solid fa-arrow-left"></span>Back to proposal</a></li>
         </ol>
     </nav>
 {% endif %}
@@ -22,7 +22,7 @@
 {% block tool_query_link %}
     {% if query_encoded is not none %}
         <p>
-            <a href="{{ url_for(target_tool_code | fmt('.tool_{}'), query=query_encoded, _external=true) }}" id="perm_query_link">Link to this query</a>
+            <a href="{{ url_for(target_tool_code | fmt('.tool_{}'), query=query_encoded, _external=true) }}" id="perm_query_link"><span class="fa-solid fa-link"></span>Link to this query</a>
         </p>
     {% endif %}
 {% endblock %}
@@ -94,9 +94,9 @@
     <nav>
         <ol>
             {% if show_input_upload %}
-                <li><a href="{{ url_for(target_tool_code | fmt('.tool_{}')) }}" id="tool_single_link">Check a single target</a></li>
+                <li><a href="{{ url_for(target_tool_code | fmt('.tool_{}')) }}" id="tool_single_link"><span class="fa-solid fa-location-crosshairs"></span>Check a single target</a></li>
             {% else %}
-                <li><a href="{{ url_for(target_tool_code | fmt('.tool_{}_upload')) }}" id="tool_upload_link">Upload a target list</a></li>
+                <li><a href="{{ url_for(target_tool_code | fmt('.tool_{}_upload')) }}" id="tool_upload_link"><span class="fa-solid fa-upload"></span>Upload a target list</a></li>
             {% endif %}
         </ol>
     </nav>

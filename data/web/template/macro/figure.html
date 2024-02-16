@@ -65,7 +65,7 @@
                             Error during processing
                         </p>
                         <p>
-                            <a href="{{ url_for(url_prefix | fmt('.{}_view_figure'), fig_id=figure.id, md5sum=figure.md5sum, **url_args) }}">View image</a>
+                            <a href="{{ url_for(url_prefix | fmt('.{}_view_figure'), fig_id=figure.id, md5sum=figure.md5sum, **url_args) }}"><span class="fa-solid fa-image"></span>View image</a>
                         </p>
                     {% else %}
                         <p class="not_present">
@@ -87,7 +87,7 @@
                         </div>
 
                         <p>
-                            <a href="{{ url_for(url_prefix | fmt('.{}_view_figure'), fig_id=figure.id, md5sum=figure.md5sum, **url_args) }}">View image</a>
+                            <a href="{{ url_for(url_prefix | fmt('.{}_view_figure'), fig_id=figure.id, md5sum=figure.md5sum, **url_args) }}"><span class="fa-solid fa-image"></span>View image</a>
                         </p>
                     {% endif %}
                 </td>
@@ -100,7 +100,7 @@
                     Uploaded:
                     {{ figure.uploaded | format_datetime }}
                     <br />
-                    <a href="{{ url_for(url_prefix | fmt('.{}_edit_figure'), fig_id=figure.id, **url_args) }}" id="edit_figure_{{ figure.id }}_link">Edit figure</a>
+                    <a href="{{ url_for(url_prefix | fmt('.{}_edit_figure'), fig_id=figure.id, **url_args) }}" id="edit_figure_{{ figure.id }}_link"><span class="fa-solid fa-pencil"></span>Edit figure</a>
                 </td>
             </tr>
         {% endfor %}

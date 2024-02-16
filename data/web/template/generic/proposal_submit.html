@@ -29,7 +29,7 @@
 {% else %}
     <nav>
         <ol>
-            <li><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">Back to proposal</a></li>
+            <li><a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}"><span class="fa-solid fa-arrow-left"></span>Back to proposal</a></li>
         </ol>
     </nav>
 {% endif %}
