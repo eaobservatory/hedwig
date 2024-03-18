@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -25,7 +25,7 @@ from ..astro.coord import CoordSystem, \
 from ..astro.catalog import parse_source_list
 from ..error import NoSuchRecord, ParseError, UserError
 from ..type.simple import Link, TargetObject
-from ..type.enum import PermissionType
+from ..type.enum import PermissionType, ProposalType
 from ..util import is_list_like
 from ..web.query_encode import encode_query, decode_query
 from ..web.util import ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, \
@@ -270,7 +270,22 @@ class BaseTargetTool(object):
                            coordinates
         """
 
-        targets = db.search_target(proposal_id=proposal.id)
+        if proposal.type != ProposalType.CONTINUATION:
+            targets_proposal_id = proposal.id
+
+        else:
+            prev_proposals = db.search_prev_proposal(
+                proposal_id=proposal.id,
+                continuation=True, resolved=True,
+                with_publications=False)
+
+            try:
+                targets_proposal_id = prev_proposals.get_single().proposal_id
+
+            except:
+                raise ErrorPage('Unable to find targets via original proposal.')
+
+        targets = db.search_target(proposal_id=targets_proposal_id)
 
         target_objects = targets.to_object_list()
 

@@ -16,6 +16,15 @@
     {% set scripts = concatenate_lists(['closeable'], scripts) %}
 {% endif %}
 
+{% macro render_target_tool_links() %}
+    <p>
+        Check targets:
+        {% for target_tool in target_tools.values() %}
+            <a href="{{ url_for(target_tool.code | fmt('.tool_{}_proposal'), proposal_id=proposal.id) }}">{{ target_tool.name }}</a>{{ ',' if not loop.last }}
+        {% endfor %}
+    </p>
+{% endmacro %}
+
 {% block content %}
 
 {% block proposal_preamble %}
@@ -301,12 +310,7 @@
 
         {% if targets and target_tools %}
             <nav>
-                <p>
-                    Check targets:
-                    {% for target_tool in target_tools.values() %}
-                        <a href="{{ url_for(target_tool.code | fmt('.tool_{}_proposal'), proposal_id=proposal.id) }}">{{ target_tool.name }}</a>{{ ',' if not loop.last }}
-                    {% endfor %}
-                </p>
+                {{ render_target_tool_links() }}
             </nav>
 
             {% if tool_note is none %}
@@ -375,6 +379,14 @@
             </nav>
         {% endif %}
     </section>
+    {% endif %}
+
+    {% if target_tools and 'proposal_targets' not in proposal_order %}
+        <nav>
+            <h2 id="targets">Target Tools</h2>
+
+            {{ render_target_tool_links() }}
+        </nav>
     {% endif %}
 {% endblock %}
 
