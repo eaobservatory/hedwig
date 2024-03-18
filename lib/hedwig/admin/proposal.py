@@ -76,6 +76,10 @@ def close_call_proposals(db, call_id, dry_run=False):
                                 ProposalState.WITHDRAWN):
             new_state = ProposalState.ABANDONED
 
+        elif proposal.state == ProposalState.HELD_OPEN:
+            # Ingore this state.
+            continue
+
         elif has_mid_close and (
                 proposal.state in ProposalState.submitted_states()):
             # The proposal is in another submitted state, but this is a call

@@ -215,7 +215,8 @@ class EnumTypeTestCase(TestCase):
                 ProposalState.ACCEPTED,
                 ProposalState.REJECTED,
                 ProposalState.ABANDONED,
-                ProposalState.RETRACTED
+                ProposalState.RETRACTED,
+                ProposalState.HELD_OPEN,
                 ):
             # Check state is an integer.
             self.assertIsInstance(state, int)
@@ -272,12 +273,15 @@ class EnumTypeTestCase(TestCase):
         self.assertIsInstance(states, list)
         self.assertIn(ProposalState.PREPARATION, states)
         self.assertNotIn(ProposalState.ACCEPTED, states)
+        self.assertNotIn(ProposalState.HELD_OPEN, states)
         states = ProposalState.closed_states()
         self.assertIsInstance(states, list)
         self.assertNotIn(ProposalState.PREPARATION, states)
         self.assertIn(ProposalState.ACCEPTED, states)
+        self.assertNotIn(ProposalState.HELD_OPEN, states)
         self.assertTrue(ProposalState.is_open(ProposalState.PREPARATION))
         self.assertFalse(ProposalState.is_open(ProposalState.ACCEPTED))
+        self.assertFalse(ProposalState.is_open(ProposalState.HELD_OPEN))
 
         self.assertEqual(ProposalState.by_name('accepted'),
                          ProposalState.ACCEPTED)

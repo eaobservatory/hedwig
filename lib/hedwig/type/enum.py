@@ -579,6 +579,9 @@ class ProposalState(EnumBasic, EnumShortName):
 
         RETRACTED is an additional state, equivalent to ABANDONED, which
         can be manually set via the administrative interface.
+
+        Similarly HELD_OPEN is a manually-set state equivalent to PREPARATION
+        but which the poll process will not consider for call closure.
     """
 
     PREPARATION = 1
@@ -590,6 +593,7 @@ class ProposalState(EnumBasic, EnumShortName):
     REJECTED = 7
     FINAL_REVIEW = 8
     RETRACTED = 9
+    HELD_OPEN = 10
 
     StateInfo = namedtuple(
         'StateInfo',
@@ -618,6 +622,8 @@ class ProposalState(EnumBasic, EnumShortName):
             StateInfo('Abnd',  'Abandoned',      False, False, False, False)),
         (RETRACTED,
             StateInfo('Rtrd',  'Retracted',      False, False, False, False)),
+        (HELD_OPEN,
+            StateInfo('Held',  'Held open',      True,  False, False, False)),
     ))
 
     @classmethod
@@ -679,10 +685,13 @@ class ProposalState(EnumBasic, EnumShortName):
         for proposals.
 
         Note: we currently assume the state is "open" if it is editable,
+        except for the special state HELD_OPEN,
         but this extra accessor method is provided in case this fact changes.
         """
 
-        return [k for (k, v) in cls._info.items() if v.edit]
+        return [
+            k for (k, v) in cls._info.items()
+            if v.edit and k != cls.HELD_OPEN]
 
     @classmethod
     def closed_states(cls):
