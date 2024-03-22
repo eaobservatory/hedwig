@@ -68,7 +68,12 @@
                                     <td rowspan="{{ semester_proposals.n_reviews }}">{{ proposal.semester_name }}</td>
                                 {% endif %}
                                 {% if loop.first %}
-                                    <td rowspan="{{ proposal.reviewers | length }}"><a href="{{ url_for(facility.code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a></td>
+                                    <td rowspan="{{ proposal.reviewers | length }}">
+                                        <a href="{{ url_for(facility.code + '.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a>
+                                        {% if proposal.type is not proposal_type_standard %}
+                                            <span class="label">{{ proposal.type | proposal_type_short_name }}</span>
+                                        {% endif %}
+                                    </td>
                                     <td rowspan="{{ proposal.reviewers | length }}">
                                         {% if proposal.member is not none %}
                                             {{ proposal.member.person_name | abbr(25) }}
