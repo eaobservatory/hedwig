@@ -115,6 +115,10 @@ tr.spacer_above td, tr.spacer_above th {
     border-top: 5px solid #AAA;
 }
 
+tr.spacer_below td, tr.spacer_below th {
+    border-bottom: 5px solid #AAA;
+}
+
 td.spacer_left, th.spacer_left {
     border-left: 5px solid #AAA;
 }

@@ -516,6 +516,49 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
                                 instrument=instruments,
                                 total_non_free=total_non_free)
 
+    def get_total_by_weather(
+            self, include_unavailable_instrument=False,
+            include_unavailable_weather=False):
+        """
+        Return totals by weather band.
+
+        The "weather" and "total_non_free" properties of the total
+        objects are not filled in.
+        """
+
+        result = OrderedDict()
+
+        for weather in JCMTWeather.get_options(
+                include_unavailable=include_unavailable_weather).keys():
+            instruments = {}
+            total = 0.0
+
+            for request in self.values():
+                if request.weather == weather:
+                    time = request.time
+
+                    instrument = request.instrument
+                    ancillary = request.ancillary
+                    if include_unavailable_instrument or (
+                            JCMTInstrument.get_info(instrument).available
+                            and JCMTInstrument.has_available_ancillary(
+                                instrument, ancillary)):
+                        instrument = (instrument, ancillary)
+                    else:
+                        instrument = None
+
+                    total += time
+                    instruments[instrument] = instruments.get(instrument, 0.0) + time
+
+            if total:
+                result[weather] = JCMTRequestTotal(
+                    total=total,
+                    weather=None,
+                    instrument=instruments,
+                    total_non_free=None)
+
+        return result
+
     def to_sorted_list(self):
         """
         Get sorted list with weather/instrument as names.

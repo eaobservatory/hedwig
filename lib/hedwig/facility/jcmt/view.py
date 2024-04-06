@@ -804,6 +804,9 @@ class JCMT(EAOFacility):
         total_affiliation = defaultdict(float)
         original_affiliation = defaultdict(float)
 
+        weather_accepted = defaultdict(empty_total)
+        weather_accepted_affiliation = defaultdict(lambda: defaultdict(float))
+
         affiliation_ids = OrderedDict((
             (x.id, x.type) for x in tabulation['affiliations']))
 
@@ -831,12 +834,14 @@ class JCMT(EAOFacility):
             # Since decisions can now be returned to "undecided", we need
             # to search for allocations regardless of decision presence.
             allocation = None
+            allocation_by_weather = None
             proposal_accepted = proposal['decision_accept']
             proposal_exempt = proposal['decision_exempt']
             allocation_records = jcmt_allocations.subset_by_proposal(
                 proposal['id'])
             if allocation_records:
                 allocation = allocation_records.get_total()
+                allocation_by_weather = allocation_records.get_total_by_weather()
 
             proposal['jcmt_allocation'] = allocation
             proposal['jcmt_allocation_different'] = \
@@ -885,11 +890,24 @@ class JCMT(EAOFacility):
                         accepted_affiliation[affiliation] += \
                             allocation.total_non_free * fraction
 
+                        if allocation_by_weather is not None:
+                            for (weather, weather_total) in allocation_by_weather.items():
+                                weather_accepted_affiliation[weather][affiliation] += \
+                                    weather_total.total * fraction
+
             fraction_non_expanding = 1.0 - fraction_expanding
 
             if proposal_accepted and allocation is not None:
                 accepted = accepted._replace(total=(
                     accepted.total + allocation.total))
+
+                if allocation_by_weather is not None:
+                    for (weather, weather_total) in allocation_by_weather.items():
+                        weather_accepted[weather] = weather_accepted[weather]._replace(total=(
+                            weather_accepted[weather].total + weather_total.total))
+
+                        for (instrument, time) in weather_total.instrument.items():
+                            weather_accepted[weather].instrument[instrument] += time
 
                 if proposal_exempt:
                     exempt = exempt._replace(
@@ -939,6 +957,7 @@ class JCMT(EAOFacility):
 
         total_weight = 0.0
         available_affiliation = {}
+        weather_available_affiliation = defaultdict(dict)
         available_total_expanding = 0.0
         available_total_non_expanding = 0.0
 
@@ -956,6 +975,10 @@ class JCMT(EAOFacility):
             else:
                 available_total_non_expanding += available_this_affiliation
 
+            for (weather, time) in available.weather.items():
+                weather_available_affiliation[weather][affiliation.id] =\
+                    time * affiliation.weight / 100.0
+
         # Assign the remaining time to the "Unknown" affiliation.
         available_affiliation[0] = \
             (1.0 - (total_weight / 100.0)) * available.total_non_free
@@ -971,6 +994,8 @@ class JCMT(EAOFacility):
             'jcmt_accepted_total': accepted,
             'jcmt_accepted_expanding': accepted_expanding,
             'jcmt_accepted_non_expanding': accepted_non_expanding,
+            'jcmt_weather_accepted_total': weather_accepted,
+            'jcmt_weather_accepted_affiliation': weather_accepted_affiliation,
             'jcmt_request_total': total,
             'jcmt_request_original': original,
             'jcmt_available': available,
@@ -980,6 +1005,7 @@ class JCMT(EAOFacility):
             'affiliation_available': available_affiliation,
             'affiliation_total': total_affiliation,
             'affiliation_original': original_affiliation,
+            'jcmt_weather_affiliation_available': weather_available_affiliation,
         })
 
         return tabulation

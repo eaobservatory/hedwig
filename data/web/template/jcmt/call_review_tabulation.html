@@ -235,6 +235,41 @@
         </td>
         {{ render_jcmt_blank_request(is_total=true) }}
     </tr>
+    {% for (weather_id, weather_name) in jcmt_weathers.items() %}
+        <tr {{ combined_class(('spacer_above', loop.first),) | safe }}>
+            <th colspan="5">Total accepted in {{ weather_name | lower }} (hours)</th>
+            <td colspan="4" class="total spacer_left">&nbsp;</td>
+            {% if weather_id in jcmt_weather_accepted_total %}
+                {% set weather_total = jcmt_weather_accepted_total[weather_id] %}
+                <td colspan="2" {{ render_cell_class(true, false) }}>
+                    {{ weather_total.total | fmt('{:.1f}')}}
+                </td>
+                {{ render_jcmt_request(weather_total, is_total=true) }}
+                {{ render_affiliation_totals(affiliations, jcmt_weather_accepted_affiliation[weather_id]) }}
+            {% else %}
+                <td colspan="2" {{ render_cell_class(true, false) }}>
+                    &nbsp;
+                </td>
+                {{ render_jcmt_blank_request(is_total=true) }}
+            {% endif %}
+        </tr>
+        <tr {{ combined_class(('spacer_below', loop.last),) | safe }}>
+            <th colspan="5">Total accepted in {{ weather_name | lower }} (percentage)</th>
+            <td colspan="4" class="total spacer_left">&nbsp;</td>
+            <td colspan="2" {{ render_cell_class(true, false) }}>&nbsp;</td>
+            {% if weather_id in jcmt_weather_affiliation_available %}
+                {% for weather in (jcmt_weathers.keys(), [none]) | chain %}
+                    <td {{ render_cell_class(true, loop.first) }}>&nbsp;</td>
+                {% endfor %}
+                {% for instrument in (jcmt_instruments.keys(), [none]) | chain %}
+                    <td {{ render_cell_class(true, loop.first) }}>&nbsp;</td>
+                {% endfor %}
+                {{ render_affiliation_totals(affiliations, jcmt_weather_accepted_affiliation[weather_id], percentage_of=jcmt_weather_affiliation_available[weather_id]) }}
+            {% else %}
+                {{ render_jcmt_blank_request(is_total=true) }}
+            {% endif %}
+        </tr>
+    {% endfor %}
 {% endblock %}
 
 {% block footer_accepted_extra %}
