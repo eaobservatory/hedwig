@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict
 
-from hedwig.compat import first_value, split_version
+from hedwig.compat import first_value, iter_items, split_version
 
 from .compat import TestCase
 
@@ -43,3 +43,16 @@ class CompatTestCase(TestCase):
 
         with self.assertRaises(IndexError):
             first_value({})
+
+    def test_iter_items(self):
+        d = OrderedDict(((1, 'a'), (2, 'b'), (3, 'c')))
+        iterator = iter_items(d)
+
+        l = []
+        while True:
+            try:
+                l.append(next(iterator))
+            except StopIteration:
+                break
+
+        self.assertEqual(l, [(1, 'a'), (2, 'b'), (3, 'c')])

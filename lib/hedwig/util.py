@@ -18,11 +18,12 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import OrderedDict
 import logging
 from math import log10
 import re
 
-from .compat import floor
+from .compat import floor, iter_items
 from .error import Error
 
 
@@ -76,6 +77,46 @@ def is_list_like(value):
             or isinstance(value, tuple)
             or isinstance(value, set)
             or isinstance(value, frozenset))
+
+
+def item_combinations(
+        dictionary, function, combine, filter_combination=(lambda x: True)):
+    """
+    Create a dictionary of combinations of items from the given
+    dictionary.  Each item has `function` applied to it and
+    each pair is then combined with `combine`.  The resulting
+    dictionary has keys which are pairs of keys from that given.
+    Only combinations for which `filter_combination` returns
+    a true value are included.
+    """
+
+    (result, mapped) = _item_combinations(
+        iter_items(dictionary), function, combine, filter_combination)
+
+    return OrderedDict(reversed(result))
+
+
+def _item_combinations(iterator, function, combine, filter_combination):
+    try:
+        head = next(iterator)
+
+    except StopIteration:
+        return ([], OrderedDict())
+
+    (key, value) = head
+    value_mapped = function(value)
+
+    (result, mapped) = _item_combinations(
+        iterator, function, combine, filter_combination)
+
+    for (other_key, other_mapped) in mapped.items():
+        combination = combine(value_mapped, other_mapped)
+        if filter_combination(combination):
+            result.append(((key, other_key), combination))
+
+    mapped[key] = value_mapped
+
+    return (result, mapped)
 
 
 def list_in_blocks(iterable, block_size):

@@ -67,6 +67,13 @@ if python_version < 3:
         except StopIteration:
             raise IndexError('dictionary has no first value')
 
+    def iter_items(dictionary):
+        """
+        Get an iterator for the dictionary's items.
+        """
+
+        return dictionary.iteritems()
+
     def floor(value):
         return int(_math_floor(value))
 
@@ -112,6 +119,13 @@ else:
             return next(iter(dictionary.values()))
         except StopIteration:
             raise IndexError('dictionary has no first value')
+
+    def iter_items(dictionary):
+        """
+        Get an iterator for the dictionary's items.
+        """
+
+        return iter(dictionary.items())
 
     class ExceptionWithMessage(Exception):
         """Exception class which restores the 'message' property."""

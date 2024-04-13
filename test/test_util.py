@@ -18,11 +18,13 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import OrderedDict
 from io import BytesIO
 
 from hedwig.error import Error
 from hedwig.util import ClosingMultiple, FormatMaxDP, FormatSigFig, \
-    is_list_like, list_in_blocks, list_in_ranges, lower_except_abbr, \
+    is_list_like, item_combinations, \
+    list_in_blocks, list_in_ranges, lower_except_abbr, \
     matches_constraint
 
 from .compat import TestCase
@@ -97,6 +99,41 @@ class UtilTest(TestCase):
         self.assertFalse(is_list_like(7))
         self.assertFalse(is_list_like('8'))
         self.assertFalse(is_list_like(None))
+
+    def test_item_combinations(self):
+        # Make list of concatenated, upper cased strings.
+        d = OrderedDict(((1, 'a'), (2, 'b'), (3, 'c'), (4, 'd')))
+
+        result = item_combinations(
+            d,
+            (lambda x: x.upper()),
+            (lambda x, y: '{}{}'.format(x, y)))
+
+        self.assertEqual(list(result.items()), [
+            ((1, 2), 'AB'),
+            ((1, 3), 'AC'),
+            ((1, 4), 'AD'),
+            ((2, 3), 'BC'),
+            ((2, 4), 'BD'),
+            ((3, 4), 'CD'),
+        ])
+
+        # Make a list of numbers with even sums.
+        d = OrderedDict((
+            ('one', 1), ('two', 2), ('three', 3), ('four', 4), ('five', 5)))
+
+        result = item_combinations(
+            d,
+            (lambda x: x),
+            (lambda x, y: x + y),
+            filter_combination=(lambda x: x % 2 == 0))
+
+        self.assertEqual(list(result.items()), [
+            (('one', 'three'), 4),
+            (('one', 'five'), 6),
+            (('two', 'four'), 6),
+            (('three', 'five'), 8),
+        ])
 
     def test_lower_except_abbr(self):
         self.assertEqual(lower_except_abbr('A TLA Review'), 'a TLA review')
