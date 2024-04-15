@@ -29,6 +29,7 @@ from astropy.utils.exceptions import AstropyWarning
 from astropy.utils.iers import conf as astropy_iers_conf
 from numpy import arange, newaxis, nonzero
 
+from ...astro.coord import concatenate_coord_objects
 from ...compat import first_value
 from ...error import UserError
 from ...view.tool import BaseTargetTool
@@ -207,16 +208,7 @@ class AvailabilityTool(BaseTargetTool):
         if len(target_objects) > 1:
             target_hits = defaultdict(int)
 
-        # Concatenate manually rather than astropy.coordinates.concatenate
-        # for improved performance.
-        target_ra = []
-        target_dec = []
-        for target_object in target_objects:
-            target_object = target_object.coord.icrs
-            target_ra.append(target_object.ra.degree)
-            target_dec.append(target_object.dec.degree)
-        targets = SkyCoord(
-            target_ra, target_dec, unit=units.degree, frame=ICRS)
+        targets = concatenate_coord_objects(target_objects)
 
         dates = (
             Time(datetime.combine(date_start, self.time_start))

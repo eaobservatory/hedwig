@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -170,3 +170,21 @@ def coord_from_dec_deg(system, x_deg, y_deg):
     info = CoordSystem._get_info(system)
 
     return coordinates.SkyCoord(x_deg, y_deg, unit=degree, frame=info.frame)
+
+
+def concatenate_coord_objects(objects):
+    """
+    Convert a list of `TargetObject` instances to a single coordinate object.
+    """
+
+    # Concatenate manually rather than astropy.coordinates.concatenate
+    # for improved performance.
+    target_ra = []
+    target_dec = []
+    for object_ in objects:
+        object_ = object_.coord.icrs
+        target_ra.append(object_.ra.degree)
+        target_dec.append(object_.dec.degree)
+
+    return coordinates.SkyCoord(
+        target_ra, target_dec, unit=degree, frame=coordinates.ICRS)
