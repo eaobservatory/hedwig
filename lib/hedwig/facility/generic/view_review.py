@@ -65,6 +65,11 @@ ProposalWithReviewerPersons = namedtuple(
     ProposalWithCode._fields + (
         'reviewer_person_ids',))
 
+ProposalWithTargets = namedtuple(
+    'ProposalWithTargets',
+    ProposalWithCode._fields + (
+        'targets',))
+
 ProposalWithViewReviewLinks = namedtuple(
     'ProposalWithViewReviewLinks',
     ProposalWithCode._fields + (
@@ -373,41 +378,15 @@ class GenericReview(object):
 
         affiliation_names.append(('0', 'Unknown'))
 
-        # Determine how to look up the target list for each proposal:
-        # continuation requests do not have their own target list, so we
-        # must fetch the corresponding previous proposal ID.  Then we can
-        # do a combined query for these and all the standard proposals.
-        proposal_ids = set()
-        proposal_ids_cr = set()
-        previous_proposal_ids = {}
-        for proposal in proposals.values():
-            (proposal_ids_cr
-             if proposal.type == ProposalType.CONTINUATION
-             else proposal_ids).add(proposal.id)
-
-        if proposal_ids_cr:
-            for prev_proposal in db.search_prev_proposal(
-                    proposal_id=proposal_ids_cr,
-                    continuation=True, resolved=True,
-                    with_publications=False).values():
-                id_ = prev_proposal.proposal_id
-                proposal_ids.add(id_)
-                previous_proposal_ids[prev_proposal.this_proposal_id] = id_
-
-        targets = db.search_target(proposal_id=proposal_ids)
-
         proposal_list = []
         ra_bins = list(range(0, 24))
-        for proposal in proposals.values():
+        for proposal in self._attach_proposal_targets(db, proposals).values():
             # Determine the fractional time spent in each RA bin, so that this
             # can be scaled by the proposal's allocation, which may change
             # later.  (At this level of detail we can't know whether an altered
             # allocation corresponds to excluding particular targets.)
-            proposal_targets = targets.subset_by_proposal(
-                previous_proposal_ids.get(proposal.id, proposal.id))
-
             ra_fraction = defaultdict(float)
-            for target in proposal_targets.to_frac_time_list():
+            for target in proposal.targets.to_frac_time_list():
                 ra = int(round(target.coord.icrs.ra.hour))
                 if ra > 23:
                     ra -= 24
@@ -416,7 +395,7 @@ class GenericReview(object):
 
             info = {
                 'id': '{}'.format(proposal.id),
-                'code': self.make_proposal_code(db, proposal),
+                'code': proposal.code,
                 'ra': [ra_fraction[x] for x in ra_bins],
                 'category': {
                     'affiliation': self.calculate_affiliation_assignment(
@@ -449,6 +428,39 @@ class GenericReview(object):
                 db, call, can, proposals),
             'ra_bins': ra_bins,
         }
+
+    def _attach_proposal_targets(self, db, proposals):
+        """
+        Attach targets (and construct codes) for the given proposals.
+        """
+
+        # Determine how to look up the target list for each proposal:
+        # continuation requests do not have their own target list, so we
+        # must fetch the corresponding previous proposal ID.  Then we can
+        # do a combined query for these and all the standard proposals.
+        proposal_ids = set()
+        proposal_ids_cr = set()
+        previous_proposal_ids = {}
+        for proposal in proposals.values():
+            (proposal_ids_cr
+             if proposal.type == ProposalType.CONTINUATION
+             else proposal_ids).add(proposal.id)
+
+        if proposal_ids_cr:
+            for prev_proposal in db.search_prev_proposal(
+                    proposal_id=proposal_ids_cr,
+                    continuation=True, resolved=True,
+                    with_publications=False).values():
+                id_ = prev_proposal.proposal_id
+                proposal_ids.add(id_)
+                previous_proposal_ids[prev_proposal.this_proposal_id] = id_
+
+        targets = db.search_target(proposal_id=proposal_ids)
+
+        return proposals.map_values(lambda x: ProposalWithTargets(
+            *x, code=self.make_proposal_code(db, x),
+            targets=targets.subset_by_proposal(
+                previous_proposal_ids.get(x.id, x.id))))
 
     @with_call_review(permission=PermissionType.VIEW)
     def view_review_call_allocation_query(self, current_user, db, call, can):
