@@ -1,0 +1,74 @@
+{% extends 'layout.html' %}
+{% set navigation=[((call.semester_name, call.queue_name, (call.type | call_type_name(facility_call_type_class))) | fmt('{} {} {}'), url_for('.review_call', call_id=call.id))] %}
+
+{% from 'generic/macro/clash.html' import render_search_radius_input %}
+
+{% block content %}
+    <nav>
+        <ol>
+            <li><a href="{{ url_for('.review_call_clash', call_id=call.id, radius=radius) }}"><span class="fa-solid fa-arrow-left"></span>Back to clash search</a></li>
+        </ol>
+    </nav>
+
+    <section>
+        <h2>Search Options</h2>
+
+        {% if message is not none %}
+            <p class="warning">
+                {{ message }}
+            </p>
+        {% endif %}
+
+        <form method="GET" action="{{ url_for('.review_call_clash_pair', call_id=call.id, proposal_a_id=proposal_a.id, proposal_b_id=proposal_b.id) }}">
+            <ol>
+                {{ render_search_radius_input(radius_options, radius) }}
+                <li>
+                    <input type="submit" value="{{ run_button }}" />
+                </li>
+            </ol>
+        </form>
+    </section>
+
+    {% if clashes is not none %}
+        <section>
+            <h2>Output</h2>
+
+            {% if not clashes %}
+                <p class="not_present">
+                    No clashes were found.
+                </p>
+            {% else %}
+                <table>
+                    <tr>
+                        <th rowspan="2" colspan="2">&nbsp;</th>
+                        <th colspan="{{ targets_b | length }}">
+                            <a href="{{ url_for('.proposal_view', proposal_id=proposal_b.id, _anchor=('targets' if proposal_b.type is proposal_type_standard else none)) }}">{{ proposal_b.code }}</a>
+                        </th>
+                    </tr>
+                    <tr>
+                        {% for target_b in targets_b.values() %}
+                            <th class="sideways"><div><div>{{ target_b.name }}</div></div></th>
+                        {% endfor %}
+                    </tr>
+                    {% for (target_a_id, target_a) in targets_a.items() %}
+                        <tr>
+                            {% if loop.first %}
+                                <th class="sideways" rowspan="{{ loop.length }}"><div><div><a href="{{ url_for('.proposal_view', proposal_id=proposal_a.id, _anchor=('targets' if proposal_a.type is proposal_type_standard else none)) }}">{{ proposal_a.code }}</div></div></a></th>
+                            {% endif %}
+                            <th>{{ target_a.name }}</th>
+                            {% for (target_b_id, target_b) in targets_b.items() %}
+                                <td class="number_center">
+                                    {% if (target_a_id, target_b_id) in clashes %}
+                                        &cross;
+                                    {% else %}
+                                        &nbsp;
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% endif %}
+        </section>
+    {% endif %}
+{% endblock %}

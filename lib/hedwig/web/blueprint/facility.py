@@ -179,6 +179,24 @@ def create_facility_blueprint(db, facility):
         return facility.view_review_call_stats_download(
             current_user, db, call_id)
 
+    @bp.route('/call/<int:call_id>/review/clash', methods=['GET', 'POST'])
+    @require_auth()
+    @facility_template('call_review_clash.html')
+    def review_call_clash(current_user, call_id):
+        return facility.view_review_call_clash(
+            current_user, db, call_id,
+            request.args, (request.form if request.method == 'POST' else None))
+
+    @bp.route(
+        '/call/<int:call_id>/review/clash/<int:proposal_a_id>/<int:proposal_b_id>')
+    @require_auth()
+    @facility_template('call_review_clash_pair.html')
+    def review_call_clash_pair(
+            current_user, call_id, proposal_a_id, proposal_b_id):
+        return facility.view_review_call_clash_pair(
+            current_user, db, call_id,
+            proposal_a_id, proposal_b_id, request.args)
+
     @bp.route('/call/<int:call_id>/affiliation', methods=['GET', 'POST'])
     @require_auth()
     @facility_template('call_affiliation_weight.html')

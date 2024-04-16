@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,14 +18,14 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from itertools import chain
 from math import sqrt, pi
 import re
 
 from pymoc.util.catalog import catalog_to_cells
 
-from ...astro.coord import CoordSystem
+from ...astro.coord import CoordSystem, concatenate_coord_objects
 from ...error import NoSuchRecord, UserError
 from ...file.moc import read_moc
 from ...view import auth
@@ -35,6 +35,7 @@ from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
 from ...type.enum import AttachmentState, FormatType
 from ...type.simple import MOCInfo, RouteInfo
 from ...type.util import null_tuple
+from ...util import item_combinations
 
 TargetClash = namedtuple('TargetClash', ('target', 'mocs', 'target_links'))
 
@@ -466,4 +467,92 @@ class ClashTool(BaseTargetTool):
         return {
             'title': 'Delete Coverage: {}'.format(moc.name),
             'message': 'Are you sure you wish to delete this coverage map?',
+        }
+
+    def search_between_proposals(
+            self, current_user, db, proposals, args, form):
+        message = None
+        result = None
+        proposals_clash = None
+
+        extra_info = self._view_extra_info(args, form)
+        (radius,) = extra_info
+
+        def all_cells(proposal):
+            object_list = proposal.targets.to_object_list()
+            if not object_list:
+                return set()
+
+            return catalog_to_cells(
+                concatenate_coord_objects(object_list),
+                radius=radius, order=self.order,
+                inclusive=True)
+
+        if proposals is not None:
+            result = item_combinations(
+                proposals,
+                all_cells,
+                (lambda x, y: not x.isdisjoint(y)),
+                filter_combination=(lambda x: x))
+
+            proposal_ids = set(chain(*result.keys()))
+            proposals_clash = proposals.map_values(
+                filter_key=lambda x: x in proposal_ids)
+
+        return {
+            'radius': radius,
+            'radius_options': self.radius_options,
+            'run_button': 'Search',
+            'message': message,
+            'clashes': result,
+            'proposals': proposals_clash,
+        }
+
+    def search_proposal_pair(
+            self, current_user, db, proposals, args):
+        message = None
+
+        extra_info = self._view_extra_info(args, None)
+        (radius,) = extra_info
+
+        proposal_list = []
+        proposal_targets = []
+        proposal_cells = []
+        for proposal in proposals.values():
+            targets = OrderedDict()
+            cells = {}
+            proposal_list.append(proposal)
+            proposal_targets.append(targets)
+            proposal_cells.append(cells)
+
+            for id_, target in enumerate(proposal.targets.to_object_list()):
+                targets[id_] = target
+                cells[id_] = catalog_to_cells(
+                    target.coord, radius=radius, order=self.order,
+                    inclusive=True)
+
+        clashes = {}
+        for (target_a, cells_a) in proposal_cells[0].items():
+            for (target_b, cells_b) in proposal_cells[1].items():
+                if not cells_a.isdisjoint(cells_b):
+                    clashes[(target_a, target_b)] = True
+
+        targets_clash = []
+        for i in (0, 1):
+            ids = set((x[i] for x in clashes.keys()))
+
+            targets_clash.append(OrderedDict((
+                (id_, x) for (id_, x) in proposal_targets[i].items()
+                if id_ in ids)))
+
+        return {
+            'radius': radius,
+            'radius_options': self.radius_options,
+            'run_button': 'Search',
+            'message': message,
+            'clashes': clashes,
+            'proposal_a': proposal_list[0],
+            'proposal_b': proposal_list[1],
+            'targets_a': targets_clash[0],
+            'targets_b': targets_clash[1],
         }

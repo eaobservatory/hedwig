@@ -617,6 +617,72 @@ class GenericReview(object):
             'weights': weights,
         }
 
+    @with_call_review(permission=PermissionType.VIEW)
+    def view_review_call_clash(self, current_user, db, call, can, args, form):
+        type_class = self.get_call_types()
+
+        # Currently we use the "Clash Tool" target tool to perform the
+        # clash search, so locate this tool.  However this is not necessary
+        # and the relevant functionality could be extracted if it is
+        # required to perform this search in a facility without this tool.
+        for tool_info in self.target_tools.values():
+            if tool_info.code == 'clash':
+                tool = tool_info.tool
+                break
+        else:
+            raise ErrorPage('Clash tool not available.')
+
+        proposals = None
+        if form is not None:
+            proposals = db.search_proposal(
+                call_id=call.id, state=ProposalState.submitted_states())
+
+            proposals = self._attach_proposal_targets(db, proposals)
+
+        ctx = {
+            'title': 'Clash Search: {} {} {}'.format(
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type)),
+            'call': call,
+        }
+
+        ctx.update(tool.search_between_proposals(
+            current_user, db, proposals, args, form))
+
+        return ctx
+
+    @with_call_review(permission=PermissionType.VIEW)
+    def view_review_call_clash_pair(
+            self, current_user, db, call, can,
+            proposal_a_id, proposal_b_id, args):
+        type_class = self.get_call_types()
+
+        for tool_info in self.target_tools.values():
+            if tool_info.code == 'clash':
+                tool = tool_info.tool
+                break
+        else:
+            raise ErrorPage('Clash tool not available.')
+
+        proposals = db.search_proposal(
+            call_id=call.id, proposal_id=(proposal_a_id, proposal_b_id))
+
+        if len(proposals) != 2:
+            raise ErrorPage('The selected proposals could not be found.')
+
+        proposals = self._attach_proposal_targets(db, proposals)
+
+        ctx = {
+            'title': 'Target Clash: {} and {}'.format(
+                *(x.code for x in proposals.values())),
+            'call': call,
+        }
+
+        ctx.update(tool.search_proposal_pair(
+            current_user, db, proposals, args))
+
+        return ctx
+
     @with_call_review(permission=PermissionType.EDIT)
     def view_review_affiliation_weight(
             self, current_user, db, call, can, form):

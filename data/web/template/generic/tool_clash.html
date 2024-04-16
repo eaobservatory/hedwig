@@ -1,17 +1,7 @@
 {% extends 'generic/tool_base.html' %}
 {% set help_link=url_for('help.user_page', page_name='target_clash') %}
 
-{% macro search_radius_input() %}
-    <li>
-        <label for="radius">Search radius</label>
-        <select name="radius">
-            {% for radius_option in radius_options %}
-                <option value="{{ radius_option }}" {{ 'selected="selected"' | safe if (radius_option == radius) }}>{{ radius_option }}</option>
-            {% endfor %}
-        </select>
-        "
-    </li>
-{% endmacro %}
+{% from 'generic/macro/clash.html' import render_search_radius_input %}
 
 {% macro render_target_links(target_links) %}
     {% if target_links %}
@@ -26,7 +16,7 @@
 {% endmacro %}
 
 {% block tool_input_list_extra %}
-    {{ search_radius_input() }}
+    {{ render_search_radius_input(radius_options, radius) }}
 {% endblock %}
 
 {% block tool_output %}
@@ -49,7 +39,7 @@
 
         <form method="GET" action="{{ url_for(target_tool_code | fmt('.tool_{}_proposal'), proposal_id=proposal_id)}}">
             <ol>
-                {{ search_radius_input() }}
+                {{ render_search_radius_input(radius_options, radius) }}
                 <li>
                     <input type="submit" value="{{ run_button }}" />
                 </li>

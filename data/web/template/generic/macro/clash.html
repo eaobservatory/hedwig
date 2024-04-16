@@ -1,0 +1,11 @@
+{% macro render_search_radius_input(radius_options, radius) %}
+    <li>
+        <label for="radius">Search radius</label>
+        <select name="radius">
+            {% for radius_option in radius_options %}
+                <option value="{{ radius_option }}" {{ 'selected="selected"' | safe if (radius_option == radius) }}>{{ radius_option }}</option>
+            {% endfor %}
+        </select>
+        "
+    </li>
+{% endmacro %}

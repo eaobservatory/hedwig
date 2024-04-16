@@ -18,6 +18,9 @@
             <li>
                 <a href="{{ url_for('.review_call_allocation', call_id=call_id) }}"><span class="fa-solid fa-chart-column"></span>View allocation details</a>
             </li>
+            <li>
+                <a href="{{ url_for('.review_call_clash', call_id=call_id) }}"><span class="fa-solid fa-burst"></span>Search for clashes</a>
+            </li>
         {% endif %}
         {% if can_edit %}
             <li><a href="{{ url_for('.review_affiliation_weight', call_id=call_id) }}"><span class="fa-solid fa-weight-hanging"></span>Edit affiliation weights</a></li>
