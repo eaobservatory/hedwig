@@ -25,6 +25,7 @@ from textwrap import wrap
 from jinja2 import Environment, FileSystemLoader
 
 from ..config import get_config, get_home
+from ..util import lower_except_abbr
 
 environment = None
 
@@ -74,6 +75,8 @@ def get_environment():
 
         environment.filters['format_datetime'] = \
             lambda x: x.strftime('%Y-%m-%d %H:%M')
+
+        environment.filters['lower_except_abbr'] = lower_except_abbr
 
     return environment
 

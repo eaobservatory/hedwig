@@ -5,7 +5,7 @@
 This is a notification regarding the peer review process for
 {% else %}
 This is a notification sent on behalf of {{ inviter_name }}
-with regard to the assignment of {{ role_name | lower }} reviews of
+with regard to the assignment of {{ role_name | lower_except_abbr }} reviews of
 {% endif %}
 {{ queue_name }} Queue proposals to use {{ facility_definite_name }}
 in Semester {{ semester_name }} ({{ call_type }} Call).
