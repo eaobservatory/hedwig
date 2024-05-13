@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict, namedtuple
+from datetime import timedelta
 from itertools import chain, count
 
 from ...astro.coord import CoordSystem
@@ -100,6 +101,10 @@ class GenericProposal(object):
         copy_proposal_id = None
         continuation_proposal_id = None
         member_copy = False
+        continuation_earliest = None
+        if call.allow_continuation and (call.cnrq_max_age is not None):
+            continuation_earliest = \
+                call.date_open - timedelta(days=call.cnrq_max_age)
 
         if form is not None:
             try:
@@ -167,6 +172,10 @@ class GenericProposal(object):
                             raise ErrorPage('Proposal to continue not found.')
 
                         assert old_proposal.id == continuation_proposal_id
+
+                        if continuation_earliest is not None:
+                            if old_proposal.semester_start < continuation_earliest:
+                                raise ErrorPage('Proposal to continue is too old.')
 
                     else:
                         raise ErrorPage('Action unexpectedly didn\'t match.')
@@ -254,7 +263,10 @@ class GenericProposal(object):
             proposals_continuable = proposals.map_values(
                 filter_value=lambda x:
                     x.state == ProposalState.ACCEPTED
-                    and x.queue_id == call.queue_id)
+                    and x.queue_id == call.queue_id
+                    and (
+                        continuation_earliest is None
+                        or not x.semester_start < continuation_earliest))
 
         return {
             'title': 'New Proposal',

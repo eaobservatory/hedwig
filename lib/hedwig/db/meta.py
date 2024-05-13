@@ -189,6 +189,7 @@ call = Table(
     Column('cnrq_word_lim', Integer, nullable=False),
     Column('cnrq_fig_lim', Integer, nullable=False),
     Column('cnrq_page_lim', Integer, nullable=False),
+    Column('cnrq_max_age', Integer, nullable=True),
     UniqueConstraint('semester_id', 'queue_id', 'type'),
     **table_opts)
 

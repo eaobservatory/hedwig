@@ -94,6 +94,7 @@ class ProposalPart(object):
                  multi_semester, separate, preamble, preamble_format, hidden,
                  allow_continuation,
                  cnrq_note, cnrq_word_lim, cnrq_fig_lim, cnrq_page_lim,
+                 cnrq_max_age,
                  _test_skip_check=False):
         """
         Add a call for proposals to the database.
@@ -164,6 +165,7 @@ class ProposalPart(object):
                 call.c.cnrq_word_lim: cnrq_word_lim,
                 call.c.cnrq_fig_lim: cnrq_fig_lim,
                 call.c.cnrq_page_lim: cnrq_page_lim,
+                call.c.cnrq_max_age: cnrq_max_age,
             }))
 
         return result.inserted_primary_key[0]
@@ -3104,6 +3106,7 @@ class ProposalPart(object):
                     preamble=(), preamble_format=(), hidden=None,
                     allow_continuation=None, cnrq_note=None,
                     cnrq_word_lim=None, cnrq_fig_lim=None, cnrq_page_lim=None,
+                    cnrq_max_age=(),
                     _test_skip_check=False):
         """
         Update a call for proposals record.
@@ -3151,6 +3154,8 @@ class ProposalPart(object):
             values['cnrq_fig_lim'] = cnrq_fig_lim
         if cnrq_page_lim is not None:
             values['cnrq_page_lim'] = cnrq_page_lim
+        if cnrq_max_age != ():
+            values['cnrq_max_age'] = cnrq_max_age
         if note_format is not None:
             if not FormatType.is_valid(note_format, is_system=True):
                 raise UserError('Note text format not recognised.')

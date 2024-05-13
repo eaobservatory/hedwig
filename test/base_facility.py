@@ -153,7 +153,7 @@ class FacilityTestCase(DBTestCase):
                 datetime(2019, 8, 1), datetime(2019, 9, 1),
                 100, 1000, 0, 1, 2000, 4, 3, 100, 100, '', '', '',
                 FormatType.PLAIN, False, False, None, None, False, False,
-                '', 500, 4, 1)
+                '', 500, 4, 1, 366)
 
         key = (queue_code, pi_affiliation)
         affiliation_id = self.id_cache.get(key)

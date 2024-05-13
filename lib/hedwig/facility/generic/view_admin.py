@@ -19,7 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import OrderedDict, defaultdict, namedtuple
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from ...email.format import render_email_template
 from ...error import NoSuchRecord, UserError
@@ -326,6 +326,16 @@ class GenericAdmin(object):
         if type_class.get_info(call.type).mid_close:
             mid_closes = db.search_call_mid_close(call_id=call.id)
 
+        semesters_continuable = None
+        if call.allow_continuation and (call.cnrq_max_age is not None):
+            continuation_earliest = \
+                call.date_open - timedelta(days=call.cnrq_max_age)
+
+            semesters_continuable = db.search_semester(
+                facility_id=self.id_).map_values(
+                    filter_value=lambda x:
+                        not x.date_start < continuation_earliest)
+
         ctx = {
             'title': 'Call: {} {} {}'.format(
                 call.semester_name, call.queue_name,
@@ -333,6 +343,7 @@ class GenericAdmin(object):
             'call': call,
             'mid_closes': mid_closes,
             'proposal_order': self.get_proposal_order(),
+            'semesters_continuable': semesters_continuable,
         }
 
         ctx.update(self._view_call_extra(db, call))
@@ -437,7 +448,8 @@ class GenericAdmin(object):
                 cnrq_note=form['cnrq_note'],
                 cnrq_word_lim=int(form['cnrq_word_lim']),
                 cnrq_fig_lim=int(form['cnrq_fig_lim']),
-                cnrq_page_lim=int(form['cnrq_page_lim']))
+                cnrq_page_lim=int(form['cnrq_page_lim']),
+                cnrq_max_age=int_or_none(form['cnrq_max_age']))
 
             if call.separate and (form['preamble'] != ''):
                 call = call._replace(
@@ -498,7 +510,8 @@ class GenericAdmin(object):
                         cnrq_note=call.cnrq_note,
                         cnrq_word_lim=call.cnrq_word_lim,
                         cnrq_fig_lim=call.cnrq_fig_lim,
-                        cnrq_page_lim=call.cnrq_page_lim)
+                        cnrq_page_lim=call.cnrq_page_lim,
+                        cnrq_max_age=call.cnrq_max_age)
 
                     # Update information in the call named tuple in case of a
                     # later error so that we have to show the edit page again.
@@ -536,7 +549,8 @@ class GenericAdmin(object):
                         cnrq_note=call.cnrq_note,
                         cnrq_word_lim=call.cnrq_word_lim,
                         cnrq_fig_lim=call.cnrq_fig_lim,
-                        cnrq_page_lim=call.cnrq_page_lim)
+                        cnrq_page_lim=call.cnrq_page_lim,
+                        cnrq_max_age=call.cnrq_max_age)
 
                     flash_message = 'The call has been updated.'
 

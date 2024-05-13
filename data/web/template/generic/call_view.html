@@ -132,7 +132,7 @@
         {% endblock %}
         {% block continuation_request %}
             <tr>
-                <th rowspan="4">Continuation Request</th>
+                <th rowspan="5">Continuation Request</th>
                 <td>
                     {% if call.cnrq_note %}
                         {{ call.cnrq_note | format_text(call.note_format) }}
@@ -149,6 +149,27 @@
             </tr>
             <tr>
                 <td>{{ call.cnrq_page_lim }} page{% if call.cnrq_page_lim != 1 %}s{% endif %}</td>
+            </tr>
+            <tr>
+                <td>
+                    Maximum age:
+                    {% if call.cnrq_max_age is not none %}
+                        {{ call.cnrq_max_age }} day{% if call.cnrq_max_age != 1 %}s{% endif %}
+                    {% else %}
+                        not constrained
+                    {% endif %}
+                    {% if semesters_continuable is not none %}
+                        <br />
+                        {% if semesters_continuable %}
+                            Eligible semesters:
+                            {% for semester in semesters_continuable.values() %}
+                                {{ semester.name }}{% if not loop.last %},{% endif %}
+                            {% endfor %}
+                        {% else %}
+                            No eligible semesters
+                        {% endif %}
+                    {% endif %}
+                </td>
             </tr>
         {% endblock %}
     {% endorderblocks %}
