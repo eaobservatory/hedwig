@@ -27,6 +27,12 @@
 
 <form method="GET" action="{{ url_for('.review_call_reviewers', call_id=call.id) }}">
     <p>
+        <select name="type">
+            <option value="" {{ 'selected="selected"' | safe if (current_type is none) }}>Any proposal type</option>
+            {% for (type_num, type_name) in types.items() %}
+                <option value="{{ type_num }}" {{ 'selected="selected"' | safe if (type_num == current_type) }}>{{ type_name }}</option>
+            {% endfor %}
+        </select>
         <select name="role">
             <option value="" {{ 'selected="selected"' | safe if (current_role is none) }}>Any role</option>
             {% for (role_num, role_name) in roles.items() %}

@@ -907,6 +907,12 @@ class GenericReview(object):
         else:
             state = int(state)
 
+        proposal_type = args.get('type', None)
+        if not proposal_type:
+            proposal_type = None
+        else:
+            proposal_type = int(proposal_type)
+
         proposals = []
         invite_roles = [x for x in role_class.get_invited_roles()
                         if type_class.has_reviewer_role(call.type, x)]
@@ -920,6 +926,7 @@ class GenericReview(object):
 
         for proposal in db.search_proposal(
                 call_id=call.id, state=ProposalState.review_states(),
+                type_=proposal_type,
                 with_members=True, with_reviewers=True,
                 with_review_info=True, with_reviewer_note=True,
                 with_reviewer_role=role, with_review_state=state).values():
@@ -967,8 +974,10 @@ class GenericReview(object):
                 type_class.get_name(call.type)),
             'call': call,
             'proposals': proposals,
+            'types': ProposalType.get_options(),
             'roles': role_class.get_options(),
             'states': ReviewState.get_options(),
+            'current_type': proposal_type,
             'current_role': role,
             'current_state': state,
             'assigned_roles': assigned_roles,

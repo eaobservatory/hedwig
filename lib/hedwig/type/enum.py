@@ -1344,6 +1344,10 @@ class ProposalType(EnumBasic, EnumShortName):
     ))
 
     @classmethod
+    def get_options(cls):
+        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
+
+    @classmethod
     def get_excluded_roles(cls, value):
         return cls._info[value].reviewer_roles_excluded
 
