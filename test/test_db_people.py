@@ -899,6 +899,13 @@ class DBPeopleTest(DBTestCase):
         user_id = self.db.add_user('user1', 'pass1')
         self.assertIsInstance(user_id, int)
 
+        # Check we cannot issue token if disabled.
+        self.db.update_user(user_id, disabled=True)
+        with self.assertRaisesRegex(UserError, 'account is disabled'):
+            self.db.issue_password_reset_token(user_id, remote_addr=None)
+
+        self.db.update_user(user_id, disabled=False)
+
         # Try making a reset token.
         (token, expiry) = self.db.issue_password_reset_token(
             user_id, remote_addr=None)
@@ -911,6 +918,13 @@ class DBPeopleTest(DBTestCase):
                                              remote_addr=None)
 
         self.assertEqual(self.db.authenticate_user('user1', 'pass1'), user_id)
+
+        # Check we cannot use token if disabled.
+        self.db.update_user(user_id, disabled=True)
+        with self.assertRaisesRegex(UserError, 'account is disabled'):
+            self.db.use_password_reset_token(token, 'nopass', remote_addr=None)
+
+        self.db.update_user(user_id, disabled=False)
 
         # Using the token should return this user name and the password
         # should have been changed.

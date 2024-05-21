@@ -826,6 +826,13 @@ class PeoplePart(object):
                     conn, user_id, UserLogEvent.GET_TOKEN,
                     rate_limit_password_reset)
 
+            disabled = conn.execute(select([user.c.disabled]).where(
+                user.c.id == user_id,
+            )).scalar()
+
+            if disabled:
+                raise UserError('Your account is disabled.')
+
             conn.execute(reset_token.delete().where(
                 reset_token.c.user_id == user_id))
 
@@ -1785,6 +1792,13 @@ class PeoplePart(object):
                 raise NoSuchRecord('reset token expired or non-existant')
 
             user_id = result.user_id
+
+            disabled = conn.execute(select([user.c.disabled]).where(
+                user.c.id == user_id,
+            )).scalar()
+
+            if disabled:
+                raise UserError('Your account is disabled.')
 
             # Log the usage of this token.
             self._add_user_log_entry(
