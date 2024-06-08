@@ -45,11 +45,7 @@ $(document).ready(function () {
     var alloc_canvas = $('<canvas id="mycanvas" width="1000" height="500"></canvas>');
     alloc.empty().append(alloc_canvas);
 
-    Chart.scaleService.updateScaleDefaults('linear', {
-        ticks: {
-            min: 0
-        }
-    });
+    Chart.defaults.scales.linear.min = 0;
 
     var alloc_chart = new Chart(alloc_canvas.get(0).getContext('2d'), {
         type: 'bar',
@@ -58,32 +54,36 @@ $(document).ready(function () {
         },
         options: {
             responsive: false,
-            legend: {
-                position: 'right'
+            plugins: {
+                legend: {
+                    position: 'right'
+                }
             },
             scales: {
-                xAxes: [{
+                x: {
                     stacked: true,
-                    scaleLabel: {
+                    title: {
                         display: true,
-                        labelString: 'RA / h'
+                        text: 'RA / h'
                     }
-                }],
-                yAxes: [{
+                },
+                y: {
                     stacked: true,
-                    scaleLabel: {
+                    title: {
                         display: true,
-                        labelString: 'Time / h'
+                        text: 'Time / h'
                     }
-                }]
+                }
             },
             animation: {
-                duration: 0
+                duration: 0,
+                active: {
+                    duration: 0
+                },
+                resize: {
+                    duration: 0
+                }
             },
-            hover: {
-                animationDuration: 0
-            },
-            responsiveAnimationDuration: 0
         }
     });
 
