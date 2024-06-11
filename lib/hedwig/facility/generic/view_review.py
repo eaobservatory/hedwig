@@ -19,11 +19,19 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from collections import defaultdict, namedtuple, OrderedDict
-from datetime import datetime
+from datetime import datetime, timedelta
 from itertools import chain
 import re
+import warnings
+
+from astropy.time import Time
+from astropy.coordinates import AltAz, ICRS, SkyCoord
+from astropy import units
+from astropy.utils.exceptions import AstropyWarning
+from numpy import arange, newaxis, nonzero
 
 from ...admin.proposal import finalize_call_review
+from ...astro.coord import get_earth_location
 from ...email.format import render_email_template
 from ...error import DatabaseIntegrityError, NoSuchRecord, NoSuchValue, \
     UserError
@@ -405,6 +413,14 @@ class GenericReview(object):
 
             proposal_list.append(info)
 
+        if call.multi_semester:
+            ra_inaccessible = None
+
+        else:
+            semester = db.get_semester(self.id_, semester_id=call.semester_id)
+            ra_inaccessible = self._get_ra_inaccessible(
+                semester.date_start, semester.date_end)
+
         return {
             'proposals': proposal_list,
             'categories': [
@@ -427,7 +443,71 @@ class GenericReview(object):
             'dynamic': self._get_review_call_allocation_dynamic(
                 db, call, can, proposals),
             'ra_bins': ra_bins,
+            'ra_inaccessible': ra_inaccessible,
         }
+
+    def _get_ra_inaccessible(self, date_start, date_end):
+        """
+        Estimate which RAs are inaccessible in the middle of the shift
+        during a semester between the given dates by considering a
+        target with declination equal to the observatory's latitude.
+        """
+
+        obs_info = self.get_observing_info()
+        if any(getattr(obs_info, x) is None for x in (
+                'geo_x', 'geo_y', 'geo_z',
+                'time_start', 'time_duration', 'el_min')):
+            return None
+
+        else:
+            location = get_earth_location(obs_info)
+            ras = list(range(0, 24))
+            targets = SkyCoord(
+                ras, [location.lat.degree] * len(ras),
+                unit=(units.hourangle, units.degree), frame=ICRS)
+
+            # Construct time in middle of shift by adding half of duration.
+            datetime_start = datetime.combine(date_start, obs_info.time_start) \
+                + timedelta(seconds=(obs_info.time_duration.total_seconds() / 2))
+
+            date_range = (Time(date_end) - Time(date_start)).sec / 86400
+
+            dates = Time(datetime_start) \
+                + arange(0, date_range + 1,  15) * units.day
+
+            frame = AltAz(location=location, obstime=dates[:, newaxis])
+
+            with warnings.catch_warnings():
+                # Ignore warning about not having the latest IERS data.
+                warnings.simplefilter('ignore', AstropyWarning)
+
+                targets = targets[newaxis, :].transform_to(frame)
+
+            all_available = (targets.alt > (obs_info.el_min * units.deg))
+            ra_available = [False] * len(ras)
+            for date_available in all_available:
+                for i in range(len(ras)):
+                    if date_available[i]:
+                        ra_available[i] = True
+
+            ra_inaccessible = []
+            inaccessible_start = None
+            ra_previous = None
+            for (i, ra) in enumerate(ras):
+                if not ra_available[i]:
+                    if inaccessible_start is None:
+                        inaccessible_start = ra
+
+                elif inaccessible_start is not None:
+                    ra_inaccessible.append([inaccessible_start, ra_previous])
+                    inaccessible_start = None
+
+                ra_previous = ra
+
+            if inaccessible_start is not None:
+                ra_inaccessible.append([inaccessible_start, ra_previous])
+
+            return ra_inaccessible
 
     def _attach_proposal_targets(self, db, proposals):
         """

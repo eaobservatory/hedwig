@@ -1,11 +1,11 @@
 {% extends 'layout.html' %}
 {% set help_link=url_for('help.admin_page', page_name='review_allocation') %}
 {% set navigation=[((call.semester_name, call.queue_name, (call.type | call_type_name(facility_call_type_class))) | fmt('{} {} {}'), url_for('.review_call', call_id=call.id))] %}
-{% set scripts = ['chart', 'review_allocation'] %}
+{% set scripts = ['chart', 'chartjs-plugin-annotation', 'review_allocation'] %}
 
 {% block content %}
 
-<div id="allocation" data-refresh="{{ url_for('.review_call_allocation_query', call_id=call.id) }}" data-proposals="{{ proposals | json }}" data-categories="{{ categories | json }}" data-dynamic="{{ dynamic | json }}" data-ra_bins="{{ ra_bins | json }}">
+<div id="allocation" data-refresh="{{ url_for('.review_call_allocation_query', call_id=call.id) }}" data-proposals="{{ proposals | json }}" data-categories="{{ categories | json }}" data-dynamic="{{ dynamic | json }}" data-ra_bins="{{ ra_bins | json }}" data-ra_inaccessible="{{ ra_inaccessible | json }}">
     <p>Loading&hellip;</p>
 </div>
 

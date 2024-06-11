@@ -12,6 +12,7 @@ $(document).ready(function () {
     var proposals = alloc.data('proposals');
     var categories = alloc.data('categories');
     var ra_bins = alloc.data('ra_bins');
+    var ra_inaccessible = alloc.data('ra_inaccessible');
     var default_bins = ra_bins.map(function () {return 0.0;});
 
     var merge_proposal_info = (function (dynamic) {
@@ -47,44 +48,61 @@ $(document).ready(function () {
 
     Chart.defaults.scales.linear.min = 0;
 
+    var chart_options = {
+        responsive: false,
+        plugins: {
+            legend: {
+                position: 'right'
+            },
+            annotation: {
+                annotations: {
+                }
+            }
+        },
+        scales: {
+            x: {
+                stacked: true,
+                title: {
+                    display: true,
+                    text: 'RA / h'
+                }
+            },
+            y: {
+                stacked: true,
+                title: {
+                    display: true,
+                    text: 'Time / h'
+                }
+            }
+        },
+        animation: {
+            duration: 0,
+            active: {
+                duration: 0
+            },
+            resize: {
+                duration: 0
+            }
+        },
+    };
+
+    if (ra_inaccessible !== null) {
+        for (var i in ra_inaccessible) {
+            chart_options.plugins.annotation.annotations['box' + i] = {
+                type: 'box',
+                xMin: ra_inaccessible[i][0] - 0.5,
+                xMax: ra_inaccessible[i][1] + 0.5,
+                backgroundColor: 'rgba(0, 0, 0, 0.1)'
+            };
+        }
+    }
+
     var alloc_chart = new Chart(alloc_canvas.get(0).getContext('2d'), {
         type: 'bar',
         data: {
             labels: ra_bins
         },
-        options: {
-            responsive: false,
-            plugins: {
-                legend: {
-                    position: 'right'
-                }
-            },
-            scales: {
-                x: {
-                    stacked: true,
-                    title: {
-                        display: true,
-                        text: 'RA / h'
-                    }
-                },
-                y: {
-                    stacked: true,
-                    title: {
-                        display: true,
-                        text: 'Time / h'
-                    }
-                }
-            },
-            animation: {
-                duration: 0,
-                active: {
-                    duration: 0
-                },
-                resize: {
-                    duration: 0
-                }
-            },
-        }
+        options: chart_options
     });
 
     // Create the refresh button.
