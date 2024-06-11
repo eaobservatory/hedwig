@@ -23,21 +23,16 @@ from datetime import datetime, timedelta
 import warnings
 
 from astropy import units
-from astropy.coordinates import AltAz, EarthLocation, ICRS, SkyCoord
+from astropy.coordinates import AltAz, ICRS, SkyCoord
 from astropy.time import Time
 from astropy.utils.exceptions import AstropyWarning
-from astropy.utils.iers import conf as astropy_iers_conf
 from numpy import arange, newaxis, nonzero
 
-from ...astro.coord import concatenate_coord_objects
+from ...astro.coord import concatenate_coord_objects, get_earth_location
 from ...compat import first_value
 from ...error import UserError
 from ...view.tool import BaseTargetTool
 from ...web.util import ErrorPage
-
-
-# Prevent Astropy from automatically downloading IERS data.
-astropy_iers_conf.auto_download = False
 
 
 class AvailabilityTool(BaseTargetTool):
@@ -52,8 +47,7 @@ class AvailabilityTool(BaseTargetTool):
             self.location = None
 
         else:
-            self.location = EarthLocation.from_geocentric(
-                obs_info.geo_x, obs_info.geo_y, obs_info.geo_z, units.m)
+            self.location = get_earth_location(obs_info)
             self.time_start = obs_info.time_start
             self.time_duration = obs_info.time_duration.total_seconds()
             self.el_min = obs_info.el_min * units.deg

@@ -21,9 +21,14 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict, namedtuple
 
 from astropy import coordinates
-from astropy.units import degree, hourangle, UnitsError
+from astropy.units import degree, hourangle, meter, UnitsError
+from astropy.utils.iers import conf as astropy_iers_conf
 
 from ..error import UserError
+
+
+# Prevent Astropy from automatically downloading IERS data.
+astropy_iers_conf.auto_download = False
 
 
 class CoordSystem(object):
@@ -188,3 +193,15 @@ def concatenate_coord_objects(objects):
 
     return coordinates.SkyCoord(
         target_ra, target_dec, unit=degree, frame=coordinates.ICRS)
+
+
+def get_earth_location(obs_info):
+    """
+    Construct Astropy `EarthLocation` object based on
+    a `FacilityObsInfo` object (with `geo_x`, `geo_y`
+    and `geo_z` attributes).
+    """
+
+    return coordinates.EarthLocation.from_geocentric(
+        obs_info.geo_x, obs_info.geo_y, obs_info.geo_z,
+        meter)
