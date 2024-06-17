@@ -55,7 +55,19 @@ class FileTest(DummyConfigTestCase):
             determine_figure_type(b'PLAIN TEXT')
 
     def test_pdf_pages(self):
-        self.assertEqual(determine_pdf_page_count(example_pdf), 1)
+        num_pages = determine_pdf_page_count(example_pdf)
+        self.assertIsInstance(num_pages, int)
+        self.assertEqual(num_pages, 1)
+
+        result = determine_pdf_page_count(example_pdf, with_max_size=True)
+        self.assertIsInstance(result, tuple)
+        (num_pages, major, minor) = result
+        self.assertIsInstance(num_pages, int)
+        self.assertEqual(num_pages, 1)
+        self.assertIsInstance(major, float)
+        self.assertAlmostEqual(major, 1.0 / 72.0)
+        self.assertIsInstance(minor, float)
+        self.assertAlmostEqual(minor, 1.0 / 72.0)
 
         with self.assertRaisesRegex(UserError, '^Could not read the PDF file'):
             determine_pdf_page_count(invalid_pdf)
