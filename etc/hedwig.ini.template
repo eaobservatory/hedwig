@@ -31,6 +31,9 @@ max_fig_size=1
 renderer=ghostscript
 resolution=120
 downscale=4
+max_size_major=11.8
+max_size_minor=8.6
+max_size_description=A4 or Letter
 
 [proposal_fig]
 max_thumb_width=100

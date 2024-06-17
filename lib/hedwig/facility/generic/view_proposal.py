@@ -2588,8 +2588,9 @@ class GenericProposal(object):
             self, current_user, db, proposal, can, role_class, role, file):
         code = role_class.get_code(role)
         name = role_class.get_name(role)
+        config = get_config()
         page_limit = getattr(proposal, code + '_page_lim')
-        max_size = int(get_config().get('upload', 'max_pdf_size'))
+        max_size = int(config.get('upload', 'max_pdf_size'))
         message = None
 
         if file is not None:
@@ -2614,12 +2615,20 @@ class GenericProposal(object):
                     raise UserError('File was of type {} rather than PDF.',
                                     FigureType.get_name(type_))
 
-                page_count = determine_pdf_page_count(buff)
+                (page_count, major_max, minor_max) = determine_pdf_page_count(
+                    buff, with_max_size=True)
+
                 if page_count > page_limit:
                     raise UserError(
-                        'PDF is too long: {} / {} {}',
-                        page_count, page_limit,
-                        ('page' if page_limit == 1 else 'pages'))
+                        'PDF is too long: {} {}.',
+                        page_count,
+                        ('page' if page_count == 1 else 'pages'))
+
+                if (major_max > float(config.get('proposal_pdf', 'max_size_major'))
+                        or minor_max > float(config.get('proposal_pdf', 'max_size_minor'))):
+                    raise UserError(
+                        'PDF page size is too large: {:.1f} \u00d7 {:.1f}\u2033.',
+                        major_max, minor_max)
 
                 db.set_proposal_pdf(
                     role_class, proposal.id, role, buff, page_count,
@@ -2640,6 +2649,8 @@ class GenericProposal(object):
             'message': message,
             'mime_types': [FigureType.get_mime_type(FigureType.PDF)],
             'max_size': max_size,
+            'max_page_size': config.get('proposal_pdf', 'max_size_description'),
+            'page_limit': page_limit,
             'target': url_for('.case_edit_pdf',
                               proposal_id=proposal.id, role=role),
         }

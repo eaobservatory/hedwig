@@ -2,6 +2,15 @@
 {% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
 
 {% block content %}
+<ul>
+    <li>
+        Maximum number of pages: {{ page_limit }}.
+    </li>
+    <li>
+        Maximum page size: {{ max_page_size }}.
+    </li>
+</ul>
+
 {% if message is not none %}
     <p class="warning">
         {{ message }}
