@@ -2364,7 +2364,8 @@ class GenericProposal(object):
     def _view_edit_figure(
             self, current_user, db, form, file_, figure, proposal, reviewer,
             title, target_edit, target_redirect, word_limit=None):
-        max_size = int(get_config().get('upload', 'max_fig_size'))
+        config = get_config()
+        max_size = int(config.get('upload', 'max_fig_size'))
         message = None
 
         if form is not None:
@@ -2395,10 +2396,18 @@ class GenericProposal(object):
 
                     type_ = determine_figure_type(buff)
                     if type_ == FigureType.PDF:
-                        page_count = determine_pdf_page_count(buff)
+                        (page_count, major_max, minor_max) = determine_pdf_page_count(
+                            buff, with_max_size=True)
+
                         if page_count != 1:
                             raise UserError(
                                 'The uploaded PDF has multiple pages.')
+
+                        if (major_max > float(config.get('proposal_fig', 'pdf_max_major'))
+                                or minor_max > float(config.get('proposal_fig', 'pdf_max_minor'))):
+                            raise UserError(
+                                'PDF page size is too large: {:.1f} \u00d7 {:.1f}\u2033.',
+                                major_max, minor_max)
 
                     figure_args = {
                         'figure': buff,
