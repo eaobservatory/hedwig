@@ -757,7 +757,8 @@ class PeopleView(object):
         # added to the database.
         institution = Institution(
             id=None, name='', department='', organization='',
-            address='', country='')
+            address='', country='',
+            name_abbr=None, department_abbr=None, organization_abbr=None)
 
         if form is not None:
             next_page = form.get('next_page', None)

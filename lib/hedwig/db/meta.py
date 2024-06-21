@@ -294,6 +294,9 @@ institution = Table(
     Column('organization', Unicode(255), nullable=False),
     Column('address', UnicodeText, nullable=False),
     Column('country', Unicode(2), nullable=False),
+    Column('name_abbr', Unicode(31), nullable=True),
+    Column('department_abbr', Unicode(31), nullable=True),
+    Column('organization_abbr', Unicode(31), nullable=True),
     **table_opts)
 
 institution_log = Table(
@@ -313,6 +316,9 @@ institution_log = Table(
     Column('prev_organization', Unicode(255), nullable=False),
     Column('prev_address', UnicodeText, nullable=False),
     Column('prev_country', Unicode(2), nullable=False),
+    Column('prev_name_abbr', Unicode(31), nullable=True),
+    Column('prev_department_abbr', Unicode(31), nullable=True),
+    Column('prev_organization_abbr', Unicode(31), nullable=True),
     Column('approved', Boolean, default=False, nullable=False),
     **table_opts)
 

@@ -562,10 +562,10 @@ class DBPeopleTest(DBTestCase):
             institution = self.db.get_institution(1999999)
 
         # Check that we can add an institution.
-        institution_id = self.db.add_institution('Institution One',
-                                                 'Department One',
-                                                 'Organization One',
-                                                 'Address...', 'AX')
+        institution_id = self.db.add_institution(
+            'Institution One', 'Department One', 'Organization One',
+            'Address...', 'AX',
+            name_abbr='I1', department_abbr='D1', organization_abbr='O1')
 
         self.assertIsInstance(institution_id, int)
 
@@ -574,29 +574,37 @@ class DBPeopleTest(DBTestCase):
         self.assertIsInstance(institution, Institution)
         self.assertEqual(institution.id, institution_id)
         self.assertEqual(institution.name, 'Institution One')
+        self.assertEqual(institution.department, 'Department One')
         self.assertEqual(institution.organization, 'Organization One')
         self.assertEqual(institution.address, 'Address...')
         self.assertEqual(institution.country, 'AX')
+        self.assertEqual(institution.name_abbr, 'I1')
+        self.assertEqual(institution.department_abbr, 'D1')
+        self.assertEqual(institution.organization_abbr, 'O1')
 
         # Get a list of institutions.
-        institution_id2 = self.db.add_institution('Institution Two',
-                                                  '', '', '', 'AX')
+        institution_id2 = self.db.add_institution(
+            'Institution Two',
+            '', '', '', 'AX',
+            name_abbr='I2')
         result = self.db.search_institution()
         self.assertIsInstance(result, ResultCollection)
         self.assertEqual(len(result), 2)
 
-        for ((row_id, institution), name, expected_id, org, country) in zip(
+        for ((row_id, institution), name, expected_id, org, country, name_abbr) in zip(
                 result.items(),
                 ['Institution One', 'Institution Two'],
                 [institution_id, institution_id2],
                 ['Organization One', ''],
-                ['AX', 'AX']):
+                ['AX', 'AX'],
+                ['I1', 'I2']):
             self.assertIsInstance(institution, InstitutionInfo)
             self.assertEqual(institution.id, row_id)
             self.assertEqual(institution.id, expected_id)
             self.assertEqual(institution.name, name)
             self.assertEqual(institution.organization, org)
             self.assertEqual(institution.country, country)
+            self.assertEqual(institution.name_abbr, name_abbr)
 
         # Try updating an institution.
         with self.assertRaisesRegex(Error,
@@ -612,19 +620,25 @@ class DBPeopleTest(DBTestCase):
             self.db.update_institution(institution_id, person_id, country='BX')
 
         self.db.update_institution(institution_id, person_id,
-                                   'Renamed Institution One')
+                                   'Renamed Institution One', name_abbr='RI1')
         institution = self.db.get_institution(institution_id)
         self.assertIsInstance(institution, Institution)
         self.assertEqual(institution.name, 'Renamed Institution One')
-        self.db.update_institution(institution_id, person_id,
-                                   organization='Renamed Organization',
-                                   address='New Address',
-                                   country='CX')
+        self.assertEqual(institution.name_abbr, 'RI1')
+        self.db.update_institution(
+            institution_id, person_id,
+            department='Renamed Department', department_abbr='RD',
+            organization='Renamed Organization', organization_abbr='RO',
+            address='New Address',
+            country='CX')
         institution = self.db.get_institution(institution_id)
         self.assertIsInstance(institution, Institution)
+        self.assertEqual(institution.department, 'Renamed Department')
         self.assertEqual(institution.organization, 'Renamed Organization')
         self.assertEqual(institution.address, 'New Address')
         self.assertEqual(institution.country, 'CX')
+        self.assertEqual(institution.organization_abbr, 'RO')
+        self.assertEqual(institution.department_abbr, 'RD')
 
         # Check country validation for new institutions.
         with self.assertRaisesRegex(UserError, 'Country code not recognised'):

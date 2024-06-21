@@ -86,6 +86,7 @@ class PeoplePart(object):
 
     def add_institution(
             self, name, department, organization, address, country,
+            name_abbr=None, department_abbr=None, organization_abbr=None,
             adder_person_id=None):
         """
         Add an institution to the database.
@@ -103,6 +104,9 @@ class PeoplePart(object):
                 institution.c.organization: organization,
                 institution.c.address: address,
                 institution.c.country: country,
+                institution.c.name_abbr: name_abbr,
+                institution.c.department_abbr: department_abbr,
+                institution.c.organization_abbr: organization_abbr,
             }))
 
             institution_id = result.inserted_primary_key[0]
@@ -1041,6 +1045,9 @@ class PeoplePart(object):
             institution.c.department,
             institution.c.organization,
             institution.c.country,
+            institution.c.name_abbr,
+            institution.c.department_abbr,
+            institution.c.organization_abbr,
         ])
 
         if has_registered_person is not None:
@@ -1145,6 +1152,9 @@ class PeoplePart(object):
                     organization=values.pop('prev_organization'),
                     address=values.pop('prev_address'),
                     country=values.pop('prev_country'),
+                    name_abbr=values.pop('prev_name_abbr'),
+                    department_abbr=values.pop('prev_department_abbr'),
+                    organization_abbr=values.pop('prev_organization_abbr'),
                 )
 
                 ans[values['id']] = InstitutionLog(prev=prev, **values)
@@ -1203,6 +1213,9 @@ class PeoplePart(object):
                 'institution_department': None,
                 'institution_organization': None,
                 'institution_country': None,
+                'institution_name_abbr': None,
+                'institution_department_abbr': None,
+                'institution_organization_abbr': None,
             }
 
             stmt = person.select()
@@ -1215,6 +1228,9 @@ class PeoplePart(object):
                 institution.c.department.label('institution_department'),
                 institution.c.organization.label('institution_organization'),
                 institution.c.country.label('institution_country'),
+                institution.c.name_abbr.label('institution_name_abbr'),
+                institution.c.department_abbr.label('institution_department_abbr'),
+                institution.c.organization_abbr.label('institution_organization_abbr'),
             ]).select_from(person.outerjoin(institution))
 
         if person_id is not None:
@@ -1290,6 +1306,9 @@ class PeoplePart(object):
                 institution.c.department.label('institution_department'),
                 institution.c.organization.label('institution_organization'),
                 institution.c.country.label('institution_country'),
+                institution.c.name_abbr.label('institution_name_abbr'),
+                institution.c.department_abbr.label('institution_department_abbr'),
+                institution.c.organization_abbr.label('institution_organization_abbr'),
             ])
 
             select_from = select_from.join(person).outerjoin(institution)
@@ -1305,6 +1324,9 @@ class PeoplePart(object):
                 'institution_department': None,
                 'institution_organization': None,
                 'institution_country': None,
+                'institution_name_abbr': None,
+                'institution_department_abbr': None,
+                'institution_organization_abbr': None,
             }
 
         stmt = select(select_columns).select_from(select_from)
@@ -1515,6 +1537,7 @@ class PeoplePart(object):
     def update_institution(self, institution_id, updater_person_id=None,
                            name=None, department=None,
                            organization=None, address=None, country=None,
+                           name_abbr=(), department_abbr=(), organization_abbr=(),
                            log_approved=False,
                            _test_skip_log=False):
         """
@@ -1540,6 +1563,15 @@ class PeoplePart(object):
                 raise UserError('Country code not recognised')
             values['country'] = country
 
+        if name_abbr != ():
+            values['name_abbr'] = name_abbr
+
+        if department_abbr != ():
+            values['department_abbr'] = department_abbr
+
+        if organization_abbr != ():
+            values['organization_abbr'] = organization_abbr
+
         if not values:
             raise Error('no institution updates specified')
 
@@ -1561,6 +1593,9 @@ class PeoplePart(object):
                     institution_log.c.prev_organization: prev.organization,
                     institution_log.c.prev_address: prev.address,
                     institution_log.c.prev_country: prev.country,
+                    institution_log.c.prev_name_abbr: prev.name_abbr,
+                    institution_log.c.prev_department_abbr: prev.department_abbr,
+                    institution_log.c.prev_organization_abbr: prev.organization_abbr,
                     institution_log.c.approved: log_approved,
                 }))
 

@@ -118,6 +118,8 @@ GroupMember = namedtuple(
     ['person_name', 'person_public', 'person_registered',
      'institution_id', 'institution_name', 'institution_department',
      'institution_organization', 'institution_country',
+     'institution_name_abbr', 'institution_department_abbr',
+     'institution_organization_abbr',
      'queue_code', 'queue_name', 'facility_id',])
 
 Institution = namedtuple(
@@ -126,7 +128,8 @@ Institution = namedtuple(
 
 InstitutionInfo = namedtuple(
     'InstitutionInfo',
-    ['id', 'name', 'department', 'organization', 'country'])
+    ['id', 'name', 'department', 'organization', 'country',
+     'name_abbr', 'department_abbr', 'organization_abbr'])
 
 InstitutionLog = namedtuple(
     'InstitutionLog',
@@ -145,7 +148,9 @@ Member = namedtuple(
      'affiliation_name',
      'resolved_institution_id',
      'institution_name', 'institution_department',
-     'institution_organization', 'institution_country'])
+     'institution_organization', 'institution_country',
+     'institution_name_abbr', 'institution_department_abbr',
+     'institution_organization_abbr'])
 
 MemberInfo = namedtuple(
     'MemberInfo',
@@ -219,7 +224,9 @@ PersonInfo = namedtuple(
     'PersonInfo',
     [x.name for x in person.columns] +
     ['institution_name', 'institution_department',
-     'institution_organization', 'institution_country'])
+     'institution_organization', 'institution_country',
+     'institution_name_abbr', 'institution_department_abbr',
+     'institution_organization_abbr'])
 
 PersonLog = namedtuple(
     'PersonLog',
@@ -309,6 +316,8 @@ Reviewer = namedtuple(
     ['person_name', 'person_public', 'person_registered', 'user_id',
      'institution_id', 'institution_name', 'institution_department',
      'institution_organization', 'institution_country',
+     'institution_name_abbr', 'institution_department_abbr',
+     'institution_organization_abbr',
      'invitation_token', 'invitation_expiry', 'review_extra',
      'acceptance_accepted', 'acceptance_text', 'acceptance_format',
      'acceptance_date',
@@ -356,7 +365,9 @@ SiteGroupMember = namedtuple(
     [x.name for x in site_group_member.columns] +
     ['person_name', 'person_public', 'person_registered',
      'institution_id', 'institution_name', 'institution_department',
-     'institution_organization', 'institution_country'])
+     'institution_organization', 'institution_country',
+     'institution_name_abbr', 'institution_department_abbr',
+     'institution_organization_abbr'])
 
 Target = namedtuple(
     'Target',

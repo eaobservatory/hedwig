@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -352,6 +352,9 @@ class ReviewPart(object):
                 institution.c.department.label('institution_department'),
                 institution.c.organization.label('institution_organization'),
                 institution.c.country.label('institution_country'),
+                institution.c.name_abbr.label('institution_name_abbr'),
+                institution.c.department_abbr.label('institution_department_abbr'),
+                institution.c.organization_abbr.label('institution_organization_abbr'),
             ])
 
             select_from = select_from.join(person).outerjoin(institution)
@@ -366,6 +369,9 @@ class ReviewPart(object):
                 'institution_department': None,
                 'institution_organization': None,
                 'institution_country': None,
+                'institution_name_abbr': None,
+                'institution_department_abbr': None,
+                'institution_organization_abbr': None,
             })
 
         if with_queue:
@@ -442,6 +448,9 @@ class ReviewPart(object):
             institution.c.department.label('institution_department'),
             institution.c.organization.label('institution_organization'),
             institution.c.country.label('institution_country'),
+            institution.c.name_abbr.label('institution_name_abbr'),
+            institution.c.department_abbr.label('institution_department_abbr'),
+            institution.c.organization_abbr.label('institution_organization_abbr'),
         ]
 
         select_from = reviewer.join(person).outerjoin(institution)
