@@ -84,10 +84,17 @@
     </li>
 {% endmacro %}
 
-{% macro render_member_institution(member, part_truncate=100) %}
-    {{ member.institution_name | abbr(part_truncate) }}{% if member.institution_department %} ({{ member.institution_department | abbr(part_truncate) }}){% endif %},
+{% macro render_member_institution(member, part_truncate=25) %}
+    {{ member.institution_name | abbr(part_truncate, abbreviation=member.institution_name_abbr) }}
+    {%- if member.institution_department %}
+        ({{ member.institution_department | abbr(part_truncate, abbreviation=member.institution_department_abbr) }})
+    {%- elif member.institution_department_abbr is not none %}
+        ({{ member.institution_department_abbr }})
+    {%- endif %},
     {% if member.institution_organization %}
-        {{ member.institution_organization | abbr(part_truncate) }},
+        {{ member.institution_organization | abbr(part_truncate, abbreviation=member.institution_organization_abbr) }},
+    {% elif member.institution_organization_abbr is not none %}
+        {{ member.institution_organization_abbr }}
     {% endif %}
     {{ member.institution_country | country_name | abbr(part_truncate) }}
 {% endmacro %}

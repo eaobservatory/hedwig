@@ -77,9 +77,15 @@
                 {% if person.institution.department %}
                     {{ person.institution.department }}
                     <br />
+                {% elif person.institution.department_abbr is not none %}
+                    {{ person.institution.department_abbr }}
+                    <br />
                 {% endif %}
                 {% if person.institution.organization %}
                     {{ person.institution.organization }}
+                    <br />
+                {% elif person.institution.organization_abbr is not none %}
+                    {{ person.institution.organization_abbr }}
                     <br />
                 {% endif %}
                 {{ person.institution.country | country_name }}

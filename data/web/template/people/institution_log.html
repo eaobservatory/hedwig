@@ -30,7 +30,7 @@
                 {% for entry in institution_entries | reverse %}
                     <tr class="spacer_above">
                         {% if (institution is none) and (loop.first) %}
-                            <td rowspan="{{ 5 * (institution_entries | length) }}">
+                            <td rowspan="{{ 8 * (institution_entries | length) }}">
                                 <p>
                                     {{ entry.institution_name }}
                                 </p>
@@ -40,28 +40,43 @@
                                 </ul>
                             </td>
                         {% endif %}
-                        <td rowspan="5">{{ entry.date | format_datetime }}</td>
-                        <td rowspan="5"><a href="{{ url_for('.person_view', person_id=entry.person_id) }}">{{ entry.person_name }}</a></td>
-                        <td rowspan="5">
+                        <td rowspan="8">{{ entry.date | format_datetime }}</td>
+                        <td rowspan="8"><a href="{{ url_for('.person_view', person_id=entry.person_id) }}">{{ entry.person_name }}</a></td>
+                        <td rowspan="8">
                             <input type="checkbox" name="approved_{{ entry.id }}" {{ 'checked="checked"' | safe if entry.approved }} />
                             <input type="hidden" name="entry_{{ entry.id }}" value="1" />
                         </td>
-                        <th>Name</th>
+                        <th rowspan="2">Name</th>
                         {% set cell_class = ('class="no_change"' | safe if entry.prev.name == entry.new.name else '') %}
                         <td {{ cell_class }}>{{ entry.prev.name }}</td>
                         <td {{ cell_class }}>{{ entry.new.name }}</td>
                     </tr>
                     <tr>
-                        <th>Department</th>
-                        {% set cell_class = ('class="no_change"' | safe if entry.prev.department == entry.new.department else '') %}
-                        <td {{ cell_class }}>{{ entry.prev.department }}</td>
-                        <td {{ cell_class }}>{{ entry.new.department }}</td>
+                        {% set cell_class = ('class="no_change"' | safe if entry.prev.name_abbr == entry.new.name_abbr else '') %}
+                        <td {{ cell_class }}>{{ '&nbsp;' | safe if entry.prev.name_abbr is none else entry.prev.name_abbr }}</td>
+                        <td {{ cell_class }}>{{ '&nbsp;' | safe if entry.new.name_abbr is none else entry.new.name_abbr }}</td>
                     </tr>
                     <tr>
-                        <th>Organization</th>
+                        <th rowspan="2">Department</th>
+                        {% set cell_class = ('class="no_change"' | safe if entry.prev.department == entry.new.department else '') %}
+                        <td {{ cell_class }}>{{ '&nbsp;' | safe if not entry.prev.department else entry.prev.department }}</td>
+                        <td {{ cell_class }}>{{ '&nbsp;' | safe if not entry.new.department else entry.new.department }}</td>
+                    </tr>
+                    <tr>
+                        {% set cell_class = ('class="no_change"' | safe if entry.prev.department_abbr == entry.new.department_abbr else '') %}
+                        <td {{ cell_class }}>{{ '&nbsp;' | safe if entry.prev.department_abbr is none else entry.prev.department_abbr }}</td>
+                        <td {{ cell_class }}>{{ '&nbsp;' | safe if entry.new.department_abbr is none else entry.new.department_abbr }}</td>
+                    </tr>
+                    <tr>
+                        <th rowspan="2">Organization</th>
                         {% set cell_class = ('class="no_change"' | safe if entry.prev.organization == entry.new.organization else '') %}
-                        <td {{ cell_class }}>{{ entry.prev.organization }}</td>
-                        <td {{ cell_class }}>{{ entry.new.organization }}</td>
+                        <td {{ cell_class }}>{{ '&nbsp;' | safe if not entry.prev.organization else entry.prev.organization }}</td>
+                        <td {{ cell_class }}>{{ '&nbsp;' | safe if not entry.new.organization else entry.new.organization }}</td>
+                    </tr>
+                    <tr>
+                        {% set cell_class = ('class="no_change"' | safe if entry.prev.organization_abbr == entry.new.organization_abbr else '') %}
+                        <td {{ cell_class }}>{{ '&nbsp;' | safe if entry.prev.organization_abbr is none else entry.prev.organization_abbr }}</td>
+                        <td {{ cell_class }}>{{ '&nbsp;' | safe if entry.new.organization_abbr is none else entry.new.organization_abbr }}</td>
                     </tr>
                     <tr>
                         <th>Address</th>

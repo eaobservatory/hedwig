@@ -144,7 +144,7 @@
                                         {% if member.resolved_institution_id is none %}
                                             &nbsp;
                                         {% else %}
-                                            <a href="{{ url_for('people.institution_view', institution_id=member.resolved_institution_id) }}">{{ render_member_institution(member, part_truncate=25) }}</a>
+                                            <a href="{{ url_for('people.institution_view', institution_id=member.resolved_institution_id) }}">{{ render_member_institution(member, part_truncate=20) }}</a>
                                         {% endif %}
                                     </td>
                                     <td>{{ member.affiliation_name }}</td>

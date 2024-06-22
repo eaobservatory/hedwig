@@ -19,33 +19,51 @@
     <table>
         <tr>
             <th>&nbsp;</th>
-            <th>Main record<br /><i>(to be kept)</i></th>
-            <th>Duplicate record<br /><i>(to be replaced)</i></th>
+            <th colspan="2">Main record<br /><i>(to be kept)</i></th>
+            <th colspan="2">Duplicate record<br /><i>(to be replaced)</i></th>
         </tr>
         <tr>
             <th>Institution name</th>
-            <td>{{ institution.name }}</td>
-            <td>{{ duplicate.name }}</td>
+            {% if institution.name_abbr is not none %}
+                <td>{{ institution.name_abbr }}</td>
+            {% endif %}
+            <td colspan="{{ 2 if institution.name_abbr is none else 1 }}">{{ institution.name }}</td>
+            {% if duplicate.name_abbr is not none %}
+                <td>{{ duplicate.name_abbr }}</td>
+            {% endif %}
+            <td colspan="{{ 2 if duplicate.name_abbr is none else 1 }}">{{ duplicate.name }}</td>
         </tr>
         <tr>
             <th>Department</th>
-            <td>{{ institution.department }}</td>
-            <td>{{ duplicate.department }}</td>
+            {% if institution.department_abbr is not none %}
+                <td>{{ institution.department_abbr }}</td>
+            {% endif %}
+            <td colspan="{{ 2 if institution.department_abbr is none else 1 }}">{{ institution.department }}</td>
+            {% if duplicate.department_abbr is not none %}
+                <td>{{ duplicate.department_abbr }}</td>
+            {% endif %}
+            <td colspan="{{ 2 if duplicate.department_abbr is none else 1 }}">{{ duplicate.department }}</td>
         </tr>
         <tr>
             <th>Parent organization</th>
-            <td>{{ institution.organization }}</td>
-            <td>{{ duplicate.organization }}</td>
+            {% if institution.organization_abbr is not none %}
+                <td>{{ institution.organization_abbr }}</td>
+            {% endif %}
+            <td colspan="{{ 2 if institution.organization_abbr is none else 1 }}">{{ institution.organization }}</td>
+            {% if duplicate.organization_abbr is not none %}
+                <td>{{ duplicate.organization_abbr }}</td>
+            {% endif %}
+            <td colspan="{{ 2 if duplicate.organization_abbr is none else 1 }}">{{ duplicate.organization }}</td>
         </tr>
         <tr>
             <th>Address</th>
-            <td>{{ institution.address | format_text }}</td>
-            <td>{{ duplicate.address | format_text }}</td>
+            <td colspan="2">{{ institution.address | format_text }}</td>
+            <td colspan="2">{{ duplicate.address | format_text }}</td>
         </tr>
         <tr>
             <th>Country</th>
-            <td>{{ institution.country | country_name }}</td>
-            <td>{{ duplicate.country | country_name }}</td>
+            <td colspan="2">{{ institution.country | country_name }}</td>
+            <td colspan="2">{{ duplicate.country | country_name }}</td>
         </tr>
     </table>
 

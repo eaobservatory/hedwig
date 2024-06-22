@@ -11,9 +11,9 @@
     </tr>
     {% for institution in institutions.values() %}
         <tr>
-            <td><a href="{{ url_for('.institution_view', institution_id=institution.id)}}">{{ institution.name }}</a></td>
-            <td>{{ institution.department }}</td>
-            <td>{{ institution.organization }}</td>
+            <td><a href="{{ url_for('.institution_view', institution_id=institution.id)}}">{{ institution.name | abbr(35, abbreviation=institution.name_abbr) }}</a></td>
+            <td>{{ institution.department | abbr(25, abbreviation=institution.department_abbr) }}</td>
+            <td>{{ institution.organization | abbr(25, abbreviation=institution.organization_abbr) }}</td>
             <td>{{ institution.country | country_name }} </td>
         </tr>
     {% endfor %}
