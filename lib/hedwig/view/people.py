@@ -41,7 +41,7 @@ from ..type.enum import LogEventLevel, \
 from ..type.simple import Email, \
     Institution, InstitutionLog, Person, ProposalWithCode
 from ..type.util import null_tuple, with_deadline
-from ..view.util import int_or_none
+from ..view.util import int_or_none, str_or_none
 from ..web.util import flash, session, url_for, url_add_args, url_relative, \
     ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect
 from .util import with_institution, with_person, with_user
@@ -792,7 +792,10 @@ class PeopleView(object):
                         department=form['department'].strip(),
                         organization=form['organization'].strip(),
                         address=form['address'],
-                        country=form['country_code'])
+                        country=form['country_code'],
+                        name_abbr=str_or_none(form['institution_name_abbr'].strip()),
+                        department_abbr=str_or_none(form['department_abbr'].strip()),
+                        organization_abbr=str_or_none(form['organization_abbr'].strip()))
                     if not institution.name:
                         raise UserError('Please enter the institution name.')
                     if not institution.country:
@@ -803,6 +806,9 @@ class PeopleView(object):
                         institution.name, institution.department,
                         institution.organization,
                         institution.address, institution.country,
+                        name_abbr=institution.name_abbr,
+                        department_abbr=institution.department_abbr,
+                        organization_abbr=institution.organization_abbr,
                         adder_person_id=current_user.person.id)
                     db.update_person(person.id, institution_id=institution_id)
 
@@ -1393,7 +1399,10 @@ class PeopleView(object):
                         department=form['department'].strip(),
                         organization=form['organization'].strip(),
                         address=form['address'],
-                        country=form['country_code'])
+                        country=form['country_code'],
+                        name_abbr=str_or_none(form['institution_name_abbr'].strip()),
+                        department_abbr=str_or_none(form['department_abbr'].strip()),
+                        organization_abbr=str_or_none(form['organization_abbr'].strip()))
                     if not institution.name:
                         raise UserError('Please enter the institution name.')
                     if not institution.country:
@@ -1412,6 +1421,9 @@ class PeopleView(object):
                         organization=institution.organization,
                         address=institution.address,
                         country=institution.country,
+                        name_abbr=institution.name_abbr,
+                        department_abbr=institution.department_abbr,
+                        organization_abbr=institution.organization_abbr,
                         log_approved=log_approved)
                     flash('The institution\'s record has been updated.')
                     raise HTTPRedirect(url_for('.institution_view',

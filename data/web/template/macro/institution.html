@@ -1,20 +1,77 @@
 {% macro render_institution_form(institution) %}
     <li>
+        <div class="explanation">
+            Primary name by which the institution is known,
+            e.g. &ldquo;University of &hellip;&rdquo;
+            &nbsp; or &nbsp; &ldquo;&hellip; Observatory&rdquo;.
+        </div>
+    </li>
+    <li>
         <label for="institution_name">Institution name</label>
         <input type="text" name="institution_name" value="{{ institution.name }}" autofocus="autofocus" required="required" size="40" />
-        <span class="explanation">e.g. University of &hellip; &nbsp; / &nbsp; &hellip; Observatory</span>
+    </li>
+    <li>
+        <label for="institution_name_abbr">Abbreviated name</label>
+        <input type="text" name="institution_name_abbr" value="{{ '' if institution.name_abbr is none else institution.name_abbr }}" size="10" />
+        <div class="formtip">
+            <div>
+                If the institution has a commonly-used abbreviation,
+                please enter the abbreviation here
+                and give its full name in the box above.
+            </div>
+        </div>
+    </li>
+
+    <li>
+        <div class="explanation">
+            Name of a subdivision of the institution,
+            e.g. a department, faculty or institute.
+            You can omit any leading classification
+            such as &ldquo;Department of &hellip;&rdquo;.
+        </div>
     </li>
     <li>
         <label for="department">Department</label>
         <input type="text" name="department" value="{{ institution.department }}" size="40" />
-        <span class="explanation">optional: e.g. Dept. of &hellip; &nbsp; / &nbsp;  Institute of &hellip;</span>
+        <span class="explanation">optional</span>
+    </li>
+    <li>
+        <label for="department_abbr">Abbreviated department</label>
+        <input type="text" name="department_abbr" value="{{ '' if institution.department_abbr is none else institution.department_abbr }}" size="10" />
+        <div class="formtip">
+            <div>
+                If the subdivision has a commonly-used abbreviation,
+                please enter the abbreviation here
+                and give its full name in the box above.
+            </div>
+        </div>
     </li>
 
     <li>
+        <div class="explanation">
+            If the institution forms part of a larger organization
+            (e.g. Chinese Academy of Sciences &mdash; CAS,
+            or National Astronomical Observatory of Japan &mdash; NAOJ)
+            you can enter that here.
+        </div>
+    </li>
+    <li>
         <label for="organization">Parent organization</label>
         <input type="text" name="organization" value="{{ institution.organization }}" size="40" />
-        <span class="explanation">optional: e.g. Chinese Academy of Sciences</span>
+        <span class="explanation">optional</span>
     </li>
+    <li>
+        <label for="organization_abbr">Abbreviated organization</label>
+        <input type="text" name="organization_abbr" value="{{ '' if institution.organization_abbr is none else institution.organization_abbr }}" size="10" />
+        <div class="formtip">
+            <div>
+                If the parent organization has a commonly-used abbreviation,
+                please enter the abbreviation here
+                and give its full name in the box above.
+            </div>
+        </div>
+    </li>
+
     <li>
         <label for="address">Address</label>
         <textarea name="address" cols="40" rows="8">{{ institution.address }}</textarea>

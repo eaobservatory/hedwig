@@ -3,7 +3,7 @@
 {% set help_link=url_for('help.user_page', page_name='register') %}
 
 {% set stylesheets = ['selectize'] %}
-{% set scripts = ['selectize', 'institution_select', 'country_select'] %}
+{% set scripts = ['selectize', 'institution_select', 'country_select', 'formtip'] %}
 
 {% from 'macro/institution.html' import render_institution_form %}
 
@@ -71,9 +71,16 @@
     <h2>New Institution</h2>
 
     <p>
-    If {% if is_current_user %} your {% else %} the {% endif %}
-    institution does not appear in the list above,
-    you may enter it into the system here.
+        If {% if is_current_user %} your {% else %} the {% endif %}
+        institution does not appear in the list above,
+        you may enter it into the system here.
+        The institution will be added to a database available
+        for selection by other members.
+        Please enter information for a single institution
+        &mdash; in case of doubt,
+        please give the institution corresponding to
+        {% if is_current_user %} your {% else %} the {% endif %}
+        affiliation as would be selected in proposals.
     </p>
 
     {% if message is not none %}

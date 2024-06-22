@@ -6,29 +6,56 @@
 <table>
     <tr>
         <th>Institution name</th>
-        <td>{{ institution.name }}</td>
+        {% if institution.name_abbr is not none %}
+            <td>{{ institution.name_abbr }}</td>
+        {% endif %}
+        <td colspan="{{ 2 if institution.name_abbr is none else 1 }}">
+            {% if institution.name %}
+                {{ institution.name }}
+            {% else %}
+                <i>Unknown full name</i>
+            {% endif %}
+        </td>
     </tr>
-    {% if institution.department %}
+    {% if institution.department or institution.department_abbr is not none %}
         <tr>
             <th>Department</th>
-            <td>{{ institution.department }}</td>
+            {% if institution.department_abbr is not none %}
+                <td>{{ institution.department_abbr }}</td>
+            {% endif %}
+            <td colspan="{{ 2 if institution.department_abbr is none else 1 }}">
+                {% if institution.department %}
+                    {{ institution.department }}
+                {% else %}
+                    <i>Unknown full name</i>
+                {% endif %}
+            </td>
         </tr>
     {% endif %}
-    {% if institution.organization %}
+    {% if institution.organization or institution.organization_abbr is not none %}
         <tr>
             <th>Parent organization</th>
-            <td>{{ institution.organization }}</td>
+            {% if institution.organization_abbr is not none %}
+                <td>{{ institution.organization_abbr }}</td>
+            {% endif %}
+            <td colspan="{{ 2 if institution.organization_abbr is none else 1 }}">
+                {% if institution.organization %}
+                    {{ institution.organization }}
+                {% else %}
+                    <i>Unknown full name</i>
+                {% endif %}
+            </td>
         </tr>
     {% endif %}
     {% if institution.address %}
         <tr>
             <th>Address</th>
-            <td>{{ institution.address | format_text }}</td>
+            <td colspan="2">{{ institution.address | format_text }}</td>
         </tr>
     {% endif %}
     <tr>
         <th>Country</th>
-        <td>{{ institution.country | country_name }}</td>
+        <td colspan="2">{{ institution.country | country_name }}</td>
     </tr>
 </table>
 
