@@ -476,7 +476,7 @@ def register_template_utils(app):
             return 'Unknown event'
 
     @app.template_filter()
-    def abbr(value, length=20):
+    def abbr(value, length=20, abbreviation=None):
         """
         Filter to truncate the text to the given length and return
         it as an "abbr" element.  If the text is already shorter than
@@ -489,8 +489,11 @@ def register_template_utils(app):
         if len(value) <= length:
             return value
 
+        if abbreviation is None:
+            abbreviation = value[:length] + Markup('&hellip;')
+
         return Markup('<abbr title="') + value + Markup('">') + \
-            value[:length] + Markup('&hellip;</abbr>')
+            abbreviation + Markup('</abbr>')
 
     @app.template_test()
     def affiliation_type_standard(value, type_class):

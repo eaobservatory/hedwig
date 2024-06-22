@@ -339,6 +339,13 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(f('1234567890', 5),
                          '<abbr title="1234567890">12345&hellip;</abbr>')
 
+        self.assertEqual(
+            f('999999999', 3, abbreviation=None),
+            '<abbr title="999999999">999&hellip;</abbr>')
+        self.assertEqual(
+            f('999999999', 3, abbreviation='1E10-1'),
+            '<abbr title="999999999">1E10-1</abbr>')
+
     def test_test_annotation(self):
         t = self.app.jinja_env.tests['annotation_proposal_copy']
         self.assertTrue(t(AnnotationType.PROPOSAL_COPY))
