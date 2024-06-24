@@ -15,7 +15,8 @@ $(document).ready(function () {
 
         settings = {
             'options': result,
-            'placeholder': 'Select a person\u2026'
+            'placeholder': 'Select a person\u2026',
+            'searchField': ['text_full', 'text_abbr']
         };
 
         var selected_value = person_select.data('selected');

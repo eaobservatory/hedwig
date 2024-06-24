@@ -15,7 +15,8 @@ $(document).ready(function () {
 
         settings = {
             'options': result,
-            'placeholder': 'Select an institution\u2026'
+            'placeholder': 'Select an institution\u2026',
+            'searchField': ['text_full', 'text_abbr']
         };
 
         var selected_value = institution_select.data('selected');

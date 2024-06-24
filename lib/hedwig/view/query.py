@@ -52,18 +52,43 @@ class QueryView(object):
         institutions = []
 
         for institution in db.search_institution().values():
-            text = truncate(institution.name, 25)
+            text = truncate(
+                institution.name, 20,
+                abbreviation=institution.name_abbr)
+            text_full = [institution.name]
+            text_abbr = []
+            if institution.name_abbr is not None:
+                text_abbr.append(institution.name_abbr)
+
             if institution.department:
-                text += ', ' + truncate(institution.department, 15)
+                text += ' (' + truncate(
+                    institution.department, 12,
+                    abbreviation=institution.department_abbr) + ')'
+                text_full.append(institution.department)
+            if institution.department_abbr is not None:
+                text_abbr.append(institution.department_abbr)
+
             if institution.organization:
-                text += ', ' + truncate(institution.organization, 15)
-            if institution.country:
                 text += ', ' + truncate(
-                    countries.get(institution.country, 'Unknown country'), 15)
+                    institution.organization, 12,
+                    abbreviation=institution.organization_abbr)
+                text_full.append(institution.organization)
+            if institution.organization_abbr is not None:
+                text_abbr.append(institution.organization_abbr)
+
+            if institution.country:
+                country_name = countries.get(
+                    institution.country, 'Unknown country')
+                text += ', ' + truncate(
+                    country_name, 15)
+                text_full.append(country_name)
+                text_abbr.append(institution.country)
 
             institutions.append({
                 'value': institution.id,
                 'text': text,
+                'text_full': ' '.join(text_full),
+                'text_abbr': ' '.join(text_abbr),
             })
 
         return institutions
@@ -81,16 +106,35 @@ class QueryView(object):
                 registered=True, public=public,
                 with_institution=True).values():
             text = truncate(person.name, 30)
+            text_full = [person.name]
+            text_abbr = []
+
             if person.institution_id:
-                text += ', ' + truncate(person.institution_name, 25)
-            if person.institution_country:
                 text += ', ' + truncate(
-                    countries.get(
-                        person.institution_country, 'Unknown country'), 15)
+                    person.institution_name, 25,
+                    abbreviation=person.institution_name_abbr)
+                text_full.append(person.institution_name)
+            if person.institution_name_abbr is not None:
+                text_abbr.append(person.institution_name_abbr)
+
+            if person.institution_organization:
+                text_full.append(person.institution_organization)
+            if person.institution_organization_abbr:
+                text_abbr.append(person.institution_organization_abbr)
+
+            if person.institution_country:
+                country_name = countries.get(
+                    person.institution_country, 'Unknown country')
+                text += ', ' + truncate(
+                    country_name, 15)
+                text_full.append(country_name)
+                text_abbr.append(person.institution_country)
 
             persons.append({
                 'value': person.id,
                 'text': text,
+                'text_full': ' '.join(text_full),
+                'text_abbr': ' '.join(text_abbr),
             })
 
         return persons
@@ -126,11 +170,16 @@ class QueryView(object):
             raise HTTPError('Failed to resolve name via CADC.')
 
 
-def truncate(value, length):
+def truncate(value, length, abbreviation=None):
     if value is None:
         return ''
 
     if len(value) <= length:
         return value
 
-    return value[:length] + '\u2026'
+    if abbreviation is None:
+        # Remove 1 from length to allow space for ellipsis.
+        length -= 1
+        abbreviation = value[:length].rstrip() + '\u2026'
+
+    return abbreviation
