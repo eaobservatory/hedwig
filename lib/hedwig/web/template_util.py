@@ -490,7 +490,9 @@ def register_template_utils(app):
             return value
 
         if abbreviation is None:
-            abbreviation = value[:length] + Markup('&hellip;')
+            # Remove 1 from length to allow space for ellipsis.
+            length -= 1
+            abbreviation = value[:length].rstrip() + Markup('&hellip;')
 
         return Markup('<abbr title="') + value + Markup('">') + \
             abbreviation + Markup('</abbr>')

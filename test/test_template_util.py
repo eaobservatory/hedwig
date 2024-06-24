@@ -337,11 +337,15 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(f('1234567890', 20), '1234567890')
 
         self.assertEqual(f('1234567890', 5),
-                         '<abbr title="1234567890">12345&hellip;</abbr>')
+                         '<abbr title="1234567890">1234&hellip;</abbr>')
+
+        # Truncates to 3 because of space at position 4 (5 - 1).
+        self.assertEqual(f('aaa bbb ccc', 5),
+                         '<abbr title="aaa bbb ccc">aaa&hellip;</abbr>')
 
         self.assertEqual(
             f('999999999', 3, abbreviation=None),
-            '<abbr title="999999999">999&hellip;</abbr>')
+            '<abbr title="999999999">99&hellip;</abbr>')
         self.assertEqual(
             f('999999999', 3, abbreviation='1E10-1'),
             '<abbr title="999999999">1E10-1</abbr>')
