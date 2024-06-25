@@ -45,7 +45,8 @@ from ..meta import auth_failure, auth_token, email, group_member, \
     oauth_code, oauth_token, person, person_log, \
     proposal_fig, proposal_pdf, proposal_text, \
     request_prop_copy, request_prop_pdf, \
-    reset_token, reviewer, site_group_member, user, user_log, verify_token
+    reset_token, reviewer, reviewer_acceptance, review_fig, \
+    site_group_member, user, user_log, verify_token
 from ..util import require_not_none
 
 auth_token_expiry = timedelta(hours=24)
@@ -947,6 +948,8 @@ class PeoplePart(object):
                     (proposal_pdf, 'uploader'),
                     (proposal_text, 'editor'),
                     (reviewer, 'person_id'),
+                    (reviewer_acceptance, 'person_id'),
+                    (review_fig, 'uploader'),
                     (request_prop_copy, 'requester'),
                     (request_prop_pdf, 'requester'),
                     (site_group_member, 'person_id')):
@@ -959,7 +962,7 @@ class PeoplePart(object):
 
             # Delete references which are no longer relevant.
             # Note: email table entries are deleted with the person by cascade.
-            for table in (invitation, verify_token):
+            for table in (invitation, verify_token, oauth_code, oauth_token):
                 conn.execute(table.delete().where(
                     table.c.person_id == duplicate_person_id))
 
