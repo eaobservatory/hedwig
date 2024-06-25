@@ -961,8 +961,9 @@ class PeoplePart(object):
                 }))
 
             # Delete references which are no longer relevant.
-            # Note: email table entries are deleted with the person by cascade.
-            for table in (invitation, verify_token, oauth_code, oauth_token):
+            # Note: email and oauth table entries are deleted with the person
+            # by cascade.
+            for table in (invitation, verify_token):
                 conn.execute(table.delete().where(
                     table.c.person_id == duplicate_person_id))
 
