@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -34,9 +34,10 @@ from ...type.simple import \
 from ...util import FormatSigFig
 from ...view.util import float_or_none, str_or_none, parse_time
 from .calculator_jcmt import JCMTCalculator
-from .type import JCMTWeather
+from .type import JCMTInstrument, JCMTWeather
 
-ReceiverInfoID = namedtuple('ReceiverInfoID', ReceiverInfo._fields + ('id', ))
+ReceiverInfoID = namedtuple('ReceiverInfoID', ReceiverInfo._fields + (
+    'id', 'available'))
 
 MappingMode = namedtuple('MappingMode', ('id', 'name', 'sw_modes'))
 SwitchingMode = namedtuple('SwitchingMode', ('id', 'name'))
@@ -111,6 +112,18 @@ class HeterodyneCalculator(JCMTCalculator):
         super(HeterodyneCalculator, self).__init__(*args)
 
         self.itc = HeterodyneITC()
+
+        # Get available receivers from the JCMTInstrument class.  We will
+        # match these by name with the ITC HeterodyneReceiver information.
+        available_receivers = JCMTInstrument.get_options()
+
+        self.receivers = OrderedDict((
+            (rx_id, ReceiverInfoID(
+                *rx_info, id=rx_id, available=any(
+                    x == rx_info.name for x in available_receivers.values())))
+            for (rx_id, rx_info)
+            in HeterodyneReceiver.get_all_receivers().items()
+        ))
 
         # Determine which combinations of mapping and switching modes
         # are allowed.
@@ -608,7 +621,7 @@ class HeterodyneCalculator(JCMTCalculator):
 
         return {
             'weather_bands': JCMTWeather.get_available(),
-            'receivers': HeterodyneReceiver.get_all_receivers().values(),
+            'receivers': self.receivers.values(),
             'map_modes': self.map_modes,
             'switch_modes': self.switch_modes,
             'jiggle_patterns': self.itc.get_jiggle_patterns(),
@@ -697,10 +710,10 @@ class HeterodyneCalculator(JCMTCalculator):
         """
         Get a receiver by name.
         """
-        for (rx_id, rx_info) in HeterodyneReceiver.get_all_receivers().items():
+        for (rx_id, rx_info) in self.receivers.items():
             if rx_info.name == receiver_name:
                 if as_object:
-                    return ReceiverInfoID(*rx_info, id=rx_id)
+                    return rx_info
                 return rx_id
 
         raise UserError('Receiver not recognised.')

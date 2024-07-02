@@ -28,9 +28,11 @@
                             data-pixel_size="{{ receiver_info.pixel_size }}"
                             data-is_array="{{ 'false' if receiver_info.array is none else 'true' }}"
                             data-if_option="{{ 'true' if receiver_info.t_rx_lo else 'false' }}"
+                            data-rx_available="{{ 'true' if receiver_info.available else 'false' }}"
                         >{{ receiver_info.name }}</option>
                     {% endfor %}
                 </select>
+                <span id="rx_available_warning" class="forminfo_bad">receiver is not currently available</span>
             {% elif value.code == 'mm' %}
                 <select name="{{ value.code }}">
                     {% for (mode_code, map_mode) in map_modes.items() %}

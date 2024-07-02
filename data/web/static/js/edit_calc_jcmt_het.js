@@ -1,4 +1,5 @@
 $(document).ready(function () {
+    var rx_available_warning = $('#rx_available_warning');
     var rx_select = $('select[name=rx]');
     var mm_select = $('select[name=mm]');
 
@@ -21,11 +22,18 @@ $(document).ready(function () {
 
     var check_rx_opt = (function () {
         var rx = rx_select.find(':selected');
+        var rx_available = rx.data('rx_available');
         var if_option = rx.data('if_option');
         var is_array = rx.data('is_array');
         var sep_pol_available = rx.data('sep_pol_available');
         var ssb_available = rx.data('ssb_available');
         var dsb_available = rx.data('dsb_available');
+
+        if (rx_available) {
+            rx_available_warning.hide();
+        } else {
+            rx_available_warning.show();
+        }
 
         freq_if_select.prop('disabled', ! if_option);
         side_select.prop('disabled', ! if_option);
