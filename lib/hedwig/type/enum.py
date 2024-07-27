@@ -531,6 +531,7 @@ class PersonTitle(EnumBasic, EnumAvailable):
         (3, TitleInfo('Mr.', True)),
         (4, TitleInfo('Mrs.', True)),
         (5, TitleInfo('Ms.', True)),
+        (7, TitleInfo('Mx.', True)),
         (6, TitleInfo('Prof.', True)),
     ))
 

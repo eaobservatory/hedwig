@@ -198,7 +198,7 @@ class EnumTypeTestCase(TestCase):
             self.assertIsInstance(title, string_type)
 
         option_values = list(options.values())
-        for title in ('Dr. Miss Mr. Mrs. Ms. Prof.'.split(' ')):
+        for title in ('Dr. Miss Mr. Mrs. Ms. Mx. Prof.'.split(' ')):
             self.assertIn(title, option_values)
 
     def test_proposal_state(self):
