@@ -1736,6 +1736,7 @@ class ProposalPart(object):
                         decision_accept_defined=None,
                         proposal_number=None, call_type=None,
                         semester_code=None, queue_code=None, queue_id=None,
+                        category=None,
                         _conn=None):
         """
         Search for proposals.
@@ -1878,6 +1879,11 @@ class ProposalPart(object):
                 decision,
                 proposal.c.id == decision.c.proposal_id)
 
+        if category is not None:
+            select_from = select_from.join(
+                proposal_category,
+                proposal.c.id == proposal_category.c.proposal_id)
+
         stmt = select(select_columns).select_from(select_from)
 
         # Determine constraints.
@@ -1967,6 +1973,12 @@ class ProposalPart(object):
 
         if queue_code is not None:
             stmt = stmt.where(queue.c.code == queue_code)
+
+        if category is not None:
+            if is_list_like(category):
+                stmt = stmt.where(proposal_category.c.category_id.in_(category))
+            else:
+                stmt = stmt.where(proposal_category.c.category_id == category)
 
         # Determine ordering: don't sort if only selecting one proposal.
         # This ordering was originally intended for the personal proposal list

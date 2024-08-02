@@ -2494,6 +2494,16 @@ class DBProposalTest(DBTestCase):
         self.assertIsInstance(proposal_cat, ProposalCategory)
         self.assertEqual(proposal_cat.category_name, 'Category B')
 
+        # Test category parameter of search_proposal.
+        result = self.db.search_proposal(category=category_id_a)
+        self.assertEqual(list(result.keys()), [])
+        result = self.db.search_proposal(category=category_id_b)
+        self.assertEqual(list(result.keys()), [proposal_id])
+        result = self.db.search_proposal(category=[category_id_a, category_id_b])
+        self.assertEqual(list(result.keys()), [proposal_id])
+        result = self.db.search_proposal(category=[1999999, 2999999])
+        self.assertEqual(list(result.keys()), [])
+
 
 def _member_person_set(member_collection):
     return [x.person_id for x in member_collection.values()]
