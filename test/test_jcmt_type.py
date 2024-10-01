@@ -71,6 +71,7 @@ class JCMTTypeTestCase(TestCase):
                 JCMTInstrument.RXA3,
                 JCMTInstrument.RXA3M,
                 JCMTInstrument.ALAIHI,
+                JCMTInstrument.KUNTUR,
                 ):
             # Identifiers should be unique integers.
             self.assertIsInstance(instrument, int)

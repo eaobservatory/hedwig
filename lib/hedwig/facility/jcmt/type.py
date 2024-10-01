@@ -162,6 +162,7 @@ class JCMTInstrument(EnumBasic, EnumAvailable):
     ALAIHI = 5
     UU = 6
     AWEOWEO = 7
+    KUNTUR = 8
 
     InstrumentInfo = namedtuple(
         'InstrumentInfo', ('name', 'available', 'ancillary'))
@@ -178,7 +179,8 @@ class JCMTInstrument(EnumBasic, EnumAvailable):
         (UU,     InstrumentInfo('\u02bb\u016a\u02bb\u016b',
                                            True,  ())),
         (AWEOWEO,InstrumentInfo('\u02bb\u0100weoweo',
-                                           True, ())),
+                                           True,  ())),
+        (KUNTUR, InstrumentInfo('Kuntur',  False, ())),
     ))
 
     @classmethod
