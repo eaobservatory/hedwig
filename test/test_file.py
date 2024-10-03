@@ -169,6 +169,9 @@ class FileTest(DummyConfigTestCase):
             self.assertEqual(determine_figure_type(image), FigureType.PNG)
 
     def test_graphviz_to_png(self):
+        if not exists(get_config().get('utilities', 'graphviz')):
+            self.skipTest('Graphviz not available')
+
         example_dot = b'graph G {x -- y}'
         invalid_dot = b'graph G {x -> y}'
 
