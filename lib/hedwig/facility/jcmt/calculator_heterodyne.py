@@ -505,33 +505,41 @@ class HeterodyneCalculator(JCMTCalculator):
 
         if new_mode == self.CALC_TIME:
             if mode == self.CALC_RMS_FROM_ELAPSED_TIME:
-                new_input['rms'] = result.output['rms']
                 del new_input['elapsed']
             elif mode == self.CALC_RMS_FROM_INT_TIME:
-                new_input['rms'] = result.output['rms']
                 del new_input['int_time']
             else:
                 raise CalculatorError('Impossible mode change.')
+
+            new_input['rms'] = result.output['rms']
 
         elif new_mode == self.CALC_RMS_FROM_ELAPSED_TIME:
             if mode == self.CALC_TIME:
-                new_input['elapsed'] = result.output['elapsed']
                 del new_input['rms']
             elif mode == self.CALC_RMS_FROM_INT_TIME:
-                new_input['elapsed'] = result.output['elapsed']
                 del new_input['int_time']
             else:
                 raise CalculatorError('Impossible mode change.')
 
+            new_input['elapsed'] = result.output['elapsed']
+
         elif new_mode == self.CALC_RMS_FROM_INT_TIME:
             if mode == self.CALC_TIME:
-                new_input['int_time'] = result.extra['int_time']
                 del new_input['rms']
             elif mode == self.CALC_RMS_FROM_ELAPSED_TIME:
-                new_input['int_time'] = result.extra['int_time']
                 del new_input['elapsed']
             else:
                 raise CalculatorError('Impossible mode change.')
+
+            if 'int_time' in result.extra:
+                new_input['int_time'] = result.extra['int_time']
+            elif (('int_time_1' in result.extra)
+                    and ('int_time_2' in result.extra)):
+                new_input['int_time'] = (
+                    result.extra['int_time_1'] + result.extra['int_time_2'])
+            else:
+                raise CalculatorError(
+                    'Integration time not found in previous mode results.')
 
         else:
             raise CalculatorError('Unknown mode.')

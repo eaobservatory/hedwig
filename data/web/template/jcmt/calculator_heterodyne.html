@@ -304,7 +304,7 @@
                 <th>
                     {{ value.name }}
                 </th>
-                <td>
+                <td colspan="2">
                     {{ output | fmt(value.format) }}
                     {% if value.unit is not none %}
                         {{ value.unit }}
@@ -317,41 +317,91 @@
         {% endwith %}
     {% endfor %}
 
+    {% if 'time_src' in output_extra %}
+    <tr>
+        <th>Time on source</th>
+        <td colspan="2">
+            {{ (output_extra.time_src / 3600.0) | fmt('{:.3f}') }} hours
+            ({{ (output_extra.time_src / 3600.0) | format_hours_hms }})
+        </td>
+    </tr>
+    {% elif 'time_src_1' in output_extra and 'time_src_2' in output_extra %}
+    <tr>
+        <th>Time on source</th>
+        <td>
+            {{ (output_extra.time_src_1 / 3600.0) | fmt('{:.3f}') }} hours
+            ({{ (output_extra.time_src_1 / 3600.0) | format_hours_hms }})
+        </td>
+        <td>
+            {{ (output_extra.time_src_2 / 3600.0) | fmt('{:.3f}') }} hours
+            ({{ (output_extra.time_src_2 / 3600.0) | format_hours_hms }})
+        </td>
+    </tr>
+    {% endif %}
+
+    {% if 'raster_n_rows' in output_extra and 'raster_n_points' in output_extra %}
+    <tr>
+        <th>Raster parameters</th>
+        <td colspan="2">
+            {{ output_extra.raster_n_rows }} {{ 'rows' if output_extra.raster_n_rows > 1 else 'row' }}
+            of {{ output_extra.raster_n_points }} {{ 'points' if output_extra.raster_n_points > 1 else 'point' }}
+        </td>
+    </tr>
+    {% elif 'raster_n_rows_1' in output_extra and 'raster_n_points_1' in output_extra and 'raster_n_rows_2' in output_extra and 'raster_n_points_2' in output_extra %}
+    <tr>
+        <th>Raster parameters</th>
+        <td>
+            {{ output_extra.raster_n_rows_1 }} {{ 'rows' if output_extra.raster_n_rows_1 > 1 else 'row' }}
+            of {{ output_extra.raster_n_points_1 }} {{ 'points' if output_extra.raster_n_points_1 > 1 else 'point' }}
+        </td>
+        <td>
+            {{ output_extra.raster_n_rows_2 }} {{ 'rows' if output_extra.raster_n_rows_2 > 1 else 'row' }}
+            of {{ output_extra.raster_n_points_2 }} {{ 'points' if output_extra.raster_n_points_2 > 1 else 'point' }}
+        </td>
+    </tr>
+    {% endif %}
+
     {% if 'int_time' in output_extra %}
     <tr>
         <th>Integration time</th>
-        <td>{{ output_extra.int_time | fmt('{:.3f}') }} seconds per point</td>
+        <td colspan="2">{{ output_extra.int_time | fmt('{:.3f}') }} seconds per point</td>
+    </tr>
+    {% elif 'int_time_1' in output_extra and 'int_time_2' in output_extra %}
+    <tr>
+        <th>Integration time</th>
+        <td colspan>{{ output_extra.int_time_1 | fmt('{:.3f}') }} seconds per point</td>
+        <td colspan>{{ output_extra.int_time_2 | fmt('{:.3f}') }} seconds per point</td>
     </tr>
     {% endif %}
 
     <tr>
         <th>Receiver temperature</th>
-        <td>{{ output_extra.t_rx | fmt('{:.3f}') }} K</td>
+        <td colspan="2">{{ output_extra.t_rx | fmt('{:.3f}') }} K</td>
     </tr>
     <tr>
         <th>System temperature</th>
-        <td>{{ output_extra.t_sys | fmt('{:.3f}') }} K</td>
+        <td colspan="2">{{ output_extra.t_sys | fmt('{:.3f}') }} K</td>
     </tr>
     <tr>
         <th>Opacity</th>
-        <td>{{ output_extra.tau | fmt('{:.3f}') }}</td>
+        <td colspan="2">{{ output_extra.tau | fmt('{:.3f}') }}</td>
     </tr>
     {% if 'zenith_angle' in output_extra %}
     <tr>
         <th>Zenith angle</th>
-        <td>{{ output_extra.zenith_angle | fmt('{:.3f}') }} degrees</td>
+        <td colspan="2">{{ output_extra.zenith_angle | fmt('{:.3f}') }} degrees</td>
     </tr>
     {% endif %}
     {% if 'if_freq' in output_extra %}
     <tr>
         <th>IF frequency</th>
-        <td>{{ output_extra.if_freq | fmt('{:.3f}') }} GHz</td>
+        <td colspan="2">{{ output_extra.if_freq | fmt('{:.3f}') }} GHz</td>
     </tr>
     {% endif %}
     {% if 'lo_freq' in output_extra %}
     <tr>
         <th>LO frequency</th>
-        <td>
+        <td colspan="2">
             {{ output_extra.lo_freq | fmt('{:.3f}') }} GHz
             {% if 'sideband' in output_extra %}
                 ({{ output_extra.sideband}})
@@ -362,37 +412,37 @@
     {% if 'rest_freq' in output_extra %}
     <tr>
         <th>Rest frequency</th>
-        <td>{{ output_extra.rest_freq | fmt('{:.3f}') }} GHz</td>
+        <td colspan="2">{{ output_extra.rest_freq | fmt('{:.3f}') }} GHz</td>
     </tr>
     {% endif %}
     {% if 'redshift' in output_extra %}
     <tr>
         <th>Redshift</th>
-        <td>{{ output_extra.redshift | fmt('{:.6f}') }}</td>
+        <td colspan="2">{{ output_extra.redshift | fmt('{:.6f}') }}</td>
     </tr>
     {% endif %}
     {% if 'sky_freq' in output_extra %}
     <tr>
         <th>Sky frequency</th>
-        <td>{{ output_extra.sky_freq | fmt('{:.3f}') }} GHz</td>
+        <td colspan="2">{{ output_extra.sky_freq | fmt('{:.3f}') }} GHz</td>
     </tr>
     {% endif %}
     {% if 'sky_freq_res' in output_extra %}
     <tr>
         <th>Sky frequency resolution</th>
-        <td>{{ output_extra.sky_freq_res | fmt('{:.3f}') }} MHz</td>
+        <td colspan="2">{{ output_extra.sky_freq_res | fmt('{:.3f}') }} MHz</td>
     </tr>
     {% endif %}
     {% if 'rest_freq_res' in output_extra %}
     <tr>
         <th>Rest frequency resolution</th>
-        <td>{{ output_extra.rest_freq_res | fmt('{:.3f}') }} MHz</td>
+        <td colspan="2">{{ output_extra.rest_freq_res | fmt('{:.3f}') }} MHz</td>
     </tr>
     {% endif %}
     {% if 'velocity_res' in output_extra %}
     <tr>
         <th>Velocity resolution</th>
-        <td>{{ output_extra.velocity_res | fmt('{:.3f}') }} km/s</td>
+        <td colspan="2">{{ output_extra.velocity_res | fmt('{:.3f}') }} km/s</td>
     </tr>
     {% endif %}
 {% endblock %}
