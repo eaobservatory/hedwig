@@ -327,7 +327,11 @@
     </tr>
     {% elif 'time_src_1' in output_extra and 'time_src_2' in output_extra %}
     <tr>
-        <th>Time on source</th>
+        <th rowspan="2">Time on source</th>
+        <th>Along width</th>
+        <th>Along height</th>
+    </tr>
+    <tr>
         <td>
             {{ (output_extra.time_src_1 / 3600.0) | fmt('{:.3f}') }} hours
             ({{ (output_extra.time_src_1 / 3600.0) | format_hours_hms }})
