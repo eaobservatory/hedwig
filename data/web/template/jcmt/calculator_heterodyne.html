@@ -462,7 +462,7 @@
         <tr>
             <th>Representative</th>
             {% for weather_band in output_extra.wb_comparison.values() %}
-                <td>{{ weather_band.rep | fmt(output_extra.wb_comparison_format) }} {{ output_extra.wb_comparison_unit }}</td>
+                <td>{% if weather_band.rep is none %}&mdash;{% else %}{{ weather_band.rep | fmt(output_extra.wb_comparison_format) }} {{ output_extra.wb_comparison_unit }}{% endif %}</td>
             {% endfor %}
         </tr>
         <tr>
