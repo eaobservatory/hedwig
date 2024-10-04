@@ -20,6 +20,9 @@ $(document).ready(function () {
     var rv_sys_box = $('select[name=rv_sys]');
     var rv_unit_span = $('#calc_unit_rv');
 
+    var basket_checkbox = $('input[name=basket]');
+    var basket_warning_span = $('span.basket_warning');
+
     var check_rx_opt = (function () {
         var rx = rx_select.find(':selected');
         var rx_available = rx.data('rx_available');
@@ -130,7 +133,7 @@ $(document).ready(function () {
         $('input[name=dim_y]').prop('disabled', ! is_raster);
         $('input[name=dx]').prop('disabled', (! is_raster) || is_array);
         $('input[name=dy]').prop('disabled', (! is_raster) || is_array);
-        $('input[name=basket]').prop('disabled', ! is_raster);
+        basket_checkbox.prop('disabled', ! is_raster);
 
         $('select[name^=dy_spacing_]').prop('disabled', true);
 
@@ -141,7 +144,8 @@ $(document).ready(function () {
         }
 
         if (! is_raster) {
-            $('input[name=basket]').prop('checked', false);
+            basket_checkbox.prop('checked', false);
+            basket_warning_span.hide();
         }
 
         $('select[name^=n_pt_jiggle_]').prop('disabled', true);
@@ -306,6 +310,17 @@ $(document).ready(function () {
 
     species_select.change(check_species_selection);
     transition_select.change(apply_transition_selection);
+
+    var check_basket_weave = (function () {
+        if (basket_checkbox.prop('checked')) {
+            basket_warning_span.show();
+        } else {
+            basket_warning_span.hide();
+        }
+    });
+
+    check_basket_weave();
+    basket_checkbox.change(check_basket_weave);
 
     $.ajax(species_select.data('line_catalog'), dataType='json'
     ).done(function (result) {
