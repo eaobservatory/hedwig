@@ -514,27 +514,10 @@ class GenericReview(object):
         Attach targets (and construct codes) for the given proposals.
         """
 
-        # Determine how to look up the target list for each proposal:
-        # continuation requests do not have their own target list, so we
-        # must fetch the corresponding previous proposal ID.  Then we can
-        # do a combined query for these and all the standard proposals.
-        proposal_ids = set()
-        proposal_ids_cr = set()
-        previous_proposal_ids = {}
-        for proposal in proposals.values():
-            (proposal_ids_cr
-             if proposal.type == ProposalType.CONTINUATION
-             else proposal_ids).add(proposal.id)
+        (proposal_ids, previous_proposal_ids) = db.get_original_proposal_ids(
+            proposals)
 
-        if proposal_ids_cr:
-            for prev_proposal in db.search_prev_proposal(
-                    proposal_id=proposal_ids_cr,
-                    continuation=True, resolved=True,
-                    with_publications=False).values():
-                id_ = prev_proposal.proposal_id
-                proposal_ids.add(id_)
-                previous_proposal_ids[prev_proposal.this_proposal_id] = id_
-
+        # Do a combined query for CRs and all the standard proposals.
         targets = db.search_target(proposal_id=proposal_ids)
 
         return proposals.map_values(lambda x: ProposalWithTargets(

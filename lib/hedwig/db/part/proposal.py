@@ -715,6 +715,40 @@ class ProposalPart(object):
             semester_id=semester_id, type_=type_
         ).get_single()
 
+    def get_original_proposal_ids(self, proposals, _conn=None):
+        """
+        Determine how to look up associated data for proposals.
+
+        For example continuation requests do not have their own target list,
+        so we must fetch the corresponding previous proposal IDs and use
+        these to find the targets.
+
+        :return: a set of proposal IDs, containing the IDs of standard
+            proposals or the previous proposal of continuation requests,
+            and a dictionary mapping continuation request IDs to their
+            previous proposals.
+        """
+
+        proposal_ids = set()
+        proposal_ids_cr = set()
+        previous_proposal_ids = {}
+        for proposal in proposals.values():
+            (proposal_ids_cr
+             if proposal.type == ProposalType.CONTINUATION
+             else proposal_ids).add(proposal.id)
+
+        if proposal_ids_cr:
+            for prev_proposal in self.search_prev_proposal(
+                    proposal_id=proposal_ids_cr,
+                    continuation=True, resolved=True,
+                    with_publications=False,
+                    _conn=_conn).values():
+                id_ = prev_proposal.proposal_id
+                proposal_ids.add(id_)
+                previous_proposal_ids[prev_proposal.this_proposal_id] = id_
+
+        return (proposal_ids, previous_proposal_ids)
+
     def get_proposal(self, facility_id, proposal_id,
                      with_members=False, with_reviewers=False,
                      with_decision=False, with_decision_note=False,
