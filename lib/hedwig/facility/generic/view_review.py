@@ -1515,7 +1515,7 @@ class GenericReview(object):
         for proposal in proposals:
             db.update_reviewer(role_class, proposal.reviewer.id, notified=True)
 
-    @with_proposal(permission=PermissionType.NONE)
+    @with_proposal(permission=PermissionType.NONE, with_categories=True)
     def view_reviewer_add(self, current_user, db, proposal, role, form):
         role_class = self.get_reviewer_roles()
         type_class = self.get_call_types()
@@ -1686,8 +1686,6 @@ class GenericReview(object):
             'proposal_code': proposal_code,
             'call': call,
             'abstract': abstract,
-            'categories': db.search_proposal_category(
-                proposal_id=proposal.id),
             'titles': PersonTitle.get_options(),
             'review_deadline': deadline,
         }
@@ -1948,7 +1946,9 @@ class GenericReview(object):
             current_user, db, None, proposal, args, form,
             reviewer_role=reviewer_role, auth_cache=auth_cache)
 
-    @with_review(permission=PermissionType.EDIT, allow_unaccepted=True)
+    @with_review(
+        permission=PermissionType.EDIT, allow_unaccepted=True,
+        with_categories=True)
     def view_review_accept(
             self, current_user, db, reviewer, proposal, can, args, form):
         role_class = self.get_reviewer_roles()
@@ -2074,8 +2074,6 @@ class GenericReview(object):
                     current_user, db, x, auth_cache=can.cache).view))),
             'proposal_code': proposal_code,
             'abstract': abstract,
-            'categories': db.search_proposal_category(
-                proposal_id=proposal.id),
             'explanation': acceptance.text,
             'message': message,
             'referrer': referrer,

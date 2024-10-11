@@ -6,7 +6,7 @@
 {% from 'macro/proposal_summary.html' import render_proposal_summary %}
 
 {% block content %}
-    {% call render_proposal_summary(facility_name, facility_call_type_class, proposal, proposal_code, abstract=abstract, categories=categories) %}
+    {% call render_proposal_summary(facility_name, facility_call_type_class, proposal, proposal_code, abstract=abstract, categories=proposal.categories) %}
         <tr>
             <th>Review due by</th>
             <td id="review_deadline_cell">
