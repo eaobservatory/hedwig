@@ -9,7 +9,7 @@
 {% block content %}
 <h2>Proposal Information</h2>
 
-{{ render_proposal_summary(facility_name, facility_call_type_class, proposal, proposal_code, abstract=abstract, categories=categories, can_edit_decision=can_edit_decision) }}
+{{ render_proposal_summary(facility_name, facility_call_type_class, proposal, proposal_code, abstract=abstract, categories=proposal.categories, can_edit_decision=can_edit_decision) }}
 
 <h2>Reviews</h2>
 

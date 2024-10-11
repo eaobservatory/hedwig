@@ -752,6 +752,7 @@ class ProposalPart(object):
     def get_proposal(self, facility_id, proposal_id,
                      with_members=False, with_reviewers=False,
                      with_decision=False, with_decision_note=False,
+                     with_categories=False,
                      _conn=None):
         """
         Get a proposal record.
@@ -761,6 +762,7 @@ class ProposalPart(object):
             facility_id=facility_id, proposal_id=proposal_id,
             with_members=with_members, with_reviewers=with_reviewers,
             with_decision=with_decision, with_decision_note=with_decision_note,
+            with_categories=with_categories,
             _conn=_conn
         ).get_single()
 

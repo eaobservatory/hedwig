@@ -2521,7 +2521,9 @@ class GenericReview(object):
             target_redirect=url_for(
                 '.review_edit', reviewer_id=reviewer.id, _anchor='figures'))
 
-    @with_proposal(permission=PermissionType.NONE, with_decision=True)
+    @with_proposal(
+        permission=PermissionType.NONE,
+        with_decision=True, with_categories=True)
     def view_proposal_reviews(self, current_user, db, proposal):
         type_class = self.get_call_types()
         role_class = self.get_reviewer_roles()
@@ -2596,8 +2598,6 @@ class GenericReview(object):
             'proposal': proposal,
             'proposal_code': proposal_code,
             'abstract': abstract,
-            'categories': db.search_proposal_category(
-                proposal_id=proposal.id),
             'reviews': reviewers,
             'overall_rating': self.calculate_overall_rating(
                 reviewers.map_values(
