@@ -2032,7 +2032,9 @@ class ProposalPart(object):
         # Perform query and collect results.
         ans = ProposalCollection()
         proposal_ids = set()
+        previous_proposal_ids = {}
         extra = {}
+        extra_via_previous = set()
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt):
@@ -2102,8 +2104,12 @@ class ProposalPart(object):
                     _conn=conn)
 
             if with_categories:
+                (all_proposal_ids, previous_proposal_ids) = \
+                    self.get_original_proposal_ids(ans, _conn=conn)
+
+                extra_via_previous.add('categories')
                 extra['categories'] = self.search_proposal_category(
-                    proposal_id=proposal_ids, _conn=conn)
+                    proposal_id=all_proposal_ids, _conn=conn)
 
         # Attach extra information to the proposal records.
         # Do this outside the database transaction block as the
@@ -2111,9 +2117,13 @@ class ProposalPart(object):
         if extra:
             for key in list(ans.keys()):
                 row = ans[key]
+                id_ = row.id
 
-                ans[key] = row._replace(**{k: v.subset_by_proposal(row.id)
-                                           for (k, v) in extra.items()})
+                ans[key] = row._replace(**{
+                    k: v.subset_by_proposal(
+                        previous_proposal_ids.get(id_, id_)
+                        if k in extra_via_previous else id_)
+                    for (k, v) in extra.items()})
 
         return ans
 
