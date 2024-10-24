@@ -34,6 +34,11 @@ time listed above will be available for your project.
 {% if proposal.decision_accept %}
 Observatory personnel will contact you shortly concerning
 the observing arrangements for your project.
+{% if continuation_code is not none %}
+Please note that observing will continue
+under your previous proposal identifier {{ continuation_code }}.
+Please use this identifier when logging in to the OMP or the Observing Tool.
+{% endif %}
 {% else %}
 We thank you for your interest in using {{ facility_definite_name }}
 and wish you the best of luck in your future observing proposals.

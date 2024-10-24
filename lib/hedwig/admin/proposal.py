@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2021 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,7 +22,8 @@ from ..config import get_facilities
 from ..email.format import render_email_template
 from ..error import ConsistencyError, FormattedError, NoSuchRecord, UserError
 from ..stats.quartile import label_quartiles
-from ..type.enum import CallState, FormatType, ProposalState, ReviewState
+from ..type.enum import CallState, FormatType, \
+    ProposalState, ProposalType, ReviewState
 from ..type.simple import MemberInstitution
 from ..util import get_logger
 
@@ -299,11 +300,38 @@ def send_call_proposal_feedback(db, call_id, proposals, dry_run=False):
 
         proposal_quartile = label_quartiles(proposal_rating)
 
+    # Fetch previous proposal record for continuation requests.
+    proposal_ids_cr = [
+        proposal.id for proposal in proposals
+        if proposal.type == ProposalType.CONTINUATION]
+    continuations_prev = None
+    if proposal_ids_cr:
+        continuations_prev = db.search_prev_proposal(
+            proposal_id=proposal_ids_cr,
+            continuation=True, resolved=True,
+            with_publications=False)
+
     # Iterate over proposals and send feedback.
     n_processed = 0
 
     for proposal in proposals:
         logger.debug('Preparing to send feedback for proposal {}', proposal.id)
+
+        continuation_code = None
+        if proposal.type == ProposalType.CONTINUATION:
+            try:
+                continuation_prev = continuations_prev.subset_by_this_proposal(
+                    proposal.id).get_single()
+                continuation_proposal = db.get_proposal(
+                    facility_id=facility.id_,
+                    proposal_id=continuation_prev.proposal_id)
+                continuation_code = facility.make_proposal_code(
+                    db, continuation_proposal)
+
+            except:
+                logger.exception(
+                    'Unable to get previous proposal code for proposal {}',
+                    proposal.id)
 
         try:
             # Check that the proposal is still in the FINAL_REVIEW state.
@@ -352,7 +380,8 @@ def send_call_proposal_feedback(db, call_id, proposals, dry_run=False):
                 'proposal_quartile': proposal_quartile.get(proposal.id),
                 'feedback': feedback,
                 'is_peer_review': type_class.has_reviewer_role(
-                    call.type, role_class.PEER)
+                    call.type, role_class.PEER),
+                'continuation_code': continuation_code,
             }
             email_ctx.update(facility.get_feedback_extra(db, proposal))
             email_body = render_email_template(
