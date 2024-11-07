@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -33,6 +33,8 @@ from ..type.simple import MessageRecipient
 from ..type.util import null_tuple
 from ..util import get_logger
 
+use_cte_qp = True
+
 if python_version < 3:
     from calendar import timegm
     from codecs import ascii_encode, utf_8_encode
@@ -46,7 +48,7 @@ if python_version < 3:
     # Override "header_enc" method for UTF-8 to use quoted printable
     # because the default (SHORTEST) may choose BASE64 which seems to
     # ignore the maxlinelen parameter.
-    add_charset(b'utf-8', QP, BASE64, b'utf-8')
+    add_charset(b'utf-8', QP, (QP if use_cte_qp else BASE64), b'utf-8')
     charset_utf_8 = Charset(b'utf-8')
 
     non_qtext = re.compile(r'[\\"]')
@@ -230,7 +232,9 @@ def _prepare_email_message_py3(
     msg = EmailMessage(policy=policy)
 
     msg.set_content(
-        message.body, charset='utf-8', cte='base64',
+        message.body,
+        charset='utf-8',
+        cte=('quoted-printable' if use_cte_qp else 'base64'),
         params={'format': 'flowed'})
 
     msg['Subject'] = message.subject

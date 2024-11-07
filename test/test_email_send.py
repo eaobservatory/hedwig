@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2023 East Asian Observatory
+# Copyright (C) 2016-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -129,13 +129,18 @@ class EmailSendTestCase(DummyConfigTestCase):
         self.assertIsInstance(msg, byte_type)
         msg_lines = msg.split(b'\n')
 
+        # Remove trailing blank line (if present) to aid comparison.
+        if msg_lines[-1] == b'':
+            msg_lines.pop()
+
         # Define expected email message, but with alternatives for
         # several lines where they can be encoded differently.
         msg_expect = [
             (b'Content-Type: text/plain; charset="utf-8"; format="flowed"',
              b'Content-Type: text/plain; format="flowed"; charset="utf-8"'),
             b'MIME-Version: 1.0',
-            b'Content-Transfer-Encoding: base64',
+            (b'Content-Transfer-Encoding: base64',
+             b'Content-Transfer-Encoding: quoted-printable'),
             (b'Subject: =?utf-8?q?Message_exp=C3=A9rimental?=',
              b'Subject: Message =?utf-8?q?exp=C3=A9rimental?='),
             b'Date: Wed, 01 Apr 2015 00:00:00 +0000',
@@ -151,8 +156,9 @@ class EmailSendTestCase(DummyConfigTestCase):
             b'X-Hedwig-Thread: prop_stat 5678',
             b'',
             (b'Qydlc3QgdW4gbWVzc2FnZSBleHDDqXJpbWVudGFsLg==',
-             b'Qydlc3QgdW4gbWVzc2FnZSBleHDDqXJpbWVudGFsLgo='),
-            b'']
+             b'Qydlc3QgdW4gbWVzc2FnZSBleHDDqXJpbWVudGFsLgo=',
+             b'C\'est un message exp=C3=A9rimental.'),
+        ]
 
         # Python 3 seems to put Content-Transfer-Encoding first.
         if not python_version < 3:
