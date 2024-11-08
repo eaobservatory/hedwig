@@ -64,19 +64,18 @@ if python_version < 3:
     def _prepare_email_message_bytes(*args, **kwargs):
         return _prepare_email_message_py2(*args, **kwargs)
 
-    class MIMETextFlowed(MIMENonMultipart):
+    class MIMETextMaybeFlowed(MIMENonMultipart):
         """
         MIME message class for flowed text.
         """
 
-        def __init__(self, text, charset='utf-8'):
+        def __init__(self, text, charset='utf-8', **kwargs):
             """
-            Based on email.mime.text.MIMEText but adds format=flowed
-            to the content type.  Also defaults to UTF-8.
+            Based on email.mime.text.MIMEText but defaults to UTF-8.
             """
 
             MIMENonMultipart.__init__(
-                self, 'text', 'plain', charset=charset, format='flowed')
+                self, 'text', 'plain', charset=charset, **kwargs)
             self.set_payload(text, charset)
 
         def __setitem__(self, name, val):
@@ -87,6 +86,15 @@ if python_version < 3:
             """
 
             MIMENonMultipart.__setitem__(self, unicode_to_str(name), val)
+
+    class MIMETextFlowed(MIMETextMaybeFlowed):
+        def __init__(self, text):
+            """
+            Adds format=flowed to the content type.
+            """
+
+            MIMETextMaybeFlowed.__init__(
+                self, text, format='flowed')
 
 else:
     from datetime import timezone
@@ -231,11 +239,18 @@ def _prepare_email_message_py3(
 
     msg = EmailMessage(policy=policy)
 
-    msg.set_content(
-        message.body,
-        charset='utf-8',
-        cte=('quoted-printable' if use_cte_qp else 'base64'),
-        params={'format': 'flowed'})
+    if use_cte_qp:
+        msg.set_content(
+            unwrap_email_text(message.body),
+            charset='utf-8',
+            cte='quoted-printable')
+
+    else:
+        msg.set_content(
+            message.body,
+            charset='utf-8',
+            cte='base64',
+            params={'format': 'flowed'})
 
     msg['Subject'] = message.subject
     msg['Date'] = message.date.replace(tzinfo=timezone.utc)
@@ -268,7 +283,11 @@ def _prepare_email_message_py2(
         header_kwargs['charset'] = 'utf-8'
         generator_kwargs['maxheaderlen'] = maxheaderlen
 
-    msg = MIMETextFlowed(message.body)
+    if use_cte_qp:
+        msg = MIMETextMaybeFlowed(unwrap_email_text(message.body))
+
+    else:
+        msg = MIMETextFlowed(message.body)
 
     msg['Subject'] = Header(message.subject, **header_kwargs)
     msg['Date'] = Header(format_datetime(message.date), **header_kwargs)
@@ -314,3 +333,29 @@ def _prepare_address_header(names_addresses):
         encoded.append(b'{} <{}>'.format(name_encoded, address_encoded))
 
     return b', '.join(encoded)
+
+
+def unwrap_email_text(text):
+    """
+    Unwrap email text, from the style of "format=flowed"
+    to paragraphs on single lines.
+
+    This is the inverse of :func:`hedwig.email.format.wrap_email_text`
+    and can be used when email text (which has be prepared for
+    sending with format=flowed) is to be sent in a different
+    style, such as "quoted-printable" content encoding.
+    """
+
+    paragraphs = []
+    paragraph = []
+
+    for line in text.splitlines():
+        paragraph.append(line)
+        if not line.endswith(' '):
+            paragraphs.append(''.join(paragraph))
+            paragraph = []
+
+    if paragraph:
+        paragraphs.append(''.join(paragraph))
+
+    return '\n'.join(paragraphs)

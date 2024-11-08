@@ -23,7 +23,8 @@ from datetime import datetime
 import re
 
 from hedwig.compat import byte_type, python_version
-from hedwig.email.send import quitting, _prepare_email_message
+from hedwig.email.send import quitting, _prepare_email_message, \
+    unwrap_email_text
 from hedwig.type.enum import MessageThreadType
 from hedwig.type.collection import MessageRecipientCollection
 from hedwig.type.simple import Message, MessageRecipient
@@ -58,11 +59,30 @@ class EmailSendTestCase(DummyConfigTestCase):
         if not python_version < 3:
             self.skipTest('test only for Python 2')
 
-        from hedwig.email.send import MIMETextFlowed
+        from hedwig.email.send import MIMETextMaybeFlowed, MIMETextFlowed
 
         msg = MIMETextFlowed('test message')
         self.assertEqual(sorted(msg['Content-type'].split('; ')),
                          ['charset="utf-8"', 'format="flowed"', 'text/plain'])
+
+        msg = MIMETextMaybeFlowed('test message')
+        self.assertEqual(sorted(msg['Content-type'].split('; ')),
+                         ['charset="utf-8"', 'text/plain'])
+
+    def test_text_unwrap(self):
+        """Test the `unwrap_email_text` function."""
+
+        self.assertEqual(
+            unwrap_email_text('a \na \na\nb \nb \nb'),
+            'a a a\nb b b')
+
+        self.assertEqual(
+            unwrap_email_text('a \na\nb \nb\nc \nc\nd \nd\n'),
+            'a a\nb b\nc c\nd d')
+
+        self.assertEqual(
+            unwrap_email_text('a\nb \nb \nb \nb \nb \nb \nb\nc'),
+            'a\nb b b b b b b\nc')
 
     def test_address_header(self):
         """Test the `_prepare_address_header` function."""
@@ -137,7 +157,8 @@ class EmailSendTestCase(DummyConfigTestCase):
         # several lines where they can be encoded differently.
         msg_expect = [
             (b'Content-Type: text/plain; charset="utf-8"; format="flowed"',
-             b'Content-Type: text/plain; format="flowed"; charset="utf-8"'),
+             b'Content-Type: text/plain; format="flowed"; charset="utf-8"',
+             b'Content-Type: text/plain; charset="utf-8"'),
             b'MIME-Version: 1.0',
             (b'Content-Transfer-Encoding: base64',
              b'Content-Transfer-Encoding: quoted-printable'),
@@ -162,7 +183,10 @@ class EmailSendTestCase(DummyConfigTestCase):
 
         # Python 3 seems to put Content-Transfer-Encoding first.
         if not python_version < 3:
-            msg_expect.insert(0, msg_expect.pop(2))
+            if msg_lines[0].startswith(b'Content-Transfer-Encoding'):
+                msg_expect.insert(0, msg_expect.pop(2))
+            else:
+                msg_expect.insert(1, msg_expect.pop(2))
 
         self.assertEqual(len(msg_lines), len(msg_expect))
 
