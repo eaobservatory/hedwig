@@ -1,7 +1,8 @@
 {% extends 'generic/call_available.html' %}
+{% set scripts = ['call_available_jcmt'] %}
 
 {% block available_form %}
-<table>
+<table id="time_available">
     <tr>
         <th>Weather band</th>
         <th>Time available (hours)</th>
@@ -12,5 +13,9 @@
             <td><input type="number" name="available_{{ weather_id }}" value="{{ available.get(weather_id, '') }}" min="0" step="any" /></td>
         </tr>
     {% endfor %}
+    <tr>
+        <th>Total</th>
+        <th><span id="total_time">Loading&hellip;</span></th>
+    </tr>
 </table>
 {% endblock %}

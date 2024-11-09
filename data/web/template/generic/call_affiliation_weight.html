@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 {% set navigation=[((call.semester_name, call.queue_name, (call.type | call_type_name(facility_call_type_class))) | fmt('{} {} {}'), url_for('.review_call', call_id=call.id))] %}
 {% set help_link=url_for('help.admin_page', page_name='affiliation_weight') %}
-{% set scripts=['checkbox_indeterminate'] %}
+{% set scripts=['checkbox_indeterminate', 'call_affiliation_weight'] %}
 
 {% block content %}
 <ul>
@@ -24,7 +24,7 @@
 {% endif %}
 
 <form method="POST" action="{{ url_for('.review_affiliation_weight', call_id=call.id) }}">
-    <table>
+    <table id="affiliation_weight">
         <tr>
             <th>Affiliation</th>
             <th>Weight</th>
@@ -49,6 +49,12 @@
                 </tr>
             {% endfor %}
         {% endfor %}
+        <tr>
+            <th>Total</th>
+            <th><span id="total_weight">Loading&hellip;</span></th>
+            <th>&nbsp;</th>
+            <th>&nbsp;</th>
+        </tr>
     </table>
 
     <p>
