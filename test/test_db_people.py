@@ -606,6 +606,26 @@ class DBPeopleTest(DBTestCase):
             self.assertEqual(institution.country, country)
             self.assertEqual(institution.name_abbr, name_abbr)
 
+        # Try searching by institution_id.
+        institution_id3 = self.db.add_institution(
+            'Institution Three',
+            '', '', '', 'AX',
+            name_abbr='I3')
+
+        result = self.db.search_institution(institution_id=institution_id)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(set(result.keys()), set((institution_id,)))
+
+        result = self.db.search_institution(institution_id=institution_id2)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(set(result.keys()), set((institution_id2,)))
+
+        result = self.db.search_institution(institution_id=(
+            institution_id, institution_id2))
+        self.assertEqual(len(result), 2)
+        self.assertEqual(set(result.keys()), set((
+            institution_id, institution_id2)))
+
         # Try updating an institution.
         with self.assertRaisesRegex(Error,
                                     '^no institution updates specified'):
@@ -708,8 +728,8 @@ class DBPeopleTest(DBTestCase):
         self.db.delete_institution(institution_id)
 
         self.assertEqual(
-            list(self.db.search_institution().keys()),
-            [institution_id2])
+            set(self.db.search_institution().keys()),
+            set((institution_id2, institution_id3)))
 
     def test_institution_merge(self):
         # Create two institution records with one person each.

@@ -1036,7 +1036,8 @@ class PeoplePart(object):
 
         return ans
 
-    def search_institution(self, has_registered_person=None):
+    def search_institution(
+            self, institution_id=None, has_registered_person=None):
         """
         Search institution records.
 
@@ -1054,6 +1055,17 @@ class PeoplePart(object):
             institution.c.organization_abbr,
         ])
 
+        iter_field = None
+        iter_list = None
+
+        if institution_id is not None:
+            if is_list_like(institution_id):
+                assert iter_field is None
+                iter_field = institution.c.id
+                iter_list = institution_id
+            else:
+                stmt = stmt.where(institution.c.id == institution_id)
+
         if has_registered_person is not None:
             condition = exists().select_from(person).where(and_(
                 person.c.user_id.isnot(None),
@@ -1069,9 +1081,10 @@ class PeoplePart(object):
         ans = ResultCollection()
 
         with self._transaction() as conn:
-            for row in conn.execute(stmt.order_by(
-                    institution.c.name, institution.c.department)):
-                ans[row.id] = InstitutionInfo(**row_as_mapping(row))
+            for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
+                for row in conn.execute(iter_stmt.order_by(
+                        institution.c.name, institution.c.department)):
+                    ans[row.id] = InstitutionInfo(**row_as_mapping(row))
 
         return ans
 
