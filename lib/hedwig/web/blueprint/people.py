@@ -290,7 +290,7 @@ def create_people_blueprint(db, facilities):
     @templated('people/person_log.html')
     def person_log(current_user, person_id):
         return view.person_log(
-            current_user, db, person_id, request.args)
+            current_user, db, person_id, facilities, request.args)
 
     @bp.route('/institution/')
     @require_auth()

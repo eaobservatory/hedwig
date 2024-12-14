@@ -21,11 +21,29 @@
         <tr>
             <th>Date (UT)</th>
             <th>Event</th>
+            <th>Proposal</th>
+            <th>Person or institution</th>
         </tr>
         {% for event in events.values() %}
             <tr>
                 <td>{{ event.date | format_datetime }}</td>
                 <td>{{ event.event | person_log_event_description }}</td>
+                <td>
+                    {% if (event.proposal_id is not none) and (event.proposal_facility_code is not none) and (event.proposal_code is not none) %}
+                        <a href="{{ url_for(event.proposal_facility_code + '.proposal_view', proposal_id=event.proposal_id) }}">{{ event.proposal_code }}</a>
+                    {% else %}
+                        &nbsp;
+                    {% endif %}
+                </td>
+                <td>
+                    {% if (event.other_person_id is not none) and (event.other_person_name is not none) %}
+                        <a href="{{ url_for('.person_view', person_id=event.other_person_id) }}">{{ event.other_person_name}}</a>
+                    {% elif (event.institution_id is not none) and (event.institution_name is not none) %}
+                        <a href="{{ url_for('.institution_view', institution_id=event.institution_id) }}">{{ event.institution_name }}</a>
+                    {% else %}
+                        &nbsp;
+                    {% endif %}
+                </td>
             </tr>
         {% endfor %}
     </table>
