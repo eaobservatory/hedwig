@@ -552,6 +552,13 @@ class DBPeopleTest(DBTestCase):
             user_id=user_3, email_address='no@email').keys()
         self.assertFalse(result)
 
+        # Try searching via person_id values.
+        result = self.db.search_person(person_id=person_2)
+        self.assertEqual(set(result.keys()), set((person_2,)))
+
+        result = self.db.search_person(person_id=(person_1, person_3))
+        self.assertEqual(set(result.keys()), set((person_1, person_3)))
+
     def test_institution(self):
         person_id = self.db.add_person('Institution Editor')
         self.assertIsInstance(person_id, int)

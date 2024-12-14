@@ -1250,8 +1250,16 @@ class PeoplePart(object):
                 institution.c.organization_abbr.label('institution_organization_abbr'),
             ]).select_from(person.outerjoin(institution))
 
+        iter_field = None
+        iter_list = None
+
         if person_id is not None:
-            stmt = stmt.where(person.c.id == person_id)
+            if is_list_like(person_id):
+                assert iter_field is None
+                iter_field = person.c.id
+                iter_list = person_id
+            else:
+                stmt = stmt.where(person.c.id == person_id)
 
         if user_id is not None:
             stmt = stmt.where(person.c.user_id == user_id)
@@ -1286,10 +1294,11 @@ class PeoplePart(object):
         ans = ResultCollection()
 
         with self._transaction() as conn:
-            for row in conn.execute(stmt.order_by(person.c.name)):
-                values = default.copy()
-                values.update(**row_as_mapping(row))
-                ans[row.id] = PersonInfo(**values)
+            for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
+                for row in conn.execute(iter_stmt.order_by(person.c.name)):
+                    values = default.copy()
+                    values.update(**row_as_mapping(row))
+                    ans[row.id] = PersonInfo(**values)
 
         return ans
 
