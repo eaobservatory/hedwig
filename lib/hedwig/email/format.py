@@ -204,3 +204,29 @@ def wrap_email_text(text):
 
     # Return complete message.
     return '\n'.join(lines)
+
+
+def unwrap_email_text(text):
+    """
+    Unwrap email text, from the style of "format=flowed"
+    to paragraphs on single lines.
+
+    This is the inverse of :func:`wrap_email_text`
+    and can be used when email text (which has be prepared for
+    sending with format=flowed) is to be sent in a different
+    style, such as "quoted-printable" content encoding.
+    """
+
+    paragraphs = []
+    paragraph = []
+
+    for line in text.splitlines():
+        paragraph.append(line)
+        if not line.endswith(' '):
+            paragraphs.append(''.join(paragraph))
+            paragraph = []
+
+    if paragraph:
+        paragraphs.append(''.join(paragraph))
+
+    return '\n'.join(paragraphs)

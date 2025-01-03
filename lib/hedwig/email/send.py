@@ -32,6 +32,7 @@ from ..type.enum import MessageThreadType
 from ..type.simple import MessageRecipient
 from ..type.util import null_tuple
 from ..util import get_logger
+from .format import unwrap_email_text
 
 use_cte_qp = True
 
@@ -333,29 +334,3 @@ def _prepare_address_header(names_addresses):
         encoded.append(b'{} <{}>'.format(name_encoded, address_encoded))
 
     return b', '.join(encoded)
-
-
-def unwrap_email_text(text):
-    """
-    Unwrap email text, from the style of "format=flowed"
-    to paragraphs on single lines.
-
-    This is the inverse of :func:`hedwig.email.format.wrap_email_text`
-    and can be used when email text (which has be prepared for
-    sending with format=flowed) is to be sent in a different
-    style, such as "quoted-printable" content encoding.
-    """
-
-    paragraphs = []
-    paragraph = []
-
-    for line in text.splitlines():
-        paragraph.append(line)
-        if not line.endswith(' '):
-            paragraphs.append(''.join(paragraph))
-            paragraph = []
-
-    if paragraph:
-        paragraphs.append(''.join(paragraph))
-
-    return '\n'.join(paragraphs)

@@ -23,8 +23,7 @@ from datetime import datetime
 import re
 
 from hedwig.compat import byte_type, python_version
-from hedwig.email.send import quitting, _prepare_email_message, \
-    unwrap_email_text
+from hedwig.email.send import quitting, _prepare_email_message
 from hedwig.type.enum import MessageFormatType, MessageThreadType
 from hedwig.type.collection import MessageRecipientCollection
 from hedwig.type.simple import Message, MessageRecipient
@@ -68,21 +67,6 @@ class EmailSendTestCase(DummyConfigTestCase):
         msg = MIMETextMaybeFlowed('test message')
         self.assertEqual(sorted(msg['Content-type'].split('; ')),
                          ['charset="utf-8"', 'text/plain'])
-
-    def test_text_unwrap(self):
-        """Test the `unwrap_email_text` function."""
-
-        self.assertEqual(
-            unwrap_email_text('a \na \na\nb \nb \nb'),
-            'a a a\nb b b')
-
-        self.assertEqual(
-            unwrap_email_text('a \na\nb \nb\nc \nc\nd \nd\n'),
-            'a a\nb b\nc c\nd d')
-
-        self.assertEqual(
-            unwrap_email_text('a\nb \nb \nb \nb \nb \nb \nb\nc'),
-            'a\nb b b b b b b\nc')
 
     def test_address_header(self):
         """Test the `_prepare_address_header` function."""
