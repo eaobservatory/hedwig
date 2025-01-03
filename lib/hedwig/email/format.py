@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -29,7 +29,51 @@ from ..util import lower_except_abbr
 
 environment = None
 
+line_break = re.compile('\n')
 paragraph_break = re.compile('\n\n+')
+break_comment = re.compile(r'^\s*{# BR #}\s*$', flags=re.IGNORECASE)
+
+
+class UnwrapFileSystemLoader(FileSystemLoader):
+    """
+    Template loader which unwraps lines as the template is read.
+
+    Email templates are stored in text files where long lines are typically
+    wrapped at a suitable width using single line breaks.  This class unwraps
+    the template by removing such breaks.  This allows single line breaks
+    in text substituted into templates to be retained.  Unwrapping after
+    rendering the template would remove both (unwanted) line breaks from
+    the template file and (presumably intentional) line breaks in substituted
+    text.
+
+    Also recognizes a special comment template comment `{# BR #}` to
+    indicate where a single line break should be retained.  (This must
+    appear on a line by itself.)
+    """
+
+    def get_source(self, environment, template):
+        (source, filename, uptodate) = super(
+            UnwrapFileSystemLoader, self).get_source(environment, template)
+
+        paragraphs = []
+        for paragraph in paragraph_break.split(source):
+            lines = []
+            for line in line_break.split(paragraph):
+                if break_comment.match(line):
+                    lines.append('\n')
+                    continue
+
+                if lines and not (
+                        (lines[-1] == '\n')
+                        or lines[-1].endswith('%}')
+                        or line.startswith('{%')):
+                    lines.append(' ')
+
+                lines.append(line)
+
+            paragraphs.append(''.join(lines))
+
+        return ('\n\n'.join(paragraphs), filename, uptodate)
 
 
 def get_environment():
@@ -60,9 +104,10 @@ def get_environment():
     if environment is None:
         environment = Environment(
             autoescape=False,
-            loader=FileSystemLoader(os.path.join(get_home(), 'data', 'email')),
-            trim_blocks=True,
-            lstrip_blocks=True)
+            loader=UnwrapFileSystemLoader(
+                os.path.join(get_home(), 'data', 'email')),
+            trim_blocks=False,
+            lstrip_blocks=False)
 
         config = get_config()
 
@@ -83,8 +128,7 @@ def get_environment():
 
 def render_email_template(name, context, facility=None):
     """
-    Render a template and then attempt to line-wrap the output
-    sensibly.
+    Render a template and then adjust paragraph breaks.
 
     If a `facility` (view class) is given then the template will be loaded
     from a directory of the facility's code, if it exists, otherwise
@@ -94,8 +138,12 @@ def render_email_template(name, context, facility=None):
     * `facility_name`
     * `facility_definite_name`
 
-    Currently line-wraps the email message, after generating the text
-    by applying the template, using :func:`wrap_email_text`.
+    .. note::
+        This function no longer line-wraps the email message (using
+        :func:`wrap_email_text`) and instead returns plain text
+        suitable for use with `MessageFormatType.PLAIN`.  If other
+        formats are to be used, it may be necessary to alter the
+        return value of this function to include the format type.
     """
 
     # Apply the template.
@@ -115,7 +163,8 @@ def render_email_template(name, context, facility=None):
             'facility_definite_name': facility.get_definite_name(),
         })
 
-    return wrap_email_text(template.render(full_context))
+    # Ensure only one blank line between paragraphs.
+    return '\n\n'.join(paragraph_break.split(template.render(full_context)))
 
 
 def wrap_email_text(text):
