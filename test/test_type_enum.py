@@ -26,7 +26,8 @@ from hedwig.type.enum import \
     Assessment, AttachmentState, \
     BaseAffiliationType, BaseCallType, BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, LogEventLevel, \
-    MessageState, PersonTitle, ProposalState, PublicationType, \
+    MessageFormatType, MessageState, \
+    PersonTitle, ProposalState, PublicationType, \
     RequestState, ReviewState, SemesterState, \
     UserLogEvent
 
@@ -147,6 +148,17 @@ class EnumTypeTestCase(TestCase):
         g = BaseCallType.get_notify_group(BaseCallType.IMMEDIATE)
         self.assertIsInstance(g, tuple)
         self.assertEqual(g, (GroupType.CTTEE,))
+
+    def test_message_format_type(self):
+        self.assertFalse(MessageFormatType.is_valid(999))
+        self.assertTrue(MessageFormatType.is_valid(
+            MessageFormatType.PLAIN))
+        self.assertTrue(MessageFormatType.is_valid(
+            MessageFormatType.PLAIN_FLOWED))
+
+        self.assertEqual(
+            MessageFormatType.get_name(MessageFormatType.PLAIN),
+            'Plain')
 
     def test_message_state(self):
         # Test "get_name" method.

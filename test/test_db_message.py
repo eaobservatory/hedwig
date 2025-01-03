@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,7 +22,7 @@ from datetime import datetime
 
 from hedwig.compat import first_value
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, Error
-from hedwig.type.enum import MessageState, MessageThreadType
+from hedwig.type.enum import MessageFormatType, MessageState, MessageThreadType
 from hedwig.type.collection import ResultCollection
 from hedwig.type.simple import Message, MessageRecipient
 from .dummy_db import DBTestCase
@@ -39,17 +39,21 @@ class DBMessageTest(DBTestCase):
         self.db.add_email(person_1, '1@a', primary=True, public=True)
 
         with self.assertRaisesRegex(Error, '^duplicate person_id'):
-            message_id = self.db.add_message('test', 'test message',
-                                             [person_1, person_1])
+            self.db.add_message(
+                'test', 'test message', [person_1, person_1])
 
         with self.assertRaises(DatabaseIntegrityError):
-            message_id = self.db.add_message('test', 'test message',
-                                             [person_1, person_1],
-                                             _test_skip_check=True)
+            self.db.add_message(
+                'test', 'test message', [person_1, person_1],
+                _test_skip_check=True)
 
         with self.assertRaises(DatabaseIntegrityError):
-            message_id = self.db.add_message('test', 'test message',
-                                             [1999999])
+            self.db.add_message(
+                'test', 'test message', [1999999])
+
+        with self.assertRaisesRegex(Error, 'invalid message format type'):
+            self.db.add_message(
+                'test', 'message', [person_1], format_type=999)
 
         message_id = self.db.add_message('test', 'test message', [person_1])
         self.assertIsInstance(message_id, int)
@@ -71,6 +75,7 @@ class DBMessageTest(DBTestCase):
         self.assertIsNone(message.thread_type)
         self.assertIsNone(message.thread_id)
         self.assertEqual(message.state, MessageState.UNSENT)
+        self.assertEqual(message.format, MessageFormatType.PLAIN)
 
         # Test a search as if preparing to send messages.
         messages = self.db.search_message(
@@ -201,10 +206,12 @@ class DBMessageTest(DBTestCase):
         self.db.add_email(person_4, '4@c', primary=False, public=True)
 
         # Create two test messages.
-        message_12 = self.db.add_message('test', 'test message',
-                                         [person_1, person_2])
-        message_34 = self.db.add_message('test', 'test message',
-                                         [person_3, person_4])
+        message_12 = self.db.add_message(
+            'test', 'test message', [person_1, person_2],
+            format_type=MessageFormatType.PLAIN)
+        message_34 = self.db.add_message(
+            'test', 'test message', [person_3, person_4],
+            format_type=MessageFormatType.PLAIN_FLOWED)
 
         self.assertIsInstance(message_12, int)
         self.assertIsInstance(message_34, int)
@@ -220,6 +227,7 @@ class DBMessageTest(DBTestCase):
 
         message = messages[message_12]
         self.assertEqual(message.id, message_12)
+        self.assertEqual(message.format, MessageFormatType.PLAIN)
         self.assertEqual(set(message.recipients.values()), set((
             MessageRecipient(message_12, person_1, '1@b', 'Person One', True),
             MessageRecipient(message_12, person_2, '2@a', 'Person Two', False),
@@ -227,6 +235,7 @@ class DBMessageTest(DBTestCase):
 
         message = messages[message_34]
         self.assertEqual(message.id, message_34)
+        self.assertEqual(message.format, MessageFormatType.PLAIN_FLOWED)
         self.assertEqual(set(message.recipients.values()), set((
             MessageRecipient(message_34, person_3, '3@c', 'Person Three', True),
             MessageRecipient(message_34, person_4, '4@b', 'Person Four', False),

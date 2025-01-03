@@ -372,6 +372,7 @@ message = Table(
     Column('thread_type', Integer, default=None),
     Column('thread_id', Integer, default=None),
     Column('state', Integer, nullable=False, index=True),
+    Column('format', Integer, nullable=False),
     **table_opts)
 
 message_recipient = Table(

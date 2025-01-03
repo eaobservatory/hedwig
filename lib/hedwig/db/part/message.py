@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -32,7 +32,7 @@ from ...email.util import is_valid_email
 from ...error import ConsistencyError, Error, FormattedError, \
     NoSuchRecord, MultipleRecords
 from ...type.collection import ResultCollection, MessageRecipientCollection
-from ...type.enum import MessageState, MessageThreadType
+from ...type.enum import MessageFormatType, MessageState, MessageThreadType
 from ...type.simple import Message, MessageRecipient
 from ...util import is_list_like
 from ..compat import case, row_as_mapping, select
@@ -42,6 +42,7 @@ from ..meta import email, message, message_recipient, person
 class MessagePart(object):
     def add_message(self, subject, body, person_ids, email_addresses=[],
                     thread_type=None, thread_id=None,
+                    format_type=MessageFormatType.PLAIN,
                     _test_skip_check=False):
         """
         Add a message to the database.
@@ -51,6 +52,10 @@ class MessagePart(object):
         then it can be a list with email addresses in the same order as the
         person_ids list.
         """
+
+        if not MessageFormatType.is_valid(format_type):
+            raise FormattedError(
+                'invalid message format type {}', format_type)
 
         for email_address in email_addresses:
             if not is_valid_email(email_address):
@@ -78,6 +83,7 @@ class MessagePart(object):
                 message.c.thread_type: thread_type,
                 message.c.thread_id: thread_id,
                 message.c.state: MessageState.UNSENT,
+                message.c.format: format_type,
             }))
 
             message_id = result.inserted_primary_key[0]

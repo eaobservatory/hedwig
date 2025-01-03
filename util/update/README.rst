@@ -4,6 +4,17 @@ Updates Requiring Intervention
 The `util/update` directory contains scripts to assist with updates
 to the Hedwig database which cannot be handled automatically by `Alembic`.
 
+* 2025-01-02: Addition of format column to message table
+
+  A `format` column has been added to the `message` table to allow
+  different types of message formatting to be used.  `Alembic` can
+  be used to create the new column, but the default value (to be
+  used for existing records) should be 1 (corresponding to
+  `MessageFormatType.PLAIN_FLOWED`)::
+
+      op.add_column('message', sa.Column(
+          'format', sa.Integer(), nullable=False, server_default='1'))
+
 * 2023-08-24: New email validation check
 
   The regular expression used to check that email addresses are valid
@@ -79,7 +90,7 @@ to the Hedwig database which cannot be handled automatically by `Alembic`.
   A `state` column has been added to the `review` database table.  `Alembic`
   should create the new column correctly, but you should ensure that the
   default value (used for the existing records) is 2 (corresponding to
-  `ReviewState.DONE`::
+  `ReviewState.DONE`)::
 
       op.add_column('review', sa.Column(
           'state', sa.Integer(), nullable=False, server_default='2'))

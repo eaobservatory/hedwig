@@ -402,6 +402,24 @@ class LogEventLevel(EnumBasic):
         return OrderedDict(((k, v.name) for (k, v) in cls._info.items()))
 
 
+class MessageFormatType(EnumBasic):
+    """
+    Class representing possible formatting types for email messages.
+    """
+
+    PLAIN_FLOWED = 1
+    PLAIN = 2
+
+    MessageFormatTypeInfo = namedtuple('MessageFormatTypeInfo', ('name',))
+
+    _info = OrderedDict((
+        (PLAIN_FLOWED, MessageFormatTypeInfo(
+            'Plain (flowed)')),
+        (PLAIN, MessageFormatTypeInfo(
+            'Plain')),
+    ))
+
+
 class MessageState(EnumAllowUser, EnumBasic, EnumDisplayClass):
     """
     Class representing possible status values for email messages.

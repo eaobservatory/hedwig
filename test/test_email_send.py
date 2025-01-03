@@ -25,7 +25,7 @@ import re
 from hedwig.compat import byte_type, python_version
 from hedwig.email.send import quitting, _prepare_email_message, \
     unwrap_email_text
-from hedwig.type.enum import MessageThreadType
+from hedwig.type.enum import MessageFormatType, MessageThreadType
 from hedwig.type.collection import MessageRecipientCollection
 from hedwig.type.simple import Message, MessageRecipient
 from hedwig.type.util import null_tuple
@@ -129,6 +129,7 @@ class EmailSendTestCase(DummyConfigTestCase):
                 date=datetime(2015, 4, 1, 0, 0, 0),
                 subject='Message exp\u00e9rimental',
                 body='C\'est un message exp\u00e9rimental.',
+                format=MessageFormatType.PLAIN,
                 recipients=MessageRecipientCollection((
                     (1, MessageRecipient(
                         None, 101, 'one@test', 'Persoon \u00e9\u00e9n', True)),
