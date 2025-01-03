@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2024 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,9 +18,9 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from hedwig.type.enum import FormatType
-from hedwig.type.simple import ProposalText
-from hedwig.web.format import format_text, \
+from hedwig.type.enum import FormatType, MessageFormatType
+from hedwig.type.simple import Message, ProposalText
+from hedwig.web.format import format_message_text, format_text, \
     format_text_plain, format_text_plain_inline
 from hedwig.web.util import HTTPError
 from hedwig.type.util import null_tuple
@@ -45,18 +45,23 @@ class TextFormatTest(TestCase):
                 text='hello', format=FormatType.PLAIN)),
             '<p>hello</p>')
 
-        # Test email-style formatting.
-        self.assertEqual(
-            format_text(null_tuple(ProposalText)._replace(
-                text='a\nb\n\nc\nd', format=FormatType.PLAIN),
-                as_email=True),
-            '<pre>a b\n\nc d</pre>')
+    def test_format_message(self):
+        with self.assertRaisesRegex(HTTPError, 'Unknown message format type'):
+            format_message_text(null_tuple(Message)._replace(
+                    body='...', format=999))
 
-        self.assertTrue(
-            format_text(null_tuple(ProposalText)._replace(
-                text='rst', format=FormatType.RST),
-                as_email=True).startswith(
-                    '<p class="warning">Format is not plain text.</p>'))
+        with self.assertRaisesRegex(HTTPError, 'Unknown message format type'):
+            format_message_text('...', format=999)
+
+        self.assertEqual(
+            format_message_text(null_tuple(Message)._replace(
+                body='a\nb\n\nc\nd', format=MessageFormatType.PLAIN_FLOWED)),
+            '<pre>a\nb\n\nc\nd</pre>')
+
+        self.assertEqual(
+            format_message_text(null_tuple(Message)._replace(
+                body='a\nb\n\nc\nd', format=MessageFormatType.PLAIN)),
+            '<p>a<br />b</p><p>c<br />d</p>')
 
     def test_format_plain(self):
         # Empty input should give no output.

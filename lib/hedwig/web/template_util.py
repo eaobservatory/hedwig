@@ -37,7 +37,7 @@ from ..type.enum import AnnotationType, Assessment, \
     ProposalState, ProposalType, PublicationType, \
     RequestState, ReviewState, SemesterState, SiteGroupType, UserLogEvent
 from ..util import FormatMaxDP, FormatSigFig
-from .format import format_text
+from .format import format_message_text, format_text
 from .util import mangle_email_address as _mangle_email_address
 
 
@@ -591,6 +591,7 @@ def register_template_utils(app):
         return role_class.is_name_review(value)
 
     app.add_template_filter(format_text)
+    app.add_template_filter(format_message_text)
 
 
 class Counter(object):

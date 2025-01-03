@@ -24,7 +24,7 @@
         <th>Message body</th>
     </tr>
     <tr>
-        <td><pre>{{ message.body }}</pre></td>
+        <td>{{ message | format_message_text }}</td>
     </tr>
 </table>
 {% endblock %}
