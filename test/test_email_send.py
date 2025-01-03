@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2024 East Asian Observatory
+# Copyright (C) 2016-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -23,7 +23,10 @@ from datetime import datetime
 import re
 
 from hedwig.compat import byte_type, python_version
-from hedwig.email.send import quitting, _prepare_email_message
+import hedwig.email.send as email_send
+from hedwig.email.send import quitting, \
+    _prepare_email_message, _prepare_email_message_body
+from hedwig.error import Error
 from hedwig.type.enum import MessageFormatType, MessageThreadType
 from hedwig.type.collection import MessageRecipientCollection
 from hedwig.type.simple import Message, MessageRecipient
@@ -103,6 +106,54 @@ class EmailSendTestCase(DummyConfigTestCase):
         ))
         _header_valid(header)
         self.assertEqual(header, b'"1" <a@b>, "2" <c@d>, "3" <e@f>')
+
+    def test_prepare_message_body(self):
+        """Test the `_prepare_email_message_body` function."""
+
+        with self.assertRaisesRegex(Error, 'not recognized'):
+            _prepare_email_message_body(null_tuple(Message)._replace(
+                body='test',
+                format=999))
+
+        orig_use_cte_qp = email_send.use_cte_qp
+
+        try:
+            # When sending QP, flowed text should be unwrapped,
+            # plain text should be returned as-is.
+            email_send.use_cte_qp = True
+
+            self.assertEqual(
+                _prepare_email_message_body(null_tuple(Message)._replace(
+                    body='a \nb\nc \nd',
+                    format=MessageFormatType.PLAIN_FLOWED)),
+                'a b\nc d')
+
+            self.assertEqual(
+                _prepare_email_message_body(null_tuple(Message)._replace(
+                    body='a \nb\nc \nd',
+                    format=MessageFormatType.PLAIN)),
+                'a \nb\nc \nd')
+
+            # When sending non-QP (i.e. with format=flowed), flowed text
+            # should be returned as-is whereas plain text should be wrapped.
+            email_send.use_cte_qp = False
+
+            self.assertEqual(
+                _prepare_email_message_body(null_tuple(Message)._replace(
+                    body='a \nb\nc \nd',
+                    format=MessageFormatType.PLAIN_FLOWED)),
+                'a \nb\nc \nd')
+
+            self.assertEqual(
+                _prepare_email_message_body(null_tuple(Message)._replace(
+                    body='12345678901234567890 12345678901234567890 '
+                    '12345678901234567890 12345678901234567890',
+                    format=MessageFormatType.PLAIN)),
+                '12345678901234567890 12345678901234567890 '
+                '12345678901234567890 \n12345678901234567890')
+
+        finally:
+            email_send.use_cte_qp = orig_use_cte_qp
 
     def test_prepare_message(self):
         """Test the `_prepare_email_message` function."""

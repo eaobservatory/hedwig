@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -28,11 +28,11 @@ from smtplib import SMTP, SMTPException
 from ..compat import python_version, unicode_to_str
 from ..config import get_config
 from ..error import FormattedError
-from ..type.enum import MessageThreadType
+from ..type.enum import MessageFormatType, MessageThreadType
 from ..type.simple import MessageRecipient
 from ..type.util import null_tuple
 from ..util import get_logger
-from .format import unwrap_email_text
+from .format import wrap_email_text, unwrap_email_text
 
 use_cte_qp = True
 
@@ -240,15 +240,17 @@ def _prepare_email_message_py3(
 
     msg = EmailMessage(policy=policy)
 
+    message_body = _prepare_email_message_body(message)
+
     if use_cte_qp:
         msg.set_content(
-            unwrap_email_text(message.body),
+            message_body,
             charset='utf-8',
             cte='quoted-printable')
 
     else:
         msg.set_content(
-            message.body,
+            message_body,
             charset='utf-8',
             cte='base64',
             params={'format': 'flowed'})
@@ -284,11 +286,13 @@ def _prepare_email_message_py2(
         header_kwargs['charset'] = 'utf-8'
         generator_kwargs['maxheaderlen'] = maxheaderlen
 
+    message_body = _prepare_email_message_body(message)
+
     if use_cte_qp:
-        msg = MIMETextMaybeFlowed(unwrap_email_text(message.body))
+        msg = MIMETextMaybeFlowed(message_body)
 
     else:
-        msg = MIMETextFlowed(message.body)
+        msg = MIMETextFlowed(message_body)
 
     msg['Subject'] = Header(message.subject, **header_kwargs)
     msg['Date'] = Header(format_datetime(message.date), **header_kwargs)
@@ -304,6 +308,23 @@ def _prepare_email_message_py2(
         msg = f.getvalue()
 
     return msg
+
+
+def _prepare_email_message_body(message):
+    if message.format == MessageFormatType.PLAIN_FLOWED:
+        if use_cte_qp:
+            return unwrap_email_text(message.body)
+
+    elif message.format == MessageFormatType.PLAIN:
+        if not use_cte_qp:
+            return wrap_email_text(message.body)
+
+    else:
+        raise FormattedError(
+            'Email message format type {} not recognized',
+            message.format)
+
+    return message.body
 
 
 def _prepare_address_header(names_addresses):
