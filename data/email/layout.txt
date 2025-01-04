@@ -11,16 +11,16 @@ Hello,
 
 {% block closing %}
 Best regards,
-
+{# BR #}
 {{ application_name }}
 {% if email_footer_title %}
-
+{# BR #}
 {{ email_footer_title }}
 {% endif %}
 {% if (email_footer_url or email_footer_email) %}
-
+{# BR #}
 {% if email_footer_url %}{{ email_footer_url }}{% endif %}
-{% if (email_footer_url and email_footer_email) %} {%endif %}
+{% if (email_footer_url and email_footer_email) %} {% endif %}
 {% if email_footer_email %}{{ email_footer_email }}{% endif %}
 {% endif %}
 {% endblock %}
