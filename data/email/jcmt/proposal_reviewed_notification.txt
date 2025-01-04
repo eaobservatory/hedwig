@@ -7,7 +7,7 @@
 {% for allocation in jcmt_allocation %}
 {{ allocation.instrument}}, {{ allocation.weather }}: {{ allocation.time }}
 {{ 'hour' if allocation.time == 1.0 else 'hours' }}
-
+{# BR #}
 {% endfor %}
 {% endif %}
 {% endblock %}

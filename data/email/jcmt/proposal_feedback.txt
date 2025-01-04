@@ -16,7 +16,7 @@ for your project:
 {% for allocation in jcmt_allocation %}
 {{ allocation.instrument}}, {{ allocation.weather }}: {{ allocation.time }}
 {{ 'hour' if allocation.time == 1.0 else 'hours' }}
-
+{# BR #}
 {% endfor %}
 
 Please be aware that, to maximize productivity,

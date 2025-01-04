@@ -47,9 +47,9 @@ assigned to you, along with direct links to
 
 {% for proposal in proposals %}
 {{ proposal.code }}: "{{ proposal.title }}"
-
+{# BR #}
     Proposal: {{ proposal.target_proposal }}
-
+{# BR #}
     Review: {{ proposal.target_review }}
 
 {% endfor %}

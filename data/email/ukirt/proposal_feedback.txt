@@ -16,7 +16,7 @@ for your project:
 {% for allocation in ukirt_allocations %}
 {{ allocation.instrument}}, {{ allocation.brightness }}: {{ allocation.time }}
 {{ 'hour' if allocation.time == 1.0 else 'hours' }}
-
+{# BR #}
 {% endfor %}
 {% endif %}
 {% endblock %}
