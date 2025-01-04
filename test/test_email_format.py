@@ -35,7 +35,7 @@ class EmailFormatTestCase(TestCase):
 
         self.assertEqual(
             wrap_email_text('a b\nc d\n\ne f\ng h'),
-            'a b c d\n\ne f g h')
+            'a b\nc d\n\ne f\ng h')
 
         self.assertEqual(
             wrap_email_text(

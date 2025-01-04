@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 import os
 import re
-from textwrap import wrap
+from textwrap import TextWrapper
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -28,6 +28,7 @@ from ..config import get_config, get_home
 from ..util import lower_except_abbr
 
 environment = None
+wrapper = None
 
 line_break = re.compile('\n')
 paragraph_break = re.compile('\n\n+')
@@ -172,16 +173,19 @@ def wrap_email_text(text):
     Line-wraps email message text.
 
     * The message is broken into paragraphs, at multiple line breaks.
-    * Each paragraph itself is line-wrapped.
-    * A trailing space is added to each line of the paragraph, except the last
+    * Each line in the paragraph is then line-wrapped.
+    * A trailing space is added to each wrapped line, except the last
       (flowed email format).
     * The lines of the email are rejoined, with a blank line between
       paragraphs.
 
-    Note: with the above scheme there is no way to insert a single
-    manual line break.  (A single break is considered to be within a
-    paragraph and the whole paragraph is re-flowed.)
+    .. note::
+        The behavior of this function has changed to preserve
+        single line breaks by individually wrapping each line
+        within each paragraph.
     """
+
+    wrp = _get_text_wrapper()
 
     # Wrap each paragraph and append to the lines list.
     lines = []
@@ -191,19 +195,34 @@ def wrap_email_text(text):
         if not paragraph:
             continue
 
-        # Avoid breaking long "words" in order not to break URLs.
-        wrapped = wrap(paragraph, width=70,
-                       break_long_words=False,
-                       break_on_hyphens=False)
+        for line in line_break.split(paragraph):
+            wrapped = wrp.wrap(line)
 
-        if not wrapped:
-            continue
+            if not wrapped:
+                continue
 
-        lines.extend([x + ' ' for x in wrapped[:-1]])
-        lines.append(wrapped[-1])
+            lines.extend([x + ' ' for x in wrapped[:-1]])
+            lines.append(wrapped[-1])
 
     # Return complete message.
     return '\n'.join(lines)
+
+
+def _get_text_wrapper():
+    """
+    Get TextWrapper object.
+    """
+
+    global wrapper
+
+    if wrapper is None:
+        # Avoid breaking long "words" in order not to break URLs.
+        wrapper = TextWrapper(
+            width=70,
+            break_long_words=False,
+            break_on_hyphens=False)
+
+    return wrapper
 
 
 def unwrap_email_text(text):
