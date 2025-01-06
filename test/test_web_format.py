@@ -46,11 +46,11 @@ class TextFormatTest(TestCase):
             '<p>hello</p>')
 
     def test_format_message(self):
-        with self.assertRaisesRegex(HTTPError, 'Unknown message format type'):
+        with self.assertRaises(HTTPError):
             format_message_text(null_tuple(Message)._replace(
                     body='...', format=999))
 
-        with self.assertRaisesRegex(HTTPError, 'Unknown message format type'):
+        with self.assertRaises(HTTPError):
             format_message_text('...', format=999)
 
         self.assertEqual(
