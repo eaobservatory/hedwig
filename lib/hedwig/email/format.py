@@ -33,6 +33,7 @@ wrapper = None
 line_break = re.compile('\n')
 paragraph_break = re.compile('\n\n+')
 break_comment = re.compile(r'^\s*{# BR #}\s*$', flags=re.IGNORECASE)
+pattern_block_only = re.compile(r'^{% (\w+) [^%]*%}$')
 
 
 class UnwrapFileSystemLoader(FileSystemLoader):
@@ -62,21 +63,51 @@ class UnwrapFileSystemLoader(FileSystemLoader):
 def _unwrap_email_template(source):
     """
     Helper function for `UnwrapFileSystemLoader`.
+
+    Attempts to unwrap the lines of an email template.  Performs some
+    basic processing:
+
+    * Recognizes the break comment `{# BR #}`.
+
+    * Assumes lines containing only a single `{% ... %}` statement
+      do not generate output and so does not add a space before the next
+      line.  Records such status before `if-elif-else-endif` structures
+      to restore it for each branch (but does not accumulate status from
+      the branches, assuming them all to be similar).
     """
 
     paragraphs = []
+    has_output_before = []
+
     for paragraph in paragraph_break.split(source):
         lines = []
+        has_output = False
         for line in line_break.split(paragraph):
             if break_comment.match(line):
                 lines.append('\n')
+                has_output = False
                 continue
 
-            if lines and not (
-                    (lines[-1] == '\n')
-                    or lines[-1].endswith('%}')
-                    or line.startswith('{%')):
-                lines.append(' ')
+            if not line:
+                continue
+
+            match = pattern_block_only.match(line)
+            if match:
+                statement = match.group(1)
+                if statement == 'if':
+                    has_output_before.append(has_output)
+                elif statement in ('else', 'elif'):
+                    if has_output_before:
+                        has_output = has_output_before[-1]
+                elif statement == 'endif':
+                    if has_output_before:
+                        has_output_before.pop()
+
+            else:
+                if has_output:
+                    lines.append(' ')
+
+                has_output = True
 
             lines.append(line)
 

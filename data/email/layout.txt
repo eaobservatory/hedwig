@@ -17,10 +17,14 @@ Best regards,
 {# BR #}
 {{ email_footer_title }}
 {% endif %}
-{% if (email_footer_url or email_footer_email) %}
+{% if (email_footer_url and email_footer_email) %}
 {# BR #}
-{% if email_footer_url %}{{ email_footer_url }}{% endif %}
-{% if (email_footer_url and email_footer_email) %} {% endif %}
-{% if email_footer_email %}{{ email_footer_email }}{% endif %}
+{{ email_footer_url }} {{ email_footer_email }}
+{% elif email_footer_url %}
+{# BR #}
+{{ email_footer_url }}
+{% elif email_footer_email %}
+{# BR #}
+{{ email_footer_email }}
 {% endif %}
 {% endblock %}

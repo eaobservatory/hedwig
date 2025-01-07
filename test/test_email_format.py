@@ -18,7 +18,8 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from hedwig.email.format import wrap_email_text, unwrap_email_text
+from hedwig.email.format import wrap_email_text, unwrap_email_text, \
+    _unwrap_email_template
 
 from .compat import TestCase
 
@@ -65,3 +66,35 @@ class EmailFormatTestCase(TestCase):
         self.assertEqual(
             unwrap_email_text('a\nb \nb \nb \nb \nb \nb \nb\nc'),
             'a\nb b b b b b b\nc')
+
+    def test_template_unwrap(self):
+        """Test the `_unwrap_email_template` function."""
+
+        self.assertEqual(_unwrap_email_template('\n'.join([
+            'line1',
+            'line2',
+            '{# BR #}',
+            'line3',
+            '',
+            'a',
+            '{% if ... %}',
+            'b',
+            '{% else %}',
+            '{% xxx %}',
+            'c',
+            '{% yyy %}d{% zzz %}',
+            'e',
+            '{% endif %}',
+            'f',
+            '',
+            '{% if ... %}',
+            'A',
+            '{% endif %}',
+        ])), '\n'.join([
+            'line1 line2',
+            'line3',
+            '',
+            'a{% if ... %} b{% else %}{% xxx %} c {% yyy %}d{% zzz %} e{% endif %} f',
+            '',
+            '{% if ... %}A{% endif %}',
+        ]))
