@@ -56,25 +56,33 @@ class UnwrapFileSystemLoader(FileSystemLoader):
         (source, filename, uptodate) = super(
             UnwrapFileSystemLoader, self).get_source(environment, template)
 
-        paragraphs = []
-        for paragraph in paragraph_break.split(source):
-            lines = []
-            for line in line_break.split(paragraph):
-                if break_comment.match(line):
-                    lines.append('\n')
-                    continue
+        return (_unwrap_email_template(source), filename, uptodate)
 
-                if lines and not (
-                        (lines[-1] == '\n')
-                        or lines[-1].endswith('%}')
-                        or line.startswith('{%')):
-                    lines.append(' ')
 
-                lines.append(line)
+def _unwrap_email_template(source):
+    """
+    Helper function for `UnwrapFileSystemLoader`.
+    """
 
-            paragraphs.append(''.join(lines))
+    paragraphs = []
+    for paragraph in paragraph_break.split(source):
+        lines = []
+        for line in line_break.split(paragraph):
+            if break_comment.match(line):
+                lines.append('\n')
+                continue
 
-        return ('\n\n'.join(paragraphs), filename, uptodate)
+            if lines and not (
+                    (lines[-1] == '\n')
+                    or lines[-1].endswith('%}')
+                    or line.startswith('{%')):
+                lines.append(' ')
+
+            lines.append(line)
+
+        paragraphs.append(''.join(lines))
+
+    return '\n\n'.join(paragraphs)
 
 
 def get_environment():
