@@ -43,7 +43,7 @@ Please begin by entering the following invitation code
 on the invitation page:
 
 Invitation code: {{ token }}
-
+{# BR #}
 Invitation page: {{ target_plain }}
 
 Alternatively you may click the following link:
