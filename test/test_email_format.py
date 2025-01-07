@@ -18,7 +18,8 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from hedwig.email.format import wrap_email_text, unwrap_email_text, \
+from hedwig.email.format import _tidy_email_text, \
+    wrap_email_text, unwrap_email_text, \
     _unwrap_email_template
 
 from .compat import TestCase
@@ -97,4 +98,26 @@ class EmailFormatTestCase(TestCase):
             'a{% if ... %} b{% else %}{% xxx %} c {% yyy %}d{% zzz %} e{% endif %} f',
             '',
             '{% if ... %}A{% endif %}',
+        ]))
+
+    def test_tidy_text(self):
+        self.assertEqual(_tidy_email_text('\n'.join([
+            'a b  c   d  e f',
+            'g h i',
+            '',
+            'x',
+            '',
+            '',
+            'y',
+            '  z w',
+            ' aa  bb'
+        ])), '\n'.join([
+            'a b c d e f',
+            'g h i',
+            '',
+            'x',
+            '',
+            'y',
+            '  z w',
+            ' aa bb',
         ]))

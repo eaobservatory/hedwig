@@ -34,6 +34,7 @@ line_break = re.compile('\n')
 paragraph_break = re.compile('\n\n+')
 break_comment = re.compile(r'^\s*{# BR #}\s*$', flags=re.IGNORECASE)
 pattern_block_only = re.compile(r'^{% (\w+) [^%]*%}$')
+pattern_spaces_non_start = re.compile(r'(?<=[^ \n])  +')
 
 
 class UnwrapFileSystemLoader(FileSystemLoader):
@@ -203,8 +204,22 @@ def render_email_template(name, context, facility=None):
             'facility_definite_name': facility.get_definite_name(),
         })
 
-    # Ensure only one blank line between paragraphs.
-    return '\n\n'.join(paragraph_break.split(template.render(full_context)))
+    return _tidy_email_text(template.render(full_context))
+
+
+def _tidy_email_text(text):
+    """
+    Tidy the spacing of email text generated from a template.
+
+    * Ensures only one blank line between paragraphs.
+
+    * Merges multiple consecutive spaces into one
+      except at the start of a line.
+    """
+
+    return '\n\n'.join(
+        pattern_spaces_non_start.sub(' ', paragraph)
+        for paragraph in paragraph_break.split(text))
 
 
 def wrap_email_text(text):
