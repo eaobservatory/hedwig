@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -814,6 +814,7 @@ reviewer = Table(
     Column('role', Integer, nullable=False),
     Column('notified', Boolean, default=False, nullable=False),
     Column('accepted', Boolean, nullable=True),
+    Column('thanked', Boolean, default=False, nullable=False),
     UniqueConstraint('proposal_id', 'person_id', 'role'),
     **table_opts)
 

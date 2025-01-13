@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -131,6 +131,7 @@ class DBReviewTest(DBTestCase):
         person_id_2 = self.db.add_person('Reviewer 2')
         person_id_3 = self.db.add_person('Reviewer 3')
         person_id_4 = self.db.add_person('Reviewer 4')
+        person_id_5 = self.db.add_person('Reviewer 5')
 
         # Try null search.
         result = self.db.search_reviewer(proposal_id)
@@ -163,12 +164,18 @@ class DBReviewTest(DBTestCase):
             BaseReviewerRole.PEER)
         self.assertIsInstance(reviewer_id_4, int)
 
+        reviewer_id_5 = self.db.add_reviewer(
+            BaseReviewerRole, proposal_id, person_id_5,
+            BaseReviewerRole.EXTERNAL)
+        self.assertIsInstance(reviewer_id_5, int)
+
         # Try searching for reviewers.
         result = self.db.search_reviewer(
             proposal_id=proposal_id, with_note=True)
-        self.assertEqual(len(result), 4)
+        self.assertEqual(len(result), 5)
 
         for ((k, v), ref) in zip(result.items(), (
+                (person_id_5, 'Reviewer 5', BaseReviewerRole.EXTERNAL, reviewer_id_5),
                 (person_id_1, 'Reviewer 1', BaseReviewerRole.CTTEE_PRIMARY, reviewer_id_1),
                 (person_id_2, 'Reviewer 2', BaseReviewerRole.CTTEE_SECONDARY, reviewer_id_2),
                 (person_id_3, 'Reviewer 3', BaseReviewerRole.CTTEE_SECONDARY, reviewer_id_3),
@@ -193,6 +200,7 @@ class DBReviewTest(DBTestCase):
             self.assertIsNone(v.accepted)
             self.assertIsNone(v.note)
             self.assertIsNone(v.note_format)
+            self.assertFalse(v.thanked)
 
         institution_id = self.db.add_institution(
             'Inst', 'Dept', 'Org', '', 'AX')
@@ -238,6 +246,26 @@ class DBReviewTest(DBTestCase):
             reviewer_id=reviewer_id_4).get_single()
         self.assertIs(result.accepted, True)
 
+        self.assertEqual(len(self.db.search_reviewer(
+            proposal_id=proposal_id, thanked=True)), 0)
+        self.assertEqual(len(self.db.search_reviewer(
+            proposal_id=proposal_id, thanked=False)), 5)
+
+        with self.assertRaisesRegex(Error, 'reviewer role is not invited'):
+            self.db.update_reviewer(
+                BaseReviewerRole, reviewer_id_1, thanked=True)
+
+        self.db.update_reviewer(
+            BaseReviewerRole, reviewer_id_5, thanked=True)
+        result = self.db.search_reviewer(
+            reviewer_id=reviewer_id_5).get_single()
+        self.assertIs(result.thanked, True)
+
+        self.assertEqual(len(self.db.search_reviewer(
+            proposal_id=proposal_id, thanked=True)), 1)
+        self.assertEqual(len(self.db.search_reviewer(
+            proposal_id=proposal_id, thanked=False)), 4)
+
         # Test call and queue query parameters.
         result = self.db.search_reviewer(call_id=1999999)
         self.assertEqual(len(result), 0)
@@ -249,7 +277,7 @@ class DBReviewTest(DBTestCase):
         self.db.delete_reviewer(reviewer_id=reviewer_id_1)
 
         result = self.db.search_reviewer(proposal_id=proposal_id)
-        self.assertEqual(len(result), 3)
+        self.assertEqual(len(result), 4)
 
         self.assertFalse(reviewer_id_1 in result.keys())
 

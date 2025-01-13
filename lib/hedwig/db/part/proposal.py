@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1764,6 +1764,7 @@ class ProposalPart(object):
                         with_review_info=False, with_review_text=False,
                         with_reviewer_role=None, with_review_state=None,
                         with_reviewer_notified=None, with_reviewer_accepted=(),
+                        with_reviewer_thanked=None,
                         with_reviewer_note=False,
                         reviewer_person_id=None,
                         with_categories=False,
@@ -2102,6 +2103,7 @@ class ProposalPart(object):
                     review_state=with_review_state,
                     notified=with_reviewer_notified,
                     accepted=with_reviewer_accepted,
+                    thanked=with_reviewer_thanked,
                     with_note=with_reviewer_note,
                     _conn=conn)
 

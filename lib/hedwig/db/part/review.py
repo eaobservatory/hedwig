@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -430,7 +430,7 @@ class ReviewPart(object):
                         person_id=None, review_state=None,
                         call_id=None, queue_id=None,
                         proposal_state=None, institution_id=None,
-                        notified=None, accepted=(),
+                        notified=None, accepted=(), thanked=None,
                         with_review=False, with_review_text=False,
                         with_review_note=False,
                         with_invitation=False,
@@ -609,6 +609,12 @@ class ReviewPart(object):
                 stmt = stmt.where(reviewer.c.notified)
             else:
                 stmt = stmt.where(not_(reviewer.c.notified))
+
+        if thanked is not None:
+            if thanked:
+                stmt = stmt.where(reviewer.c.thanked)
+            else:
+                stmt = stmt.where(not_(reviewer.c.thanked))
 
         ans = ReviewerCollection()
 
@@ -1045,7 +1051,7 @@ class ReviewPart(object):
 
     def update_reviewer(
             self, role_class, reviewer_id,
-            notified=None, accepted=()):
+            notified=None, accepted=(), thanked=None):
         """
         Update the status information of a reviewer record.
         """
@@ -1076,6 +1082,13 @@ class ReviewPart(object):
                     raise Error('reviewer role is not accepted')
 
                 values['accepted'] = accepted
+
+            if thanked is not None:
+                # For now assume this will only be used for invited roles.
+                if not role_info.invite:
+                    raise Error('reviewer role is not invited')
+
+                values['thanked'] = thanked
 
             if not values:
                 raise Error('no reviewer updates specified')
