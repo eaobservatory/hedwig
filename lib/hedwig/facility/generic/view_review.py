@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -984,6 +984,7 @@ class GenericReview(object):
             for (role_num, group) in role_class.get_assigned_roles().items()
             if type_class.has_reviewer_role(call.type, role_num)))
         unnotified_roles = defaultdict(int)
+        unthanked_roles = defaultdict(int)
         state_editable_roles = {}
         type_excluded_roles = {}
 
@@ -1031,6 +1032,11 @@ class GenericReview(object):
                         and (not reviewer.notified)):
                     unnotified_roles[reviewer.role] += 1
 
+                if ((reviewer.role in invite_roles)
+                        and (reviewer.review_state == ReviewState.DONE)
+                        and (not reviewer.thanked)):
+                    unthanked_roles[reviewer.role] += 1
+
         return {
             'title': 'Reviewers: {} {} {}'.format(
                 call.semester_name, call.queue_name,
@@ -1045,6 +1051,8 @@ class GenericReview(object):
             'current_state': state,
             'assigned_roles': assigned_roles,
             'unnotified_roles': unnotified_roles,
+            'unthanked_roles': unthanked_roles,
+            'all_invite_roles': invite_roles,
         }
 
     @with_call_review(permission=PermissionType.EDIT)
@@ -1514,6 +1522,125 @@ class GenericReview(object):
 
         for proposal in proposals:
             db.update_reviewer(role_class, proposal.reviewer.id, notified=True)
+
+    @with_call_review(permission=PermissionType.EDIT)
+    def view_reviewer_thank(self, current_user, db, call, can, role, form):
+        role_class = self.get_reviewer_roles()
+        type_class = self.get_call_types()
+
+        if not type_class.has_reviewer_role(call.type, role):
+            raise ErrorPage('Reviewer role is not expected for this call.')
+
+        if not role_class.is_invited_review(role):
+            raise ErrorPage('Reviewer role is not invited.')
+
+        # Prepare the list of reviewers and proposal reviews.  (This is needed
+        # both to display the confirmation page and to send the messages.)
+        reviewers = OrderedDict()
+
+        for proposal in db.search_proposal(
+                call_id=call.id, with_review_state=ReviewState.DONE,
+                with_reviewers=True, with_reviewer_role=role,
+                with_reviewer_thanked=False).values():
+            proposal = ProposalWithCode(
+                *proposal, code=self.make_proposal_code(db, proposal))
+
+            for reviewer in proposal.reviewers.values():
+                person_id = reviewer.person_id
+                if person_id not in reviewers:
+                    reviewers[person_id] = []
+
+                reviewers[person_id].append(proposal._replace(
+                    reviewers=None, reviewer=with_can_view(
+                        reviewer, auth.for_person_reviewer(
+                            current_user, db, reviewer,
+                            auth_cache=can.cache).view)))
+
+        if form is not None:
+            if 'submit_confirm' in form:
+                try:
+                    n_notifications = 0
+
+                    for (person_id, proposals_all) in reviewers.items():
+                        # Include only reviews present in the form parameters.
+                        proposals = [
+                            x for x in proposals_all
+                            if 'reviewer_{}'.format(x.reviewer.id) in form]
+                        if not proposals:
+                            continue
+
+                        self._message_review_thank(
+                            current_user, db, role, person_id, proposals)
+
+                        n_notifications += 1
+
+                    if n_notifications:
+                        flash(
+                            'Messages have been sent to {} reviewer(s).',
+                            n_notifications)
+
+                except UserError as e:
+                    raise ErrorPage(e.message)
+
+            raise HTTPRedirect(url_for(
+                '.review_call_reviewers', call_id=call.id))
+
+        return {
+            'title': '{}: {} {} {}: Thank'.format(
+                role_class.get_name_with_review(role),
+                call.semester_name, call.queue_name,
+                type_class.get_name(call.type)),
+            'call': call,
+            'role': role,
+            'reviewers': reviewers,
+        }
+
+    def _message_review_thank(
+            self, current_user, db, role, person_id, proposals):
+        """
+        Send a message to an invited reviewer thanking
+        them for their contribution.
+
+        This method takes a list of proposals, each of which should have a
+        `reviewer` attribute corresponding to the review for which the
+        message is being sent.
+        """
+
+        assert proposals
+        for proposal in proposals:
+            assert proposal.reviewer.role == role
+            assert proposal.reviewer.person_id == person_id
+            assert not proposal.reviewer.thanked
+
+        type_class = self.get_call_types()
+        role_class = self.get_reviewer_roles()
+
+        role_name = role_class.get_name(role)
+
+        reviewer = proposals[0].reviewer
+
+        email_ctx = {
+            'recipient_name': reviewer.person_name,
+            'sender_name': current_user.person.name,
+            'queue_name': proposals[0].queue_name,
+            'semester_name': proposals[0].semester_name,
+            'call_type': type_class.get_name(proposals[0].call_type),
+            'role_name': role_name,
+            'proposals': proposals,
+        }
+
+        email_subject = 'Thank you for your {}'.format(
+            ('reviews' if (len(proposals) > 1) else 'review'))
+
+        db.add_message(
+            email_subject,
+            render_email_template(
+                'review_thank_you.txt',
+                email_ctx, facility=self),
+            [person_id])
+
+        for proposal in proposals:
+            db.update_reviewer(role_class, proposal.reviewer.id, thanked=True)
 
     @with_proposal(permission=PermissionType.NONE, with_categories=True)
     def view_reviewer_add(self, current_user, db, proposal, role, form):

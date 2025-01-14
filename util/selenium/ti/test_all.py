@@ -1971,7 +1971,21 @@ class IntegrationTest(DummyConfigTestCase):
 
         review_process_url = self.browser.current_url
 
+        # Thank external reviewer.
+        self.browser.find_element(By.LINK_TEXT, 'Assign reviewers').click()
+        self._save_screenshot(
+            self.admin_image_root, 'reviewer_thank',
+            ['thank_reviewer_links'])
+
+        self.browser.find_element(By.LINK_TEXT, 'Thank external reviewers').click()
+
+        self.browser.find_element(By.NAME, 'submit_confirm').click()
+
+        self.assertIn('Messages have been sent',
+                      self.browser.page_source)
+
         # Enter affiliation weights.
+        self.browser.get(review_process_url)
         self.browser.find_element(
             By.LINK_TEXT, 'Edit affiliation weights').click()
 

@@ -1,0 +1,15 @@
+{% extends 'layout.txt' %}
+
+{% block content %}
+On behalf of the {{ facility_name }} Time Allocation Committee,
+we would like to extend our sincere gratitude for your recent
+contribution as a proposal reviewer for
+Semester {{ semester_name }}
+at {{ facility_definite_name }}.
+Your participation in the proposal review process was essential in
+ensuring both transparency and fairness.
+Your expertise plays a critical role in maintaining the high-quality
+astronomy conducted with {{ facility_definite_name }}.
+
+Your time and effort is very much appreciated.
+{% endblock %}

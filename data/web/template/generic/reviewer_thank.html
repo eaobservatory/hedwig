@@ -1,0 +1,49 @@
+{% extends 'layout.html' %}
+{% set navigation=[((call.semester_name, call.queue_name, (call.type | call_type_name(facility_call_type_class))) | fmt('{} {} {}'), url_for('.review_call', call_id=call.id)),
+                   ('Reviewers', url_for('.review_call_reviewers', call_id=call.id))] %}
+{% set help_link=url_for('help.admin_page', page_name='review_process') %}
+
+{% block content %}
+{% if reviewers %}
+<p>
+    Would you like to thank the following reviewers?
+</p>
+
+<form method="POST" action="{{ url_for('.review_call_thank', call_id=call.id, reviewer_role=role) }}">
+    <table>
+        <tr>
+            <th>Reviewer</th>
+            <th>Proposal</th>
+        </tr>
+        {% for (person_id, proposals) in reviewers.items() %}
+            {% for proposal in proposals %}
+                <tr>
+                    {% if loop.first %}
+                        <td rowspan="{{ loop.length }}">
+                            {% if proposal.reviewer.can_view %}
+                                <a href="{{ url_for('people.person_view', person_id=proposal.reviewer.person_id) }}">{{ proposal.reviewer.person_name | abbr }}</a>
+                            {% else %}
+                                {{ proposal.reviewer.person_name | abbr }}
+                            {% endif %}
+                        </td>
+                    {% endif %}
+                    <td>
+                        <a href="{{ url_for('.proposal_view', proposal_id=proposal.id) }}">{{ proposal.code }}</a>
+                        <input type="hidden" name="reviewer_{{ proposal.reviewer.id }}" value="1" />
+                    </td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+    </table>
+
+    <p>
+        <input type="submit" name="submit_cancel" value="Cancel" />
+        <input type="submit" name="submit_confirm" value="Confirm" />
+    </p>
+</form>
+{% else %}
+    <p class="not_present">
+        No reviewers found for this role.
+    </p>
+{% endif %}
+{% endblock %}

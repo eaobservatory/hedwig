@@ -25,6 +25,18 @@
 </nav>
 {% endif %}
 
+{% if unthanked_roles %}
+<nav>
+    <ol id="thank_reviewer_links">
+        {% for role in all_invite_roles %}
+            {% if role in unthanked_roles %}
+                <li><a href="{{ url_for('.review_call_thank', call_id=call.id, reviewer_role=role) }}"><span class="fa-solid fa-hand-holding-heart"></span>Thank {{ role | reviewer_role_name(facility_role_class) | lower }} reviewers</a></li>
+            {% endif %}
+        {% endfor %}
+    </ol>
+</nav>
+{% endif %}
+
 <form method="GET" action="{{ url_for('.review_call_reviewers', call_id=call.id) }}">
     <p>
         <select name="type">
@@ -110,7 +122,10 @@
                         <td class="{{ reviewer.review_state | review_state_class }}">
                             {{ reviewer.review_state | review_state_name }}
                             {% if (reviewer.role is reviewer_role_accepted(facility_role_class)) and (reviewer.accepted is none) %}
-                                    <span class="label">not accepted</span>
+                                <span class="label">not accepted</span>
+                            {% endif %}
+                            {% if reviewer.thanked %}
+                                <span class="label">thanked</span>
                             {% endif %}
                         </td>
                         <td class="{{ reviewer.review_state | review_state_class }}">

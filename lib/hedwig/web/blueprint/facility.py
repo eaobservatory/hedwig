@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -262,6 +262,17 @@ def create_facility_blueprint(db, facility):
     @facility_template('reviewer_notify.html')
     def review_call_notify(current_user, call_id, reviewer_role):
         return facility.view_reviewer_notify(
+            current_user, db, call_id, reviewer_role,
+            (request.form if request.method == 'POST' else None))
+
+    @bp.route(
+        '/call/<int:call_id>/reviewers/<hedwig_review_{}:reviewer_role>'
+        '/thank'.format(code),
+        methods=['GET', 'POST'])
+    @require_auth()
+    @facility_template('reviewer_thank.html')
+    def review_call_thank(current_user, call_id, reviewer_role):
+        return facility.view_reviewer_thank(
             current_user, db, call_id, reviewer_role,
             (request.form if request.method == 'POST' else None))
 
