@@ -55,7 +55,7 @@ from ...type.simple import Affiliation, DateAndTime, Link, MemberPIInfo, \
     ProposalWithCode, Reviewer, ReviewerAcceptance, \
     ReviewFigureInfo, ReviewDeadline
 from ...type.util import null_tuple, \
-    with_can_edit, with_can_view, with_can_view_edit_rating
+    with_can_edit, with_can_view, with_can_view_edit, with_can_view_edit_rating
 from ...util import lower_except_abbr
 
 
@@ -989,7 +989,7 @@ class GenericReview(object):
         type_excluded_roles = {}
 
         for proposal in db.search_proposal(
-                call_id=call.id, state=ProposalState.review_states(),
+                call_id=call.id, state=ProposalState.submitted_states(),
                 type_=proposal_type,
                 with_members=True, with_reviewers=True,
                 with_review_info=True, with_reviewer_note=True,
@@ -1013,8 +1013,12 @@ class GenericReview(object):
                 *proposal._replace(
                     member=member_pi,
                     reviewers=proposal.reviewers.map_values(
-                        lambda x: with_can_view(x, auth.for_person_reviewer(
-                            current_user, db, x, auth_cache=can.cache).view))),
+                        lambda x: with_can_view_edit(
+                            x,
+                            can_view=auth.for_person_reviewer(
+                                current_user, db, x,
+                                auth_cache=can.cache).view,
+                            can_edit=(x.role in roles)))),
                 invite_roles=[
                     x for x in invite_roles
                     if x in roles and x not in excluded_roles],
@@ -1029,6 +1033,7 @@ class GenericReview(object):
 
             for reviewer in proposal.reviewers.values():
                 if ((reviewer.role in assigned_roles)
+                        and (reviewer.role in roles)
                         and (not reviewer.notified)):
                     unnotified_roles[reviewer.role] += 1
 

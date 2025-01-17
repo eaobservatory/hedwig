@@ -102,7 +102,11 @@
                         <td colspan="4"><span class="missing_data">none {{ 'assigned' if ((current_role is none) and (current_state is none)) else 'matching filter' }}</span></td>
                     {% else %}
                         <td rowspan="{{ reviewer_rowspan }}" class="{{ reviewer.role | reviewer_role_class(facility_role_class) }}">
-                            <a href="{{ url_for('.review_edit', reviewer_id=reviewer.id, referrer='cr') }}">{{ reviewer.role | reviewer_role_name(facility_role_class) }}</a>
+                            {% if reviewer.can_edit %}
+                                <a href="{{ url_for('.review_edit', reviewer_id=reviewer.id, referrer='cr') }}">{{ reviewer.role | reviewer_role_name(facility_role_class) }}</a>
+                            {% else %}
+                                {{ reviewer.role | reviewer_role_name(facility_role_class) }}
+                            {% endif %}
                         </td>
                         <td rowspan="{{ reviewer_rowspan }}" class="{{ reviewer.role | reviewer_role_class(facility_role_class) }}">
                             {% if reviewer.can_view %}
