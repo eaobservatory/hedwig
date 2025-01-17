@@ -814,7 +814,7 @@ reviewer = Table(
     Column('role', Integer, nullable=False),
     Column('notified', Boolean, default=False, nullable=False),
     Column('accepted', Boolean, nullable=True),
-    Column('thanked', Boolean, default=False, nullable=False),
+    Column('thanked', Boolean, nullable=True),
     UniqueConstraint('proposal_id', 'person_id', 'role'),
     **table_opts)
 

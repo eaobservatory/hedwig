@@ -1034,7 +1034,7 @@ class GenericReview(object):
 
                 if ((reviewer.role in invite_roles)
                         and (reviewer.review_state == ReviewState.DONE)
-                        and (not reviewer.thanked)):
+                        and (reviewer.thanked is False)):
                     unthanked_roles[reviewer.role] += 1
 
         return {

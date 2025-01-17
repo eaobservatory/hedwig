@@ -1764,7 +1764,7 @@ class ProposalPart(object):
                         with_review_info=False, with_review_text=False,
                         with_reviewer_role=None, with_review_state=None,
                         with_reviewer_notified=None, with_reviewer_accepted=(),
-                        with_reviewer_thanked=None,
+                        with_reviewer_thanked=(),
                         with_reviewer_note=False,
                         reviewer_person_id=None,
                         with_categories=False,

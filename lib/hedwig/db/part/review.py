@@ -94,6 +94,7 @@ class ReviewPart(object):
                 reviewer.c.proposal_id: proposal_id,
                 reviewer.c.person_id: person_id,
                 reviewer.c.role: role,
+                reviewer.c.thanked: False,
             }))
 
         return result.inserted_primary_key[0]
@@ -430,7 +431,7 @@ class ReviewPart(object):
                         person_id=None, review_state=None,
                         call_id=None, queue_id=None,
                         proposal_state=None, institution_id=None,
-                        notified=None, accepted=(), thanked=None,
+                        notified=None, accepted=(), thanked=(),
                         with_review=False, with_review_text=False,
                         with_review_note=False,
                         with_invitation=False,
@@ -610,8 +611,10 @@ class ReviewPart(object):
             else:
                 stmt = stmt.where(not_(reviewer.c.notified))
 
-        if thanked is not None:
-            if thanked:
+        if thanked != ():
+            if thanked is None:
+                stmt = stmt.where(reviewer.c.thanked.is_(None))
+            elif thanked:
                 stmt = stmt.where(reviewer.c.thanked)
             else:
                 stmt = stmt.where(not_(reviewer.c.thanked))
@@ -1051,7 +1054,7 @@ class ReviewPart(object):
 
     def update_reviewer(
             self, role_class, reviewer_id,
-            notified=None, accepted=(), thanked=None):
+            notified=None, accepted=(), thanked=()):
         """
         Update the status information of a reviewer record.
         """
@@ -1083,7 +1086,7 @@ class ReviewPart(object):
 
                 values['accepted'] = accepted
 
-            if thanked is not None:
+            if thanked != ():
                 # For now assume this will only be used for invited roles.
                 if not role_info.invite:
                     raise Error('reviewer role is not invited')
