@@ -1133,7 +1133,10 @@ class PeopleView(object):
             auth_cache=can.cache)
 
     def _person_reviews(self, current_user, db, person_id, facilities, person,
-                        as_admin=False, view_all=None, auth_cache={}):
+                        as_admin=False, view_all=None, auth_cache=None):
+        if auth_cache is None:
+            auth_cache = {}
+
         # Get a list of proposals, in all review states, for which this
         # person has reviews.  (Will filter later to list only those
         # which are editable in each proposal's actual state.)
