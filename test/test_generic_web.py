@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2023 East Asian Observatory
+# Copyright (C) 2019-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -103,8 +103,10 @@ class GenericFacilityWebAppTestCase(WebAppTestCase):
         # ... previous proposals.
         self.db.sync_proposal_prev_proposal(
             proposal_id, PrevProposalCollection([
-                (1, PrevProposal(
-                    1, proposal_id, None, 'OLDPROP', False, None, [])),
+                (1, null_tuple(PrevProposal)._replace(
+                    id=1, this_proposal_id=proposal_id,
+                    proposal_code='OLDPROP', continuation=False,
+                    publications=[])),
             ]))
 
         # ... PDF file.

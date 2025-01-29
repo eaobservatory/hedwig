@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1096,35 +1096,35 @@ class DBProposalTest(DBTestCase):
 
     def test_prev_proposal(self):
         proposal_id = self._create_test_proposal()
-
-        proposal = self.db.get_proposal(
-            facility_id=None, proposal_id=proposal_id, with_members=True)
-        member = proposal.members.get_pi()
-        old_proposal_id = self.db.add_proposal(
-            proposal.call_id, member.person_id, member.affiliation_id,
-            'Previous Proposal Title')
+        old_proposal_id = self._create_test_proposal(
+            semester_code='old', queue_code='old')
+        old_proposal = self.db.get_proposal(
+            facility_id=None, proposal_id=old_proposal_id)
 
         result = self.db.search_prev_proposal(proposal_id=proposal_id)
         self.assertIsInstance(result, PrevProposalCollection)
         self.assertEqual(len(result), 0)
 
         records = PrevProposalCollection([
-            (1, PrevProposal(
-                None, proposal_id, None, 'OLD1', False, None, [
+            (1, null_tuple(PrevProposal)._replace(
+                this_proposal_id=proposal_id, proposal_code='OLD1',
+                continuation=False, publications=[
                     null_tuple(PrevProposalPub)._replace(
                         description='Pub 11', type=PublicationType.PLAIN),
                     null_tuple(PrevProposalPub)._replace(
                         description='Pub 12', type=PublicationType.PLAIN),
                 ])),
-            (2, PrevProposal(
-                None, proposal_id, None, 'OLD2', True, None, [
+            (2, null_tuple(PrevProposal)._replace(
+                this_proposal_id=proposal_id, proposal_code='OLD2',
+                continuation=True, publications=[
                     null_tuple(PrevProposalPub)._replace(
                         description='Pub 21', type=PublicationType.PLAIN),
                     null_tuple(PrevProposalPub)._replace(
                         description='Pub 22', type=PublicationType.PLAIN),
                 ])),
-            (3, PrevProposal(
-                None, proposal_id, old_proposal_id, 'OLD3', False, None, [
+            (3, null_tuple(PrevProposal)._replace(
+                this_proposal_id=proposal_id, proposal_id=old_proposal_id,
+                proposal_code='OLD3', continuation=False, publications=[
                     null_tuple(PrevProposalPub)._replace(
                         description='Pub 31', type=PublicationType.PLAIN),
                     null_tuple(PrevProposalPub)._replace(
@@ -1138,28 +1138,53 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(n_update, 6)
         self.assertEqual(n_delete, 0)
 
-        result = self.db.search_prev_proposal(proposal_id=proposal_id)
-        self.assertIsInstance(result, PrevProposalCollection)
-        self.assertEqual(len(result), 3)
+        for with_proposal_info in [False, True]:
+            result = self.db.search_prev_proposal(
+                proposal_id=proposal_id, with_proposal_info=with_proposal_info)
+            self.assertIsInstance(result, PrevProposalCollection)
+            self.assertEqual(len(result), 3)
 
-        for (row, expect_continuation, expect_code, expect_pub) in zip(
-                result.values(),
-                [False, True, False],
-                ['OLD1', 'OLD2', 'OLD3'],
-                [
-                    ['Pub 11', 'Pub 12'],
-                    ['Pub 21', 'Pub 22'],
-                    ['Pub 31', 'Pub 32'],
-                ]):
-            self.assertIsInstance(row, PrevProposal)
-            self.assertEqual(row.this_proposal_id, proposal_id)
-            self.assertEqual(row.continuation, expect_continuation)
-            self.assertIsInstance(row.publications, list)
-            self.assertEqual(len(row.publications), len(expect_pub))
-            for (pub, expect) in zip(row.publications, expect_pub):
-                self.assertIsInstance(pub, PrevProposalPub)
-                self.assertEqual(pub.type, PublicationType.PLAIN)
-                self.assertEqual(pub.description, expect)
+            for (row, expect_continuation, expect_code, expect_pub,
+                 proposal) in zip(
+                    result.values(),
+                    [False, True, False],
+                    ['OLD1', 'OLD2', 'OLD3'],
+                    [
+                        ['Pub 11', 'Pub 12'],
+                        ['Pub 21', 'Pub 22'],
+                        ['Pub 31', 'Pub 32'],
+                    ],
+                    [None, None, old_proposal]):
+                self.assertIsInstance(row, PrevProposal)
+                self.assertEqual(row.this_proposal_id, proposal_id)
+                self.assertEqual(row.continuation, expect_continuation)
+                self.assertIsInstance(row.publications, list)
+                self.assertEqual(len(row.publications), len(expect_pub))
+                if proposal is None:
+                    self.assertIsNone(row.proposal_id)
+                else:
+                    self.assertEqual(row.proposal_id, proposal.id)
+                if with_proposal_info and proposal is not None:
+                    self.assertEqual(row.proposal_state, proposal.state)
+                    self.assertEqual(row.proposal_type, proposal.type)
+                    self.assertEqual(row.proposal_call_id, proposal.call_id)
+                    self.assertEqual(
+                        row.proposal_call_type, proposal.call_type)
+                    self.assertEqual(
+                        row.proposal_semester_id, proposal.semester_id)
+                    self.assertEqual(
+                        row.proposal_queue_id, proposal.queue_id)
+                else:
+                    self.assertIsNone(row.proposal_state)
+                    self.assertIsNone(row.proposal_type)
+                    self.assertIsNone(row.proposal_call_id)
+                    self.assertIsNone(row.proposal_call_type)
+                    self.assertIsNone(row.proposal_semester_id)
+                    self.assertIsNone(row.proposal_queue_id)
+                for (pub, expect) in zip(row.publications, expect_pub):
+                    self.assertIsInstance(pub, PrevProposalPub)
+                    self.assertEqual(pub.type, PublicationType.PLAIN)
+                    self.assertEqual(pub.description, expect)
 
         result = self.db.search_prev_proposal(
             proposal_id=proposal_id, continuation=False,

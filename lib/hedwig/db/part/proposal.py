@@ -1623,7 +1623,7 @@ class ProposalPart(object):
 
     def search_prev_proposal(
             self, proposal_id, continuation=None, resolved=None,
-            with_publications=True,
+            with_publications=True, with_proposal_info=False,
             _conn=None):
         """
         Search for the previous proposal associated with a given proposal.
@@ -1632,6 +1632,30 @@ class ProposalPart(object):
         select_columns = [prev_proposal]
         select_from = prev_proposal
         order_by = [prev_proposal.c.sort_order.asc()]
+        default = {}
+
+        if with_proposal_info:
+            select_from = select_from.outerjoin(
+                proposal, prev_proposal.c.proposal_id == proposal.c.id
+            ).outerjoin(
+                call, proposal.c.call_id == call.c.id)
+            select_columns.extend((
+                proposal.c.state.label('proposal_state'),
+                proposal.c.type.label('proposal_type'),
+                proposal.c.call_id.label('proposal_call_id'),
+                call.c.type.label('proposal_call_type'),
+                call.c.semester_id.label('proposal_semester_id'),
+                call.c.queue_id.label('proposal_queue_id'),
+            ))
+        else:
+            default.update({
+                'proposal_state': None,
+                'proposal_type': None,
+                'proposal_call_id': None,
+                'proposal_call_type': None,
+                'proposal_semester_id': None,
+                'proposal_queue_id': None,
+            })
 
         if with_publications:
             non_id_pub_columns = [
@@ -1674,17 +1698,17 @@ class ProposalPart(object):
         with self._transaction(_conn=_conn) as conn:
             for iter_stmt in self._iter_stmt(stmt, iter_field, iter_list):
                 for row in conn.execute(iter_stmt.order_by(*order_by)):
-                    if with_publications:
-                        # Convert row to a dictionary so that we can manipulate
-                        # its entries.
-                        row = row_as_dict(row)
+                    values = default.copy()
+                    values.update(**row_as_mapping(row))
+                    id_ = values['id']
 
+                    if with_publications:
                         # Move the entries relating to the publication table
                         # to another dictionary.
-                        pub_id = row.pop('pp_pub_id')
+                        pub_id = values.pop('pp_pub_id')
                         pub = {'id': pub_id, 'proposal_id': None}
                         for col in [x.name for x in non_id_pub_columns]:
-                            pub[col] = row.pop(col)
+                            pub[col] = values.pop(col)
                         if pub_id is None:
                             pub = None
                         else:
@@ -1692,17 +1716,16 @@ class ProposalPart(object):
 
                         # Either make a new entry in the result table or just
                         # add the publication to it if it already exists.
-                        id_ = row['id']
                         if id_ in ans and (pub is not None):
                             ans[id_].publications.append(pub)
                         else:
                             ans[id_] = PrevProposal(
                                 publications=([] if pub is None else [pub]),
-                                **row)
+                                **values)
 
                     else:
-                        ans[row.id] = PrevProposal(
-                            publications=None, **row_as_mapping(row))
+                        ans[id_] = PrevProposal(
+                            publications=None, **values)
 
         return ans
 

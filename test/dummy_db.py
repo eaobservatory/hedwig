@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -123,15 +123,16 @@ class DBTestCase(DummyConfigTestCase):
 
         return (call_id, affiliation_id)
 
-    def _create_test_proposal(self,
-                              facility_id=None, facility_code='test facility'):
+    def _create_test_proposal(
+            self, facility_id=None, facility_code='test facility',
+            semester_code='test', queue_code='test'):
         if facility_id is None:
             facility_id = self.db.ensure_facility(facility_code)
 
         semester_id = self.db.add_semester(
-            facility_id, 'test', 'test',
+            facility_id, semester_code, semester_code,
             datetime(2000, 1, 1), datetime(2000, 6, 30))
-        queue_id = self.db.add_queue(facility_id, 'test', 'test')
+        queue_id = self.db.add_queue(facility_id, queue_code, queue_code)
         call_id = self.db.add_call(
             BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
             datetime(1999, 9, 1), datetime(1999, 9, 30),
