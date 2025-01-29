@@ -398,16 +398,19 @@ Here is an abbreviated version of these methods:
 .. code-block:: python
 
     @with_proposal(permission=PermissionType.VIEW)
-    def view_proposal_view(self, db, proposal, can, args):
+    def view_proposal_view(
+            self, current_user, db, proposal, can, args):
         ctx = {
             'title': proposal.title,
         }
 
-        ctx.update(self._view_proposal_extra(db, proposal))
+        ctx.update(self._view_proposal_extra(
+            current_user, db, proposal, auth_cache=can.cache))
 
         return ctx
 
-    def _view_proposal_extra(self, db, proposal):
+    def _view_proposal_extra(
+            self, current_user, db, proposal, auth_cache=None):
         role_class = self.get_text_roles()
         proposal_text = db.search_proposal_text(proposal.id, with_text=True)
 
@@ -423,8 +426,10 @@ private method, for example:
 
 .. code-block:: python
 
-    def _view_proposal_extra(self, db, proposal):
-        ctx = super(Example, self)._view_proposal_extra(db, proposal)
+    def _view_proposal_extra(
+            self, current_user, db, proposal, auth_cache=None):
+        ctx = super(Example, self)._view_proposal_extra(
+            current_user, db, proposal, auth_cache=auth_cache)
 
         requests = db.search_example_request(proposal.id)
 

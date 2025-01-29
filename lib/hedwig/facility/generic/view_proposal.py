@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -834,7 +834,8 @@ class GenericProposal(object):
             'call_mid_closes': call_mid_closes,
         }
 
-        ctx.update(self._view_proposal_extra(db, proposal))
+        ctx.update(self._view_proposal_extra(
+            current_user, db, proposal, auth_cache=can.cache))
 
         if is_first_view:
             ctx['proposal_annotations'] = db.search_proposal_annotation(
@@ -842,7 +843,9 @@ class GenericProposal(object):
 
         return ctx
 
-    def _view_proposal_extra(self, db, proposal, extra_text_roles={}):
+    def _view_proposal_extra(
+            self, current_user, db, proposal, extra_text_roles={},
+            auth_cache=None):
         """
         Method to gather additional information for the proposal view page.
 
@@ -1019,9 +1022,11 @@ class GenericProposal(object):
             'states': ProposalState.get_options(),
         }
 
-    def _validate_proposal(self, db, proposal, proposal_order):
+    def _validate_proposal(
+            self, current_user, db, proposal, proposal_order, auth_cache):
         # Validate the "extra" parts of the proposal.
-        extra = self._view_proposal_extra(db, proposal)
+        extra = self._view_proposal_extra(
+            current_user, db, proposal, auth_cache=auth_cache)
 
         report = self._validate_proposal_extra(
             db, proposal, extra, proposal_order)
@@ -1273,7 +1278,8 @@ class GenericProposal(object):
         immediate_review = type_class.has_immediate_review(proposal.call_type)
 
         proposal_order = self.get_proposal_order_names(type_=proposal.type)
-        messages = self._validate_proposal(db, proposal, proposal_order)
+        messages = self._validate_proposal(
+            current_user, db, proposal, proposal_order, auth_cache=can.cache)
         has_error = any(x.is_error for x in messages)
 
         if form is not None:
@@ -1399,7 +1405,8 @@ class GenericProposal(object):
     @with_proposal(permission=PermissionType.VIEW)
     def view_proposal_validate(self, current_user, db, proposal, can):
         proposal_order = self.get_proposal_order_names(type_=proposal.type)
-        messages = self._validate_proposal(db, proposal, proposal_order)
+        messages = self._validate_proposal(
+            current_user, db, proposal, proposal_order, auth_cache=can.cache)
 
         return {
             'title': 'Proposal Validation',

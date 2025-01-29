@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2022 East Asian Observatory
+# Copyright (C) 2018-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -128,8 +128,10 @@ class UKIRT(EAOFacility):
 
         return atn
 
-    def _view_proposal_extra(self, db, proposal):
-        ctx = super(UKIRT, self)._view_proposal_extra(db, proposal)
+    def _view_proposal_extra(
+            self, current_user, db, proposal, auth_cache=None):
+        ctx = super(UKIRT, self)._view_proposal_extra(
+            current_user, db, proposal, auth_cache=auth_cache)
 
         requests = db.search_ukirt_request(proposal_id=proposal.id)
 

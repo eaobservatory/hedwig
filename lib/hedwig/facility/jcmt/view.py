@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -651,11 +651,13 @@ class JCMT(EAOFacility):
             'jcmt_options': info,
         }
 
-    def _view_proposal_extra(self, db, proposal):
+    def _view_proposal_extra(
+            self, current_user, db, proposal, auth_cache=None):
         role_class = self.get_text_roles()
         ctx = super(JCMT, self)._view_proposal_extra(
-            db, proposal,
-            extra_text_roles={'jcmt_pr_summary': role_class.PR_SUMMARY})
+            current_user, db, proposal,
+            extra_text_roles={'jcmt_pr_summary': role_class.PR_SUMMARY},
+            auth_cache=auth_cache)
 
         requests = db.search_jcmt_request(proposal_id=proposal.id)
 
