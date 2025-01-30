@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -25,7 +25,7 @@ from ..error import NoSuchRecord, NoSuchValue
 from ..type.collection import ProposalCollection, ReviewerCollection
 from ..type.enum import GroupType, ProposalState, ProposalType, \
     ReviewState, SiteGroupType
-from ..type.simple import Call, Person, Reviewer
+from ..type.simple import Call, Person, Proposal, Reviewer
 from ..type.util import null_tuple
 from ..web.util import HTTPError, HTTPForbidden, \
     HTTPRedirectWithReferrer, url_for
@@ -329,13 +329,14 @@ def for_proposal(
     if current_user.is_admin:
         auth = auth._replace(view=True)
 
-    try:
-        member = proposal.members.get_person(person_id)
-        return Authorization(
-            view=True,
-            edit=(member.editor and ProposalState.can_edit(proposal.state)))
-    except NoSuchValue:
-        pass
+    if proposal.members is not None:
+        try:
+            member = proposal.members.get_person(person_id)
+            return Authorization(
+                view=True,
+                edit=(member.editor and ProposalState.can_edit(proposal.state)))
+        except NoSuchValue:
+            pass
 
     if proposal.reviewers is not None:
         # Give access to people assigned as reviewers of the proposal.
@@ -370,6 +371,40 @@ def for_proposal(
         raise redirect
 
     return auth
+
+
+def for_proposal_prev_proposal(
+        current_user, db, prev_proposal, members=None, auth_cache=None):
+    """
+    Estimate authorization for a proposal, based on a previous proposal record.
+
+    This constructs a dummy proposal record and then calls
+    :func:`for_proposal`.
+
+    A collection of `members` can be provided if any approximate information
+    is available.
+    """
+
+    return for_proposal(
+        None, current_user, db,
+        _dummy_proposal_prev_proposal(prev_proposal, members=members),
+        auth_cache=auth_cache,
+        allow_unaccepted_review=True)
+
+
+def _dummy_proposal_prev_proposal(prev_proposal, members=None):
+    assert prev_proposal.proposal_state is not None
+    assert prev_proposal.proposal_queue_id is not None
+
+    return null_tuple(Proposal)._replace(
+        id=prev_proposal.proposal_id,
+        semester_id=prev_proposal.proposal_semester_id,
+        queue_id=prev_proposal.proposal_queue_id,
+        call_id=prev_proposal.proposal_call_id,
+        call_type=prev_proposal.proposal_call_type,
+        state=prev_proposal.proposal_state,
+        type=prev_proposal.proposal_type,
+        members=members)
 
 
 def for_proposal_decision(
@@ -575,6 +610,28 @@ def for_review(
             view=True, edit=False, view_rating=rating_is_viewable)
 
     return AuthorizationWithRating(*no, view_rating=False)
+
+
+def for_review_prev_proposal(
+        current_user, db, prev_proposal, members=None, auth_cache=None):
+    """
+    Estimate authorization for reviews of a proposal, based on a previous
+    proposal record.
+
+    This constructs a dummy proposal record and then calls
+    :func:`for_review`, giving the reviewer as `None` for a
+    non-reviewer-specific authorization.
+
+    A collection of `members` can be provided if any approximate information
+    is available.
+    """
+
+    return for_review(
+        None, current_user, db, None,
+        _dummy_proposal_prev_proposal(prev_proposal, members=members),
+        auth_cache=auth_cache,
+        skip_membership_test=(members is None),
+        allow_unaccepted=True)
 
 
 def can_be_admin(current_user, db, auth_cache=None):
