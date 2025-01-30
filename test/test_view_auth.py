@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2024 East Asian Observatory
+# Copyright (C) 2016-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -21,10 +21,14 @@ from __future__ import absolute_import, division, print_function, \
 from contextlib import contextmanager
 from datetime import datetime
 
+from hedwig.compat import first_value
+from hedwig.type.collection import PrevProposalCollection
 from hedwig.type.enum import BaseAffiliationType, BaseCallType, \
     BaseReviewerRole, \
     FormatType, GroupType, \
     ProposalState, SiteGroupType
+from hedwig.type.simple import PrevProposal
+from hedwig.type.util import null_tuple
 from hedwig.view import auth
 from hedwig.web.util import HTTPForbidden, HTTPRedirectWithReferrer
 
@@ -154,6 +158,20 @@ class WebAppAuthTestCase(WebAppTestCase):
         proposal_b2 = self.db.add_proposal(
             call_b, person_b2e, affiliation_b, 'Test proposal B 2')
         self.db.add_member(proposal_b2, person_b2u, affiliation_b)
+
+        # Add previous proposals.
+        self.db.sync_proposal_prev_proposal(
+            proposal_b2, PrevProposalCollection([
+                (1, null_tuple(PrevProposal)._replace(
+                    proposal_id=proposal_a1, proposal_code='A1',
+                    continuation=False, publications=[])),
+                (2, null_tuple(PrevProposal)._replace(
+                    proposal_id=proposal_a2, proposal_code='A2',
+                    continuation=False, publications=[])),
+                (3, null_tuple(PrevProposal)._replace(
+                    proposal_id=proposal_b1, proposal_code='B1',
+                    continuation=False, publications=[])),
+            ]))
 
         # Create review coordinator profiles.
         user_a_rc = self.db.add_user('arc', 'pass')
@@ -293,23 +311,23 @@ class WebAppAuthTestCase(WebAppTestCase):
         # Test authorization for call reviews.
         for test_case in [
                 # No general access to call reviews.
-                (1,  person_a1e,   False, call_a, auth.no),
-                (2,  person_a1e,   False, call_b, auth.no),
+                (1,  person_a1e,   False, call_a, proposal_a1, auth.no),
+                (2,  person_a1e,   False, call_b, proposal_b1, auth.no),
                 # Admin has full access but only when is_admin is set.
-                (3,  person_admin, False, call_a, auth.no),
-                (4,  person_admin, False, call_b, auth.no),
-                (5,  person_admin, True,  call_a, auth.yes),
-                (6,  person_admin, True,  call_b, auth.yes),
+                (3,  person_admin, False, call_a, proposal_a1, auth.no),
+                (4,  person_admin, False, call_b, proposal_b1, auth.no),
+                (5,  person_admin, True,  call_a, proposal_a1, auth.yes),
+                (6,  person_admin, True,  call_b, proposal_b1, auth.yes),
                 # Review coordinators have full access to corresponding call.
-                (7,  person_a_rc,  False, call_a, auth.yes),
-                (8,  person_a_rc,  False, call_b, auth.no),
-                (9,  person_b_rc,  False, call_a, auth.no),
-                (10, person_b_rc,  False, call_b, auth.yes),
+                (7,  person_a_rc,  False, call_a, proposal_a1, auth.yes),
+                (8,  person_a_rc,  False, call_b, proposal_b1, auth.no),
+                (9,  person_b_rc,  False, call_a, proposal_a1, auth.no),
+                (10, person_b_rc,  False, call_b, proposal_b1, auth.yes),
                 # Committee members have view access to corresponding call.
-                (11, person_a1rc1, False, call_a, auth.view_only),
-                (12, person_a1rc2, False, call_a, auth.view_only),
-                (13, person_a1rc1, False, call_b, auth.no),
-                (14, person_a1rc2, False, call_b, auth.no),
+                (11, person_a1rc1, False, call_a, proposal_a1, auth.view_only),
+                (12, person_a1rc2, False, call_a, proposal_a1, auth.view_only),
+                (13, person_a1rc1, False, call_b, proposal_b1, auth.no),
+                (14, person_a1rc2, False, call_b, proposal_b1, auth.no),
                 ]:
             self._test_auth_call_review(auth_cache, *test_case)
 
@@ -638,24 +656,81 @@ class WebAppAuthTestCase(WebAppTestCase):
                 ]:
             self._test_auth_person_list(auth_cache, *test_case)
 
+        # Test authorization via PrevProposal objects.
+        result = list(self.db.search_prev_proposal(
+            proposal_id=proposal_b2, with_proposal_info=True).values())
+        self.assertEqual(len(result), 3)
+        self.assertEqual(result[0].proposal_id, proposal_a1)
+        self.assertEqual(result[1].proposal_id, proposal_a2)
+        self.assertEqual(result[2].proposal_id, proposal_b1)
+        for test_case in [
+                (1,  person_admin, False, result[0], 'oooooooooo', 'oooooooooo'),
+                (2,  person_admin, True,  result[0], 'vvvvvvvvvv', 'vvveevvvvv'),
+                (3,  person_a_rc,  False, result[0], 'oovvvvvooo', 'vvveevvvvv'),
+                (4,  person_b_rc,  False, result[0], 'oooooooooo', 'oooooooooo'),
+                (5,  person_a1rc1, False, result[0], 'oovvvvvooo', 'vvvvvvvvvv'),
+                (6,  person_b2rc1, False, result[0], 'oooooooooo', 'oooooooooo'),
+                (7,  person_a_rc,  False, result[2], 'oooooooooo', 'oooooooooo'),
+                (8,  person_b_rc,  False, result[2], 'oovvvvvooo', 'vvveevvvvv'),
+                (9,  person_a1rc1, False, result[2], 'oooooooooo', 'oooooooooo'),
+                (10, person_b2rc1, False, result[2], 'oovvvvvooo', 'vvvvvvvvvv'),
+                ]:
+            self._test_auth_via_prev_proposal(auth_cache, *test_case)
+
     def _test_auth_call_review(self, auth_cache,
                                case_number, person_id, is_admin,
-                               call_id, expect):
+                               call_id, proposal_id, expect):
+        current_user = self._current_user(person_id, is_admin)
         call = self.db.get_call(None, call_id)
         self.assertEqual(
             auth.for_call_review(
-                self._current_user(person_id, is_admin), self.db,
+                current_user, self.db,
                 call, auth_cache=auth_cache),
             expect, 'auth call review case {}'.format(case_number))
 
+        # Check for the same result via a proposal.
+        proposal = self.db.get_proposal(None, proposal_id)
+        self.assertEqual(
+            auth.for_call_review_proposal(
+                current_user, self.db,
+                proposal, auth_cache=auth_cache),
+            expect, 'auth call review case {} via proposal'.format(case_number))
+
     def _test_auth_person(self, auth_cache, case_number, person_id, is_admin,
                           for_person_id, expect):
+        current_user = self._current_user(person_id, is_admin)
+        person = self.db.get_person(for_person_id)
         self.assertEqual(
             auth.for_person(
-                self._current_user(person_id, is_admin), self.db,
-                self.db.get_person(for_person_id),
+                current_user, self.db, person,
                 auth_cache=auth_cache),
             expect, 'auth person case {}'.format(case_number))
+
+        # Try the check via a member record.
+        try:
+            member = first_value(self.db.search_member(person_id=for_person_id))
+            assert member.person_id == for_person_id
+
+            self.assertEqual(
+                auth.for_person_member(
+                    current_user, self.db, member,
+                    auth_cache=auth_cache),
+                expect, 'auth person case {} via member'.format(case_number))
+        except IndexError:
+            pass
+
+        # Try the check via a reviewer record.
+        try:
+            reviewer = first_value(self.db.search_reviewer(person_id=for_person_id))
+            assert reviewer.person_id == for_person_id
+
+            self.assertEqual(
+                auth.for_person_reviewer(
+                    current_user, self.db, reviewer,
+                    auth_cache=auth_cache),
+                expect, 'auth person case {} via reviewer'.format(case_number))
+        except IndexError:
+            pass
 
     def _test_auth_person_list(
             self, auth_cache, case_number, person_id, is_admin, expect):
@@ -865,6 +940,44 @@ class WebAppAuthTestCase(WebAppTestCase):
                     self.db, proposal,
                     auth_cache=auth_cache)),
                 expect, 'add review case {} state {}'.format(
+                    case_number, state_name))
+
+    def _test_auth_via_prev_proposal(
+            self, auth_cache,
+            case_number, person_id, is_admin, prev_proposal_orig,
+            expect_codes_proposal, expect_codes_review):
+        proposal_states = ProposalState.get_options()
+        self.assertEqual(
+            len(expect_codes_proposal), len(proposal_states),
+            'codes for prev proposal proposal case {}'.format(case_number))
+        self.assertEqual(
+            len(expect_codes_review), len(proposal_states),
+            'codes for prev proposal review case {}'.format(case_number))
+
+        current_user = self._current_user(person_id, is_admin)
+
+        for (state_info, expect_code_proposal, expect_code_review) in zip(
+                proposal_states.items(),
+                expect_codes_proposal, expect_codes_review):
+            (state, state_name) = state_info
+
+            # Always use "quick" update for proposal state.
+            prev_proposal = prev_proposal_orig._replace(proposal_state=state)
+
+            self.assertEqual(
+                auth.for_proposal_prev_proposal(
+                    current_user, self.db, prev_proposal, auth_cache=auth_cache),
+                self._expect_code(
+                    'prev proposal proposal', case_number, expect_code_proposal),
+                'prev proposal proposal case {} state {}'.format(
+                    case_number, state_name))
+
+            self.assertEqual(
+                auth.for_review_prev_proposal(
+                    current_user, self.db, prev_proposal, auth_cache=auth_cache),
+                self._expect_code(
+                    'prev proposal review', case_number, expect_code_review, rating=True),
+                'prev proposal review case {} state {}'.format(
                     case_number, state_name))
 
     def _expect_code(self, case_type, case_number, code, rating=False):
