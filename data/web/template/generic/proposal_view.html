@@ -479,20 +479,25 @@
                             <tr>
                                 {% if loop.first %}
                                     <td rowspan="{{ publications | length }}">
-                                        {% if prev_proposal.proposal_id is none %}
-                                            {{ prev_proposal.proposal_code }}
-                                        {% else %}
+                                        {% if prev_proposal.can_view_proposal %}
                                             <a href="{{ url_for('.proposal_view', proposal_id=prev_proposal.proposal_id) }}">{{ prev_proposal.proposal_code }}</a>
+                                        {% else %}
+                                            {{ prev_proposal.proposal_code }}
                                         {% endif %}
                                         {% if prev_proposal.continuation %}
                                             <span class="label">continuation</span>
                                         {% endif %}
                                     </td>
                                     <td rowspan="{{ publications | length }}">
-                                        {% if prev_proposal.links %}
-                                            {% for link in prev_proposal.links %}
-                                                <a href="{{ link.url }}" target="_blank">{{ link.text }}</a>
-                                            {% endfor %}
+                                        {% if prev_proposal.can_view_review or prev_proposal.links %}
+                                            {% if prev_proposal.links %}
+                                                {% for link in prev_proposal.links %}
+                                                    <a href="{{ link.url }}" target="_blank">{{ link.text }}</a>
+                                                {% endfor %}
+                                            {% endif %}
+                                            {% if prev_proposal.can_view_review %}
+                                                <a href="{{ url_for('.proposal_reviews', proposal_id=prev_proposal.proposal_id) }}">Reviews</a>
+                                            {% endif %}
                                         {% else %}
                                             &nbsp;
                                         {% endif %}

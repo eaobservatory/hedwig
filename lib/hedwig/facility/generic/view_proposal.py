@@ -63,7 +63,7 @@ CalculationExtra = namedtuple(
 
 PrevProposalExtra = namedtuple(
     'PrevProposalExtra',
-    PrevProposal._fields + ('links',))
+    PrevProposal._fields + ('links', 'can_view_proposal', 'can_view_review'))
 
 PrevProposalPubExtra = namedtuple(
     'PrevProposalPubExtra',
@@ -867,7 +867,8 @@ class GenericProposal(object):
 
         calculations = db.search_calculation(proposal_id=proposal.id)
 
-        prev_proposals = db.search_prev_proposal(proposal_id=proposal.id)
+        prev_proposals = db.search_prev_proposal(
+            proposal_id=proposal.id, with_proposal_info=True)
 
         extra = {
             'abstract': proposal_text.get_role(role_class.ABSTRACT, None),
@@ -886,7 +887,20 @@ class GenericProposal(object):
                             *p,
                             url=make_publication_url(p.type, p.description))
                         for p in x.publications]),
-                    links=self.make_proposal_info_urls(x.proposal_code))),
+                    links=self.make_proposal_info_urls(x.proposal_code),
+                    # For the purpose of estimating authorization to view the
+                    # previous proposals and their reviews, assume that the
+                    # membership is the same as this proposal.
+                    can_view_proposal=(
+                        False if x.proposal_id is None
+                        else auth.for_proposal_prev_proposal(
+                            current_user, db, x, members=proposal.members,
+                            auth_cache=auth_cache).view),
+                    can_view_review=(
+                        False if x.proposal_id is None
+                        else auth.for_review_prev_proposal(
+                            current_user, db, x, members=proposal.members,
+                            auth_cache=auth_cache).view))),
             'text_roles': role_class,
         }
 
