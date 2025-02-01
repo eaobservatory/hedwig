@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2022 East Asian Observatory.
+# Copyright (C) 2015-2025 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -29,7 +29,7 @@ from jinja2_orderblocks import OrderBlocks
 from ..config import get_config, get_database, get_facilities, get_home
 from ..type.enum import GroupType, MessageThreadType, SiteGroupType
 from .template_util import register_template_utils
-from .util import check_current_user , \
+from .util import CurrentUserFormatter, check_current_user, \
     make_enum_converter, register_error_handlers
 
 from .blueprint.admin import create_admin_blueprint
@@ -96,8 +96,11 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
         if log_file:
             file_handler = logging.FileHandler(log_file)
             file_handler.setLevel(logging.WARNING)
-            file_handler.setFormatter(logging.Formatter(
-                fmt='%(asctime)s %(levelname)s %(name)s %(message)s',
+            file_handler.setFormatter(CurrentUserFormatter(
+                fmt='%(asctime)s %(levelname)s %(name)s'
+                    ' %(hedwig_addr)s user:%(hedwig_user)s'
+                    ' person:%(hedwig_person)s admin:%(hedwig_admin)s'
+                    ' %(message)s',
                 datefmt='%Y-%m-%dT%H:%M:%S'))
             app.logger.addHandler(file_handler)
 

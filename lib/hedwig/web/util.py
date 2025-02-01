@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2023 East Asian Observatory.
+# Copyright (C) 2015-2025 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -21,11 +21,12 @@ from __future__ import absolute_import, division, print_function, \
 from datetime import datetime
 import json
 import functools
+from logging import Formatter
 import pickle
 import re
 
 # Import the names we wish to expose.
-from flask import session, url_for
+from flask import has_request_context, session, url_for
 from flask import g as flask_g
 
 # Import the names which we use but do not wish to expose.
@@ -56,6 +57,40 @@ from ..type.simple import CurrentUser, DateAndTime, Person, UserInfo
 from ..type.enum import FigureType, FileTypeInfo
 from ..type.util import null_tuple
 from ..util import FormattedLogger
+
+
+class CurrentUserFormatter(Formatter):
+    """Log entry formatter which includes information
+    regarding the current user."""
+
+    def format(self, record):
+        addr = 'unknown'
+        user = '?'
+        person = '?'
+        admin = '?'
+
+        # Prepare extra record information in a try...except block in
+        # case anything is missing (e.g. remote_addr or current_user).
+        try:
+            if has_request_context():
+                addr = _flask_request.remote_addr
+
+            current_user = flask_g.current_user
+            if current_user.user is not None:
+                user = current_user.user.id
+            if current_user.person is not None:
+                person = current_user.person.id
+            admin = ('yes' if current_user.is_admin else 'no')
+
+        except:
+            pass
+
+        record.hedwig_addr = addr
+        record.hedwig_user = user
+        record.hedwig_person = person
+        record.hedwig_admin = admin
+
+        return super(CurrentUserFormatter, self).format(record)
 
 
 class HTTPError(_werkzeug_exceptions.InternalServerError):
