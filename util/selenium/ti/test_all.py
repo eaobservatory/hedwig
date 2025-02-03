@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1978,6 +1978,8 @@ class IntegrationTest(DummyConfigTestCase):
             ['thank_reviewer_links'])
 
         self.browser.find_element(By.LINK_TEXT, 'Thank external reviewers').click()
+
+        self._save_screenshot(self.admin_image_root, 'reviewer_thank_confirm')
 
         self.browser.find_element(By.NAME, 'submit_confirm').click()
 
