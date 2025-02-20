@@ -330,11 +330,15 @@ class GenericAdmin(object):
         if call.allow_continuation and (call.cnrq_max_age is not None):
             continuation_earliest = \
                 call.date_open - timedelta(days=call.cnrq_max_age)
+            # Also restrict latest date in order to provide a reasonable
+            # list of semesters when viewing older calls.
+            continuation_latest = call.date_open
 
             semesters_continuable = db.search_semester(
                 facility_id=self.id_).map_values(
-                    filter_value=lambda x:
-                        not x.date_start < continuation_earliest)
+                    filter_value=lambda x: not (
+                        x.date_start < continuation_earliest
+                        or x.date_start > continuation_latest))
 
         ctx = {
             'title': 'Call: {} {} {}'.format(
