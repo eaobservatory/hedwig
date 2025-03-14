@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -105,7 +105,7 @@ class JCMTAffiliationType(BaseAffiliationType):
             (BaseAffiliationType.STANDARD,
                 BaseAffiliationType._info[BaseAffiliationType.STANDARD]),
             (EXPANDING, BaseAffiliationType.TypeInfo(
-                'Expanding partner program', True)),
+                'Expanding partner program', None, True)),
         ),
         ((k, v) for (k, v) in BaseAffiliationType._info.items()
             if k != BaseAffiliationType.STANDARD),

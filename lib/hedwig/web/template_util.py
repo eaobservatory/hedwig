@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -93,6 +93,12 @@ def register_template_utils(app):
         if value is None:
             return ''
         return type_class.get_name(value)
+
+    @app.template_filter()
+    def affiliation_type_description(value, type_class):
+        if value is None:
+            return ''
+        return type_class.get_description(value)
 
     @app.template_filter()
     def assessment_name(value):

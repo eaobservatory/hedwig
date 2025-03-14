@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -36,13 +36,21 @@ class BaseAffiliationType(EnumBasic):
     SHARED = 3
 
     TypeInfo = namedtuple(
-        'TypeInfo', ('name', 'tabulated'))
+        'TypeInfo', ('name', 'description', 'tabulated'))
 
     _info = OrderedDict((
-        (STANDARD, TypeInfo('Standard', True)),
-        (SHARED,   TypeInfo('Shared',   False)),
-        (EXCLUDED, TypeInfo('Excluded', False)),
+        (STANDARD, TypeInfo('Standard', 'Eligibility: PI or Co-I', True)),
+        (SHARED,   TypeInfo('Shared',   'Shared affiliation',      False)),
+        (EXCLUDED, TypeInfo('Excluded', 'Eligibility: Co-I only',  False)),
     ))
+
+    @classmethod
+    def get_description(cls, value):
+        description = cls._info[value].description
+        if description is not None:
+            return description
+
+        return cls._info[value].name
 
     @classmethod
     def get_options(cls):

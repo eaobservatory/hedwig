@@ -47,8 +47,13 @@
             <label for="affiliation_id">Your affiliation</label>
             <select name="affiliation_id" required="required">
                 <option value="">Select an affiliation&hellip;</option>
-                {% for affiliation in affiliations.values_in_type_order(facility_affiliation_type_class) %}
-                    <option value="{{ affiliation.id }}" {{ 'selected="selected"' | safe if affiliation.id == affiliation_id }}>{{ affiliation.name }}</option>
+                {% for (affiliation_type, type_affiliations) in affiliations.group_by_type(facility_affiliation_type_class) %}
+                    <hr />
+                    <optgroup label="{{ affiliation_type | affiliation_type_description(facility_affiliation_type_class) }}" />
+                        {% for affiliation in type_affiliations.values() %}
+                            <option value="{{ affiliation.id }}" {{ 'selected="selected"' | safe if affiliation.id == affiliation_id }}>{{ affiliation.name }}</option>
+                        {% endfor %}
+                    </optgroup>
                 {% endfor %}
             </select>
             {{ render_affiliation_tip(call.semester_id, call.type, call.queue_id, call.separate) }}

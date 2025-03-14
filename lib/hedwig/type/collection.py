@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -171,6 +171,11 @@ class AffiliationCollection(ResultCollection):
                 if affiliation.type == type_:
                     yield affiliation
 
+    def group_by_type(self, type_class):
+        for type_ in type_class.get_options().keys():
+            items = [(k, v) for (k, v) in self.items() if v.type == type_]
+            if items:
+                yield (type_, type(self)(items))
 
 class AnnotationCollection(ResultCollection, CollectionByType):
     """
