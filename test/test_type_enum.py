@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -44,6 +44,10 @@ class EnumTypeTestCase(TestCase):
         types = BaseAffiliationType.get_tabulated_types()
         self.assertIsInstance(types, list)
         self.assertEqual(types, [BaseAffiliationType.STANDARD])
+
+        self.assertEqual(
+            BaseAffiliationType.get_description(BaseAffiliationType.SHARED),
+            'Shared affiliation')
 
     def test_assessment(self):
         self.assertTrue(Assessment.is_valid(Assessment.PROBLEM))

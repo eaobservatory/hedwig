@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -203,6 +203,24 @@ class CollectionTypeTestCase(TestCase):
                 'Aff. 1 (st)', 'Aff. 2 (st)', 'Aff. 3 (st)',
                 'Aff. 1 (sh)', 'Aff. 2 (sh)', 'Aff. 3 (sh)',
                 'Aff. 1 (ex)', 'Aff. 2 (ex)', 'Aff. 3 (ex)'])
+
+        grouped = list(affiliations.group_by_type(BaseAffiliationType))
+        self.assertEqual(len(grouped), 3)
+
+        (type_, group) = grouped[0]
+        self.assertEqual(type_, BaseAffiliationType.STANDARD)
+        self.assertEqual(list(x.name for x in group.values()), [
+            'Aff. 1 (st)', 'Aff. 2 (st)', 'Aff. 3 (st)'])
+
+        (type_, group) = grouped[1]
+        self.assertEqual(type_, BaseAffiliationType.SHARED)
+        self.assertEqual(list(x.name for x in group.values()), [
+            'Aff. 1 (sh)', 'Aff. 2 (sh)', 'Aff. 3 (sh)'])
+
+        (type_, group) = grouped[2]
+        self.assertEqual(type_, BaseAffiliationType.EXCLUDED)
+        self.assertEqual(list(x.name for x in group.values()), [
+            'Aff. 1 (ex)', 'Aff. 2 (ex)', 'Aff. 3 (ex)'])
 
     def test_annotation_collection(self):
         c = AnnotationCollection()
