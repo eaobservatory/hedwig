@@ -20,3 +20,18 @@
         </div>
     </div>
 {% endmacro %}
+{% macro render_affiliation_selection(affiliation_type_class, select_name, affiliations, affiliation_selected, include_undefined=true) %}
+    <select name="{{ select_name }}" required="required">
+        {% if include_undefined %}
+            <option value="">Select an affiliation&hellip;</option>
+        {% endif %}
+        {% for (affiliation_type, type_affiliations) in affiliations.group_by_type(affiliation_type_class) %}
+            <hr />
+            <optgroup label="{{ affiliation_type | affiliation_type_description(affiliation_type_class) }}" />
+                {% for affiliation in type_affiliations.values() %}
+                    <option value="{{ affiliation.id }}" {{ 'selected="selected"' | safe if affiliation.id == affiliation_selected }}>{{ affiliation.name }}</option>
+                {% endfor %}
+            </optgroup>
+        {% endfor %}
+    </select>
+{% endmacro %}

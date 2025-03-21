@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% from 'macro/affiliation_tip.html' import render_affiliation_tip %}
+{% from 'macro/affiliation.html' import render_affiliation_selection, render_affiliation_tip %}
 {% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
 {% set scripts=['table_row_drag', 'edit_member', 'formtip'] %}
 {% set help_link=url_for('help.user_page', page_name='member', _anchor='editing-the-list-of-members') %}
@@ -56,11 +56,7 @@
                     <input name="sort_order_{{ member.id }}" type="hidden" value="{{ member.sort_order }}" />
                 </td>
                 <td>
-                    <select name="affiliation_{{ member.id }}">
-                        {% for affiliation in affiliations.values_in_type_order(facility_affiliation_type_class) %}
-                            <option value="{{ affiliation.id }}" {{ 'selected="selected"' | safe if affiliation.id == member.affiliation_id }}>{{ affiliation.name }}</option>
-                        {% endfor %}
-                    </select>
+                    {{ render_affiliation_selection(facility_affiliation_type_class, member.id | fmt('affiliation_{}'), affiliations, member.affiliation_id, include_undefined=false) }}
                 </td>
                 <td>
                     <input type="radio" name="pi" value="{{ member.id }}" {{ 'checked="checked"' | safe if member.pi }} />

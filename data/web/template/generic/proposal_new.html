@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% from 'macro/affiliation_tip.html' import render_affiliation_tip %}
+{% from 'macro/affiliation.html' import render_affiliation_selection, render_affiliation_tip %}
 {% set navigation=[((call.semester_name, (call.type | call_type_name(facility_call_type_class)), call.queue_name) | fmt('{} {} ({})'), url_for('.semester_call_separate', semester_id=call.semester_id, call_type=call.type, queue_id=call.queue_id)) if call.separate else ((call.semester_name, (call.type | call_type_name(facility_call_type_class))) | fmt('{} {}'), url_for('.semester_calls', semester_id=call.semester_id, call_type=call.type))] %}
 {% set help_link=url_for('help.user_page', page_name='proposal_create') %}
 {% set scripts = ['formtip', 'new_proposal'] %}
@@ -45,17 +45,7 @@
             {{ current_user.person.name }}
         <li>
             <label for="affiliation_id">Your affiliation</label>
-            <select name="affiliation_id" required="required">
-                <option value="">Select an affiliation&hellip;</option>
-                {% for (affiliation_type, type_affiliations) in affiliations.group_by_type(facility_affiliation_type_class) %}
-                    <hr />
-                    <optgroup label="{{ affiliation_type | affiliation_type_description(facility_affiliation_type_class) }}" />
-                        {% for affiliation in type_affiliations.values() %}
-                            <option value="{{ affiliation.id }}" {{ 'selected="selected"' | safe if affiliation.id == affiliation_id }}>{{ affiliation.name }}</option>
-                        {% endfor %}
-                    </optgroup>
-                {% endfor %}
-            </select>
+            {{ render_affiliation_selection(facility_affiliation_type_class, 'affiliation_id', affiliations, affiliation_id) }}
             {{ render_affiliation_tip(call.semester_id, call.type, call.queue_id, call.separate) }}
         </li>
     </ol>
