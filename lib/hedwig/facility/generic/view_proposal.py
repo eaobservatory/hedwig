@@ -1116,7 +1116,7 @@ class GenericProposal(object):
                                 (x.id == member_pi.affiliation_id))]
 
                         messages.append(ValidationMessage(
-                            False,
+                            True,
                             'The principal investigator (PI) has an '
                             'ineligible affiliation.  The PI should '
                             'not be someone with ' +
