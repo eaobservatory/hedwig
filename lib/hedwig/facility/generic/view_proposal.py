@@ -90,7 +90,8 @@ class GenericProposal(object):
             raise HTTPForbidden('Permission denied for this call.')
 
         affiliations = db.search_affiliation(
-            queue_id=call.queue_id, hidden=False)
+            queue_id=call.queue_id, hidden=False,
+            with_weight_call_id=call_id)
         if not affiliations:
             raise HTTPError('No affiliations appear to be available.')
 
@@ -642,7 +643,8 @@ class GenericProposal(object):
         else:
             # Get a list of the affiliations which are available now.
             affiliations = db.search_affiliation(
-                queue_id=proposal.queue_id, hidden=False)
+                queue_id=proposal.queue_id, hidden=False,
+                with_weight_call_id=proposal.call_id)
 
         copier_old_member = old_proposal.members.get_person(
             copier_person_id)
@@ -1104,7 +1106,8 @@ class GenericProposal(object):
                 if member_pi is not None:
                     exclude = db.search_affiliation(
                         queue_id=proposal.queue_id,
-                        type_=affiliation_type_class.EXCLUDED)
+                        type_=affiliation_type_class.EXCLUDED,
+                        with_weight_call_id=proposal.call_id)
 
                     if member_pi.affiliation_id in exclude:
                         exclude_names = [
@@ -1573,7 +1576,8 @@ class GenericProposal(object):
         person_id = current_user.person.id
 
         affiliations = db.search_affiliation(
-            queue_id=proposal.queue_id, hidden=False)
+            queue_id=proposal.queue_id, hidden=False,
+            with_weight_call_id=proposal.call_id)
         if not affiliations:
             raise HTTPError('No affiliations appear to be available.')
 
@@ -1641,7 +1645,8 @@ class GenericProposal(object):
                       name='', title=None, email='')
 
         affiliations = db.search_affiliation(
-            queue_id=proposal.queue_id, hidden=False)
+            queue_id=proposal.queue_id, hidden=False,
+            with_weight_call_id=proposal.call_id)
         if not affiliations:
             raise HTTPError('No affiliations appear to be available.')
 
@@ -1936,7 +1941,8 @@ class GenericProposal(object):
             raise HTTPNotFound('Proposal member not found.')
 
         affiliations = db.search_affiliation(
-            queue_id=proposal.queue_id, hidden=False)
+            queue_id=proposal.queue_id, hidden=False,
+            with_weight_call_id=proposal.call_id)
         if not affiliations:
             raise HTTPError('No affiliations appear to be available.')
 
