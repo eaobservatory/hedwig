@@ -376,6 +376,8 @@ class JCMT(EAOFacility):
 
         # Determine affiliation fractions, in case there are any proposal
         # members with shared affiliation.
+        if not total_weight:
+            total_weight = 1.0
         affiliation_fraction = {k: v / total_weight
                                 for (k, v) in affiliation_weight.items()}
 
