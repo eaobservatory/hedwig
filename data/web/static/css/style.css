@@ -260,6 +260,10 @@ p.caution + *.caution_detail {
     margin-top: -1ex;
 }
 
+span.smallcaps {
+    font-variant: small-caps;
+}
+
 input[type="number"] {
     width: 15ex;
 }

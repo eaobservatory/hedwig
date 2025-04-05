@@ -37,7 +37,7 @@ from ..type.enum import AnnotationType, Assessment, \
     ProposalState, ProposalType, PublicationType, \
     RequestState, ReviewState, SemesterState, SiteGroupType, UserLogEvent
 from ..util import FormatMaxDP, FormatSigFig
-from .format import format_message_text, format_text
+from .format import format_message_text, format_text, format_title_markup
 from .util import mangle_email_address as _mangle_email_address
 
 
@@ -209,6 +209,18 @@ def register_template_utils(app):
                 + Markup('</span>')
 
         return format_.format(value)
+
+    @app.template_filter()
+    def title_markup(text):
+        """
+        Apply possible formatting to "markup" elements found in text
+        such as publication titles.
+        """
+
+        if text is None or isinstance(text, Undefined):
+            return ''
+
+        return format_title_markup(text)
 
     @app.template_filter()
     def fmt_max_dp(value, digits):

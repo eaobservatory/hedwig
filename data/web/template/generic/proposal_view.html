@@ -514,7 +514,7 @@
                                         {% endif %}
                                         {% if publication.state is attachment_ready %}
                                             {% if publication.title is not none %}
-                                                &ldquo;{{ publication.title }}&rdquo;
+                                                &ldquo;{{ publication.title | title_markup }}&rdquo;
                                             {% endif %}
                                             {% if publication.author is not none %}
                                                 <i>{{ publication.author }}</i>
