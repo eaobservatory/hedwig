@@ -70,6 +70,11 @@ div#facilities > div {
 img.pdf_preview {
     border: 1px solid black;
     cursor: zoom-in;
+    image-rendering: pixelated;
+}
+
+figure img {
+    image-rendering: pixelated;
 }
 
 span.label {
