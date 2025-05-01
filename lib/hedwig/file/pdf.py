@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -148,7 +148,6 @@ def _pdf_ps_to_png(buff, page_count, resolution=100, downscale=4):
         '-dBATCH',
         '-dSAFER',
         '-dPARANOIDSAFER',
-        '-dNOTRANSPARENCY',
         '-sDEVICE=png16m',
         '-r{}'.format(resolution * downscale),
         '-dGraphicsAlphaBits=4',
