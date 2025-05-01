@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -176,7 +176,7 @@ def _process_figure(db, _type, dry_run=False):
                 if figure.type == FigureType.PDF:
                     pngs = pdf_to_png(
                         figure.data,
-                        renderer=config.get('proposal_fig', 'pdf_renderer'),
+                        renderer=config.get(config_section, 'pdf_renderer'),
                         **pdf_ps_options)
 
                     if len(pngs) != 1:
