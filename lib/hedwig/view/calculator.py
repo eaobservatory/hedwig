@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2022 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -26,7 +26,8 @@ from ..type.enum import ProposalState
 from ..type.simple import CalculatorResult, ProposalWithCode
 from ..type.util import null_tuple
 from ..web.query_encode import encode_query, decode_query
-from ..web.util import HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
+from ..web.util import ErrorPage, \
+    HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, url_for
 from .util import int_or_none
 from . import auth
@@ -423,7 +424,9 @@ class BaseCalculator(object):
 
             # Following a link which describes a specific calculation -- get
             # the input, run the calculation and provide an encoded query.
+            fetched_from_query = False
             if 'query' in args:
+                fetched_from_query = True
                 try:
                     (fetched_version, fetched_input) = self._decode_query(
                         mode, args['query'])
@@ -443,13 +446,39 @@ class BaseCalculator(object):
                 except UserError as e:
                     message = e.message
 
+                except:
+                    if fetched_from_query:
+                        # As for formatting inputs below, trap errors in the
+                        # case that the inputs came from a query string.
+                        raise ErrorPage(
+                            'Unable to perform the calculation using'
+                            ' parameters from the query string in the'
+                            ' calculation link.')
+
+                    else:
+                        raise
+
             else:
                 # When we didn't receive a form submission, get the default
                 # values -- need to convert these to strings to match the
                 # form input strings as explained above.
                 fetched_input = self.get_default_input(mode)
 
-            input_values = self.format_input(inputs, fetched_input)
+            try:
+                input_values = self.format_input(inputs, fetched_input)
+
+            except:
+                if fetched_from_query:
+                    # It is possible for this error to occur if values of the
+                    # wrong type are encoded in the query string, especially
+                    # if it was generated outside this system.  Therefore trap
+                    # the error in this case only to prevent logging it.
+                    raise ErrorPage(
+                        'Unable to format input parameters from the query'
+                        ' string in the calculation link.')
+
+                else:
+                    raise
 
         # If we have a reviewer ID, look for information about the proposal.
         for_proposal_code = None
