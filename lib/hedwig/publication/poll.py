@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,7 +24,7 @@ from ..error import ConsistencyError
 from ..util import get_logger
 from ..type.enum import AttachmentState, PublicationType
 from .arxiv import get_pub_info_arxiv
-from .ads import get_pub_info_ads, get_pub_info_doi
+from .ads import get_pub_info_ads, get_pub_info_atel, get_pub_info_doi
 
 logger = get_logger(__name__)
 
@@ -49,6 +49,7 @@ def process_publication_references(db, dry_run=False):
         PublicationType.DOI:   PubTypeInfo(set(), get_pub_info_doi),
         PublicationType.ADS:   PubTypeInfo(set(), get_pub_info_ads),
         PublicationType.ARXIV: PubTypeInfo(set(), get_pub_info_arxiv),
+        PublicationType.ATEL:  PubTypeInfo(set(), get_pub_info_atel),
     }
 
     for publication in db.search_prev_proposal_pub(

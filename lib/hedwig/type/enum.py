@@ -781,6 +781,7 @@ class PublicationType(EnumBasic, EnumAvailable):
     DOI = 2
     ADS = 3
     ARXIV = 4
+    ATEL = 5
 
     PubTypeInfo = namedtuple(
         'PubTypeInfo', ('name', 'available', 'placeholder', 'regex', 'prefix'))
@@ -811,6 +812,12 @@ class PublicationType(EnumBasic, EnumAvailable):
             [re.compile(r'^\d+\.\d+(?:v\d+)?$'),
              re.compile(r'^\S+\/\d+(?:v\d+)?$')],
             ['arxiv:'])),
+        (ATEL, PubTypeInfo(
+            'ATEL number',
+            True,
+            '00000',
+            [re.compile(r'^\d+$')],
+            ['#'])),
     ))
 
 

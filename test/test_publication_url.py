@@ -1,4 +1,4 @@
-# Copyright (C) 2017 East Asian Observatory
+# Copyright (C) 2017-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -43,6 +43,10 @@ class PublicationURLTestCase(TestCase):
         url = make_publication_url(PublicationType.ARXIV, '0000.00000')
         self.assertIsInstance(url, string_type)
         self.assertEqual(url, 'http://arxiv.org/abs/0000.00000')
+
+        url = make_publication_url(PublicationType.ATEL, '12345')
+        self.assertIsInstance(url, string_type)
+        self.assertEqual(url, 'https://www.astronomerstelegram.org/?read=12345')
 
         # Test handling of references with non-ASCII characters.
         url = make_publication_url(

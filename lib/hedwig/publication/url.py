@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -37,6 +37,9 @@ def make_publication_url(type_, reference):
 
         elif type_ == PublicationType.ARXIV:
             return 'http://arxiv.org/abs/' + url_quote(reference)
+
+        elif type_ == PublicationType.ATEL:
+            return 'https://www.astronomerstelegram.org/?read=' + url_quote(reference)
 
     except:
         # `url_quote` could possibly raise UnicodeEncodeError.  In this case

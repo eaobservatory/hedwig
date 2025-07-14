@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -57,6 +57,16 @@ def get_pub_info_doi(dois):
     return _get_pub_info_ads_generic('doi', dois)
 
 
+def get_pub_info_atel(numbers):
+    """
+    Get information on a list of ATel numbers.
+
+    :return: a dictionary by number.
+    """
+
+    return _get_pub_info_ads_generic('atel', numbers)
+
+
 def _get_pub_info_ads_generic(type_, codes):
     """
     Get information via ADS for a given type of code.
@@ -77,15 +87,24 @@ def _get_pub_info_ads_generic(type_, codes):
         n_query += 1
 
         result = None
+        query_extra = None
 
         if type_ == 'doi':
             query_type = 'identifier'
             query = ['doi:"{}"'.format(_escape_term(x)) for x in query]
+
+        elif type_ == 'atel':
+            type_ = query_type = 'volume'
+            query_extra = 'bibstem:ATel'
+
         else:
             query_type = type_
 
         try:
             query_str = '{}:({})'.format(query_type, ' OR '.join(query))
+
+            if query_extra is not None:
+                query_str = ' '.join((query_str, query_extra))
 
             response = fixed_responses.get(query_str)
 
