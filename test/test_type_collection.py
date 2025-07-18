@@ -20,6 +20,8 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple, OrderedDict
 
+from hedwig.astro.coord import CoordSystem
+from hedwig.compat import string_type
 from hedwig.error import MultipleRecords, NoSuchRecord, NoSuchValue, UserError
 from hedwig.type.base import CollectionByProposal, CollectionOrdered, \
     CollectionSortable
@@ -31,7 +33,7 @@ from hedwig.type.collection import \
     PrevProposalCollection, \
     ProposalCollection, ProposalFigureCollection, \
     RequestCollection, ReviewerCollection, \
-    SiteGroupMemberCollection
+    SiteGroupMemberCollection, TargetCollection, TargetWithExtra
 from hedwig.type.enum import AnnotationType, BaseAffiliationType, \
     BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, \
@@ -40,7 +42,8 @@ from hedwig.type.simple import \
     Affiliation, Annotation, Call, CallPreamble, Email, GroupMember, Member, \
     PrevProposal, \
     Proposal, ProposalFigureInfo, \
-    RequestPropPDF, Reviewer, ReviewDeadline, SiteGroupMember
+    RequestPropPDF, Reviewer, ReviewDeadline, \
+    SiteGroupMember, Target, TargetFracTime, TargetObject
 from hedwig.type.util import null_tuple
 
 from .compat import TestCase
@@ -786,3 +789,115 @@ class CollectionTypeTestCase(TestCase):
 
         with self.assertRaises(MultipleRecords):
             c.get_continuation()
+
+    def test_target_collection(self):
+        c = TargetCollection()
+
+        c[1] = null_tuple(Target)._replace(
+            name='Target 1', system=CoordSystem.ICRS, x=15.0, y=45.0,
+            time=4.5, priority=6)
+        c[2] = null_tuple(Target)._replace(
+            name='Target 2', system=CoordSystem.ICRS, x=45.0, y=15.0,
+            time=5.5, priority=7)
+
+        # Test total_time method.
+        self.assertAlmostEqual(c.total_time(), 10.0)
+
+        # Test formatting with "to_formatted_collection".
+        for with_extra in (True, False):
+            f = c.to_formatted_collection(with_extra=with_extra)
+            self.assertIsInstance(f, TargetCollection)
+            self.assertEqual(list(f.keys()), [1, 2])
+
+            t = f[1]
+            if with_extra:
+                self.assertIsInstance(t, TargetWithExtra)
+            else:
+                self.assertIsInstance(t, Target)
+
+            self.assertIsInstance(t.time, string_type)
+            self.assertIsInstance(t.priority, string_type)
+            self.assertEqual(t.name, 'Target 1')
+            self.assertEqual(t.time, '4.5')
+            self.assertEqual(t.priority, '6')
+            self.assertEqual(t.x, '01:00:00')
+            self.assertEqual(t.y, '+45:00:00')
+
+            if with_extra:
+                self.assertIsInstance(t.time_unfmt, float)
+                self.assertIsInstance(t.priority_unfmt, int)
+                self.assertIsInstance(t.systems, dict)
+                self.assertAlmostEqual(t.time_unfmt, 4.5)
+                self.assertEqual(t.priority_unfmt, 6)
+
+            t = f[2]
+            if with_extra:
+                self.assertIsInstance(t, TargetWithExtra)
+            else:
+                self.assertIsInstance(t, Target)
+
+            self.assertIsInstance(t.time, string_type)
+            self.assertIsInstance(t.priority, string_type)
+            self.assertEqual(t.name, 'Target 2')
+            self.assertEqual(t.time, '5.5')
+            self.assertEqual(t.priority, '7')
+            self.assertEqual(t.x, '03:00:00')
+            self.assertEqual(t.y, '+15:00:00')
+
+            if with_extra:
+                self.assertIsInstance(t.time_unfmt, float)
+                self.assertIsInstance(t.priority_unfmt, int)
+                self.assertIsInstance(t.systems, dict)
+                self.assertAlmostEqual(t.time_unfmt, 5.5)
+                self.assertEqual(t.priority_unfmt, 7)
+
+        # Test parsing with "from_formatted_collection".
+        cc = TargetCollection.from_formatted_collection(c)
+        self.assertIsInstance(cc, TargetCollection)
+        self.assertEqual(list(cc.keys()), [1, 2])
+
+        t = cc[1]
+        self.assertIsInstance(t, Target)
+
+        self.assertIsInstance(t.time, float)
+        self.assertIsInstance(t.priority, int)
+        self.assertEqual(t.name, 'Target 1')
+        self.assertEqual(t.time, 4.5)
+        self.assertEqual(t.priority, 6)
+        self.assertAlmostEqual(t.x, 15.0)
+        self.assertAlmostEqual(t.y, 45.0)
+
+        t = cc[2]
+        self.assertIsInstance(t, Target)
+
+        self.assertIsInstance(t.time, float)
+        self.assertIsInstance(t.priority, int)
+        self.assertEqual(t.name, 'Target 2')
+        self.assertEqual(t.time, 5.5)
+        self.assertEqual(t.priority, 7)
+        self.assertAlmostEqual(t.x, 45.0)
+        self.assertAlmostEqual(t.y, 15.0)
+
+        # Test parsing to an object list with "from_formatted_collection".
+        ol = TargetCollection.from_formatted_collection(c, as_object_list=True)
+        self.assertIsInstance(ol, list)
+        self.assertEqual(len(ol), 2)
+
+        self.assertIsInstance(ol[0], TargetObject)
+        self.assertIsInstance(ol[1], TargetObject)
+
+        # Test "to_object_list" method.
+        ol = c.to_object_list()
+        self.assertIsInstance(ol, list)
+        self.assertEqual(len(ol), 2)
+
+        self.assertIsInstance(ol[0], TargetObject)
+        self.assertIsInstance(ol[1], TargetObject)
+
+        # Test "to_frac_time_list" method.
+        fl = c.to_frac_time_list()
+        self.assertIsInstance(fl, list)
+        self.assertEqual(len(fl), 2)
+
+        self.assertIsInstance(fl[0], TargetFracTime)
+        self.assertIsInstance(fl[1], TargetFracTime)

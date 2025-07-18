@@ -904,6 +904,7 @@ class GenericProposal(object):
                             current_user, db, x, members=proposal.members,
                             auth_cache=auth_cache).view))),
             'text_roles': role_class,
+            'systems': CoordSystem.get_options(),
         }
 
         for role in (

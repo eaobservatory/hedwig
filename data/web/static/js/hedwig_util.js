@@ -12,6 +12,8 @@ function enable_table_sorting(table, alter_url) {
     var last_sorted_by = null;
     var sort_direction = -1;
 
+    var reset_button = table.find('button[data-sort_reset]');
+
     var apply_sort_column = (function (sort_key) {
         var arr = [];
         var i;
@@ -75,6 +77,8 @@ function enable_table_sorting(table, alter_url) {
 
             apply_sort_column(sort_key);
 
+            reset_button.prop('disabled', false);
+
             if (alter_url) {
                 var params = new URLSearchParams();
                 if (! sort_total) {
@@ -93,21 +97,45 @@ function enable_table_sorting(table, alter_url) {
         });
     });
 
+    if (reset_button.length === 1) {
+        reset_button.click(function () {
+            sort_direction = 1;
+
+            var sort_key = reset_button.data('sort_reset');
+            apply_sort_column(sort_key);
+
+            reset_button.prop('disabled', true);
+
+            if (alter_url) {
+                window.history.replaceState(
+                    null, 'Restore original ordering',
+                    window.location.pathname);
+            }
+        });
+    }
+
     sort_headings.each(function () {
         enable_sort_column($(this));
     });
 
     if (alter_url) {
         var params = new URLSearchParams(window.location.search);
+        var sort_applied = false;
         params.forEach(function (value, key) {
             if (key === 'sortasc') {
+                sort_applied = true;
                 sort_direction = 1;
                 apply_sort_column(value);
             } else if (key === 'sortdesc') {
+                sort_applied = true;
                 sort_direction = -1;
                 apply_sort_column(value);
             }
         });
+
+        reset_button.prop('disabled', ! sort_applied);
+    } else {
+        reset_button.prop('disabled', true);
     }
 }
 

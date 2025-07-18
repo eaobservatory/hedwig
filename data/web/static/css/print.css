@@ -50,3 +50,7 @@ figure img {
 .volatile {
     display: none;
 }
+
+button {
+    display: none;
+}

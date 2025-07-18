@@ -9,8 +9,9 @@
 {% set navigation=[(proposal_code, none)] %}
 {% set help_link=url_for('help.user_page', page_name='proposal') %}
 
+{% set scripts = ['hedwig_util', 'proposal_targets'] %}
 {% if show_person_proposals_callout %}
-    {% set scripts = ['dismiss_callout'] %}
+    {% set scripts = concatenate_lists(['dismiss_callout'], scripts) %}
 {% endif %}
 {% if proposal_annotations %}
     {% set scripts = concatenate_lists(['closeable'], scripts) %}
@@ -260,34 +261,69 @@
                 This proposal does not yet have any target objects.
             </p>
         {% else %}
-            <table>
-                <tr>
-                    <th>Name</th>
-                    <th>RA / Longitude</th>
-                    <th>Dec / Latitude</th>
-                    <th>System</th>
-                    <th>Time<br />(hours)</th>
-                    <th>Priority<br />(1 highest)</th>
-                    <th>Notes</th>
-                </tr>
-                {% for target in targets.to_formatted_collection().values() %}
+            <table id="target_table">
+                <thead>
                     <tr>
-                        <td>{{ target.name }}</td>
-                        <td>{{ target.x }}</td>
-                        <td>{{ target.y }}</td>
-                        <td>{{ target.system | coord_system_name }}</td>
-                        <td>{{ target.time }}</td>
-                        <td>{{ target.priority }}</td>
-                        <td>{{ target.note }}</td>
+                        <th class="sortable" data-sortkey="name">Name</th>
+                        <th class="sortable" data-sortkey="x">RA / Longitude</th>
+                        <th class="sortable" data-sortkey="y">Dec / Latitude</th>
+                        <th class="sortable" data-sortkey="system">System</th>
+                        <th class="sortable sortreverse" data-sortkey="time">Time<br />(hours)</th>
+                        <th class="sortable" data-sortkey="priority">Priority<br />(1 highest)</th>
+                        <th>Notes</th>
                     </tr>
-                {% endfor %}
-                {% if target_total_time and (targets | length > 1) %}
+                </thead>
+                <tbody>
+                    {% for target in targets.to_formatted_collection(with_extra=true).values() %}
+                        <tr data-sortinfo="{{ {
+                                'name': target.name,
+                                'system': target.system,
+                                'x': none,
+                                'y': none,
+                                'time': target.time_unfmt,
+                                'priority': target.priority_unfmt,
+                                'sort_order': target.sort_order,
+                            } | json }}" data-systems="{{ target.systems | json }}">
+                            <td>{{ target.name }}</td>
+                            <td data-column="x">{{ target.x }}</td>
+                            <td data-column="y">{{ target.y }}</td>
+                            <td data-column="system">{{ target.system | coord_system_name }}</td>
+                            <td>{{ target.time }}</td>
+                            <td>{{ target.priority }}</td>
+                            <td>{{ target.note }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
                     <tr>
-                        <th colspan="4">Total</th>
-                        <td class="total">{{ target_total_time | fmt_max_dp(3) }}</td>
-                        <td colspan="2" class="total">&nbsp;</td>
+                        {% if target_total_time and (targets | length > 1) %}
+                            <th>Total</th>
+                        {% else %}
+                            <td class="total">&nbsp;</td>
+                        {% endif %}
+                        <td class="total" colspan="3">
+                            {% for (system_id, system_name) in systems.items() %}
+                                <button id="system_{{system_id}}">{{ system_name }}</button>
+                            {% endfor %}
+                            <button id="system_original">As entered</button>
+                        </td>
+                        <td class="total">
+                            {% if target_total_time and (targets | length > 1) %}
+                                {{ target_total_time | fmt_max_dp(3) }}
+                            {% else %}
+                                &nbsp;
+                            {% endif %}
+                        </td>
+                        <td class="total">&nbsp;</td>
+                        <td class="total">
+                            {% if (targets | length > 1) %}
+                                <button data-sort_reset="sort_order">Original ordering</button>
+                            {% else %}
+                                &nbsp;
+                            {% endif %}
+                        </td>
                     </tr>
-                {% endif %}
+                </tfoot>
             </table>
         {% endif %}
 

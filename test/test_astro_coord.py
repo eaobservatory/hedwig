@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,8 +22,8 @@ from collections import OrderedDict
 
 from astropy.coordinates import SkyCoord
 
-from hedwig.astro.coord import CoordSystem, \
-    parse_coord, format_coord, \
+from hedwig.astro.coord import CoordSystem, CoordWithFmt, \
+    parse_coord, format_coord, format_coord_all_systems, \
     coord_to_dec_deg, coord_from_dec_deg
 from hedwig.compat import string_type
 from hedwig.error import UserError
@@ -59,6 +59,20 @@ class AstroCoordTest(TestCase):
         # Check we can't format with the wrong system.
         with self.assertRaises(AssertionError):
             format_coord(CoordSystem.GAL, c)
+
+        # Test application of fixed precision.
+        (x, y) = format_coord(
+            CoordSystem.GAL, c.galactic, fixed_precision=True)
+        self.assertEqual(x, '124.020')
+        self.assertEqual(y, '+38.943')
+
+        c = parse_coord(CoordSystem.ICRS, '01:02:03.456', '+07:08:09.101', 't')
+        (x, y) = format_coord(CoordSystem.ICRS, c)
+        self.assertEqual(x, '01:02:03.456')
+        self.assertEqual(y, '+07:08:09.101')
+        (x, y) = format_coord(CoordSystem.ICRS, c, fixed_precision=True)
+        self.assertEqual(x, '01:02:03.5')
+        self.assertEqual(y, '+07:08:09')
 
         # Test decimal input.
         c = parse_coord(CoordSystem.ICRS, '15.0', '75', 'test')
@@ -100,3 +114,21 @@ class AstroCoordTest(TestCase):
         cc = coord_from_dec_deg(CoordSystem.ICRS, 21.34, 55.89)
         self.assertEqual(format_coord(CoordSystem.ICRS, cc)[0], '01:25:21.6')
         self.assertEqual(format_coord(CoordSystem.ICRS, cc)[1], '+55:53:24')
+
+    def test_format_all_systems(self):
+        results = format_coord_all_systems(CoordSystem.ICRS, 30.0, 45.0)
+        self.assertIsInstance(results, dict)
+
+        result = results[CoordSystem.ICRS]
+        self.assertIsInstance(result, CoordWithFmt)
+        self.assertAlmostEqual(result.x_deg, 30.0)
+        self.assertAlmostEqual(result.y_deg, 45.0)
+        self.assertEqual(result.x, '02:00:00')
+        self.assertEqual(result.y, '+45:00:00')
+
+        result = results[CoordSystem.GAL]
+        self.assertIsInstance(result, CoordWithFmt)
+        self.assertAlmostEqual(result.x_deg, 135.4653, places=4)
+        self.assertAlmostEqual(result.y_deg, -16.1967, places=4)
+        self.assertEqual(result.x, '135.465')
+        self.assertEqual(result.y, '-16.197')

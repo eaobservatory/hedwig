@@ -22,7 +22,7 @@ from collections import OrderedDict, namedtuple
 from math import sqrt
 
 from ..astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
-    format_coord, parse_coord
+    format_coord, format_coord_all_systems, parse_coord
 from ..compat import first_value
 from ..email.util import is_valid_email
 from ..error import NoSuchRecord, NoSuchValue, MultipleRecords, UserError
@@ -31,9 +31,12 @@ from .base import CollectionByCall, CollectionByFacility, \
     CollectionByProposal, CollectionByReviewerRole, CollectionByType, \
     CollectionOrdered, CollectionSortable
 from .enum import PublicationType, ReviewState
-from .simple import TargetFracTime, TargetObject
+from .simple import Target, TargetFracTime, TargetObject
 
 ResultTable = namedtuple('ResultTable', ('table', 'columns', 'rows'))
+
+TargetWithExtra = namedtuple('TargetWithExtra', Target._fields + (
+    'systems', 'priority_unfmt', 'time_unfmt'))
 
 
 class ResultCollection(OrderedDict):
@@ -897,7 +900,7 @@ class TargetCollection(ResultCollection, CollectionOrdered,
     Collection for target objects listed on a proposal.
     """
 
-    def to_formatted_collection(self):
+    def to_formatted_collection(self, with_extra=False):
         """
         Construct an instance of this class in which the target values
         (`x`, `y`, `time`, `priority`) are replaced with formatted strings.
@@ -908,9 +911,18 @@ class TargetCollection(ResultCollection, CollectionOrdered,
         for (k, v) in self.items():
             if v.x is None or v.y is None:
                 x = y = ''
+                systems = None
+
             else:
-                (x, y) = format_coord(v.system,
-                                      coord_from_dec_deg(v.system, v.x, v.y))
+                if with_extra:
+                    systems = format_coord_all_systems(v.system, v.x, v.y)
+                    system_selected = systems[v.system]
+                    x = system_selected.x
+                    y = system_selected.y
+
+                else:
+                    coord = coord_from_dec_deg(v.system, v.x, v.y)
+                    (x, y) = format_coord(v.system, coord)
 
             if v.time is None:
                 time = ''
@@ -927,8 +939,15 @@ class TargetCollection(ResultCollection, CollectionOrdered,
             else:
                 note = v.note
 
-            ans[k] = v._replace(
+            formatted = v._replace(
                 x=x, y=y, time=time, priority=priority, note=note)
+
+            if with_extra:
+                formatted = TargetWithExtra(
+                    *formatted, systems=systems,
+                    priority_unfmt=v.priority, time_unfmt=v.time)
+
+            ans[k] = formatted
 
         return ans
 

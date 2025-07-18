@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -29,6 +29,8 @@ from ..error import UserError
 
 # Prevent Astropy from automatically downloading IERS data.
 astropy_iers_conf.auto_download = False
+
+CoordWithFmt = namedtuple('CoordWithFmt', ('x', 'y', 'x_deg', 'y_deg'))
 
 
 class CoordSystem(object):
@@ -138,9 +140,15 @@ def parse_coord(system, x, y, name):
             name, e)
 
 
-def format_coord(system, coord):
+def format_coord(system, coord, fixed_precision=False):
     """
     Format coordinates for display.
+
+    :param system: coordinate system (from `CoordSystem` enum)
+    :param coord: coordinate object
+    :param fixed_precision: limit precision, e.g. for converted values
+
+    :return: pair of `(x, y)` formatted values
     """
 
     info = CoordSystem._get_info(system)
@@ -148,15 +156,61 @@ def format_coord(system, coord):
 
     sph = coord.spherical
 
+    precision_x = None
+    precision_y = None
     kwargs = {'pad': True}
 
     if info.decimal:
         kwargs['decimal'] = True
+        if fixed_precision:
+            precision_x = precision_y = 3
+
     else:
         kwargs['sep'] = ':'
+        if fixed_precision:
+            precision_x = 1
+            precision_y = 0
 
-    return (sph.lon.to_string(unit=info.unit[0], alwayssign=False, **kwargs),
-            sph.lat.to_string(unit=info.unit[1], alwayssign=True, **kwargs))
+    return (
+        sph.lon.to_string(
+            unit=info.unit[0], alwayssign=False, precision=precision_x,
+            **kwargs),
+        sph.lat.to_string(
+            unit=info.unit[1], alwayssign=True, precision=precision_y,
+            **kwargs))
+
+
+def format_coord_all_systems(coord_system, x, y):
+    """
+    Convert coordinates to all available systems and format
+    for display.
+
+    :return: a dictionary of `CoordWithFmt` tuples by `CoordSystem` value
+    """
+
+    coord = coord_from_dec_deg(coord_system, x, y)
+
+    ans = {}
+
+    for system in CoordSystem.get_options():
+        if system == coord_system:
+            fixed_precision = False
+            converted = coord
+            x_deg = x
+            y_deg = y
+
+        else:
+            fixed_precision = True
+            info = CoordSystem._get_info(system)
+            converted = coord.transform_to(info.frame)
+            (x_deg, y_deg) = coord_to_dec_deg(converted)
+
+        (x_fmt, y_fmt) = format_coord(
+            system, converted, fixed_precision=fixed_precision)
+
+        ans[system] = CoordWithFmt(x=x_fmt, y=y_fmt, x_deg=x_deg, y_deg=y_deg)
+
+    return ans
 
 
 def coord_to_dec_deg(coord):
