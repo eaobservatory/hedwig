@@ -259,6 +259,12 @@ class BaseCalculator(object):
                 # data back in the form for correction.
                 input_values = self.get_form_input(inputs, form)
 
+            except UserError as e:
+                # If a UserError has been raised already, abort now since
+                # input_values will not have been defined.
+                raise ErrorPage(e.message)
+
+            try:
                 if 'submit_mode' in form:
                     parsed_input = self.parse_input(
                         mode, input_values,
