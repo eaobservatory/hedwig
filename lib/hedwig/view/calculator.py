@@ -264,6 +264,15 @@ class BaseCalculator(object):
                 # input_values will not have been defined.
                 raise ErrorPage(e.message)
 
+            except ValueError:
+                # This should not happen here if the browser selects from
+                # the given options but trap in case other values are sent.
+                raise ErrorPage('Invalid identifying value.')
+
+            except KeyError:
+                # This should not happen (as above).
+                raise ErrorPage('Unrecognised identifying value.')
+
             try:
                 if 'submit_mode' in form:
                     parsed_input = self.parse_input(

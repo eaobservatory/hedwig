@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -112,14 +112,23 @@ class BaseTargetTool(object):
         target_object = None
         query_encoded = None
 
-        extra_info = self._view_extra_info(args, form)
+        try:
+            extra_info = self._view_extra_info(args, form)
+
+        except ValueError:
+            # Trap in case an identifier other than those in selection
+            # lists is received.
+            raise ErrorPage('Invalid identifying value.')
+
+        except KeyError:
+            raise ErrorPage('Unrecognised identifying value.')
 
         if form is not None:
-            target = target._replace(
-                name=form['name'], x=form['x'], y=form['y'],
-                system=int(form['system']))
-
             try:
+                target = target._replace(
+                    name=form['name'], x=form['x'], y=form['y'],
+                    system=int(form['system']))
+
                 target_name = (
                     'Input coordinates' if target.name == ''
                     else target.name)
@@ -131,6 +140,10 @@ class BaseTargetTool(object):
 
             except UserError as e:
                 message = e.message
+
+            except ValueError:
+                # Should only happen at int(form['system']) if non-listed.
+                raise ErrorPage('Invalid identifying value.')
 
             if target_object is not None:
                 query_encoded = self._encode_query(target_object, extra_info)
