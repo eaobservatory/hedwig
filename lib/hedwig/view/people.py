@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -565,10 +565,15 @@ class PeopleView(object):
         if form is not None:
             log_in_for = form.get('log_in_for', None)
 
-            person = person._replace(
-                name=form['person_name'].strip(),
-                title=int_or_none(form['person_title']),
-                public=('person_public' in form))
+            try:
+                person = person._replace(
+                    name=form['person_name'].strip(),
+                    title=int_or_none(form['person_title']),
+                    public=('person_public' in form))
+
+            except ValueError:
+                raise ErrorPage('Invalid title value.')
+
             email = form['single_email'].strip()
 
             try:
