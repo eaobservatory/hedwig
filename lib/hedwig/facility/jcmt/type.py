@@ -150,8 +150,7 @@ class JCMTCallType(BaseCallType):
     _info = OrderedDict()
     for (role_id, role_info) in BaseCallType._info.items():
         override = _jcmt_info.get(role_id, {})
-        _info[role_id] = BaseCallType.TypeInfo(
-            *(role_info._replace(**override)))
+        _info[role_id] = role_info._replace(**override)
 
 
 class JCMTInstrument(EnumBasic, EnumAvailable):
