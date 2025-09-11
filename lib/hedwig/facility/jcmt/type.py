@@ -144,7 +144,12 @@ class JCMTCallType(BaseCallType):
             'name': 'Rapid Turnaround', 'code': 'R', 'url_path': 'rapid',
             'name_proposal': True},
         BaseCallType.SUPPLEMENTAL: {
-            'code': 'E'},
+            'code': 'E',
+            'reviewer_roles': tuple(
+                BaseReviewerRole.PEER if x == BaseReviewerRole.EXTERNAL else x
+                for x in
+                BaseCallType._info[BaseCallType.SUPPLEMENTAL].reviewer_roles),
+        },
     }
 
     _info = OrderedDict()
