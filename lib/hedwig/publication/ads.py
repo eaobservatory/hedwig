@@ -67,6 +67,25 @@ def get_pub_info_atel(numbers):
     return _get_pub_info_ads_generic('atel', numbers)
 
 
+def get_pub_info_arxiv_ads(article_ids):
+    """
+    Get information on a list of article IDs.
+
+    This is a fallback function for use if
+    :func:`hedwig.publication.arxiv.get_pub_info_arxiv`
+    is not usable.
+
+    :return: a dictionary by article ID.
+
+    .. warning::
+        This function may return the wrong year, i.e. the year of
+        final publication rather than the year in which the publication
+        was uploaded to arXiv, because ADS may have combined these records.
+    """
+
+    return _get_pub_info_ads_generic('arxiv', article_ids)
+
+
 def _get_pub_info_ads_generic(type_, codes):
     """
     Get information via ADS for a given type of code.
@@ -88,10 +107,18 @@ def _get_pub_info_ads_generic(type_, codes):
 
         result = None
         query_extra = None
+        id_filter = None
 
         if type_ == 'doi':
             query_type = 'identifier'
             query = ['doi:"{}"'.format(_escape_term(x)) for x in query]
+
+        elif type_ == 'arxiv':
+            type_ = query_type = 'identifier'
+            query = ['arXiv:"{}"'.format(_escape_term(x)) for x in query]
+
+            def id_filter(id_):
+                return id_[6:] if id_.startswith('arXiv:') else None
 
         elif type_ == 'atel':
             type_ = query_type = 'volume'
@@ -151,6 +178,11 @@ def _get_pub_info_ads_generic(type_, codes):
                     (year, date) = doc['pubdate'].split('-', 1)
 
                     for id_ in ids:
+                        if id_filter is not None:
+                            id_ = id_filter(id_)
+                            if id_ is None:
+                                continue
+
                         ans[id_] = null_tuple(PrevProposalPub)._replace(
                             title=title,
                             author=author,
