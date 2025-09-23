@@ -3,14 +3,14 @@ Software Overview
 
 Hedwig is based around two Python libraries:
 
-* The `SQLAlchemy <http://www.sqlalchemy.org/>`_ Core expression language.
+* The `SQLAlchemy <https://www.sqlalchemy.org/>`_ Core expression language.
 
-* The `Flask <http://flask.pocoo.org/>`_  web "microframework".
+* The `Flask <https://flask.palletsprojects.com/en/stable/>`_  web "microframework".
 
   This is based in turn on:
 
-  * The `Werkzeug <http://werkzeug.pocoo.org/>`_ WSGI library.
-  * The `Jinja2 <http://jinja.pocoo.org/>`_ template engine.
+  * The `Werkzeug <https://werkzeug.palletsprojects.com/en/stable/>`_ WSGI library.
+  * The `Jinja2 <https://jinja.palletsprojects.com/en/stable/>`_ template engine.
 
 However the usage of these libraries has been largely contained to
 certain areas of the Hedwig code base.

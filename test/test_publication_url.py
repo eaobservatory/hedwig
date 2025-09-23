@@ -33,16 +33,16 @@ class PublicationURLTestCase(TestCase):
 
         url = make_publication_url(PublicationType.DOI, '00.0000/a b')
         self.assertIsInstance(url, string_type)
-        self.assertEqual(url, 'http://doi.org/00.0000/a%20b')
+        self.assertEqual(url, 'https://doi.org/00.0000/a%20b')
 
         url = make_publication_url(PublicationType.ADS, '0000............. X')
         self.assertIsInstance(url, string_type)
         self.assertEqual(
-            url, 'http://adsabs.harvard.edu/abs/0000.............%20X')
+            url, 'https://adsabs.harvard.edu/abs/0000.............%20X')
 
         url = make_publication_url(PublicationType.ARXIV, '0000.00000')
         self.assertIsInstance(url, string_type)
-        self.assertEqual(url, 'http://arxiv.org/abs/0000.00000')
+        self.assertEqual(url, 'https://arxiv.org/abs/0000.00000')
 
         url = make_publication_url(PublicationType.ATEL, '12345')
         self.assertIsInstance(url, string_type)
@@ -52,4 +52,4 @@ class PublicationURLTestCase(TestCase):
         url = make_publication_url(
             PublicationType.DOI, '00.0000/\u201Cab\u201D')
         self.assertIsInstance(url, string_type)
-        self.assertEqual(url, 'http://doi.org/00.0000/%E2%80%9Cab%E2%80%9D')
+        self.assertEqual(url, 'https://doi.org/00.0000/%E2%80%9Cab%E2%80%9D')

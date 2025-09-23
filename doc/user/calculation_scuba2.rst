@@ -2,7 +2,7 @@ SCUBA-2 Integration Time Calculator
 ===================================
 
 This calculator can be used to estimate integration times for
-`SCUBA-2 <http://www.eaobservatory.org/jcmt/instrumentation/continuum/scuba-2/>`_.
+`SCUBA-2 <https://www.eaobservatory.org/jcmt/instrumentation/continuum/scuba-2/>`_.
 
 Source and Conditions
 ---------------------
@@ -20,7 +20,7 @@ and the factor 0.9 is an approximation
 for the average zenith angle of the source.
 
 For the weather conditions you can either select one of the
-`JCMT weather bands <http://www.eaobservatory.org/jcmt/observing/weather-bands/>`_,
+`JCMT weather bands <https://www.eaobservatory.org/jcmt/observing/weather-bands/>`_,
 in which case a representative value for that band will be used,
 or select "Other" and enter a 225 GHz opacity value directly.
 
@@ -28,7 +28,7 @@ Observation
 -----------
 
 For the map type, select the
-`SCUBA-2 observing mode <http://www.eaobservatory.org/jcmt/instrumentation/continuum/scuba-2/observing-modes/>`_
+`SCUBA-2 observing mode <https://www.eaobservatory.org/jcmt/instrumentation/continuum/scuba-2/observing-modes/>`_
 which you would like to use.
 
 Next select the map sampling scheme for which you
@@ -38,7 +38,7 @@ If you plan to use the matched filter, you should select
 "Matched filter" and the calculator will use
 sampling factors appropriate for this filter
 (:math:`f_{850} = 5` and :math:`f_{450}=8` --- please see the
-`SCUBA-2 sensitivity page <http://www.eaobservatory.org/jcmt/instrumentation/continuum/scuba-2/time-and-sensitivity/>`_
+`SCUBA-2 sensitivity page <https://www.eaobservatory.org/jcmt/instrumentation/continuum/scuba-2/time-and-sensitivity/>`_
 for more information).
 Otherwise, if you have specific pixel sizes which you intend to use,
 you can select "Custom pixel size" and then enter the

@@ -37,7 +37,7 @@ You can copy this file to `hedwig.wsgi` and adjust the paths
 for the "virtualenv" and Hedwig home directory.
 For more information about using Flask-based applications
 (such as Hedwig) with `mod_wsgi`, see the
-`Flask guide for mod_wsgi <http://flask.pocoo.org/docs/latest/deploying/mod_wsgi/>`_.
+`Flask guide for mod_wsgi <https://flask.palletsprojects.com/en/stable/deploying/mod_wsgi/>`_.
 
 Requirements
 ~~~~~~~~~~~~
@@ -114,7 +114,7 @@ You will then need to edit the file to complete the configuration.
     This is the key used by Flask for its secure cookie session system.
     Since Hedwig uses this system to authenticate users, you must be
     sure to enter a good random string here.
-    The `Flask quick start guide <http://flask.pocoo.org/docs/latest/quickstart/>`_
+    The `Flask quick start guide <https://flask.palletsprojects.com/en/stable/quickstart/>`_
     recommends 24 random bytes.
 
   * *facilities*
@@ -236,7 +236,7 @@ The Hedwig unit tests can be run with::
 (You can omit the `PYTHONPATH` setting if you have activated
 a "virtualenv" or already set `PYTHONPATH` as described above.)
 
-Hedwig also includes a `Selenium <http://www.seleniumhq.org/>`_-based
+Hedwig also includes a `Selenium <https://www.selenium.dev>`_-based
 integration test.
 This also acquires the screenshots used in the documentation.
 It can be run with::
@@ -305,7 +305,7 @@ For testing purposes, a stand-alone copy of Hedwig can be run using::
 You can also add the `--debug` command line option to enable debugging
 and automatic reloading.
 Note that this enables the
-`Werkzeug Debugger <http://werkzeug.pocoo.org/docs/latest/debug/>`_
+`Werkzeug Debugger <https://werkzeug.palletsprojects.com/en/stable/debug/>`_
 which provides tracebacks and provides access to a Python shell.
 *It should never be run in a manner accessible to untrusted users!*
 When this option is specified, `hedwigctl` configures the
@@ -375,7 +375,7 @@ you can poll for specific types of tasks.
 Documentation
 ~~~~~~~~~~~~~
 
-You can use `Sphinx <http://sphinx-doc.org/>`_ to build the
+You can use `Sphinx <https://sphinx-doc.org/>`_ to build the
 documenation with::
 
     sphinx-build -b html doc doc/_build/html
@@ -440,4 +440,4 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program.  If not, see <https://www.gnu.org/licenses/>.

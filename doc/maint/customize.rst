@@ -187,7 +187,7 @@ before proceeding.
 Overriding Display Templates
 ----------------------------
 
-Hedwig uses `Jinja2 <http://jinja.pocoo.org/>`_ templates
+Hedwig uses `Jinja2 <https://jinja.palletsprojects.com/en/stable/>`_ templates
 for HTML pages and email messages.
 
 * **HTML pages**
@@ -235,7 +235,7 @@ for HTML pages and email messages.
   * `data/email/<facility code>/`
 
 The templates make use of Jinja2's
-`template inheritance <http://jinja.pocoo.org/docs/dev/templates/#template-inheritance>`_
+`template inheritance <https://jinja.palletsprojects.com/en/latest/templates/#template-inheritance>`_
 mechanism.  For example the generic `proposal_view.html` template
 includes a placeholder block for the observing request:
 

@@ -5,7 +5,7 @@ This System
 -----------
 
 This system was developed for the
-`James Clerk Maxell Telescope <http://www.eaobservatory.org/jcmt>`_
+`James Clerk Maxell Telescope <https://www.eaobservatory.org/jcmt>`_
 by the East Asian Observatory software group.
 The software can be obtained from its
 `GitHub repository page <https://github.com/eaobservatory/hedwig>`_
@@ -22,7 +22,7 @@ and is made available under the GPL, version 3:
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Libraries Used by this System
 -----------------------------
@@ -30,10 +30,10 @@ Libraries Used by this System
 This system makes use of a number of Python software libraries.
 These include:
 
-* `Astropy <http://www.astropy.org/>`_
-* `Flask <http://flask.pocoo.org/>`_
+* `Astropy <https://www.astropy.org/>`_
+* `Flask <https://flask.palletsprojects.com//>`_
 * `Healpy <https://pypi.python.org/pypi/healpy>`_
-* `SQLAlchemy <http://www.sqlalchemy.org/>`_
+* `SQLAlchemy <https://www.sqlalchemy.org/>`_
 
 Libraries Included in this System
 ---------------------------------
@@ -41,7 +41,7 @@ Libraries Included in this System
 jQuery
 ~~~~~~
 
-This system includes the `jQuery <http://jquery.com/>`_ JavaScript
+This system includes the `jQuery <https://jquery.com/>`_ JavaScript
 libary.  Its `license <https://jquery.org/license/>`__ is as follows:
 
     Permission is hereby granted, free of charge, to any person obtaining
@@ -160,7 +160,7 @@ is as follows:
     Licensed under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License. You may obtain a copy of the License at:
-    http://www.apache.org/licenses/LICENSE-2.0
+    https://www.apache.org/licenses/LICENSE-2.0
 
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,

@@ -3,7 +3,7 @@ JCMT Heterodyne Integration Time Calculator
 
 This calculator can be used to estimate integration times for
 heterodyne instruments at the
-`JCMT <http://www.eaobservatory.org/jcmt/>`_.
+`JCMT <https://www.eaobservatory.org/jcmt/>`_.
 
 Receiver
 --------
@@ -11,7 +11,7 @@ Receiver
 First select the receiver you wish to use.
 On the next line you should select the frequency resolution
 --- please refer to the
-`ACSIS <http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/acsis/>`_
+`ACSIS <https://www.eaobservatory.org/jcmt/instrumentation/heterodyne/acsis/>`_
 page for information about available resolutions.
 You can also enter a lower frequency resolution if you
 are planning to bin your data.
@@ -38,7 +38,7 @@ so only one option will be available here.
 For sideband-separating receivers,
 a single-sideband calculation should be used.
 Some receivers (e.g.
-`ʻŪʻū and ʻĀweoweo <http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/namakanui/>`_)
+`ʻŪʻū and ʻĀweoweo <https://www.eaobservatory.org/jcmt/instrumentation/heterodyne/namakanui/>`_)
 have two mixers observing the same position in orthogonal polarizations.
 By default the calculator will assume that you intend to use both
 mixers together to reduce the integration time required.
@@ -98,7 +98,7 @@ and the factor 0.9 is an approximation
 for the average zenith angle of the source.
 
 For the weather conditions you can either select one of the
-`JCMT weather bands <http://www.eaobservatory.org/jcmt/observing/weather-bands/>`_,
+`JCMT weather bands <https://www.eaobservatory.org/jcmt/observing/weather-bands/>`_,
 in which case a representative value for that band will be used,
 or select "Other" and enter a 225 GHz opacity value directly.
 The calculator uses a tabulated atmospheric model to estimate the
@@ -154,7 +154,7 @@ which you wish to make.
     *Frequency switching is not currently supported by this calculator.*
 
 Please see the
-`heterodyne observing modes <http://www.eaobservatory.org/jcmt/instrumentation/heterodyne/observing-modes/>`_
+`heterodyne observing modes <https://www.eaobservatory.org/jcmt/instrumentation/heterodyne/observing-modes/>`_
 page for more information about these modes.
 
 Requirement

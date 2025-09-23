@@ -61,7 +61,7 @@ def get_pub_info_arxiv(article_ids):
     :return: a dictionary by article ID
     """
 
-    url = 'http://export.arxiv.org/api/query'
+    url = 'https://export.arxiv.org/api/query'
     xmlns = {'atom': 'http://www.w3.org/2005/Atom'}
 
     ans = {}

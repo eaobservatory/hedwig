@@ -30,13 +30,13 @@ def make_publication_url(type_, reference):
 
     try:
         if type_ == PublicationType.DOI:
-            return 'http://doi.org/' + url_quote(reference)
+            return 'https://doi.org/' + url_quote(reference)
 
         elif type_ == PublicationType.ADS:
-            return 'http://adsabs.harvard.edu/abs/' + url_quote(reference)
+            return 'https://adsabs.harvard.edu/abs/' + url_quote(reference)
 
         elif type_ == PublicationType.ARXIV:
-            return 'http://arxiv.org/abs/' + url_quote(reference)
+            return 'https://arxiv.org/abs/' + url_quote(reference)
 
         elif type_ == PublicationType.ATEL:
             return 'https://www.astronomerstelegram.org/?read=' + url_quote(reference)
