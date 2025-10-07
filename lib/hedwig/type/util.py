@@ -80,10 +80,12 @@ def with_cache(obj, cache):
                       obj._fields + ('cache',))(*obj, cache=cache)
 
 
-def with_deadline(obj, deadline):
+def with_deadline(obj, can_edit, deadline):
     """
-    Add a `deadline` field to a tuple.
+    Add `can_edit` and `deadline` fields to a tuple.
     """
 
-    return namedtuple(type(obj).__name__ + 'WithDeadline',
-                      obj._fields + ('deadline',))(*obj, deadline=deadline)
+    return namedtuple(
+        type(obj).__name__ + 'WithDeadline',
+        obj._fields + ('can_edit', 'deadline',))(
+            *obj, can_edit=can_edit, deadline=deadline)

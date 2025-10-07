@@ -1178,13 +1178,12 @@ class PeopleView(object):
                 # Filter reviews by edit permission.  But show all reviews
                 # when viewing the administrative version of this page,
                 # and exclude rejected reviews otherwise.
-                if as_admin or (auth.for_review(
-                        role_class, current_user, db,
-                        proposal.reviewer, proposal,
-                        auth_cache=auth_cache,
-                        allow_unaccepted=True).edit
-                        and (proposal.reviewer.review_state
-                             != ReviewState.REJECTED)):
+                can = auth.for_review(
+                    role_class, current_user, db, proposal.reviewer, proposal,
+                    auth_cache=auth_cache, allow_unaccepted=True)
+                if as_admin or (can.edit and (
+                        proposal.reviewer.review_state
+                        != ReviewState.REJECTED)):
                     if proposal.id in facility_proposals:
                         proposal_reviewers = \
                             facility_proposals[proposal.id].reviewers
@@ -1199,9 +1198,12 @@ class PeopleView(object):
                             members=None, reviewer=None)
 
                     proposal_reviewers[proposal.reviewer.id] = \
-                        with_deadline(proposal.reviewer, deadlines.get_role(
-                            proposal.reviewer.role, call_id=proposal.call_id,
-                            default=None))
+                        with_deadline(
+                            proposal.reviewer, can_edit=can.edit,
+                            deadline=deadlines.get_role(
+                                proposal.reviewer.role,
+                                call_id=proposal.call_id,
+                                default=None))
 
             if all_addable is not None:
                 for proposal in all_addable.values_by_facility(facility.id):
@@ -1221,9 +1223,12 @@ class PeopleView(object):
                     for (i, reviewer) in enumerate(
                             proposal.reviewers.values()):
                         proposal_reviewers['addable_{}'.format(i)] = \
-                            with_deadline(reviewer, deadlines.get_role(
-                                reviewer.role, call_id=proposal.call_id,
-                                default=None))
+                            with_deadline(
+                                reviewer, can_edit=True,
+                                deadline=deadlines.get_role(
+                                    reviewer.role,
+                                    call_id=proposal.call_id,
+                                    default=None))
 
             # If, after filtering, no proposals are left, skip this facility.
             if not facility_proposals:
