@@ -37,7 +37,7 @@
                 <td>{{ moc.uploaded | format_datetime }} UT</td>
                 <td>{{ moc.num_cells }}</td>
                 <td>{{ moc.area | fmt('{:0.1f}') }} sq. deg.</td>
-                <td>{{ moc.state | attachment_state_name }}</td>
+                <td class="{{ moc.state | attachment_state_class }}">{{ moc.state | attachment_state_name }}</td>
                 <td><a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_info'), moc_id=moc.id) }}">View</a></td>
                 <td><a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_edit'), moc_id=moc.id) }}">Edit</a></td>
                 <td><a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_delete'), moc_id=moc.id) }}">Delete</a></td>
