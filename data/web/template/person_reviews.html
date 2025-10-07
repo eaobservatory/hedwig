@@ -55,8 +55,8 @@
                     <th>Proposal</th>
                     <th>PI Name</th>
                     <th>Title</th>
-                    <th>Review state</th>
                     <th>Review role</th>
+                    <th>Review state</th>
                     <th>Due by</th>
                 </tr>
                 {% for (semseter_id, semester_proposals) in facility.proposals.sorted().group_by('semester_id') %}
@@ -83,7 +83,6 @@
                                         </td>
                                     <td rowspan="{{ proposal.reviewers | length }}">{{ proposal.title | abbr(25) }}</td>
                                 {% endif %}
-                                <td class="{{ reviewer.review_state | review_state_class }}">{{ reviewer.review_state | review_state_name }}</td>
                                 <td>
                                     {% if reviewer.can_edit %}
                                         <a href="{{ url_for(facility.code + '.proposal_review_new', proposal_id=proposal.id, reviewer_role=reviewer.role) if reviewer.id is none else url_for(facility.code + '.review_edit', reviewer_id=reviewer.id) }}">{{ reviewer.role | reviewer_role_name(facility.role_class) }}</a>
@@ -91,6 +90,7 @@
                                         {{ reviewer.role | reviewer_role_name(facility.role_class) }}
                                     {% endif %}
                                 </td>
+                                <td class="{{ reviewer.review_state | review_state_class }}">{{ reviewer.review_state | review_state_name }}</td>
                                 <td>
                                     {% if reviewer.deadline is none %}
                                         <span class="missing_data">Not specified</span>
