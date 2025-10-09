@@ -77,13 +77,20 @@ figure img {
     image-rendering: pixelated;
 }
 
-span.label {
+span.label, abbr.label {
     background: #888;
-    color: #FFF;
     border-radius: 1ex;
     padding-left: 1ex;
     padding-right: 1ex;
     white-space: nowrap;
+}
+
+span.label {
+    color: #FFF;
+}
+
+abbr.label {
+    color: #8F8;
 }
 
 .callouttip > div {

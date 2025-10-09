@@ -26,11 +26,11 @@ p.missing {
     color: inherit;
 }
 
-span.label {
+span.label, abbr.label {
     font-weight: bold;
 }
 
-span.label + span.label {
+.label + .label {
     padding-left: 1ex;
 }
 
