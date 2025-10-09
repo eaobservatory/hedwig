@@ -572,6 +572,10 @@ class IntegrationTest(DummyConfigTestCase):
             'The new coverage map has been stored.',
             self.browser.page_source)
 
+        self.browser.refresh()
+        self._save_screenshot(
+            self.admin_image_root, 'moc_list', highlight=['new_moc_link'])
+
         return (semester_name, queue_name)
 
     def _create_semester(self, suffix, screenshot_path=None):

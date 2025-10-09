@@ -14,6 +14,9 @@ Follow the "View all defined areas of sky coverage" link and
 then click "New coverage map".
 (This link will only be available when you view the coverage
 list with administrative access.)
+
+.. image:: image/moc_list.png
+
 You can then enter the name and a description as well as selecting the
 file to upload.
 The name will be displayed
