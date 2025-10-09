@@ -980,6 +980,8 @@ class GenericReview(object):
         proposals = []
         invite_roles = [x for x in role_class.get_invited_roles()
                         if type_class.has_reviewer_role(call.type, x)]
+        thanked_roles = [x for x in role_class.get_thanked_roles()
+                         if type_class.has_reviewer_role(call.type, x)]
         assigned_roles = OrderedDict((
             (role_num, group)
             for (role_num, group) in role_class.get_assigned_roles().items()
@@ -1038,7 +1040,7 @@ class GenericReview(object):
                         and (not reviewer.notified)):
                     unnotified_roles[reviewer.role] += 1
 
-                if ((reviewer.role in invite_roles)
+                if ((reviewer.role in thanked_roles)
                         and (reviewer.review_state == ReviewState.DONE)
                         and (reviewer.thanked is False)):
                     unthanked_roles[reviewer.role] += 1
@@ -1544,8 +1546,8 @@ class GenericReview(object):
         if not type_class.has_reviewer_role(call.type, role):
             raise ErrorPage('Reviewer role is not expected for this call.')
 
-        if not role_class.is_invited_review(role):
-            raise ErrorPage('Reviewer role is not invited.')
+        if not role_class.is_thanked_review(role):
+            raise ErrorPage('Thanks not enabled for this reviewer role.')
 
         # Prepare the list of reviewers and proposal reviews.  (This is needed
         # both to display the confirmation page and to send the messages.)
@@ -1611,7 +1613,7 @@ class GenericReview(object):
     def _message_review_thank(
             self, current_user, db, role, person_id, proposals):
         """
-        Send a message to an invited reviewer thanking
+        Send a message to a reviewer thanking
         them for their contribution.
 
         This method takes a list of proposals, each of which should have a

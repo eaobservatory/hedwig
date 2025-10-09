@@ -28,10 +28,8 @@
 {% if unthanked_roles %}
 <nav>
     <ol id="thank_reviewer_links">
-        {% for role in all_invite_roles %}
-            {% if role in unthanked_roles %}
-                <li><a href="{{ url_for('.review_call_thank', call_id=call.id, reviewer_role=role) }}"><span class="fa-solid fa-hand-holding-heart"></span>Thank {{ role | reviewer_role_name(facility_role_class) | lower }} reviewers</a></li>
-            {% endif %}
+        {% for role in unthanked_roles %}
+            <li><a href="{{ url_for('.review_call_thank', call_id=call.id, reviewer_role=role) }}"><span class="fa-solid fa-hand-holding-heart"></span>Thank {{ role | reviewer_role_name(facility_role_class) | lower }} reviewers</a></li>
         {% endfor %}
     </ol>
 </nav>

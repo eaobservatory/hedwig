@@ -1087,9 +1087,8 @@ class ReviewPart(object):
                 values['accepted'] = accepted
 
             if thanked != ():
-                # For now assume this will only be used for invited roles.
-                if not role_info.invite:
-                    raise Error('reviewer role is not invited')
+                if not role_info.thank:
+                    raise Error('reviewer role does not use thanked attribute')
 
                 values['thanked'] = thanked
 

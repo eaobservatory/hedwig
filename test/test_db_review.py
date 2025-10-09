@@ -251,7 +251,8 @@ class DBReviewTest(DBTestCase):
         self.assertEqual(len(self.db.search_reviewer(
             proposal_id=proposal_id, thanked=False)), 5)
 
-        with self.assertRaisesRegex(Error, 'reviewer role is not invited'):
+        with self.assertRaisesRegex(
+                Error, 'reviewer role does not use thanked attribute'):
             self.db.update_reviewer(
                 BaseReviewerRole, reviewer_id_1, thanked=True)
 

@@ -461,7 +461,9 @@ class EnumTypeTestCase(TestCase):
                 BaseReviewerRole.EXTERNAL,
                 BaseReviewerRole.CTTEE_PRIMARY,
                 BaseReviewerRole.CTTEE_SECONDARY,
-                BaseReviewerRole.CTTEE_OTHER]:
+                BaseReviewerRole.CTTEE_OTHER,
+                BaseReviewerRole.FEEDBACK,
+                BaseReviewerRole.PEER]:
             self.assertTrue(BaseReviewerRole.is_valid(role))
 
             info = BaseReviewerRole.get_info(role)
@@ -475,6 +477,7 @@ class EnumTypeTestCase(TestCase):
             self.assertIsInstance(info.weight, bool)
             self.assertIsInstance(info.calc, bool)
             self.assertIsInstance(info.figure, bool)
+            self.assertIsInstance(info.thank, bool)
 
         self.assertFalse(BaseReviewerRole.is_valid(999999))
 
@@ -503,6 +506,15 @@ class EnumTypeTestCase(TestCase):
 
         self.assertEqual(BaseReviewerRole.get_figure_roles(), [
             BaseReviewerRole.TECH,
+        ])
+
+        self.assertEqual(BaseReviewerRole.get_invited_roles(), [
+            BaseReviewerRole.EXTERNAL,
+        ])
+
+        self.assertEqual(BaseReviewerRole.get_thanked_roles(), [
+            BaseReviewerRole.EXTERNAL,
+            BaseReviewerRole.PEER,
         ])
 
         self.assertEqual(

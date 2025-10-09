@@ -966,10 +966,11 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
          'cttee', 'name_review', 'feedback_direct', 'feedback_indirect',
          'note', 'invite',
          'edit_rev', 'edit_fr', 'rating_hide', 'calc', 'figure', 'accept',
+         'thank',
          'display_class', 'url_path', 'help_page', 'review_group'))
 
     # Options:  Unique Text   Ass/nt Rating Weight Cttee  "Rev"  Fbk_dr Fbk_id
-    #           Note   Invite E.Rev  E.FR   Ra.Hi. Calc   Fig.   Accept
+    #           Note   Invite E.Rev  E.FR   Ra.Hi. Calc   Fig.   Accept Thank
     #           Disp.cl.      URL           Help_page
     #           Review group
     _info = OrderedDict((
@@ -977,49 +978,49 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
             RoleInfo(
                 'Technical',
                 True,  True,  True,  False, False, False, True,  False, False,
-                True,  False, True,  True,  False, True,  True,  False,
+                True,  False, True,  True,  False, True,  True,  False, False,
                 'tech',       'technical',  'technical',
                 GroupType.TECH)),
         (EXTERNAL,
             RoleInfo(
                 'External',
                 False, True,  False, True,  False, False, True,  False, False,
-                False, True,  True,  False, False, False, False, False,
+                False, True,  True,  False, False, False, False, False, True,
                 'ext',        'external',   'external',
                 None)),
         (PEER,
             RoleInfo(
                 'Peer',
                 False, True,  False, True,  True,  False, True,  False, False,
-                False, False, True,  False, False, False, False, True,
+                False, False, True,  False, False, False, False, True,  True,
                 'ext',        'peer',       'peer',
                 GroupType.PEER)),
         (CTTEE_PRIMARY,
             RoleInfo(
                 'Committee Primary',
                 True,  True,  False, True,  True,  True,  True,  True,  False,
-                True,  False, True,  True,  True,  False, False, False,
+                True,  False, True,  True,  True,  False, False, False, False,
                 'cttee',      'committee',  'committee',
                 GroupType.CTTEE)),
         (CTTEE_SECONDARY,
             RoleInfo(
                 'Committee Secondary',
                 False, True,  False, True,  True,  True,  True,  False, True,
-                True,  False, True,  True,  True,  False, False, False,
+                True,  False, True,  True,  True,  False, False, False, False,
                 'cttee',      None,         'committee',
                 None)),
         (CTTEE_OTHER,
             RoleInfo(
                 'Committee Other',
                 False, True,  False, True,  True,  True,  True,  False, False,
-                True,  False, True,  True,  True,  False, False, False,
+                True,  False, True,  True,  True,  False, False, False, False,
                 'cttee',      'other',      'committee',
                 None)),
         (FEEDBACK,
             RoleInfo(
                 'Feedback',
                 True,  True,  False, False, False, False, False, False, False,
-                False, False, False, True,  False, False, False, False,
+                False, False, False, True,  False, False, False, False, False,
                 'feedback',   'feedback',   None,
                 None)),
     ))
@@ -1122,6 +1123,12 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
         return [k for (k, v) in cls._info.items() if v.invite]
 
     @classmethod
+    def get_thanked_roles(cls):
+        """Get list of roles for thanked reviewers."""
+
+        return [k for (k, v) in cls._info.items() if v.thank]
+
+    @classmethod
     def get_options(cls):
         """
         Get an OrderedDict of role names by role numbers.
@@ -1134,6 +1141,12 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
         """Indicate whether the given role is for invited reviews."""
 
         return cls._info[role].invite
+
+    @classmethod
+    def is_thanked_review(cls, role):
+        """Indicate whether thanks is enabled for the given reviewer role."""
+
+        return cls._info[role].thank
 
     @classmethod
     def is_name_review(cls, role):

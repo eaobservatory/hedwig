@@ -16,10 +16,10 @@ see the proposal status and read the feedback online.
 
 .. image:: image/approve_feedback.png
 
-Thanking Invited Reviewers
---------------------------
+Thanking Reviewers
+------------------
 
-Once invited reviewers have completed their reviews,
+Once invited and peer reviewers have completed their reviews,
 the "Assign reviewers" page will show a link allowing you to
 send each of them a "thank you" message.
 
