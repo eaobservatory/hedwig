@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1022,15 +1022,18 @@ class GenericAdmin(object):
 
                     id_ = param[5:]
                     is_hidden = ('hidden_' + id_) in form
+                    name_abbr = str_or_none(form['abbr_' + id_].strip())
 
                     if id_.startswith('new_'):
                         id_ = int(id_[4:])
                         added_records[id_] = Category(
-                            id_, self.id_, form[param].strip(), is_hidden)
+                            id_, self.id_, form[param].strip(), name_abbr,
+                            is_hidden)
                     else:
                         id_ = int(id_)
                         updated_records[id_] = Category(
-                            id_, self.id_, form[param].strip(), is_hidden)
+                            id_, self.id_, form[param].strip(), name_abbr,
+                            is_hidden)
 
                 records = ResultCollection.organize_collection(
                     updated_records, added_records)

@@ -44,12 +44,14 @@
     <table id="categories">
         <tr>
             <th>Category</th>
+            <th>Abbreviated name</th>
             <th>Hidden</th>
             <th>Actions</th>
         </tr>
         {% for category in categories.values() %}
             <tr id="categoryrow_{{ category.id }}">
-                <td><input type="text" name="name_{{ category.id }}" value="{{ category.name }}" required="required" /></td>
+                <td><input type="text" name="name_{{ category.id }}" size="25" value="{{ category.name }}" required="required" /></td>
+                <td><input type="text" name="abbr_{{ category.id }}" size="5" value="{{ '' if category.name_abbr is none else category.name_abbr }}" /></td>
                 <td><input type="checkbox" name="hidden_{{ category.id }}" value="yes" {{ 'checked="checked"' | safe if category.hidden }} /></td>
                 <td><input type="button" id="delete_{{ category.id }}" value="Delete" />
             </tr>
@@ -57,7 +59,8 @@
     </table>
     <table class="template">
         <tr id="categoryrow_template">
-            <td><input type="text" name="name" value="" /></td>
+            <td><input type="text" name="name" size="25" value="" /></td>
+            <td><input type="text" name="abbr" size="5" value="" /></td>
             <td><input type="checkbox" name="hidden" value="yes" /></td>
             <td><input type="button" id="delete_template" value="Delete" />
         </tr>

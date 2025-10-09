@@ -135,15 +135,15 @@ class GenericFacilityWebAppTestCase(WebAppTestCase):
 
         # ... categories.
         n = self.db.sync_facility_category(view.id_, ResultCollection((
-            (0, Category(None, view.id_, 'Cat 1', False)),
-            (1, Category(None, view.id_, 'Cat 2', False)),
+            (0, Category(None, view.id_, 'Cat 1', None, False)),
+            (1, Category(None, view.id_, 'Cat 2', None, False)),
         )))
         self.assertEqual(n, (2, 0, 0))
         category = first_value(self.db.search_category(
             facility_id=view.id_))
         self.db.sync_proposal_category(
             proposal_id, ProposalCategoryCollection((
-                (1, ProposalCategory(1, proposal_id, category.id, None)),
+                (1, ProposalCategory(1, proposal_id, category.id, None, None)),
             )))
 
         # Copy the proposal.

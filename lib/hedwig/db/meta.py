@@ -226,6 +226,7 @@ category = Table(
            ForeignKey('facility.id', onupdate='RESTRICT', ondelete='RESTRICT'),
            nullable=False),
     Column('name', Unicode(255), nullable=False),
+    Column('name_abbr', Unicode(31), nullable=True),
     Column('hidden', Boolean, default=False, nullable=False),
     UniqueConstraint('facility_id', 'name'),
     **table_opts)

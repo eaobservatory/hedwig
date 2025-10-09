@@ -2450,8 +2450,8 @@ class DBProposalTest(DBTestCase):
     def test_category(self):
         facility_id = self.db.ensure_facility('cat test facility')
         records = ResultCollection()
-        records[1] = Category(1, None, 'Category A', False)
-        records[2] = Category(2, None, 'Category B', True)
+        records[1] = Category(1, None, 'Category A', 'A', False)
+        records[2] = Category(2, None, 'Category B', 'B', True)
 
         (n_insert, n_update, n_delete) = self.db.sync_facility_category(
             facility_id, records)
@@ -2464,6 +2464,7 @@ class DBProposalTest(DBTestCase):
         self.assertIsInstance(result, ResultCollection)
 
         self.assertEqual([x.name for x in result.values()], ['Category A'])
+        self.assertEqual([x.name_abbr for x in result.values()], ['A'])
         category_id_a = list(result.keys())[0]
         self.assertIsInstance(category_id_a, int)
 
@@ -2471,6 +2472,7 @@ class DBProposalTest(DBTestCase):
         self.assertIsInstance(result, ResultCollection)
 
         self.assertEqual([x.name for x in result.values()], ['Category B'])
+        self.assertEqual([x.name_abbr for x in result.values()], ['B'])
         category_id_b = list(result.keys())[0]
         self.assertIsInstance(category_id_b, int)
         self.assertNotEqual(category_id_a, category_id_b)
@@ -2485,7 +2487,7 @@ class DBProposalTest(DBTestCase):
 
         proposal_categories = ResultCollection()
         proposal_categories[1] = ProposalCategory(1, proposal_id,
-                                                  category_id_a, None)
+                                                  category_id_a, None, None)
 
         (n_insert, n_update, n_delete) = self.db.sync_proposal_category(
             proposal_id, proposal_categories)
@@ -2500,10 +2502,11 @@ class DBProposalTest(DBTestCase):
         proposal_cat = list(result.values())[0]
         self.assertIsInstance(proposal_cat, ProposalCategory)
         self.assertEqual(proposal_cat.category_name, 'Category A')
+        self.assertEqual(proposal_cat.category_name_abbr, 'A')
 
         proposal_categories = ResultCollection()
         proposal_categories[2] = ProposalCategory(2, proposal_id,
-                                                  category_id_b, None)
+                                                  category_id_b, None, None)
 
         (n_insert, n_update, n_delete) = self.db.sync_proposal_category(
             proposal_id, proposal_categories)
@@ -2518,6 +2521,7 @@ class DBProposalTest(DBTestCase):
         proposal_cat = list(result.values())[0]
         self.assertIsInstance(proposal_cat, ProposalCategory)
         self.assertEqual(proposal_cat.category_name, 'Category B')
+        self.assertEqual(proposal_cat.category_name_abbr, 'B')
 
         # Test category parameter of search_proposal.
         result = self.db.search_proposal(category=category_id_a)

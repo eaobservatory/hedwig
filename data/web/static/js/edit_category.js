@@ -5,6 +5,7 @@ function addCategoryRow(newRowNumber) {
     var newname = newrow.find('[name=name]');
     newname.attr('name', 'name_' + nid);
     newname.attr('required', 'required');
+    newrow.find('[name=abbr]').attr('name', 'abbr_' + nid);
     newrow.find('[name=hidden]').attr('name', 'hidden_' + nid);
     var deletelink = newrow.find('#delete_template');
     deletelink.attr('id', 'delete_' + nid);

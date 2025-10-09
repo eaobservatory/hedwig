@@ -273,7 +273,8 @@ ProposalWithCode = namedtuple('ProposalWithCode', Proposal._fields + ('code',))
 
 ProposalCategory = namedtuple(
     'ProposalCategory',
-    [x.name for x in proposal_category.columns] + ['category_name'])
+    [x.name for x in proposal_category.columns] + [
+        'category_name', 'category_name_abbr'])
 
 ProposalFigure = namedtuple(
     'ProposalFigure',

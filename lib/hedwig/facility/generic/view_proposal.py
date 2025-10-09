@@ -1558,8 +1558,9 @@ class GenericProposal(object):
         for cat_id in categories_selected:
             if cat_id in categories:
                 max_id += 1
-                proposal_categories[max_id] = ProposalCategory(
-                    max_id, proposal.id, cat_id, None)
+                proposal_categories[max_id] = null_tuple(
+                    ProposalCategory)._replace(
+                        id=max_id, proposal_id=proposal.id, category_id=cat_id)
 
         db.sync_proposal_category(proposal.id, proposal_categories)
 

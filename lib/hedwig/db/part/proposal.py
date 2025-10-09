@@ -2183,7 +2183,8 @@ class ProposalPart(object):
 
         stmt = select([
             proposal_category,
-            category.c.name.label('category_name')
+            category.c.name.label('category_name'),
+            category.c.name_abbr.label('category_name_abbr'),
         ]).select_from(proposal_category.join(category))
 
         iter_field = None

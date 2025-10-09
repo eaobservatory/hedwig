@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -133,10 +133,10 @@ class DBSyncTest(DBTestCase):
         self.assertIsInstance(facility_id, int)
 
         records = ResultCollection()
-        records[0] = Category(None, facility_id, 'Cat 1', False)
-        records[1] = Category(None, facility_id, 'Cat 2', False)
-        records[2] = Category(None, facility_id, 'Cat 3', False)
-        records[3] = Category(None, facility_id, 'Cat 4', False)
+        records[0] = Category(None, facility_id, 'Cat 1', '1', False)
+        records[1] = Category(None, facility_id, 'Cat 2', '2', False)
+        records[2] = Category(None, facility_id, 'Cat 3', '3', False)
+        records[3] = Category(None, facility_id, 'Cat 4', '4', False)
 
         n = self.db.sync_facility_category(facility_id, records)
         self.assertEqual(n, (4, 0, 0))
@@ -145,12 +145,14 @@ class DBSyncTest(DBTestCase):
                                           order_by_id=True)
         self.assertEqual([x.name for x in records.values()],
                          ['Cat 1', 'Cat 2', 'Cat 3', 'Cat 4'])
+        self.assertEqual([x.name_abbr for x in records.values()],
+                         ['1', '2', '3', '4'])
 
         id_ = list(records.keys())
 
-        records[id_[1]] = records[id_[1]]._replace(name='Cat 3')
-        records[id_[2]] = records[id_[2]]._replace(name='Cat 4')
-        records[id_[3]] = records[id_[3]]._replace(name='Cat 5')
+        records[id_[1]] = records[id_[1]]._replace(name='Cat 3', name_abbr='3')
+        records[id_[2]] = records[id_[2]]._replace(name='Cat 4', name_abbr='4')
+        records[id_[3]] = records[id_[3]]._replace(name='Cat 5', name_abbr='5')
 
         n = self.db.sync_facility_category(facility_id, records)
         self.assertEqual(n, (0, 3, 0))
@@ -159,6 +161,8 @@ class DBSyncTest(DBTestCase):
                                           order_by_id=True)
         self.assertEqual([x.name for x in records.values()],
                          ['Cat 1', 'Cat 3', 'Cat 4', 'Cat 5'])
+        self.assertEqual([x.name_abbr for x in records.values()],
+                         ['1', '3', '4', '5'])
 
     def test_sync_email(self):
         person_id = self.db.add_person('Test Person')
