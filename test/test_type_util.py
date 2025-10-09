@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2019 East Asian Observatory
+# Copyright (C) 2016-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import namedtuple
 
 from hedwig.type.util import with_can_edit, with_can_view, \
-    with_can_view_edit, with_can_view_edit_rating
+    with_can_view_edit, with_can_view_edit_rating, with_proposals
 
 from .compat import TestCase
 
@@ -102,5 +102,26 @@ class TypeUtilTestCase(TestCase):
             self.assertEqual(type(t_x).__name__, 'TestTupleWithCVER')
             self.assertEqual(t_x._fields, (
                 'x', 'y', 'can_view', 'can_edit', 'can_view_rating'))
+            self.assertEqual(t_x.x, 1)
+            self.assertEqual(t_x.y, 2)
+
+    def test_with_proposals(self):
+        TestTuple = namedtuple('TestTuple', ('x', 'y'))
+        TestProposal = namedtuple('TestProposal', ('id',))
+
+        t = TestTuple(1, 2)
+
+        t_1 = with_proposals(t)
+
+        self.assertIsInstance(t_1.proposals, list)
+        self.assertEqual(len(t_1.proposals), 0)
+
+        t_2 = with_proposals(t, TestProposal(999))
+
+        self.assertIsInstance(t_2.proposals, list)
+        self.assertEqual(len(t_2.proposals), 1)
+        self.assertEqual(t_2.proposals[0].id, 999)
+
+        for t_x in (t_1, t_2):
             self.assertEqual(t_x.x, 1)
             self.assertEqual(t_x.y, 2)

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2019 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -89,3 +89,20 @@ def with_deadline(obj, can_edit, deadline):
         type(obj).__name__ + 'WithDeadline',
         obj._fields + ('can_edit', 'deadline',))(
             *obj, can_edit=can_edit, deadline=deadline)
+
+
+def with_proposals(obj, proposal=None):
+    """
+    Add a `proposals` attribute to a tuple,``
+
+    The new attribute is a list.  If a `proposal` is given then
+    it is included (as the only member) in this list.
+    """
+
+    proposals = []
+    if proposal is not None:
+        proposals.append(proposal)
+
+    return namedtuple(
+        type(obj).__name__ + 'WithProposals',
+        obj._fields + ('proposals',))(*obj, proposals=proposals)

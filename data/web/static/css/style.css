@@ -135,6 +135,10 @@ td.control_center {
     text-align: center;
 }
 
+td.text_center, th.text_center {
+    text-align: center;
+}
+
 tr.decision_accept > td {
     background: #BFB;
 }

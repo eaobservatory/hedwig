@@ -55,7 +55,8 @@ from ...type.simple import Affiliation, DateAndTime, Link, MemberPIInfo, \
     ProposalWithCode, Reviewer, ReviewerAcceptance, \
     ReviewFigureInfo, ReviewDeadline
 from ...type.util import null_tuple, \
-    with_can_edit, with_can_view, with_can_view_edit, with_can_view_edit_rating
+    with_can_edit, with_can_view, with_can_view_edit, \
+    with_can_view_edit_rating, with_proposals
 from ...util import lower_except_abbr
 
 
@@ -1124,7 +1125,8 @@ class GenericReview(object):
             call_id=call.id,
             state=role_class.get_editable_states(primary_role),
             with_members=True, with_reviewers=True,
-            with_review_info=True, with_reviewer_role=all_roles
+            with_review_info=True, with_reviewer_role=all_roles,
+            with_categories=(group_type == GroupType.PEER),
         ).map_values(augment_proposal, filter_value=filter_proposal)
 
         # Determine group membership.
@@ -1137,7 +1139,13 @@ class GenericReview(object):
                     # group.  (This could happen if the same person is the
                     # designated reviewer for multiple proposals.)
                     if not group_members.has_person(member_reviewer.person_id):
-                        group_members[member_reviewer.id] = member_reviewer
+                        group_members[member_reviewer.id] = with_proposals(
+                            member_reviewer, proposal)
+                    else:
+                        # This person is already in group -- add proposal.
+                        group_members.get_person(
+                            member_reviewer.person_id
+                        ).proposals.append(proposal)
 
         else:
             group_members = db.search_group_member(
