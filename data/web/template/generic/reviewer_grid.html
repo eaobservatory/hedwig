@@ -55,11 +55,11 @@
     <table id="reviewer_grid" data-nroles="{{ n_role }}">
         <thead>
             <tr>
-                <th rowspan="{{ 3 if is_peer_review else 1 }}">Proposal</th>
-                <th rowspan="{{ 3 if is_peer_review else 1 }}">PI Name</th>
-                <th rowspan="{{ 3 if is_peer_review else 1 }}">Title</th>
+                <th>Proposal</th>
+                <th>PI Name</th>
+                <th>Title</th>
                 {% if is_peer_review %}
-                    <th rowspan="3">Categories</th>
+                    <th>Categories</th>
                 {% endif %}
                 {% for member in group_members.values() %}
                     <th class="sideways text_center" colspan="{{ member.proposals | length if is_peer_review else 1 }}"><div><div>{{ member.person_name| abbr(25)  }}</div></div></th>
@@ -67,45 +67,47 @@
                 {% if n_unique %}
                     <th class="sideways spacer_left" rowspan="{{ 3 if is_peer_review else 1 }}"><div><div>Unassigned</div></div></th>
                 {% endif %}
-                <th rowspan="{{ 3 if is_peer_review else 1 }}">&nbsp;</th>
+                <th>&nbsp;</th>
             </tr>
-            {% if is_peer_review %}
-                <tr>
-                    {% for member in group_members.values() %}
-                        {% if member.proposals %}
-                            {% for member_proposal in member.proposals %}
-                                <th class="sideways"><div><div>{{ member_proposal.code }}</div></div></th>
-                            {% endfor %}
-                        {% else %}
-                            <th class="sideways"><div><div>Unknown</div></div></th>
-                        {% endif %}
-                    {% endfor %}
-                </tr>
-                <tr>
-                    {% for member in group_members.values() %}
-                        {% if member.proposals %}
-                            {% for member_proposal in member.proposals %}
-                                <th class="sideways"><div><div>
-                                    {% if member_proposal.categories %}
-                                        {% for category in member_proposal.categories.values() %}
-                                            {% if category.category_name_abbr %}
-                                                <abbr title="{{ category.category_name }}" class="label">{{ category.category_name_abbr }}</abbr>
-                                            {% else %}
-                                                <span class="label">{{ category.category_name }}</span>
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% else %}
-                                        &nbsp;
-                                    {% endif %}
-                                </div></div></th>
-                            {% endfor %}
-                        {% else %}
-                            <th class="sideways"><div><div>&nbsp;</div></div></th>
-                        {% endif %}
-                    {% endfor %}
-                </tr>
-            {% endif %}
         </thead>
+        {% if is_peer_review %}
+            <tr>
+                <th colspan="4" rowspan="2">&nbsp;</th>
+                {% for member in group_members.values() %}
+                    {% if member.proposals %}
+                        {% for member_proposal in member.proposals %}
+                            <th class="sideways"><div><div>{{ member_proposal.code }}</div></div></th>
+                        {% endfor %}
+                    {% else %}
+                        <th class="sideways"><div><div>Unknown</div></div></th>
+                    {% endif %}
+                {% endfor %}
+                <th rowspan="2">&nbsp;</th>
+            </tr>
+            <tr>
+                {% for member in group_members.values() %}
+                    {% if member.proposals %}
+                        {% for member_proposal in member.proposals %}
+                            <th class="sideways"><div><div>
+                                {% if member_proposal.categories %}
+                                    {% for category in member_proposal.categories.values() %}
+                                        {% if category.category_name_abbr %}
+                                            <abbr title="{{ category.category_name }}" class="label">{{ category.category_name_abbr }}</abbr>
+                                        {% else %}
+                                            <span class="label">{{ category.category_name }}</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    &nbsp;
+                                {% endif %}
+                            </div></div></th>
+                        {% endfor %}
+                    {% else %}
+                        <th class="sideways"><div><div>&nbsp;</div></div></th>
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% endif %}
         {% for proposal in proposals.values() %}
             <tr>
                 <td>
