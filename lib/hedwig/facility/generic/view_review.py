@@ -1123,18 +1123,18 @@ class GenericReview(object):
 
             return primary_role not in excluded_roles
 
-        proposals = db.search_proposal(
+        all_proposals = db.search_proposal(
             call_id=call.id,
             state=role_class.get_editable_states(primary_role),
             with_members=True, with_reviewers=True,
             with_review_info=True, with_reviewer_role=all_roles,
             with_categories=(group_type == GroupType.PEER),
-        ).map_values(augment_proposal, filter_value=filter_proposal)
+        ).map_values(augment_proposal)
 
         # Determine group membership.
         if group_type == GroupType.PEER:
             group_members = MemberCollection()
-            for proposal in proposals.values():
+            for proposal in all_proposals.values():
                 member_reviewer = proposal.members.get_reviewer(default=None)
                 if member_reviewer is not None:
                     # Ensure we didn't already add this person to the review
@@ -1153,6 +1153,10 @@ class GenericReview(object):
             group_members = db.search_group_member(
                 queue_id=call.queue_id, group_type=group_type,
                 with_person=True)
+
+        # Filter proposal list after constructing the PEER group so that
+        # all assigned reviewers are added to the group.
+        proposals = all_proposals.map_values(filter_value=filter_proposal)
 
         group_name = GroupType.get_name(group_type)
         group_person_ids = [x.person_id for x in group_members.values()]
