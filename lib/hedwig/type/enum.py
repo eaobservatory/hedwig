@@ -1387,7 +1387,7 @@ class ProposalType(EnumBasic, EnumShortName):
             ())),
         (CONTINUATION, TypeInfo(
             'CR',  'Continuation request',
-            (BaseReviewerRole.EXTERNAL,))),
+            (BaseReviewerRole.EXTERNAL, BaseReviewerRole.PEER))),
     ))
 
     @classmethod
