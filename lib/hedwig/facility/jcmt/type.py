@@ -145,10 +145,10 @@ class JCMTCallType(BaseCallType):
             'name_proposal': True},
         BaseCallType.SUPPLEMENTAL: {
             'code': 'E',
-            'reviewer_roles': tuple(
-                BaseReviewerRole.PEER if x == BaseReviewerRole.EXTERNAL else x
-                for x in
-                BaseCallType._info[BaseCallType.SUPPLEMENTAL].reviewer_roles),
+            'reviewer_roles': tuple(chain(
+                BaseCallType._info[BaseCallType.SUPPLEMENTAL].reviewer_roles,
+                (BaseReviewerRole.PEER,)
+            )),
         },
     }
 
