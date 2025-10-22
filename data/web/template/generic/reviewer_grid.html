@@ -76,7 +76,12 @@
                 {% for member in group_members.values() %}
                     {% if member.proposals %}
                         {% for member_proposal in member.proposals %}
-                            <th class="sideways"><div><div>{{ member_proposal.code }}</div></div></th>
+                            <th class="sideways"><div><div>
+                                {{ member_proposal.code }}
+                                {% if member_proposal.type is not proposal_type_standard %}
+                                    <span class="label">{{ member_proposal.type | proposal_type_short_name }}</span>
+                                {% endif %}
+                            </div></div></th>
                         {% endfor %}
                     {% else %}
                         <th class="sideways"><div><div>Unknown</div></div></th>
