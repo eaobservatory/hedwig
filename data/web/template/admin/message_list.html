@@ -11,6 +11,7 @@
     <p>
         <select name="state">
             <option value="" {{ 'selected="selected"' | safe if current_state is none }}>Any status</option>
+            <hr />
             {% for (state_num, state_name) in states.items() %}
                 <option value="{{ state_num }}" {{ 'selected="selected"' | safe if current_state == state_num}}>{{ state_name }}</option>
             {% endfor %}

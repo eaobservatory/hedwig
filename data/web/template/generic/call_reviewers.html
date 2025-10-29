@@ -39,12 +39,14 @@
     <p>
         <select name="type">
             <option value="" {{ 'selected="selected"' | safe if (current_type is none) }}>Any proposal type</option>
+            <hr />
             {% for (type_num, type_name) in types.items() %}
                 <option value="{{ type_num }}" {{ 'selected="selected"' | safe if (type_num == current_type) }}>{{ type_name }}</option>
             {% endfor %}
         </select>
         <select name="role">
             <option value="" {{ 'selected="selected"' | safe if (current_role is none) }}>Any role</option>
+            <hr />
             {% for (role_num, role_name) in roles.items() %}
                 {% if facility_call_type_class.has_reviewer_role(call.type, role_num) %}
                     <option value="{{ role_num }}" {{ 'selected="selected"' | safe if (role_num == current_role) }}>{{ role_name }}</option>
@@ -53,6 +55,7 @@
         </select>
         <select name="state">
             <option value="" {{ 'selected="selected"' | safe if (current_state is none) }} >Any status</option>
+            <hr />
             {% for (state_num, state_name) in states.items() %}
                 <option value="{{ state_num }}" {{ 'selected="selected"' | safe if (current_state == state_num) }}>{{ state_name }}</option>
             {% endfor %}
