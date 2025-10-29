@@ -23,8 +23,8 @@
     <table>
         <tr>
             <th>Name</th>
-            <th>Affiliation</th>
-            <th>Institution</th>
+            <th{% if show_admin_links %} colspan="2"{% endif %}>Affiliation</th>
+            <th{% if show_admin_links %} colspan="2"{% endif %}>Institution</th>
             <th>Role</th>
         </tr>
         {% for member in members.values() %}
@@ -38,11 +38,14 @@
                 </td>
                 <td>
                     {{ member.affiliation_name }}
-                    {% if show_admin_links %}
+                </td>
+                {% if show_admin_links %}
+                    <td>
                         <nav>
-                            <a href="{{ url_for('.member_affiliation_edit', proposal_id=proposal_id, member_id=member.id) }}" id="member_aff_ed_{{ member.id }}">edit</a>
+                            <a href="{{ url_for('.member_affiliation_edit', proposal_id=proposal_id, member_id=member.id) }}" id="member_aff_ed_{{ member.id }}"><span class="fa-solid fa-pencil"></span>Edit</a>
                         </nav>
-                    {% endif %}
+                    </td>
+                {% endif %}
                 </td>
                 <td>
                     {% if member.resolved_institution_id is not none %}
@@ -56,12 +59,14 @@
                     {% else %}
                         <i>Unknown institution</i>
                     {% endif %}
-                    {% if show_admin_links %}
-                        <nav>
-                            <a href="{{ url_for('.member_institution_edit', proposal_id=proposal_id, member_id=member.id) }}" id="member_inst_ed_{{ member.id }}">edit</a>
-                        </nav>
-                    {% endif %}
                 </td>
+                {% if show_admin_links %}
+                    <td>
+                        <nav>
+                            <a href="{{ url_for('.member_institution_edit', proposal_id=proposal_id, member_id=member.id) }}" id="member_inst_ed_{{ member.id }}"><span class="fa-solid fa-pencil"></span>Edit</a>
+                        </nav>
+                    </td>
+                {% endif %}
                 <td>
                     {% if member.pi %}<span class="label">PI</span>{% endif %}
                     {% if with_extra_labels %}

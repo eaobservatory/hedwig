@@ -1538,11 +1538,11 @@ class IntegrationTest(DummyConfigTestCase):
         # Go to a proposal to correct the affiliation information.
         self.browser.find_element(By.ID, 'proposal_view_1').click()
 
-        edit_link = self.browser.find_element(By.ID, 'member_aff_ed_2')
-        self._save_screenshot(self.admin_image_root, 'proposal_mem_aff_link',
-                              [edit_link, 'alter_state_link'])
+        self._save_screenshot(
+            self.admin_image_root, 'proposal_mem_aff_link',
+            ['alter_state_link', 'member_aff_ed_2', 'member_inst_ed_2'])
 
-        edit_link.click()
+        self.browser.find_element(By.ID, 'member_aff_ed_2').click()
 
         Select(
             self.browser.find_element(By.NAME, 'affiliation_id')

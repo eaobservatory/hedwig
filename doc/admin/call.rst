@@ -61,7 +61,8 @@ proposals are in each state.
 
 .. image:: image/call_proposals.png
 
-When viewing a proposal, you can edit the member affiliation if this
+When viewing a proposal, you can edit the member affiliation
+or institution if this information
 has been entered incorrectly
 or manually change the status of the proposal.
 To do this use the link next to the current affiliation or status.
@@ -72,6 +73,17 @@ Editing an affiliation will show a new page where you can enter the correct
 affiliation for the proposal member in question.
 
 .. image:: image/proposal_mem_aff_edit.png
+
+Editing an institution shows a new page where the institution saved for
+the member for this proposal in particular can be corrected.
+Normally this information is only saved when a call for proposals closes,
+or when the proposal is submitted in the case of immediate / urgent calls.
+This page is best used after this has happened to allow any subsequent
+updates to the person's institution to apply automatically.
+You can also edit the general institution for the member
+from their :doc:`person profile page <user>`.
+
+.. image:: image/proposal_mem_inst_edit.png
 
 Altering the proposal status also shows a new page where any proposal state
 can be selected.
