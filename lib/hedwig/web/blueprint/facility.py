@@ -661,7 +661,7 @@ def create_facility_blueprint(db, facility):
     @facility_template('proposal_log.html')
     def proposal_log(current_user, proposal_id):
         return facility.view_proposal_log(
-            current_user, db, proposal_id)
+            current_user, db, proposal_id, request.args)
 
     @bp.route('/proposal_by_code')
     @with_current_user

@@ -38,7 +38,7 @@ from ...type.collection import CalculationCollection, \
     TargetCollection
 from ...type.enum import AttachmentState, \
     CallState, FigureType, FormatType, \
-    GroupType, MessageThreadType, \
+    GroupType, LogEventLevel, MessageThreadType, \
     PermissionType, PersonLogEvent, PersonTitle, \
     ProposalState, ProposalType, PublicationType, \
     RequestState, ReviewState
@@ -3003,12 +3003,18 @@ class GenericProposal(object):
         }
 
     @with_proposal(permission=PermissionType.NONE)
-    def view_proposal_log(self, current_user, db, proposal):
+    def view_proposal_log(self, current_user, db, proposal, args):
+        level = (
+            int(args['level']) if 'level' in args
+            else LogEventLevel.INTERMEDIATE)
+
         proposal_code = self.make_proposal_code(db, proposal)
 
         # Search the person action log, with person_id=None but specifying
         # this proposal to find events related to it.
-        raw_events = db.search_person_log(None, proposal_id=proposal.id)
+        raw_events = db.search_person_log(
+            None, proposal_id=proposal.id,
+            event=PersonLogEvent.events_of_level(level))
 
         person_ids = set()
         for event in raw_events.values():
@@ -3042,6 +3048,8 @@ class GenericProposal(object):
             'proposal_order': self.get_proposal_order_names(
                 type_=proposal.type),
             'events': events,
+            'level': level,
+            'levels': LogEventLevel.get_options(),
         }
 
     def view_proposal_by_code(self, current_user, db, args):

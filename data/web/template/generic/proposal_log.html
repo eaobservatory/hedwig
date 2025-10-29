@@ -12,6 +12,17 @@
 
 <h2>Log Entries</h2>
 
+<form method="GET" action="{{ url_for('.proposal_log', proposal_id=proposal_id) }}">
+    <p>
+        <select name="level">
+            {% for (level_num, level_name) in levels.items() %}
+                <option value="{{ level_num }}" {{ 'selected="selected"' | safe if level_num == level }}>{{ level_name }}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="Filter" />
+    </p>
+</form>
+
 {% if events %}
     <table>
         <tr>
