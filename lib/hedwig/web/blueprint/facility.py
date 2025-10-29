@@ -656,6 +656,13 @@ def create_facility_blueprint(db, facility):
             current_user, db, proposal_id, reviewer_role,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/proposal/<int:proposal_id>/log/')
+    @require_admin
+    @facility_template('proposal_log.html')
+    def proposal_log(current_user, proposal_id):
+        return facility.view_proposal_log(
+            current_user, db, proposal_id)
+
     @bp.route('/proposal_by_code')
     @with_current_user
     @facility_template('proposal_by_code.html')

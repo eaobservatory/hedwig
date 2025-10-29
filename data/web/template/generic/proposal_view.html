@@ -75,12 +75,15 @@
             <td class="borderless control_links" rowspan="{{ 6 if proposal.type is proposal_type_standard else 7 }}">
                 <nav>
                     <ol>
+                        {% if show_admin_links %}
+                            <li><a href="{{ url_for('.proposal_log', proposal_id=proposal.id) }}"><span class="fa-solid fa-user-tag"></span>View log</a></li>
+                        {% endif %}
                         {% if can_edit %}
                             {% if is_submitted %}
-                                <li><a id="withdraw_proposal_link" href="{{ url_for('.proposal_withdraw', proposal_id=proposal.id) }}">Withdraw proposal</a></li>
+                                <li class="space_above"><a id="withdraw_proposal_link" href="{{ url_for('.proposal_withdraw', proposal_id=proposal.id) }}">Withdraw proposal</a></li>
                                 <li><a id="validate_proposal_link" href="{{ url_for('.proposal_validate', proposal_id=proposal.id) }}">Validate proposal</a></li>
                             {% else %}
-                                <li><a id="submit_proposal_link" href="{{ url_for('.proposal_submit', proposal_id=proposal.id) }}">Submit proposal</a></li>
+                                <li class="space_above"><a id="submit_proposal_link" href="{{ url_for('.proposal_submit', proposal_id=proposal.id) }}">Submit proposal</a></li>
                             {% endif %}
                         {% elif (can_view_review or can_view_feedback) %}
                             {% if can_view_review %}

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1434,6 +1434,7 @@ class PeoplePart(object):
     def _search_event_log(
             self, table, result_class, result_collection_class,
             user_id=None, person_id=None, event=None, date_after=None,
+            proposal_id=None,
             _conn=None):
         stmt = table.select()
 
@@ -1454,6 +1455,12 @@ class PeoplePart(object):
                 stmt = stmt.where(table.c.event.in_(event))
             else:
                 stmt = stmt.where(table.c.event == event)
+
+        if proposal_id is not None:
+            if is_list_like(proposal_id):
+                stmt = stmt.where(table.c.proposal_id.in_(proposal_id))
+            else:
+                stmt = stmt.where(table.c.proposal_id == proposal_id)
 
         if date_after is not None:
             stmt = stmt.where(table.c.date > date_after)

@@ -1,0 +1,54 @@
+{% extends 'layout.html' %}
+{% set navigation=[(proposal_code, url_for('.proposal_view', proposal_id=proposal_id))] %}
+
+{% from 'macro/annotation.html' import render_proposal_annotation %}
+
+{% block content %}
+<nav>
+    <ol>
+        <li><a href="{{ url_for('.proposal_view', proposal_id=proposal_id) }}"><span class="fa-solid fa-arrow-left"></span>Back to proposal</a></li>
+    </ol>
+</nav>
+
+<h2>Log Entries</h2>
+
+{% if events %}
+    <table>
+        <tr>
+            <th>Date (UT)</th>
+            <th>Editor</th>
+            <th>Event</th>
+            <th>Member</th>
+        </tr>
+        {% for event in events.values() %}
+            <tr>
+                <td>{{ event.date | format_datetime }}</td>
+                <td>
+                    <a href="{{ url_for('people.person_view', person_id=event.person_id) }}">{% if event.person_name is not none %}{{ event.person_name }}{% else %}Person {{ event.person_id }}{% endif %}</a>
+                </td>
+                <td>{{ event.event | person_log_event_description }}</td>
+                <td>
+                    {% if event.other_person_id is not none %}
+                        <a href="{{ url_for('people.person_view', person_id=event.other_person_id) }}">{% if event.other_person_name is not none %}{{ event.other_person_name}}{% else %}Person {{ event.other_person_id }}{% endif %}</a>
+                    {% else %}
+                        &nbsp;
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p class="not_present">
+        No log entries were found for this proposal.
+    </p>
+{% endif %}
+
+{% if proposal_annotations %}
+    <h2>Annotations</h2>
+
+    {% for annotation in proposal_annotations.values() %}
+        {{ render_proposal_annotation(annotation, proposal_order) }}
+    {% endfor %}
+{% endif %}
+
+{% endblock %}
