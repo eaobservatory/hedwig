@@ -506,6 +506,7 @@ class PersonLogEvent(EnumBasic, EnumLevel):
     PROPOSAL_WITHDRAW = 3
     PROPOSAL_REQUEST_COPY = 4
     PROPOSAL_REQUEST_CONTINUATION = 5
+    PROPOSAL_REQUEST_PDF = 6
     INSTITUTION_ADD = 101
     INSTITUTION_EDIT = 102
     MEMBER_ADD = 201
@@ -530,6 +531,9 @@ class PersonLogEvent(EnumBasic, EnumLevel):
         PROPOSAL_REQUEST_CONTINUATION: EventInfo(
             'Proposal continuation requested',
             LogEventLevel.MAJOR),
+        PROPOSAL_REQUEST_PDF: EventInfo(
+            'Proposal PDF requested',
+            LogEventLevel.MINOR),
         INSTITUTION_ADD: EventInfo(
             'Institution added',
             LogEventLevel.MAJOR),

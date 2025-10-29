@@ -435,9 +435,17 @@ class ProposalPart(object):
     def add_request_prop_pdf(
             self, proposal_id, requester_person_id,
             _test_skip_check=False):
-        return self._add_request_prop(
-            request_prop_pdf, proposal_id, requester_person_id,
-            _test_skip_check=_test_skip_check)
+        with self._transaction() as conn:
+            request_id = self._add_request_prop(
+                request_prop_pdf, proposal_id, requester_person_id,
+                _conn=conn, _test_skip_check=_test_skip_check)
+
+            self.add_person_log_entry(
+                requester_person_id,
+                PersonLogEvent.PROPOSAL_REQUEST_PDF,
+                proposal_id=proposal_id, _conn=conn)
+
+        return request_id
 
     def _add_request_prop(
             self, table, proposal_id, requester_person_id, extra_values=None,
