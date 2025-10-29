@@ -91,3 +91,10 @@ This should normally only be done in exceptional circumstances.
 Please read the notes on the alter status page itself before proceeding.
 
 .. image:: image/proposal_alter_state.png
+
+Finally you can use the "view log" link to see any person log events
+relating to this proposal.
+The page also shows any annotations which have been attached,
+such as copy and continuation request reports.
+
+.. image:: image/proposal_log.png

@@ -1581,6 +1581,15 @@ class IntegrationTest(DummyConfigTestCase):
             'The proposal state has been updated.',
             self.browser.page_source)
 
+        # View proposal log.
+        self.browser.find_element(By.ID, 'proposal_log_link').click()
+
+        self.assertIn(
+            'Log Entries',
+            self.browser.page_source)
+
+        self._save_screenshot(self.admin_image_root, 'proposal_log')
+
         # Try deleting the MOC.
         self.browser.get(facility_home_url)
         self.browser.find_element(By.LINK_TEXT, 'Clash Tool').click()

@@ -77,7 +77,7 @@
                     <ol>
                         {% if show_admin_links %}
                             <li><a href="{{ url_for('.proposal_alter_state', proposal_id=proposal.id) }}" id="alter_state_link"><span class="fa-solid fa-wrench"></span>Alter status</a></li>
-                            <li><a href="{{ url_for('.proposal_log', proposal_id=proposal.id) }}"><span class="fa-solid fa-user-tag"></span>View log</a></li>
+                            <li><a href="{{ url_for('.proposal_log', proposal_id=proposal.id) }}" id="proposal_log_link"><span class="fa-solid fa-user-tag"></span>View log</a></li>
                         {% endif %}
                         {% if can_edit %}
                             {% if is_submitted %}
