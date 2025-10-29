@@ -977,6 +977,10 @@ class DBProposalTest(DBTestCase):
         with self.assertRaisesRegex(UserError, 'can not remove yourself'):
             self.db.sync_proposal_member(proposal_id, members, person_id_1)
 
+        with self.assertRaisesRegex(UserError, 'can not be deleted'):
+            self.db.sync_proposal_member(
+                proposal_id, members, None, forbid_delete=True)
+
         (n_insert, n_update, n_delete) = self.db.sync_proposal_member(
             proposal_id, members, None)
 

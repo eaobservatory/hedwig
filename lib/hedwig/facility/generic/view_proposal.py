@@ -1972,7 +1972,8 @@ class GenericProposal(object):
 
                 (n_insert, n_update, n_delete) = \
                     db.sync_proposal_member(
-                        proposal.id, records, editor_person_id=None)
+                        proposal.id, records, editor_person_id=None,
+                        forbid_delete=True)
 
                 if n_update:
                     flash('The affiliation has been updated.')

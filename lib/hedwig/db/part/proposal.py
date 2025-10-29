@@ -2982,11 +2982,14 @@ class ProposalPart(object):
 
         return (n_insert, n_update, n_delete)
 
-    def sync_proposal_member(self, proposal_id, records, editor_person_id):
+    def sync_proposal_member(
+            self, proposal_id, records, editor_person_id,
+            forbid_delete=False):
         """
         Update the member records for a proposal.
 
-        Only the "pi", "editor" and "observer" flags are updated.
+        Only the `sort_order`, `pi`, `editor`, `observer`,
+        `reviewer` and `affiliation_id` values are updated.
         """
 
         records.validate(editor_person_id=editor_person_id)
@@ -3005,7 +3008,7 @@ class ProposalPart(object):
                     member.c.pi, member.c.editor, member.c.observer,
                     member.c.reviewer,
                     member.c.affiliation_id
-                ), forbid_add=True)
+                ), forbid_add=True, forbid_delete=forbid_delete)
 
     def sync_proposal_member_institution(self, proposal_id, records):
         """
