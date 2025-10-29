@@ -171,6 +171,11 @@ class JCMT(EAOFacility):
             time_duration=timedelta(hours=12),
             el_min=30)
 
+    def get_features(self):
+        return super(JCMT, self).get_features()._replace(
+            member_observer=False,
+        )
+
     def make_proposal_code(self, db, proposal):
         type_class = self.get_call_types()
         type_code = type_class.get_code(proposal.call_type)

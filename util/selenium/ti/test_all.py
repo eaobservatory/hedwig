@@ -728,8 +728,6 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element(By.LINK_TEXT, 'Edit members').click()
 
-        self.browser.find_element(By.NAME, 'observer_1').click()
-
         self._save_screenshot(self.user_image_root, 'member_edit')
 
         self.browser.find_element(By.NAME, 'submit').click()
