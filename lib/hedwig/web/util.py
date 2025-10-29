@@ -354,7 +354,9 @@ def require_auth(require_person=True, require_person_admin=False,
         associated with thir profile.
 
     :param allow_unverified: when requiring a person profile, do not
-        require that profile to be verified.
+        require that profile to be verified.  The session option
+        `allow_unverified` can be used to permit access if this
+        requirement would otherwise not be met.
 
     :param register_user_only: used when we want the user to log in or
         create a user account but not to complete a profile before
@@ -420,7 +422,10 @@ def require_auth(require_person=True, require_person_admin=False,
                     'people.register_person', **redirect_kwargs))
 
             elif (require_person and (not allow_unverified) and
-                    (not current_user.person.verified)):
+                    (not current_user.person.verified) and
+                    (not (
+                        (current_user.options is not None) and
+                        current_user.options.get('allow_unverified', False)))):
                 flash('Please verify your email address before proceeding.')
                 raise HTTPRedirect(url_for(
                     'people.person_email_verify_primary',

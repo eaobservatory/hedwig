@@ -37,6 +37,7 @@ class PDFWriterWeasyPrint(PDFWriterFlask):
         # Set up request environment.
         session_options = {
             'pdf_as_svg': True,
+            'allow_unverified': True,
         }
 
         if section:
