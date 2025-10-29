@@ -424,7 +424,10 @@ class ProposalPart(object):
                 _conn=conn, _test_skip_check=_test_skip_check)
 
             self.add_person_log_entry(
-                requester_person_id, PersonLogEvent.PROPOSAL_REQUEST_COPY,
+                requester_person_id,
+                (PersonLogEvent.PROPOSAL_REQUEST_CONTINUATION
+                    if continuation else
+                    PersonLogEvent.PROPOSAL_REQUEST_COPY),
                 proposal_id=proposal_id, _conn=conn)
 
         return request_id
