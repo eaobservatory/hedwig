@@ -12,11 +12,13 @@
         <input type="checkbox" name="editor" value="yes" {{ 'checked="checked"' | safe if member.editor }}>
         Can edit proposal
     </li>
-    <li>
-        <label for="observer">Potential observer</label>
-        <input type="checkbox" name="observer" value="yes" {{ 'checked="checked"' | safe if member.observer }}>
-        Potential observer
-    </li>
+    {% if has_member_observer %}
+        <li>
+            <label for="observer">Potential observer</label>
+            <input type="checkbox" name="observer" value="yes" {{ 'checked="checked"' | safe if member.observer }}>
+            Potential observer
+        </li>
+    {% endif %}
     <li>
         <label for="affiliation_id">Affiliation</label>
         {{ render_affiliation_selection(facility_affiliation_type_class, 'affiliation_id', affiliations, member.affiliation_id) }}

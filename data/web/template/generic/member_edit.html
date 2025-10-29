@@ -45,7 +45,9 @@
                     </div>
                 </th>
             {% endif %}
-            <th>Potential observer?</th>
+            {% if has_member_observer %}
+                <th>Potential observer?</th>
+            {% endif %}
             <th>Actions</th>
         </tr>
         {% for member in members.values_in_sorted_order() %}
@@ -75,9 +77,11 @@
                         <input type="radio" name="reviewer" value="{{ member.id }}" {{ 'checked="checked"' | safe if member.reviewer }} />
                     </td>
                 {% endif %}
-                <td>
-                    <input type="checkbox" name="observer_{{ member.id }}" value="yes" {{ 'checked="checked"' | safe if member.observer }} />
-                </td>
+                {% if has_member_observer %}
+                    <td>
+                        <input type="checkbox" name="observer_{{ member.id }}" value="yes" {{ 'checked="checked"' | safe if member.observer }} />
+                    </td>
+                {% endif %}
                 <td>
                     {% if member.can_edit %}
                         <input type="button" id="delete_{{ member.id }}" value="Delete" />

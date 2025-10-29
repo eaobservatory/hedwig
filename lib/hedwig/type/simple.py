@@ -104,6 +104,11 @@ Email = namedtuple(
     'Email',
     [x.name for x in email.columns])
 
+# Tuple to group together general facility feature settings.
+FacilityFeatures = namedtuple(
+    'FacilityFeatures',
+    ['member_observer'])
+
 FacilityInfo = namedtuple(
     'FacilityInfo',
     ['id', 'code', 'name', 'view'])

@@ -24,7 +24,7 @@ from ...error import NoSuchRecord, NoSuchValue, ParseError
 from ...type.enum import BaseAffiliationType, \
     BaseCallType, BaseReviewerRole, BaseTextRole, \
     FormatType
-from ...type.simple import Call, FacilityObsInfo
+from ...type.simple import Call, FacilityFeatures, FacilityObsInfo
 from ...type.util import null_tuple
 from ...view.base import ViewMember
 from .tool_clash import ClashTool
@@ -245,6 +245,18 @@ class Generic(
         """
 
         return null_tuple(FacilityObsInfo)
+
+    def get_features(self):
+        """
+        Get general facility feature settings.
+
+        (Could potentially be made proposal/semeseter/call specific so
+        that features could, e.g., change with date.)
+        """
+
+        return FacilityFeatures(
+            member_observer=True,
+        )
 
     def make_proposal_code(self, db, proposal):
         """

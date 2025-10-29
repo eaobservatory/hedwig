@@ -628,6 +628,8 @@ class GenericProposal(object):
             self, notes, current_user, db,
             old_proposal, old_proposal_code, proposal,
             copy_members=False):
+        has_member_observer = self.get_features().member_observer
+
         copier_person_id = current_user.person.id
 
         affiliations = None
@@ -707,7 +709,8 @@ class GenericProposal(object):
 
             member_id = db.add_member(
                 proposal.id, member_person_id, member.affiliation_id,
-                editor=member.editor, observer=member.observer)
+                editor=member.editor,
+                observer=(has_member_observer and member.observer))
 
             self._message_proposal_invite(
                 current_user, db, proposal=proposal,
@@ -1577,6 +1580,7 @@ class GenericProposal(object):
         role_class = self.get_reviewer_roles()
         has_peer_review = type_class.has_reviewer_role(
             proposal.call_type, role_class.PEER)
+        has_member_observer = self.get_features().member_observer
 
         message = None
         records = proposal.members
@@ -1615,7 +1619,9 @@ class GenericProposal(object):
                         sort_order=int(form['sort_order_{}'.format(id_)]),
                         pi=(id_ == pi),
                         editor=('editor_{}'.format(id_) in form),
-                        observer=('observer_{}'.format(id_) in form),
+                        observer=(
+                            has_member_observer
+                            and ('observer_{}'.format(id_) in form)),
                         reviewer=(id_ == reviewer),
                         affiliation_id=int(affiliation_str))
 
@@ -1643,10 +1649,13 @@ class GenericProposal(object):
             'affiliations': affiliations,
             'proposal_code': self.make_proposal_code(db, proposal),
             'has_peer_review': has_peer_review,
+            'has_member_observer': has_member_observer,
         }
 
     @with_proposal(permission=PermissionType.EDIT)
     def view_member_add(self, current_user, db, proposal, can, form):
+        has_member_observer = self.get_features().member_observer
+
         message_link = message_invite = None
         member = dict(editor=None, observer=None, person_id=None,
                       name='', title=None, email='')
@@ -1662,7 +1671,9 @@ class GenericProposal(object):
         with member_info.catch_() as member:
             if form is not None:
                 member['editor'] = 'editor' in form
-                member['observer'] = 'observer' in form
+                member['observer'] = (
+                    has_member_observer
+                    and ('observer' in form))
                 member['affiliation_id'] = int_or_none(form['affiliation_id'])
                 if member['affiliation_id'] is None:
                     raise UserError('Please select an affiliation.')
@@ -1771,6 +1782,7 @@ class GenericProposal(object):
             'submit_invite': 'Invite to register',
             'label_link': 'Member',
             'titles': PersonTitle.get_options(),
+            'has_member_observer': has_member_observer,
         }
 
     def _message_proposal_invite(
