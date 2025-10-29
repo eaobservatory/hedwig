@@ -1604,6 +1604,8 @@ class GenericProposal(object):
                 reviewer = None
 
             try:
+                records_deleted = []
+
                 # Create a new list from the items so that it is safe
                 # to update and/or delete from records (for Python-3).
                 for (id_, record) in list(records.items()):
@@ -1613,6 +1615,7 @@ class GenericProposal(object):
                     affiliation_str = form.get('affiliation_{}'.format(id_))
                     if affiliation_str is None:
                         del records[id_]
+                        records_deleted.append(record)
                         continue
 
                     records[id_] = record._replace(
@@ -1627,6 +1630,13 @@ class GenericProposal(object):
 
                 db.sync_proposal_member(
                     proposal.id, records, editor_person_id=person_id)
+
+                # Log any removal of members.
+                for record_deleted in records_deleted:
+                    db.add_person_log_entry(
+                        current_user.person.id, PersonLogEvent.MEMBER_REMOVE,
+                        proposal_id=proposal.id,
+                        other_person_id=record_deleted.person_id)
 
                 flash('The proposal member list has been updated.')
                 raise HTTPRedirect(url_for('.proposal_view',
@@ -1907,6 +1917,10 @@ class GenericProposal(object):
                         'If you are the only editor of the proposal, you '
                         'must make someone else an editor '
                         'before removing yourself.')
+
+                db.add_person_log_entry(
+                    current_user.person.id, PersonLogEvent.MEMBER_REMOVE_SELF,
+                    proposal_id=proposal.id)
 
                 flash('You have been removed from proposal {}.', proposal_code)
                 raise HTTPRedirect(url_for('home.home_page'))

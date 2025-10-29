@@ -512,6 +512,8 @@ class PersonLogEvent(EnumBasic, EnumLevel):
     MEMBER_ADD = 201
     MEMBER_INVITE = 202
     MEMBER_REINVITE = 203
+    MEMBER_REMOVE = 204
+    MEMBER_REMOVE_SELF = 205
 
     EventInfo = namedtuple('EventInfo', ('description', 'level'))
 
@@ -548,6 +550,12 @@ class PersonLogEvent(EnumBasic, EnumLevel):
             LogEventLevel.INTERMEDIATE),
         MEMBER_REINVITE: EventInfo(
             'Member invitation resent',
+            LogEventLevel.INTERMEDIATE),
+        MEMBER_REMOVE: EventInfo(
+            'Member removed',
+            LogEventLevel.MINOR),
+        MEMBER_REMOVE_SELF: EventInfo(
+            'Removed self as member',
             LogEventLevel.INTERMEDIATE),
     }
 
