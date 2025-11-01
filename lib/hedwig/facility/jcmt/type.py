@@ -134,7 +134,12 @@ class JCMTCallType(BaseCallType):
 
     _jcmt_info = {
         BaseCallType.STANDARD: {
-            'name': 'Regular', 'code': 'M', 'url_path': 'regular'},
+            'name': 'Regular', 'code': 'M', 'url_path': 'regular',
+            'reviewer_roles': tuple(chain(
+                BaseCallType._info[BaseCallType.SUPPLEMENTAL].reviewer_roles,
+                (BaseReviewerRole.PEER,)
+            )),
+        },
         BaseCallType.IMMEDIATE: {
             'name': 'Urgent', 'code': 'S', 'url_path': 'urgent',
             'name_proposal': True},
