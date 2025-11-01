@@ -43,13 +43,14 @@ class GenericHome(object):
         # Determine which semesters have standard open calls for proposals.
         open_calls_std = facility_calls.map_values(filter_value=(
             lambda x: x.state == CallState.OPEN
+            and (not x.separate)
             and x.type == type_class.STANDARD
             and auth.for_call(
                 current_user, db, x, auth_cache=auth_cache).view))
 
         open_calls_nonstd = facility_calls.map_values(filter_value=(
             lambda x: x.state == CallState.OPEN
-            and x.type != type_class.STANDARD
+            and (x.separate or (x.type != type_class.STANDARD))
             and auth.for_call(
                 current_user, db, x, auth_cache=auth_cache).view))
 
@@ -166,7 +167,7 @@ class GenericHome(object):
 
         # Get list of calls, considering only those of standard type.
         calls = db.search_call(
-            facility_id=self.id_, type_=type_class.STANDARD
+            facility_id=self.id_, type_=type_class.STANDARD, separate=False,
         ).map_values(
             filter_value=(lambda x: auth.for_call(
                 current_user, db, x, auth_cache=auth_cache).view))
@@ -199,11 +200,11 @@ class GenericHome(object):
         calls = db.search_call(
             facility_id=self.id_,
             state=CallState.OPEN,
-            type_=[x for x in type_class.get_options()
-                   if x != type_class.STANDARD]
-        ).map_values(
-            filter_value=(lambda x: auth.for_call(
-                current_user, db, x, auth_cache=auth_cache).view))
+        ).map_values(filter_value=(
+            lambda x:
+                (x.separate or (x.type != type_class.STANDARD))
+                and auth.for_call(
+                    current_user, db, x, auth_cache=auth_cache).view))
 
         if not calls:
             raise ErrorPage('No open special calls for proposals were found.')
