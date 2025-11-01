@@ -172,7 +172,7 @@ class JCMTInstrument(EnumBasic, EnumAvailable):
         'InstrumentInfo', ('name', 'available', 'ancillary'))
 
     _info = OrderedDict((
-        (SCUBA2, InstrumentInfo('SCUBA-2', True,  (JCMTAncillary.POL2,
+        (SCUBA2, InstrumentInfo('SCUBA-2', False, (JCMTAncillary.POL2,
                                                    JCMTAncillary.FTS2))),
         (HARP,   InstrumentInfo('HARP',    True,  (JCMTAncillary.ROVER,))),
         (RXA3,   InstrumentInfo('RxA3',    False, (JCMTAncillary.ROVER,))),
@@ -184,7 +184,7 @@ class JCMTInstrument(EnumBasic, EnumAvailable):
                                            True,  ())),
         (AWEOWEO,InstrumentInfo('\u02bb\u0100weoweo',
                                            True,  ())),
-        (KUNTUR, InstrumentInfo('Kuntur',  False, ())),
+        (KUNTUR, InstrumentInfo('Kuntur',  True,  ())),
     ))
 
     @classmethod
