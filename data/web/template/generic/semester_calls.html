@@ -1,17 +1,10 @@
 {% extends "layout.html" %}
-
+{% from 'macro/call.html' import render_call_type_warning %}
 {% set help_link=url_for('help.user_page', page_name='proposal_create') %}
 
 {% block content %}
 
-{% if call_type is not call_type_standard(facility_call_type_class) %}
-    <p class="minor_warning">
-        This is a {{ call_type | full_call_type_name(facility_call_type_class) }}.
-        For {{ facility_call_type_class.STANDARD | full_call_type_name(facility_call_type_class, plural=true) }},
-        please see the
-        <a href="{{ url_for('.facility_home') }}">facility home page</a>.
-    </p>
-{% endif %}
+{{ render_call_type_warning(facility_call_type_class, separate, call_type) }}
 
 <h2>Semester Information</h2>
 

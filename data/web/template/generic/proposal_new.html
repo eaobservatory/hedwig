@@ -1,19 +1,13 @@
 {% extends "layout.html" %}
 {% from 'macro/affiliation.html' import render_affiliation_selection, render_affiliation_tip %}
+{% from 'macro/call.html' import render_call_type_warning %}
 {% set navigation=[((call.semester_name, (call.type | call_type_name(facility_call_type_class)), call.queue_name) | fmt('{} {} ({})'), url_for('.semester_call_separate', semester_id=call.semester_id, call_type=call.type, queue_id=call.queue_id)) if call.separate else ((call.semester_name, (call.type | call_type_name(facility_call_type_class))) | fmt('{} {}'), url_for('.semester_calls', semester_id=call.semester_id, call_type=call.type))] %}
 {% set help_link=url_for('help.user_page', page_name='proposal_create') %}
 {% set scripts = ['formtip', 'new_proposal'] %}
 
 {% block content %}
 
-{% if call.type is not call_type_standard(facility_call_type_class) %}
-    <p class="minor_warning">
-        This is a {{ call.type | full_call_type_name(facility_call_type_class) }}.
-        For {{ facility_call_type_class.STANDARD | full_call_type_name(facility_call_type_class, plural=true) }},
-        please see the
-        <a href="{{ url_for('.facility_home') }}">facility home page</a>.
-    </p>
-{% endif %}
+{{ render_call_type_warning(facility_call_type_class, call.separate, call.type) }}
 
 {% if message is not none %}
     <p class="warning">

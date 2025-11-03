@@ -51,3 +51,18 @@
         {% endfor %}
     </ul>
 {% endmacro %}
+{% macro render_call_type_warning(facility_call_type_class, separate, call_type) %}
+    {% if separate or (call_type is not call_type_standard(facility_call_type_class)) %}
+        <p class="minor_warning">
+            This is a
+            {% if call_type is not call_type_standard(facility_call_type_class) %}
+                {{ call_type | full_call_type_name(facility_call_type_class) }}.
+            {% else %}
+                special call for proposals.
+            {% endif %}
+            For {{ facility_call_type_class.STANDARD | full_call_type_name(facility_call_type_class, plural=true) }},
+            please see the
+            <a href="{{ url_for('.facility_home') }}">facility home page</a>.
+        </p>
+    {% endif %}
+{% endmacro %}
