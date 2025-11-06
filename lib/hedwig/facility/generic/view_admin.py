@@ -22,7 +22,7 @@ from collections import OrderedDict, defaultdict, namedtuple
 from datetime import datetime, timedelta
 
 from ...email.format import render_email_template
-from ...error import NoSuchRecord, UserError
+from ...error import DatabaseIntegrityError, NoSuchRecord, UserError
 from ...type.collection import AffiliationCollection, \
     CallMidCloseCollection, ResultCollection
 from ...type.enum import FormatType, GroupType, \
@@ -151,10 +151,15 @@ class GenericAdmin(object):
 
                 if semester_id is None:
                     # Create the new semester.
-                    new_semester_id = db.add_semester(
-                        self.id_, semester.name, semester.code,
-                        parsed_date_start, parsed_date_end,
-                        semester.description, semester.description_format)
+                    try:
+                        new_semester_id = db.add_semester(
+                            self.id_, semester.name, semester.code,
+                            parsed_date_start, parsed_date_end,
+                            semester.description, semester.description_format)
+                    except DatabaseIntegrityError:
+                        raise UserError(
+                            'Could not add the new semester. '
+                            'The selected semester code may already exist.')
 
                     # Copy requested preambles.
                     if semester_orig is not None:
@@ -315,9 +320,16 @@ class GenericAdmin(object):
             try:
                 if queue_id is None:
                     # Create new queue.
-                    new_queue_id = db.add_queue(self.id_, queue.name,
-                                                queue.code, queue.description,
-                                                queue.description_format)
+                    try:
+                        new_queue_id = db.add_queue(
+                            self.id_, queue.name,
+                            queue.code, queue.description,
+                            queue.description_format)
+                    except DatabaseIntegrityError:
+                        raise UserError(
+                            'Could not add the new queue. '
+                            'The selected queue code may already exist.')
+
                     flash('New queue "{}" has been added.', queue.name)
                     raise HTTPRedirect(url_for('.queue_view',
                                                queue_id=new_queue_id))
