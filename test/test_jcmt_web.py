@@ -58,8 +58,8 @@ class JCMTWebAppTestCase(WebAppTestCase):
 
         # ... request.
         self.db.sync_jcmt_proposal_request(proposal_id, JCMTRequestCollection([
-            (1, JCMTRequest(None, None, JCMTInstrument.SCUBA2,
-                            JCMTAncillary.NONE, JCMTWeather.BAND1, 4.0)),
+            (1, JCMTRequest(None, None, JCMTInstrument.UU,
+                            JCMTAncillary.NONE, JCMTWeather.BAND5, 4.0)),
             (2, JCMTRequest(None, None, JCMTInstrument.HARP,
                             JCMTAncillary.NONE, JCMTWeather.BAND3, 12.0)),
         ]))
@@ -119,7 +119,7 @@ class JCMTWebAppTestCase(WebAppTestCase):
         records = self.db.search_jcmt_request(copy_id)
         self.assertEqual(len(records), 2)
         for (record, expect) in zip(records.values(), [
-                (JCMTInstrument.SCUBA2, JCMTWeather.BAND1, 4.0),
+                (JCMTInstrument.UU, JCMTWeather.BAND5, 4.0),
                 (JCMTInstrument.HARP, JCMTWeather.BAND3, 12.0)]):
             (instrument, weather, time) = expect
             self.assertEqual(record.instrument, instrument)

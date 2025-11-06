@@ -836,7 +836,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         Select(
             self.browser.find_element(By.NAME, 'instrument_new_1')
-        ).select_by_visible_text('SCUBA-2')
+        ).select_by_visible_text('Kuntur')
         Select(
             self.browser.find_element(By.NAME, 'instrument_new_2')
         ).select_by_visible_text('HARP')
