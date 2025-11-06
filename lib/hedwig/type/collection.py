@@ -234,7 +234,7 @@ class CallMidCloseCollection(ResultCollection, CollectionByCall):
     pass
 
 
-class CallPreambleCollection(ResultCollection):
+class CallPreambleCollection(ResultCollection, CollectionByType):
     """
     Class to hold the results of a search for call preambles.
     """

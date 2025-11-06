@@ -74,6 +74,9 @@ class GenericAdmin(object):
         updated.
         """
 
+        type_class = self.get_call_types()
+
+        semester_orig = None
         if semester_id is None:
             # We are creating a new semester: args should be provided
             # so that we can check for "copy" request.
@@ -90,13 +93,23 @@ class GenericAdmin(object):
 
                 flash('Details have been copied from Semester "{}".',
                       semester_orig.name)
+
             else:
                 semester = Semester(None, None, name='', code='',
                                     date_start=None, date_end=None,
                                     description='',
                                     description_format=FormatType.PLAIN)
+
+                if (form is not None) and ('semester_copy_id' in form):
+                    try:
+                        semester_orig = db.get_semester(
+                            self.id_, int(form['semester_copy_id']))
+                    except NoSuchRecord:
+                        raise ErrorPage('Original semester to copy not found.')
+
             title = 'Add New Semester'
             target = url_for('.semester_new')
+
         else:
             # Fetch the existing semester record.
             try:
@@ -112,6 +125,12 @@ class GenericAdmin(object):
             date_start=format_datetime(semester.date_start),
             date_end=format_datetime(semester.date_end))
 
+        copy_preambles = {}
+        semester_orig_preambles = None
+        if semester_orig is not None:
+            semester_orig_preambles = db.search_call_preamble(
+                semester_id=semester_orig.id)
+
         if form is not None:
             semester = semester._replace(
                 name=form['semester_name'].strip(),
@@ -120,6 +139,11 @@ class GenericAdmin(object):
                 date_end=DateAndTime(form['end_date'], form['end_time']),
                 description=form['description'],
                 description_format=int(form['description_format']))
+
+            if semester_orig is not None:
+                for type_num in type_class.get_options():
+                    copy_preambles[type_num] = \
+                        'copy_preamble_{}'.format(type_num) in form
 
             try:
                 parsed_date_start = parse_datetime(semester.date_start)
@@ -131,8 +155,22 @@ class GenericAdmin(object):
                         self.id_, semester.name, semester.code,
                         parsed_date_start, parsed_date_end,
                         semester.description, semester.description_format)
+
+                    # Copy requested preambles.
+                    if semester_orig is not None:
+                        for type_num in type_class.get_options():
+                            preamble = semester_orig_preambles.get_type(
+                                type_num, default=None)
+                            if (copy_preambles.get(type_num, False)
+                                    and preamble is not None):
+                                db.set_call_preamble(
+                                    type_class, new_semester_id, type_num,
+                                    description=preamble.description,
+                                    description_format=preamble.description_format)
+
                     flash('New semester "{}" has been created.',
                           semester.name)
+
                     raise HTTPRedirect(url_for('.semester_view',
                                                semester_id=new_semester_id))
 
@@ -158,6 +196,9 @@ class GenericAdmin(object):
             'message': message,
             'semester': semester,
             'format_types': FormatType.get_options(is_system=True),
+            'semester_copy': semester_orig,
+            'semester_copy_preambles': semester_orig_preambles,
+            'copy_preambles': copy_preambles,
         }
 
     def view_call_preamble_edit(

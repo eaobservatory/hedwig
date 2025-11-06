@@ -15,6 +15,7 @@
 
 <form method="POST" action="{{ target }}">
     <ol>
+        <li class="separator">Semester information</li>
         <li>
             <label for="semester_name">Name</label>
             <input type="text" name="semester_name" value="{{ semester.name }}" required="required" autofocus="autofocus" />
@@ -37,6 +38,24 @@
             <input type="time" name="end_time" value="{{ semester.date_end.time }}" placeholder="HH:MM" required="required" size="5" />
             <span class="explanation">UT, end of observing</span>
         </li>
+        {% if semester_copy is not none %}
+            <li class="separator">Call preamble</li>
+            <li>
+                <div class="explanation">
+                    Please select any call preambles you would like
+                    to copy from Semester {{ semester_copy.name }}.
+                </div>
+                <input type="hidden" name="semester_copy_id" value="{{ semester_copy.id }}" />
+            </li>
+            {% for (type_num, type_name) in facility_call_type_class.get_options().items() %}
+                <li>
+                    <label for="copy_preamble_{{ type_num }}">{% if loop.first %}Copy preamble{% else %}&nbsp;{% endif %}</label>
+                    <input type="checkbox" name="copy_preamble_{{ type_num }}" {{ 'checked="checked"' | safe if copy_preambles.get(type_num, False) }} {{ 'disabled="disabled"' | safe if not semester_copy_preambles.has_type(type_num) }} />
+                    <span class="checkboxlabel">{{ type_name }}</span>
+                </li>
+            {% endfor %}
+        {% endif %}
+        <li class="separator">Description</li>
         <li>
             <label for="description">Description</label>
             <textarea name="description" cols="70" rows="10">{{ semester.description }}</textarea>
