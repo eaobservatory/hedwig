@@ -45,7 +45,7 @@ from ...type.enum import AttachmentState, \
 from ...type.misc import SectionedList, SkipSection
 from ...type.simple import Affiliation, \
     Calculation, CalculatorInfo, CalculatorMode, CalculatorValue, Call, \
-    Member, MemberInstitution, PersonLog, PrevProposal, PrevProposalPub, \
+    Member, MemberInstitution, PrevProposal, PrevProposalPub, \
     ProposalCategory, ProposalFigureInfo, ProposalText, ProposalWithCode, \
     Queue, Semester, Target, TargetToolInfo, \
     TextCopyInfo, ValidationMessage
@@ -68,11 +68,6 @@ PrevProposalExtra = namedtuple(
 PrevProposalPubExtra = namedtuple(
     'PrevProposalPubExtra',
     PrevProposalPub._fields + ('url',))
-
-ProposalLogExtra = namedtuple(
-    'ProposalLogExtra',
-    PersonLog._fields + (
-        'person_name', 'other_person_name'))
 
 
 class GenericProposal(object):
@@ -3027,32 +3022,10 @@ class GenericProposal(object):
 
         # Search the person action log, with person_id=None but specifying
         # this proposal to find events related to it.
-        raw_events = db.search_person_log(
+        events = db.search_person_log(
             None, proposal_id=proposal.id,
-            event=PersonLogEvent.events_of_level(level))
-
-        person_ids = set()
-        for event in raw_events.values():
-            person_ids.add(event.person_id)
-            if event.other_person_id is not None:
-                person_ids.add(event.other_person_id)
-
-        persons = {}
-        if person_ids:
-            persons = db.search_person(person_id=person_ids)
-
-        events = OrderedDict()
-        for (event_id, event) in raw_events.items():
-            person = persons.get(event.person_id)
-
-            other_person = None
-            if event.other_person_id is not None:
-                other_person = persons.get(event.other_person_id)
-
-            events[event_id] = ProposalLogExtra(
-                *event,
-                person_name=(None if person is None else person.name),
-                other_person_name=(None if other_person is None else other_person.name))
+            event=PersonLogEvent.events_of_level(level),
+            with_person_names=True)
 
         return {
             'title': '{}: Log'.format(proposal_code),

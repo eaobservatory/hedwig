@@ -12,6 +12,27 @@
 {% endif %}
 
 {% block content %}
+{% if add_entries %}
+    <h2>Addition of the Institution</h2>
+
+    <table>
+        <tr>
+            <th>Date (UT)</th>
+            <th>Editor</th>
+            <th>Event</th>
+        </tr>
+        {% for entry in add_entries.values() %}
+            <tr>
+                <td>{{ entry.date | format_datetime }}</td>
+                <td><a href="{{ url_for('.person_view', person_id=entry.person_id) }}">{{ entry.person_name }}</a></td>
+                <td>{{ entry.event | person_log_event_description }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Edits made to the Institution</h2>
+{% endif %}
+
 {% if entries %}
     <form method="POST" action="{{ url_for('.institution_log_approval') if institution is none else url_for('.institution_log', institution_id=institution.id) }}">
         <table>

@@ -59,8 +59,7 @@ GroupsByFacility = namedtuple(
 PersonLogExtra = namedtuple(
     'PersonLogExtra',
     PersonLog._fields + (
-        'proposal_facility_code', 'proposal_code',
-        'institution_name', 'other_person_name'))
+        'proposal_facility_code', 'proposal_code'))
 
 ProposalsByFacility = namedtuple(
     'ProposalsByFacility',
@@ -1252,28 +1251,17 @@ class PeopleView(object):
             else LogEventLevel.INTERMEDIATE)
 
         raw_events = db.search_person_log(
-            person_id=person.id, event=PersonLogEvent.events_of_level(level))
+            person_id=person.id, event=PersonLogEvent.events_of_level(level),
+            with_person_names=True, with_institution_name=True)
 
         proposal_ids = set()
-        institution_ids = set()
-        person_ids = set()
         for event in raw_events.values():
             if event.proposal_id is not None:
                 proposal_ids.add(event.proposal_id)
-            if event.institution_id is not None:
-                institution_ids.add(event.institution_id)
-            if event.other_person_id is not None:
-                person_ids.add(event.other_person_id)
 
         proposals = {}
-        institutions = {}
-        persons = {}
         if proposal_ids:
             proposals = db.search_proposal(proposal_id=proposal_ids)
-        if institution_ids:
-            institutions = db.search_institution(institution_id=institution_ids)
-        if person_ids:
-            persons = db.search_person(person_id=person_ids)
 
         events = OrderedDict()
         for (event_id, event) in raw_events.items():
@@ -1287,20 +1275,10 @@ class PeopleView(object):
                         proposal_facility_code = facility.code
                         proposal_code = facility.view.make_proposal_code(db, proposal)
 
-            other_person = None
-            if event.other_person_id is not None:
-                other_person = persons.get(event.other_person_id)
-
-            institution = None
-            if event.institution_id is not None:
-                institution = institutions.get(event.institution_id)
-
             events[event_id] = PersonLogExtra(
                 *event,
                 proposal_facility_code=proposal_facility_code,
-                proposal_code=proposal_code,
-                other_person_name=(None if other_person is None else other_person.name),
-                institution_name=(None if institution is None else institution.name))
+                proposal_code=proposal_code)
 
         return {
             'title': '{}: Action Log'.format(person.name),
@@ -1593,6 +1571,7 @@ class PeopleView(object):
                                            institution_id=int(institution_id)))
 
         current = {}
+        add_entries = None
 
         if institution_id is None:
             institution = None
@@ -1609,6 +1588,13 @@ class PeopleView(object):
 
             raw_entries = db.search_institution_log(
                 institution_id=institution_id)
+
+            # Also search the person log for entries corresponding to
+            # the addition of this institution to the database.
+            add_entries = db.search_person_log(
+                None, institution_id=institution_id,
+                event=PersonLogEvent.INSTITUTION_ADD,
+                with_person_names=True)
 
             current[institution_id] = institution
 
@@ -1642,6 +1628,7 @@ class PeopleView(object):
             'title': title,
             'institution': institution,
             'entries': entries,
+            'add_entries': add_entries,
         }
 
     def institution_subsume(self, current_user, db, institution_id, form):

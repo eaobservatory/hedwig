@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -29,11 +29,11 @@ from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
 from hedwig.type.collection import EmailCollection, ResultCollection, \
     SiteGroupMemberCollection
 from hedwig.type.enum import BaseAffiliationType, BaseCallType, BaseTextRole, \
-    FormatType, \
+    FormatType, PersonLogEvent, \
     SiteGroupType, UserLogEvent
 from hedwig.type.simple import Email, \
     Institution, InstitutionInfo, MemberInstitution, \
-    OAuthCode, OAuthToken, Person, SiteGroupMember, UserInfo
+    OAuthCode, OAuthToken, Person, PersonLog, SiteGroupMember, UserInfo
 from .dummy_db import DBTestCase
 
 
@@ -852,6 +852,61 @@ class DBPeopleTest(DBTestCase):
         person = self.db.get_person(person_id)
         self.assertTrue(person.admin)
         self.assertTrue(person.verified)
+
+    def test_person_log(self):
+        person_1 = self.db.add_person('Person One')
+        person_2 = self.db.add_person('Person Two')
+        institution_id = self.db.add_institution(
+            'Inst One', '', '', '', 'AX', adder_person_id=person_1)
+        (proposal_id, affiliation_id) = self._create_test_proposal(person_1)
+        self.db.add_member(
+            proposal_id, person_2, affiliation_id, adder_person_id=person_1)
+
+        for (with_person, with_institution) in (
+                (False, False),
+                (True, False),
+                (False, True),
+                (True, True)):
+            events = self.db.search_person_log(
+                person_1, with_person_names=with_person,
+                with_institution_name=with_institution)
+
+            self.assertIsInstance(events, ResultCollection)
+            self.assertEqual(len(events), 3)
+
+            for (event, expect) in zip(events.values(), (
+                    (PersonLogEvent.MEMBER_ADD,
+                     ('Person Two' if with_person else None),
+                     None, proposal_id),
+                    (PersonLogEvent.PROPOSAL_CREATE, None, None, proposal_id),
+                    (PersonLogEvent.INSTITUTION_ADD, None,
+                     ('Inst One' if with_institution else None), None))):
+                (expect_event, expect_person,
+                 expect_institution, expect_proposal_id) = expect
+
+                self.assertIsInstance(event, PersonLog)
+                self.assertEqual(event.person_id, person_1)
+                self.assertEqual(event.event, expect_event)
+
+                if with_person:
+                    self.assertEqual(event.person_name, 'Person One')
+                else:
+                    self.assertIsNone(event.person_name)
+
+                if expect_person is None:
+                    self.assertIsNone(event.other_person_name)
+                else:
+                    self.assertEqual(event.other_person_name, expect_person)
+
+                if expect_institution is None:
+                    self.assertIsNone(event.institution_name)
+                else:
+                    self.assertEqual(event.institution_name, expect_institution)
+
+                if expect_proposal_id is None:
+                    self.assertIsNone(event.proposal_id)
+                else:
+                    self.assertEqual(event.proposal_id, expect_proposal_id)
 
     def test_person_merge(self):
         # Create two test person records.

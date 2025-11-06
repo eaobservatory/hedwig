@@ -235,7 +235,8 @@ PersonInfo = namedtuple(
 
 PersonLog = namedtuple(
     'PersonLog',
-    [x.name for x in person_log.columns])
+    [x.name for x in person_log.columns] +
+    ['person_name', 'other_person_name', 'institution_name'])
 
 PrevProposal = namedtuple(
     'PrevProposal',

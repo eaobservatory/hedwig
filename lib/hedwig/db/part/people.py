@@ -1310,7 +1310,7 @@ class PeoplePart(object):
         assert 'user_id' not in kwargs
 
         return self._search_event_log(
-            person_log, PersonLog, ResultCollection,
+            person_log, PersonLog, ResultCollection, _has_extra=True,
             person_id=person_id, **kwargs)
 
     def search_site_group_member(
@@ -1433,10 +1433,50 @@ class PeoplePart(object):
 
     def _search_event_log(
             self, table, result_class, result_collection_class,
+            _has_extra=False,
             user_id=None, person_id=None, event=None, date_after=None,
-            proposal_id=None,
+            proposal_id=None, institution_id=None,
+            with_person_names=False, with_institution_name=False,
             _conn=None):
-        stmt = table.select()
+        select_from = table
+        select_columns = [table]
+
+        if _has_extra:
+            default = {}
+
+            if with_person_names:
+                other_person = person.alias()
+
+                select_columns.extend([
+                    person.c.name.label('person_name'),
+                    other_person.c.name.label('other_person_name'),
+                ])
+
+                select_from = select_from.outerjoin(
+                    person, person.c.id == table.c.person_id,
+                ).outerjoin(
+                    other_person, other_person.c.id == table.c.other_person_id)
+
+            else:
+                default.update({
+                    'person_name': None,
+                    'other_person_name': None,
+                })
+
+            if with_institution_name:
+                select_columns.extend([
+                    institution.c.name.label('institution_name'),
+                ])
+
+                select_from = select_from.outerjoin(
+                    institution, institution.c.id == table.c.institution_id)
+
+            else:
+                default.update({
+                    'institution_name': None,
+                })
+
+        stmt = select(select_columns).select_from(select_from)
 
         if user_id is not None:
             if is_list_like(user_id):
@@ -1462,6 +1502,12 @@ class PeoplePart(object):
             else:
                 stmt = stmt.where(table.c.proposal_id == proposal_id)
 
+        if institution_id is not None:
+            if is_list_like(institution_id):
+                stmt = stmt.where(table.c.institution_id.in_(institution_id))
+            else:
+                stmt = stmt.where(table.c.institution_id == institution_id)
+
         if date_after is not None:
             stmt = stmt.where(table.c.date > date_after)
 
@@ -1469,7 +1515,14 @@ class PeoplePart(object):
 
         with self._transaction(_conn=_conn) as conn:
             for row in conn.execute(stmt.order_by(table.c.id.desc())):
-                ans[row.id] = result_class(**row_as_mapping(row))
+                if _has_extra and default:
+                    values = default.copy()
+                    values.update(**row_as_mapping(row))
+
+                else:
+                    values = row_as_mapping(row)
+
+                ans[row.id] = result_class(**values)
 
         return ans
 
