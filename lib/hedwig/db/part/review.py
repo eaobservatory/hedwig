@@ -420,7 +420,7 @@ class ReviewPart(object):
                     values = default.copy()
                     values.update(**row_as_mapping(row))
                 else:
-                    values = row
+                    values = row_as_mapping(row)
 
                 ans[row.id] = GroupMember(**values)
 
