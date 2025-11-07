@@ -144,6 +144,7 @@ class GenericReview(object):
             'call': call,
             'proposals': proposals,
             'reviewer_roles': reviewer_roles,
+            'show_admin_links': current_user.is_admin,
         }
 
     @with_call_review(permission=PermissionType.VIEW)

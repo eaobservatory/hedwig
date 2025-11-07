@@ -31,3 +31,10 @@ Your changes will only be saved when you click the "Save" button at the
 bottom of the page.
 
 .. image:: image/group_cttee_edit.png
+
+Finally on the queue page, you will find a link "View all"
+in the "Groups" section.
+This will take you to a table showing all group members
+for this queue and the corresponding groups.
+
+.. image:: image/group_all_view.png

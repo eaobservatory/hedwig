@@ -1666,6 +1666,17 @@ class IntegrationTest(DummyConfigTestCase):
             self.assertIn('The group membership has been saved.',
                           self.browser.page_source)
 
+        # View the all-groups page.
+        self.browser.find_element(By.LINK_TEXT, 'PI Science').click()
+        self.browser.find_element(By.LINK_TEXT, 'View all').click()
+
+        self.assertIn(
+            'PI Science: Groups',
+            self.browser.page_source)
+
+        self._save_screenshot(
+            self.admin_image_root, 'group_all_view')
+
         # Go back to the main page and test the "drop admin" link.
         self.browser.get(self.base_url)
         self.browser.find_element(By.LINK_TEXT, 'drop admin').click()

@@ -1,0 +1,55 @@
+{% extends 'layout.html' %}
+{% set navigation=['facility_admin', ('Queues', url_for('.queue_list')), (queue.name, url_for('.queue_view', queue_id=queue.id))] %}
+{% set help_link=url_for('help.admin_page', page_name='review_group') %}
+{% set scripts = ['jquery_stickytableheaders', 'group_view_all'] %}
+
+{% block content %}
+{% if not members %}
+    <p class="not_present">
+        This queue currently has no group members.
+    </p>
+{% else %}
+    <table id='group_members'>
+        <thead>
+            <tr>
+                <th>Name</th>
+                {% for group_name in groups.values() %}
+                    <th>{{ group_name }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for member in unique_members %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name }}</a>
+                        {% if not member.person_registered %}
+                            <span class="label">unregistered</span>
+                        {% endif %}
+                    </td>
+                    {% for group_type in groups.keys() %}
+                        <td class="text_center">{% if members.has_entry(person_id=member.person_id, group_type=group_type) %}&check;{% else %}&nbsp;{% endif %}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="spacer_above">
+                <td rowspan="2">&nbsp;</td>
+                {% for group_type in groups.keys() %}
+                    <td>
+                        <a href="{{ url_for('.group_member_add', queue_id=queue.id, group_type=group_type) }}"><span class="fa-solid fa-user-plus"></span>Add</a></li>
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                {% for group_type in groups.keys() %}
+                    <td>
+                        <a href="{{ url_for('.group_member_edit', queue_id=queue.id, group_type=group_type) }}"><span class="fa-solid fa-pencil"></span>Edit</a></li>
+                    </td>
+                {% endfor %}
+            </tr>
+        </tfoot>
+    </table>
+{% endif %}
+{% endblock %}

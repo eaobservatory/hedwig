@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2024 East Asian Observatory
+# Copyright (C) 2016-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -292,7 +292,7 @@ class EnumAllowUser(object):
         return is_system or value_info.allow_user
 
     @classmethod
-    def get_options(cls, is_system=False):
+    def get_options(cls, is_system=False, short_name=False):
         """
         Get an OrderedDict of names by value.
 
@@ -300,8 +300,10 @@ class EnumAllowUser(object):
         However with the `is_system` flag, all values are returned.
         """
 
-        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()
-                            if is_system or v.allow_user))
+        return OrderedDict((
+            (k, v.short_name if short_name else v.name)
+            for (k, v) in cls._info.items()
+            if is_system or v.allow_user))
 
 
 class EnumAvailable(object):

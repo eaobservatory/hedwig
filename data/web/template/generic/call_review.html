@@ -22,6 +22,9 @@
                 <a href="{{ url_for('.review_call_clash', call_id=call.id) }}"><span class="fa-solid fa-burst"></span>Search for clashes</a>
             </li>
         {% endif %}
+        {% if show_admin_links %}
+            <li><a href="{{ url_for('.group_view_all', queue_id=call.queue_id) }}"><span class="fa-solid fa-users"></span>Reviewer groups</a></li>
+        {% endif %}
         {% if can_edit %}
             <li><a href="{{ url_for('.review_affiliation_weight', call_id=call.id) }}"><span class="fa-solid fa-weight-hanging"></span>Edit affiliation weights</a></li>
             <li><a href="{{ url_for('.review_call_available', call_id=call.id) }}"><span class="fa-solid fa-clock"></span>Edit time available</a></li>

@@ -806,6 +806,13 @@ def create_facility_blueprint(db, facility):
             current_user, db, queue_id,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/admin/queue/<int:queue_id>/group/')
+    @facility_template('group_view_all.html')
+    @require_admin
+    def group_view_all(current_user, queue_id):
+        return facility.view_group_view(
+            current_user, db, queue_id, None)
+
     @bp.route('/admin/queue/<int:queue_id>/group/<hedwig_group:group_type>')
     @facility_template('group_view.html')
     @require_admin

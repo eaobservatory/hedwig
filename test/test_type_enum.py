@@ -343,14 +343,30 @@ class EnumTypeTestCase(TestCase):
             i = GroupType.get_info(k)
             self.assertIsInstance(i, tuple)
             self.assertIsInstance(i.name, string_type)
+            self.assertIsInstance(i.short_name, string_type)
             self.assertIsInstance(i.view_all_prop, bool)
             self.assertIsInstance(i.private_moc, bool)
             self.assertIsInstance(i.url_path, string_type)
             self.assertEqual(i.name, v)
 
+            self.assertEqual(GroupType.get_name(k), i.name)
             self.assertEqual(GroupType.url_path(k), i.url_path)
 
             self.assertEqual(GroupType.by_url_path(i.url_path), k)
+
+        # Check that get_options(short_name=True) gives the same options
+        # but with the shortened names.
+        short_options = GroupType.get_options(short_name=True)
+        self.assertIsInstance(short_options, OrderedDict)
+        self.assertEqual(list(short_options.keys()), list(options.keys()))
+
+        for (k, v) in short_options.items():
+            self.assertIsInstance(k, int)
+
+            i = GroupType.get_info(k)
+            self.assertEqual(i.short_name, v)
+
+            self.assertEqual(GroupType.get_short_name(k), i.short_name)
 
         self.assertFalse(GroupType.is_valid(999999))
 

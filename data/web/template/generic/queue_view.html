@@ -48,4 +48,8 @@
     {% endfor %}
 </ul>
 
+<p>
+    <a href="{{ url_for('.group_view_all', queue_id=queue.id) }}"><span class="fa-solid fa-users"></span>View all</a>
+</p>
+
 {% endblock %}

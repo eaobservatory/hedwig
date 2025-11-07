@@ -836,21 +836,44 @@ class GenericAdmin(object):
         except NoSuchRecord:
             raise HTTPNotFound('Queue not found')
 
-        try:
-            group_info = GroupType.get_info(group_type)
-        except KeyError:
-            raise HTTPNotFound('Unknown group.')
+        if group_type is not None:
+            try:
+                group_info = GroupType.get_info(group_type)
+            except KeyError:
+                raise HTTPNotFound('Unknown group.')
 
         members = db.search_group_member(
             queue_id=queue_id, group_type=group_type, with_person=True)
 
-        return {
-            'title': '{}: {}'.format(queue.name, group_info.name),
+        ctx = {
             'queue': queue,
-            'group_type': group_type,
-            'group_info': group_info,
             'members': members,
         }
+
+        if group_type is not None:
+            ctx.update({
+                'title': '{}: {}'.format(queue.name, group_info.name),
+                'group_type': group_type,
+                'group_info': group_info,
+            })
+
+        else:
+            # Create a list of records, one for each unique person_id.
+            # (Note these are GroupMember tuples rather than Person tuples.)
+            persons = []
+            seen_person_ids = set()
+            for member in members.values():
+                if member.person_id not in seen_person_ids:
+                    seen_person_ids.add(member.person_id)
+                    persons.append(member)
+
+            ctx.update({
+                'title': '{}: Groups'.format(queue.name),
+                'groups': GroupType.get_options(short_name=True),
+                'unique_members': persons,
+            })
+
+        return ctx
 
     def view_group_member_add(
             self, current_user, db, queue_id, group_type, form):

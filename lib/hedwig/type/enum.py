@@ -306,7 +306,7 @@ class FigureType(EnumAllowUser):
         return [x.mime for x in cls._info.values() if x.allow_user]
 
 
-class GroupType(EnumAllowUser, EnumBasic, EnumURLPath):
+class GroupType(EnumAllowUser, EnumBasic, EnumURLPath, EnumShortName):
     """
     Class representing groups of people related to the proposal review
     process.
@@ -324,29 +324,29 @@ class GroupType(EnumAllowUser, EnumBasic, EnumURLPath):
         'GroupInfo',
         ('name', 'view_all_prop', 'private_moc',
          'review_coord', 'review_view',  'feedback_view',
-         'allow_user', 'url_path'))
+         'allow_user', 'short_name', 'url_path'))
 
     _info = OrderedDict((
         #           Authorization: Prop   MOC    Rv.Ed  Rv.Vw  Fb.Vw  User
         (CTTEE, GroupInfo(
             'Committee members',   True,  False, False, True,  False, True,
-            'committee')),
+            'Committee', 'committee')),
         (TECH,  GroupInfo(
             'Technical assessors', False, True,  False, False, False, True,
-            'technical')),
+            'Technical', 'technical')),
         (COORD, GroupInfo(
             'Review coordinators', True,  False, True,  True,  False, True,
-            'coordinator')),
+            'Coordinator', 'coordinator')),
         (VIEWER, GroupInfo(
             'Viewers',             True,  False, False, True,  True,  True,
-            'viewer')),
+            'Viewer', 'viewer')),
         (HIDDEN_CALL, GroupInfo(
             'Hidden call',         False, False, False, False, False, True,
-            'hidden')),
+            'Hidden call', 'hidden')),
 
         (PEER, GroupInfo(
             'Peer reviewers',      False, False, False, False, False, False,
-            None)),
+            'Peer', None)),
     ))
 
     @classmethod
