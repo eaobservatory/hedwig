@@ -19,11 +19,25 @@
         <tr>
             <th>Queue</th>
             <th>Code</th>
+            <th colspan="2">Affiliations</th>
         </tr>
         {% for queue in queues.values() %}
+            {% set queue_affiliations = affiliations.subset_by_queue(queue.id) %}
             <tr>
                 <td><a href="{{ url_for('.queue_view', queue_id=queue.id) }}">{{ queue.name }}</a></td>
                 <td>{{ queue.code }}</td>
+                <td>
+                    {% if queue_affiliations %}
+                        {% for affiliation in queue_affiliations.values_in_type_order(facility_affiliation_type_class) %}
+                            {{ affiliation.name }}{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <span class="missing_data">None specified</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a id="affiliation_edit_link" href="{{ url_for('.affiliation_edit', queue_id=queue.id) }}"><span class="fa-solid fa-globe"></span>Edit</a>
+                </td>
             </tr>
         {% endfor %}
     </table>

@@ -28,7 +28,8 @@ from ..email.util import is_valid_email
 from ..error import NoSuchRecord, NoSuchValue, MultipleRecords, UserError
 from ..util import is_list_like, matches_constraint
 from .base import CollectionByCall, CollectionByFacility, \
-    CollectionByProposal, CollectionByReviewerRole, CollectionByType, \
+    CollectionByProposal, CollectionByQueue, \
+    CollectionByReviewerRole, CollectionByType, \
     CollectionOrdered, CollectionSortable
 from .enum import PublicationType, ReviewState
 from .simple import Target, TargetFracTime, TargetObject
@@ -129,7 +130,7 @@ class ResultCollection(OrderedDict):
         return records
 
 
-class AffiliationCollection(ResultCollection):
+class AffiliationCollection(ResultCollection, CollectionByQueue):
     """
     Class to hold th results of an affiliation search,
     """

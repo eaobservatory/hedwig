@@ -267,9 +267,14 @@ class GenericAdmin(object):
     def view_queue_list(self, current_user, db):
         queues = db.search_queue(facility_id=self.id_)
 
+        affiliations = db.search_affiliation(
+            queue_id=[x.id for x in queues.values()],
+            hidden=False)
+
         return {
             'title': 'Queue List',
             'queues': queues,
+            'affiliations': affiliations,
         }
 
     def view_queue_view(self, current_user, db, queue_id):

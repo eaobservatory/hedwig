@@ -1154,7 +1154,10 @@ class ProposalPart(object):
             )
 
         if queue_id is not None:
-            stmt = stmt.where(affiliation.c.queue_id == queue_id)
+            if is_list_like(queue_id):
+                stmt = stmt.where(affiliation.c.queue_id.in_(queue_id))
+            else:
+                stmt = stmt.where(affiliation.c.queue_id == queue_id)
 
         if hidden is not None:
             if hidden:

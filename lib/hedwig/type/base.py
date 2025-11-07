@@ -82,6 +82,22 @@ class CollectionByProposal(object):
                           if v.proposal_id == proposal_id)
 
 
+class CollectionByQueue(object):
+    """
+    Mix-in for collections of items with a `queue_id` attribute.
+    """
+
+    def subset_by_queue(self, queue_id):
+        """
+        Create a subset of the collection (of the same type) containing
+        the entries which match the given queue.
+        """
+
+        return type(self)(
+            (k, v) for (k, v) in self.items()
+            if v.queue_id == queue_id)
+
+
 class CollectionByReviewerRole(object):
     """
     Mix-in for collections of items with a reviewer `role` attribute.
