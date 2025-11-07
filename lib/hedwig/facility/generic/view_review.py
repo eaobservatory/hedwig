@@ -141,7 +141,7 @@ class GenericReview(object):
                 call.semester_name, call.queue_name,
                 type_class.get_name(call.type)),
             'can_edit': can.edit,
-            'call_id': call.id,
+            'call': call,
             'proposals': proposals,
             'reviewer_roles': reviewer_roles,
         }
