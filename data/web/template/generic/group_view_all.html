@@ -38,14 +38,14 @@
                 <td rowspan="2">&nbsp;</td>
                 {% for group_type in groups.keys() %}
                     <td>
-                        <a href="{{ url_for('.group_member_add', queue_id=queue.id, group_type=group_type) }}"><span class="fa-solid fa-user-plus"></span>Add</a></li>
+                        <a href="{{ url_for('.group_member_add', queue_id=queue.id, group_type=group_type, referrer='gva') }}"><span class="fa-solid fa-user-plus"></span>Add</a></li>
                     </td>
                 {% endfor %}
             </tr>
             <tr>
                 {% for group_type in groups.keys() %}
                     <td>
-                        <a href="{{ url_for('.group_member_edit', queue_id=queue.id, group_type=group_type) }}"><span class="fa-solid fa-pencil"></span>Edit</a></li>
+                        <a href="{{ url_for('.group_member_edit', queue_id=queue.id, group_type=group_type, referrer='gva') }}"><span class="fa-solid fa-pencil"></span>Edit</a></li>
                     </td>
                 {% endfor %}
             </tr>

@@ -30,6 +30,9 @@
                 {% endblock %}
                 <li>
                     <input type="submit" value="{{ submit_link }}" name="submit_link" />
+                    {% if ('referrer' in member) and (member.referrer is not none) %}
+                        <input type="hidden" name="referrer" value="{{ member.referrer }}" />
+                    {% endif %}
                 </li>
             </ol>
         </form>
@@ -74,6 +77,9 @@
                 {% endblock %}
                 <li>
                     <input type="submit" value="{{ submit_invite }}" name="submit_invite" />
+                    {% if ('referrer' in member) and (member.referrer is not none) %}
+                        <input type="hidden" name="referrer" value="{{ member.referrer }}" />
+                    {% endif %}
                 </li>
             </ol>
         </form>

@@ -876,7 +876,7 @@ class GenericAdmin(object):
         return ctx
 
     def view_group_member_add(
-            self, current_user, db, queue_id, group_type, form):
+            self, current_user, db, queue_id, group_type, args, form):
         try:
             queue = db.get_queue(self.id_, queue_id)
         except NoSuchRecord:
@@ -890,60 +890,66 @@ class GenericAdmin(object):
         message_link = None
         message_invite = None
 
-        member_info = self._read_member_form(form)
+        member_info = self._read_member_form(
+            form, referrer=args.get('referrer'))
 
         with member_info.release() as member:
             if member['is_link'] is None:
                 member_info.raise_()
 
-            elif member['is_link']:
-                try:
-                    member_info.raise_()
-
-                    try:
-                        person = db.get_person(person_id=member['person_id'])
-                    except NoSuchRecord:
-                        raise UserError('Could not find the person profile.')
-
-                    db.add_group_member(queue_id, group_type, person.id)
-
-                    flash('{} has been added to the group.', person.name)
-
-                    raise HTTPRedirect(url_for(
-                        '.group_view',
-                        queue_id=queue_id, group_type=group_type))
-
-                except UserError as e:
-                    message_link = e.message
-
             else:
-                try:
-                    member_info.raise_()
+                if member['referrer'] == 'gva':
+                    target_redir = url_for(
+                        '.group_view_all', queue_id=queue_id)
 
-                    person_id = db.add_person(
-                        member['name'], title=member['title'],
-                        primary_email=member['email'])
-                    db.add_group_member(queue_id, group_type, person_id)
+                else:
+                    target_redir = url_for(
+                        '.group_view', queue_id=queue_id, group_type=group_type)
 
-                    self._message_group_invite(
-                        current_user, db,
-                        group_info=group_info,
-                        queue=queue,
-                        person_id=person_id,
-                        person_name=member['name'])
+                if member['is_link']:
+                    try:
+                        member_info.raise_()
 
-                    flash('{} has been added to the group.', member['name'])
+                        try:
+                            person = db.get_person(person_id=member['person_id'])
+                        except NoSuchRecord:
+                            raise UserError('Could not find the person profile.')
 
-                    # Return to the group page after editing the new
-                    # member's institution.
-                    raise HTTPRedirect(url_for(
-                        'people.person_edit_institution',
-                        person_id=person_id, next_page=url_for(
-                            '.group_view',
-                            queue_id=queue_id, group_type=group_type)))
+                        db.add_group_member(queue_id, group_type, person.id)
 
-                except UserError as e:
-                    message_invite = e.message
+                        flash('{} has been added to the group.', person.name)
+
+                        raise HTTPRedirect(target_redir)
+
+                    except UserError as e:
+                        message_link = e.message
+
+                else:
+                    try:
+                        member_info.raise_()
+
+                        person_id = db.add_person(
+                            member['name'], title=member['title'],
+                            primary_email=member['email'])
+                        db.add_group_member(queue_id, group_type, person_id)
+
+                        self._message_group_invite(
+                            current_user, db,
+                            group_info=group_info,
+                            queue=queue,
+                            person_id=person_id,
+                            person_name=member['name'])
+
+                        flash('{} has been added to the group.', member['name'])
+
+                        # Return to the group page after editing the new
+                        # member's institution.
+                        raise HTTPRedirect(url_for(
+                            'people.person_edit_institution',
+                            person_id=person_id, next_page=target_redir))
+
+                    except UserError as e:
+                        message_invite = e.message
 
         # Prepare list of people to exclude from the member directory.
         existing_person_ids = [
@@ -1000,7 +1006,7 @@ class GenericAdmin(object):
             [person_id])
 
     def view_group_member_edit(
-            self, current_user, db, queue_id, group_type, form):
+            self, current_user, db, queue_id, group_type, args, form):
         try:
             queue = db.get_queue(self.id_, queue_id)
         except NoSuchRecord:
@@ -1011,6 +1017,7 @@ class GenericAdmin(object):
         except KeyError:
             raise HTTPNotFound('Unknown group.')
 
+        referrer = args.get('referrer')
         message = None
 
         members = db.search_group_member(
@@ -1026,10 +1033,21 @@ class GenericAdmin(object):
                     else:
                         del members[member_id]
 
+                referrer = form.get('referrer')
+
                 db.sync_group_member(queue_id, group_type, members)
                 flash('The group membership has been saved.')
-                raise HTTPRedirect(url_for(
-                    '.group_view', queue_id=queue_id, group_type=group_type))
+
+                if referrer == 'gva':
+                    target_redir = url_for(
+                        '.group_view_all', queue_id=queue_id)
+
+                else:
+                    target_redir = url_for(
+                        '.group_view', queue_id=queue_id,
+                        group_type=group_type)
+
+                raise HTTPRedirect(target_redir)
 
             except UserError as e:
                 message = e.message
@@ -1041,6 +1059,7 @@ class GenericAdmin(object):
             'group_info': group_info,
             'members': members,
             'message': message,
+            'referrer': referrer,
         }
 
     def view_group_member_reinvite(

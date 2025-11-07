@@ -29,6 +29,9 @@
 
     <p>
         <input type="submit" value="Save" name="submit" />
+        {% if referrer is not none %}
+            <input type="hidden" name="referrer" value="{{ referrer }}" />
+        {% endif %}
     </p>
 </form>
 {% endblock %}

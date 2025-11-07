@@ -29,17 +29,29 @@ class ViewMember(object):
     Mix-in for view classes dealing with membership.
     """
 
-    def _read_member_form(self, form):
+    def _read_member_form(self, form, referrer=()):
         """
         Read member information from the given form, returning
         a dictionary.
+
+        If given a referrer argument (which is not `()`), include
+        this in the member information dictionary, replacing it
+        with the value from the form this is a POST (form not `None`).
+        Typically this should be passed as `referrer=args.get('referrer')`
+        if referrer tracking is desired..
         """
 
         info = ErrorCatcher(dict(
             person_id=None, name='', title=None, email='', is_link=None))
 
         with info.catch_() as member:
+            if referrer != ():
+                member['referrer'] = referrer
+
             if form is not None:
+                if referrer != ():
+                    member['referrer'] = form.get('referrer')
+
                 if 'person_id' in form:
                     member['person_id'] = int_or_none(form['person_id'])
                 if 'person_title' in form:
