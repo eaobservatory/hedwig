@@ -80,6 +80,7 @@ class WebAppAuthTestCase(WebAppTestCase):
 
         queue_a = self.db.add_queue(facility_id, 'Queue A', 'A')
         queue_b = self.db.add_queue(facility_id, 'Queue B', 'B')
+        queue_c = self.db.add_queue(facility_id, 'Queue C', 'C')
 
         affiliation_a = self.db.add_affiliation(
             BaseAffiliationType, queue_a, 'Test')
@@ -97,6 +98,9 @@ class WebAppAuthTestCase(WebAppTestCase):
             type_class, semester_id, queue_a, *call_options)
         call_b = self.db.add_call(
             type_class, semester_id, queue_b, *call_options)
+        call_c = self.db.add_call(
+            type_class, semester_id, queue_c, *call_options)
+        self.db.update_call(call_c, hidden=True)
 
         institution_1 = self.db.add_institution('Inst 1', '', '', '', 'AX')
         institution_2 = self.db.add_institution('Inst 2', '', '', '', 'AX')
@@ -297,6 +301,14 @@ class WebAppAuthTestCase(WebAppTestCase):
         person_a_v = self.db.add_person('Person V', user_id=user_a_v)
         self.db.add_group_member(queue_a, GroupType.VIEWER, person_a_v)
 
+        user_a_hc = self.db.add_user('ahc', 'pass')
+        person_a_hc = self.db.add_person('Person A HC', user_id=user_a_hc)
+        self.db.add_group_member(queue_a, GroupType.HIDDEN_CALL, person_a_hc)
+
+        user_c_hc = self.db.add_user('chc', 'pass')
+        person_c_hc = self.db.add_person('Person C HC', user_id=user_c_hc)
+        self.db.add_group_member(queue_c, GroupType.HIDDEN_CALL, person_c_hc)
+
         user_svp = self.db.add_user('svp', 'pass')
         person_svp = self.db.add_person('Person SVP', user_id=user_svp)
         self.db.add_site_group_member(SiteGroupType.PROFILE_VIEWER, person_svp)
@@ -307,6 +319,21 @@ class WebAppAuthTestCase(WebAppTestCase):
         # in ways which would affect the information which the auth module
         # might memoize beyond this point without clearing this.
         auth_cache = {}
+
+        # Test authorization for call view.
+        for test_case in [
+                # General access to non-hidden call.
+                (1,  person_a_hc,  False, call_a, auth.view_only),
+                (2,  person_c_hc,  False, call_a, auth.view_only),
+                (3,  person_admin, False, call_a, auth.view_only),
+                (4,  person_admin, True,  call_a, auth.view_only),
+                # Restricted access to hidden call.
+                (5,  person_a_hc,  False, call_c, auth.no),
+                (6,  person_c_hc,  False, call_c, auth.view_only),
+                (7,  person_admin, False, call_c, auth.no),
+                (8,  person_admin, True,  call_c, auth.view_only),
+                ]:
+            self._test_auth_call(auth_cache, *test_case)
 
         # Test authorization for call reviews.
         for test_case in [
@@ -676,6 +703,17 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (10, person_b2rc1, False, result[2], 'oovvvvvooo', 'vvvvvvvvvv'),
                 ]:
             self._test_auth_via_prev_proposal(auth_cache, *test_case)
+
+    def _test_auth_call(
+            self, auth_cache, case_number, person_id, is_admin,
+            call_id, expect):
+        current_user = self._current_user(person_id, is_admin)
+        call = self.db.get_call(None, call_id)
+        self.assertEqual(
+            auth.for_call(
+                current_user, self.db,
+                call, auth_cache=auth_cache),
+            expect, 'auth call view case {}'.format(case_number))
 
     def _test_auth_call_review(self, auth_cache,
                                case_number, person_id, is_admin,

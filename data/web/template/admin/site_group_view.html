@@ -10,12 +10,11 @@
 </p>
 
 <ul>
-    {% set n_permission = 0 %}
+    {% set permission_counter = create_counter(0) %}
     {% if site_group_info.view_all_profile %}
-        <li>Can view all person profiles.</li>
-        {% set n_permission = n_permission + 1 %}
+        <li id="permission_{{ permission_counter() }}">Can view all person profiles.</li>
     {% endif %}
-    {% if n_permission == 0 %}
+    {% if permission_counter() == 0 %}
         <li>Have no special access rights.</li>
     {% endif %}
 </ul>

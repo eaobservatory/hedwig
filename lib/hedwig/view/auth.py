@@ -63,7 +63,7 @@ def for_call(current_user, db, call, auth_cache=None):
 
     if group_members.has_entry(
             queue_id=call.queue_id,
-            group_type=GroupType.HIDDEN_CALL):
+            group_type=GroupType.hidden_call_groups()):
         return view_only
 
     return no

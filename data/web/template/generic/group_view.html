@@ -10,28 +10,27 @@
 </p>
 
 <ul>
+    {% set permission_counter = create_counter(0) %}
     {% set n_permission = 0 %}
     {% if group_info.private_moc %}
-        <li>Can search private coverage maps.</li>
-        {% set n_permission = n_permission + 1 %}
+        <li id="permission_{{ permission_counter() }}">Can search private coverage maps.</li>
     {% endif %}
     {% if group_info.view_all_prop %}
-        <li>Can view all proposals.</li>
-        {% set n_permission = n_permission + 1 %}
+        <li id="permission_{{ permission_counter() }}">Can view all proposals.</li>
     {% endif %}
     {% if group_info.review_view %}
-        <li>Can view all reviews.</li>
-        {% set n_permission = n_permission + 1 %}
+        <li id="permission_{{ permission_counter() }}">Can view all reviews.</li>
     {% endif %}
     {% if group_info.feedback_view %}
-        <li>Can view proposal feedback.</li>
-        {% set n_permission = n_permission + 1 %}
+        <li id="permission_{{ permission_counter() }}">Can view proposal feedback.</li>
     {% endif %}
     {% if group_info.review_coord %}
-        <li>Can manage review processes.</li>
-        {% set n_permission = n_permission + 1 %}
+        <li id="permission_{{ permission_counter() }}">Can manage review processes.</li>
     {% endif %}
-    {% if n_permission == 0 %}
+    {% if group_info.hidden_call %}
+        <li id="permission_{{ permission_counter() }}">Can view hidden calls.</li>
+    {% endif %}
+    {% if permission_counter() == 0 %}
         <li>Have no special access rights.</li>
     {% endif %}
 </ul>

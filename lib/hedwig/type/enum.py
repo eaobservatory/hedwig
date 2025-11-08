@@ -322,31 +322,33 @@ class GroupType(EnumAllowUser, EnumBasic, EnumURLPath, EnumShortName):
 
     GroupInfo = namedtuple(
         'GroupInfo',
-        ('name', 'view_all_prop', 'private_moc',
-         'review_coord', 'review_view',  'feedback_view',
-         'allow_user', 'short_name', 'url_path'))
+        ('name', 'short_name', 'url_path',
+         'view_all_prop', 'private_moc', 'review_coord', 'review_view',
+         'feedback_view', 'hidden_call',
+         'allow_user'))
 
     _info = OrderedDict((
-        #           Authorization: Prop   MOC    Rv.Ed  Rv.Vw  Fb.Vw  User
+        #   Name                        Short name          URL
+        #   Prop   MOC    Rv.Ed  Rv.Vw  Fb.Vw  Hd.Cl. User
         (CTTEE, GroupInfo(
-            'Committee members',   True,  False, False, True,  False, True,
-            'Committee', 'committee')),
+            'Committee members',        'Committee',        'committee',
+            True,  False, False, True,  False, False, True)),
         (TECH,  GroupInfo(
-            'Technical assessors', False, True,  False, False, False, True,
-            'Technical', 'technical')),
+            'Technical assessors',      'Technical',        'technical',
+            False, True,  False, False, False, False, True)),
         (COORD, GroupInfo(
-            'Review coordinators', True,  False, True,  True,  False, True,
-            'Coordinator', 'coordinator')),
+            'Review coordinators',      'Coordinator',      'coordinator',
+            True,  False, True,  True,  False, False, True)),
         (VIEWER, GroupInfo(
-            'Viewers',             True,  False, False, True,  True,  True,
-            'Viewer', 'viewer')),
+            'Viewers',                  'Viewer',           'viewer',
+            True,  False, False, True,  True,  False, True)),
         (HIDDEN_CALL, GroupInfo(
-            'Hidden call',         False, False, False, False, False, True,
-            'Hidden call', 'hidden')),
+            'Hidden call',              'Hidden call',      'hidden',
+            False, False, False, False, False, True,  True)),
 
         (PEER, GroupInfo(
-            'Peer reviewers',      False, False, False, False, False, False,
-            'Peer', None)),
+            'Peer reviewers',           'Peer',              None,
+            False, False, False, False, False, False, False)),
     ))
 
     @classmethod
@@ -378,6 +380,12 @@ class GroupType(EnumAllowUser, EnumBasic, EnumURLPath, EnumShortName):
         """Get a list of groups with the `feedback_view` privilege."""
 
         return [k for (k, v) in cls._info.items() if v.feedback_view]
+
+    @classmethod
+    def hidden_call_groups(cls):
+        """Get a list of groups with the `hidden_call` privilege."""
+
+        return [k for (k, v) in cls._info.items() if v.hidden_call]
 
 
 class LogEventLevel(EnumBasic):
