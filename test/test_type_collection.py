@@ -513,13 +513,13 @@ class CollectionTypeTestCase(TestCase):
         c = GroupMemberCollection()
 
         c[101] = null_tuple(GroupMember)._replace(
-            id=101, group_type=GroupType.CTTEE, facility_id=1)
+            id=101, person_id=201, group_type=GroupType.CTTEE, facility_id=1)
         c[102] = null_tuple(GroupMember)._replace(
-            id=102, group_type=GroupType.TECH, facility_id=1)
+            id=102, person_id=202, group_type=GroupType.TECH, facility_id=1)
         c[103] = null_tuple(GroupMember)._replace(
-            id=103, group_type=GroupType.TECH, facility_id=1)
+            id=103, person_id=203, group_type=GroupType.TECH, facility_id=1)
         c[104] = null_tuple(GroupMember)._replace(
-            id=104, group_type=GroupType.COORD, facility_id=2)
+            id=104, person_id=203, group_type=GroupType.COORD, facility_id=2)
 
         self.assertEqual(
             sorted([x.id for x in c.values_by_group_type(GroupType.CTTEE)]),
@@ -551,6 +551,14 @@ class CollectionTypeTestCase(TestCase):
                                     facility_id=2))
         self.assertFalse(c.has_entry(group_type=GroupType.COORD,
                                      facility_id=1))
+
+        cc = c.subset_by_person(202)
+        self.assertIsInstance(cc, GroupMemberCollection)
+        self.assertEqual(list(cc.keys()), [102])
+
+        cc = c.subset_by_person(203)
+        self.assertIsInstance(cc, GroupMemberCollection)
+        self.assertEqual(list(cc.keys()), [103, 104])
 
     def test_proposal_collection(self):
         c = ProposalCollection()

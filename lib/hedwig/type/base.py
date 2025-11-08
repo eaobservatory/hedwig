@@ -53,6 +53,22 @@ class CollectionByFacility(object):
                 yield value
 
 
+class CollectionByPerson(object):
+    """
+    Mix-in for collections of items with a `person_id` attribute.
+    """
+
+    def subset_by_person(self, person_id):
+        """
+        Create a subset of the collection (of the same type) containing
+        the entries which match the given person.
+        """
+
+        return type(self)(
+            (k, v) for (k, v) in self.items()
+            if v.person_id == person_id)
+
+
 class CollectionByProposal(object):
     """
     Mix-in for collections of items with a `proposal_id` attribute.

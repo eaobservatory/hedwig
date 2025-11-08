@@ -25,10 +25,13 @@ from jinja2.runtime import Undefined
 from markupsafe import Markup
 
 from hedwig.astro.coord import CoordSystem
+from hedwig.type.collection import MemberCollection
 from hedwig.type.enum import AnnotationType, Assessment, AttachmentState, \
     BaseCallType, BaseReviewerRole, BaseTextRole, CallState, \
     MessageState, MessageThreadType, ProposalState, ProposalType, \
     PublicationType, RequestState, ReviewState, SemesterState, UserLogEvent
+from hedwig.type.simple import Member
+from hedwig.type.util import null_tuple
 from hedwig.web.template_util import Counter
 
 from .base_app import WebAppTestCase
@@ -209,6 +212,25 @@ class TemplateUtilTestCase(WebAppTestCase):
             json.loads(f({'e': 'f'}, dynamic=[
                 ('test', [1, 2, 3], False, {1: 'one', 2: 'two'}, 'null')])),
             {'e': 'f', 'test_1': 'one', 'test_2': 'two', 'test_3': 'null'})
+
+        c = MemberCollection()
+        c[101] = null_tuple(Member)._replace(
+            id=101, person_id=201, pi=True, person_name='Person One')
+        c[102] = null_tuple(Member)._replace(
+            id=102, person_id=202, pi=False, person_name='Person Two')
+
+        self.assertEqual(
+            json.loads(f({}, dynamic=[(
+                'test', [201, 202, 203], False,
+                (c, 'has_person', 'person_id', None), None)])),
+            {'test_201': True, 'test_202': True, 'test_203': False})
+
+        self.assertEqual(
+            json.loads(f({}, dynamic=[(
+                'test', [201, 202, 203], False,
+                (c, 'get_person', 'person_id', 'person_name'), 'Unknown')])),
+            {'test_201': 'Person One', 'test_202': 'Person Two',
+             'test_203': 'Unknown'})
 
     def test_filter_mangle_email(self):
         f = self.app.jinja_env.filters['mangle_email_address']

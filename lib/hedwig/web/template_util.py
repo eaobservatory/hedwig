@@ -294,7 +294,9 @@ def register_template_utils(app):
         * The element prefix.
         * The list of elements to generate.
         * A true value if we need to use the "id" attribute of the elements.
-        * A dictionary in which to look up the elements.
+        * A dictionary in which to look up the elements, or another tuple
+          containing a collection, method name to call, argument name
+          and optionally attribute to use.
         * The default value to supply for undefined entries.
         """
 
@@ -305,12 +307,28 @@ def register_template_utils(app):
 
         if dynamic is not None:
             for (prefix, elements, use_id, values, default) in dynamic:
+                method = None
+                if isinstance(values, tuple):
+                    (collection, method_name, arg, attr) = values
+                    method = getattr(collection, method_name)
+
                 for element in elements:
                     if use_id:
                         element = element.id
-                    value['{}_{}'.format(prefix, ('none' if element is None
-                                                  else element))] = \
-                        values.get(element, default)
+
+                    if method is None:
+                        result = values.get(element, default)
+                    else:
+                        try:
+                            result = method(**{arg: element})
+                            if attr is not None:
+                                result = getattr(result, attr)
+                        except:
+                            result = default
+
+                    value['{}_{}'.format(
+                        prefix, ('none' if element is None else element)
+                    )] = result
 
         return json_module.dumps(value)
 

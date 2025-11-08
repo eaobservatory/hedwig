@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 {% set navigation=['facility_admin', ('Queues', url_for('.queue_list')), (queue.name, url_for('.queue_view', queue_id=queue.id))] %}
 {% set help_link=url_for('help.admin_page', page_name='review_group') %}
-{% set scripts = ['jquery_stickytableheaders', 'group_view_all'] %}
+{% set scripts = ['jquery_stickytableheaders', 'hedwig_util', 'group_view_all'] %}
 
 {% block content %}
 {% if not members %}
@@ -12,15 +12,16 @@
     <table id='group_members'>
         <thead>
             <tr>
-                <th>Name</th>
-                {% for group_name in groups.values() %}
-                    <th>{{ group_name }}</th>
+                <th class="sortable sortedalready" data-sortkey="person_name">Name</th>
+                {% for (group_type, group_name) in groups.items() %}
+                    <th class="sortable sortreverse" data-sortkey="group_{{ group_type }}">{{ group_name }}</th>
                 {% endfor %}
             </tr>
         </thead>
         <tbody>
             {% for member in unique_members %}
-                <tr>
+            {% set member_groups = members.subset_by_person(member.person_id) %}
+                <tr data-sortinfo="{{ {'person_name': member.person_name} | json(dynamic=[('group', groups.keys(), false, (member_groups, 'has_entry', 'group_type', none), none)]) }}">
                     <td>
                         <a href="{{ url_for('people.person_view', person_id=member.person_id) }}">{{ member.person_name }}</a>
                         {% if not member.person_registered %}
@@ -28,14 +29,19 @@
                         {% endif %}
                     </td>
                     {% for group_type in groups.keys() %}
-                        <td class="text_center">{% if members.has_entry(person_id=member.person_id, group_type=group_type) %}&check;{% else %}&nbsp;{% endif %}</td>
+                        <td class="text_center">{% if member_groups.has_entry(group_type=group_type) %}&check;{% else %}&nbsp;{% endif %}</td>
                     {% endfor %}
                 </tr>
             {% endfor %}
         </tbody>
         <tfoot>
             <tr class="spacer_above">
-                <td rowspan="2">&nbsp;</td>
+                <td rowspan="3">&nbsp;</td>
+                {% for group_type in groups.keys() %}
+                    <td><a href="{{ url_for('.group_view', queue_id=queue.id, group_type=group_type) }}"><span class="fa-solid fa-users"></span>View</a></td>
+                {% endfor %}
+            </tr>
+            <tr>
                 {% for group_type in groups.keys() %}
                     <td>
                         <a href="{{ url_for('.group_member_add', queue_id=queue.id, group_type=group_type, referrer='gva') }}"><span class="fa-solid fa-user-plus"></span>Add</a></li>

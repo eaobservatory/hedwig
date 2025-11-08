@@ -28,7 +28,7 @@ from ..email.util import is_valid_email
 from ..error import NoSuchRecord, NoSuchValue, MultipleRecords, UserError
 from ..util import is_list_like, matches_constraint
 from .base import CollectionByCall, CollectionByFacility, \
-    CollectionByProposal, CollectionByQueue, \
+    CollectionByPerson, CollectionByProposal, CollectionByQueue, \
     CollectionByReviewerRole, CollectionByType, \
     CollectionOrdered, CollectionSortable
 from .enum import PublicationType, ReviewState
@@ -308,7 +308,8 @@ class EmailCollection(ResultCollection):
 
 
 class GroupMemberCollection(
-        ResultCollection, CollectionByFacility, CollectionSortable):
+        ResultCollection, CollectionByFacility, CollectionByPerson,
+        CollectionSortable):
     """
     Class to hold a collection of review group members.
     """
