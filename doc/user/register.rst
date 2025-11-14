@@ -105,8 +105,7 @@ Please be aware of the different ways you can change your institution:
 
 * If something is wrong with your current institution (perhaps the
   address has changed or the name is spelled incorrectly) then
-  you can click on the link "View this institution's information"
-  under the institution's name on your profile
+  you can click the institution's name on your profile
   and then click "Edit this institution".   This will update the
   institution record for everyone using it.
 

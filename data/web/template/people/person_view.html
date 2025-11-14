@@ -1,25 +1,30 @@
 {% extends "layout.html" %}
 {% set navigation=['people'] %}
-{% set scripts = ['unmangle'] %}
+{% set scripts = ['hedwig_util', 'unmangle', 'person_groups'] %}
 {% if is_current_user %}
     {% set help_link=url_for('help.user_page', page_name='profile') %}
 {% endif %}
 
 {% block content %}
 
+{% if show_admin_links and person.admin %}
+    <p class="minor_warning">
+        <span class="fa-solid fa-user-shield"></span>
+        Site administrator.
+    </p>
+{% endif %}
 {% if person.user_id is none %}
     <p class="minor_warning">
+        <span class="fa-solid fa-user-slash"></span>
         This profile does not belong to a registered user.
     </p>
 {% elif show_admin_links and not person.verified %}
     <p class="warning">
+        <span class="fa-solid fa-user-lock"></span>
         This profile has not been verified.
     </p>
 {% endif %}
 {% if is_current_user %}
-    <p>
-        This is your profile.
-    </p>
     <nav>
         <ol id="account_manage_links">
             <li><a href="{{ url_for('.change_password') }}"><span class="fa-solid fa-key"></span>Change password</a></li>
@@ -72,7 +77,7 @@
         <tr>
             <th>Institution</th>
             <td>
-                {{ person.institution.name }}
+                <a href="{{ url_for('.institution_view', institution_id=person.institution.id) }}">{{ person.institution.name }}</a>
                 <br />
                 {% if person.institution.department %}
                     {{ person.institution.department }}
@@ -89,8 +94,6 @@
                     <br />
                 {% endif %}
                 {{ person.institution.country | country_name }}
-                <br />
-                <a href="{{ url_for('.institution_view', institution_id=person.institution.id) }}">View this institution's information</a>
             </td>
         </tr>
     {% endif %}
@@ -103,10 +106,11 @@
                 <td>
                     <span class="mangled_address" data-mangled="{{ email.address | mangle_email_address }}">&nbsp;</span>
                     {% if email.primary %}<span class="label">primary</span>{% endif %}
-                    {% if email.verified %}<span class="label">verified</span>{% endif %}
                     {% if email.public %}<span class="label">public</span>{% endif %}
-                    {% if is_current_user and not email.verified %}
-                        <a href="{{ url_for('.person_email_verify_get', person_id=person.id, email_id=email.id) }}" id="email_{{ email.id }}_verify_link">verify</a>
+                    {% if email.verified %}
+                        <span class="label">verified</span>
+                    {% elif is_current_user %}
+                        <a href="{{ url_for('.person_email_verify_get', person_id=person.id, email_id=email.id) }}" id="email_{{ email.id }}_verify_link"><span class="fa-solid fa-envelope-circle-check"></span>Verify</a>
                     {% endif %}
                 </td>
             </tr>
@@ -130,10 +134,12 @@
     <table>
         <tr>
             <th>Group</th>
+            <th>Member?</th>
         </tr>
-        {% for member in site_group_membership.values() %}
+        {% for (site_group_type, site_group_name) in site_groups.items() %}
             <tr>
-                <td><a href="{{ url_for('admin.site_group_view', site_group_type=member.site_group_type) }}">{{ member.site_group_type | site_group_type_name }}</a></td>
+                <td><a href="{{ url_for('admin.site_group_view', site_group_type=site_group_type) }}">{{ site_group_name }}</a></td>
+                <td class="text_center">{% if site_group_membership.has_entry(site_group_type=site_group_type) %}&check;{% else %}&nbsp;{% endif %}</td>
             </tr>
         {% endfor %}
     </table>
@@ -145,21 +151,30 @@
     {% for facility in review_group_membership %}
         <h3>{{ facility.name }}</h3>
 
-        <table>
-            <tr>
-                <th>Queue</th>
-                <th>Group</th>
-            </tr>
-            {% for queue_groups in facility.groups.values_in_sorted_order() | plain_group_by('queue_id') %}
-                {% for group in queue_groups %}
-                    <tr>
-                        {% if loop.first %}
-                            <td rowspan="{{ queue_groups | length }}"><a href="{{ url_for(facility.code + '.queue_view', queue_id=group.queue_id) }}">{{ group.queue_name }}</a></td>
-                        {% endif %}
-                        <td><a href="{{ url_for(facility.code + '.group_view', queue_id=group.queue_id, group_type=group.group_type) }}">{{ group.group_type | group_type_name }}</a></td>
-                    </tr>
+        <table class="review_group_membership">
+            <thead>
+                <tr>
+                    <th class="sortable sortedalready" data-sortkey="queue_name">Queue</th>
+                    {% for (group_type, group_name) in review_groups.items() %}
+                        <th class="sortable sortreverse" data-sortkey="group_{{group_type}}">{{ group_name }}</th>
+                    {% endfor %}
+                    <th>Links</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for (group_type, queue_groups) in facility.groups.sorted().group_by('queue_id') %}
+                    {% with group = queue_groups | first_value %}
+                        <tr data-sortinfo="{{ {'queue_name': group.queue_name} | json(dynamic=[('group', review_groups.keys(), false, (queue_groups, 'has_entry', 'group_type', none), none)]) }}">
+                            <td><a href="{{ url_for(facility.code + '.queue_view', queue_id=group.queue_id) }}">{{ group.queue_name }}</a></td>
+
+                            {% for group_type in review_groups.keys() %}
+                                <td class="text_center">{% if queue_groups.has_entry(group_type=group_type) %}&check;{% else %}&nbsp;{% endif %}</td>
+                            {% endfor %}
+                            <td><a href="{{ url_for(facility.code + '.group_view_all', queue_id=group.queue_id) }}"><span class="fa-solid fa-users"></span>View</a></td>
+                        </tr>
+                    {% endwith %}
                 {% endfor %}
-            {% endfor %}
+            </tbody>
         </table>
     {% endfor %}
 {% endif %}

@@ -12,7 +12,7 @@ and then click your name at the top right of the page.
   log in to the system.
 
 * For each email address you have entered there will be a
-  link labeled "verify" allowing you to send a verification
+  link labeled "Verify" allowing you to send a verification
   code to that address, unless it has already been verified.
 
 * Below the information table are links to edit your information
@@ -92,7 +92,7 @@ You should use this if, for example:
 * The address is wrong or has changed.
 
 To get started, click
-the link "View this institution's information"
+the institution's name
 on your profile page.
 This will take you to the institution view.
 Here you will see a list of the members of the institution.

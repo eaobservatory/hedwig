@@ -35,9 +35,9 @@ from ..error import ConsistencyError, DatabaseIntegrityError, Error, \
     UserError
 from ..type.collection import EmailCollection, GroupMemberCollection, \
     ProposalCollection, ReviewerCollection
-from ..type.enum import LogEventLevel, \
+from ..type.enum import GroupType, LogEventLevel, \
     PermissionType, PersonLogEvent, PersonTitle, ProposalState, \
-    ReviewState, UserLogEvent
+    ReviewState, SiteGroupType, UserLogEvent
 from ..type.simple import Email, \
     Institution, InstitutionLog, Person, PersonLog, ProposalWithCode
 from ..type.util import null_tuple, with_deadline
@@ -648,9 +648,14 @@ class PeopleView(object):
             email=[x for x in person.email.values()
                    if x.public or view_all_email])
 
+        site_groups = None
+        review_groups = None
         site_group_membership = None
         review_group_membership = []
         if is_admin:
+            site_groups = SiteGroupType.get_options()
+            review_groups = GroupType.get_options(short_name=True)
+
             site_group_membership = db.search_site_group_member(
                 person_id=person.id)
             all_review_group_membership = db.search_group_member(
@@ -667,7 +672,8 @@ class PeopleView(object):
                     facility.name, facility.code, facility_members))
 
         return {
-            'title': '{}: Profile'.format(person.name),
+            'title': ('Your Profile' if is_current_user
+                      else'{}: Profile'.format(person.name)),
             'is_current_user': is_current_user,
             'can_edit': can.edit,
             'person': person,
@@ -676,6 +682,8 @@ class PeopleView(object):
                 current_user, db, None, auth_cache=can.cache).view,
             'site_group_membership': site_group_membership,
             'review_group_membership': review_group_membership,
+            'review_groups': review_groups,
+            'site_groups': site_groups,
         }
 
     @with_person(permission=PermissionType.NONE)

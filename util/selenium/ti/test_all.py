@@ -1359,10 +1359,10 @@ class IntegrationTest(DummyConfigTestCase):
         self._save_screenshot(
             self.user_image_root, 'profile_edit_links',
             ['account_manage_links', 'profile_manage_links',
-             self.browser.find_element(By.LINK_TEXT, 'verify')])
+             self.browser.find_element(By.LINK_TEXT, 'Verify')])
 
         # Verify email address.
-        self.browser.find_element(By.LINK_TEXT, 'verify').click()
+        self.browser.find_element(By.LINK_TEXT, 'Verify').click()
 
         self._do_verify_email(email_new)
 
@@ -1399,7 +1399,7 @@ class IntegrationTest(DummyConfigTestCase):
 
         # View institution.
         self.browser.find_element(
-            By.PARTIAL_LINK_TEXT, 'View this institution').click()
+            By.LINK_TEXT, 'Test Institution').click()
 
         edit_institution = self.browser.find_element(
             By.LINK_TEXT, 'Edit this institution')
@@ -2231,7 +2231,7 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element(By.NAME, 'submit_cancel').click()
 
         self.browser.find_element(
-            By.PARTIAL_LINK_TEXT, 'View this institution').click()
+            By.PARTIAL_LINK_TEXT, 'Test Institution').click()
 
         self._save_screenshot(self.admin_image_root, 'institution_links',
                               ['institution_admin_links'])
