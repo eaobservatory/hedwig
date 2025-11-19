@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -347,6 +347,26 @@ def with_proposal(
         return decorated_method
 
     return decorator
+
+
+def with_queue(f):
+    """
+    Decorator for methods which deal with queues.
+    """
+
+    @functools.wraps(f)
+    def decorated(
+            self, current_user, db, queue_id, *args, **kwargs):
+        try:
+            queue = db.get_queue(self.id_, queue_id)
+        except NoSuchRecord:
+            raise HTTPNotFound('Queue not found.')
+
+        assert queue.id == queue_id
+
+        return f(self, current_user, db, queue, *args, **kwargs)
+
+    return decorated
 
 
 def with_relevant_text_role(f):

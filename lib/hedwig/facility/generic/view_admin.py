@@ -34,7 +34,7 @@ from ...type.util import null_tuple
 from ...view import auth
 from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
     flash, format_datetime, parse_datetime, url_for
-from ...view.util import int_or_none, str_or_none
+from ...view.util import int_or_none, str_or_none, with_queue
 
 
 class GenericAdmin(object):
@@ -277,13 +277,9 @@ class GenericAdmin(object):
             'affiliations': affiliations,
         }
 
-    def view_queue_view(self, current_user, db, queue_id):
-        try:
-            queue = db.get_queue(self.id_, queue_id)
-        except NoSuchRecord:
-            raise HTTPNotFound('Queue not found')
-
-        affiliations = db.search_affiliation(queue_id=queue_id, hidden=False)
+    @with_queue
+    def view_queue_view(self, current_user, db, queue):
+        affiliations = db.search_affiliation(queue_id=queue.id, hidden=False)
 
         return {
             'title': 'Queue: {}'.format(queue.name),
@@ -773,16 +769,12 @@ class GenericAdmin(object):
                 if k in n_state),
         }
 
-    def view_affiliation_edit(self, current_user, db, queue_id, form):
+    @with_queue
+    def view_affiliation_edit(self, current_user, db, queue, form):
         affiliation_type_class = self.get_affiliation_types()
 
-        try:
-            queue = db.get_queue(self.id_, queue_id)
-        except NoSuchRecord:
-            raise HTTPNotFound('Queue not found')
-
         message = None
-        records = db.search_affiliation(queue_id=queue_id)
+        records = db.search_affiliation(queue_id=queue.id)
 
         if form is not None:
             try:
@@ -801,23 +793,23 @@ class GenericAdmin(object):
                     if id_.startswith('new_'):
                         id_ = int(id_[4:])
                         added_records[id_] = Affiliation(
-                            id_, queue_id, form[param].strip(), is_hidden,
+                            id_, queue.id, form[param].strip(), is_hidden,
                             type_, None)
 
                     else:
                         id_ = int(id_)
                         updated_records[id_] = Affiliation(
-                            id_, queue_id, form[param].strip(), is_hidden,
+                            id_, queue.id, form[param].strip(), is_hidden,
                             type_, None)
 
                 records = AffiliationCollection.organize_collection(
                     updated_records, added_records)
 
                 db.sync_queue_affiliation(
-                    affiliation_type_class, queue_id, records)
+                    affiliation_type_class, queue.id, records)
 
                 flash('The affiliations have been updated.')
-                raise HTTPRedirect(url_for('.queue_view', queue_id=queue_id))
+                raise HTTPRedirect(url_for('.queue_view', queue_id=queue.id))
 
             except UserError as e:
                 message = e.message
@@ -830,12 +822,8 @@ class GenericAdmin(object):
             'queue': queue,
         }
 
-    def view_group_view(self, current_user, db, queue_id, group_type):
-        try:
-            queue = db.get_queue(self.id_, queue_id)
-        except NoSuchRecord:
-            raise HTTPNotFound('Queue not found')
-
+    @with_queue
+    def view_group_view(self, current_user, db, queue, group_type):
         if group_type is not None:
             try:
                 group_info = GroupType.get_info(group_type)
@@ -843,7 +831,7 @@ class GenericAdmin(object):
                 raise HTTPNotFound('Unknown group.')
 
         members = db.search_group_member(
-            queue_id=queue_id, group_type=group_type, with_person=True)
+            queue_id=queue.id, group_type=group_type, with_person=True)
 
         ctx = {
             'queue': queue,
@@ -875,13 +863,9 @@ class GenericAdmin(object):
 
         return ctx
 
+    @with_queue
     def view_group_member_add(
-            self, current_user, db, queue_id, group_type, args, form):
-        try:
-            queue = db.get_queue(self.id_, queue_id)
-        except NoSuchRecord:
-            raise HTTPNotFound('Queue not found')
-
+            self, current_user, db, queue, group_type, args, form):
         try:
             group_info = GroupType.get_info(group_type)
         except KeyError:
@@ -900,11 +884,11 @@ class GenericAdmin(object):
             else:
                 if member['referrer'] == 'gva':
                     target_redir = url_for(
-                        '.group_view_all', queue_id=queue_id)
+                        '.group_view_all', queue_id=queue.id)
 
                 else:
                     target_redir = url_for(
-                        '.group_view', queue_id=queue_id, group_type=group_type)
+                        '.group_view', queue_id=queue.id, group_type=group_type)
 
                 if member['is_link']:
                     try:
@@ -915,7 +899,7 @@ class GenericAdmin(object):
                         except NoSuchRecord:
                             raise UserError('Could not find the person profile.')
 
-                        db.add_group_member(queue_id, group_type, person.id)
+                        db.add_group_member(queue.id, group_type, person.id)
 
                         flash('{} has been added to the group.', person.name)
 
@@ -931,7 +915,7 @@ class GenericAdmin(object):
                         person_id = db.add_person(
                             member['name'], title=member['title'],
                             primary_email=member['email'])
-                        db.add_group_member(queue_id, group_type, person_id)
+                        db.add_group_member(queue.id, group_type, person_id)
 
                         self._message_group_invite(
                             current_user, db,
@@ -954,7 +938,7 @@ class GenericAdmin(object):
         # Prepare list of people to exclude from the member directory.
         existing_person_ids = [
             x.person_id for x in db.search_group_member(
-                queue_id=queue_id, group_type=group_type).values()]
+                queue_id=queue.id, group_type=group_type).values()]
 
         return {
             'title': 'Add Group Member',
@@ -1005,13 +989,9 @@ class GenericAdmin(object):
                                   email_ctx, facility=self),
             [person_id])
 
+    @with_queue
     def view_group_member_edit(
-            self, current_user, db, queue_id, group_type, args, form):
-        try:
-            queue = db.get_queue(self.id_, queue_id)
-        except NoSuchRecord:
-            raise HTTPNotFound('Queue not found')
-
+            self, current_user, db, queue, group_type, args, form):
         try:
             group_info = GroupType.get_info(group_type)
         except KeyError:
@@ -1021,7 +1001,7 @@ class GenericAdmin(object):
         message = None
 
         members = db.search_group_member(
-            queue_id=queue_id, group_type=group_type, with_person=True)
+            queue_id=queue.id, group_type=group_type, with_person=True)
 
         if form is not None:
             try:
@@ -1035,16 +1015,16 @@ class GenericAdmin(object):
 
                 referrer = form.get('referrer')
 
-                db.sync_group_member(queue_id, group_type, members)
+                db.sync_group_member(queue.id, group_type, members)
                 flash('The group membership has been saved.')
 
                 if referrer == 'gva':
                     target_redir = url_for(
-                        '.group_view_all', queue_id=queue_id)
+                        '.group_view_all', queue_id=queue.id)
 
                 else:
                     target_redir = url_for(
-                        '.group_view', queue_id=queue_id,
+                        '.group_view', queue_id=queue.id,
                         group_type=group_type)
 
                 raise HTTPRedirect(target_redir)
@@ -1062,13 +1042,9 @@ class GenericAdmin(object):
             'referrer': referrer,
         }
 
+    @with_queue
     def view_group_member_reinvite(
-            self, current_user, db, queue_id, group_type, member_id, form):
-        try:
-            queue = db.get_queue(self.id_, queue_id)
-        except NoSuchRecord:
-            raise HTTPNotFound('Queue not found.')
-
+            self, current_user, db, queue, group_type, member_id, form):
         try:
             group_info = GroupType.get_info(group_type)
         except KeyError:
@@ -1076,7 +1052,7 @@ class GenericAdmin(object):
 
         try:
             member = db.search_group_member(
-                queue_id=queue_id, group_type=group_type,
+                queue_id=queue.id, group_type=group_type,
                 group_member_id=member_id, with_person=True).get_single()
         except NoSuchRecord:
             raise HTTPNotFound('Group member record not found.')
@@ -1096,7 +1072,7 @@ class GenericAdmin(object):
                 flash('{} has been re-invited to the group.',
                       member.person_name)
 
-            raise HTTPRedirect(url_for('.group_view', queue_id=queue_id,
+            raise HTTPRedirect(url_for('.group_view', queue_id=queue.id,
                                        group_type=group_type))
 
         return {
