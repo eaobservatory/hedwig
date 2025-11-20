@@ -600,7 +600,7 @@ class PrevProposalCollection(ResultCollection, CollectionOrdered):
         Retrieve a record with the continuation flag set.
 
         :raises NoSuchValue: if no continuation found and no default given.
-        :raises MultipleRecords: if multiple continuation records are found.
+        :raises MultipleValues: if multiple continuation records are found.
         """
 
         result = None
@@ -608,7 +608,7 @@ class PrevProposalCollection(ResultCollection, CollectionOrdered):
         for entry in self.values():
             if entry.continuation:
                 if result is not None:
-                    raise MultipleRecords('multiple continuation records')
+                    raise MultipleValues('multiple continuation records')
 
                 result = entry
 

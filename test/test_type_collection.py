@@ -807,7 +807,7 @@ class CollectionTypeTestCase(TestCase):
 
         c[4] = null_tuple(PrevProposal)._replace(id=4, continuation=True)
 
-        with self.assertRaises(MultipleRecords):
+        with self.assertRaises(MultipleValues):
             c.get_continuation()
 
     def test_target_collection(self):

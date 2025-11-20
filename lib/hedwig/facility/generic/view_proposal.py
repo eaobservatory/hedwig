@@ -27,7 +27,7 @@ from ...astro.catalog import parse_source_list, write_source_list
 from ...compat import first_value
 from ...email.format import render_email_template
 from ...config import get_config
-from ...error import ConsistencyError, MultipleRecords, \
+from ...error import ConsistencyError, MultipleRecords, MultipleValues, \
     NoSuchRecord, NoSuchValue, ParseError, UserError
 from ...file.info import determine_figure_type, determine_pdf_page_count
 from ...file.pdf import pdf_to_svg
@@ -1153,7 +1153,7 @@ class GenericProposal(object):
                 try:
                     previous = extra['prev_proposals'].get_continuation()
 
-                except MultipleRecords:
+                except MultipleValues:
                     messages.append(message_template._replace(
                         description='This proposal is a continuation request, '
                         'but the continuation box is checked for '
