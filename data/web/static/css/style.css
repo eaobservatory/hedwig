@@ -204,6 +204,26 @@ td.semester_past, td.call_closed {
     background: #F88;
 }
 
+td.sync_op_unc {
+    background: #AAA;
+}
+
+td.sync_op_ins {
+    background: #4F4;
+}
+
+td.sync_op_upd {
+    background: #FFA;
+}
+
+td.sync_op_del {
+    background: #F88;
+}
+
+td.sync_updated {
+    background: #FFA;
+}
+
 td.att_req_new {
     background: #000;
     color: #FFF;

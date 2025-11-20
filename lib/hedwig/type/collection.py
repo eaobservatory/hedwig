@@ -72,6 +72,25 @@ class ResultCollection(OrderedDict):
         else:
             return first_value(self)
 
+    def get_value(self, filter_value, default=()):
+        result = None
+
+        for value in self.values():
+            if filter_value(value):
+                if result is not None:
+                    raise MultipleRecords('multiple matching values found')
+
+                result = value
+
+        if result is None:
+            if default == ():
+                raise NoSuchValue('no matching value found')
+
+            else:
+                return default
+
+        return result
+
     def group_by(self, attr):
         """
         Group members of a collection by a given attribute.

@@ -208,6 +208,8 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.administer_facility('jcmt', semester_name, queue_name)
 
+            self.copy_queue_settings('jcmt', queue_name)
+
             # Set up review process.
             close_call_proposals(self.db, 1)
 
@@ -256,10 +258,12 @@ class IntegrationTest(DummyConfigTestCase):
             self.administer_site()
 
             new_semester_name = self.open_new_call(
-                'jcmt', 'Regular', allow_continuation=True)
+                'jcmt', 'Regular', queue_name,
+                allow_continuation=True)
 
             self.open_new_call(
-                'jcmt', 'Rapid Turnaround', semester_name=new_semester_name)
+                'jcmt', 'Rapid Turnaround', queue_name,
+                semester_name=new_semester_name)
 
             self.log_out_user()
 
@@ -525,7 +529,8 @@ class IntegrationTest(DummyConfigTestCase):
         # Create a call.
         self.browser.get(admin_menu_url)
         self._create_call(
-            'Regular', semester_name, screenshot_path=self.admin_image_root)
+            'Regular', queue_name, semester_name,
+            screenshot_path=self.admin_image_root)
 
         # Add categories.
         self.browser.get(admin_menu_url)
@@ -630,7 +635,7 @@ class IntegrationTest(DummyConfigTestCase):
         return semester_name
 
     def _create_call(
-            self, type_name, semester_name,
+            self, type_name, queue_name, semester_name,
             allow_continuation=False,
             screenshot_path=None):
         self.browser.find_element(By.LINK_TEXT, 'Calls').click()
@@ -643,6 +648,10 @@ class IntegrationTest(DummyConfigTestCase):
         Select(
             self.browser.find_element(By.NAME, 'semester_id')
         ).select_by_visible_text(semester_name)
+
+        Select(
+            self.browser.find_element(By.NAME, 'queue_id')
+        ).select_by_visible_text(queue_name)
 
         current_date = datetime.utcnow()
         current_year = str(current_date.year)
@@ -1684,6 +1693,76 @@ class IntegrationTest(DummyConfigTestCase):
         self.assertIn('You have dropped administrative privileges.',
                       self.browser.page_source)
 
+    def copy_queue_settings(self, facility_code, queue_name):
+        """
+        This test copies queue settings to another queue.
+        """
+
+        # Go to the facility page and take administrative privileges.
+        self.browser.get(self.base_url + facility_code)
+
+        facility_home_url = self.browser.current_url
+
+        self.browser.find_element(By.LINK_TEXT, 'take admin').click()
+        self.browser.find_element(By.LINK_TEXT, 'Administrative menu').click()
+
+        admin_menu_url = self.browser.current_url
+
+        # Create a new queue.
+        self.browser.find_element(By.LINK_TEXT, 'Queues').click()
+        self.browser.find_element(By.LINK_TEXT, 'New queue').click()
+
+        other_queue_name = 'Another Queue'
+        self.browser.find_element(By.NAME, 'queue_name').send_keys(other_queue_name)
+        self.browser.find_element(By.NAME, 'queue_code').send_keys('X')
+        self.browser.find_element(By.NAME, 'description').send_keys('...')
+        self.browser.find_element(By.NAME, 'submit').click()
+        self.assertIn(
+            'New queue "{}" has been added.'.format(other_queue_name),
+            self.browser.page_source)
+
+        # Copy the affiliations.
+        self.browser.find_element(By.LINK_TEXT, 'Copy from another queue').click()
+
+        Select(
+            self.browser.find_element(By.NAME, 'other_queue_id')
+        ).select_by_visible_text(queue_name)
+
+        self.browser.find_element(By.NAME, 'submit_select').click()
+
+        self._save_screenshot(self.admin_image_root, 'queue_affiliation_copy')
+
+        self.browser.find_element(By.NAME, 'submit_copy').click()
+
+        self.assertIn(
+            'The affiliations have been copied.',
+            self.browser.page_source)
+
+        # Copy a group.
+        self.browser.find_element(By.LINK_TEXT, 'Committee members').click()
+        self.browser.find_element(By.LINK_TEXT, 'Copy from another queue').click()
+
+        Select(
+            self.browser.find_element(By.NAME, 'other_queue_id')
+        ).select_by_visible_text(queue_name)
+
+        self.browser.find_element(By.NAME, 'submit_select').click()
+
+        self._save_screenshot(self.admin_image_root, 'group_cttee_copy')
+
+        self.browser.find_element(By.NAME, 'submit_copy').click()
+
+        self.assertIn(
+            'The group membership has been copied.',
+            self.browser.page_source)
+
+        # Drop administrative privileges.
+        self.browser.get(self.base_url)
+        self.browser.find_element(By.LINK_TEXT, 'drop admin').click()
+
+        self.assertIn('You have dropped administrative privileges.',
+                      self.browser.page_source)
+
     def set_up_review(self, facility_code):
         """
         This test sets up a review process.
@@ -2328,7 +2407,7 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element(By.NAME, 'submit_cancel').click()
 
     def open_new_call(
-            self, facility_code, type_name,
+            self, facility_code, type_name, queue_name,
             semester_name=None, allow_continuation=False):
         self.browser.get(self.base_url + facility_code)
 
@@ -2342,7 +2421,8 @@ class IntegrationTest(DummyConfigTestCase):
 
         # Create a call.
         self._create_call(
-            type_name, semester_name, allow_continuation=allow_continuation)
+            type_name, queue_name, semester_name,
+            allow_continuation=allow_continuation)
 
         return semester_name
 

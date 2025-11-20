@@ -1284,6 +1284,33 @@ class SiteGroupType(EnumAllowUser, EnumBasic, EnumURLPath):
         return [k for (k, v) in cls._info.items() if v.view_all_profile]
 
 
+class SyncOperation(EnumBasic, EnumDisplayClass):
+    """
+    Class representing different record sync operations.
+    """
+
+    UNCHANGED = 0
+    INSERT = 1
+    UPDATE = 2
+    DELETE = 3
+
+    SyncOperationInfo = namedtuple(
+        'SyncOperationInfo',
+        ('name', 'display_class'))
+
+    #       Name            Class
+    _info = OrderedDict((
+        (UNCHANGED, SyncOperationInfo(
+            'Unchanged',    'unc')),
+        (INSERT, SyncOperationInfo(
+            'Insert',       'ins')),
+        (UPDATE, SyncOperationInfo(
+            'Update',       'upd')),
+        (DELETE, SyncOperationInfo(
+            'Delete',       'del')),
+    ))
+
+
 class BaseTextRole(EnumBasic, EnumCode, EnumURLPath):
     """
     Base for classes representing roles which a piece of text may have

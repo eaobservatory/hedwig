@@ -32,6 +32,16 @@ bottom of the page.
 
 .. image:: image/group_cttee_edit.png
 
+If you are managing multiple queues where the membership of
+a group should be the same, you can use the "Copy from another queue"
+link on the group page.
+Once you have selected another queue from which to copy information,
+you will see a list of the changes which will be applied in order
+to make the group membership match that in the other queue.
+If everything looks correct, you can press the "Copy" button to confirm.
+
+.. image:: image/group_cttee_copy.png
+
 Finally on the queue page, you will find a link "View all"
 in the "Groups" section.
 This will take you to a table showing all group members

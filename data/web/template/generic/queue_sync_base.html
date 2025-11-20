@@ -1,0 +1,81 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+{% block header_notes %}
+{% endblock %}
+
+{% if message is not none %}
+    <p class="warning">
+        {{ message }}
+    </p>
+{% endif %}
+
+{% if other_queues is not none %}
+    <p>
+        Please select the queue from which to copy information.
+    </p>
+
+    <form method="POST" action="{{ target }}">
+        <ol>
+            <li>
+                <label for="other_queue_id">Queue</label>
+                <select name="other_queue_id">
+                    {% for other_queue in other_queues.values() %}
+                        <option value="{{ other_queue.id }}" {% if other_queue.id == queue.id %}disabled="disabled"{% endif %}>{{ other_queue.name }}</option>
+                    {% endfor %}
+                </select>
+            </li>
+            <li>
+                <input type="submit" value="Select queue" name="submit_select" />
+            </li>
+        </ol>
+    </form>
+{% endif %}
+
+{% if comparison is not none %}
+    <table>
+        <tr>
+            <th>Copying from</th>
+            <td>{{ other_queue.name }}</td>
+        </tr>
+        <tr>
+            <th>Copying to</th>
+            <td>{{ queue.name }}</td>
+        </tr>
+    </table>
+
+    <h2>Changes</h2>
+
+    <form method="POST" action="{{ target }}">
+        <table>
+            <tr>
+                <th>Change</th>
+                {% block comparison_head_extra %}
+                {% endblock %}
+            </tr>
+            {% for (record_id, record) in comparison.items() %}
+                <tr>
+                    <td class="{{ record.sync_operation | sync_operation_class }}">{{ record.sync_operation | sync_operation_name }}</td>
+                    {% block comparison_row_extra scoped %}
+                    {% endblock %}
+                </tr>
+            {% endfor %}
+        </table>
+
+        <p>
+            <input type="submit" name="submit_cancel" value="Cancel" />
+            <input type="submit" name="submit_copy" value="Copy" />
+            <input type="hidden" name="other_queue_id" value="{{ other_queue.id }}" />
+        </p>
+    </form>
+{% endif %}
+
+{% if target_swap is not none %}
+    <form method="POST" action="{{ target_swap }}">
+        <p>
+            <input type="submit" name="submit_swap" value="Swap queues" />
+            <input type="hidden" name="other_queue_id" value="{{ queue.id }}" />
+        </p>
+    </form>
+{% endif %}
+{% endblock %}

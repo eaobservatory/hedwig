@@ -35,7 +35,8 @@ from ..type.enum import AnnotationType, Assessment, \
     MessageState, MessageThreadType, \
     PersonLogEvent, PersonTitle, \
     ProposalState, ProposalType, PublicationType, \
-    RequestState, ReviewState, SemesterState, SiteGroupType, UserLogEvent
+    RequestState, ReviewState, \
+    SemesterState, SiteGroupType, SyncOperation, UserLogEvent
 from ..util import FormatMaxDP, FormatSigFig
 from .format import format_message_text, format_text, format_title_markup
 from .util import mangle_email_address as _mangle_email_address
@@ -489,6 +490,20 @@ def register_template_utils(app):
         if value is None:
             return ''
         return SiteGroupType.get_name(value)
+
+    @app.template_filter()
+    def sync_operation_name(value):
+        if value is None:
+            return 'Unknown operation'
+        return SyncOperation.get_name(value)
+
+    @app.template_filter()
+    def sync_operation_class(value):
+        try:
+            return 'sync_op_{}'.format(
+                SyncOperation.get_display_class(value))
+        except KeyError:
+            return ''
 
     @app.template_filter()
     def text_role_name(value, role_class):

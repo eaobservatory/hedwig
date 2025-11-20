@@ -806,6 +806,16 @@ def create_facility_blueprint(db, facility):
             current_user, db, queue_id,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route(
+        '/admin/queue/<int:queue_id>/affiliation/sync',
+        methods=['GET', 'POST'])
+    @facility_template('affiliation_sync.html')
+    @require_admin
+    def affiliation_sync(current_user, queue_id):
+        return facility.view_affiliation_sync(
+            current_user, db, queue_id,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/admin/queue/<int:queue_id>/group/')
     @facility_template('group_view_all.html')
     @require_admin
@@ -839,6 +849,16 @@ def create_facility_blueprint(db, facility):
         return facility.view_group_member_edit(
             current_user, db, queue_id, group_type,
             request.args, (request.form if request.method == 'POST' else None))
+
+    @bp.route(
+        '/admin/queue/<int:queue_id>/group/<hedwig_group:group_type>/sync',
+        methods=['GET', 'POST'])
+    @facility_template('group_member_sync.html')
+    @require_admin
+    def group_member_sync(current_user, queue_id, group_type):
+        return facility.view_group_member_sync(
+            current_user, db, queue_id, group_type,
+            (request.form if request.method == 'POST' else None))
 
     @bp.route('/admin/queue/<int:queue_id>/group/<hedwig_group:group_type>/'
               'reinvite/<int:member_id>',

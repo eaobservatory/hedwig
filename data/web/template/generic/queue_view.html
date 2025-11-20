@@ -34,9 +34,12 @@
     </p>
 {% endif %}
 
-<p>
-    <a id="affiliation_edit_link" href="{{ url_for('.affiliation_edit', queue_id=queue.id) }}"><span class="fa-solid fa-globe"></span>Edit affiliations</a>
-</p>
+<nav>
+    <ol>
+        <li><a id="affiliation_edit_link" href="{{ url_for('.affiliation_edit', queue_id=queue.id) }}"><span class="fa-solid fa-globe"></span>Edit affiliations</a></li>
+        <li><a href="{{ url_for('.affiliation_sync', queue_id=queue.id) }}"><span class="fa-solid fa-rotate"></span>Copy from another queue</a></li>
+    </ol>
+</nav>
 
 <h2>Groups</h2>
 

@@ -1,0 +1,30 @@
+{% extends 'generic/queue_sync_base.html' %}
+{% set navigation=['facility_admin', ('Queues', url_for('.queue_list')), (queue.name, url_for('.queue_view', queue_id=queue.id)), (group_info.name, url_for('.group_view', queue_id=queue.id, group_type=group_type))] %}
+{% set help_link=url_for('help.admin_page', page_name='review_group') %}
+
+{% from 'macro/institution.html' import render_member_institution %}
+
+{% block header_notes %}
+<p>
+    This page allows you to copy group membership from another queue.
+    Members will be added and deleted as necessary
+    to match the membership of the same group in the selected queue.
+</p>
+
+<table>
+    <tr>
+        <th>Group</th>
+        <td>{{ group_info.name }}</td>
+    </tr>
+</table>
+{% endblock %}
+
+{% block comparison_head_extra %}
+    <th>Name</th>
+    <th>Institution</th>
+{% endblock %}
+
+{% block comparison_row_extra %}
+    <td>{{ record.person_name }}</td>
+    <td>{{ render_member_institution(record) }}</td>
+{% endblock %}

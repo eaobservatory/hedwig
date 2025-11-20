@@ -26,11 +26,11 @@ from ...error import DatabaseIntegrityError, NoSuchRecord, UserError
 from ...type.collection import AffiliationCollection, \
     CallMidCloseCollection, ResultCollection
 from ...type.enum import FormatType, GroupType, \
-    PersonTitle, ProposalState, SemesterState
+    PersonTitle, ProposalState, SemesterState, SyncOperation
 from ...type.simple import Affiliation, \
     CallMidClose, CallPreamble, Category, DateAndTime, \
     ProposalWithCode, Queue, Semester
-from ...type.util import null_tuple
+from ...type.util import compare_collections, null_tuple
 from ...view import auth
 from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
     flash, format_datetime, parse_datetime, url_for
@@ -823,6 +823,83 @@ class GenericAdmin(object):
         }
 
     @with_queue
+    def view_affiliation_sync(self, current_user, db, queue, form):
+        affiliation_type_class = self.get_affiliation_types()
+
+        message = None
+        other_queues = None
+        other_queue = None
+        comparison = None
+
+        if form is None:
+            other_queues = db.search_queue(facility_id=self.id_)
+            if queue.id not in other_queues:
+                raise ErrorPage('This queue does not appear in full list.')
+            elif 2 > len(other_queues):
+                raise ErrorPage('No other queues are present.')
+
+        else:
+            if 'submit_cancel' in form:
+                raise HTTPRedirect(url_for('.queue_view', queue_id=queue.id))
+
+            other_queue_id = int(form['other_queue_id'])
+            if other_queue_id == queue.id:
+                raise ErrorPage('Selected other queue is the same as this.')
+            try:
+                other_queue = db.get_queue(
+                    facility_id=self.id_, queue_id=other_queue_id)
+            except NoSuchRecord:
+                raise ErrorPage('Other queue not found.')
+            assert other_queue.id == other_queue_id
+
+            orig_affiliations = db.search_affiliation(
+                queue_id=queue.id)
+            other_affiliations = db.search_affiliation(
+                queue_id=other_queue.id, hidden=False)
+
+            comparison = compare_collections(
+                orig_affiliations, other_affiliations,
+                match_attrs=('name',),
+                sort_attrs=('name',),
+                update_attrs=('type', 'hidden'),
+                hide_deleted=True)
+
+            if ('submit_swap' in form) or ('submit_select' in form):
+                pass
+
+            elif 'submit_copy' in form:
+                try:
+                    (n_insert, n_update, n_delete) = \
+                        db.sync_queue_affiliation(
+                            affiliation_type_class, queue.id, comparison)
+
+                    if n_insert or n_update or n_delete:
+                        flash('The affiliations have been copied.')
+                    else:
+                        flash('No changes were made.')
+
+                    raise HTTPRedirect(url_for('.queue_view', queue_id=queue.id))
+
+                except UserError as e:
+                    message = e.message
+
+            else:
+                raise ErrorPage('Unknown action.')
+
+        return {
+            'title': 'Copy Affiliations',
+            'queue': queue,
+            'other_queues': other_queues,
+            'other_queue': other_queue,
+            'comparison': comparison,
+            'message': message,
+            'target': url_for('.affiliation_sync', queue_id=queue.id),
+            'target_swap': (
+                None if other_queue is None else
+                url_for('.affiliation_sync', queue_id=other_queue.id)),
+        }
+
+    @with_queue
     def view_group_view(self, current_user, db, queue, group_type):
         if group_type is not None:
             try:
@@ -1040,6 +1117,97 @@ class GenericAdmin(object):
             'members': members,
             'message': message,
             'referrer': referrer,
+        }
+
+    @with_queue
+    def view_group_member_sync(
+            self, current_user, db, queue, group_type, form):
+        try:
+            group_info = GroupType.get_info(group_type)
+        except KeyError:
+            raise HTTPNotFound('Unknown group.')
+
+        message = None
+        other_queues = None
+        other_queue = None
+        comparison = None
+
+        if form is None:
+            other_queues = db.search_queue(facility_id=self.id_)
+            if queue.id not in other_queues:
+                raise ErrorPage('This queue does not appear in full list.')
+            elif 2 > len(other_queues):
+                raise ErrorPage('No other queues are present.')
+
+        else:
+            if 'submit_cancel' in form:
+                raise HTTPRedirect(url_for(
+                    '.group_view', queue_id=queue.id, group_type=group_type))
+
+            other_queue_id = int(form['other_queue_id'])
+            if other_queue_id == queue.id:
+                raise ErrorPage('Selected other queue is the same as this.')
+            try:
+                other_queue = db.get_queue(
+                    facility_id=self.id_, queue_id=other_queue_id)
+            except NoSuchRecord:
+                raise ErrorPage('Other queue not found.')
+            assert other_queue.id == other_queue_id
+
+            orig_members = db.search_group_member(
+                queue_id=queue.id, group_type=group_type, with_person=True)
+
+            other_members = db.search_group_member(
+                queue_id=other_queue.id, group_type=group_type, with_person=True)
+
+            comparison = compare_collections(
+                orig_members, other_members,
+                match_attrs=('person_id',),
+                sort_attrs=('person_name',))
+
+            if ('submit_swap' in form) or ('submit_select' in form):
+                pass
+
+            elif 'submit_copy' in form:
+                try:
+                    (n_insert, n_update, n_delete) = \
+                        db.sync_group_member(
+                            queue.id, group_type, comparison.map_values(
+                                filter_value=(
+                                    lambda x: x.sync_operation
+                                    != SyncOperation.DELETE)),
+                            forbid_add=False)
+
+                    if n_insert or n_update or n_delete:
+                        flash('The group membership has been copied.')
+                    else:
+                        flash('No changes were made.')
+
+                    raise HTTPRedirect(url_for(
+                        '.group_view', queue_id=queue.id,
+                        group_type=group_type))
+
+                except UserError as e:
+                    message = e.message
+
+            else:
+                raise ErrorPage('Unknown action.')
+
+        return {
+            'title': 'Copy Group Membership',
+            'queue': queue,
+            'other_queues': other_queues,
+            'other_queue': other_queue,
+            'group_type': group_type,
+            'group_info': group_info,
+            'comparison': comparison,
+            'message': message,
+            'target': url_for(
+                '.group_member_sync',
+                queue_id=queue.id, group_type=group_type),
+            'target_swap': (None if other_queue is None else url_for(
+                '.group_member_sync',
+                queue_id=other_queue.id, group_type=group_type)),
         }
 
     @with_queue

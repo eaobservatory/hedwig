@@ -1,0 +1,37 @@
+{% extends 'generic/queue_sync_base.html' %}
+{% set navigation=['facility_admin', ('Queues', url_for('.queue_list')), (queue.name, url_for('.queue_view', queue_id=queue.id))] %}
+{% set help_link=url_for('help.admin_page', page_name='queue') %}
+
+{% block header_notes %}
+<p>
+    This page allows you to copy affiliations from another queue.
+</p>
+<p>
+    <b>Note:</b>
+</p>
+
+<ul>
+    <li>
+        Entries not present in the selected queue will be hidden
+        (rather than deleted) in case they have been used on a proposal.
+    </li>
+    <li>
+        Affiliations will be matched by name.  If an affiliation is
+        shown as deleted (i.e. updated to hidden) and also re-inserted, please
+        <a href="{{ url_for('.affiliation_edit', queue_id=queue.id) }}">edit the affiliations</a>
+        such that the names match before performing the copy.
+    </li>
+</ul>
+{% endblock %}
+
+{% block comparison_head_extra %}
+    <th>Affiliation</th>
+    <th>Hidden</th>
+    <th>Assignment type</th>
+{% endblock %}
+
+{% block comparison_row_extra %}
+    <td>{{ record.name }}</td>
+    <td {{ combined_class(('sync_updated', 'hidden' in record.sync_update), ('text_center', true)) | safe }}>{% if record.hidden %}&check;{% else %}&mdash;{% endif %}</td>
+    <td {{ combined_class(('sync_updated', 'type' in record.sync_update)) | safe }}>{{ record.type | affiliation_type_name(facility_affiliation_type_class) }}</td>
+{% endblock %}

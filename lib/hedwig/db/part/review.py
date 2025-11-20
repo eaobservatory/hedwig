@@ -999,11 +999,13 @@ class ReviewPart(object):
                 key_column=review_deadline.c.call_id, key_value=call_id,
                 records=records, unique_columns=(review_deadline.c.role,))
 
-    def sync_group_member(self, queue_id, group_type, records):
+    def sync_group_member(
+            self, queue_id, group_type, records, forbid_add=True):
         """
         Update the member records of the given group for the given queue.
 
-        Currently this just allows removing members of the group,
+        Currently this just allows removing members of the group
+        (unless the forbid_add argument is overridden),
         but could be extended if group members gain extra attributes.
         (E.g. the chair of a group representing a committee.)
         """
@@ -1016,14 +1018,17 @@ class ReviewPart(object):
                 raise ConsistencyError('queue does not exist with id={}',
                                        queue_id)
 
-            self._sync_records(
+            (n_insert, n_update, n_delete) = self._sync_records(
                 conn, group_member,
                 key_column=(group_member.c.queue_id,
                             group_member.c.group_type),
                 key_value=(queue_id, group_type),
                 records=records,
-                update_columns=(),
-                forbid_add=True)
+                update_columns=(
+                    () if forbid_add else (group_member.c.person_id,)),
+                forbid_add=forbid_add)
+
+        return (n_insert, n_update, n_delete)
 
     def sync_review_figure(self, reviewer_id, records):
         """

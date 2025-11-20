@@ -79,6 +79,7 @@
         {% if members %}
             <li><a href="{{ url_for('.group_member_edit', queue_id=queue.id, group_type=group_type) }}"><span class="fa-solid fa-pencil"></span>Edit members</a></li>
         {% endif %}
+        <li><a href="{{ url_for('.group_member_sync', queue_id=queue.id, group_type=group_type) }}"><span class="fa-solid fa-rotate"></span>Copy from another queue</a></li>
     </ol>
 <nav>
 {% endblock %}

@@ -58,3 +58,16 @@ In practice this means:
   and hide the old one instead.
 
 .. image:: image/queue_affiliation.png
+
+If you are managing multiple queues where the affiliations
+should be the same, you can use the "Copy from another queue"
+link in the "Affiliations" section of the queue page.
+Once you have selected another queue from which to copy information,
+you will see a list of the changes which will be applied.
+Note that affiliations not present in the other queue will be hidden
+rather than deleted.  (This will be shown as a change of type "Update"
+with the "Hidden" column highlighted.)
+The assignment types will also be updated to match those in the other queue.
+If everything looks correct, you can press the "Copy" button to confirm.
+
+.. image:: image/queue_affiliation_copy.png
