@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple
 
-from ..error import FormattedError, MultipleRecords, NoSuchValue
+from ..error import FormattedError, MultipleValues, NoSuchValue
 from .enum import SyncOperation
 
 
@@ -110,7 +110,7 @@ def compare_collections(
                 comparison.append((k, with_sync_operation(
                     v, SyncOperation.DELETE)))
 
-        except MultipleRecords:
+        except MultipleValues:
             raise FormattedError(
                 'Multiple matches found for key {!r} comparing collections',
                 match_key)

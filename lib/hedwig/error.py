@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2021 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -105,6 +105,14 @@ class MultipleRecords(FormattedError):
     """
     Error for when the database unexpectedly returns multiple
     records when only one was expected.
+    """
+
+    pass
+
+
+class MultipleValues(FormattedError):
+    """
+    Error for when multiple matching values are found.
     """
 
     pass

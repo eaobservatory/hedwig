@@ -493,9 +493,10 @@ def register_template_utils(app):
 
     @app.template_filter()
     def sync_operation_name(value):
-        if value is None:
+        try:
+            return SyncOperation.get_name(value)
+        except KeyError:
             return 'Unknown operation'
-        return SyncOperation.get_name(value)
 
     @app.template_filter()
     def sync_operation_class(value):

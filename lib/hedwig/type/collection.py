@@ -25,7 +25,8 @@ from ..astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
     format_coord, format_coord_all_systems, parse_coord
 from ..compat import first_value
 from ..email.util import is_valid_email
-from ..error import NoSuchRecord, NoSuchValue, MultipleRecords, UserError
+from ..error import MultipleRecords, MultipleValues, \
+    NoSuchRecord, NoSuchValue, UserError
 from ..util import is_list_like, matches_constraint
 from .base import CollectionByCall, CollectionByFacility, \
     CollectionByPerson, CollectionByProposal, CollectionByQueue, \
@@ -73,12 +74,20 @@ class ResultCollection(OrderedDict):
             return first_value(self)
 
     def get_value(self, filter_value, default=()):
+        """
+        Search the collection for a value matching the given filter function.
+
+        :raises NoSuchValue: if no matching value is found
+            unless a `default` value is given.
+        :raises MultipleValues: if multiple matching values are found.
+        """
+
         result = None
 
         for value in self.values():
             if filter_value(value):
                 if result is not None:
-                    raise MultipleRecords('multiple matching values found')
+                    raise MultipleValues('multiple matching values found')
 
                 result = value
 

@@ -22,7 +22,8 @@ from collections import namedtuple, OrderedDict
 
 from hedwig.astro.coord import CoordSystem
 from hedwig.compat import string_type
-from hedwig.error import MultipleRecords, NoSuchRecord, NoSuchValue, UserError
+from hedwig.error import MultipleRecords, MultipleValues, \
+    NoSuchRecord, NoSuchValue, UserError
 from hedwig.type.base import CollectionByProposal, CollectionOrdered, \
     CollectionSortable
 from hedwig.type.collection import \
@@ -87,6 +88,17 @@ class CollectionTypeTestCase(TestCase):
         self.assertEqual(list(cc[1].values()), [TT(0, 1), TT(1, 1), TT(4, 1)])
         self.assertEqual(list(cc[2].values()), [TT(2, 2), TT(3, 2)])
         self.assertEqual(list(cc[3].values()), [TT(5, 3)])
+
+        # Also test "get_value" method.
+        self.assertIsNone(c.get_value((lambda x: x.flag == 4), default=None))
+
+        with self.assertRaises(NoSuchValue):
+            c.get_value(lambda x: x.flag == 4)
+
+        with self.assertRaises(MultipleValues):
+            c.get_value(lambda x: x.flag == 1)
+
+        self.assertEqual(c.get_value(lambda x: x.id == 2), TT(2, 2))
 
     def test_by_proposal_collection(self):
         class BPCollection(ResultCollection, CollectionByProposal):

@@ -29,7 +29,8 @@ from hedwig.type.collection import MemberCollection
 from hedwig.type.enum import AnnotationType, Assessment, AttachmentState, \
     BaseCallType, BaseReviewerRole, BaseTextRole, CallState, \
     MessageState, MessageThreadType, ProposalState, ProposalType, \
-    PublicationType, RequestState, ReviewState, SemesterState, UserLogEvent
+    PublicationType, RequestState, ReviewState, \
+    SemesterState, SyncOperation, UserLogEvent
 from hedwig.type.simple import Member
 from hedwig.type.util import null_tuple
 from hedwig.web.template_util import Counter
@@ -338,6 +339,17 @@ class TemplateUtilTestCase(WebAppTestCase):
 
         self.assertEqual(f(999), 'Unknown state')
         self.assertEqual(f(SemesterState.PAST), 'Past')
+
+    def test_filter_sync_operation(self):
+        f = self.app.jinja_env.filters['sync_operation_name']
+
+        self.assertEqual(f(999), 'Unknown operation')
+        self.assertEqual(f(SyncOperation.DELETE), 'Delete')
+
+        f = self.app.jinja_env.filters['sync_operation_class']
+
+        self.assertEqual(f(999), '')
+        self.assertEqual(f(SyncOperation.INSERT), 'sync_op_ins')
 
     def test_filter_text_role(self):
         f = self.app.jinja_env.filters['text_role_name']
