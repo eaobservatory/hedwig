@@ -60,10 +60,10 @@
                 <td>
                     {{ render_affiliation_selection(facility_affiliation_type_class, member.id | fmt('affiliation_{}'), affiliations, member.affiliation_id, include_undefined=false) }}
                 </td>
-                <td>
+                <td class="control_center">
                     <input type="radio" name="pi" value="{{ member.id }}" {{ 'checked="checked"' | safe if member.pi }} />
                 </td>
-                <td>
+                <td class="control_center">
                     {% if member.can_edit %}
                         <input type="checkbox" name="editor_{{ member.id }}" value="yes" {{ 'checked="checked"' | safe if member.editor }} />
                     {% elif member.editor %}
@@ -73,12 +73,12 @@
                     {% endif %}
                 </td>
                 {% if has_peer_review %}
-                    <td>
+                    <td class="control_center">
                         <input type="radio" name="reviewer" value="{{ member.id }}" {{ 'checked="checked"' | safe if member.reviewer }} />
                     </td>
                 {% endif %}
                 {% if has_member_observer %}
-                    <td>
+                    <td class="control_center">
                         <input type="checkbox" name="observer_{{ member.id }}" value="yes" {{ 'checked="checked"' | safe if member.observer }} />
                     </td>
                 {% endif %}

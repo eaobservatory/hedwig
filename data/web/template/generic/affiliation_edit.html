@@ -56,7 +56,7 @@
             {% for affiliation in hidden_affiliations.values_in_type_order(facility_affiliation_type_class) %}
                 <tr id="affiliationrow_{{ affiliation.id }}" {{ combined_class(('spacer_above', loop.first and hidden),) | safe }}>
                     <td><input type="text" name="name_{{ affiliation.id }}" value="{{ affiliation.name }}" required="required" /></td>
-                    <td><input type="checkbox" name="hidden_{{ affiliation.id }}" value="yes" {{ 'checked="checked"' | safe if affiliation.hidden }} /></td>
+                    <td class="control_center"><input type="checkbox" name="hidden_{{ affiliation.id }}" value="yes" {{ 'checked="checked"' | safe if affiliation.hidden }} /></td>
                     <td><select name="type_{{ affiliation.id }}">
                         {% for (type_id, type_name) in affiliation_types.items() %}
                             <option value="{{ type_id }}" {{ 'selected="selected"' | safe if type_id == affiliation.type }}>{{ type_name }}</option>
@@ -70,7 +70,7 @@
     <table class="template">
         <tr id="affiliationrow_template">
             <td><input type="text" name="name" value="" /></td>
-            <td><input type="checkbox" name="hidden" value="yes" /></td>
+            <td class="control_center"><input type="checkbox" name="hidden" value="yes" /></td>
             <td><select name="type">
                 {% for (type_id, type_name) in affiliation_types.items() %}
                     <option value="{{ type_id }}">{{ type_name }}</option>

@@ -52,7 +52,7 @@
             <tr id="previousrow_{{ prev_proposal.id }}">
             <td class="draggrip">&vellip;&vellip;</td>
             <td><input type="text" name="code_{{ prev_proposal.id }}" value="{{ prev_proposal.proposal_code }}" size="20" list="accepted_proposals" /></td>
-            <td><input type="checkbox" name="continuation_{{ prev_proposal.id }}" {{ 'checked="checked"' | safe if prev_proposal.continuation }} /></td>
+            <td class="control_center"><input type="checkbox" name="continuation_{{ prev_proposal.id }}" {{ 'checked="checked"' | safe if prev_proposal.continuation }} /></td>
             <td>
                 {% for i in range(6) %}
                     {% with pub_present = (i < (prev_proposal.publications | length)) %}

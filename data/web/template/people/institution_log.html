@@ -63,7 +63,7 @@
                         {% endif %}
                         <td rowspan="8">{{ entry.date | format_datetime }}</td>
                         <td rowspan="8"><a href="{{ url_for('.person_view', person_id=entry.person_id) }}">{{ entry.person_name }}</a></td>
-                        <td rowspan="8">
+                        <td rowspan="8" class="control_center">
                             <input type="checkbox" name="approved_{{ entry.id }}" {{ 'checked="checked"' | safe if entry.approved }} />
                             <input type="hidden" name="entry_{{ entry.id }}" value="1" />
                         </td>

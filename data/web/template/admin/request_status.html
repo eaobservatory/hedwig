@@ -33,7 +33,7 @@
                     {% if has_expiry %}
                         <td>{{ request.processed | format_datetime }}</td>
                     {% endif %}
-                    <td>
+                    <td class="control_center">
                         {% if request.state is request_state_resettable %}
                             <input type="checkbox" name="{{ request.id | fmt(checkbox_fmt) }}" value="1" id="{{ update_counter() | fmt('update_box_{}') }}" />
                         {% else %}

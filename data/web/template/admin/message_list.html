@@ -54,7 +54,7 @@
                     </td>
                 {% endif %}
                 <td><a href="{{ url_for('.message_view', message_id=message.id) }}">{{ message.subject }}</a></td>
-                <td>
+                <td class="control_center">
                     {% if message.state is message_state_resettable %}
                         <input type="checkbox" name="{{ message.id | fmt('message_{}') }}" value="1" id="{{ update_counter() | fmt('update_box_{}') }}" />
                         <input type="hidden" name="{{ message.id | fmt('prev_state_{}') }}" value="{{ message.state }}" />

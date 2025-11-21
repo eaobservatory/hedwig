@@ -68,7 +68,7 @@
                             {{ review.review_text | format_text(review.review_format) }}
                         </td>
                         {% if loop.first %}
-                            <td rowspan="{{ loop.length }}">
+                            <td rowspan="{{ loop.length }}" class="control_center">
                                 <input type="checkbox" name="ready_{{ proposal.id }}" {{ 'checked="checked"' | safe if proposal.decision_ready }} />
                             </td>
                         {% endif %}

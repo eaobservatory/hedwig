@@ -38,7 +38,7 @@
                     <td><a href="{{ url_for('people.person_view', person_id=entry.uploader) }}">{{ entry.uploader_name }}</a></td>
                     <td>{{ caller(entry) }}</td>
                     <td>{{ entry.md5sum }}</td>
-                    <td>
+                    <td class="control_center">
                         {% if entry.state is attachment_new %}
                             &nbsp;
                         {% else %}
@@ -97,7 +97,7 @@
                     <td>{{ pub.proposal.state | proposal_state_name }}</td>
                     <td>{{ pub.type | publication_type_name }}</td>
                     <td>{{ pub.description }}</td>
-                    <td>
+                    <td class="control_center">
                         {% if pub.state is attachment_new %}
                             &nbsp;
                         {% else %}
@@ -129,7 +129,7 @@
                     <td class="{{ moc.state | attachment_state_class }}">{{ moc.state | attachment_state_name }}</td>
                     <td>{{ moc.uploaded | format_datetime }}</td>
                     <td><a href="{{ url_for(moc.facility_code | fmt('{}.tool_clash_moc_edit'), moc_id=moc.id) }}">{{ moc.name }}</a></td>
-                    <td>
+                    <td class="control_center">
                         {% if moc.state is attachment_new %}
                             &nbsp;
                         {% else %}

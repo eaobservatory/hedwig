@@ -39,9 +39,10 @@
                         {% if affiliation.type is not affiliation_type_standard(facility_affiliation_type_class) %}<span class="label">{{ affiliation.type | affiliation_type_name(facility_affiliation_type_class) }}</span>{% endif %}
                     </td>
                     <td><input type="number" name="weight_{{ affiliation.id }}" value="{{ affiliation.weight.weight if affiliation.weight.weight is not none }}" min="0" step="any"></td>
-                    <td><input type="checkbox" name="hidden_{{ affiliation.id }}" class="checkbox_indeterminate" value="{{ 'indeterminate' if affiliation.weight.hidden is none else 'yes' }}" {{ 'checked="checked"' | safe if affiliation.weight.hidden or (affiliation.weight.hidden is none)}} /></td>
+                    <td class="control_center"><input type="checkbox" name="hidden_{{ affiliation.id }}" class="checkbox_indeterminate" value="{{ 'indeterminate' if affiliation.weight.hidden is none else 'yes' }}" {{ 'checked="checked"' | safe if affiliation.weight.hidden or (affiliation.weight.hidden is none)}} /></td>
                     <td><select name="type_{{ affiliation.id }}">
                         <option value="" {{ 'selected="selected"' | safe if affiliation.weight.type is none }}>&mdash;</option>
+                        <hr />
                         {% for (type_id, type_name) in affiliation_types.items() %}
                             <option value="{{ type_id }}" {{ 'selected="selected"' | safe if type_id == affiliation.weight.type }}>{{ type_name }}</option>
                         {% endfor %}

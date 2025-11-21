@@ -51,7 +51,7 @@
                             {{ proposal.member.person_name | abbr(25) }}
                         {% endif %}
                     </td>
-                    <td><input type="checkbox" name="{{ proposal.id | fmt('proposal_{}') }}" /></td>
+                    <td class="control_center"><input type="checkbox" name="{{ proposal.id | fmt('proposal_{}') }}" /></td>
                 </tr>
             {% endfor %}
         </table>
