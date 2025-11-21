@@ -3,19 +3,19 @@
 
 {% block content %}
 <nav>
-    <ol>
-        <li><a href="{{ url_for('home.home_page') }}"><span class="fa-solid fa-house"></span>Back to home page</a></li>
+    <ol class="fa-ul">
+        <li><a href="{{ url_for('home.home_page') }}"><span class="fa-li"><span class="fa-solid fa-house"></span></span>Back to home page</a></li>
     </ol>
 </nav>
 
-<ul>
-    <li><a href="{{ url_for('.message_list') }}">Email messages</a></li>
-    <li><a href="{{ url_for('people.institution_log_approval') }}">Approve institution edits</a></li>
-    <li><a href="{{ url_for('.processing_status') }}">View processing status</a></li>
-    <li><a href="{{ url_for('.request_status') }}">View user request status</a></li>
-    <li><a href="{{ url_for('.user_unregistered') }}">Unregistered users</a></li>
-    <li><a href="{{ url_for('people.user_session_list') }}">User log in sessions</a></li>
-</ul>
+<ol class="fa-ul">
+    <li><a href="{{ url_for('.message_list') }}"><span class="fa-li"><span class="fa-solid fa-envelope"></span></span>Email messages</a></li>
+    <li><a href="{{ url_for('people.institution_log_approval') }}"><span class="fa-li"><span class="fa-solid fa-building-columns"></span></span>Approve institution edits</a></li>
+    <li><a href="{{ url_for('.processing_status') }}"><span class="fa-li"><span class="fa-solid fa-gear"></span></span>View processing status</a></li>
+    <li><a href="{{ url_for('.request_status') }}"><span class="fa-li"><span class="fa-solid fa-user-gear"></span></span>View user request status</a></li>
+    <li><a href="{{ url_for('.user_unregistered') }}"><span class="fa-li"><span class="fa-solid fa-user-xmark"></span></span>Unregistered users</a></li>
+    <li><a href="{{ url_for('people.user_session_list') }}"><span class="fa-li"><span class="fa-solid fa-users"></span></span>User log in sessions</a></li>
+</ol>
 
 <h2>Site Groups</h2>
 

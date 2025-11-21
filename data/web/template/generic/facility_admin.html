@@ -3,17 +3,17 @@
 
 {% block content %}
 <nav>
-    <ol>
-        <li><a href="{{ url_for('.facility_home') }}"><span class="fa-solid fa-building"></span>Back to facility home page</a></li>
-        <li><a href="{{ url_for('admin.admin_home') }}"><span class="fa-solid fa-shield-halved"></span>Back to site administration page</a></li>
+    <ol class="fa-ul">
+        <li><a href="{{ url_for('.facility_home') }}"><span class="fa-li"><span class="fa-solid fa-building"></span></span>Back to facility home page</a></li>
+        <li><a href="{{ url_for('admin.admin_home') }}"><span class="fa-li"><span class="fa-solid fa-shield-halved"></span></span>Back to site administration page</a></li>
     </ol>
 </nav>
 
-<ul>
-    <li><a href="{{ url_for('.semester_list') }}">Semesters</a></li>
-    <li><a href="{{ url_for('.queue_list') }}">Queues</a></li>
-    <li><a href="{{ url_for('.call_list') }}">Calls</a></li>
-    <li><a href="{{ url_for('.category_edit') }}">Categories</a></li>
-</ul>
+<ol class="fa-ul">
+    <li><a href="{{ url_for('.semester_list') }}"><span class="fa-li"><span class="fa-solid fa-timeline"></span></span>Semesters</a></li>
+    <li><a href="{{ url_for('.queue_list') }}"><span class="fa-li"><span class="fa-solid fa-filter"></span></span>Queues</a></li>
+    <li><a href="{{ url_for('.call_list') }}"><span class="fa-li"><span class="fa-solid fa-bullhorn"></span></span>Calls</a></li>
+    <li><a href="{{ url_for('.category_edit') }}"><span class="fa-li"><span class="fa-solid fa-tags"></span></span>Categories</a></li>
+</ol>
 
 {% endblock %}
