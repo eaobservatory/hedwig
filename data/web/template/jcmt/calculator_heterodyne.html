@@ -28,6 +28,8 @@
                             data-pixel_size="{{ receiver_info.pixel_size }}"
                             data-is_array="{{ 'false' if receiver_info.array is none else 'true' }}"
                             data-if_option="{{ 'true' if receiver_info.t_rx_lo else 'false' }}"
+                            data-lsb_available="{{ 'true' if (receiver_info.t_rx_lo and (receiver_info.t_rx_lsb is not none)) else 'false' }}"
+                            data-usb_available="{{ 'true' if (receiver_info.t_rx_lo and (receiver_info.t_rx_usb is not none)) else 'false' }}"
                             data-rx_available="{{ 'true' if receiver_info.available else 'false' }}"
                         >{{ receiver_info.name }}</option>
                     {% endfor %}

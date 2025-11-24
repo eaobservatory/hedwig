@@ -31,6 +31,8 @@ $(document).ready(function () {
         var sep_pol_available = rx.data('sep_pol_available');
         var ssb_available = rx.data('ssb_available');
         var dsb_available = rx.data('dsb_available');
+        var lsb_available = rx.data('lsb_available');
+        var usb_available = rx.data('usb_available');
 
         if (rx_available) {
             rx_available_warning.hide();
@@ -44,6 +46,20 @@ $(document).ready(function () {
         if (! if_option) {
             freq_if_select.val('default');
             side_select.val('');
+        } else if (lsb_available && usb_available) {
+            side_select.children().prop('disabled', false);
+        } else if (lsb_available) {
+            if (side_select.val() === 'usb') {
+                side_select.val('');
+            }
+            side_select.find('option[value="usb"]').prop('disabled', true);
+            side_select.find('option[value="lsb"]').prop('disabled', false);
+        } else {
+            if (side_select.val() === 'lsb') {
+                side_select.val('');
+            }
+            side_select.find('option[value="lsb"]').prop('disabled', true);
+            side_select.find('option[value="usb"]').prop('disabled', false);
         }
 
         freq_if_box.attr('min', rx.data('f_if_min'));
