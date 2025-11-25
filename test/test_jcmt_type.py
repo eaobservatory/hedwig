@@ -41,6 +41,7 @@ class JCMTTypeTestCase(TestCase):
         instruments = set()
         for instrument in (
                 JCMTInstrument.HARP,
+                JCMTInstrument.ALAIHI,
                 JCMTInstrument.UU,
                 JCMTInstrument.AWEOWEO,
                 JCMTInstrument.KUNTUR,
@@ -70,7 +71,6 @@ class JCMTTypeTestCase(TestCase):
         for instrument in (
                 JCMTInstrument.RXA3,
                 JCMTInstrument.RXA3M,
-                JCMTInstrument.ALAIHI,
                 JCMTInstrument.SCUBA2,
                 ):
             # Identifiers should be unique integers.

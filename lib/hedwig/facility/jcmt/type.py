@@ -184,7 +184,7 @@ class JCMTInstrument(EnumBasic, EnumAvailable):
         (RXA3M,  InstrumentInfo('RxA3m',   False, (JCMTAncillary.ROVER,))),
         # Namakanui:
         (ALAIHI, InstrumentInfo('\u02bbAla\u02bbihi',
-                                           False, ())),
+                                           True,  ())),
         (UU,     InstrumentInfo('\u02bb\u016a\u02bb\u016b',
                                            True,  ())),
         (AWEOWEO,InstrumentInfo('\u02bb\u0100weoweo',
