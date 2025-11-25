@@ -28,6 +28,7 @@ from jinja2.runtime import Undefined
 from markupsafe import Markup
 
 from ..astro.coord import CoordSystem
+from ..compat import char
 from ..compat import first_value as _first_value
 from ..config import get_countries
 from ..type.enum import AnnotationType, Assessment, \
@@ -40,6 +41,8 @@ from ..type.enum import AnnotationType, Assessment, \
 from ..util import FormatMaxDP, FormatSigFig
 from .format import format_message_text, format_text, format_title_markup
 from .util import mangle_email_address as _mangle_email_address
+
+valid_country_code = re.compile(r'^[A-Z][A-Z]$')
 
 
 def register_template_utils(app):
@@ -177,6 +180,36 @@ def register_template_utils(app):
             return ''
 
         return get_countries().get(value, 'Unknown country')
+
+    @app.template_filter()
+    def country_indicator(value, as_abbr=True):
+        """
+        Attempt to construct unicode regional indicator symbol
+        for the given country.
+
+        :param value: two letter country code (ISO 3166-1).
+        :param as_abbr: return as an HTML `abbr` tag with the country
+            name as the title.
+        """
+
+        if (value is None) or not valid_country_code.match(value):
+            # Options to use here: black flag: U+1F3F4, white flag: U+1F3F3
+            # (but both probably render with a "pole" unlike real indicators)
+            indicator = '\U0001F3F4'
+
+        else:
+            # Map 'A' (U+0041) to indicator U+1F1E6, etc.; i.e. add 0x1F1A5.
+            indicator = ''.join(char(ord(c) + 0x1F1A5) for c in value)
+
+        if as_abbr:
+            name = 'Unknown country'
+            if value is not None:
+                name = get_countries().get(value, name)
+
+            return Markup('<abbr title="') + name + Markup('">') + \
+                indicator + Markup('</abbr>')
+
+        return indicator
 
     @app.template_filter()
     def fmt(value, format_):

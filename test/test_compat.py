@@ -20,12 +20,18 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict
 
-from hedwig.compat import first_value, iter_items, split_version
+from hedwig.compat import char, first_value, iter_items, \
+    split_version, string_type
 
 from .compat import TestCase
 
 
 class CompatTestCase(TestCase):
+    def test_char(self):
+        c = char(65)
+        self.assertIsInstance(c, string_type)
+        self.assertEqual(c, 'A')
+
     def test_split_version(self):
         version = split_version('5.2.8')
         self.assertIsInstance(version, tuple)

@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2024 East Asian Observatory
+# Copyright (C) 2016-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -36,6 +36,7 @@ if python_version < 3:
     from urllib import quote as _url_quote
     from urllib import urlencode as _urlencode
 
+    char = unichr
     string_type = unicode
     byte_type = str
 
@@ -96,6 +97,7 @@ else:
     from urllib.parse import quote as url_quote
     from urllib.parse import urlencode as url_encode
 
+    char = chr
     string_type = str
     byte_type = bytes
     make_type = type

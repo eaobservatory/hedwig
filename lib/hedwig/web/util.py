@@ -228,8 +228,8 @@ def mangle_email_address(email_address):
 
     mangled = []
 
-    for char in email_address:
-        mangled.append('&#{};'.format(ord(char)))
+    for c in email_address:
+        mangled.append('&#{};'.format(ord(c)))
 
     return json.dumps(mangled)
 

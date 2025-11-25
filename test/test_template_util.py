@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2024 East Asian Observatory
+# Copyright (C) 2016-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -142,12 +142,28 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(f([True,  True,  False, True]),  3)
         self.assertEqual(f([True,  True,  True,  True]),  4)
 
-    def test_filter_country_name(self):
+    def test_filter_country(self):
         f = self.app.jinja_env.filters['country_name']
 
         self.assertEqual(f(None), '')
         self.assertEqual(f('US'), 'United States')
         self.assertEqual(f('BX'), 'Unknown country')
+
+        # Test unicode regional indicator symbols.
+        f = self.app.jinja_env.filters['country_indicator']
+
+        abbr = '<abbr title="{}">{}</abbr>'
+        unknown_indicator = '\U0001F3F4'
+        unknown_name = 'Unknown country'
+
+        self.assertEqual(f(None, as_abbr=False), unknown_indicator)
+        self.assertEqual(f('x', as_abbr=False), unknown_indicator)
+        self.assertEqual(f('GB', as_abbr=False), '\U0001F1EC\U0001F1E7')
+
+        self.assertEqual(f(None), abbr.format(unknown_name, unknown_indicator))
+        self.assertEqual(f('x'), abbr.format(unknown_name, unknown_indicator))
+        self.assertEqual(f('GB'), abbr.format(
+            'United Kingdom', '\U0001F1EC\U0001F1E7'))
 
     def test_filter_fmt(self):
         f = self.app.jinja_env.filters['fmt']
