@@ -76,7 +76,8 @@
                         can only carry forward existing approved observing.
                     </div>
                     <label for="proposal_continuation">Proposal</label>
-                    <select name="proposal_continuation" />
+                    <select name="proposal_continuation">
+                        <option value="" {{ 'selected="selected"' | safe if proposal_continuation is none }} disabled="disabled">Select a proposal&hellip;</option>
                         {% for proposal in proposals_continuable.values() %}
                             <option value="{{ proposal.id }}" {{ 'selected="selected"' | safe if proposal.id == proposal_continuation }}>
                                 {{ proposal.code }}:
@@ -99,7 +100,8 @@
             <ol>
                 <li>
                     <label for="proposal_copy">Proposal</label>
-                    <select name="proposal_copy" />
+                    <select name="proposal_copy">
+                        <option value="" {{ 'selected="selected"' | safe if proposal_copy is none }} disabled="disabled">Select a proposal&hellip;</option>
                         {% for proposal in proposals.values() %}
                             <option value="{{ proposal.id }}" {{ 'selected="selected"' | safe if proposal.id == proposal_copy }} data-queue_id="{{ proposal.queue_id }}">
                                 {{ proposal.code }}:

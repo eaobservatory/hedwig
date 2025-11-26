@@ -2463,6 +2463,11 @@ class IntegrationTest(DummyConfigTestCase):
             self.browser.find_element(By.NAME, 'affiliation_id')
         ).select_by_visible_text('China')
 
+        Select(
+            self.browser.find_element(By.NAME, (
+                'proposal_continuation' if continuation else 'proposal_copy'))
+        ).select_by_index(1)
+
         if continuation:
             self.browser.find_element(By.NAME, 'submit_continue').click()
 
