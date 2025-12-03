@@ -177,8 +177,8 @@
         </tr>
         <tr>
             <th>Transmission</th>
-            <td>{{ output_extra.trans_850 | fmt('{:.3f}') }}</td>
-            <td>{{ output_extra.trans_450 | fmt('{:.3f}')}}</td>
+            <td>{{ (output_extra.trans_850 * 100.0) | fmt('{:.1f}%') }}</td>
+            <td>{{ (output_extra.trans_450 * 100.0) | fmt('{:.1f}%') }}</td>
         </tr>
         {% if 'airmass' in output_extra %}
             <tr>
