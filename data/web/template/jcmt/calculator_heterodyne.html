@@ -384,7 +384,13 @@
 
     <tr>
         <th>Receiver temperature</th>
-        <td colspan="2">{{ output_extra.t_rx | fmt('{:.3f}') }} K</td>
+        <td colspan="2">
+            {{ output_extra.t_rx | fmt('{:.3f}') }} K
+            {% if ('t_rx_base' in output_extra) and ('t_rx_if' in output_extra) and (output_extra.t_rx_if != 0.0) %}
+                ({{ output_extra.t_rx_base | fmt('{:.3f}') }}
+                + {{ output_extra.t_rx_if | fmt('{:.3f}') }} K)
+            {% endif %}
+        </td>
     </tr>
     <tr>
         <th>System temperature</th>
@@ -392,7 +398,13 @@
     </tr>
     <tr>
         <th>Opacity</th>
-        <td colspan="2">{{ output_extra.tau | fmt('{:.3f}') }}</td>
+        <td colspan="2">
+            {{ output_extra.tau | fmt('{:.3f}') }}
+            {% if 'eta_sky' in output_extra %}
+                ({{ (output_extra.eta_sky * 100.0) | fmt('{:.1f}%') }}
+                sky efficiency)
+            {% endif %}
+        </td>
     </tr>
     {% if 'zenith_angle' in output_extra %}
     <tr>
