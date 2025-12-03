@@ -7,8 +7,8 @@
 {% block content %}
 
 <nav>
-    <ol>
-        <li><a href="{{ url_for('.review_call_stats_download', call_id=call.id) }}"><span class="fa-solid fa-download"></span>Download as a CSV file</a></li>
+    <ol class="fa-ul">
+        <li><a href="{{ url_for('.review_call_stats_download', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-download"></span></span>Download as a CSV file</a></li>
     </ol>
 </nav>
 

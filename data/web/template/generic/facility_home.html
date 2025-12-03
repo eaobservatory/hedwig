@@ -8,8 +8,8 @@
 
 {% if show_admin_links %}
     <nav>
-        <ol>
-            <li><a id="admin_menu_link" href="{{ url_for('.facility_admin') }}"><span class="fa-solid fa-building-shield"></span>Administrative menu</a></li>
+        <ol class="fa-ul">
+            <li><a id="admin_menu_link" href="{{ url_for('.facility_admin') }}"><span class="fa-li"><span class="fa-solid fa-building-shield"></span></span>Administrative menu</a></li>
         </ol>
     </nav>
 {% endif %}

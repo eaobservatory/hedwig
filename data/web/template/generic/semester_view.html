@@ -24,9 +24,9 @@
 {{ semester.description | format_text(semester.description_format) }}
 
 <nav>
-    <ol>
-        <li><a href="{{ url_for('.semester_edit', semester_id=semester.id) }}"><span class="fa-solid fa-pencil"></span>Edit semester</a></li>
-        <li><a href="{{ url_for('.semester_new', copy=semester.id) }}"><span class="fa-solid fa-copy"></span>Copy semester</a></li>
+    <ol class="fa-ul">
+        <li><a href="{{ url_for('.semester_edit', semester_id=semester.id) }}"><span class="fa-li"><span class="fa-solid fa-pencil"></span></span>Edit semester</a></li>
+        <li><a href="{{ url_for('.semester_new', copy=semester.id) }}"><span class="fa-li"><span class="fa-solid fa-copy"></span></span>Copy semester</a></li>
     </ol>
 </nav>
 
@@ -47,8 +47,8 @@
                     {% endif %}
 
                     <nav>
-                        <ol>
-                            <li><a id="preamble_edit_{{ type_num }}" href="{{ url_for('.call_preamble_edit', semester_id=semester.id, call_type=type_num) }}"><span class="fa-solid fa-pencil"></span>{{ 'Add' if preamble is none else 'Edit' }} preamble</a></li>
+                        <ol class="fa-ul">
+                            <li><a id="preamble_edit_{{ type_num }}" href="{{ url_for('.call_preamble_edit', semester_id=semester.id, call_type=type_num) }}"><span class="fa-li"><span class="fa-solid fa-pencil"></span></span>{{ 'Add' if preamble is none else 'Edit' }} preamble</a></li>
                         </ol>
                     </nav>
                 {% endwith %}

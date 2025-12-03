@@ -5,9 +5,9 @@
 {% block content %}
 {% if assigned_roles %}
 <nav>
-    <ol id="assign_reviewer_links">
+    <ol id="assign_reviewer_links" class="fa-ul">
         {% for (role, group) in assigned_roles.items() %}
-            <li><a href="{{ url_for('.review_call_grid', call_id=call.id, reviewer_role=role) }}"><span class="fa-solid fa-file-circle-exclamation"></span>Assign {{ group | group_type_name | lower }}</a></li>
+            <li><a href="{{ url_for('.review_call_grid', call_id=call.id, reviewer_role=role) }}"><span class="fa-li"><span class="fa-solid fa-file-circle-exclamation"></span></span>Assign {{ group | group_type_name | lower }}</a></li>
         {% endfor %}
     </ol>
 </nav>
@@ -15,10 +15,10 @@
 
 {% if unnotified_roles %}
 <nav>
-    <ol id="notify_reviewer_links">
+    <ol id="notify_reviewer_links" class="fa-ul">
         {% for (role, group) in assigned_roles.items() %}
             {% if unnotified_roles.get(role, 0) %}
-                <li><a href="{{ url_for('.review_call_notify', call_id=call.id, reviewer_role=role) }}"><span class="fa-solid fa-comment"></span>Notify {{ group | group_type_name | lower }}</a></li>
+                <li><a href="{{ url_for('.review_call_notify', call_id=call.id, reviewer_role=role) }}"><span class="fa-li"><span class="fa-solid fa-comment"></span></span>Notify {{ group | group_type_name | lower }}</a></li>
             {% endif %}
         {% endfor %}
     </ol>
@@ -27,9 +27,9 @@
 
 {% if unthanked_roles %}
 <nav>
-    <ol id="thank_reviewer_links">
+    <ol id="thank_reviewer_links" class="fa-ul">
         {% for role in unthanked_roles %}
-            <li><a href="{{ url_for('.review_call_thank', call_id=call.id, reviewer_role=role) }}"><span class="fa-solid fa-hand-holding-heart"></span>Thank {{ role | reviewer_role_name(facility_role_class) | lower }} reviewers</a></li>
+            <li><a href="{{ url_for('.review_call_thank', call_id=call.id, reviewer_role=role) }}"><span class="fa-li"><span class="fa-solid fa-hand-holding-heart"></span></span>Thank {{ role | reviewer_role_name(facility_role_class) | lower }} reviewers</a></li>
         {% endfor %}
     </ol>
 </nav>

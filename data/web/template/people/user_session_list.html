@@ -43,9 +43,9 @@
     </table>
 
     <nav>
-        <p>
-            <a href="{{ url_for('.user_session_log_out_all') }}"><span class="fa-solid fa-users-slash"></span>Log out all</a></td>
-        </p>
+        <ol class="fa-ul">
+            <li><a href="{{ url_for('.user_session_log_out_all') }}"><span class="fa-li"><span class="fa-solid fa-users-slash"></span></span>Log out all</a></li>
+        </ol>
     </nav>
 {% else %}
     <p class="not_present">

@@ -16,8 +16,8 @@
 
         {% if can_edit %}
             <nav>
-                <ol>
-                    <li><a href="{{ url_for('.request_edit', proposal_id=proposal.id) }}"><span class="fa-solid fa-pencil"></span>Edit observing request</a></li>
+                <ol class="fa-ul">
+                    <li><a href="{{ url_for('.request_edit', proposal_id=proposal.id) }}"><span class="fa-li"><span class="fa-solid fa-pencil"></span></span>Edit observing request</a></li>
                 </ol>
             </nav>
         {% endif %}

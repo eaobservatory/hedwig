@@ -21,11 +21,11 @@
 </div>
 
 <nav>
-    <ol>
-        <li><a href="{{ url_for('people.invitation_token_enter') }}"><span class="fa-solid fa-envelope-open-text"></span>Enter an invitation code</a></li>
-        <li><a href="{{ url_for('help.help_index') }}"><span class="fa-solid fa-circle-info"></span>Help and information</a></li>
+    <ol class="fa-ul">
+        <li><a href="{{ url_for('people.invitation_token_enter') }}"><span class="fa-li"><span class="fa-solid fa-envelope-open-text"></span></span>Enter an invitation code</a></li>
+        <li><a href="{{ url_for('help.help_index') }}"><span class="fa-li"><span class="fa-solid fa-circle-info"></span></span>Help and information</a></li>
         {% if show_admin_links %}
-            <li><a href="{{ url_for('admin.admin_home') }}"><span class="fa-solid fa-shield-halved"></span>Site administration</a>
+            <li><a href="{{ url_for('admin.admin_home') }}"><span class="fa-li"><span class="fa-solid fa-shield-halved"></span></span>Site administration</a>
         {% endif %}
     </ol>
 </nav>

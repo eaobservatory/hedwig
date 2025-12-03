@@ -5,9 +5,11 @@
 
 {% block content %}
 
-<p>
-    <a href="{{ url_for('.proposal_view', proposal_id=proposal_id, _anchor=(role_code | fmt('{}_case'))) }}"><span class="fa-solid fa-arrow-left"></span>Back to proposal</a>
-</p>
+<nav>
+    <ol class="fa-ul">
+        <li><a href="{{ url_for('.proposal_view', proposal_id=proposal_id, _anchor=(role_code | fmt('{}_case'))) }}"><span class="fa-li"><span class="fa-solid fa-arrow-left"></span></span>Back to proposal</a></li>
+    </ol>
+</nav>
 
 {% if note %}
     <section>
@@ -70,26 +72,23 @@
         {% endif %}
 
         <nav>
-            <ol>
-                <li><a href="{{ url_for('.case_edit_text', proposal_id=proposal_id, role=role) }}" id="edit_text_link"><span class="fa-solid fa-pencil"></span>Edit text</a></li>
+            <ol class="fa-ul">
+                <li><a href="{{ url_for('.case_edit_text', proposal_id=proposal_id, role=role) }}" id="edit_text_link"><span class="fa-li"><span class="fa-solid fa-pencil"></span></span>Edit text</a></li>
             </ol>
         </nav>
 
         {% if figures %}
             {{ render_proposal_figure_table(figures.values(), proposal_id, role) }}
-
-            <nav>
-                <ol>
-                    <li><a href="{{ url_for('.case_manage_figure', proposal_id=proposal_id, role=role) }}" id="manage_figures_link"><span class="fa-solid fa-images"></span>Manage figures</a></li>
-                </ol>
-            </nav>
         {% endif %}
 
-        {% if fig_limit > (figures | length) and pdf is none %}
+        {% if figures or (fig_limit > (figures | length) and pdf is none) %}
             <nav>
-                <ol>
-                    {% if true %}
-                        <li><a href="{{ url_for('.case_new_figure', proposal_id=proposal_id, role=role) }}"><span class="fa-solid fa-upload"></span>Upload new figure</a></li>
+                <ol class="fa-ul">
+                    {% if figures %}
+                        <li><a href="{{ url_for('.case_manage_figure', proposal_id=proposal_id, role=role) }}" id="manage_figures_link"><span class="fa-li"><span class="fa-solid fa-images"></span></span>Manage figures</a></li>
+                    {% endif %}
+                    {% if fig_limit > (figures | length) and pdf is none %}
+                        <li><a href="{{ url_for('.case_new_figure', proposal_id=proposal_id, role=role) }}"><span class="fa-li"><span class="fa-solid fa-upload"></span></span>Upload new figure</a></li>
                     {% endif %}
                 </ol>
             </nav>
@@ -185,11 +184,11 @@
         {% endif %}
 
         <nav>
-            <ol>
+            <ol class="fa-ul">
                 {% if pdf is not none %}
-                    <li><a href="{{ url_for('.case_view_pdf', proposal_id=proposal_id, role=role, md5sum=pdf.md5sum) }}"><span class="fa-solid fa-magnifying-glass"></span>View current PDF file</a></li>
+                    <li><a href="{{ url_for('.case_view_pdf', proposal_id=proposal_id, role=role, md5sum=pdf.md5sum) }}"><span class="fa-li"><span class="fa-solid fa-magnifying-glass"></span></span>View current PDF file</a></li>
                 {% endif %}
-                <li><a href="{{ url_for( '.case_edit_pdf', proposal_id=proposal_id, role=role) }}" id="upload_pdf_link"><span class="fa-solid fa-upload"></span>Upload {{ 'new' if pdf is none else 'replacement' }} PDF file</a></li>
+                <li><a href="{{ url_for( '.case_edit_pdf', proposal_id=proposal_id, role=role) }}" id="upload_pdf_link"><span class="fa-li"><span class="fa-solid fa-upload"></span></span>Upload {{ 'new' if pdf is none else 'replacement' }} PDF file</a></li>
             </ol>
         </nav>
     </section>

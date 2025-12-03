@@ -6,8 +6,8 @@
 
 {% if can_edit %}
     <nav>
-        <ol>
-            <li><a id="new_moc_link" href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_new')) }}"><span class="fa-solid fa-circle-plus"></span>New coverage map</a></li>
+        <ol class="fa-ul">
+            <li><a id="new_moc_link" href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_new')) }}"><span class="fa-li"><span class="fa-solid fa-circle-plus"></span></span>New coverage map</a></li>
         </ol>
     </nav>
 {% endif %}

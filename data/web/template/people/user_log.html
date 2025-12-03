@@ -21,13 +21,13 @@
 </table>
 
 <nav>
-    <p>
+    <ol class="fa-ul">
         {% if user.disabled %}
-            <a href="{{ url_for('.user_enable', user_id=user.id) }}"><span class="fa-solid fa-unlock"></span>Enable account</a>
+            <li><a href="{{ url_for('.user_enable', user_id=user.id) }}"><span class="fa-li"><span class="fa-solid fa-unlock"></span></span>Enable account</a></li>
         {% else %}
-            <a href="{{ url_for('.user_disable', user_id=user.id) }}"><span class="fa-solid fa-lock"></span>Disable account</a>
+            <li><a href="{{ url_for('.user_disable', user_id=user.id) }}"><span class="fa-li"><span class="fa-solid fa-lock"></span></span>Disable account</a></li>
         {% endif %}
-    </p>
+    </ol>
 </nav>
 
 <h2>Account Log Events</h2>

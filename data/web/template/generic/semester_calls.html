@@ -8,8 +8,8 @@
 
 {% if show_admin_links %}
     <nav>
-        <ol>
-            <li><a href="{{ url_for('.semester_view', semester_id=semester.id) }}"><span class="fa-solid fa-timeline"></span>Semester settings</a></li>
+        <ol class="fa-ul">
+            <li><a href="{{ url_for('.semester_view', semester_id=semester.id) }}"><span class="fa-li"><span class="fa-solid fa-timeline"></span></span>Semester settings</a></li>
         </ol>
     </nav>
 {% endif %}
@@ -101,9 +101,9 @@
 
         {% if show_admin_links %}
             <nav>
-                <ol>
-                    <li><a href="{{ url_for('.call_view', call_id=call.id) }}"><span class="fa-solid fa-bullhorn"></span>Call settings</a></li>
-                    <li><a href="{{ url_for('.queue_view', queue_id=call.queue_id) }}"><span class="fa-solid fa-filter"></span>Queue settings</a></li>
+                <ol class="fa-ul">
+                    <li><a href="{{ url_for('.call_view', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-bullhorn"></span></span>Call settings</a></li>
+                    <li><a href="{{ url_for('.queue_view', queue_id=call.queue_id) }}"><span class="fa-li"><span class="fa-solid fa-filter"></span></span>Queue settings</a></li>
                 </ol>
             </nav>
         {% endif %}

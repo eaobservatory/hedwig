@@ -5,8 +5,8 @@
 
 {% block content %}
     <nav>
-        <ol>
-            <li><a href="{{ url_for('.review_call_clash', call_id=call.id, radius=radius) }}"><span class="fa-solid fa-arrow-left"></span>Back to clash search</a></li>
+        <ol class="fa-ul">
+            <li><a href="{{ url_for('.review_call_clash', call_id=call.id, radius=radius) }}"><span class="fa-li"><span class="fa-solid fa-arrow-left"></span></span>Back to clash search</a></li>
         </ol>
     </nav>
 

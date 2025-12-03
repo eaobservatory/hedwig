@@ -58,10 +58,10 @@
 {% endif %}
 
 <nav>
-    <ol>
-        <li><a href="{{ url_for('.site_group_member_add', site_group_type=site_group_type) }}"><span class="fa-solid fa-user-plus"></span>Add member</a></li>
+    <ol class="fa-ul">
+        <li><a href="{{ url_for('.site_group_member_add', site_group_type=site_group_type) }}"><span class="fa-li"><span class="fa-solid fa-user-plus"></span></span>Add member</a></li>
         {% if members %}
-            <li><a href="{{ url_for('.site_group_member_edit', site_group_type=site_group_type) }}"><span class="fa-solid fa-pencil"></span>Edit members</a></li>
+            <li><a href="{{ url_for('.site_group_member_edit', site_group_type=site_group_type) }}"><span class="fa-li"><span class="fa-solid fa-pencil"></span></span>Edit members</a></li>
         {% endif %}
     </ol>
 <nav>

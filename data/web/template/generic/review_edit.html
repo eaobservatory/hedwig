@@ -71,8 +71,8 @@
 
                 {% if calculation.mode_info.code is not none %}
                     <nav>
-                        <ol>
-                            <li><a href="{{ url_for('.review_calculation_view', reviewer_id=reviewer.id, review_calculation_id=calculation.id) }}"><span class="fa-solid fa-calculator"></span>View calculation</a></li>
+                        <ol class="fa-ul">
+                            <li><a href="{{ url_for('.review_calculation_view', reviewer_id=reviewer.id, review_calculation_id=calculation.id) }}"><span class="fa-li"><span class="fa-solid fa-calculator"></span></span>View calculation</a></li>
                         </ol>
                     </nav>
                 {% endif %}
@@ -90,8 +90,8 @@
 
         {% if calculations %}
             <nav>
-                <ol>
-                    <li><a href="{{ url_for('.review_calculation_manage', reviewer_id=reviewer.id) }}"><span class="fa-solid fa-pen-to-square"></span>Manage calculations</a></li>
+                <ol class="fa-ul">
+                    <li><a href="{{ url_for('.review_calculation_manage', reviewer_id=reviewer.id) }}"><span class="fa-li"><span class="fa-solid fa-pen-to-square"></span></span>Manage calculations</a></li>
                 </ol>
             </nav>
         {% endif %}
@@ -104,17 +104,14 @@
 
         {% if figures %}
             {{ render_review_figure_table(figures.values(), reviewer.id) }}
-
-            <nav>
-                <ol>
-                    <li><a href="{{ url_for('.review_manage_figure', reviewer_id=reviewer.id) }}"><span class="fa-solid fa-images"></span>Manage figures</a></li>
-                </ol>
-            </nav>
         {% endif %}
 
         <nav>
-            <ol>
-                <li><a id="upload_fig_link" href="{{ url_for('.review_new_figure', reviewer_id=reviewer.id) }}"><span class="fa-solid fa-upload"></span>Upload new figure</a></li>
+            <ol class="fa-ul">
+                {% if figures %}
+                    <li><a href="{{ url_for('.review_manage_figure', reviewer_id=reviewer.id) }}"><span class="fa-li"><span class="fa-solid fa-images"></span></span>Manage figures</a></li>
+                {% endif %}
+                <li><a id="upload_fig_link" href="{{ url_for('.review_new_figure', reviewer_id=reviewer.id) }}"><span class="fa-li"><span class="fa-solid fa-upload"></span></span>Upload new figure</a></li>
             </ol>
         </nav>
     {% endif %}

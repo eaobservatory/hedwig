@@ -61,8 +61,8 @@
 </p>
 
 <nav>
-    <ol>
-        <li><a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_fits'), moc_id=moc.id) }}"><span class="fa-solid fa-download"></span>Download coverage MOC FITS file</a></li>
+    <ol class="fa-ul">
+        <li><a href="{{ url_for(target_tool_code | fmt('.tool_{}_moc_fits'), moc_id=moc.id) }}"><span class="fa-li"><span class="fa-solid fa-download"></span></span>Download coverage MOC FITS file</a></li>
     </ol>
 </nav>
 

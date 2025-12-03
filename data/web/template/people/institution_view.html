@@ -61,19 +61,19 @@
 
 {% if can_edit %}
     <nav>
-        <ol>
-            <li><a href="{{ url_for('.institution_edit', institution_id=institution.id) }}" id="edit_institution_link"><span class="fa-solid fa-pencil"></span>Edit this institution</a></li>
+        <ol class="fa-ul">
+            <li><a href="{{ url_for('.institution_edit', institution_id=institution.id) }}" id="edit_institution_link"><span class="fa-li"><span class="fa-solid fa-pencil"></span></span>Edit this institution</a></li>
         </ol>
     </nav>
 {% endif %}
 
 {% if show_admin_links %}
     <nav>
-        <ol id="institution_admin_links">
-            <li><a href="{{ url_for('.institution_log', institution_id=institution.id) }}"><span class="fa-solid fa-user-tag"></span>View edit log</a></li>
-            <li><a href="{{ url_for('.institution_subsume', institution_id=institution.id) }}"><span class="fa-solid fa-object-group"></span>Subsume duplicate record</a></li>
+        <ol id="institution_admin_links" class="fa-ul">
+            <li><a href="{{ url_for('.institution_log', institution_id=institution.id) }}"><span class="fa-li"><span class="fa-solid fa-user-tag"></span></span>View edit log</a></li>
+            <li><a href="{{ url_for('.institution_subsume', institution_id=institution.id) }}"><span class="fa-li"><span class="fa-solid fa-object-group"></span></span>Subsume duplicate record</a></li>
             {% if show_delete_link %}
-                <li><a href="{{ url_for('.institution_delete', institution_id=institution.id) }}"><span class="fa-solid fa-trash-can"></span>Delete institution</a></li>
+                <li><a href="{{ url_for('.institution_delete', institution_id=institution.id) }}"><span class="fa-li"><span class="fa-solid fa-trash-can"></span></span>Delete institution</a></li>
             {% endif %}
         </ol>
     </nav>
@@ -114,8 +114,8 @@
         </p>
 
         <nav>
-            <ol>
-                <li><a href="{{ url_for('.institution_frozen_members', institution_id=institution.id) }}"><span class="fa-solid fa-users"></span>View frozen members</a></li>
+            <ol class="fa-ul">
+                <li><a href="{{ url_for('.institution_frozen_members', institution_id=institution.id) }}"><span class="fa-li"><span class="fa-solid fa-users"></span></span>View frozen members</a></li>
             </ol>
         </nav>
     </section>

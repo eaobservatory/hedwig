@@ -3,36 +3,36 @@
 
 {% block content %}
 <nav>
-    <ol>
+    <ol class="fa-ul">
         {% if proposals  %}
             <li>
-                <a href="{{ url_for('.review_call_tabulation', call_id=call.id) }}"><span class="fa-solid fa-table"></span>View detailed tabulation</a>
+                <a href="{{ url_for('.review_call_tabulation', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-table"></span></span>View detailed tabulation</a>
                 or
                 <a href="{{ url_for('.review_call_tabulation_download', call_id=call.id) }}"><span class="fa-solid fa-download"></span>download as a CSV file</a>
             </li>
             <li>
-                <a href="{{ url_for('.review_call_stats', call_id=call.id) }}"><span class="fa-solid fa-file-waveform"></span>View review statistics</a>
+                <a href="{{ url_for('.review_call_stats', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-file-waveform"></span></span>View review statistics</a>
                 or
                 <a href="{{ url_for('.review_call_stats_download', call_id=call.id) }}"><span class="fa-solid fa-download"></span>download as a CSV file</a>
             </li>
             <li>
-                <a href="{{ url_for('.review_call_allocation', call_id=call.id) }}"><span class="fa-solid fa-chart-column"></span>View allocation details</a>
+                <a href="{{ url_for('.review_call_allocation', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-chart-column"></span></span>View allocation details</a>
             </li>
             <li>
-                <a href="{{ url_for('.review_call_clash', call_id=call.id) }}"><span class="fa-solid fa-burst"></span>Search for clashes</a>
+                <a href="{{ url_for('.review_call_clash', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-burst"></span></span>Search for clashes</a>
             </li>
         {% endif %}
         {% if show_admin_links %}
-            <li><a href="{{ url_for('.group_view_all', queue_id=call.queue_id) }}"><span class="fa-solid fa-users"></span>Reviewer groups</a></li>
+            <li><a href="{{ url_for('.group_view_all', queue_id=call.queue_id) }}"><span class="fa-li"><span class="fa-solid fa-users"></span></span>Reviewer groups</a></li>
         {% endif %}
         {% if can_edit %}
-            <li><a href="{{ url_for('.review_affiliation_weight', call_id=call.id) }}"><span class="fa-solid fa-weight-hanging"></span>Edit affiliation weights</a></li>
-            <li><a href="{{ url_for('.review_call_available', call_id=call.id) }}"><span class="fa-solid fa-clock"></span>Edit time available</a></li>
-            <li><a href="{{ url_for('.review_call_deadline', call_id=call.id) }}"><span class="fa-solid fa-calendar-days"></span>Edit review deadlines</a></li>
+            <li><a href="{{ url_for('.review_affiliation_weight', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-weight-hanging"></span></span>Edit affiliation weights</a></li>
+            <li><a href="{{ url_for('.review_call_available', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-clock"></span></span>Edit time available</a></li>
+            <li><a href="{{ url_for('.review_call_deadline', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-calendar-days"></span></span>Edit review deadlines</a></li>
             {% if proposals %}
-                <li><a href="{{ url_for('.review_call_reviewers', call_id=call.id) }}"><span class="fa-solid fa-file-circle-exclamation"></span>Assign reviewers</a></li>
-                <li><a href="{{ url_for('.review_call_advance_final', call_id=call.id) }}"><span class="fa-solid fa-flag-checkered"></span>Advance to final review phase</a></li>
-                <li><a href="{{ url_for('.review_confirm_feedback', call_id=call.id) }}"><span class="fa-solid fa-file-circle-check"></span>Approve feedback reports</a></li>
+                <li><a href="{{ url_for('.review_call_reviewers', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-file-circle-exclamation"></span></span>Assign reviewers</a></li>
+                <li><a href="{{ url_for('.review_call_advance_final', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-flag-checkered"></span></span>Advance to final review phase</a></li>
+                <li><a href="{{ url_for('.review_confirm_feedback', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-file-circle-check"></span></span>Approve feedback reports</a></li>
             {% endif %}
         {% endif %}
     </ol>

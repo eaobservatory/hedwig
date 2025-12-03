@@ -74,12 +74,12 @@
 {% endif %}
 
 <nav>
-    <ol>
-        <li><a href="{{ url_for('.group_member_add', queue_id=queue.id, group_type=group_type) }}"><span class="fa-solid fa-user-plus"></span>Add member</a></li>
+    <ol class="fa-ul">
+        <li><a href="{{ url_for('.group_member_add', queue_id=queue.id, group_type=group_type) }}"><span class="fa-li"><span class="fa-solid fa-user-plus"></span></span>Add member</a></li>
         {% if members %}
-            <li><a href="{{ url_for('.group_member_edit', queue_id=queue.id, group_type=group_type) }}"><span class="fa-solid fa-pencil"></span>Edit members</a></li>
+            <li><a href="{{ url_for('.group_member_edit', queue_id=queue.id, group_type=group_type) }}"><span class="fa-li"><span class="fa-solid fa-pencil"></span></span>Edit members</a></li>
         {% endif %}
-        <li><a href="{{ url_for('.group_member_sync', queue_id=queue.id, group_type=group_type) }}"><span class="fa-solid fa-rotate"></span>Copy from another queue</a></li>
+        <li><a href="{{ url_for('.group_member_sync', queue_id=queue.id, group_type=group_type) }}"><span class="fa-li"><span class="fa-solid fa-rotate"></span></span>Copy from another queue</a></li>
     </ol>
 <nav>
 {% endblock %}
