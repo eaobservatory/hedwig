@@ -4,7 +4,7 @@
 {% set help_link_text = 'Help on this calculator' %}
 
 {% block calculator_input_item %}
-    {% if value.code not in ('dim_y', 'dy', 'res_unit', 'pos_type', 'rv_sys', 'trans', 'side') %}
+    {% if value.code not in ('dim_y', 'dy', 'res_unit', 'pos_type', 'rv_sys', 'trans') %}
         {% if value.code == 'dim_x' %}
             <li>&nbsp;</li>
         {% endif %}
@@ -174,6 +174,12 @@
                 <input type="number" name="{{ value.code }}" value="{{ input }}" min="-90" max="90" step="any" />
             {% elif value.code == 'rv' %}
                 <input type="number" name="{{ value.code }}" value="{{ input }}" step="any" />
+            {% elif value.code == 'side' %}
+                <select name="side">
+                    <option value="" {{ 'selected="selected"' | safe if input_values.side is none }}>Best sideband</option>
+                    <option value="lsb" {{ 'selected="selected"' | safe if input_values.side == 'lsb'}} >Lower sideband</option>
+                    <option value="usb" {{ 'selected="selected"' | safe if input_values.side == 'usb'}} >Upper sideband</option>
+                </select>
             {% elif value.code == 'sb' %}
                 <input type="radio" name="{{ value.code }}" value="ssb" {{ 'checked="checked"' | safe if input == 'ssb' }} /><span class="checkboxlabel">Single sideband</span>
                 <input type="radio" name="{{ value.code }}" value="dsb" {{ 'checked="checked"' | safe if input == 'dsb' }} /><span class="checkboxlabel">Dual sideband</span>
@@ -273,11 +279,7 @@
                     {% endfor %}
                 </select>
             {% elif value.code == 'if' %}
-                <select name="side">
-                    <option value="" {{ 'selected="selected"' | safe if input_values.side is none }}>best sideband</option>
-                    <option value="lsb" {{ 'selected="selected"' | safe if input_values.side == 'lsb'}} >lower sideband</option>
-                    <option value="usb" {{ 'selected="selected"' | safe if input_values.side == 'usb'}} >upper sideband</option>
-                </select>
+                <span class="explanation"><span id="if_min"></span> &mdash; <span id="if_max"></span> {{ value.unit }}</span>
             {% endif %}
         </li>
         {% if value.code == 'dx' %}

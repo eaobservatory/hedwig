@@ -62,8 +62,12 @@ $(document).ready(function () {
             side_select.find('option[value="usb"]').prop('disabled', false);
         }
 
-        freq_if_box.attr('min', rx.data('f_if_min'));
-        freq_if_box.attr('max', rx.data('f_if_max'));
+        var f_if_min = rx.data('f_if_min');
+        var f_if_max = rx.data('f_if_max');
+        freq_if_box.attr('min', f_if_min);
+        freq_if_box.attr('max', f_if_max);
+        $('span#if_min').text(f_if_min);
+        $('span#if_max').text(f_if_max);
 
         $('input[name=sep_pol]').prop('disabled', ! sep_pol_available);
 
