@@ -104,6 +104,8 @@
                 <ol class="fa-ul">
                     <li><a href="{{ url_for('.call_view', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-bullhorn"></span></span>Call settings</a></li>
                     <li><a href="{{ url_for('.queue_view', queue_id=call.queue_id) }}"><span class="fa-li"><span class="fa-solid fa-filter"></span></span>Queue settings</a></li>
+                    <li><a href="{{ url_for('.call_proposals', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-book"></span></span>View proposals</a></li>
+                    <li><a href="{{ url_for('.review_call', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-file-lines"></span></span>Review process</a></li>
                 </ol>
             </nav>
         {% endif %}
