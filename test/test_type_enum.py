@@ -26,7 +26,7 @@ from hedwig.type.enum import \
     Assessment, AttachmentState, \
     BaseAffiliationType, BaseCallType, BaseReviewerRole, BaseTextRole, \
     CallState, GroupType, LogEventLevel, \
-    MessageFormatType, MessageState, \
+    MessageFormatType, MessageState, MessageThreadType, \
     PersonTitle, ProposalState, PublicationType, \
     RequestState, ReviewState, SemesterState, \
     UserLogEvent
@@ -195,6 +195,14 @@ class EnumTypeTestCase(TestCase):
         self.assertIsInstance(states, dict)
         self.assertEqual(set(states.keys()),
                          set((MessageState.UNSENT, MessageState.DISCARD)))
+
+    def test_message_thread_type(self):
+        self.assertFalse(MessageThreadType.is_recipient_public(
+            MessageThreadType.PROPOSAL_STATUS))
+        self.assertFalse(MessageThreadType.is_recipient_public(
+            MessageThreadType.REVIEW_INVITATION))
+        self.assertTrue(MessageThreadType.is_recipient_public(
+            MessageThreadType.PROPOSAL_REVIEW))
 
     def test_person_title(self):
         # Since the PersonTitle class doesn't provide value attributes,

@@ -185,14 +185,18 @@ def _prepare_email_message(message, from_, identifier=None, maxheaderlen=None):
 
     # Collect recipients in the ("to") list based on their public setting
     # unless there is only one recipient, in which case there's no
-    # need to hide the address.  Place all recipients' addresses in the
-    # "plain" list used to actually send the message ("to" + "bcc").
+    # need to hide the address, or this is a "recipient public" thread type.
+    # Place all recipients' addresses in the "plain" list used to actually
+    # send the message ("to" + "bcc").
     recipients_plain = []
     recipients_public = []
-    single_recipient = len(message.recipients) == 1
+    all_public = (
+        (len(message.recipients) == 1) or (
+            (message.thread_type is not None)
+            and MessageThreadType.is_recipient_public(message.thread_type)))
     for recipient in message.recipients.values():
         recipients_plain.append(recipient.email_address)
-        if single_recipient or recipient.email_public:
+        if all_public or recipient.email_public:
             recipients_public.append(
                 (recipient.person_name, recipient.email_address))
 

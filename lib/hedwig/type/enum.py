@@ -473,13 +473,25 @@ class MessageThreadType(EnumBasic, EnumURLPath):
     PROPOSAL_REVIEW = 3
 
     TypeInfo = namedtuple(
-        'TypeInfo', ('name', 'url_path'))
+        'TypeInfo', ('name', 'url_path', 'recipient_public'))
 
     _info = OrderedDict((
-        (PROPOSAL_STATUS,   TypeInfo('Proposal status',   'prop_stat')),
-        (REVIEW_INVITATION, TypeInfo('Review invitation', 'rev_inv')),
-        (PROPOSAL_REVIEW,   TypeInfo('Proposal review',   'prop_rev')),
+        (PROPOSAL_STATUS,   TypeInfo('Proposal status',   'prop_stat', False)),
+        (REVIEW_INVITATION, TypeInfo('Review invitation', 'rev_inv',   False)),
+        (PROPOSAL_REVIEW,   TypeInfo('Proposal review',   'prop_rev',  True)),
     ))
+
+    @classmethod
+    def is_recipient_public(cls, value):
+        """
+        Should the recipients always be listed in full?
+
+        I.e. whereas we normally "bcc" anyone with a email address not marked
+        as public, for administrative messages, we may want to always include
+        everyone in the "to" header.
+        """
+
+        return cls._info[value].recipient_public
 
 
 class PermissionType(object):

@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from codecs import ascii_decode
+from codecs import ascii_decode, ascii_encode
 from datetime import datetime
 import re
 
@@ -158,22 +158,24 @@ class EmailSendTestCase(DummyConfigTestCase):
     def test_prepare_message(self):
         """Test the `_prepare_email_message` function."""
 
+        message = null_tuple(Message)._replace(
+            id=1234,
+            date=datetime(2015, 4, 1, 0, 0, 0),
+            subject='Message exp\u00e9rimental',
+            body='C\'est un message exp\u00e9rimental.',
+            format=MessageFormatType.PLAIN,
+            recipients=MessageRecipientCollection((
+                (1, MessageRecipient(
+                    None, 101, 'one@test', 'Persoon \u00e9\u00e9n', True)),
+                (2, MessageRecipient(
+                    None, 102, 'two@test', 'Persoon twee', False)),
+            )),
+            thread_identifiers=['test-ref-1', 'test-ref-2'],
+            thread_type=MessageThreadType.PROPOSAL_STATUS,
+            thread_id=5678)
+
         (id_, msg, recipients) = _prepare_email_message(
-            message=null_tuple(Message)._replace(
-                id=1234,
-                date=datetime(2015, 4, 1, 0, 0, 0),
-                subject='Message exp\u00e9rimental',
-                body='C\'est un message exp\u00e9rimental.',
-                format=MessageFormatType.PLAIN,
-                recipients=MessageRecipientCollection((
-                    (1, MessageRecipient(
-                        None, 101, 'one@test', 'Persoon \u00e9\u00e9n', True)),
-                    (2, MessageRecipient(
-                        None, 102, 'two@test', 'Persoon twee', False)),
-                )),
-                thread_identifiers=['test-ref-1', 'test-ref-2'],
-                thread_type=MessageThreadType.PROPOSAL_STATUS,
-                thread_id=5678),
+            message=message,
             from_='Hedwig Pr\u00fcfung <hedwig@test>',
             identifier='test-msg-1')
 
@@ -231,3 +233,38 @@ class EmailSendTestCase(DummyConfigTestCase):
                 self.assertIn(line, expect)
             else:
                 self.assertEqual(line, expect)
+
+        # Check that we list everyone if the thread is "recipient_public".
+        message = message._replace(
+            thread_type=MessageThreadType.PROPOSAL_REVIEW)
+
+        def get_header(header, encoded_message):
+            encoded_header = ascii_encode('{}:'.format(header))[0]
+            for line in encoded_message.split(b'\n'):
+                if line.startswith(encoded_header):
+                    return line
+            raise Exception('header {} not found'.format(header))
+
+        (id_, msg, recipients) = _prepare_email_message(
+            message=message,
+            from_='Hedwig Pr\u00fcfung <hedwig@test>',
+            identifier='test-msg-2')
+
+        to = get_header('To', msg)
+        self.assertIn(b'one@test', to)
+        self.assertIn(b'two@test', to)
+
+        # Check that we list a single recipient.
+        message = message._replace(
+            recipients=message.recipients.map_values(
+                filter_key=(lambda x: x == 2)),
+            thread_type=None,
+            thread_id=None)
+
+        (id_, msg, recipients) = _prepare_email_message(
+            message=message,
+            from_='Hedwig Pr\u00fcfung <hedwig@test>',
+            identifier='test-msg-2')
+
+        to = get_header('To', msg)
+        self.assertIn(b'two@test', to)
