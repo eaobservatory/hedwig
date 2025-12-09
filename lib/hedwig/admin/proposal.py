@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,7 +22,7 @@ from ..config import get_facilities
 from ..email.format import render_email_template
 from ..error import ConsistencyError, FormattedError, NoSuchRecord, UserError
 from ..stats.quartile import label_quartiles
-from ..type.enum import CallState, FormatType, \
+from ..type.enum import CallState, FormatType, MessageThreadType, \
     ProposalState, ProposalType, ReviewState
 from ..type.simple import MemberInstitution
 from ..util import get_logger
@@ -436,7 +436,9 @@ def send_call_proposal_feedback(db, call_id, proposals, dry_run=False):
                         render_email_template(
                             'proposal_reviewed_notification.txt',
                             email_ctx, facility=facility),
-                        [x.id for x in site_administrators.values()])
+                        [x.id for x in site_administrators.values()],
+                        thread_type=MessageThreadType.PROPOSAL_REVIEW,
+                        thread_id=proposal.id)
 
             n_processed += 1
 
