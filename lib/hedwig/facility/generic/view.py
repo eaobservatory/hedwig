@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -373,22 +373,25 @@ class Generic(
 
         return None
 
-    def calculate_overall_rating(self, reviews, with_std_dev=False):
+    def calculate_overall_rating(self, reviewers, with_std_dev=False):
         """
         Calculate the overall rating from a collection of reviewer
         records (including their reviews).
         """
 
-        return reviews.get_overall_rating(
-            self.get_review_rating_weight_function(),
+        return reviewers.get_overall_rating(
+            self.get_review_rating_weight_function(reviewers=reviewers),
             with_std_dev=with_std_dev)
 
-    def get_review_rating_weight_function(self):
+    def get_review_rating_weight_function(self, reviewers=None):
         """
-        Get the numerical rating and weight of a review.
+        Get a function calculating the numerical rating and weight of a review.
 
-        :return: a (`rating`, `weight`) tuple.  If either value is `None` then
-            the review should not be included in the overall rating.
+        :param reviewers: full collection of reviewers, in case the function
+            should be customized based on which roles are present.
+        :return: a function returning a (`rating`, `weight`) tuple.
+            If either value is `None` then the review should not be included
+            in the overall rating.
         """
 
         role_class = self.get_reviewer_roles()

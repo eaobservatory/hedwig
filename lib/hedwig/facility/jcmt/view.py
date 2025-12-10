@@ -314,8 +314,15 @@ class JCMT(EAOFacility):
         else:
             return super(JCMT, self).make_review_guidelines_url(role)
 
-    def get_review_rating_weight_function(self):
+    def get_review_rating_weight_function(self, reviewers=None):
         role_class = self.get_reviewer_roles()
+
+        # To accommodate calls with both peer and committee reviewers, check
+        # whether there are any reviewers with "jcmt_expertise" -- if so we
+        # should not include ratings with "jcmt_peer_expertise".
+        has_jcmt_expertise = (reviewers is not None) and any(
+            role_class.get_info(x.role).jcmt_expertise
+            for x in reviewers.values())
 
         def rating_weight_function(reviewer):
             role_info = role_class.get_info(reviewer.role)
@@ -339,7 +346,7 @@ class JCMT(EAOFacility):
                     weight = JCMTReviewerExpertise.get_weight(
                         extra.expertise) / 100.0
 
-            elif role_info.jcmt_peer_expertise:
+            elif role_info.jcmt_peer_expertise and not has_jcmt_expertise:
                 if extra.peer_expertise is not None:
                     weight = JCMTPeerReviewerExpertise.get_weight(
                         extra.peer_expertise) / 100.0

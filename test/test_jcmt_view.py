@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2023 East Asian Observatory
+# Copyright (C) 2016-2025 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -151,6 +151,23 @@ class JCMTFacilityTestCase(FacilityTestCase):
 
         self.assertAlmostEqual(
             self.view.calculate_overall_rating(c), 58.333, places=3)
+
+        # Test a mixture of peer and committee ratings -- the peer ratings
+        # should be excluded.
+        c = ReviewerCollection()
+
+        c[101] = make_peer_review(
+            101, JCMTPeerReviewRating.EXCELLENT,
+            JCMTPeerReviewerExpertise.KNOWLEDGEABLE)
+
+        self.assertAlmostEqual(
+            self.view.calculate_overall_rating(c), 100.0)
+
+        c[201] = make_review(
+            201, role_class.CTTEE_OTHER, 50, JCMTReviewerExpertise.EXPERT)
+
+        self.assertAlmostEqual(
+            self.view.calculate_overall_rating(c), 50.0)
 
     def test_archive_urls(self):
         coord = parse_coord(CoordSystem.ICRS, '180.0', '45.0', 'test')
