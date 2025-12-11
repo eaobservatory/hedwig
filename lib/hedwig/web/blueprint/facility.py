@@ -170,14 +170,15 @@ def create_facility_blueprint(db, facility):
     @require_auth()
     @facility_template('call_review_statistics.html')
     def review_call_stats(current_user, call_id):
-        return facility.view_review_call_stats(current_user, db, call_id)
+        return facility.view_review_call_stats(
+            current_user, db, call_id, request.args)
 
     @bp.route('/call/<int:call_id>/review/review_stats/download')
     @require_auth()
     @send_file()
     def review_call_stats_download(current_user, call_id):
         return facility.view_review_call_stats_download(
-            current_user, db, call_id)
+            current_user, db, call_id, request.args)
 
     @bp.route('/call/<int:call_id>/review/clash', methods=['GET', 'POST'])
     @require_auth()

@@ -558,17 +558,25 @@ class GenericReview(object):
             } for x in proposals.values()}
 
     @with_call_review(permission=PermissionType.VIEW)
-    def view_review_call_stats(self, current_user, db, call, can):
+    def view_review_call_stats(self, current_user, db, call, can, args):
         type_class = self.get_call_types()
+
+        cttee_role = args.get('cttee', None)
+        if not cttee_role:
+            cttee_role = None
+        else:
+            cttee_role = int(cttee_role)
 
         ctx = {
             'title': 'Review Statistics: {} {} {}'.format(
                 call.semester_name, call.queue_name,
                 type_class.get_name(call.type)),
             'call': call,
+            'cttee_role': cttee_role,
         }
 
-        ctx.update(self._get_review_statistics(current_user, db, call, can))
+        ctx.update(self._get_review_statistics(
+            current_user, db, call, can, cttee_role=cttee_role))
 
         # Compute mean and standard deviation.
         ctx.update(zip(
@@ -587,9 +595,18 @@ class GenericReview(object):
         return ctx
 
     @with_call_review(permission=PermissionType.VIEW)
-    def view_review_call_stats_download(self, current_user, db, call, can):
+    def view_review_call_stats_download(
+            self, current_user, db, call, can, args):
         type_class = self.get_call_types()
-        stats = self._get_review_statistics(current_user, db, call, can)
+
+        cttee_role = args.get('cttee', None)
+        if not cttee_role:
+            cttee_role = None
+        else:
+            cttee_role = int(cttee_role)
+
+        stats = self._get_review_statistics(
+            current_user, db, call, can, cttee_role=cttee_role)
 
         writer = CSVWriter()
 
@@ -615,8 +632,13 @@ class GenericReview(object):
                 re.sub('[^-_a-z0-9]', '_', call.queue_name.lower()),
                 re.sub('[^-_a-z0-9]', '_', type_class.url_path(call.type))))
 
-    def _get_review_statistics(self, current_user, db, call, can):
+    def _get_review_statistics(
+            self, current_user, db, call, can, cttee_role=None):
         role_class = self.get_reviewer_roles()
+
+        cttee_roles = None
+        if cttee_role is not None:
+            cttee_roles = role_class.get_cttee_roles()
 
         proposals = db.search_proposal(
             call_id=call.id, state=ProposalState.submitted_states(),
@@ -650,6 +672,11 @@ class GenericReview(object):
                 continue
 
             for reviewer in proposal.reviewers.values():
+                if cttee_role is not None:
+                    if ((cttee_role and (reviewer.role not in cttee_roles)) or
+                            ((not cttee_role) and (reviewer.role in cttee_roles))):
+                        continue
+
                 if not auth.for_review(
                         role_class, current_user, db,
                         reviewer=reviewer, proposal=proposal,

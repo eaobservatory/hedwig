@@ -8,7 +8,7 @@
 
 <nav>
     <ol class="fa-ul">
-        <li><a href="{{ url_for('.review_call_stats_download', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-download"></span></span>Download as a CSV file</a></li>
+        <li><a href="{{ url_for('.review_call_stats_download', call_id=call.id, cttee=cttee_role) }}"><span class="fa-li"><span class="fa-solid fa-download"></span></span>Download as a CSV file</a></li>
     </ol>
 </nav>
 
@@ -27,6 +27,18 @@
         on a 0 &ndash; 100 scale.
     </li>
 </ul>
+
+<form method="GET" action="{{ url_for('.review_call_stats', call_id=call.id) }}">
+    <p>
+        <select name="cttee">
+            <option value="" {{ 'selected="selected"' | safe if cttee_role is none }}>Any role</option>
+            <hr />
+            <option value="0" {{ 'selected="selected"' | safe if (cttee_role is not none) and (not cttee_role) }}>Non-committee roles</option>
+            <option value="1" {{ 'selected="selected"' | safe if cttee_role }}>Committee roles</option>
+        </select>
+        <input type="submit" value="Filter" />
+    </p>
+</form>
 
 <table id="statistics">
     <thead>
