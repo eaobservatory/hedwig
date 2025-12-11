@@ -644,23 +644,23 @@ class JCMTReviewerRole(BaseReviewerRole):
     _jcmt_default_info = (False, False, False, False)
 
     # Define JCMT-specific role information.
-    #        Exp.   Ext.Q.
+    #        Exp.   Ext.Q. Pr.Exp Pr.Rat
     _jcmt_info = {
         BaseReviewerRole.EXTERNAL: (
-            (False, True, False, False),
+            (False, True,  False, False),
             {'accept': True}),
         BaseReviewerRole.CTTEE_PRIMARY: (
-            (True, False, False, False),
+            (True,  False, False, False),
             {'name': 'TAC Primary', 'weight': False}),
         BaseReviewerRole.CTTEE_SECONDARY: (
-            (True, False, False, False),
+            (True,  False, False, False),
             {'name': 'TAC Secondary', 'unique': True, 'weight': False}),
         BaseReviewerRole.CTTEE_OTHER: (
-            (True, False, False, False),
+            (True,  False, False, False),
             {'name': 'Rating', 'name_review': False, 'url_path': 'rating',
              'weight': False}),
         BaseReviewerRole.PEER: (
-            (False, False, True, True),
+            (False, False, True,  True),
             {'rating': False, 'weight': False}),
     }
 
