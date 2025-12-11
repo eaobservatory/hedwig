@@ -22,6 +22,7 @@ from collections import defaultdict, namedtuple, OrderedDict
 from datetime import datetime, timedelta
 from itertools import chain
 import re
+from statistics import mean
 import warnings
 
 from astropy.time import Time
@@ -636,8 +637,8 @@ class GenericReview(object):
                 })
 
         persons = {}
-        ratings = defaultdict(dict)
-        weights = defaultdict(dict)
+        ratings = defaultdict(lambda: defaultdict(list))
+        weights = defaultdict(lambda: defaultdict(list))
 
         rating_weight = self.get_review_rating_weight_function()
 
@@ -663,23 +664,33 @@ class GenericReview(object):
                 person_id = reviewer.person_id
                 if person_id not in persons:
                     persons[person_id] = {
-                        'id': reviewer.person_id,
+                        'id': person_id,
                         'name': reviewer.person_name,
                         'can_view': auth.for_person_reviewer(
                             current_user, db, reviewer,
                             auth_cache=can.cache).view,
                     }
 
-                ratings[proposal.id][person_id] = rating
-                weights[proposal.id][person_id] = weight
+                ratings[proposal.id][person_id].append(rating)
+                weights[proposal.id][person_id].append(weight)
 
         return {
             'proposals': proposals,
             'persons': OrderedDict(sorted(
                 persons.items(), key=(lambda x: x[1]['name']))),
             'peer_reviewer_proposals': peer_reviewer_proposals,
-            'ratings': ratings,
-            'weights': weights,
+            'ratings': {
+                proposal_id: {
+                    person_id: mean(values)
+                    for (person_id, values) in proposal_ratings.items()}
+                for (proposal_id, proposal_ratings) in ratings.items()
+            },
+            'weights': {
+                proposal_id: {
+                    person_id: mean(values)
+                    for (person_id, values) in proposal_weights.items()}
+                for (proposal_id, proposal_weights) in weights.items()
+            },
         }
 
     @with_call_review(permission=PermissionType.VIEW)
