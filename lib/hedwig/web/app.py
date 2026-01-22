@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2025 East Asian Observatory.
+# Copyright (C) 2015-2026 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -89,6 +89,7 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
     if 'extensions' not in app.jinja_options:
         app.jinja_options['extensions'] = []
 
+    app.jinja_options['extensions'].append('jinja2.ext.do')
     app.jinja_options['extensions'].append(OrderBlocks)
 
     if not without_logger:

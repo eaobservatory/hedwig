@@ -28,11 +28,27 @@
                 <td>{{ queue.code }}</td>
                 <td>
                     {% if queue_affiliations %}
-                        {% for affiliation in queue_affiliations.values_in_type_order(facility_affiliation_type_class) %}
-                            {{ affiliation.name }}{% if not loop.last %},{% endif %}
-                        {% endfor %}
+                        {%- set affiliation_standard_counter = create_counter(0) -%}
+                        {%- set affiliation_non_standard = [] -%}
+                        {%- for (affiliation_type, type_affiliations) in queue_affiliations.group_by_type(facility_affiliation_type_class) -%}
+                            {%- if affiliation_type is affiliation_type_standard(facility_affiliation_type_class) -%}
+                                {%- do affiliation_standard_counter() -%}
+                                {%- for affiliation in type_affiliations.values() -%}
+                                    {{ affiliation.name }}{% if not loop.last %},{% endif %}
+                                {% endfor -%}
+                            {%- else -%}
+                                {%- for affiliation in type_affiliations.values() -%}
+                                    {%- do affiliation_non_standard.append(affiliation.name) -%}
+                                {%- endfor -%}
+                            {%- endif %}
+                        {%- endfor %}
+                        {%- if affiliation_standard_counter() == 0 -%}
+                            <span class="missing_data">No standard affiliations</span>
+                        {%- elif affiliation_non_standard -%}
+                            <abbr title="{{ affiliation_non_standard | join(', ') }}">&hellip;</abbr>
+                        {%- endif -%}
                     {% else %}
-                        <span class="missing_data">None specified</span>
+                        <span class="missing_data">No affiliations specified</span>
                     {% endif %}
                 </td>
                 <td>
