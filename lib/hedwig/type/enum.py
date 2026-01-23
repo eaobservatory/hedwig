@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -310,6 +310,15 @@ class GroupType(EnumAllowUser, EnumBasic, EnumURLPath, EnumShortName):
     """
     Class representing groups of people related to the proposal review
     process.
+
+    Includes the following "special" names (with negative values):
+
+    PEER
+        The proposal members with the `reviewer` attribute, e.g. when
+        assigning reviewers of proposals.
+
+    ADMIN
+        Site administrators, e.g. when sending notifications.
     """
 
     CTTEE = 1
@@ -319,6 +328,7 @@ class GroupType(EnumAllowUser, EnumBasic, EnumURLPath, EnumShortName):
     HIDDEN_CALL = 5
 
     PEER = -1
+    ADMIN = -2
 
     GroupInfo = namedtuple(
         'GroupInfo',
@@ -348,6 +358,9 @@ class GroupType(EnumAllowUser, EnumBasic, EnumURLPath, EnumShortName):
 
         (PEER, GroupInfo(
             'Peer reviewers',           'Peer',              None,
+            False, False, False, False, False, False, False)),
+        (ADMIN, GroupInfo(
+            'Site administrators',      'Admin',             None,
             False, False, False, False, False, False, False)),
     ))
 
@@ -1500,7 +1513,7 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
             'I',   'Immediate', True,  'immediate',  True,  False, False,
             (BaseReviewerRole.TECH, BaseReviewerRole.CTTEE_OTHER,
              BaseReviewerRole.FEEDBACK),
-            (GroupType.CTTEE,))),
+            (GroupType.CTTEE, GroupType.ADMIN))),
         (MULTICLOSE,  TypeInfo(
             'M',  'Multiple-close', True, 'multi',   False, False, True,
             (BaseReviewerRole.TECH, BaseReviewerRole.PEER,

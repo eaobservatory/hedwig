@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -151,7 +151,7 @@ class EnumTypeTestCase(TestCase):
 
         g = BaseCallType.get_notify_group(BaseCallType.IMMEDIATE)
         self.assertIsInstance(g, tuple)
-        self.assertEqual(g, (GroupType.CTTEE,))
+        self.assertEqual(g, (GroupType.CTTEE, GroupType.ADMIN))
 
     def test_message_format_type(self):
         self.assertFalse(MessageFormatType.is_valid(999))

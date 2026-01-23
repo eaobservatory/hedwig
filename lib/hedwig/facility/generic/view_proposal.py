@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -1389,17 +1389,26 @@ class GenericProposal(object):
         if not notify_group:
             return
 
-        group_recipients = db.search_group_member(queue_id=proposal.queue_id,
-                                                  group_type=notify_group)
+        recipient_ids = set()
 
-        if not group_recipients:
+        standard_group = tuple(x for x in notify_group if x != GroupType.ADMIN)
+
+        if standard_group:
+            group_recipients = db.search_group_member(
+                queue_id=proposal.queue_id,
+                group_type=standard_group)
+
+            recipient_ids.update((
+                x.person_id for x in group_recipients.values()))
+
+        if GroupType.ADMIN in notify_group:
+            site_administrators = db.search_person(admin=True)
+
+            recipient_ids.update((
+                x.id for x in site_administrators.values()))
+
+        if not recipient_ids:
             return
-
-        recipient_ids = set((x.person_id for x in group_recipients.values()))
-
-        # Also send the notification to site administrators.
-        site_administrators = db.search_person(admin=True)
-        recipient_ids.update((x.id for x in site_administrators.values()))
 
         db.add_message(
             'Proposal {} received{}'.format(
