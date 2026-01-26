@@ -42,7 +42,7 @@ from .calculator_scuba2 import SCUBA2Calculator
 from .type import \
     JCMTAffiliationType, \
     JCMTAvailable, JCMTAvailableCollection, JCMTAncillary, \
-    JCMTCallOptions, JCMTCallType, JCMTInstrument, \
+    JCMTCallOptions, JCMTCallType, JCMTGroupType, JCMTInstrument, \
     JCMTOptionValue, JCMTOptions, \
     JCMTPeerReviewerExpertise, JCMTPeerReviewRating, \
     JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, \
@@ -69,6 +69,9 @@ class JCMT(EAOFacility):
 
     def get_call_types(self):
         return JCMTCallType
+
+    def get_group_types(self):
+        return JCMTGroupType
 
     def get_text_roles(self):
         return JCMTTextRole

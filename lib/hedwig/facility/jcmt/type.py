@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -21,11 +21,13 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict, namedtuple
 from itertools import chain
 
+from ...compat import move_to_end
 from ...type.base import CollectionByProposal, \
     EnumAvailable, EnumBasic, EnumShortName
 from ...type.enum import BaseAffiliationType, BaseCallType, \
-    BaseReviewerRole, BaseTextRole
+    BaseGroupType, BaseReviewerRole, BaseTextRole
 from ...type.collection import ResultCollection, ResultTable
+from ...type.util import insert_after
 from ...error import UserError
 from .meta import jcmt_available, jcmt_call_options, jcmt_options, \
     jcmt_request, jcmt_review
@@ -127,40 +129,26 @@ class JCMTAncillary(EnumBasic, EnumAvailable):
     ))
 
 
-class JCMTCallType(BaseCallType):
+class JCMTGroupType(BaseGroupType):
     """
-    Class providing information about JCMT call types.
+    Class providing information about JCMT reviewer groups.
     """
 
-    _jcmt_info = {
-        BaseCallType.STANDARD: {
-            'name': 'Regular', 'code': 'M', 'url_path': 'regular',
-            'reviewer_roles': tuple(chain(
-                BaseCallType._info[BaseCallType.SUPPLEMENTAL].reviewer_roles,
-                (BaseReviewerRole.PEER,)
-            )),
-        },
-        BaseCallType.IMMEDIATE: {
-            'name': 'Urgent', 'code': 'S', 'url_path': 'urgent',
-            'name_proposal': True},
-        BaseCallType.TEST: {
-            'code': 'X'},
-        BaseCallType.MULTICLOSE: {
-            'name': 'Rapid Turnaround', 'code': 'R', 'url_path': 'rapid',
-            'name_proposal': True},
-        BaseCallType.SUPPLEMENTAL: {
-            'code': 'E',
-            'reviewer_roles': tuple(chain(
-                BaseCallType._info[BaseCallType.SUPPLEMENTAL].reviewer_roles,
-                (BaseReviewerRole.PEER,)
-            )),
-        },
-    }
+    INTERNAL = 101
 
-    _info = OrderedDict()
-    for (role_id, role_info) in BaseCallType._info.items():
-        override = _jcmt_info.get(role_id, {})
-        _info[role_id] = role_info._replace(**override)
+    _jcmt_extra = (
+        #   Name                        Short name          URL
+        #   Prop   MOC    Rv.Ed  Rv.Vw  Fb.Vw  Hd.Cl. User
+        (INTERNAL, BaseGroupType.TECH, BaseGroupType.GroupInfo(
+            'Internal reviewers',       'Internal',         'internal',
+            False, False, False, False, False, False, True)),
+    )
+
+    # Merge with base group information.
+    _info = OrderedDict(BaseGroupType._info.items())
+
+    for (group_id, after_id, group_info) in _jcmt_extra:
+        insert_after(_info, after_id, group_id, group_info)
 
 
 class JCMTInstrument(EnumBasic, EnumAvailable):
@@ -636,6 +624,8 @@ class JCMTReviewerRole(BaseReviewerRole):
     Class providing information about reviewer roles for JCMT.
     """
 
+    INTERNAL = 101
+
     RoleInfo = namedtuple(
         'RoleInfo', BaseReviewerRole.RoleInfo._fields + (
             'jcmt_expertise', 'jcmt_external',
@@ -664,11 +654,31 @@ class JCMTReviewerRole(BaseReviewerRole):
             {'rating': False, 'weight': False}),
     }
 
+    # Define extra roles for JCMT and after which role to insert.
+    # Options:  Unique Text   Ass/nt Rating Weight Cttee  "Rev"  Fbk_dr Fbk_id
+    #           Note   Invite E.Rev  E.FR   Ra.Hi. Calc   Fig.   Accept Thank
+    #           Disp.cl.      URL           Help_page
+    #           Review group
+    #           Exp.   Ext.Q. Pr.Exp Pr.Rat
+    _jcmt_extra = (
+        (INTERNAL, BaseReviewerRole.EXTERNAL,
+            RoleInfo(
+                'Internal',
+                False, True,  False, True,  False, False, True,  False, False,
+                True,  False, True,  False, False, False, False, False, False,
+                'cttee',      'internal',   None,
+                JCMTGroupType.INTERNAL,
+                True,  False, False, False)),
+    )
+
     # Merge with base role information.
     _info = OrderedDict()
     for role_id, role_info in BaseReviewerRole._info.items():
         (extra, override) = _jcmt_info.get(role_id, (_jcmt_default_info, {}))
         _info[role_id] = RoleInfo(*(role_info._replace(**override) + extra))
+
+    for (role_id, after_id, role_info) in _jcmt_extra:
+        insert_after(_info, after_id, role_id, role_info)
 
 
 class JCMTReviewRatingJustification(EnumBasic, EnumAvailable):
@@ -746,3 +756,59 @@ class JCMTWeather(EnumBasic, EnumAvailable):
     def get_available(cls):
         return OrderedDict(((k, v) for (k, v) in cls._info.items()
                             if v.available))
+
+
+# NOTE: this is defined at the end since it refers to values from
+# JCMTGroupType and JCMTReviewerRole.
+class JCMTCallType(BaseCallType):
+    """
+    Class providing information about JCMT call types.
+    """
+
+    ROLLING = 101
+
+    _jcmt_info = {
+        BaseCallType.STANDARD: {
+            'name': 'Regular', 'code': 'M', 'url_path': 'regular',
+            'reviewer_roles': tuple(chain(
+                BaseCallType._info[BaseCallType.SUPPLEMENTAL].reviewer_roles,
+                (JCMTReviewerRole.PEER,)
+            )),
+        },
+        BaseCallType.IMMEDIATE: {
+            'name': 'Urgent', 'code': 'S', 'url_path': 'urgent',
+            'name_proposal': True},
+        BaseCallType.TEST: {
+            'code': 'X'},
+        BaseCallType.MULTICLOSE: {
+            'name': 'Rapid Turnaround', 'code': 'R', 'url_path': 'rapid',
+            'name_proposal': True},
+        BaseCallType.SUPPLEMENTAL: {
+            'code': 'E',
+            'reviewer_roles': tuple(chain(
+                BaseCallType._info[BaseCallType.SUPPLEMENTAL].reviewer_roles,
+                (JCMTReviewerRole.PEER,)
+            )),
+        },
+    }
+
+    #       Code   Name         Avail.  URL          Im.Rv. Nm.Pr. Md.Cl.
+    #       (Reviewer roles)
+    #       (Notify groups)
+    _jcmt_extra = OrderedDict((
+        (ROLLING, BaseCallType.TypeInfo(
+            'F', 'Supplemental Rolling',
+                                True,   'rolling',   True,  False, False,
+            (JCMTReviewerRole.TECH, JCMTReviewerRole.EXTERNAL,
+             JCMTReviewerRole.INTERNAL, JCMTReviewerRole.FEEDBACK),
+            (JCMTGroupType.ADMIN,))),
+    ))
+
+    _info = OrderedDict()
+    for (role_id, role_info) in BaseCallType._info.items():
+        override = _jcmt_info.get(role_id, {})
+        _info[role_id] = role_info._replace(**override)
+
+    _info.update(_jcmt_extra)
+
+    move_to_end(_info, BaseCallType.TEST)
