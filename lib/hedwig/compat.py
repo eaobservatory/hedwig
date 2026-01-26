@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2025 East Asian Observatory
+# Copyright (C) 2016-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -75,6 +75,13 @@ if python_version < 3:
 
         return dictionary.iteritems()
 
+    def move_to_end(dictionary, key):
+        """
+        Move given key to end of an OrderedDict.
+        """
+
+        dictionary[key] = dictionary.pop(key)
+
     def floor(value):
         return int(_math_floor(value))
 
@@ -128,6 +135,13 @@ else:
         """
 
         return iter(dictionary.items())
+
+    def move_to_end(dictionary, key):
+        """
+        Move given key to end of an OrderedDict.
+        """
+
+        dictionary.move_to_end(key)
 
     class ExceptionWithMessage(Exception):
         """Exception class which restores the 'message' property."""

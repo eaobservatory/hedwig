@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2024 East Asian Observatory
+# Copyright (C) 2016-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import OrderedDict
 
-from hedwig.compat import char, first_value, iter_items, \
+from hedwig.compat import char, first_value, iter_items, move_to_end, \
     split_version, string_type
 
 from .compat import TestCase
@@ -62,3 +62,12 @@ class CompatTestCase(TestCase):
                 break
 
         self.assertEqual(l, [(1, 'a'), (2, 'b'), (3, 'c')])
+
+    def test_move_to_end(self):
+        d = OrderedDict(((1, 'a'), (2, 'b'), (3, 'c')))
+
+        self.assertEqual(list(iter_items(d)), [(1, 'a'), (2, 'b'), (3, 'c')])
+
+        move_to_end(d, 2)
+
+        self.assertEqual(list(iter_items(d)), [(1, 'a'), (3, 'c'), (2, 'b')])
