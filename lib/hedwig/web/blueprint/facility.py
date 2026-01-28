@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -824,16 +824,19 @@ def create_facility_blueprint(db, facility):
         return facility.view_group_view(
             current_user, db, queue_id, None)
 
-    @bp.route('/admin/queue/<int:queue_id>/group/<hedwig_group:group_type>')
+    @bp.route(
+        '/admin/queue/<int:queue_id>/group/'
+        '<hedwig_group_{}:group_type>'.format(code))
     @facility_template('group_view.html')
     @require_admin
     def group_view(current_user, queue_id, group_type):
         return facility.view_group_view(
             current_user, db, queue_id, group_type)
 
-    @bp.route('/admin/queue/<int:queue_id>/group/<hedwig_group:group_type>/'
-              'add',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/admin/queue/<int:queue_id>/group/'
+        '<hedwig_group_{}:group_type>/add'.format(code),
+        methods=['GET', 'POST'])
     @templated('person_select.html')
     @require_admin
     def group_member_add(current_user, queue_id, group_type):
@@ -841,9 +844,10 @@ def create_facility_blueprint(db, facility):
             current_user, db, queue_id, group_type,
             request.args, (request.form if request.method == 'POST' else None))
 
-    @bp.route('/admin/queue/<int:queue_id>/group/<hedwig_group:group_type>/'
-              'edit',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/admin/queue/<int:queue_id>/group/'
+        '<hedwig_group_{}:group_type>/edit'.format(code),
+        methods=['GET', 'POST'])
     @facility_template('group_member_edit.html')
     @require_admin
     def group_member_edit(current_user, queue_id, group_type):
@@ -852,7 +856,8 @@ def create_facility_blueprint(db, facility):
             request.args, (request.form if request.method == 'POST' else None))
 
     @bp.route(
-        '/admin/queue/<int:queue_id>/group/<hedwig_group:group_type>/sync',
+        '/admin/queue/<int:queue_id>/group/'
+        '<hedwig_group_{}:group_type>/sync'.format(code),
         methods=['GET', 'POST'])
     @facility_template('group_member_sync.html')
     @require_admin
@@ -861,9 +866,10 @@ def create_facility_blueprint(db, facility):
             current_user, db, queue_id, group_type,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/admin/queue/<int:queue_id>/group/<hedwig_group:group_type>/'
-              'reinvite/<int:member_id>',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/admin/queue/<int:queue_id>/group/'
+        '<hedwig_group_{}:group_type>/reinvite/<int:member_id>'.format(code),
+        methods=['GET', 'POST'])
     @templated('confirm.html')
     @require_admin
     def group_member_reinvite(current_user, queue_id, group_type, member_id):
@@ -1186,6 +1192,7 @@ def create_facility_blueprint(db, facility):
     def add_to_context():
         return {
             'facility_name': name,
+            'facility_group_class': facility.get_group_types(),
             'facility_role_class': facility.get_reviewer_roles(),
             'facility_affiliation_type_class': facility.get_affiliation_types(),
             'facility_call_type_class': facility.get_call_types(),

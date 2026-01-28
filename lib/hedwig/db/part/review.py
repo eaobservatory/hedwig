@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -28,7 +28,7 @@ from ...error import ConsistencyError, Error, FormattedError, \
 from ...type.collection import GroupMemberCollection, ResultCollection, \
     ReviewerCollection, ReviewerAcceptanceCollection, ReviewDeadlineCollection, \
     ReviewFigureCollection
-from ...type.enum import Assessment, FormatType, GroupType, ReviewState
+from ...type.enum import Assessment, FormatType, ReviewState
 from ...type.simple import GroupMember, Note, \
     Reviewer, ReviewerAcceptance, \
     ReviewDeadline, ReviewFigureInfo
@@ -43,9 +43,9 @@ from ..meta import affiliation_weight_note, available_note, \
 
 
 class ReviewPart(object):
-    def add_group_member(self, queue_id, group_type, person_id,
+    def add_group_member(self, group_class, queue_id, group_type, person_id,
                          _conn=None, _test_skip_check=False):
-        if not GroupType.is_valid(group_type):
+        if not group_class.is_valid(group_type):
             raise Error('invalid group type')
 
         with self._transaction(_conn=_conn) as conn:
@@ -1000,7 +1000,7 @@ class ReviewPart(object):
                 records=records, unique_columns=(review_deadline.c.role,))
 
     def sync_group_member(
-            self, queue_id, group_type, records, forbid_add=True):
+            self, group_class, queue_id, group_type, records, forbid_add=True):
         """
         Update the member records of the given group for the given queue.
 
@@ -1010,7 +1010,7 @@ class ReviewPart(object):
         (E.g. the chair of a group representing a committee.)
         """
 
-        if not GroupType.is_valid(group_type):
+        if not group_class.is_valid(group_type):
             raise Error('invalid group type')
 
         with self._transaction() as conn:

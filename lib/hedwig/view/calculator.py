@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -146,6 +146,7 @@ class BaseCalculator(object):
             for the proposal specified by `for_proposal_id`.
         """
 
+        group_class = self.facility.get_group_types()
         role_class = self.facility.get_reviewer_roles()
         auth_cache = {} if (can is None) else can.cache
 
@@ -203,7 +204,8 @@ class BaseCalculator(object):
                         code=self.facility.make_proposal_code(db, proposal))),
                     filter_value=(lambda proposal: auth.for_proposal(
                         # Emulate search_proposal(with_members=True) behavior.
-                        role_class, current_user, db, proposal._replace(
+                        group_class, role_class,
+                        current_user, db, proposal._replace(
                             members=MemberCollection((
                                 (proposal.member.id, proposal.member),))),
                         auth_cache=auth_cache,
@@ -218,7 +220,7 @@ class BaseCalculator(object):
                         *proposal,
                         code=self.facility.make_proposal_code(db, proposal))),
                     filter_value=(lambda proposal: auth.for_review(
-                        role_class, current_user, db,
+                        group_class, role_class, current_user, db,
                         proposal.reviewer, proposal,
                         auth_cache=auth_cache,
                         skip_membership_test=True,

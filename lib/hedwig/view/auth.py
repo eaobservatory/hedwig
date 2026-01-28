@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -23,7 +23,7 @@ from collections import namedtuple
 from ..db.util import memoized
 from ..error import NoSuchRecord, NoSuchValue
 from ..type.collection import ProposalCollection, ReviewerCollection
-from ..type.enum import GroupType, ProposalState, ProposalType, \
+from ..type.enum import ProposalState, ProposalType, \
     ReviewState, SiteGroupType
 from ..type.simple import Call, Person, Proposal, Reviewer
 from ..type.util import null_tuple
@@ -41,7 +41,7 @@ AuthorizationWithRating = namedtuple(
     'AuthorizationWithRating', Authorization._fields + ('view_rating',))
 
 
-def for_call(current_user, db, call, auth_cache=None):
+def for_call(group_class, current_user, db, call, auth_cache=None):
     """
     Determine the current user's authorization regarding the
     given call.
@@ -63,13 +63,13 @@ def for_call(current_user, db, call, auth_cache=None):
 
     if group_members.has_entry(
             queue_id=call.queue_id,
-            group_type=GroupType.hidden_call_groups()):
+            group_type=group_class.hidden_call_groups()):
         return view_only
 
     return no
 
 
-def for_call_review(current_user, db, call, auth_cache=None):
+def for_call_review(group_class, current_user, db, call, auth_cache=None):
     """
     Determine the current user's authorization regarding the general
     review of proposals for a given call.
@@ -96,18 +96,19 @@ def for_call_review(current_user, db, call, auth_cache=None):
 
     if group_members.has_entry(
             queue_id=call.queue_id,
-            group_type=GroupType.review_coord_groups()):
+            group_type=group_class.review_coord_groups()):
         return yes
 
     if group_members.has_entry(
             queue_id=call.queue_id,
-            group_type=GroupType.review_view_groups()):
+            group_type=group_class.review_view_groups()):
         return view_only
 
     return no
 
 
-def for_call_review_proposal(current_user, db, proposal, auth_cache=None):
+def for_call_review_proposal(
+        group_class, current_user, db, proposal, auth_cache=None):
     """
     Determine general authorization for call reviews,
     based on a proposal record.
@@ -115,12 +116,14 @@ def for_call_review_proposal(current_user, db, proposal, auth_cache=None):
     This constucts a dummy call record and then calls :func:`for_call_review`.
     """
 
-    return for_call_review(current_user, db, null_tuple(Call)._replace(
-        queue_id=proposal.queue_id,
-    ), auth_cache=auth_cache)
+    return for_call_review(
+        group_class, current_user, db,
+        null_tuple(Call)._replace(
+            queue_id=proposal.queue_id,
+        ), auth_cache=auth_cache)
 
 
-def for_person(current_user, db, person, auth_cache=None):
+def for_person(current_user, db, facilities, person, auth_cache=None):
     """
     Determine the current user's authorization regarding this
     profile.
@@ -174,9 +177,12 @@ def for_person(current_user, db, person, auth_cache=None):
     # access to review coordinators.
     group_members = _get_group_membership(auth_cache, db, current_person_id)
 
-    queue_ids = frozenset((
-        x.queue_id for x in group_members.values_by_group_type(
-            GroupType.review_coord_groups())))
+    queue_ids = frozenset(
+        member.queue_id
+        for facility in facilities.values()
+        for member in group_members.values_by_group_type(
+            facility.view.get_group_types().review_coord_groups(),
+            facility_id=facility.id))
 
     if queue_ids:
         for reviewer in _get_queue_reviewers(
@@ -187,7 +193,7 @@ def for_person(current_user, db, person, auth_cache=None):
     return auth
 
 
-def for_person_list(current_user, db, auth_cache=None):
+def for_person_list(current_user, db, facilities, auth_cache=None):
     """
     Determine the current user's authorization regarding the full person list
     (including those without public profiles).
@@ -204,42 +210,47 @@ def for_person_list(current_user, db, auth_cache=None):
     group_members = _get_group_membership(
         auth_cache, db, current_user.person.id)
 
-    if group_members.has_entry(
-            group_type=GroupType.review_coord_groups()):
-        return view_only
+    for facility in facilities.values():
+        group_class = facility.view.get_group_types()
+
+        if group_members.has_entry(
+                group_type=group_class.review_coord_groups(),
+                facility_id=facility.id):
+            return view_only
 
     return no
 
 
-def for_person_member(current_user, db, member, auth_cache=None):
+def for_person_member(current_user, db, facilities, member, auth_cache=None):
     """
     Determine authorization for a person profile, based on a member record.
 
     This constucts a dummy person record and then calls :func:`for_person`.
     """
 
-    return for_person(current_user, db, null_tuple(Person)._replace(
+    return for_person(current_user, db, facilities, null_tuple(Person)._replace(
         id=member.person_id,
         user_id=member.user_id,
         public=member.person_public,
     ), auth_cache=auth_cache)
 
 
-def for_person_reviewer(current_user, db, reviewer, auth_cache=None):
+def for_person_reviewer(current_user, db, facilities, reviewer, auth_cache=None):
     """
     Determine authorization for a person profile, based on a reviewer record.
 
     This constucts a dummy person record and then calls :func:`for_person`.
     """
 
-    return for_person(current_user, db, null_tuple(Person)._replace(
+    return for_person(current_user, db, facilities, null_tuple(Person)._replace(
         id=reviewer.person_id,
         user_id=reviewer.user_id,
         public=reviewer.person_public,
     ), auth_cache=auth_cache)
 
 
-def for_institution(current_user, db, institution, auth_cache=None):
+def for_institution(
+        current_user, db, facilities, institution, auth_cache=None):
     """
     Determine the current user's authorization regarding this
     institution.
@@ -273,9 +284,12 @@ def for_institution(current_user, db, institution, auth_cache=None):
         group_members = _get_group_membership(
             auth_cache, db, current_user.person.id)
 
-        queue_ids = frozenset((
-            x.queue_id for x in group_members.values_by_group_type(
-                GroupType.review_coord_groups())))
+        queue_ids = frozenset(
+            member.queue_id
+            for facility in facilities.values()
+            for member in group_members.values_by_group_type(
+                facility.view.get_group_types().review_coord_groups(),
+                facility_id=facility.id))
 
         if queue_ids:
             for reviewer in _get_queue_reviewers(
@@ -286,7 +300,8 @@ def for_institution(current_user, db, institution, auth_cache=None):
     return view_only
 
 
-def for_private_moc(current_user, db, facility_id, auth_cache=None):
+def for_private_moc(
+        group_class, current_user, db, facility_id, auth_cache=None):
     """
     Determine whether the current user can view/search private MOCs.
 
@@ -305,7 +320,7 @@ def for_private_moc(current_user, db, facility_id, auth_cache=None):
         auth_cache, db, current_user.person.id)
 
     if group_members.has_entry(
-            group_type=GroupType.private_moc_groups(),
+            group_type=group_class.private_moc_groups(),
             facility_id=facility_id):
         return view_only
 
@@ -313,7 +328,7 @@ def for_private_moc(current_user, db, facility_id, auth_cache=None):
 
 
 def for_proposal(
-        role_class, current_user, db, proposal, auth_cache=None,
+        group_class, role_class, current_user, db, proposal, auth_cache=None,
         allow_unaccepted_review=None):
     """
     Determine the current user's authorization regarding this proposal.
@@ -364,7 +379,7 @@ def for_proposal(
 
         if group_members.has_entry(
                 queue_id=proposal.queue_id,
-                group_type=GroupType.view_all_groups()):
+                group_type=group_class.view_all_groups()):
             return auth._replace(view=True)
 
     if redirect is not None:
@@ -374,7 +389,8 @@ def for_proposal(
 
 
 def for_proposal_prev_proposal(
-        current_user, db, prev_proposal, members=None, auth_cache=None):
+        group_class, current_user, db, prev_proposal, members=None,
+        auth_cache=None):
     """
     Estimate authorization for a proposal, based on a previous proposal record.
 
@@ -386,7 +402,7 @@ def for_proposal_prev_proposal(
     """
 
     return for_proposal(
-        None, current_user, db,
+        group_class, None, current_user, db,
         _dummy_proposal_prev_proposal(prev_proposal, members=members),
         auth_cache=auth_cache,
         allow_unaccepted_review=True)
@@ -408,7 +424,7 @@ def _dummy_proposal_prev_proposal(prev_proposal, members=None):
 
 
 def for_proposal_decision(
-        current_user, db, proposal, call=None, auth_cache=None):
+        group_class, current_user, db, proposal, call=None, auth_cache=None):
     """
     Determine the current user's authorization regarding the
     review committee decision.
@@ -434,14 +450,17 @@ def for_proposal_decision(
 
     # Assume that the user has permission to edit the decision of they
     # can edit the call.  (I.e. they are review coordinator or admin.)
-    if for_call_review(current_user, db, call, auth_cache=auth_cache).edit:
+    if for_call_review(
+            group_class, current_user, db, call,
+            auth_cache=auth_cache).edit:
         return edit_only
 
     return no
 
 
 def for_proposal_feedback(
-        role_class, current_user, db, proposal, auth_cache=None):
+        group_class, role_class, current_user, db, proposal,
+        auth_cache=None):
     """
     Determine the current user's authorization regarding general feedback
     for a proposal.
@@ -474,7 +493,7 @@ def for_proposal_feedback(
 
     if group_members.has_entry(
             queue_id=proposal.queue_id,
-            group_type=GroupType.feedback_view_groups()):
+            group_type=group_class.feedback_view_groups()):
         return view_only
 
     # Otherwise deny access.
@@ -482,7 +501,8 @@ def for_proposal_feedback(
 
 
 def for_review(
-        role_class, current_user, db, reviewer, proposal, auth_cache=None,
+        group_class, role_class,
+        current_user, db, reviewer, proposal, auth_cache=None,
         skip_membership_test=False,
         allow_unaccepted=None):
     """
@@ -598,14 +618,14 @@ def for_review(
 
     if group_members.has_entry(
             queue_id=proposal.queue_id,
-            group_type=GroupType.review_coord_groups()):
+            group_type=group_class.review_coord_groups()):
         return AuthorizationWithRating(
             view=True, edit=review_is_editable, view_rating=rating_is_viewable)
 
     # Give view access to committee members.
     if group_members.has_entry(
             queue_id=proposal.queue_id,
-            group_type=GroupType.review_view_groups()):
+            group_type=group_class.review_view_groups()):
         return AuthorizationWithRating(
             view=True, edit=False, view_rating=rating_is_viewable)
 
@@ -613,7 +633,8 @@ def for_review(
 
 
 def for_review_prev_proposal(
-        current_user, db, prev_proposal, members=None, auth_cache=None):
+        group_class, current_user, db, prev_proposal, members=None,
+        auth_cache=None):
     """
     Estimate authorization for reviews of a proposal, based on a previous
     proposal record.
@@ -627,7 +648,7 @@ def for_review_prev_proposal(
     """
 
     return for_review(
-        None, current_user, db, None,
+        group_class, None, current_user, db, None,
         _dummy_proposal_prev_proposal(prev_proposal, members=members),
         auth_cache=auth_cache,
         skip_membership_test=(members is None),
@@ -647,7 +668,7 @@ def can_be_admin(current_user, db, auth_cache=None):
 
 
 def can_add_review_roles(
-        type_class, role_class,
+        group_class, type_class, role_class,
         current_user, db, proposal, include_indirect=True,
         auth_cache=None):
     """
@@ -679,7 +700,7 @@ def can_add_review_roles(
         if not proposal.reviewers.has_person(
                 person_id=person_id, roles=role_class.get_cttee_roles()):
             if group_members.has_entry(
-                    queue_id=proposal.queue_id, group_type=GroupType.CTTEE):
+                    queue_id=proposal.queue_id, group_type=group_class.CTTEE):
                 roles.append(role_class.CTTEE_OTHER)
 
     # Determine whether the user can add a "feedback" review -- they should be
@@ -698,7 +719,7 @@ def can_add_review_roles(
                         current_user.is_admin
                         or group_members.has_entry(
                             queue_id=proposal.queue_id,
-                            group_type=GroupType.review_coord_groups())))):
+                            group_type=group_class.review_coord_groups())))):
                 roles.append(role_class.FEEDBACK)
 
     return roles
@@ -742,12 +763,13 @@ def find_addable_reviews(current_user, db, facilities, auth_cache=None):
         return ans
 
     for facility in facilities.values():
+        group_class = facility.view.get_group_types()
         role_class = facility.view.get_reviewer_roles()
         type_class = facility.view.get_call_types()
 
         for proposal in proposals.values_by_facility(facility.id):
             roles = can_add_review_roles(
-                type_class, role_class, current_user, db, proposal,
+                group_class, type_class, role_class, current_user, db, proposal,
                 include_indirect=False,
                 auth_cache=auth_cache)
             if not roles:

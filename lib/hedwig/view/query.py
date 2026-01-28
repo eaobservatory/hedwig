@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -93,12 +93,12 @@ class QueryView(object):
 
         return institutions
 
-    def get_person_list(self, current_user, db, public):
+    def get_person_list(self, current_user, db, facilities, public):
         countries = get_countries()
         persons = []
 
         if not public:
-            can = auth.for_person_list(current_user, db)
+            can = auth.for_person_list(current_user, db, facilities)
             if not can.view:
                 raise HTTPForbidden('Permission denied.')
 

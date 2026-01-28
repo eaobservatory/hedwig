@@ -38,7 +38,7 @@ from ...type.collection import CalculationCollection, \
     TargetCollection
 from ...type.enum import AttachmentState, \
     CallState, FigureType, FormatType, \
-    GroupType, LogEventLevel, MessageThreadType, \
+    LogEventLevel, MessageThreadType, \
     PermissionType, PersonLogEvent, PersonTitle, \
     ProposalState, ProposalType, PublicationType, \
     RequestState, ReviewState
@@ -72,6 +72,7 @@ PrevProposalPubExtra = namedtuple(
 
 class GenericProposal(object):
     def view_proposal_new(self, current_user, db, call_id, form):
+        group_class = self.get_group_types()
         type_class = self.get_call_types()
         role_class = self.get_reviewer_roles()
         auth_cache = {}
@@ -86,7 +87,8 @@ class GenericProposal(object):
             raise HTTPError('Multiple calls found')
 
         if not auth.for_call(
-                current_user, db, call, auth_cache=auth_cache).view:
+                group_class, current_user, db, call,
+                auth_cache=auth_cache).view:
             raise HTTPForbidden('Permission denied for this call.')
 
         affiliations = db.search_affiliation(
@@ -183,7 +185,7 @@ class GenericProposal(object):
 
                     role_class = self.get_reviewer_roles()
                     can = auth.for_proposal(
-                        role_class, current_user, db, old_proposal,
+                        group_class, role_class, current_user, db, old_proposal,
                         auth_cache=auth_cache)
 
                     if not can.view:
@@ -798,12 +800,14 @@ class GenericProposal(object):
 
     @with_proposal(permission=PermissionType.VIEW)
     def view_proposal_view(self, current_user, db, proposal, can, args):
+        group_class = self.get_group_types()
         role_class = self.get_reviewer_roles()
         review_can = auth.for_review(
-            role_class, current_user, db, reviewer=None, proposal=proposal,
+            group_class, role_class, current_user, db,
+            reviewer=None, proposal=proposal,
             auth_cache=can.cache)
         feedback_can = auth.for_proposal_feedback(
-            role_class, current_user, db, proposal=proposal,
+            group_class, role_class, current_user, db, proposal=proposal,
             auth_cache=can.cache)
 
         type_class = self.get_call_types()
@@ -829,7 +833,8 @@ class GenericProposal(object):
             'proposal': proposal._replace(members=proposal.members.map_values(
                 lambda x: with_can_view(
                     x, auth.for_person_member(
-                        current_user, db, x, auth_cache=can.cache).view))),
+                        current_user, db, self._facilities, x,
+                        auth_cache=can.cache).view))),
             'students': proposal.members.get_students(),
             'proposal_code': self.make_proposal_code(db, proposal),
             'show_person_proposals_callout': is_first_view,
@@ -858,6 +863,7 @@ class GenericProposal(object):
         to the proposal.
         """
 
+        group_class = self.get_group_types()
         role_class = self.get_text_roles()
 
         proposal_text = db.search_proposal_text(proposal.id, with_text=True)
@@ -899,12 +905,14 @@ class GenericProposal(object):
                     can_view_proposal=(
                         False if x.proposal_id is None
                         else auth.for_proposal_prev_proposal(
-                            current_user, db, x, members=proposal.members,
+                            group_class, current_user, db, x,
+                            members=proposal.members,
                             auth_cache=auth_cache).view),
                     can_view_review=(
                         False if x.proposal_id is None
                         else auth.for_review_prev_proposal(
-                            current_user, db, x, members=proposal.members,
+                            group_class, current_user, db,
+                            x, members=proposal.members,
                             auth_cache=auth_cache).view))),
             'text_roles': role_class,
             'systems': CoordSystem.get_options(),
@@ -1380,6 +1388,7 @@ class GenericProposal(object):
         :param proposal: the Proposal object.
         """
 
+        group_class = self.get_group_types()
         type_class = self.get_call_types()
         proposal_code = self.make_proposal_code(db, proposal)
         immediate_review = type_class.has_immediate_review(proposal.call_type)
@@ -1391,7 +1400,7 @@ class GenericProposal(object):
 
         recipient_ids = set()
 
-        standard_group = tuple(x for x in notify_group if x != GroupType.ADMIN)
+        standard_group = tuple(x for x in notify_group if x != group_class.ADMIN)
 
         if standard_group:
             group_recipients = db.search_group_member(
@@ -1401,7 +1410,7 @@ class GenericProposal(object):
             recipient_ids.update((
                 x.person_id for x in group_recipients.values()))
 
-        if GroupType.ADMIN in notify_group:
+        if group_class.ADMIN in notify_group:
             site_administrators = db.search_person(admin=True)
 
             recipient_ids.update((

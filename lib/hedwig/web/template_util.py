@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -32,7 +32,7 @@ from ..compat import char
 from ..compat import first_value as _first_value
 from ..config import get_countries
 from ..type.enum import AnnotationType, Assessment, \
-    AttachmentState, CallState, FigureType, GroupType, \
+    AttachmentState, CallState, FigureType, \
     MessageState, MessageThreadType, \
     PersonLogEvent, PersonTitle, \
     ProposalState, ProposalType, PublicationType, \
@@ -308,10 +308,10 @@ def register_template_utils(app):
         return type_class.get_full_call_name(value, **kwargs)
 
     @app.template_filter()
-    def group_type_name(value):
+    def group_type_name(value, group_class):
         if value is None:
             return ''
-        return GroupType.get_name(value)
+        return group_class.get_name(value)
 
     @app.template_filter()
     def json(value, extend=None, dynamic=None):

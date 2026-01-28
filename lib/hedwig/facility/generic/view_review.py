@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -48,7 +48,7 @@ from ...web.util import ErrorPage, \
 from ...type.collection import AffiliationCollection, MemberCollection, \
     ReviewerCollection, ReviewDeadlineCollection
 from ...type.enum import Assessment, \
-    FigureType, FormatType, GroupType, \
+    FigureType, FormatType, \
     MessageThreadType, PermissionType, PersonTitle, \
     ProposalState, ProposalType, ReviewState
 from ...type.simple import Affiliation, DateAndTime, Link, MemberPIInfo, \
@@ -96,6 +96,7 @@ RoleClosingInfo = namedtuple(
 class GenericReview(object):
     @with_call_review(permission=PermissionType.VIEW)
     def view_review_call(self, current_user, db, call, can):
+        group_class = self.get_group_types()
         role_class = self.get_reviewer_roles()
         type_class = self.get_call_types()
 
@@ -115,21 +116,24 @@ class GenericReview(object):
             if member_pi is not None:
                 member_pi = with_can_view(
                     member_pi, auth.for_person_member(
-                        current_user, db, member_pi,
+                        current_user, db, self._facilities, member_pi,
                         auth_cache=can.cache).view)
 
             review_can = auth.for_review(
-                role_class, current_user, db, reviewer=None, proposal=proposal,
+                group_class, role_class, current_user, db,
+                reviewer=None, proposal=proposal,
                 auth_cache=can.cache)
 
             decision_can = auth.for_proposal_decision(
-                current_user, db, proposal, call=call, auth_cache=can.cache)
+                group_class, current_user, db, proposal, call=call,
+                auth_cache=can.cache)
 
             reviewers = None
             if proposal.reviewers is not None:
                 reviewers = proposal.reviewers.map_values(
                     lambda x: with_can_view(x, auth.for_person_reviewer(
-                        current_user, db, x, auth_cache=can.cache).view))
+                        current_user, db, self._facilities, x,
+                        auth_cache=can.cache).view))
 
             proposals.append(ProposalWithExtraPermissions(
                 *proposal._replace(member=member_pi, reviewers=reviewers),
@@ -217,6 +221,7 @@ class GenericReview(object):
         """
 
         affiliation_type_class = self.get_affiliation_types()
+        group_class = self.get_group_types()
         role_class = self.get_reviewer_roles()
 
         proposals = db.search_proposal(
@@ -232,12 +237,14 @@ class GenericReview(object):
         proposal_list = []
         for proposal in proposals.values():
             can_view_review = auth.for_review(
-                role_class, current_user, db, reviewer=None, proposal=proposal,
+                group_class, role_class, current_user, db,
+                reviewer=None, proposal=proposal,
                 auth_cache=can.cache).view
 
             members = proposal.members.map_values(lambda x: with_can_view(
                 x, auth.for_person_member(
-                    current_user, db, x, auth_cache=can.cache).view))
+                    current_user, db, self._facilities, x,
+                    auth_cache=can.cache).view))
 
             member_pi = members.get_pi(default=None)
 
@@ -258,7 +265,7 @@ class GenericReview(object):
                 'affiliations': self.calculate_affiliation_assignment(
                     db, proposal.members, affiliations),
                 'can_edit_decision': auth.for_proposal_decision(
-                    current_user, db, proposal, call=call,
+                    group_class, current_user, db, proposal, call=call,
                     auth_cache=can.cache).edit,
             })
 
@@ -269,14 +276,14 @@ class GenericReview(object):
 
                 for reviewer_id, reviewer in proposal.reviewers.items():
                     reviewer_can = auth.for_review(
-                        role_class, current_user, db,
+                        group_class, role_class, current_user, db,
                         reviewer=reviewer, proposal=proposal,
                         auth_cache=can.cache, allow_unaccepted=False)
 
                     reviewers[reviewer_id] = with_can_view_edit_rating(
                         reviewer,
                         auth.for_person_reviewer(
-                            current_user, db, reviewer,
+                            current_user, db, self._facilities, reviewer,
                             auth_cache=can.cache).view,
                         reviewer_can.edit, reviewer_can.view_rating)
 
@@ -634,6 +641,7 @@ class GenericReview(object):
 
     def _get_review_statistics(
             self, current_user, db, call, can, cttee_role=None):
+        group_class = self.get_group_types()
         role_class = self.get_reviewer_roles()
 
         cttee_roles = None
@@ -666,7 +674,7 @@ class GenericReview(object):
 
         for proposal in proposals.values():
             if not auth.for_review(
-                    role_class, current_user, db,
+                    group_class, role_class, current_user, db,
                     reviewer=None, proposal=proposal,
                     auth_cache=can.cache).view:
                 continue
@@ -678,7 +686,7 @@ class GenericReview(object):
                         continue
 
                 if not auth.for_review(
-                        role_class, current_user, db,
+                        group_class, role_class, current_user, db,
                         reviewer=reviewer, proposal=proposal,
                         auth_cache=can.cache,
                         allow_unaccepted=False).view_rating:
@@ -694,7 +702,7 @@ class GenericReview(object):
                         'id': person_id,
                         'name': reviewer.person_name,
                         'can_view': auth.for_person_reviewer(
-                            current_user, db, reviewer,
+                            current_user, db, self._facilities, reviewer,
                             auth_cache=can.cache).view,
                     }
 
@@ -995,6 +1003,7 @@ class GenericReview(object):
 
     @with_call_review(permission=PermissionType.EDIT)
     def view_review_call_reviewers(self, current_user, db, call, can, args):
+        group_class = self.get_group_types()
         role_class = self.get_reviewer_roles()
         type_class = self.get_call_types()
 
@@ -1049,7 +1058,8 @@ class GenericReview(object):
             member_pi = proposal.members.get_pi(default=None)
             if member_pi is not None:
                 member_pi = with_can_view(member_pi, auth.for_person_member(
-                    current_user, db, member_pi, auth_cache=can.cache).view)
+                    current_user, db, self._facilities, member_pi,
+                    auth_cache=can.cache).view)
 
             proposals.append(ProposalWithInviteRoles(
                 *proposal._replace(
@@ -1058,18 +1068,18 @@ class GenericReview(object):
                         lambda x: with_can_view_edit(
                             x,
                             can_view=auth.for_person_reviewer(
-                                current_user, db, x,
+                                current_user, db, self._facilities, x,
                                 auth_cache=can.cache).view,
                             can_edit=(x.role in roles)))),
                 invite_roles=[
                     x for x in invite_roles
                     if x in roles and x not in excluded_roles],
                 add_roles=auth.can_add_review_roles(
-                    type_class, role_class, current_user, db, proposal,
-                    auth_cache=can.cache),
+                    group_class, type_class, role_class, current_user, db,
+                    proposal, auth_cache=can.cache),
                 code=self.make_proposal_code(db, proposal),
                 can_view_review=auth.for_review(
-                    role_class, current_user, db, None, proposal,
+                    group_class, role_class, current_user, db, None, proposal,
                     auth_cache=can.cache).view,
                 can_edit_decision=None))
 
@@ -1105,6 +1115,7 @@ class GenericReview(object):
     @with_call_review(permission=PermissionType.EDIT)
     def view_reviewer_grid(
             self, current_user, db, call, can, primary_role, form):
+        group_class = self.get_group_types()
         role_class = self.get_reviewer_roles()
         type_class = self.get_call_types()
 
@@ -1142,7 +1153,7 @@ class GenericReview(object):
             if member_pi is not None:
                 proposal = proposal._replace(member=with_can_view(
                     member_pi, auth.for_person_member(
-                        current_user, db, member_pi,
+                        current_user, db, self._facilities, member_pi,
                         auth_cache=can.cache).view))
 
             return ProposalWithReviewerPersons(
@@ -1167,11 +1178,11 @@ class GenericReview(object):
             state=role_class.get_editable_states(primary_role),
             with_members=True, with_reviewers=True,
             with_review_info=True, with_reviewer_role=all_roles,
-            with_categories=(group_type == GroupType.PEER),
+            with_categories=(group_type == group_class.PEER),
         ).map_values(augment_proposal)
 
         # Determine group membership.
-        if group_type == GroupType.PEER:
+        if group_type == group_class.PEER:
             group_members = MemberCollection()
             for proposal in all_proposals.values():
                 member_reviewer = proposal.members.get_reviewer(default=None)
@@ -1197,7 +1208,7 @@ class GenericReview(object):
         # all assigned reviewers are added to the group.
         proposals = all_proposals.map_values(filter_value=filter_proposal)
 
-        group_name = GroupType.get_name(group_type)
+        group_name = group_class.get_name(group_type)
         group_person_ids = [x.person_id for x in group_members.values()]
 
         # Get any relevant acceptance records.
@@ -1345,13 +1356,14 @@ class GenericReview(object):
                     for role in roles_conflict))
                 for proposal in proposals.values()},
             'message': message,
-            'is_peer_review': (group_type == GroupType.PEER),
+            'is_peer_review': (group_type == group_class.PEER),
             'acceptance': acceptance,
         }
 
     @with_review(permission=PermissionType.NONE, with_note=True)
     def view_reviewer_note(self, current_user, db, reviewer, proposal, form):
         auth_cache = {}
+        group_class = self.get_group_types()
         role_class = self.get_reviewer_roles()
 
         try:
@@ -1360,7 +1372,8 @@ class GenericReview(object):
             raise HTTPError('The corresponding call was not found')
 
         if not auth.for_call_review(
-                current_user, db, call, auth_cache=auth_cache).edit:
+                group_class, current_user, db, call,
+                auth_cache=auth_cache).edit:
             raise HTTPForbidden('Edit permission denied for this call.')
 
         try:
@@ -1414,7 +1427,8 @@ class GenericReview(object):
             'title': '{}: {} Reviewer Note'.format(
                 proposal_code, role_info.name.title()),
             'reviewer': with_can_view(reviewer, auth.for_person_reviewer(
-                current_user, db, reviewer, auth_cache=auth_cache).view),
+                current_user, db, self._facilities, reviewer,
+                auth_cache=auth_cache).view),
             'proposal': proposal,
             'proposal_code': proposal_code,
             'role_info': role_info,
@@ -1424,6 +1438,7 @@ class GenericReview(object):
 
     @with_call_review(permission=PermissionType.EDIT)
     def view_reviewer_notify(self, current_user, db, call, can, role, form):
+        group_class = self.get_group_types()
         role_class = self.get_reviewer_roles()
         type_class = self.get_call_types()
 
@@ -1435,7 +1450,7 @@ class GenericReview(object):
         if group_type is None:
             raise ErrorPage('Reviewer role is not assigned.')
 
-        group_name = GroupType.get_name(group_type)
+        group_name = group_class.get_name(group_type)
 
         # Prepare the list of reviewers and proposal reviews.  (This is needed
         # both to display the confirmation page and to send the notifications.)
@@ -1456,7 +1471,7 @@ class GenericReview(object):
                 reviewers[person_id].append(proposal._replace(
                     reviewers=None, reviewer=with_can_view(
                         reviewer, auth.for_person_reviewer(
-                            current_user, db, reviewer,
+                            current_user, db, self._facilities, reviewer,
                             auth_cache=can.cache).view)))
 
         # Get the deadline for this review role.
@@ -1611,7 +1626,7 @@ class GenericReview(object):
                 reviewers[person_id].append(proposal._replace(
                     reviewers=None, reviewer=with_can_view(
                         reviewer, auth.for_person_reviewer(
-                            current_user, db, reviewer,
+                            current_user, db, self._facilities, reviewer,
                             auth_cache=can.cache).view)))
 
         if form is not None:
@@ -1702,6 +1717,7 @@ class GenericReview(object):
 
     @with_proposal(permission=PermissionType.NONE, with_categories=True)
     def view_reviewer_add(self, current_user, db, proposal, role, form):
+        group_class = self.get_group_types()
         role_class = self.get_reviewer_roles()
         type_class = self.get_call_types()
         text_role_class = self.get_text_roles()
@@ -1734,7 +1750,8 @@ class GenericReview(object):
         auth_cache = {}
 
         if not auth.for_call_review(
-                current_user, db, call, auth_cache=auth_cache).edit:
+                group_class, current_user, db, call,
+                auth_cache=auth_cache).edit:
             raise HTTPForbidden('Edit permission denied for this call.')
 
         proposal_person_ids = [
@@ -1843,7 +1860,8 @@ class GenericReview(object):
         member_pi = proposal.members.get_pi(default=None)
         if member_pi is not None:
             member_pi = with_can_view(member_pi, auth.for_person_member(
-                current_user, db, member_pi, auth_cache=auth_cache).view)
+                current_user, db, self._facilities, member_pi,
+                auth_cache=auth_cache).view)
 
         proposal_code = self.make_proposal_code(db, proposal)
 
@@ -1952,6 +1970,7 @@ class GenericReview(object):
 
     @with_review(permission=PermissionType.NONE)
     def view_reviewer_remove(self, current_user, db, reviewer, proposal, form):
+        group_class = self.get_group_types()
         role_class = self.get_reviewer_roles()
 
         if proposal.state not in role_class.get_editable_states(reviewer.role):
@@ -1959,7 +1978,8 @@ class GenericReview(object):
                 'This proposal is not in a suitable state '
                 'for this type of review.')
 
-        if not auth.for_call_review_proposal(current_user, db, proposal).edit:
+        if not auth.for_call_review_proposal(
+                group_class, current_user, db, proposal).edit:
             raise HTTPForbidden('Edit permission denied for this call.')
 
         if ReviewState.is_present(reviewer.review_state):
@@ -2017,6 +2037,7 @@ class GenericReview(object):
     def _view_reviewer_reinvite_remind(
             self, current_user, db, reviewer, proposal, form,
             is_reminder=False, is_repeat_notification=False):
+        group_class = self.get_group_types()
         role_class = self.get_reviewer_roles()
 
         if proposal.state not in role_class.get_editable_states(reviewer.role):
@@ -2024,7 +2045,8 @@ class GenericReview(object):
                 'This proposal is not in a suitable state '
                 'for this type of review.')
 
-        if not auth.for_call_review_proposal(current_user, db, proposal).edit:
+        if not auth.for_call_review_proposal(
+                group_class, current_user, db, proposal).edit:
             raise HTTPForbidden('Edit permission denied for this call.')
 
         try:
@@ -2103,6 +2125,7 @@ class GenericReview(object):
                    with_decision=True, with_decision_note=True)
     def view_review_new(
             self, current_user, db, proposal, reviewer_role, args, form):
+        group_class = self.get_group_types()
         role_class = self.get_reviewer_roles()
         type_class = self.get_call_types()
 
@@ -2119,7 +2142,7 @@ class GenericReview(object):
         auth_cache = {}
 
         can_add_roles = auth.can_add_review_roles(
-            type_class, role_class, current_user, db, proposal,
+            group_class, type_class, role_class, current_user, db, proposal,
             auth_cache=auth_cache)
 
         if reviewer_role not in can_add_roles:
@@ -2256,7 +2279,8 @@ class GenericReview(object):
             'reviewer': reviewer,
             'proposal': proposal._replace(members=proposal.members.map_values(
                 lambda x: with_can_view(x, auth.for_person_member(
-                    current_user, db, x, auth_cache=can.cache).view))),
+                    current_user, db, self._facilities, x,
+                    auth_cache=can.cache).view))),
             'proposal_code': proposal_code,
             'abstract': abstract,
             'explanation': acceptance.text,
@@ -2271,6 +2295,7 @@ class GenericReview(object):
     def view_review_clear_accept(
             self, current_user, db, reviewer, proposal, form):
         auth_cache = {}
+        group_class = self.get_group_types()
         role_class = self.get_reviewer_roles()
         if not role_class.is_accepted_review(reviewer.role):
             raise ErrorPage('This review does not require acceptance.')
@@ -2279,7 +2304,8 @@ class GenericReview(object):
             raise ErrorPage('This review has not been rejected.')
 
         if not auth.for_call_review_proposal(
-                current_user, db, proposal, auth_cache=auth_cache).edit:
+                group_class, current_user, db, proposal,
+                auth_cache=auth_cache).edit:
             raise HTTPForbidden('Edit permission denied for this call.')
 
         if form is not None:
@@ -2325,6 +2351,7 @@ class GenericReview(object):
     def _view_review_new_or_edit(
             self, current_user, db, reviewer, proposal, args, form,
             reviewer_role=None, auth_cache=None):
+        group_class = self.get_group_types()
         role_class = self.get_reviewer_roles()
 
         if reviewer is None:
@@ -2514,7 +2541,8 @@ class GenericReview(object):
             'proposal_code': proposal_code,
             'proposal': proposal,
             'reviewer': with_can_view(reviewer, auth.for_person_reviewer(
-                current_user, db, reviewer, auth_cache=auth_cache).view),
+                current_user, db, self._facilities, reviewer,
+                auth_cache=auth_cache).view),
             'role_info': role_info,
             'assessment_options': Assessment.get_options(),
             'message': message,
@@ -2527,7 +2555,8 @@ class GenericReview(object):
             'review_deadline': deadline,
             'show_review_acceptance': (
                 role_info.accept and auth.for_call_review_proposal(
-                    current_user, db, proposal, auth_cache=auth_cache).edit),
+                    group_class, current_user, db, proposal,
+                    auth_cache=auth_cache).edit),
         }
 
         ctx.update(self._view_review_edit_extra(
@@ -2708,13 +2737,14 @@ class GenericReview(object):
         permission=PermissionType.NONE,
         with_decision=True, with_categories=True)
     def view_proposal_reviews(self, current_user, db, proposal):
+        group_class = self.get_group_types()
         type_class = self.get_call_types()
         role_class = self.get_reviewer_roles()
         text_role_class = self.get_text_roles()
 
         auth_cache = {}
         if not auth.for_review(
-                role_class, current_user, db,
+                group_class, role_class, current_user, db,
                 reviewer=None, proposal=proposal,
                 auth_cache=auth_cache).view:
             raise HTTPForbidden(
@@ -2735,7 +2765,8 @@ class GenericReview(object):
         if member_pi is not None:
             member_pi = with_can_view(
                 member_pi, auth.for_person_member(
-                    current_user, db, member_pi, auth_cache=auth_cache).view)
+                    current_user, db, self._facilities, member_pi,
+                    auth_cache=auth_cache).view)
         proposal = proposal._replace(member=member_pi, reviewers=reviewers)
 
         # Add permission fields and hide non-public notes so that we don't
@@ -2746,7 +2777,7 @@ class GenericReview(object):
                 with_acceptance=True).items():
             role_info = role_class.get_info(reviewer.role)
             reviewer_can = auth.for_review(
-                role_class, current_user, db,
+                group_class, role_class, current_user, db,
                 reviewer=reviewer, proposal=proposal,
                 auth_cache=auth_cache, allow_unaccepted=False)
 
@@ -2770,7 +2801,8 @@ class GenericReview(object):
                 *reviewer,
                 calculations=calculations, figures=figures,
                 can_view=auth.for_person_reviewer(
-                    current_user, db, reviewer, auth_cache=auth_cache).view,
+                    current_user, db, self._facilities, reviewer,
+                    auth_cache=auth_cache).view,
                 can_edit=reviewer_can.edit,
                 can_view_rating=reviewer_can.view_rating)
 
@@ -2786,19 +2818,22 @@ class GenericReview(object):
                 reviewers.map_values(
                     filter_value=lambda x: x.can_view_rating)),
             'can_add_roles': auth.can_add_review_roles(
-                type_class, role_class, current_user, db,
+                group_class, type_class, role_class, current_user, db,
                 proposal, auth_cache=auth_cache),
             'can_edit_decision': auth.for_proposal_decision(
-                current_user, db, proposal, auth_cache=auth_cache).edit,
+                group_class, current_user, db, proposal,
+                auth_cache=auth_cache).edit,
         }
 
     @with_proposal(permission=PermissionType.NONE,
                    with_decision=True, with_decision_note=True)
     def view_proposal_decision(self, current_user, db, proposal, args, form):
         auth_cache = {}
+        group_class = self.get_group_types()
 
         if not auth.for_proposal_decision(
-                current_user, db, proposal, auth_cache=auth_cache).edit:
+                group_class, current_user, db, proposal,
+                auth_cache=auth_cache).edit:
             raise HTTPForbidden(
                 'Decision edit permission denied for this proposal.')
 
@@ -2864,7 +2899,8 @@ class GenericReview(object):
         if member_pi is not None:
             member_pi = with_can_view(
                 member_pi, auth.for_person_member(
-                    current_user, db, member_pi, auth_cache=auth_cache).view)
+                    current_user, db, self._facilities, member_pi,
+                    auth_cache=auth_cache).view)
 
         ctx = {
             'title': '{}: Decision'.format(proposal_code),
@@ -2965,7 +3001,7 @@ class GenericReview(object):
                     *x, code=self.make_proposal_code(db, x)
                 )._replace(member=with_can_view(
                     x.member, auth.for_person_member(
-                        current_user, db, x.member,
+                        current_user, db, self._facilities, x.member,
                         auth_cache=can.cache).view)))
 
         # For information, determine which review roles are closing and what
@@ -3065,6 +3101,7 @@ class GenericReview(object):
                     *x, code=self.make_proposal_code(db, x)
                 )._replace(reviewers=x.reviewers.map_values(
                     lambda y: with_can_view(y, auth.for_person_reviewer(
-                        current_user, db, y, auth_cache=can.cache).view)))),
+                        current_user, db, self._facilities,
+                        y, auth_cache=can.cache).view)))),
             'message': message,
         }

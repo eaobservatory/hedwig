@@ -7,7 +7,7 @@
 <nav>
     <ol id="assign_reviewer_links" class="fa-ul">
         {% for (role, group) in assigned_roles.items() %}
-            <li><a href="{{ url_for('.review_call_grid', call_id=call.id, reviewer_role=role) }}"><span class="fa-li"><span class="fa-solid fa-file-circle-exclamation"></span></span>Assign {{ group | group_type_name | lower }}</a></li>
+            <li><a href="{{ url_for('.review_call_grid', call_id=call.id, reviewer_role=role) }}"><span class="fa-li"><span class="fa-solid fa-file-circle-exclamation"></span></span>Assign {{ group | group_type_name(facility_group_class) | lower }}</a></li>
         {% endfor %}
     </ol>
 </nav>
@@ -18,7 +18,7 @@
     <ol id="notify_reviewer_links" class="fa-ul">
         {% for (role, group) in assigned_roles.items() %}
             {% if unnotified_roles.get(role, 0) %}
-                <li><a href="{{ url_for('.review_call_notify', call_id=call.id, reviewer_role=role) }}"><span class="fa-li"><span class="fa-solid fa-comment"></span></span>Notify {{ group | group_type_name | lower }}</a></li>
+                <li><a href="{{ url_for('.review_call_notify', call_id=call.id, reviewer_role=role) }}"><span class="fa-li"><span class="fa-solid fa-comment"></span></span>Notify {{ group | group_type_name(facility_group_class) | lower }}</a></li>
             {% endif %}
         {% endfor %}
     </ol>

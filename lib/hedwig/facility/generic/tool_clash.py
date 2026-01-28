@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -245,10 +245,12 @@ class ClashTool(BaseTargetTool):
         has access to private mocs.
         """
 
+        group_class = self.facility.get_group_types()
+
         public = True
 
         if auth.for_private_moc(
-                current_user, db, self.facility.id_,
+                group_class, current_user, db, self.facility.id_,
                 auth_cache=auth_cache).view:
             public = None
 

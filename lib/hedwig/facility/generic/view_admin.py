@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -25,7 +25,7 @@ from ...email.format import render_email_template
 from ...error import DatabaseIntegrityError, NoSuchRecord, UserError
 from ...type.collection import AffiliationCollection, \
     CallMidCloseCollection, ResultCollection
-from ...type.enum import FormatType, GroupType, \
+from ...type.enum import FormatType, \
     PersonTitle, ProposalState, SemesterState, SyncOperation
 from ...type.simple import Affiliation, \
     CallMidClose, CallPreamble, Category, DateAndTime, \
@@ -279,13 +279,15 @@ class GenericAdmin(object):
 
     @with_queue
     def view_queue_view(self, current_user, db, queue):
+        group_class = self.get_group_types()
+
         affiliations = db.search_affiliation(queue_id=queue.id, hidden=False)
 
         return {
             'title': 'Queue: {}'.format(queue.name),
             'queue': queue,
             'affiliations': affiliations,
-            'groups': GroupType.get_options(),
+            'groups': group_class.get_options(),
         }
 
     def view_queue_edit(self, current_user, db, queue_id, form):
@@ -901,9 +903,11 @@ class GenericAdmin(object):
 
     @with_queue
     def view_group_view(self, current_user, db, queue, group_type):
+        group_class = self.get_group_types()
+
         if group_type is not None:
             try:
-                group_info = GroupType.get_info(group_type)
+                group_info = group_class.get_info(group_type)
             except KeyError:
                 raise HTTPNotFound('Unknown group.')
 
@@ -934,7 +938,7 @@ class GenericAdmin(object):
 
             ctx.update({
                 'title': '{}: Groups'.format(queue.name),
-                'groups': GroupType.get_options(short_name=True),
+                'groups': group_class.get_options(short_name=True),
                 'unique_members': persons,
             })
 
@@ -943,8 +947,10 @@ class GenericAdmin(object):
     @with_queue
     def view_group_member_add(
             self, current_user, db, queue, group_type, args, form):
+        group_class = self.get_group_types()
+
         try:
-            group_info = GroupType.get_info(group_type)
+            group_info = group_class.get_info(group_type)
         except KeyError:
             raise HTTPNotFound('Unknown group.')
 
@@ -976,7 +982,8 @@ class GenericAdmin(object):
                         except NoSuchRecord:
                             raise UserError('Could not find the person profile.')
 
-                        db.add_group_member(queue.id, group_type, person.id)
+                        db.add_group_member(
+                            group_class, queue.id, group_type, person.id)
 
                         flash('{} has been added to the group.', person.name)
 
@@ -992,7 +999,8 @@ class GenericAdmin(object):
                         person_id = db.add_person(
                             member['name'], title=member['title'],
                             primary_email=member['email'])
-                        db.add_group_member(queue.id, group_type, person_id)
+                        db.add_group_member(
+                            group_class, queue.id, group_type, person_id)
 
                         self._message_group_invite(
                             current_user, db,
@@ -1069,8 +1077,10 @@ class GenericAdmin(object):
     @with_queue
     def view_group_member_edit(
             self, current_user, db, queue, group_type, args, form):
+        group_class = self.get_group_types()
+
         try:
-            group_info = GroupType.get_info(group_type)
+            group_info = group_class.get_info(group_type)
         except KeyError:
             raise HTTPNotFound('Unknown group.')
 
@@ -1092,7 +1102,8 @@ class GenericAdmin(object):
 
                 referrer = form.get('referrer')
 
-                db.sync_group_member(queue.id, group_type, members)
+                db.sync_group_member(
+                    group_class, queue.id, group_type, members)
                 flash('The group membership has been saved.')
 
                 if referrer == 'gva':
@@ -1122,8 +1133,10 @@ class GenericAdmin(object):
     @with_queue
     def view_group_member_sync(
             self, current_user, db, queue, group_type, form):
+        group_class = self.get_group_types()
+
         try:
-            group_info = GroupType.get_info(group_type)
+            group_info = group_class.get_info(group_type)
         except KeyError:
             raise HTTPNotFound('Unknown group.')
 
@@ -1172,7 +1185,8 @@ class GenericAdmin(object):
                 try:
                     (n_insert, n_update, n_delete) = \
                         db.sync_group_member(
-                            queue.id, group_type, comparison.map_values(
+                            group_class, queue.id, group_type,
+                            comparison.map_values(
                                 filter_value=(
                                     lambda x: x.sync_operation
                                     != SyncOperation.DELETE)),
@@ -1213,8 +1227,10 @@ class GenericAdmin(object):
     @with_queue
     def view_group_member_reinvite(
             self, current_user, db, queue, group_type, member_id, form):
+        group_class = self.get_group_types()
+
         try:
-            group_info = GroupType.get_info(group_type)
+            group_info = group_class.get_info(group_type)
         except KeyError:
             raise HTTPNotFound('Unknown group.')
 

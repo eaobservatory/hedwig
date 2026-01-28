@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2023 East Asian Observatory.
+# Copyright (C) 2016-2026 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -26,7 +26,6 @@ from ..compat import first_value
 from ..config import get_facilities
 from ..error import FormattedError, NoSuchValue
 from ..file.pdf import pdf_merge
-from ..type.enum import GroupType
 from ..type.simple import CurrentUser, UserInfo
 from ..type.util import null_tuple
 from .write import PDFWriter
@@ -71,10 +70,14 @@ class PDFWriterFlask(PDFWriter):
         # Find a reviewer who is not a member of the proposal.
         proposal = self.db.get_proposal(
             facility_id=None, proposal_id=proposal_id, with_members=True)
+
+        facility_info = get_facilities(db=self.db)[proposal.facility_id]
+        group_class = facility_info.view.get_group_types()
+
         for group_member in self.db.search_group_member(
                 facility_id=proposal.facility_id,
                 queue_id=proposal.queue_id,
-                group_type=GroupType.review_view_groups()).values():
+                group_type=group_class.review_view_groups()).values():
             if not proposal.members.has_person(group_member.person_id):
                 person_id = group_member.person_id
                 break
@@ -83,8 +86,7 @@ class PDFWriterFlask(PDFWriter):
                 'No non-member reviewers found for proposal {}', proposal_id)
 
         # Determine URL to use to access the reviews.
-        facility_code = get_facilities(db=self.db)[proposal.facility_id].code
-        url = '{}/proposal/{}/review/'.format(facility_code, proposal_id)
+        url = '{}/proposal/{}/review/'.format(facility_info.code, proposal_id)
 
         # Request and return the PDF.
         return self._request_pdf(url, person_id)

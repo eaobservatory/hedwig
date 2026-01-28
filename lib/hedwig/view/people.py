@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -35,7 +35,7 @@ from ..error import ConsistencyError, DatabaseIntegrityError, Error, \
     UserError
 from ..type.collection import EmailCollection, GroupMemberCollection, \
     ProposalCollection, ReviewerCollection
-from ..type.enum import GroupType, LogEventLevel, \
+from ..type.enum import LogEventLevel, \
     PermissionType, PersonLogEvent, PersonTitle, ProposalState, \
     ReviewState, SiteGroupType, UserLogEvent
 from ..type.simple import Email, \
@@ -54,7 +54,7 @@ InstitutionLogExtra = namedtuple(
 
 GroupsByFacility = namedtuple(
     'GroupsByFacility',
-    ('name', 'code', 'groups'))
+    ('name', 'code', 'review_groups', 'groups'))
 
 PersonLogExtra = namedtuple(
     'PersonLogExtra',
@@ -607,13 +607,13 @@ class PeopleView(object):
             'log_in_for': log_in_for,
         }
 
-    def person_list(self, current_user, db, args):
+    def person_list(self, current_user, db, facilities, args):
         # Only show public, registered members unless the user has
         # suitable authorization.
         public = True
         can_view_unregistered = False
         registered = True
-        if auth.for_person(current_user, db, None).view:
+        if auth.for_person(current_user, db, facilities, None).view:
             public = None
             can_view_unregistered = True
             registered = int_or_none(args.get('registered', '1'))
@@ -629,7 +629,7 @@ class PeopleView(object):
         }
 
     @with_person(permission=PermissionType.VIEW)
-    def person_view(self, current_user, db, person, can, facilities):
+    def person_view(self, current_user, db, facilities, person, can):
         is_admin = current_user.is_admin
         is_current_user = (person.user_id == current_user.user.id)
 
@@ -649,12 +649,10 @@ class PeopleView(object):
                    if x.public or view_all_email])
 
         site_groups = None
-        review_groups = None
         site_group_membership = None
         review_group_membership = []
         if is_admin:
             site_groups = SiteGroupType.get_options()
-            review_groups = GroupType.get_options(short_name=True)
 
             site_group_membership = db.search_site_group_member(
                 person_id=person.id)
@@ -662,6 +660,9 @@ class PeopleView(object):
                 person_id=person.id, with_queue=True)
 
             for facility in facilities.values():
+                review_groups = facility.view.get_group_types().get_options(
+                    short_name=True)
+
                 facility_members = all_review_group_membership.map_values(
                     filter_value=(lambda x: x.facility_id == facility.id))
 
@@ -669,7 +670,8 @@ class PeopleView(object):
                     continue
 
                 review_group_membership.append(GroupsByFacility(
-                    facility.name, facility.code, facility_members))
+                    facility.name, facility.code, review_groups,
+                    facility_members))
 
         return {
             'title': ('Your Profile' if is_current_user
@@ -679,15 +681,14 @@ class PeopleView(object):
             'person': person,
             'show_admin_links': is_admin,
             'show_viewer_links': auth.for_person(
-                current_user, db, None, auth_cache=can.cache).view,
+                current_user, db, facilities, None, auth_cache=can.cache).view,
             'site_group_membership': site_group_membership,
             'review_group_membership': review_group_membership,
-            'review_groups': review_groups,
             'site_groups': site_groups,
         }
 
     @with_person(permission=PermissionType.NONE)
-    def person_invite(self, current_user, db, person, args, form):
+    def person_invite(self, current_user, db, facilities, person, args, form):
         if person.user_id is not None:
             raise ErrorPage('This user is already registered.')
 
@@ -724,7 +725,8 @@ class PeopleView(object):
         }
 
     @with_person(permission=PermissionType.EDIT)
-    def person_edit(self, current_user, db, person, can, args, form):
+    def person_edit(
+            self, current_user, db, facilities, person, can, args, form):
         message = None
 
         if form is not None:
@@ -761,7 +763,7 @@ class PeopleView(object):
 
     @with_person(permission=PermissionType.EDIT)
     def person_edit_institution(
-            self, current_user, db, person, can, args, form):
+            self, current_user, db, facilities, person, can, args, form):
         message = None
         message_select = None
 
@@ -861,7 +863,8 @@ class PeopleView(object):
             current_user, db, current_user.person, args, form)
 
     @with_person(permission=PermissionType.EDIT)
-    def person_edit_email(self, current_user, db, person, can, form):
+    def person_edit_email(
+            self, current_user, db, facilities, person, can, form):
         return self._person_edit_email(
             current_user, db, person, None, form)
 
@@ -971,7 +974,8 @@ class PeopleView(object):
 
     @with_person(permission=PermissionType.EDIT)
     def person_email_verify_get(
-            self, current_user, db, person, can, email_id, form, remote_addr):
+            self, current_user, db, facilities, person, can,
+            email_id, form, remote_addr):
         try:
             email = person.email[email_id]
         except KeyError:
@@ -1103,7 +1107,7 @@ class PeopleView(object):
 
     @with_person(permission=PermissionType.UNIVERSAL_VIEW)
     def person_proposals_other(
-            self, current_user, db, person, can, facilities):
+            self, current_user, db, facilities, person, can):
         return self._person_proposals(
             db, person.id, facilities, person,
             '{}: Proposals'.format(person.name))
@@ -1138,7 +1142,7 @@ class PeopleView(object):
 
     @with_person(permission=PermissionType.UNIVERSAL_VIEW)
     def person_reviews_other(
-            self, current_user, db, person, can, facilities, args):
+            self, current_user, db, facilities, person, can, args):
         return self._person_reviews(
             current_user, db, person.id, facilities, person, as_admin=True,
             view_all=int_or_none(args.get('view_all', '0')),
@@ -1177,6 +1181,7 @@ class PeopleView(object):
         proposals = []
 
         for facility in facilities.values():
+            group_class = facility.view.get_group_types()
             role_class = facility.view.get_reviewer_roles()
 
             facility_proposals = ProposalCollection()
@@ -1186,7 +1191,8 @@ class PeopleView(object):
                 # when viewing the administrative version of this page,
                 # and exclude rejected reviews otherwise.
                 can = auth.for_review(
-                    role_class, current_user, db, proposal.reviewer, proposal,
+                    group_class, role_class, current_user, db,
+                    proposal.reviewer, proposal,
                     auth_cache=auth_cache, allow_unaccepted=True)
                 if as_admin or (can.edit and (
                         proposal.reviewer.review_state
@@ -1253,7 +1259,7 @@ class PeopleView(object):
         }
 
     @with_person(permission=PermissionType.NONE)
-    def person_log(self, current_user, db, person, facilities, args):
+    def person_log(self, current_user, db, facilities, person, args):
         level = (
             int(args['level']) if 'level' in args
             else LogEventLevel.INTERMEDIATE)
@@ -1297,7 +1303,7 @@ class PeopleView(object):
         }
 
     @with_person(permission=PermissionType.NONE)
-    def person_subsume(self, current_user, db, person, form):
+    def person_subsume(self, current_user, db, facilities, person, form):
         ctx = {
             'title': '{}: Subsume Duplicate'.format(person.name),
             'person': person,
@@ -1378,13 +1384,15 @@ class PeopleView(object):
         }
 
     @with_institution(permission=PermissionType.VIEW)
-    def institution_view(self, current_user, db, institution, can):
+    def institution_view(
+            self, current_user, db, facilities, institution, can):
         # Only show public, registered members unless the user has
         # suitable authorization.
         public = True
         registered = True
         is_admin = current_user.is_admin
-        if auth.for_person(current_user, db, None, auth_cache=can.cache).view:
+        if auth.for_person(
+                current_user, db, facilities, None, auth_cache=can.cache).view:
             public = None
             registered = None
 
@@ -1410,7 +1418,8 @@ class PeopleView(object):
         }
 
     @with_institution(permission=PermissionType.NONE)
-    def institution_delete(self, current_user, db, institution, form):
+    def institution_delete(
+            self, current_user, db, facilities, institution, form):
         if form is not None:
             if 'submit_confirm' in form:
                 db.delete_institution(institution_id=institution.id)
@@ -1433,7 +1442,8 @@ class PeopleView(object):
         }
 
     @with_institution(permission=PermissionType.EDIT)
-    def institution_edit(self, current_user, db, institution, can, form):
+    def institution_edit(
+            self, current_user, db, facilities, institution, can, form):
         show_confirm_prompt = True
         message = None
         person_affected_list = []
@@ -1513,7 +1523,7 @@ class PeopleView(object):
 
     @with_institution(permission=PermissionType.NONE)
     def institution_frozen_members(
-            self, current_user, db, institution, facilities):
+            self, current_user, db, facilities, institution):
         persons = db.search_person(
             institution_id=institution.id)
 

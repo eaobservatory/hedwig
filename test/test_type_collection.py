@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -36,8 +36,8 @@ from hedwig.type.collection import \
     RequestCollection, ReviewerCollection, \
     SiteGroupMemberCollection, TargetCollection, TargetWithExtra
 from hedwig.type.enum import AnnotationType, BaseAffiliationType, \
-    BaseReviewerRole, BaseTextRole, \
-    CallState, GroupType, \
+    BaseGroupType, BaseReviewerRole, BaseTextRole, \
+    CallState, \
     RequestState, ReviewState, SiteGroupType
 from hedwig.type.simple import \
     Affiliation, Annotation, Call, CallPreamble, Email, GroupMember, Member, \
@@ -525,43 +525,53 @@ class CollectionTypeTestCase(TestCase):
         c = GroupMemberCollection()
 
         c[101] = null_tuple(GroupMember)._replace(
-            id=101, person_id=201, group_type=GroupType.CTTEE, facility_id=1)
+            id=101, person_id=201, group_type=BaseGroupType.CTTEE, facility_id=1)
         c[102] = null_tuple(GroupMember)._replace(
-            id=102, person_id=202, group_type=GroupType.TECH, facility_id=1)
+            id=102, person_id=202, group_type=BaseGroupType.TECH, facility_id=1)
         c[103] = null_tuple(GroupMember)._replace(
-            id=103, person_id=203, group_type=GroupType.TECH, facility_id=1)
+            id=103, person_id=203, group_type=BaseGroupType.TECH, facility_id=1)
         c[104] = null_tuple(GroupMember)._replace(
-            id=104, person_id=203, group_type=GroupType.COORD, facility_id=2)
+            id=104, person_id=203, group_type=BaseGroupType.COORD, facility_id=2)
 
         self.assertEqual(
-            sorted([x.id for x in c.values_by_group_type(GroupType.CTTEE)]),
+            sorted([x.id for x in c.values_by_group_type(BaseGroupType.CTTEE)]),
             [101])
 
         self.assertEqual(
-            sorted([x.id for x in c.values_by_group_type(GroupType.TECH)]),
+            sorted([x.id for x in c.values_by_group_type(BaseGroupType.TECH)]),
             [102, 103])
 
         self.assertEqual(
-            sorted([x.id for x in c.values_by_group_type(GroupType.COORD)]),
+            sorted([x.id for x in c.values_by_group_type(BaseGroupType.COORD)]),
             [104])
 
-        self.assertTrue(c.has_entry(group_type=GroupType.CTTEE))
-        self.assertTrue(c.has_entry(group_type=(GroupType.TECH,
-                                                GroupType.COORD)))
+        self.assertEqual(
+            sorted([x.id for x in c.values_by_group_type(
+                BaseGroupType.COORD, facility_id=2)]),
+            [104])
+
+        self.assertEqual(
+            sorted([x.id for x in c.values_by_group_type(
+                BaseGroupType.COORD, facility_id=1)]),
+            [])
+
+        self.assertTrue(c.has_entry(group_type=BaseGroupType.CTTEE))
+        self.assertTrue(c.has_entry(group_type=(BaseGroupType.TECH,
+                                                BaseGroupType.COORD)))
         self.assertFalse(c.has_entry(group_type=999))
 
         self.assertTrue(c.has_entry(facility_id=1))
         self.assertTrue(c.has_entry(facility_id=2))
         self.assertFalse(c.has_entry(facility_id=3))
 
-        self.assertTrue(c.has_entry(group_type=GroupType.CTTEE,
+        self.assertTrue(c.has_entry(group_type=BaseGroupType.CTTEE,
                                     facility_id=1))
-        self.assertFalse(c.has_entry(group_type=GroupType.CTTEE,
+        self.assertFalse(c.has_entry(group_type=BaseGroupType.CTTEE,
                                      facility_id=2))
 
-        self.assertTrue(c.has_entry(group_type=GroupType.COORD,
+        self.assertTrue(c.has_entry(group_type=BaseGroupType.COORD,
                                     facility_id=2))
-        self.assertFalse(c.has_entry(group_type=GroupType.COORD,
+        self.assertFalse(c.has_entry(group_type=BaseGroupType.COORD,
                                      facility_id=1))
 
         cc = c.subset_by_person(202)

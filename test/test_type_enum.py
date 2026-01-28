@@ -24,8 +24,9 @@ from hedwig.compat import string_type
 from hedwig.error import Error, NoSuchValue
 from hedwig.type.enum import \
     Assessment, AttachmentState, \
-    BaseAffiliationType, BaseCallType, BaseReviewerRole, BaseTextRole, \
-    CallState, GroupType, LogEventLevel, \
+    BaseAffiliationType, BaseCallType, BaseGroupType, \
+    BaseReviewerRole, BaseTextRole, \
+    CallState, LogEventLevel, \
     MessageFormatType, MessageState, MessageThreadType, \
     PersonTitle, ProposalState, PublicationType, \
     RequestState, ReviewState, SemesterState, \
@@ -151,7 +152,7 @@ class EnumTypeTestCase(TestCase):
 
         g = BaseCallType.get_notify_group(BaseCallType.IMMEDIATE)
         self.assertIsInstance(g, tuple)
-        self.assertEqual(g, (GroupType.CTTEE, GroupType.ADMIN))
+        self.assertEqual(g, (BaseGroupType.CTTEE, BaseGroupType.ADMIN))
 
     def test_message_format_type(self):
         self.assertFalse(MessageFormatType.is_valid(999))
@@ -339,16 +340,16 @@ class EnumTypeTestCase(TestCase):
         self.assertFalse(PublicationType.is_valid(999999))
 
     def test_group_type(self):
-        options = GroupType.get_options()
+        options = BaseGroupType.get_options()
         self.assertIsInstance(options, OrderedDict)
 
         for (k, v) in options.items():
             self.assertIsInstance(k, int)
-            self.assertTrue(GroupType.is_valid(k))
+            self.assertTrue(BaseGroupType.is_valid(k))
 
             self.assertIsInstance(v, string_type)
 
-            i = GroupType.get_info(k)
+            i = BaseGroupType.get_info(k)
             self.assertIsInstance(i, tuple)
             self.assertIsInstance(i.name, string_type)
             self.assertIsInstance(i.short_name, string_type)
@@ -357,35 +358,35 @@ class EnumTypeTestCase(TestCase):
             self.assertIsInstance(i.url_path, string_type)
             self.assertEqual(i.name, v)
 
-            self.assertEqual(GroupType.get_name(k), i.name)
-            self.assertEqual(GroupType.url_path(k), i.url_path)
+            self.assertEqual(BaseGroupType.get_name(k), i.name)
+            self.assertEqual(BaseGroupType.url_path(k), i.url_path)
 
-            self.assertEqual(GroupType.by_url_path(i.url_path), k)
+            self.assertEqual(BaseGroupType.by_url_path(i.url_path), k)
 
         # Check that get_options(short_name=True) gives the same options
         # but with the shortened names.
-        short_options = GroupType.get_options(short_name=True)
+        short_options = BaseGroupType.get_options(short_name=True)
         self.assertIsInstance(short_options, OrderedDict)
         self.assertEqual(list(short_options.keys()), list(options.keys()))
 
         for (k, v) in short_options.items():
             self.assertIsInstance(k, int)
 
-            i = GroupType.get_info(k)
+            i = BaseGroupType.get_info(k)
             self.assertEqual(i.short_name, v)
 
-            self.assertEqual(GroupType.get_short_name(k), i.short_name)
+            self.assertEqual(BaseGroupType.get_short_name(k), i.short_name)
 
-        self.assertFalse(GroupType.is_valid(999999))
+        self.assertFalse(BaseGroupType.is_valid(999999))
 
-        self.assertIsInstance(GroupType.view_all_groups(), list)
-        self.assertIsInstance(GroupType.private_moc_groups(), list)
-        self.assertIsInstance(GroupType.review_coord_groups(), list)
-        self.assertIsInstance(GroupType.review_view_groups(), list)
-        self.assertIsInstance(GroupType.feedback_view_groups(), list)
-        self.assertIsInstance(GroupType.hidden_call_groups(), list)
+        self.assertIsInstance(BaseGroupType.view_all_groups(), list)
+        self.assertIsInstance(BaseGroupType.private_moc_groups(), list)
+        self.assertIsInstance(BaseGroupType.review_coord_groups(), list)
+        self.assertIsInstance(BaseGroupType.review_view_groups(), list)
+        self.assertIsInstance(BaseGroupType.feedback_view_groups(), list)
+        self.assertIsInstance(BaseGroupType.hidden_call_groups(), list)
 
-        url_paths = GroupType.get_url_paths()
+        url_paths = BaseGroupType.get_url_paths()
         self.assertIsInstance(url_paths, list)
         for url_path in url_paths:
             self.assertIsInstance(url_path, string_type)

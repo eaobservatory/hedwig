@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -362,13 +362,19 @@ class GroupMemberCollection(
 
         return False
 
-    def values_by_group_type(self, group_type):
+    def values_by_group_type(self, group_type, facility_id=None):
         """
         Get a list of the group members with the given role.
+
+        The `facility_id` can also be specified, in which case only members
+        also matching this constraint will be returned.  This is to allow
+        searching by a facility-specific `group_type` for only matching
+        members.
         """
 
         return [x for x in self.values()
-                if matches_constraint(x.group_type, group_type)]
+                if matches_constraint(x.group_type, group_type)
+                and matches_constraint(x.facility_id, facility_id)]
 
 
 class MemberCollection(ResultCollection, CollectionByProposal,

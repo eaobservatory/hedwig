@@ -27,7 +27,7 @@ from flask import g as flask_g
 from jinja2_orderblocks import OrderBlocks
 
 from ..config import get_config, get_database, get_facilities, get_home
-from ..type.enum import GroupType, MessageThreadType, SiteGroupType
+from ..type.enum import MessageThreadType, SiteGroupType
 from .template_util import register_template_utils
 from .util import CurrentUserFormatter, check_current_user, \
     make_enum_converter, register_error_handlers
@@ -126,7 +126,6 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
     app.config['TEMPLATES_AUTO_RELOAD'] = auto_reload_templates
 
     # Set up routing converters.
-    app.url_map.converters['hedwig_group'] = make_enum_converter(GroupType)
     app.url_map.converters['hedwig_thread'] = \
         make_enum_converter(MessageThreadType)
     app.url_map.converters['hedwig_site_group'] = \
@@ -135,6 +134,9 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
     for facility in facilities.values():
         app.url_map.converters['hedwig_call_type_{}'.format(facility.code)] = \
             make_enum_converter(facility.view.get_call_types())
+
+        app.url_map.converters['hedwig_group_{}'.format(facility.code)] = \
+            make_enum_converter(facility.view.get_group_types())
 
         app.url_map.converters['hedwig_review_{}'.format(facility.code)] = \
             make_enum_converter(facility.view.get_reviewer_roles())
@@ -151,7 +153,7 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
                            url_prefix='/admin')
     app.register_blueprint(create_people_blueprint(db, facilities))
     app.register_blueprint(create_help_blueprint(db), url_prefix='/help')
-    app.register_blueprint(create_query_blueprint(db), url_prefix='/query')
+    app.register_blueprint(create_query_blueprint(db, facilities), url_prefix='/query')
     app.register_blueprint(create_oauth_blueprint(db, app), url_prefix='/user/oauth')
 
     # Register blueprints for each facility.

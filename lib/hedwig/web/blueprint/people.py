@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -174,20 +174,20 @@ def create_people_blueprint(db, facilities):
     @require_auth()
     @templated('people/person_list.html')
     def person_list(current_user):
-        return view.person_list(current_user, db, request.args)
+        return view.person_list(current_user, db, facilities, request.args)
 
     @bp.route('/person/<int:person_id>')
     @require_auth()
     @templated('people/person_view.html')
     def person_view(current_user, person_id):
-        return view.person_view(current_user, db, person_id, facilities)
+        return view.person_view(current_user, db, facilities, person_id)
 
     @bp.route('/person/<int:person_id>/invite', methods=['GET', 'POST'])
     @require_admin
     @templated('confirm.html')
     def person_invite(current_user, person_id):
         return view.person_invite(
-            current_user, db, person_id, request.args,
+            current_user, db, facilities, person_id, request.args,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/person/<int:person_id>/edit', methods=['GET', 'POST'])
@@ -195,7 +195,7 @@ def create_people_blueprint(db, facilities):
     @templated('people/person_edit.html')
     def person_edit(current_user, person_id):
         return view.person_edit(
-            current_user, db, person_id, request.args,
+            current_user, db, facilities, person_id, request.args,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/person/<int:person_id>/institution', methods=['GET', 'POST'])
@@ -203,7 +203,7 @@ def create_people_blueprint(db, facilities):
     @templated('people/person_edit_institution.html')
     def person_edit_institution(current_user, person_id):
         return view.person_edit_institution(
-            current_user, db, person_id, request.args,
+            current_user, db, facilities, person_id, request.args,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/user/email/edit', methods=['GET', 'POST'])
@@ -219,7 +219,7 @@ def create_people_blueprint(db, facilities):
     @templated('people/person_edit_email.html')
     def person_edit_email(current_user, person_id):
         return view.person_edit_email(
-            current_user, db, person_id,
+            current_user, db, facilities, person_id,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/user/email/verify', methods=['GET', 'POST'])
@@ -237,7 +237,7 @@ def create_people_blueprint(db, facilities):
     @templated('people/person_email_verify_get.html')
     def person_email_verify_get(current_user, person_id, email_id):
         return view.person_email_verify_get(
-            current_user, db, person_id, email_id,
+            current_user, db, facilities, person_id, email_id,
             (request.form if request.method == 'POST' else None),
             str_to_unicode(request.remote_addr))
 
@@ -274,7 +274,7 @@ def create_people_blueprint(db, facilities):
     @templated('person_reviews.html')
     def person_view_reviews(current_user, person_id):
         return view.person_reviews_other(
-            current_user, db, person_id, facilities, request.args)
+            current_user, db, facilities, person_id, request.args)
 
     @bp.route('/person/<int:person_id>/subsume',
               methods=['GET', 'POST'])
@@ -282,7 +282,7 @@ def create_people_blueprint(db, facilities):
     @templated('people/person_subsume.html')
     def person_subsume(current_user, person_id):
         return view.person_subsume(
-            current_user, db, person_id,
+            current_user, db, facilities, person_id,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/person/<int:person_id>/log')
@@ -290,7 +290,7 @@ def create_people_blueprint(db, facilities):
     @templated('people/person_log.html')
     def person_log(current_user, person_id):
         return view.person_log(
-            current_user, db, person_id, facilities, request.args)
+            current_user, db, facilities, person_id, request.args)
 
     @bp.route('/institution/')
     @require_auth()
@@ -302,7 +302,8 @@ def create_people_blueprint(db, facilities):
     @require_auth()
     @templated('people/institution_view.html')
     def institution_view(current_user, institution_id):
-        return view.institution_view(current_user, db, institution_id)
+        return view.institution_view(
+            current_user, db, facilities, institution_id)
 
     @bp.route(
         '/institution/<int:institution_id>/delete',
@@ -311,7 +312,7 @@ def create_people_blueprint(db, facilities):
     @templated('confirm.html')
     def institution_delete(current_user, institution_id):
         return view.institution_delete(
-            current_user, db, institution_id,
+            current_user, db, facilities, institution_id,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/institution/<int:institution_id>/edit',
@@ -320,7 +321,7 @@ def create_people_blueprint(db, facilities):
     @templated('people/institution_edit.html')
     def institution_edit(current_user, institution_id):
         return view.institution_edit(
-            current_user, db, institution_id,
+            current_user, db, facilities, institution_id,
             (request.form if request.method == 'POST' else None))
 
     @bp.route('/institution/<int:institution_id>/members')
@@ -328,7 +329,7 @@ def create_people_blueprint(db, facilities):
     @templated('people/institution_members.html')
     def institution_frozen_members(current_user, institution_id):
          return view.institution_frozen_members(
-            current_user, db, institution_id, facilities)
+            current_user, db, facilities, institution_id)
 
     @bp.route('/institution/<int:institution_id>/log', methods=['GET', 'POST'])
     @require_admin

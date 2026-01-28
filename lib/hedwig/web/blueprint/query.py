@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,7 +24,7 @@ from ...view.query import QueryView
 from ..util import require_auth, send_file, send_json
 
 
-def create_query_blueprint(db):
+def create_query_blueprint(db, facilities):
     """
     Create Flask Blueprint for services to be queried by our JavaScript
     code.
@@ -52,12 +52,12 @@ def create_query_blueprint(db):
     @require_auth()
     @send_json(allow_cache=True, cache_max_age=60)
     def person_list(current_user):
-        return view.get_person_list(current_user, db, public=True)
+        return view.get_person_list(current_user, db, facilities, public=True)
 
     @bp.route('/people/all')
     @require_auth()
     @send_json(allow_cache=True, cache_max_age=60)
     def person_list_all(current_user):
-        return view.get_person_list(current_user, db, public=None)
+        return view.get_person_list(current_user, db, facilities, public=None)
 
     return bp

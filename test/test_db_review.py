@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -26,8 +26,9 @@ from hedwig.error import ConsistencyError, DatabaseIntegrityError, Error, \
 from hedwig.type.collection import GroupMemberCollection, \
     ReviewerCollection, ReviewerAcceptanceCollection, \
     ReviewDeadlineCollection, ReviewFigureCollection
-from hedwig.type.enum import Assessment, AttachmentState, BaseReviewerRole, \
-    FigureType, FormatType, GroupType, ReviewState
+from hedwig.type.enum import Assessment, AttachmentState, \
+    BaseGroupType, BaseReviewerRole, \
+    FigureType, FormatType, ReviewState
 from hedwig.type.simple import GroupMember, Note, \
     Reviewer, ReviewerAcceptance, \
     ReviewDeadline, ReviewFigureInfo
@@ -46,40 +47,48 @@ class DBReviewTest(DBTestCase):
         person_id_2 = self.db.add_person('Person Two')
 
         # Check null search result.
-        result = self.db.search_group_member(queue_id, GroupType.CTTEE)
+        result = self.db.search_group_member(queue_id, BaseGroupType.CTTEE)
         self.assertIsInstance(result, GroupMemberCollection)
         self.assertEqual(len(result), 0)
 
         # Check member add constraints.
         with self.assertRaisesRegex(ConsistencyError, 'queue does not exist'):
-            self.db.add_group_member(1999999, GroupType.CTTEE, person_id_1)
+            self.db.add_group_member(
+                BaseGroupType, 1999999, BaseGroupType.CTTEE, person_id_1)
         with self.assertRaisesRegex(ConsistencyError, 'person does not'):
-            self.db.add_group_member(queue_id, GroupType.TECH, 1999999)
+            self.db.add_group_member(
+                BaseGroupType, queue_id, BaseGroupType.TECH, 1999999)
         with self.assertRaisesRegex(Error, 'invalid group type'):
-            self.db.add_group_member(queue_id, 999, person_id_1)
+            self.db.add_group_member(
+                BaseGroupType, queue_id, 999, person_id_1)
 
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_group_member(1999999, GroupType.CTTEE, person_id_1,
-                                     _test_skip_check=True)
+            self.db.add_group_member(
+                BaseGroupType, 1999999, BaseGroupType.CTTEE, person_id_1,
+                _test_skip_check=True)
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_group_member(queue_id, GroupType.TECH, 1999999,
-                                     _test_skip_check=True)
+            self.db.add_group_member(
+                BaseGroupType, queue_id, BaseGroupType.TECH, 1999999,
+                _test_skip_check=True)
 
         # Add two members.
-        self.db.add_group_member(queue_id, GroupType.CTTEE, person_id_1)
-        self.db.add_group_member(queue_id, GroupType.CTTEE, person_id_2)
+        self.db.add_group_member(
+            BaseGroupType, queue_id, BaseGroupType.CTTEE, person_id_1)
+        self.db.add_group_member(
+            BaseGroupType, queue_id, BaseGroupType.CTTEE, person_id_2)
 
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_group_member(queue_id, GroupType.CTTEE, person_id_2)
+            self.db.add_group_member(
+                BaseGroupType, queue_id, BaseGroupType.CTTEE, person_id_2)
 
         # Check we don't find them when searching another queue / group.
-        result = self.db.search_group_member(queue_id, GroupType.TECH)
+        result = self.db.search_group_member(queue_id, BaseGroupType.TECH)
         self.assertEqual(len(result), 0)
-        result = self.db.search_group_member(queue_id_2, GroupType.CTTEE)
+        result = self.db.search_group_member(queue_id_2, BaseGroupType.CTTEE)
         self.assertEqual(len(result), 0)
 
         # Check the search results (without and then with person info).
-        result = self.db.search_group_member(queue_id, GroupType.CTTEE)
+        result = self.db.search_group_member(queue_id, BaseGroupType.CTTEE)
         self.assertIsInstance(result, GroupMemberCollection)
         self.assertEqual(len(result), 2)
 
@@ -87,7 +96,7 @@ class DBReviewTest(DBTestCase):
             self.assertIsInstance(v, GroupMember)
             self.assertIsNone(v.person_name)
 
-        result = self.db.search_group_member(queue_id, GroupType.CTTEE,
+        result = self.db.search_group_member(queue_id, BaseGroupType.CTTEE,
                                              with_person=True)
         self.assertIsInstance(result, GroupMemberCollection)
         self.assertEqual(len(result), 2)
@@ -100,7 +109,7 @@ class DBReviewTest(DBTestCase):
             self.assertIsInstance(v, GroupMember)
             self.assertEqual(k, v.id)
             self.assertEqual(v.queue_id, queue_id)
-            self.assertEqual(v.group_type, GroupType.CTTEE)
+            self.assertEqual(v.group_type, BaseGroupType.CTTEE)
             self.assertEqual(v.person_id, person_id)
             self.assertEqual(v.person_name, person_name)
             self.assertEqual(v.facility_id, facility_id)
@@ -120,8 +129,9 @@ class DBReviewTest(DBTestCase):
 
         # Remove members via sync.
         records = GroupMemberCollection()
-        self.db.sync_group_member(queue_id, GroupType.CTTEE, records)
-        result = self.db.search_group_member(queue_id, GroupType.CTTEE)
+        self.db.sync_group_member(
+            BaseGroupType, queue_id, BaseGroupType.CTTEE, records)
+        result = self.db.search_group_member(queue_id, BaseGroupType.CTTEE)
         self.assertEqual(len(result), 0)
 
     def test_review(self):

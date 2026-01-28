@@ -306,7 +306,7 @@ class FigureType(EnumAllowUser):
         return [x.mime for x in cls._info.values() if x.allow_user]
 
 
-class GroupType(EnumAllowUser, EnumBasic, EnumURLPath, EnumShortName):
+class BaseGroupType(EnumAllowUser, EnumBasic, EnumURLPath, EnumShortName):
     """
     Class representing groups of people related to the proposal review
     process.
@@ -1029,7 +1029,7 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
                 True,  True,  True,  False, False, False, True,  False, False,
                 True,  False, True,  True,  False, True,  True,  False, False,
                 'tech',       'technical',  'technical',
-                GroupType.TECH)),
+                BaseGroupType.TECH)),
         (EXTERNAL,
             RoleInfo(
                 'External',
@@ -1043,14 +1043,14 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
                 False, True,  False, True,  True,  False, True,  False, False,
                 False, False, True,  False, False, False, False, True,  True,
                 'ext',        'peer',       'peer',
-                GroupType.PEER)),
+                BaseGroupType.PEER)),
         (CTTEE_PRIMARY,
             RoleInfo(
                 'Committee Primary',
                 True,  True,  False, True,  True,  True,  True,  True,  False,
                 True,  False, True,  True,  True,  False, False, False, False,
                 'cttee',      'committee',  'committee',
-                GroupType.CTTEE)),
+                BaseGroupType.CTTEE)),
         (CTTEE_SECONDARY,
             RoleInfo(
                 'Committee Secondary',
@@ -1476,7 +1476,7 @@ class ProposalType(EnumBasic, EnumShortName):
 
 
 # NOTE: this is defined at the end since it refers to values from
-# GroupType and BaseReviewerRole.
+# BaseGroupType and BaseReviewerRole.
 class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
     """
     Class representing types of calls for proposals.
@@ -1513,7 +1513,7 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
             'I',   'Immediate', True,  'immediate',  True,  False, False,
             (BaseReviewerRole.TECH, BaseReviewerRole.CTTEE_OTHER,
              BaseReviewerRole.FEEDBACK),
-            (GroupType.CTTEE, GroupType.ADMIN))),
+            (BaseGroupType.CTTEE, BaseGroupType.ADMIN))),
         (MULTICLOSE,  TypeInfo(
             'M',  'Multiple-close', True, 'multi',   False, False, True,
             (BaseReviewerRole.TECH, BaseReviewerRole.PEER,

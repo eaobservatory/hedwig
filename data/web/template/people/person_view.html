@@ -155,7 +155,7 @@
             <thead>
                 <tr>
                     <th class="sortable sortedalready" data-sortkey="queue_name">Queue</th>
-                    {% for (group_type, group_name) in review_groups.items() %}
+                    {% for (group_type, group_name) in facility.review_groups.items() %}
                         <th class="sortable sortreverse" data-sortkey="group_{{group_type}}">{{ group_name }}</th>
                     {% endfor %}
                     <th>Links</th>
@@ -164,10 +164,10 @@
             <tbody>
                 {% for (group_type, queue_groups) in facility.groups.sorted().group_by('queue_id') %}
                     {% with group = queue_groups | first_value %}
-                        <tr data-sortinfo="{{ {'queue_name': group.queue_name} | json(dynamic=[('group', review_groups.keys(), false, (queue_groups, 'has_entry', 'group_type', none), none)]) }}">
+                        <tr data-sortinfo="{{ {'queue_name': group.queue_name} | json(dynamic=[('group', facility.review_groups.keys(), false, (queue_groups, 'has_entry', 'group_type', none), none)]) }}">
                             <td><a href="{{ url_for(facility.code + '.queue_view', queue_id=group.queue_id) }}">{{ group.queue_name }}</a></td>
 
-                            {% for group_type in review_groups.keys() %}
+                            {% for group_type in facility.review_groups.keys() %}
                                 <td class="text_center">{% if queue_groups.has_entry(group_type=group_type) %}&check;{% else %}&nbsp;{% endif %}</td>
                             {% endfor %}
                             <td><a href="{{ url_for(facility.code + '.group_view_all', queue_id=group.queue_id) }}"><span class="fa-solid fa-users"></span>View</a></td>

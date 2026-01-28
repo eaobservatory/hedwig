@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2025 East Asian Observatory
+# Copyright (C) 2016-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,14 +18,17 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from collections import OrderedDict
 from contextlib import contextmanager
 from datetime import datetime
+from itertools import chain
 
 from hedwig.compat import first_value
+from hedwig.facility.generic.view import Generic
 from hedwig.type.collection import PrevProposalCollection
 from hedwig.type.enum import BaseAffiliationType, BaseCallType, \
-    BaseReviewerRole, \
-    FormatType, GroupType, \
+    BaseGroupType, BaseReviewerRole, \
+    FormatType, \
     ProposalState, SiteGroupType
 from hedwig.type.simple import PrevProposal
 from hedwig.type.util import null_tuple
@@ -63,8 +66,9 @@ class WebAppAuthTestCase(WebAppTestCase):
         # identifiers.
         self.longMessage = True
 
-        # Use basic call type and reviewer role classes.
+        # Use basic call, group and reviewer type/role classes.
         type_class = BaseCallType
+        group_class = BaseGroupType
         role_class = BaseReviewerRole
 
         # Select whether to simulate proposal state updates.
@@ -73,6 +77,11 @@ class WebAppAuthTestCase(WebAppTestCase):
         # Set up test database entries.
         facility_id = self.db.ensure_facility('test')
         facility_other = self.db.ensure_facility('other')
+
+        facilities = OrderedDict(chain(
+            Generic(facility_id)._facilities.items(),
+            Generic(facility_other)._facilities.items(),
+        ))
 
         semester_id = self.db.add_semester(
             facility_id, 'Test', 'T',
@@ -180,11 +189,13 @@ class WebAppAuthTestCase(WebAppTestCase):
         # Create review coordinator profiles.
         user_a_rc = self.db.add_user('arc', 'pass')
         person_a_rc = self.db.add_person('Person A RC', user_id=user_a_rc)
-        self.db.add_group_member(queue_a, GroupType.COORD, person_a_rc)
+        self.db.add_group_member(
+            group_class, queue_a, group_class.COORD, person_a_rc)
 
         user_b_rc = self.db.add_user('brc', 'pass')
         person_b_rc = self.db.add_person('Person B RC', user_id=user_b_rc)
-        self.db.add_group_member(queue_b, GroupType.COORD, person_b_rc)
+        self.db.add_group_member(
+            group_class, queue_b, group_class.COORD, person_b_rc)
 
         # Create reviews and reviewer profiles.
         # Naming convention: <info> = r<type><options>
@@ -193,7 +204,8 @@ class WebAppAuthTestCase(WebAppTestCase):
         # -- technical reviewers
         user_a1rt = self.db.add_user('a1rt', 'pass')
         person_a1rt = self.db.add_person('Person A 1 RT', user_id=user_a1rt)
-        self.db.add_group_member(queue_a, GroupType.TECH, person_a1rt)
+        self.db.add_group_member(
+            group_class, queue_a, group_class.TECH, person_a1rt)
         reviewer_a1rt = self.db.add_reviewer(
             role_class, proposal_a1, person_a1rt, role_class.TECH)
 
@@ -233,38 +245,44 @@ class WebAppAuthTestCase(WebAppTestCase):
         # -- committee reviewers:
         user_a1rc1 = self.db.add_user('a1rc1', 'pass')
         person_a1rc1 = self.db.add_person('Person A 1 RC1', user_id=user_a1rc1)
-        self.db.add_group_member(queue_a, GroupType.CTTEE, person_a1rc1)
+        self.db.add_group_member(
+            group_class, queue_a, group_class.CTTEE, person_a1rc1)
         reviewer_a1rc1 = self.db.add_reviewer(
             role_class, proposal_a1, person_a1rc1, role_class.CTTEE_PRIMARY)
 
         user_a1rc2 = self.db.add_user('a1rc2', 'pass')
         person_a1rc2 = self.db.add_person('Person A 1 RC2', user_id=user_a1rc2)
-        self.db.add_group_member(queue_a, GroupType.CTTEE, person_a1rc2)
+        self.db.add_group_member(
+            group_class, queue_a, group_class.CTTEE, person_a1rc2)
         reviewer_a1rc2 = self.db.add_reviewer(
             role_class, proposal_a1, person_a1rc2, role_class.CTTEE_SECONDARY)
 
         user_b2rc1 = self.db.add_user('b2rc1', 'pass')
         person_b2rc1 = self.db.add_person('Person B 2 RC1', user_id=user_b2rc1)
-        self.db.add_group_member(queue_b, GroupType.CTTEE, person_b2rc1)
+        self.db.add_group_member(
+            group_class, queue_b, group_class.CTTEE, person_b2rc1)
         reviewer_b2rc1 = self.db.add_reviewer(
             role_class, proposal_b2, person_b2rc1, role_class.CTTEE_PRIMARY)
 
         user_b2rc2 = self.db.add_user('b2rc2', 'pass')
         person_b2rc2 = self.db.add_person('Person B 2 RC2', user_id=user_b2rc2)
-        self.db.add_group_member(queue_b, GroupType.CTTEE, person_b2rc2)
+        self.db.add_group_member(
+            group_class, queue_b, group_class.CTTEE, person_b2rc2)
         reviewer_b2rc2 = self.db.add_reviewer(
             role_class, proposal_b2, person_b2rc2, role_class.CTTEE_SECONDARY)
 
         # -- feedback reviewers:
         user_a1rf = self.db.add_user('a1rf', 'pass')
         person_a1rf = self.db.add_person('Person A 1 RF', user_id=user_a1rf)
-        self.db.add_group_member(queue_a, GroupType.CTTEE, person_a1rf)
+        self.db.add_group_member(
+            group_class, queue_a, group_class.CTTEE, person_a1rf)
         reviewer_a1rf = self.db.add_reviewer(
             role_class, proposal_a1, person_a1rf, role_class.FEEDBACK)
 
         user_b1rf = self.db.add_user('b1rf', 'pass')
         person_b1rf = self.db.add_person('Person A 2 RF', user_id=user_b1rf)
-        self.db.add_group_member(queue_b, GroupType.CTTEE, person_b1rf)
+        self.db.add_group_member(
+            group_class, queue_b, group_class.CTTEE, person_b1rf)
         reviewer_b1rf = self.db.add_reviewer(
             role_class, proposal_b1, person_b1rf, role_class.FEEDBACK)
 
@@ -278,12 +296,14 @@ class WebAppAuthTestCase(WebAppTestCase):
         user_a1x2 = self.db.add_user('a1x2', 'pass')
         person_a1x2 = self.db.add_person('Person A 1 X2', user_id=user_a1x2)
         self.db.add_member(proposal_a1, person_a1x2, affiliation_a)
-        self.db.add_group_member(queue_a, GroupType.CTTEE, person_a1x2)
+        self.db.add_group_member(
+            group_class, queue_a, group_class.CTTEE, person_a1x2)
 
         user_a1x3 = self.db.add_user('a1x3', 'pass')
         person_a1x3 = self.db.add_person('Person A 1 X3', user_id=user_a1x3)
         self.db.add_member(proposal_a1, person_a1x3, affiliation_a)
-        self.db.add_group_member(queue_a, GroupType.COORD, person_a1x3)
+        self.db.add_group_member(
+            group_class, queue_a, group_class.COORD, person_a1x3)
 
         user_a1x4 = self.db.add_user('a1x4', 'pass')
         person_a1x4 = self.db.add_person('Person A 1 X4', user_id=user_a1x4)
@@ -299,15 +319,18 @@ class WebAppAuthTestCase(WebAppTestCase):
         # Create additional profiles.
         user_a_v = self.db.add_user('av', 'pass')
         person_a_v = self.db.add_person('Person V', user_id=user_a_v)
-        self.db.add_group_member(queue_a, GroupType.VIEWER, person_a_v)
+        self.db.add_group_member(
+            group_class, queue_a, group_class.VIEWER, person_a_v)
 
         user_a_hc = self.db.add_user('ahc', 'pass')
         person_a_hc = self.db.add_person('Person A HC', user_id=user_a_hc)
-        self.db.add_group_member(queue_a, GroupType.HIDDEN_CALL, person_a_hc)
+        self.db.add_group_member(
+            group_class, queue_a, group_class.HIDDEN_CALL, person_a_hc)
 
         user_c_hc = self.db.add_user('chc', 'pass')
         person_c_hc = self.db.add_person('Person C HC', user_id=user_c_hc)
-        self.db.add_group_member(queue_c, GroupType.HIDDEN_CALL, person_c_hc)
+        self.db.add_group_member(
+            group_class, queue_c, group_class.HIDDEN_CALL, person_c_hc)
 
         user_svp = self.db.add_user('svp', 'pass')
         person_svp = self.db.add_person('Person SVP', user_id=user_svp)
@@ -333,7 +356,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (7,  person_admin, False, call_c, auth.no),
                 (8,  person_admin, True,  call_c, auth.view_only),
                 ]:
-            self._test_auth_call(auth_cache, *test_case)
+            self._test_auth_call(group_class, auth_cache, *test_case)
 
         # Test authorization for call reviews.
         for test_case in [
@@ -356,7 +379,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (13, person_a1rc1, False, call_b, proposal_b1, auth.no),
                 (14, person_a1rc2, False, call_b, proposal_b1, auth.no),
                 ]:
-            self._test_auth_call_review(auth_cache, *test_case)
+            self._test_auth_call_review(group_class, auth_cache, *test_case)
 
         # Test authorization for person profiles.
         for test_case in [
@@ -405,7 +428,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                 # Member of site group with view all profile permission.
                 (35, person_svp,   False, person_a1e,   auth.view_only),
                 ]:
-            self._test_auth_person(auth_cache, *test_case)
+            self._test_auth_person(facilities, auth_cache, *test_case)
 
         self._set_state(all_proposals, ProposalState.REVIEW)
         if auth_cache is not None:
@@ -421,7 +444,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (95, person_a_rc,  False, person_b1reu, auth.no),
                 (96, person_b_rc,  False, person_b1reu, auth.yes),
                 ]:
-            self._test_auth_person(auth_cache, *test_case)
+            self._test_auth_person(facilities, auth_cache, *test_case)
 
         self._set_state(all_proposals, ProposalState.PREPARATION)
         if auth_cache is not None:
@@ -453,7 +476,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (16, person_a_rc,  False, institution_3, auth.view_only),
                 (17, person_b_rc,  False, institution_3, auth.view_only),
                 ]:
-            self._test_auth_institution(auth_cache, *test_case)
+            self._test_auth_institution(facilities, auth_cache, *test_case)
 
         self._set_state(all_proposals, ProposalState.REVIEW)
         if auth_cache is not None:
@@ -469,7 +492,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (94, person_a_rc,  False, institution_3, auth.yes),
                 (95, person_b_rc,  False, institution_3, auth.view_only),
                 ]:
-            self._test_auth_institution(auth_cache, *test_case)
+            self._test_auth_institution(facilities, auth_cache, *test_case)
 
         # Test authorization for private MOCs.
         for test_case in [
@@ -487,7 +510,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (9,  person_a1rt,  False, facility_id,    auth.view_only),
                 (10, person_a1rt,  False, facility_other, auth.no),
                 ]:
-            self._test_auth_private_moc(auth_cache, *test_case)
+            self._test_auth_private_moc(group_class, auth_cache, *test_case)
 
         # Test authorization for proposals and feedback.
         # Checks authorization in each state via codes -- see _expect_code().
@@ -550,7 +573,8 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (71, person_a_v,   False, proposal_a1, 'oovvvvvooo', 'ooooovvooo', 'oooooooooo'),
                 (72, person_a_v,   False, proposal_b1, 'oooooooooo', 'oooooooooo', 'oooooooooo'),
                 ]:
-            self._test_auth_proposal(role_class, auth_cache, *test_case)
+            self._test_auth_proposal(
+                group_class, role_class, auth_cache, *test_case)
 
         # Test authorization for reviews.
         for test_case in [
@@ -623,7 +647,8 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (68, person_a_v,   False, reviewer_a1rt,  'vvvVVVVvvv'),
                 (69, person_a_v,   False, reviewer_b1reu, 'oooooooooo'),
                 ]:
-            self._test_auth_review(role_class, auth_cache, *test_case)
+            self._test_auth_review(
+                group_class, role_class, auth_cache, *test_case)
 
         # Test authorization to add new reviews.
         for test_case in [
@@ -666,7 +691,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                 }),
                 ]:
             self._test_auth_add_review(
-                type_class, role_class, auth_cache, *test_case)
+                group_class, type_class, role_class, auth_cache, *test_case)
 
         # Test authorization to view the full person list.
         for test_case in [
@@ -681,7 +706,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (9,  person_a_v,   False, auth.no),
                 (10, person_svp,   False, auth.no),
                 ]:
-            self._test_auth_person_list(auth_cache, *test_case)
+            self._test_auth_person_list(facilities, auth_cache, *test_case)
 
         # Test authorization via PrevProposal objects.
         result = list(self.db.search_prev_proposal(
@@ -702,27 +727,28 @@ class WebAppAuthTestCase(WebAppTestCase):
                 (9,  person_a1rc1, False, result[2], 'oooooooooo', 'oooooooooo'),
                 (10, person_b2rc1, False, result[2], 'oovvvvvooo', 'vvvvvvvvvv'),
                 ]:
-            self._test_auth_via_prev_proposal(auth_cache, *test_case)
+            self._test_auth_via_prev_proposal(
+                group_class, auth_cache, *test_case)
 
     def _test_auth_call(
-            self, auth_cache, case_number, person_id, is_admin,
+            self, group_class, auth_cache, case_number, person_id, is_admin,
             call_id, expect):
         current_user = self._current_user(person_id, is_admin)
         call = self.db.get_call(None, call_id)
         self.assertEqual(
             auth.for_call(
-                current_user, self.db,
+                group_class, current_user, self.db,
                 call, auth_cache=auth_cache),
             expect, 'auth call view case {}'.format(case_number))
 
-    def _test_auth_call_review(self, auth_cache,
+    def _test_auth_call_review(self, group_class, auth_cache,
                                case_number, person_id, is_admin,
                                call_id, proposal_id, expect):
         current_user = self._current_user(person_id, is_admin)
         call = self.db.get_call(None, call_id)
         self.assertEqual(
             auth.for_call_review(
-                current_user, self.db,
+                group_class, current_user, self.db,
                 call, auth_cache=auth_cache),
             expect, 'auth call review case {}'.format(case_number))
 
@@ -730,17 +756,18 @@ class WebAppAuthTestCase(WebAppTestCase):
         proposal = self.db.get_proposal(None, proposal_id)
         self.assertEqual(
             auth.for_call_review_proposal(
-                current_user, self.db,
+                group_class, current_user, self.db,
                 proposal, auth_cache=auth_cache),
             expect, 'auth call review case {} via proposal'.format(case_number))
 
-    def _test_auth_person(self, auth_cache, case_number, person_id, is_admin,
-                          for_person_id, expect):
+    def _test_auth_person(
+            self, facilities, auth_cache, case_number, person_id, is_admin,
+            for_person_id, expect):
         current_user = self._current_user(person_id, is_admin)
         person = self.db.get_person(for_person_id)
         self.assertEqual(
             auth.for_person(
-                current_user, self.db, person,
+                current_user, self.db, facilities, person,
                 auth_cache=auth_cache),
             expect, 'auth person case {}'.format(case_number))
 
@@ -751,7 +778,7 @@ class WebAppAuthTestCase(WebAppTestCase):
 
             self.assertEqual(
                 auth.for_person_member(
-                    current_user, self.db, member,
+                    current_user, self.db, facilities, member,
                     auth_cache=auth_cache),
                 expect, 'auth person case {} via member'.format(case_number))
         except IndexError:
@@ -764,40 +791,42 @@ class WebAppAuthTestCase(WebAppTestCase):
 
             self.assertEqual(
                 auth.for_person_reviewer(
-                    current_user, self.db, reviewer,
+                    current_user, self.db, facilities, reviewer,
                     auth_cache=auth_cache),
                 expect, 'auth person case {} via reviewer'.format(case_number))
         except IndexError:
             pass
 
     def _test_auth_person_list(
-            self, auth_cache, case_number, person_id, is_admin, expect):
+            self, facilities, auth_cache,
+            case_number, person_id, is_admin, expect):
         self.assertEqual(
             auth.for_person_list(
                 self._current_user(person_id, is_admin),
-                self.db, auth_cache=auth_cache),
+                self.db, facilities, auth_cache=auth_cache),
             expect, 'auth person list case {}'.format(case_number))
 
-    def _test_auth_institution(self, auth_cache,
+    def _test_auth_institution(self, facilities, auth_cache,
                                case_number, person_id, is_admin,
                                institution_id, expect):
         institution = self.db.get_institution(institution_id)
         self.assertEqual(
             auth.for_institution(
-                self._current_user(person_id, is_admin), self.db,
+                self._current_user(person_id, is_admin), self.db, facilities,
                 institution, auth_cache=auth_cache),
             expect, 'auth institution case {}'.format(case_number))
 
-    def _test_auth_private_moc(self, auth_cache,
+    def _test_auth_private_moc(self, group_class, auth_cache,
                                case_number, person_id, is_admin,
                                facility_id, expect):
         self.assertEqual(
             auth.for_private_moc(
+                group_class,
                 self._current_user(person_id, is_admin), self.db,
                 facility_id, auth_cache=auth_cache),
             expect, 'auth private moc {}'.format(case_number))
 
-    def _test_auth_proposal(self, role_class, auth_cache,
+    def _test_auth_proposal(self, group_class, role_class, auth_cache,
                             case_number, person_id, is_admin,
                             proposal_id, expect_codes, expect_codes_fb,
                             expect_codes_dec):
@@ -844,12 +873,14 @@ class WebAppAuthTestCase(WebAppTestCase):
                 if isinstance(expect, type):
                     with self.assertRaises(expect):
                         auth.for_proposal(
-                            role_class, current_user, self.db, proposal,
+                            group_class, role_class,
+                            current_user, self.db, proposal,
                             auth_cache=auth_cache)
 
                     self.assertEqual(
                         auth.for_proposal(
-                            role_class, current_user, self.db, proposal,
+                            group_class, role_class,
+                            current_user, self.db, proposal,
                             auth_cache=auth_cache,
                             allow_unaccepted_review=False),
                         auth.no,
@@ -858,7 +889,8 @@ class WebAppAuthTestCase(WebAppTestCase):
 
                     self.assertEqual(
                         auth.for_proposal(
-                            role_class, current_user, self.db, proposal,
+                            group_class, role_class,
+                            current_user, self.db, proposal,
                             auth_cache=auth_cache,
                             allow_unaccepted_review=True),
                         auth.view_only,
@@ -868,24 +900,26 @@ class WebAppAuthTestCase(WebAppTestCase):
                 else:
                     self.assertEqual(
                         auth.for_proposal(
-                            role_class, current_user, self.db, proposal,
+                            group_class, role_class,
+                            current_user, self.db, proposal,
                             auth_cache=auth_cache),
                         expect, 'auth proposal case {} state {}'.format(
                             case_number, state_name))
                 self.assertEqual(
                     auth.for_proposal_feedback(
-                        role_class, current_user, self.db, proposal,
+                        group_class, role_class,
+                        current_user, self.db, proposal,
                         auth_cache=auth_cache),
                     expect_fb, 'auth proposal fb case {} state {}'.format(
                         case_number, state_name))
                 self.assertEqual(
                     auth.for_proposal_decision(
-                        current_user, self.db, proposal,
+                        group_class, current_user, self.db, proposal,
                         auth_cache=auth_cache),
                     expect_dec, 'auth proposal dec case {} state {}'.format(
                         case_number, state_name))
 
-    def _test_auth_review(self, role_class, auth_cache,
+    def _test_auth_review(self, group_class, role_class, auth_cache,
                           case_number, person_id, is_admin,
                           reviewer_id, expect_codes):
         proposal_states = ProposalState.get_options()
@@ -925,12 +959,13 @@ class WebAppAuthTestCase(WebAppTestCase):
                 if isinstance(expect, type):
                     with self.assertRaises(expect):
                         auth.for_review(
-                            role_class, current_user, self.db,
+                            group_class, role_class, current_user, self.db,
                             reviewer, proposal, auth_cache=auth_cache)
 
                     self.assertEqual(
                         auth.for_review(
-                            role_class, current_user, self.db, reviewer, proposal,
+                            group_class, role_class, current_user, self.db,
+                            reviewer, proposal,
                             auth_cache=auth_cache,
                             allow_unaccepted=False),
                         auth.AuthorizationWithRating(False, False, False),
@@ -939,7 +974,7 @@ class WebAppAuthTestCase(WebAppTestCase):
 
                     self.assertEqual(
                         auth.for_review(
-                            role_class, current_user, self.db,
+                            group_class, role_class, current_user, self.db,
                             reviewer, proposal, auth_cache=auth_cache,
                             allow_unaccepted=True),
                         auth.AuthorizationWithRating(True, True, True),
@@ -949,14 +984,16 @@ class WebAppAuthTestCase(WebAppTestCase):
                 else:
                     self.assertEqual(
                         auth.for_review(
-                            role_class, current_user, self.db, reviewer, proposal,
+                            group_class, role_class, current_user, self.db,
+                            reviewer, proposal,
                             auth_cache=auth_cache),
                         expect, 'auth review case {} state {}'.format(
                             case_number, state_name))
 
-    def _test_auth_add_review(self, type_class, role_class, auth_cache,
-                              case_number, person_id, is_admin,
-                              proposal_id, expect_by_state):
+    def _test_auth_add_review(
+            self, group_class, type_class, role_class, auth_cache,
+            case_number, person_id, is_admin,
+            proposal_id, expect_by_state):
         if self.quick_proposal_state:
             proposal_orig = self.db.get_proposal(
                 None, proposal_id, with_members=True, with_reviewers=True)
@@ -973,7 +1010,7 @@ class WebAppAuthTestCase(WebAppTestCase):
 
             self.assertEqual(
                 set(auth.can_add_review_roles(
-                    type_class, role_class,
+                    group_class, type_class, role_class,
                     self._current_user(person_id, is_admin),
                     self.db, proposal,
                     auth_cache=auth_cache)),
@@ -981,7 +1018,7 @@ class WebAppAuthTestCase(WebAppTestCase):
                     case_number, state_name))
 
     def _test_auth_via_prev_proposal(
-            self, auth_cache,
+            self, group_class, auth_cache,
             case_number, person_id, is_admin, prev_proposal_orig,
             expect_codes_proposal, expect_codes_review):
         proposal_states = ProposalState.get_options()
@@ -1004,7 +1041,8 @@ class WebAppAuthTestCase(WebAppTestCase):
 
             self.assertEqual(
                 auth.for_proposal_prev_proposal(
-                    current_user, self.db, prev_proposal, auth_cache=auth_cache),
+                    group_class, current_user, self.db, prev_proposal,
+                    auth_cache=auth_cache),
                 self._expect_code(
                     'prev proposal proposal', case_number, expect_code_proposal),
                 'prev proposal proposal case {} state {}'.format(
@@ -1012,7 +1050,8 @@ class WebAppAuthTestCase(WebAppTestCase):
 
             self.assertEqual(
                 auth.for_review_prev_proposal(
-                    current_user, self.db, prev_proposal, auth_cache=auth_cache),
+                    group_class, current_user, self.db, prev_proposal,
+                    auth_cache=auth_cache),
                 self._expect_code(
                     'prev proposal review', case_number, expect_code_review, rating=True),
                 'prev proposal review case {} state {}'.format(

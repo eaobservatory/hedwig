@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2023 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -252,10 +252,11 @@ class AdminView(ViewMember):
                     proposal_id=proposal.id)))
 
             if reviewer is not None:
+                group_class = facility.view.get_group_types()
                 role_class = facility.view.get_reviewer_roles()
 
                 can = auth.for_review(
-                    role_class, current_user, db,
+                    group_class, role_class, current_user, db,
                     reviewer=None, proposal=proposal,
                     allow_unaccepted=True)
 

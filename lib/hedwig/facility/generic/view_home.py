@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import namedtuple, OrderedDict
 
 from ...error import NoSuchRecord, MultipleRecords
-from ...type.enum import CallState, GroupType, ProposalState
+from ...type.enum import CallState, ProposalState
 from ...type.simple import CallPreamble
 from ...type.util import null_tuple
 from ...util import matches_constraint
@@ -31,6 +31,7 @@ from ...web.util import ErrorPage, HTTPNotFound
 
 class GenericHome(object):
     def view_facility_home(self, current_user, db):
+        group_class = self.get_group_types()
         type_class = self.get_call_types()
         auth_cache = {}
 
@@ -46,13 +47,13 @@ class GenericHome(object):
             and (not x.separate)
             and x.type == type_class.STANDARD
             and auth.for_call(
-                current_user, db, x, auth_cache=auth_cache).view))
+                group_class, current_user, db, x, auth_cache=auth_cache).view))
 
         open_calls_nonstd = facility_calls.map_values(filter_value=(
             lambda x: x.state == CallState.OPEN
             and (x.separate or (x.type != type_class.STANDARD))
             and auth.for_call(
-                current_user, db, x, auth_cache=auth_cache).view))
+                group_class, current_user, db, x, auth_cache=auth_cache).view))
 
         open_semesters = set((x.semester_id for x in open_calls_std.values()))
 
@@ -61,14 +62,15 @@ class GenericHome(object):
                 state=CallState.CLOSED, type_=type_class.STANDARD):
             if ((call.semester_id not in open_semesters)
                     and auth.for_call(
-                        current_user, db, call, auth_cache=auth_cache).view):
+                        group_class, current_user, db, call,
+                        auth_cache=auth_cache).view):
                 closed_calls_std = True
                 break
 
         # Create a list of the review processes which the user can view.
         review_calls = facility_calls.map_values(filter_value=(
             lambda x: auth.for_call_review(
-                current_user, db, x, auth_cache=auth_cache).view))
+                group_class, current_user, db, x, auth_cache=auth_cache).view))
 
         return {
             'title': self.get_name(),
@@ -86,6 +88,7 @@ class GenericHome(object):
 
     def view_semester_calls(
             self, current_user, db, semester_id, call_type, queue_id):
+        group_class = self.get_group_types()
         type_class = self.get_call_types()
         auth_cache = {}
 
@@ -112,7 +115,7 @@ class GenericHome(object):
             with_preamble=separate
         ).map_values(
             filter_value=(lambda x: auth.for_call(
-                current_user, db, x, auth_cache=auth_cache).view))
+                group_class, current_user, db, x, auth_cache=auth_cache).view))
 
         call_preamble = None
 
@@ -163,6 +166,7 @@ class GenericHome(object):
         }
 
     def view_semester_closed(self, current_user, db):
+        group_class = self.get_group_types()
         type_class = self.get_call_types()
         auth_cache = {}
 
@@ -171,7 +175,7 @@ class GenericHome(object):
             facility_id=self.id_, type_=type_class.STANDARD, separate=False,
         ).map_values(
             filter_value=(lambda x: auth.for_call(
-                current_user, db, x, auth_cache=auth_cache).view))
+                group_class, current_user, db, x, auth_cache=auth_cache).view))
 
         open_semesters = set(
             x.semester_id for x in calls.values_matching(state=CallState.OPEN))
@@ -194,6 +198,7 @@ class GenericHome(object):
         }
 
     def view_semester_non_standard(self, current_user, db):
+        group_class = self.get_group_types()
         type_class = self.get_call_types()
         auth_cache = {}
 
@@ -205,7 +210,8 @@ class GenericHome(object):
             lambda x:
                 (x.separate or (x.type != type_class.STANDARD))
                 and auth.for_call(
-                    current_user, db, x, auth_cache=auth_cache).view))
+                    group_class, current_user, db, x,
+                    auth_cache=auth_cache).view))
 
         if not calls:
             raise ErrorPage('No open special calls for proposals were found.')

@@ -1,5 +1,5 @@
 # Copyright (C) 2014 Science and Technology Facilities Council.
-# Copyright (C) 2015-2023 East Asian Observatory.
+# Copyright (C) 2015-2026 East Asian Observatory.
 # All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -28,7 +28,7 @@ import os
 from .compat import make_type, python_version
 from .error import FormattedError
 from .db.engine import get_engine
-from .type.simple import CalculatorInfo, FacilityInfo, TargetToolInfo
+from .type.simple import CalculatorInfo, TargetToolInfo
 
 if python_version < 3:
     from io import open as io_open
@@ -295,8 +295,7 @@ def _create_facility(db, facility_class):
         facility.target_tools[tool_id] = TargetToolInfo(
             tool_id, tool_code, tool_name, tool)
 
-    return FacilityInfo(
-        facility_id, facility_code, facility.get_name(), facility)
+    return facility.get_info()
 
 
 def get_home():

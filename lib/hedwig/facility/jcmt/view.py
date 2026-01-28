@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -28,7 +28,7 @@ from ...compat import url_encode
 from ...error import NoSuchRecord, NoSuchValue, ParseError, UserError
 from ...web.util import HTTPError, HTTPRedirect, flash, url_for
 from ...view.util import float_or_none, int_or_none, join_list, \
-    with_call_review, with_proposal
+    with_proposal
 from ...type.collection import ResultTable
 from ...type.enum import FormatType, \
     PermissionType, ProposalState, ProposalType, ReviewState

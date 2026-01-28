@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2024 East Asian Observatory
+# Copyright (C) 2016-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -23,7 +23,7 @@ from datetime import datetime
 from hedwig.compat import first_value, string_type
 from hedwig.config import get_facilities
 from hedwig.type.enum import BaseAffiliationType, FormatType, ProposalType
-from hedwig.type.simple import Call
+from hedwig.type.simple import Call, FacilityInfo
 
 from .dummy_db import DBTestCase
 
@@ -80,6 +80,21 @@ class FacilityTestCase(DBTestCase):
         self.assertIsInstance(self.view.get_moc_order(), int)
         self.assertIsInstance(self.view.get_target_tool_classes(), tuple)
 
+        # Check the get_info method and _facilities attribute.
+        facility_id = self.view.id_
+        self.assertIsInstance(facility_id, int)
+
+        facility_info = self.view.get_info()
+        self.assertIsInstance(facility_info, FacilityInfo)
+        self.assertEqual(facility_info.id, facility_id)
+        self.assertEqual(facility_info.code, expect_code)
+        self.assertEqual(facility_info.name, self.view.get_name())
+        self.assertIs(facility_info.view, self.view)
+
+        self.assertIsInstance(self.view._facilities, dict)
+        self.assertEqual(list(self.view._facilities.keys()), [facility_id])
+        self.assertIs(self.view._facilities[facility_id], facility_info)
+
         order_expected = [
             'continuation_request',
             'proposal_abstract',
@@ -112,6 +127,10 @@ class FacilityTestCase(DBTestCase):
         type_class = self.view.get_call_types()
         self.assertIsInstance(type_class, type)
         self.assertTrue(hasattr(type_class, 'STANDARD'))
+
+        group_class = self.view.get_group_types()
+        self.assertIsInstance(group_class, type)
+        self.assertTrue(hasattr(group_class, 'TECH'))
 
         role_class = self.view.get_text_roles()
         self.assertIsInstance(role_class, type)

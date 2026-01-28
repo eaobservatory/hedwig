@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -109,6 +109,8 @@ def with_call_review(permission):
     def decorator(f):
         @functools.wraps(f)
         def decorated_method(self, current_user, db, call_id, *args, **kwargs):
+            group_class = self.get_group_types()
+
             try:
                 call = db.get_call(facility_id=self.id_, call_id=call_id)
             except NoSuchRecord:
@@ -118,7 +120,7 @@ def with_call_review(permission):
 
             auth_cache = {}
             can = auth.for_call_review(
-                current_user, db, call, auth_cache=auth_cache)
+                group_class, current_user, db, call, auth_cache=auth_cache)
 
             if permission == PermissionType.VIEW:
                 if not can.view:
@@ -154,7 +156,8 @@ def with_institution(permission):
     def decorator(f):
         @functools.wraps(f)
         def decorated_method(
-                self, current_user, db, institution_id, *args, **kwargs):
+                self, current_user, db, facilities, institution_id,
+                *args, **kwargs):
             try:
                 institution = db.get_institution(institution_id)
             except NoSuchRecord:
@@ -163,12 +166,15 @@ def with_institution(permission):
             assert institution.id == institution_id
 
             if permission == PermissionType.NONE:
-                return f(self, current_user, db, institution, *args, **kwargs)
+                return f(
+                    self, current_user, db, facilities, institution,
+                    *args, **kwargs)
 
             else:
                 auth_cache = {}
                 can = auth.for_institution(
-                    current_user, db, institution, auth_cache=auth_cache)
+                    current_user, db, facilities, institution,
+                    auth_cache=auth_cache)
 
                 if permission == PermissionType.VIEW:
                     if not can.view:
@@ -184,7 +190,7 @@ def with_institution(permission):
                     raise HTTPError('Unknown permission type.')
 
                 return f(
-                    self, current_user, db, institution,
+                    self, current_user, db, facilities, institution,
                     with_cache(can, auth_cache), *args, **kwargs)
 
         return decorated_method
@@ -205,7 +211,8 @@ def with_person(permission):
     def decorator(f):
         @functools.wraps(f)
         def decorated_method(
-                self, current_user, db, person_id, *args, **kwargs):
+                self, current_user, db, facilities, person_id,
+                *args, **kwargs):
             try:
                 person = db.get_person(person_id=person_id,
                                        with_institution=True, with_email=True)
@@ -215,25 +222,27 @@ def with_person(permission):
             assert person.id == person_id
 
             if permission == PermissionType.NONE:
-                return f(self, current_user, db, person, *args, **kwargs)
+                return f(
+                    self, current_user, db, facilities, person,
+                    *args, **kwargs)
 
             elif permission == PermissionType.UNIVERSAL_VIEW:
                 auth_cache = {}
                 can = auth.for_person(
-                    current_user, db, None, auth_cache=auth_cache)
+                    current_user, db, facilities, None, auth_cache=auth_cache)
 
                 if not can.view:
                     raise HTTPForbidden(
                         'Permission denied for person profiles.')
 
                 return f(
-                    self, current_user, db, person,
+                    self, current_user, db, facilities, person,
                     with_cache(can, auth_cache), *args, **kwargs)
 
             else:
                 auth_cache = {}
                 can = auth.for_person(
-                    current_user, db, person, auth_cache=auth_cache)
+                    current_user, db, facilities, person, auth_cache=auth_cache)
 
                 if permission == PermissionType.VIEW:
                     if not can.view:
@@ -249,7 +258,7 @@ def with_person(permission):
                     raise HTTPError('Unknown permission type.')
 
                 return f(
-                    self, current_user, db, person,
+                    self, current_user, db, facilities, person,
                     with_cache(can, auth_cache), *args, **kwargs)
 
         return decorated_method
@@ -290,6 +299,7 @@ def with_proposal(
         def decorated_method(
                 self, current_user, db, proposal_id, *args, **kwargs):
             facility = (self.facility if indirect_facility else self)
+            group_class = facility.get_group_types()
             role_class = facility.get_reviewer_roles()
             auth_cache = {}
 
@@ -308,7 +318,7 @@ def with_proposal(
 
             elif permission == PermissionType.FEEDBACK:
                 can = auth.for_proposal_feedback(
-                    role_class, current_user, db, proposal,
+                    group_class, role_class, current_user, db, proposal,
                     auth_cache=auth_cache)
 
                 if not can.view:
@@ -321,7 +331,7 @@ def with_proposal(
 
             else:
                 can = auth.for_proposal(
-                    role_class, current_user, db, proposal,
+                    group_class, role_class, current_user, db, proposal,
                     auth_cache=auth_cache,
                     allow_unaccepted_review=allow_unaccepted_review)
 
@@ -432,6 +442,7 @@ def with_review(
         @functools.wraps(f)
         def decorated_method(
                 self, current_user, db, reviewer_id, *args, **kwargs):
+            group_class = self.get_group_types()
             role_class = self.get_reviewer_roles()
 
             try:
@@ -467,7 +478,8 @@ def with_review(
             else:
                 auth_cache = {}
                 can = auth.for_review(
-                    role_class, current_user, db, reviewer, proposal,
+                    group_class, role_class, current_user, db,
+                    reviewer, proposal,
                     auth_cache=auth_cache, allow_unaccepted=allow_unaccepted)
 
                 if permission == PermissionType.VIEW:

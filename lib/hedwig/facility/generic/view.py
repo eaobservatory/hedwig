@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -22,9 +22,10 @@ from collections import defaultdict, OrderedDict
 
 from ...error import NoSuchRecord, NoSuchValue, ParseError
 from ...type.enum import BaseAffiliationType, \
-    BaseCallType, BaseReviewerRole, BaseTextRole, \
+    BaseCallType, BaseGroupType, BaseReviewerRole, BaseTextRole, \
     FormatType
-from ...type.simple import Call, FacilityFeatures, FacilityObsInfo
+from ...type.simple import Call, \
+    FacilityFeatures, FacilityInfo, FacilityObsInfo
 from ...type.util import null_tuple
 from ...view.base import ViewMember
 from .tool_clash import ClashTool
@@ -56,6 +57,12 @@ class Generic(
         self.calculators = OrderedDict()
         self.target_tools = OrderedDict()
 
+        # Pre-prepare a "facilities" dictionary which we can pass to auth
+        # functions.  (Note that this will not grant permissions which the
+        # current user may otherwise have had via other facilities.)
+        self._facilities = {id_: FacilityInfo(
+            self.id_, self.get_code(), self.get_name(), self)}
+
     @classmethod
     def get_code(cls):
         """
@@ -66,6 +73,13 @@ class Generic(
         """
 
         return 'generic'
+
+    def get_info(self):
+        """
+        Get the `FacilityInfo` object describing this facility.
+        """
+
+        return self._facilities[self.id_]
 
     def get_name(self):
         """
@@ -139,6 +153,13 @@ class Generic(
         """
 
         return BaseCallType
+
+    def get_group_types(self):
+        """
+        Get the group type enum-style class to be used with this facility.
+        """
+
+        return BaseGroupType
 
     def get_text_roles(self):
         """
