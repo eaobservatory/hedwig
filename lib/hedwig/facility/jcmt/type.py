@@ -21,7 +21,6 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict, namedtuple
 from itertools import chain
 
-from ...compat import move_to_end
 from ...type.base import CollectionByProposal, \
     EnumAvailable, EnumBasic, EnumShortName
 from ...type.enum import BaseAffiliationType, BaseCallType, \
@@ -767,48 +766,57 @@ class JCMTCallType(BaseCallType):
 
     ROLLING = 101
 
+    TypeInfo = namedtuple(
+        'TypeInfo', BaseCallType.TypeInfo._fields + (
+            'jcmt_close_when_full',))
+
+    _jcmt_default_info = (False,)
+
     _jcmt_info = {
-        BaseCallType.STANDARD: {
-            'name': 'Regular', 'code': 'M', 'url_path': 'regular',
-            'reviewer_roles': tuple(chain(
+        BaseCallType.STANDARD: (
+            _jcmt_default_info,
+            {'name': 'Regular', 'code': 'M', 'url_path': 'regular',
+             'reviewer_roles': tuple(chain(
                 BaseCallType._info[BaseCallType.SUPPLEMENTAL].reviewer_roles,
                 (JCMTReviewerRole.PEER,)
-            )),
-        },
-        BaseCallType.IMMEDIATE: {
-            'name': 'Urgent', 'code': 'S', 'url_path': 'urgent',
-            'name_proposal': True},
-        BaseCallType.TEST: {
-            'code': 'X'},
-        BaseCallType.MULTICLOSE: {
-            'name': 'Rapid Turnaround', 'code': 'R', 'url_path': 'rapid',
-            'name_proposal': True},
-        BaseCallType.SUPPLEMENTAL: {
-            'code': 'E',
-            'reviewer_roles': tuple(chain(
+             ))}),
+        BaseCallType.IMMEDIATE: (
+            _jcmt_default_info,
+            {'name': 'Urgent', 'code': 'S', 'url_path': 'urgent',
+             'name_proposal': True}),
+        BaseCallType.TEST: (
+            _jcmt_default_info,
+            {'code': 'X'}),
+        BaseCallType.MULTICLOSE: (
+            _jcmt_default_info,
+            {'name': 'Rapid Turnaround', 'code': 'R', 'url_path': 'rapid',
+             'name_proposal': True}),
+        BaseCallType.SUPPLEMENTAL: (
+            _jcmt_default_info,
+            {'code': 'E',
+             'reviewer_roles': tuple(chain(
                 BaseCallType._info[BaseCallType.SUPPLEMENTAL].reviewer_roles,
-                (JCMTReviewerRole.PEER,)
-            )),
-        },
+                (JCMTReviewerRole.PEER,)))}),
     }
 
     #       Code   Name         Avail.  URL          Im.Rv. Nm.Pr. Md.Cl.
     #       (Reviewer roles)
     #       (Notify groups)
-    _jcmt_extra = OrderedDict((
-        (ROLLING, BaseCallType.TypeInfo(
+    #       Cl.Fl
+    _jcmt_extra = (
+        (ROLLING, BaseCallType.SUPPLEMENTAL, TypeInfo(
             'F', 'Supplemental Rolling',
                                 True,   'rolling',   True,  False, False,
             (JCMTReviewerRole.TECH, JCMTReviewerRole.EXTERNAL,
              JCMTReviewerRole.INTERNAL, JCMTReviewerRole.FEEDBACK),
-            (JCMTGroupType.ADMIN,))),
-    ))
+            (JCMTGroupType.ADMIN,),
+            True)),
+    )
 
     _info = OrderedDict()
-    for (role_id, role_info) in BaseCallType._info.items():
-        override = _jcmt_info.get(role_id, {})
-        _info[role_id] = role_info._replace(**override)
+    for (type_id, type_info) in BaseCallType._info.items():
+        (extra, override) = _jcmt_info.get(type_id, (_jcmt_default_info, {}))
+        _info[type_id] = TypeInfo(*(type_info._replace(**override) + extra))
 
-    _info.update(_jcmt_extra)
-
-    move_to_end(_info, BaseCallType.TEST)
+    for (type_id, after_id, type_info) in _jcmt_extra:
+        insert_after(_info, after_id, type_id, type_info)
