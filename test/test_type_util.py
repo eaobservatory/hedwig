@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2025 East Asian Observatory
+# Copyright (C) 2016-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,12 +18,12 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 
 from hedwig.error import Error
 from hedwig.type.collection import ResultCollection
 from hedwig.type.enum import SyncOperation
-from hedwig.type.util import compare_collections, \
+from hedwig.type.util import compare_collections, insert_after, \
     with_can_edit, with_can_view, \
     with_can_view_edit, with_can_view_edit_rating, \
     with_proposals, with_sync_operation
@@ -32,6 +32,27 @@ from .compat import TestCase
 
 
 class TypeUtilTestCase(TestCase):
+    def test_insert_after(self):
+        d = OrderedDict((
+            (1, 'a'),
+            (2, 'b'),
+            (4, 'd'),
+            (5, 'e'),
+        ))
+
+        insert_after(d, 2, 3, 'c')
+
+        self.assertEqual(list(d.items()), [
+            (1, 'a'),
+            (2, 'b'),
+            (3, 'c'),
+            (4, 'd'),
+            (5, 'e'),
+        ])
+
+        with self.assertRaises(KeyError):
+            insert_after(d, 2, 3, 'c')
+
     def test_with_can_edit(self):
         TestTuple = namedtuple('TestTuple', ('x', 'y'))
 

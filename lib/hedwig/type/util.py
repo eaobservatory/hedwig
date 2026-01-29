@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 
 from collections import namedtuple
 
+from ..compat import move_to_end
 from ..error import FormattedError, MultipleValues, NoSuchValue
 from .enum import SyncOperation
 
@@ -131,6 +132,35 @@ def compare_collections(
 
     # Return as a collection of the original type.
     return type(original)(comparison)
+
+
+def insert_after(dictionary, key_after, key_new, value):
+    """
+    Insert the given new (key, value) pair into an ordered dictionary
+    after the given key.
+
+    :param dictionary: the dictionary to modify
+    :param key_after: the original key after which to insert
+    :param key_new: the new key to insert
+    :param value: the new value to insert
+
+    :raises KeyError: if the dictionary already contains `key_new`
+    """
+
+    if key_new in dictionary:
+        raise KeyError('key {} already present'.format(key_new))
+
+    keys = list(dictionary.keys())
+
+    dictionary[key_new] = value
+
+    found = False
+    for key in keys:
+        if found:
+            move_to_end(dictionary, key)
+
+        elif key == key_after:
+            found = True
 
 
 def null_tuple(type_):
