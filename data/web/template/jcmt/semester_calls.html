@@ -1,0 +1,9 @@
+{% extends 'generic/semester_calls.html' %}
+
+{% block call_date_close %}
+    {% if facility_call_type_class.get_info(call_type).jcmt_close_when_full %}
+        When queue is full
+    {% else %}
+        {{ super() }}
+    {% endif %}
+{% endblock %}

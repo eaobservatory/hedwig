@@ -27,6 +27,7 @@
     </tr>
 </table>
 
+{% set rendered_date_close = [] %}
 {% if calls and not separate %}
     <table>
         <tr>
@@ -38,7 +39,14 @@
         <tr>
             <th>Call for proposals closing date</th>
             {% for call in calls.values() %}
-                <td>{{ call.date_close | format_datetime }} UT</td>
+                <td>
+                    {% set rendered %}
+                        {% block call_date_close scoped %}
+                            {{ call.date_close | format_datetime }} UT
+                        {% endblock %}
+                    {% endset %}{% do rendered_date_close.append(rendered) %}
+                    {{ rendered }}
+                </td>
             {% endfor %}
         </tr>
     </table>
@@ -85,7 +93,7 @@
             {% endif %}
             <tr>
                 <th>Call for proposals closes</th>
-                <td>{{ call.date_close | format_datetime }} UT</td>
+                <td>{{ rendered_date_close[loop.index0] }}</td>
             </tr>
         </table>
 

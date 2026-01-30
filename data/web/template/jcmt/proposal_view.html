@@ -2,6 +2,14 @@
 
 {% from 'jcmt/macro/request_table.html' import render_request_display, render_request_options_display %}
 
+{% block proposal_preamble_not_submitted_note %}
+    {% if facility_call_type_class.get_info(proposal.call_type).jcmt_close_when_full %}
+        This call closes when the observing queue for Semester {{ proposal.semester_name }} is full.
+    {% else %}
+        {{ super() }}
+    {% endif %}
+{% endblock %}
+
 {% block science_case_extra %}
     {% if jcmt_pr_summary is not none %}
         <h2 id="jcmt_pr_summary">Public Summary</h2>
