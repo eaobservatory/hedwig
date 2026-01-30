@@ -140,12 +140,17 @@ def insert_after(dictionary, key_after, key_new, value):
     after the given key.
 
     :param dictionary: the dictionary to modify
-    :param key_after: the original key after which to insert
+    :param key_after: the original key after which to insert,
+        or `None` to insert at the start
     :param key_new: the new key to insert
     :param value: the new value to insert
 
     :raises KeyError: if the dictionary already contains `key_new`
+        or does not contain `key_after`
     """
+
+    if (key_after is not None) and (key_after not in dictionary):
+        raise KeyError('key {} is not present'.format(key_after))
 
     if key_new in dictionary:
         raise KeyError('key {} already present'.format(key_new))
@@ -154,7 +159,7 @@ def insert_after(dictionary, key_after, key_new, value):
 
     dictionary[key_new] = value
 
-    found = False
+    found = (key_after is None)
     for key in keys:
         if found:
             move_to_end(dictionary, key)

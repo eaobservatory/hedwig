@@ -53,6 +53,20 @@ class TypeUtilTestCase(TestCase):
         with self.assertRaises(KeyError):
             insert_after(d, 2, 3, 'c')
 
+        with self.assertRaises(KeyError):
+            insert_after(d, 9, 6, 'f')
+
+        insert_after(d, None, 0, 'z')
+
+        self.assertEqual(list(d.items()), [
+            (0, 'z'),
+            (1, 'a'),
+            (2, 'b'),
+            (3, 'c'),
+            (4, 'd'),
+            (5, 'e'),
+        ])
+
     def test_with_can_edit(self):
         TestTuple = namedtuple('TestTuple', ('x', 'y'))
 
