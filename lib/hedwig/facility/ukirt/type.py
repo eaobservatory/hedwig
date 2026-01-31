@@ -170,12 +170,14 @@ class UKIRTRequestCollection(ResultCollection, CollectionByProposal):
 
         return ResultTable(
             instruments,
-            OrderedDict([(k, v.name)
-                         for (k, v) in UKIRTBrightness._info.items()
-                         if v.available or k in brightnesses]),
-            OrderedDict([(k, v.name)
-                         for (k, v) in UKIRTInstrument._info.items()
-                         if k in instruments]))
+            OrderedDict([
+                (k, v.name)
+                for (k, v) in UKIRTBrightness._info.items()
+                if v.available or k in brightnesses]),
+            OrderedDict([
+                (k, v.name)
+                for (k, v) in UKIRTInstrument._info.items()
+                if k in instruments]))
 
     def get_total(self):
         """

@@ -25,10 +25,13 @@ from io import BytesIO
 from PIL import Image
 try:
     from PyPDF2 import PdfWriter as PdfFileWriter
+
     def pdf_blank_page(w, *args, **kwargs):
         w.add_blank_page(*args, **kwargs)
+
 except ImportError:
     from PyPDF2 import PdfFileWriter
+
     def pdf_blank_page(w, *args, **kwargs):
         w.addBlankPage(*args, **kwargs)
 

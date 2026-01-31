@@ -196,8 +196,9 @@ def render_email_template(name, context, facility=None):
         template = env.get_template(name)
 
     else:
-        template = env.select_template((facility.get_code() + '/' + name,
-                                        'generic/' + name))
+        template = env.select_template((
+            facility.get_code() + '/' + name,
+            'generic/' + name))
 
         full_context.update({
             'facility_name': facility.get_name(),

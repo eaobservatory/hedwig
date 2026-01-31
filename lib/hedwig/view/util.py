@@ -214,8 +214,9 @@ def with_person(permission):
                 self, current_user, db, facilities, person_id,
                 *args, **kwargs):
             try:
-                person = db.get_person(person_id=person_id,
-                                       with_institution=True, with_email=True)
+                person = db.get_person(
+                    person_id=person_id,
+                    with_institution=True, with_email=True)
             except NoSuchRecord:
                 raise HTTPNotFound('Person profile not found.')
 
@@ -242,7 +243,8 @@ def with_person(permission):
             else:
                 auth_cache = {}
                 can = auth.for_person(
-                    current_user, db, facilities, person, auth_cache=auth_cache)
+                    current_user, db, facilities, person,
+                    auth_cache=auth_cache)
 
                 if permission == PermissionType.VIEW:
                     if not can.view:
@@ -304,10 +306,12 @@ def with_proposal(
             auth_cache = {}
 
             try:
-                proposal = db.get_proposal(facility.id_, proposal_id,
-                                           with_members=True,
-                                           with_reviewers=True,
-                                           **get_proposal_kwargs)
+                proposal = db.get_proposal(
+                    facility.id_, proposal_id,
+                    with_members=True,
+                    with_reviewers=True,
+                    **get_proposal_kwargs)
+
             except NoSuchRecord:
                 raise HTTPNotFound('Proposal not found')
 
@@ -452,6 +456,7 @@ def with_review(
                     with_review_note=True, with_invitation=with_invitation,
                     with_note=with_note, with_acceptance=with_acceptance
                 ).get_single()
+
             except NoSuchRecord:
                 raise HTTPNotFound('Reviewer record not found')
 
@@ -462,9 +467,11 @@ def with_review(
             # Apply facility constraint here -- the proposal will only
             # be found if its facility is self.id_.
             try:
-                proposal = db.get_proposal(self.id_, proposal_id,
-                                           with_members=True,
-                                           **get_proposal_kwargs)
+                proposal = db.get_proposal(
+                    self.id_, proposal_id,
+                    with_members=True,
+                    **get_proposal_kwargs)
+
             except NoSuchRecord:
                 raise HTTPNotFound('Proposal record not found')
 
@@ -549,5 +556,6 @@ def parse_time(input_time):
             (float(
                 input_time_part[2] if len(input_time_part) > 2
                 else 0.0)) / 3600.0)
+
     else:
         return float(input_time)

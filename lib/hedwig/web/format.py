@@ -113,8 +113,9 @@ def format_text_rst(text, extract_title_toc=False, start_heading=3):
         and a list of TOC items.
     """
 
-    (body, title, toc) = rst_to_html(text, extract_title=extract_title_toc,
-                                     start_heading=start_heading)
+    (body, title, toc) = rst_to_html(
+        text, extract_title=extract_title_toc,
+        start_heading=start_heading)
 
     if not extract_title_toc:
         return Markup(body)
@@ -150,7 +151,9 @@ def format_message_text(text, format=None):
     else:
         raise HTTPError('Unknown message format type.')
 
-pattern_html_tag = re.compile(r'<(SUP|sup|SUB|sub|ASTROBJ)>([-_+A-Za-z0-9() ]+)</\1>')
+
+pattern_html_tag = re.compile(
+    r'<(SUP|sup|SUB|sub|ASTROBJ)>([-_+A-Za-z0-9() ]+)</\1>')
 
 title_html_tags = {
     'SUB': 'sub',

@@ -92,10 +92,10 @@ class JCMTCalculator(BaseCalculator):
 
             calculation.input[val_a] = ' '.join([
                 value.format.format(input_a),
-                ('' if (value.unit is None or
-                        (val_a == 'pos' and
-                         self.position_type[input_b].no_unit)) else
-                 value.unit),
+                ('' if (
+                    (value.unit is None) or
+                    (val_a == 'pos' and self.position_type[input_b].no_unit))
+                 else value.unit),
                 input_b,
             ])
 
@@ -123,8 +123,9 @@ class JCMTCalculator(BaseCalculator):
             calculation.input[code] = True
             calculation.inputs.replace_item_where(
                 (lambda x: x.code == code),
-                (lambda x: x._replace(name=JCMTWeather.get_info(band).name,
-                                      abbr=None)))
+                (lambda x: x._replace(
+                    name=JCMTWeather.get_info(band).name,
+                    abbr=None)))
 
     @classmethod
     def _validate_position(self, pos, pos_type):

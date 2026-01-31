@@ -179,8 +179,9 @@ def _pdf_ps_to_png(buff, page_count, resolution=100, downscale=4):
 
             if p.returncode:
                 stderrdata = latin_1_decode(stderrdata, 'replace')[0]
-                raise ConversionError('PDF/PS to PNG conversion failed: ' +
-                                      stderrdata.replace('\n', ' ').strip())
+                raise ConversionError(
+                    'PDF/PS to PNG conversion failed: ' +
+                    stderrdata.replace('\n', ' ').strip())
 
             # If we need to downscale but our Ghostscript doesn't support that
             # feature, scale using Pillow instead.
@@ -232,8 +233,8 @@ def _pdf_to_cairo(buff, type_, pages, resolution=100, downscale=None):
         ])
 
     else:
-        raise ConversionError('Unrecognised target type for pdftocairo: {}',
-                              type_)
+        raise ConversionError(
+            'Unrecognised target type for pdftocairo: {}', type_)
 
     # Convert pages using pdftocairo.
     rendered_pages = []
@@ -254,8 +255,9 @@ def _pdf_to_cairo(buff, type_, pages, resolution=100, downscale=None):
 
             if p.returncode:
                 stderrdata = latin_1_decode(stderrdata, 'replace')[0]
-                raise ConversionError('PDF conversion (pdftocairo) failed: ' +
-                                      stderrdata.replace('\n', ' ').strip())
+                raise ConversionError(
+                    'PDF conversion (pdftocairo) failed: ' +
+                    stderrdata.replace('\n', ' ').strip())
 
             rendered_pages.append(stdoutdata)
 

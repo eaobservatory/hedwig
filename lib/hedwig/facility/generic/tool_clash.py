@@ -452,8 +452,9 @@ class ClashTool(BaseTargetTool):
 
     def view_moc_delete(self, current_user, db, moc_id, form):
         try:
-            moc = db.search_moc(facility_id=self.facility.id_, moc_id=moc_id,
-                                public=None).get_single()
+            moc = db.search_moc(
+                facility_id=self.facility.id_, moc_id=moc_id,
+                public=None).get_single()
         except NoSuchRecord:
             raise HTTPNotFound('Coverage map not found')
 

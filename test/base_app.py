@@ -37,8 +37,9 @@ class WebAppTestCase(DBTestCase):
 
         self.config = get_config()
 
-        app_info = create_web_app(db=self.db, facility_spec=self.facility_spec,
-                                  _test_return_extra=True)
+        app_info = create_web_app(
+            db=self.db, facility_spec=self.facility_spec,
+            _test_return_extra=True)
 
         self.app = app_info['app']
         self.app.config['TESTING'] = True
@@ -65,8 +66,9 @@ class WebAppTestCase(DBTestCase):
         (substring) is in it.
         """
 
-        return self.assertIn(member, utf_8_decode(container)[0],
-                             *args, **kwargs)
+        return self.assertIn(
+            member, utf_8_decode(container)[0],
+            *args, **kwargs)
 
     def _get_facility_view(self, code):
         for facility in self.facilities.values():

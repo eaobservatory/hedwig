@@ -125,8 +125,9 @@ class PeopleView(object):
 
                         # If the user has no profile, take them to the profile
                         # registration page.
-                        flash('It appears your registration was not complete. '
-                              'Please complete your profile.')
+                        flash(
+                            'It appears your registration was not complete. '
+                            'Please complete your profile.')
                         raise HTTPRedirect(url_for(
                             '.register_person', **redirect_kwargs))
                     except MultipleRecords:
@@ -203,8 +204,10 @@ class PeopleView(object):
                 password = form['password']
                 if password != form['password_check']:
                     raise UserError('The passwords did not match.')
-                user_id = db.add_user(user_name, password,
-                                      remote_addr=remote_addr)
+
+                user_id = db.add_user(
+                    user_name, password,
+                    remote_addr=remote_addr)
 
                 _update_session_user(
                     db, user_id, remote_addr=remote_addr,
@@ -239,17 +242,21 @@ class PeopleView(object):
             try:
                 user_name = form['user_name']
                 password = form['password']
-                if db.authenticate_user(None, form['password'],
-                                        user_id=user_id) is None:
+                if db.authenticate_user(
+                        None, form['password'],
+                        user_id=user_id) is None:
                     raise UserError(
                         'Your current password was entered incorrectly.')
 
-                db.update_user_name(user_id, user_name,
-                                    remote_addr=remote_addr)
+                db.update_user_name(
+                    user_id, user_name, remote_addr=remote_addr)
+
                 flash('Your user name has been changed.')
+
                 if current_user.person is not None:
                     raise HTTPRedirect(url_for(
                         '.person_view', person_id=current_user.person.id))
+
                 else:
                     raise HTTPRedirect(url_for('home.home_page'))
 
@@ -278,17 +285,23 @@ class PeopleView(object):
                 if password_new == password:
                     raise UserError(
                         'The new password is the same as the current password')
-                if db.authenticate_user(None, form['password'],
-                                        user_id=user_id) is None:
+
+                if db.authenticate_user(
+                        None, form['password'],
+                        user_id=user_id) is None:
                     raise UserError(
                         'Your current password was entered incorrectly.')
-                db.update_user_password(user_id, password_new,
-                                        remote_addr=remote_addr)
+
+                db.update_user_password(
+                    user_id, password_new,
+
+                    remote_addr=remote_addr)
                 flash('Your password has been changed.')
 
                 if current_user.person is not None:
                     raise HTTPRedirect(url_for(
                         '.person_view', person_id=current_user.person.id))
+
                 else:
                     raise HTTPRedirect(url_for('home.home_page'))
 
@@ -360,8 +373,9 @@ class PeopleView(object):
                     # They did specify a user name, so try to look up their
                     # primary email address.
                     try:
-                        person = db.get_person(person_id=None, user_id=user_id,
-                                               with_email=True)
+                        person = db.get_person(
+                            person_id=None, user_id=user_id,
+                            with_email=True)
                     except NoSuchRecord:
                         raise ErrorPage(
                             'There is no email address associated with your '
@@ -387,8 +401,9 @@ class PeopleView(object):
                         'recipient_name': person.name,
                         'token': token,
                         'expiry': expiry,
-                        'target_url': url_for('.password_reset_token_use',
-                                              token=token, _external=True),
+                        'target_url': url_for(
+                            '.password_reset_token_use',
+                            token=token, _external=True),
                     }),
                     [person.id],
                     email_addresses=[email_address])
@@ -505,13 +520,14 @@ class PeopleView(object):
             if 'submit_confirm' in form:
                 db.update_user(user_id=user.id, disabled=disabled)
 
-                flash('Account {}d.'.format(action))
+                flash('Account {}d.', action)
 
             raise HTTPRedirect(url_for('.user_log', user_id=user.id))
 
         return {
             'title': '{}: {} Account'.format(name, action.title()),
-            'message': 'Are you sure you wish to {} this account?'.format(action),
+            'message':
+                'Are you sure you wish to {} this account?'.format(action),
             'target': url_for(
                 ('.user_disable' if disabled else '.user_enable'),
                 user_id=user.id),
@@ -618,8 +634,9 @@ class PeopleView(object):
             can_view_unregistered = True
             registered = int_or_none(args.get('registered', '1'))
 
-        persons = db.search_person(registered=registered, public=public,
-                                   with_institution=True)
+        persons = db.search_person(
+            registered=registered, public=public,
+            with_institution=True)
 
         return {
             'title': 'Directory of Users',
@@ -644,9 +661,9 @@ class PeopleView(object):
             or is_admin
             or ((person.user_id is None) and can.edit))
 
-        person = person._replace(
-            email=[x for x in person.email.values()
-                   if x.public or view_all_email])
+        person = person._replace(email=[
+            x for x in person.email.values()
+            if x.public or view_all_email])
 
         site_groups = None
         site_group_membership = None
@@ -674,8 +691,10 @@ class PeopleView(object):
                     facility_members))
 
         return {
-            'title': ('Your Profile' if is_current_user
-                      else'{}: Profile'.format(person.name)),
+            'title': (
+                'Your Profile'
+                if is_current_user
+                else '{}: Profile'.format(person.name)),
             'is_current_user': is_current_user,
             'can_edit': can.edit,
             'person': person,
@@ -940,7 +959,8 @@ class PeopleView(object):
                         '.person_view', person_id=person.id))
                 else:
                     raise HTTPRedirect(url_for(
-                        '.person_email_verify_primary', log_in_for=log_in_for))
+                        '.person_email_verify_primary',
+                        log_in_for=log_in_for))
 
             except UserError as e:
                 message = e.message
@@ -955,7 +975,8 @@ class PeopleView(object):
             'person': person,
             'emails': records,
             'target': (
-                url_for('.person_edit_email_own') if is_registration else
+                url_for('.person_edit_email_own')
+                if is_registration else
                 url_for('.person_edit_email', person_id=person.id)),
             'log_in_for': log_in_for,
         }
@@ -1018,8 +1039,9 @@ class PeopleView(object):
                     'recipient_name': person.name,
                     'token': token,
                     'expiry': expiry,
-                    'target_url': url_for('.person_email_verify_use',
-                                          token=token, _external=True),
+                    'target_url': url_for(
+                        '.person_email_verify_use',
+                        token=token, _external=True),
                 }),
                 [person.id],
                 email_addresses=[email.address])
@@ -1251,8 +1273,10 @@ class PeopleView(object):
                 facility.name, facility.code, role_class, facility_proposals))
 
         return {
-            'title': ('Your Reviews' if (person is None)
-                      else '{}: Reviews'.format(person.name)),
+            'title': (
+                'Your Reviews'
+                if (person is None) else
+                '{}: Reviews'.format(person.name)),
             'proposals': proposals,
             'person': person,
             'view_all': view_all,
@@ -1287,7 +1311,8 @@ class PeopleView(object):
                     facility = facilities.get(proposal.facility_id)
                     if facility is not None:
                         proposal_facility_code = facility.code
-                        proposal_code = facility.view.make_proposal_code(db, proposal)
+                        proposal_code = facility.view.make_proposal_code(
+                            db, proposal)
 
             events[event_id] = PersonLogExtra(
                 *event,
@@ -1332,8 +1357,9 @@ class PeopleView(object):
             assert duplicate.id == duplicate_id
 
             if 'submit_cancel' in form:
-                raise HTTPRedirect(url_for('.person_view',
-                                           person_id=person.id))
+                raise HTTPRedirect(url_for(
+                    '.person_view',
+                    person_id=person.id))
 
             elif 'submit_confirm' in form:
                 try:
@@ -1349,8 +1375,9 @@ class PeopleView(object):
 
                 flash('The person profiles have been merged.')
 
-                raise HTTPRedirect(url_for('.person_view',
-                                           person_id=person.id))
+                raise HTTPRedirect(url_for(
+                    '.person_view',
+                    person_id=person.id))
 
             else:
                 user_name = None
@@ -1396,8 +1423,9 @@ class PeopleView(object):
             public = None
             registered = None
 
-        persons = db.search_person(institution_id=institution.id,
-                                   registered=registered, public=public)
+        persons = db.search_person(
+            institution_id=institution.id,
+            registered=registered, public=public)
 
         members = None
         if is_admin:
@@ -1453,8 +1481,9 @@ class PeopleView(object):
             if 'submit_confirm' in form:
                 show_confirm_prompt = False
             elif 'submit_cancel' in form:
-                raise HTTPRedirect(url_for('.institution_view',
-                                           institution_id=institution.id))
+                raise HTTPRedirect(url_for(
+                    '.institution_view',
+                    institution_id=institution.id))
             elif 'submit_edit' in form:
                 try:
                     institution = institution._replace(
@@ -1489,8 +1518,9 @@ class PeopleView(object):
                         organization_abbr=institution.organization_abbr,
                         log_approved=log_approved)
                     flash('The institution\'s record has been updated.')
-                    raise HTTPRedirect(url_for('.institution_view',
-                                               institution_id=institution.id))
+                    raise HTTPRedirect(url_for(
+                        '.institution_view',
+                        institution_id=institution.id))
                 except UserError as e:
                     message = e.message
                     show_confirm_prompt = False
@@ -1585,8 +1615,9 @@ class PeopleView(object):
             if institution_id is None:
                 raise HTTPRedirect(url_for('admin.admin_home'))
             else:
-                raise HTTPRedirect(url_for('.institution_view',
-                                           institution_id=int(institution_id)))
+                raise HTTPRedirect(url_for(
+                    '.institution_view',
+                    institution_id=int(institution_id)))
 
         current = {}
         add_entries = None
@@ -1627,8 +1658,9 @@ class PeopleView(object):
                 try:
                     new = db.get_institution(entry.institution_id)
                 except NoSuchRecord:
-                    raise HTTPError('Institution {} not found',
-                                    entry.institution_id)
+                    raise HTTPError(
+                        'Institution {} not found',
+                        entry.institution_id)
 
             # Only display non-approved entries if we are not displaying an
             # institution-specific log.
@@ -1677,8 +1709,9 @@ class PeopleView(object):
                 raise HTTPError('Duplicate institution not found.')
 
             if 'submit_cancel' in form:
-                raise HTTPRedirect(url_for('.institution_view',
-                                           institution_id=institution_id))
+                raise HTTPRedirect(url_for(
+                    '.institution_view',
+                    institution_id=institution_id))
 
             elif 'submit_confirm' in form:
                 db.merge_institution_records(
@@ -1687,8 +1720,9 @@ class PeopleView(object):
 
                 flash('The institution records have been merged.')
 
-                raise HTTPRedirect(url_for('.institution_view',
-                                           institution_id=institution_id))
+                raise HTTPRedirect(url_for(
+                    '.institution_view',
+                    institution_id=institution_id))
 
             else:
                 ctx.update({
@@ -1707,13 +1741,15 @@ class PeopleView(object):
 
     def invitation_token_accept(
             self, current_user, db, facilities, args, form, remote_addr):
-        token = (form.get('token', None) if (form is not None)
-                 else args.get('token', None))
+        token = (
+            form.get('token', None) if (form is not None)
+            else args.get('token', None))
 
         if token is None:
             # Token was lost somehow: redirect back to entry page.
-            flash('Your invitation code was not received.  '
-                  'Please enter it again.')
+            flash(
+                'Your invitation code was not received.  '
+                'Please enter it again.')
             raise HTTPRedirect(url_for('.invitation_token_enter'))
 
         token = token.strip()
@@ -1753,17 +1789,19 @@ class PeopleView(object):
                 token, with_email=True, with_institution=True)
 
         except NoSuchRecord:
-            raise ErrorPage('Your invitation code was not recognised. '
-                            'It may have expired or been superceded by '
-                            'a newer code.')
+            raise ErrorPage(
+                'Your invitation code was not recognised. '
+                'It may have expired or been superceded by '
+                'a newer code.')
 
         except Error as e:
             # TODO: detect the "already a member" error specifically and avoid
             # it.  For now adding the note that this is a possible cause of
             # this error will have to suffice.
-            raise ErrorPage('An error occurred while attempting to process '
-                            'the invitation.  Perhaps you have been invited '
-                            'to a proposal of which you are already a member?')
+            raise ErrorPage(
+                'An error occurred while attempting to process '
+                'the invitation.  Perhaps you have been invited '
+                'to a proposal of which you are already a member?')
 
         return {
             'title': 'Apply Invitation to Account',

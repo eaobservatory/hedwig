@@ -97,16 +97,18 @@ def create_facility_blueprint(db, facility):
     def facility_home(current_user):
         return facility.view_facility_home(current_user, db)
 
-    @bp.route('/semester/<int:semester_id>/'
-              '<hedwig_call_type_{}:call_type>'.format(code))
+    @bp.route(
+        '/semester/<int:semester_id>/'
+        '<hedwig_call_type_{}:call_type>'.format(code))
     @with_current_user
     @facility_template('semester_calls.html')
     def semester_calls(current_user, semester_id, call_type):
         return facility.view_semester_calls(
             current_user, db, semester_id, call_type, None)
 
-    @bp.route('/semester/<int:semester_id>/'
-              '<hedwig_call_type_{}:call_type>/<int:queue_id>'.format(code))
+    @bp.route(
+        '/semester/<int:semester_id>/'
+        '<hedwig_call_type_{}:call_type>/<int:queue_id>'.format(code))
     @with_current_user
     @facility_template('semester_calls.html')
     def semester_call_separate(current_user, semester_id, call_type, queue_id):
@@ -125,8 +127,9 @@ def create_facility_blueprint(db, facility):
     def semester_non_standard(current_user):
         return facility.view_semester_non_standard(current_user, db)
 
-    @bp.route('/call/<int:call_id>/new_proposal',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/call/<int:call_id>/new_proposal',
+        methods=['GET', 'POST'])
     @require_auth(require_institution=True)
     @facility_template('proposal_new.html')
     def proposal_new(current_user, call_id):
@@ -189,7 +192,8 @@ def create_facility_blueprint(db, facility):
             request.args, (request.form if request.method == 'POST' else None))
 
     @bp.route(
-        '/call/<int:call_id>/review/clash/<int:proposal_a_id>/<int:proposal_b_id>')
+        '/call/<int:call_id>/review/clash/'
+        '<int:proposal_a_id>/<int:proposal_b_id>')
     @require_auth()
     @facility_template('call_review_clash_pair.html')
     def review_call_clash_pair(
@@ -245,9 +249,10 @@ def create_facility_blueprint(db, facility):
         return facility.view_review_call_reviewers(
             current_user, db, call_id, request.args)
 
-    @bp.route('/call/<int:call_id>/reviewers/'
-              '<hedwig_review_{}:reviewer_role>'.format(code),
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/call/<int:call_id>/reviewers/'
+        '<hedwig_review_{}:reviewer_role>'.format(code),
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('reviewer_grid.html')
     def review_call_grid(current_user, call_id, reviewer_role):
@@ -292,8 +297,9 @@ def create_facility_blueprint(db, facility):
         return facility.view_proposal_sections(
             current_user, db, proposal_id, request.args)
 
-    @bp.route('/proposal/<int:proposal_id>/alter_state',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/proposal/<int:proposal_id>/alter_state',
+        methods=['GET', 'POST'])
     @require_admin
     @facility_template('proposal_alter_state.html')
     def proposal_alter_state(current_user, proposal_id):
@@ -348,8 +354,9 @@ def create_facility_blueprint(db, facility):
             current_user, db, proposal_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/member/add',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/proposal/<int:proposal_id>/member/add',
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('member_add.html')
     def member_add(current_user, proposal_id):
@@ -357,8 +364,9 @@ def create_facility_blueprint(db, facility):
             current_user, db, proposal_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/member/reinvite/<int:member_id>',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/proposal/<int:proposal_id>/member/reinvite/<int:member_id>',
+        methods=['GET', 'POST'])
     @require_auth()
     @templated('confirm.html')
     def member_reinvite(current_user, proposal_id, member_id):
@@ -366,8 +374,9 @@ def create_facility_blueprint(db, facility):
             current_user, db, proposal_id, member_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/member/remove',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/proposal/<int:proposal_id>/member/remove',
+        methods=['GET', 'POST'])
     @require_auth()
     @templated('confirm.html')
     def remove_self(current_user, proposal_id):
@@ -383,8 +392,9 @@ def create_facility_blueprint(db, facility):
             current_user, db, proposal_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/member_affiliation/<int:member_id>',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/proposal/<int:proposal_id>/member_affiliation/<int:member_id>',
+        methods=['GET', 'POST'])
     @require_admin
     @facility_template('member_affiliation_edit.html')
     def member_affiliation_edit(current_user, proposal_id, member_id):
@@ -392,8 +402,9 @@ def create_facility_blueprint(db, facility):
             current_user, db, proposal_id, member_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/member_institution/<int:member_id>',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/proposal/<int:proposal_id>/member_institution/<int:member_id>',
+        methods=['GET', 'POST'])
     @require_admin
     @facility_template('member_institution_edit.html')
     def member_institution_edit(current_user, proposal_id, member_id):
@@ -401,8 +412,9 @@ def create_facility_blueprint(db, facility):
             current_user, db, proposal_id, member_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/previous',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/proposal/<int:proposal_id>/previous',
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('previous_edit.html')
     def previous_edit(current_user, proposal_id):
@@ -418,8 +430,9 @@ def create_facility_blueprint(db, facility):
             current_user, db, proposal_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/target/upload',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/proposal/<int:proposal_id>/target/upload',
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('target_upload.html')
     def target_upload(current_user, proposal_id):
@@ -435,8 +448,9 @@ def create_facility_blueprint(db, facility):
         return facility.view_target_download(
             current_user, db, proposal_id)
 
-    @bp.route('/proposal/<int:proposal_id>/target/note',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/proposal/<int:proposal_id>/target/note',
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('tool_note_edit.html')
     def tool_note_edit(current_user, proposal_id):
@@ -459,9 +473,10 @@ def create_facility_blueprint(db, facility):
         return facility.view_case_edit(
             current_user, db, proposal_id, role)
 
-    @bp.route('/proposal/<int:proposal_id>/'
-              '<hedwig_text_{}:role>/text'.format(code),
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/proposal/<int:proposal_id>/'
+        '<hedwig_text_{}:role>/text'.format(code),
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('text_edit.html')
     def case_edit_text(current_user, proposal_id, role):
@@ -469,9 +484,10 @@ def create_facility_blueprint(db, facility):
             current_user, db, proposal_id, role,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/'
-              '<hedwig_text_{}:role>/figure/new'.format(code),
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/proposal/<int:proposal_id>/'
+        '<hedwig_text_{}:role>/figure/new'.format(code),
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('figure_edit.html')
     def case_new_figure(current_user, proposal_id, role):
@@ -480,9 +496,10 @@ def create_facility_blueprint(db, facility):
             (request.form if request.method == 'POST' else None),
             (request.files['file'] if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/<hedwig_text_{}:role>/'
-              'figure/<int:fig_id>/edit'.format(code),
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/proposal/<int:proposal_id>/<hedwig_text_{}:role>/'
+        'figure/<int:fig_id>/edit'.format(code),
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('figure_edit.html')
     def case_edit_figure(current_user, proposal_id, role, fig_id):
@@ -491,9 +508,10 @@ def create_facility_blueprint(db, facility):
             (request.form if request.method == 'POST' else None),
             (request.files['file'] if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/'
-              '<hedwig_text_{}:role>/figure/manage'.format(code),
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/proposal/<int:proposal_id>/'
+        '<hedwig_text_{}:role>/figure/manage'.format(code),
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('figure_manage.html')
     def case_manage_figure(current_user, proposal_id, role):
@@ -501,16 +519,18 @@ def create_facility_blueprint(db, facility):
             current_user, db, proposal_id, role,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/<hedwig_text_{}:role>/'
-              'figure/<int:fig_id>/<md5sum>'.format(code))
+    @bp.route(
+        '/proposal/<int:proposal_id>/<hedwig_text_{}:role>/'
+        'figure/<int:fig_id>/<md5sum>'.format(code))
     @require_auth()
     @send_file(allow_cache=True)
     def case_view_figure(current_user, proposal_id, role, fig_id, md5sum):
         return facility.view_case_view_figure(
             current_user, db, proposal_id, fig_id, role, md5sum)
 
-    @bp.route('/proposal/<int:proposal_id>/<hedwig_text_{}:role>/'
-              'figure/<int:fig_id>/thumbnail/<md5sum>'.format(code))
+    @bp.route(
+        '/proposal/<int:proposal_id>/<hedwig_text_{}:role>/'
+        'figure/<int:fig_id>/thumbnail/<md5sum>'.format(code))
     @require_auth()
     @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     def case_view_figure_thumbnail(
@@ -519,8 +539,9 @@ def create_facility_blueprint(db, facility):
             current_user, db, proposal_id, fig_id, role, md5sum,
             'thumbnail')
 
-    @bp.route('/proposal/<int:proposal_id>/<hedwig_text_{}:role>/'
-              'figure/<int:fig_id>/preview/<md5sum>'.format(code))
+    @bp.route(
+        '/proposal/<int:proposal_id>/<hedwig_text_{}:role>/'
+        'figure/<int:fig_id>/preview/<md5sum>'.format(code))
     @require_auth()
     @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     def case_view_figure_preview(
@@ -529,8 +550,9 @@ def create_facility_blueprint(db, facility):
             current_user, db, proposal_id, fig_id, role, md5sum,
             'preview')
 
-    @bp.route('/proposal/<int:proposal_id>/<hedwig_text_{}:role>/'
-              'figure/<int:fig_id>/svg/<md5sum>'.format(code))
+    @bp.route(
+        '/proposal/<int:proposal_id>/<hedwig_text_{}:role>/'
+        'figure/<int:fig_id>/svg/<md5sum>'.format(code))
     @require_auth()
     @require_session_option('pdf_as_svg')
     @send_file(fixed_type=FigureType.SVG, allow_cache=True)
@@ -539,9 +561,10 @@ def create_facility_blueprint(db, facility):
             current_user, db, proposal_id, fig_id, role, md5sum,
             'svg')
 
-    @bp.route('/proposal/<int:proposal_id>/'
-              '<hedwig_text_{}:role>/pdf/edit'.format(code),
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/proposal/<int:proposal_id>/'
+        '<hedwig_text_{}:role>/pdf/edit'.format(code),
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('pdf_upload.html')
     def case_edit_pdf(current_user, proposal_id, role):
@@ -549,24 +572,27 @@ def create_facility_blueprint(db, facility):
             current_user, db, proposal_id, role,
             (request.files['file'] if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/<hedwig_text_{}:role>/'
-              'pdf/view/<md5sum>'.format(code))
+    @bp.route(
+        '/proposal/<int:proposal_id>/<hedwig_text_{}:role>/'
+        'pdf/view/<md5sum>'.format(code))
     @require_auth()
     @send_file(allow_cache=True)
     def case_view_pdf(current_user, proposal_id, role, md5sum):
         return facility.view_case_view_pdf(
             current_user, db, proposal_id, role, md5sum)
 
-    @bp.route('/proposal/<int:proposal_id>/<hedwig_text_{}:role>/'
-              'pdf/preview/<int:page>/<md5sum>'.format(code))
+    @bp.route(
+        '/proposal/<int:proposal_id>/<hedwig_text_{}:role>/'
+        'pdf/preview/<int:page>/<md5sum>'.format(code))
     @require_auth()
     @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     def case_view_pdf_preview(current_user, proposal_id, role, page, md5sum):
         return facility.view_case_view_pdf_preview(
             current_user, db, proposal_id, page, role, md5sum)
 
-    @bp.route('/proposal/<int:proposal_id>/calculation',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/proposal/<int:proposal_id>/calculation',
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('calculation_manage.html')
     def calculation_manage(current_user, proposal_id):
@@ -637,9 +663,10 @@ def create_facility_blueprint(db, facility):
         return facility.view_proposal_reviews(
             current_user, db, proposal_id)
 
-    @bp.route('/proposal/<int:proposal_id>/review/'
-              '<hedwig_review_{}:reviewer_role>/new'.format(code),
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/proposal/<int:proposal_id>/review/'
+        '<hedwig_review_{}:reviewer_role>/new'.format(code),
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('review_edit.html')
     def proposal_review_new(current_user, proposal_id, reviewer_role):
@@ -647,9 +674,10 @@ def create_facility_blueprint(db, facility):
             current_user, db, proposal_id, reviewer_role, request.args,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/proposal/<int:proposal_id>/review/'
-              '<hedwig_review_{}:reviewer_role>/add'.format(code),
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/proposal/<int:proposal_id>/review/'
+        '<hedwig_review_{}:reviewer_role>/add'.format(code),
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('reviewer_select.html')
     def proposal_reviewer_add(current_user, proposal_id, reviewer_role):
@@ -671,8 +699,9 @@ def create_facility_blueprint(db, facility):
         return facility.view_proposal_by_code(
             current_user, db, request.args)
 
-    @bp.route('/review/<int:reviewer_id>/remove',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/review/<int:reviewer_id>/remove',
+        methods=['GET', 'POST'])
     @require_auth()
     @templated('confirm.html')
     def proposal_reviewer_remove(current_user, reviewer_id):
@@ -680,8 +709,9 @@ def create_facility_blueprint(db, facility):
             current_user, db, reviewer_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/review/<int:reviewer_id>/reinvite',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/review/<int:reviewer_id>/reinvite',
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('reviewer_reinvite_confirm.html')
     def proposal_reviewer_reinvite(current_user, reviewer_id):
@@ -689,8 +719,9 @@ def create_facility_blueprint(db, facility):
             current_user, db, reviewer_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/review/<int:reviewer_id>/notify',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/review/<int:reviewer_id>/notify',
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('reviewer_reinvite_confirm.html')
     def proposal_reviewer_notify_again(current_user, reviewer_id):
@@ -698,8 +729,9 @@ def create_facility_blueprint(db, facility):
             current_user, db, reviewer_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/review/<int:reviewer_id>/remind',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/review/<int:reviewer_id>/remind',
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('reviewer_reinvite_confirm.html')
     def proposal_reviewer_remind(current_user, reviewer_id):
@@ -707,8 +739,9 @@ def create_facility_blueprint(db, facility):
             current_user, db, reviewer_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/review/<int:reviewer_id>/note',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/review/<int:reviewer_id>/note',
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('reviewer_note_edit.html')
     def proposal_reviewer_note(current_user, reviewer_id):
@@ -750,8 +783,9 @@ def create_facility_blueprint(db, facility):
     def semester_view(current_user, semester_id):
         return facility.view_semester_view(current_user, db, semester_id)
 
-    @bp.route('/admin/semester/<int:semester_id>/edit',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/admin/semester/<int:semester_id>/edit',
+        methods=['GET', 'POST'])
     @facility_template('semester_edit.html')
     @require_admin
     def semester_edit(current_user, semester_id):
@@ -759,9 +793,10 @@ def create_facility_blueprint(db, facility):
             current_user, db, semester_id, None,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/admin/semester/<int:semester_id>/preamble/'
-              '<hedwig_call_type_{}:call_type>'.format(code),
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/admin/semester/<int:semester_id>/preamble/'
+        '<hedwig_call_type_{}:call_type>'.format(code),
+        methods=['GET', 'POST'])
     @facility_template('call_preamble_edit.html')
     @require_admin
     def call_preamble_edit(current_user, semester_id, call_type):
@@ -789,8 +824,9 @@ def create_facility_blueprint(db, facility):
     def queue_view(current_user, queue_id):
         return facility.view_queue_view(current_user, db, queue_id)
 
-    @bp.route('/admin/queue/<int:queue_id>/edit',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/admin/queue/<int:queue_id>/edit',
+        methods=['GET', 'POST'])
     @facility_template('queue_edit.html')
     @require_admin
     def queue_edit(current_user, queue_id):
@@ -798,8 +834,9 @@ def create_facility_blueprint(db, facility):
             current_user, db, queue_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/admin/queue/<int:queue_id>/affiliation',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/admin/queue/<int:queue_id>/affiliation',
+        methods=['GET', 'POST'])
     @facility_template('affiliation_edit.html')
     @require_admin
     def affiliation_edit(current_user, queue_id):
@@ -883,8 +920,9 @@ def create_facility_blueprint(db, facility):
     def call_list(current_user):
         return facility.view_call_list(current_user, db)
 
-    @bp.route('/admin/call/new/<hedwig_call_type_{}:call_type>'.format(code),
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/admin/call/new/<hedwig_call_type_{}:call_type>'.format(code),
+        methods=['GET', 'POST'])
     @facility_template('call_edit.html')
     @require_admin
     def call_new(current_user, call_type):
@@ -962,8 +1000,9 @@ def create_facility_blueprint(db, facility):
     def review_info(current_user, reviewer_id):
         return facility.view_review_info(current_user, db, reviewer_id)
 
-    @bp.route('/review/<int:reviewer_id>/calculation',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/review/<int:reviewer_id>/calculation',
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('calculation_manage.html')
     def review_calculation_manage(current_user, reviewer_id):
@@ -971,7 +1010,8 @@ def create_facility_blueprint(db, facility):
             current_user, db, reviewer_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/review/<int:reviewer_id>/calculation/<int:review_calculation_id>')
+    @bp.route(
+        '/review/<int:reviewer_id>/calculation/<int:review_calculation_id>')
     @require_auth()
     def review_calculation_view(
             current_user, reviewer_id, review_calculation_id):
@@ -1005,8 +1045,9 @@ def create_facility_blueprint(db, facility):
         return facility.view_review_view_figure(
             current_user, db, reviewer_id, fig_id, md5sum)
 
-    @bp.route('/review/<int:reviewer_id>/figure/<int:fig_id>/thumbnail/'
-              '<md5sum>')
+    @bp.route(
+        '/review/<int:reviewer_id>/figure/<int:fig_id>/thumbnail/'
+        '<md5sum>')
     @require_auth()
     @send_file(fixed_type=FigureType.PNG, allow_cache=True)
     def review_view_figure_thumbnail(
@@ -1029,8 +1070,9 @@ def create_facility_blueprint(db, facility):
         return facility.view_review_view_figure(
             current_user, db, reviewer_id, fig_id, md5sum, 'svg')
 
-    @bp.route('/review/<int:reviewer_id>/figure/manage',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/review/<int:reviewer_id>/figure/manage',
+        methods=['GET', 'POST'])
     @require_auth()
     @facility_template('figure_manage.html')
     def review_manage_figure(current_user, reviewer_id):
@@ -1117,8 +1159,8 @@ def create_facility_blueprint(db, facility):
                         '{}/calculator_{}_{}'.format(*(x + (route.template,)))
                         for x in template_params]),
                     route.func,
-                    extra_context=(None if route.template is None
-                                   else extra_context),
+                    extra_context=(
+                        None if route.template is None else extra_context),
                     **route.options),
                 **options)
 
@@ -1183,8 +1225,8 @@ def create_facility_blueprint(db, facility):
                         '{}/tool_{}_{}'.format(*(x + (route.template,)))
                         for x in template_params]),
                     route.func,
-                    extra_context=(None if route.template is None
-                                   else extra_context),
+                    extra_context=(
+                        None if route.template is None else extra_context),
                     **route.options),
                 **options)
 
@@ -1216,11 +1258,12 @@ def make_custom_redirect(target, target_opts={}):
     return custom_redirect
 
 
-def make_custom_route(db, template, func, include_args=False,
-                      allow_post=False, post_files=[],
-                      send_file_opts={}, extra_params=[],
-                      auth_required=False, admin_required=False,
-                      init_route_params=[], extra_context=None):
+def make_custom_route(
+        db, template, func, include_args=False,
+        allow_post=False, post_files=[],
+        send_file_opts={}, extra_params=[],
+        auth_required=False, admin_required=False,
+        init_route_params=[], extra_context=None):
     """
     Create a custom view function.
 
@@ -1257,8 +1300,9 @@ def make_custom_route(db, template, func, include_args=False,
         if allow_post:
             args.append(request.form if request.method == 'POST' else None)
             for post_file in post_files:
-                args.append(request.files[post_file]
-                            if request.method == 'POST' else None)
+                args.append(
+                    request.files[post_file]
+                    if request.method == 'POST' else None)
 
         ctx = func(current_user, *args, **kwargs)
 

@@ -45,8 +45,9 @@ RecordUpdate = namedtuple(
      'deferred'))
 
 
-class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
-               ReviewPart):
+class Database(
+        CalculatorPart, MessagePart, PeoplePart, ProposalPart,
+        ReviewPart):
     _mem_ctr = itertools_count()
 
     def __init__(self, engine, query_block_size=50):
@@ -121,11 +122,12 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
             for iter_block in list_in_blocks(iter_list, self.query_block_size):
                 yield stmt.where(iter_field.in_(iter_block))
 
-    def _sync_records(self, conn, table, key_column, key_value, records,
-                      update_columns=None, verified_columns=(),
-                      forbid_add=False, forbid_delete=False,
-                      record_match_column=None,
-                      unique_columns=None, forbid_circular_reinsert=False):
+    def _sync_records(
+            self, conn, table, key_column, key_value, records,
+            update_columns=None, verified_columns=(),
+            forbid_add=False, forbid_delete=False,
+            record_match_column=None,
+            unique_columns=None, forbid_circular_reinsert=False):
         """
         Update a set of database records to match the given set of records.
 
@@ -186,8 +188,9 @@ class Database(CalculatorPart, MessagePart, PeoplePart, ProposalPart,
         # Were update columns specified?  If not, assume everything should
         # be updated except for the key.
         if update_columns is None:
-            update_columns = [x for x in table.c
-                              if x is not table.c.id and x not in key_column]
+            update_columns = [
+                x for x in table.c
+                if x is not table.c.id and x not in key_column]
 
         # Is the record matching column specified?  If not use the "id" column.
         if record_match_column is None:

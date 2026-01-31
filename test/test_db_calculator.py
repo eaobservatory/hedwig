@@ -157,9 +157,10 @@ class DBCalculatorTest(DBTestCase):
 
         moc_a = MOC(order=1, cells=(4, 7))
 
-        moc_id = self.db.add_moc(facility_id, 'test',
-                                 'A Test MOC', FormatType.PLAIN,
-                                 True, moc_a)
+        moc_id = self.db.add_moc(
+            facility_id, 'test',
+            'A Test MOC', FormatType.PLAIN,
+            True, moc_a)
         self.assertIsInstance(moc_id, int)
 
         with self.assertRaises(NoSuchRecord):
@@ -207,9 +208,10 @@ class DBCalculatorTest(DBTestCase):
 
         moc_b = MOC(order=1, cells=(5, 6))
 
-        self.db.update_moc(moc_id, 'test2',
-                           'Another Test MOC', FormatType.PLAIN,
-                           False, moc_b)
+        self.db.update_moc(
+            moc_id, 'test2',
+            'Another Test MOC', FormatType.PLAIN,
+            False, moc_b)
 
         moc_b_fits_fetched = self.db.get_moc_fits(moc_id)
         moc_b_fetched = read_moc(buff=moc_b_fits_fetched)
@@ -282,26 +284,31 @@ class DBCalculatorTest(DBTestCase):
         self.assertEqual(len(result), 1)
 
         with self.assertRaises(ConsistencyError):
-            self.db.update_moc(moc_id, state=AttachmentState.ERROR,
-                               state_prev=AttachmentState.PROCESSING,
-                               state_is_system=True)
+            self.db.update_moc(
+                moc_id, state=AttachmentState.ERROR,
+                state_prev=AttachmentState.PROCESSING,
+                state_is_system=True)
 
         with self.assertRaisesRegex(Error, 'Invalid state'):
-            self.db.update_moc(moc_id, state=999,
-                               state_prev=AttachmentState.PROCESSING,
-                               state_is_system=True)
+            self.db.update_moc(
+                moc_id, state=999,
+                state_prev=AttachmentState.PROCESSING,
+                state_is_system=True)
 
         with self.assertRaisesRegex(Error, 'Invalid previous state'):
-            self.db.update_moc(moc_id, state=AttachmentState.ERROR,
-                               state_prev=999,
-                               state_is_system=True)
+            self.db.update_moc(
+                moc_id, state=AttachmentState.ERROR,
+                state_prev=999,
+                state_is_system=True)
 
-        self.db.update_moc(moc_id, state=AttachmentState.ERROR,
-                           state_prev=AttachmentState.NEW,
-                           state_is_system=True)
+        self.db.update_moc(
+            moc_id, state=AttachmentState.ERROR,
+            state_prev=AttachmentState.NEW,
+            state_is_system=True)
 
-        moc_info = self.db.search_moc(facility_id, None, moc_id=moc_id,
-                                      with_description=True).get_single()
+        moc_info = self.db.search_moc(
+            facility_id, None, moc_id=moc_id,
+            with_description=True).get_single()
         self.assertIsInstance(moc_info, MOCInfo)
         self.assertEqual(moc_info.id, moc_id)
         self.assertEqual(moc_info.name, 'test2')
@@ -321,8 +328,8 @@ class DBCalculatorTest(DBTestCase):
 
         moc = MOC(order=5, cells=(1, 2, 3))
 
-        moc_id = self.db.add_moc(facility_id, 'test', 'test', FormatType.PLAIN,
-                                 True, moc)
+        moc_id = self.db.add_moc(
+            facility_id, 'test', 'test', FormatType.PLAIN, True, moc)
         self.assertIsInstance(moc_id, int)
 
         self.assertEqual(self.db.update_moc_cell(moc_id, moc, block_pause=0), {

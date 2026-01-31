@@ -58,8 +58,9 @@ def require_not_none(f):
     def decorated_function(*args, **kwargs):
         ans = f(*args, **kwargs)
         if ans is None:
-            raise NoSuchRecord('function {}(*{!r}, **{!r}) returned None',
-                               f.__name__, args, kwargs)
+            raise NoSuchRecord(
+                'function {}(*{!r}, **{!r}) returned None',
+                f.__name__, args, kwargs)
         return ans
 
     return decorated_function
@@ -93,6 +94,7 @@ class ReadOnlyWrapper(object):
 
         if first_word == 'ensure':
             meth_ensure = getattr(self._db, name)
+
             def meth_ro(*args, **kwargs):
                 return meth_ensure(*args, _read_only=True, **kwargs)
             return meth_ro

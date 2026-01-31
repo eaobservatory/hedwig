@@ -52,8 +52,9 @@ def create_admin_blueprint(db, facilities):
     def message_view(current_user, message_id):
         return view.message_view(current_user, db, message_id)
 
-    @bp.route('/message/<int:message_id>/alter_state',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/message/<int:message_id>/alter_state',
+        methods=['GET', 'POST'])
     @templated('admin/message_alter_state.html')
     @require_admin
     def message_alter_state(current_user, message_id):
@@ -98,8 +99,9 @@ def create_admin_blueprint(db, facilities):
     def site_group_view(current_user, site_group_type):
         return view.site_group_view(current_user, db, site_group_type)
 
-    @bp.route('/group/<hedwig_site_group:site_group_type>/add',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/group/<hedwig_site_group:site_group_type>/add',
+        methods=['GET', 'POST'])
     @templated('person_select.html')
     @require_admin
     def site_group_member_add(current_user, site_group_type):
@@ -107,8 +109,9 @@ def create_admin_blueprint(db, facilities):
             current_user, db, site_group_type,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/group/<hedwig_site_group:site_group_type>/edit',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/group/<hedwig_site_group:site_group_type>/edit',
+        methods=['GET', 'POST'])
     @templated('admin/site_group_member_edit.html')
     @require_admin
     def site_group_member_edit(current_user, site_group_type):

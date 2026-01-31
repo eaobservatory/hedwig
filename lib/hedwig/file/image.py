@@ -91,8 +91,9 @@ def _calculate_size(max_size, orig_size, only_shrink=False):
 
     # Calculate scale factor required to ensure both dimensions are withing
     # the maximum allowed.
-    scale = max(orig_width / max_width,
-                orig_height / max_height)
+    scale = max(
+        orig_width / max_width,
+        orig_height / max_height)
 
     if only_shrink and scale <= 1:
         return None

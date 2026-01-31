@@ -98,11 +98,15 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(f(BaseCallType.STANDARD, BaseCallType), 'Standard')
 
         f = self.app.jinja_env.filters['full_call_type_name']
-        self.assertEqual(f(None, BaseCallType), '')
-        self.assertEqual(f(BaseCallType.STANDARD, BaseCallType),
-                         'standard call for proposals')
-        self.assertEqual(f(BaseCallType.STANDARD, BaseCallType, plural=True),
-                         'standard calls for proposals')
+        self.assertEqual(
+            f(None, BaseCallType),
+            '')
+        self.assertEqual(
+            f(BaseCallType.STANDARD, BaseCallType),
+            'standard call for proposals')
+        self.assertEqual(
+            f(BaseCallType.STANDARD, BaseCallType, plural=True),
+            'standard calls for proposals')
 
     def test_filter_chain(self):
         f = self.app.jinja_env.filters['chain']
@@ -221,8 +225,9 @@ class TemplateUtilTestCase(WebAppTestCase):
         self.assertEqual(json.loads(j), d)
 
         # Test usage of the "extend" parameter".
-        self.assertEqual(json.loads(f({'c': 'd'}, extend=Markup(j))),
-                         {'a': 'b', 'c': 'd'})
+        self.assertEqual(
+            json.loads(f({'c': 'd'}, extend=Markup(j))),
+            {'a': 'b', 'c': 'd'})
 
         # Test usage of the "dynamic" parameter.
         self.assertEqual(
@@ -268,9 +273,12 @@ class TemplateUtilTestCase(WebAppTestCase):
     def test_filter_message_thread(self):
         f = self.app.jinja_env.filters['message_thread_type_name']
 
-        self.assertEqual(f(MessageThreadType.REVIEW_INVITATION),
-                         'Review invitation')
-        self.assertEqual(f(999), 'Unknown thread type')
+        self.assertEqual(
+            f(MessageThreadType.REVIEW_INVITATION),
+            'Review invitation')
+        self.assertEqual(
+            f(999),
+            'Unknown thread type')
 
     def test_filter_proposal_state(self):
         f = self.app.jinja_env.filters['proposal_state_name']
@@ -320,10 +328,12 @@ class TemplateUtilTestCase(WebAppTestCase):
     def test_filter_reviewer_role(self):
         f = self.app.jinja_env.filters['reviewer_role_name']
 
-        self.assertEqual(f(None, BaseReviewerRole),
-                         'Unknown role')
-        self.assertEqual(f(BaseReviewerRole.EXTERNAL, BaseReviewerRole),
-                         'External')
+        self.assertEqual(
+            f(None, BaseReviewerRole),
+            'Unknown role')
+        self.assertEqual(
+            f(BaseReviewerRole.EXTERNAL, BaseReviewerRole),
+            'External')
 
         self.assertEqual(
             f(None, BaseReviewerRole, with_review=True),
@@ -339,10 +349,12 @@ class TemplateUtilTestCase(WebAppTestCase):
 
         f = self.app.jinja_env.filters['reviewer_role_class']
 
-        self.assertEqual(f(999, BaseReviewerRole),
-                         '')
-        self.assertEqual(f(BaseReviewerRole.EXTERNAL, BaseReviewerRole),
-                         'reviewer_ext')
+        self.assertEqual(
+            f(999, BaseReviewerRole),
+            '')
+        self.assertEqual(
+            f(BaseReviewerRole.EXTERNAL, BaseReviewerRole),
+            'reviewer_ext')
 
     def test_filter_person_title(self):
         f = self.app.jinja_env.filters['title_name']
@@ -384,14 +396,18 @@ class TemplateUtilTestCase(WebAppTestCase):
 
         self.assertEqual(f(None), '')
 
-        self.assertEqual(f('1234567890', 20), '1234567890')
+        self.assertEqual(
+            f('1234567890', 20),
+            '1234567890')
 
-        self.assertEqual(f('1234567890', 5),
-                         '<abbr title="1234567890">1234&hellip;</abbr>')
+        self.assertEqual(
+            f('1234567890', 5),
+            '<abbr title="1234567890">1234&hellip;</abbr>')
 
         # Truncates to 3 because of space at position 4 (5 - 1).
-        self.assertEqual(f('aaa bbb ccc', 5),
-                         '<abbr title="aaa bbb ccc">aaa&hellip;</abbr>')
+        self.assertEqual(
+            f('aaa bbb ccc', 5),
+            '<abbr title="aaa bbb ccc">aaa&hellip;</abbr>')
 
         self.assertEqual(
             f('999999999', 3, abbreviation=None),

@@ -197,8 +197,9 @@ class SCUBA2Calculator(JCMTCalculator):
 
         formatted_inputs = {
             x.code:
-                x.format.format(values[x.code] if values[x.code] is not None
-                                else defaults.get(x.code))
+                x.format.format(
+                    values[x.code] if values[x.code] is not None
+                    else defaults.get(x.code))
                 if x.code not in ('map', 'samp', 'wl')
                 else values[x.code]
             for x in inputs
@@ -396,8 +397,10 @@ class SCUBA2Calculator(JCMTCalculator):
                 pix_850 = mode_info.pix_850
                 pix_450 = mode_info.pix_450
 
-            factor = {850: (pix_850 / 4) ** 2,
-                      450: (pix_450 / 2) ** 2}
+            factor = {
+                850: (pix_850 / 4) ** 2,
+                450: (pix_450 / 2) ** 2,
+            }
 
         else:
             raise UserError('Unknown map sampling option.')
@@ -463,8 +466,8 @@ class SCUBA2Calculator(JCMTCalculator):
             weather_band_result = {}
             for condition_name in ('rep', 'min', 'max'):
                 condition_result = None
-                condition_tau = getattr(weather_band_info,
-                                        condition_name)
+                condition_tau = getattr(
+                    weather_band_info, condition_name)
 
                 try:
                     if condition_tau is None:
@@ -514,5 +517,6 @@ class SCUBA2Calculator(JCMTCalculator):
                 calculation.input['samp'] = True
                 calculation.inputs.replace_item_where(
                     (lambda x: x.code == 'samp'),
-                    (lambda x: x._replace(name='Matched filter',
-                                          abbr='Match. filt.')))
+                    (lambda x: x._replace(
+                        name='Matched filter',
+                        abbr='Match. filt.')))

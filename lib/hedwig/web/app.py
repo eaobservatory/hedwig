@@ -43,9 +43,10 @@ from .blueprint.query import create_query_blueprint
 _mem_ctr = count()
 
 
-def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
-                   without_logger=False, without_auth=False,
-                   _test_return_extra=False):
+def create_web_app(
+        db=None, facility_spec=None, auto_reload_templates=False,
+        without_logger=False, without_auth=False,
+        _test_return_extra=False):
     """
     Function to prepare the Flask web application.
 
@@ -148,18 +149,28 @@ def create_web_app(db=None, facility_spec=None, auto_reload_templates=False,
             app.add_template_filter(
                 filter_, '{}_{}'.format(facility.code, filter_.__name__))
 
-    app.register_blueprint(create_home_blueprint(db, facilities))
-    app.register_blueprint(create_admin_blueprint(db, facilities),
-                           url_prefix='/admin')
-    app.register_blueprint(create_people_blueprint(db, facilities))
-    app.register_blueprint(create_help_blueprint(db), url_prefix='/help')
-    app.register_blueprint(create_query_blueprint(db, facilities), url_prefix='/query')
-    app.register_blueprint(create_oauth_blueprint(db, app), url_prefix='/user/oauth')
+    app.register_blueprint(
+        create_home_blueprint(db, facilities))
+    app.register_blueprint(
+        create_admin_blueprint(db, facilities),
+        url_prefix='/admin')
+    app.register_blueprint(
+        create_people_blueprint(db, facilities))
+    app.register_blueprint(
+        create_help_blueprint(db),
+        url_prefix='/help')
+    app.register_blueprint(
+        create_query_blueprint(db, facilities),
+        url_prefix='/query')
+    app.register_blueprint(
+        create_oauth_blueprint(db, app),
+        url_prefix='/user/oauth')
 
     # Register blueprints for each facility.
     for facility in facilities.values():
-        app.register_blueprint(create_facility_blueprint(db, facility.view),
-                               url_prefix='/' + facility.code)
+        app.register_blueprint(
+            create_facility_blueprint(db, facility.view),
+            url_prefix='/' + facility.code)
 
     if not without_auth:
         # Add beginning of request function to check session for user log in.

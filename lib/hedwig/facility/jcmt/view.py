@@ -303,16 +303,19 @@ class JCMT(EAOFacility):
         role_class = self.get_reviewer_roles()
 
         if role == role_class.EXTERNAL:
-            return url_for('help.review_page', page_name='external_jcmt',
-                           _external=True)
+            return url_for(
+                'help.review_page', page_name='external_jcmt',
+                _external=True)
 
         elif role == role_class.PEER:
-            return url_for('help.review_page', page_name='peer_jcmt',
-                           _external=True)
+            return url_for(
+                'help.review_page', page_name='peer_jcmt',
+                _external=True)
 
         elif role == role_class.FEEDBACK:
-            return url_for('help.review_page', page_name='feedback_jcmt',
-                           _external=True)
+            return url_for(
+                'help.review_page', page_name='feedback_jcmt',
+                _external=True)
 
         else:
             return super(JCMT, self).make_review_guidelines_url(role)
@@ -393,8 +396,9 @@ class JCMT(EAOFacility):
         # members with shared affiliation.
         if not total_weight:
             total_weight = 1.0
-        affiliation_fraction = {k: v / total_weight
-                                for (k, v) in affiliation_weight.items()}
+        affiliation_fraction = {
+            k: v / total_weight
+            for (k, v) in affiliation_weight.items()}
 
         # Find the PI (if present) and their affiliation.
         try:
@@ -488,8 +492,9 @@ class JCMT(EAOFacility):
 
             affiliation_total += pi_weight
 
-        return {k: (v / affiliation_total)
-                for (k, v) in affiliation_count.items()}
+        return {
+            k: (v / affiliation_total)
+            for (k, v) in affiliation_count.items()}
 
     def _copy_proposal(
             self, current_user, db, old_proposal, proposal, *args, **kwargs):
@@ -724,8 +729,10 @@ class JCMT(EAOFacility):
         return ctx
 
     def _validate_proposal_extra(self, db, proposal, extra, proposal_order):
-        is_target_of_opp = (extra['jcmt_option_values'].target_of_opp
-            if (extra['jcmt_option_values'] is not None) else False)
+        is_target_of_opp = (
+            extra['jcmt_option_values'].target_of_opp
+            if (extra['jcmt_option_values'] is not None)
+            else False)
 
         report = super(JCMT, self)._validate_proposal_extra(
             db, proposal, extra, proposal_order,
@@ -749,8 +756,8 @@ class JCMT(EAOFacility):
                         [x.name for x in JCMTWeather.get_available().values()
                          if x.free])
 
-                    # Only describe "free" time if there are any such weather bands,
-                    # and the proposal has used them.
+                    # Only describe "free" time if there are any such weather
+                    # bands, and the proposal has used them.
                     if ((request_total.total != request_total.total_non_free)
                             and time_free_desc):
                         time_desc = time_desc_fmt.format(time_free_desc)
@@ -1024,7 +1031,8 @@ class JCMT(EAOFacility):
             'affiliation_available': available_affiliation,
             'affiliation_total': total_affiliation,
             'affiliation_original': original_affiliation,
-            'jcmt_weather_affiliation_available': weather_available_affiliation,
+            'jcmt_weather_affiliation_available':
+                weather_available_affiliation,
         })
 
         return tabulation
@@ -1147,9 +1155,10 @@ class JCMT(EAOFacility):
 
                 flash('The observing request has been saved.')
 
-                raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id,
-                                           _anchor='request'))
+                raise HTTPRedirect(url_for(
+                    '.proposal_view',
+                    proposal_id=proposal.id,
+                    _anchor='request'))
 
             except UserError as e:
                 message = e.message
@@ -1376,7 +1385,8 @@ class JCMT(EAOFacility):
                 JCMTReviewRatingJustification.get_options(),
             'jcmt_ratings_technical': JCMTReviewRatingTechnical.get_options(),
             'jcmt_ratings_urgency': JCMTReviewRatingUrgency.get_options(),
-            'jcmt_peer_expertise_levels': JCMTPeerReviewerExpertise.get_options(),
+            'jcmt_peer_expertise_levels':
+                JCMTPeerReviewerExpertise.get_options(),
             'jcmt_peer_rating_levels': JCMTPeerReviewRating.get_options(),
             'jcmt_review': info,
             'jcmt_request': request,
@@ -1410,11 +1420,12 @@ class JCMT(EAOFacility):
         option_values = info['options']
 
         if proposal.decision_accept and (not allocations.get_total().total):
-            raise UserError('An accepted proposal should not have '
-                            'zero total time allocation.')
+            raise UserError(
+                'An accepted proposal should not have '
+                'zero total time allocation.')
 
-        db.sync_jcmt_proposal_allocation(proposal_id=proposal.id,
-                                         records=allocations)
+        db.sync_jcmt_proposal_allocation(
+            proposal_id=proposal.id, records=allocations)
 
         db.set_jcmt_alloc_options(**option_values._asdict())
 
@@ -1566,6 +1577,8 @@ class JCMT(EAOFacility):
         role_class = self.get_text_roles()
         return self._edit_text(
             current_user, db, proposal, role_class.PR_SUMMARY, 300,
-            url_for('.pr_summary_edit', proposal_id=proposal.id), form, 10,
-            target_redir=url_for('.proposal_view', proposal_id=proposal.id,
-                                 _anchor='jcmt_pr_summary'))
+            url_for('.pr_summary_edit', proposal_id=proposal.id),
+            form, 10,
+            target_redir=url_for(
+                '.proposal_view', proposal_id=proposal.id,
+                _anchor='jcmt_pr_summary'))

@@ -556,23 +556,23 @@ class CollectionTypeTestCase(TestCase):
             [])
 
         self.assertTrue(c.has_entry(group_type=BaseGroupType.CTTEE))
-        self.assertTrue(c.has_entry(group_type=(BaseGroupType.TECH,
-                                                BaseGroupType.COORD)))
+        self.assertTrue(c.has_entry(group_type=(
+            BaseGroupType.TECH, BaseGroupType.COORD)))
         self.assertFalse(c.has_entry(group_type=999))
 
         self.assertTrue(c.has_entry(facility_id=1))
         self.assertTrue(c.has_entry(facility_id=2))
         self.assertFalse(c.has_entry(facility_id=3))
 
-        self.assertTrue(c.has_entry(group_type=BaseGroupType.CTTEE,
-                                    facility_id=1))
-        self.assertFalse(c.has_entry(group_type=BaseGroupType.CTTEE,
-                                     facility_id=2))
+        self.assertTrue(c.has_entry(
+            group_type=BaseGroupType.CTTEE, facility_id=1))
+        self.assertFalse(c.has_entry(
+            group_type=BaseGroupType.CTTEE, facility_id=2))
 
-        self.assertTrue(c.has_entry(group_type=BaseGroupType.COORD,
-                                    facility_id=2))
-        self.assertFalse(c.has_entry(group_type=BaseGroupType.COORD,
-                                     facility_id=1))
+        self.assertTrue(c.has_entry(
+            group_type=BaseGroupType.COORD, facility_id=2))
+        self.assertFalse(c.has_entry(
+            group_type=BaseGroupType.COORD, facility_id=1))
 
         cc = c.subset_by_person(202)
         self.assertIsInstance(cc, GroupMemberCollection)
@@ -604,10 +604,10 @@ class CollectionTypeTestCase(TestCase):
     def test_reviewer_collection(self):
         c = ReviewerCollection()
 
-        c[201] = null_tuple(Reviewer)._replace(id=201, person_id=2001,
-                                               role=BaseReviewerRole.TECH)
-        c[202] = null_tuple(Reviewer)._replace(id=202, person_id=2002,
-                                               role=BaseReviewerRole.EXTERNAL)
+        c[201] = null_tuple(Reviewer)._replace(
+            id=201, person_id=2001, role=BaseReviewerRole.TECH)
+        c[202] = null_tuple(Reviewer)._replace(
+            id=202, person_id=2002, role=BaseReviewerRole.EXTERNAL)
 
         self.assertFalse(c.has_person(9999))
 
@@ -625,11 +625,13 @@ class CollectionTypeTestCase(TestCase):
 
         self.assertTrue(c.has_role(BaseReviewerRole.EXTERNAL))
 
-        self.assertEqual([x.role for x in c.values_by_person_id(2001)],
-                         [BaseReviewerRole.TECH])
+        self.assertEqual(
+            [x.role for x in c.values_by_person_id(2001)],
+            [BaseReviewerRole.TECH])
 
-        self.assertEqual([x.role for x in c.values_by_person_id(2002)],
-                         [BaseReviewerRole.EXTERNAL])
+        self.assertEqual(
+            [x.role for x in c.values_by_person_id(2002)],
+            [BaseReviewerRole.EXTERNAL])
 
         reviewers = c.values_by_role(BaseReviewerRole.EXTERNAL)
         self.assertIsInstance(reviewers, list)
@@ -654,11 +656,11 @@ class CollectionTypeTestCase(TestCase):
                 return (None, None)
             return (reviewer.review_rating, reviewer.review_weight / 100.0)
 
-        rating = c.get_overall_rating(rwf_inc_unweighted,
-                                      with_std_dev=False)
+        rating = c.get_overall_rating(
+            rwf_inc_unweighted, with_std_dev=False)
         self.assertIsNone(rating)
-        rating = c.get_overall_rating(rwf_inc_unweighted,
-                                      with_std_dev=True)
+        rating = c.get_overall_rating(
+            rwf_inc_unweighted, with_std_dev=True)
         self.assertIsInstance(rating, tuple)
         self.assertEqual(len(rating), 2)
         self.assertIsNone(rating[0])
@@ -678,21 +680,22 @@ class CollectionTypeTestCase(TestCase):
             c[n] = null_tuple(Reviewer)._replace(
                 review_state=ReviewState.DONE, **r)
 
-        self.assertEqual(c.get_overall_rating(rwf_inc_unweighted,
-                                              with_std_dev=False), 50)
-        self.assertEqual(c.get_overall_rating(rwf_exc_unweighted,
-                                              with_std_dev=False), 80)
+        self.assertEqual(
+            c.get_overall_rating(rwf_inc_unweighted, with_std_dev=False),
+            50)
+        self.assertEqual(
+            c.get_overall_rating(rwf_exc_unweighted, with_std_dev=False),
+            80)
 
         # Repeat test above, including calculation of standard deviation.
-        rating = c.get_overall_rating(rwf_exc_unweighted,
-                                      with_std_dev=True)
+        rating = c.get_overall_rating(rwf_exc_unweighted, with_std_dev=True)
         self.assertIsInstance(rating, tuple)
         self.assertEqual(len(rating), 2)
         self.assertEqual(rating[0], 80.0)
         self.assertEqual(rating[1], 0.0)
 
-        (rating, std_dev) = c.get_overall_rating(rwf_inc_unweighted,
-                                                 with_std_dev=True)
+        (rating, std_dev) = c.get_overall_rating(
+            rwf_inc_unweighted, with_std_dev=True)
         self.assertEqual(rating, 50.0)
         self.assertEqual(std_dev, 30.0)
 
@@ -706,11 +709,12 @@ class CollectionTypeTestCase(TestCase):
             c[n] = null_tuple(Reviewer)._replace(
                 review_state=ReviewState.DONE, **r)
 
-        self.assertEqual(c.get_overall_rating(rwf_exc_unweighted,
-                                              with_std_dev=False), 55)
+        self.assertEqual(
+            c.get_overall_rating(rwf_exc_unweighted, with_std_dev=False),
+            55)
 
-        (rating, std_dev) = c.get_overall_rating(rwf_exc_unweighted,
-                                                 with_std_dev=True)
+        (rating, std_dev) = c.get_overall_rating(
+            rwf_exc_unweighted, with_std_dev=True)
         self.assertEqual(rating, 55.0)
         self.assertAlmostEqual(std_dev, 25.981, places=3)
 

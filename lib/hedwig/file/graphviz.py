@@ -46,8 +46,9 @@ def graphviz_to_png(buff):
 
         if p.returncode:
             stderrdata = latin_1_decode(stderrdata, 'replace')[0]
-            raise ConversionError('Graphviz conversion failed: {}',
-                                  stderrdata.replace('\n', ' ').strip())
+            raise ConversionError(
+                'Graphviz conversion failed: {}',
+                stderrdata.replace('\n', ' ').strip())
 
         return stdoutdata
 

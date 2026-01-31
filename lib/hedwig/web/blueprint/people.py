@@ -231,8 +231,9 @@ def create_people_blueprint(db, facilities):
             (request.form if request.method == 'POST' else None),
             str_to_unicode(request.remote_addr))
 
-    @bp.route('/person/<int:person_id>/email/verify/<int:email_id>',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/person/<int:person_id>/email/verify/<int:email_id>',
+        methods=['GET', 'POST'])
     @require_auth(allow_unverified=True)
     @templated('people/person_email_verify_get.html')
     def person_email_verify_get(current_user, person_id, email_id):
@@ -276,8 +277,9 @@ def create_people_blueprint(db, facilities):
         return view.person_reviews_other(
             current_user, db, facilities, person_id, request.args)
 
-    @bp.route('/person/<int:person_id>/subsume',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/person/<int:person_id>/subsume',
+        methods=['GET', 'POST'])
     @require_admin
     @templated('people/person_subsume.html')
     def person_subsume(current_user, person_id):
@@ -307,7 +309,7 @@ def create_people_blueprint(db, facilities):
 
     @bp.route(
         '/institution/<int:institution_id>/delete',
-          methods=['GET', 'POST'])
+        methods=['GET', 'POST'])
     @require_admin
     @templated('confirm.html')
     def institution_delete(current_user, institution_id):
@@ -315,8 +317,9 @@ def create_people_blueprint(db, facilities):
             current_user, db, facilities, institution_id,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/institution/<int:institution_id>/edit',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/institution/<int:institution_id>/edit',
+        methods=['GET', 'POST'])
     @require_auth()
     @templated('people/institution_edit.html')
     def institution_edit(current_user, institution_id):
@@ -328,7 +331,7 @@ def create_people_blueprint(db, facilities):
     @require_admin
     @templated('people/institution_members.html')
     def institution_frozen_members(current_user, institution_id):
-         return view.institution_frozen_members(
+        return view.institution_frozen_members(
             current_user, db, facilities, institution_id)
 
     @bp.route('/institution/<int:institution_id>/log', methods=['GET', 'POST'])
@@ -347,8 +350,9 @@ def create_people_blueprint(db, facilities):
             current_user, db,
             (request.form if request.method == 'POST' else None))
 
-    @bp.route('/institution/<int:institution_id>/subsume',
-              methods=['GET', 'POST'])
+    @bp.route(
+        '/institution/<int:institution_id>/subsume',
+        methods=['GET', 'POST'])
     @require_admin
     @templated('people/institution_subsume.html')
     def institution_subsume(current_user, institution_id):

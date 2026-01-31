@@ -232,7 +232,9 @@ class Client(namedtuple('Client_', ['id', 'name', 'secret', 'redirect_uris'])):
 
     def check_redirect_uri(self, redirect_uri):
         # Allow any port with loopback IP literal (see e.g. RFC8252 7.3).
-        redirect_uri = re.sub(r'^(http://(?:127.0.0.1|\[::1\])):\d+', r'\1', redirect_uri)
+        redirect_uri = re.sub(
+            r'^(http://(?:127.0.0.1|\[::1\])):\d+', r'\1',
+            redirect_uri)
 
         return redirect_uri in self.redirect_uris
 

@@ -186,8 +186,9 @@ class CalculatorPart(object):
 
         return ans
 
-    def search_moc(self, facility_id, public, moc_id=None, state=None,
-                   with_description=False, order_by_date=False):
+    def search_moc(
+            self, facility_id, public, moc_id=None, state=None,
+            with_description=False, order_by_date=False):
         """
         Search for MOC records for a facility.
         """
@@ -264,8 +265,9 @@ class CalculatorPart(object):
                 (cell_ranges, cell_individual) = list_in_ranges(cell_query)
 
                 for (cell_min, cell_max) in cell_ranges:
-                    conditions.append(moc_cell.c.cell.between(cell_min,
-                                                              cell_max))
+                    conditions.append(moc_cell.c.cell.between(
+                        cell_min, cell_max))
+
                 if cell_individual:
                     conditions.append(moc_cell.c.cell.in_(cell_individual))
 
@@ -399,10 +401,11 @@ class CalculatorPart(object):
                     'no rows matched updating table {} entry with id={}',
                     table.name, id_)
 
-    def update_moc(self, moc_id, name=None,
-                   description=None, description_format=None, public=None,
-                   moc_object=None, state=None, state_prev=None,
-                   state_is_system=False):
+    def update_moc(
+            self, moc_id, name=None,
+            description=None, description_format=None, public=None,
+            moc_object=None, state=None, state_prev=None,
+            state_is_system=False):
         values = {}
 
         stmt = moc.update().where(moc.c.id == moc_id)
@@ -453,8 +456,9 @@ class CalculatorPart(object):
                     moc_fits.c.moc_id == moc_id
                 ).values({moc_fits.c.fits: write_moc(moc_object)}))
 
-    def update_moc_cell(self, moc_id, moc_object,
-                        block_size=1000, block_pause=1):
+    def update_moc_cell(
+            self, moc_id, moc_object,
+            block_size=1000, block_pause=1):
         """
         Update the moc_cell database table.
 

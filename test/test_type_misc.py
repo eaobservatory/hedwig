@@ -129,38 +129,59 @@ class MiscTypeTestCase(TestCase):
         del sl[3]
         del sl[1]
 
-        self.assertEqual(list(sl), ['x', 'z', '1', '3'])
-        self.assertEqual(len(sl), 4)
-        self.assertEqual(sl.list_sections(), [None, 'num'])
-        self.assertEqual(sl.list_sections(include_empty=True),
-                         [None, 'alpha', 'num'])
+        self.assertEqual(
+            list(sl),
+            ['x', 'z', '1', '3'])
+        self.assertEqual(
+            len(sl),
+            4)
+        self.assertEqual(
+            sl.list_sections(),
+            [None, 'num'])
+        self.assertEqual(
+            sl.list_sections(include_empty=True),
+            [None, 'alpha', 'num'])
 
         # Try section manipulation methods.
         sl.add_section('new_1', 'New section one')
         sl.add_section('new_2', 'New section two')
-        self.assertEqual(sl.list_sections(include_empty=True),
-                         [None, 'alpha', 'num', 'new_1', 'new_2'])
+        self.assertEqual(
+            sl.list_sections(include_empty=True),
+            [None, 'alpha', 'num', 'new_1', 'new_2'])
 
         sl.append('t', section='new_2')
-        self.assertEqual(sl.list_sections(), [None, 'num', 'new_2'])
+        self.assertEqual(
+            sl.list_sections(),
+            [None, 'num', 'new_2'])
         sl.extend(['u', 'v'], section='new_1')
-        self.assertEqual(sl.list_sections(), [None, 'num', 'new_1', 'new_2'])
+        self.assertEqual(
+            sl.list_sections(),
+            [None, 'num', 'new_1', 'new_2'])
 
-        self.assertEqual(list(sl), ['x', 'z', '1', '3', 'u', 'v', 't'])
+        self.assertEqual(
+            list(sl),
+            ['x', 'z', '1', '3', 'u', 'v', 't'])
 
         with self.assertRaises(KeyError):
             sl.delete_section('new_3')
 
         sl.delete_section('num')
         sl.delete_section(None)
-        self.assertEqual(sl.list_sections(), ['new_1', 'new_2'])
-        self.assertEqual(list(sl), ['u', 'v', 't'])
+        self.assertEqual(
+            sl.list_sections(),
+            ['new_1', 'new_2'])
+        self.assertEqual(
+            list(sl),
+            ['u', 'v', 't'])
 
-        self.assertEqual(sl.list_sections(include_empty=True),
-                         [None, 'alpha', 'new_1', 'new_2'])
+        self.assertEqual(
+            sl.list_sections(include_empty=True),
+            [None, 'alpha', 'new_1', 'new_2'])
 
         sl.append('xxx')
-        self.assertEqual(list(sl), ['xxx', 'u', 'v', 't'])
+        self.assertEqual(
+            list(sl),
+            ['xxx', 'u', 'v', 't'])
 
         self.assertEqual(list(sl.by_section()), [
             SectionedListSection(None, None, ['xxx']),
@@ -193,7 +214,8 @@ class MiscTypeTestCase(TestCase):
         sl.extend([21, 22, 23, 24], section='b')
 
         self.assertEqual(
-            list(sl), [1, 2, 3, 4, 11, 12, 13, 14, 21, 22, 23, 24])
+            list(sl),
+            [1, 2, 3, 4, 11, 12, 13, 14, 21, 22, 23, 24])
 
         is_even = lambda x: ((x % 2) == 0)
         is_div_three = lambda x: ((x % 3) == 0)

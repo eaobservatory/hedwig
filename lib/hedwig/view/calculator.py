@@ -289,8 +289,8 @@ class BaseCalculator(object):
                     if new_mode != mode:
                         # If the mode actually changed, convert the input
                         # and then create new formatted input values.
-                        new_input = self.convert_input_mode(mode, new_mode,
-                                                            parsed_input)
+                        new_input = self.convert_input_mode(
+                            mode, new_mode, parsed_input)
 
                         inputs = self.get_inputs(new_mode)
                         input_values = self.format_input(inputs, new_input)

@@ -58,10 +58,12 @@ class JCMTWebAppTestCase(WebAppTestCase):
 
         # ... request.
         self.db.sync_jcmt_proposal_request(proposal_id, JCMTRequestCollection([
-            (1, JCMTRequest(None, None, JCMTInstrument.UU,
-                            JCMTAncillary.NONE, JCMTWeather.BAND5, 4.0)),
-            (2, JCMTRequest(None, None, JCMTInstrument.HARP,
-                            JCMTAncillary.NONE, JCMTWeather.BAND3, 12.0)),
+            (1, JCMTRequest(
+                None, None, JCMTInstrument.UU,
+                JCMTAncillary.NONE, JCMTWeather.BAND5, 4.0)),
+            (2, JCMTRequest(
+                None, None, JCMTInstrument.HARP,
+                JCMTAncillary.NONE, JCMTWeather.BAND3, 12.0)),
         ]))
 
         # ... JCMT options.

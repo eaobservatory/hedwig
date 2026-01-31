@@ -62,9 +62,10 @@ class AdminView(ViewMember):
                     n_update += 1
 
             if n_update:
-                flash('The status for {} {} has been set to {}.',
-                      n_update, ('message' if n_update == 1 else 'messages'),
-                      MessageState.get_name(state_new).lower())
+                flash(
+                    'The status for {} {} has been set to {}.',
+                    n_update, ('message' if n_update == 1 else 'messages'),
+                    MessageState.get_name(state_new).lower())
 
             # While preparing the display, use input values from the POST
             # form.
@@ -136,19 +137,23 @@ class AdminView(ViewMember):
         # specified.  (Might not be true if the number of messages is divisible
         # by the number per page.)
         if len(messages) >= num_per_page:
-            target_next = url_for('.message_list', id_lt=min(messages.keys()),
-                                  **url_params)
+            target_next = url_for(
+                '.message_list', id_lt=min(messages.keys()),
+                **url_params)
 
         return {
-            'title': ('Message List' if person is None
-                      else '{}: Messages'.format(person.name)),
+            'title': (
+                'Message List'
+                if person is None else
+                '{}: Messages'.format(person.name)),
             'person': person,
             'messages': messages,
             'target_first': target_first,
             'target_next': target_next,
             # Parameters for the filtering form at the top of the page:
-            'form_params': {k: v for (k, v) in url_params.items()
-                            if k != 'state'},
+            'form_params': {
+                k: v for (k, v) in url_params.items()
+                if k != 'state'},
             # Parameters for the state setting form (submit at bottom of page).
             'set_form_params': set_form_params,
             'current_state': state,
@@ -334,9 +339,10 @@ class AdminView(ViewMember):
                     n_update += 1
 
             if n_update:
-                flash('The status for {} {} has been set to {}.',
-                      n_update, ('entry' if n_update == 1 else 'entries'),
-                      AttachmentState.get_name(state_new).lower())
+                flash(
+                    'The status for {} {} has been set to {}.',
+                    n_update, ('entry' if n_update == 1 else 'entries'),
+                    AttachmentState.get_name(state_new).lower())
             raise HTTPRedirect(url_for('.processing_status'))
 
         # We would like to search with the "no_link" option to only
@@ -429,8 +435,8 @@ class AdminView(ViewMember):
             proposal = proposals.get(proposal_id)
 
             if proposal is None:
-                proposal = db.get_proposal(facility_id=None,
-                                           proposal_id=proposal_id)
+                proposal = db.get_proposal(
+                    facility_id=None, proposal_id=proposal_id)
                 facility = facilities.get(proposal.facility_id)
                 if facility is None:
                     continue

@@ -105,12 +105,14 @@ class HelpView(object):
             toc_entries[toc_entry] = toc_entry_title
 
         if page_name is None:
-            nav_link = NavLink(url_for('.help_index'), 'Help',
-                               None, None, None, None)
+            nav_link = NavLink(
+                url_for('.help_index'), 'Help',
+                None, None, None, None)
 
         else:
-            nav_link = _find_nav_link(doc_root, page_name, 'index',
-                                      title_cache, tree_cache)
+            nav_link = _find_nav_link(
+                doc_root, page_name, 'index',
+                title_cache, tree_cache)
 
         return {
             'title': title,
@@ -222,8 +224,9 @@ def _find_nav_link(doc_root, target_name, page_name, title_cache, tree_cache):
 
     if toc_i is not None:
         # The target page was in this TOC.  Create the NavLink object.
-        nl = NavLink(('./' if page_name == 'index' else page_name),
-                     title, None, None, None, None)
+        nl = NavLink(
+            ('./' if page_name == 'index' else page_name),
+            title, None, None, None, None)
 
         if toc_i > 0:
             prev = toc[toc_i - 1]
@@ -242,8 +245,9 @@ def _find_nav_link(doc_root, target_name, page_name, title_cache, tree_cache):
     else:
         # Recurse through the TOC entries looking for a match.
         for toc_entry in toc:
-            ans = _find_nav_link(doc_root, target_name, toc_entry,
-                                 title_cache, sub_tree_cache)
+            ans = _find_nav_link(
+                doc_root, target_name, toc_entry,
+                title_cache, sub_tree_cache)
 
             if ans is not None:
                 return ans

@@ -34,8 +34,9 @@ from hedwig.type.enum import BaseAffiliationType, BaseCallType, \
 from .dummy_config import DummyConfigTestCase
 
 
-def get_dummy_database(randomize_ids=True, allow_multi_threaded=False,
-                       facility_spec=None):
+def get_dummy_database(
+        randomize_ids=True, allow_multi_threaded=False,
+        facility_spec=None):
     """
     Create in-memory SQL database for testing.
 

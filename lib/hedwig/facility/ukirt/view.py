@@ -71,8 +71,9 @@ class UKIRT(EAOFacility):
         type_class = self.get_call_types()
 
         try:
-            m = re.match(r'U/(?:([A-Z]+)/)?(\d\d[ABXYZW])/([A-Z]+)(\d+)$',
-                         proposal_code)
+            m = re.match(
+                r'U/(?:([A-Z]+)/)?(\d\d[ABXYZW])/([A-Z]+)(\d+)$',
+                proposal_code)
 
             if not m:
                 raise ParseError(
@@ -81,8 +82,9 @@ class UKIRT(EAOFacility):
             (call_type, semester_code, queue_code,
                 proposal_number) = m.groups()
 
-            return (semester_code, queue_code, type_class.by_code(call_type),
-                    int(proposal_number))
+            return (
+                semester_code, queue_code, type_class.by_code(call_type),
+                int(proposal_number))
 
         except ValueError:
             raise ParseError('Could not parse proposal number ')
@@ -177,13 +179,21 @@ class UKIRT(EAOFacility):
             current_user, db, call, can, with_extra)
 
         exempt = UKIRTRequestTotal(
-            total=0.0, instrument=defaultdict(float), brightness=defaultdict(float))
+            total=0.0,
+            instrument=defaultdict(float),
+            brightness=defaultdict(float))
         accepted = UKIRTRequestTotal(
-            total=0.0, instrument=defaultdict(float), brightness=defaultdict(float))
+            total=0.0,
+            instrument=defaultdict(float),
+            brightness=defaultdict(float))
         total = UKIRTRequestTotal(
-            total=0.0, instrument=defaultdict(float), brightness=defaultdict(float))
+            total=0.0,
+            instrument=defaultdict(float),
+            brightness=defaultdict(float))
         original = UKIRTRequestTotal(
-            total=0.0, instrument=defaultdict(float), brightness=defaultdict(float))
+            total=0.0,
+            instrument=defaultdict(float),
+            brightness=defaultdict(float))
 
         accepted_affiliation = defaultdict(float)
         total_affiliation = defaultdict(float)
@@ -318,9 +328,10 @@ class UKIRT(EAOFacility):
 
                 flash('The observing request has been saved.')
 
-                raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id,
-                                           _anchor='request'))
+                raise HTTPRedirect(url_for(
+                    '.proposal_view',
+                    proposal_id=proposal.id,
+                    _anchor='request'))
 
             except UserError as e:
                 message = e.message
@@ -387,11 +398,12 @@ class UKIRT(EAOFacility):
         """
 
         if proposal.decision_accept and not info.get_total().total:
-            raise UserError('An accepted proposal should not have '
-                            'zero total time allocation.')
+            raise UserError(
+                'An accepted proposal should not have '
+                'zero total time allocation.')
 
-        db.sync_ukirt_proposal_allocation(proposal_id=proposal.id,
-                                          records=info)
+        db.sync_ukirt_proposal_allocation(
+            proposal_id=proposal.id, records=info)
 
     def _view_proposal_decision_extra(self, db, proposal, info):
         """

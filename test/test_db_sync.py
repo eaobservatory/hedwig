@@ -55,8 +55,8 @@ class DBSyncTest(DBTestCase):
             BaseAffiliationType, queue_id, records)
         self.assertEqual(n, (6, 0, 0))
 
-        records = self.db.search_affiliation(queue_id=queue_id,
-                                             order_by_id=True)
+        records = self.db.search_affiliation(
+            queue_id=queue_id, order_by_id=True)
         id_ = list(records.keys())
 
         # Delete an affiliation and rename another affiliation to its old name.
@@ -112,8 +112,8 @@ class DBSyncTest(DBTestCase):
             BaseAffiliationType, queue_id, records)
         self.assertEqual(n, (5, 0, 0))
 
-        records = self.db.search_affiliation(queue_id=queue_id,
-                                             order_by_id=True)
+        records = self.db.search_affiliation(
+            queue_id=queue_id, order_by_id=True)
         id_ = list(records.keys())
 
         records[id_[1]] = records[id_[1]]._replace(name='Aff C')
@@ -141,12 +141,14 @@ class DBSyncTest(DBTestCase):
         n = self.db.sync_facility_category(facility_id, records)
         self.assertEqual(n, (4, 0, 0))
 
-        records = self.db.search_category(facility_id=facility_id,
-                                          order_by_id=True)
-        self.assertEqual([x.name for x in records.values()],
-                         ['Cat 1', 'Cat 2', 'Cat 3', 'Cat 4'])
-        self.assertEqual([x.name_abbr for x in records.values()],
-                         ['1', '2', '3', '4'])
+        records = self.db.search_category(
+            facility_id=facility_id, order_by_id=True)
+        self.assertEqual(
+            [x.name for x in records.values()],
+            ['Cat 1', 'Cat 2', 'Cat 3', 'Cat 4'])
+        self.assertEqual(
+            [x.name_abbr for x in records.values()],
+            ['1', '2', '3', '4'])
 
         id_ = list(records.keys())
 
@@ -157,12 +159,14 @@ class DBSyncTest(DBTestCase):
         n = self.db.sync_facility_category(facility_id, records)
         self.assertEqual(n, (0, 3, 0))
 
-        records = self.db.search_category(facility_id=facility_id,
-                                          order_by_id=True)
-        self.assertEqual([x.name for x in records.values()],
-                         ['Cat 1', 'Cat 3', 'Cat 4', 'Cat 5'])
-        self.assertEqual([x.name_abbr for x in records.values()],
-                         ['1', '3', '4', '5'])
+        records = self.db.search_category(
+            facility_id=facility_id, order_by_id=True)
+        self.assertEqual(
+            [x.name for x in records.values()],
+            ['Cat 1', 'Cat 3', 'Cat 4', 'Cat 5'])
+        self.assertEqual(
+            [x.name_abbr for x in records.values()],
+            ['1', '3', '4', '5'])
 
     def test_sync_email(self):
         person_id = self.db.add_person('Test Person')
@@ -172,8 +176,9 @@ class DBSyncTest(DBTestCase):
 
         records = self.db.search_email(person_id=person_id)
 
-        self.assertEqual([x.address for x in records.values()],
-                         ['a@x', 'b@x', 'c@x'])
+        self.assertEqual(
+            [x.address for x in records.values()],
+            ['a@x', 'b@x', 'c@x'])
 
         id_ = list(records.keys())
 
@@ -188,7 +193,9 @@ class DBSyncTest(DBTestCase):
         records = self.db.search_email(person_id=person_id)
 
         # Expect first address to have moved to the end due to re-insertion.
-        self.assertEqual([x.address for x in records.values()],
-                         ['c@x', 'a@x', 'b@x'])
-        self.assertEqual([x.primary for x in records.values()],
-                         [False, False, True])
+        self.assertEqual(
+            [x.address for x in records.values()],
+            ['c@x', 'a@x', 'b@x'])
+        self.assertEqual(
+            [x.primary for x in records.values()],
+            [False, False, True])

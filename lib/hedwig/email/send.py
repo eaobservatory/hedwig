@@ -159,16 +159,19 @@ def send_email_message(message, dry_run=False):
                 from_, recipients, msg)
 
             for (recipient, problem) in refusal.items():
-                logger.error('Email message {} refused for {}: {}: {}',
-                             message.id, recipient, problem[0], problem[1])
+                logger.error(
+                    'Email message {} refused for {}: {}: {}',
+                    message.id, recipient, problem[0], problem[1])
 
     except SMTPException:
-        raise FormattedError('Email message {} refused for all recipients',
-                             message.id)
+        raise FormattedError(
+            'Email message {} refused for all recipients',
+            message.id)
 
     except socket.error:
-        raise FormattedError('Email message {} not sent due to failure '
-                             'to connect to email server', message.id)
+        raise FormattedError(
+            'Email message {} not sent due to failure '
+            'to connect to email server', message.id)
 
     return identifier
 

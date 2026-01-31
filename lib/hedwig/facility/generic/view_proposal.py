@@ -147,7 +147,8 @@ class GenericProposal(object):
                         is_continuation = False
 
                         if copy_proposal_id is None:
-                            raise UserError('No proposal was selected to copy.')
+                            raise UserError(
+                                'No proposal was selected to copy.')
 
                         try:
                             old_proposal = db.get_proposal(
@@ -166,26 +167,31 @@ class GenericProposal(object):
                                 ' for this call.')
 
                         if continuation_proposal_id is None:
-                            raise UserError('No proposal was selected to continue.')
+                            raise UserError(
+                                'No proposal was selected to continue.')
 
                         try:
                             old_proposal = db.get_proposal(
-                                self.id_, continuation_proposal_id, with_members=True)
+                                self.id_, continuation_proposal_id,
+                                with_members=True)
                         except NoSuchRecord:
                             raise ErrorPage('Proposal to continue not found.')
 
                         assert old_proposal.id == continuation_proposal_id
 
                         if continuation_earliest is not None:
-                            if old_proposal.semester_start < continuation_earliest:
-                                raise ErrorPage('Proposal to continue is too old.')
+                            if (old_proposal.semester_start
+                                    < continuation_earliest):
+                                raise ErrorPage(
+                                    'Proposal to continue is too old.')
 
                     else:
                         raise ErrorPage('Action unexpectedly didn\'t match.')
 
                     role_class = self.get_reviewer_roles()
                     can = auth.for_proposal(
-                        group_class, role_class, current_user, db, old_proposal,
+                        group_class, role_class, current_user, db,
+                        old_proposal,
                         auth_cache=auth_cache)
 
                     if not can.view:
@@ -200,7 +206,8 @@ class GenericProposal(object):
 
                     if is_continuation:
                         if old_proposal.state != ProposalState.ACCEPTED:
-                            raise ErrorPage('Proposal to continue not accepted.')
+                            raise ErrorPage(
+                                'Proposal to continue not accepted.')
 
                     else:
                         if ProposalState.is_open(old_proposal.state):
@@ -576,7 +583,8 @@ class GenericProposal(object):
 
                         notes.append({
                             'item': figure_name,
-                            'comment': 'the figure was copied to the proposal.'})
+                            'comment':
+                                'the figure was copied to the proposal.'})
 
         # Copy categories.
         with atn['notes'].accumulate_notes('proposal_abstract') as notes:
@@ -822,13 +830,16 @@ class GenericProposal(object):
         ctx = {
             'title': proposal.title,
             'can_edit': can.edit,
-            'can_remove_self': (ProposalState.can_edit(proposal.state) and
-                                any(x.person_id == current_user.person.id
-                                    for x in proposal.members.values())),
+            'can_remove_self': (
+                ProposalState.can_edit(proposal.state)
+                and any(
+                    x.person_id == current_user.person.id
+                    for x in proposal.members.values())),
             'can_view_review': review_can.view,
             'can_edit_review': review_can.edit,
             'can_view_feedback': feedback_can.view,
-            'can_request_pdf': get_config().getboolean('pdf_request', 'enable_request'),
+            'can_request_pdf': get_config().getboolean(
+                'pdf_request', 'enable_request'),
             'is_submitted': ProposalState.is_submitted(proposal.state),
             'proposal': proposal._replace(members=proposal.members.map_values(
                 lambda x: with_can_view(
@@ -869,9 +880,8 @@ class GenericProposal(object):
         proposal_text = db.search_proposal_text(proposal.id, with_text=True)
         proposal_pdf = db.search_proposal_pdf(proposal.id)
 
-        proposal_fig = db.search_proposal_figure(proposal.id,
-                                                 with_caption=True,
-                                                 with_has_preview=True)
+        proposal_fig = db.search_proposal_figure(
+            proposal.id, with_caption=True, with_has_preview=True)
 
         targets = db.search_target(proposal_id=proposal.id)
         target_total_time = targets.total_time()
@@ -971,7 +981,10 @@ class GenericProposal(object):
                 # We don't already have a template section: add one now.
                 section_ctx = ctx.copy()
 
-                section_ctx['proposal_order'] = OrderedDict(((section, section_name),))
+                section_ctx['proposal_order'] = OrderedDict((
+                    (section, section_name),
+                ))
+
                 section_ctx.update(extra)
 
                 # Omit the title in sections after the first.
@@ -1002,7 +1015,8 @@ class GenericProposal(object):
                     result.append((
                         FigureType.get_mime_type(FigureType.PDF),
                         db.get_proposal_pdf(
-                            proposal_id=None, role=None, pdf_id=pdf.pdf_id).data))
+                            proposal_id=None, role=None,
+                            pdf_id=pdf.pdf_id).data))
 
                     push_section(section, section_name, {
                         '{}_order'.format(section):
@@ -1022,22 +1036,24 @@ class GenericProposal(object):
 
         if form is not None:
             try:
-                db.update_proposal(proposal_id=proposal.id,
-                                   state=int(form['state']),
-                                   state_prev=int(form['state_prev']))
+                db.update_proposal(
+                    proposal_id=proposal.id,
+                    state=int(form['state']),
+                    state_prev=int(form['state_prev']))
 
                 flash('The proposal state has been updated.')
 
-                raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id))
+                raise HTTPRedirect(url_for(
+                    '.proposal_view',
+                    proposal_id=proposal.id))
 
             except UserError as e:
                 message = e.message
 
             except ConsistencyError:
-                    raise ErrorPage(
-                        'The state could not be updated.  Perhaps it changed '
-                        'since you opened the alter state page.')
+                raise ErrorPage(
+                    'The state could not be updated.  Perhaps it changed '
+                    'since you opened the alter state page.')
 
         proposal_code = self.make_proposal_code(db, proposal)
 
@@ -1072,9 +1088,10 @@ class GenericProposal(object):
         # Return the list of messages.
         return report
 
-    def _validate_proposal_extra(self, db, proposal, extra, proposal_order,
-                                 skip_missing_targets=False,
-                                 check_excluded_pi=False):
+    def _validate_proposal_extra(
+            self, db, proposal, extra, proposal_order,
+            skip_missing_targets=False,
+            check_excluded_pi=False):
         affiliation_type_class = self.get_affiliation_types()
         type_class = self.get_call_types()
         reviewer_role_class = self.get_reviewer_roles()
@@ -1270,8 +1287,9 @@ class GenericProposal(object):
                                 'us for help in the event that this error '
                                 'persists.'.format(role_name.lower()),
                                 'Edit {}'.format(role_name.lower()),
-                                url_for('.case_edit',
-                                        proposal_id=proposal.id, role=role)))
+                                url_for(
+                                    '.case_edit',
+                                    proposal_id=proposal.id, role=role)))
                             break
 
                 elif case['pdf'] is not None:
@@ -1284,8 +1302,9 @@ class GenericProposal(object):
                             'for help in the event that this error '
                             'persists.'.format(role_name.lower()),
                             'Edit {}'.format(role_name.lower()),
-                            url_for('.case_edit',
-                                    proposal_id=proposal.id, role=role)))
+                            url_for(
+                                '.case_edit',
+                                proposal_id=proposal.id, role=role)))
 
                 else:
                     messages.append(ValidationMessage(
@@ -1293,8 +1312,9 @@ class GenericProposal(object):
                         'The proposal does not have a {}.'.format(
                             role_name.lower()),
                         'Edit {}'.format(role_name.lower()),
-                        url_for('.case_edit',
-                                proposal_id=proposal.id, role=role)))
+                        url_for(
+                            '.case_edit',
+                            proposal_id=proposal.id, role=role)))
 
         return report
 
@@ -1342,8 +1362,9 @@ class GenericProposal(object):
             else:
                 flash('The submission process has been cancelled.')
 
-            raise HTTPRedirect(url_for('.proposal_view',
-                                       proposal_id=proposal.id))
+            raise HTTPRedirect(url_for(
+                '.proposal_view',
+                proposal_id=proposal.id))
 
         return {
             'title': 'Submit Proposal',
@@ -1400,7 +1421,8 @@ class GenericProposal(object):
 
         recipient_ids = set()
 
-        standard_group = tuple(x for x in notify_group if x != group_class.ADMIN)
+        standard_group = tuple(
+            x for x in notify_group if x != group_class.ADMIN)
 
         if standard_group:
             group_recipients = db.search_group_member(
@@ -1477,8 +1499,9 @@ class GenericProposal(object):
             else:
                 flash('The withdrawl process has been cancelled.')
 
-            raise HTTPRedirect(url_for('.proposal_view',
-                                       proposal_id=proposal.id))
+            raise HTTPRedirect(url_for(
+                '.proposal_view',
+                proposal_id=proposal.id))
 
         return {
             'title': 'Withdraw Proposal',
@@ -1512,8 +1535,9 @@ class GenericProposal(object):
                     title=form['proposal_title'].strip())
                 db.update_proposal(proposal.id, title=proposal.title)
                 flash('The proposal title has been changed.')
-                raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id))
+                raise HTTPRedirect(url_for(
+                    '.proposal_view',
+                    proposal_id=proposal.id))
 
             except UserError as e:
                 message = e.message
@@ -1535,18 +1559,19 @@ class GenericProposal(object):
             extra_initialization=self._view_abstract_edit_init,
             extra_form_read=self._view_abstract_edit_read,
             extra_form_proc=self._view_abstract_edit_proc,
-            target_redir=url_for('.proposal_view', proposal_id=proposal.id,
-                                 _anchor='abstract'))
+            target_redir=url_for(
+                '.proposal_view', proposal_id=proposal.id,
+                _anchor='abstract'))
 
     def _view_abstract_edit_init(self, db, proposal, role):
         proposal_categories = db.search_proposal_category(
             proposal_id=proposal.id)
 
         return {
-            'categories': db.search_category(facility_id=self.id_,
-                                             hidden=False),
-            'categories_selected': set(x.category_id
-                                       for x in proposal_categories.values()),
+            'categories': db.search_category(
+                facility_id=self.id_, hidden=False),
+            'categories_selected': set(
+                x.category_id for x in proposal_categories.values()),
             '_proposal_categories': proposal_categories,
         }
 
@@ -1652,9 +1677,10 @@ class GenericProposal(object):
                         other_person_id=record_deleted.person_id)
 
                 flash('The proposal member list has been updated.')
-                raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id,
-                                           _anchor='members'))
+                raise HTTPRedirect(url_for(
+                    '.proposal_view',
+                    proposal_id=proposal.id,
+                    _anchor='members'))
 
             except UserError as e:
                 message = e.message
@@ -1680,8 +1706,9 @@ class GenericProposal(object):
         has_member_observer = self.get_features().member_observer
 
         message_link = message_invite = None
-        member = dict(editor=None, observer=None, person_id=None,
-                      name='', title=None, email='')
+        member = dict(
+            editor=None, observer=None, person_id=None,
+            name='', title=None, email='')
 
         affiliations = db.search_affiliation(
             queue_id=proposal.queue_id, hidden=False,
@@ -1723,11 +1750,12 @@ class GenericProposal(object):
                     if not person.public:
                         raise ErrorPage('This person\'s record is private.')
 
-                    db.add_member(proposal.id, person.id,
-                                  member['affiliation_id'],
-                                  editor=member['editor'],
-                                  observer=member['observer'],
-                                  adder_person_id=current_user.person.id)
+                    db.add_member(
+                        proposal.id, person.id,
+                        member['affiliation_id'],
+                        editor=member['editor'],
+                        observer=member['observer'],
+                        adder_person_id=current_user.person.id)
 
                     self._message_proposal_invite(
                         current_user, db, proposal=proposal,
@@ -1738,9 +1766,10 @@ class GenericProposal(object):
                         send_token=False)
 
                     flash('{} has been added to the proposal.', person.name)
-                    raise HTTPRedirect(url_for('.proposal_view',
-                                       proposal_id=proposal.id,
-                                       _anchor='members'))
+                    raise HTTPRedirect(url_for(
+                        '.proposal_view',
+                        proposal_id=proposal.id,
+                        _anchor='members'))
 
                 except UserError as e:
                     message_link = e.message
@@ -1752,12 +1781,13 @@ class GenericProposal(object):
                     person_id = db.add_person(
                         member['name'], title=member['title'],
                         primary_email=member['email'])
-                    db.add_member(proposal.id, person_id,
-                                  member['affiliation_id'],
-                                  editor=member['editor'],
-                                  observer=member['observer'],
-                                  adder_person_id=current_user.person.id,
-                                  is_invite=True)
+                    db.add_member(
+                        proposal.id, person_id,
+                        member['affiliation_id'],
+                        editor=member['editor'],
+                        observer=member['observer'],
+                        adder_person_id=current_user.person.id,
+                        is_invite=True)
 
                     self._message_proposal_invite(
                         current_user, db, proposal=proposal,
@@ -1767,8 +1797,9 @@ class GenericProposal(object):
                         affiliation_name=affiliation.name,
                         send_token=True)
 
-                    flash('{} has been added to the proposal.',
-                          member['name'])
+                    flash(
+                        '{} has been added to the proposal.',
+                        member['name'])
 
                     # Return to the proposal page after editing the new
                     # member's institution.
@@ -1861,8 +1892,9 @@ class GenericProposal(object):
 
         db.add_message(
             'Proposal {} invitation'.format(proposal_code),
-            render_email_template('proposal_invitation.txt',
-                                  email_ctx, facility=self),
+            render_email_template(
+                'proposal_invitation.txt',
+                email_ctx, facility=self),
             [person_id])
 
     @with_proposal(permission=PermissionType.EDIT)
@@ -1891,19 +1923,21 @@ class GenericProposal(object):
                     current_user.person.id, PersonLogEvent.MEMBER_REINVITE,
                     proposal_id=proposal.id, other_person_id=member.person_id)
 
-                flash('{} has been re-invited to the proposal.',
-                      member.person_name)
+                flash(
+                    '{} has been re-invited to the proposal.',
+                    member.person_name)
 
-            raise HTTPRedirect(url_for('.proposal_view',
-                                       proposal_id=proposal.id,
-                                       _anchor='members'))
+            raise HTTPRedirect(url_for(
+                '.proposal_view',
+                proposal_id=proposal.id,
+                _anchor='members'))
 
         return {
             'title': 'Re-send Proposal Invitation',
             'message':
                 'Would you like to re-send an invitation '
-                'to proposal {} to {}?'.format(proposal_code,
-                                               member.person_name),
+                'to proposal {} to {}?'.format(
+                    proposal_code, member.person_name),
         }
 
     @with_proposal(permission=PermissionType.VIEW)
@@ -1915,9 +1949,10 @@ class GenericProposal(object):
 
         if form:
             if 'submit_cancel' in form:
-                raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id,
-                                           _anchor='members'))
+                raise HTTPRedirect(url_for(
+                    '.proposal_view',
+                    proposal_id=proposal.id,
+                    _anchor='members'))
 
             elif 'submit_confirm' in form:
                 try:
@@ -1962,9 +1997,10 @@ class GenericProposal(object):
                 if n_update:
                     flash('The list of students has been updated.')
 
-                raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id,
-                                           _anchor='members'))
+                raise HTTPRedirect(url_for(
+                    '.proposal_view',
+                    proposal_id=proposal.id,
+                    _anchor='members'))
 
             except UserError as e:
                 message = e.message
@@ -2005,9 +2041,10 @@ class GenericProposal(object):
                 if n_update:
                     flash('The affiliation has been updated.')
 
-                raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id,
-                                           _anchor='members'))
+                raise HTTPRedirect(url_for(
+                    '.proposal_view',
+                    proposal_id=proposal.id,
+                    _anchor='members'))
 
             except UserError as e:
                 message = e.message
@@ -2035,7 +2072,8 @@ class GenericProposal(object):
         if form is not None:
             try:
                 records[member_id] = records[member_id]._replace(
-                    resolved_institution_id=int_or_none(form['institution_id']))
+                    resolved_institution_id=int_or_none(
+                        form['institution_id']))
 
                 if records[member_id].resolved_institution_id is None:
                     raise UserError('No institution was selected.')
@@ -2047,9 +2085,10 @@ class GenericProposal(object):
 
                 flash('The institution has been updated.')
 
-                raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id,
-                                           _anchor='members'))
+                raise HTTPRedirect(url_for(
+                    '.proposal_view',
+                    proposal_id=proposal.id,
+                    _anchor='members'))
 
             except UserError as e:
                 message = e.message
@@ -2147,9 +2186,10 @@ class GenericProposal(object):
                 if any(updates):
                     flash('The previous proposals list has been saved.')
 
-                raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id,
-                                           _anchor='prev_proposals'))
+                raise HTTPRedirect(url_for(
+                    '.proposal_view',
+                    proposal_id=proposal.id,
+                    _anchor='prev_proposals'))
 
             except UserError as e:
                 message = e.message
@@ -2221,9 +2261,10 @@ class GenericProposal(object):
 
                 flash('The target object list has been saved.')
 
-                raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id,
-                                           _anchor='targets'))
+                raise HTTPRedirect(url_for(
+                    '.proposal_view',
+                    proposal_id=proposal.id,
+                    _anchor='targets'))
 
             except UserError as e:
                 message = e.message
@@ -2259,8 +2300,8 @@ class GenericProposal(object):
 
                 max_record = (max(records.keys()) if records else 0)
 
-                added_records = parse_source_list(buff,
-                                                  number_from=max_record + 1)
+                added_records = parse_source_list(
+                    buff, number_from=max_record + 1)
 
                 # TODO: would be more efficient to have a store-only
                 # version of the sync method.
@@ -2272,12 +2313,14 @@ class GenericProposal(object):
 
                 db.sync_proposal_target(proposal.id, new_records)
 
-                flash('The target object list has been {}.',
-                      ('overwritten' if overwrite else 'updated'))
+                flash(
+                    'The target object list has been {}.',
+                    ('overwritten' if overwrite else 'updated'))
 
-                raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id,
-                                           _anchor='targets'))
+                raise HTTPRedirect(url_for(
+                    '.proposal_view',
+                    proposal_id=proposal.id,
+                    _anchor='targets'))
 
             except UserError as e:
                 message = e.message
@@ -2308,13 +2351,15 @@ class GenericProposal(object):
             proposal, role_class.TOOL_NOTE, proposal.expl_word_lim,
             url_for('.tool_note_edit', proposal_id=proposal.id), form, 10,
             extra_initialization=self._view_tool_note_edit_init,
-            target_redir=url_for('.proposal_view', proposal_id=proposal.id,
-                                 _anchor='targets'))
+            target_redir=url_for(
+                '.proposal_view', proposal_id=proposal.id,
+                _anchor='targets'))
 
     def _view_tool_note_edit_init(self, db, proposal, role):
         return {
-            'help_link': url_for('help.user_page', page_name='target',
-                                 _anchor='checking-your-targets'),
+            'help_link': url_for(
+                'help.user_page', page_name='target',
+                _anchor='checking-your-targets'),
             'target_tools': self.target_tools,
         }
 
@@ -2356,8 +2401,9 @@ class GenericProposal(object):
             'text': text_info,
             'figures': figures,
             'pdf': pdf_info,
-            'help_link': url_for('help.user_page',
-                                 page_name=role_class.url_path(role)),
+            'help_link': url_for(
+                'help.user_page',
+                page_name=role_class.url_path(role)),
             'can_view_text_editor': is_admin,
             'can_view_pdf_uploader': is_admin,
         }
@@ -2403,8 +2449,8 @@ class GenericProposal(object):
                     'The {} can not have figures attached.',
                     name.lower())
 
-            elif len(db.search_proposal_figure(proposal_id=proposal.id,
-                                               role=role)) >= fig_limit:
+            elif len(db.search_proposal_figure(
+                    proposal_id=proposal.id, role=role)) >= fig_limit:
                 raise ErrorPage(
                     'The {} already has the maximum number of figures.',
                     name.lower())
@@ -2412,8 +2458,9 @@ class GenericProposal(object):
             figure = null_tuple(ProposalFigureInfo)._replace(
                 caption='', role=role)
 
-            target = url_for('.case_new_figure',
-                             proposal_id=proposal.id, role=role)
+            target = url_for(
+                '.case_new_figure',
+                proposal_id=proposal.id, role=role)
 
         else:
             try:
@@ -2423,9 +2470,10 @@ class GenericProposal(object):
             except NoSuchRecord:
                 raise HTTPNotFound('Figure not found.')
 
-            target = url_for('.case_edit_figure',
-                             proposal_id=proposal.id, role=role,
-                             fig_id=fig_id)
+            target = url_for(
+                '.case_edit_figure',
+                proposal_id=proposal.id, role=role,
+                fig_id=fig_id)
 
         return self._view_edit_figure(
             current_user, db, form, file_, figure, proposal, None,
@@ -2470,17 +2518,21 @@ class GenericProposal(object):
 
                     type_ = determine_figure_type(buff)
                     if type_ == FigureType.PDF:
-                        (page_count, major_max, minor_max) = determine_pdf_page_count(
-                            buff, with_max_size=True)
+                        (page_count, major_max, minor_max) = \
+                            determine_pdf_page_count(buff, with_max_size=True)
 
                         if page_count != 1:
                             raise UserError(
                                 'The uploaded PDF has multiple pages.')
 
-                        if (major_max > float(config.get('proposal_fig', 'pdf_max_major'))
-                                or minor_max > float(config.get('proposal_fig', 'pdf_max_minor'))):
+                        if (
+                                major_max > float(config.get(
+                                    'proposal_fig', 'pdf_max_major'))
+                                or minor_max > float(config.get(
+                                    'proposal_fig', 'pdf_max_minor'))):
                             raise UserError(
-                                'PDF page size is too large: {:.1f} \u00d7 {:.1f}\u2033.',
+                                'PDF page size is too large: '
+                                '{:.1f} \u00d7 {:.1f}\u2033.',
                                 major_max, minor_max)
 
                     figure_args = {
@@ -2604,8 +2656,9 @@ class GenericProposal(object):
                         db.sync_review_figure(reviewer.id, figures)
 
                 if n_delete:
-                    flash('{} {} been removed.', n_delete,
-                          ('figure has' if n_delete == 1 else 'figures have'))
+                    flash(
+                        '{} {} been removed.', n_delete,
+                        ('figure has' if n_delete == 1 else 'figures have'))
 
                 raise HTTPRedirect(target_redirect)
 
@@ -2695,8 +2748,9 @@ class GenericProposal(object):
 
                 type_ = determine_figure_type(buff)
                 if type_ != FigureType.PDF:
-                    raise UserError('File was of type {} rather than PDF.',
-                                    FigureType.get_name(type_))
+                    raise UserError(
+                        'File was of type {} rather than PDF.',
+                        FigureType.get_name(type_))
 
                 (page_count, major_max, minor_max) = determine_pdf_page_count(
                     buff, with_max_size=True)
@@ -2707,10 +2761,14 @@ class GenericProposal(object):
                         page_count,
                         ('page' if page_count == 1 else 'pages'))
 
-                if (major_max > float(config.get('proposal_pdf', 'max_size_major'))
-                        or minor_max > float(config.get('proposal_pdf', 'max_size_minor'))):
+                if (
+                        major_max > float(config.get(
+                            'proposal_pdf', 'max_size_major'))
+                        or minor_max > float(config.get(
+                            'proposal_pdf', 'max_size_minor'))):
                     raise UserError(
-                        'PDF page size is too large: {:.1f} \u00d7 {:.1f}\u2033.',
+                        'PDF page size is too large: '
+                        '{:.1f} \u00d7 {:.1f}\u2033.',
                         major_max, minor_max)
 
                 db.set_proposal_pdf(
@@ -2732,10 +2790,12 @@ class GenericProposal(object):
             'message': message,
             'mime_types': [FigureType.get_mime_type(FigureType.PDF)],
             'max_size': max_size,
-            'max_page_size': config.get('proposal_pdf', 'max_size_description'),
+            'max_page_size': config.get(
+                'proposal_pdf', 'max_size_description'),
             'page_limit': page_limit,
-            'target': url_for('.case_edit_pdf',
-                              proposal_id=proposal.id, role=role),
+            'target': url_for(
+                '.case_edit_pdf',
+                proposal_id=proposal.id, role=role),
         }
 
     @with_proposal(permission=PermissionType.VIEW)
@@ -2752,8 +2812,9 @@ class GenericProposal(object):
     def view_case_view_pdf_preview(
             self, current_user, db, proposal, can, page, role, md5sum):
         try:
-            return db.get_proposal_pdf_preview(proposal.id, role, page,
-                                               md5sum=md5sum)
+            return db.get_proposal_pdf_preview(
+                proposal.id, role, page,
+                md5sum=md5sum)
         except NoSuchRecord:
             raise HTTPNotFound('PDF preview page not found.')
 
@@ -2814,9 +2875,10 @@ class GenericProposal(object):
                         db.sync_review_calculation(reviewer.id, calculations)
 
                 if n_delete:
-                    flash('{} {} been removed.', n_delete,
-                          ('calculation has' if n_delete == 1 else
-                           'calculations have'))
+                    flash(
+                        '{} {} been removed.', n_delete,
+                        ('calculation has' if n_delete == 1 else
+                         'calculations have'))
 
                 raise HTTPRedirect(target_redirect)
 
@@ -3112,17 +3174,18 @@ class GenericProposal(object):
                         '{} is too long: {} / {} words',
                         name.capitalize(), word_count, word_limit)
 
-                db.set_proposal_text(role_class, proposal.id, role,
-                                     text.text, text.format, word_count,
-                                     current_user.person.id)
+                db.set_proposal_text(
+                    role_class, proposal.id, role,
+                    text.text, text.format, word_count,
+                    current_user.person.id)
 
                 if extra_form_proc is not None:
                     ctx = extra_form_proc(db, proposal, role, ctx)
 
                 flash('The {} has been saved.', name.lower())
-                raise HTTPRedirect(url_for('.proposal_view',
-                                           proposal_id=proposal.id)
-                                   if target_redir is None else target_redir)
+                raise HTTPRedirect(
+                    url_for('.proposal_view', proposal_id=proposal.id)
+                    if target_redir is None else target_redir)
 
             except UserError as e:
                 message = e.message
@@ -3134,8 +3197,8 @@ class GenericProposal(object):
                 text = null_tuple(ProposalText)._replace(
                     text='', format=FormatType.PLAIN)
 
-        is_case_text = (role in
-                        (role_class.TECHNICAL_CASE, role_class.SCIENCE_CASE))
+        is_case_text = (
+            role in (role_class.TECHNICAL_CASE, role_class.SCIENCE_CASE))
 
         title_suffix = 'Text' if is_case_text else ''
 
@@ -3166,12 +3229,14 @@ class GenericProposal(object):
                 calculations.append(CalculationExtra(
                     *calc,
                     calculator_name='Calculator {}'.format(calc.calculator_id),
-                    inputs=[CalculatorValue(x, x, None, '{}', None)
-                            for x in calc.input],
-                    outputs=[CalculatorValue(x, x, None, '{}', None)
-                             for x in calc.output],
-                    mode_info=CalculatorMode(None,
-                                             'Mode {}'.format(calc.mode))))
+                    inputs=[
+                        CalculatorValue(x, x, None, '{}', None)
+                        for x in calc.input],
+                    outputs=[
+                        CalculatorValue(x, x, None, '{}', None)
+                        for x in calc.output],
+                    mode_info=CalculatorMode(
+                        None, 'Mode {}'.format(calc.mode))))
             else:
                 calculator = calc_info.calculator
                 mode_info = calculator.get_mode_info(calc.mode)
@@ -3186,8 +3251,8 @@ class GenericProposal(object):
                 # Call the calculator method to compact the calculation
                 # where possible.
                 if condense:
-                    calculator.condense_calculation(calc.mode, calc.version,
-                                                    calculation)
+                    calculator.condense_calculation(
+                        calc.mode, calc.version, calculation)
 
                 calculations.append(calculation)
 

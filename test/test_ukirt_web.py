@@ -46,10 +46,12 @@ class UKIRTWebAppTestCase(WebAppTestCase):
         # ... request.
         self.db.sync_ukirt_proposal_request(
             proposal_id, UKIRTRequestCollection([
-                (1, UKIRTRequest(None, None, UKIRTInstrument.WFCAM,
-                                 UKIRTBrightness.BRIGHT, 8.0)),
-                (2, UKIRTRequest(None, None, UKIRTInstrument.UFTI,
-                                 UKIRTBrightness.DARK, 55.0)),
+                (1, UKIRTRequest(
+                    None, None, UKIRTInstrument.WFCAM,
+                    UKIRTBrightness.BRIGHT, 8.0)),
+                (2, UKIRTRequest(
+                    None, None, UKIRTInstrument.UFTI,
+                    UKIRTBrightness.DARK, 55.0)),
             ]))
 
         # Copy the proposal.

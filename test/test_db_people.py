@@ -106,14 +106,16 @@ class DBPeopleTest(DBTestCase):
         self.assertNotIn(user_id_3, records)
 
         # Attempting to reference a non-existant person is an error.
-        with self.assertRaisesRegex(ConsistencyError,
-                                    '^person does not exist'):
+        with self.assertRaisesRegex(
+                ConsistencyError,
+                '^person does not exist'):
             self.db.add_user('user4', 'pass4', person_id=1999999)
 
         # Check that we also detects this error via.
         with self.assertRaisesRegex(ConsistencyError, '^no rows matched'):
-            self.db.add_user('user4', 'pass4', person_id=1999999,
-                             _test_skip_check=True)
+            self.db.add_user(
+                'user4', 'pass4', person_id=1999999,
+                _test_skip_check=True)
 
         # Test changing a password.
         self.assertEqual(self.db.authenticate_user('user3', 'pass3'), user_id_3)
@@ -221,8 +223,9 @@ class DBPeopleTest(DBTestCase):
 
         # Check that the database also traps this error.
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_person('User One', user_id=1999999,
-                               _test_skip_check=True)
+            self.db.add_person(
+                'User One', user_id=1999999,
+                _test_skip_check=True)
 
         # Create a person which references a valid user_id.
         user_id = self.db.add_user('user1', 'pass1')
@@ -231,14 +234,16 @@ class DBPeopleTest(DBTestCase):
 
         # Check that we can't have two person records referencing the same
         # user.
-        with self.assertRaisesRegex(ConsistencyError,
-                                    '^person already exists with user_id'):
+        with self.assertRaisesRegex(
+                ConsistencyError,
+                '^person already exists with user_id'):
             person_id = self.db.add_person('User Two', user_id=user_id)
 
         # Check that the database also recognises this error.
         with self.assertRaises(DatabaseIntegrityError):
-            person_id = self.db.add_person('User Two', user_id=user_id,
-                                           _test_skip_check=True)
+            person_id = self.db.add_person(
+                'User Two', user_id=user_id,
+                _test_skip_check=True)
 
         # Try getting a person by user_id.
         result = self.db.get_person(person_id=None, user_id=user_id)
@@ -294,14 +299,16 @@ class DBPeopleTest(DBTestCase):
             self.db.add_person('Invalid Email', primary_email='@z')
 
         # Test person_id existance checking.
-        with self.assertRaisesRegex(ConsistencyError,
-                                    '^person does not exist'):
+        with self.assertRaisesRegex(
+                ConsistencyError,
+                '^person does not exist'):
             email_id = self.db.add_email(1999999, 'zero@users.net')
 
         # Test that the database check for the same thing works.
         with self.assertRaises(DatabaseIntegrityError):
-            email_id = self.db.add_email(1999999, 'zero@users.net',
-                                         _test_skip_check=True)
+            email_id = self.db.add_email(
+                1999999, 'zero@users.net',
+                _test_skip_check=True)
 
         # Test that the database prevents duplicates for the same person.
         with self.assertRaises(DatabaseIntegrityError):
@@ -507,9 +514,10 @@ class DBPeopleTest(DBTestCase):
         email_3b = self.db.add_email(person_3, 'shared@email')
 
         # Check all the records were created successfully.
-        for id_ in (user_1, user_2, person_1, person_2, person_3,
-                    email_1a, email_2a, email_2b, email_2c,
-                    email_3a, email_3b):
+        for id_ in (
+                user_1, user_2, person_1, person_2, person_3,
+                email_1a, email_2a, email_2b, email_2c,
+                email_3a, email_3b):
             self.assertIsInstance(id_, int)
 
         # Try searching by user ID.
@@ -564,8 +572,9 @@ class DBPeopleTest(DBTestCase):
         self.assertIsInstance(person_id, int)
 
         # Try getting a non-existent institution record.
-        with self.assertRaisesRegex(NoSuchRecord,
-                                    '^institution does not exist'):
+        with self.assertRaisesRegex(
+                NoSuchRecord,
+                '^institution does not exist'):
             institution = self.db.get_institution(1999999)
 
         # Check that we can add an institution.
@@ -634,16 +643,23 @@ class DBPeopleTest(DBTestCase):
             institution_id, institution_id2)))
 
         # Try updating an institution.
-        with self.assertRaisesRegex(Error,
-                                    '^no institution updates specified'):
+        with self.assertRaisesRegex(
+                Error,
+                '^no institution updates specified'):
             self.db.update_institution(institution_id, person_id)
-        with self.assertRaisesRegex(ConsistencyError,
-                                    '^institution does not exist'):
+        with self.assertRaisesRegex(
+                ConsistencyError,
+                '^institution does not exist'):
             self.db.update_institution(1999999, person_id, '...')
-        with self.assertRaisesRegex(ConsistencyError, '^no rows matched'):
-            self.db.update_institution(1999999, person_id, '...',
-                                       _test_skip_log=True)
-        with self.assertRaisesRegex(UserError, 'Country code not recognised'):
+        with self.assertRaisesRegex(
+                ConsistencyError,
+                '^no rows matched'):
+            self.db.update_institution(
+                1999999, person_id, '...',
+                _test_skip_log=True)
+        with self.assertRaisesRegex(
+                UserError,
+                'Country code not recognised'):
             self.db.update_institution(institution_id, person_id, country='BX')
 
         self.db.update_institution(institution_id, person_id,
@@ -812,8 +828,8 @@ class DBPeopleTest(DBTestCase):
         self.assertIsInstance(institution_id, int)
 
         # Update the person to reference the new institution.
-        self.db.update_person(person_id, institution_id=institution_id,
-                              public=True)
+        self.db.update_person(
+            person_id, institution_id=institution_id, public=True)
 
         # Get and inspect the updated record.
         person = self.db.get_person(person_id)
@@ -825,10 +841,12 @@ class DBPeopleTest(DBTestCase):
         with self.assertRaisesRegex(Error, '^no person updates specified'):
             self.db.update_person(person_id)
         with self.assertRaisesRegex(ConsistencyError, '^person does not'):
-            self.db.update_person(1999999, institution_id=institution_id)
+            self.db.update_person(
+                1999999, institution_id=institution_id)
         with self.assertRaisesRegex(ConsistencyError, '^no rows matched'):
-            self.db.update_person(1999999, institution_id=institution_id,
-                                  _test_skip_check=True)
+            self.db.update_person(
+                1999999, institution_id=institution_id,
+                _test_skip_check=True)
         with self.assertRaises(DatabaseIntegrityError):
             self.db.update_person(person_id, institution_id=1999999)
 
@@ -945,8 +963,9 @@ class DBPeopleTest(DBTestCase):
         # Check constraint on whether the duplicate user is registered.
         with self.assertRaisesRegex(
                 ConsistencyError, 'is not already registered'):
-            self.db.merge_person_records(person_1, person_2,
-                                         duplicate_person_registered=True)
+            self.db.merge_person_records(
+                person_1, person_2,
+                duplicate_person_registered=True)
 
         user_2 = self.db.add_user('user2', 'pass2', person_id=person_2)
         self.assertIsInstance(user_2, int)
@@ -955,8 +974,9 @@ class DBPeopleTest(DBTestCase):
 
         with self.assertRaisesRegex(
                 ConsistencyError, 'is already registered'):
-            self.db.merge_person_records(person_1, person_2,
-                                         duplicate_person_registered=False)
+            self.db.merge_person_records(
+                person_1, person_2,
+                duplicate_person_registered=False)
 
         # Perform the merge.
         self.db.merge_person_records(person_1, person_2)
@@ -1010,8 +1030,9 @@ class DBPeopleTest(DBTestCase):
 
         # Using a bad token should do nothing.
         with self.assertRaises(NoSuchRecord):
-            self.db.use_password_reset_token('not a valid token', 'pass2',
-                                             remote_addr=None)
+            self.db.use_password_reset_token(
+                'not a valid token', 'pass2',
+                remote_addr=None)
 
         self.assertEqual(self.db.authenticate_user('user1', 'pass1'), user_id)
 
@@ -1024,8 +1045,8 @@ class DBPeopleTest(DBTestCase):
 
         # Using the token should return this user name and the password
         # should have been changed.
-        token_user_name = self.db.use_password_reset_token(token, 'pass3',
-                                                           remote_addr=None)
+        token_user_name = self.db.use_password_reset_token(
+            token, 'pass3', remote_addr=None)
         self.assertEqual(token_user_name, 'user1')
 
         self.assertIsNone(self.db.authenticate_user('user1', 'pass1'))
@@ -1044,8 +1065,8 @@ class DBPeopleTest(DBTestCase):
             user_id, remote_addr=None, _test_skip_check=True)
         with self.assertRaises(NoSuchRecord):
             self.db.use_password_reset_token(token1, 'pass5', remote_addr=None)
-        token_user_name = self.db.use_password_reset_token(token2, 'pass6',
-                                                           remote_addr=None)
+        token_user_name = self.db.use_password_reset_token(
+            token2, 'pass6', remote_addr=None)
         self.assertEqual(token_user_name, 'user1')
 
         # Create a token and artificially age it by putting the expiry
@@ -1084,8 +1105,9 @@ class DBPeopleTest(DBTestCase):
             self.db.use_invitation('not a valid token', user_id=user_id)
 
         # Try check that the user exists.
-        with self.assertRaisesRegex(ConsistencyError,
-                                    'user does not exist'):
+        with self.assertRaisesRegex(
+                ConsistencyError,
+                'user does not exist'):
             self.db.use_invitation(token, user_id=1999999)
 
         # Try using the token: user_id is None before but set afterwards.
@@ -1114,13 +1136,16 @@ class DBPeopleTest(DBTestCase):
             [UserLogEvent.USE_INVITE, UserLogEvent.CREATE])
 
         # Check error trapping.
-        with self.assertRaisesRegex(ConsistencyError,
-                                    'person does not exist'):
+        with self.assertRaisesRegex(
+                ConsistencyError,
+                'person does not exist'):
             self.db.issue_invitation(1999999)
-        with self.assertRaises(DatabaseIntegrityError):
+        with self.assertRaises(
+                DatabaseIntegrityError):
             self.db.issue_invitation(1999999, _test_skip_check=True)
-        with self.assertRaisesRegex(ConsistencyError,
-                                    'person is already registered'):
+        with self.assertRaisesRegex(
+                ConsistencyError,
+                'person is already registered'):
             self.db.issue_invitation(person_id)
 
         # Try artificially aging a token.
@@ -1140,8 +1165,9 @@ class DBPeopleTest(DBTestCase):
         (token, expiry) = self.db.issue_invitation(person_id)
         user_id_2 = self.db.add_user('user2', 'pass2')
         user_id_3 = self.db.add_user('user3', 'pass3', person_id=person_id)
-        with self.assertRaisesRegex(ConsistencyError,
-                                    'no rows matched setting new user_id'):
+        with self.assertRaisesRegex(
+                ConsistencyError,
+                'no rows matched setting new user_id'):
             self.db.use_invitation(token, user_id=user_id_2)
 
     def test_invitation_user_admin(self):
@@ -1154,8 +1180,9 @@ class DBPeopleTest(DBTestCase):
         # fail unless the check is disabled.
         with self.assertRaisesRegex(UserError, 'administrative privileges'):
             self.db.issue_invitation(person_id)
-        (token, expiry) = self.db.issue_invitation(person_id,
-                                                   _test_skip_check=True)
+        (token, expiry) = self.db.issue_invitation(
+            person_id,
+            _test_skip_check=True)
 
         # Try to accept the invitation to register as that person.
         user_id = self.db.add_user('user1', 'pass1')
@@ -1189,13 +1216,15 @@ class DBPeopleTest(DBTestCase):
         self.assertRegex(token, '^[0-9a-f]{32}$')
 
         # Try check that the person exists.
-        with self.assertRaisesRegex(ConsistencyError,
-                                    'person does not exist'):
+        with self.assertRaisesRegex(
+                ConsistencyError,
+                'person does not exist'):
             self.db.use_invitation(token, new_person_id=1999999)
 
         # Accept the invitation with the existing new person record.
-        old_user_record = self.db.use_invitation(token,
-                                                 new_person_id=person_id_new)
+        old_user_record = self.db.use_invitation(
+            token,
+            new_person_id=person_id_new)
 
         # Check the old person record was returned correctly.
         self.assertIsInstance(old_user_record, Person)
@@ -1214,8 +1243,9 @@ class DBPeopleTest(DBTestCase):
 
         # The proposal members should by the original author and new person.
         proposal = self.db.get_proposal(None, proposal_id, with_members=True)
-        self.assertEqual([x.person_id for x in proposal.members.values()],
-                         [person_id_1, person_id_new])
+        self.assertEqual(
+            [x.person_id for x in proposal.members.values()],
+            [person_id_1, person_id_new])
 
         # The invitation should have been removed.
         person_id_new_2 = self.db.add_person('Person New 2')
@@ -1357,9 +1387,10 @@ class DBPeopleTest(DBTestCase):
         """
 
         facility_id = self.db.ensure_facility('test')
-        semester_id = self.db.add_semester(facility_id, 'test', 'test',
-                                           datetime(2000, 1, 1),
-                                           datetime(2000, 6, 30))
+        semester_id = self.db.add_semester(
+            facility_id, 'test', 'test',
+            datetime(2000, 1, 1),
+            datetime(2000, 6, 30))
         queue_id = self.db.add_queue(facility_id, 'test', 'test')
         call_id = self.db.add_call(
             BaseCallType, semester_id, queue_id, BaseCallType.STANDARD,
@@ -1369,7 +1400,8 @@ class DBPeopleTest(DBTestCase):
             False, '', 500, 4, 1, 366)
         affiliation_id = self.db.add_affiliation(
             BaseAffiliationType, queue_id, 'Aff/n 1')
-        proposal_id = self.db.add_proposal(call_id, person_id,
-                                           affiliation_id, 'Proposal 1')
+        proposal_id = self.db.add_proposal(
+            call_id, person_id,
+            affiliation_id, 'Proposal 1')
 
         return (proposal_id, affiliation_id)

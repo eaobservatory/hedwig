@@ -209,6 +209,7 @@ class AffiliationCollection(ResultCollection, CollectionByQueue):
             if items:
                 yield (type_, type(self)(items))
 
+
 class AnnotationCollection(ResultCollection, CollectionByType):
     """
     Class to hold the results of a search for annotations.
@@ -320,8 +321,9 @@ class EmailCollection(ResultCollection):
                 n_primary += 1
 
             if email.address in seen_address:
-                raise UserError('The address "{}" appears more than once.',
-                                email.address)
+                raise UserError(
+                    'The address "{}" appears more than once.',
+                    email.address)
             seen_address.add(email.address)
 
             if not is_valid_email(email.address):
@@ -346,18 +348,20 @@ class GroupMemberCollection(
         (False, ('queue_name', 'queue_id', 'group_type', 'id')),
     )
 
-    def has_entry(self, group_type=None, queue_id=None,
-                  person_id=None, facility_id=None):
+    def has_entry(
+            self, group_type=None, queue_id=None,
+            person_id=None, facility_id=None):
         """
         Check whether the collection has an entry matching the given
         criteria.
         """
 
         for x in self.values():
-            if (all((matches_constraint(x.group_type, group_type),
-                     matches_constraint(x.queue_id, queue_id),
-                     matches_constraint(x.person_id, person_id),
-                     matches_constraint(x.facility_id, facility_id)))):
+            if (all((
+                    matches_constraint(x.group_type, group_type),
+                    matches_constraint(x.queue_id, queue_id),
+                    matches_constraint(x.person_id, person_id),
+                    matches_constraint(x.facility_id, facility_id)))):
                 return True
 
         return False
@@ -372,13 +376,14 @@ class GroupMemberCollection(
         members.
         """
 
-        return [x for x in self.values()
-                if matches_constraint(x.group_type, group_type)
-                and matches_constraint(x.facility_id, facility_id)]
+        return [
+            x for x in self.values()
+            if matches_constraint(x.group_type, group_type)
+            and matches_constraint(x.facility_id, facility_id)]
 
 
-class MemberCollection(ResultCollection, CollectionByProposal,
-                       CollectionOrdered):
+class MemberCollection(
+        ResultCollection, CollectionByProposal, CollectionOrdered):
     """
     Class to hold a collection of proposal members.
     """
@@ -519,8 +524,9 @@ class MessageRecipientCollection(ResultCollection):
         the entries which match the given proposal.
         """
 
-        return type(self)((k, v) for (k, v) in self.items()
-                          if v.message_id == message_id)
+        return type(self)(
+            (k, v) for (k, v) in self.items()
+            if v.message_id == message_id)
 
 
 class PrevProposalCollection(ResultCollection, CollectionOrdered):
@@ -635,8 +641,9 @@ class PrevProposalCollection(ResultCollection, CollectionOrdered):
         referenced).
         """
 
-        return type(self)((k, v) for (k, v) in self.items()
-                          if v.this_proposal_id == this_proposal_id)
+        return type(self)(
+            (k, v) for (k, v) in self.items()
+            if v.this_proposal_id == this_proposal_id)
 
 
 class ProposalCollection(
@@ -915,8 +922,9 @@ class SiteGroupMemberCollection(ResultCollection):
         """
 
         for x in self.values():
-            if (all((matches_constraint(x.site_group_type, site_group_type),
-                     matches_constraint(x.person_id, person_id)))):
+            if (all((
+                    matches_constraint(x.site_group_type, site_group_type),
+                    matches_constraint(x.person_id, person_id)))):
                 return True
 
         return False
@@ -926,8 +934,9 @@ class SiteGroupMemberCollection(ResultCollection):
         Get a list of the group members with the given role.
         """
 
-        return [x for x in self.values()
-                if matches_constraint(x.site_group_type, site_group_type)]
+        return [
+            x for x in self.values()
+            if matches_constraint(x.site_group_type, site_group_type)]
 
 
 class TargetCollection(ResultCollection, CollectionOrdered,
@@ -1049,8 +1058,9 @@ class TargetCollection(ResultCollection, CollectionOrdered,
             else:
                 note = None
 
-            ans[k] = v._replace(system=system, x=x, y=y,
-                                time=time, priority=priority, note=note)
+            ans[k] = v._replace(
+                system=system, x=x, y=y,
+                time=time, priority=priority, note=note)
 
         return ans
 
@@ -1066,7 +1076,8 @@ class TargetCollection(ResultCollection, CollectionOrdered,
             if not (v.x is None or v.y is None):
                 ans.append(TargetObject(
                     v.name, v.system,
-                    coord=coord_from_dec_deg(v.system, v.x, v.y), time=v.time))
+                    coord=coord_from_dec_deg(v.system, v.x, v.y),
+                    time=v.time))
 
         return ans
 

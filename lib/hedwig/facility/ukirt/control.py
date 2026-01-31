@@ -91,8 +91,9 @@ class UKIRTPart(object):
 
         return ans
 
-    def sync_ukirt_proposal_allocation(self, proposal_id, records,
-                                       _test_skip_check=False):
+    def sync_ukirt_proposal_allocation(
+            self, proposal_id, records,
+            _test_skip_check=False):
         """
         Update the observing allocations for the given proposal.
         """
@@ -111,8 +112,9 @@ class UKIRTPart(object):
                     ukirt_allocation.c.instrument,
                     ukirt_allocation.c.brightness))
 
-    def sync_ukirt_proposal_request(self, proposal_id, records,
-                                    _test_skip_check=False):
+    def sync_ukirt_proposal_request(
+            self, proposal_id, records,
+            _test_skip_check=False):
         """
         Update the observing requests for the given proposal.
         """

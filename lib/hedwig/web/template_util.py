@@ -149,8 +149,10 @@ def register_template_utils(app):
         return _chain(*sequences)
 
     @app.template_filter()
-    def color_scale(value,
-                    color_start=(1.0, 1.0, 1.0), color_end=(0.0, 0.5, 0.0)):
+    def color_scale(
+            value,
+            color_start=(1.0, 1.0, 1.0),
+            color_end=(0.0, 0.5, 0.0)):
         """
         Convert a fractional value (0.0 - 1.0) to an HTML-style color
         by interpolating between `color_start` and `color_end`.

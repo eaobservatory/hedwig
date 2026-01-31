@@ -123,8 +123,9 @@ class EnumTypeTestCase(TestCase):
             self.assertIsInstance(type_name, string_type)
 
         self.assertIsNone(BaseCallType.get_code(BaseCallType.STANDARD))
-        self.assertIsInstance(BaseCallType.get_code(BaseCallType.IMMEDIATE),
-                              string_type)
+        self.assertIsInstance(
+            BaseCallType.get_code(BaseCallType.IMMEDIATE),
+            string_type)
 
         self.assertEqual(BaseCallType.by_code(None), BaseCallType.STANDARD)
         self.assertEqual(BaseCallType.by_code('I'), BaseCallType.IMMEDIATE)
@@ -178,24 +179,26 @@ class EnumTypeTestCase(TestCase):
         # Test "is_valid" method.
         self.assertFalse(MessageState.is_valid(999))
         self.assertFalse(MessageState.is_valid(MessageState.SENDING))
-        self.assertTrue(MessageState.is_valid(MessageState.SENDING,
-                                              is_system=True))
-        self.assertTrue(MessageState.is_valid(MessageState.UNSENT,
-                                              is_system=True))
+        self.assertTrue(MessageState.is_valid(
+            MessageState.SENDING, is_system=True))
+        self.assertTrue(MessageState.is_valid(
+            MessageState.UNSENT, is_system=True))
         self.assertTrue(MessageState.is_valid(MessageState.UNSENT))
 
         # Test "get_options" method.
         states = MessageState.get_options(is_system=True)
         self.assertIsInstance(states, dict)
-        self.assertEqual(set(states.keys()),
-                         set((MessageState.UNSENT, MessageState.SENDING,
-                              MessageState.SENT, MessageState.DISCARD,
-                              MessageState.ERROR)))
+        self.assertEqual(
+            set(states.keys()), set((
+                MessageState.UNSENT, MessageState.SENDING,
+                MessageState.SENT, MessageState.DISCARD,
+                MessageState.ERROR)))
 
         states = MessageState.get_options()
         self.assertIsInstance(states, dict)
-        self.assertEqual(set(states.keys()),
-                         set((MessageState.UNSENT, MessageState.DISCARD)))
+        self.assertEqual(
+            set(states.keys()), set((
+                MessageState.UNSENT, MessageState.DISCARD)))
 
     def test_message_thread_type(self):
         self.assertFalse(MessageThreadType.is_recipient_public(
@@ -308,8 +311,9 @@ class EnumTypeTestCase(TestCase):
         self.assertFalse(ProposalState.is_open(ProposalState.ACCEPTED))
         self.assertFalse(ProposalState.is_open(ProposalState.HELD_OPEN))
 
-        self.assertEqual(ProposalState.by_name('accepted'),
-                         ProposalState.ACCEPTED)
+        self.assertEqual(
+            ProposalState.by_name('accepted'),
+            ProposalState.ACCEPTED)
         with self.assertRaisesRegex(NoSuchValue, 'not recognised'):
             ProposalState.by_name('not a real state')
 
@@ -474,8 +478,9 @@ class EnumTypeTestCase(TestCase):
         self.assertIn(RequestState.DISCARD, unready)
 
     def test_review_state(self):
-        self.assertEqual(ReviewState.get_name(ReviewState.NOT_DONE),
-                         'Not done')
+        self.assertEqual(
+            ReviewState.get_name(ReviewState.NOT_DONE),
+            'Not done')
 
         self.assertTrue(ReviewState.is_valid(ReviewState.DONE))
 
@@ -594,11 +599,14 @@ class EnumTypeTestCase(TestCase):
                  ProposalState.ACCEPTED, ProposalState.REJECTED)))
 
     def test_semester_state(self):
-        states = [SemesterState.FUTURE, SemesterState.CURRENT,
-                  SemesterState.PAST]
+        states = [
+            SemesterState.FUTURE,
+            SemesterState.CURRENT,
+            SemesterState.PAST]
 
-        self.assertEqual(SemesterState.get_name(SemesterState.FUTURE),
-                         'Future')
+        self.assertEqual(
+            SemesterState.get_name(SemesterState.FUTURE),
+            'Future')
 
         for state in states:
             self.assertIsInstance(SemesterState.get_name(state), string_type)
@@ -626,10 +634,12 @@ class EnumTypeTestCase(TestCase):
             BaseTextRole.get_url_paths(),
             ['technical', 'scientific', 'continuation'])
 
-        self.assertEqual(BaseTextRole.by_url_path('scientific'),
-                         BaseTextRole.SCIENCE_CASE)
-        self.assertEqual(BaseTextRole.by_url_path('technical'),
-                         BaseTextRole.TECHNICAL_CASE)
+        self.assertEqual(
+            BaseTextRole.by_url_path('scientific'),
+            BaseTextRole.SCIENCE_CASE)
+        self.assertEqual(
+            BaseTextRole.by_url_path('technical'),
+            BaseTextRole.TECHNICAL_CASE)
 
         with self.assertRaisesRegex(NoSuchValue, 'path .* not recognised'):
             BaseTextRole.by_url_path('something_else')

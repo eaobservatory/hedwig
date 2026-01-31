@@ -87,8 +87,9 @@ def parse_source_list(source_list, number_from=1, as_object_list=False):
 
             system_name = target.pop('system')
             if system_name is None:
-                raise UserError('No coordinate system given for "{}".',
-                                target_name)
+                raise UserError(
+                    'No coordinate system given for "{}".',
+                    target_name)
 
             system = systems.get(system_name.upper(), None)
 

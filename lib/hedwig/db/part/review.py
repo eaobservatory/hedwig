@@ -26,7 +26,8 @@ from sqlalchemy.sql.functions import count
 from ...error import ConsistencyError, Error, FormattedError, \
     NoSuchRecord, UserError
 from ...type.collection import GroupMemberCollection, ResultCollection, \
-    ReviewerCollection, ReviewerAcceptanceCollection, ReviewDeadlineCollection, \
+    ReviewerCollection, ReviewerAcceptanceCollection, \
+    ReviewDeadlineCollection, \
     ReviewFigureCollection
 from ...type.enum import Assessment, FormatType, ReviewState
 from ...type.simple import GroupMember, Note, \
@@ -43,19 +44,22 @@ from ..meta import affiliation_weight_note, available_note, \
 
 
 class ReviewPart(object):
-    def add_group_member(self, group_class, queue_id, group_type, person_id,
-                         _conn=None, _test_skip_check=False):
+    def add_group_member(
+            self, group_class, queue_id, group_type, person_id,
+            _conn=None, _test_skip_check=False):
         if not group_class.is_valid(group_type):
             raise Error('invalid group type')
 
         with self._transaction(_conn=_conn) as conn:
             if not _test_skip_check:
                 if not self._exists_id(conn, queue, queue_id):
-                    raise ConsistencyError('queue does not exist with id={}',
-                                           queue_id)
+                    raise ConsistencyError(
+                        'queue does not exist with id={}',
+                        queue_id)
                 if not self._exists_id(conn, person, person_id):
-                    raise ConsistencyError('person does not exist with id={}',
-                                           person_id)
+                    raise ConsistencyError(
+                        'person does not exist with id={}',
+                        person_id)
 
             result = conn.execute(group_member.insert().values({
                 group_member.c.queue_id: queue_id,
@@ -65,8 +69,9 @@ class ReviewPart(object):
 
         return result.inserted_primary_key[0]
 
-    def add_reviewer(self, role_class, proposal_id, person_id, role,
-                     _test_skip_check=False, _conn=None):
+    def add_reviewer(
+            self, role_class, proposal_id, person_id, role,
+            _test_skip_check=False, _conn=None):
         try:
             role_info = role_class.get_info(role)
         except KeyError:
@@ -157,9 +162,10 @@ class ReviewPart(object):
             key_value=call_id,
             _conn=_conn)
 
-    def delete_reviewer(self, reviewer_id=None,
-                        proposal_id=None, person_id=None, role=None,
-                        delete_review=False, _conn=None):
+    def delete_reviewer(
+            self, reviewer_id=None,
+            proposal_id=None, person_id=None, role=None,
+            delete_review=False, _conn=None):
         """
         Delete a reviewer record from the database.
 
@@ -190,13 +196,15 @@ class ReviewPart(object):
                 stmt = stmt.where(reviewer.c.id == reviewer_id)
 
             elif proposal_id is None or person_id is None or role is None:
-                raise Error('Either reviewer_id or proposal/person/role '
-                            'must be specified.')
+                raise Error(
+                    'Either reviewer_id or proposal/person/role '
+                    'must be specified.')
 
             else:
-                stmt = stmt.where(and_(reviewer.c.proposal_id == proposal_id,
-                                       reviewer.c.person_id == person_id,
-                                       reviewer.c.role == role))
+                stmt = stmt.where(and_(
+                    reviewer.c.proposal_id == proposal_id,
+                    reviewer.c.person_id == person_id,
+                    reviewer.c.role == role))
 
             result = conn.execute(stmt)
 
@@ -271,7 +279,8 @@ class ReviewPart(object):
 
         return Note(text=row.note, format=row.note_format)
 
-    def get_review_figure(self, reviewer_id, link_id, fig_id=None, md5sum=None):
+    def get_review_figure(
+            self, reviewer_id, link_id, fig_id=None, md5sum=None):
         where_extra = []
 
         if reviewer_id is not None:
@@ -327,13 +336,15 @@ class ReviewPart(object):
 
             if add is not None:
                 for kwargs in add:
-                    self.add_reviewer(role_class=role_class,
-                                      _conn=conn, **kwargs)
+                    self.add_reviewer(
+                        role_class=role_class,
+                        _conn=conn, **kwargs)
 
-    def search_group_member(self, queue_id=None, group_type=None,
-                            person_id=None, facility_id=None,
-                            group_member_id=None,
-                            with_person=False, with_queue=False, _conn=None):
+    def search_group_member(
+            self, queue_id=None, group_type=None,
+            person_id=None, facility_id=None,
+            group_member_id=None,
+            with_person=False, with_queue=False, _conn=None):
         select_from = group_member.join(queue)
 
         select_columns = [
@@ -426,18 +437,19 @@ class ReviewPart(object):
 
         return ans
 
-    def search_reviewer(self,
-                        proposal_id=None, role=None, reviewer_id=None,
-                        person_id=None, review_state=None,
-                        call_id=None, queue_id=None,
-                        proposal_state=None, institution_id=None,
-                        notified=None, accepted=(), thanked=(),
-                        with_review=False, with_review_text=False,
-                        with_review_note=False,
-                        with_invitation=False,
-                        with_acceptance=False,
-                        with_note=False,
-                        _conn=None):
+    def search_reviewer(
+            self,
+            proposal_id=None, role=None, reviewer_id=None,
+            person_id=None, review_state=None,
+            call_id=None, queue_id=None,
+            proposal_state=None, institution_id=None,
+            notified=None, accepted=(), thanked=(),
+            with_review=False, with_review_text=False,
+            with_review_note=False,
+            with_invitation=False,
+            with_acceptance=False,
+            with_note=False,
+            _conn=None):
         select_columns = [
             reviewer,
             person.c.name.label('person_name'),
@@ -479,12 +491,14 @@ class ReviewPart(object):
             select_columns.append(
                 self._expr_review_state().label('review_state'))
 
-            select_columns.extend((x.label('review_{}'.format(x.name))
-                                   for x in review.columns
-                                   if x not in (review.c.reviewer_id,
-                                                review.c.text,
-                                                review.c.note,
-                                                review.c.state)))
+            select_columns.extend((
+                x.label('review_{}'.format(x.name))
+                for x in review.columns
+                if x not in (
+                    review.c.reviewer_id,
+                    review.c.text,
+                    review.c.note,
+                    review.c.state)))
 
             if with_review_text:
                 select_columns.append(review.c.text.label('review_text'))
@@ -796,8 +810,9 @@ class ReviewPart(object):
             key_value=call_id,
             note=note, format_=format_, _conn=_conn)
 
-    def set_decision(self, proposal_id, accept=(), exempt=None, ready=None,
-                     note=None, note_format=None):
+    def set_decision(
+            self, proposal_id, accept=(), exempt=None, ready=None,
+            note=None, note_format=None):
         values = {}
 
         if accept != ():
@@ -845,10 +860,11 @@ class ReviewPart(object):
 
         return decision_id
 
-    def set_review(self, role_class, reviewer_id, text, format_,
-                   assessment, rating, weight,
-                   note, note_format, note_public,
-                   state):
+    def set_review(
+            self, role_class, reviewer_id, text, format_,
+            assessment, rating, weight,
+            note, note_format, note_public,
+            state):
         if text is not None:
             if not format_:
                 raise UserError('Text format not specified.')
@@ -1020,9 +1036,12 @@ class ReviewPart(object):
 
             (n_insert, n_update, n_delete) = self._sync_records(
                 conn, group_member,
-                key_column=(group_member.c.queue_id,
-                            group_member.c.group_type),
-                key_value=(queue_id, group_type),
+                key_column=(
+                    group_member.c.queue_id,
+                    group_member.c.group_type),
+                key_value=(
+                    queue_id,
+                    group_type),
                 records=records,
                 update_columns=(
                     () if forbid_add else (group_member.c.person_id,)),
@@ -1046,8 +1065,9 @@ class ReviewPart(object):
                     'reviewer does not exist with id={}', reviewer_id)
 
             (n_insert, n_update, n_delete) = self._sync_records(
-                conn, review_fig_link, review_fig_link.c.reviewer_id, reviewer_id,
-                records, update_columns=(
+                conn, review_fig_link, review_fig_link.c.reviewer_id,
+                reviewer_id, records,
+                update_columns=(
                     review_fig_link.c.sort_order,
                 ), forbid_add=True)
 
@@ -1110,7 +1130,8 @@ class ReviewPart(object):
                     reveiwer_id)
 
     def update_reviewer_acceptance(
-            self, reviewer_acceptance_id, accepted=None, text=None, format_=None,
+            self, reviewer_acceptance_id, accepted=None,
+            text=None, format_=None,
             _conn=None):
         if accepted is None:
             raise Error('Accepted flag not specified.')

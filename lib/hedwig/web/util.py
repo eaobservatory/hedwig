@@ -262,8 +262,9 @@ def parse_datetime(date_and_time):
             datetime.strptime(date_and_time.time, '%H:%M').time())
 
     except ValueError:
-        raise UserError('Could not parse date and time {} {}.',
-                        date_and_time.date, date_and_time.time)
+        raise UserError(
+            'Could not parse date and time {} {}.',
+            date_and_time.date, date_and_time.time)
 
 
 def format_datetime(value):
@@ -293,8 +294,9 @@ def register_error_handlers(app):
     :param app: Flask application with which to register error handlers.
     """
 
-    for error_class in (HTTPError, HTTPForbidden, HTTPNotFound,
-                        _werkzeug_exceptions.BadRequest):
+    for error_class in (
+            HTTPError, HTTPForbidden, HTTPNotFound,
+            _werkzeug_exceptions.BadRequest):
         @app.errorhandler(error_class.code)
         def error_handler(error):
             # Flask matches error handlers for HTTP exception classes by
@@ -304,8 +306,9 @@ def register_error_handlers(app):
             # uses the handler for code 500 (same as our HTTPError).
             # Flask will already have logged the error, so just replace it
             # with a standard HTTPError.
-            if not all((hasattr(error, x) for x in
-                        ['name', 'description', 'code'])):
+            if not all((
+                    hasattr(error, x) for x in
+                    ['name', 'description', 'code'])):
                 error = HTTPError()
 
             return _make_response(
@@ -335,10 +338,11 @@ def require_admin(f):
     return decorated
 
 
-def require_auth(require_person=True, require_person_admin=False,
-                 require_institution=False,
-                 allow_unverified=False,
-                 register_user_only=False, record_referrer=False):
+def require_auth(
+        require_person=True, require_person_admin=False,
+        require_institution=False,
+        allow_unverified=False,
+        register_user_only=False, record_referrer=False):
     """
     Decorator to require that the user is authenticated.
 

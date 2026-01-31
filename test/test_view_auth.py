@@ -741,9 +741,10 @@ class WebAppAuthTestCase(WebAppTestCase):
                 call, auth_cache=auth_cache),
             expect, 'auth call view case {}'.format(case_number))
 
-    def _test_auth_call_review(self, group_class, auth_cache,
-                               case_number, person_id, is_admin,
-                               call_id, proposal_id, expect):
+    def _test_auth_call_review(
+            self, group_class, auth_cache,
+            case_number, person_id, is_admin,
+            call_id, proposal_id, expect):
         current_user = self._current_user(person_id, is_admin)
         call = self.db.get_call(None, call_id)
         self.assertEqual(
@@ -806,9 +807,10 @@ class WebAppAuthTestCase(WebAppTestCase):
                 self.db, facilities, auth_cache=auth_cache),
             expect, 'auth person list case {}'.format(case_number))
 
-    def _test_auth_institution(self, facilities, auth_cache,
-                               case_number, person_id, is_admin,
-                               institution_id, expect):
+    def _test_auth_institution(
+            self, facilities, auth_cache,
+            case_number, person_id, is_admin,
+            institution_id, expect):
         institution = self.db.get_institution(institution_id)
         self.assertEqual(
             auth.for_institution(
@@ -816,9 +818,10 @@ class WebAppAuthTestCase(WebAppTestCase):
                 institution, auth_cache=auth_cache),
             expect, 'auth institution case {}'.format(case_number))
 
-    def _test_auth_private_moc(self, group_class, auth_cache,
-                               case_number, person_id, is_admin,
-                               facility_id, expect):
+    def _test_auth_private_moc(
+            self, group_class, auth_cache,
+            case_number, person_id, is_admin,
+            facility_id, expect):
         self.assertEqual(
             auth.for_private_moc(
                 group_class,
@@ -826,17 +829,21 @@ class WebAppAuthTestCase(WebAppTestCase):
                 facility_id, auth_cache=auth_cache),
             expect, 'auth private moc {}'.format(case_number))
 
-    def _test_auth_proposal(self, group_class, role_class, auth_cache,
-                            case_number, person_id, is_admin,
-                            proposal_id, expect_codes, expect_codes_fb,
-                            expect_codes_dec):
+    def _test_auth_proposal(
+            self, group_class, role_class, auth_cache,
+            case_number, person_id, is_admin,
+            proposal_id, expect_codes, expect_codes_fb,
+            expect_codes_dec):
         proposal_states = ProposalState.get_options()
-        self.assertEqual(len(expect_codes), len(proposal_states),
-                         'codes for proposal case {}'.format(case_number))
-        self.assertEqual(len(expect_codes_fb), len(proposal_states),
-                         'fb codes for proposal case {}'.format(case_number))
-        self.assertEqual(len(expect_codes_dec), len(proposal_states),
-                         'dec codes for proposal case {}'.format(case_number))
+        self.assertEqual(
+            len(expect_codes), len(proposal_states),
+            'codes for proposal case {}'.format(case_number))
+        self.assertEqual(
+            len(expect_codes_fb), len(proposal_states),
+            'fb codes for proposal case {}'.format(case_number))
+        self.assertEqual(
+            len(expect_codes_dec), len(proposal_states),
+            'dec codes for proposal case {}'.format(case_number))
 
         if self.quick_proposal_state:
             proposal_orig = self.db.get_proposal(
@@ -853,12 +860,13 @@ class WebAppAuthTestCase(WebAppTestCase):
                 ctx_kwargs['path'] = '/generic/'
 
             else:
-                expect = self._expect_code('proposal', case_number, expect_code)
+                expect = self._expect_code(
+                    'proposal', case_number, expect_code)
 
-            expect_fb = self._expect_code('proposal fb', case_number,
-                                          expect_code_fb)
-            expect_dec = self._expect_code('proposal dec', case_number,
-                                           expect_code_dec)
+            expect_fb = self._expect_code(
+                'proposal fb', case_number, expect_code_fb)
+            expect_dec = self._expect_code(
+                'proposal dec', case_number, expect_code_dec)
 
             if self.quick_proposal_state:
                 proposal = proposal_orig._replace(state=state)
@@ -919,9 +927,10 @@ class WebAppAuthTestCase(WebAppTestCase):
                     expect_dec, 'auth proposal dec case {} state {}'.format(
                         case_number, state_name))
 
-    def _test_auth_review(self, group_class, role_class, auth_cache,
-                          case_number, person_id, is_admin,
-                          reviewer_id, expect_codes):
+    def _test_auth_review(
+            self, group_class, role_class, auth_cache,
+            case_number, person_id, is_admin,
+            reviewer_id, expect_codes):
         proposal_states = ProposalState.get_options()
         self.assertEqual(len(expect_codes), len(proposal_states),
                          'codes for review case {}'.format(case_number))
@@ -943,8 +952,8 @@ class WebAppAuthTestCase(WebAppTestCase):
                 ctx_kwargs['path'] = '/generic/'
 
             else:
-                expect = self._expect_code('review', case_number, expect_code,
-                                           rating=True)
+                expect = self._expect_code(
+                    'review', case_number, expect_code, rating=True)
 
             if self.quick_proposal_state:
                 proposal = proposal_orig._replace(state=state)
@@ -1081,8 +1090,8 @@ class WebAppAuthTestCase(WebAppTestCase):
                 case_type, case_number))
 
         if rating:
-            expect = auth.AuthorizationWithRating(*expect,
-                                                  view_rating=view_rating)
+            expect = auth.AuthorizationWithRating(
+                *expect, view_rating=view_rating)
 
         return expect
 

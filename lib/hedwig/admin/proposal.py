@@ -62,8 +62,8 @@ def close_call_proposals(db, call_id, dry_run=False):
     n_closed = 0
     n_submitted = 0
 
-    for proposal in db.search_proposal(call_id=call_id,
-                                       with_members=True).values():
+    for proposal in db.search_proposal(
+            call_id=call_id, with_members=True).values():
         logger.debug('Closing call {} proposal {}', call_id, proposal.id)
 
         # Change the proposal state.
@@ -73,8 +73,9 @@ def close_call_proposals(db, call_id, dry_run=False):
             new_state = ProposalState.REVIEW
             n_submitted += 1
 
-        elif proposal.state in (ProposalState.PREPARATION,
-                                ProposalState.WITHDRAWN):
+        elif proposal.state in (
+                ProposalState.PREPARATION,
+                ProposalState.WITHDRAWN):
             new_state = ProposalState.ABANDONED
 
         elif proposal.state == ProposalState.HELD_OPEN:
@@ -91,8 +92,9 @@ def close_call_proposals(db, call_id, dry_run=False):
             # If the proposal is in an unexpected state, issue a warning
             # and skip to the next proposal.  (We don't want a poll process
             # to repeatedly perform the member institution freezing step.)
-            logger.warning('Proposal {} is in unexpected state "{}"',
-                           proposal.id, ProposalState.get_name(proposal.state))
+            logger.warning(
+                'Proposal {} is in unexpected state "{}"',
+                proposal.id, ProposalState.get_name(proposal.state))
             continue
 
         _close_proposal(db, proposal, new_state, dry_run=dry_run)
@@ -145,12 +147,14 @@ def close_mid_call(db, call_id, mid_close_id, dry_run=False):
 
 def _close_proposal(db, proposal, new_state, dry_run=False):
     try:
-        logger.info('Setting state of proposal {} to {}',
-                    proposal.id, ProposalState.get_name(new_state))
+        logger.info(
+            'Setting state of proposal {} to {}',
+            proposal.id, ProposalState.get_name(new_state))
 
         if not dry_run:
-            db.update_proposal(proposal.id, state=new_state,
-                               state_prev=proposal.state)
+            db.update_proposal(
+                proposal.id, state=new_state,
+                state_prev=proposal.state)
 
         # Freeze the current institution ID values in the member table.
         records = {}
@@ -158,8 +162,8 @@ def _close_proposal(db, proposal, new_state, dry_run=False):
             records[member.id] = MemberInstitution(
                 member.id, member.resolved_institution_id)
 
-        logger.debug('Sync institution IDs into proposal {} member table',
-                     proposal.id)
+        logger.debug(
+            'Sync institution IDs into proposal {} member table', proposal.id)
         if not dry_run:
             db.sync_proposal_member_institution(proposal.id, records)
 
@@ -231,8 +235,9 @@ def finalize_call_review(db, call_id, proposals=None):
 
     for proposal in proposals:
         try:
-            db.update_proposal(proposal.id, state=ProposalState.FINAL_REVIEW,
-                               state_prev=ProposalState.REVIEW)
+            db.update_proposal(
+                proposal.id, state=ProposalState.FINAL_REVIEW,
+                state_prev=ProposalState.REVIEW)
             n_update += 1
 
         except ConsistencyError:
@@ -270,8 +275,8 @@ def send_call_proposal_feedback(db, call_id, proposals, dry_run=False):
     try:
         facility = get_facilities(db=db)[call.facility_id].view
     except KeyError:
-        logger.error('Call {} facility {} not present',
-                     call_id, call.facility_id)
+        logger.error(
+            'Call {} facility {} not present', call_id, call.facility_id)
         return 0
 
     role_class = facility.get_reviewer_roles()
@@ -336,8 +341,9 @@ def send_call_proposal_feedback(db, call_id, proposals, dry_run=False):
         try:
             # Check that the proposal is still in the FINAL_REVIEW state.
             if proposal.state != ProposalState.FINAL_REVIEW:
-                raise FeedbackError('Proposal {} is not in final review',
-                                    proposal.id)
+                raise FeedbackError(
+                    'Proposal {} is not in final review',
+                    proposal.id)
 
             # Double-check facility assignment.
             if facility.id_ != proposal.facility_id:
@@ -360,8 +366,9 @@ def send_call_proposal_feedback(db, call_id, proposals, dry_run=False):
                     continue
 
                 if review.review_format != FormatType.PLAIN:
-                    raise FeedbackError('Feedback review {} is not plain text',
-                                        review.id)
+                    raise FeedbackError(
+                        'Feedback review {} is not plain text',
+                        review.id)
 
                 feedback.append(review.review_text)
 
@@ -388,20 +395,24 @@ def send_call_proposal_feedback(db, call_id, proposals, dry_run=False):
                 'proposal_feedback.txt', email_ctx, facility=facility)
 
             # Change the proposal state.
-            new_state = (ProposalState.ACCEPTED if proposal.decision_accept
-                         else ProposalState.REJECTED)
+            new_state = (
+                ProposalState.ACCEPTED if proposal.decision_accept
+                else ProposalState.REJECTED)
 
-            logger.info('Setting state of proposal {} to {}',
-                        proposal.id, ProposalState.get_name(new_state))
+            logger.info(
+                'Setting state of proposal {} to {}',
+                proposal.id, ProposalState.get_name(new_state))
 
             if not dry_run:
-                db.update_proposal(proposal.id, state=new_state,
-                                   state_prev=ProposalState.FINAL_REVIEW)
+                db.update_proposal(
+                    proposal.id, state=new_state,
+                    state_prev=ProposalState.FINAL_REVIEW)
 
             # Write feedback email message into the database.  Do this after
             # setting the state (see comment above for why).
-            logger.debug('Writing feedback message for proposal {}',
-                         proposal.id)
+            logger.debug(
+                'Writing feedback message for proposal {}',
+                proposal.id)
 
             if not dry_run:
                 db.add_message(
@@ -412,8 +423,9 @@ def send_call_proposal_feedback(db, call_id, proposals, dry_run=False):
             # an additional notification message.  For now send this to
             # site administrators.
             if (proposal.decision_accept and immediate_review):
-                logger.debug('Writing approval notification for proposal {}',
-                             proposal.id)
+                logger.debug(
+                    'Writing approval notification for proposal {}',
+                    proposal.id)
 
                 email_ctx.update({
                     'call_type': type_class.get_name(proposal.call_type),
@@ -425,8 +437,9 @@ def send_call_proposal_feedback(db, call_id, proposals, dry_run=False):
                     if proposal.decision_note_format == FormatType.PLAIN:
                         email_ctx['decision_note'] = proposal.decision_note
                     else:
-                        logger.warning('Proposal {} note is not plain text',
-                                       proposal_code)
+                        logger.warning(
+                            'Proposal {} note is not plain text',
+                            proposal_code)
 
                 site_administrators = db.search_person(admin=True)
 

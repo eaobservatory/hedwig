@@ -84,18 +84,19 @@ class ProposalPart(object):
 
         return result.inserted_primary_key[0]
 
-    def add_call(self, type_class, semester_id, queue_id, type_,
-                 date_open, date_close,
-                 abst_word_lim,
-                 tech_word_lim, tech_fig_lim, tech_page_lim,
-                 sci_word_lim, sci_fig_lim, sci_page_lim,
-                 capt_word_lim, expl_word_lim,
-                 tech_note, sci_note, prev_prop_note, note_format,
-                 multi_semester, separate, preamble, preamble_format, hidden,
-                 allow_continuation,
-                 cnrq_note, cnrq_word_lim, cnrq_fig_lim, cnrq_page_lim,
-                 cnrq_max_age,
-                 _test_skip_check=False):
+    def add_call(
+            self, type_class, semester_id, queue_id, type_,
+            date_open, date_close,
+            abst_word_lim,
+            tech_word_lim, tech_fig_lim, tech_page_lim,
+            sci_word_lim, sci_fig_lim, sci_page_lim,
+            capt_word_lim, expl_word_lim,
+            tech_note, sci_note, prev_prop_note, note_format,
+            multi_semester, separate, preamble, preamble_format, hidden,
+            allow_continuation,
+            cnrq_note, cnrq_word_lim, cnrq_fig_lim, cnrq_page_lim,
+            cnrq_max_age,
+            _test_skip_check=False):
         """
         Add a call for proposals to the database.
         """
@@ -170,17 +171,19 @@ class ProposalPart(object):
 
         return result.inserted_primary_key[0]
 
-    def add_member(self, proposal_id, person_id, affiliation_id,
-                   pi=False, editor=False, observer=False, reviewer=False,
-                   adder_person_id=None, is_invite=False,
-                   _conn=None, _test_skip_check=False):
+    def add_member(
+            self, proposal_id, person_id, affiliation_id,
+            pi=False, editor=False, observer=False, reviewer=False,
+            adder_person_id=None, is_invite=False,
+            _conn=None, _test_skip_check=False):
         with self._transaction(_conn=_conn) as conn:
             if not _test_skip_check:
                 if not self._exists_id(conn, person, person_id):
-                    raise ConsistencyError('person does not exist with id={}',
-                                           person_id)
-                proposal_record = self.get_proposal(None, proposal_id,
-                                                    _conn=conn)
+                    raise ConsistencyError(
+                        'person does not exist with id={}',
+                        person_id)
+                proposal_record = self.get_proposal(
+                    None, proposal_id, _conn=conn)
                 if not self._exists_queue_affiliation(
                         conn, proposal_record.queue_id, affiliation_id):
                     raise ConsistencyError(
@@ -219,11 +222,12 @@ class ProposalPart(object):
 
         return result.inserted_primary_key[0]
 
-    def add_proposal(self, call_id, person_id, affiliation_id, title,
-                     type_=ProposalType.STANDARD,
-                     state=ProposalState.PREPARATION, person_is_reviewer=False,
-                     is_copy=False,
-                     _test_skip_check=False):
+    def add_proposal(
+            self, call_id, person_id, affiliation_id, title,
+            type_=ProposalType.STANDARD,
+            state=ProposalState.PREPARATION, person_is_reviewer=False,
+            is_copy=False,
+            _test_skip_check=False):
         """
         Add a new proposal to the database.
 
@@ -249,8 +253,9 @@ class ProposalPart(object):
                     call = self.search_call(
                         call_id=call_id, _conn=conn).get_single()
                 except NoSuchRecord:
-                    raise ConsistencyError('call does not exist with id={}',
-                                           call_id)
+                    raise ConsistencyError(
+                        'call does not exist with id={}',
+                        call_id)
 
                 if not self._exists_queue_affiliation(
                         conn, call.queue_id, affiliation_id):
@@ -273,9 +278,10 @@ class ProposalPart(object):
 
             proposal_id = result.inserted_primary_key[0]
 
-            self.add_member(proposal_id, person_id, affiliation_id,
-                            True, True, False, reviewer=person_is_reviewer,
-                            _conn=conn, _test_skip_check=_test_skip_check)
+            self.add_member(
+                proposal_id, person_id, affiliation_id,
+                True, True, False, reviewer=person_is_reviewer,
+                _conn=conn, _test_skip_check=_test_skip_check)
 
             # If this is a copy we should have already logged the copy request.
             if not is_copy:
@@ -334,12 +340,14 @@ class ProposalPart(object):
         with self._transaction() as conn:
             if (not _test_skip_check and
                     not self._exists_id(conn, foreign_table, key_value)):
-                raise ConsistencyError('fig parent does not exist with id={}',
-                                       key_value)
+                raise ConsistencyError(
+                    'fig parent does not exist with id={}',
+                    key_value)
             if (not _test_skip_check and
                     not self._exists_id(conn, person, uploader_person_id)):
-                raise ConsistencyError('person does not exist with id={}',
-                                       uploader_person_id)
+                raise ConsistencyError(
+                    'person does not exist with id={}',
+                    uploader_person_id)
 
             # Create entry in main figure table.
             values = {
@@ -379,9 +387,10 @@ class ProposalPart(object):
 
         return (link_id, fig_id)
 
-    def add_queue(self, facility_id, name, code, description='',
-                  description_format=FormatType.PLAIN,
-                  _test_skip_check=False):
+    def add_queue(
+            self, facility_id, name, code, description='',
+            description_format=FormatType.PLAIN,
+            _test_skip_check=False):
         """
         Add a queue to the database.
         """
@@ -395,8 +404,9 @@ class ProposalPart(object):
         with self._transaction() as conn:
             if (not _test_skip_check and
                     not self._exists_id(conn, facility, facility_id)):
-                raise ConsistencyError('facility does not exist with id={}',
-                                       facility_id)
+                raise ConsistencyError(
+                    'facility does not exist with id={}',
+                    facility_id)
 
             result = conn.execute(queue.insert().values({
                 queue.c.facility_id: facility_id,
@@ -475,10 +485,11 @@ class ProposalPart(object):
 
             return result.inserted_primary_key[0]
 
-    def add_semester(self, facility_id, name, code,
-                     date_start, date_end, description='',
-                     description_format=FormatType.PLAIN,
-                     _test_skip_check=False):
+    def add_semester(
+            self, facility_id, name, code,
+            date_start, date_end, description='',
+            description_format=FormatType.PLAIN,
+            _test_skip_check=False):
         """
         Add a semester to the database.
         """
@@ -495,8 +506,9 @@ class ProposalPart(object):
         with self._transaction() as conn:
             if (not _test_skip_check and
                     not self._exists_id(conn, facility, facility_id)):
-                raise ConsistencyError('facility does not exist with id={}',
-                                       facility_id)
+                raise ConsistencyError(
+                    'facility does not exist with id={}',
+                    facility_id)
 
             result = conn.execute(semester.insert().values({
                 semester.c.facility_id: facility_id,
@@ -588,8 +600,9 @@ class ProposalPart(object):
 
             self._remove_orphan_records(conn, table, table_link.c.fig_id)
 
-    def delete_proposal_pdf(self, proposal_id, role,
-                            _skip_check=False, _allow_count=(1,), _conn=None):
+    def delete_proposal_pdf(
+            self, proposal_id, role,
+            _skip_check=False, _allow_count=(1,), _conn=None):
         """
         Delete a PDF file associated with a proposal.
 
@@ -605,8 +618,9 @@ class ProposalPart(object):
             if (not _skip_check
                     and (self._get_proposal_text_id(
                         conn, proposal_pdf_link, proposal_id, role) is None)):
-                raise ConsistencyError('PDF does not exist for {} role {}',
-                                       proposal_id, role)
+                raise ConsistencyError(
+                    'PDF does not exist for {} role {}',
+                    proposal_id, role)
 
             result = conn.execute(proposal_pdf_link.delete().where(and_(
                 proposal_pdf_link.c.proposal_id == proposal_id,
@@ -621,8 +635,9 @@ class ProposalPart(object):
             self._remove_orphan_records(
                 conn, proposal_pdf, proposal_pdf_link.c.pdf_id)
 
-    def delete_proposal_text(self, proposal_id, role,
-                             _skip_check=False, _allow_count=(1,), _conn=None):
+    def delete_proposal_text(
+            self, proposal_id, role,
+            _skip_check=False, _allow_count=(1,), _conn=None):
         """
         Delete a piece of text associated with a proposal.
 
@@ -637,8 +652,9 @@ class ProposalPart(object):
         with self._transaction(_conn=_conn) as conn:
             if not _skip_check and not self._get_proposal_text_id(
                     conn, proposal_text_link, proposal_id, role):
-                raise ConsistencyError('text does not exist for {} role {}',
-                                       proposal_id, role)
+                raise ConsistencyError(
+                    'text does not exist for {} role {}',
+                    proposal_id, role)
 
             result = conn.execute(proposal_text_link.delete().where(and_(
                 proposal_text_link.c.proposal_id == proposal_id,
@@ -760,11 +776,12 @@ class ProposalPart(object):
 
         return (proposal_ids, previous_proposal_ids)
 
-    def get_proposal(self, facility_id, proposal_id,
-                     with_members=False, with_reviewers=False,
-                     with_decision=False, with_decision_note=False,
-                     with_categories=False,
-                     _conn=None):
+    def get_proposal(
+            self, facility_id, proposal_id,
+            with_members=False, with_reviewers=False,
+            with_decision=False, with_decision_note=False,
+            with_categories=False,
+            _conn=None):
         """
         Get a proposal record.
         """
@@ -856,7 +873,8 @@ class ProposalPart(object):
             where_extra.append(proposal_fig_link.c.role == role)
 
         return self._get_figure_alternate(
-            proposal_fig, proposal_fig_link, proposal_fig_thumbnail.c.thumbnail,
+            proposal_fig, proposal_fig_link,
+            proposal_fig_thumbnail.c.thumbnail,
             link_id, fig_id, md5sum, where_extra=where_extra)
 
     def _get_figure_alternate(
@@ -891,8 +909,9 @@ class ProposalPart(object):
 
         return row[0]
 
-    def get_proposal_pdf(self, proposal_id, role, pdf_id=None, md5sum=None,
-                         _conn=None):
+    def get_proposal_pdf(
+            self, proposal_id, role, pdf_id=None, md5sum=None,
+            _conn=None):
         """
         Get the given PDF associated with a proposal.
         """
@@ -920,8 +939,9 @@ class ProposalPart(object):
             row = conn.execute(stmt).first()
 
         if row is None:
-            raise NoSuchRecord('PDF does not exist for {} role {}',
-                               proposal_id, role)
+            raise NoSuchRecord(
+                'PDF does not exist for {} role {}',
+                proposal_id, role)
 
         return ProposalFigure(row.pdf, FigureType.PDF, row.filename)
 
@@ -1196,16 +1216,17 @@ class ProposalPart(object):
 
         return ans
 
-    def search_call(self, call_id=None, facility_id=None,
-                    semester_id=None, semester_code=None,
-                    queue_id=None, queue_code=None,
-                    type_=None, state=None,
-                    has_proposal_state=None, date_close_before=None,
-                    separate=None, hidden=None,
-                    with_queue_description=False, with_case_notes=False,
-                    with_preamble=False,
-                    with_proposal_count=False, with_proposal_count_state=None,
-                    _conn=None):
+    def search_call(
+            self, call_id=None, facility_id=None,
+            semester_id=None, semester_code=None,
+            queue_id=None, queue_code=None,
+            type_=None, state=None,
+            has_proposal_state=None, date_close_before=None,
+            separate=None, hidden=None,
+            with_queue_description=False, with_case_notes=False,
+            with_preamble=False,
+            with_proposal_count=False, with_proposal_count_state=None,
+            _conn=None):
         """
         Search for call records.
         """
@@ -1326,10 +1347,11 @@ class ProposalPart(object):
         ans = CallCollection()
 
         with self._transaction(_conn=_conn) as conn:
-            for row in conn.execute(stmt.order_by(semester.c.date_start.desc(),
-                                                  semester.c.code.desc(),
-                                                  call.c.type.asc(),
-                                                  queue.c.name.asc())):
+            for row in conn.execute(stmt.order_by(
+                    semester.c.date_start.desc(),
+                    semester.c.code.desc(),
+                    call.c.type.asc(),
+                    queue.c.name.asc())):
                 values = default.copy()
                 values.update(**row_as_mapping(row))
                 ans[row.id] = Call(**values)
@@ -1398,8 +1420,9 @@ class ProposalPart(object):
 
         return ans
 
-    def search_category(self, facility_id, hidden=None, order_by_id=False,
-                        _conn=None):
+    def search_category(
+            self, facility_id, hidden=None, order_by_id=False,
+            _conn=None):
         """
         Search for categories.
         """
@@ -1743,8 +1766,9 @@ class ProposalPart(object):
 
         return ans
 
-    def search_prev_proposal_pub(self, state=None, type_=None,
-                                 with_proposal_id=False, order_by_date=False):
+    def search_prev_proposal_pub(
+            self, state=None, type_=None,
+            with_proposal_id=False, order_by_date=False):
         """
         Search for publications associated with previous proposals.
 
@@ -1793,25 +1817,26 @@ class ProposalPart(object):
 
         return ans
 
-    def search_proposal(self, call_id=None, facility_id=None, proposal_id=None,
-                        person_id=None, person_is_editor=None, state=None,
-                        type_=None,
-                        with_member_pi=False, with_members=False,
-                        with_reviewers=False,
-                        with_review_info=False, with_review_text=False,
-                        with_reviewer_role=None, with_review_state=None,
-                        with_reviewer_notified=None, with_reviewer_accepted=(),
-                        with_reviewer_thanked=(),
-                        with_reviewer_note=False,
-                        reviewer_person_id=None,
-                        with_categories=False,
-                        with_decision=False, with_decision_note=False,
-                        decision_accept=None, decision_ready=None,
-                        decision_accept_defined=None,
-                        proposal_number=None, call_type=None,
-                        semester_code=None, queue_code=None, queue_id=None,
-                        category=None,
-                        _conn=None):
+    def search_proposal(
+            self, call_id=None, facility_id=None, proposal_id=None,
+            person_id=None, person_is_editor=None, state=None,
+            type_=None,
+            with_member_pi=False, with_members=False,
+            with_reviewers=False,
+            with_review_info=False, with_review_text=False,
+            with_reviewer_role=None, with_review_state=None,
+            with_reviewer_notified=None, with_reviewer_accepted=(),
+            with_reviewer_thanked=(),
+            with_reviewer_note=False,
+            reviewer_person_id=None,
+            with_categories=False,
+            with_decision=False, with_decision_note=False,
+            decision_accept=None, decision_ready=None,
+            decision_accept_defined=None,
+            proposal_number=None, call_type=None,
+            semester_code=None, queue_code=None, queue_id=None,
+            category=None,
+            _conn=None):
         """
         Search for proposals.
 
@@ -2623,9 +2648,10 @@ class ProposalPart(object):
 
         return ans
 
-    def set_call_preamble(self, type_class, semester_id, type_,
-                          description, description_format,
-                          _test_skip_check=False):
+    def set_call_preamble(
+            self, type_class, semester_id, type_,
+            description, description_format,
+            _test_skip_check=False):
         if not type_class.is_valid(type_):
             raise UserError('The selected call type is not recognised.')
         if not description_format:
@@ -2722,8 +2748,9 @@ class ProposalPart(object):
                     column: alternate,
                 }))
 
-    def set_proposal_pdf(self, role_class, proposal_id, role, pdf, pages,
-                         filename, uploader_person_id, _test_skip_check=False):
+    def set_proposal_pdf(
+            self, role_class, proposal_id, role, pdf, pages,
+            filename, uploader_person_id, _test_skip_check=False):
         """
         Insert or update a given proposal PDF.
 
@@ -2731,14 +2758,16 @@ class ProposalPart(object):
         """
 
         if not role_class.is_valid(role):
-            raise FormattedError('proposal text role not recognised: {}',
-                                 role)
+            raise FormattedError(
+                'proposal text role not recognised: {}',
+                role)
 
         with self._transaction() as conn:
             if (not _test_skip_check and
                     not self._exists_id(conn, person, uploader_person_id)):
-                raise ConsistencyError('person does not exist with id={}',
-                                       uploader_person_id)
+                raise ConsistencyError(
+                    'person does not exist with id={}',
+                    uploader_person_id)
 
             link_id = self._get_proposal_text_id(
                 conn, proposal_pdf_link, proposal_id, role)
@@ -2814,9 +2843,10 @@ class ProposalPart(object):
                     proposal_pdf_preview.c.preview: png,
                 }))
 
-    def set_proposal_text(self, role_class, proposal_id, role, text, format,
-                          words, editor_person_id,
-                          _test_skip_check=False):
+    def set_proposal_text(
+            self, role_class, proposal_id, role, text, format,
+            words, editor_person_id,
+            _test_skip_check=False):
         """
         Insert or update a given piece of proposal text.
 
@@ -2828,14 +2858,16 @@ class ProposalPart(object):
         if not FormatType.is_valid(format):
             raise UserError('Text format not recognised.')
         if not role_class.is_valid(role):
-            raise FormattedError('proposal text role not recognised: {}',
-                                 role)
+            raise FormattedError(
+                'proposal text role not recognised: {}',
+                role)
 
         with self._transaction() as conn:
             if (not _test_skip_check and
                     not self._exists_id(conn, person, editor_person_id)):
-                raise ConsistencyError('person does not exist with id={}',
-                                       editor_person_id)
+                raise ConsistencyError(
+                    'person does not exist with id={}',
+                    editor_person_id)
 
             link_id = self._get_proposal_text_id(
                 conn, proposal_text_link, proposal_id, role)
@@ -3053,8 +3085,9 @@ class ProposalPart(object):
         n_insert = n_update = n_delete = 0
 
         with self._transaction() as conn:
-            existing = self.search_prev_proposal(proposal_id=proposal_id,
-                                                 _conn=conn)
+            existing = self.search_prev_proposal(
+                proposal_id=proposal_id,
+                _conn=conn)
 
             for value in records.values():
                 id_ = value.id
@@ -3203,18 +3236,19 @@ class ProposalPart(object):
                 records, unique_columns=(affiliation.c.name,),
                 forbid_circular_reinsert=True)
 
-    def update_call(self, call_id, date_open=None, date_close=None,
-                    abst_word_lim=None,
-                    tech_word_lim=None, tech_fig_lim=None, tech_page_lim=None,
-                    sci_word_lim=None, sci_fig_lim=None, sci_page_lim=None,
-                    capt_word_lim=None, expl_word_lim=None,
-                    tech_note=None, sci_note=None, prev_prop_note=None,
-                    note_format=None, multi_semester=None, separate=None,
-                    preamble=(), preamble_format=(), hidden=None,
-                    allow_continuation=None, cnrq_note=None,
-                    cnrq_word_lim=None, cnrq_fig_lim=None, cnrq_page_lim=None,
-                    cnrq_max_age=(),
-                    _test_skip_check=False):
+    def update_call(
+            self, call_id, date_open=None, date_close=None,
+            abst_word_lim=None,
+            tech_word_lim=None, tech_fig_lim=None, tech_page_lim=None,
+            sci_word_lim=None, sci_fig_lim=None, sci_page_lim=None,
+            capt_word_lim=None, expl_word_lim=None,
+            tech_note=None, sci_note=None, prev_prop_note=None,
+            note_format=None, multi_semester=None, separate=None,
+            preamble=(), preamble_format=(), hidden=None,
+            allow_continuation=None, cnrq_note=None,
+            cnrq_word_lim=None, cnrq_fig_lim=None, cnrq_page_lim=None,
+            cnrq_max_age=(),
+            _test_skip_check=False):
         """
         Update a call for proposals record.
         """
@@ -3338,10 +3372,11 @@ class ProposalPart(object):
                     'no rows matched updating call inter. close with id={}',
                     id_)
 
-    def update_prev_proposal_pub(self, type_=None, description=None,
-                                 pp_pub_id=None,
-                                 state=None, title=(), author=(),
-                                 year=(), state_prev=None):
+    def update_prev_proposal_pub(
+            self, type_=None, description=None,
+            pp_pub_id=None,
+            state=None, title=(), author=(),
+            year=(), state_prev=None):
         """
         Update all previous proposal publication records for the given
         reference.
@@ -3358,8 +3393,9 @@ class ProposalPart(object):
 
         if pp_pub_id is not None:
             if has_type_desc:
-                raise Error('previous proposal publication identified by both '
-                            'ID and type and description')
+                raise Error(
+                    'previous proposal publication identified by both '
+                    'ID and type and description')
 
             stmt = stmt.where(prev_proposal_pub.c.id == pp_pub_id)
 
@@ -3369,8 +3405,9 @@ class ProposalPart(object):
                 prev_proposal_pub.c.description == description))
 
         else:
-            raise Error('previous proposal publication not identified by '
-                        'ID or type and description')
+            raise Error(
+                'previous proposal publication not identified by '
+                'ID or type and description')
 
         # Apply previous state restriction if given.
         if state_prev is not None:
@@ -3466,10 +3503,11 @@ class ProposalPart(object):
                 raise ConsistencyError(
                     'no rows matched updating request {}', request_id)
 
-    def update_semester(self, semester_id, name=None, code=None,
-                        date_start=None, date_end=None, description=None,
-                        description_format=None,
-                        _test_skip_check=False):
+    def update_semester(
+            self, semester_id, name=None, code=None,
+            date_start=None, date_end=None, description=None,
+            description_format=None,
+            _test_skip_check=False):
         """
         Update a semester record.
         """
@@ -3513,9 +3551,10 @@ class ProposalPart(object):
                     'no rows matched updating semester with id={}',
                     semester_id)
 
-    def update_proposal(self, proposal_id, state=None, title=None,
-                        state_prev=None,
-                        _test_skip_check=False):
+    def update_proposal(
+            self, proposal_id, state=None, title=None,
+            state_prev=None,
+            _test_skip_check=False):
         """
         Update a proposal record.
         """
@@ -3555,11 +3594,12 @@ class ProposalPart(object):
                     'no rows matched updating proposal with id={}',
                     proposal_id)
 
-    def update_proposal_figure(self, proposal_id, role, link_id, fig_id=None,
-                               figure=None, type_=None,
-                               filename=None, uploader_person_id=None,
-                               state=None, state_prev=None,
-                               caption=None, state_is_system=False):
+    def update_proposal_figure(
+            self, proposal_id, role, link_id, fig_id=None,
+            figure=None, type_=None,
+            filename=None, uploader_person_id=None,
+            state=None, state_prev=None,
+            caption=None, state_is_system=False):
         """
         Update the record of a figure attached to a proposal.
 
@@ -3773,9 +3813,10 @@ class ProposalPart(object):
                 raise ConsistencyError(
                     'no rows matched updating proposal PDF with id={}', pdf_id)
 
-    def update_queue(self, queue_id, name=None, code=None, description=None,
-                     description_format=None,
-                     _test_skip_check=False):
+    def update_queue(
+            self, queue_id, name=None, code=None, description=None,
+            description_format=None,
+            _test_skip_check=False):
         """
         Update a queue record.
         """

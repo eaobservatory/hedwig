@@ -477,8 +477,10 @@ class GenericReview(object):
                 unit=(units.hourangle, units.degree), frame=ICRS)
 
             # Construct time in middle of shift by adding half of duration.
-            datetime_start = datetime.combine(date_start, obs_info.time_start) \
-                + timedelta(seconds=(obs_info.time_duration.total_seconds() / 2))
+            datetime_start = \
+                datetime.combine(date_start, obs_info.time_start) \
+                + timedelta(
+                    seconds=(obs_info.time_duration.total_seconds() / 2))
 
             date_range = (Time(date_end) - Time(date_start)).sec / 86400
 
@@ -1026,10 +1028,12 @@ class GenericReview(object):
             proposal_type = int(proposal_type)
 
         proposals = []
-        invite_roles = [x for x in role_class.get_invited_roles()
-                        if type_class.has_reviewer_role(call.type, x)]
-        thanked_roles = [x for x in role_class.get_thanked_roles()
-                         if type_class.has_reviewer_role(call.type, x)]
+        invite_roles = [
+            x for x in role_class.get_invited_roles()
+            if type_class.has_reviewer_role(call.type, x)]
+        thanked_roles = [
+            x for x in role_class.get_thanked_roles()
+            if type_class.has_reviewer_role(call.type, x)]
         assigned_roles = OrderedDict((
             (role_num, group)
             for (role_num, group) in role_class.get_assigned_roles().items()
@@ -1164,6 +1168,7 @@ class GenericReview(object):
                     for role_id in all_roles})
 
         type_excluded_roles = {}
+
         def filter_proposal(proposal):
             excluded_roles = type_excluded_roles.get(proposal.type)
             if excluded_roles is None:
@@ -1331,10 +1336,12 @@ class GenericReview(object):
                     raise UserError(
                         'Could not update reviewer assignments.')
 
-                flash('The {} assignments have been updated.',
-                      group_name.lower())
-                raise HTTPRedirect(url_for('.review_call_reviewers',
-                                           call_id=call.id))
+                flash(
+                    'The {} assignments have been updated.',
+                    group_name.lower())
+                raise HTTPRedirect(url_for(
+                    '.review_call_reviewers',
+                    call_id=call.id))
 
             except UserError as e:
                 message = e.message
@@ -1346,8 +1353,9 @@ class GenericReview(object):
                 type_class.get_name(call.type)),
             'call': call,
             'proposals': proposals,
-            'target': url_for('.review_call_grid', call_id=call.id,
-                              reviewer_role=primary_role),
+            'target': url_for(
+                '.review_call_grid', call_id=call.id,
+                reviewer_role=primary_role),
             'group_members': group_members,
             'roles': roles,
             'conflict_person_ids': {
@@ -1851,8 +1859,8 @@ class GenericReview(object):
         exclude_person_ids = proposal_person_ids + existing_person_ids
 
         try:
-            abstract = db.get_proposal_text(proposal.id,
-                                            text_role_class.ABSTRACT)
+            abstract = db.get_proposal_text(
+                proposal.id, text_role_class.ABSTRACT)
         except NoSuchRecord:
             abstract = None
 
@@ -1878,8 +1886,9 @@ class GenericReview(object):
             'member': member_info.data,
             'message_link': message_link,
             'message_invite': message_invite,
-            'target': url_for('.proposal_reviewer_add',
-                              proposal_id=proposal.id, reviewer_role=role),
+            'target': url_for(
+                '.proposal_reviewer_add',
+                proposal_id=proposal.id, reviewer_role=role),
             'title_link': 'Select Reviewer from the Directory',
             'title_invite': 'Invite a Reviewer to Register',
             'submit_link': 'Select reviewer',
@@ -1893,10 +1902,11 @@ class GenericReview(object):
             'review_deadline': deadline,
         }
 
-    def _message_review_invite(self, current_user, db, proposal, role,
-                               person_id, person_name, person_registered,
-                               reviewer_id, is_reminder=False,
-                               reminder_token=None, reminder_expiry=None):
+    def _message_review_invite(
+            self, current_user, db, proposal, role,
+            person_id, person_name, person_registered,
+            reviewer_id, is_reminder=False,
+            reminder_token=None, reminder_expiry=None):
         """
         Send a review invitation or reminder email message.
         """
@@ -1962,8 +1972,9 @@ class GenericReview(object):
         # Generate and store the message.
         db.add_message(
             email_subject,
-            render_email_template('review_invitation.txt',
-                                  email_ctx, facility=self),
+            render_email_template(
+                'review_invitation.txt',
+                email_ctx, facility=self),
             [person_id],
             thread_type=MessageThreadType.REVIEW_INVITATION,
             thread_id=reviewer_id)
@@ -1999,20 +2010,24 @@ class GenericReview(object):
             if 'submit_confirm' in form:
                 db.delete_reviewer(reviewer_id=reviewer.id)
 
-                flash('{} has been removed as a reviewer of proposal {}.',
-                      reviewer.person_name, proposal_code)
+                flash(
+                    '{} has been removed as a reviewer of proposal {}.',
+                    reviewer.person_name, proposal_code)
 
-            raise HTTPRedirect(url_for('.review_call_reviewers',
-                                       call_id=proposal.call_id))
+            raise HTTPRedirect(url_for(
+                '.review_call_reviewers',
+                call_id=proposal.call_id))
 
         return {
             'title': '{}: Remove {} Reviewer'.format(
                 proposal_code, role_info.name.title()),
-            'message': 'Are you sure you wish to remove {} '
-                       'as a reviewer of this proposal?'.format(
-                           reviewer.person_name),
-            'target': url_for('.proposal_reviewer_remove',
-                              reviewer_id=reviewer.id),
+            'message':
+                'Are you sure you wish to remove {} '
+                'as a reviewer of this proposal?'.format(
+                    reviewer.person_name),
+            'target': url_for(
+                '.proposal_reviewer_remove',
+                reviewer_id=reviewer.id),
         }
 
     @with_review(permission=PermissionType.NONE)
@@ -2099,8 +2114,9 @@ class GenericReview(object):
                     '{} has been {}.',
                     reviewer.person_name, description)
 
-            raise HTTPRedirect(url_for('.review_call_reviewers',
-                                       call_id=proposal.call_id))
+            raise HTTPRedirect(url_for(
+                '.review_call_reviewers',
+                call_id=proposal.call_id))
 
         proposal_code = self.make_proposal_code(db, proposal)
 
@@ -2121,8 +2137,9 @@ class GenericReview(object):
             'person_registered': reviewer.person_registered,
         }
 
-    @with_proposal(permission=PermissionType.NONE,
-                   with_decision=True, with_decision_note=True)
+    @with_proposal(
+        permission=PermissionType.NONE,
+        with_decision=True, with_decision_note=True)
     def view_review_new(
             self, current_user, db, proposal, reviewer_role, args, form):
         group_class = self.get_group_types()
@@ -2339,9 +2356,10 @@ class GenericReview(object):
             'proposal_code': proposal_code,
         }
 
-    @with_review(permission=PermissionType.EDIT,
-                 with_decision=True, with_decision_note=True,
-                 with_acceptance=True)
+    @with_review(
+        permission=PermissionType.EDIT,
+        with_decision=True, with_decision_note=True,
+        with_acceptance=True)
     def view_review_edit(
             self, current_user, db, reviewer, proposal, can, args, form):
         return self._view_review_new_or_edit(
@@ -2357,8 +2375,9 @@ class GenericReview(object):
         if reviewer is None:
             is_new_reviewer = True
             is_own_review = True
-            target = url_for('.proposal_review_new', proposal_id=proposal.id,
-                             reviewer_role=reviewer_role)
+            target = url_for(
+                '.proposal_review_new', proposal_id=proposal.id,
+                reviewer_role=reviewer_role)
             reviewer = null_tuple(Reviewer)._replace(role=reviewer_role)
 
         else:
@@ -2469,22 +2488,26 @@ class GenericReview(object):
                     note_public=reviewer.review_note_public,
                     state=reviewer.review_state)
 
-                flash('The review has been saved and marked as {}.',
-                      ReviewState.get_name(reviewer.review_state).lower())
+                flash(
+                    'The review has been saved and marked as {}.',
+                    ReviewState.get_name(reviewer.review_state).lower())
 
                 # Determine where to redirect the user.  Look for a
                 # "referrer" value identifying a suitable page.
                 if referrer == 'pr':
-                    target_redir = url_for('.proposal_reviews',
-                                           proposal_id=proposal.id)
+                    target_redir = url_for(
+                        '.proposal_reviews',
+                        proposal_id=proposal.id)
 
                 elif referrer == 'cr':
-                    target_redir = url_for('.review_call_reviewers',
-                                           call_id=proposal.call_id)
+                    target_redir = url_for(
+                        '.review_call_reviewers',
+                        call_id=proposal.call_id)
 
                 elif referrer == 'tab':
-                    target_redir = url_for('.review_call_tabulation',
-                                           call_id=proposal.call_id)
+                    target_redir = url_for(
+                        '.review_call_tabulation',
+                        call_id=proposal.call_id)
 
                 else:
                     # Otherwise, by default redirect back to the person's
@@ -2753,8 +2776,8 @@ class GenericReview(object):
         proposal_code = self.make_proposal_code(db, proposal)
 
         try:
-            abstract = db.get_proposal_text(proposal.id,
-                                            text_role_class.ABSTRACT)
+            abstract = db.get_proposal_text(
+                proposal.id, text_role_class.ABSTRACT)
         except NoSuchRecord:
             abstract = None
 
@@ -2825,8 +2848,9 @@ class GenericReview(object):
                 auth_cache=auth_cache).edit,
         }
 
-    @with_proposal(permission=PermissionType.NONE,
-                   with_decision=True, with_decision_note=True)
+    @with_proposal(
+        permission=PermissionType.NONE,
+        with_decision=True, with_decision_note=True)
     def view_proposal_decision(self, current_user, db, proposal, args, form):
         auth_cache = {}
         group_class = self.get_group_types()
@@ -2850,18 +2874,19 @@ class GenericReview(object):
 
                 decision = form['decision_accept']
                 proposal = proposal._replace(
-                    decision_accept=(None if (decision == '')
-                                     else bool(int(decision))),
+                    decision_accept=(
+                        None if (decision == '') else bool(int(decision))),
                     decision_exempt=('decision_exempt' in form),
                     decision_note=form['decision_note'],
                     decision_note_format=FormatType.PLAIN)
-                extra_info = self._view_proposal_decision_get(db, proposal,
-                                                              form)
+                extra_info = self._view_proposal_decision_get(
+                    db, proposal, form)
 
                 # Parse and store new values.
                 if proposal.decision_exempt and (not proposal.decision_accept):
-                    raise UserError('Proposal should not be marked "exempt" '
-                                    'when rejected.')
+                    raise UserError(
+                        'Proposal should not be marked "exempt" '
+                        'when rejected.')
 
                 self._view_proposal_decision_save(db, proposal, extra_info)
 
@@ -2877,17 +2902,20 @@ class GenericReview(object):
 
                 # Determine where to redirect the user.
                 if referrer == 'rp':
-                    target_redir = url_for('.review_call',
-                                           call_id=proposal.call_id)
+                    target_redir = url_for(
+                        '.review_call',
+                        call_id=proposal.call_id)
 
                 elif referrer == 'pr':
-                    target_redir = url_for('.proposal_reviews',
-                                           proposal_id=proposal.id)
+                    target_redir = url_for(
+                        '.proposal_reviews',
+                        proposal_id=proposal.id)
 
                 else:
                     # By default redirect to the detailed tabulation.
-                    target_redir = url_for('.review_call_tabulation',
-                                           call_id=proposal.call_id)
+                    target_redir = url_for(
+                        '.review_call_tabulation',
+                        call_id=proposal.call_id)
 
                 raise HTTPRedirect(target_redir)
 
@@ -2910,8 +2938,8 @@ class GenericReview(object):
             'referrer': referrer,
         }
 
-        ctx.update(self._view_proposal_decision_extra(db, proposal,
-                                                      extra_info))
+        ctx.update(self._view_proposal_decision_extra(
+            db, proposal, extra_info))
 
         return ctx
 
@@ -2982,9 +3010,10 @@ class GenericReview(object):
                     db, call_id=call.id, proposals=selected_proposals)
 
                 if n_update:
-                    flash('{} {} advanced to the final review state.',
-                          n_update,
-                          ('proposals' if n_update > 1 else 'proposal'))
+                    flash(
+                        '{} {} advanced to the final review state.',
+                        n_update,
+                        ('proposals' if n_update > 1 else 'proposal'))
 
                 if n_error:
                     raise ErrorPage(

@@ -161,9 +161,11 @@ class HeterodyneCalculator(JCMTCalculator):
                 'line_catalog',
                 'line_cat',
                 self.view_line_catalog,
-                {'send_file_opts': {
-                    'allow_cache': True,
-                    'fixed_type': 'application/json'}}),
+                {
+                    'send_file_opts': {
+                        'allow_cache': True,
+                        'fixed_type': 'application/json'},
+                }),
         ]
 
     def get_inputs(self, mode, version=None):
@@ -187,7 +189,7 @@ class HeterodyneCalculator(JCMTCalculator):
                 'res_unit', 'Resolution unit',
                 '\u0394\u03bd unit', '{}', None),
             CalculatorValue(
-                'if', 'Intermediate frequency', 'IF','{:.3f}', 'GHz'),
+                'if', 'Intermediate frequency', 'IF', '{:.3f}', 'GHz'),
             CalculatorValue(
                 'side', 'Sideband', 'SB', '{}', None),
             CalculatorValue(
@@ -939,8 +941,11 @@ class HeterodyneCalculator(JCMTCalculator):
         return CalculatorResult(output, extra_output)
 
     def condense_calculation(self, mode, version, calculation):
-        self._condense_merge_values(calculation, (('pos', 'pos_type'),
-                                                  ('res', 'res_unit')))
+        self._condense_merge_values(
+            calculation, (
+                ('pos', 'pos_type'),
+                ('res', 'res_unit'),
+            ))
 
         self._condense_tau_band(calculation, 'tau')
 

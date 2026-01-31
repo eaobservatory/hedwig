@@ -132,10 +132,11 @@ class ExampleCalculator(BaseCalculator):
 
         if version == 1:
             if mode == self.ADDITION:
-                return [CalculatorValue('sum', 'Sum', None, '{}', 'mm')]
+                return [CalculatorValue(
+                    'sum', 'Sum', None, '{}', 'mm')]
             elif mode == self.SUBTRACTION:
-                return [CalculatorValue('diff', 'Difference', None,
-                                        '{}', 'km')]
+                return [CalculatorValue(
+                    'diff', 'Difference', None, '{}', 'km')]
             else:
                 raise CalculatorError('Unknown mode.')
         else:
@@ -189,6 +190,8 @@ class ExampleCalculator(BaseCalculator):
 
         t_after = time.time()
 
-        return CalculatorResult(output,
-                                {'product': input_['a'] * input_['b'],
-                                 't_elapsed': t_after - t_before})
+        return CalculatorResult(
+            output, {
+                'product': input_['a'] * input_['b'],
+                't_elapsed': t_after - t_before
+            })

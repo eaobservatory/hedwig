@@ -89,5 +89,6 @@ def pool_checkout(dbapi_connection, connection_record, connection_proxy):
 def get_engine(url, **kwargs):
     """Creates an SQLAchemmy database engine object for the given URL."""
 
-    return create_engine(url, pool_recycle=3600,
-                         echo=False, **kwargs)
+    return create_engine(
+        url, pool_recycle=3600,
+        echo=False, **kwargs)

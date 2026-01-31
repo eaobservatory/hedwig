@@ -222,8 +222,9 @@ class ImagPhotCalculator(BaseCalculator):
 
         return {
             x.code:
-                x.format.format(values[x.code] if values[x.code] is not None
-                                else defaults.get(x.code))
+                x.format.format(
+                    values[x.code] if values[x.code] is not None
+                    else defaults.get(x.code))
                 for x in inputs}
 
     def convert_input_mode(self, mode, new_mode, input_):

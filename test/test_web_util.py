@@ -65,8 +65,10 @@ class WebUtilTestCase(TestCase):
     def test_url_manipulation(self):
         base_url = 'https://proposals.obs/facil/page?aaa=xxx'
 
-        self.assertEqual(url_relative(base_url),
-                         '/facil/page?aaa=xxx')
+        self.assertEqual(
+            url_relative(base_url),
+            '/facil/page?aaa=xxx')
 
-        self.assertEqual(url_add_args(base_url, bbb='yyy'),
-                         'https://proposals.obs/facil/page?aaa=xxx&bbb=yyy')
+        self.assertEqual(
+            url_add_args(base_url, bbb='yyy'),
+            'https://proposals.obs/facil/page?aaa=xxx&bbb=yyy')

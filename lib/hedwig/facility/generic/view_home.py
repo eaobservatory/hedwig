@@ -178,9 +178,11 @@ class GenericHome(object):
                 group_class, current_user, db, x, auth_cache=auth_cache).view))
 
         open_semesters = set(
-            x.semester_id for x in calls.values_matching(state=CallState.OPEN))
+            x.semester_id
+            for x in calls.values_matching(state=CallState.OPEN))
         closed_semesters = set(
-            x.semester_id for x in calls.values_matching(state=CallState.CLOSED))
+            x.semester_id
+            for x in calls.values_matching(state=CallState.CLOSED))
 
         closed_calls = calls.map_values(filter_value=(
             lambda x: (x.semester_id in closed_semesters)

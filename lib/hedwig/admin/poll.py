@@ -122,7 +122,7 @@ def send_proposal_feedback(db, dry_run=False):
     n_processed = 0
 
     for (call_id, call_proposals) in calls.items():
-        n_processed += send_call_proposal_feedback(db, call_id, call_proposals,
-                                                   dry_run=dry_run)
+        n_processed += send_call_proposal_feedback(
+            db, call_id, call_proposals, dry_run=dry_run)
 
     return n_processed

@@ -47,17 +47,21 @@ class UtilTest(TestCase):
         self.assertTrue(f_1.closed)
 
     def test_list_in_blocks(self):
-        self.assertEqual(list(list_in_blocks(range(0, 3), 5)),
-                         [[0, 1, 2]])
+        self.assertEqual(
+            list(list_in_blocks(range(0, 3), 5)),
+            [[0, 1, 2]])
 
-        self.assertEqual(list(list_in_blocks(range(0, 10), 5)),
-                         [[0, 1, 2, 3, 4], [5, 6, 7, 8, 9]])
+        self.assertEqual(
+            list(list_in_blocks(range(0, 10), 5)),
+            [[0, 1, 2, 3, 4], [5, 6, 7, 8, 9]])
 
-        self.assertEqual(list(list_in_blocks(range(0, 12), 5)),
-                         [[0, 1, 2, 3, 4], [5, 6, 7, 8, 9], [10, 11]])
+        self.assertEqual(
+            list(list_in_blocks(range(0, 12), 5)),
+            [[0, 1, 2, 3, 4], [5, 6, 7, 8, 9], [10, 11]])
 
-        self.assertEqual(list(list_in_blocks([], 5)),
-                         [])
+        self.assertEqual(
+            list(list_in_blocks([], 5)),
+            [])
 
     def test_list_in_ranges(self):
         self.assertEqual(list_in_ranges(

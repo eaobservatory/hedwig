@@ -96,8 +96,8 @@ class DBReviewTest(DBTestCase):
             self.assertIsInstance(v, GroupMember)
             self.assertIsNone(v.person_name)
 
-        result = self.db.search_group_member(queue_id, BaseGroupType.CTTEE,
-                                             with_person=True)
+        result = self.db.search_group_member(
+            queue_id, BaseGroupType.CTTEE, with_person=True)
         self.assertIsInstance(result, GroupMemberCollection)
         self.assertEqual(len(result), 2)
 
@@ -214,8 +214,8 @@ class DBReviewTest(DBTestCase):
 
         institution_id = self.db.add_institution(
             'Inst', 'Dept', 'Org', '', 'AX')
-        self.db.update_person(person_id=person_id_3,
-                              institution_id=institution_id)
+        self.db.update_person(
+            person_id=person_id_3, institution_id=institution_id)
 
         result = self.db.search_reviewer(
             reviewer_id=reviewer_id_3,
@@ -292,8 +292,8 @@ class DBReviewTest(DBTestCase):
 
         self.assertFalse(reviewer_id_1 in result.keys())
 
-        result = self.db.search_reviewer(proposal_id=proposal_id,
-                                         person_id=person_id_2)
+        result = self.db.search_reviewer(
+            proposal_id=proposal_id, person_id=person_id_2)
 
         self.assertEqual(list(result.keys()), [reviewer_id_2])
 

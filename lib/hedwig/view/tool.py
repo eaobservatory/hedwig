@@ -296,7 +296,8 @@ class BaseTargetTool(object):
                 targets_proposal_id = prev_proposals.get_single().proposal_id
 
             except:
-                raise ErrorPage('Unable to find targets via original proposal.')
+                raise ErrorPage(
+                    'Unable to find targets via original proposal.')
 
         targets = db.search_target(proposal_id=targets_proposal_id)
 

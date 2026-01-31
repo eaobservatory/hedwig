@@ -120,7 +120,8 @@ def for_call_review_proposal(
         group_class, current_user, db,
         null_tuple(Call)._replace(
             queue_id=proposal.queue_id,
-        ), auth_cache=auth_cache)
+        ),
+        auth_cache=auth_cache)
 
 
 def for_person(current_user, db, facilities, person, auth_cache=None):
@@ -228,25 +229,32 @@ def for_person_member(current_user, db, facilities, member, auth_cache=None):
     This constucts a dummy person record and then calls :func:`for_person`.
     """
 
-    return for_person(current_user, db, facilities, null_tuple(Person)._replace(
-        id=member.person_id,
-        user_id=member.user_id,
-        public=member.person_public,
-    ), auth_cache=auth_cache)
+    return for_person(
+        current_user, db, facilities,
+        null_tuple(Person)._replace(
+            id=member.person_id,
+            user_id=member.user_id,
+            public=member.person_public,
+        ),
+        auth_cache=auth_cache)
 
 
-def for_person_reviewer(current_user, db, facilities, reviewer, auth_cache=None):
+def for_person_reviewer(
+        current_user, db, facilities, reviewer, auth_cache=None):
     """
     Determine authorization for a person profile, based on a reviewer record.
 
     This constucts a dummy person record and then calls :func:`for_person`.
     """
 
-    return for_person(current_user, db, facilities, null_tuple(Person)._replace(
-        id=reviewer.person_id,
-        user_id=reviewer.user_id,
-        public=reviewer.person_public,
-    ), auth_cache=auth_cache)
+    return for_person(
+        current_user, db, facilities,
+        null_tuple(Person)._replace(
+            id=reviewer.person_id,
+            user_id=reviewer.user_id,
+            public=reviewer.person_public,
+        ),
+        auth_cache=auth_cache)
 
 
 def for_institution(
@@ -347,9 +355,13 @@ def for_proposal(
     if proposal.members is not None:
         try:
             member = proposal.members.get_person(person_id)
+
             return Authorization(
                 view=True,
-                edit=(member.editor and ProposalState.can_edit(proposal.state)))
+                edit=(
+                    member.editor
+                    and ProposalState.can_edit(proposal.state)))
+
         except NoSuchValue:
             pass
 
@@ -769,8 +781,8 @@ def find_addable_reviews(current_user, db, facilities, auth_cache=None):
 
         for proposal in proposals.values_by_facility(facility.id):
             roles = can_add_review_roles(
-                group_class, type_class, role_class, current_user, db, proposal,
-                include_indirect=False,
+                group_class, type_class, role_class, current_user, db,
+                proposal, include_indirect=False,
                 auth_cache=auth_cache)
             if not roles:
                 continue

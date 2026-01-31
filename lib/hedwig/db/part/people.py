@@ -57,8 +57,9 @@ rate_limit_password_reset = 3
 
 
 class PeoplePart(object):
-    def add_email(self, person_id, address, primary=False, verified=False,
-                  public=False, _conn=None, _test_skip_check=False):
+    def add_email(
+            self, person_id, address, primary=False, verified=False,
+            public=False, _conn=None, _test_skip_check=False):
         """
         Add an email address record to the databae.
 
@@ -119,10 +120,11 @@ class PeoplePart(object):
 
         return institution_id
 
-    def add_person(self, name, title=None, public=False,
-                   user_id=None, remote_addr=None,
-                   primary_email=None, institution_id=None,
-                   _test_skip_check=False):
+    def add_person(
+            self, name, title=None, public=False,
+            user_id=None, remote_addr=None,
+            primary_email=None, institution_id=None,
+            _test_skip_check=False):
         """
         Add a person to the database.
 
@@ -240,8 +242,9 @@ class PeoplePart(object):
         with self._transaction(_conn=_conn) as conn:
             if not _test_skip_check:
                 if not self._exists_id(conn, person, person_id):
-                    raise ConsistencyError('person does not exist with id={}',
-                                           person_id)
+                    raise ConsistencyError(
+                        'person does not exist with id={}',
+                        person_id)
 
             result = conn.execute(site_group_member.insert().values({
                 site_group_member.c.site_group_type: site_group_type,
@@ -250,8 +253,9 @@ class PeoplePart(object):
 
         return result.inserted_primary_key[0]
 
-    def add_user(self, name, password_raw, person_id=None, remote_addr=None,
-                 _test_skip_check=False):
+    def add_user(
+            self, name, password_raw, person_id=None, remote_addr=None,
+            _test_skip_check=False):
         """
         Add a user to the database.
 
@@ -637,13 +641,15 @@ class PeoplePart(object):
             if result is None:
                 raise NoSuchRecord('invitation token expired or non-existant')
 
-        return self.get_person(person_id=result.person_id,
-                               *args, **kwargs)
+        return self.get_person(
+            person_id=result.person_id,
+            *args, **kwargs)
 
-    def get_person(self, person_id, user_id=None,
-                   with_email=False, with_institution=False,
-                   with_proposals=False, with_reviews=False,
-                   _conn=None):
+    def get_person(
+            self, person_id, user_id=None,
+            with_email=False, with_institution=False,
+            with_proposals=False, with_reviews=False,
+            _conn=None):
         """
         Get a person record.
 
@@ -773,8 +779,9 @@ class PeoplePart(object):
 
         return (token, expiry)
 
-    def issue_invitation(self, person_id, days_valid=30,
-                         _test_skip_check=False):
+    def issue_invitation(
+            self, person_id, days_valid=30,
+            _test_skip_check=False):
         """
         Creates an invitation token to allow someone to register as the
         given person and adds it to the database.
@@ -795,8 +802,9 @@ class PeoplePart(object):
                     person.c.id == person_id
                 )).first()
                 if result is None:
-                    raise ConsistencyError('person does not exist with id={}',
-                                           person_id)
+                    raise ConsistencyError(
+                        'person does not exist with id={}',
+                        person_id)
                 elif result.user_id is not None:
                     raise ConsistencyError('person is already registered')
                 elif result.admin:
@@ -852,9 +860,10 @@ class PeoplePart(object):
 
         return (token, expiry)
 
-    def merge_institution_records(self, main_institution_id,
-                                  duplicate_institution_id,
-                                  _test_skip_check=False):
+    def merge_institution_records(
+            self, main_institution_id,
+            duplicate_institution_id,
+            _test_skip_check=False):
         """
         Merge the two given institutions.
 
@@ -865,13 +874,13 @@ class PeoplePart(object):
 
         with self._transaction() as conn:
             if not _test_skip_check:
-                if not self._exists_id(conn, institution,
-                                       main_institution_id):
+                if not self._exists_id(
+                        conn, institution, main_institution_id):
                     raise ConsistencyError(
                         'main institution {} does not exist for merge',
                         main_institution_id)
-                if not self._exists_id(conn, institution,
-                                       duplicate_institution_id):
+                if not self._exists_id(
+                        conn, institution, duplicate_institution_id):
                     raise ConsistencyError(
                         'duplicate institution {} does not exist for merge',
                         duplicate_institution_id)
@@ -890,11 +899,12 @@ class PeoplePart(object):
             conn.execute(institution.delete().where(
                 institution.c.id == duplicate_institution_id))
 
-    def merge_person_records(self, main_person_id, duplicate_person_id,
-                             duplicate_person_registered=None,
-                             _user_log_event=UserLogEvent.MERGED,
-                             _user_log_remote_addr=None,
-                             _conn=None, _test_skip_check=False):
+    def merge_person_records(
+            self, main_person_id, duplicate_person_id,
+            duplicate_person_registered=None,
+            _user_log_event=UserLogEvent.MERGED,
+            _user_log_remote_addr=None,
+            _conn=None, _test_skip_check=False):
         """
         Merge the two given person records.
         """
@@ -1088,8 +1098,9 @@ class PeoplePart(object):
 
         return ans
 
-    def search_institution_log(self, institution_id=None, approved=None,
-                               has_unapproved=None):
+    def search_institution_log(
+            self, institution_id=None, approved=None,
+            has_unapproved=None):
         """
         Search for records in the institution edit log.
 
@@ -1216,10 +1227,11 @@ class PeoplePart(object):
 
         return ans
 
-    def search_person(self, person_id=None, user_id=None, email_address=None,
-                      registered=None, public=None, admin=None,
-                      institution_id=None,
-                      with_institution=False):
+    def search_person(
+            self, person_id=None, user_id=None, email_address=None,
+            registered=None, public=None, admin=None,
+            institution_id=None,
+            with_institution=False):
         """
         Find person records.
         """
@@ -1620,12 +1632,13 @@ class PeoplePart(object):
                 update_columns=(),
                 forbid_add=True)
 
-    def update_institution(self, institution_id, updater_person_id=None,
-                           name=None, department=None,
-                           organization=None, address=None, country=None,
-                           name_abbr=(), department_abbr=(), organization_abbr=(),
-                           log_approved=False,
-                           _test_skip_log=False):
+    def update_institution(
+            self, institution_id, updater_person_id=None,
+            name=None, department=None,
+            organization=None, address=None, country=None,
+            name_abbr=(), department_abbr=(), organization_abbr=(),
+            log_approved=False,
+            _test_skip_log=False):
         """
         Update an institution record.
         """
@@ -1698,10 +1711,11 @@ class PeoplePart(object):
                 updater_person_id, PersonLogEvent.INSTITUTION_EDIT,
                 institution_id=institution_id, _conn=conn)
 
-    def update_person(self, person_id,
-                      name=None, title=(), public=None, institution_id=(),
-                      admin=None, verified=None,
-                      _conn=None, _test_skip_check=False):
+    def update_person(
+            self, person_id,
+            name=None, title=(), public=None, institution_id=(),
+            admin=None, verified=None,
+            _conn=None, _test_skip_check=False):
         """
         Update a person database record.
         """
@@ -1777,8 +1791,9 @@ class PeoplePart(object):
                 raise ConsistencyError(
                     'no rows matched updating user with id={}', user_id)
 
-    def update_user_name(self, user_id, name, remote_addr=None,
-                         _test_skip_check=False):
+    def update_user_name(
+            self, user_id, name, remote_addr=None,
+            _test_skip_check=False):
         if not name:
             raise UserError('The new user name can not be blank.')
 
@@ -1805,9 +1820,10 @@ class PeoplePart(object):
             self._add_user_log_entry(
                 conn, user_id, UserLogEvent.CHANGE_NAME, remote_addr)
 
-    def update_user_password(self, user_id, password_raw, remote_addr=None,
-                             _test_skip_check=False, _skip_log=False,
-                             _conn=None):
+    def update_user_password(
+            self, user_id, password_raw, remote_addr=None,
+            _test_skip_check=False, _skip_log=False,
+            _conn=None):
         """
         Update a user's password.
 
@@ -1926,8 +1942,9 @@ class PeoplePart(object):
                 conn, user_id, UserLogEvent.USE_TOKEN, remote_addr)
 
             # Apply the password change, without adding another log entry.
-            self.update_user_password(user_id, password_raw, remote_addr,
-                                      _skip_log=True, _conn=conn)
+            self.update_user_password(
+                user_id, password_raw, remote_addr,
+                _skip_log=True, _conn=conn)
 
             # Delete the used password reset token.
             conn.execute(reset_token.delete().where(
@@ -1940,8 +1957,9 @@ class PeoplePart(object):
 
         return user_name
 
-    def use_invitation(self, token, user_id=None, new_person_id=None,
-                       remote_addr=None, _test_skip_check=False):
+    def use_invitation(
+            self, token, user_id=None, new_person_id=None,
+            remote_addr=None, _test_skip_check=False):
         """
         Uses the invitation token to link the given user_id to the
         person record associated with the invitation.
@@ -1982,10 +2000,11 @@ class PeoplePart(object):
                 raise NoSuchRecord('invitation token expired or non-existant')
 
             old_person_id = result.person_id
-            old_person_record = self.get_person(old_person_id,
-                                                with_proposals=True,
-                                                with_reviews=True,
-                                                _conn=conn)
+            old_person_record = self.get_person(
+                old_person_id,
+                with_proposals=True,
+                with_reviews=True,
+                _conn=conn)
 
             if user_id is not None:
                 # Remove the token.

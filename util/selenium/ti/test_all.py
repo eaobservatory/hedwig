@@ -76,13 +76,16 @@ class DummyServer(Thread):
         # Patch werkzeug.serving.make_server to save a reference
         # to the server so that we can shut it down when needed.
         make_server_orig = werkzeug.serving.make_server
+
         def make_server_save(*args, **kwargs):
             self.server = make_server_orig(*args, **kwargs)
             return self.server
+
         werkzeug.serving.make_server = make_server_save
 
-        self.app.run(host='127.0.0.1', port=11111,
-                     debug=False, use_reloader=False)
+        self.app.run(
+            host='127.0.0.1', port=11111,
+            debug=False, use_reloader=False)
 
 
 class IntegrationTest(DummyConfigTestCase):
@@ -102,8 +105,10 @@ class IntegrationTest(DummyConfigTestCase):
         self.review_image_root = os.path.join('doc', 'review', 'image')
         self.admin_image_root = os.path.join('doc', 'admin', 'image')
 
-        self.db = get_dummy_database(randomize_ids=False,
-                                     allow_multi_threaded=True)
+        self.db = get_dummy_database(
+            randomize_ids=False,
+            allow_multi_threaded=True)
+
         self.server = DummyServer(self.db)
 
         options = Options()
@@ -125,32 +130,37 @@ class IntegrationTest(DummyConfigTestCase):
             person_id = self.db.search_person().get_single().id
             self.db.update_person(person_id, admin=True)
 
-            self.register_user(user_name='username',
-                               person_name='Example Person',
-                               person_email='example@somewhere.edu',
-                               public_profile=True,
-                               screenshot_path=self.user_image_root)
+            self.register_user(
+                user_name='username',
+                person_name='Example Person',
+                person_email='example@somewhere.edu',
+                public_profile=True,
+                screenshot_path=self.user_image_root)
 
             self.log_out_user()
 
-            self.register_user(user_name='username2',
-                               person_name='Another Person',
-                               public_profile=True)
+            self.register_user(
+                user_name='username2',
+                person_name='Another Person',
+                public_profile=True)
 
             self.log_out_user()
 
-            self.register_user(user_name='tech1',
-                               person_name='Example Technical Assessor')
+            self.register_user(
+                user_name='tech1',
+                person_name='Example Technical Assessor')
 
             self.log_out_user()
 
-            self.register_user(user_name='group1',
-                               person_name='Example Group Member')
+            self.register_user(
+                user_name='group1',
+                person_name='Example Group Member')
 
             self.log_out_user()
 
-            self.register_user(user_name='group2',
-                               person_name='Another Group Member')
+            self.register_user(
+                user_name='group2',
+                person_name='Another Group Member')
 
             self.log_out_user()
 
@@ -225,8 +235,9 @@ class IntegrationTest(DummyConfigTestCase):
             self.log_out_user()
 
             # Enter an external review.
-            self.accept_invitation(user_name='invitee2',
-                                   screenshot_path=self.review_image_root)
+            self.accept_invitation(
+                user_name='invitee2',
+                screenshot_path=self.review_image_root)
 
             self.enter_review()
 
@@ -277,12 +288,14 @@ class IntegrationTest(DummyConfigTestCase):
             self.view_proposal_feedback('jcmt', 1)
 
             # Try creating a continuation request.
-            self.copy_proposal('jcmt', new_semester_name, continuation=True,
-                               screenshot_path=self.user_image_root)
+            self.copy_proposal(
+                'jcmt', new_semester_name, continuation=True,
+                screenshot_path=self.user_image_root)
 
             # Also try copying the proposal into the rapid turnaround call.
-            self.copy_proposal('jcmt', None, 'Rapid Turnaround',
-                               screenshot_path=self.user_image_root)
+            self.copy_proposal(
+                'jcmt', None, 'Rapid Turnaround',
+                screenshot_path=self.user_image_root)
 
             self.log_out_user()
 
@@ -322,12 +335,13 @@ class IntegrationTest(DummyConfigTestCase):
             self.browser.get(self.base_url + 'shutdown')
             self.browser.quit()
 
-    def register_user(self, user_name, person_name, person_email='a@a',
-                      password='password',
-                      institution_name='Test Institution',
-                      institution_country='United States',
-                      public_profile=False,
-                      screenshot_path=None):
+    def register_user(
+            self, user_name, person_name, person_email='a@a',
+            password='password',
+            institution_name='Test Institution',
+            institution_country='United States',
+            public_profile=False,
+            screenshot_path=None):
         self.browser.get(self.base_url)
 
         log_in = self.browser.find_element(By.LINK_TEXT, 'Log in')
@@ -354,8 +368,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element(By.NAME, 'submit').click()
 
-        self.assertIn('Your user profile has been saved.',
-                      self.browser.page_source)
+        self.assertIn(
+            'Your user profile has been saved.',
+            self.browser.page_source)
 
         self._do_verify_email(person_email, screenshot_path=screenshot_path)
 
@@ -368,8 +383,9 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.browser.find_element(By.NAME, 'submit_select').click()
 
-            self.assertIn('Your institution has been selected.',
-                          self.browser.page_source)
+            self.assertIn(
+                'Your institution has been selected.',
+                self.browser.page_source)
 
         except NoSuchElementException:
             self.browser.find_element(By.NAME, 'institution_name').send_keys(
@@ -380,12 +396,14 @@ class IntegrationTest(DummyConfigTestCase):
 
             self.browser.find_element(By.NAME, 'submit_add').click()
 
-            self.assertIn('Your institution has been recorded.',
-                          self.browser.page_source)
+            self.assertIn(
+                'Your institution has been recorded.',
+                self.browser.page_source)
 
         profile_link = self.browser.find_element(By.LINK_TEXT, person_name)
-        self._save_screenshot(screenshot_path, 'profile_complete',
-                              highlight=[profile_link, 'log_out_link'])
+        self._save_screenshot(
+            screenshot_path, 'profile_complete',
+            highlight=[profile_link, 'log_out_link'])
 
         profile_link.click()
         self._save_screenshot(screenshot_path, 'profile_view')
@@ -425,8 +443,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element(By.NAME, 'submit').click()
 
-        self.assertIn('Your user account has been created.',
-                      self.browser.page_source)
+        self.assertIn(
+            'Your user account has been created.',
+            self.browser.page_source)
 
     def log_out_user(self):
         self.browser.find_element(By.LINK_TEXT, 'log out').click()
@@ -443,8 +462,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element(By.NAME, 'submit').click()
 
-        self.assertIn('You have been logged in.',
-                      self.browser.page_source)
+        self.assertIn(
+            'You have been logged in.',
+            self.browser.page_source)
 
     def set_up_facility(self, facility_code):
         self.browser.get(self.base_url + facility_code)
@@ -453,20 +473,23 @@ class IntegrationTest(DummyConfigTestCase):
 
         take_admin = self.browser.find_element(By.LINK_TEXT, 'take admin')
 
-        self._save_screenshot(self.admin_image_root, 'facility_home',
-                              [take_admin])
+        self._save_screenshot(
+            self.admin_image_root, 'facility_home',
+            [take_admin])
 
         take_admin.click()
 
-        self.assertIn('You have taken administrative privileges.',
-                      self.browser.page_source)
+        self.assertIn(
+            'You have taken administrative privileges.',
+            self.browser.page_source)
 
         drop_admin = self.browser.find_element(By.LINK_TEXT, 'drop admin')
         admin_menu = self.browser.find_element(
             By.LINK_TEXT, 'Administrative menu')
 
-        self._save_screenshot(self.admin_image_root, 'facility_home_admin',
-                              [drop_admin, admin_menu])
+        self._save_screenshot(
+            self.admin_image_root, 'facility_home_admin',
+            [drop_admin, admin_menu])
 
         admin_menu.click()
 
@@ -500,8 +523,9 @@ class IntegrationTest(DummyConfigTestCase):
         affiliation_edit = self.browser.find_element(
             By.LINK_TEXT, 'Edit affiliations')
 
-        self._save_screenshot(self.admin_image_root, 'queue_view',
-                              [affiliation_edit])
+        self._save_screenshot(
+            self.admin_image_root, 'queue_view',
+            [affiliation_edit])
 
         affiliation_edit.click()
 
@@ -517,8 +541,9 @@ class IntegrationTest(DummyConfigTestCase):
             self.browser.find_element(By.NAME, 'type_new_3')
         ).select_by_visible_text('Excluded')
 
-        self._save_screenshot(self.admin_image_root, 'queue_affiliation',
-                              [affiliation_add])
+        self._save_screenshot(
+            self.admin_image_root, 'queue_affiliation',
+            [affiliation_add])
 
         self.browser.find_element(By.NAME, 'submit').click()
 
@@ -545,8 +570,9 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element(By.NAME, 'name_new_2').send_keys(
             'Cosmology')
 
-        self._save_screenshot(self.admin_image_root, 'category',
-                              [category_add])
+        self._save_screenshot(
+            self.admin_image_root, 'category',
+            [category_add])
 
         self.browser.find_element(By.NAME, 'submit').click()
 
@@ -680,8 +706,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         semester_link = self.browser.find_element(By.LINK_TEXT, semester_name)
 
-        self._save_screenshot(self.user_image_root, 'facility_home',
-                              [semester_link])
+        self._save_screenshot(
+            self.user_image_root, 'facility_home',
+            [semester_link])
 
         semester_link.click()
 
@@ -990,8 +1017,9 @@ class IntegrationTest(DummyConfigTestCase):
         upload_pdf_link = self.browser.find_element(
             By.LINK_TEXT, 'Upload new PDF file')
 
-        self._save_screenshot(self.user_image_root, 'tech_case_edit',
-                              [edit_text_link, upload_pdf_link])
+        self._save_screenshot(
+            self.user_image_root, 'tech_case_edit',
+            [edit_text_link, upload_pdf_link])
 
         upload_pdf_link.click()
 
@@ -1031,8 +1059,9 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element(By.NAME, 'text').send_keys(
             'We plan to observe ...')
 
-        self._save_screenshot(self.user_image_root, 'tech_case_text',
-                              ['text_words'])
+        self._save_screenshot(
+            self.user_image_root, 'tech_case_text',
+            ['text_words'])
 
         self.browser.find_element(By.NAME, 'submit').click()
 
@@ -1053,16 +1082,18 @@ class IntegrationTest(DummyConfigTestCase):
         manage_figures = self.browser.find_element(
             By.LINK_TEXT, 'Manage figures')
 
-        self._save_screenshot(self.user_image_root, 'sci_case_edit',
-                              [manage_figures, 'edit_figure_1_link'])
+        self._save_screenshot(
+            self.user_image_root, 'sci_case_edit',
+            [manage_figures, 'edit_figure_1_link'])
 
         self.browser.find_element(By.LINK_TEXT, 'Edit text').click()
 
         self.browser.find_element(By.NAME, 'text').send_keys(
             'The scientific rationale for this project is ...')
 
-        self._save_screenshot(self.user_image_root, 'sci_case_text',
-                              ['text_words'])
+        self._save_screenshot(
+            self.user_image_root, 'sci_case_text',
+            ['text_words'])
 
         self.browser.find_element(By.NAME, 'submit').click()
 
@@ -1083,8 +1114,9 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element(By.LINK_TEXT, 'Back to proposal').click()
 
         # Grab a screenshot of the complete proposal now.
-        self._save_screenshot(self.user_image_root, 'proposal_complete',
-                              ['proposal_status_cell'])
+        self._save_screenshot(
+            self.user_image_root, 'proposal_complete',
+            ['proposal_status_cell'])
 
         self.browser.find_element(By.LINK_TEXT, 'Request PDF file download').click()
         self._save_screenshot(self.user_image_root, 'proposal_pdf_request')
@@ -1258,8 +1290,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         register_link = self.browser.find_element(By.LINK_TEXT, 'register')
 
-        self._save_screenshot(screenshot_path, 'log_in_register',
-                              [register_link])
+        self._save_screenshot(
+            screenshot_path, 'log_in_register',
+            [register_link])
 
         register_link.click()
 
@@ -1294,8 +1327,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         profile_link = self.browser.find_element(By.ID, 'user_profile_link')
 
-        self._save_screenshot(self.user_image_root, 'profile_link',
-                              [profile_link])
+        self._save_screenshot(
+            self.user_image_root, 'profile_link',
+            [profile_link])
 
         profile_link.click()
 
@@ -1350,8 +1384,9 @@ class IntegrationTest(DummyConfigTestCase):
         # Edit email addresses.
         self.browser.find_element(By.LINK_TEXT, 'Edit email addresses').click()
 
-        self._save_screenshot(self.user_image_root, 'email_edit',
-                              ['delete_2', 'add_email'])
+        self._save_screenshot(
+            self.user_image_root, 'email_edit',
+            ['delete_2', 'add_email'])
 
         email_new = 'example@somewhere.else.edu'
 
@@ -1413,8 +1448,9 @@ class IntegrationTest(DummyConfigTestCase):
         edit_institution = self.browser.find_element(
             By.LINK_TEXT, 'Edit this institution')
 
-        self._save_screenshot(self.user_image_root, 'institution_view',
-                              [edit_institution])
+        self._save_screenshot(
+            self.user_image_root, 'institution_view',
+            [edit_institution])
 
         edit_institution.click()
 
@@ -1454,8 +1490,9 @@ class IntegrationTest(DummyConfigTestCase):
         reset_password = self.browser.find_element(
             By.LINK_TEXT, 'reset your password')
 
-        self._save_screenshot(self.user_image_root, 'pass_reset_link',
-                              [reset_password])
+        self._save_screenshot(
+            self.user_image_root, 'pass_reset_link',
+            [reset_password])
 
         reset_password.click()
 
@@ -1515,8 +1552,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element(By.LINK_TEXT, queue_name).click()
 
-        self.assertIn('<h1>Call:',
-                      self.browser.page_source)
+        self.assertIn(
+            '<h1>Call:',
+            self.browser.page_source)
 
         self.browser.find_element(By.LINK_TEXT, 'Edit call').click()
 
@@ -1534,13 +1572,15 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element(By.NAME, 'submit').click()
 
-        self.assertIn('The call has been updated.',
-                      self.browser.page_source)
+        self.assertIn(
+            'The call has been updated.',
+            self.browser.page_source)
 
         self.browser.find_element(By.LINK_TEXT, 'View proposals').click()
 
-        self.assertIn('<h1>Proposals:',
-                      self.browser.page_source)
+        self.assertIn(
+            '<h1>Proposals:',
+            self.browser.page_source)
 
         self._save_screenshot(self.admin_image_root, 'call_proposals')
 
@@ -1606,8 +1646,9 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element(By.LINK_TEXT, 'Delete').click()
         self.browser.find_element(By.NAME, 'submit_confirm').click()
 
-        self.assertIn('The coverage map has been deleted.',
-                      self.browser.page_source)
+        self.assertIn(
+            'The coverage map has been deleted.',
+            self.browser.page_source)
 
         # Also test the semester and queue edit pages.
         self.browser.get(admin_menu_url)
@@ -1616,8 +1657,9 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element(By.LINK_TEXT, 'Edit semester').click()
         self.browser.find_element(By.NAME, 'submit').click()
 
-        self.assertIn('Semester "{}" has been updated.'.format(semester_name),
-                      self.browser.page_source)
+        self.assertIn(
+            'Semester "{}" has been updated.'.format(semester_name),
+            self.browser.page_source)
 
         self.browser.find_element(By.LINK_TEXT, 'Administrative menu').click()
         self.browser.find_element(By.LINK_TEXT, 'Queues').click()
@@ -1625,8 +1667,9 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element(By.LINK_TEXT, 'Edit queue').click()
         self.browser.find_element(By.NAME, 'submit').click()
 
-        self.assertIn('Queue "PI Science" has been updated.',
-                      self.browser.page_source)
+        self.assertIn(
+            'Queue "PI Science" has been updated.',
+            self.browser.page_source)
 
         # Set up the review groups.
         admin_queue_url = self.browser.current_url
@@ -1648,8 +1691,9 @@ class IntegrationTest(DummyConfigTestCase):
                         person_name))
 
                 if first_person:
-                    self._save_screenshot(self.admin_image_root,
-                                          'group_{}_add'.format(group_abbr))
+                    self._save_screenshot(
+                        self.admin_image_root,
+                        'group_{}_add'.format(group_abbr))
 
                 self.browser.find_element(By.NAME, 'submit_link').click()
 
@@ -1662,18 +1706,21 @@ class IntegrationTest(DummyConfigTestCase):
             # Reload page to remove the yellow flash box for the screenshot.
             self.browser.get(self.browser.current_url)
 
-            self._save_screenshot(self.admin_image_root,
-                                  'group_{}'.format(group_abbr))
+            self._save_screenshot(
+                self.admin_image_root,
+                'group_{}'.format(group_abbr))
 
             self.browser.find_element(By.LINK_TEXT, 'Edit members').click()
 
-            self._save_screenshot(self.admin_image_root,
-                                  'group_{}_edit'.format(group_abbr))
+            self._save_screenshot(
+                self.admin_image_root,
+                'group_{}_edit'.format(group_abbr))
 
             self.browser.find_element(By.NAME, 'submit').click()
 
-            self.assertIn('The group membership has been saved.',
-                          self.browser.page_source)
+            self.assertIn(
+                'The group membership has been saved.',
+                self.browser.page_source)
 
         # View the all-groups page.
         self.browser.find_element(By.LINK_TEXT, 'PI Science').click()
@@ -1690,8 +1737,9 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.get(self.base_url)
         self.browser.find_element(By.LINK_TEXT, 'drop admin').click()
 
-        self.assertIn('You have dropped administrative privileges.',
-                      self.browser.page_source)
+        self.assertIn(
+            'You have dropped administrative privileges.',
+            self.browser.page_source)
 
     def copy_queue_settings(self, facility_code, queue_name):
         """
@@ -1760,8 +1808,9 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.get(self.base_url)
         self.browser.find_element(By.LINK_TEXT, 'drop admin').click()
 
-        self.assertIn('You have dropped administrative privileges.',
-                      self.browser.page_source)
+        self.assertIn(
+            'You have dropped administrative privileges.',
+            self.browser.page_source)
 
     def set_up_review(self, facility_code):
         """
@@ -1786,8 +1835,9 @@ class IntegrationTest(DummyConfigTestCase):
         self._save_screenshot(self.admin_image_root, 'review_deadline')
 
         self.browser.find_element(By.NAME, 'submit').click()
-        self.assertIn('The review deadlines have been saved.',
-                      self.browser.page_source)
+        self.assertIn(
+            'The review deadlines have been saved.',
+            self.browser.page_source)
 
         # Add an external reviewer.
         self.browser.find_element(By.LINK_TEXT, 'Assign reviewers').click()
@@ -1830,8 +1880,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element(By.NAME, 'submit').click()
 
-        self.assertIn('assignments have been updated.',
-                      self.browser.page_source)
+        self.assertIn(
+            'assignments have been updated.',
+            self.browser.page_source)
 
         # Committee reviewers page.
         self.browser.find_element(
@@ -1846,8 +1897,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element(By.NAME, 'submit').click()
 
-        self.assertIn('assignments have been updated.',
-                      self.browser.page_source)
+        self.assertIn(
+            'assignments have been updated.',
+            self.browser.page_source)
 
         # Sending notifications.
         self.browser.refresh()
@@ -1862,8 +1914,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element(By.NAME, 'submit_confirm').click()
 
-        self.assertIn('Notifications have been sent',
-                      self.browser.page_source)
+        self.assertIn(
+            'Notifications have been sent',
+            self.browser.page_source)
 
     def set_up_peer_review(self, facility_code):
         self.browser.get(self.base_url + facility_code)
@@ -1878,8 +1931,9 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element(By.NAME, 'date_time_7').send_keys('00:00')
 
         self.browser.find_element(By.NAME, 'submit').click()
-        self.assertIn('The review deadlines have been saved.',
-                      self.browser.page_source)
+        self.assertIn(
+            'The review deadlines have been saved.',
+            self.browser.page_source)
 
         # Assign peer reviewers.
         self.browser.find_element(By.LINK_TEXT, 'Assign reviewers').click()
@@ -1891,8 +1945,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element(By.NAME, 'submit').click()
 
-        self.assertIn('assignments have been updated.',
-                      self.browser.page_source)
+        self.assertIn(
+            'assignments have been updated.',
+            self.browser.page_source)
 
     def enter_technical_assessment(self):
         """
@@ -1926,8 +1981,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element(By.NAME, 'done').click()
 
-        self._save_screenshot(self.review_image_root, 'tech_assess_edit',
-                              ['add_calc_links', 'upload_fig_link'])
+        self._save_screenshot(
+            self.review_image_root, 'tech_assess_edit',
+            ['add_calc_links', 'upload_fig_link'])
 
         self.browser.find_element(By.NAME, 'submit').click()
 
@@ -1945,8 +2001,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.accept_review()
 
-        self._save_screenshot(self.review_image_root, 'review_info',
-                              ['person_reviews_link', 'review_action_links'])
+        self._save_screenshot(
+            self.review_image_root, 'review_info',
+            ['person_reviews_link', 'review_action_links'])
 
         self.browser.find_element(By.LINK_TEXT, 'Write your review').click()
 
@@ -2084,8 +2141,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element(By.NAME, 'submit_confirm').click()
 
-        self.assertIn('Messages have been sent',
-                      self.browser.page_source)
+        self.assertIn(
+            'Messages have been sent',
+            self.browser.page_source)
 
         # Enter affiliation weights.
         self.browser.get(review_process_url)
@@ -2098,8 +2156,9 @@ class IntegrationTest(DummyConfigTestCase):
         self._save_screenshot(self.admin_image_root, 'affiliation_weights')
 
         self.browser.find_element(By.NAME, 'submit').click()
-        self.assertIn('The affiliation weights have been updated.',
-                      self.browser.page_source)
+        self.assertIn(
+            'The affiliation weights have been updated.',
+            self.browser.page_source)
 
         # Enter times by weather band.
         self.browser.find_element(
@@ -2114,8 +2173,9 @@ class IntegrationTest(DummyConfigTestCase):
         self._save_screenshot(self.admin_image_root, 'time_available')
 
         self.browser.find_element(By.NAME, 'submit').click()
-        self.assertIn('The time available has been saved.',
-                      self.browser.page_source)
+        self.assertIn(
+            'The time available has been saved.',
+            self.browser.page_source)
 
         # Advance to the final review phase.
         self.browser.find_element(
@@ -2126,8 +2186,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element(By.NAME, 'submit_confirm').click()
 
-        self.assertIn('1 proposal advanced to the final review state',
-                      self.browser.page_source)
+        self.assertIn(
+            '1 proposal advanced to the final review state',
+            self.browser.page_source)
 
         # Look at the tabulation page and enter a decision.
         self.browser.find_element(
@@ -2143,8 +2204,9 @@ class IntegrationTest(DummyConfigTestCase):
             '$("table#tabulation").stickyTableHeaders("destroy");')
         ActionChains(self.browser).scroll_by_amount(0, 200).perform()
 
-        self._save_screenshot(self.admin_image_root, 'review_tabulation',
-                              [decision_link])
+        self._save_screenshot(
+            self.admin_image_root, 'review_tabulation',
+            [decision_link])
 
         decision_link.click()
 
@@ -2165,33 +2227,37 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.assertRegex(
             self.browser.page_source,
-            'The decision for proposal [A-Z0-9]+ has been saved\.')
+            r'The decision for proposal [A-Z0-9]+ has been saved\.')
 
-        self._save_screenshot(self.admin_image_root,
-                              'review_tabulation_updated')
+        self._save_screenshot(
+            self.admin_image_root,
+            'review_tabulation_updated')
 
         # Look at the reviewer statistics page
         self.browser.get(review_process_url)
         self.browser.find_element(
             By.LINK_TEXT, 'View review statistics').click()
 
-        self._save_screenshot(self.admin_image_root,
-                              'review_statistics')
+        self._save_screenshot(
+            self.admin_image_root,
+            'review_statistics')
 
         # Look at the allocation details page
         self.browser.get(review_process_url)
         self.browser.find_element(
             By.LINK_TEXT, 'View allocation details').click()
 
-        self._save_screenshot(self.admin_image_root,
-                              'allocation_details')
+        self._save_screenshot(
+            self.admin_image_root,
+            'allocation_details')
 
         # View reviews page.
         self.browser.get(review_process_url)
         self.browser.find_element(By.LINK_TEXT, 'Reviews').click()
 
-        self._save_screenshot(self.admin_image_root, 'proposal_reviews',
-                              ['extra_review_links'])
+        self._save_screenshot(
+            self.admin_image_root, 'proposal_reviews',
+            ['extra_review_links'])
 
         # Enter feedback text.
         self.browser.find_element(By.LINK_TEXT, 'Add feedback').click()
@@ -2216,8 +2282,9 @@ class IntegrationTest(DummyConfigTestCase):
         self._save_screenshot(self.admin_image_root, 'approve_feedback')
 
         self.browser.find_element(By.NAME, 'submit').click()
-        self.assertIn('The feedback approval status has been updated.',
-                      self.browser.page_source)
+        self.assertIn(
+            'The feedback approval status has been updated.',
+            self.browser.page_source)
 
     def administer_site(self):
         self.browser.get(self.base_url)
@@ -2233,8 +2300,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         thread_link = self.browser.find_element(By.ID, 'message_thread_link')
 
-        self._save_screenshot(self.admin_image_root, 'message_view',
-                              [thread_link])
+        self._save_screenshot(
+            self.admin_image_root, 'message_view',
+            [thread_link])
         thread_link.click()
 
         self.assertIn('<h1>Message thread:', self.browser.page_source)
@@ -2255,13 +2323,15 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element(By.XPATH, '//input[@type="checkbox"]').click()
 
-        self._save_screenshot(self.admin_image_root, 'message_reset',
-                              ['message_state_control'])
+        self._save_screenshot(
+            self.admin_image_root, 'message_reset',
+            ['message_state_control'])
 
         self.browser.find_element(By.NAME, 'submit').click()
 
-        self.assertIn('The status for 1 message has been set to unsent.',
-                      self.browser.page_source)
+        self.assertIn(
+            'The status for 1 message has been set to unsent.',
+            self.browser.page_source)
 
         self.browser.get(admin_menu_url)
         self.browser.find_element(
@@ -2285,8 +2355,9 @@ class IntegrationTest(DummyConfigTestCase):
         # View administrative links on a profile and institution pages.
         self.browser.find_element(By.ID, 'user_profile_link').click()
 
-        self._save_screenshot(self.admin_image_root, 'person_admin',
-                              ['account_admin_links'])
+        self._save_screenshot(
+            self.admin_image_root, 'person_admin',
+            ['account_admin_links'])
 
         self.browser.find_element(By.LINK_TEXT, 'User account log').click()
 
@@ -2312,8 +2383,9 @@ class IntegrationTest(DummyConfigTestCase):
         self.browser.find_element(
             By.PARTIAL_LINK_TEXT, 'Test Institution').click()
 
-        self._save_screenshot(self.admin_image_root, 'institution_links',
-                              ['institution_admin_links'])
+        self._save_screenshot(
+            self.admin_image_root, 'institution_links',
+            ['institution_admin_links'])
 
         self.browser.find_element(By.LINK_TEXT, 'View edit log').click()
         self._save_screenshot(self.admin_image_root, 'institution_log')
@@ -2330,8 +2402,9 @@ class IntegrationTest(DummyConfigTestCase):
 
         self.browser.find_element(By.NAME, 'submit').click()
 
-        self._save_screenshot(self.admin_image_root,
-                              'institution_subsume_confirm')
+        self._save_screenshot(
+            self.admin_image_root,
+            'institution_subsume_confirm')
 
         self.browser.find_element(By.NAME, 'submit_cancel').click()
 
@@ -2427,13 +2500,15 @@ class IntegrationTest(DummyConfigTestCase):
         return semester_name
 
     def view_proposal_feedback(self, facility_code, proposal_id):
-        self.browser.get(self.base_url +
-                         '{}/proposal/{}'.format(facility_code, proposal_id))
+        self.browser.get(
+            self.base_url +
+            '{}/proposal/{}'.format(facility_code, proposal_id))
 
         feedback_link = self.browser.find_element(By.LINK_TEXT, 'View feedback')
 
-        self._save_screenshot(self.user_image_root, 'proposal_reviewed',
-                              [feedback_link])
+        self._save_screenshot(
+            self.user_image_root, 'proposal_reviewed',
+            [feedback_link])
 
         feedback_link.click()
 

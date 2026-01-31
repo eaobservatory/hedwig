@@ -34,8 +34,9 @@ class CollectionByCall(object):
         Create a subset containing entries for the given call.
         """
 
-        return type(self)((k, v) for (k, v) in self.items()
-                          if v.call_id == call_id)
+        return type(self)(
+            (k, v) for (k, v) in self.items()
+            if v.call_id == call_id)
 
 
 class CollectionByFacility(object):
@@ -94,8 +95,9 @@ class CollectionByProposal(object):
         the entries which match the given proposal.
         """
 
-        return type(self)((k, v) for (k, v) in self.items()
-                          if v.proposal_id == proposal_id)
+        return type(self)(
+            (k, v) for (k, v) in self.items()
+            if v.proposal_id == proposal_id)
 
 
 class CollectionByQueue(object):
@@ -330,8 +332,9 @@ class EnumAvailable(object):
 
     @classmethod
     def get_options(cls, include_unavailable=False):
-        return OrderedDict(((k, v.name) for (k, v) in cls._info.items()
-                            if (v.available or include_unavailable)))
+        return OrderedDict((
+            (k, v.name) for (k, v) in cls._info.items()
+            if (v.available or include_unavailable)))
 
     @classmethod
     def is_available(cls, value):

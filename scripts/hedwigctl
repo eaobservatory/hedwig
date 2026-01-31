@@ -189,18 +189,21 @@ def admin(args):
         person = db.get_person(person_id)
 
         if person.user_id is None:
-            logger.error('{} (person {}) is unregistered',
-                         person.name, person_id)
+            logger.error(
+                '{} (person {}) is unregistered',
+                person.name, person_id)
 
         elif person.admin == admin:
-            logger.error('{} (person {}) {} administrative access',
-                         person.name, person_id,
-                         ('already has' if person.admin else 'does not have'))
+            logger.error(
+                '{} (person {}) {} administrative access',
+                person.name, person_id,
+                ('already has' if person.admin else 'does not have'))
 
         else:
-            logger.info('{} administrative access for {} (person {})',
-                        ('Granting' if admin else 'Removing'),
-                        person.name, person_id)
+            logger.info(
+                '{} administrative access for {} (person {})',
+                ('Granting' if admin else 'Removing'),
+                person.name, person_id)
 
             db.update_person(person_id, admin=admin)
 
@@ -346,8 +349,9 @@ def poll_publication(db, dry_run):
     n_processed = process_publication_references(db, dry_run=dry_run)
 
     if n_processed:
-        logger.info('Processed {} publication reference(s)',
-                    n_processed)
+        logger.info(
+            'Processed {} publication reference(s)',
+            n_processed)
 
 
 @poll_option

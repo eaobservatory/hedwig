@@ -24,7 +24,8 @@ from hedwig.compat import first_value
 from hedwig.db.meta import member
 from hedwig.error import ConsistencyError, DatabaseIntegrityError, \
     Error, NoSuchRecord, NoSuchValue, UserError
-from hedwig.type.collection import AffiliationCollection, AnnotationCollection, \
+from hedwig.type.collection import AffiliationCollection, \
+    AnnotationCollection, \
     CallCollection, CallMidCloseCollection, MemberCollection, \
     PrevProposalCollection, \
     ProposalCollection, ProposalCategoryCollection, \
@@ -119,8 +120,9 @@ class DBProposalTest(DBTestCase):
             '', 500, 4, 1, 366)
 
         # Store different sets of weights for the two calls.
-        result = self.db.search_affiliation(queue_id=queue_id,
-                                            with_weight_call_id=call_id)
+        result = self.db.search_affiliation(
+            queue_id=queue_id,
+            with_weight_call_id=call_id)
 
         self.assertEqual(len(result), 2)
 
@@ -130,8 +132,9 @@ class DBProposalTest(DBTestCase):
         records_1 = AffiliationCollection()
         records_2 = AffiliationCollection()
 
-        for (row, weight_1, weight_2) in zip(result.values(),
-                                             weights_1, weights_2):
+        for (row, weight_1, weight_2) in zip(
+                result.values(),
+                weights_1, weights_2):
             self.assertIsNone(row.weight)
             records_1[row.id] = row._replace(weight=weight_1)
             records_2[row.id] = row._replace(weight=weight_2)
@@ -142,16 +145,18 @@ class DBProposalTest(DBTestCase):
             BaseAffiliationType, call_id_2, records_2)
 
         # Check we can recover the two sets of weights.
-        result = self.db.search_affiliation(queue_id=queue_id,
-                                            with_weight_call_id=call_id)
+        result = self.db.search_affiliation(
+            queue_id=queue_id,
+            with_weight_call_id=call_id)
 
         self.assertEqual(len(result), 2)
 
         for (row, weight) in zip(result.values(), weights_1):
             self.assertEqual(row.weight, weight)
 
-        result = self.db.search_affiliation(queue_id=queue_id,
-                                            with_weight_call_id=call_id_2)
+        result = self.db.search_affiliation(
+            queue_id=queue_id,
+            with_weight_call_id=call_id_2)
 
         self.assertEqual(len(result), 2)
 
@@ -167,26 +172,31 @@ class DBProposalTest(DBTestCase):
         date_end = datetime(2002, 8, 1)
 
         with self.assertRaisesRegex(UserError, 'end date is before start'):
-            self.db.add_semester(facility_id, '99A', '99A',
-                                 date_end, date_start)
+            self.db.add_semester(
+                facility_id, '99A', '99A',
+                date_end, date_start)
 
         with self.assertRaisesRegex(ConsistencyError, 'facility does not'):
             self.db.add_semester(1999999, '99A', '99A', date_start, date_end)
 
-        semester_id = self.db.add_semester(facility_id, '99A', '99A',
-                                           date_start, date_end)
+        semester_id = self.db.add_semester(
+            facility_id, '99A', '99A',
+            date_start, date_end)
         self.assertIsInstance(semester_id, int)
 
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_semester(facility_id, '99A', '99A2',
-                                 date_start, date_end)
+            self.db.add_semester(
+                facility_id, '99A', '99A2',
+                date_start, date_end)
 
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_semester(facility_id, '99A2', '99A',
-                                 date_start, date_end)
+            self.db.add_semester(
+                facility_id, '99A2', '99A',
+                date_start, date_end)
 
-        semester_id_2 = self.db.add_semester(facility_id, '99B', '99B',
-                                             date_start, date_end)
+        semester_id_2 = self.db.add_semester(
+            facility_id, '99B', '99B',
+            date_start, date_end)
         self.assertIsInstance(semester_id_2, int)
         self.assertNotEqual(semester_id_2, semester_id)
 
@@ -195,16 +205,19 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(len(semesters), 2)
 
         # Try updating a record.
-        self.assertEqual(self.db.get_semester(facility_id, semester_id).name,
-                         '99A')
+        self.assertEqual(
+            self.db.get_semester(facility_id, semester_id).name,
+            '99A')
         self.db.update_semester(semester_id, name='99 (a)')
-        self.assertEqual(self.db.get_semester(facility_id, semester_id).name,
-                         '99 (a)')
+        self.assertEqual(
+            self.db.get_semester(facility_id, semester_id).name,
+            '99 (a)')
         with self.assertRaisesRegex(ConsistencyError, 'semester does not ex'):
             self.db.update_semester(1999999, name='bad semester')
         with self.assertRaisesRegex(UserError, 'end date is before start'):
-            self.db.update_semester(semester_id,
-                                    date_start=date_end, date_end=date_start)
+            self.db.update_semester(
+                semester_id,
+                date_start=date_end, date_end=date_start)
 
         # Check for semesters which don't exist or have wrong facility.
         with self.assertRaises(NoSuchRecord):
@@ -363,8 +376,9 @@ class DBProposalTest(DBTestCase):
         semester_id_2 = self.db.add_semester(
             facility_id_2, 'My Semester', 'MS',
             datetime(2000, 2, 1), datetime(2000, 7, 31))
-        with self.assertRaisesRegex(ConsistencyError,
-                                    'inconsistent facility references'):
+        with self.assertRaisesRegex(
+                ConsistencyError,
+                'inconsistent facility references'):
             self.db.add_call(
                 BaseCallType, semester_id_2, queue_id, BaseCallType.STANDARD,
                 date_open, date_close,
@@ -376,27 +390,28 @@ class DBProposalTest(DBTestCase):
         result = self.db.search_call(call_id=call_id, with_preamble=True)
         self.assertIsInstance(result, CallCollection)
         self.assertEqual(list(result.keys()), [call_id])
-        expected = Call(id=call_id, semester_id=semester_id, queue_id=queue_id,
-                        type=BaseCallType.STANDARD,
-                        date_open=date_open, date_close=date_close,
-                        state=CallState.CLOSED,
-                        facility_id=facility_id,
-                        semester_name='My Semester', queue_name='My Queue',
-                        queue_description=None, queue_description_format=None,
-                        abst_word_lim=1,
-                        tech_word_lim=2, tech_fig_lim=7, tech_page_lim=3,
-                        sci_word_lim=4, sci_fig_lim=5, sci_page_lim=6,
-                        capt_word_lim=8, expl_word_lim=9,
-                        tech_note='technical note', sci_note='scientific note',
-                        prev_prop_note='previous proposal note',
-                        note_format=FormatType.PLAIN,
-                        proposal_count=None,
-                        multi_semester=False, separate=False,
-                        preamble='preamble text', preamble_format=FormatType.RST,
-                        hidden=False, allow_continuation=False,
-                        cnrq_note='con req note',
-                        cnrq_word_lim=500, cnrq_fig_lim=4, cnrq_page_lim=1,
-                        cnrq_max_age=366)
+        expected = Call(
+            id=call_id, semester_id=semester_id, queue_id=queue_id,
+            type=BaseCallType.STANDARD,
+            date_open=date_open, date_close=date_close,
+            state=CallState.CLOSED,
+            facility_id=facility_id,
+            semester_name='My Semester', queue_name='My Queue',
+            queue_description=None, queue_description_format=None,
+            abst_word_lim=1,
+            tech_word_lim=2, tech_fig_lim=7, tech_page_lim=3,
+            sci_word_lim=4, sci_fig_lim=5, sci_page_lim=6,
+            capt_word_lim=8, expl_word_lim=9,
+            tech_note='technical note', sci_note='scientific note',
+            prev_prop_note='previous proposal note',
+            note_format=FormatType.PLAIN,
+            proposal_count=None,
+            multi_semester=False, separate=False,
+            preamble='preamble text', preamble_format=FormatType.RST,
+            hidden=False, allow_continuation=False,
+            cnrq_note='con req note',
+            cnrq_word_lim=500, cnrq_fig_lim=4, cnrq_page_lim=1,
+            cnrq_max_age=366)
         self.assertEqual(result[call_id], expected._replace(
             tech_note=None, sci_note=None,
             prev_prop_note=None, cnrq_note=None))
@@ -426,16 +441,19 @@ class DBProposalTest(DBTestCase):
         with self.assertRaisesRegex(ConsistencyError, 'call does not exist'):
             self.db.update_call(1999999, date_open=date_open)
         with self.assertRaisesRegex(UserError, 'Closing date is before open'):
-            self.db.update_call(call_id,
-                                date_close=date_open, date_open=date_close)
+            self.db.update_call(
+                call_id,
+                date_close=date_open, date_open=date_close)
         with self.assertRaisesRegex(Error, 'Preamble .* not specified'):
             self.db.update_call(call_id, preamble='new preamble')
         with self.assertRaisesRegex(Error, 'Preamble .* not specified'):
-            self.db.update_call(call_id, preamble='new preamble',
-                                preamble_format=None)
+            self.db.update_call(
+                call_id, preamble='new preamble',
+                preamble_format=None)
         with self.assertRaisesRegex(Error, 'Preamble .* not recognised'):
-            self.db.update_call(call_id, preamble='new preamble',
-                                preamble_format=999999)
+            self.db.update_call(
+                call_id, preamble='new preamble',
+                preamble_format=999999)
         with self.assertRaisesRegex(Error, 'format specified without pre'):
             self.db.update_call(call_id, preamble_format=FormatType.PLAIN)
 
@@ -656,16 +674,19 @@ class DBProposalTest(DBTestCase):
         self.assertIsInstance(person_id, int)
 
         # Create proposals and check the numbers are as expected.
-        for (call_id, affiliation_id) in ((call_id_1, affiliation_id_1),
-                                          (call_id_2, affiliation_id_2)):
+        for (call_id, affiliation_id) in (
+                (call_id_1, affiliation_id_1),
+                (call_id_2, affiliation_id_2)):
             for i in range(1, 11):
                 title = 'Proposal {}'.format(i)
-                proposal_id = self.db.add_proposal(call_id, person_id,
-                                                   affiliation_id, title)
+                proposal_id = self.db.add_proposal(
+                    call_id, person_id,
+                    affiliation_id, title)
                 self.assertIsInstance(proposal_id, int)
 
-                proposal = self.db.get_proposal(None, proposal_id,
-                                                with_members=True)
+                proposal = self.db.get_proposal(
+                    None, proposal_id,
+                    with_members=True)
                 self.assertIsInstance(proposal, Proposal)
 
                 self.assertEqual(proposal.number, i)
@@ -686,8 +707,9 @@ class DBProposalTest(DBTestCase):
                 self.assertFalse(member.observer)
 
                 # Try updating the proposal.
-                with self.assertRaisesRegex(ConsistencyError,
-                                            '^no rows matched'):
+                with self.assertRaisesRegex(
+                        ConsistencyError,
+                        '^no rows matched'):
                     self.db.update_proposal(
                         proposal_id, state=ProposalState.SUBMITTED,
                         state_prev=ProposalState.REVIEW)
@@ -697,9 +719,10 @@ class DBProposalTest(DBTestCase):
                     state=ProposalState.PREPARATION,
                     members=None))
 
-                self.db.update_proposal(proposal_id,
-                                        state=ProposalState.SUBMITTED,
-                                        state_prev=ProposalState.PREPARATION)
+                self.db.update_proposal(
+                    proposal_id,
+                    state=ProposalState.SUBMITTED,
+                    state_prev=ProposalState.PREPARATION)
                 proposal_updated = self.db.get_proposal(None, proposal_id)
                 self.assertEqual(proposal_updated, proposal._replace(
                     state=ProposalState.SUBMITTED,
@@ -734,10 +757,12 @@ class DBProposalTest(DBTestCase):
 
         # Check for error raised when the call or person doesn't exist.
         with self.assertRaisesRegex(ConsistencyError, '^call does not'):
-            self.db.add_proposal(1999999, person_id, affiliation_id_1, 'Title')
+            self.db.add_proposal(
+                1999999, person_id, affiliation_id_1, 'Title')
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_proposal(1999999, person_id, affiliation_id_1, 'Title',
-                                 _test_skip_check=True)
+            self.db.add_proposal(
+                1999999, person_id, affiliation_id_1, 'Title',
+                _test_skip_check=True)
 
         with self.assertRaisesRegex(ConsistencyError, '^person does not'):
             self.db.add_proposal(call_id_1, 1999999, affiliation_id_1, 'Title')
@@ -748,13 +773,13 @@ class DBProposalTest(DBTestCase):
         # Check for error raised when the affiliation is for the wrong
         # queue.
         other_facility_id = self.db.ensure_facility('another_tel')
-        other_queue_id = self.db.add_queue(other_facility_id, 'another queue',
-                                           'aq')
+        other_queue_id = self.db.add_queue(
+            other_facility_id, 'another queue', 'aq')
         other_affiliation_id = self.db.add_affiliation(
             BaseAffiliationType, other_queue_id, 'another aff/n')
         with self.assertRaisesRegex(ConsistencyError, 'affiliation does not'):
-            self.db.add_proposal(call_id_1, person_id, other_affiliation_id,
-                                 'title')
+            self.db.add_proposal(
+                call_id_1, person_id, other_affiliation_id, 'title')
 
         # Check that the "with_proposals" option of "get_user" works.
         result = self.db.get_person(person_id, with_proposals=True)
@@ -768,11 +793,11 @@ class DBProposalTest(DBTestCase):
         person_id_1 = self.db.add_person('Person 1')
         person_id_2 = self.db.add_person('Person 2')
         person_id_3 = self.db.add_person('Person 3')
-        proposal_id = self.db.add_proposal(call_id, person_id_1,
-                                           affiliation_id, 'Proposal 1')
+        proposal_id = self.db.add_proposal(
+            call_id, person_id_1, affiliation_id, 'Proposal 1')
 
-        for id_ in (call_id, person_id_1, person_id_2, person_id_3,
-                    proposal_id):
+        for id_ in (
+                call_id, person_id_1, person_id_2, person_id_3, proposal_id):
             self.assertIsInstance(id_, int)
 
         # Check the member list as we add members one at a time.
@@ -783,25 +808,29 @@ class DBProposalTest(DBTestCase):
         member_id_2 = self.db.add_member(
             proposal_id, person_id_2, affiliation_id, False, False, True)
         result = self.db.search_member(proposal_id=proposal_id)
-        self.assertEqual(_member_person_set(result),
-                         [person_id_1, person_id_2])
+        self.assertEqual(
+            _member_person_set(result),
+            [person_id_1, person_id_2])
 
         member_id_3 = self.db.add_member(
             proposal_id, person_id_3, affiliation_id, False, True, True)
         result = self.db.search_member(proposal_id=proposal_id)
-        self.assertEqual(_member_person_set(result),
-                         [person_id_1, person_id_2, person_id_3])
+        self.assertEqual(
+            _member_person_set(result),
+            [person_id_1, person_id_2, person_id_3])
 
         self.assertEqual(result.get_pi().person_id, person_id_1)
 
         # Ensure we can't add a member twice.
         with self.assertRaisesRegex(UserError, 'already a member'):
-            self.db.add_member(proposal_id, person_id_2, affiliation_id,
-                               False, False, False)
+            self.db.add_member(
+                proposal_id, person_id_2, affiliation_id,
+                False, False, False)
 
         with self.assertRaises(DatabaseIntegrityError):
-            self.db.add_member(proposal_id, person_id_2, affiliation_id,
-                               False, False, False, _test_skip_check=True)
+            self.db.add_member(
+                proposal_id, person_id_2, affiliation_id,
+                False, False, False, _test_skip_check=True)
 
         # Ensure we can't add a member with an affiliation for the wrong
         # facility.
@@ -1001,8 +1030,8 @@ class DBProposalTest(DBTestCase):
         person_id_2 = self.db.add_person('Person 2')
         person_id_3 = self.db.add_person('Person 3')
         self.db.update_person(person_id_3, institution_id=institution_id_3)
-        proposal_id = self.db.add_proposal(call_id, person_id_1,
-                                           affiliation_id, 'Proposal 1')
+        proposal_id = self.db.add_proposal(
+            call_id, person_id_1, affiliation_id, 'Proposal 1')
 
         member_id_2 = self.db.add_member(
             proposal_id, person_id_2, affiliation_id, False, False, False)
@@ -1084,12 +1113,13 @@ class DBProposalTest(DBTestCase):
 
         self.db.add_member(proposal_id, person_id_2, affiliation_id)
 
-        with self.assertRaisesRegex(ConsistencyError,
-                                    'would leave no editors'):
+        with self.assertRaisesRegex(
+                ConsistencyError,
+                'would leave no editors'):
             self.db.delete_member_person(proposal_id, person_id_1)
 
-        self.db.add_member(proposal_id, person_id_3, affiliation_id,
-                           editor=True)
+        self.db.add_member(
+            proposal_id, person_id_3, affiliation_id, editor=True)
 
         self.db.delete_member_person(proposal_id, person_id_1)
 
@@ -1266,11 +1296,11 @@ class DBProposalTest(DBTestCase):
 
         (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
         person_id = self.db.add_person('Person 1')
-        proposal_id_1 = self.db.add_proposal(call_id, person_id,
-                                             affiliation_id, 'Proposal 1')
+        proposal_id_1 = self.db.add_proposal(
+            call_id, person_id, affiliation_id, 'Proposal 1')
         self.assertIsInstance(proposal_id_1, int)
-        proposal_id_2 = self.db.add_proposal(call_id, person_id,
-                                             affiliation_id, 'Proposal 1')
+        proposal_id_2 = self.db.add_proposal(
+            call_id, person_id, affiliation_id, 'Proposal 1')
         self.assertIsInstance(proposal_id_2, int)
 
         # Searching now should return nothing.
@@ -1292,13 +1322,14 @@ class DBProposalTest(DBTestCase):
                 proposal_id_1, BaseTextRole.ABSTRACT)
 
         with self.assertRaisesRegex(ConsistencyError, '^text does not exist'):
-            self.db.delete_proposal_text(proposal_id_1,
-                                         BaseTextRole.ABSTRACT)
+            self.db.delete_proposal_text(
+                proposal_id_1, BaseTextRole.ABSTRACT)
 
         with self.assertRaisesRegex(ConsistencyError, '^mismatch deleting'):
-            self.db.delete_proposal_text(proposal_id_1,
-                                         BaseTextRole.ABSTRACT,
-                                         _skip_check=True)
+            self.db.delete_proposal_text(
+                proposal_id_1,
+                BaseTextRole.ABSTRACT,
+                _skip_check=True)
 
         # Test that we can't reference a non-existant person as editor.
         with self.assertRaisesRegex(ConsistencyError, '^person does not'):
@@ -1437,8 +1468,8 @@ class DBProposalTest(DBTestCase):
         role = BaseTextRole.TECHNICAL_CASE
 
         person_id = self.db.add_person('Person 1')
-        proposal_id = self.db.add_proposal(call_id, person_id,
-                                           affiliation_id, 'Proposal 1')
+        proposal_id = self.db.add_proposal(
+            call_id, person_id, affiliation_id, 'Proposal 1')
         self.assertIsInstance(proposal_id, int)
 
         # Add text and figures -- these should be removed automatically.
@@ -1552,8 +1583,8 @@ class DBProposalTest(DBTestCase):
         type_ = FigureType.PNG
 
         person_id = self.db.add_person('Person 1')
-        proposal_id = self.db.add_proposal(call_id, person_id,
-                                           affiliation_id, 'Proposal 1')
+        proposal_id = self.db.add_proposal(
+            call_id, person_id, affiliation_id, 'Proposal 1')
         self.assertIsInstance(proposal_id, int)
 
         result = self.db.search_proposal_figure(proposal_id=proposal_id)
@@ -1639,8 +1670,8 @@ class DBProposalTest(DBTestCase):
             state_prev=AttachmentState.NEW, state_is_system=True)
         self.assertIsNone(result)
 
-        result = self.db.search_proposal_figure(proposal_id=proposal_id,
-                                                with_has_preview=True)
+        result = self.db.search_proposal_figure(
+            proposal_id=proposal_id, with_has_preview=True)
         fig_info = result[link_id]
         self.assertEqual(fig_info.state, AttachmentState.ERROR)
         self.assertEqual(fig_info.has_preview, True)
@@ -1674,8 +1705,8 @@ class DBProposalTest(DBTestCase):
         self.assertIsInstance(new_fig_id, int)
         self.assertNotEqual(new_fig_id, fig_id)
 
-        result = self.db.search_proposal_figure(proposal_id=proposal_id,
-                                                with_caption=True)
+        result = self.db.search_proposal_figure(
+            proposal_id=proposal_id, with_caption=True)
         fig_info = result[link_id]
         self.assertEqual(fig_info.md5sum, 'b9e7dfbc36883c26e5d2aff8c80f34db')
         self.assertEqual(fig_info.state, AttachmentState.NEW)
@@ -1726,8 +1757,8 @@ class DBProposalTest(DBTestCase):
             proposal_id, role, link_id, caption='!')
         self.assertIsNone(result)
 
-        result = self.db.search_proposal_figure(proposal_id=proposal_id,
-                                                with_caption=True)
+        result = self.db.search_proposal_figure(
+            proposal_id=proposal_id, with_caption=True)
         fig_info = result[link_id]
         self.assertEqual(fig_info.caption, '!')
         self.assertEqual(fig_info.fig_id, fig_id)
@@ -2290,8 +2321,8 @@ class DBProposalTest(DBTestCase):
     def test_proposal_target(self):
         (call_id, affiliation_id) = self._create_test_call('sem1', 'queue1')
         person_id = self.db.add_person('Person 1')
-        proposal_id = self.db.add_proposal(call_id, person_id,
-                                           affiliation_id, 'Proposal 1')
+        proposal_id = self.db.add_proposal(
+            call_id, person_id, affiliation_id, 'Proposal 1')
         self.assertIsInstance(proposal_id, int)
 
         result = self.db.search_target(proposal_id=proposal_id)
@@ -2490,8 +2521,8 @@ class DBProposalTest(DBTestCase):
         self.assertIsInstance(proposal_id, int)
 
         proposal_categories = ResultCollection()
-        proposal_categories[1] = ProposalCategory(1, proposal_id,
-                                                  category_id_a, None, None)
+        proposal_categories[1] = ProposalCategory(
+            1, proposal_id, category_id_a, None, None)
 
         (n_insert, n_update, n_delete) = self.db.sync_proposal_category(
             proposal_id, proposal_categories)
@@ -2509,8 +2540,8 @@ class DBProposalTest(DBTestCase):
         self.assertEqual(proposal_cat.category_name_abbr, 'A')
 
         proposal_categories = ResultCollection()
-        proposal_categories[2] = ProposalCategory(2, proposal_id,
-                                                  category_id_b, None, None)
+        proposal_categories[2] = ProposalCategory(
+            2, proposal_id, category_id_b, None, None)
 
         (n_insert, n_update, n_delete) = self.db.sync_proposal_category(
             proposal_id, proposal_categories)
@@ -2543,5 +2574,6 @@ def _member_person_set(member_collection):
 
 
 def _co_member_person_ed(co_member_collection):
-    return sorted(((x.co_member_person_id, x.editor)
-                   for x in co_member_collection.values()))
+    return sorted((
+        (x.co_member_person_id, x.editor)
+        for x in co_member_collection.values()))

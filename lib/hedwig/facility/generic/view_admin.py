@@ -82,7 +82,8 @@ class GenericAdmin(object):
             # so that we can check for "copy" request.
             if (args is not None) and ('copy' in args):
                 try:
-                    semester_orig = db.get_semester(self.id_, int(args['copy']))
+                    semester_orig = db.get_semester(
+                        self.id_, int(args['copy']))
                 except NoSuchRecord:
                     raise ErrorPage('Original semester to copy not found.')
 
@@ -91,14 +92,16 @@ class GenericAdmin(object):
                     id=None, facility_id=None, name='', code='',
                     date_start=None, date_end=None)
 
-                flash('Details have been copied from Semester "{}".',
-                      semester_orig.name)
+                flash(
+                    'Details have been copied from Semester "{}".',
+                    semester_orig.name)
 
             else:
-                semester = Semester(None, None, name='', code='',
-                                    date_start=None, date_end=None,
-                                    description='',
-                                    description_format=FormatType.PLAIN)
+                semester = Semester(
+                    None, None, name='', code='',
+                    date_start=None, date_end=None,
+                    description='',
+                    description_format=FormatType.PLAIN)
 
                 if (form is not None) and ('semester_copy_id' in form):
                     try:
@@ -173,11 +176,13 @@ class GenericAdmin(object):
                                     description=preamble.description,
                                     description_format=preamble.description_format)
 
-                    flash('New semester "{}" has been created.',
-                          semester.name)
+                    flash(
+                        'New semester "{}" has been created.',
+                        semester.name)
 
-                    raise HTTPRedirect(url_for('.semester_view',
-                                               semester_id=new_semester_id))
+                    raise HTTPRedirect(url_for(
+                        '.semester_view',
+                        semester_id=new_semester_id))
 
                 else:
                     # Update an existing semseter.
@@ -189,8 +194,9 @@ class GenericAdmin(object):
                         description=semester.description,
                         description_format=semester.description_format)
                     flash('Semester "{}" has been updated.', semester.name)
-                    raise HTTPRedirect(url_for('.semester_view',
-                                               semester_id=semester_id))
+                    raise HTTPRedirect(url_for(
+                        '.semester_view',
+                        semester_id=semester_id))
 
             except UserError as e:
                 message = e.message
@@ -233,12 +239,13 @@ class GenericAdmin(object):
                     description=preamble.description,
                     description_format=preamble.description_format)
 
-                flash('The {} call preamble for semester {} has been saved.',
-                      type_class.get_name(preamble.type).lower(),
-                      semester.name)
+                flash(
+                    'The {} call preamble for semester {} has been saved.',
+                    type_class.get_name(preamble.type).lower(),
+                    semester.name)
 
-                raise HTTPRedirect(url_for('.semester_view',
-                                           semester_id=semester.id))
+                raise HTTPRedirect(url_for(
+                    '.semester_view', semester_id=semester.id))
 
             except UserError as e:
                 message = e.message
@@ -297,10 +304,12 @@ class GenericAdmin(object):
 
         if queue_id is None:
             # We are creating a new queue.
-            queue = Queue(None, None, name='', code='', description='',
-                          description_format=FormatType.PLAIN)
+            queue = Queue(
+                None, None, name='', code='', description='',
+                description_format=FormatType.PLAIN)
             title = 'Add New Queue'
             target = url_for('.queue_new')
+
         else:
             # Fetch the existing queue record.
             try:
@@ -334,8 +343,8 @@ class GenericAdmin(object):
                             'The selected queue code may already exist.')
 
                     flash('New queue "{}" has been added.', queue.name)
-                    raise HTTPRedirect(url_for('.queue_view',
-                                               queue_id=new_queue_id))
+                    raise HTTPRedirect(url_for(
+                        '.queue_view', queue_id=new_queue_id))
 
                 else:
                     # Update existing queue.
@@ -343,9 +352,10 @@ class GenericAdmin(object):
                         queue_id, name=queue.name, code=queue.code,
                         description=queue.description,
                         description_format=queue.description_format)
+
                     flash('Queue "{}" has been updated.', queue.name)
-                    raise HTTPRedirect(url_for('.queue_view',
-                                               queue_id=queue_id))
+                    raise HTTPRedirect(url_for(
+                        '.queue_view', queue_id=queue_id))
 
             except UserError as e:
                 message = e.message
@@ -386,6 +396,7 @@ class GenericAdmin(object):
         if call.allow_continuation and (call.cnrq_max_age is not None):
             continuation_earliest = \
                 call.date_open - timedelta(days=call.cnrq_max_age)
+
             # Also restrict latest date in order to provide a reasonable
             # list of semesters when viewing older calls.
             continuation_latest = call.date_open
@@ -443,9 +454,10 @@ class GenericAdmin(object):
 
                 extra_info = self._view_call_edit_copy(db, call_orig)
 
-                flash('Details have been copied from {} {} {}.'.format(
+                flash(
+                    'Details have been copied from {} {} {}.',
                     call_orig.semester_name, call_orig.queue_name,
-                    type_class.get_name(call_orig.type)))
+                    type_class.get_name(call_orig.type))
             else:
                 call = self.get_new_call_default(call_type)._replace(
                     type=call_type)
@@ -455,10 +467,13 @@ class GenericAdmin(object):
             semesters = db.search_semester(
                 facility_id=self.id_,
                 state=(SemesterState.FUTURE, SemesterState.CURRENT))
+
             if not semesters:
                 raise ErrorPage('No semesters are available for this call.')
-            queues = db.search_queue(facility_id=self.id_,
-                                     has_affiliation=True)
+
+            queues = db.search_queue(
+                facility_id=self.id_, has_affiliation=True)
+
             if not queues:
                 raise ErrorPage(
                     'No queues (with affiliations) are available '
@@ -880,7 +895,8 @@ class GenericAdmin(object):
                     else:
                         flash('No changes were made.')
 
-                    raise HTTPRedirect(url_for('.queue_view', queue_id=queue.id))
+                    raise HTTPRedirect(url_for(
+                        '.queue_view', queue_id=queue.id))
 
                 except UserError as e:
                     message = e.message
@@ -971,16 +987,19 @@ class GenericAdmin(object):
 
                 else:
                     target_redir = url_for(
-                        '.group_view', queue_id=queue.id, group_type=group_type)
+                        '.group_view',
+                        queue_id=queue.id, group_type=group_type)
 
                 if member['is_link']:
                     try:
                         member_info.raise_()
 
                         try:
-                            person = db.get_person(person_id=member['person_id'])
+                            person = db.get_person(
+                                person_id=member['person_id'])
                         except NoSuchRecord:
-                            raise UserError('Could not find the person profile.')
+                            raise UserError(
+                                'Could not find the person profile.')
 
                         db.add_group_member(
                             group_class, queue.id, group_type, person.id)
@@ -1009,7 +1028,9 @@ class GenericAdmin(object):
                             person_id=person_id,
                             person_name=member['name'])
 
-                        flash('{} has been added to the group.', member['name'])
+                        flash(
+                            '{} has been added to the group.',
+                            member['name'])
 
                         # Return to the group page after editing the new
                         # member's institution.
@@ -1032,8 +1053,9 @@ class GenericAdmin(object):
             'member': member_info.data,
             'message_link': message_link,
             'message_invite': message_invite,
-            'target': url_for('.group_member_add',
-                              queue_id=queue.id, group_type=group_type),
+            'target': url_for(
+                '.group_member_add',
+                queue_id=queue.id, group_type=group_type),
             'title_link': 'Add a Member from the Directory',
             'title_invite': 'Invite a Member to Register',
             'submit_link': 'Add to group',
@@ -1043,14 +1065,16 @@ class GenericAdmin(object):
                 'facility_admin',
                 ('Queues', url_for('.queue_list')),
                 (queue.name, url_for('.queue_view', queue_id=queue.id)),
-                (group_info.name, url_for('.group_view', queue_id=queue.id,
-                                          group_type=group_type))],
+                (group_info.name, url_for(
+                    '.group_view',
+                    queue_id=queue.id, group_type=group_type))],
             'help_link': url_for('help.admin_page', page_name='review_group'),
             'titles': PersonTitle.get_options(),
         }
 
-    def _message_group_invite(self, current_user, db, group_info, queue,
-                              person_id, person_name):
+    def _message_group_invite(
+            self, current_user, db, group_info, queue,
+            person_id, person_name):
         (token, expiry) = db.issue_invitation(person_id, days_valid=7)
 
         email_ctx = {
@@ -1070,8 +1094,9 @@ class GenericAdmin(object):
 
         db.add_message(
             '{} invitation'.format(group_info.name),
-            render_email_template('group_invitation.txt',
-                                  email_ctx, facility=self),
+            render_email_template(
+                'group_invitation.txt',
+                email_ctx, facility=self),
             [person_id])
 
     @with_queue
@@ -1171,7 +1196,8 @@ class GenericAdmin(object):
                 queue_id=queue.id, group_type=group_type, with_person=True)
 
             other_members = db.search_group_member(
-                queue_id=other_queue.id, group_type=group_type, with_person=True)
+                queue_id=other_queue.id, group_type=group_type,
+                with_person=True)
 
             comparison = compare_collections(
                 orig_members, other_members,
@@ -1253,11 +1279,13 @@ class GenericAdmin(object):
                     person_id=member.person_id,
                     person_name=member.person_name)
 
-                flash('{} has been re-invited to the group.',
-                      member.person_name)
+                flash(
+                    '{} has been re-invited to the group.',
+                    member.person_name)
 
-            raise HTTPRedirect(url_for('.group_view', queue_id=queue.id,
-                                       group_type=group_type))
+            raise HTTPRedirect(url_for(
+                '.group_view', queue_id=queue.id,
+                group_type=group_type))
 
         return {
             'title': 'Re-send Group Member Invitation',

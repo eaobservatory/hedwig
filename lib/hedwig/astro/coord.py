@@ -41,14 +41,15 @@ class CoordSystem(object):
     ICRS = 1
     GAL = 2
 
-    SystemInfo = namedtuple('SystemInfo',
-                            ('name', 'frame', 'unit', 'decimal'))
+    SystemInfo = namedtuple(
+        'SystemInfo',
+        ('name', 'frame', 'unit', 'decimal'))
 
     _info = OrderedDict((
-        (ICRS, SystemInfo('ICRS',     coordinates.ICRS,
-                          (hourangle, degree), False)),
-        (GAL,  SystemInfo('Galactic', coordinates.Galactic,
-                          (degree,    degree), True))
+        (ICRS, SystemInfo(
+            'ICRS',     coordinates.ICRS,     (hourangle, degree), False)),
+        (GAL,  SystemInfo(
+            'Galactic', coordinates.Galactic, (degree,    degree), True)),
     ))
 
     @classmethod

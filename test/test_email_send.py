@@ -64,12 +64,14 @@ class EmailSendTestCase(DummyConfigTestCase):
         from hedwig.email.send import MIMETextMaybeFlowed, MIMETextFlowed
 
         msg = MIMETextFlowed('test message')
-        self.assertEqual(sorted(msg['Content-type'].split('; ')),
-                         ['charset="utf-8"', 'format="flowed"', 'text/plain'])
+        self.assertEqual(
+            sorted(msg['Content-type'].split('; ')),
+            ['charset="utf-8"', 'format="flowed"', 'text/plain'])
 
         msg = MIMETextMaybeFlowed('test message')
-        self.assertEqual(sorted(msg['Content-type'].split('; ')),
-                         ['charset="utf-8"', 'text/plain'])
+        self.assertEqual(
+            sorted(msg['Content-type'].split('; ')),
+            ['charset="utf-8"', 'text/plain'])
 
     def test_address_header(self):
         """Test the `_prepare_address_header` function."""

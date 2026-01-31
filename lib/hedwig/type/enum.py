@@ -274,8 +274,9 @@ class FigureType(EnumAllowUser):
             if info.mime == mime_type:
                 return type_
 
-        raise UserError('File has type "{}" which is not recognised.',
-                        mime_type)
+        raise UserError(
+            'File has type "{}" which is not recognised.',
+            mime_type)
 
     @classmethod
     def can_view_inline(cls, type_):
@@ -290,8 +291,9 @@ class FigureType(EnumAllowUser):
         Currently implemented as any "image/\\*" MIME type or PDF.
         """
 
-        return (type_ == cls.PDF or
-                cls.get_mime_type(type_).startswith('image/'))
+        return (
+            type_ == cls.PDF or
+            cls.get_mime_type(type_).startswith('image/'))
 
     @classmethod
     def allowed_type_names(cls):
@@ -982,6 +984,7 @@ class RequestState(AttachmentState):
 
         return [k for (k, v) in cls._info.items() if v.ready or v.pre_ready]
 
+
 class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
     """
     Base for classes representing roles in which a person may provide a review
@@ -1078,8 +1081,10 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
     def get_assigned_roles(cls):
         """Get an OrderedDict of reviewer group types by role numbers."""
 
-        return OrderedDict(((k, v.review_group) for (k, v) in cls._info.items()
-                            if v.review_group is not None))
+        return OrderedDict((
+            (k, v.review_group)
+            for (k, v) in cls._info.items()
+            if v.review_group is not None))
 
     @classmethod
     def get_calc_roles(cls):
@@ -1101,7 +1106,8 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
 
         for (role_id, role_info) in cls._info.items():
             if ((role_info.edit_rev and (state == ProposalState.REVIEW))
-                    or (role_info.edit_fr
+                    or (
+                        role_info.edit_fr
                         and (state == ProposalState.FINAL_REVIEW))):
                 roles.append(role_id)
 
@@ -1161,9 +1167,10 @@ class BaseReviewerRole(EnumBasic, EnumDisplayClass, EnumURLPath):
     def get_feedback_roles(cls, include_indirect=True):
         """Get list of roles who can write the feedback review."""
 
-        return [k for (k, v) in cls._info.items()
-                if (v.feedback_direct or (include_indirect
-                                          and v.feedback_indirect))]
+        return [
+            k for (k, v) in cls._info.items() if (
+                v.feedback_direct
+                or (include_indirect and v.feedback_indirect))]
 
     @classmethod
     def get_invited_roles(cls):
@@ -1565,8 +1572,9 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
 
         call = 'calls' if plural else 'call'
 
-        ans = ('{1} for {0} proposals'
-               if type_info.name_proposal
-               else '{0} {1} for proposals')
+        ans = (
+            '{1} for {0} proposals'
+            if type_info.name_proposal
+            else '{0} {1} for proposals')
 
         return ans.format(type_info.name.lower(), call)

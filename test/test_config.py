@@ -106,8 +106,9 @@ class ConfigTestCase(DummyConfigTestCase):
         self.assertNotIsInstance(db, JCMTPart)
 
         # Get database via plain facility name.
-        db = config.get_database(database_url=database_url,
-                                 facility_spec='JCMT')
+        db = config.get_database(
+            database_url=database_url,
+            facility_spec='JCMT')
         self.assertEqual(db.__class__.__name__, 'CombinedDatabase')
         self.assertIsInstance(db, Database)
         self.assertIsInstance(db, JCMTPart)

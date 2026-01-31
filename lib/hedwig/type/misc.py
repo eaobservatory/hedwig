@@ -414,8 +414,10 @@ class SectionedList(object):
         :return: list of section identifiers
         """
 
-        return [section for (section, items) in self.data.items()
-                if items or include_empty]
+        return [
+            section
+            for (section, items) in self.data.items()
+            if items or include_empty]
 
     def get_item_where(self, predicate, default=()):
         """
@@ -460,10 +462,10 @@ class SectionedList(object):
         n = 0
 
         for (current_section, items) in self.data.items():
-            if ((section != ())
-                    and ((current_section is not None)
-                         if (section is None)
-                         else (current_section != section))):
+            if ((section != ()) and (
+                    (current_section is not None)
+                    if (section is None)
+                    else (current_section != section))):
                 continue
 
             to_delete = []

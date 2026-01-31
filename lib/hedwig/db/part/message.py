@@ -40,10 +40,11 @@ from ..meta import email, message, message_recipient, person
 
 
 class MessagePart(object):
-    def add_message(self, subject, body, person_ids, email_addresses=[],
-                    thread_type=None, thread_id=None,
-                    format_type=MessageFormatType.PLAIN,
-                    _test_skip_check=False):
+    def add_message(
+            self, subject, body, person_ids, email_addresses=[],
+            thread_type=None, thread_id=None,
+            format_type=MessageFormatType.PLAIN,
+            _test_skip_check=False):
         """
         Add a message to the database.
 
@@ -88,8 +89,8 @@ class MessagePart(object):
 
             message_id = result.inserted_primary_key[0]
 
-            for (person_id, email_address) in zip_longest(person_ids,
-                                                          email_addresses):
+            for (person_id, email_address) in zip_longest(
+                    person_ids, email_addresses):
                 conn.execute(message_recipient.insert().values({
                     message_recipient.c.message_id: message_id,
                     message_recipient.c.person_id: person_id,
@@ -209,8 +210,9 @@ class MessagePart(object):
             for key in list(ans.keys()):
                 row = ans[key]
 
-                ans[key] = row._replace(**{k: v.subset_by_message(row.id)
-                                           for (k, v) in extra.items()})
+                ans[key] = row._replace(**{
+                    k: v.subset_by_message(row.id)
+                    for (k, v) in extra.items()})
 
         return ans
 
@@ -233,9 +235,14 @@ class MessagePart(object):
 
         if with_resolved_email:
             fields.extend([
-                coalesce(message_recipient.c.email_address,
-                         email.c.address).label('email_address'),
-                coalesce(email.c.public, False).label('email_public'),
+                coalesce(
+                    message_recipient.c.email_address,
+                    email.c.address
+                ).label('email_address'),
+                coalesce(
+                    email.c.public,
+                    False
+                ).label('email_public'),
             ])
 
             select_from = select_from.outerjoin(
@@ -282,12 +289,13 @@ class MessagePart(object):
 
         return ans
 
-    def update_message(self, message_id,
-                       state=None, state_prev=None,
-                       state_is_system=False,
-                       timestamp_send=(), timestamp_sent=(),
-                       identifier=None,
-                       _conn=None, _test_skip_check=False):
+    def update_message(
+            self, message_id,
+            state=None, state_prev=None,
+            state_is_system=False,
+            timestamp_send=(), timestamp_sent=(),
+            identifier=None,
+            _conn=None, _test_skip_check=False):
         """
         Update a message record.
         """
@@ -299,8 +307,9 @@ class MessagePart(object):
         if state is not None:
             if not MessageState.is_valid(
                     state, is_system=state_is_system):
-                raise FormattedError('invalid state {} for message update',
-                                     state)
+                raise FormattedError(
+                    'invalid state {} for message update',
+                    state)
 
             values[message.c.state] = state
 

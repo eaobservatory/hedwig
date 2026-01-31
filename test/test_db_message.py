@@ -145,14 +145,14 @@ class DBMessageTest(DBTestCase):
                 1999999, identifier='<2@localhost>', _test_skip_check=True)
 
         # Test "update_message" method.
-        self.db.update_message(message_id=message_id,
-                               state=MessageState.UNSENT)
+        self.db.update_message(
+            message_id=message_id, state=MessageState.UNSENT)
 
         message = self.db.get_message(message_id)
         self.assertEqual(message.state, MessageState.UNSENT)
 
-        self.db.update_message(message_id=message_id,
-                               state=MessageState.DISCARD)
+        self.db.update_message(
+            message_id=message_id, state=MessageState.DISCARD)
 
         messages = self.db.search_message()
         self.assertEqual(set(messages.keys()), set((message_id,)))
@@ -161,8 +161,8 @@ class DBMessageTest(DBTestCase):
 
         self.assertFalse(self.db.search_message(state=MessageState.UNSENT))
 
-        self.db.update_message(message_id=message_id,
-                               state=MessageState.UNSENT)
+        self.db.update_message(
+            message_id=message_id, state=MessageState.UNSENT)
 
         messages = self.db.search_message(state=MessageState.UNSENT)
         self.assertEqual(len(messages), 1)
@@ -265,9 +265,10 @@ class DBMessageTest(DBTestCase):
                 [person_1], ['@xyz'])
 
         # Create test message, giving specific email addresses.
-        message_id = self.db.add_message('test', 'test message',
-                                         [person_1, person_2, person_3],
-                                         ['1@c', '2@b', '3@c'])
+        message_id = self.db.add_message(
+            'test', 'test message',
+            [person_1, person_2, person_3],
+            ['1@c', '2@b', '3@c'])
 
         self.assertIsInstance(message_id, int)
 
@@ -296,8 +297,9 @@ class DBMessageTest(DBTestCase):
         # Check handling of an email address which isn't in the email table.
         # (This can happen if an address is changed after an email is already
         # inserted into the database with an explicit address.)
-        message_id = self.db.add_message('test', 'test message',
-                                         [person_1], ['1@d'])
+        message_id = self.db.add_message(
+            'test', 'test message',
+            [person_1], ['1@d'])
 
         message = self._get_unsent_message()
 

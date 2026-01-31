@@ -211,9 +211,11 @@ class JCMTInstrument(EnumBasic, EnumAvailable):
 
     @classmethod
     def has_available_ancillary(cls, instrument, ancillary):
-        return ((ancillary == JCMTAncillary.NONE)
-                or ((ancillary in cls._info[instrument].ancillary)
-                    and JCMTAncillary.is_available(ancillary)))
+        return (
+            (ancillary == JCMTAncillary.NONE)
+            or (
+                (ancillary in cls._info[instrument].ancillary)
+                and JCMTAncillary.is_available(ancillary)))
 
 
 class JCMTAvailableCollection(ResultCollection):
@@ -272,8 +274,9 @@ class JCMTAvailableCollection(ResultCollection):
             if not weather_info.free:
                 total_non_free += time
 
-        return JCMTRequestTotal(total=total, weather=weathers, instrument={},
-                                total_non_free=total_non_free)
+        return JCMTRequestTotal(
+            total=total, weather=weathers, instrument={},
+            total_non_free=total_non_free)
 
 
 class JCMTOptionsCollection(ResultCollection, CollectionByProposal):
@@ -455,17 +458,19 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
             total[None] = sum(total.values())
             instruments[None] = total
 
-        instrument_names = \
-            JCMTInstrument.get_options_with_ancillary(include_unavailable=True)
+        instrument_names = JCMTInstrument.get_options_with_ancillary(
+            include_unavailable=True)
 
         return ResultTable(
             instruments,
-            OrderedDict([(k, v.name)
-                         for (k, v) in JCMTWeather._info.items()
-                         if v.available or k in weathers]),
-            OrderedDict([(k, v)
-                         for (k, v) in instrument_names.items()
-                         if k in instruments]))
+            OrderedDict([
+                (k, v.name)
+                for (k, v) in JCMTWeather._info.items()
+                if v.available or k in weathers]),
+            OrderedDict([
+                (k, v)
+                for (k, v) in instrument_names.items()
+                if k in instruments]))
 
     def get_total(
             self, include_unavailable_instrument=False,
@@ -510,9 +515,10 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
             if not weather_info.free:
                 total_non_free += time
 
-        return JCMTRequestTotal(total=total, weather=weathers,
-                                instrument=instruments,
-                                total_non_free=total_non_free)
+        return JCMTRequestTotal(
+            total=total, weather=weathers,
+            instrument=instruments,
+            total_non_free=total_non_free)
 
     def get_total_by_weather(
             self, include_unavailable_instrument=False,
@@ -546,7 +552,8 @@ class JCMTRequestCollection(ResultCollection, CollectionByProposal):
                         instrument = None
 
                     total += time
-                    instruments[instrument] = instruments.get(instrument, 0.0) + time
+                    instruments[instrument] = \
+                        instruments.get(instrument, 0.0) + time
 
             if total:
                 result[weather] = JCMTRequestTotal(

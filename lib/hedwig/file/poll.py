@@ -37,8 +37,9 @@ def process_moc(db, dry_run=False):
 
     n_processed = 0
 
-    for moc_info in db.search_moc(facility_id=None, public=None,
-                                  state=AttachmentState.NEW).values():
+    for moc_info in db.search_moc(
+            facility_id=None, public=None,
+            state=AttachmentState.NEW).values():
         logger.debug('Importing MOC {}', moc_info.id)
 
         try:
@@ -161,8 +162,9 @@ def _process_figure(db, _type, dry_run=False):
 
         try:
             if not dry_run:
-                set_state(figure_info.fig_id, AttachmentState.PROCESSING,
-                          state_prev=AttachmentState.NEW)
+                set_state(
+                    figure_info.fig_id, AttachmentState.PROCESSING,
+                    state_prev=AttachmentState.NEW)
         except ConsistencyError:
             continue
 
@@ -216,8 +218,9 @@ def _process_figure(db, _type, dry_run=False):
 
             try:
                 if not dry_run:
-                    set_state(figure_info.fig_id, AttachmentState.READY,
-                              state_prev=AttachmentState.PROCESSING)
+                    set_state(
+                        figure_info.fig_id, AttachmentState.READY,
+                        state_prev=AttachmentState.PROCESSING)
 
                 n_processed += 1
 

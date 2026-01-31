@@ -167,7 +167,8 @@ MemberInstitution = namedtuple(
 
 MemberPIInfo = namedtuple(
     'MemberPIInfo',
-    ['person_id', 'person_name', 'person_public', 'user_id', 'affiliation_name'])
+    ['person_id', 'person_name', 'person_public', 'user_id',
+     'affiliation_name'])
 
 Message = namedtuple(
     'Message',

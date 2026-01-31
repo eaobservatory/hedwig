@@ -370,7 +370,8 @@ class JCMTPart(object):
             attr_req = {
                 jcmt_review.c.expertise: role_info.jcmt_expertise,
                 jcmt_review.c.review_aims: role_info.jcmt_external,
-                jcmt_review.c.review_goals: (None if role_info.jcmt_external else False),
+                jcmt_review.c.review_goals: (
+                    None if role_info.jcmt_external else False),
                 jcmt_review.c.review_analysis: role_info.jcmt_external,
                 jcmt_review.c.review_difficulties: role_info.jcmt_external,
                 jcmt_review.c.rating_justification: role_info.jcmt_external,
@@ -421,8 +422,9 @@ class JCMTPart(object):
 
                 result = conn.execute(jcmt_review.insert().values(values))
 
-    def sync_jcmt_call_available(self, call_id, records,
-                                 _test_skip_check=False):
+    def sync_jcmt_call_available(
+            self, call_id, records,
+            _test_skip_check=False):
         """
         Update the records of the amount of time available for a call.
         """
@@ -430,8 +432,8 @@ class JCMTPart(object):
         records.validate()
 
         with self._transaction() as conn:
-            if not _test_skip_check and \
-                    not self._exists_id(conn, call, call_id):
+            if (not _test_skip_check
+                    and not self._exists_id(conn, call, call_id)):
                 raise ConsistencyError(
                     'call does not exist with id={}', call_id)
 
