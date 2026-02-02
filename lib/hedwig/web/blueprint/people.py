@@ -262,7 +262,7 @@ def create_people_blueprint(db, facilities):
     @templated('person_proposals.html')
     def person_view_proposals(current_user, person_id):
         return view.person_proposals_other(
-            current_user, db, person_id, facilities)
+            current_user, db, facilities, person_id)
 
     @bp.route('/reviews')
     @require_auth()
