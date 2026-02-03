@@ -14,7 +14,7 @@
                 <td>
                     {{ message.state | message_state_name }}
                     <nav>
-                        <a href="{{ url_for('.message_alter_state', message_id=message.id) }}" id="alter_state_link">edit</a>
+                        <a href="{{ url_for('.message_alter_state', message_id=message.id) }}" id="alter_state_link"><span class="fa-solid fa-pencil"></span>Edit</a>
                     </nav>
                 </td>
             </tr>
