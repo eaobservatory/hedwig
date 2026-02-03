@@ -820,6 +820,8 @@ class JCMTCallType(BaseCallType):
             True)),
     )
 
+    REVIEW_INTERNAL = 101
+
     _info = OrderedDict()
     for (type_id, type_info) in BaseCallType._info.items():
         (extra, override) = _jcmt_info.get(type_id, (_jcmt_default_info, {}))
@@ -827,3 +829,13 @@ class JCMTCallType(BaseCallType):
 
     for (type_id, after_id, type_info) in _jcmt_extra:
         insert_after(_info, after_id, type_id, type_info)
+
+    @classmethod
+    def get_review_type(cls, value):
+        roles = cls._info[value].reviewer_roles
+
+        if JCMTReviewerRole.INTERNAL in roles:
+            return cls.REVIEW_INTERNAL
+
+        return super(JCMTCallType, cls).get_review_type(
+            value, role_class=JCMTReviewerRole)

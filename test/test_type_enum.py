@@ -155,6 +155,17 @@ class EnumTypeTestCase(TestCase):
         self.assertIsInstance(g, tuple)
         self.assertEqual(g, (BaseGroupType.CTTEE, BaseGroupType.ADMIN))
 
+        for (type_, review_type) in (
+                    (BaseCallType.STANDARD, BaseCallType.REVIEW_CTTEE),
+                    (BaseCallType.IMMEDIATE, BaseCallType.REVIEW_CTTEE),
+                    (BaseCallType.TEST, BaseCallType.REVIEW_CTTEE),
+                    (BaseCallType.MULTICLOSE, BaseCallType.REVIEW_PEER),
+                    (BaseCallType.SUPPLEMENTAL, BaseCallType.REVIEW_CTTEE),
+                ):
+            self.assertEqual(
+                BaseCallType.get_review_type(type_),
+                review_type)
+
     def test_message_format_type(self):
         self.assertFalse(MessageFormatType.is_valid(999))
         self.assertTrue(MessageFormatType.is_valid(

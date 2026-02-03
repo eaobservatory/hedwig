@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -24,7 +24,7 @@ from hedwig.compat import string_type
 from hedwig.error import UserError
 from hedwig.facility.jcmt.type import \
     JCMTAvailable, JCMTAvailableCollection, \
-    JCMTInstrument, \
+    JCMTCallType, JCMTInstrument, \
     JCMTRequest, JCMTRequestCollection, JCMTRequestTotal, \
     JCMTReviewerExpertise, \
     JCMTWeather
@@ -338,3 +338,16 @@ class JCMTTypeTestCase(TestCase):
 
         with self.assertRaisesRegex(UserError, 'There are multiple entries'):
             c.validate()
+
+    def test_call_type(self):
+        for (type_, review_type) in (
+                    (JCMTCallType.STANDARD, JCMTCallType.REVIEW_CTTEE),
+                    (JCMTCallType.IMMEDIATE, JCMTCallType.REVIEW_CTTEE),
+                    (JCMTCallType.TEST, JCMTCallType.REVIEW_CTTEE),
+                    (JCMTCallType.MULTICLOSE, JCMTCallType.REVIEW_PEER),
+                    (JCMTCallType.SUPPLEMENTAL, JCMTCallType.REVIEW_CTTEE),
+                    (JCMTCallType.ROLLING, JCMTCallType.REVIEW_INTERNAL),
+                ):
+            self.assertEqual(
+                JCMTCallType.get_review_type(type_),
+                review_type)

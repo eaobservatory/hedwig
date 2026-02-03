@@ -1538,6 +1538,11 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
             ())),
     ))
 
+    # Values indicating how to describe the type of review process,
+    # as returned by the `get_review_type` method.
+    REVIEW_CTTEE = 1
+    REVIEW_PEER = 2
+
     @classmethod
     def has_immediate_review(cls, value):
         return cls._info[value].immediate_review
@@ -1578,3 +1583,25 @@ class BaseCallType(EnumBasic, EnumAvailable, EnumCode, EnumURLPath):
             else '{0} {1} for proposals')
 
         return ans.format(type_info.name.lower(), call)
+
+    @classmethod
+    def get_review_type(cls, value, role_class=BaseReviewerRole):
+        """
+        Return a value indicating how to describe the type of review
+        process.
+
+        Subclasses can specify their role class when deferring to
+        this method.
+
+        Returns `None` if unknown.
+        """
+
+        roles = cls._info[value].reviewer_roles
+
+        if any(x in roles for x in role_class.get_cttee_roles()):
+            return cls.REVIEW_CTTEE
+
+        if role_class.PEER in roles:
+            return cls.REVIEW_PEER
+
+        return None
