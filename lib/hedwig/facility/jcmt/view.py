@@ -1566,10 +1566,15 @@ class JCMT(EAOFacility):
         corresponding instrument and weather band.
         """
 
+        type_class = self.get_call_types()
+
+        review_type = type_class.get_review_type(proposal.call_type)
+
         allocations = db.search_jcmt_allocation(proposal_id=proposal.id)
 
         return {
             'jcmt_allocation': allocations.to_sorted_list(),
+            'is_internal_review': (review_type == type_class.REVIEW_INTERNAL),
         }
 
     @with_proposal(permission=PermissionType.EDIT)

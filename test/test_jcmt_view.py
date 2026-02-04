@@ -343,7 +343,10 @@ class JCMTFacilityTestCase(FacilityTestCase):
 
         self.assertIsInstance(extra, dict)
 
-        self.assertEqual(set(extra.keys()), set(('jcmt_allocation',)))
+        self.assertEqual(set(extra.keys()), set((
+            'jcmt_allocation',
+            'is_internal_review',
+        )))
 
         alloc = extra['jcmt_allocation']
 
@@ -357,3 +360,5 @@ class JCMTFacilityTestCase(FacilityTestCase):
         self.assertEqual(a.weather, 'Band 5')
         self.assertEqual(a.time, 4.5)
         self.assertIsNone(a.ancillary)
+
+        self.assertFalse(extra['is_internal_review'])

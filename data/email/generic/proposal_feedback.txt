@@ -6,11 +6,11 @@
 We are glad to be able to inform you that
 your proposal {{ proposal_code }} entitled "{{ proposal.title }}"
 was approved
-{{- '' if is_peer_review else ' by the Time Allocation Committee' }}.
+{{- ' by the Time Allocation Committee' if is_cttee_review else '' }}.
 {% else %}
 We regret to inform you that
 no observing time was approved
-{{- '' if is_peer_review else ' by the Time Allocation Committee' }}
+{{- ' by the Time Allocation Committee' if is_cttee_review else '' }}
 for your proposal {{ proposal_code }} entitled "{{ proposal.title }}".
 {% endif %}
 {% endblock %}
@@ -35,7 +35,7 @@ of those received for this call for proposals.
 
 {% block feedback_feedback %}
 {% if feedback %}
-{% if not is_peer_review %}
+{% if is_cttee_review %}
 The Time Allocation Committee made the following comments regarding
 your proposal:
 {% endif %}

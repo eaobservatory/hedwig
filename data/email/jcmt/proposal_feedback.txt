@@ -2,15 +2,21 @@
 
 {% block feedback_information %}
 {% if (proposal.decision_accept and jcmt_allocation) %}
-{% if is_peer_review %}
-Following the peer review process, the
-observing {{ 'times' if (jcmt_allocation | length) > 1 else 'time' }}
-given below {{ 'have' if (jcmt_allocation | length) > 1 else 'has' }}
-been approved for your project:
-{% else %}
+{% if is_cttee_review %}
 The committee has approved the following
 observing {{ 'times' if (jcmt_allocation | length) > 1 else 'time' }}
 for your project:
+{% else %}
+Following the
+{% if is_peer_review %}
+peer
+{% elif is_internal_review %}
+internal
+{% endif %}
+review process, the
+observing {{ 'times' if (jcmt_allocation | length) > 1 else 'time' }}
+given below {{ 'have' if (jcmt_allocation | length) > 1 else 'has' }}
+been approved for your project:
 {% endif %}
 
 {% for allocation in jcmt_allocation %}
@@ -24,7 +30,17 @@ Please be aware that, to maximize productivity,
 whereby observing programs are matched to
 available instrumentation, weather conditions and
 priority as assigned
-{{ 'in the peer review process' if is_peer_review else 'by the Time Allocation Committee' }}.
+{% if is_cttee_review %}
+by the Time Allocation Committee.
+{% else %}
+in the
+{% if is_peer_review %}
+peer
+{% elif is_internal_review %}
+internal
+{% endif %}
+review process.
+{% endif %}
 Therefore we are not able to guarantee that all of the
 time listed above will be available for your project.
 {% endif %}

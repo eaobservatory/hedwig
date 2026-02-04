@@ -372,6 +372,8 @@ def send_call_proposal_feedback(db, call_id, proposals, dry_run=False):
 
                 feedback.append(review.review_text)
 
+            review_type = type_class.get_review_type(call.type)
+
             # Prepare email (but don't write now -- set the state first so
             # that, if something goes wrong, we don't get into a loop of
             # sending the email again every time we poll for feedback
@@ -386,8 +388,8 @@ def send_call_proposal_feedback(db, call_id, proposals, dry_run=False):
                 'proposal_rating': proposal_rating.get(proposal.id),
                 'proposal_quartile': proposal_quartile.get(proposal.id),
                 'feedback': feedback,
-                'is_peer_review': type_class.has_reviewer_role(
-                    call.type, role_class.PEER),
+                'is_peer_review': (review_type == type_class.REVIEW_PEER),
+                'is_cttee_review': (review_type == type_class.REVIEW_CTTEE),
                 'continuation_code': continuation_code,
             }
             email_ctx.update(facility.get_feedback_extra(db, proposal))
