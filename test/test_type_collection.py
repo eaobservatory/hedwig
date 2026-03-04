@@ -237,6 +237,33 @@ class CollectionTypeTestCase(TestCase):
         self.assertEqual(list(x.name for x in group.values()), [
             'Aff. 1 (ex)', 'Aff. 2 (ex)', 'Aff. 3 (ex)'])
 
+        # Test `flatten_weight` method.
+        affiliations = AffiliationCollection((
+            (1, null_tuple(Affiliation)._replace(
+                id=1, name='A',
+                type=BaseAffiliationType.STANDARD,
+                hidden=False,
+                weight=null_tuple(Affiliation)._replace(
+                    type=BaseAffiliationType.SHARED,
+                    weight=10.0,
+                    hidden=False))),
+            (2, null_tuple(Affiliation)._replace(
+                id=2, name='B',
+                type=BaseAffiliationType.STANDARD,
+                hidden=False,
+                weight=null_tuple(Affiliation)._replace(
+                    type=BaseAffiliationType.EXCLUDED,
+                    weight=20.0,
+                    hidden=True))),
+        )).flatten_weight()
+
+        self.assertEqual(affiliations[1], null_tuple(Affiliation)._replace(
+            id=1, name='A', type=BaseAffiliationType.SHARED,
+            weight=10.0, hidden=False))
+        self.assertEqual(affiliations[2], null_tuple(Affiliation)._replace(
+            id=2, name='B', type=BaseAffiliationType.EXCLUDED,
+            weight=20.0, hidden=True))
+
     def test_annotation_collection(self):
         c = AnnotationCollection()
 

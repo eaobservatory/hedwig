@@ -210,6 +210,14 @@ def create_facility_blueprint(db, facility):
             current_user, db, call_id,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/call/<int:call_id>/affiliation/sync', methods=['GET', 'POST'])
+    @require_auth()
+    @facility_template('call_affiliation_sync.html')
+    def review_affiliation_sync(current_user, call_id):
+        return facility.view_review_affiliation_sync(
+            current_user, db, call_id,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/call/<int:call_id>/available', methods=['GET', 'POST'])
     @require_auth()
     @facility_template('call_available.html')

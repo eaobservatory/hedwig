@@ -1,0 +1,17 @@
+{% extends 'generic/call_sync_base.html' %}
+{% set navigation=[((call.semester_name, call.queue_name, (call.type | call_type_name(facility_call_type_class))) | fmt('{} {} {}'), url_for('.review_call', call_id=call.id))] %}
+{% set help_link=url_for('help.admin_page', page_name='affiliation_weight') %}
+
+{% block comparison_head_extra %}
+    <th>Affiliation</th>
+    <th>Weight</th>
+    <th>Override hidden</th>
+    <th>Override assignment type</th>
+{% endblock %}
+
+{% block comparison_row_extra %}
+    <td>{{ record.name }}</td>
+    <td {{ combined_class(('sync_updated', 'weight' in record.sync_update), ('number_center', True)) | safe }}>{{ '&mdash;' | safe if record.weight is none else record.weight }}</td>
+    <td {{ combined_class(('sync_updated', 'hidden' in record.sync_update), ('control_center', True)) | safe }}>{{ ('&mdash;' if record.hidden is none else ('&check;' if record.hidden else '&cross;')) | safe }}</td>
+    <td {{ combined_class(('sync_updated', 'type' in record.sync_update), ('text_center', True)) | safe }}>{{ '&mdash;' | safe if record.type is none else (record.type | affiliation_type_name(facility_affiliation_type_class)) }}</td>
+{% endblock %}

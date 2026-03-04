@@ -209,6 +209,22 @@ class AffiliationCollection(ResultCollection, CollectionByQueue):
             if items:
                 yield (type_, type(self)(items))
 
+    def flatten_weight(self):
+        """
+        Return a new collection of the same type where the entries are
+        based on the `weight` attributes.  This is for use with
+        information retrieved using `with_weight_call_id` and
+        `with_weight_separate` but only the override values are required.
+        """
+
+        return type(self)(
+            (k, v.weight._replace(
+                id=v.id,
+                queue_id=v.queue_id,
+                name=v.name,
+            ))
+            for (k, v) in self.items())
+
 
 class AnnotationCollection(ResultCollection, CollectionByType):
     """

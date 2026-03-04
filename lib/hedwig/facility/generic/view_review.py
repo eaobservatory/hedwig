@@ -55,7 +55,7 @@ from ...type.simple import Affiliation, DateAndTime, Link, MemberPIInfo, \
     Note, \
     ProposalWithCode, Reviewer, ReviewerAcceptance, \
     ReviewFigureInfo, ReviewDeadline
-from ...type.util import null_tuple, \
+from ...type.util import compare_collections, null_tuple, \
     with_can_edit, with_can_view, with_can_view_edit, \
     with_can_view_edit_rating, with_proposals
 from ...util import lower_except_abbr
@@ -888,6 +888,90 @@ class GenericReview(object):
             'affiliations': affiliations,
             'affiliation_types': affiliation_type_class.get_options(),
             'note': note,
+        }
+
+    @with_call_review(permission=PermissionType.EDIT)
+    def view_review_affiliation_sync(
+            self, current_user, db, call, can, form):
+        affiliation_type_class = self.get_affiliation_types()
+
+        message = None
+        other_calls = None
+        other_call = None
+        comparison = None
+
+        if form is None:
+            other_calls = db.search_call(
+                facility_id=self.id_, queue_id=call.queue_id)
+            if call.id not in other_calls:
+                raise ErrorPage('This call does not appear in full list.')
+            elif 2 > len(other_calls):
+                raise ErrorPage('No other calls are present.')
+
+        else:
+            if 'submit_cancel' in form:
+                raise HTTPRedirect(url_for('.review_call', call_id=call.id))
+
+            other_call_id = int(form['other_call_id'])
+            if other_call_id == call.id:
+                raise ErrorPage('Selected other call is the same as this.')
+            try:
+                other_call = db.get_call(
+                    facility_id=self.id_, call_id=other_call_id)
+            except NoSuchRecord:
+                raise ErrorPage('Other call not found')
+            assert other_call.id == other_call_id
+
+            orig_affiliations = db.search_affiliation(
+                queue_id=call.queue_id,
+                with_weight_call_id=call.id,
+                with_weight_separate=True).flatten_weight()
+
+            other_affiliations = db.search_affiliation(
+                queue_id=other_call.queue_id,
+                with_weight_call_id=other_call.id,
+                with_weight_separate=True).flatten_weight()
+
+            comparison = compare_collections(
+                orig_affiliations, other_affiliations,
+                match_attrs=('id',),
+                sort_attrs=('name',),
+                update_attrs=('weight', 'type', 'hidden'))
+
+            if ('submit_swap' in form) or ('submit_select' in form):
+                pass
+
+            elif 'submit_copy' in form:
+                try:
+                    (n_insert, n_update, n_delete) = \
+                        db.sync_affiliation_weight(
+                            affiliation_type_class, call.id, comparison)
+
+                    if n_insert or n_update or n_delete:
+                        flash('The affiliation weights have been copied.')
+                    else:
+                        flash('No changes were made.')
+
+                    raise HTTPRedirect(url_for(
+                        '.review_call', call_id=call.id))
+
+                except UserError as e:
+                    message = e.message
+
+            else:
+                raise ErrorPage('Unknown action.')
+
+        return {
+            'title': 'Copy Affiliation Weights',
+            'call': call,
+            'other_calls': other_calls,
+            'other_call': other_call,
+            'comparison': comparison,
+            'message': message,
+            'target': url_for('.review_affiliation_sync', call_id=call.id),
+            'target_swap': (
+                None if other_call is None else
+                url_for('.review_affiliation_sync', call_id=other_call.id)),
         }
 
     @with_call_review(permission=PermissionType.EDIT)
