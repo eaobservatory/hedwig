@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict, namedtuple, defaultdict
 from math import sqrt
 
 from ..astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
@@ -130,6 +130,30 @@ class ResultCollection(OrderedDict):
         return type(self)(
             (k, function(v)) for (k, v) in self.items()
             if (filter_key(k) and filter_value(v)))
+
+    def sorted_to_match(self, attr, order):
+        """
+        Return a copy of the collection such that the values of the
+        given attribute are in the given order.
+        """
+
+        # Organize the entries into lists base on the attribute.
+        entries = defaultdict(list)
+        for (k, v) in self.items():
+            entries[getattr(v, attr)].append((k, v))
+
+        # Add (lists of) entries to the result in the order specified.
+        result = type(self)()
+        for value in order:
+            match = entries.pop(value, None)
+            if match is not None:
+                result.update(match)
+
+        # Add any (lists of) non-matching entries at the end.
+        for non_match in entries.values():
+            result.update(non_match)
+
+        return result
 
     @classmethod
     def organize_collection(cls, updated_records, added_records):

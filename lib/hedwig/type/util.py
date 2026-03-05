@@ -26,7 +26,7 @@ from .enum import SyncOperation
 
 
 def compare_collections(
-        original, other, match_attrs, sort_attrs,
+        original, other, match_attrs, sort_attrs=None,
         update_attrs=(), hide_deleted=False):
     """
     Create a comparison between two database record collections.
@@ -127,8 +127,9 @@ def compare_collections(
                 v._replace(id=None), SyncOperation.INSERT)))
 
     # Sort to combine the inserted entries with the original ones.
-    comparison.sort(key=(
-        lambda entry: tuple(getattr(entry[1], attr) for attr in sort_attrs)))
+    if sort_attrs is not None:
+        comparison.sort(key=(lambda entry: tuple(
+            getattr(entry[1], attr) for attr in sort_attrs)))
 
     # Return as a collection of the original type.
     return type(original)(comparison)

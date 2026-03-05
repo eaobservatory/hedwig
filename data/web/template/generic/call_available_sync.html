@@ -1,0 +1,3 @@
+{% extends 'generic/call_sync_base.html' %}
+{% set navigation=[((call.semester_name, call.queue_name, (call.type | call_type_name(facility_call_type_class))) | fmt('{} {} {}'), url_for('.review_call', call_id=call.id))] %}
+{% set help_link=url_for('help.admin_page', page_name='time_available') %}

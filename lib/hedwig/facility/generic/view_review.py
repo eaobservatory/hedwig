@@ -46,11 +46,12 @@ from ...web.util import ErrorPage, \
     HTTPError, HTTPForbidden, HTTPNotFound, HTTPRedirect, \
     flash, format_datetime, parse_datetime, url_for
 from ...type.collection import AffiliationCollection, MemberCollection, \
-    ReviewerCollection, ReviewDeadlineCollection
+    ResultCollection, ReviewerCollection, ReviewDeadlineCollection
 from ...type.enum import Assessment, \
     FigureType, FormatType, \
     MessageThreadType, PermissionType, PersonTitle, \
-    ProposalState, ProposalType, ReviewState
+    ProposalState, ProposalType, ReviewState, \
+    SyncOperation
 from ...type.simple import Affiliation, DateAndTime, Link, MemberPIInfo, \
     Note, \
     ProposalWithCode, Reviewer, ReviewerAcceptance, \
@@ -1033,6 +1034,91 @@ class GenericReview(object):
 
     def _view_review_call_available_extra(self, db, call, info):
         return {}
+
+    @with_call_review(permission=PermissionType.EDIT)
+    def view_review_call_available_sync(
+            self, current_user, db, call, can, form):
+        message = None
+        other_calls = None
+        other_call = None
+        comparison = None
+        extra_info = None
+
+        if form is None:
+            other_calls = db.search_call(facility_id=self.id_)
+            if call.id not in other_calls:
+                raise ErrorPage('This call does not appear in full list.')
+            elif 2 > len(other_calls):
+                raise ErrorPage('No other calls are present.')
+
+        else:
+            if 'submit_cancel' in form:
+                raise HTTPRedirect(url_for('.review_call', call_id=call.id))
+
+            other_call_id = int(form['other_call_id'])
+            if other_call_id == call.id:
+                raise ErrorPage('Selected other call is the same as this.')
+            try:
+                other_call = db.get_call(
+                    facility_id=self.id_, call_id=other_call_id)
+            except NoSuchRecord:
+                raise ErrorPage('Other call not found')
+            assert other_call.id == other_call_id
+
+            (comparison, extra_info) = \
+                self._view_review_call_available_compare(db, call, other_call)
+
+            if ('submit_swap' in form) or ('submit_select' in form):
+                pass
+
+            elif 'submit_copy' in form:
+                try:
+                    # Assume that the facility view class will want to remove
+                    # (rather than hiding) deleted items, so filter them out.
+                    updates = self._view_review_call_available_sync(
+                        db, call, comparison.map_values(
+                            filter_value=(
+                                lambda x: x.sync_operation
+                                != SyncOperation.DELETE)))
+
+                    if any(updates):
+                        flash('The time available has been copied.')
+
+                    else:
+                        flash('No changes were made.')
+
+                    raise HTTPRedirect(url_for(
+                        '.review_call', call_id=call.id))
+
+                except UserError as e:
+                    message = e.message
+
+            else:
+                raise ErrorPage('Unknown action.')
+
+        ctx = {
+            'title': 'Copy Time Available',
+            'call': call,
+            'other_calls': other_calls,
+            'other_call': other_call,
+            'comparison': comparison,
+            'message': message,
+            'target': url_for('.review_call_available_sync', call_id=call.id),
+            'target_swap': (
+                None if other_call is None else
+                url_for('.review_call_available_sync', call_id=other_call.id)),
+        }
+
+        if extra_info is not None:
+            ctx.update(extra_info)
+
+        return ctx
+
+    def _view_review_call_available_compare(self, db, orig_call, other_call):
+        return (ResultCollection(), {})
+
+    def _view_review_call_available_sync(self, db, call, comparison):
+        raise ErrorPage('Not implemented for this facility.')
 
     @with_call_review(permission=PermissionType.EDIT)
     def view_review_call_deadline(self, current_user, db, call, can, form):

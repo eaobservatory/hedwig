@@ -226,6 +226,14 @@ def create_facility_blueprint(db, facility):
             current_user, db, call_id,
             (request.form if request.method == 'POST' else None))
 
+    @bp.route('/call/<int:call_id>/available/sync', methods=['GET', 'POST'])
+    @require_auth()
+    @facility_template('call_available_sync.html')
+    def review_call_available_sync(current_user, call_id):
+        return facility.view_review_call_available_sync(
+            current_user, db, call_id,
+            (request.form if request.method == 'POST' else None))
+
     @bp.route('/call/<int:call_id>/deadline', methods=['GET', 'POST'])
     @require_auth()
     @facility_template('call_review_deadline.html')

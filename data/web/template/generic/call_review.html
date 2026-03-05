@@ -31,7 +31,11 @@
                 or
                 <a href="{{ url_for('.review_affiliation_sync', call_id=call.id) }}"><span class="fa-solid fa-rotate"></span>copy from another call</a>
             </li>
-            <li><a href="{{ url_for('.review_call_available', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-clock"></span></span>Edit time available</a></li>
+            <li>
+                <a href="{{ url_for('.review_call_available', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-clock"></span></span>Edit time available</a>
+                or
+                <a href="{{ url_for('.review_call_available_sync', call_id=call.id) }}"><span class="fa-solid fa-rotate"></span>copy from another call</a>
+            </li>
             <li><a href="{{ url_for('.review_call_deadline', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-calendar-days"></span></span>Edit review deadlines</a></li>
             {% if proposals %}
                 <li><a href="{{ url_for('.review_call_reviewers', call_id=call.id) }}"><span class="fa-li"><span class="fa-solid fa-file-circle-exclamation"></span></span>Assign reviewers</a></li>

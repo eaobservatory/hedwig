@@ -21,7 +21,7 @@
                 <label for="other_call_id">Call</label>
                 <select name="other_call_id">
                     {% for other_call in other_calls.values() %}
-                        <option value="{{ other_call.id }}" {% if other_call.id == call.id %}disabled="disabled"{% endif %}>{{ other_call.semester_name }} {{ other_call.type | call_type_name(facility_call_type_class) }}</option>
+                        <option value="{{ other_call.id }}" {% if other_call.id == call.id %}disabled="disabled"{% endif %}>{{ other_call.semester_name }} {{ other_call.queue_name }} {{ other_call.type | call_type_name(facility_call_type_class) }}</option>
                     {% endfor %}
                 </select>
             </li>

@@ -1,0 +1,11 @@
+{% extends 'generic/call_available_sync.html' %}
+
+{% block comparison_head_extra %}
+    <th>Weather band</th>
+    <th>Time available (hours)</th>
+{% endblock %}
+
+{% block comparison_row_extra %}
+    <td>{{ weathers.get(record.weather, 'Unknown band') }}</td>
+    <td {{ combined_class(('sync_updated', 'time' in record.sync_update), ('number_center', True)) | safe }}>{{ record.time }}</td>
+{% endblock %}

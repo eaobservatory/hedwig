@@ -278,6 +278,15 @@ class JCMTAvailableCollection(ResultCollection):
             total=total, weather=weathers, instrument={},
             total_non_free=total_non_free)
 
+    def sorted(self):
+        """
+        Return a new collection with values sorted by weather band.
+        """
+
+        return self.sorted_to_match(
+            'weather',
+            JCMTWeather.get_options(include_unavailable=True).keys())
+
 
 class JCMTOptionsCollection(ResultCollection, CollectionByProposal):
     """

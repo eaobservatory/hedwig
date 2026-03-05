@@ -35,7 +35,7 @@ from ...type.enum import FormatType, \
 from ...type.misc import SkipSection
 from ...type.simple import FacilityObsInfo, Link, RouteInfo, TextCopyInfo, \
     ValidationMessage
-from ...type.util import null_tuple
+from ...type.util import compare_collections, null_tuple
 from ..eao.view import EAOFacility
 from .calculator_heterodyne import HeterodyneCalculator
 from .calculator_scuba2 import SCUBA2Calculator
@@ -1532,6 +1532,29 @@ class JCMT(EAOFacility):
             'weathers': JCMTWeather.get_available(),
             'available': available_weather,
         }
+
+    def _view_review_call_available_compare(self, db, orig_call, other_call):
+        orig_avail = db.search_jcmt_available(call_id=orig_call.id)
+
+        other_avail = db.search_jcmt_available(call_id=other_call.id)
+
+        return (
+            # Can not use `compare_collections` to sort in case the weather
+            # band ordering changes to not be numeric by enum value, so
+            # compare without specifying `sort_attrs` and apply our collection
+            # class's sort method instead.
+            compare_collections(
+                orig_avail, other_avail,
+                match_attrs=('weather',),
+                update_attrs=('time',)).sorted(),
+            {
+                'weathers': JCMTWeather.get_options(
+                    include_unavailable=True),
+            },
+        )
+
+    def _view_review_call_available_sync(self, db, call, comparison):
+        return db.sync_jcmt_call_available(call.id, comparison)
 
     def attach_review_extra(self, db, proposals):
         """

@@ -548,6 +548,47 @@ class CollectionTypeTestCase(TestCase):
             SortOrdered(4, 4),
         ])
 
+    def test_sorted_to_match(self):
+        TT = namedtuple('TT', ('id', 'x', 'y'))
+
+        c = ResultCollection((
+            (1, TT(1, 2, 4)),
+            (2, TT(2, 1, 3)),
+            (3, TT(3, 3, 2)),
+            (4, TT(4, 0, 1)),
+            (5, TT(5, 0, 1)),
+            (6, TT(6, 0, 3)),
+        ))
+
+        # Sort by 'x', with some non-matching values.
+        self.assertEqual(list(c.sorted_to_match('x', [1, 2]).items()), [
+            (2, TT(2, 1, 3)),
+            (1, TT(1, 2, 4)),
+            (3, TT(3, 3, 2)),
+            (4, TT(4, 0, 1)),
+            (5, TT(5, 0, 1)),
+            (6, TT(6, 0, 3)),
+        ])
+
+        self.assertEqual(list(c.sorted_to_match('x', [0]).items()), [
+            (4, TT(4, 0, 1)),
+            (5, TT(5, 0, 1)),
+            (6, TT(6, 0, 3)),
+            (1, TT(1, 2, 4)),
+            (2, TT(2, 1, 3)),
+            (3, TT(3, 3, 2)),
+        ])
+
+        # Sort by 'y', with all values specified.
+        self.assertEqual(list(c.sorted_to_match('y', [1, 2, 3, 4]).items()), [
+            (4, TT(4, 0, 1)),
+            (5, TT(5, 0, 1)),
+            (3, TT(3, 3, 2)),
+            (2, TT(2, 1, 3)),
+            (6, TT(6, 0, 3)),
+            (1, TT(1, 2, 4)),
+        ])
+
     def test_group_member_collection(self):
         c = GroupMemberCollection()
 
