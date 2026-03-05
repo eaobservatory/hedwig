@@ -902,8 +902,7 @@ class GenericReview(object):
         comparison = None
 
         if form is None:
-            other_calls = db.search_call(
-                facility_id=self.id_, queue_id=call.queue_id)
+            other_calls = db.search_call(facility_id=self.id_)
             if call.id not in other_calls:
                 raise ErrorPage('This call does not appear in full list.')
             elif 2 > len(other_calls):
@@ -926,18 +925,27 @@ class GenericReview(object):
             orig_affiliations = db.search_affiliation(
                 queue_id=call.queue_id,
                 with_weight_call_id=call.id,
-                with_weight_separate=True).flatten_weight()
+                with_weight_separate=True)
 
             other_affiliations = db.search_affiliation(
                 queue_id=other_call.queue_id,
                 with_weight_call_id=other_call.id,
-                with_weight_separate=True).flatten_weight()
+                with_weight_separate=True)
 
+            # As we may be syncing from a different queue, we need to match
+            # by name (rather than id).  Also we don't want to omit any of
+            # "our" affiliations or try to add any of "theirs" (an error
+            # due to undefined id), so use `hide_deleted` and filter out
+            # any `INSERT` operations.
             comparison = compare_collections(
-                orig_affiliations, other_affiliations,
-                match_attrs=('id',),
+                orig_affiliations.flatten_weight(),
+                other_affiliations.flatten_weight(),
+                match_attrs=('name',),
                 sort_attrs=('name',),
-                update_attrs=('weight', 'type', 'hidden'))
+                update_attrs=('weight', 'type', 'hidden'),
+                hide_deleted=True,
+            ).map_values(filter_value=(
+                lambda x: x.sync_operation != SyncOperation.INSERT))
 
             if ('submit_swap' in form) or ('submit_select' in form):
                 pass

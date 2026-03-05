@@ -2,6 +2,30 @@
 {% set navigation=[((call.semester_name, call.queue_name, (call.type | call_type_name(facility_call_type_class))) | fmt('{} {} {}'), url_for('.review_call', call_id=call.id))] %}
 {% set help_link=url_for('help.admin_page', page_name='affiliation_weight') %}
 
+{% block header_notes %}
+<p>
+    This page allows you to copy affiliation weights from another call.
+</p>
+
+<p>
+    <b>Note:</b>
+</p>
+
+<ul>
+    <li>
+        Affiliations will be matched by name.  If an affiliation is
+        unexpectedly shown as deleted (i.e. updated to hidden)
+        when copying from a call in a different queue,
+        its name may be different.
+    </li>
+    <li>
+        The weights will be copied as they are, without validation
+        &mdash; their suitability given the assignment types should
+        be checked after copying.
+    </li>
+</ul>
+{% endblock %}
+
 {% block comparison_head_extra %}
     <th>Affiliation</th>
     <th>Weight</th>
