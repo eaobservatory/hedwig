@@ -226,7 +226,11 @@ class AdminView(ViewMember):
         }
 
     def _make_thread_links(
-            self, current_user, db, facilities, thread_type, thread_id):
+            self, current_user, db, facilities, thread_type, thread_id,
+            auth_cache=None):
+        if auth_cache is None:
+            auth_cache = {}
+
         links = []
 
         proposal = None
@@ -274,21 +278,23 @@ class AdminView(ViewMember):
                 group_class = facility.view.get_group_types()
                 role_class = facility.view.get_reviewer_roles()
 
-                can = auth.for_review(
-                    group_class, role_class, current_user, db,
-                    reviewer=None, proposal=proposal,
-                    allow_unaccepted=True)
-
                 links.append(Link('Review assignment', url_for(
                     '{}.review_call_reviewers'.format(facility.code),
                     call_id=proposal.call_id)))
 
-                if can.view:
+                if auth.for_review(
+                        group_class, role_class, current_user, db,
+                        reviewer=None, proposal=proposal,
+                        auth_cache=auth_cache).view:
                     links.append(Link('View proposal reviews', url_for(
                         '{}.proposal_reviews'.format(facility.code),
                         proposal_id=proposal.id)))
 
-                if can.edit:
+                if auth.for_review(
+                        group_class, role_class, current_user, db,
+                        reviewer=reviewer, proposal=proposal,
+                        auth_cache=auth_cache,
+                        allow_unaccepted=True).edit:
                     links.append(Link('Edit review', url_for(
                         '{}.review_edit'.format(facility.code),
                         reviewer_id=reviewer.id)))
