@@ -486,6 +486,7 @@ class MessageThreadType(EnumBasic, EnumURLPath):
     PROPOSAL_STATUS = 1
     REVIEW_INVITATION = 2
     PROPOSAL_REVIEW = 3
+    CALL_STATUS = 4
 
     TypeInfo = namedtuple(
         'TypeInfo', ('name', 'url_path', 'recipient_public'))
@@ -494,6 +495,7 @@ class MessageThreadType(EnumBasic, EnumURLPath):
         (PROPOSAL_STATUS,   TypeInfo('Proposal status',   'prop_stat', False)),
         (REVIEW_INVITATION, TypeInfo('Review invitation', 'rev_inv',   False)),
         (PROPOSAL_REVIEW,   TypeInfo('Proposal review',   'prop_rev',  True)),
+        (CALL_STATUS,       TypeInfo('Call status',       'call_stat', True)),
     ))
 
     @classmethod

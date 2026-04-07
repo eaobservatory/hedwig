@@ -201,7 +201,9 @@ def _message_call_closed(
             render_email_template(
                 'call_closed.txt',
                 email_ctx, facility=facility),
-            [x.id for x in site_administrators.values()])
+            [x.id for x in site_administrators.values()],
+            thread_type=MessageThreadType.CALL_STATUS,
+            thread_id=call.id)
 
 
 def finalize_call_review(db, call_id, proposals=None):

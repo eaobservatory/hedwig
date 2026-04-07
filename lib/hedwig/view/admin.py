@@ -231,9 +231,13 @@ class AdminView(ViewMember):
 
         proposal = None
         reviewer = None
+        call = None
+
         facility = None
 
         try:
+            facility_id = None
+
             if thread_type in (
                     MessageThreadType.PROPOSAL_STATUS,
                     MessageThreadType.PROPOSAL_REVIEW):
@@ -245,7 +249,17 @@ class AdminView(ViewMember):
                 proposal = db.get_proposal(
                     None, reviewer.proposal_id, with_members=True)
 
-            facility = facilities.get(proposal.facility_id)
+            elif thread_type == MessageThreadType.CALL_STATUS:
+                call = db.search_call(
+                    call_id=thread_id).get_single()
+
+                facility_id = call.facility_id
+
+            if proposal is not None:
+                facility_id = proposal.facility_id
+
+            if facility_id is not None:
+                facility = facilities.get(facility_id)
 
         except NoSuchRecord:
             pass
@@ -278,6 +292,15 @@ class AdminView(ViewMember):
                     links.append(Link('Edit review', url_for(
                         '{}.review_edit'.format(facility.code),
                         reviewer_id=reviewer.id)))
+
+            if call is not None:
+                links.append(Link('View call', url_for(
+                    '{}.call_view'.format(facility.code),
+                    call_id=call.id)))
+
+                links.append(Link('Review process', url_for(
+                    '{}.review_call'.format(facility.code),
+                    call_id=call.id)))
 
         return links
 
