@@ -24,7 +24,7 @@ from ..astro.coord import CoordSystem, \
     coord_to_dec_deg, coord_from_dec_deg, format_coord, parse_coord
 from ..astro.catalog import parse_source_list
 from ..error import NoSuchRecord, ParseError, UserError
-from ..type.simple import Link, TargetObject
+from ..type.simple import Link, TargetCoord, TargetObject
 from ..type.enum import PermissionType, ProposalType
 from ..util import is_list_like
 from ..web.query_encode import encode_query, decode_query
@@ -32,8 +32,6 @@ from ..web.util import ErrorPage, HTTPError, HTTPForbidden, HTTPNotFound, \
     url_for
 from .util import with_proposal
 from . import auth
-
-TargetCoord = namedtuple('TargetCoord', ('name', 'x', 'y', 'system'))
 
 
 class BaseTargetTool(object):

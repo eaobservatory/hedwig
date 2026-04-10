@@ -232,8 +232,6 @@ class JCMT(EAOFacility):
         ra_deg = coord.spherical.lon.deg
         dec_deg = coord.spherical.lat.deg
 
-        (ra_str, dec_str) = format_coord(CoordSystem.ICRS, coord)
-
         try:
             url = '{}?{}#resultTableTab'.format(
                 self.cadc_advanced_search,
@@ -247,16 +245,18 @@ class JCMT(EAOFacility):
             # Advanced Search doesn't seem to like + as part of the
             # coordinates, or "@" encoded as "%40".
             result.append(Link(
-                'Search CADC at {} {}'.format(ra_str, dec_str),
+                'Search CADC',
                 url.replace('+', '%20').replace('%40', '@')))
 
         except UnicodeEncodeError:
             pass
 
         if not public:
+            (ra_str, dec_str) = format_coord(CoordSystem.ICRS, coord)
+
             try:
                 result.append(Link(
-                    'Search OMP MSBs at {} {}'.format(ra_str, dec_str),
+                    'Search OMP MSBs',
                     '{}findtarget.pl?{}'.format(
                         self.OMP_CGI_BIN,
                         url_encode(OrderedDict((

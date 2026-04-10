@@ -384,6 +384,8 @@ Target = namedtuple(
     'Target',
     [x.name for x in target.columns])
 
+TargetCoord = namedtuple('TargetCoord', ('name', 'x', 'y', 'system'))
+
 TargetFracTime = namedtuple('TargetFracTime', ('coord', 'frac_time'))
 
 TargetObject = namedtuple('TargetObject', ('name', 'system', 'coord', 'time'))

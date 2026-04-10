@@ -1,7 +1,16 @@
 {% extends 'generic/tool_base.html' %}
 {% set help_link=url_for('help.user_page', page_name='target_clash') %}
+{% set scripts=['copy_text'] %}
 
 {% from 'generic/macro/clash.html' import render_search_radius_input %}
+
+{% macro render_target_info(target) %}
+    <p>
+        {{ target.name }}
+        &mdash;
+        <span class="copy_text">{{ target.x }} {{ target.y }}</span>
+    </p>
+{% endmacro %}
 
 {% macro render_target_links(target_links) %}
     {% if target_links %}
@@ -71,9 +80,7 @@
             <ul>
                 {% for clash in clashes %}
                     <li>
-                        <p>
-                            {{ clash.target.name }}
-                        </p>
+                        {{ render_target_info(clash.target) }}
 
                         <p>
                             Matches were found in the following defined areas of sky coverage:
@@ -106,9 +113,7 @@
             <ul>
                 {% for clash in non_clashes %}
                     <li>
-                        <p>
-                            {{ clash.target.name }}
-                        </p>
+                        {{ render_target_info(clash.target) }}
 
                         {{ render_target_links(clash.target_links) }}
                     </li>

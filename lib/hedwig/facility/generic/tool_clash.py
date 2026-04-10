@@ -25,7 +25,8 @@ import re
 
 from pymoc.util.catalog import catalog_to_cells
 
-from ...astro.coord import CoordSystem, concatenate_coord_objects
+from ...astro.coord import CoordSystem, \
+    concatenate_coord_objects, format_coord
 from ...error import NoSuchRecord, UserError
 from ...file.moc import read_moc
 from ...view import auth
@@ -33,12 +34,11 @@ from ...view.tool import BaseTargetTool
 from ...web.util import ErrorPage, HTTPNotFound, HTTPRedirect, \
     flash, url_for
 from ...type.enum import AttachmentState, FormatType
-from ...type.simple import MOCInfo, RouteInfo
+from ...type.simple import MOCInfo, RouteInfo, TargetCoord
 from ...type.util import null_tuple
 from ...util import item_combinations
 
 TargetClash = namedtuple('TargetClash', ('target', 'mocs', 'target_links'))
-
 
 class ClashTool(BaseTargetTool):
     # This tool always shows a search radius form with message display,
@@ -304,13 +304,19 @@ class ClashTool(BaseTargetTool):
             archive_links = self.facility.make_archive_search_urls(
                 coord, public=public)
 
+            (x_fmt, y_fmt) = format_coord(
+                CoordSystem.ICRS, coord, fixed_precision=True)
+
+            target_fmt = TargetCoord(
+                target.name, x_fmt, y_fmt, CoordSystem.ICRS)
+
             if target_clashes:
                 clashes.append(TargetClash(
-                    target, target_clashes, archive_links))
+                    target_fmt, target_clashes, archive_links))
 
             else:
                 non_clashes.append(TargetClash(
-                    target, None, archive_links))
+                    target_fmt, None, archive_links))
 
         return (clashes, non_clashes)
 
