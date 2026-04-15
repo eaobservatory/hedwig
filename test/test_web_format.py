@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,6 +18,8 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from markupsafe import Markup
+
 from hedwig.type.enum import FormatType, MessageFormatType
 from hedwig.type.simple import Message, ProposalText
 from hedwig.web.format import format_message_text, format_text, \
@@ -31,7 +33,10 @@ from .compat import TestCase
 class TextFormatTest(TestCase):
     def test_format(self):
         self.assertEqual(format_text('text'), '<p>text</p>')
-        self.assertEqual(format_text('text', FormatType.PLAIN), '<p>text</p>')
+
+        result = format_text('text', FormatType.PLAIN)
+        self.assertIsInstance(result, Markup)
+        self.assertEqual(result, '<p>text</p>')
 
         with self.assertRaises(HTTPError):
             format_text('text', 999)
@@ -44,6 +49,15 @@ class TextFormatTest(TestCase):
             format_text(null_tuple(ProposalText)._replace(
                 text='hello', format=FormatType.PLAIN)),
             '<p>hello</p>')
+
+        # Test application of other formats.
+        result = format_text('Head RST\n========\n\n', FormatType.RST)
+        self.assertIsInstance(result, Markup)
+        self.assertRegex(result, r'<h3>Head RST</h3>')
+
+        result = format_text('# Head MD\n\n', FormatType.MD)
+        self.assertIsInstance(result, Markup)
+        self.assertRegex(result, r'<h3>Head MD</h3>')
 
     def test_format_message(self):
         with self.assertRaises(HTTPError):

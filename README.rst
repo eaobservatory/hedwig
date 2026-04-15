@@ -52,6 +52,7 @@ The following Python modules should be installed:
 * Flask
 * healpy
 * jinja2_orderblocks
+* Markdown (version < 3.2 if using Python 2)
 * msgpack
 * mysql-connector-python
 * Pillow

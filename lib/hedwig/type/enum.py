@@ -120,12 +120,14 @@ class FormatType(EnumAllowUser):
 
     PLAIN = 1
     RST = 2
+    MD = 3
 
     FormatTypeInfo = namedtuple('FormatTypeInfo', ('name', 'allow_user'))
 
     _info = OrderedDict((
-        (PLAIN, FormatTypeInfo('Plain', True)),
-        (RST,   FormatTypeInfo('RST',   False)),
+        (PLAIN, FormatTypeInfo('Plain',     True)),
+        (RST,   FormatTypeInfo('RST',       False)),
+        (MD,    FormatTypeInfo('Markdown',  False)),
     ))
 
 

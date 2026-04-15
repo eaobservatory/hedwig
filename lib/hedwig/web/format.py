@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2025 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -23,6 +23,7 @@ import re
 from markupsafe import Markup
 
 from ..format.rst import rst_to_html
+from ..format.markdown import markdown_to_html
 from ..type.enum import FormatType, MessageFormatType
 from .util import get_logger, HTTPError
 
@@ -53,6 +54,9 @@ def format_text(text, format=None, as_inline=False):
 
     elif format == FormatType.RST:
         return format_text_rst(text)
+
+    elif format == FormatType.MD:
+        return format_text_markdown(text)
 
     else:
         raise HTTPError('Unknown format type.')
@@ -122,6 +126,16 @@ def format_text_rst(text, extract_title_toc=False, start_heading=3):
 
     else:
         return (Markup(body), Markup(title), toc)
+
+
+def format_text_markdown(text, start_heading=3):
+    """
+    Format Markdown for display as HTML.
+    """
+
+    body = markdown_to_html(text, start_heading=start_heading)
+
+    return Markup(body)
 
 
 def format_message_text(text, format=None):
