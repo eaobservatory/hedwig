@@ -77,6 +77,10 @@ There are also facility-specific requirements:
   * jcmt_itc_heterodyne
   * jcmt_itc_scuba2
 
+* UKIRT
+
+  * ukirt_itc
+
 .. _installation_configuration:
 
 Configuration
