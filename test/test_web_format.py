@@ -127,7 +127,7 @@ class TextFormatTest(TestCase):
                 '\\textsc{text} \\textbf{command} \\textit{alternative}',
                 '<span class="smallcaps">text</span> <b>command</b> <i>alternative</i>',
                 ], [
-                'H\,{\sc ii} region and cloud at 20 km s^{-1} velocity',
+                'H\\,{\\sc ii} region and cloud at 20 km s^{-1} velocity',
                 'H <span class="smallcaps">ii</span> region and cloud at 20 km s<sup>-1</sup> velocity',
                 ], [
                 '<SUP>HTML</SUP> format mixed with LaTeX _{format}',
